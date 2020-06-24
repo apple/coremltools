@@ -3,10 +3,11 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from coremltools.converters.mil.mil import (SYMBOL, VALUE)
+from coremltools.converters.mil.mil import SYMBOL, VALUE
 from coremltools.converters.mil.mil.types.symbolic import is_compatible_symbolic_vector
 from ._op_reqs import *
 import numbers
+
 
 @register_op(doc_str="")
 class gather(Operation):
@@ -49,15 +50,15 @@ class gather(Operation):
     """
 
     input_spec = InputSpec(
-            x = TensorInputType(),
-            indices = IntOrIntTensorInputType(),
-            axis = IntInputType(const=True, default=0)
-            )
+        x=TensorInputType(),
+        indices=IntOrIntTensorInputType(),
+        axis=IntInputType(const=True, default=0),
+    )
 
     def __init__(self, **kwargs):
         super(gather, self).__init__(**kwargs)
 
-    @precondition(allow=VALUE|SYMBOL)
+    @precondition(allow=VALUE | SYMBOL)
     def value_inference(self):
         x = self.x.sym_val
         indices = self.indices.val
@@ -79,11 +80,12 @@ class gather(Operation):
     def type_inference(self):
         out_type = self.x.dtype
 
-        if self.axis.val < -self.x.rank \
-                or self.axis.val >= self.x.rank:
+        if self.axis.val < -self.x.rank or self.axis.val >= self.x.rank:
             raise IndexError(
-                'Axis value {} is out of bounds for {} node {}'.format(
-                    self.axis.val, self.op_type, self.name))
+                "Axis value {} is out of bounds for {} node {}".format(
+                    self.axis.val, self.op_type, self.name
+                )
+            )
 
         output_rank = self.x.rank - 1 + self.indices.rank
         if output_rank == 0:
@@ -92,7 +94,7 @@ class gather(Operation):
 
         axis = self.axis.val
         axis = axis if axis >= 0 else axis + self.x.rank
-        out_shape = self.x.shape[:axis] + self.indices.shape + self.x.shape[axis + 1:]
+        out_shape = self.x.shape[:axis] + self.indices.shape + self.x.shape[axis + 1 :]
         return types.tensor(out_type, out_shape)
 
 
@@ -151,27 +153,31 @@ class scatter(Operation):
     ----------
     T: fp32
     """
+
     input_spec = InputSpec(
-            data = TensorInputType(),
-            indices = IntTensorInputType(),
-            updates = TensorInputType(),
-            axis = IntInputType(const=True, default=0),
-            mode = StringInputType(const=True, default="add")
-            )
+        data=TensorInputType(),
+        indices=IntTensorInputType(),
+        updates=TensorInputType(),
+        axis=IntInputType(const=True, default=0),
+        mode=StringInputType(const=True, default="add"),
+    )
 
     def __init__(self, **kwargs):
         super(scatter, self).__init__(**kwargs)
 
     def type_inference(self):
-        if self.axis.val < -self.data.rank \
-                or self.axis.val >= self.data.rank:
+        if self.axis.val < -self.data.rank or self.axis.val >= self.data.rank:
             raise IndexError(
-                'Axis value {} is out of bounds for {} node {}'.format(
-                    self.axis.val, self.op_type, self.name))
+                "Axis value {} is out of bounds for {} node {}".format(
+                    self.axis.val, self.op_type, self.name
+                )
+            )
 
         axis = self.axis.val
         axis = axis if axis >= 0 else axis + self.data.rank
-        expected_updates_shape = self.data.shape[:axis] + self.indices.shape + self.data.shape[axis + 1:]
+        expected_updates_shape = (
+            self.data.shape[:axis] + self.indices.shape + self.data.shape[axis + 1 :]
+        )
         np.testing.assert_equal(self.updates.shape, np.array(expected_updates_shape))
 
         return self.data.sym_type
@@ -204,11 +210,12 @@ class gather_along_axis(Operation):
     ----------
     T: fp32
     """
+
     input_spec = InputSpec(
-            x = TensorInputType(),
-            indices = IntTensorInputType(),
-            axis = IntInputType(const=True, default=0)
-            )
+        x=TensorInputType(),
+        indices=IntTensorInputType(),
+        axis=IntInputType(const=True, default=0),
+    )
 
     def __init__(self, **kwargs):
         super(gather_along_axis, self).__init__(**kwargs)
@@ -223,14 +230,19 @@ class gather_along_axis(Operation):
     def type_inference(self):
 
         if self.x.rank != self.indices.rank:
-            raise ValueError("Rank mismatch between input and indices. \
-                              Input rank: {}, indices rank: {}".format(self.x.rank, self.indices.rank))
+            raise ValueError(
+                "Rank mismatch between input and indices. \
+                              Input rank: {}, indices rank: {}".format(
+                    self.x.rank, self.indices.rank
+                )
+            )
 
-        if self.axis.val < -self.x.rank \
-                or self.axis.val >= self.x.rank:
+        if self.axis.val < -self.x.rank or self.axis.val >= self.x.rank:
             raise IndexError(
-                'Axis value {} is out of bounds for {} node {}'.format(
-                    self.axis.val, self.op_type, self.name))
+                "Axis value {} is out of bounds for {} node {}".format(
+                    self.axis.val, self.op_type, self.name
+                )
+            )
 
         axis = self.axis.val
         axis = axis if axis >= 0 else axis + self.x.rank
@@ -300,13 +312,14 @@ class scatter_along_axis(Operation):
     ----------
     T: fp32
     """
+
     input_spec = InputSpec(
-            data = TensorInputType(),
-            indices = IntTensorInputType(),
-            updates = TensorInputType(),
-            axis = IntInputType(const=True, default=0),
-            mode = StringInputType(const=True, default="add")
-            )
+        data=TensorInputType(),
+        indices=IntTensorInputType(),
+        updates=TensorInputType(),
+        axis=IntInputType(const=True, default=0),
+        mode=StringInputType(const=True, default="add"),
+    )
 
     def __init__(self, **kwargs):
         super(scatter_along_axis, self).__init__(**kwargs)
@@ -322,11 +335,12 @@ class scatter_along_axis(Operation):
         return np_output
 
     def type_inference(self):
-        if self.axis.val < -self.data.rank \
-                or self.axis.val >= self.data.rank:
+        if self.axis.val < -self.data.rank or self.axis.val >= self.data.rank:
             raise IndexError(
-                'Axis value {} is out of bounds for {} node {}'.format(
-                    self.axis.val, self.op_type, self.name))
+                "Axis value {} is out of bounds for {} node {}".format(
+                    self.axis.val, self.op_type, self.name
+                )
+            )
 
         axis = self.axis.val
         axis = axis if axis >= 0 else axis + self.data.rank
@@ -365,10 +379,8 @@ class gather_nd(Operation):
     ----------
     T: fp32
     """
-    input_spec = InputSpec(
-            x = TensorInputType(),
-            indices = IntTensorInputType(),
-            )
+
+    input_spec = InputSpec(x=TensorInputType(), indices=IntTensorInputType(),)
 
     def __init__(self, **kwargs):
         super(gather_nd, self).__init__(**kwargs)
@@ -376,7 +388,7 @@ class gather_nd(Operation):
     def type_inference(self):
         assert self.indices.shape[-1] <= self.x.rank
         out_type = self.x.dtype
-        out_shape = self.indices.shape[:-1] + self.x.shape[self.indices.shape[-1]:]
+        out_shape = self.indices.shape[:-1] + self.x.shape[self.indices.shape[-1] :]
         return types.tensor(out_type, out_shape)
 
 
@@ -419,18 +431,23 @@ class scatter_nd(Operation):
     ----------
     T: fp32
     """
+
     input_spec = InputSpec(
-            data = TensorInputType(),
-            indices = IntTensorInputType(),
-            updates = TensorInputType(),
-            mode = StringInputType(const=True, default="add")
-            )
+        data=TensorInputType(),
+        indices=IntTensorInputType(),
+        updates=TensorInputType(),
+        mode=StringInputType(const=True, default="add"),
+    )
 
     def __init__(self, **kwargs):
         super(scatter_nd, self).__init__(**kwargs)
 
     def type_inference(self):
         assert self.indices.shape[-1] <= self.data.rank
-        expected_updates_shape = self.indices.shape[:-1] + self.data.shape[self.indices.shape[-1]:]
-        assert is_compatible_symbolic_vector(self.updates.shape, tuple(expected_updates_shape))
+        expected_updates_shape = (
+            self.indices.shape[:-1] + self.data.shape[self.indices.shape[-1] :]
+        )
+        assert is_compatible_symbolic_vector(
+            self.updates.shape, tuple(expected_updates_shape)
+        )
         return self.data.sym_type

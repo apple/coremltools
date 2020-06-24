@@ -10,11 +10,10 @@ from ._utils import promoted_primitive_type, broadcast_shapes
 """
 Elementwise Binary Op Superclass
 """
+
+
 class elementwise_binary(Operation):
-    input_spec = InputSpec(
-            x = ScalarOrTensorInputType(),
-            y = ScalarOrTensorInputType(),
-            )
+    input_spec = InputSpec(x=ScalarOrTensorInputType(), y=ScalarOrTensorInputType(),)
 
     def __init__(self, **kwargs):
         super(elementwise_binary, self).__init__(**kwargs)
@@ -24,7 +23,7 @@ class elementwise_binary(Operation):
         typeb = self.y.sym_type
         primitive_type = promoted_primitive_type(typea, typeb)
         if primitive_type is None:
-            raise ValueError('Incompatible primitive types in broadcast operation')
+            raise ValueError("Incompatible primitive types in broadcast operation")
         primitive_type = self.get_dtype(primitive_type)
 
         # broadcast
@@ -65,13 +64,15 @@ class elementwise_binary(Operation):
         """
         If one of the input is tensor, cast the result to tensor.
         """
-        to_cast = any([isinstance(x, np.ndarray) for x in [a,b]])
-        result = self.get_operator()(a,b)
+        to_cast = any([isinstance(x, np.ndarray) for x in [a, b]])
+        result = self.get_operator()(a, b)
         return result if not to_cast else np.array(result)
+
 
 """
 Elementwise Binary Op Implmentation(s)
 """
+
 
 @register_op(doc_str="")
 class add(elementwise_binary):
@@ -92,6 +93,7 @@ class add(elementwise_binary):
     ----------
     T: fp32
     """
+
     def __init__(self, **kwargs):
         super(add, self).__init__(**kwargs)
 
@@ -118,6 +120,7 @@ class equal(elementwise_binary):
     ----------
     T: fp32
     """
+
     def __init__(self, **kwargs):
         super(equal, self).__init__(**kwargs)
 
@@ -148,6 +151,7 @@ class floor_div(elementwise_binary):
     ----------
     T: fp32
     """
+
     def __init__(self, **kwargs):
         super(floor_div, self).__init__(**kwargs)
 
@@ -174,6 +178,7 @@ class greater(elementwise_binary):
     ----------
     T: fp32
     """
+
     def __init__(self, **kwargs):
         super(greater, self).__init__(**kwargs)
 
@@ -203,6 +208,7 @@ class greater_equal(elementwise_binary):
     ----------
     T: fp32
     """
+
     def __init__(self, **kwargs):
         super(greater_equal, self).__init__(**kwargs)
 
@@ -232,6 +238,7 @@ class less(elementwise_binary):
     ----------
     T: fp32
     """
+
     def __init__(self, **kwargs):
         super(less, self).__init__(**kwargs)
 
@@ -261,6 +268,7 @@ class less_equal(elementwise_binary):
     ----------
     T: fp32
     """
+
     def __init__(self, **kwargs):
         super(less_equal, self).__init__(**kwargs)
 
@@ -286,6 +294,7 @@ class logical_and(elementwise_binary):
     tensor<*?, bool>
         * a bool tensor with the same shape as inputs.
     """
+
     def __init__(self, **kwargs):
         super(logical_and, self).__init__(**kwargs)
 
@@ -311,6 +320,7 @@ class logical_or(elementwise_binary):
     tensor<*?, bool>
         * a bool tensor with the same shape as inputs.
     """
+
     def __init__(self, **kwargs):
         super(logical_or, self).__init__(**kwargs)
 
@@ -336,6 +346,7 @@ class logical_xor(elementwise_binary):
     tensor<*?, bool>
         * a bool tensor with the same shape as inputs.
     """
+
     def __init__(self, **kwargs):
         super(logical_xor, self).__init__(**kwargs)
 
@@ -365,6 +376,7 @@ class maximum(elementwise_binary):
     ----------
     T: fp32
     """
+
     def __init__(self, **kwargs):
         super(maximum, self).__init__(**kwargs)
 
@@ -391,6 +403,7 @@ class minimum(elementwise_binary):
     ----------
     T: fp32
     """
+
     def __init__(self, **kwargs):
         super(minimum, self).__init__(**kwargs)
 
@@ -417,6 +430,7 @@ class mod(elementwise_binary):
     ----------
     T: fp32
     """
+
     def __init__(self, **kwargs):
         super(mod, self).__init__(**kwargs)
 
@@ -443,6 +457,7 @@ class mul(elementwise_binary):
     ----------
     T: fp32
     """
+
     def __init__(self, **kwargs):
         super(mul, self).__init__(**kwargs)
 
@@ -465,6 +480,7 @@ class not_equal(elementwise_binary):
     tensor<*?, bool>
         * a bool tensor with the same shape as inputs.
     """
+
     def __init__(self, **kwargs):
         super(not_equal, self).__init__(**kwargs)
 
@@ -494,6 +510,7 @@ class real_div(elementwise_binary):
     ----------
     T: fp32
     """
+
     def __init__(self, **kwargs):
         super(real_div, self).__init__(**kwargs)
 
@@ -523,6 +540,7 @@ class pow(elementwise_binary):
     ----------
     T: fp32
     """
+
     def __init__(self, **kwargs):
         super(pow, self).__init__(**kwargs)
 
@@ -549,6 +567,7 @@ class sub(elementwise_binary):
     ----------
     T: fp32
     """
+
     def __init__(self, **kwargs):
         super(sub, self).__init__(**kwargs)
 

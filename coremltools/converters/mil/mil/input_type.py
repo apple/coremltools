@@ -51,19 +51,19 @@ class InputSpec(object):
             ValueError if a require input is missing
         """
         ret = []
-        no_check_var_visibility = kwargs.get('no_check_var_visibility', False)
+        no_check_var_visibility = kwargs.get("no_check_var_visibility", False)
         for name, input_type in self.input_types.items():
             if name in kwargs:
                 var = kwargs[name]
                 # TODO (jay): we should remove this internal var later as we
                 # further cleanup the interface
-                if isinstance(var, InternalVar) or \
-                        input_type.is_compatible(var):
+                if isinstance(var, InternalVar) or input_type.is_compatible(var):
                     ret.append((name, var))
                 else:
-                    msg = "Input {} has type {} not compatible with " \
-                          "expected type {}".format(name, var.sym_type,
-                                                    input_type)
+                    msg = (
+                        "Input {} has type {} not compatible with "
+                        "expected type {}".format(name, var.sym_type, input_type)
+                    )
                     raise TypeError(msg)
             else:
                 # if input is not found in kwargs, it must be optional has no
@@ -71,8 +71,9 @@ class InputSpec(object):
                 if not input_type.optional or input_type.default:
                     # Skip check on PyFunctionInput since created while_loop /
                     # cond ops don't need to rebuild the nested blocks
-                    if no_check_var_visibility or isinstance(input_type,
-                            PyFunctionInputType):
+                    if no_check_var_visibility or isinstance(
+                        input_type, PyFunctionInputType
+                    ):
                         continue
                     raise ValueError("Input {} is required".format(name))
                 else:
@@ -86,6 +87,7 @@ class _InputType(object):
     (Untyped) input containing fundamental properties of all inputs to an
     Operation:
     """
+
     def __init__(self, const=False, default=None, optional=False):
         """
         const (bool):
@@ -157,9 +159,11 @@ class ListOrScalarOrTensorInputType(_InputType):
         super(ListOrScalarOrTensorInputType, self).__init__(**kwargs)
 
     def _is_compatible(self, v):
-        return types.is_list(v.sym_type) or \
-               types.is_scalar(v.dtype) or \
-               types.is_tensor(v.dtype)
+        return (
+            types.is_list(v.sym_type)
+            or types.is_scalar(v.dtype)
+            or types.is_tensor(v.dtype)
+        )
 
 
 class IntInputType(ScalarOrTensorInputType):
@@ -170,6 +174,7 @@ class IntInputType(ScalarOrTensorInputType):
     Set with IntAttribute.val
     Raise error when value set is not integer.
     """
+
     def __init__(self, **kwargs):
         super(IntInputType, self).__init__(**kwargs)
 
@@ -187,6 +192,7 @@ class BoolInputType(ScalarOrTensorInputType):
     Set with IntAttribute.val
     Raise error when value set is not integer.
     """
+
     def __init__(self, **kwargs):
         super(BoolInputType, self).__init__(**kwargs)
 
@@ -204,6 +210,7 @@ class FloatInputType(ScalarOrTensorInputType):
     Set with IntAttribute.val
     Raise error when value set is not integer.
     """
+
     def __init__(self, **kwargs):
         super(FloatInputType, self).__init__(**kwargs)
 
@@ -213,11 +220,13 @@ class FloatInputType(ScalarOrTensorInputType):
     def _get_predefined_datatype(self):
         return types.fp32
 
+
 class IntOrFloatInputType(ScalarOrTensorInputType):
     """
     input with _sym_type == types.int32 or _sym_type == types.int64 or _sym_type == types.fp32
     predefined to be types.fp32 by default.
     """
+
     def __init__(self, **kwargs):
         super(IntOrFloatInputType, self).__init__(**kwargs)
 
@@ -233,6 +242,7 @@ class TensorInputType(ScalarOrTensorInputType):
     TensorInputType must be numpy ndarray of numeric types. Min rank = 1. (Use
     ScalarOrTensorInputType for possibly scalar input).
     """
+
     def __init__(self, **kwargs):
         super(TensorInputType, self).__init__(**kwargs)
 
@@ -252,8 +262,7 @@ class IntTensorInputType(ScalarOrTensorInputType):
         super(IntTensorInputType, self).__init__(**kwargs)
 
     def _is_compatible(self, v):
-        return types.is_tensor(v.sym_type) and \
-               v.dtype in {types.int32, types.int64}
+        return types.is_tensor(v.sym_type) and v.dtype in {types.int32, types.int64}
 
 
 class IntOrIntTensorInputType(ScalarOrTensorInputType):
@@ -302,6 +311,7 @@ class InternalInputType(_InputType):
     It allows ops to take, for example, python primitive types, instead of
     only the builtin types.
     """
+
     def __init__(self, **kwargs):
         super(InternalInputType, self).__init__(**kwargs)
 
@@ -313,10 +323,11 @@ class PyFunctionInputType(InternalInputType):
     """
     Native python function.
     """
+
     def __init__(self, **kwargs):
         super(PyFunctionInputType, self).__init__(**kwargs)
 
-    #def _is_compatible(self, v):
+    # def _is_compatible(self, v):
     #    return callable(v.val)
 
 
@@ -324,7 +335,7 @@ class InternalStringInputType(InternalInputType):
     def __init__(self, **kwargs):
         super(InternalStringInputType, self).__init__(**kwargs)
 
-    #def _is_compatible(self, v):
+    # def _is_compatible(self, v):
     #    return types.is_str(v.sym_type)
 
 
@@ -332,5 +343,5 @@ class InternalScalarOrTensorInputType(InternalInputType):
     def __init__(self, **kwargs):
         super(InternalScalarOrTensorInputType, self).__init__(**kwargs)
 
-    #def _is_compatible(self, v):
+    # def _is_compatible(self, v):
     #    return types.is_scalar(v.dtype) or types.is_tensor(v.dtype)

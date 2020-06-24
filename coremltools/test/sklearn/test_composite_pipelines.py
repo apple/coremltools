@@ -22,52 +22,55 @@ if _HAS_SKLEARN:
     from sklearn.pipeline import Pipeline
     from sklearn.preprocessing import StandardScaler
     from sklearn.preprocessing import OneHotEncoder
-        
 
-@unittest.skipIf(not _HAS_SKLEARN, 'Missing sklearn. Skipping tests.')
+
+@unittest.skipIf(not _HAS_SKLEARN, "Missing sklearn. Skipping tests.")
 class GradientBoostingRegressorBostonHousingScikitNumericTest(unittest.TestCase):
-
-    def test_boston_OHE_plus_normalizer(self): 
+    def test_boston_OHE_plus_normalizer(self):
 
         data = load_boston()
 
-        pl = Pipeline([
-            ("OHE", OneHotEncoder(categorical_features = [8], sparse=False)), 
-            ("Scaler",StandardScaler())])
+        pl = Pipeline(
+            [
+                ("OHE", OneHotEncoder(categorical_features=[8], sparse=False)),
+                ("Scaler", StandardScaler()),
+            ]
+        )
 
         pl.fit(data.data, data.target)
 
         # Convert the model
-        spec = convert(pl, data.feature_names, 'out')
+        spec = convert(pl, data.feature_names, "out")
 
         if _is_macos() and _macos_version() >= (10, 13):
             input_data = [dict(zip(data.feature_names, row)) for row in data.data]
-            output_data = [{"out" : row} for row in pl.transform(data.data)]
+            output_data = [{"out": row} for row in pl.transform(data.data)]
 
             result = evaluate_transformer(spec, input_data, output_data)
             assert result["num_errors"] == 0
-    
-    def test_boston_OHE_plus_trees(self): 
+
+    def test_boston_OHE_plus_trees(self):
 
         data = load_boston()
 
-        pl = Pipeline([
-            ("OHE", OneHotEncoder(categorical_features = [8], sparse=False)), 
-            ("Trees",GradientBoostingRegressor(random_state = 1))])
+        pl = Pipeline(
+            [
+                ("OHE", OneHotEncoder(categorical_features=[8], sparse=False)),
+                ("Trees", GradientBoostingRegressor(random_state=1)),
+            ]
+        )
 
         pl.fit(data.data, data.target)
 
         # Convert the model
-        spec = convert(pl, data.feature_names, 'target')
+        spec = convert(pl, data.feature_names, "target")
 
         if _is_macos() and _macos_version() >= (10, 13):
             # Get predictions
             df = pd.DataFrame(data.data, columns=data.feature_names)
-            df['prediction'] = pl.predict(data.data)
+            df["prediction"] = pl.predict(data.data)
 
             # Evaluate it
-            result = evaluate_regressor(spec, df, 'target', verbose = False)
+            result = evaluate_regressor(spec, df, "target", verbose=False)
 
             assert result["max_error"] < 0.0001
-
-    

@@ -12,6 +12,7 @@ from __future__ import absolute_import as _
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 from coremltools.converters.mil.mil import Builder as mb
 
+
 def divide_to_multiply_block(block):
     for op in list(block.operations):
         for b in op.blocks:
@@ -20,16 +21,18 @@ def divide_to_multiply_block(block):
             # This op can't be divide.
             continue
 
-        if op.op_type == 'real_div' and op.y.val is not None:
+        if op.op_type == "real_div" and op.y.val is not None:
             with block:
-                x = mb.mul(x=op.x, y=1./op.y.val, name="_inversed_"+op.name, before_op=op)
-                op.enclosing_block.replace_uses_of_var_after_op(anchor_op=op,
-                                                                old_var=op.outputs[0],
-                                                                new_var=x)
+                x = mb.mul(
+                    x=op.x, y=1.0 / op.y.val, name="_inversed_" + op.name, before_op=op
+                )
+                op.enclosing_block.replace_uses_of_var_after_op(
+                    anchor_op=op, old_var=op.outputs[0], new_var=x
+                )
                 block.remove_ops([op])
 
 
-@register_pass(namespace='common')
+@register_pass(namespace="common")
 def divide_to_multiply(prog):
     """
     Convert divide into multiply if divisor is const.

@@ -6,6 +6,7 @@ from __future__ import unicode_literals as _
 import unittest
 import numpy as np
 from coremltools._deps import _HAS_ONNX, MSG_ONNX_NOT_FOUND
+
 if _HAS_ONNX:
     import onnx
     from onnx.numpy_helper import from_array
@@ -22,10 +23,10 @@ from typing import Text
 
 from coremltools.models.utils import _macos_version
 
-
 MIN_MACOS_VERSION_10_15 = (10, 15)
 
 ONNX_SHAPE_INFERENCE_FAILS = True
+
 
 @unittest.skipUnless(_HAS_ONNX, MSG_ONNX_NOT_FOUND)
 class SingleOperatorTest(unittest.TestCase):

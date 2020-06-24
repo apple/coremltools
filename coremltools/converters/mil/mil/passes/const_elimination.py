@@ -20,18 +20,18 @@ def get_const_mode(val):
     # Heuristics to determine if a val should be file value or immediate
     # value.
     if isinstance(val, six.string_types):
-        return 'immediate_value'
+        return "immediate_value"
     if isinstance(val, (np.generic, np.ndarray)):
         if val.size > 10:
-            return 'file_value'
-        return 'immediate_value'
+            return "file_value"
+        return "immediate_value"
     raise ValueError("val {} not recognized.".format(val))
 
 
 def const_elimination_block(block):
     # shallow copy hides changes on f.operations during the loop
     for op in list(block.operations):
-        if op.op_type == 'const':
+        if op.op_type == "const":
             continue
 
         for b in op.blocks:
@@ -41,14 +41,17 @@ def const_elimination_block(block):
         for i, o in enumerate(op.outputs):
             if o.val is not None:
                 with block:
-                    res = mb.const(val=o.val,
-                                   mode=get_const_mode(o.val),
-                                   before_op=op,
-                                   # same var name, but different python
-                                   # instance does not violate SSA property.
-                                   name=o.name)
-                op.enclosing_block.replace_uses_of_var_after_op(anchor_op=op,
-                        old_var=o, new_var=res)
+                    res = mb.const(
+                        val=o.val,
+                        mode=get_const_mode(o.val),
+                        before_op=op,
+                        # same var name, but different python
+                        # instance does not violate SSA property.
+                        name=o.name,
+                    )
+                op.enclosing_block.replace_uses_of_var_after_op(
+                    anchor_op=op, old_var=o, new_var=res
+                )
             else:
                 all_outputs_are_const = False
 
@@ -56,7 +59,7 @@ def const_elimination_block(block):
             op.remove_from_block()
 
 
-@register_pass(namespace='common')
+@register_pass(namespace="common")
 def const_elimination(prog):
     """
     prog: Program

@@ -13,12 +13,13 @@ from coremltools.converters.mil.mil.ops.registry import SSAOpRegistry
 
 from coremltools.converters.mil.mil import types
 from coremltools._deps import (
-    _HAS_TF_1, _HAS_TF_2, _HAS_TORCH,
-    MSG_TF1_NOT_FOUND, MSG_TF2_NOT_FOUND
+    _HAS_TF_1,
+    _HAS_TF_2,
+    _HAS_TORCH,
+    MSG_TF1_NOT_FOUND,
+    MSG_TF2_NOT_FOUND,
 )
-from .testing_utils import (
-    ssa_fn, is_close, random_gen, converter, _converter
-)
+from .testing_utils import ssa_fn, is_close, random_gen, converter, _converter
 
 backends = _converter.ConverterRegistry.backends.keys()
 

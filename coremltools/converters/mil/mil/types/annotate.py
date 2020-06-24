@@ -50,7 +50,7 @@ def annotate(return_type=_invalid_placeholder_type, **kwargs):
      - captured variables
      - function arguments
      - other variables within the function
-    
+
     Ex:
 
         @annotate(compyler.double, a=compyler.double, b=compyler.double)
@@ -70,8 +70,8 @@ def annotate(return_type=_invalid_placeholder_type, **kwargs):
         class double:
             @annotate(delay_type.double, other=delay_type.double)
             def __add__(self, other):
-    
-    After which apply_delayed_types() must be called to fill in the delayed 
+
+    After which apply_delayed_types() must be called to fill in the delayed
     type.
     """
     global annotated_function_list
@@ -101,20 +101,22 @@ def class_annotate():
     return decorator
 
 
-def apply_delayed_types(type_map=annotated_class_list,
-                        fnlist=annotated_function_list):  # pylint: disable=dangerous-default-value
+def apply_delayed_types(
+    type_map=annotated_class_list, fnlist=annotated_function_list
+):  # pylint: disable=dangerous-default-value
     """
     Apply all delayed types. See annotate()
     """
     # pylint: disable=no-member
     # type name is a dict from str to type
     for func in fnlist:
-        if hasattr(func, 'return_type') and \
-                isinstance(func.return_type, _string_types) and \
-                func.return_type in type_map:
+        if (
+            hasattr(func, "return_type")
+            and isinstance(func.return_type, _string_types)
+            and func.return_type in type_map
+        ):
             func.return_type = type_map[func.return_type]
-        if hasattr(func, 'type_annotations'):
+        if hasattr(func, "type_annotations"):
             for key in func.type_annotations:
                 if func.type_annotations[key] in type_map:
-                    func.type_annotations[key] = type_map[
-                        func.type_annotations[key]]
+                    func.type_annotations[key] = type_map[func.type_annotations[key]]

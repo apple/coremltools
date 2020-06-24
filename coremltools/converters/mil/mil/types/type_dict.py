@@ -43,19 +43,17 @@ def dict(keytype, valuetype):
 
         @classmethod
         def __type_info__(cls):
-            return Type("dict",
-                        [get_type_info(keytype),
-                         get_type_info(valuetype)], cls)
+            return Type("dict", [get_type_info(keytype), get_type_info(valuetype)], cls)
 
         @annotate(T[1], key=T[0])
         def __getitem__(self, key):
-            assert (isinstance(key, self.T[0]))
+            assert isinstance(key, self.T[0])
             return self.val[key]
 
         @annotate(void, key=T[0], newval=T[1])
         def __setitem__(self, key, newval):
-            assert (isinstance(key, self.T[0]))
-            assert (isinstance(newval, self.T[1]))
+            assert isinstance(key, self.T[0])
+            assert isinstance(newval, self.T[1])
             self.val[key] = newval
 
         @annotate(type_int.int)

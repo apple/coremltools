@@ -10,7 +10,10 @@ if _HAS_KERAS_TF or _HAS_KERAS2_TF:
     import keras as _keras
     import logging as _logging
     from ._keras_converter import convert
-    if _keras.backend.backend() != 'tensorflow':
+
+    if _keras.backend.backend() != "tensorflow":
         _HAS_KERAS_TF = False
         _HAS_KERAS2_TF = False
-        _logging.warning('Currently, only Keras models with TensorFlow backend can be converted to Core ML.')
+        _logging.warning(
+            "Currently, only Keras models with TensorFlow backend can be converted to Core ML."
+        )

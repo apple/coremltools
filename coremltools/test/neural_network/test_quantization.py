@@ -11,7 +11,9 @@ import coremltools.models.datatypes as datatypes
 from coremltools.models import neural_network
 import coremltools.models.neural_network.quantization_utils as quantization_utils
 from coremltools.models.neural_network.quantization_utils import (
-    activate_int8_int8_matrix_multiplications, MatrixMultiplyLayerSelector, _quantize_spec_weights
+    activate_int8_int8_matrix_multiplications,
+    MatrixMultiplyLayerSelector,
+    _quantize_spec_weights,
 )
 
 from coremltools._deps import _HAS_KERAS2_TF
@@ -510,9 +512,8 @@ class AdvancedQuantizationNumericalCorrectnessTests(unittest.TestCase):
     "Missing macOS 10.16+. Skipping tests.",
 )
 class DynamicQuantizedInt8Int8MatMul(unittest.TestCase):
-
     """
-    Quantization tests for dynamic Int8 - Int8 matrix multiplications 
+    Quantization tests for dynamic Int8 - Int8 matrix multiplications
     """
 
     def initialize(self):
@@ -544,7 +545,7 @@ class DynamicQuantizedInt8Int8MatMul(unittest.TestCase):
         self.assertGreaterEqual(snr, SNR)
         self.assertGreaterEqual(psnr, PSNR)
 
-    def compare(self, specification_modified = True):
+    def compare(self, specification_modified=True):
         x = np.random.rand(*self.input_shape)
 
         def _get_preds(spec):
@@ -554,7 +555,9 @@ class DynamicQuantizedInt8Int8MatMul(unittest.TestCase):
         preds = _get_preds(self.builder.spec)
         self.assertEqual(self.builder.spec.specificationVersion, 4)
 
-        quantized_spec = activate_int8_int8_matrix_multiplications(self.builder.spec, self.selector)
+        quantized_spec = activate_int8_int8_matrix_multiplications(
+            self.builder.spec, self.selector
+        )
 
         layer = self.builder.spec.neuralNetwork.layers[0]
         layer_type = layer.WhichOneof("layer")
@@ -575,7 +578,6 @@ class DynamicQuantizedInt8Int8MatMul(unittest.TestCase):
             quant_preds = _get_preds(quantized_spec)
             np.testing.assert_array_almost_equal(preds, quant_preds)
             self.assertGreater(len(wp.floatValue), 0)
-
 
     def test_single_batched_matmul_no_bias(self):
 
@@ -935,7 +937,9 @@ class DynamicQuantizedInt8Int8MatMul(unittest.TestCase):
             weight_matrix_columns=self.Cout,
             W=self.W,
         )
-        _quantize_spec_weights(self.builder.spec, 8, _QUANTIZATION_MODE_LINEAR_QUANTIZATION)
+        _quantize_spec_weights(
+            self.builder.spec, 8, _QUANTIZATION_MODE_LINEAR_QUANTIZATION
+        )
         self.compare()
 
     def test_batched_matmul_4bit_weight_quantized(self):
@@ -949,7 +953,9 @@ class DynamicQuantizedInt8Int8MatMul(unittest.TestCase):
             weight_matrix_columns=self.Cout,
             W=self.W,
         )
-        _quantize_spec_weights(self.builder.spec, 4, _QUANTIZATION_MODE_LINEAR_QUANTIZATION)
+        _quantize_spec_weights(
+            self.builder.spec, 4, _QUANTIZATION_MODE_LINEAR_QUANTIZATION
+        )
         self.compare()
 
     def test_batched_matmul_2bit_weight_quantized(self):
@@ -963,7 +969,9 @@ class DynamicQuantizedInt8Int8MatMul(unittest.TestCase):
             weight_matrix_columns=self.Cout,
             W=self.W,
         )
-        _quantize_spec_weights(self.builder.spec, 2, _QUANTIZATION_MODE_LINEAR_QUANTIZATION)
+        _quantize_spec_weights(
+            self.builder.spec, 2, _QUANTIZATION_MODE_LINEAR_QUANTIZATION
+        )
         self.compare()
 
     def test_batched_matmul_1bit_weight_quantized(self):
@@ -977,48 +985,72 @@ class DynamicQuantizedInt8Int8MatMul(unittest.TestCase):
             weight_matrix_columns=self.Cout,
             W=self.W,
         )
-        _quantize_spec_weights(self.builder.spec, 1, _QUANTIZATION_MODE_LINEAR_QUANTIZATION)
+        _quantize_spec_weights(
+            self.builder.spec, 1, _QUANTIZATION_MODE_LINEAR_QUANTIZATION
+        )
         self.compare()
 
-@unittest.skipIf(not coremltools.utils._is_macos() or
-                 coremltools.utils._macos_version() < (10, 15),
-                 'Missing macOS 10.15+. Skipping tests.')
+
+@unittest.skipIf(
+    not coremltools.utils._is_macos() or coremltools.utils._macos_version() < (10, 15),
+    "Missing macOS 10.15+. Skipping tests.",
+)
 class QuantizeWeightsAPI(unittest.TestCase):
-
     def test_embeddingND_quantize(self):
-        input_features = [('data', datatypes.Array(10,1))]
-        output_features = [('output', None)]
+        input_features = [("data", datatypes.Array(10, 1))]
+        output_features = [("output", None)]
         builder = neural_network.NeuralNetworkBuilder(
-            input_features, output_features,
-            disable_rank5_shape_mapping=True)
+            input_features, output_features, disable_rank5_shape_mapping=True
+        )
 
-        builder.add_embedding_nd(name='embedding_nd',
-                                 input_name='data',
-                                 output_name='output',
-                                 vocab_size=300,
-                                 embedding_size=20,
-                                 W=np.random.rand(20, 300))
+        builder.add_embedding_nd(
+            name="embedding_nd",
+            input_name="data",
+            output_name="output",
+            vocab_size=300,
+            embedding_size=20,
+            W=np.random.rand(20, 300),
+        )
 
         spec = builder.spec
         model_fp32 = coremltools.models.MLModel(spec)
-        self.assertEqual(len(spec.neuralNetwork.layers[0].embeddingND.weights.floatValue), 6000)
+        self.assertEqual(
+            len(spec.neuralNetwork.layers[0].embeddingND.weights.floatValue), 6000
+        )
 
         # quantize to FP16
         model_fp16 = quantization_utils.quantize_weights(model_fp32, nbits=16)
         spec_fp16 = model_fp16.get_spec()
-        self.assertEqual(len(spec_fp16.neuralNetwork.layers[0].embeddingND.weights.floatValue), 0)
-        self.assertEqual(len(spec_fp16.neuralNetwork.layers[0].embeddingND.weights.float16Value), 2*6000)
+        self.assertEqual(
+            len(spec_fp16.neuralNetwork.layers[0].embeddingND.weights.floatValue), 0
+        )
+        self.assertEqual(
+            len(spec_fp16.neuralNetwork.layers[0].embeddingND.weights.float16Value),
+            2 * 6000,
+        )
 
         # quantize to uint8
         model_uint8 = quantization_utils.quantize_weights(model_fp32, nbits=8)
         spec_uint8 = model_uint8.get_spec()
-        self.assertEqual(len(spec_uint8.neuralNetwork.layers[0].embeddingND.weights.floatValue), 0)
-        self.assertEqual(len(spec_uint8.neuralNetwork.layers[0].embeddingND.weights.float16Value), 0)
-        self.assertEqual(len(spec_uint8.neuralNetwork.layers[0].embeddingND.weights.rawValue), 6000)
+        self.assertEqual(
+            len(spec_uint8.neuralNetwork.layers[0].embeddingND.weights.floatValue), 0
+        )
+        self.assertEqual(
+            len(spec_uint8.neuralNetwork.layers[0].embeddingND.weights.float16Value), 0
+        )
+        self.assertEqual(
+            len(spec_uint8.neuralNetwork.layers[0].embeddingND.weights.rawValue), 6000
+        )
 
         # quantize to uint5
         model_uint5 = quantization_utils.quantize_weights(model_fp32, nbits=5)
         spec_uint5 = model_uint5.get_spec()
-        self.assertEqual(len(spec_uint5.neuralNetwork.layers[0].embeddingND.weights.floatValue), 0)
-        self.assertEqual(len(spec_uint5.neuralNetwork.layers[0].embeddingND.weights.float16Value), 0)
-        self.assertEqual(len(spec_uint5.neuralNetwork.layers[0].embeddingND.weights.rawValue), 3750) # 3750 = 5*6000/8
+        self.assertEqual(
+            len(spec_uint5.neuralNetwork.layers[0].embeddingND.weights.floatValue), 0
+        )
+        self.assertEqual(
+            len(spec_uint5.neuralNetwork.layers[0].embeddingND.weights.float16Value), 0
+        )
+        self.assertEqual(
+            len(spec_uint5.neuralNetwork.layers[0].embeddingND.weights.rawValue), 3750
+        )  # 3750 = 5*6000/8

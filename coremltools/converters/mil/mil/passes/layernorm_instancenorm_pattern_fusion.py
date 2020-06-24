@@ -13,12 +13,13 @@ from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 from coremltools.converters.mil.mil import Builder as mb
 import numpy as np
 
+
 def _check_child_op_type(op, child_op_type):
-    '''
+    """
     :param op: operation
     :param child_op_type: str
     :return: Return True if op has 1 child and type of that child matches child_op_type
-    '''
+    """
     if len(op.outputs) != 1:
         return False
     child_ops = list(op.outputs[0].child_ops)
@@ -30,7 +31,6 @@ def _check_child_op_type(op, child_op_type):
 
 
 def try_to_transform(reduce_mean_op, block):
-
     all_ops = [reduce_mean_op]
     root_var = reduce_mean_op.x
 
@@ -45,7 +45,10 @@ def try_to_transform(reduce_mean_op, block):
         return False
 
     # check 1st reduce_mean op
-    if not (reduce_mean_op.keep_dims.val is not None and reduce_mean_op.keep_dims.val == True):
+    if not (
+        reduce_mean_op.keep_dims.val is not None
+        and reduce_mean_op.keep_dims.val == True
+    ):
         return False
     axes = reduce_mean_op.axes.val
     if axes is None:
@@ -57,33 +60,40 @@ def try_to_transform(reduce_mean_op, block):
         return False
     op_a = child_ops_reduce_mean[0]
     op_b = child_ops_reduce_mean[1]
-    if not ((op_a.op_type == 'sub' and op_b.op_type == 'mul') or \
-            (op_a.op_type == 'mul' and op_b.op_type == 'sub')):
+    if not (
+        (op_a.op_type == "sub" and op_b.op_type == "mul")
+        or (op_a.op_type == "mul" and op_b.op_type == "sub")
+    ):
         return False
-    sub_op1 = op_a if op_a.op_type == 'sub' else op_b
+    sub_op1 = op_a if op_a.op_type == "sub" else op_b
     if not (sub_op1.x == root_var and sub_op1.y == reduce_mean_op.outputs[0]):
         return False
     all_ops.append(sub_op1)
 
     # check square op
-    if not _check_child_op_type(sub_op1, 'square'):
+    if not _check_child_op_type(sub_op1, "square"):
         return False
     square_op = list(sub_op1.outputs[0].child_ops)[0]
     all_ops.append(square_op)
 
     # check second reduce mean
-    if not _check_child_op_type(square_op, 'reduce_mean'):
+    if not _check_child_op_type(square_op, "reduce_mean"):
         return False
     reduce_mean_op2 = list(square_op.outputs[0].child_ops)[0]
-    if not (reduce_mean_op2.keep_dims.val is not None and reduce_mean_op2.keep_dims.val == True):
+    if not (
+        reduce_mean_op2.keep_dims.val is not None
+        and reduce_mean_op2.keep_dims.val == True
+    ):
         return False
-    if not ((reduce_mean_op2.axes.val is not None) and \
-            (axes == reduce_mean_op2.axes.val).all()):
+    if not (
+        (reduce_mean_op2.axes.val is not None)
+        and (axes == reduce_mean_op2.axes.val).all()
+    ):
         return False
     all_ops.append(reduce_mean_op2)
 
     # check add op (with epsilon)
-    if not _check_child_op_type(reduce_mean_op2, 'add'):
+    if not _check_child_op_type(reduce_mean_op2, "add"):
         return False
     add_op1 = list(reduce_mean_op2.outputs[0].child_ops)[0]
     epsilon_var = add_op1.y if add_op1.x == reduce_mean_op2.outputs[0] else add_op1.x
@@ -95,13 +105,13 @@ def try_to_transform(reduce_mean_op, block):
     all_ops.append(add_op1)
 
     # check rsqrt op
-    if not _check_child_op_type(add_op1, 'rsqrt'):
+    if not _check_child_op_type(add_op1, "rsqrt"):
         return False
     rsqrt_op = list(add_op1.outputs[0].child_ops)[0]
     all_ops.append(rsqrt_op)
 
     # check mul (gamma)
-    if not _check_child_op_type(rsqrt_op, 'mul'):
+    if not _check_child_op_type(rsqrt_op, "mul"):
         return False
     mul_op1 = list(rsqrt_op.outputs[0].child_ops)[0]
     gamma_var = mul_op1.y if mul_op1.x == rsqrt_op.outputs[0] else mul_op1.x
@@ -115,12 +125,20 @@ def try_to_transform(reduce_mean_op, block):
         return False
     mul_op2 = child_ops[0]
     mul_op3 = child_ops[1]
-    if not (mul_op2.op_type == 'mul' and mul_op3.op_type == 'mul'):
+    if not (mul_op2.op_type == "mul" and mul_op3.op_type == "mul"):
         return False
     mul_op2_other_var = mul_op2.x if mul_op2.y == mul_op1.outputs[0] else mul_op2.y
     mul_op3_other_var = mul_op3.x if mul_op3.y == mul_op1.outputs[0] else mul_op3.y
-    if not ((mul_op2_other_var == root_var and mul_op3_other_var == reduce_mean_op.outputs[0]) or \
-            (mul_op2_other_var == reduce_mean_op.outputs[0] and mul_op3_other_var == root_var)):
+    if not (
+        (
+            mul_op2_other_var == root_var
+            and mul_op3_other_var == reduce_mean_op.outputs[0]
+        )
+        or (
+            mul_op2_other_var == reduce_mean_op.outputs[0]
+            and mul_op3_other_var == root_var
+        )
+    ):
         return False
     if mul_op2_other_var == root_var:
         mul_root_op = mul_op2
@@ -132,7 +150,7 @@ def try_to_transform(reduce_mean_op, block):
     all_ops.append(mul_root_op)
 
     # check sub with beta
-    if not _check_child_op_type(mul_mean_op, 'sub'):
+    if not _check_child_op_type(mul_mean_op, "sub"):
         return False
     sub_op2 = list(mul_mean_op.outputs[0].child_ops)[0]
     if sub_op2.y != mul_mean_op.outputs[0]:
@@ -143,13 +161,12 @@ def try_to_transform(reduce_mean_op, block):
     all_ops.append(sub_op2)
 
     # check last add op
-    if not _check_child_op_type(sub_op2, 'add'):
+    if not _check_child_op_type(sub_op2, "add"):
         return False
     add_op2 = list(sub_op2.outputs[0].child_ops)[0]
     if not (add_op2.x == mul_root_op.outputs[0] or add_op2.y == mul_root_op.outputs[0]):
         return False
     all_ops.append(add_op2)
-
 
     # check that none of the op in this pattern is connected to the output
     # (except the last add op)
@@ -173,35 +190,41 @@ def try_to_transform(reduce_mean_op, block):
             is_layernorm = True
 
     if negative_axes == [-2, -1] and rank == 4:
-        if len(np.squeeze(gamma_var.val).shape) == 1 and \
-                len(np.squeeze(beta_var.val).shape) == 1:
+        if (
+            len(np.squeeze(gamma_var.val).shape) == 1
+            and len(np.squeeze(beta_var.val).shape) == 1
+        ):
             is_instancenorm = True
 
     if not (is_instancenorm or is_layernorm):
         return False
 
-
     # remove all the ops, and replace with a layer_norm or instance_norm op
     out_name = add_op2.outputs[0].name
 
     if is_instancenorm:
-        x = mb.instance_norm(x=root_var,
-                             gamma=np.squeeze(gamma_var.val),
-                             beta=np.squeeze(beta_var.val),
-                             epsilon=epsilon_var,
-                             name=out_name,
-                             before_op=add_op2)
+        x = mb.instance_norm(
+            x=root_var,
+            gamma=np.squeeze(gamma_var.val),
+            beta=np.squeeze(beta_var.val),
+            epsilon=epsilon_var,
+            name=out_name,
+            before_op=add_op2,
+        )
     else:
-        x = mb.layer_norm(x=root_var,
-                          axes=axes,
-                          gamma=gamma_var,
-                          beta=beta_var,
-                          epsilon=epsilon_var,
-                          name=out_name,
-                          before_op=add_op2)
+        x = mb.layer_norm(
+            x=root_var,
+            axes=axes,
+            gamma=gamma_var,
+            beta=beta_var,
+            epsilon=epsilon_var,
+            name=out_name,
+            before_op=add_op2,
+        )
 
-    add_op2.enclosing_block.replace_uses_of_var_after_op(anchor_op=add_op2,
-            old_var=add_op2.outputs[0], new_var=x)
+    add_op2.enclosing_block.replace_uses_of_var_after_op(
+        anchor_op=add_op2, old_var=add_op2.outputs[0], new_var=x
+    )
     # Remove all the ops at once
     block.remove_ops(all_ops)
     return True
@@ -219,13 +242,14 @@ def fuse_layernorm_or_instancenorm_block(block):
             continue
 
         # start pattern match if reduce_mean op is encountered
-        if op.op_type == 'reduce_mean':
+        if op.op_type == "reduce_mean":
             with block:
                 fusion_status = try_to_transform(op, block)
             # has to break as the downstream iterator is affected.
             if fusion_status:
                 return fusion_status
     return fusion_status
+
 
 @register_pass(namespace="common")
 def fuse_layernorm_or_instancenorm(prog):

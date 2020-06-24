@@ -13,11 +13,11 @@ import numpy as np
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 from coremltools.converters.mil.mil import Builder as mb
 
-child_op_types = ['add', 'sub']
+child_op_types = ["add", "sub"]
 
 
 def match_pattern(op):
-    if op.op_type == 'matmul':
+    if op.op_type == "matmul":
         # find add
         child_ops = op.outputs[0].child_ops
         if len(child_ops) == 1:
@@ -71,39 +71,47 @@ def try_to_transform(matmul_op, add_op, block):
     if len(bias.shape) != 1 or bias.shape[0] != d_out:
         return  # cannot transform
 
-    if add_op.op_type == 'sub':
+    if add_op.op_type == "sub":
         bias = -bias
     out_name = add_op.outputs[0].name
 
     if x_is_weight:
         # If transpose_x == transpose_weight == False:
         # w*x = (x^T w^T)^T = linear(x^T, w)^T
-        x_transposed = transpose(linear_x, before_op=matmul_op) if \
-                not transpose_x else linear_x
-        w_no_transpose = weight if not transpose_weight else \
-                transpose(weight, before_op=matmul_op)
-        x = mb.linear(x=x_transposed,
-                      weight=w_no_transpose,
-                      bias=bias,
-                      before_op=matmul_op)
+        x_transposed = (
+            transpose(linear_x, before_op=matmul_op) if not transpose_x else linear_x
+        )
+        w_no_transpose = (
+            weight if not transpose_weight else transpose(weight, before_op=matmul_op)
+        )
+        x = mb.linear(
+            x=x_transposed, weight=w_no_transpose, bias=bias, before_op=matmul_op
+        )
         x = transpose(x, before_op=matmul_op, name=out_name)
     else:
         # If transpose_x == transpose_weight == False
         # x*w = x*(w^T)^T = linear(x, w^T)
-        x_no_transpose = transpose(linear_x, before_op=matmul_op) \
-                if transpose_x else linear_x
-        w_transposed = weight if transpose_weight else transpose(
-            weight, before_op=matmul_op)
-        x = mb.linear(x=x_no_transpose,
-                      weight=w_transposed,
-                      bias=bias,
-                      before_op=matmul_op, name=out_name)
+        x_no_transpose = (
+            transpose(linear_x, before_op=matmul_op) if transpose_x else linear_x
+        )
+        w_transposed = (
+            weight if transpose_weight else transpose(weight, before_op=matmul_op)
+        )
+        x = mb.linear(
+            x=x_no_transpose,
+            weight=w_transposed,
+            bias=bias,
+            before_op=matmul_op,
+            name=out_name,
+        )
 
-    add_op.enclosing_block.replace_uses_of_var_after_op(anchor_op=add_op,
-            old_var=add_op.outputs[0], new_var=x)
+    add_op.enclosing_block.replace_uses_of_var_after_op(
+        anchor_op=add_op, old_var=add_op.outputs[0], new_var=x
+    )
     # Remove all the ops at once
     block.remove_ops([matmul_op, add_op])
     return True
+
 
 def fuse_matmul_weight_bias_block(block):
     fusion_status = False
@@ -126,7 +134,7 @@ def fuse_matmul_weight_bias_block(block):
     return fusion_status
 
 
-@register_pass(namespace='common')
+@register_pass(namespace="common")
 def fuse_matmul_weight_bias(prog):
     """
     Convert matmul + add/sub to linear whenever possible.

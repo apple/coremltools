@@ -36,7 +36,6 @@ def register_with(name):
 
 @register_with(AvailableTarget.iOS14)
 def iOS14Features(spec):
-
     features_list = []
 
     if spec.WhichOneof("Type") == "neuralNetwork":
@@ -101,7 +100,6 @@ def iOS14Features(spec):
 
 
 def check_deployment_compatibility(spec, representation=None, deployment_target=None):
-
     if representation is None:
         representation = "nn_proto"
 
@@ -143,8 +141,7 @@ def check_deployment_compatibility(spec, representation=None, deployment_target=
         msg = (
             "Provided deployment target requires model to be of version {} but converted model has version {} "
             "suitable for later releases".format(
-                deployment_target.value,
-                spec.specificationVersion,
+                deployment_target.value, spec.specificationVersion,
             )
         )
         raise ValueError(msg)

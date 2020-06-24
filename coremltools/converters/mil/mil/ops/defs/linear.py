@@ -7,7 +7,9 @@ from coremltools.converters.mil.mil.types.symbolic import is_symbolic
 from ._op_reqs import *
 from ._utils import broadcast_shapes
 
-@register_op(doc_str="""
+
+@register_op(
+    doc_str="""
 Performs  x*weight.T + bias where weight and bias are const at compile time.
 
 Inputs
@@ -26,7 +28,8 @@ Outputs
 Type Domains
 
 * T: f32
-""")
+"""
+)
 class linear(Operation):
     input_spec = InputSpec(
         x=TensorInputType(),
@@ -56,7 +59,7 @@ class linear(Operation):
 
 
 # rdar://58622145
-@register_op(doc_str='TODO')
+@register_op(doc_str="TODO")
 class matmul(Operation):
     input_spec = InputSpec(
         x=TensorInputType(),
@@ -82,9 +85,11 @@ class matmul(Operation):
             y_shape = list(y_shape)
             y_shape[-1], y_shape[-2] = y_shape[-2], y_shape[-1]
             y_shape = tuple(y_shape)
-        if not (x_shape[-1] == y_shape[-2] or \
-               is_symbolic(x_shape[-1]) or \
-               is_symbolic(y_shape[-2])):
+        if not (
+            x_shape[-1] == y_shape[-2]
+            or is_symbolic(x_shape[-1])
+            or is_symbolic(y_shape[-2])
+        ):
             msg = "Op {} (matmul): x {}, y {} are not broadcastable"
             raise ValueError(msg.format(self.name, self.x.shape, self.y.shape))
 

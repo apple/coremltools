@@ -14,6 +14,7 @@ from .visitors import FindAllUpstreamTerminals
 import logging
 from coremltools._deps import _HAS_TF_2
 
+
 def compute_max_rank(graph):
     #  highly inefficient way to calculate the rank of every node
     ret = {}
@@ -44,12 +45,19 @@ class CondToWhere(object):
         """
         node = g[node_name]
 
-        switches = FindAllUpstreamTerminals(lambda x: x.op == 'Switch').visit(
-            g, node.name).get_result()
+        switches = (
+            FindAllUpstreamTerminals(lambda x: x.op == "Switch")
+            .visit(g, node.name)
+            .get_result()
+        )
         if len(switches) == 0:
-            switches = FindAllUpstreamTerminals(
-                lambda x: x.op == 'Switch' or x.attr.get('was_switch') is not None).visit(
-                    g, node.name).get_result()
+            switches = (
+                FindAllUpstreamTerminals(
+                    lambda x: x.op == "Switch" or x.attr.get("was_switch") is not None
+                )
+                .visit(g, node.name)
+                .get_result()
+            )
         return switches
 
     @staticmethod
@@ -57,10 +65,10 @@ class CondToWhere(object):
         """
         Convert a Merge's Switch nodes to Identity ops and the Merge to iff.
         """
-        if g[switches[0]].op == 'Switch':
+        if g[switches[0]].op == "Switch":
             condition_input = g[switches[0]].inputs[1]
         else:
-            condition_input = g[switches[0]].attr['was_switch']
+            condition_input = g[switches[0]].attr["was_switch"]
 
         # convert the merge to a select
         # TensorFlow seems to ensure the condition that the first
@@ -69,9 +77,9 @@ class CondToWhere(object):
 
         # we convert switches to identity, detaching to switch condition
         for s in switches:
-            if g[s].op == 'Switch':
-                g[s].op = 'Identity'
-                g[s].attr['was_switch'] = g[s].inputs[1]
+            if g[s].op == "Switch":
+                g[s].op = "Identity"
+                g[s].attr["was_switch"] = g[s].inputs[1]
                 # detach input 1: the switch condition
                 if g[s].inputs[0] == g[s].inputs[1]:
                     g[s].inputs.pop()
@@ -80,10 +88,13 @@ class CondToWhere(object):
                     disconnect_edge(g, g[s].inputs[1], s)
 
         # build the final select
-        g[merge].op = 'iff'
+        g[merge].op = "iff"
         if not _HAS_TF_2:
             # swap true branch with false branch to get the right semantics for IFF
-            g[merge].inputs[0], g[merge].inputs[1] = g[merge].inputs[1], g[merge].inputs[0]
+            g[merge].inputs[0], g[merge].inputs[1] = (
+                g[merge].inputs[1],
+                g[merge].inputs[0],
+            )
 
         g[merge].inputs = [condition_input] + g[merge].inputs
         g[condition_input].outputs.append(merge)
@@ -92,7 +103,7 @@ class CondToWhere(object):
         stuff_done = False
         g = graph
         ranks = compute_max_rank(graph)
-        merges = [a for a in g if g[a].op == 'Merge']
+        merges = [a for a in g if g[a].op == "Merge"]
         merges = sorted(merges, key=lambda k: ranks[k])
         if len(merges) == 0:
             return False
@@ -104,9 +115,11 @@ class CondToWhere(object):
 
         # delete the extra switches that seem to just lead to identities
         # which then lead nowhere but into control dependencies
-        extra_switches = [a for a in g if g[a].op == 'Switch']
+        extra_switches = [a for a in g if g[a].op == "Switch"]
         for s in extra_switches:
-            if all([g[o].op == 'Identity' and len(g[o].outputs) == 0 for o in g[s].outputs]):
+            if all(
+                [g[o].op == "Identity" and len(g[o].outputs) == 0 for o in g[s].outputs]
+            ):
                 nodes_to_delete = g[s].outputs + [s]
                 for d in nodes_to_delete:
                     delete_node(g, d)

@@ -7,7 +7,8 @@
 
 import unittest
 import pytest
-pytest.importorskip('tensorflow', minversion='1.14.0')
+
+pytest.importorskip("tensorflow", minversion="1.14.0")
 from tensorflow.core.framework import attr_value_pb2 as attr_value
 from tensorflow.core.framework import tensor_shape_pb2 as tensor_shape
 from tensorflow.core.framework import types_pb2 as types
@@ -122,4 +123,3 @@ class TestParse(unittest.TestCase):
         compare(None, types.DataType.DT_VARIANT)
         compare(mil_types.uint32, types.DataType.DT_UINT32)
         compare(mil_types.uint64, types.DataType.DT_UINT64)
-

@@ -4,11 +4,21 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import math
-from coremltools.converters.mil.mil.types.symbolic import is_symbolic, any_symbolic, is_compatible_symbolic_vector
+from coremltools.converters.mil.mil.types.symbolic import (
+    is_symbolic,
+    any_symbolic,
+    is_compatible_symbolic_vector,
+)
 from coremltools.converters.mil.mil import (
-    get_new_symbol, get_new_variadic_symbol, SYMBOL, VALUE, NONE)
+    get_new_symbol,
+    get_new_variadic_symbol,
+    SYMBOL,
+    VALUE,
+    NONE,
+)
 from ._op_reqs import *
 from ._utils import promoted_primitive_type
+
 
 @register_op(doc_str="")
 class band_part(Operation):
@@ -35,6 +45,7 @@ class band_part(Operation):
     tensor<*?, T>
         * Same type and shape as the input tensor.
     """
+
     input_spec = InputSpec(
         x=TensorInputType(),
         lower=IntInputType(const=True, default=-1),
@@ -81,11 +92,11 @@ class cumsum(Operation):
     """
 
     input_spec = InputSpec(
-            x = TensorInputType(),
-            axis = IntInputType(const=True, default=0),
-            exclusive = BoolInputType(const=True, default=False),
-            reverse = BoolInputType(const=True, default=False)
-            )
+        x=TensorInputType(),
+        axis=IntInputType(const=True, default=0),
+        exclusive=BoolInputType(const=True, default=False),
+        reverse=BoolInputType(const=True, default=False),
+    )
 
     def __init__(self, **kwargs):
         super(cumsum, self).__init__(**kwargs)
@@ -108,9 +119,11 @@ class cumsum(Operation):
         return data
 
     def type_inference(self):
-        #Check range of axis
+        # Check range of axis
         if self.axis.val < -1 or self.axis.val > self.x.rank - 1:
-            raise ValueError("axis should be in the range [-1, {}]".format(self.x.rank - 1))
+            raise ValueError(
+                "axis should be in the range [-1, {}]".format(self.x.rank - 1)
+            )
 
         return self.x.sym_type
 
@@ -138,9 +151,9 @@ class fill(Operation):
     ----------
     T: fp32
     """
+
     input_spec = InputSpec(
-        shape=IntTensorInputType(),
-        value=IntOrFloatInputType(const=True, default=0.),
+        shape=IntTensorInputType(), value=IntOrFloatInputType(const=True, default=0.0),
     )
 
     def __init__(self, **kwargs):
@@ -202,13 +215,14 @@ class non_maximum_suppression(Operation):
     ----------
     T: fp32
     """
+
     input_spec = InputSpec(
         boxes=TensorInputType(),
         scores=TensorInputType(),
         iou_threshold=FloatInputType(const=True),
         score_threshold=FloatInputType(const=True),
         max_boxes=IntInputType(const=True),
-        per_class_suppression=BoolInputType(const=True, default=False)
+        per_class_suppression=BoolInputType(const=True, default=False),
     )
 
     def __init__(self, **kwargs):
@@ -220,10 +234,12 @@ class non_maximum_suppression(Operation):
         n_batch, _, n_score = self.scores.shape
         max_boxes = self.max_boxes.val
 
-        return types.tensor(boxes_dtype, (n_batch, max_boxes, 4)), \
-               types.tensor(scores_dtype, (n_batch, max_boxes, n_score)), \
-               types.tensor(types.int32, (n_batch, max_boxes)), \
-               types.tensor(types.int32, (n_batch,))
+        return (
+            types.tensor(boxes_dtype, (n_batch, max_boxes, 4)),
+            types.tensor(scores_dtype, (n_batch, max_boxes, n_score)),
+            types.tensor(types.int32, (n_batch, max_boxes)),
+            types.tensor(types.int32, (n_batch,)),
+        )
 
 
 @register_op(doc_str="")
@@ -247,9 +263,8 @@ class non_zero(Operation):
     ----------
     T: fp32
     """
-    input_spec = InputSpec(
-        x=TensorInputType()
-    )
+
+    input_spec = InputSpec(x=TensorInputType())
 
     def __init__(self, **kwargs):
         super(non_zero, self).__init__(**kwargs)
@@ -294,12 +309,13 @@ class one_hot(Operation):
     ----------
     T: fp32
     """
+
     input_spec = InputSpec(
-            indices = IntTensorInputType(),
-            one_hot_vector_size=IntInputType(),
-            axis  = IntInputType(const=True, default=-1),
-            on_value  = IntOrFloatInputType(const=True, default=1),
-            off_value = IntOrFloatInputType(const=True, default=0)
+        indices=IntTensorInputType(),
+        one_hot_vector_size=IntInputType(),
+        axis=IntInputType(const=True, default=-1),
+        on_value=IntOrFloatInputType(const=True, default=1),
+        off_value=IntOrFloatInputType(const=True, default=0),
     )
 
     def __init__(self, **kwargs):
@@ -310,13 +326,16 @@ class one_hot(Operation):
         off_type = self.off_value.dtype
 
         if on_type != off_type:
-            raise TypeError("Parameters on_value and off_value must have same input types.")
+            raise TypeError(
+                "Parameters on_value and off_value must have same input types."
+            )
 
-        if self.axis.val < -self.indices.rank - 1 \
-                or self.axis.val > self.indices.rank:
+        if self.axis.val < -self.indices.rank - 1 or self.axis.val > self.indices.rank:
             raise IndexError(
-                'Axis value {} is out of bounds for {} node {}'.format(
-                    self.axis.val, self.op_type, self.name))
+                "Axis value {} is out of bounds for {} node {}".format(
+                    self.axis.val, self.op_type, self.name
+                )
+            )
 
         indices_shape = list(self.indices.shape)
 
@@ -324,7 +343,7 @@ class one_hot(Operation):
         if depth_value is None:
             depth_value = get_new_symbol()
         elif depth_value < 0:
-            raise ValueError('Parameter one_hot_vector_size must be non-negative')
+            raise ValueError("Parameter one_hot_vector_size must be non-negative")
 
         retshape = indices_shape
 
@@ -339,7 +358,7 @@ class one_hot(Operation):
 
 @register_op(doc_str="")
 class pad(Operation):
-    '''
+    """
     Pad a tensor.
 
     Parameters
@@ -370,13 +389,14 @@ class pad(Operation):
     Attributes
     ----------
     T: fp32
-    '''
+    """
+
     input_spec = InputSpec(
-            x = TensorInputType(),
-            pad = IntTensorInputType(const=True),
-            mode = StringInputType(const=True, default="constant"),
-            constant_val = FloatInputType(const=True, default=0.),
-            )
+        x=TensorInputType(),
+        pad=IntTensorInputType(const=True),
+        mode=StringInputType(const=True, default="constant"),
+        constant_val=FloatInputType(const=True, default=0.0),
+    )
 
     def __init__(self, **kwargs):
         super(pad, self).__init__(**kwargs)
@@ -386,35 +406,36 @@ class pad(Operation):
         pad = self.pad.val
         ret_shape = list(in_shape)
         if len(pad.shape) != 1:
-            raise ValueError('Pad should be a 1D tensor!')
+            raise ValueError("Pad should be a 1D tensor!")
         pad = pad.copy()
-        pad = pad.reshape(-1,2)
+        pad = pad.reshape(-1, 2)
 
         for i in range(len(pad)):
-            ret_shape[-len(pad)+i] = ret_shape[-len(pad)+i] + pad[i][0] + pad[i][1]
+            ret_shape[-len(pad) + i] = ret_shape[-len(pad) + i] + pad[i][0] + pad[i][1]
 
         return types.tensor(self.x.dtype, tuple(ret_shape))
 
     @precondition(allow=VALUE)
     def value_inference(self):
         # NumPy `edge` mode is equivalent to `replicate` mode of PyTorch and CoreML
-        mode = 'edge' if self.mode.val == 'replicate' else self.mode.val
+        mode = "edge" if self.mode.val == "replicate" else self.mode.val
         pad_val = self.pad.val
         if len(self.x.val.shape) > (pad_val.shape[0] // 2):
-            updated_pad = np.zeros(len(self.x.val.shape)*2)
-            updated_pad[-pad_val.shape[0]:] = pad_val
+            updated_pad = np.zeros(len(self.x.val.shape) * 2)
+            updated_pad[-pad_val.shape[0] :] = pad_val
             pad_val = updated_pad
         pad_val = pad_val.reshape(-1, 2).astype(np.int32)
-        if mode == 'constant':
-            return np.pad(self.x.val, pad_val, mode,
-                          constant_values=self.constant_val.val)
+        if mode == "constant":
+            return np.pad(
+                self.x.val, pad_val, mode, constant_values=self.constant_val.val
+            )
         # NumPy does not support non-constant mode and constant_values argument
         return np.pad(self.x.val, pad_val, mode)
 
 
 @register_op(doc_str="")
 class range_1d(Operation):
-    '''
+    """
     Returns a numpy-like 1d range sequence.
 
     Parameters
@@ -434,12 +455,13 @@ class range_1d(Operation):
     Attributes
     ----------
     T: fp32
-    '''
+    """
+
     input_spec = InputSpec(
-            end   = IntOrFloatInputType(),
-            start = IntOrFloatInputType(),
-            step  = IntOrFloatInputType()
-            )
+        end=IntOrFloatInputType(),
+        start=IntOrFloatInputType(),
+        step=IntOrFloatInputType(),
+    )
 
     def __init__(self, **kwargs):
         super(range_1d, self).__init__(**kwargs)
@@ -447,8 +469,8 @@ class range_1d(Operation):
     @precondition(allow=VALUE)
     def value_inference(self):
         start = self.start.val
-        end   = self.end.val
-        step  = self.step.val
+        end = self.end.val
+        step = self.step.val
         return np.arange(start, end, step).astype(np.int32)
 
     def type_inference(self):
@@ -456,9 +478,14 @@ class range_1d(Operation):
         end = self.end.sym_val
         step = self.step.sym_val
 
-        if (self.start.dtype != self.end.dtype) or (self.start.dtype != self.step.dtype) or (
-            self.end.dtype != self.step.dtype):
-            raise TypeError("All inputs to the range operation must have same input types.")
+        if (
+            (self.start.dtype != self.end.dtype)
+            or (self.start.dtype != self.step.dtype)
+            or (self.end.dtype != self.step.dtype)
+        ):
+            raise TypeError(
+                "All inputs to the range operation must have same input types."
+            )
 
         if all(sym_val is not None for sym_val in (start, end, step)):
             shape = (end - start) / step
@@ -472,7 +499,7 @@ class range_1d(Operation):
 
 @register_op(doc_str="")
 class tile(Operation):
-    '''
+    """
     Returns a new tensor by replicating input ``x`` multiples times.
     The ``i``th dimention of ``x`` will be replicated ``reps[i]`` times.
 
@@ -491,11 +518,9 @@ class tile(Operation):
     Attributes
     ----------
     T: fp32
-    '''
-    input_spec = InputSpec(
-            x = TensorInputType(),
-            reps = TensorInputType(),
-            )
+    """
+
+    input_spec = InputSpec(x=TensorInputType(), reps=TensorInputType(),)
 
     def __init__(self, **kwargs):
         super(tile, self).__init__(**kwargs)
@@ -509,15 +534,17 @@ class tile(Operation):
             return types.tensor(x_type, out_shape)
 
         if len(reps) == 0 or len(reps) > self.x.rank:
-            msg = "Length of the reps ({}) must be at least 1, and " \
-                  "not greater than the rank of the input x ({})"
+            msg = (
+                "Length of the reps ({}) must be at least 1, and "
+                "not greater than the rank of the input x ({})"
+            )
             raise ValueError(msg.format(len(reps), self.x.rank))
 
         if any(i <= 0 for i in reps):
             raise ValueError("All entries of reps parameter must be greater than 0")
 
         if len(reps) < self.x.rank:
-            reps = [1]*(self.x.rank - len(reps)) + list(reps)
+            reps = [1] * (self.x.rank - len(reps)) + list(reps)
 
         out_shape = tuple([reps[i] * x_shape[i] for i in range(len(reps))])
 
@@ -556,10 +583,11 @@ class argsort(Operation):
     ----------
     T: fp32
     """
+
     input_spec = InputSpec(
         x=TensorInputType(),
         axis=IntInputType(const=True, default=-1),
-        ascending=BoolInputType(const=True, default=False)
+        ascending=BoolInputType(const=True, default=False),
     )
 
     def __init__(self, **kwargs):
@@ -606,11 +634,12 @@ class topk(Operation):
     ----------
     T: fp32
     """
+
     input_spec = InputSpec(
         x=TensorInputType(),
         k=IntInputType(const=True, default=1),
         axis=IntInputType(const=True, default=-1),
-        ascending=BoolInputType(const=True, default=False)
+        ascending=BoolInputType(const=True, default=False),
     )
 
     def __init__(self, **kwargs):
@@ -623,7 +652,7 @@ class topk(Operation):
         axis = self.axis.val
 
         if not is_symbolic(x_shape[axis]) and k > x_shape[axis]:
-            msg = 'K={} is greater than size of the given axis={}'
+            msg = "K={} is greater than size of the given axis={}"
             raise ValueError(msg.format(k, axis))
 
         ret_shape = list(x_shape)
@@ -673,9 +702,9 @@ class flatten(Operation):
     ----------
     T: fp32
     """
+
     input_spec = InputSpec(
-              x = TensorInputType(),
-           axis = IntInputType(const=True, default=1)
+        x=TensorInputType(), axis=IntInputType(const=True, default=1)
     )
 
     def __init__(self, **kwargs):
@@ -689,7 +718,7 @@ class flatten(Operation):
         new_shape = [dim_pre_axis, dim_post_axis]
         return types.tensor(self.x.dtype, tuple(new_shape))
 
-    @precondition(allow=VALUE|SYMBOL)
+    @precondition(allow=VALUE | SYMBOL)
     def value_inference(self):
         shape = self.x.shape
         axis = self.axis.val
@@ -719,9 +748,8 @@ class shape(Operation):
     ----------
     T: fp32
     """
-    input_spec = InputSpec(
-              x = TensorInputType()
-    )
+
+    input_spec = InputSpec(x=TensorInputType())
 
     def __init__(self, **kwargs):
         super(shape, self).__init__(**kwargs)
@@ -761,10 +789,8 @@ class concat(Operation):
     ----------
     T: fp32
     """
-    input_spec = InputSpec(
-        values = TupleInputType(),
-        axis = IntInputType(const=True),
-    )
+
+    input_spec = InputSpec(values=TupleInputType(), axis=IntInputType(const=True),)
 
     def __init__(self, **kwargs):
         super(concat, self).__init__(**kwargs)
@@ -772,13 +798,13 @@ class concat(Operation):
     def type_inference(self):
         concat_dim_len = 0
         if len(self.values) == 0:
-            raise ValueError('Concat {} got 0 values'.format(self.name))
+            raise ValueError("Concat {} got 0 values".format(self.name))
 
         # Validate values have the same rank
         rank = self.values[0].rank
         for v in self.values:
             if v.rank != rank:
-                msg = 'Input {} has rank {} != other inputs rank {}'
+                msg = "Input {} has rank {} != other inputs rank {}"
                 raise ValueError(msg.format(v.name, v.rank, rank))
 
         # Check concat axis is within (-rank, rank)
@@ -786,8 +812,7 @@ class concat(Operation):
         if concat_axis < 0:
             concat_axis += rank
         if rank > 0 and (concat_axis < 0 or concat_axis >= rank):
-            msg = 'In {} of op_type {}: axis out of bound for input '+\
-                '(rank {})'
+            msg = "In {} of op_type {}: axis out of bound for input " + "(rank {})"
             raise ValueError(msg.format(self.name, self.op_type, rank))
 
         # Validate primitive types are compatible
@@ -795,7 +820,7 @@ class concat(Operation):
         for v in self.values[1:]:
             new_dtype = promoted_primitive_type(v.dtype, dtype)
             if new_dtype is None:
-                msg = 'Incompatible primitive types concat: {} vs {}'
+                msg = "Incompatible primitive types concat: {} vs {}"
                 raise ValueError(msg.format(v.dtype, dtype))
             dtype = new_dtype
 
@@ -807,8 +832,9 @@ class concat(Operation):
                     continue
                 if i != concat_axis and retshape[i] != v.shape[i]:
                     msg = 'Dimension mismatch in {} ("{}"): shapes {} vs. {}'
-                    raise ValueError(msg.format(
-                        self.op_type, self.name, retshape, v.shape))
+                    raise ValueError(
+                        msg.format(self.op_type, self.name, retshape, v.shape)
+                    )
 
         # Get length of concat dim
         concat_dim_len = 0
@@ -829,11 +855,14 @@ class concat(Operation):
 
         return types.tensor(dtype, retshape)
 
-    @precondition(allow=VALUE|SYMBOL|NONE)
+    @precondition(allow=VALUE | SYMBOL | NONE)
     def value_inference(self):
 
         is_all_rank_zero = all([v.rank == 0 for v in self.values])
-        values = [v.sym_val if v.sym_val is not None else get_new_symbol() for v in self.values]
+        values = [
+            v.sym_val if v.sym_val is not None else get_new_symbol()
+            for v in self.values
+        ]
 
         # we only infer values for values whose ranks are all zero,
         # or don't have symbolic values.
@@ -845,6 +874,7 @@ class concat(Operation):
             return np.stack(values, axis=self.axis.val)
 
         return np.concatenate(values, axis=self.axis.val)
+
 
 @register_op(doc_str="")
 class split(Operation):
@@ -875,11 +905,12 @@ class split(Operation):
     ----------
     T: fp32
     """
+
     input_spec = InputSpec(
-        x = TensorInputType(),
-        num_splits = IntInputType(const=True, optional=True),
-        split_sizes = IntTensorInputType(const=True, optional=True),
-        axis = IntInputType(const=True),
+        x=TensorInputType(),
+        num_splits=IntInputType(const=True, optional=True),
+        split_sizes=IntTensorInputType(const=True, optional=True),
+        axis=IntInputType(const=True),
     )
 
     def __init__(self, **kwargs):
@@ -903,8 +934,10 @@ class split(Operation):
         Raise ValueError if num_splits cannot be determined.
         """
         if self.num_splits is None and self.split_sizes is None:
-            msg = 'At least one of num_splits and split_sizes '+\
-                    'must be specified in split op {}'
+            msg = (
+                "At least one of num_splits and split_sizes "
+                + "must be specified in split op {}"
+            )
             raise ValueError(msg.format(self.name))
 
         axis = self.axis.val
@@ -913,13 +946,14 @@ class split(Operation):
             num_splits = self.num_splits.val
             if self.split_sizes is None:
                 # Even split
-                if not is_symbolic(self.x.shape[axis]) and self.x.shape[axis] % num_splits != 0:
-                    msg = 'num_split {} does not divide split ' +\
-                            'dim (length = {})'
-                    raise ValueError(msg.format(num_splits,
-                        self.x.shape[axis]))
+                if (
+                    not is_symbolic(self.x.shape[axis])
+                    and self.x.shape[axis] % num_splits != 0
+                ):
+                    msg = "num_split {} does not divide split " + "dim (length = {})"
+                    raise ValueError(msg.format(num_splits, self.x.shape[axis]))
                 size = self.x.shape[axis] / num_splits
-                return num_splits, [size]*num_splits
+                return num_splits, [size] * num_splits
 
             # self.split_sizes is not None
             if self.split_sizes.sym_val is not None:
@@ -936,14 +970,13 @@ class split(Operation):
         # self.num_splits is None, self.split_sizes is not None
         # self.split_sizes.sym_val is None
         if any_symbolic(self.split_sizes.shape):
-            raise ValueError('Unable to determine number of splits')
+            raise ValueError("Unable to determine number of splits")
 
         num_splits = len(self.split_sizes.shape)
         sizes = [get_new_symbol() for _ in range(num_splits)]
         return num_splits, sizes
 
-
-    @precondition(allow=VALUE|SYMBOL|NONE)
+    @precondition(allow=VALUE | SYMBOL | NONE)
     def value_inference(self):
         num_splits, sizes = self._get_num_splits_and_sizes()
         if self.x.sym_val is None or any_symbolic(sizes):
@@ -955,6 +988,7 @@ class split(Operation):
 
         split_indices = np.cumsum(sizes).astype(np.int)
         return tuple(np.split(self.x.sym_val, split_indices[:-1], axis=self.axis.val))
+
 
 @register_op(doc_str="")
 class stack(Operation):
@@ -977,10 +1011,8 @@ class stack(Operation):
     ----------
     T: fp32
     """
-    input_spec = InputSpec(
-        values = TupleInputType(),
-        axis = IntInputType(const=True),
-    )
+
+    input_spec = InputSpec(values=TupleInputType(), axis=IntInputType(const=True),)
 
     def __init__(self, **kwargs):
         super(stack, self).__init__(**kwargs)
@@ -989,7 +1021,7 @@ class stack(Operation):
 
         num_tensors = len(self.values)
         if num_tensors == 0:
-            raise ValueError('Cannot stack 0 tensor')
+            raise ValueError("Cannot stack 0 tensor")
 
         # get the first value without symbolic shape
         t_shape = None
@@ -1002,28 +1034,30 @@ class stack(Operation):
         # compare all shape
         for t in self.values:
             if not is_compatible_symbolic_vector(t.shape, t_shape):
-                msg = 'Component tensor {} has shape {}, others have {}'
+                msg = "Component tensor {} has shape {}, others have {}"
                 raise ValueError(msg.format(t.name, t.shape, t_shape))
         ret_shape = list(t_shape)
         ret_shape.insert(self.axis.val, num_tensors)
         return types.tensor(self.values[0].dtype, ret_shape)
 
-    @precondition(allow=VALUE|SYMBOL|NONE)
+    @precondition(allow=VALUE | SYMBOL | NONE)
     def value_inference(self):
 
         is_all_rank_zero = all([v.rank == 0 for v in self.values])
-        values = [v.sym_val if v.sym_val is not None else get_new_symbol() for v in self.values]
+        values = [
+            v.sym_val if v.sym_val is not None else get_new_symbol()
+            for v in self.values
+        ]
 
         if any([is_symbolic(v) for v in values]) and not is_all_rank_zero:
             return None
 
         return np.stack(values, self.axis.val)
 
+
 @register_op(doc_str="")
 class addn(Operation):
-    input_spec = InputSpec(
-        values = TupleInputType(),
-    )
+    input_spec = InputSpec(values=TupleInputType(),)
     """
     Should deprecate this op.
     """
@@ -1034,17 +1068,17 @@ class addn(Operation):
     def type_inference(self):
         num_tensors = len(self.values)
         if num_tensors == 0:
-            raise ValueError('Cannot addn 0 tensors.')
+            raise ValueError("Cannot addn 0 tensors.")
 
         t_shape = self.values[0].shape
         t_type = self.values[0].dtype
 
         for t in self.values[1:]:
             if t.shape != t_shape:
-                msg = 'Component tensor {} has shape {}, others have {}'
+                msg = "Component tensor {} has shape {}, others have {}"
                 raise ValueError(msg.format(t.name, t.shape, t_shape))
             if t.dtype != t_type:
-                msg = 'Component tensor {} has dtype {}, others have {}'
+                msg = "Component tensor {} has dtype {}, others have {}"
                 raise ValueError(msg.format(t.name, t.dtype, t_type))
 
         return types.tensor(t_type, list(t_shape))
@@ -1054,11 +1088,10 @@ class addn(Operation):
         inputs = np.array([v.val for v in self.values])
         return np.sum(inputs, axis=0)
 
+
 @register_op(doc_str="")
 class isfinite(Operation):
-    input_spec = InputSpec(
-        x = ScalarOrTensorInputType(),
-    )
+    input_spec = InputSpec(x=ScalarOrTensorInputType(),)
     """
     Should deprecate this op.
     """

@@ -25,7 +25,7 @@ def convert_constant_nodes_to_const_ops(tfssa):
             if v is None:
                 continue
             if v.value is not None:
-                v.op = 'Const'
+                v.op = "Const"
                 # delete all upstream edges now that this is constant
                 inv = v.inputs[:]
                 for i in inv:
@@ -34,7 +34,7 @@ def convert_constant_nodes_to_const_ops(tfssa):
                     disconnect_edge(f.graph, curnode, nextnode)
 
                     # keep deleting upwards as long as it is a chain
-                    while (curnode is not None):
+                    while curnode is not None:
                         prevnode = None
                         if len(f.graph[curnode].outputs) == 0:
                             if len(f.graph[curnode].inputs) == 1:
@@ -69,7 +69,11 @@ def delete_nodes_with_only_constant_descendents(tfssa):
         for k in keys:
             if k not in f.graph:
                 continue
-            if f.graph[k].op == 'Const' and len(f.graph[k].outputs) == 0 and (k not in f.outputs):
+            if (
+                f.graph[k].op == "Const"
+                and len(f.graph[k].outputs) == 0
+                and (k not in f.outputs)
+            ):
                 delete_count += 1
                 delete_node(f.graph, k)
     return delete_count

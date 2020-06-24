@@ -37,28 +37,45 @@ def make_int(width, unsigned):
 
         @val.setter
         def val(self, v):
-            from .type_mapping import nptype_from_builtin, builtin_to_string, numpy_type_to_builtin_type
+            from .type_mapping import (
+                nptype_from_builtin,
+                builtin_to_string,
+                numpy_type_to_builtin_type,
+            )
+
             if not isinstance(v, (np.generic, sm.Basic)):
-                raise ValueError("types should have value of numpy type or Symbols, got {} instead".format(type(v)))
+                raise ValueError(
+                    "types should have value of numpy type or Symbols, got {} instead".format(
+                        type(v)
+                    )
+                )
 
             if isinstance(v, sm.Basic):
                 self._val = v
             elif isinstance(v, np.integer):
                 v_type = numpy_type_to_builtin_type(v.dtype)
-                if v_type.get_bitwidth() <= self.get_bitwidth() and (v >= 0 or v < 0 and not self.is_unsigned()):
+                if v_type.get_bitwidth() <= self.get_bitwidth() and (
+                    v >= 0 or v < 0 and not self.is_unsigned()
+                ):
                     self._val = v
                 else:
                     self._val = v.astype(nptype_from_builtin(self.__class__))
-                    logging.warning("Saving value type of {} into a builtin type of {}, might overflow or loses precision!".format(v.dtype, builtin_to_string(self.__class__)))
+                    logging.warning(
+                        "Saving value type of {} into a builtin type of {}, might overflow or loses precision!".format(
+                            v.dtype, builtin_to_string(self.__class__)
+                        )
+                    )
             else:
                 self._val = v.astype(nptype_from_builtin(self.__class__))
-                logging.warning("Saving value type of {} into a builtin type of {}, might be incompatible or loses precision!".format(v.dtype, builtin_to_string(self.__class__)))
-
+                logging.warning(
+                    "Saving value type of {} into a builtin type of {}, might be incompatible or loses precision!".format(
+                        v.dtype, builtin_to_string(self.__class__)
+                    )
+                )
 
         @classmethod
         def __type_info__(cls):
-            return Type(cls._unsigned + "int" + str(cls._width),
-                        python_class=cls)
+            return Type(cls._unsigned + "int" + str(cls._width), python_class=cls)
 
         @classmethod
         def get_bitwidth(cls):
@@ -66,31 +83,31 @@ def make_int(width, unsigned):
 
         @classmethod
         def is_unsigned(cls):
-            return cls._unsigned == 'u'
+            return cls._unsigned == "u"
 
         @annotate(delay_type_int, other=delay_type_int)
         def __add__(self, other):
-            assert (isinstance(other, int))
+            assert isinstance(other, int)
             return int(self.val + other.val)
 
         @annotate(delay_type_int, other=delay_type_int)
         def __sub__(self, other):
-            assert (isinstance(other, int))
+            assert isinstance(other, int)
             return int(self.val - other.val)
 
         @annotate(delay_type_int, other=delay_type_int)
         def __mul__(self, other):
-            assert (isinstance(other, int))
+            assert isinstance(other, int)
             return int(self.val * other.val)
 
         @annotate(delay_type_int, other=delay_type_int)
         def __div__(self, other):
-            assert (isinstance(other, int))
+            assert isinstance(other, int)
             return int(self.val // other.val)
 
         @annotate(delay_type_int, other=delay_type_int)
         def __mod__(self, other):
-            assert (isinstance(other, int))
+            assert isinstance(other, int)
             return int(self.val % other.val)
 
         @annotate(delay_type.bool, other=delay_type_int)
@@ -148,20 +165,21 @@ def make_int(width, unsigned):
     return int
 
 
-int8 = make_int(8, '')
-int16 = make_int(16, '')
-int32 = make_int(32, '')
-int64 = make_int(64, '')
+int8 = make_int(8, "")
+int16 = make_int(16, "")
+int32 = make_int(32, "")
+int64 = make_int(64, "")
 int = int64
 
-uint8 = make_int(8, 'u')
-uint16 = make_int(16, 'u')
-uint32 = make_int(32, 'u')
-uint64 = make_int(64, 'u')
+uint8 = make_int(8, "u")
+uint16 = make_int(16, "u")
+uint32 = make_int(32, "u")
+uint64 = make_int(64, "u")
 uint = uint64
 
 
 def is_int(t):
     return any(
         t is i or isinstance(t, i)
-        for i in [int8, int16, int32, int64, uint8, uint16, uint32, uint64])
+        for i in [int8, int16, int32, int64, uint8, uint16, uint32, uint64]
+    )

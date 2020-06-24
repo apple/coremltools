@@ -8,11 +8,14 @@ from ...models import MLModel as _MLModel
 
 if _HAS_SKLEARN:
     from sklearn.svm import LinearSVC as _LinearSVC
+
     sklearn_class = _LinearSVC
     from . import _sklearn_util
 
 from . import _logistic_regression
-model_type = 'classifier'
+
+model_type = "classifier"
+
 
 def convert(model, feature_names, target):
     """Convert a LinearSVC model to the protobuf spec.
@@ -32,19 +35,24 @@ def convert(model, feature_names, target):
     model_spec: An object of type Model_pb.
         Protobuf representation of the model
     """
-    if not(_HAS_SKLEARN):
-        raise RuntimeError('scikit-learn not found. scikit-learn conversion API is disabled.')
+    if not (_HAS_SKLEARN):
+        raise RuntimeError(
+            "scikit-learn not found. scikit-learn conversion API is disabled."
+        )
 
     _sklearn_util.check_expected_type(model, _LinearSVC)
-    _sklearn_util.check_fitted(model, lambda m: hasattr(m, 'coef_'))
+    _sklearn_util.check_fitted(model, lambda m: hasattr(m, "coef_"))
 
     return _MLModel(_logistic_regression._convert(model, feature_names, target))
+
 
 def supports_output_scores(model):
     return True
 
+
 def get_output_classes(model):
     return _logistic_regression.get_output_classes(model)
+
 
 def get_input_dimension(model):
     return _logistic_regression.get_input_dimension(model)

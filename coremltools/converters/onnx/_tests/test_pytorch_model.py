@@ -5,6 +5,7 @@ from __future__ import unicode_literals as _
 
 import unittest
 from coremltools._deps import _HAS_ONNX, MSG_ONNX_NOT_FOUND, _IS_MACOS
+
 if _HAS_ONNX:
     import onnx
     from coremltools.converters.onnx import convert
@@ -87,6 +88,7 @@ def _test_torch_model_single_io(
         if not DEBUG:
             if os.path.exists(model_dir):
                 shutil.rmtree(model_dir)
+
 
 @unittest.skipUnless(_HAS_ONNX, MSG_ONNX_NOT_FOUND)
 class OnnxModelTest(unittest.TestCase):
@@ -355,7 +357,6 @@ class OnnxModelTest(unittest.TestCase):
                 groups=1,
                 bias=True,
             ):
-
                 super(Net, self).__init__()
 
                 self.conv = torch.nn.Conv1d(
@@ -623,6 +624,7 @@ class OnnxModelTest(unittest.TestCase):
             minimum_ios_deployment_target=minimum_ios_deployment_target,
         )
 
+
 @unittest.skipUnless(_HAS_ONNX, MSG_ONNX_NOT_FOUND)
 class ReshapeTransposeTests(unittest.TestCase):
     """
@@ -748,6 +750,7 @@ class ReshapeTransposeTests(unittest.TestCase):
         torch_model.train(False)
         _test_torch_model_single_io(torch_model, (1, 12, 4, 6), (12, 4, 6))  # type: ignore
 
+
 @unittest.skipUnless(_HAS_ONNX, MSG_ONNX_NOT_FOUND)
 class UnaryOperationTests(unittest.TestCase):
     """
@@ -768,6 +771,7 @@ class UnaryOperationTests(unittest.TestCase):
         torch_model.train(False)
         _test_torch_model_single_io(torch_model, (18, 4, 5), (18, 4, 5), minimum_ios_deployment_target=minimum_ios_deployment_target)  # type: ignore
 
+
 @unittest.skipUnless(_HAS_ONNX, MSG_ONNX_NOT_FOUND)
 class OperatorTests(unittest.TestCase):
     """
@@ -786,6 +790,7 @@ class OperatorTests(unittest.TestCase):
         torch_model = Net()
         torch_model.train(False)
         _test_torch_model_single_io(torch_model, (18, 4, 5), (18, 4, 5), minimum_ios_deployment_target=minimum_ios_deployment_target)  # type: ignore
+
 
 @unittest.skipUnless(_HAS_ONNX, MSG_ONNX_NOT_FOUND)
 class BinaryOperationTests(unittest.TestCase):
@@ -936,6 +941,7 @@ class BinaryOperationTests(unittest.TestCase):
         torch_model.train(False)
         _test_torch_model_single_io(torch_model, (18, 4, 5), (18, 4, 5), minimum_ios_deployment_target=minimum_ios_deployment_target)  # type: ignore
 
+
 @unittest.skipUnless(_HAS_ONNX, MSG_ONNX_NOT_FOUND)
 class ReduceOperationTests(unittest.TestCase):
     """
@@ -978,6 +984,7 @@ class ReduceOperationTests(unittest.TestCase):
             (18, 5),
             minimum_ios_deployment_target=minimum_ios_deployment_target,
         )
+
 
 @unittest.skipUnless(_HAS_ONNX, MSG_ONNX_NOT_FOUND)
 class TransformationTests(unittest.TestCase):

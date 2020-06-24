@@ -14,8 +14,8 @@ from coremltools._deps import _IS_MACOS
 import sys
 
 """
-   dynamically generate random inputs, 
-   use caffe2 backend for onnx and 
+   dynamically generate random inputs,
+   use caffe2 backend for onnx and
 """
 
 

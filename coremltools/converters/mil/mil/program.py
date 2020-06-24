@@ -56,7 +56,7 @@ class Program(object):
         for f_name, f in self.functions.items():
             found_ops.extend(f.find_ops(prefix=prefix, op_type=op_type))
         if exactly_one and len(found_ops) != 1:
-            msg = 'Found matching ops not exactly one. Found ops: {}'
+            msg = "Found matching ops not exactly one. Found ops: {}"
             raise ValueError(msg.format(found_ops))
         return found_ops
 
@@ -66,7 +66,7 @@ class Program(object):
 
     def __getitem__(self, func_name):
         if func_name not in self.functions:
-            msg = 'Function {} not found in among functions {}.'
+            msg = "Function {} not found in among functions {}."
             raise KeyError(msg.format(func_name, self.functions.keys()))
         return self.functions[func_name]
 
@@ -91,8 +91,7 @@ class Placeholder(object):
         dtype: types.float or other scalar builtin types.
         """
         if not isinstance(sym_shape, (list, tuple, _np.generic, _np.ndarray)):
-            raise ValueError(
-                "Illegal shape for Placeholder: {}".format(sym_shape))
+            raise ValueError("Illegal shape for Placeholder: {}".format(sym_shape))
         self.sym_shape = sym_shape
         self.dtype = dtype
         if self.dtype is None:
@@ -100,7 +99,7 @@ class Placeholder(object):
         sym_type = self.type_inference()
 
         # Globally unique var name for placeholders
-        name = 'placeholder_' + str(self.__class__.counter)
+        name = "placeholder_" + str(self.__class__.counter)
         self.__class__.counter += 1
 
         # List of output vars (consistent w/ other ops)
@@ -121,7 +120,7 @@ class Placeholder(object):
 
 def get_new_variadic_symbol():
     global k_num_internal_syms
-    s = Symbol('*is' + str(k_num_internal_syms))
+    s = Symbol("*is" + str(k_num_internal_syms))
     k_num_internal_syms += 1
     return s
 
@@ -145,7 +144,7 @@ def get_new_symbol(name=None):
             _logging.warning(msg.format(name, new_name))
             s = Symbol(new_name)
     else:
-        s = Symbol('is' + str(k_num_internal_syms))
+        s = Symbol("is" + str(k_num_internal_syms))
     k_num_internal_syms += 1
     return s
 
@@ -161,12 +160,12 @@ class Symbol(_sm.Symbol):
         generated (to a non-variadic symbol). Furthermore, sym_name may not
         start with 'is' (internal symbol)
         """
-        if not (sym_name[0].isalpha() or sym_name[0] == '*'):
-            msg = 'Symbol name must start with a letter or *. Got {}'
+        if not (sym_name[0].isalpha() or sym_name[0] == "*"):
+            msg = "Symbol name must start with a letter or *. Got {}"
             raise ValueError(msg.format(sym_name))
         global k_used_symbols
         if sym_name in k_used_symbols:
-            msg = 'Symbol `{}` is used already.'
+            msg = "Symbol `{}` is used already."
             raise ValueError(msg.format(sym_name))
         k_used_symbols.add(sym_name)
         self.name = sym_name

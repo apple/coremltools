@@ -18,14 +18,15 @@ def match_pattern(op):
     if op.outputs[0] in op.enclosing_block.outputs:
         return None
 
-    if op.op_type == 'mul':
+    if op.op_type == "mul":
         # find add
         child_ops = op.outputs[0].child_ops
         if len(child_ops) == 1:
             add_op_candidate = list(child_ops)[0]
-            if add_op_candidate.op_type == 'add':
+            if add_op_candidate.op_type == "add":
                 return add_op_candidate
     return None
+
 
 def _find_const_input_val(op):
     if op.x.val is not None:
@@ -34,22 +35,22 @@ def _find_const_input_val(op):
         return op.y.val
     return None
 
+
 def _check_shape(arr):
-    '''
+    """
     return True if shape is of form
     (1,C,1,1) or (C,1,1)
-    '''
+    """
     rank = len(arr.shape)
-    if not(rank == 3 or rank == 4):
+    if not (rank == 3 or rank == 4):
         return False
     C = arr.shape[-3]
-    if not (arr.shape == (1,C,1,1) or arr.shape == (C,1,1)):
+    if not (arr.shape == (1, C, 1, 1) or arr.shape == (C, 1, 1)):
         return False
     return True
 
 
 def try_to_transform(mul_op, add_op, block):
-
     non_const_input_mul = mul_op.x if mul_op.x.val is None else mul_op.y
     if non_const_input_mul.rank != 4:
         return False
@@ -73,16 +74,19 @@ def try_to_transform(mul_op, add_op, block):
         return False
 
     out_name = add_op.outputs[0].name
-    x = mb.batch_norm(x=non_const_input_mul,
-                      mean=np.zeros((C,), np.float32),
-                      variance=np.ones((C,), np.float32),
-                      gamma=np.squeeze(gamma),
-                      beta=np.squeeze(beta),
-                      name=out_name,
-                      before_op=mul_op)
+    x = mb.batch_norm(
+        x=non_const_input_mul,
+        mean=np.zeros((C,), np.float32),
+        variance=np.ones((C,), np.float32),
+        gamma=np.squeeze(gamma),
+        beta=np.squeeze(beta),
+        name=out_name,
+        before_op=mul_op,
+    )
 
-    add_op.enclosing_block.replace_uses_of_var_after_op(anchor_op=add_op,
-            old_var=add_op.outputs[0], new_var=x)
+    add_op.enclosing_block.replace_uses_of_var_after_op(
+        anchor_op=add_op, old_var=add_op.outputs[0], new_var=x
+    )
     # Remove all the ops at once
     block.remove_ops([mul_op, add_op])
     return True
@@ -107,7 +111,6 @@ def fuse_elementwise_to_batchnorm_block(block):
             if fusion_status:
                 return fusion_status
     return fusion_status
-
 
 
 @register_pass(namespace="common")

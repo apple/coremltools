@@ -53,7 +53,7 @@ include_directories(
   )
 
 if(APPLE)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fobjc-arc ")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fobjc-arc")
 endif()
 
 add_library(caffeconverter
@@ -239,7 +239,7 @@ add_custom_target(pip_install_dev
 )
 
 add_custom_target(pytest
-  COMMAND pytest -r fs ${PROJECT_SOURCE_DIR}/coremltools/test/
+  COMMAND pytest -r fs ${PROJECT_SOURCE_DIR}/coremltools/test/ --timeout=600
   DEPENDS pip_install_dev
   USES_TERMINAL
 )

@@ -208,7 +208,7 @@ class FindSubgraph(object):
 
     def visit(self, g, node):
         self.visit_impl(g, node)
-        while (True):
+        while True:
             if None in iter(self.memo.values()):
                 revisit = [k for k, v in self.memo.items() if v is None]
                 self.memo = {k: v for k, v in self.memo.items() if v is not None}
@@ -221,7 +221,7 @@ class FindSubgraph(object):
     def visit_many(self, g, nodes):
         for node in nodes:
             self.visit_impl(g, node)
-        while (True):
+        while True:
             if None in iter(self.memo.values()):
                 revisit = [k for k, v in self.memo.items() if v is None]
                 self.memo = {k: v for k, v in self.memo.items() if v is not None}

@@ -13,11 +13,11 @@ from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 from coremltools.converters.mil.mil import Builder as mb
 import numpy as np
 
-child_op_types = ['add', 'sub']
+child_op_types = ["add", "sub"]
 
 
 def match_pattern(op):
-    if op.op_type == 'conv' or op.op_type == 'conv_transpose':
+    if op.op_type == "conv" or op.op_type == "conv_transpose":
         # abort fusion if op output is also a block output
         if op.outputs[0] in op.enclosing_block.outputs:
             return None
@@ -31,8 +31,7 @@ def match_pattern(op):
 
 
 def try_to_transform(conv_op, add_op, block):
-
-    if add_op.op_type == 'sub':
+    if add_op.op_type == "sub":
         bias_var = add_op.y
     else:
         bias_var = add_op.x if add_op.x.val is not None else add_op.y
@@ -70,15 +69,15 @@ def try_to_transform(conv_op, add_op, block):
             if bias_value.shape[0] != 1:
                 return False
         # check that last rank-2 entries in the shape vector are all 1s
-        if np.prod(bias_value.shape[-(rank-2):]) != 1:
+        if np.prod(bias_value.shape[-(rank - 2) :]) != 1:
             return False
         bias_value = np.squeeze(bias_value)
 
-    if add_op.op_type == 'sub':
+    if add_op.op_type == "sub":
         bias_value *= -1
 
     # everything looks good, now find the new updated bias
-    old_bias = conv_op.inputs.get('bias', None)
+    old_bias = conv_op.inputs.get("bias", None)
     old_bias_value = None
     if old_bias is not None and old_bias.val is not None:
         old_bias_value = old_bias.val
@@ -102,22 +101,23 @@ def try_to_transform(conv_op, add_op, block):
 
     # create a new conv op with the new bias value, copying rest of the attributes
     out_name = add_op.outputs[0].name
-    new_bias_var = mb.const(val=new_bias_value, mode='file_value', before_op=conv_op)
+    new_bias_var = mb.const(val=new_bias_value, mode="file_value", before_op=conv_op)
 
-    conv_kargs = {'bias':new_bias_var, 'name':out_name, 'before_op':conv_op}
+    conv_kargs = {"bias": new_bias_var, "name": out_name, "before_op": conv_op}
 
-    for k,v in conv_op.inputs.items():
-        if k == 'bias':
+    for k, v in conv_op.inputs.items():
+        if k == "bias":
             continue
         conv_kargs[k] = v
 
-    if conv_op.op_type == 'conv':
+    if conv_op.op_type == "conv":
         x = mb.conv(**conv_kargs)
     else:
         x = mb.conv_transpose(**conv_kargs)
 
-    add_op.enclosing_block.replace_uses_of_var_after_op(anchor_op=add_op,
-            old_var=add_op.outputs[0], new_var=x)
+    add_op.enclosing_block.replace_uses_of_var_after_op(
+        anchor_op=add_op, old_var=add_op.outputs[0], new_var=x
+    )
     # Remove all the ops at once
     block.remove_ops([conv_op, add_op])
     return True
@@ -143,6 +143,7 @@ def fuse_bias_conv_block(block):
                 return fusion_status
     return fusion_status
 
+
 @register_pass(namespace="common")
 def fuse_bias_conv(prog):
     """
@@ -164,4 +165,3 @@ def fuse_bias_conv(prog):
         block_changed = True
         while block_changed:
             block_changed = fuse_bias_conv_block(f)
-

@@ -50,17 +50,24 @@ def insert_get_tuple(gddict):
         inserted_op_name = new_node_name
         inserted_op = ParsedTFNode()
         inserted_op.name = inserted_op_name
-        inserted_op.op = 'get_tuple'
+        inserted_op.op = "get_tuple"
         inserted_op.inputs = [input_node]
-        inserted_op.attr['index'] = index
+        inserted_op.attr["index"] = index
         inserted_ops[inserted_op_name] = inserted_op
         gto_make_op_cache[cache_key] = inserted_op
         return inserted_op
 
     exclusions = [
-        'Switch', 'Enter', 'Exit', 'Merge', 'LoopCond', 'NextIteration', 'TensorArrayV3', 'Const'
+        "Switch",
+        "Enter",
+        "Exit",
+        "Merge",
+        "LoopCond",
+        "NextIteration",
+        "TensorArrayV3",
+        "Const",
     ]
-    inclusions = ['Split', 'SplitV', 'LSTMBlockCell']
+    inclusions = ["Split", "SplitV", "LSTMBlockCell"]
     gto_make_op_cache = {}
     for name in list(gddict.keys()):
         new_node = ParsedTFNode()
@@ -73,14 +80,20 @@ def insert_get_tuple(gddict):
                 input_node = new_node.inputs[idx]
                 input_index = 0
 
-            if ('_output_shapes' in gddict[input_node].attr and \
-                    len(gddict[input_node].attr['_output_shapes']) > 1 and \
-                    gddict[input_node].op not in exclusions) or \
-               (gddict[input_node].op in inclusions):
-                get_tuple_node_name = 'gto_%s' % (get_tuple_op_var_index)
+            if (
+                "_output_shapes" in gddict[input_node].attr
+                and len(gddict[input_node].attr["_output_shapes"]) > 1
+                and gddict[input_node].op not in exclusions
+            ) or (gddict[input_node].op in inclusions):
+                get_tuple_node_name = "gto_%s" % (get_tuple_op_var_index)
                 new_inputs.append(
-                    make_op(input_node, int(input_index), get_tuple_node_name,
-                            gto_make_op_cache).name)
+                    make_op(
+                        input_node,
+                        int(input_index),
+                        get_tuple_node_name,
+                        gto_make_op_cache,
+                    ).name
+                )
                 get_tuple_op_var_index += 1
             else:
                 new_inputs.append(new_node.inputs[idx])

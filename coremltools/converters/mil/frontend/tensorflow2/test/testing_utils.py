@@ -5,8 +5,11 @@
 
 from coremltools.converters import convert
 import pytest
-tf = pytest.importorskip('tensorflow', minversion='2.1.0')
-from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import get_tf_node_names
+
+tf = pytest.importorskip("tensorflow", minversion="2.1.0")
+from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import (
+    get_tf_node_names,
+)
 
 from coremltools.converters.mil.input_types import TensorType
 from coremltools.converters.mil.testing_utils import compare_shapes, compare_backend
@@ -46,19 +49,29 @@ def make_tf2_graph(input_types):
         module = TensorFlowModule()
         concrete_func = module.__call__.get_concrete_function()
         inputs = get_tf_node_names(
-            [t.name for t in concrete_func.inputs if t.dtype != dtypes.resource], mode='input')
+            [t.name for t in concrete_func.inputs if t.dtype != dtypes.resource],
+            mode="input",
+        )
         outputs = get_tf_node_names(
-            [t.name for t in concrete_func.outputs], mode='output')
+            [t.name for t in concrete_func.outputs], mode="output"
+        )
         return [concrete_func], inputs, outputs
 
     return wrapper
 
 
 def run_compare_tf2(
-        model, input_dict, output_names,
-        use_cpu_only=False, frontend_only=False,
-        frontend='tensorflow', backend='nn_proto',
-        debug=False, atol=1e-04, rtol=1e-05):
+    model,
+    input_dict,
+    output_names,
+    use_cpu_only=False,
+    frontend_only=False,
+    frontend="tensorflow",
+    backend="nn_proto",
+    debug=False,
+    atol=1e-04,
+    rtol=1e-05,
+):
     """
     Parameters
     ----------
@@ -103,22 +116,40 @@ def run_compare_tf2(
     expected_outputs = {n: v for n, v in zip(outputs, ref)}
 
     proto = convert(
-        model, source=frontend, inputs=inputs,
-        outputs=outputs, convert_to=backend, debug=debug).get_spec()
+        model,
+        source=frontend,
+        inputs=inputs,
+        outputs=outputs,
+        convert_to=backend,
+        debug=debug,
+    ).get_spec()
 
     if frontend_only:
         return
 
-    compare_backend(proto, input_dict, expected_outputs,
-                    use_cpu_only, atol=atol, rtol=rtol,
-                    also_compare_shapes=True)
+    compare_backend(
+        proto,
+        input_dict,
+        expected_outputs,
+        use_cpu_only,
+        atol=atol,
+        rtol=rtol,
+        also_compare_shapes=True,
+    )
 
     return proto
 
 
 def run_compare_tf_keras(
-        model, input_values, use_cpu_only=False, frontend_only=False,
-        frontend='tensorflow', backend='nn_proto', atol=1e-04, rtol=1e-05):
+    model,
+    input_values,
+    use_cpu_only=False,
+    frontend_only=False,
+    frontend="tensorflow",
+    backend="nn_proto",
+    atol=1e-04,
+    rtol=1e-05,
+):
     """
     Parameters
     ----------
@@ -153,7 +184,14 @@ def run_compare_tf_keras(
     ref = [model(input_values).numpy()]
     expected_outputs = {n: v for n, v in zip(outputs, ref)}
     input_key_values = {n: v for n, v in zip(inputs, input_values)}
-    compare_backend(proto, input_key_values, expected_outputs,
-                    use_cpu_only, atol=atol, rtol=rtol, also_compare_shapes=True)
+    compare_backend(
+        proto,
+        input_key_values,
+        expected_outputs,
+        use_cpu_only,
+        atol=atol,
+        rtol=rtol,
+        also_compare_shapes=True,
+    )
 
     return proto

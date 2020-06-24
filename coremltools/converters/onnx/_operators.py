@@ -193,7 +193,6 @@ def _add_inner_product(input_names, output_names, **kwargs):
 def _add_conv_like_op(
     add_func, get_params_func, params_dict, builder, node, graph, err
 ):
-
     if node.inputs[0] in graph.onnx_coreml_shape_mapping:
         mapp = graph.onnx_coreml_shape_mapping[node.inputs[0]]
 

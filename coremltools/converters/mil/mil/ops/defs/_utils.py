@@ -40,19 +40,23 @@ def broadcast_shapes(shape_x, shape_y):
         elif not y_unknown and shape_y[i] > 1:
             if not x_unknown and shape_x[i] != shape_y[i]:
                 raise ValueError(
-                    'Incompatible dim {} in shapes {} vs. {}'.format(
-                        i, shape_x, shape_y))
+                    "Incompatible dim {} in shapes {} vs. {}".format(
+                        i, shape_x, shape_y
+                    )
+                )
             ret_shapes.append(shape_y[i])
         elif not x_unknown and shape_x[i] > 1:
             if not y_unknown and shape_x[i] != shape_y[i]:
                 raise ValueError(
-                    'Incompatible dim {} in shapes {} vs. {}'.format(
-                        i, shape_x, shape_y))
+                    "Incompatible dim {} in shapes {} vs. {}".format(
+                        i, shape_x, shape_y
+                    )
+                )
             ret_shapes.append(shape_x[i])
         elif x_unknown or y_unknown:
             ret_shapes.append(sm.functions.Max(shape_x[i], shape_y[i]))
         else:
-            assert (shape_x[i] == shape_y[i])
+            assert shape_x[i] == shape_y[i]
             ret_shapes.append(shape_x[i])
 
     return tuple(ret_shapes)

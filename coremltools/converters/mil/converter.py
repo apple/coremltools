@@ -6,6 +6,7 @@
 from coremltools.converters._profile_utils import _profile
 from .mil.passes.common_pass import common_pass
 
+
 class ConverterRegistry:
     frontends = {}
     backends = {}
@@ -20,6 +21,7 @@ class ConverterRegistry:
         ConverterRegistry.backends[converter.name] = converter
         return converter
 
+
 @ConverterRegistry.frontend
 class MILFrontend:
     name = "mil"
@@ -27,22 +29,25 @@ class MILFrontend:
     def __call__(self, model, *args, **kwargs):
         return model
 
+
 @ConverterRegistry.frontend
 class TensorFlowFrontend:
-    name = 'tensorflow'
+    name = "tensorflow"
 
     def __call__(self, *args, **kwargs):
         from .frontend.tensorflow.load import TF1Loader
+
         tf1_loader = TF1Loader(*args, **kwargs)
         return tf1_loader.load()
 
 
 @ConverterRegistry.frontend
 class TensorFlow2Frontend:
-    name = 'tensorflow2'
+    name = "tensorflow2"
 
     def __call__(self, *args, **kwargs):
         from .frontend.tensorflow2.load import TF2Loader
+
         tf2_loader = TF2Loader(*args, **kwargs)
         return tf2_loader.load()
 
@@ -53,6 +58,7 @@ class TorchFrontend:
 
     def __call__(self, *args, **kwargs):
         from .frontend.torch import load
+
         return load(*args, **kwargs)
 
 
@@ -62,6 +68,7 @@ class NNProtoBackend:
 
     def __call__(self, *args, **kwargs):
         from .backend.nn import load
+
         return load(*args, **kwargs)
 
 
@@ -71,12 +78,18 @@ class CustomFrontend:
 
     def __call__(self, *args, **kwargs):
         from coremltools.converters.mil.mil.passes.common_pass import common_pass
+
         return common_pass(*args, **kwargs)
 
 
 @_profile
-def _convert(model, convert_from='TensorFlow', convert_to='nn_proto',
-             converter_registry=ConverterRegistry, **kwargs):
+def _convert(
+    model,
+    convert_from="TensorFlow",
+    convert_to="nn_proto",
+    converter_registry=ConverterRegistry,
+    **kwargs
+):
     """
     Convert from an external representation.
 
@@ -91,15 +104,17 @@ def _convert(model, convert_from='TensorFlow', convert_to='nn_proto',
     frontend_converter_type = converter_registry.frontends.get(convert_from.lower())
     if not frontend_converter_type:
         msg = 'Frontend converter "{}" not implemented, must be one of: {}'
-        raise NotImplementedError(msg.format(
-            convert_from, list(converter_registry.frontends.keys())))
+        raise NotImplementedError(
+            msg.format(convert_from, list(converter_registry.frontends.keys()))
+        )
     frontend_converter = frontend_converter_type()
 
     backend_converter_type = converter_registry.backends.get(convert_to.lower())
     if not backend_converter_type:
         msg = 'Backend converter "{}" not implemented, must be one of: {}'
-        raise NotImplementedError(msg.format(
-            convert_to, list(converter_registry.backends.keys())))
+        raise NotImplementedError(
+            msg.format(convert_to, list(converter_registry.backends.keys()))
+        )
     backend_converter = backend_converter_type()
 
     prog = frontend_converter(model, **kwargs)

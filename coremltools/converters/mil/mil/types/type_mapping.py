@@ -6,11 +6,24 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from .type_bool import bool as types_bool
-from .type_double import is_float, fp16 as types_fp16, fp32 as types_fp32, fp64 as types_fp64
+from .type_double import (
+    is_float,
+    fp16 as types_fp16,
+    fp32 as types_fp32,
+    fp64 as types_fp64,
+)
 from .type_list import is_list
-from .type_int import is_int, int8 as types_int8, int16 as types_int16, int32 as types_int32, \
-    int64 as types_int64, uint8 as types_uint8, uint16 as types_uint16, uint32 as types_uint32, \
-    uint64 as types_uint64
+from .type_int import (
+    is_int,
+    int8 as types_int8,
+    int16 as types_int16,
+    int32 as types_int32,
+    int64 as types_int64,
+    uint8 as types_uint8,
+    uint16 as types_uint16,
+    uint32 as types_uint32,
+    uint64 as types_uint64,
+)
 from .type_str import str as types_str
 from .type_unknown import unknown
 import numpy as np
@@ -30,26 +43,27 @@ _types_TO_NPTYPES = {
     types_fp16: np.float16,
     types_fp32: np.float32,
     types_fp64: np.float64,
-    types_str: np.str_
+    types_str: np.str_,
 }
 
 _types_TO_STRINGS = {
-    types_bool: 'bool',
-    types_int8: 'i8',
-    types_int16: 'i16',
-    types_int32: 'i32',
-    types_int64: 'i64',
-    types_uint8: 'u8',
-    types_uint16: 'u16',
-    types_uint32: 'u32',
-    types_uint64: 'u64',
-    types_fp16: 'fp16',
-    types_fp32: 'fp32',
-    types_fp64: 'fp64',
-    types_str: 'str'
+    types_bool: "bool",
+    types_int8: "i8",
+    types_int16: "i16",
+    types_int32: "i32",
+    types_int64: "i64",
+    types_uint8: "u8",
+    types_uint16: "u16",
+    types_uint32: "u32",
+    types_uint64: "u64",
+    types_fp16: "fp16",
+    types_fp32: "fp32",
+    types_fp64: "fp64",
+    types_str: "str",
 }
 
 _STRINGS_TO_types = {v: k for k, v in _types_TO_STRINGS.items()}
+
 
 def string_to_builtin(s):
     """
@@ -57,11 +71,13 @@ def string_to_builtin(s):
     """
     return _STRINGS_TO_types.get(s, None)
 
+
 def builtin_to_string(builtin_type):
     """
     Given a builtin type, return its corresponding string representation.
     """
     return _types_TO_STRINGS.get(builtin_type, None)
+
 
 def nptype_from_builtin(btype):
     """
@@ -88,7 +104,9 @@ def promote_types(dtype1, dtype2):
     # dtype('float64')
     if np.issubdtype(nptype1, np.floating) and np.issubdtype(nptype2, np.signedinteger):
         nppromoted = nptype1
-    elif np.issubdtype(nptype2, np.floating) and np.issubdtype(nptype1, np.signedinteger):
+    elif np.issubdtype(nptype2, np.floating) and np.issubdtype(
+        nptype1, np.signedinteger
+    ):
         nppromoted = nptype2
     else:
         nppromoted = np.promote_types(nptype1, nptype2)
@@ -99,8 +117,7 @@ def is_primitive(btype):
     """
     Is the indicated builtin type a primitive?
     """
-    return btype is types_bool or btype is types_str or is_float(
-        btype) or is_int(btype)
+    return btype is types_bool or btype is types_str or is_float(btype) or is_int(btype)
 
 
 def is_scalar(btype):
@@ -117,7 +134,7 @@ def is_tensor(tensor_type):
         type_info = get_type_info(tensor_type).name
     except TypeError:
         return False
-    return type_info == 'tensor'
+    return type_info == "tensor"
 
 
 def is_str(t):
@@ -127,7 +144,7 @@ def is_str(t):
         type_info = get_type_info(t).name
     except TypeError:
         return False
-    return type_info == 'str'
+    return type_info == "str"
 
 
 def is_tuple(t):
@@ -137,7 +154,7 @@ def is_tuple(t):
         type_info = get_type_info(t).name
     except TypeError:
         return False
-    return type_info == 'tuple'
+    return type_info == "tuple"
 
 
 def is_builtin(t):
@@ -147,11 +164,10 @@ def is_builtin(t):
 # Converts a numpy type to its types equivalent.
 # Supports both dtypes and numpy primitive types.
 def numpy_type_to_builtin_type(nptype):
-    if (type(nptype) == np.dtype):
+    if type(nptype) == np.dtype:
         nptype = nptype.type
 
-    if np.issubclass_(nptype, np.bool) or \
-       np.issubclass_(nptype, np.bool_):
+    if np.issubclass_(nptype, np.bool) or np.issubclass_(nptype, np.bool_):
         # numpy as 2 bool types it looks like. what is the difference?
         return types_bool
     elif np.issubclass_(nptype, np.int8):
@@ -178,15 +194,15 @@ def numpy_type_to_builtin_type(nptype):
         return types_int32
     elif np.issubclass_(nptype, np.float16):
         return types_fp16
-    elif np.issubclass_(nptype, np.float32) or \
-         np.issubclass_(nptype, np.single):
+    elif np.issubclass_(nptype, np.float32) or np.issubclass_(nptype, np.single):
         return types_fp32
-    elif np.issubclass_(nptype, np.float64) or \
-         np.issubclass_(nptype, np.double):
+    elif np.issubclass_(nptype, np.float64) or np.issubclass_(nptype, np.double):
         return types_fp64
-    elif np.issubclass_(nptype, six.string_types) or \
-         np.issubclass_(nptype, np.string_) or \
-         np.issubclass_(nptype, np.str_):
+    elif (
+        np.issubclass_(nptype, six.string_types)
+        or np.issubclass_(nptype, np.string_)
+        or np.issubclass_(nptype, np.str_)
+    ):
         return types_str
     else:
         raise TypeError("Unsupported numpy type: %s" % (nptype))
@@ -209,8 +225,7 @@ def type_to_builtin_type(type):
     elif np.issubclass_(type, float):
         return types_fp32
     else:
-        raise TypeError("Could not determine builtin type for " \
-                        + str(type))
+        raise TypeError("Could not determine builtin type for " + str(type))
 
 
 def numpy_val_to_builtin_val(npval):
@@ -222,6 +237,7 @@ def numpy_val_to_builtin_val(npval):
     else:
         builtintype = numpy_type_to_builtin_type(npval.dtype)
         from . import tensor as types_tensor
+
         ret_type = types_tensor(builtintype, npval.shape)
         ret = ret_type()
         ret.val = npval

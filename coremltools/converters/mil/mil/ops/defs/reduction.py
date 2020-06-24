@@ -10,6 +10,7 @@ from ._op_reqs import *
 Reduction Op Superclasses
 """
 
+
 class ReductionAxes(Operation):
     input_spec = InputSpec(
         x=TensorInputType(),
@@ -86,7 +87,9 @@ class ReductionAxis(Operation):
 """
 Reduction op implementations
 """
-@register_op(doc_str='TODO')
+
+
+@register_op(doc_str="TODO")
 class reduce_arg(ReductionAxis):
     def __init__(self, **kwargs):
         super(reduce_arg, self).__init__(**kwargs)
@@ -104,7 +107,8 @@ class reduce_arg(ReductionAxis):
 
         return types.tensor(types.int32, tuple(reduced_shape))
 
-@register_op(doc_str='TODO')
+
+@register_op(doc_str="TODO")
 class reduce_argmax(reduce_arg):
     def __init__(self, **kwargs):
         super(reduce_argmax, self).__init__(**kwargs)
@@ -113,7 +117,7 @@ class reduce_argmax(reduce_arg):
         return np.argmax
 
 
-@register_op(doc_str='TODO')
+@register_op(doc_str="TODO")
 class reduce_argmin(reduce_arg):
     def __init__(self, **kwargs):
         super(reduce_argmin, self).__init__(**kwargs)
@@ -122,7 +126,7 @@ class reduce_argmin(reduce_arg):
         return np.argmin
 
 
-@register_op(doc_str='TODO')
+@register_op(doc_str="TODO")
 class reduce_l1_norm(ReductionAxes):
     def __init__(self, **kwargs):
         super(reduce_l1_norm, self).__init__(**kwargs)
@@ -134,7 +138,7 @@ class reduce_l1_norm(ReductionAxes):
         return l1_norm
 
 
-@register_op(doc_str='TODO')
+@register_op(doc_str="TODO")
 class reduce_l2_norm(ReductionAxes):
     def __init__(self, **kwargs):
         super(reduce_l2_norm, self).__init__(**kwargs)
@@ -146,7 +150,7 @@ class reduce_l2_norm(ReductionAxes):
         return l2_norm
 
 
-@register_op(doc_str='TODO')
+@register_op(doc_str="TODO")
 class reduce_log_sum(ReductionAxes):
     def __init__(self, **kwargs):
         super(reduce_log_sum, self).__init__(**kwargs)
@@ -158,7 +162,7 @@ class reduce_log_sum(ReductionAxes):
         return log_sum
 
 
-@register_op(doc_str='TODO')
+@register_op(doc_str="TODO")
 class reduce_log_sum_exp(ReductionAxes):
     def __init__(self, **kwargs):
         super(reduce_log_sum_exp, self).__init__(**kwargs)
@@ -167,7 +171,7 @@ class reduce_log_sum_exp(ReductionAxes):
         return scipy.special.logsumexp
 
 
-@register_op(doc_str='TODO')
+@register_op(doc_str="TODO")
 class reduce_max(ReductionAxes):
     def __init__(self, **kwargs):
         super(reduce_max, self).__init__(**kwargs)
@@ -176,7 +180,7 @@ class reduce_max(ReductionAxes):
         return np.max
 
 
-@register_op(doc_str='TODO')
+@register_op(doc_str="TODO")
 class reduce_mean(ReductionAxes):
     def __init__(self, **kwargs):
         super(reduce_mean, self).__init__(**kwargs)
@@ -185,7 +189,7 @@ class reduce_mean(ReductionAxes):
         return np.mean
 
 
-@register_op(doc_str='TODO')
+@register_op(doc_str="TODO")
 class reduce_min(ReductionAxes):
     def __init__(self, **kwargs):
         super(reduce_min, self).__init__(**kwargs)
@@ -194,7 +198,7 @@ class reduce_min(ReductionAxes):
         return np.min
 
 
-@register_op(doc_str='TODO')
+@register_op(doc_str="TODO")
 class reduce_prod(ReductionAxes):
     def __init__(self, **kwargs):
         super(reduce_prod, self).__init__(**kwargs)
@@ -203,7 +207,7 @@ class reduce_prod(ReductionAxes):
         return np.prod
 
 
-@register_op(doc_str='TODO')
+@register_op(doc_str="TODO")
 class reduce_sum(ReductionAxes):
     def __init__(self, **kwargs):
         super(reduce_sum, self).__init__(**kwargs)
@@ -212,7 +216,7 @@ class reduce_sum(ReductionAxes):
         return np.sum
 
 
-@register_op(doc_str='TODO')
+@register_op(doc_str="TODO")
 class reduce_sum_square(ReductionAxes):
     def __init__(self, **kwargs):
         super(reduce_sum_square, self).__init__(**kwargs)

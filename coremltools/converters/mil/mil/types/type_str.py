@@ -24,5 +24,5 @@ class str:
 
     @annotate(delay_type.str, other=delay_type.str)
     def __add__(self, other):
-        assert (isinstance(other, _string_types))
+        assert isinstance(other, _string_types)
         return str(self.val + other.val)

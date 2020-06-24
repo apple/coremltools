@@ -6,6 +6,7 @@ from coremltools.converters.mil.backend.nn.passes.mlmodel_passes import (
     remove_disconnected_layers,
 )
 
+
 class MLModelPassesTest(unittest.TestCase):
     def test_load_constant_remove(self):
         input_features = [("data", datatypes.Array(*(3, 4)))]

@@ -5,6 +5,7 @@ from __future__ import print_function as _
 import unittest
 
 from coremltools._deps import _HAS_ONNX, MSG_ONNX_NOT_FOUND
+
 if _HAS_ONNX:
     import onnx
     from ._test_utils import _onnx_create_model
@@ -43,6 +44,7 @@ def _make_model_flatten_axis3():  # type: (...) -> ModelProto
         "Flatten", inputs=[inputs[0][0]], outputs=[outputs[0][0]], axis=3
     )
     return _onnx_create_model([flatten], inputs, outputs)
+
 
 @unittest.skipUnless(_HAS_ONNX, MSG_ONNX_NOT_FOUND)
 class CustomLayerTest(unittest.TestCase):

@@ -7,6 +7,7 @@ import scipy
 from ._op_reqs import *
 from .elementwise_unary import elementwise_unary
 
+
 @register_op(doc_str="")
 class clamped_relu(Operation):
     """
@@ -27,11 +28,12 @@ class clamped_relu(Operation):
     ----------
     T: fp32
     """
+
     input_spec = InputSpec(
-            x = ScalarOrTensorInputType(),
-            alpha = FloatInputType(const=True),
-            beta = FloatInputType(const=True),
-            )
+        x=ScalarOrTensorInputType(),
+        alpha=FloatInputType(const=True),
+        beta=FloatInputType(const=True),
+    )
 
     def __init__(self, **kwargs):
         super(clamped_relu, self).__init__(**kwargs)
@@ -66,10 +68,10 @@ class elu(Operation):
     ----------
     T: fp32
     """
+
     input_spec = InputSpec(
-            x = ScalarOrTensorInputType(),
-            alpha = FloatInputType(const=True, default=1),
-            )
+        x=ScalarOrTensorInputType(), alpha=FloatInputType(const=True, default=1),
+    )
 
     def __init__(self, **kwargs):
         super(elu, self).__init__(**kwargs)
@@ -108,28 +110,28 @@ class gelu(Operation):
     ----------
     T: fp32
     """
+
     input_spec = InputSpec(
-            x = ScalarOrTensorInputType(),
-            mode = StringInputType(const=True, default="EXACT"),
-        )
+        x=ScalarOrTensorInputType(), mode=StringInputType(const=True, default="EXACT"),
+    )
 
     def __init__(self, **kwargs):
-      super(gelu, self).__init__(**kwargs)
+        super(gelu, self).__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
         if self.mode.val == "TANH_APPROXIMATION":
-            a = np.sqrt(2/np.pi) * (self.x.val + .044715 * np.power(self.x.val, 3))
+            a = np.sqrt(2 / np.pi) * (self.x.val + 0.044715 * np.power(self.x.val, 3))
             return 0.5 * self.x.val * (1 + np.tanh(a))
         elif self.mode.val == "SIGMOID_APPROXIMATION":
-            return self.x.val * (1/(1 + np.exp(-(1.702 * self.x.val))))
+            return self.x.val * (1 / (1 + np.exp(-(1.702 * self.x.val))))
         else:
             return 0.5 * self.x.val * (1 + scipy.special.erf(self.x.val / np.sqrt(2)))
 
     def type_inference(self):
         allowed_values = {"EXACT", "TANH_APPROXIMATION", "SIGMOID_APPROXIMATION"}
         if self.mode.val not in allowed_values:
-            msg = "\"gelu\" op: unrecognized value of mode: \"{}\". Allowed values are {}"
+            msg = '"gelu" op: unrecognized value of mode: "{}". Allowed values are {}'
             raise ValueError(msg.format(self.mode.val, allowed_values))
         return self.x.sym_type
 
@@ -154,10 +156,10 @@ class leaky_relu(Operation):
     ----------
     T: fp32
     """
+
     input_spec = InputSpec(
-            x = ScalarOrTensorInputType(),
-            alpha = FloatInputType(const=True, default=0.01),
-        )
+        x=ScalarOrTensorInputType(), alpha=FloatInputType(const=True, default=0.01),
+    )
 
     def __init__(self, **kwargs):
         super(leaky_relu, self).__init__(**kwargs)
@@ -193,11 +195,12 @@ class linear_activation(Operation):
     ----------
     T: fp32
     """
+
     input_spec = InputSpec(
-            x = ScalarOrTensorInputType(),
-            alpha = FloatInputType(const=True),
-            beta = FloatInputType(const=True, default=0.),
-            )
+        x=ScalarOrTensorInputType(),
+        alpha=FloatInputType(const=True),
+        beta=FloatInputType(const=True, default=0.0),
+    )
 
     def __init__(self, **kwargs):
         super(linear_activation, self).__init__(**kwargs)
@@ -229,10 +232,8 @@ class prelu(Operation):
     ----------
     T: fp32
     """
-    input_spec = InputSpec(
-            x = TensorInputType(),
-            alpha = TensorInputType(const=True),
-            )
+
+    input_spec = InputSpec(x=TensorInputType(), alpha=TensorInputType(const=True),)
 
     def __init__(self, **kwargs):
         super(prelu, self).__init__(**kwargs)
@@ -247,13 +248,15 @@ class prelu(Operation):
         return x_pos + b * alpha_br
 
     def type_inference(self):
-        if (len(self.x.shape) < 3):
+        if len(self.x.shape) < 3:
             raise ValueError("x should be at least rank 3")
-        if (len(self.alpha.val.shape) != 1):
+        if len(self.alpha.val.shape) != 1:
             raise ValueError("alpha should be rank 1")
-        if (self.x.shape[-3] != self.alpha.val.shape[0]):
-            raise ValueError("Size of dimension 0 of alpha should be the same as " +
-                             "the size of dimension -3 of x.")
+        if self.x.shape[-3] != self.alpha.val.shape[0]:
+            raise ValueError(
+                "Size of dimension 0 of alpha should be the same as "
+                + "the size of dimension -3 of x."
+            )
         return self.x.sym_type
 
 
@@ -275,6 +278,7 @@ class relu(elementwise_unary):
     ----------
     T: fp32
     """
+
     def __init__(self, **kwargs):
         super(relu, self).__init__(**kwargs)
 
@@ -301,6 +305,7 @@ class relu6(elementwise_unary):
     ----------
     T: fp32
     """
+
     def __init__(self, **kwargs):
         super(relu6, self).__init__(**kwargs)
 
@@ -332,11 +337,12 @@ class scaled_tanh(Operation):
     ----------
     T: fp32
     """
+
     input_spec = InputSpec(
-            x = ScalarOrTensorInputType(),
-            alpha = FloatInputType(const=True, default=1),
-            beta = FloatInputType(const=True, default=1),
-            )
+        x=ScalarOrTensorInputType(),
+        alpha=FloatInputType(const=True, default=1),
+        beta=FloatInputType(const=True, default=1),
+    )
 
     def __init__(self, **kwargs):
         super(scaled_tanh, self).__init__(**kwargs)
@@ -367,12 +373,13 @@ class sigmoid(elementwise_unary):
     ----------
     T: fp32
     """
+
     def __init__(self, **kwargs):
         super(sigmoid, self).__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
-        return 1/(1 + np.exp(-self.x.val))
+        return 1 / (1 + np.exp(-self.x.val))
 
 
 @register_op(doc_str="")
@@ -396,18 +403,21 @@ class sigmoid_hard(Operation):
     ----------
     T: fp32
     """
+
     input_spec = InputSpec(
-            x = ScalarOrTensorInputType(),
-            alpha = FloatInputType(const=True, default=0.2),
-            beta = FloatInputType(const=True, default=0.5),
-            )
+        x=ScalarOrTensorInputType(),
+        alpha=FloatInputType(const=True, default=0.2),
+        beta=FloatInputType(const=True, default=0.5),
+    )
 
     def __init__(self, **kwargs):
         super(sigmoid_hard, self).__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
-        return np.minimum(np.maximum((self.alpha.val * self.x.val) + self.beta.val, 0), 1)
+        return np.minimum(
+            np.maximum((self.alpha.val * self.x.val) + self.beta.val, 0), 1
+        )
 
     def type_inference(self):
         return self.x.sym_type
@@ -431,12 +441,13 @@ class softplus(elementwise_unary):
     ----------
     T: fp32
     """
+
     def __init__(self, **kwargs):
-     super(softplus, self).__init__(**kwargs)
+        super(softplus, self).__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
-     return np.log(1 + np.exp(-np.abs(self.x.val))) + np.maximum(self.x.val, 0)
+        return np.log(1 + np.exp(-np.abs(self.x.val))) + np.maximum(self.x.val, 0)
 
 
 @register_op(doc_str="")
@@ -459,11 +470,12 @@ class softplus_parametric(Operation):
     ----------
     T: fp32
     """
+
     input_spec = InputSpec(
-            x = TensorInputType(),
-            alpha = TensorInputType(const=True),
-            beta = TensorInputType(const=True),
-            )
+        x=TensorInputType(),
+        alpha=TensorInputType(const=True),
+        beta=TensorInputType(const=True),
+    )
 
     def __init__(self, **kwargs):
         super(softplus_parametric, self).__init__(**kwargs)
@@ -478,24 +490,28 @@ class softplus_parametric(Operation):
         return alpha_br * np.log(1 + np.exp(self.x.val * beta_br))
 
     def type_inference(self):
-        if (len(self.x.shape) < 3):
+        if len(self.x.shape) < 3:
             raise ValueError("x should be at least rank 3")
-        if (len(self.alpha.val.shape) != 1):
+        if len(self.alpha.val.shape) != 1:
             raise ValueError("alpha should be rank 1")
-        if (self.x.shape[-3] != self.alpha.val.shape[0]):
-            raise ValueError("Size of dimension 0 of alpha should be the same as " +
-                             "the size of dimension -3 of x.")
-        if (len(self.beta.val.shape) != 1):
+        if self.x.shape[-3] != self.alpha.val.shape[0]:
+            raise ValueError(
+                "Size of dimension 0 of alpha should be the same as "
+                + "the size of dimension -3 of x."
+            )
+        if len(self.beta.val.shape) != 1:
             raise ValueError("beta should be rank 1")
-        if (self.x.shape[-3] != self.beta.val.shape[0]):
-            raise ValueError("Size of dimension 0 of beta should be the same as " +
-                             "the size of dimension -3 of x.")
+        if self.x.shape[-3] != self.beta.val.shape[0]:
+            raise ValueError(
+                "Size of dimension 0 of beta should be the same as "
+                + "the size of dimension -3 of x."
+            )
         return self.x.sym_type
 
 
 @register_op(doc_str="")
 class softmax(Operation):
-    '''
+    """
     Returns ``exp(x) / tf.reduce_sum(tf.exp(x), axis)``.
 
     Parameters
@@ -511,11 +527,11 @@ class softmax(Operation):
     Attributes
     ----------
     T: fp32
-    '''
+    """
+
     input_spec = InputSpec(
-            logit = TensorInputType(),
-            axis = IntInputType(const=True, default=-1),
-            )
+        logit=TensorInputType(), axis=IntInputType(const=True, default=-1),
+    )
 
     def __init__(self, **kwargs):
         super(softmax, self).__init__(**kwargs)
@@ -528,6 +544,7 @@ class softmax(Operation):
         x = self.logit.val
         axis = self.axis.val
         return scipy.special.softmax(x, axis=axis)
+
 
 @register_op(doc_str="")
 class softsign(elementwise_unary):
@@ -543,6 +560,7 @@ class softsign(elementwise_unary):
     tensor<*?, T>
         * a tensor of the same shape and type as ``x``.
     """
+
     def __init__(self, **kwargs):
         super(softsign, self).__init__(**kwargs)
 
@@ -567,10 +585,10 @@ class thresholded_relu(Operation):
     tensor<*, T>
         * a tensor of the same shape and type as ``x``.
     """
+
     input_spec = InputSpec(
-            x = ScalarOrTensorInputType(),
-            alpha = FloatInputType(const=True, default=1),
-            )
+        x=ScalarOrTensorInputType(), alpha=FloatInputType(const=True, default=1),
+    )
 
     def __init__(self, **kwargs):
         super(thresholded_relu, self).__init__(**kwargs)

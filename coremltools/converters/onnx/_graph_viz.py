@@ -15,7 +15,7 @@ def plot_graph(graph, graph_img_path="graph.png", show_coreml_mapped_shapes=Fals
     2. connect nodes added in pydot
 
     :param graph
-    :return: writes down a png/pdf file using dot 
+    :return: writes down a png/pdf file using dot
     """
 
     try:

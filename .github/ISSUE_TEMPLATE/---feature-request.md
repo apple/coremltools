@@ -9,7 +9,7 @@ assignees: ''
 
 ## 🌱 Describe your Feature Request
 - A clear and concise description of what the problem is.
-- CoreML / iOS version you are using?
+- Core ML / iOS version you are using?
 - Are you interested in contributing?
 
 ## Use cases

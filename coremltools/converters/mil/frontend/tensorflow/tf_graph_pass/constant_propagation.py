@@ -21,6 +21,7 @@ from coremltools.converters._profile_utils import _profile
 def _get_const_nodes(fn):
     from tensorflow.core.framework import graph_pb2
     from tensorflow.core.framework import node_def_pb2
+
     new_graph = graph_pb2.GraphDef()
     constant_nodes = set()
     constant_node_num_outputs = {}
@@ -43,23 +44,26 @@ def _get_const_nodes(fn):
                 topsort.append(n)
                 topsort_set.add(n)
 
-        const_nodes_in_this_graph = set(const_nodes_in_this_graph).difference(topsort_set)
+        const_nodes_in_this_graph = set(const_nodes_in_this_graph).difference(
+            topsort_set
+        )
 
     for node in topsort:
         new_node = node_def_pb2.NodeDef()
         new_node.CopyFrom(fn.graph[node].original_node)
-        if '_class' in new_node.attr:
-            del new_node.attr['_class']
+        if "_class" in new_node.attr:
+            del new_node.attr["_class"]
         del new_node.input[:]
         new_node.input.extend(fn.graph[node].inputs)
-        if '_output_shapes' in fn.graph[node].attr:
-            constant_node_num_outputs[node] = len(fn.graph[node].attr['_output_shapes'])
+        if "_output_shapes" in fn.graph[node].attr:
+            constant_node_num_outputs[node] = len(fn.graph[node].attr["_output_shapes"])
         else:
             constant_node_num_outputs[node] = 1
         new_graph.node.extend([new_node])
         del new_node
     gc.collect()
     return new_graph, list(constant_nodes), constant_node_num_outputs
+
 
 @_profile
 def _constant_propagation(fn, new_graph, constant_nodes, constant_node_num_outputs):
@@ -72,42 +76,54 @@ def _constant_propagation(fn, new_graph, constant_nodes, constant_node_num_outpu
                 # In this context, the default optimization settings make everything dramatically
                 # slower and more memory-intensive.
                 session_config = tf.compat.v1.ConfigProto()
-                session_config.graph_options.optimizer_options.opt_level = tf.compat.v1.OptimizerOptions.L0
-                session_config.graph_options.rewrite_options.disable_meta_optimizer = True
+                session_config.graph_options.optimizer_options.opt_level = (
+                    tf.compat.v1.OptimizerOptions.L0
+                )
+                session_config.graph_options.rewrite_options.disable_meta_optimizer = (
+                    True
+                )
                 with tf.compat.v1.Session(graph=graph, config=session_config) as sess:
                     query_list = list()
                     control_flow_ops = list()
                     for c in constant_nodes:
                         for j in range(constant_node_num_outputs[c]):
-                            query = c + ':' + str(j)
+                            query = c + ":" + str(j)
                             lower_query = query.lower()
-                            if 'switch' in lower_query or 'cond' in lower_query:
+                            if "switch" in lower_query or "cond" in lower_query:
                                 control_flow_ops.append(query)
                             else:
                                 query_list.append(query)
                     result_list = sess.run(query_list)
-                    result = {query_list[i]: result_list[i] for i in range(len(query_list))}
+                    result = {
+                        query_list[i]: result_list[i] for i in range(len(query_list))
+                    }
                     # propagate switch one by one
                     for op in control_flow_ops:
                         try:
                             res = sess.run([op])
                             result.update({op: res[0]})
                         except:
-                            logging.warning('[Constant Propagation] Skip "dead" tensor: {}'.format(op))
+                            logging.warning(
+                                '[Constant Propagation] Skip "dead" tensor: {}'.format(
+                                    op
+                                )
+                            )
                             result.update({op: None})
 
             for k, v in fn.graph.items():
                 if k in constant_node_num_outputs:
                     if constant_node_num_outputs[k] == 1:
-                        result_entry = k + ':0'
+                        result_entry = k + ":0"
                         try:
-                            v.value, v.datatype = numpy_val_to_builtin_val(result[result_entry])
+                            v.value, v.datatype = numpy_val_to_builtin_val(
+                                result[result_entry]
+                            )
                         except:
                             logging.error(result_entry)
                             logging.error(result[result_entry])
                     else:
                         values = [
-                            result[k + ':' + str(i)]
+                            result[k + ":" + str(i)]
                             for i in range(constant_node_num_outputs[k])
                         ]
                         try:
@@ -119,15 +135,16 @@ def _constant_propagation(fn, new_graph, constant_nodes, constant_node_num_outpu
                         except:
                             logging.error(values)
             for k, v in fn.graph.items():
-                if v.op == 'get_tuple':
+                if v.op == "get_tuple":
                     inp = fn.graph[v.inputs[0]]
-                    idx = v.attr['index']
+                    idx = v.attr["index"]
                     if inp.value is not None:
                         v.value = inp.value.val[idx]
                         v.datatype = inp.datatype.T[idx]
 
     except Exception as e:
         logging.exception("Constant Propagation pass failed: {}".format(e))
+
 
 @_profile
 def constant_propagation(tfssa):

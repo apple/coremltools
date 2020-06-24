@@ -15,7 +15,13 @@ import logging
 
 from .type_spec import Type
 from .get_type_info import get_type_info
-from .type_mapping import promote_types, is_tensor, nptype_from_builtin, builtin_to_string, numpy_type_to_builtin_type
+from .type_mapping import (
+    promote_types,
+    is_tensor,
+    nptype_from_builtin,
+    builtin_to_string,
+    numpy_type_to_builtin_type,
+)
 
 
 def memoize(f):
@@ -23,23 +29,12 @@ def memoize(f):
 
     def helper(x, y):
         y = tuple(y)
-        if (
-                x,
-                y,
-        ) not in memo:
-            memo[(
-                x,
-                y,
-            )] = f(
-                x,
-                y,
-            )
-        return memo[(
-            x,
-            y,
-        )]
+        if (x, y,) not in memo:
+            memo[(x, y,)] = f(x, y,)
+        return memo[(x, y,)]
 
     return helper
+
 
 def canonical_shape(shape):
     """ Return shape as tuple of int or Symbol.
@@ -50,10 +45,11 @@ def canonical_shape(shape):
     Args:
         shape: tuple(int|long|np.int*|Symbol|SymbolExpr...)
     """
+
     def try_cast(x):
         try:
             # In python2.7, long and int are different types.
-            # If we cast a long int whose value is out of the range of int, 
+            # If we cast a long int whose value is out of the range of int,
             # the result is still long, avoiding overflow:
             #
             #     `type(2<<64) == long        # true`
@@ -63,7 +59,9 @@ def canonical_shape(shape):
             # ignore symbolic value (sm.Symbol or sm.Expr)
             pass
         return x
+
     return tuple(try_cast(x) for x in shape)
+
 
 @memoize
 def tensor(primitive, shape):
@@ -77,8 +75,9 @@ def tensor(primitive, shape):
 
         @classmethod
         def __type_info__(cls):
-            return Type("tensor", [get_type_info(primitive)] + list(shape),
-                        python_class=cls)
+            return Type(
+                "tensor", [get_type_info(primitive)] + list(shape), python_class=cls
+            )
 
         @classmethod
         def get_primitive(cls):
@@ -95,29 +94,37 @@ def tensor(primitive, shape):
         @val.setter
         def val(self, v):
             if not isinstance(v, np.ndarray):
-                raise ValueError("tensor should have value of type ndarray, got {} instead".format(type(v)))
+                raise ValueError(
+                    "tensor should have value of type ndarray, got {} instead".format(
+                        type(v)
+                    )
+                )
 
             v_type = numpy_type_to_builtin_type(v.dtype)
             promoted_type = promote_types(v_type, primitive)
-            if v_type == primitive or v.dtype == np.dtype('O'):
+            if v_type == primitive or v.dtype == np.dtype("O"):
                 # np.array of symbolic has object type. Don't cast type.
                 self._val = v
             elif promoted_type == primitive:
                 self._val = v.astype(nptype_from_builtin(primitive))
             else:
-                logging.warning("Saving value type of {} into a builtin type of {}, might lose precision!".format(v.dtype, builtin_to_string(primitive)))
+                logging.warning(
+                    "Saving value type of {} into a builtin type of {}, might lose precision!".format(
+                        v.dtype, builtin_to_string(primitive)
+                    )
+                )
                 self._val = v.astype(nptype_from_builtin(primitive))
 
-    tensor.__template_name__ = "tensor[" + primitive.__name__ + "," + ",".join(
-        str(s) for s in shape) + "]"
-    tensor.__name__ = "tensor[" + ",".join(str(s) for s in shape) \
-            + ',' + primitive.__name__ + "]"
+    tensor.__template_name__ = (
+        "tensor[" + primitive.__name__ + "," + ",".join(str(s) for s in shape) + "]"
+    )
+    tensor.__name__ = (
+        "tensor[" + ",".join(str(s) for s in shape) + "," + primitive.__name__ + "]"
+    )
     return tensor
 
 
-def is_tensor_and_is_compatible(tensor_type1,
-                                tensor_type2,
-                                allow_promotion=False):
+def is_tensor_and_is_compatible(tensor_type1, tensor_type2, allow_promotion=False):
     """
     Try to find a tensor type compatible with both input types.
 
@@ -149,8 +156,7 @@ def is_tensor_and_is_compatible(tensor_type1,
 
     primitive_type = tensor_type1.get_primitive()
     if primitive_type != tensor_type2.get_primitive():
-        promoted_type = promote_types(primitive_type,
-                                      tensor_type2.get_primitive())
+        promoted_type = promote_types(primitive_type, tensor_type2.get_primitive())
         if allow_promotion:
             primitive_type = promoted_type
         else:

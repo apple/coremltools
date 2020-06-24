@@ -33,13 +33,13 @@ def load(model_spec, debug=False, **kwargs):
         1. Any subclass of InputType
         2. torch.Tensor (only shape and dtype will be used)
         3. list of (1. or 2.)
-        Inputs are parsed in the flattened order that the model accepts them. 
+        Inputs are parsed in the flattened order that the model accepts them.
         If names are not specified: input keys for calling predict on the converted model
-        will be internal symbols of the input to the graph. 
-        User can specify a subset of names.    
-    outputs (optional): List of output name strings. If specified: keys of output dictionary 
+        will be internal symbols of the input to the graph.
+        User can specify a subset of names.
+    outputs (optional): List of output name strings. If specified: keys of output dictionary
         will be these names in order of flattened returned outputs. If not specified:
-        output dictionary keys will be the internal output symbols in the graph. 
+        output dictionary keys will be the internal output symbols in the graph.
         User can specify a subset of names.
     cut_at_symbols (optional): List of internal symbol name strings. Graph conversion will
         terminate once these symbols have been generated. For debugging use
@@ -56,12 +56,14 @@ def load(model_spec, debug=False, **kwargs):
             elif isinstance(_input, InputType):
                 input_type.append(_input)
             elif isinstance(_input, _torch.Tensor):
-                input_type.append(TensorType(shape=_input.shape, dtype=torch_to_mil_types[_input.dtype]))
+                input_type.append(
+                    TensorType(
+                        shape=_input.shape, dtype=torch_to_mil_types[_input.dtype]
+                    )
+                )
             else:
                 raise ValueError(
-                    "Unknown type {} for conversion to InputType.".format(
-                        type(_input)
-                    )
+                    "Unknown type {} for conversion to InputType.".format(type(_input))
                 )
         return input_type
 
@@ -87,7 +89,6 @@ def load(model_spec, debug=False, **kwargs):
 
 
 def _torchscript_from_model(model_spec):
-
     if isinstance(model_spec, _string_types) and model_spec.endswith(".pt"):
         filename = _os_path.abspath(model_spec)
         return _torch.jit.load(filename)

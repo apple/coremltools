@@ -11,4 +11,11 @@ from . import keras
 from . import caffe
 from . import onnx
 from ._converters_entry import convert
-from .mil import ClassifierConfig, TensorType, ImageType, RangeDim, Shape, EnumeratedShapes
+from .mil import (
+    ClassifierConfig,
+    TensorType,
+    ImageType,
+    RangeDim,
+    Shape,
+    EnumeratedShapes,
+)

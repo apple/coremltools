@@ -10,15 +10,22 @@ from coremltools.converters.mil.mil.types.symbolic import is_symbolic
 from coremltools.converters.mil.mil import Program, Function
 from coremltools.converters.mil.testing_utils import compare_backend
 
-UNK_VARIADIC = '*s_unk'
-UNK_SYM = 's_unk'
+UNK_VARIADIC = "*s_unk"
+UNK_SYM = "s_unk"
 
 
 def run_compare_builder(
-        build, input_placeholders, input_values,
-        expected_output_types=None, expected_outputs=None,
-        use_cpu_only=False, frontend_only=False, backend='nn_proto',
-        atol=1e-04, rtol=1e-05):
+    build,
+    input_placeholders,
+    input_values,
+    expected_output_types=None,
+    expected_outputs=None,
+    use_cpu_only=False,
+    frontend_only=False,
+    backend="nn_proto",
+    atol=1e-04,
+    rtol=1e-05,
+):
     """
     Inputs:
         - build: python function taking input of Vars and returning Var or
@@ -54,27 +61,35 @@ def run_compare_builder(
         prog.add_function("main", ssa_func)
 
     # Validate type inference
-    msg = "Provided expected outputs types {} should match number of output" + \
-          " variables {}"
+    msg = (
+        "Provided expected outputs types {} should match number of output"
+        + " variables {}"
+    )
     assert_msg = msg.format(len(expected_output_types), len(output_vars))
-    assert (len(output_vars) == len(expected_output_types)), assert_msg
+    assert len(output_vars) == len(expected_output_types), assert_msg
 
     for out_var, s in zip(output_vars, expected_output_types):
         if out_var.dtype != s[-1]:
-            raise ValueError('Output {} type: expect {}, got {}. Program:\n{}'.format(
-                out_var.name, s[-1], out_var.dtype, prog))
+            raise ValueError(
+                "Output {} type: expect {}, got {}. Program:\n{}".format(
+                    out_var.name, s[-1], out_var.dtype, prog
+                )
+            )
         if UNK_VARIADIC in s[:-1]:
-            msg = 'Skip type checking for UNK_VARIADIC. Output shape: {} vs expected shape: {}'
+            msg = "Skip type checking for UNK_VARIADIC. Output shape: {} vs expected shape: {}"
             logging.debug(msg.format(out_var.shape, s[:-1]))
             continue
         expected_shape = s[:-1]
-        msg = 'Output {} shape: expect {}, got {}. Program:\n{}'.format(
-            out_var.name, expected_shape, out_var.shape, prog)
+        msg = "Output {} shape: expect {}, got {}. Program:\n{}".format(
+            out_var.name, expected_shape, out_var.shape, prog
+        )
         # No more variadic here.
         if len(out_var.shape) != len(expected_shape):
             raise ValueError(msg)
         # replace UNK_SYM in out_var.shape.
-        output_shape = [0 if es == UNK_SYM else os for os, es in zip(out_var.shape, expected_shape)]
+        output_shape = [
+            0 if es == UNK_SYM else os for os, es in zip(out_var.shape, expected_shape)
+        ]
         expected_shape = [0 if es == UNK_SYM else es for es in expected_shape]
         # convert float etc to int.
         output_shape = [i if is_symbolic(i) else int(i) for i in output_shape]
@@ -82,24 +97,28 @@ def run_compare_builder(
         if output_shape != expected_shape:
             raise ValueError(msg)
 
-    proto = converter._convert(
-        prog, convert_from="mil", convert_to=backend)
+    proto = converter._convert(prog, convert_from="mil", convert_to=backend)
 
     if frontend_only:
         return
 
     if expected_outputs:
-        assert (len(output_vars) == len(expected_outputs)), \
-            "Provided expected_outputs {}" \
-            " should match number of output" \
-            " variables {}".format(
-                len(expected_outputs), len(output_vars))
+        assert len(output_vars) == len(expected_outputs), (
+            "Provided expected_outputs {}"
+            " should match number of output"
+            " variables {}".format(len(expected_outputs), len(output_vars))
+        )
 
         expected_outputs = {
-            o.name: val for o, val in zip(output_vars, expected_outputs)}
+            o.name: val for o, val in zip(output_vars, expected_outputs)
+        }
 
-    compare_backend(proto=proto,
-                    input_key_values=input_values,
-                    expected_outputs=expected_outputs,
-                    use_cpu_only=use_cpu_only,
-                    atol=atol, rtol=rtol, also_compare_shapes=False)
+    compare_backend(
+        proto=proto,
+        input_key_values=input_values,
+        expected_outputs=expected_outputs,
+        use_cpu_only=use_cpu_only,
+        atol=atol,
+        rtol=rtol,
+        also_compare_shapes=False,
+    )

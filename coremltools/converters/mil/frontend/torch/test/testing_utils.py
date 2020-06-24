@@ -12,6 +12,7 @@ from coremltools.converters import convert
 from coremltools.models import MLModel
 from coremltools._deps import _IS_MACOS
 
+
 def _flatten(object):
     flattened_list = []
     for item in object:
@@ -42,7 +43,9 @@ def convert_to_mlmodel(model_spec, tensor_inputs):
         elif isinstance(inputs, torch.Tensor):
             return TensorType(shape=inputs.shape)
         else:
-            raise ValueError("Unable to parse type {} into InputType.".format(type(inputs)))
+            raise ValueError(
+                "Unable to parse type {} into InputType.".format(type(inputs))
+            )
 
     mlmodel = convert(model_spec, inputs=list(_convert_to_inputtype(tensor_inputs)))
     return mlmodel

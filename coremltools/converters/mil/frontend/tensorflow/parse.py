@@ -30,7 +30,7 @@ def parse_type(t):
         DataType.DT_BOOL: types.bool,
         DataType.DT_UINT16: types.uint16,
         DataType.DT_UINT32: types.uint32,
-        DataType.DT_UINT64: types.uint64
+        DataType.DT_UINT64: types.uint64,
     }
     t = int(t)
     if t in mapping:
@@ -64,9 +64,9 @@ def parse_tensor(t):
         retval = _np.array(t.int64_val, dtype=_TF_TO_NP[t.dtype])
     elif len(t.bool_val) > 0:
         retval = _np.array(t.bool_val, dtype=_TF_TO_NP[t.dtype])
-    elif hasattr(t, 'uint32_val') and len(t.uint32_val) > 0:
+    elif hasattr(t, "uint32_val") and len(t.uint32_val) > 0:
         retval = _np.array(t.uint32_val, dtype=_TF_TO_NP[t.dtype])
-    elif hasattr(t, 'uint64_val') and len(t.uint64_val) > 0:
+    elif hasattr(t, "uint64_val") and len(t.uint64_val) > 0:
         retval = _np.array(t.uint64_val, dtype=_TF_TO_NP[t.dtype])
 
     if not t.tensor_shape.unknown_rank and len(shape) == 0:
@@ -85,7 +85,7 @@ def parse_tensor(t):
 
 def parse_string(s):
     if isinstance(s, bytes):
-        return s.decode('utf-8')
+        return s.decode("utf-8")
     else:
         return s
 
@@ -114,24 +114,24 @@ def parse_func(f):
 
 
 def parse_attr(attr):
-    if attr.HasField('s'):
+    if attr.HasField("s"):
         return parse_string(attr.s)
-    elif attr.HasField('i'):
+    elif attr.HasField("i"):
         return attr.i
-    elif attr.HasField('f'):
+    elif attr.HasField("f"):
         return attr.f
-    elif attr.HasField('b'):
+    elif attr.HasField("b"):
         return attr.b
-    elif attr.HasField('type'):
+    elif attr.HasField("type"):
         return parse_type(attr.type)
-    elif attr.HasField('shape'):
+    elif attr.HasField("shape"):
         return parse_shape(attr.shape)
-    elif attr.HasField('tensor'):
+    elif attr.HasField("tensor"):
         return parse_tensor(attr.tensor)
-    elif attr.HasField('list'):
+    elif attr.HasField("list"):
         return parse_list(attr.list)
-    elif attr.HasField('func'):
+    elif attr.HasField("func"):
         return parse_func(attr.func)
-    elif attr.HasField('placeholder'):
+    elif attr.HasField("placeholder"):
         raise NotImplementedError("placeholder not yet implemented")
-    raise ValueError('unintelligible TFNode attributes')
+    raise ValueError("unintelligible TFNode attributes")

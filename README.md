@@ -16,8 +16,8 @@ responsive.
 
 Core ML community tools contains all supporting tools for Core ML model
 conversion, editing and validation. This includes deep learning frameworks like
-TensorFlow, PyTorch Keras, Caffe as well as classical machine learning
-frameworks like LIBSVB, scikit-learn, and XGBoost.
+TensorFlow, PyTorch, Keras, Caffe as well as classical machine learning
+frameworks like LIBSVM, scikit-learn, and XGBoost.
 
 With coremltools, you can do the following:
 
@@ -36,8 +36,6 @@ For the latest changes please see the [release notes](https://github.com/apple/c
 
 # Documentation
 
-* [coremltools user guide and examples](https://coremltools.readme.io/)
-* [Core ML specification](https://mlmodel.readme.io/)
-* [API reference](https://coremltools.readme.io/reference/convertersconvert)
-
-
+* [User Guides and Examples](https://coremltools.readme.io/)
+* [Core ML Specification](https://mlmodel.readme.io/)
+* [API Reference](https://coremltools.readme.io/reference/convertersconvert)

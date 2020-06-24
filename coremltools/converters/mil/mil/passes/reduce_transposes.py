@@ -17,52 +17,52 @@ import numpy as np
 import copy
 from collections import defaultdict
 
-DEBUG = False # set to true to plot the block before and after the transformation
+DEBUG = False  # set to true to plot the block before and after the transformation
 
-'''
+"""
 Description of the Pass:
 
-The pass is divided into 3 phases  
+The pass is divided into 3 phases
 
 1st phase: information gathering
 ---------------------------------
 
-- Block is traversed in the topological order, starting from the ops connected to the inputs. 
+- Block is traversed in the topological order, starting from the ops connected to the inputs.
 - During the traversal, a value is associated with every var in the block
 - This value can be either of type "HypotheticalValue" or "LazyTransposeHypotheticalValue"
 - Main purpose of type "HypotheticalValue" is to essentially indicate that it is NOT of type  "LazyTransposeHypotheticalValue"
 - "LazyTransposeHypotheticalValue" represents either one or multiple transpose ops with the same perm value. This information
-is stored in this class. It also wraps a "HypotheticalValue" that was the last hypothetical value which was generated 
+is stored in this class. It also wraps a "HypotheticalValue" that was the last hypothetical value which was generated
 prior to the origin of "LazyTransposeHypotheticalValue"
- 
+
 - Each op decides which type of hypothetical value to associate with its output vars, based on its op type,
 its attributes, and the types of the hypothetical values of its input vars
 - Ops are classified into 4 categories: unary like, axis update, transpose and materialize (all the rest)
-- Transpose ops: these are the ops from which a "LazyTransposeHypotheticalValue" originate. 
+- Transpose ops: these are the ops from which a "LazyTransposeHypotheticalValue" originate.
     - If the input to it is a "HypotheticalValue", its output will be a "LazyTransposeHypotheticalValue",
         indicating that this transpose op is available to get cancelled downstream
     - If the input to it is a "LazyTransposeHypotheticalValue", then it is checked whether this op cancels it or not
-    - If it cancels it, a "HypotheticalValue" value is generated at the output and the information about this transpose cancellation 
+    - If it cancels it, a "HypotheticalValue" value is generated at the output and the information about this transpose cancellation
       is recorded in the dictionary "transpose_op_to_cancel_ops"
-    - If it does not cancel, the current transpose op is categrorized as a materialize op and hence the information in 
-       dictionary "transpose_op_to_materialize_ops" is updated accordingly. The output of the op is now mapped to a 
+    - If it does not cancel, the current transpose op is categrorized as a materialize op and hence the information in
+       dictionary "transpose_op_to_materialize_ops" is updated accordingly. The output of the op is now mapped to a
        "HypotheticalValue"
-- Unary like ops: they simply transfer their input hypothetical value type to the output. 
-- Axis update ops: if a transpose can pass through them, they are treated like a unary op and the dictionary 
+- Unary like ops: they simply transfer their input hypothetical value type to the output.
+- Axis update ops: if a transpose can pass through them, they are treated like a unary op and the dictionary
    "transpose_op_to_axis_update_ops" is updated. If the op cannot be updated in any manner to
-   allow a transpose to pass through, this op is then categorized as a materialize op and handled accordingly 
-- Materialzie ops: All "LazyTransposeHypotheticalValue" input vars, if present, materialize here. Output of this op 
+   allow a transpose to pass through, this op is then categorized as a materialize op and handled accordingly
+- Materialzie ops: All "LazyTransposeHypotheticalValue" input vars, if present, materialize here. Output of this op
   is always of type "HypotheticalValue". If the input is a "LazyTransposeHypotheticalValue", update the dict
   "transpose_op_to_materialize_ops"
-  
-- If the "LazyTransposeHypotheticalValue" hits a block output var, it is recorded in the dictionary 
+
+- If the "LazyTransposeHypotheticalValue" hits a block output var, it is recorded in the dictionary
 "transpose_op_to_block_output_vars". A non cancelled transpose op has to be materialized before a block output
-  
+
 - To treat an op like a unary op, add its type to "UNARY_LIKE_OP_TYPES". In future changes we want to make this process
 automatic, by automatically detecting an op as a unary like by its "traits"
 
 - To treat an op like axis update op, add a class specific to the op implementing the class "transform_axis_update_ops"
-For examples, see classes "transform_concat", "transform_pad" etc. The dictionary AXIS_UPDATE_OPS is automatically filled 
+For examples, see classes "transform_concat", "transform_pad" etc. The dictionary AXIS_UPDATE_OPS is automatically filled
 in by the decorator "register_axis_update_op"
 
 
@@ -71,16 +71,16 @@ in by the decorator "register_axis_update_op"
 - All Transpose ops that have a corresponding compliment op in dict "transpose_op_to_cancel_ops" is a candidate
 - However, we need to make sure of two things
     - if a transpose op is removed then all its cancel ops in "transpose_op_to_cancel_ops" must be also removed,
-      to ensure correctness of the graph. Same is true in the reverse direction as well, 
+      to ensure correctness of the graph. Same is true in the reverse direction as well,
       that is, for every cancel op that is removed all its parent transpose ops upstream, must also be removed.
-    - transpose ops should only be removed if the number of cancel ops is greater than the number of transpose ops 
+    - transpose ops should only be removed if the number of cancel ops is greater than the number of transpose ops
       that would get freshly introduced to the block as a result of materialization ops. Right now in the algorithm
       each materialization op/output var (dicts "transpose_op_to_materialize_ops" and "transpose_op_to_block_output_vars"),
-      results in one more transpose op, although this can be further optimized in the future 
-      
-- To resolve this, we recognize that nodes consisting of sets (a) and (b) form a bipartitle graph, where, 
+      results in one more transpose op, although this can be further optimized in the future
+
+- To resolve this, we recognize that nodes consisting of sets (a) and (b) form a bipartitle graph, where,
 (a) == starting transpose ops (originators of "LazyTransposeHypotheticalValue")
-and (b) == set of transpose cancel ops and materialize ops 
+and (b) == set of transpose cancel ops and materialize ops
 - in this bipartite graph, we find all the connected components
 - for each connected component, either the whole set of transpose ops in it are removed/materialized or none
 of them are touched
@@ -92,19 +92,18 @@ of them are touched
 ----------------------------------
 - Transpose starting ops and the cancel ops are removed
 - Axis update ops, affected by these transpose ops, are updated
-- Transposes are materialized, i.e. added just before the materialize ops, which are linked to the starting transpose ops. 
-  The starting transpose op can get materialized (inserted) multiple times, before each of the "materialize ops" downstream.  
-- Block outputs are handled similar to the materialize ops 
-- Type inference on all ops is invoked after all the transformations 
+- Transposes are materialized, i.e. added just before the materialize ops, which are linked to the starting transpose ops.
+  The starting transpose op can get materialized (inserted) multiple times, before each of the "materialize ops" downstream.
+- Block outputs are handled similar to the materialize ops
+- Type inference on all ops is invoked after all the transformations
 
 
-Debugging: 
+Debugging:
 ------------
 If the debug flag is set to True, the block before and after the transformation is plotted,
 with transpose nodes highlighted
 
-'''
-
+"""
 
 # TODO: instead of a hard-coded set, use op-traits
 # These are the ops that satisfy the following property:
@@ -113,18 +112,49 @@ with transpose nodes highlighted
 # - non rank changing
 # - doesn't need to be updated of a transpose passes through it. i.e.
 #  Transpose(op(x)) == op(Transpose(x))
-UNARY_LIKE_OP_TYPES = set(["relu", "log", "relu6",
-                           "abs", "acos", "asin", "atan",
-                           "atanh", "ceil", "clip", "cos",
-                           "cosh", "erf", "exp", "exp2",
-                           "floor", "logical_not", "round",
-                           "rsqrt", "sign", "sin", "sinh",
-                           "sqrt", "square", "tan", "tanh",
-                           "threshold", "clamped_relu", "elu",
-                           "gelu", "leaky_relu", "linear_activation",
-                           "scaled_tanh", "sigmoid", "sigmoid_hard",
-                           "softplus", "softplus_parametric", "softsign",
-                           "thresholded_relu"])
+UNARY_LIKE_OP_TYPES = set(
+    [
+        "relu",
+        "log",
+        "relu6",
+        "abs",
+        "acos",
+        "asin",
+        "atan",
+        "atanh",
+        "ceil",
+        "clip",
+        "cos",
+        "cosh",
+        "erf",
+        "exp",
+        "exp2",
+        "floor",
+        "logical_not",
+        "round",
+        "rsqrt",
+        "sign",
+        "sin",
+        "sinh",
+        "sqrt",
+        "square",
+        "tan",
+        "tanh",
+        "threshold",
+        "clamped_relu",
+        "elu",
+        "gelu",
+        "leaky_relu",
+        "linear_activation",
+        "scaled_tanh",
+        "sigmoid",
+        "sigmoid_hard",
+        "softplus",
+        "softplus_parametric",
+        "softsign",
+        "thresholded_relu",
+    ]
+)
 
 # Dictionary from axis update op to its class
 # This is filled in by child classes of the class "transform_axis_update_ops".
@@ -141,6 +171,7 @@ def _do_transposes_cancel(perm1, perm2):
         return True
     return False
 
+
 def _get_input_vars(op, only_nonconst_vars=False):
     """
     :return: List[Var]
@@ -149,7 +180,7 @@ def _get_input_vars(op, only_nonconst_vars=False):
     for name, val in op.inputs.items():
         if isinstance(val, Var):
             if only_nonconst_vars:
-                if val.op and val.op.op_type == 'const':
+                if val.op and val.op.op_type == "const":
                     continue
             input_vars.append(val)
         elif isinstance(val, (list, tuple)):
@@ -158,7 +189,7 @@ def _get_input_vars(op, only_nonconst_vars=False):
                     msg = "transpose optimization pass: unrecognized input type of op='{}', input='{}'"
                     raise ValueError(msg.format(op.name, name))
                 if only_nonconst_vars:
-                    if var.op and var.op.op_type == 'const':
+                    if var.op and var.op.op_type == "const":
                         continue
                 input_vars.append(var)
         else:
@@ -168,20 +199,22 @@ def _get_input_vars(op, only_nonconst_vars=False):
 
 
 def register_axis_update_op(cls=None, similar_ops=[]):
-    '''
+    """
     :param similar_ops: these ops share the same "update" and
     "can_transpose_pass" methods as the base class.
     For example: the class "transform_reduce_mean" corresponding to
     op "reduce_mean" can be shared with other ops such as
     "reduce_prod", "reduce_sum" etc
-    '''
+    """
 
     def class_wrapper(op_update_cls):
         cls_name = op_update_cls.__name__
         # remove "transform_" to get type of op
         op_type = cls_name[len("transform_") :]
         if op_type in AXIS_UPDATE_OPS:
-            raise ValueError("Update class for op '{}' already defined".format(op_update_cls))
+            raise ValueError(
+                "Update class for op '{}' already defined".format(op_update_cls)
+            )
         AXIS_UPDATE_OPS[op_type] = op_update_cls
         for similar_op_type in similar_ops:
             if similar_op_type in AXIS_UPDATE_OPS:
@@ -259,7 +292,6 @@ class transform_axis_update_ops(object):
 
 @register_axis_update_op()
 class transform_concat(transform_axis_update_ops):
-
     def __init__(self, **kwargs):
         super(transform_concat, self).__init__(**kwargs)
         self.axis_var = self.op.inputs["axis"]
@@ -271,7 +303,7 @@ class transform_concat(transform_axis_update_ops):
 
     def update(self):
         new_axis_val = self.transpose_axes[self.axis_var.val]
-        inputs = list(self.op.inputs['values'])
+        inputs = list(self.op.inputs["values"])
 
         # to be used, if there is a consant inputs to the concat op
         transpose_perm_for_const = [0] * len(self.transpose_axes)
@@ -280,7 +312,7 @@ class transform_concat(transform_axis_update_ops):
 
         # if there is a constant input, transpose it
         for input_var in inputs:
-            if input_var.op.op_type == 'const':
+            if input_var.op.op_type == "const":
                 const_val = input_var.val
                 new_const_val = np.transpose(const_val, transpose_perm_for_const)
                 # insert a new constant JUST before the op
@@ -293,7 +325,7 @@ class transform_concat(transform_axis_update_ops):
                     end_op=self.op,
                     old_var=input_var,
                     new_var=new_const_input_var,
-                    no_check_var_types=True
+                    no_check_var_types=True,
                 )
 
         # insert a new constant for the new axis, JUST before the op
@@ -307,15 +339,15 @@ class transform_concat(transform_axis_update_ops):
             end_op=self.op,
             old_var=self.axis_var,
             new_var=new_axis_var,
-            no_check_var_types=True
+            no_check_var_types=True,
         )
+
 
 @register_axis_update_op()
 class transform_pad(transform_axis_update_ops):
-
     def __init__(self, **kwargs):
         super(transform_pad, self).__init__(**kwargs)
-        self.pad_var = self.op.inputs['pad']
+        self.pad_var = self.op.inputs["pad"]
         self.pad_op = self.pad_var.op
         self.mode = self.op.mode.val
         self.pad_amounts_new = None
@@ -325,9 +357,13 @@ class transform_pad(transform_axis_update_ops):
         rank_diff = len(self.transpose_axes) - pad_amounts.shape[0]
         self.pad_amounts_new = copy.deepcopy(pad_amounts)
         # append "rank_diff" rows of zeros to the top
-        self.pad_amounts_new = np.concatenate((np.zeros((2 * rank_diff)).reshape(-1, 2), self.pad_amounts_new))
+        self.pad_amounts_new = np.concatenate(
+            (np.zeros((2 * rank_diff)).reshape(-1, 2), self.pad_amounts_new)
+        )
         self.pad_amounts_new = self.pad_amounts_new.astype(pad_amounts.dtype)
-        pad_amounts = np.concatenate((np.zeros((2 * rank_diff)).reshape(-1, 2), pad_amounts))
+        pad_amounts = np.concatenate(
+            (np.zeros((2 * rank_diff)).reshape(-1, 2), pad_amounts)
+        )
         for i, axis in enumerate(self.transpose_axes):
             self.pad_amounts_new[axis][0] = pad_amounts[i][0]
             self.pad_amounts_new[axis][1] = pad_amounts[i][1]
@@ -340,9 +376,11 @@ class transform_pad(transform_axis_update_ops):
         self.pad_amounts_new = self.pad_amounts_new.flatten()
         return True
 
-
     def can_transpose_pass(self):
-        if len(_get_input_vars(self.op, only_nonconst_vars=True)) != 1 or self.pad_op.op_type != 'const':
+        if (
+            len(_get_input_vars(self.op, only_nonconst_vars=True)) != 1
+            or self.pad_op.op_type != "const"
+        ):
             return False
         if len(self.transpose_axes) < 2:
             return False
@@ -350,7 +388,7 @@ class transform_pad(transform_axis_update_ops):
             return False
         # check that if mode is not constant, the updated padding
         # would stay limited to last 2 axes
-        if self.mode != 'constant' and not np.all(self.pad_amounts_new[:-4] == 0):
+        if self.mode != "constant" and not np.all(self.pad_amounts_new[:-4] == 0):
             return False
         return True
 
@@ -366,8 +404,9 @@ class transform_pad(transform_axis_update_ops):
             end_op=self.op,
             old_var=self.pad_var,
             new_var=new_pad_var,
-            no_check_var_types=True
+            no_check_var_types=True,
         )
+
 
 @register_axis_update_op(
     similar_ops=[
@@ -383,7 +422,6 @@ class transform_pad(transform_axis_update_ops):
     ]
 )
 class transform_reduce_mean(transform_axis_update_ops):
-
     def __init__(self, **kwargs):
         super(transform_reduce_mean, self).__init__(**kwargs)
         self.axes_var = self.op.inputs["axes"]
@@ -414,33 +452,25 @@ class transform_reduce_mean(transform_axis_update_ops):
             end_op=self.op,
             old_var=self.axes_var,
             new_var=new_axis_var,
-            no_check_var_types=True
+            no_check_var_types=True,
         )
 
-@register_axis_update_op(
-    similar_ops=[
-        "mul",
-        "sub",
-        "real_div",
-        "maximum",
-        "minimum"
-    ]
-)
-class transform_add(transform_axis_update_ops):
 
+@register_axis_update_op(similar_ops=["mul", "sub", "real_div", "maximum", "minimum"])
+class transform_add(transform_axis_update_ops):
     def __init__(self, **kwargs):
         super(transform_add, self).__init__(**kwargs)
 
     def can_transpose_pass(self):
         const_input = None
-        if self.op.inputs['x'].op and self.op.inputs['x'].op.op_type == 'const':
-            const_input = self.op.inputs['x']
-            other_input = self.op.inputs['y']
-        if self.op.inputs['y'].op and self.op.inputs['y'].op.op_type == 'const':
+        if self.op.inputs["x"].op and self.op.inputs["x"].op.op_type == "const":
+            const_input = self.op.inputs["x"]
+            other_input = self.op.inputs["y"]
+        if self.op.inputs["y"].op and self.op.inputs["y"].op.op_type == "const":
             if const_input is not None:
-                return False # both inputs are constant
-            const_input = self.op.inputs['y']
-            other_input = self.op.inputs['x']
+                return False  # both inputs are constant
+            const_input = self.op.inputs["y"]
+            other_input = self.op.inputs["x"]
         if const_input is None:
             return True
         if not isinstance(const_input.val, (np.ndarray, np.generic)):
@@ -457,7 +487,7 @@ class transform_add(transform_axis_update_ops):
             return
 
         for input_var in _get_input_vars(self.op):
-            if input_var.op and input_var.op.op_type == 'const':
+            if input_var.op and input_var.op.op_type == "const":
                 const_input_var = input_var
                 break
 
@@ -482,7 +512,7 @@ class transform_add(transform_axis_update_ops):
             end_op=self.op,
             old_var=const_input_var,
             new_var=new_const_var,
-            no_check_var_types=True
+            no_check_var_types=True,
         )
 
 
@@ -507,12 +537,15 @@ class LazyTransposeHypotheticalValue(object):
         self.wrapped_hypothetical_value = hypothetical_value  # type : HypotheticalValue
 
         if not isinstance(hypothetical_value, HypotheticalValue):
-            raise ValueError('transpose optimization pass: incorrect type passed for hypothetical_value')
+            raise ValueError(
+                "transpose optimization pass: incorrect type passed for hypothetical_value"
+            )
 
         for op in transpose_ops:
             if op.op_type != "transpose":
                 raise ValueError(
-                    "transpose optimization pass: LazyTransposeHypotheticalValue can only be made with transpose ops")
+                    "transpose optimization pass: LazyTransposeHypotheticalValue can only be made with transpose ops"
+                )
             perm_op = list(op.inputs["perm"].val)
             if perm_op != perm:
                 raise ValueError(
@@ -523,14 +556,15 @@ class LazyTransposeHypotheticalValue(object):
         self.transpose_ops = transpose_ops  # type : Set(op)
 
 
-
 class TransposeOptimization(object):
     def __init__(self, block):
         self.block = block
 
         # for each var in the block, this dictionary stores the hypothetical value that is assigned to it during
         # graph traversal
-        self.var_to_hypothetical_value = {}  # type : var : HypotheticalValue or LazyTransposeHypotheticalValue
+        self.var_to_hypothetical_value = (
+            {}
+        )  # type : var : HypotheticalValue or LazyTransposeHypotheticalValue
         # start out by filling this dictionary with all the inputs of the block
         for _, input_var in block.inputs.items():
             self.var_to_hypothetical_value[input_var] = HypotheticalValue(input_var)
@@ -540,19 +574,27 @@ class TransposeOptimization(object):
         # after which they are used by the `_apply_transform` method
 
         # transpose op to the list of transpose ops that are its compliments and can be cancelled away with it
-        self.transpose_op_to_cancel_ops = defaultdict(lambda: [])  # type : op : List[op]
+        self.transpose_op_to_cancel_ops = defaultdict(
+            lambda: []
+        )  # type : op : List[op]
 
         # transpose op to the list of ops before which it has to materialize, i.e. the root transpose op
         #  can be moved downstream in the graph, as far as these materialize ops
-        self.transpose_op_to_materialize_ops = defaultdict(lambda: [])  # type : op : List[Tuple(op, Var)]
+        self.transpose_op_to_materialize_ops = defaultdict(
+            lambda: []
+        )  # type : op : List[Tuple(op, Var)]
 
         # list of the ops that need to be updated (either their axis parameter or one of their constant inputs)
         # if the transpose op is fused away or moved downstream in the graph
-        self.transpose_op_to_axis_update_ops = defaultdict(lambda: [])  # type : op : List[op]
+        self.transpose_op_to_axis_update_ops = defaultdict(
+            lambda: []
+        )  # type : op : List[op]
 
         # transpose op to "materialize" block output vars
         # if a block output var gets a Lazy transpose value, this dictionary is updated
-        self.transpose_op_to_block_output_vars = defaultdict(lambda: []) # type : op : List[Var]
+        self.transpose_op_to_block_output_vars = defaultdict(
+            lambda: []
+        )  # type : op : List[Var]
 
         # for book keeping
         self.ops_updated = set()
@@ -567,10 +609,14 @@ class TransposeOptimization(object):
             input_var = op.inputs["x"]
 
         if len(op.outputs) > 1:
-            msg = "transpose optimization pass: op '{}', of type = '{}', has multiple outputs, hence it" \
-                  "cannot be handled like a unary op"
+            msg = (
+                "transpose optimization pass: op '{}', of type = '{}', has multiple outputs, hence it"
+                "cannot be handled like a unary op"
+            )
             raise ValueError(msg.format(op.name, op.op_type))
-        self.var_to_hypothetical_value[op.outputs[0]] = self.var_to_hypothetical_value[input_var]
+        self.var_to_hypothetical_value[op.outputs[0]] = self.var_to_hypothetical_value[
+            input_var
+        ]
 
     def _visit_materialize_op(self, op):
         # this is the catch all category of ops
@@ -588,8 +634,9 @@ class TransposeOptimization(object):
             if isinstance(input_hypothetical_value, LazyTransposeHypotheticalValue):
                 all_lazy_transpose_ops = input_hypothetical_value.transpose_ops
                 for transpose_op in all_lazy_transpose_ops:
-                    self.transpose_op_to_materialize_ops[transpose_op].append((op, input_var))
-
+                    self.transpose_op_to_materialize_ops[transpose_op].append(
+                        (op, input_var)
+                    )
 
     def _visit_axis_update_op(self, op):
         """
@@ -612,9 +659,11 @@ class TransposeOptimization(object):
         # checks specific to the op type
         op_cls = AXIS_UPDATE_OPS.get(op.op_type, None)
         if op_cls is None:
-            raise ValueError("Transform class for op of type '{}' not found".format(op.op_type))
+            raise ValueError(
+                "Transform class for op of type '{}' not found".format(op.op_type)
+            )
 
-        if not op_cls(**{'op':op, 'transpose_axes':perm}).can_transpose_pass():
+        if not op_cls(**{"op": op, "transpose_axes": perm}).can_transpose_pass():
             self._visit_materialize_op(op)
             return
 
@@ -629,9 +678,10 @@ class TransposeOptimization(object):
             self.transpose_op_to_axis_update_ops[transpose_op].append(op)
 
         self.var_to_hypothetical_value[op.outputs[0]] = LazyTransposeHypotheticalValue(
-                                                                input_hypothetical_value.wrapped_hypothetical_value,
-                                                                all_lazy_transpose_ops,
-                                                                perm)
+            input_hypothetical_value.wrapped_hypothetical_value,
+            all_lazy_transpose_ops,
+            perm,
+        )
 
     def _visit_transpose_op(self, op):
         input_var = op.inputs["x"]
@@ -641,13 +691,13 @@ class TransposeOptimization(object):
         perm = list(op.inputs["perm"].val)
         input_hypothetical_value = self.var_to_hypothetical_value[input_var]
 
-        '''
+        """
         There are 3 cases to handle:
-        
+
         1. input type == HypotheticalValue
         2. input type == LazyTransposeHypotheticalValue and this op is the transpose compliment of it
         3. input type == LazyTransposeHypotheticalValue and this op is NOT the transpose compliment of it
-        '''
+        """
 
         if isinstance(input_hypothetical_value, HypotheticalValue):
             # case 1
@@ -656,9 +706,10 @@ class TransposeOptimization(object):
             # make the output var's hypothetical_value a lazy transpose
             self.var_to_hypothetical_value[
                 op.outputs[0]
-            ] = LazyTransposeHypotheticalValue(input_hypothetical_value, set([op]), perm)
+            ] = LazyTransposeHypotheticalValue(
+                input_hypothetical_value, set([op]), perm
+            )
             return
-
 
         # input is a Lazy transpose hypothetical value. Lets first check whether the current
         # transpose cancels it or not
@@ -684,8 +735,11 @@ class TransposeOptimization(object):
 
         input_vars = _get_input_vars(op)
         for var in input_vars:
-            assert var in self.var_to_hypothetical_value, \
-                "transpose optimization pass: hypothetical value for var \'{}\', not found".format(var.name)
+            assert (
+                var in self.var_to_hypothetical_value
+            ), "transpose optimization pass: hypothetical value for var '{}', not found".format(
+                var.name
+            )
 
         if op.op_type in UNARY_LIKE_OP_TYPES:
             self._visit_unary_like_op(op)
@@ -699,7 +753,6 @@ class TransposeOptimization(object):
             )
         else:
             self._visit_materialize_op(op)
-
 
     def block_traversal(self):
 
@@ -729,17 +782,24 @@ class TransposeOptimization(object):
         transpose_cancel_ops_to_starting_transpose_set = defaultdict(lambda: set())
         for op, cancel_ops_list in self.transpose_op_to_cancel_ops.items():
             for cancel_op in cancel_ops_list:
-                transpose_cancel_ops_to_starting_transpose_set[cancel_op].update(set([op]))
+                transpose_cancel_ops_to_starting_transpose_set[cancel_op].update(
+                    set([op])
+                )
 
         for op in transpose_cancel_ops_to_starting_transpose_set:
-            assert op not in self.transpose_op_to_cancel_ops, \
-                "transpose reduction optimization: transpose op \'{}\' cannot be both a starting and cancel op".format(op.name)
+            assert (
+                op not in self.transpose_op_to_cancel_ops
+            ), "transpose reduction optimization: transpose op '{}' cannot be both a starting and cancel op".format(
+                op.name
+            )
 
         # invert "transpose_op_to_materialize_ops"
         materizalize_ops_to_starting_transpose_set = defaultdict(lambda: set())
         for op, materialize_ops in self.transpose_op_to_materialize_ops.items():
             for materialize_op, edge in materialize_ops:
-                materizalize_ops_to_starting_transpose_set[materialize_op].update(set([op]))
+                materizalize_ops_to_starting_transpose_set[materialize_op].update(
+                    set([op])
+                )
 
                 # the starting transpose op may not be in "transpose_op_to_cancel_ops"
                 # but it needs to be removed if it materializes later, hence we need to add it
@@ -747,21 +807,23 @@ class TransposeOptimization(object):
                 if op not in self.transpose_op_to_cancel_ops:
                     self.transpose_op_to_cancel_ops[op] = []
 
-
         # (starting transpose ops) and (transpose cancel ops + materialize ops) form a bipartite graph.
         # Find the connected components of this graph, by doing a BFS traversal
-        connected_components = [] # List[(Set(op), Set(op)), Set(op)]
+        connected_components = []  # List[(Set(op), Set(op)), Set(op)]
         visited = {}
         for op in list(self.transpose_op_to_cancel_ops.keys()):
-            if op in visited: continue
+            if op in visited:
+                continue
             visited[op] = 1
-            set_a = set([op]) # set of starting transpose ops
-            set_b1 = set() # set of transpose cancel ops connected to set_a
-            set_b2 = set() # set of materialize ops connected to set_a
+            set_a = set([op])  # set of starting transpose ops
+            set_b1 = set()  # set of transpose cancel ops connected to set_a
+            set_b2 = set()  # set of materialize ops connected to set_a
             queue = []
             queue.extend(self.transpose_op_to_cancel_ops[op])
             if op in self.transpose_op_to_materialize_ops:
-                materialize_ops_list = list(list(zip(*self.transpose_op_to_materialize_ops[op]))[0])
+                materialize_ops_list = list(
+                    list(zip(*self.transpose_op_to_materialize_ops[op]))[0]
+                )
                 queue.extend(materialize_ops_list)
             while len(queue) > 0:
                 o = queue.pop(0)
@@ -774,7 +836,9 @@ class TransposeOptimization(object):
                             queue.append(neighbor_op)
                 elif o in transpose_cancel_ops_to_starting_transpose_set:
                     set_b1.update(set([o]))
-                    for neighbor_op in transpose_cancel_ops_to_starting_transpose_set[o]:
+                    for neighbor_op in transpose_cancel_ops_to_starting_transpose_set[
+                        o
+                    ]:
                         if neighbor_op not in visited:
                             queue.append(neighbor_op)
                 else:
@@ -784,7 +848,9 @@ class TransposeOptimization(object):
                             queue.append(neighbor_op)
             connected_components.append((set_a, set_b1, set_b2))
 
-        starting_ops_to_remove = set()  # starting ops to remove from the optimization list
+        starting_ops_to_remove = (
+            set()
+        )  # starting ops to remove from the optimization list
 
         # now for each connected component, make a decision whether to cancel it or not
         # (either all transpose ops in a set get cancelled or they don't)
@@ -797,13 +863,16 @@ class TransposeOptimization(object):
                     starting_ops_to_remove.update(op_set)
                     block_output = True
                     break
-            if block_output:continue
+            if block_output:
+                continue
 
             # check whether transposes resulting from materialization are not greater than cancel transposes
             materizalize_set = set(list(materialize_op_set))
             # all the output nodes are like materialize ops , so add them here
             for op in op_set:
-                materizalize_set.update(set(self.transpose_op_to_block_output_vars.get(op, [])))
+                materizalize_set.update(
+                    set(self.transpose_op_to_block_output_vars.get(op, []))
+                )
 
             if len(materizalize_set) > len(op_cancel_set):
                 starting_ops_to_remove.update(op_set)
@@ -811,7 +880,6 @@ class TransposeOptimization(object):
         # remove ops
         for op in starting_ops_to_remove:
             self.transpose_op_to_cancel_ops.pop(op, None)
-
 
     def _remove_transpose_ops(self, starting_transpose_op):
 
@@ -823,14 +891,16 @@ class TransposeOptimization(object):
         for op in self.transpose_op_to_axis_update_ops.get(starting_transpose_op, []):
             if op not in self.ops_updated:
                 op_cls = AXIS_UPDATE_OPS.get(op.op_type, None)
-                op_cls(**{'op':op, 'transpose_axes':perm}).update()
+                op_cls(**{"op": op, "transpose_axes": perm}).update()
                 self.ops_updated.add(op)
 
         # short circuit starting_transpose_op and its cancel ops
 
         to_be_removed_ops = []
 
-        for op in [starting_transpose_op] + self.transpose_op_to_cancel_ops[starting_transpose_op]:
+        for op in [starting_transpose_op] + self.transpose_op_to_cancel_ops[
+            starting_transpose_op
+        ]:
             if op in self.transpose_ops_removed:
                 continue
 
@@ -852,7 +922,7 @@ class TransposeOptimization(object):
                 anchor_op=parent_op,
                 old_var=output_var,
                 new_var=input_var,
-                no_check_var_types=True
+                no_check_var_types=True,
             )
 
         """
@@ -869,7 +939,9 @@ class TransposeOptimization(object):
                 ... = materialize_op(..., %i2 ,...)
                 ...
         """
-        for op, input_var in self.transpose_op_to_materialize_ops.get(starting_transpose_op, []):
+        for op, input_var in self.transpose_op_to_materialize_ops.get(
+            starting_transpose_op, []
+        ):
             if (op, input_var) in self.materialized_ops_handled:
                 continue
 
@@ -886,51 +958,55 @@ class TransposeOptimization(object):
             self.block.replace_uses_of_var_after_op(
                 anchor_op=x.op,
                 end_op=op,
-                old_var=i1, new_var=x,
-                no_check_var_types=True
+                old_var=i1,
+                new_var=x,
+                no_check_var_types=True,
             )
 
         # materialize transpose JUST before output vars
-        for output_var in self.transpose_op_to_block_output_vars.get(starting_transpose_op, []):
+        for output_var in self.transpose_op_to_block_output_vars.get(
+            starting_transpose_op, []
+        ):
             with self.block:
                 x = mb.transpose(x=output_var, perm=perm, name=output_var.name)
 
             self.block.replace_uses_of_var_after_op(
-                anchor_op=x.op,
-                old_var=output_var, new_var=x,
-                no_check_var_types=True
+                anchor_op=x.op, old_var=output_var, new_var=x, no_check_var_types=True
             )
-            output_var.name += '_before_transpose_op_' + x.op.name
+            output_var.name += "_before_transpose_op_" + x.op.name
             if output_var.op.name == x.op.name:
-                output_var.op.name += '_before_transpose_op_' + x.op.name
+                output_var.op.name += "_before_transpose_op_" + x.op.name
 
         self.block.remove_ops(to_be_removed_ops)
 
-
-
     def apply_transform(self):
-        '''
+        """
         Take in the data collected during graph traversal
-        and transform the graph by cancelling out transpose ops that can be removed. 
-        '''
+        and transform the graph by cancelling out transpose ops that can be removed.
+        """
 
-        logging.debug("Block before optimize transpose transform:\n{}".format(self.block))
+        logging.debug(
+            "Block before optimize transpose transform:\n{}".format(self.block)
+        )
         if DEBUG:
             import graphviz
-            graphviz.Source(self.block.get_dot_string(highlight_debug_op_names=[],
-                                                       highlight_debug_op_types=['transpose'])).\
-                view(filename='/tmp/block_before_reduce_transpose')
 
-        '''        
+            graphviz.Source(
+                self.block.get_dot_string(
+                    highlight_debug_op_names=[], highlight_debug_op_types=["transpose"]
+                )
+            ).view(filename="/tmp/block_before_reduce_transpose")
+
+        """
         First check which transposes can be cancelled.
         After this function call we get an updated dictionary "transpose_op_to_cancel_ops"
         with only the transpose ops that can really be cancelled in the graph
         Reasons to not cancel:
         - materialize_ops are greater than cancel_ops, so removing transpose will instead end up increasing the count of transposes
         - removing a transpose op can only be successful, if all of its cancel ops are removed, removing all the cancel ops
-          is only successful if all of their starting transpose ops are removed and so on. This check is also done in 
+          is only successful if all of their starting transpose ops are removed and so on. This check is also done in
            "_verify_cancellable_transposes()"
-        '''
+        """
         self._verify_cancellable_transposes()
 
         # apply transform
@@ -938,18 +1014,21 @@ class TransposeOptimization(object):
             self._remove_transpose_ops(transpose_op)
 
         if DEBUG:
-            graphviz.Source(self.block.get_dot_string(highlight_debug_op_names=[],
-                                                       highlight_debug_op_types=['transpose'])).\
-                view(filename='/tmp/block_after_reduce_transpose')
+            graphviz.Source(
+                self.block.get_dot_string(
+                    highlight_debug_op_names=[], highlight_debug_op_types=["transpose"]
+                )
+            ).view(filename="/tmp/block_after_reduce_transpose")
 
-        logging.debug("Block after optimize transpose transform:\n{}".format(self.block))
+        logging.debug(
+            "Block after optimize transpose transform:\n{}".format(self.block)
+        )
 
         for op in self.block.operations:
             op.type_value_inference(overwrite_output=True)
 
 
 def reduce_transposes_block(block):
-
     """
     Only apply the optimization if the block is flat,
     i.e, it does not contain any op which contains a sub-block.

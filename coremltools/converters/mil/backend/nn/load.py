@@ -11,52 +11,69 @@ from __future__ import absolute_import as _
 import logging
 from collections import defaultdict
 
-from coremltools.converters.mil.input_types import ClassifierConfig, ImageType, EnumeratedShapes, Shape, RangeDim
+from coremltools.converters.mil.input_types import (
+    ClassifierConfig,
+    ImageType,
+    EnumeratedShapes,
+    Shape,
+    RangeDim,
+)
 from coremltools.models import MLModel
 from coremltools.models import neural_network as neural_network
 import coremltools.models.datatypes as datatypes
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.types.symbolic import (
-        any_symbolic, any_variadic, is_symbolic)
+    any_symbolic,
+    any_variadic,
+    is_symbolic,
+)
 from .op_mapping import convert_ops
 from coremltools.models.neural_network import flexible_shape_utils
 from coremltools.models.neural_network.flexible_shape_utils import (
-        update_image_size_range, add_enumerated_image_sizes,
-        set_multiarray_ndshape_range, add_multiarray_ndshape_enumeration)
+    update_image_size_range,
+    add_enumerated_image_sizes,
+    set_multiarray_ndshape_range,
+    add_multiarray_ndshape_enumeration,
+)
 from .passes.nn_passes import nn_backend_passes
 from coremltools.converters._profile_utils import _profile
+
 
 def _convert_to_image_input(proto, inputs):
     tmp_model = MLModel(proto)
     for input_type in inputs:
         if isinstance(input_type, ImageType):
-            if input_type.color_layout == 'G':
+            if input_type.color_layout == "G":
                 gray_bias = input_type.bias
                 red_bias, green_bias, blue_bias = 0.0, 0.0, 0.0
-            elif input_type.color_layout == 'RGB':
+            elif input_type.color_layout == "RGB":
                 gray_bias = 0.0
                 red_bias, green_bias, blue_bias = input_type.bias
-            elif input_type.color_layout == 'BGR':
+            elif input_type.color_layout == "BGR":
                 gray_bias = 0.0
                 blue_bias, green_bias, red_bias = input_type.bias
-            tmp_model = neural_network.utils.make_image_input(tmp_model,
-                                                              input_type.name,
-                                                              is_bgr=input_type.color_layout == 'BGR',
-                                                              image_format='NCHW' if input_type.channel_first else 'NHWC',
-                                                              red_bias=red_bias,
-                                                              green_bias=green_bias,
-                                                              blue_bias=blue_bias,
-                                                              gray_bias=gray_bias,
-                                                              scale=input_type.scale)
+            tmp_model = neural_network.utils.make_image_input(
+                tmp_model,
+                input_type.name,
+                is_bgr=input_type.color_layout == "BGR",
+                image_format="NCHW" if input_type.channel_first else "NHWC",
+                red_bias=red_bias,
+                green_bias=green_bias,
+                blue_bias=blue_bias,
+                gray_bias=gray_bias,
+                scale=input_type.scale,
+            )
     return tmp_model.get_spec()
 
 
 def _convert_to_classifier(proto, classifier_config):
     tmp_model = MLModel(proto)
-    tmp_model = neural_network.utils.make_nn_classifier(tmp_model,
-                                                        classifier_config.class_labels,
-                                                        classifier_config.predicted_feature_name,
-                                                        classifier_config.predicted_probabilities_output)
+    tmp_model = neural_network.utils.make_nn_classifier(
+        tmp_model,
+        classifier_config.class_labels,
+        classifier_config.predicted_feature_name,
+        classifier_config.predicted_probabilities_output,
+    )
     return tmp_model.get_spec()
 
 
@@ -68,17 +85,33 @@ def _set_user_inputs(proto, inputs):
                 image_sizes = []
                 if input_type.image_config.channel_first:
                     for s in shape.shapes:
-                        image_sizes.append(flexible_shape_utils.NeuralNetworkImageSize(s.shape[-2], s.shape[-1]))
+                        image_sizes.append(
+                            flexible_shape_utils.NeuralNetworkImageSize(
+                                s.shape[-2], s.shape[-1]
+                            )
+                        )
                 else:
                     for s in shape.shapes:
-                        image_sizes.append(flexible_shape_utils.NeuralNetworkImageSize(s.shape[-3], s.shape[-2]))
-                add_enumerated_image_sizes(proto, input_type.name, image_sizes=image_sizes)
+                        image_sizes.append(
+                            flexible_shape_utils.NeuralNetworkImageSize(
+                                s.shape[-3], s.shape[-2]
+                            )
+                        )
+                add_enumerated_image_sizes(
+                    proto, input_type.name, image_sizes=image_sizes
+                )
             else:
                 add_multiarray_ndshape_enumeration(
-                    proto, input_type.name, [tuple(s.shape) for s in shape.shapes])
+                    proto, input_type.name, [tuple(s.shape) for s in shape.shapes]
+                )
         elif isinstance(shape, Shape):
-            shape = shape.shape # This is shape in Shape
-            if all([not isinstance(s, RangeDim) and not is_symbolic(s) and s > 0 for s in shape]):
+            shape = shape.shape  # This is shape in Shape
+            if all(
+                [
+                    not isinstance(s, RangeDim) and not is_symbolic(s) and s > 0
+                    for s in shape
+                ]
+            ):
                 continue
             if isinstance(input_type, ImageType):
                 img_range = flexible_shape_utils.NeuralNetworkImageSizeRange()
@@ -102,7 +135,9 @@ def _set_user_inputs(proto, inputs):
                 else:
                     img_range.add_width_range((W, W))
 
-                flexible_shape_utils.update_image_size_range(proto, input_type.name, img_range)
+                flexible_shape_utils.update_image_size_range(
+                    proto, input_type.name, img_range
+                )
             else:
                 lb = []
                 ub = []
@@ -117,7 +152,9 @@ def _set_user_inputs(proto, inputs):
                         lb.append(s)
                         ub.append(s)
                 set_multiarray_ndshape_range(
-                    proto, input_type.name, lower_bounds=lb, upper_bounds=ub)
+                    proto, input_type.name, lower_bounds=lb, upper_bounds=ub
+                )
+
 
 def _set_symbolic_inputs(proto, symbolic_inputs):
     # Set symbolic input shapes by -1 infered from graph
@@ -125,16 +162,20 @@ def _set_symbolic_inputs(proto, symbolic_inputs):
         lb = [1 if is_symbolic(d) else d for d in shape]
         ub = [-1 if is_symbolic(d) else d for d in shape]
         set_multiarray_ndshape_range(
-            proto, input_name, lower_bounds=lb, upper_bounds=ub)
+            proto, input_name, lower_bounds=lb, upper_bounds=ub
+        )
+
 
 @_profile
 def load(prog, **kwargs):
-    if 'main' not in prog.functions:
-        msg = 'main function not found in program {}'
+    if "main" not in prog.functions:
+        msg = "main function not found in program {}"
         raise ValueError(msg.format(prog))
     if len(prog.functions) != 1:
-        msg = 'Program must have exactly one `main` function to ' \
-            'convert to NN. Program: {}'
+        msg = (
+            "Program must have exactly one `main` function to "
+            "convert to NN. Program: {}"
+        )
         raise ValueError(msg.format(prog))
 
     nn_backend_passes(prog)
@@ -142,12 +183,12 @@ def load(prog, **kwargs):
 
     v1_inputs = []
     symbolic_inputs = {}
-    for name, var in prog.functions['main'].inputs.items():
+    for name, var in prog.functions["main"].inputs.items():
         if types.is_tensor(var.sym_type):
             sym_shape = var.sym_type.get_shape()
             if any_variadic(sym_shape):
                 # TODO: rdar://59559656
-                raise NotImplementedError('Variadic rank is not supported')
+                raise NotImplementedError("Variadic rank is not supported")
             if any_symbolic(sym_shape):
                 user_specified = False
                 for input_type in input_types:
@@ -168,7 +209,7 @@ def load(prog, **kwargs):
             raise NotImplementedError()
 
     v1_outputs = []
-    for var in prog.functions['main'].outputs:
+    for var in prog.functions["main"].outputs:
         if types.is_tensor(var.sym_type) or types.is_primitive(var.sym_type):
             # Disregard the output types
             v1_outputs.append((var.name, None))
@@ -177,9 +218,11 @@ def load(prog, **kwargs):
 
     # create neural network builder
     builder = neural_network.NeuralNetworkBuilder(
-        v1_inputs, v1_outputs,
+        v1_inputs,
+        v1_outputs,
         disable_rank5_shape_mapping=True,
-        use_float_arraytype=True)
+        use_float_arraytype=True,
+    )
 
     # const in V2 are added lazily to V1 by each op whenever needed.
     # `const_context` stores the const names we've added so far and avoid
@@ -189,15 +232,19 @@ def load(prog, **kwargs):
     # layer, so the const_context is simply a stack of set.
     const_context = []
     # Iterate through ops and add to builder
-    convert_ops(const_context, builder, prog.functions['main'].operations,
-            prog.functions['main'].outputs)
+    convert_ops(
+        const_context,
+        builder,
+        prog.functions["main"].operations,
+        prog.functions["main"].outputs,
+    )
 
     # Replace model outputs's name with v1_outputs
     output_names = [x[0] for x in v1_outputs]
     for i, spec_layer in enumerate(builder.nn_spec.layers):
         for j, name in enumerate(spec_layer.output):
             for output_name in output_names:
-                if output_name.split(':')[0] == name:
+                if output_name.split(":")[0] == name:
                     spec_layer.output[j] = output_name
 
     proto = builder.spec
@@ -207,7 +254,7 @@ def load(prog, **kwargs):
         proto = _convert_to_image_input(proto, input_types)
 
     # classifier flag
-    classifier_config = kwargs.get('classifier_config', None)
+    classifier_config = kwargs.get("classifier_config", None)
     if classifier_config is not None:
         proto = _convert_to_classifier(proto, classifier_config)
 

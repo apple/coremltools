@@ -9,6 +9,7 @@ from __future__ import print_function as _
 from __future__ import division as _
 from __future__ import absolute_import as _
 
+
 # A TensorArray is essentially a runtime vector<Tensor> with
 #
 #  - an optional requirement "infer_shape" (True by default) that all Tensors
@@ -63,7 +64,7 @@ def tensor_array_resource_removal(gd):
     # this should be called *BEFORE* introduction of tuples,
     # and before output edges are added (for simplicity)
     for k, node in gd.items():
-        if node.op.startswith('TensorArray') and node.op != 'TensorArrayV3':
+        if node.op.startswith("TensorArray") and node.op != "TensorArrayV3":
             # generally the resource edge is the first edge
             # input is resource, indices, flow
             # output is generally flow
@@ -78,6 +79,6 @@ def tensor_array_resource_removal(gd):
             else:
                 input_node = node.inputs[i]
                 input_index = 0
-            if gd[input_node].op == 'TensorArrayV3':
+            if gd[input_node].op == "TensorArrayV3":
                 if input_index == 1:
                     node.inputs[i] = "%s" % input_node

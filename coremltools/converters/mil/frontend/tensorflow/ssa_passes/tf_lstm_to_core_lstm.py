@@ -15,7 +15,8 @@ from coremltools.converters.mil.mil import types
 import numpy as np
 import logging
 
-@register_pass(namespace='tensorflow')
+
+@register_pass(namespace="tensorflow")
 def tf_lstm_to_core_lstm(prog):
     """
     Try to map TF dialect ops `tf_lstm_block` and `tf_lstm_block_cell` to
@@ -48,11 +49,11 @@ def tf_lstm_to_core_lstm_block(block):
         for b in op.blocks:
             tf_lstm_to_core_lstm_block(b)
 
-        if op.op_type in ['tf_lstm_block_cell', 'tf_lstm_block']:
+        if op.op_type in ["tf_lstm_block_cell", "tf_lstm_block"]:
             if try_replace_with_core_lstm(op):
-                logging.info('Successfully map {} to lstm'.format(op.op_type))
+                logging.info("Successfully map {} to lstm".format(op.op_type))
             else:
-                logging.info('Unable to map {} to lstm'.format(op.op_type))
+                logging.info("Unable to map {} to lstm".format(op.op_type))
 
 
 def try_replace_with_core_lstm(op):
@@ -65,7 +66,7 @@ def try_replace_with_core_lstm(op):
 
     True if op can be represented by mb.lstm op in SSA. False otherwise
     """
-    if op.op_type == 'tf_lstm_block_cell':
+    if op.op_type == "tf_lstm_block_cell":
         batch = op.x.shape[0]
     else:  # tf_lstm_block
         batch = op.x.shape[1]
@@ -82,12 +83,12 @@ def try_replace_with_core_lstm(op):
 
     # Check if tf_lstm_block_cell can be replaced with lstm op
     i, cs, f, o, ci, co, h = op.outputs
-    if op.op_type == 'tf_lstm_block_cell':
+    if op.op_type == "tf_lstm_block_cell":
         unsupported_outputs = [i, f, o, ci, co]  # only cs, h are supported
         for ov in unsupported_outputs:
             if len(ov.child_ops) > 0 or len(ov.consuming_blocks) > 0:
                 return False
-    else: # tf_lstm_block
+    else:  # tf_lstm_block
         unsupported_outputs = [i, cs, f, o, ci, co]  # only h is supported
         for ov in unsupported_outputs:
             if len(ov.child_ops) > 0 or len(ov.consuming_blocks) > 0:
@@ -98,8 +99,9 @@ def try_replace_with_core_lstm(op):
 
     mb_peep = None
     if op.use_peephole.val:
-        mb_peep = np.stack([op.weight_peep_i.val, op.weight_peep_f.val,
-            op.weight_peep_o.val])
+        mb_peep = np.stack(
+            [op.weight_peep_i.val, op.weight_peep_f.val, op.weight_peep_o.val]
+        )
 
     # weights. TF1 W is icfo. Need to convert to ifco
     tf_w = op.weight.val  # [input_dim+outut_dim, 4*hidden_dim] in icfo layout
@@ -109,7 +111,7 @@ def try_replace_with_core_lstm(op):
     # Bias is icfo. Convert to ssa LSTM's ifoc layout
     tf_b = op.bias.val
     tf_b_i, tf_b_c, tf_b_f, tf_b_o = np.split(tf_b, 4, axis=0)
-    tf_b_f += op.forget_bias.val # add forget bias to bias
+    tf_b_f += op.forget_bias.val  # add forget bias to bias
     bias = np.concatenate([tf_b_i, tf_b_f, tf_b_o, tf_b_c], axis=0)
 
     # TF's bias = input_bias + recurrence_bias [4*hidden_dims]. Use all zeros
@@ -118,33 +120,34 @@ def try_replace_with_core_lstm(op):
 
     cell_clip = None if op.cell_clip is None else op.cell_clip.val
 
-    output_sequence = op.op_type == 'tf_lstm_block'
+    output_sequence = op.op_type == "tf_lstm_block"
 
     block = op.enclosing_block
     with block:
         # x: [seq_len, batch, input_dim]
-        if op.op_type == 'tf_lstm_block_cell':
+        if op.op_type == "tf_lstm_block_cell":
             x = mb.expand_dims(x=op.x, axes=[0], before_op=op)
-        else: # tf_lstm_block
+        else:  # tf_lstm_block
             x = op.x
-        new_h_all, new_h, new_cs = mb.lstm(x=x, initial_c=op.c_prev,
-                initial_h=op.h_prev,
-                weight=w,
-                bias=bias,
-                # activations[2] should be "sigmoid" (rdar://62272632)
-                activations=("sigmoid", "tanh", "tanh"),
-                peephole=mb_peep, clip=cell_clip,
-                output_sequence=output_sequence,
-                name=op.name, before_op=op)
+        new_h_all, new_h, new_cs = mb.lstm(
+            x=x,
+            initial_c=op.c_prev,
+            initial_h=op.h_prev,
+            weight=w,
+            bias=bias,
+            # activations[2] should be "sigmoid" (rdar://62272632)
+            activations=("sigmoid", "tanh", "tanh"),
+            peephole=mb_peep,
+            clip=cell_clip,
+            output_sequence=output_sequence,
+            name=op.name,
+            before_op=op,
+        )
 
-    if op.op_type == 'tf_lstm_block_cell':
-        block.replace_uses_of_var_after_op(anchor_op=op,
-                old_var=cs, new_var=new_cs)
-        block.replace_uses_of_var_after_op(anchor_op=op,
-                old_var=h, new_var=new_h)
-    else: # 'tf_lstm_block'
-        block.replace_uses_of_var_after_op(anchor_op=op,
-                old_var=h, new_var=new_h_all)
+    if op.op_type == "tf_lstm_block_cell":
+        block.replace_uses_of_var_after_op(anchor_op=op, old_var=cs, new_var=new_cs)
+        block.replace_uses_of_var_after_op(anchor_op=op, old_var=h, new_var=new_h)
+    else:  # 'tf_lstm_block'
+        block.replace_uses_of_var_after_op(anchor_op=op, old_var=h, new_var=new_h_all)
     block.remove_ops([op])
     return True
-

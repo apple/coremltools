@@ -4,26 +4,30 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from coremltools.converters.mil import testing_reqs
-from coremltools.converters.mil.frontend.tensorflow.test import testing_utils as tf_testing_utils
+from coremltools.converters.mil.frontend.tensorflow.test import (
+    testing_utils as tf_testing_utils,
+)
 from coremltools.converters.mil.frontend.tensorflow2.test.testing_utils import (
     make_tf2_graph as make_tf_graph,
-    run_compare_tf2 as run_compare_tf
+    run_compare_tf2 as run_compare_tf,
 )
 from coremltools.converters.mil.testing_reqs import *
 
-tf = pytest.importorskip('tensorflow', minversion='2.1.0')
+tf = pytest.importorskip("tensorflow", minversion="2.1.0")
 
 backends = testing_reqs.backends
 
 # -----------------------------------------------------------------------------
 # Overwrite utilities to enable different conversion / compare method
-tf_testing_utils.frontend = 'TensorFlow2'
+tf_testing_utils.frontend = "TensorFlow2"
 tf_testing_utils.make_tf_graph = make_tf_graph
 tf_testing_utils.run_compare_tf = run_compare_tf
 
 # -----------------------------------------------------------------------------
 # Import TF 2.x-compatible TF 1.x test cases
-from coremltools.converters.mil.frontend.tensorflow.test.test_custom_ops import TestCompositeOp
+from coremltools.converters.mil.frontend.tensorflow.test.test_custom_ops import (
+    TestCompositeOp,
+)
 from coremltools.converters.mil.frontend.tensorflow.test.test_ops import (
     TestActivationElu,
     TestActivationLeakyReLU,
@@ -65,44 +69,53 @@ del TestWhileLoop.test_nested_while_body  # tf.function() error in TF2
 
 
 class TestNormalizationTF2:
-    @pytest.mark.parametrize('use_cpu_only, backend, epsilon',
-                             itertools.product(
-                                 [True, False],
-                                 backends,
-                                 [1e-1, 1e-10]
-                             ))
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend, epsilon",
+        itertools.product([True, False], backends, [1e-1, 1e-10]),
+    )
     def test_fused_batch_norm_v3(self, use_cpu_only, backend, epsilon):
         input_shape = np.random.randint(low=1, high=6, size=4)
         attr_shape = [list(input_shape)[-1]]
 
-        m = random_gen(shape=attr_shape, rand_min=-1., rand_max=1.)
-        v = random_gen(shape=attr_shape, rand_min=0., rand_max=10.)
-        o = random_gen(shape=attr_shape, rand_min=1., rand_max=10.)
-        s = random_gen(shape=attr_shape, rand_min=-1., rand_max=1.)
+        m = random_gen(shape=attr_shape, rand_min=-1.0, rand_max=1.0)
+        v = random_gen(shape=attr_shape, rand_min=0.0, rand_max=10.0)
+        o = random_gen(shape=attr_shape, rand_min=1.0, rand_max=10.0)
+        s = random_gen(shape=attr_shape, rand_min=-1.0, rand_max=1.0)
 
         @make_tf_graph([input_shape])
         def build_model(x):
             return tf.raw_ops.FusedBatchNormV3(
-                x=x, scale=s, offset=o, mean=m, variance=v, epsilon=epsilon, is_training=False)[0]
+                x=x,
+                scale=s,
+                offset=o,
+                mean=m,
+                variance=v,
+                epsilon=epsilon,
+                is_training=False,
+            )[0]
 
         model, inputs, outputs = build_model
 
-        input_values = [random_gen(shape=input_shape, rand_min=-100., rand_max=100.)]
+        input_values = [random_gen(shape=input_shape, rand_min=-100.0, rand_max=100.0)]
 
         input_dict = dict(zip(inputs, input_values))
 
-        run_compare_tf(model, input_dict, outputs,
-                       use_cpu_only=use_cpu_only, backend=backend,
-                       atol=1e-2, rtol=1e-3)
+        run_compare_tf(
+            model,
+            input_dict,
+            outputs,
+            use_cpu_only=use_cpu_only,
+            backend=backend,
+            atol=1e-2,
+            rtol=1e-3,
+        )
 
 
 class TestElementWiseBinaryTF2:
-    @pytest.mark.parametrize("use_cpu_only, backend, rank",
-                             itertools.product(
-                                 [True],  # False
-                                 backends,
-                                 [rank for rank in range(1, 4)]
-                             ))
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend, rank",
+        itertools.product([True], backends, [rank for rank in range(1, 4)]),  # False
+    )
     def test_add_v2(self, use_cpu_only, backend, rank):
         x_shape = list(np.random.randint(low=2, high=6, size=rank))
         y_shape = x_shape[:]
@@ -123,83 +136,86 @@ class TestElementWiseBinaryTF2:
 
         model, inputs, outputs = build_model
 
-        input_values = [np.random.randint(low=-1000, high=1000, size=x_shape).astype(dtype),
-                        np.random.randint(low=-1000, high=1000, size=y_shape).astype(dtype)]
+        input_values = [
+            np.random.randint(low=-1000, high=1000, size=x_shape).astype(dtype),
+            np.random.randint(low=-1000, high=1000, size=y_shape).astype(dtype),
+        ]
 
         input_dict = dict(zip(inputs, input_values))
 
-        run_compare_tf(model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend)
+        run_compare_tf(
+            model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend
+        )
 
 
 # TestElementWiseBinaryTF1: overwrite parameters
 
 # Note: The data type is set as float16 when `use_cpu_only=False`
 # which errors out in TF2 tests. TODO:62466374
-mark = pytest.mark.parametrize("use_cpu_only, backend, rank, mode",
-                               itertools.product(
-                                   [True],  # False
-                                   backends,
-                                   [rank for rank in range(1, 4)],
-                                   ['add', 'floor_div', 'floor_mod',
-                                    'maximum', 'minimum', 'mod', 'mul',
-                                    'pow', 'real_div', 'sub',
-                                    'squared_difference']
-                               ))
+mark = pytest.mark.parametrize(
+    "use_cpu_only, backend, rank, mode",
+    itertools.product(
+        [True],  # False
+        backends,
+        [rank for rank in range(1, 4)],
+        [
+            "add",
+            "floor_div",
+            "floor_mod",
+            "maximum",
+            "minimum",
+            "mod",
+            "mul",
+            "pow",
+            "real_div",
+            "sub",
+            "squared_difference",
+        ],
+    ),
+)
 TestElementWiseBinary.test_binary.pytestmark[0] = mark
 
-mark = pytest.mark.parametrize("use_cpu_only, backend, rank",
-                               itertools.product(
-                                   [True],  # False
-                                   backends,
-                                   [rank for rank in range(1, 4)]
-                               ))
+mark = pytest.mark.parametrize(
+    "use_cpu_only, backend, rank",
+    itertools.product([True], backends, [rank for rank in range(1, 4)]),  # False
+)
 TestElementWiseBinary.test_equal.pytestmark[0] = mark
 
-mark = pytest.mark.parametrize("use_cpu_only, backend, rank",
-                               itertools.product(
-                                   [True],  # False
-                                   backends,
-                                   [rank for rank in range(1, 4)]
-                               ))
+mark = pytest.mark.parametrize(
+    "use_cpu_only, backend, rank",
+    itertools.product([True], backends, [rank for rank in range(1, 4)]),  # False
+)
 TestElementWiseBinary.test_greater.pytestmark[0] = mark
 
-mark = pytest.mark.parametrize("use_cpu_only, backend, rank",
-                               itertools.product(
-                                   [True],  # False
-                                   backends,
-                                   [rank for rank in range(1, 4)]
-                               ))
+mark = pytest.mark.parametrize(
+    "use_cpu_only, backend, rank",
+    itertools.product([True], backends, [rank for rank in range(1, 4)]),  # False
+)
 TestElementWiseBinary.test_greater_equal.pytestmark[0] = mark
 
-mark = pytest.mark.parametrize("use_cpu_only, backend, rank",
-                               itertools.product(
-                                   [True],  # False
-                                   backends,
-                                   [rank for rank in range(1, 4)]
-                               ))
+mark = pytest.mark.parametrize(
+    "use_cpu_only, backend, rank",
+    itertools.product([True], backends, [rank for rank in range(1, 4)]),  # False
+)
 TestElementWiseBinary.test_less.pytestmark[0] = mark
 
-mark = pytest.mark.parametrize("use_cpu_only, backend, rank",
-                               itertools.product(
-                                   [True],  # False
-                                   backends,
-                                   [rank for rank in range(1, 4)]
-                               ))
+mark = pytest.mark.parametrize(
+    "use_cpu_only, backend, rank",
+    itertools.product([True], backends, [rank for rank in range(1, 4)]),  # False
+)
 TestElementWiseBinary.test_less_equal.pytestmark[0] = mark
 
-mark = pytest.mark.parametrize("use_cpu_only, backend, rank",
-                               itertools.product(
-                                   [True],  # False
-                                   backends,
-                                   [rank for rank in range(1, 4)]
-                               ))
+mark = pytest.mark.parametrize(
+    "use_cpu_only, backend, rank",
+    itertools.product([True], backends, [rank for rank in range(1, 4)]),  # False
+)
 TestElementWiseBinary.test_not_equal.pytestmark[0] = mark
 
 
 class TestControlFlowFromAutoGraph:
-
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends))
+        "use_cpu_only, backend", itertools.product([True, False], backends)
+    )
     def test_if_unary_const(self, use_cpu_only, backend):
         @make_tf_graph([(1,)])
         def build_model(x):
@@ -213,14 +229,13 @@ class TestControlFlowFromAutoGraph:
         input_values = [np.array([0.7], dtype=np.float32)]
         input_dict = dict(zip(inputs, input_values))
         run_compare_tf(
-            model, input_dict, outputs,
-            use_cpu_only=use_cpu_only,
-            backend=backend)
+            model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend
+        )
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends))
-    def test_if_unary_double_if_positive_else_square(
-            self, use_cpu_only, backend):
+        "use_cpu_only, backend", itertools.product([True, False], backends)
+    )
+    def test_if_unary_double_if_positive_else_square(self, use_cpu_only, backend):
         @make_tf_graph([(1,)])
         def build_model(x):
             if x >= 0:
@@ -233,12 +248,12 @@ class TestControlFlowFromAutoGraph:
         input_values = [np.array([2], dtype=np.float32)]
         input_dict = dict(zip(inputs, input_values))
         run_compare_tf(
-            model, input_dict, outputs,
-            use_cpu_only=use_cpu_only,
-            backend=backend)
+            model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend
+        )
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends))
+        "use_cpu_only, backend", itertools.product([True, False], backends)
+    )
     def test_if_binary_add_if_else_mul(self, use_cpu_only, backend):
         @make_tf_graph([(1,), (1,)])
         def build_model(x, y):
@@ -251,15 +266,16 @@ class TestControlFlowFromAutoGraph:
         model, inputs, outputs = build_model
         input_values = [
             np.array([3], dtype=np.float32),
-            np.array([7], dtype=np.float32)]
+            np.array([7], dtype=np.float32),
+        ]
         input_dict = dict(zip(inputs, input_values))
         run_compare_tf(
-            model, input_dict, outputs,
-            use_cpu_only=use_cpu_only,
-            backend=backend)
+            model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend
+        )
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends))
+        "use_cpu_only, backend", itertools.product([True, False], backends)
+    )
     def test_while_loop_square(self, use_cpu_only, backend):
         @make_tf_graph([(1,)])
         def build_model(x):
@@ -270,15 +286,15 @@ class TestControlFlowFromAutoGraph:
             return x
 
         model, inputs, outputs = build_model
-        input_values = [np.array([2.], dtype=np.float32)]
+        input_values = [np.array([2.0], dtype=np.float32)]
         input_dict = dict(zip(inputs, input_values))
         run_compare_tf(
-            model, input_dict, outputs,
-            use_cpu_only=use_cpu_only,
-            backend=backend)
+            model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend
+        )
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends))
+        "use_cpu_only, backend", itertools.product([True, False], backends)
+    )
     def test_while_loop_power(self, use_cpu_only, backend):
         @make_tf_graph([(1,)])
         def build_model(x):
@@ -289,15 +305,15 @@ class TestControlFlowFromAutoGraph:
             return x
 
         model, inputs, outputs = build_model
-        input_values = [np.array([2.], dtype=np.float32)]
+        input_values = [np.array([2.0], dtype=np.float32)]
         input_dict = dict(zip(inputs, input_values))
         run_compare_tf(
-            model, input_dict, outputs,
-            use_cpu_only=use_cpu_only,
-            backend=backend)
+            model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend
+        )
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends))
+        "use_cpu_only, backend", itertools.product([True, False], backends)
+    )
     def test_while_loop_nested_body(self, use_cpu_only, backend):
         @make_tf_graph([(1,)])
         def build_model(x):
@@ -311,33 +327,33 @@ class TestControlFlowFromAutoGraph:
             return x
 
         model, inputs, outputs = build_model
-        input_values = [np.array([9.], dtype=np.float32)]
+        input_values = [np.array([9.0], dtype=np.float32)]
         input_dict = dict(zip(inputs, input_values))
         run_compare_tf(
-            model, input_dict, outputs,
-            use_cpu_only=use_cpu_only,
-            backend=backend)
+            model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend
+        )
 
 
 class TestTensorList:
-
     @pytest.mark.parametrize(
         "use_cpu_only, backend, size_dynamic_shape",
         itertools.product(
             [True, False],
             backends,
-            [(1, True, None), (1, True, (1,)), (2, False, (1,))]
-        ))
-    def test_write_read_and_stack(
-            self, use_cpu_only, backend, size_dynamic_shape):
+            [(1, True, None), (1, True, (1,)), (2, False, (1,))],
+        ),
+    )
+    def test_write_read_and_stack(self, use_cpu_only, backend, size_dynamic_shape):
         size, dynamic_size, element_shape = size_dynamic_shape
 
         @make_tf_graph([(1,), (1,)])
         def build_model(x, y):
             ta = tf.TensorArray(
-                tf.float32, size=size,
+                tf.float32,
+                size=size,
                 dynamic_size=dynamic_size,
-                element_shape=element_shape)
+                element_shape=element_shape,
+            )
             ta = ta.write(0, x)
             ta = ta.write(1, y)
             return ta.read(0), ta.read(1), ta.stack()
@@ -345,59 +361,61 @@ class TestTensorList:
         model, inputs, outputs = build_model
         input_values = [
             np.array([3.14], dtype=np.float32),
-            np.array([6.17], dtype=np.float32)]
+            np.array([6.17], dtype=np.float32),
+        ]
         input_dict = dict(zip(inputs, input_values))
         run_compare_tf(
-            model, input_dict, outputs,
-            use_cpu_only=use_cpu_only,
-            backend=backend)
+            model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend
+        )
 
     @pytest.mark.parametrize(
         "use_cpu_only, backend, size_dynamic_shape",
         itertools.product(
             [True, False],
             backends,
-            [(0, True, None), (1, True, (1,)), (3, False, (1,))]
-        ))
-    def test_unstack_and_read(
-            self, use_cpu_only, backend, size_dynamic_shape):
+            [(0, True, None), (1, True, (1,)), (3, False, (1,))],
+        ),
+    )
+    def test_unstack_and_read(self, use_cpu_only, backend, size_dynamic_shape):
         size, dynamic_size, element_shape = size_dynamic_shape
 
         @make_tf_graph([(3, 1)])
         def build_model(x):
             ta = tf.TensorArray(
-                tf.float32, size=size,
+                tf.float32,
+                size=size,
                 dynamic_size=dynamic_size,
-                element_shape=element_shape)
+                element_shape=element_shape,
+            )
             ta = ta.unstack(x)
             return ta.read(0), ta.read(1), ta.read(2)
 
         model, inputs, outputs = build_model
-        input_values = [
-            np.array([[3.14], [6.17], [12.14]], dtype=np.float32)]
+        input_values = [np.array([[3.14], [6.17], [12.14]], dtype=np.float32)]
         input_dict = dict(zip(inputs, input_values))
         run_compare_tf(
-            model, input_dict, outputs,
-            use_cpu_only=use_cpu_only,
-            backend=backend)
+            model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend
+        )
 
     @pytest.mark.parametrize(
         "use_cpu_only, backend, size_dynamic_shape",
         itertools.product(
             [True, False],
             backends,
-            [(2, True, None), (1, True, (1,)), (3, False, (1,))]
-        ))
-    def test_write_and_gather(
-            self, use_cpu_only, backend, size_dynamic_shape):
+            [(2, True, None), (1, True, (1,)), (3, False, (1,))],
+        ),
+    )
+    def test_write_and_gather(self, use_cpu_only, backend, size_dynamic_shape):
         size, dynamic_size, element_shape = size_dynamic_shape
 
         @make_tf_graph([(1,), (1,)])
         def build_model(x, y):
             ta = tf.TensorArray(
-                tf.float32, size=size,
+                tf.float32,
+                size=size,
                 dynamic_size=dynamic_size,
-                element_shape=element_shape)
+                element_shape=element_shape,
+            )
             ta = ta.write(0, x)
             ta = ta.write(1, y)
             return ta.gather(indices=[0, 1])
@@ -405,59 +423,57 @@ class TestTensorList:
         model, inputs, outputs = build_model
         input_values = [
             np.array([3.14], dtype=np.float32),
-            np.array([6.17], dtype=np.float32)]
+            np.array([6.17], dtype=np.float32),
+        ]
         input_dict = dict(zip(inputs, input_values))
         run_compare_tf(
-            model, input_dict, outputs,
-            use_cpu_only=use_cpu_only,
-            backend=backend)
+            model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend
+        )
 
     @pytest.mark.parametrize(
         "use_cpu_only, backend, size_dynamic_shape",
         itertools.product(
             [True, False],
             backends,
-            [(2, True, None), (1, True, (1,)), (3, False, (1,))]
-        ))
-    def test_scatter_and_read(
-            self, use_cpu_only, backend, size_dynamic_shape):
+            [(2, True, None), (1, True, (1,)), (3, False, (1,))],
+        ),
+    )
+    def test_scatter_and_read(self, use_cpu_only, backend, size_dynamic_shape):
         size, dynamic_size, element_shape = size_dynamic_shape
 
         @make_tf_graph([(3, 1)])
         def build_model(x):
             ta = tf.TensorArray(
-                tf.float32, size=size,
+                tf.float32,
+                size=size,
                 dynamic_size=dynamic_size,
-                element_shape=element_shape)
+                element_shape=element_shape,
+            )
             ta = ta.scatter(indices=[0, 1, 2], value=x)
             return ta.read(0), ta.read(1), ta.read(2)
 
         model, inputs, outputs = build_model
-        input_values = [
-            np.array([[3.14], [6.17], [12.14]], dtype=np.float32)]
+        input_values = [np.array([[3.14], [6.17], [12.14]], dtype=np.float32)]
         input_dict = dict(zip(inputs, input_values))
         run_compare_tf(
-            model, input_dict, outputs,
-            use_cpu_only=use_cpu_only,
-            backend=backend)
+            model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend
+        )
 
     @pytest.mark.parametrize(
         "use_cpu_only, backend, size_dynamic_shape",
-        itertools.product(
-            [True, False],
-            backends,
-            [(2, False, (None, 8))]
-        ))
-    def test_partial_element_shape(
-            self, use_cpu_only, backend, size_dynamic_shape):
+        itertools.product([True, False], backends, [(2, False, (None, 8))]),
+    )
+    def test_partial_element_shape(self, use_cpu_only, backend, size_dynamic_shape):
         size, dynamic_size, element_shape = size_dynamic_shape
 
         @make_tf_graph([(3, 1, 8)])
         def build_model(x):
             ta = tf.TensorArray(
-                tf.float32, size=size,
+                tf.float32,
+                size=size,
                 dynamic_size=dynamic_size,
-                element_shape=element_shape)
+                element_shape=element_shape,
+            )
             ta = ta.scatter(indices=[0, 1, 2], value=x)
             return ta.read(0), ta.read(1), ta.read(2)
 
@@ -465,6 +481,5 @@ class TestTensorList:
         input_values = [np.random.rand(3, 1, 8).astype(np.float32)]
         input_dict = dict(zip(inputs, input_values))
         run_compare_tf(
-            model, input_dict, outputs,
-            use_cpu_only=use_cpu_only,
-            backend=backend)
+            model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend
+        )

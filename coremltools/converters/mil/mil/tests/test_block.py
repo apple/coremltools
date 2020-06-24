@@ -11,8 +11,10 @@ from __future__ import absolute_import as _
 
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.testing_utils import (
-    get_op_types_in_program, assert_same_output_shapes,
-    assert_same_output_names)
+    get_op_types_in_program,
+    assert_same_output_shapes,
+    assert_same_output_names,
+)
 import copy
 
 """
@@ -130,21 +132,27 @@ def test_op_removal_and_insertion():
         %out2 = log(%x2)
 
     """
+
     @mb.program(input_specs=[mb.TensorSpec(shape=(1, 2, 6, 6))])
     def prog(x):
-        x1 = mb.transpose(x=x, perm=[0,2,3,1])
+        x1 = mb.transpose(x=x, perm=[0, 2, 3, 1])
         x2 = mb.relu(x=x1)
-        out1 = mb.avg_pool(x=x2, kernel_sizes=[1, 1], strides=[1, 1], pad_type='valid')
-        x3 = mb.transpose(x=x2, perm=[0,3,1,2])
+        out1 = mb.avg_pool(x=x2, kernel_sizes=[1, 1], strides=[1, 1], pad_type="valid")
+        x3 = mb.transpose(x=x2, perm=[0, 3, 1, 2])
         out2 = mb.log(x=x3)
         return out1, out2
 
     prev_prog = copy.deepcopy(prog)
 
     print("before:\n{}".format(prog))
-    assert get_op_types_in_program(prog) == ['transpose', 'relu', 'avg_pool',
-                                             'transpose', 'log']
-    block = prog.functions['main']
+    assert get_op_types_in_program(prog) == [
+        "transpose",
+        "relu",
+        "avg_pool",
+        "transpose",
+        "log",
+    ]
+    block = prog.functions["main"]
 
     def remove_transpose(block):
         op = block.find_ops(op_type="transpose")[0]
@@ -152,35 +160,35 @@ def test_op_removal_and_insertion():
             anchor_op=op.inputs["x"].op,
             old_var=op.outputs[0],
             new_var=op.inputs["x"],
-            no_check_var_types=True
+            no_check_var_types=True,
         )
         block.remove_ops([op])
 
     # remove 1st transpose
     remove_transpose(block)
-    assert get_op_types_in_program(prog) == ['relu', 'avg_pool',
-                                             'transpose', 'log']
+    assert get_op_types_in_program(prog) == ["relu", "avg_pool", "transpose", "log"]
 
     # remove 2nd transpose
     remove_transpose(block)
-    assert get_op_types_in_program(prog) == ['relu', 'avg_pool', 'log']
+    assert get_op_types_in_program(prog) == ["relu", "avg_pool", "log"]
 
     print("after transpose ops removal:\n{}".format(prog))
 
     # insert transpose before pool
     pool_op = block.find_ops(op_type="avg_pool")[0]
     with block:
-        y = mb.transpose(x=pool_op.inputs['x'], perm=[0,2,3,1], before_op=pool_op)
+        y = mb.transpose(x=pool_op.inputs["x"], perm=[0, 2, 3, 1], before_op=pool_op)
 
     block.replace_uses_of_var_after_op(
         anchor_op=y.op,
         end_op=pool_op,
-        old_var=pool_op.inputs['x'], new_var=y,
-        no_check_var_types=True
+        old_var=pool_op.inputs["x"],
+        new_var=y,
+        no_check_var_types=True,
     )
 
     print("after transpose insertion:\n{}".format(prog))
-    assert get_op_types_in_program(prog) == ['relu', 'transpose', 'avg_pool', 'log']
+    assert get_op_types_in_program(prog) == ["relu", "transpose", "avg_pool", "log"]
 
     for op in block.operations:
         op.type_value_inference(overwrite_output=True)
@@ -315,7 +323,9 @@ def test_simple_transpose_squash():
     for (trans1, trans2) in candidates:
         before = trans1.inputs["x"]
         after = trans2.outputs[0]
-        block.replace_uses_of_var_after_op(anchor_op=trans2, old_var=after, new_var=before)
+        block.replace_uses_of_var_after_op(
+            anchor_op=trans2, old_var=after, new_var=before
+        )
         block.remove_ops([trans1, trans2])
 
     print("after:\n{}".format(prog))

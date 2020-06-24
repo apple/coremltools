@@ -9,33 +9,38 @@ import six
 from coremltools.converters.mil.mil.types.symbolic import is_symbolic
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.types.type_mapping import (
-        numpy_type_to_builtin_type, is_builtin)
+    numpy_type_to_builtin_type,
+    is_builtin,
+)
+
 
 class ClassifierConfig(object):
-    def __init__(self,
-                 class_labels,
-                 predicted_feature_name="classLabel",
-                 predicted_probabilities_output=None):
+    def __init__(
+        self,
+        class_labels,
+        predicted_feature_name="classLabel",
+        predicted_probabilities_output=None,
+    ):
         """
-            Configuration for classifier models.
+        Configuration for classifier models.
 
-            Attributes:
+        Attributes:
 
-            class_labels: str / list of int / list of str
-                If a list if given, the list maps the index of the output of a
-                neural network to labels in a classifier.
-                If a str is given, the str points to a file which maps the index
-                to labels in a classifier.
+        class_labels: str / list of int / list of str
+            If a list if given, the list maps the index of the output of a
+            neural network to labels in a classifier.
+            If a str is given, the str points to a file which maps the index
+            to labels in a classifier.
 
-            predicted_feature_name: str
-                Name of the output feature for the class labels exposed in the
-                Core ML neural network classifier, defaults: 'classLabel'.
+        predicted_feature_name: str
+            Name of the output feature for the class labels exposed in the
+            Core ML neural network classifier, defaults: 'classLabel'.
 
-            predicted_probabilities_output: str
-                If provided, then this is the name of the neural network blob which
-                generates the probabilities for each class label (typically the output
-                of a softmax layer). If not provided, then the last output layer is
-                assumed.
+        predicted_probabilities_output: str
+            If provided, then this is the name of the neural network blob which
+            generates the probabilities for each class label (typically the output
+            of a softmax layer). If not provided, then the last output layer is
+            assumed.
         """
         self.class_labels = class_labels
         self.predicted_feature_name = predicted_feature_name
@@ -43,10 +48,7 @@ class ClassifierConfig(object):
 
 
 class InputType(object):
-    def __init__(self,
-                 name=None,
-                 shape=None,
-                 dtype=types.fp32):
+    def __init__(self, name=None, shape=None, dtype=types.fp32):
         """
         The Input Type for inputs fed into the model.
 
@@ -66,14 +68,17 @@ class InputType(object):
             self.shape = None
         self.dtype = dtype
 
+
 class ImageType(InputType):
-    def __init__(self,
-                 name=None,
-                 shape=None,
-                 scale=1.0,
-                 bias=None,
-                 color_layout='RGB',
-                 channel_first=None):
+    def __init__(
+        self,
+        name=None,
+        shape=None,
+        scale=1.0,
+        bias=None,
+        color_layout="RGB",
+        channel_first=None,
+    ):
         """
         Configuration class used for image inputs in CoreML.
 
@@ -85,8 +90,8 @@ class ImageType(InputType):
             If `color_layout` is 'G', bias would be a float
             If `color_layout` is 'RGB' or 'BGR', bias would be a list of float
         color_layout: string
-            Color layout of the image. 
-            Valid values: 
+            Color layout of the image.
+            Valid values:
                 'G': Grayscale
                 'RGB': [Red, Green, Blue]
                 'BRG': [Blue, Red, Green]
@@ -94,25 +99,26 @@ class ImageType(InputType):
             Set to True if input format is channel first.
             Default format is for TF is channel last. (channel_first=False)
                               for PyTorch is channel first. (channel_first=True)
-
         """
         super(ImageType, self).__init__(name, shape)
         self.scale = scale
-        if color_layout not in ['G', 'RGB', 'BGR']:
-            raise ValueError("color_layout should be one of ['G', 'RGB', 'BGR'], got '{}' instead".format(color_layout))
-        self.color_layout = color_layout 
+        if color_layout not in ["G", "RGB", "BGR"]:
+            raise ValueError(
+                "color_layout should be one of ['G', 'RGB', 'BGR'], got '{}' instead".format(
+                    color_layout
+                )
+            )
+        self.color_layout = color_layout
 
         if bias is None:
-            self.bias = 0.0 if color_layout == 'G' else [0.0, 0.0, 0.0]
+            self.bias = 0.0 if color_layout == "G" else [0.0, 0.0, 0.0]
         else:
             self.bias = bias
         self.channel_first = channel_first
 
+
 class TensorType(InputType):
-    def __init__(self,
-                 name=None,
-                 shape=None,
-                 dtype=None):
+    def __init__(self, name=None, shape=None, dtype=None):
         super(TensorType, self).__init__(name, shape)
         if dtype is None:
             self.dtype = types.fp32
@@ -123,8 +129,7 @@ class TensorType(InputType):
             try:
                 self.dtype = numpy_type_to_builtin_type(dtype)
             except TypeError:
-                raise TypeError('dtype={} is unsupported'.format(
-                    dtype))
+                raise TypeError("dtype={} is unsupported".format(dtype))
 
 
 class RangeDim(object):
@@ -150,9 +155,17 @@ class RangeDim(object):
             self.default = lower_bound
         else:
             if default < lower_bound:
-                raise ValueError("Default value {} is less than minimum value ({}) for range".format(default, lower_bound))
+                raise ValueError(
+                    "Default value {} is less than minimum value ({}) for range".format(
+                        default, lower_bound
+                    )
+                )
             if upper_bound > 0 and default > upper_bound:
-                raise ValueError("Default value {} is greater than maximum value ({}) for range".format(default, upper_bound))
+                raise ValueError(
+                    "Default value {} is greater than maximum value ({}) for range".format(
+                        default, upper_bound
+                    )
+                )
             self.default = default
 
 
@@ -165,14 +178,17 @@ class Shape(object):
 
         shape: list of (int), symbolic values, RangeDim object
             The valid shape of the input
-        default: tuple of int or None 
+        default: tuple of int or None
             The default shape that is used for initiating the model, and set in
             the metadata of the model file.
             If None, then `shape` would be used.
         """
         from coremltools.converters.mil.mil import get_new_symbol
+
         if not isinstance(shape, (list, tuple)):
-            raise ValueError("Shape should be list or tuple, got type {} instead".format(type(shape)))
+            raise ValueError(
+                "Shape should be list or tuple, got type {} instead".format(type(shape))
+            )
         self.symbolic_shape = []
         shape = list(shape)
         for idx, s in enumerate(shape):
@@ -184,15 +200,27 @@ class Shape(object):
             elif isinstance(s, (np.generic, six.integer_types)) or is_symbolic(s):
                 self.symbolic_shape.append(s)
             else:
-                raise ValueError("Unknown type {} to build symbolic shape.".format(type(s)))
+                raise ValueError(
+                    "Unknown type {} to build symbolic shape.".format(type(s))
+                )
 
         self.shape = tuple(shape)
         if default is not None:
             if not isinstance(default, (list, tuple)):
-                raise ValueError("Default shape should be list or tuple, got type {} instead".format(type(default)))
+                raise ValueError(
+                    "Default shape should be list or tuple, got type {} instead".format(
+                        type(default)
+                    )
+                )
             for idx, s in enumerate(default):
-                if not isinstance(s, (np.generic, six.integer_types)) and not is_symbolic(s):
-                    raise ValueError("Default shape invalid, got error at index {} which is {}".format(idx, s))
+                if not isinstance(
+                    s, (np.generic, six.integer_types)
+                ) and not is_symbolic(s):
+                    raise ValueError(
+                        "Default shape invalid, got error at index {} which is {}".format(
+                            idx, s
+                        )
+                    )
         else:
             default = []
             for idx, s in enumerate(self.shape):
@@ -204,6 +232,7 @@ class Shape(object):
                     default.append(s)
         self.default = tuple(default)
 
+
 class EnumeratedShapes(object):
     def __init__(self, shapes, default=None):
         """
@@ -213,16 +242,25 @@ class EnumeratedShapes(object):
             The valid shapes of the inputs.
             If input provided is not Shape object, but can be converted to Shape,
             the Shape object would be stored in `shapes` instead.
-        default: tuple of int or None 
+        default: tuple of int or None
             The default shape that is used for initiating the model, and set in
             the metadata of the model file.
             If None, then the first element in `shapes` would be used.
         """
         from coremltools.converters.mil.mil import get_new_symbol
+
         if not isinstance(shapes, (list, tuple)):
-            raise ValueError("EnumeratedShapes should be list or tuple of shape, got type {} instead".format(type(shapes)))
+            raise ValueError(
+                "EnumeratedShapes should be list or tuple of shape, got type {} instead".format(
+                    type(shapes)
+                )
+            )
         if len(shapes) < 2:
-            raise ValueError("EnumeratedShapes should be take a list or tuple with len >= 2, got {} instead".format(len(shapes)))
+            raise ValueError(
+                "EnumeratedShapes should be take a list or tuple with len >= 2, got {} instead".format(
+                    len(shapes)
+                )
+            )
 
         self.shapes = []
         for idx, s in enumerate(shapes):
@@ -243,13 +281,24 @@ class EnumeratedShapes(object):
 
         if default is not None:
             if not isinstance(default, (list, tuple)):
-                raise ValueError("Default shape should be list or tuple, got type {} instead".format(type(default)))
+                raise ValueError(
+                    "Default shape should be list or tuple, got type {} instead".format(
+                        type(default)
+                    )
+                )
             for idx, s in enumerate(default):
-                if not isinstance(s, (np.generic, six.integer_types)) and not is_symbolic(s):
-                    raise ValueError("Default shape invalid, got error at index {} which is {}".format(idx, s))
+                if not isinstance(
+                    s, (np.generic, six.integer_types)
+                ) and not is_symbolic(s):
+                    raise ValueError(
+                        "Default shape invalid, got error at index {} which is {}".format(
+                            idx, s
+                        )
+                    )
         else:
             default = self.shapes[0].default
         self.default = default
+
 
 def _get_shaping_class(shape):
     """

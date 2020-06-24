@@ -10,6 +10,7 @@ import six
 k_used_symbols = set()
 k_num_internal_syms = 0
 
+
 def is_compatible_symbolic_vector(val_a, val_b):
     """
     compare two vector and check if they are compatible.
@@ -21,17 +22,22 @@ def is_compatible_symbolic_vector(val_a, val_b):
     if len(val_a) != len(val_b):
         return False
 
-    for a,b in zip(val_a, val_b):
+    for a, b in zip(val_a, val_b):
         if not is_symbolic(a) and not is_symbolic(b):
             if a != b:
                 return False
     return True
 
+
 def is_symbolic(val):
     return issubclass(type(val), sm.Basic)  # pylint: disable=consider-using-ternary
 
+
 def is_variadic(val):
-    return issubclass(type(val), sm.Symbol) and val.name[0] == '*'  # pylint: disable=consider-using-ternary
+    return (
+        issubclass(type(val), sm.Symbol) and val.name[0] == "*"
+    )  # pylint: disable=consider-using-ternary
+
 
 def num_symbolic(val):
     """
@@ -41,9 +47,10 @@ def num_symbolic(val):
         return 1
     elif isinstance(val, np.ndarray) and np.issctype(val.dtype):
         return 0
-    elif hasattr(val, '__iter__'):
+    elif hasattr(val, "__iter__"):
         return sum(any_symbolic(i) for i in val)
     return 0
+
 
 def any_symbolic(val):
     if is_symbolic(val):
@@ -52,22 +59,24 @@ def any_symbolic(val):
         return is_symbolic(val[()])
     elif isinstance(val, np.ndarray) and np.issctype(val.dtype):
         return False
-    elif isinstance(val, six.string_types): # string is iterable
+    elif isinstance(val, six.string_types):  # string is iterable
         return False
-    elif hasattr(val, '__iter__'):
+    elif hasattr(val, "__iter__"):
         return any(any_symbolic(i) for i in val)
     return False
+
 
 def any_variadic(val):
     if is_variadic(val):
         return True
     elif isinstance(val, np.ndarray) and np.issctype(val.dtype):
         return False
-    elif isinstance(val, six.string_types): # string is iterable
+    elif isinstance(val, six.string_types):  # string is iterable
         return False
-    elif hasattr(val, '__iter__'):
+    elif hasattr(val, "__iter__"):
         return any(any_variadic(i) for i in val)
     return False
+
 
 def isscalar(val):
     return np.isscalar(val) or issubclass(type(val), sm.Basic)

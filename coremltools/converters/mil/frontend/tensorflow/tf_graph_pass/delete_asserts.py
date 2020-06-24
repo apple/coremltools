@@ -38,7 +38,7 @@ def _all_assert_leaves(gdict, nodename, memo):
             outputs = node.outputs
             if len(outputs) == 0:
                 # Leaf node: stack shrinks
-                memo[node.name] = node.op in ('Assert', 'CheckNumerics')
+                memo[node.name] = node.op in ("Assert", "CheckNumerics")
             else:
                 outputs_to_process = [n for n in outputs if n not in memo]
                 if len(outputs_to_process) == 0:

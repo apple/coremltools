@@ -214,7 +214,9 @@ class MatrixMultiplyLayerSelector(QuantizedLayerSelector):
 
         if not (
             isinstance(self.include_layers_with_names, (list, tuple))
-            and all([isinstance(s, _string_types) for s in self.include_layers_with_names])
+            and all(
+                [isinstance(s, _string_types) for s in self.include_layers_with_names]
+            )
         ):
             raise ValueError(
                 "Property 'include_layers_with_names' must be a list/tuple of str objects"
@@ -521,8 +523,7 @@ def _quantize_wp(wp, nbits, qm, axis=0, **kwargs):
     elif qm == _QUANTIZATION_MODE_LOOKUP_TABLE_LINEAR:
         lut, qw = _get_linear_lookup_table_and_weight(nbits, wp)
     else:
-        raise NotImplementedError(
-            'Quantization method "{}" not supported'.format(qm))
+        raise NotImplementedError('Quantization method "{}" not supported'.format(qm))
 
     quantized_wp = _np.uint8(qw)
     return scale, bias, lut, quantized_wp
@@ -826,14 +827,25 @@ def _quantize_nn_spec(nn_spec, nbits, qm, **kwargs):
                     layer.embedding.bias, nbits, qm, shape=(output_channels,), **kwargs
                 )
 
-
         # Embedding ND layer
-        elif layer_type == 'embeddingND':
+        elif layer_type == "embeddingND":
             output_channels = layer.embeddingND.embeddingSize
             input_channels = layer.embeddingND.vocabSize
-            _quantize_wp_field(layer.embeddingND.weights, nbits, qm, shape=(output_channels, input_channels), **kwargs)
+            _quantize_wp_field(
+                layer.embeddingND.weights,
+                nbits,
+                qm,
+                shape=(output_channels, input_channels),
+                **kwargs
+            )
             if layer.embeddingND.hasBias:
-                _quantize_wp_field(layer.embeddingND.bias, nbits, qm, shape=(output_channels,), **kwargs)
+                _quantize_wp_field(
+                    layer.embeddingND.bias,
+                    nbits,
+                    qm,
+                    shape=(output_channels,),
+                    **kwargs
+                )
 
         # Scale layer
         elif layer_type == "scale":
@@ -1541,9 +1553,9 @@ def quantize_weights(
         for only neural network models is supported. If a pipeline model is
         passed in then all embedded neural network models embedded within
         will be converted.
-        
+
     nbits: int
-        Number of bits per quantized weight. Only 16-bit float point and 
+        Number of bits per quantized weight. Only 16-bit float point and
             1-8 bit is supported
 
     quantization_mode: str

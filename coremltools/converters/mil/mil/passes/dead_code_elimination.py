@@ -38,7 +38,7 @@ def dead_code_elimination_block(block):
     return used_vars
 
 
-@register_pass(namespace='common')
+@register_pass(namespace="common")
 def dead_code_elimination(program):
     """
     Eliminate unused ops in program.

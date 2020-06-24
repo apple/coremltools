@@ -13,12 +13,13 @@ from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 from coremltools.converters.mil.mil import Builder as mb
 import numpy as np
 
+
 def _check_var_scalar_value(x, val, tol=1e-3):
-    '''
+    """
     :param x: var
     :param val: a scalar value
     :return: True if the value of var is equal to val otherwise return False
-    '''
+    """
     if x.val is None:
         return False
     if not isinstance(x.val, (np.ndarray, np.generic)):
@@ -35,12 +36,13 @@ def _check_var_scalar_value(x, val, tol=1e-3):
         return True
     return False
 
+
 def _check_child_op_type(op, child_op_type):
-    '''
+    """
     :param op: operation
     :param child_op_type: str
     :return: Return True if op has 1 child and type of that child matches child_op_type
-    '''
+    """
     if len(op.outputs) != 1:
         return False
     child_ops = list(op.outputs[0].child_ops)
@@ -52,7 +54,6 @@ def _check_child_op_type(op, child_op_type):
 
 
 def try_to_transform(pow_op, block):
-
     all_ops = [pow_op]
     root_var = pow_op.x
 
@@ -61,62 +62,86 @@ def try_to_transform(pow_op, block):
         return False
 
     # check for 1st mul op
-    if not _check_child_op_type(pow_op, 'mul'):
+    if not _check_child_op_type(pow_op, "mul"):
         return False
     mul_op1 = list(pow_op.outputs[0].child_ops)[0]
-    if not ((mul_op1.x == pow_op.outputs[0] and _check_var_scalar_value(mul_op1.y, .044715)) or \
-            (mul_op1.y == pow_op.outputs[0] and _check_var_scalar_value(mul_op1.x, .044715))):
+    if not (
+        (
+            mul_op1.x == pow_op.outputs[0]
+            and _check_var_scalar_value(mul_op1.y, 0.044715)
+        )
+        or (
+            mul_op1.y == pow_op.outputs[0]
+            and _check_var_scalar_value(mul_op1.x, 0.044715)
+        )
+    ):
         return False
     all_ops.append(mul_op1)
 
     # check for 1st add op
-    if not _check_child_op_type(mul_op1, 'add'):
+    if not _check_child_op_type(mul_op1, "add"):
         return False
     add_op1 = list(mul_op1.outputs[0].child_ops)[0]
-    if not ((add_op1.x == mul_op1.outputs[0] and add_op1.y == root_var) or \
-                (add_op1.y == mul_op1.outputs[0] and add_op1.x == root_var)):
+    if not (
+        (add_op1.x == mul_op1.outputs[0] and add_op1.y == root_var)
+        or (add_op1.y == mul_op1.outputs[0] and add_op1.x == root_var)
+    ):
         return False
     all_ops.append(add_op1)
 
     # check for 2nd mul op
-    if not _check_child_op_type(add_op1, 'mul'):
+    if not _check_child_op_type(add_op1, "mul"):
         return False
     mul_op2 = list(add_op1.outputs[0].child_ops)[0]
-    if not ((mul_op2.x == add_op1.outputs[0] and _check_var_scalar_value(mul_op2.y, .79788)) or \
-            (mul_op2.y == add_op1.outputs[0] and _check_var_scalar_value(mul_op2.x, .79788))):
+    if not (
+        (
+            mul_op2.x == add_op1.outputs[0]
+            and _check_var_scalar_value(mul_op2.y, 0.79788)
+        )
+        or (
+            mul_op2.y == add_op1.outputs[0]
+            and _check_var_scalar_value(mul_op2.x, 0.79788)
+        )
+    ):
         return False
     all_ops.append(mul_op2)
 
     # check for tanh op
-    if not _check_child_op_type(mul_op2, 'tanh'):
+    if not _check_child_op_type(mul_op2, "tanh"):
         return False
     tanh_op = list(mul_op2.outputs[0].child_ops)[0]
     all_ops.append(tanh_op)
 
     # check for 2nd add op
-    if not _check_child_op_type(tanh_op, 'add'):
+    if not _check_child_op_type(tanh_op, "add"):
         return False
     add_op2 = list(tanh_op.outputs[0].child_ops)[0]
-    if not ((add_op2.x == tanh_op.outputs[0] and _check_var_scalar_value(add_op2.y, 1)) or \
-            (add_op2.y == tanh_op.outputs[0] and _check_var_scalar_value(add_op2.x, 1))):
+    if not (
+        (add_op2.x == tanh_op.outputs[0] and _check_var_scalar_value(add_op2.y, 1))
+        or (add_op2.y == tanh_op.outputs[0] and _check_var_scalar_value(add_op2.x, 1))
+    ):
         return False
     all_ops.append(add_op2)
 
     # check for 3rd mul op
-    if not _check_child_op_type(add_op2, 'mul'):
+    if not _check_child_op_type(add_op2, "mul"):
         return False
     mul_op3 = list(add_op2.outputs[0].child_ops)[0]
-    if not ((mul_op3.x == add_op2.outputs[0] and _check_var_scalar_value(mul_op3.y, .5)) or \
-            (mul_op3.y == add_op2.outputs[0] and _check_var_scalar_value(mul_op3.x, .5))):
+    if not (
+        (mul_op3.x == add_op2.outputs[0] and _check_var_scalar_value(mul_op3.y, 0.5))
+        or (mul_op3.y == add_op2.outputs[0] and _check_var_scalar_value(mul_op3.x, 0.5))
+    ):
         return False
     all_ops.append(mul_op3)
 
     # check for 4th mul op
-    if not _check_child_op_type(mul_op3, 'mul'):
+    if not _check_child_op_type(mul_op3, "mul"):
         return False
     mul_op4 = list(mul_op3.outputs[0].child_ops)[0]
-    if not ((mul_op4.x == mul_op3.outputs[0] and mul_op4.y == root_var) or \
-                (mul_op4.y == mul_op3.outputs[0] and mul_op4.x == root_var)):
+    if not (
+        (mul_op4.x == mul_op3.outputs[0] and mul_op4.y == root_var)
+        or (mul_op4.y == mul_op3.outputs[0] and mul_op4.x == root_var)
+    ):
         return False
     all_ops.append(mul_op4)
 
@@ -131,12 +156,11 @@ def try_to_transform(pow_op, block):
 
     # remove all the ops, and replace with a gelu op
     out_name = mul_op4.outputs[0].name
-    x = mb.gelu(x=root_var, mode='TANH_APPROXIMATION',
-                name=out_name,
-                before_op=pow_op)
+    x = mb.gelu(x=root_var, mode="TANH_APPROXIMATION", name=out_name, before_op=pow_op)
 
-    mul_op4.enclosing_block.replace_uses_of_var_after_op(anchor_op=mul_op4,
-            old_var=mul_op4.outputs[0], new_var=x)
+    mul_op4.enclosing_block.replace_uses_of_var_after_op(
+        anchor_op=mul_op4, old_var=mul_op4.outputs[0], new_var=x
+    )
     # Remove all the ops at once
     block.remove_ops(all_ops)
     return True
@@ -154,7 +178,7 @@ def fuse_gelu_tanh_block(block):
             continue
 
         # start pattern match if pow op with power 3 is encountered
-        if op.op_type == 'pow':
+        if op.op_type == "pow":
             if _check_var_scalar_value(op.y, 3):
                 with block:
                     fusion_status = try_to_transform(op, block)
@@ -162,6 +186,7 @@ def fuse_gelu_tanh_block(block):
                 if fusion_status:
                     return fusion_status
     return fusion_status
+
 
 @register_pass(namespace="common")
 def fuse_gelu_tanh_approximation(prog):

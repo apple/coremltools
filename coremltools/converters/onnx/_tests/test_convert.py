@@ -16,6 +16,7 @@ if _HAS_ONNX:
     from coremltools.converters.onnx import convert
     from ._test_utils import _onnx_create_single_node_model
 
+
 @unittest.skipUnless(_HAS_ONNX, MSG_ONNX_NOT_FOUND)
 class ConvertTest(unittest.TestCase):
     def setUp(self):  # type: () -> None

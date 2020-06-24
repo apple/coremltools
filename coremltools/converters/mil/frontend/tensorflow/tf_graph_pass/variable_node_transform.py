@@ -10,6 +10,7 @@ from __future__ import division as _
 from __future__ import absolute_import as _
 from ..basic_graph_ops import disconnect_vertex_ins, delete_node
 
+
 # Variable nodes are not horribly complicated.
 #
 # There are Variable nodes which don't really do much on their own
@@ -37,11 +38,14 @@ from ..basic_graph_ops import disconnect_vertex_ins, delete_node
 #  - We transform Assign ops to just "set_global" with attribute variable:VariableName
 #  - We transform Read ops to just "get_global" with attribute variable:VariableName
 def remove_variable_node_impl(fn, tfssa):
-    variables = [var for var in fn.graph.values() if var.op == 'VariableV2']
-    assigns = [assign for assign in fn.graph.values() if assign.op == 'Assign']
+    variables = [var for var in fn.graph.values() if var.op == "VariableV2"]
+    assigns = [assign for assign in fn.graph.values() if assign.op == "Assign"]
     reads = [
-        read for read in fn.graph.values() if read.op == 'Identity' and len(read.inputs) == 1
-                                              and fn.graph[read.inputs[0]].op == 'VariableV2'
+        read
+        for read in fn.graph.values()
+        if read.op == "Identity"
+        and len(read.inputs) == 1
+        and fn.graph[read.inputs[0]].op == "VariableV2"
     ]
 
     # find the variable initial values
@@ -51,19 +55,22 @@ def remove_variable_node_impl(fn, tfssa):
         v.parse_from_attr()
         variable_values[v.name] = v.datatype()
         for node in fn.graph.values():
-            if node.op == 'Assign' and node.inputs[0] == v.name and node.inputs[
-                1] == v.name + "/initial_value":
+            if (
+                node.op == "Assign"
+                and node.inputs[0] == v.name
+                and node.inputs[1] == v.name + "/initial_value"
+            ):
                 variable_values[v.name] = fn.graph[node.inputs[1]].value
                 additional_nodes_to_delete += [node.name, node.inputs[1]]
     for r in reads:
-        r.op = 'get_global'
-        r.attr['variable'] = r.inputs[0]
+        r.op = "get_global"
+        r.attr["variable"] = r.inputs[0]
         disconnect_vertex_ins(fn.graph, r.name)
 
     # transform writes to set_global
     for r in assigns:
-        r.op = 'set_global'
-        r.attr['variable'] = r.inputs[0]
+        r.op = "set_global"
+        r.attr["variable"] = r.inputs[0]
 
     for var in variables:
         delete_node(fn.graph, var.name)

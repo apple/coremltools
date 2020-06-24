@@ -12,6 +12,7 @@ from __future__ import absolute_import as _
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 
+
 def handle_return_unused_inputs_func(f):
     returned_unused_inputs = []
     for v_name, v in f.inputs.items():
@@ -22,12 +23,14 @@ def handle_return_unused_inputs_func(f):
     with f:
         for v in returned_unused_inputs:
             # copy twice since NN layer cannot have input name == output name
-            v_tmp = mb.identity(x=v, name=v.name+'_tmp')
+            v_tmp = mb.identity(x=v, name=v.name + "_tmp")
             res = mb.identity(x=v_tmp, name=v.name)
-            res.op.enclosing_block.replace_uses_of_var_after_op(anchor_op=res.op,
-                    old_var=v, new_var=res)
+            res.op.enclosing_block.replace_uses_of_var_after_op(
+                anchor_op=res.op, old_var=v, new_var=res
+            )
 
-@register_pass(namespace='nn_backend')
+
+@register_pass(namespace="nn_backend")
 def handle_return_unused_inputs(prog):
     """
     prog: Program

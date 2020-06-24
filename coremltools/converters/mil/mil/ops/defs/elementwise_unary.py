@@ -9,10 +9,10 @@ from ._op_reqs import *
 """
 Elementwise Unary Op Superclass
 """
+
+
 class elementwise_unary(Operation):
-    input_spec = InputSpec(
-            x = ScalarOrTensorInputType(),
-            )
+    input_spec = InputSpec(x=ScalarOrTensorInputType(),)
 
     def __init__(self, **kwargs):
         super(elementwise_unary, self).__init__(**kwargs)
@@ -24,6 +24,7 @@ class elementwise_unary(Operation):
 """
 Elementwise unary op implmentation(s)
 """
+
 
 @register_op(doc_str="")
 class abs(elementwise_unary):
@@ -43,6 +44,7 @@ class abs(elementwise_unary):
     ----------
     T: fp32
     """
+
     def __init__(self, **kwargs):
         super(abs, self).__init__(**kwargs)
 
@@ -69,6 +71,7 @@ class acos(elementwise_unary):
     ----------
     T: fp32
     """
+
     def __init__(self, **kwargs):
         super(acos, self).__init__(**kwargs)
 
@@ -95,6 +98,7 @@ class asin(elementwise_unary):
     ----------
     T: fp32
     """
+
     def __init__(self, **kwargs):
         super(asin, self).__init__(**kwargs)
 
@@ -121,6 +125,7 @@ class atan(elementwise_unary):
     ----------
     T: fp32
     """
+
     def __init__(self, **kwargs):
         super(atan, self).__init__(**kwargs)
 
@@ -147,6 +152,7 @@ class atanh(elementwise_unary):
     ----------
     T: fp32
     """
+
     def __init__(self, **kwargs):
         super(atanh, self).__init__(**kwargs)
 
@@ -173,6 +179,7 @@ class ceil(elementwise_unary):
     ----------
     T: fp32
     """
+
     def __init__(self, **kwargs):
         super(ceil, self).__init__(**kwargs)
 
@@ -203,11 +210,12 @@ class clip(Operation):
     ----------
     T: fp32
     """
+
     input_spec = InputSpec(
-            x = ScalarOrTensorInputType(),
-            alpha = FloatInputType(const=True),
-            beta = FloatInputType(const=True),
-            )
+        x=ScalarOrTensorInputType(),
+        alpha=FloatInputType(const=True),
+        beta=FloatInputType(const=True),
+    )
 
     def __init__(self, **kwargs):
         super(clip, self).__init__(**kwargs)
@@ -238,6 +246,7 @@ class cos(elementwise_unary):
     ----------
     T: fp32
     """
+
     def __init__(self, **kwargs):
         super(cos, self).__init__(**kwargs)
 
@@ -263,6 +272,7 @@ class cosh(elementwise_unary):
     ----------
     T: fp32
     """
+
     def __init__(self, **kwargs):
         super(cosh, self).__init__(**kwargs)
 
@@ -289,6 +299,7 @@ class erf(elementwise_unary):
     ----------
     T: fp32
     """
+
     def __init__(self, **kwargs):
         super(erf, self).__init__(**kwargs)
 
@@ -315,6 +326,7 @@ class exp(elementwise_unary):
     ----------
     T: fp32
     """
+
     def __init__(self, **kwargs):
         super(exp, self).__init__(**kwargs)
 
@@ -341,6 +353,7 @@ class exp2(elementwise_unary):
     ----------
     T: fp32
     """
+
     def __init__(self, **kwargs):
         super(exp2, self).__init__(**kwargs)
 
@@ -367,12 +380,14 @@ class floor(elementwise_unary):
     ----------
     T: fp32
     """
+
     def __init__(self, **kwargs):
         super(floor, self).__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
         return np.floor(self.x.val)
+
 
 @register_op(doc_str="")
 class inverse(elementwise_unary):
@@ -392,12 +407,14 @@ class inverse(elementwise_unary):
     ----------
     T: fp32
     """
+
     def __init__(self, **kwargs):
         super(inverse, self).__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
         return np.reciprocal(self.x.val)
+
 
 @register_op(doc_str="")
 class log(elementwise_unary):
@@ -417,6 +434,7 @@ class log(elementwise_unary):
     ----------
     T: fp32
     """
+
     def __init__(self, **kwargs):
         super(log, self).__init__(**kwargs)
 
@@ -443,6 +461,7 @@ class logical_not(elementwise_unary):
     ----------
     T: fp32
     """
+
     def __init__(self, **kwargs):
         super(logical_not, self).__init__(**kwargs)
 
@@ -471,6 +490,7 @@ class round(elementwise_unary):
     ----------
     T: fp32
     """
+
     def __init__(self, **kwargs):
         super(round, self).__init__(**kwargs)
 
@@ -497,12 +517,13 @@ class rsqrt(elementwise_unary):
     ----------
     T: fp32
     """
+
     def __init__(self, **kwargs):
         super(rsqrt, self).__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
-        return 1. / np.sqrt(self.x.val)
+        return 1.0 / np.sqrt(self.x.val)
 
 
 @register_op(doc_str="")
@@ -523,6 +544,7 @@ class sign(elementwise_unary):
     ----------
     T: fp32
     """
+
     def __init__(self, **kwargs):
         super(sign, self).__init__(**kwargs)
 
@@ -549,6 +571,7 @@ class sin(elementwise_unary):
     ----------
     T: fp32
     """
+
     def __init__(self, **kwargs):
         super(sin, self).__init__(**kwargs)
 
@@ -575,13 +598,13 @@ class sinh(elementwise_unary):
     ----------
     T: fp32
     """
+
     def __init__(self, **kwargs):
         super(sinh, self).__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
         return np.sinh(self.x.val)
-
 
 
 @register_op(doc_str="")
@@ -602,6 +625,7 @@ class sqrt(elementwise_unary):
     ----------
     T: fp32
     """
+
     def __init__(self, **kwargs):
         super(sqrt, self).__init__(**kwargs)
 
@@ -628,6 +652,7 @@ class square(elementwise_unary):
     ----------
     T: fp32
     """
+
     def __init__(self, **kwargs):
         super(square, self).__init__(**kwargs)
 
@@ -654,6 +679,7 @@ class tan(elementwise_unary):
     ----------
     T: fp32
     """
+
     def __init__(self, **kwargs):
         super(tan, self).__init__(**kwargs)
 
@@ -680,6 +706,7 @@ class tanh(elementwise_unary):
     ----------
     T: fp32
     """
+
     def __init__(self, **kwargs):
         super(tanh, self).__init__(**kwargs)
 
@@ -708,10 +735,10 @@ class threshold(Operation):
     ----------
     T: fp32
     """
+
     input_spec = InputSpec(
-            x = ScalarOrTensorInputType(),
-            alpha = FloatInputType(const=True),
-            )
+        x=ScalarOrTensorInputType(), alpha=FloatInputType(const=True),
+    )
 
     def __init__(self, **kwargs):
         super(threshold, self).__init__(**kwargs)
@@ -722,6 +749,7 @@ class threshold(Operation):
     @precondition(allow=VALUE)
     def value_inference(self):
         return np.maximum(self.x.val, self.alpha.val)
+
 
 @register_op(doc_str="")
 class cast(Operation):
@@ -743,10 +771,10 @@ class cast(Operation):
     ----------
     T: i32, i64, fp32, fp64, bool.
     """
+
     input_spec = InputSpec(
-            x = ScalarOrTensorInputType(),
-            dtype = StringInputType(const=True)
-            )
+        x=ScalarOrTensorInputType(), dtype=StringInputType(const=True)
+    )
 
     def __init__(self, **kwargs):
         super(cast, self).__init__(**kwargs)
@@ -755,13 +783,15 @@ class cast(Operation):
         type_map = {
             "int32": types.int32,
             "int64": types.int64,
-            "fp32" : types.fp32,
-            "fp64" : types.fp64
+            "fp32": types.fp32,
+            "fp64": types.fp64,
         }
 
         if self.dtype.val not in type_map.keys():
-            raise NotImplementedError("Parameter dtype of the cast operation can be one of the {}. "
-                                      "Provided {}".format(type_map.keys(), self.dtype.val))
+            raise NotImplementedError(
+                "Parameter dtype of the cast operation can be one of the {}. "
+                "Provided {}".format(type_map.keys(), self.dtype.val)
+            )
 
         if not types.is_tensor(self.x.sym_type):
             return type_map[self.dtype.val]
@@ -774,13 +804,15 @@ class cast(Operation):
         type_map = {
             "int32": np.int32,
             "int64": np.int64,
-            "fp32" : np.float32,
-            "fp64" : np.float64
+            "fp32": np.float32,
+            "fp64": np.float64,
         }
 
         if self.dtype.val not in type_map.keys():
-            raise NotImplementedError("Parameter dtype of the cast operation can be one of the {}. "
-                                      "Provided {}".format(type_map.keys(), self.dtype.val))
+            raise NotImplementedError(
+                "Parameter dtype of the cast operation can be one of the {}. "
+                "Provided {}".format(type_map.keys(), self.dtype.val)
+            )
 
         if not types.is_tensor(self.x.sym_type):
             return self.x.val.astype(dtype=type_map[self.dtype.val])

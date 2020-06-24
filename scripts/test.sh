@@ -12,6 +12,7 @@ FAST=0
 SLOW=0
 COV=""
 CHECK_ENV=1
+TIME_OUT=600
 
 # command flag options
 PYTHON="3.7"
@@ -33,6 +34,7 @@ print_help() {
   echo "  --cov=*                 Generate converage report for these dirs."
   echo "  --fast                  Run only fast tests."
   echo "  --slow                  Run only slow tests."
+  echo "  --timeout               Timeout limit (on each test)"
   echo "  --no-check-env          Don't check the environment to verify it's up to date."
   echo
   exit 1
@@ -50,6 +52,7 @@ while [ $# -gt 0 ]
     --fast)              FAST=1;;
     --slow)              SLOW=1;;
     --no-check-env)      CHECK_ENV=0 ;;
+    --timeout=*)         TIME_OUT=${1##--timeout=} ;;
     --help)              print_help ;;
     *) unknown_option $1 ;;
   esac
@@ -84,7 +87,8 @@ fi
 # Now run the tests
 echo "Running tests"
 
-TEST_CMD=($PYTEST_EXECUTABLE -ra -W "ignore::FutureWarning" -W "ignore::DeprecationWarning" --durations=100 --pyargs ${TEST_PACKAGE} --junitxml=${BUILD_DIR}/py-test-report.xml)
+TEST_CMD=($PYTEST_EXECUTABLE -ra -W "ignore::FutureWarning" -W "ignore::DeprecationWarning" --durations=100 --pyargs ${TEST_PACKAGE} --junitxml=${BUILD_DIR}/py-test-report.xml --timeout=${TIME_OUT})
+echo $TEST_CMD
 
 if [[ $SLOW != 1 || $FAST != 1 ]]; then
     if [[ $SLOW == 1 ]]; then

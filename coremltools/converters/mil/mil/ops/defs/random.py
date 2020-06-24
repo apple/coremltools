@@ -13,9 +13,7 @@ Random Op Superclass
 
 
 class RandomDistribution(Operation):
-    input_spec = InputSpec(
-        shape=IntTensorInputType(),
-    )
+    input_spec = InputSpec(shape=IntTensorInputType(),)
 
     def __init__(self, **kwargs):
         super(RandomDistribution, self).__init__(**kwargs)
@@ -38,7 +36,8 @@ Random Op Implementation(s)
 """
 
 
-@register_op(doc_str=r"""
+@register_op(
+    doc_str=r"""
 Returns a tensor with specified shape with random values from a Bernoulli distribution.
 
 .. math::
@@ -65,19 +64,24 @@ Returns
 See Also
 --------
 random_categorical, random_normal, random_uniform
-""")
+"""
+)
 class random_bernoulli(RandomDistribution):
-    input_spec = InputSpec(
-        shape=IntTensorInputType(),
-        prob=FloatInputType(const=True, default=0.5),
-        seed=IntInputType(const=True, default=-1)
-    ) + RandomDistribution.input_spec
+    input_spec = (
+        InputSpec(
+            shape=IntTensorInputType(),
+            prob=FloatInputType(const=True, default=0.5),
+            seed=IntInputType(const=True, default=-1),
+        )
+        + RandomDistribution.input_spec
+    )
 
     def __init__(self, **kwargs):
         super(random_bernoulli, self).__init__(**kwargs)
 
 
-@register_op(doc_str=r"""
+@register_op(
+    doc_str=r"""
 Returns random values from a categorical distribution.
 
 Parameters
@@ -100,13 +104,14 @@ Returns
 See Also
 --------
 random_bernoulli, random_normal, random_uniform
-""")
+"""
+)
 class random_categorical(Operation):
     input_spec = InputSpec(
         x=TensorInputType(),
-        mode=StringInputType(const=True, default='logits'),
+        mode=StringInputType(const=True, default="logits"),
         size=IntInputType(const=True, default=1),
-        seed=IntInputType(const=True, default=-1)
+        seed=IntInputType(const=True, default=-1),
     )
 
     def __init__(self, **kwargs):
@@ -117,7 +122,8 @@ class random_categorical(Operation):
         return types.tensor(types.fp32, output_shape)
 
 
-@register_op(doc_str=r"""
+@register_op(
+    doc_str=r"""
 Returns a tensor with specified shape with random values from a normal distribution.
 
 .. math::
@@ -145,20 +151,25 @@ Returns
 See Also
 --------
 random_categorical, random_bernoulli, random_uniform
-""")
+"""
+)
 class random_normal(RandomDistribution):
-    input_spec = InputSpec(
-        shape=IntTensorInputType(),
-        mean=FloatInputType(const=True, default=0.),
-        stddev=FloatInputType(const=True, default=1.),
-        seed=IntInputType(const=True, default=-1)
-    ) + RandomDistribution.input_spec
+    input_spec = (
+        InputSpec(
+            shape=IntTensorInputType(),
+            mean=FloatInputType(const=True, default=0.0),
+            stddev=FloatInputType(const=True, default=1.0),
+            seed=IntInputType(const=True, default=-1),
+        )
+        + RandomDistribution.input_spec
+    )
 
     def __init__(self, **kwargs):
         super(random_normal, self).__init__(**kwargs)
 
 
-@register_op(doc_str=r"""
+@register_op(
+    doc_str=r"""
 Returns a tensor with specified shape with random values from a normal distribution.
 
 .. math::
@@ -186,14 +197,18 @@ Returns
 See Also
 --------
 random_categorical, random_bernoulli, random_normal
-""")
+"""
+)
 class random_uniform(RandomDistribution):
-    input_spec = InputSpec(
-        shape=IntTensorInputType(),
-        low=FloatInputType(const=True, default=0.),
-        high=FloatInputType(const=True, default=1.),
-        seed=IntInputType(const=True, default=-1)
-    ) + RandomDistribution.input_spec
+    input_spec = (
+        InputSpec(
+            shape=IntTensorInputType(),
+            low=FloatInputType(const=True, default=0.0),
+            high=FloatInputType(const=True, default=1.0),
+            seed=IntInputType(const=True, default=-1),
+        )
+        + RandomDistribution.input_spec
+    )
 
     def __init__(self, **kwargs):
         super(random_uniform, self).__init__(**kwargs)

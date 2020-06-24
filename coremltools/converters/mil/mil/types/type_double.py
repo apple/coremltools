@@ -17,6 +17,7 @@ from .annotate import class_annotate, annotate, delay_type
 from .type_bool import bool
 from .type_spec import Type
 
+
 def make_float(width):
     delay_type_float = getattr(delay_type, "fp" + str(width))
 
@@ -33,9 +34,18 @@ def make_float(width):
 
         @val.setter
         def val(self, v):
-            from .type_mapping import nptype_from_builtin, numpy_type_to_builtin_type, builtin_to_string
+            from .type_mapping import (
+                nptype_from_builtin,
+                numpy_type_to_builtin_type,
+                builtin_to_string,
+            )
+
             if not isinstance(v, np.generic):
-                raise ValueError("types should have value of numpy type, got {} instead".format(type(v)))
+                raise ValueError(
+                    "types should have value of numpy type, got {} instead".format(
+                        type(v)
+                    )
+                )
 
             if isinstance(v, np.floating):
                 v_type = numpy_type_to_builtin_type(v.dtype)
@@ -43,11 +53,18 @@ def make_float(width):
                     self._val = v
                 else:
                     self._val = v.astype(nptype_from_builtin(self.__class__))
-                    logging.warning("Saving value type of {} into a builtin type of {}, might lose precision!".format(v.dtype, builtin_to_string(self.__class__)))
+                    logging.warning(
+                        "Saving value type of {} into a builtin type of {}, might lose precision!".format(
+                            v.dtype, builtin_to_string(self.__class__)
+                        )
+                    )
             else:
                 self._val = v.astype(nptype_from_builtin(self.__class__))
-                logging.warning("Saving value type of {} into a builtin type of {}, might be incompatible or loses precision!".format(v.dtype, builtin_to_string(self.__class__)))
-
+                logging.warning(
+                    "Saving value type of {} into a builtin type of {}, might be incompatible or loses precision!".format(
+                        v.dtype, builtin_to_string(self.__class__)
+                    )
+                )
 
         @classmethod
         def __type_info__(cls):
@@ -59,27 +76,27 @@ def make_float(width):
 
         @annotate(delay_type_float, other=delay_type_float)
         def __add__(self, other):
-            assert (isinstance(other, double))
+            assert isinstance(other, double)
             return double(self.val + other.val)
 
         @annotate(delay_type_float, other=delay_type_float)
         def __sub__(self, other):
-            assert (isinstance(other, double))
+            assert isinstance(other, double)
             return double(self.val - other.val)
 
         @annotate(delay_type_float, other=delay_type_float)
         def __mul__(self, other):
-            assert (isinstance(other, double))
+            assert isinstance(other, double)
             return double(self.val * other.val)
 
         @annotate(delay_type_float, other=delay_type_float)
         def __div__(self, other):
-            assert (isinstance(other, double))
+            assert isinstance(other, double)
             return double(self.val / other.val)
 
         @annotate(delay_type_float, other=delay_type_float)
         def __mod__(self, other):
-            assert (isinstance(other, double))
+            assert isinstance(other, double)
             return double(self.val % other.val)
 
         @annotate(delay_type.bool, other=delay_type_float)
@@ -134,7 +151,7 @@ def make_float(width):
         def __neg__(self):
             return double(-self.val)
 
-    double.__name__ = 'fp%d' % double.get_bitwidth()
+    double.__name__ = "fp%d" % double.get_bitwidth()
     return double
 
 

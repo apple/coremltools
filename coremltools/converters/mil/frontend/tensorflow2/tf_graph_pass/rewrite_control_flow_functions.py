@@ -81,24 +81,24 @@ def _flatten_sub_graph_namespaces(tf_ssa, fn_name):
     count = 0
     fn = tf_ssa.functions.get(fn_name)
     for name, node in fn.graph.copy().items():
-        if node.op not in {'StatelessWhile', 'While', 'StatelessIf', 'If'}:
+        if node.op not in {"StatelessWhile", "While", "StatelessIf", "If"}:
             continue
 
-        if node.op in {'StatelessWhile', 'While'}:
-            sub_fn_names = [node.attr.get('cond'), node.attr.get('body')]
+        if node.op in {"StatelessWhile", "While"}:
+            sub_fn_names = [node.attr.get("cond"), node.attr.get("body")]
         else:
-            sub_fn_names = [node.attr.get('then_branch'), node.attr.get('else_branch')]
+            sub_fn_names = [node.attr.get("then_branch"), node.attr.get("else_branch")]
 
         for sf_name in sub_fn_names:
             sf = tf_ssa.functions.get(sf_name)
-            prefix = '{}/{}'.format(node.name, sf_name)
+            prefix = "{}/{}".format(node.name, sf_name)
 
             for old_name, n in sf.graph.copy().items():
-                _rename_node_in_fn(n, '{}/{}'.format(prefix, old_name), sf)
+                _rename_node_in_fn(n, "{}/{}".format(prefix, old_name), sf)
                 count += 1
 
             ios = set(sf.inputs + sf.outputs)
-            io_name_mappings = {n: '{}/{}'.format(prefix, n) for n in ios}
+            io_name_mappings = {n: "{}/{}".format(prefix, n) for n in ios}
             sf.inputs = [io_name_mappings[n] for n in sf.inputs]
             sf.outputs = [io_name_mappings[n] for n in sf.outputs]
             _flatten_sub_graph_namespaces(tf_ssa, sf_name)
@@ -138,20 +138,20 @@ def _insert_op(fn, op, name, attr=None):
 
 
 def _insert_function_entry(fn):
-    return _insert_op(fn=fn, op='function_entry', name='entry')
+    return _insert_op(fn=fn, op="function_entry", name="entry")
 
 
 def _insert_return(fn):
-    return _insert_op(fn=fn, op='return', name='return')
+    return _insert_op(fn=fn, op="return", name="return")
 
 
 def _insert_make_tuple(fn, name=None):
-    name = 'make_tuple' if name is None else name
-    return _insert_op(fn=fn, op='make_tuple', name=name)
+    name = "make_tuple" if name is None else name
+    return _insert_op(fn=fn, op="make_tuple", name=name)
 
 
 def _insert_get_tuple(fn, name, idx):
-    return _insert_op(fn=fn, op='get_tuple', name=name, attr={'index': idx})
+    return _insert_op(fn=fn, op="get_tuple", name=name, attr={"index": idx})
 
 
 def _rewrite_cond_functions(tf_ssa, fn):
@@ -217,15 +217,16 @@ def _rewrite_cond_functions(tf_ssa, fn):
 
     """
     for cond_name, cond_node in fn.graph.copy().items():
-        if cond_node.op not in {'StatelessIf', 'If'}:
+        if cond_node.op not in {"StatelessIf", "If"}:
             continue
 
-        then_fn_name = cond_node.attr.get('then_branch')
-        else_fn_name = cond_node.attr.get('else_branch')
+        then_fn_name = cond_node.attr.get("then_branch")
+        else_fn_name = cond_node.attr.get("else_branch")
 
         msg = "Rewriting '{}' ({}) sub-graphs: then '{}', else '{}'"
-        logging.info(msg.format(
-            cond_node.name, cond_node.op, then_fn_name, else_fn_name))
+        logging.info(
+            msg.format(cond_node.name, cond_node.op, then_fn_name, else_fn_name)
+        )
 
         then_fn = tf_ssa.functions.get(then_fn_name)
         else_fn = tf_ssa.functions.get(else_fn_name)
@@ -235,7 +236,7 @@ def _rewrite_cond_functions(tf_ssa, fn):
         else_entry = _insert_function_entry(else_fn)
 
         # pack node inputs to a single tuple
-        cond_input = _insert_make_tuple(fn, 'make_tuple/{}'.format(cond_name))
+        cond_input = _insert_make_tuple(fn, "make_tuple/{}".format(cond_name))
         for ci in cond_node.inputs:
             disconnect_edge(fn.graph, ci, cond_node.name)
             connect_edge(fn.graph, ci, cond_input)
@@ -248,9 +249,11 @@ def _rewrite_cond_functions(tf_ssa, fn):
             # Fallback to use original cond_node.outputs order if fails.
             o_original = fn.graph[co].original_node
             if o_original:
-                c_input = [n for n in o_original.input if str(n).startswith(cond_name)][0]
-                c_index = c_input.split(":")[-1] if ':' in c_input else 0
-                mapped_name = then_fn.ret['identity_{}'.format(c_index)].split(':')[0]
+                c_input = [n for n in o_original.input if str(n).startswith(cond_name)][
+                    0
+                ]
+                c_index = c_input.split(":")[-1] if ":" in c_input else 0
+                mapped_name = then_fn.ret["identity_{}".format(c_index)].split(":")[0]
                 if mapped_name in then_fn.outputs:
                     idx = then_fn.outputs.index(mapped_name)
                 else:  # in else_fn.outputs
@@ -259,7 +262,8 @@ def _rewrite_cond_functions(tf_ssa, fn):
                 idx = i
 
             cond_output = _insert_get_tuple(
-                fn, 'get_tuple/{}/{}'.format(idx, cond_name), idx)
+                fn, "get_tuple/{}/{}".format(idx, cond_name), idx
+            )
             edge_idx = fn.graph[co].inputs.index(cond_node.name)
             replace_dest(fn.graph, cond_node, co, cond_output)
             connect_edge_at_index(fn.graph, cond_output, co, edge_idx)
@@ -267,7 +271,8 @@ def _rewrite_cond_functions(tf_ssa, fn):
         # fetch inputs using get_tuple for then branch
         for i, ti in enumerate(then_fn.inputs):
             then_input = _insert_get_tuple(
-                then_fn, 'get_tuple/{}/{}'.format(i, ti), i + 1)
+                then_fn, "get_tuple/{}/{}".format(i, ti), i + 1
+            )
             connect_edge(then_fn.graph, then_entry, then_input)
             replace_node(then_fn.graph, ti, then_input)
             delete_node(then_fn.graph, ti)
@@ -275,7 +280,8 @@ def _rewrite_cond_functions(tf_ssa, fn):
         # fetch inputs using get_tuple for else branch
         for i, ei in enumerate(else_fn.inputs):
             else_input = _insert_get_tuple(
-                else_fn, 'get_tuple/{}/{}'.format(i, ei), i + 1)
+                else_fn, "get_tuple/{}/{}".format(i, ei), i + 1
+            )
             connect_edge(else_fn.graph, else_entry, else_input)
             replace_node(else_fn.graph, ei, else_input)
             delete_node(else_fn.graph, ei)
@@ -285,7 +291,7 @@ def _rewrite_cond_functions(tf_ssa, fn):
         for to in then_fn.outputs:
             if to not in then_fn.graph.keys():
                 # from identity, map back to get_tuple node
-                to = 'get_tuple/{}/{}'.format(then_fn.inputs.index(to), to)
+                to = "get_tuple/{}/{}".format(then_fn.inputs.index(to), to)
             connect_edge(then_fn.graph, to, then_output.name)
 
         then_return = _insert_return(then_fn)
@@ -296,7 +302,7 @@ def _rewrite_cond_functions(tf_ssa, fn):
         for eo in else_fn.outputs:
             if eo not in else_fn.graph.keys():
                 # from identity, map back to get_tuple node
-                eo = 'get_tuple/{}/{}'.format(else_fn.inputs.index(eo), eo)
+                eo = "get_tuple/{}/{}".format(else_fn.inputs.index(eo), eo)
             connect_edge(else_fn.graph, eo, else_output.name)
 
         else_return = _insert_return(else_fn)
@@ -362,11 +368,11 @@ def _eliminate_loop_cond_nodes(tf_ssa, fn):
             [placeholder] ---> [sub]
     """
     for name, node in fn.graph.copy().items():
-        if node.op not in {'StatelessWhile', 'While'}:
+        if node.op not in {"StatelessWhile", "While"}:
             continue
 
-        cond_fn = tf_ssa.functions.get(node.attr.get('cond'))
-        body_fn = tf_ssa.functions.get(node.attr.get('body'))
+        cond_fn = tf_ssa.functions.get(node.attr.get("cond"))
+        body_fn = tf_ssa.functions.get(node.attr.get("body"))
 
         cond_lc_nodes = {cond_fn.inputs.pop(0), cond_fn.inputs.pop(0)}
         logging.info("Removing {} from cond graph".format(cond_lc_nodes))
@@ -451,15 +457,16 @@ def _rewrite_while_loop_functions(tf_ssa, fn):
             [entry] -> [get_tuple] -> [placeholder] -> [sub] -> [make_tuple] -> [return]
     """
     for while_name, while_node in fn.graph.copy().items():
-        if while_node.op not in {'StatelessWhile', 'While'}:
+        if while_node.op not in {"StatelessWhile", "While"}:
             continue
 
-        cond_fn_name = while_node.attr.get('cond')
-        body_fn_name = while_node.attr.get('body')
+        cond_fn_name = while_node.attr.get("cond")
+        body_fn_name = while_node.attr.get("body")
 
         msg = "Rewriting '{}' ({}) sub-graphs: cond '{}', body '{}'"
-        logging.info(msg.format(
-            while_node.name, while_node.op, cond_fn_name, body_fn_name))
+        logging.info(
+            msg.format(while_node.name, while_node.op, cond_fn_name, body_fn_name)
+        )
 
         cond_fn = tf_ssa.functions.get(cond_fn_name)
         body_fn = tf_ssa.functions.get(body_fn_name)
@@ -469,7 +476,7 @@ def _rewrite_while_loop_functions(tf_ssa, fn):
         body_entry = _insert_function_entry(body_fn)
 
         # pack node inputs to a single tuple
-        while_input_tuple = _insert_make_tuple(fn, 'make_tuple/{}'.format(while_name))
+        while_input_tuple = _insert_make_tuple(fn, "make_tuple/{}".format(while_name))
         for wi in while_node.inputs:
             disconnect_edge(fn.graph, wi, while_node.name)
             connect_edge(fn.graph, wi, while_input_tuple)
@@ -480,13 +487,16 @@ def _rewrite_while_loop_functions(tf_ssa, fn):
             # utilize FunctionDef's ret to make sure function outputs and
             # node outputs order matches when multiple outputs are there.
             o_original = fn.graph[wo].original_node
-            while_input = [n for n in o_original.input if str(n).startswith(while_name)][0]
+            while_input = [
+                n for n in o_original.input if str(n).startswith(while_name)
+            ][0]
             while_index = while_input.split(":")[-1]
-            mapped_name = body_fn.ret['identity_{}'.format(while_index)].split(':')[0]
+            mapped_name = body_fn.ret["identity_{}".format(while_index)].split(":")[0]
             idx = body_fn.outputs.index(mapped_name)
 
             loop_output = _insert_get_tuple(
-                fn, 'get_tuple/{}/{}'.format(idx,while_input), idx)
+                fn, "get_tuple/{}/{}".format(idx, while_input), idx
+            )
 
             edge_idx = fn.graph[wo].inputs.index(while_node.name)
             replace_dest(fn.graph, while_node, wo, loop_output)
@@ -494,7 +504,7 @@ def _rewrite_while_loop_functions(tf_ssa, fn):
 
         # fetch inputs using get_tuple for cond fn
         for i, ci in enumerate(cond_fn.inputs):
-            cond_input = _insert_get_tuple(cond_fn, 'get_tuple/{}/{}'.format(i, ci), i)
+            cond_input = _insert_get_tuple(cond_fn, "get_tuple/{}/{}".format(i, ci), i)
             connect_edge(cond_fn.graph, cond_entry, cond_input)
             replace_node(cond_fn.graph, ci, cond_input)
             delete_node(cond_fn.graph, ci)
@@ -539,4 +549,4 @@ def rewrite_control_flow_functions(tf_ssa):
 
 
 def flatten_sub_graph_namespaces(tf_ssa):
-    _flatten_sub_graph_namespaces(tf_ssa, fn_name='main')
+    _flatten_sub_graph_namespaces(tf_ssa, fn_name="main")

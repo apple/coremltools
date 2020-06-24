@@ -17,6 +17,7 @@ if _HAS_ONNX:
         _random_array,
     )
 
+
 @unittest.skipUnless(_HAS_ONNX, MSG_ONNX_NOT_FOUND)
 class NodeTest(unittest.TestCase):
     def test_create_node(self):  # type: () -> None
@@ -30,6 +31,7 @@ class NodeTest(unittest.TestCase):
         self.assertTrue(len(node_.outputs) == 1)
         self.assertTrue(len(node_.attrs) == 1)
         self.assertTrue(node_.attrs["alpha"] == 0.5)
+
 
 @unittest.skipUnless(_HAS_ONNX, MSG_ONNX_NOT_FOUND)
 class GraphTest(unittest.TestCase):

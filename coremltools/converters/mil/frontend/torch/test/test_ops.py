@@ -16,7 +16,6 @@ from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import Function, get_new_symbol
 from coremltools.converters.mil.mil.var import Var
 
-
 from .. import ops
 from ..converter import TorchConverter, TranscriptionContext
 from ..internal_graph import InternalTorchIRNode
@@ -25,8 +24,8 @@ from ..internal_graph import InternalTorchIRNode
 class TestTorchOps:
     """Class containing tests for converting TorchIR -> CoreML ops.
 
-    These tests interface with only the InternalTorchIRGraph and do not 
-    build a torch module. Thus, they are much faster then the numerical tests. 
+    These tests interface with only the InternalTorchIRGraph and do not
+    build a torch module. Thus, they are much faster then the numerical tests.
     However, for some ops it is necessary to use the torch module to verify
     numerical output so they are placed the numerical tests.
 
@@ -1153,7 +1152,9 @@ class TestTorchOps:
 
     @pytest.mark.parametrize(
         "input_size, dim, index",
-        itertools.product([(13, 43, 10), (39, 14, 11, 9)], [0, 1, 2], [0, 1, 3, 8, -1],),
+        itertools.product(
+            [(13, 43, 10), (39, 14, 11, 9)], [0, 1, 2], [0, 1, 3, 8, -1],
+        ),
     )
     def test_select(self, context, input_size, dim, index):
         graph_inputs = {"input1": mb.placeholder(input_size, dtype=types.float)}
@@ -1188,8 +1189,8 @@ class TestTorchOps:
         "dynamic, test_tuple", itertools.product([True, False], [True, False])
     )
     def test_tuple_and_list_unpack(self, context, dynamic, test_tuple):
-        """ 
-            if @dynamic is True then packs up a dynamic input 
+        """
+            if @dynamic is True then packs up a dynamic input
             if @test_tuple is True tests tupleUnpack else tests listUnpack
         """
         if test_tuple:
@@ -1804,7 +1805,6 @@ class TestTorchOps:
         max_result = context["out2"].val
         expected_index, expected_max = torch.max(test_input, dim=dim, keepdim=keepdim)
 
-
     @pytest.mark.parametrize(
         "input_size, dim, descending",
         itertools.product([(2, 3, 4), (1, 2, 3, 4)], [0, 1, 2], [True, False]),
@@ -1818,7 +1818,9 @@ class TestTorchOps:
             kind="sort", inputs=input_list, outputs=["out1", "out2"],
         )
         ssa = self._construct_test_graph(context, ops.sort, node, constants=constants)
-        expected_sort, expected_index = torch.sort(test_input, dim=dim, descending=descending)
+        expected_sort, expected_index = torch.sort(
+            test_input, dim=dim, descending=descending
+        )
         sort_result = context["out1"].val
         index_result = context["out2"].val
         np.testing.assert_allclose(expected_sort, sort_result)

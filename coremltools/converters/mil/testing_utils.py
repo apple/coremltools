@@ -36,8 +36,9 @@ def assert_op_count_match(program, expect, op=None, verbose=False):
         np.testing.assert_equal(count, expect)
 
 
-def assert_model_is_valid(program, inputs, backend='nn_proto',
-        verbose=True, expected_output_shapes=None):
+def assert_model_is_valid(
+    program, inputs, backend="nn_proto", verbose=True, expected_output_shapes=None
+):
     """
     Assert Core ML model is valid.
 
@@ -49,12 +50,11 @@ def assert_model_is_valid(program, inputs, backend='nn_proto',
     input_dict = dict()
     for name, shape in inputs.items():
         input_dict[name] = np.random.rand(*shape)
-    proto = _converter._convert(program,
-                                convert_from='mil',
-                                convert_to=backend)
+    proto = _converter._convert(program, convert_from="mil", convert_to=backend)
     if verbose:
         from coremltools.models.neural_network.printer import print_network_spec
-        print_network_spec(proto, style='coding')
+
+        print_network_spec(proto, style="coding")
 
     model = coremltools.models.MLModel(proto)
     assert model is not None
@@ -67,19 +67,19 @@ def assert_model_is_valid(program, inputs, backend='nn_proto',
                 assert out_shape == prediction[out_name].shape
 
 
-def assert_same_output_names(prog1, prog2, func_name='main'):
+def assert_same_output_names(prog1, prog2, func_name="main"):
     prog1_outputs = [o.name for o in prog1[func_name].outputs]
     prog2_outputs = [o.name for o in prog2[func_name].outputs]
     assert prog1_outputs == prog2_outputs
 
 
-def assert_same_output_shapes(prog1, prog2, func_name='main'):
+def assert_same_output_shapes(prog1, prog2, func_name="main"):
     prog1_output_shapes = [o.shape for o in prog1[func_name].outputs]
     prog2_output_shapes = [o.shape for o in prog2[func_name].outputs]
     assert prog1_output_shapes == prog2_output_shapes
 
 
-def get_op_types_in_program(prog, func_name='main', skip_const_ops=True):
+def get_op_types_in_program(prog, func_name="main", skip_const_ops=True):
     """
     Return the operation types in prog[func_name],
     in the same order as they are stored (topological)
@@ -87,13 +87,20 @@ def get_op_types_in_program(prog, func_name='main', skip_const_ops=True):
     op_types_in_program = []
     for op in prog[func_name].operations:
         if skip_const_ops:
-            if op.op_type == 'const':
+            if op.op_type == "const":
                 continue
         op_types_in_program.append(op.op_type)
     return op_types_in_program
 
 
-def random_gen(shape, rand_min=0.0, rand_max=1.0, eps_from_int=0.0, allow_duplicate=True, dtype=np.float32):
+def random_gen(
+    shape,
+    rand_min=0.0,
+    rand_max=1.0,
+    eps_from_int=0.0,
+    allow_duplicate=True,
+    dtype=np.float32,
+):
     """
     This helper function generates a random array of shape `shape`
     The range of generated numbers will be between (rand_min, rand_max].
@@ -120,6 +127,7 @@ def ssa_fn(func):
     """
     Deprecated: use @mb.program()
     """
+
     def wrapper(*args, **kwargs):
         prog = Program()
         with Function({}) as ssa_func:
@@ -145,8 +153,7 @@ def is_close(expected, actual, atol=1e-04, rtol=1e-05):
         diff = expected - actual
         num_not_close = np.sum(~close)
         msg = "Values differ by L1 norm: {}. Num entries not close: {}/{}"
-        logging.error(msg.format(np.sum(np.abs(diff)), num_not_close,
-                                 expected.size))
+        logging.error(msg.format(np.sum(np.abs(diff)), num_not_close, expected.size))
         if num_not_close < 30:
             logging.error("Differing entries:")
             logging.error("Expected: {}".format(expected[~close]))
@@ -160,17 +167,27 @@ def run_core_ml_predict(proto, input_key_values, use_cpu_only=False):
     model = coremltools.models.MLModel(proto, useCPUOnly=use_cpu_only)
     input_key_values = dict(
         [
-            (k, v.astype(np.float32)
-            if not np.isscalar(v) and not v.shape == ()
-            else np.array([v], dtype=np.float32))
+            (
+                k,
+                v.astype(np.float32)
+                if not np.isscalar(v) and not v.shape == ()
+                else np.array([v], dtype=np.float32),
+            )
             for k, v in input_key_values.items()
-        ])
+        ]
+    )
     return model.predict(input_key_values, useCPUOnly=use_cpu_only)
 
 
-def compare_backend(proto, input_key_values, expected_outputs,
-                    use_cpu_only=False, atol=1e-04, rtol=1e-05,
-                    also_compare_shapes=True):
+def compare_backend(
+    proto,
+    input_key_values,
+    expected_outputs,
+    use_cpu_only=False,
+    atol=1e-04,
+    rtol=1e-05,
+    also_compare_shapes=True,
+):
     """
     Inputs:
         - proto: MLModel proto.
@@ -186,18 +203,29 @@ def compare_backend(proto, input_key_values, expected_outputs,
     if _IS_MACOS:
         pred = run_core_ml_predict(proto, input_key_values, use_cpu_only=use_cpu_only)
         if also_compare_shapes:
-            compare_shapes(proto, input_key_values, expected_outputs, use_cpu_only=use_cpu_only, pred=pred)
+            compare_shapes(
+                proto,
+                input_key_values,
+                expected_outputs,
+                use_cpu_only=use_cpu_only,
+                pred=pred,
+            )
         if not use_cpu_only:
-            atol = min(atol * 100., 1e-1)
-            rtol = min(rtol * 100., 1e-2)
+            atol = min(atol * 100.0, 1e-1)
+            rtol = min(rtol * 100.0, 1e-2)
         for o, expected in expected_outputs.items():
-            msg = 'Output {} differs. useCPUOnly={}.\nInput={}, ' + \
-                  'Expected={}, Output={}\n'
+            msg = (
+                "Output {} differs. useCPUOnly={}.\nInput={}, "
+                + "Expected={}, Output={}\n"
+            )
             assert is_close(expected, pred[o], atol, rtol), msg.format(
-                o, use_cpu_only, input_key_values, expected, pred[o])
+                o, use_cpu_only, input_key_values, expected, pred[o]
+            )
 
 
-def compare_shapes(proto, input_key_values, expected_outputs, use_cpu_only=False, pred=None):
+def compare_shapes(
+    proto, input_key_values, expected_outputs, use_cpu_only=False, pred=None
+):
     """
     Inputs:
         - proto: MLModel proto.
@@ -216,8 +244,9 @@ def compare_shapes(proto, input_key_values, expected_outputs, use_cpu_only=False
         if not pred:
             pred = run_core_ml_predict(proto, input_key_values, use_cpu_only)
         for o, expected in expected_outputs.items():
-            msg = 'Output: {}. expected shape {} != actual shape {}'.format(
-                o, expected.shape, pred[o].shape)
+            msg = "Output: {}. expected shape {} != actual shape {}".format(
+                o, expected.shape, pred[o].shape
+            )
             # Core ML does not support scalar as output
             # remove this special case when support is added
             if expected.shape == () and pred[o].shape == (1,):
@@ -226,8 +255,8 @@ def compare_shapes(proto, input_key_values, expected_outputs, use_cpu_only=False
 
 
 def get_core_ml_prediction(
-        build, input_placeholders, input_values,
-        use_cpu_only=False, backend='nn_proto'):
+    build, input_placeholders, input_values, use_cpu_only=False, backend="nn_proto"
+):
     """
     Return predictions of the given model.
     """
@@ -239,13 +268,12 @@ def get_core_ml_prediction(
         elif not isinstance(output_vars, list):
             output_vars = [output_vars]
         ssa_func.set_outputs(output_vars)
-        program.add_function('main', ssa_func)
+        program.add_function("main", ssa_func)
 
-    proto = _converter._convert(program,
-                                convert_from='mil',
-                                convert_to=backend)
+    proto = _converter._convert(program, convert_from="mil", convert_to=backend)
     model = coremltools.models.MLModel(proto, use_cpu_only)
     return model.predict(input_values, useCPUOnly=use_cpu_only)
+
 
 def apply_pass_and_basic_check(prog, pass_name):
     """

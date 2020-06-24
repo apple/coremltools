@@ -522,11 +522,11 @@ def convert(
         This is ignored if "minimum_ios_deployment_target" is set to 13.
     minimum_ios_deployment_target: str
         Target Deployment iOS Version (default: '12')
-        Supported iOS version options: '11.2', '12', '13'        
+        Supported iOS version options: '11.2', '12', '13'
         CoreML model produced by the converter will be compatible with the iOS version specified in this argument.
         e.g. if minimum_ios_deployment_target = '12', the converter would only utilize CoreML features released till iOS12 (equivalently macOS 10.14, watchOS 5 etc).
 
-        iOS 11.2 (CoreML 0.8) does not support resize_bilinear, crop_resize layers 
+        iOS 11.2 (CoreML 0.8) does not support resize_bilinear, crop_resize layers
          - (Supported features: https://github.com/apple/coremltools/releases/tag/v0.8)
         iOS 12 (CoreML 2.0)
          - (Supported features: https://github.com/apple/coremltools/releases/tag/v2.0)
@@ -563,7 +563,7 @@ def convert(
 
     """
     First, apply a few optimizations to the ONNX graph,
-    in preparation for conversion to CoreML. 
+    in preparation for conversion to CoreML.
     """
 
     # Using Dummy transformation to conditionally disable certain transformation
@@ -596,7 +596,7 @@ def convert(
 
     """
     Check for ImageScalar nodes in ONNX, this will indicate whether input image preprocessing needs
-    to be added to the CoreML graph or not. 
+    to be added to the CoreML graph or not.
     """
     # are there ImageScaler nodes in the Graph?
     # If yes then add the info from it to the "preprocessing_args" dictionary, if the dictionary is not
@@ -632,8 +632,8 @@ def convert(
 
     """
     Gather information (name, shape) for model inputs and outputs
-    This information is then used to initialize the neural network builder object of coremltools. 
-    The builder object is later used to add layers to the CoreML model. 
+    This information is then used to initialize the neural network builder object of coremltools.
+    The builder object is later used to add layers to the CoreML model.
     """
 
     # Make CoreML input and output features by gathering shape info and
@@ -669,7 +669,7 @@ def convert(
     """
     _transform_coreml_dtypes(builder, graph.inputs, graph.outputs)
 
-    """what follows is some book-keeping to support outputs of type image. 
+    """what follows is some book-keeping to support outputs of type image.
     """
 
     is_deprocess_bgr_only = (len(deprocessing_args) == 1) and (
@@ -709,13 +709,13 @@ def convert(
                 _convert_multiarray_output_to_image(builder.spec, f_name, is_bgr=is_bgr)
 
     """
-    Iterate through all the ONNX ops and translate them to CoreML layers, one by one. 
+    Iterate through all the ONNX ops and translate them to CoreML layers, one by one.
     """
 
     """
     before proceeding to start the layer translation process,
     check whether there is an op in the ONNX graph, whose translation function is not yet
-    implemented in the converter or which is not supported in the CoreML framework. If so, 
+    implemented in the converter or which is not supported in the CoreML framework. If so,
     raise an error before starting the process.
     (if the user desires to add a custom layer then this check is not required)
     """
@@ -723,7 +723,7 @@ def convert(
         _check_unsupported_ops(graph.nodes, disable_coreml_rank5_mapping)
 
     """
-    ErrorHandling is a generic class, useful to store a variety of parameters during the conversion process  
+    ErrorHandling is a generic class, useful to store a variety of parameters during the conversion process
     """
     err = ErrorHandling(add_custom_layers, custom_conversion_functions)
 
@@ -909,5 +909,7 @@ def convert(
             )
 
     mlmodel.user_defined_metadata[_METADATA_VERSION] = ct_version
-    mlmodel.user_defined_metadata[_METADATA_SOURCE] = 'onnx=={0}'.format(onnx.__version__)
+    mlmodel.user_defined_metadata[_METADATA_SOURCE] = "onnx=={0}".format(
+        onnx.__version__
+    )
     return mlmodel

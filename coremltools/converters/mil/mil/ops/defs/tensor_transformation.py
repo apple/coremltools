@@ -6,9 +6,20 @@
 import functools
 import sympy as sm
 from coremltools.converters.mil.mil.types.symbolic import (
-        is_symbolic, isscalar, any_symbolic, any_variadic)
-from coremltools.converters.mil.mil import get_new_symbol, get_new_variadic_symbol, VALUE, SYMBOL, types
+    is_symbolic,
+    isscalar,
+    any_symbolic,
+    any_variadic,
+)
+from coremltools.converters.mil.mil import (
+    get_new_symbol,
+    get_new_variadic_symbol,
+    VALUE,
+    SYMBOL,
+    types,
+)
 from ._op_reqs import *
+
 
 @register_op(doc_str="")
 class depth_to_space(Operation):
@@ -31,10 +42,8 @@ class depth_to_space(Operation):
     ----------
     T: fp32
     """
-    input_spec = InputSpec(
-        x=TensorInputType(),
-        block_size=IntInputType(const=True),
-    )
+
+    input_spec = InputSpec(x=TensorInputType(), block_size=IntInputType(const=True),)
 
     def __init__(self, **kwargs):
         super(depth_to_space, self).__init__(**kwargs)
@@ -45,6 +54,7 @@ class depth_to_space(Operation):
         bs = self.block_size.val
         ret_shape = (n, c // (bs * bs), h * bs, w * bs)
         return types.tensor(x_type, ret_shape)
+
 
 @register_op(doc_str="")
 class expand_dims(Operation):
@@ -70,9 +80,9 @@ class expand_dims(Operation):
     ----------
     T: fp32
     """
+
     input_spec = InputSpec(
-        x=ScalarOrTensorInputType(),
-        axes=IntTensorInputType(const=True),
+        x=ScalarOrTensorInputType(), axes=IntTensorInputType(const=True),
     )
 
     def __init__(self, **kwargs):
@@ -89,7 +99,8 @@ class expand_dims(Operation):
             if axis <= -out_rank - 1 or axis >= out_rank:
                 msg = 'Axis value {} is out of bounds for {} node "{}" of shape {}'
                 raise IndexError(
-                    msg.format(axis, self.op_type, self.name, self.x.shape))
+                    msg.format(axis, self.op_type, self.name, self.x.shape)
+                )
 
         ret_shape = x_shape
         axes = sorted([out_rank + axis if axis < 0 else axis for axis in axes])
@@ -107,7 +118,8 @@ class expand_dims(Operation):
             if axis <= -out_rank - 1 or axis >= out_rank:
                 msg = 'Axis value {} is out of bounds for {} node "{}" of shape {}'
                 raise IndexError(
-                    msg.format(axis, self.op_type, self.name, self.x.shape))
+                    msg.format(axis, self.op_type, self.name, self.x.shape)
+                )
 
         axes = sorted([out_rank + axis if axis < 0 else axis for axis in axes])
         ret_shape = list(self.x.shape)
@@ -161,10 +173,8 @@ class reshape(Operation):
     ----------
     T: fp32
     """
-    input_spec = InputSpec(
-            x = ScalarOrTensorInputType(),
-            shape = IntTensorInputType(),
-            )
+
+    input_spec = InputSpec(x=ScalarOrTensorInputType(), shape=IntTensorInputType(),)
 
     def __init__(self, **kwargs):
         super(reshape, self).__init__(**kwargs)
@@ -181,7 +191,7 @@ class reshape(Operation):
         t, _ = self._get_type_val()
         return t
 
-    @precondition(allow=VALUE|SYMBOL)
+    @precondition(allow=VALUE | SYMBOL)
     def value_inference(self):
         _, val = self._get_type_val()
         return val
@@ -195,8 +205,7 @@ class reshape(Operation):
         sym_shape = [get_new_symbol() if d == -1 else d for d in sym_shape]
         ret_shape = reshape.enforce_volumetric_constraint(x_vol, sym_shape)
         ret_val = None
-        if self.x.val is not None and \
-            all(isscalar(a) for a in ret_shape):
+        if self.x.val is not None and all(isscalar(a) for a in ret_shape):
             ret_val = reshape_with_symbol(self.x.val, ret_shape)
         return types.tensor(x_type, tuple(ret_shape)), ret_val
 
@@ -212,7 +221,11 @@ class reshape(Operation):
         # Handling when reshape is given 0 instead of actual input
         # input tensor shape: [4, 3, 2], reshape:[0, -1], output tensor shape: [4, 6]
         if shape.count(-1) > 1:
-            raise ValueError("Reshape op supports only one dimension to be -1. Given {}".format(shape.count(-1)))
+            raise ValueError(
+                "Reshape op supports only one dimension to be -1. Given {}".format(
+                    shape.count(-1)
+                )
+            )
 
         infer_dim_index = shape.index(-1) if -1 in shape else None
         right_volume = 1
@@ -271,9 +284,9 @@ class reverse(Operation):
     ----------
     T: fp32
     """
+
     input_spec = InputSpec(
-        x=TensorInputType(),
-        axes=IntTensorInputType(const=True, optional=True),
+        x=TensorInputType(), axes=IntTensorInputType(const=True, optional=True),
     )
 
     def __init__(self, **kwargs):
@@ -323,11 +336,12 @@ class reverse_sequence(Operation):
     ----------
     T: fp32
     """
+
     input_spec = InputSpec(
         x=TensorInputType(),
         lengths=IntTensorInputType(),
         seq_axis=IntInputType(const=True, default=0),
-        batch_axis=IntInputType(const=True, default=0)
+        batch_axis=IntInputType(const=True, default=0),
     )
 
     def __init__(self, **kwargs):
@@ -338,7 +352,7 @@ class reverse_sequence(Operation):
 
     @precondition(allow=VALUE)
     def value_inference(self):
-        raise NotImplementedError('TODO')
+        raise NotImplementedError("TODO")
 
 
 @register_op(doc_str="")
@@ -364,10 +378,9 @@ class slice_by_size(Operation):
     ----------
     T: fp32
     """
+
     input_spec = InputSpec(
-        x=TensorInputType(),
-        begin=IntTensorInputType(),
-        size=IntTensorInputType(),
+        x=TensorInputType(), begin=IntTensorInputType(), size=IntTensorInputType(),
     )
 
     def __init__(self, **kwargs):
@@ -375,13 +388,29 @@ class slice_by_size(Operation):
 
     def type_inference(self):
         if self.begin.rank != 1:
-            raise ValueError("begin should be 1-D tensor, got {}-D tensor instead".format(self.begin.rank))
+            raise ValueError(
+                "begin should be 1-D tensor, got {}-D tensor instead".format(
+                    self.begin.rank
+                )
+            )
         if self.size.rank != 1:
-            raise ValueError("size should be 1-D tensor, got {}-D tensor instead".format(self.size.rank))
+            raise ValueError(
+                "size should be 1-D tensor, got {}-D tensor instead".format(
+                    self.size.rank
+                )
+            )
         if self.x.rank != self.begin.shape[0]:
-            raise ValueError("Length of begin {} doesn't equal to input rank {}.".format(len(self.begin.shape[0]), len(self.x.rank)))
+            raise ValueError(
+                "Length of begin {} doesn't equal to input rank {}.".format(
+                    len(self.begin.shape[0]), len(self.x.rank)
+                )
+            )
         if self.x.rank != self.size.shape[0]:
-            raise ValueError("Length of size {} doesn't equal to input rank {}.".format(len(self.size.shape[0]), len(self.x.rank)))
+            raise ValueError(
+                "Length of size {} doesn't equal to input rank {}.".format(
+                    len(self.size.shape[0]), len(self.x.rank)
+                )
+            )
 
         x_shape = self.x.shape
         ret_shape = []
@@ -395,13 +424,13 @@ class slice_by_size(Operation):
             elif s != -1:
                 ret_shape.append(s)
             elif self.begin.sym_val is not None:
-                ret_shape.append(x_shape[idx]-self.begin.sym_val[idx])
+                ret_shape.append(x_shape[idx] - self.begin.sym_val[idx])
             else:
                 ret_shape.append(get_new_symbol())
 
         return types.tensor(self.x.dtype, tuple(ret_shape))
 
-    @precondition(allow=VALUE|SYMBOL)
+    @precondition(allow=VALUE | SYMBOL)
     def value_inference(self):
         if any_symbolic(self.begin.sym_val):
             return None
@@ -417,10 +446,11 @@ class slice_by_size(Operation):
                     return None
                 begin_val += self.x.shape[i]
             if self.size.val[i] > 0:
-                slices.append(slice(begin_val, begin_val+self.size.val[i]))
+                slices.append(slice(begin_val, begin_val + self.size.val[i]))
             else:
                 slices.append(slice(begin_val, None, None))
         return self.x.val[tuple(slices)]
+
 
 @register_op(doc_str="")
 class space_to_depth(Operation):
@@ -443,10 +473,8 @@ class space_to_depth(Operation):
     ----------
     T: fp32
     """
-    input_spec = InputSpec(
-        x=TensorInputType(),
-        block_size=IntInputType(const=True),
-    )
+
+    input_spec = InputSpec(x=TensorInputType(), block_size=IntInputType(const=True),)
 
     def __init__(self, **kwargs):
         super(space_to_depth, self).__init__(**kwargs)
@@ -481,10 +509,10 @@ class squeeze(Operation):
     ----------
     T: fp32
     """
+
     input_spec = InputSpec(
-            x = TensorInputType(),
-            axes = IntTensorInputType(const=True, optional=True),
-            )
+        x=TensorInputType(), axes=IntTensorInputType(const=True, optional=True),
+    )
 
     def __init__(self, **kwargs):
         super(squeeze, self).__init__(**kwargs)
@@ -498,11 +526,13 @@ class squeeze(Operation):
             squeezed_shape = [s for s in squeezed_shape if s != 1]
         else:
             axes = self.axes.val
-            axes = [axis if axis >=0 else axis + self.x.rank for axis in axes]
-            for i in sorted(axes)[::-1]: # descending order
+            axes = [axis if axis >= 0 else axis + self.x.rank for axis in axes]
+            for i in sorted(axes)[::-1]:  # descending order
                 if len(squeezed_shape) <= i:
-                    raise ValueError("Cannot squeeze dim {} for shape"+
-                            " {}".format(i, squeezed_shape))
+                    raise ValueError(
+                        "Cannot squeeze dim {} for shape"
+                        + " {}".format(i, squeezed_shape)
+                    )
                 squeezed_shape.pop(i)
 
         return types.tensor(x_type, tuple(squeezed_shape))
@@ -536,10 +566,8 @@ class transpose(Operation):
     ----------
     T: fp32
     """
-    input_spec = InputSpec(
-            x = TensorInputType(),
-            perm = IntTensorInputType(const=True),
-            )
+
+    input_spec = InputSpec(x=TensorInputType(), perm=IntTensorInputType(const=True),)
 
     def __init__(self, **kwargs):
         super(transpose, self).__init__(**kwargs)
@@ -559,7 +587,7 @@ class transpose(Operation):
             ret_shape = x_shape[perm]
         return types.tensor(x_type, tuple(ret_shape))
 
-    @precondition(allow=VALUE|SYMBOL)
+    @precondition(allow=VALUE | SYMBOL)
     def value_inference(self):
         return np.transpose(self.x.val, axes=self.perm.val)
 
@@ -586,9 +614,9 @@ class pixel_shuffle(Operation):
     ----------
     T: fp32
     """
+
     input_spec = InputSpec(
-        x=TensorInputType(),
-        upscale_factor=IntInputType(const=True),
+        x=TensorInputType(), upscale_factor=IntInputType(const=True),
     )
 
     def __init__(self, **kwargs):
@@ -633,7 +661,7 @@ class sliding_windows(Operation):
         x=TensorInputType(),
         axis=IntInputType(const=True),
         size=IntInputType(const=True),
-        stride=IntInputType(const=True, default=1)
+        stride=IntInputType(const=True, default=1),
     )
 
     def __init__(self, **kwargs):

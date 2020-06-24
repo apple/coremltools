@@ -13,12 +13,13 @@ from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 from coremltools.converters.mil.mil import Builder as mb
 import numpy as np
 
+
 def _check_child_op_type(op, child_op_type):
-    '''
+    """
     :param op: operation
     :param child_op_type: str
     :return: Return True if op has 1 child and type of that child matches child_op_type
-    '''
+    """
     if len(op.outputs) != 1:
         return False
     child_ops = list(op.outputs[0].child_ops)
@@ -28,12 +29,13 @@ def _check_child_op_type(op, child_op_type):
         return True
     return False
 
+
 def _check_var_scalar_value(x, val, tol=1e-3):
-    '''
+    """
     :param x: var
     :param val: a scalar value
     :return: True if the value of var is equal to val otherwise return False
-    '''
+    """
     if x.val is None:
         return False
     if not isinstance(x.val, (np.ndarray, np.generic)):
@@ -52,7 +54,6 @@ def _check_var_scalar_value(x, val, tol=1e-3):
 
 
 def try_to_transform(onehot_op, block):
-
     root_var = onehot_op.indices
 
     # check that the output of the onehot op is not a block output
@@ -79,7 +80,7 @@ def try_to_transform(onehot_op, block):
         return False
 
     # checks for the following matmul op
-    if not _check_child_op_type(onehot_op, 'matmul'):
+    if not _check_child_op_type(onehot_op, "matmul"):
         return False
     matmul_op = list(onehot_op.outputs[0].child_ops)[0]
     if matmul_op.x != onehot_op.outputs[0]:
@@ -94,14 +95,11 @@ def try_to_transform(onehot_op, block):
 
     # remove onehot and matmul and replace with gather op
     out_name = matmul_op.outputs[0].name
-    x = mb.gather(x=W_var,
-                  indices=root_var,
-                  axis=0,
-                  name=out_name,
-                  before_op=matmul_op)
+    x = mb.gather(x=W_var, indices=root_var, axis=0, name=out_name, before_op=matmul_op)
 
-    matmul_op.enclosing_block.replace_uses_of_var_after_op(anchor_op=matmul_op,
-            old_var=matmul_op.outputs[0], new_var=x)
+    matmul_op.enclosing_block.replace_uses_of_var_after_op(
+        anchor_op=matmul_op, old_var=matmul_op.outputs[0], new_var=x
+    )
     # Remove all the ops at once
     block.remove_ops([onehot_op, matmul_op])
     return True
@@ -119,13 +117,14 @@ def fuse_onehot_matmul_to_gather_block(block):
             continue
 
         # start pattern match if one_hot op is encountered
-        if op.op_type == 'one_hot':
+        if op.op_type == "one_hot":
             with block:
                 fusion_status = try_to_transform(op, block)
             # has to break as the downstream iterator is affected.
             if fusion_status:
                 return fusion_status
     return fusion_status
+
 
 @register_pass(namespace="common")
 def fuse_onehot_matmul_to_gather(prog):

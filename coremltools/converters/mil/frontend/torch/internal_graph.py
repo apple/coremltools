@@ -73,10 +73,10 @@ class InternalTorchIRBlock:
 
 
 class InternalTorchIRNode:
-    """CoreML internal representation of a torch IR node. 
-    Can construct itself from a provided torchIR node or manually constructed with 
-    args for testing. 
-    
+    """CoreML internal representation of a torch IR node.
+    Can construct itself from a provided torchIR node or manually constructed with
+    args for testing.
+
     See InternalTorchIRGraph for the motivation behind this structure.
 
         Arguments:
@@ -159,8 +159,8 @@ class InternalTorchIRGraph:
             input_spec: A list of InputType objects, describing the name,
                 shape, and dtype of graph inputs.
             cut_at_symbols: The list of desired outputs from the graph. Must
-                be present in the graph. For debugging use only. 
-                See kwarg in load.py for more information. 
+                be present in the graph. For debugging use only.
+                See kwarg in load.py for more information.
     """
 
     def __init__(

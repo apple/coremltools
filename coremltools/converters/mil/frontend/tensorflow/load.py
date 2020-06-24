@@ -68,9 +68,13 @@ class TFLoader:
 
         if self.debug:
             import graphviz
+
             dot_string = self._tf_ssa.get_dot_string(
-                annotation=True, name_and_op_style=True, highlight_debug_nodes=[])
-            graphviz.Source(dot_string).view(filename='/tmp/ssa_before_tf_passes', cleanup=True)
+                annotation=True, name_and_op_style=True, highlight_debug_nodes=[]
+            )
+            graphviz.Source(dot_string).view(
+                filename="/tmp/ssa_before_tf_passes", cleanup=True
+            )
 
         program = self._program_from_tf_ssa()
         logging.debug("program:\n{}".format(program))
@@ -82,7 +86,7 @@ class TFLoader:
         pass
 
     # @abstractmethod
-    def _tf_ssa_from_graph_def(self, fn_name='main'):
+    def _tf_ssa_from_graph_def(self, fn_name="main"):
         """Load GraphDef and parse into NetworkEnsemble (TFSSA)."""
         pass
 
@@ -99,12 +103,11 @@ class TFLoader:
         msg = "Extracting sub-graph based on outputs '{}' from the full model"
         logging.debug(msg.format(outputs))
         outputs = outputs if isinstance(outputs, list) else [outputs]
-        outputs = [i.split(':')[0] for i in outputs]
+        outputs = [i.split(":")[0] for i in outputs]
         return tf.compat.v1.graph_util.extract_sub_graph(graph_def, outputs)
 
 
 class TF1Loader(TFLoader):
-
     def __init__(self, model, debug=False, **kwargs):
         """
         TensorFlow 1.x model loader.
@@ -128,8 +131,8 @@ class TF1Loader(TFLoader):
 
     def _graph_def_from_model(self, outputs=None):
         """Overwrites TFLoader._graph_def_from_model()"""
-        msg = 'Expected model format: [tf.Graph | .pb | SavedModel | tf.keras.Model | .h5], got {}'
-        if isinstance(self.model, tf.Graph) and hasattr(self.model, 'as_graph_def'):
+        msg = "Expected model format: [tf.Graph | .pb | SavedModel | tf.keras.Model | .h5], got {}"
+        if isinstance(self.model, tf.Graph) and hasattr(self.model, "as_graph_def"):
             graph_def = self.model.as_graph_def(add_shapes=True)
             return self.extract_sub_graph(graph_def, outputs)
         elif isinstance(self.model, tf.keras.Model):
@@ -138,15 +141,15 @@ class TF1Loader(TFLoader):
         elif isinstance(self.model, six.string_types):
             if not os.path.exists(str(self.model)):
                 raise ValueError('Input model "{}" does not exist'.format(self.model))
-            elif os.path.isfile(str(self.model)) and self.model.endswith('.pb'):
-                with tf.io.gfile.GFile(self.model, 'rb') as f:
+            elif os.path.isfile(str(self.model)) and self.model.endswith(".pb"):
+                with tf.io.gfile.GFile(self.model, "rb") as f:
                     gd = tf.compat.v1.GraphDef()
                     gd.ParseFromString(f.read())
                 with tf.Graph().as_default() as graph:
-                    tf.graph_util.import_graph_def(gd, name='')
+                    tf.graph_util.import_graph_def(gd, name="")
                 graph_def = graph.as_graph_def(add_shapes=True)
                 return self.extract_sub_graph(graph_def, outputs)
-            elif os.path.isfile(str(self.model)) and self.model.endswith('.h5'):
+            elif os.path.isfile(str(self.model)) and self.model.endswith(".h5"):
                 graph_def = self._from_tf_keras_model(self.model)
                 return self.extract_sub_graph(graph_def, outputs)
             elif os.path.isdir(str(self.model)):
@@ -157,7 +160,7 @@ class TF1Loader(TFLoader):
         else:
             raise NotImplementedError(msg.format(self.model))
 
-    def _tf_ssa_from_graph_def(self, fn_name='main'):
+    def _tf_ssa_from_graph_def(self, fn_name="main"):
         """Overwrites TFLoader._tf_ssa_from_graph_def()"""
         graph_dict = {}
         for node in self._graph_def.node:
@@ -182,25 +185,33 @@ class TF1Loader(TFLoader):
             constant_propagation,
             cond_to_where,
             remove_variable_nodes,
-            fuse_dilation_conv
+            fuse_dilation_conv,
         ]
 
         if self.debug:
-            for tf_pass in _tqdm(tf_passes, desc='Running TensorFlow Graph Passes', unit=' passes'):
+            for tf_pass in _tqdm(
+                tf_passes, desc="Running TensorFlow Graph Passes", unit=" passes"
+            ):
                 try:
                     tf_pass(self._tf_ssa)
                 except Exception as e:
                     logging.exception('Exception in pass "{}": {}'.format(tf_pass, e))
                     logging.info("Ignoring exception and continuing to next pass")
         else:
-            for tf_pass in _tqdm(tf_passes, desc='Running TensorFlow Graph Passes', unit=' passes'):
+            for tf_pass in _tqdm(
+                tf_passes, desc="Running TensorFlow Graph Passes", unit=" passes"
+            ):
                 tf_pass(self._tf_ssa)
 
         if self.debug:
             import graphviz
+
             dot_string = self._tf_ssa.get_dot_string(
-                annotation=True, name_and_op_style=True, highlight_debug_nodes=[])
-            graphviz.Source(dot_string).view(filename='/tmp/ssa_after_tf_passes', cleanup=True)
+                annotation=True, name_and_op_style=True, highlight_debug_nodes=[]
+            )
+            graphviz.Source(dot_string).view(
+                filename="/tmp/ssa_after_tf_passes", cleanup=True
+            )
 
         converter = TFConverter(self._tf_ssa, **self.kwargs)
         return converter.convert()
@@ -208,22 +219,23 @@ class TF1Loader(TFLoader):
     @staticmethod
     def _from_saved_model(saved_model_dir):
         from tensorflow.python.tools import freeze_graph
+
         # must import here as tf.contrib is only available on TF 1.x
         from tensorflow.contrib.saved_model.python.saved_model import reader
+
         saved_model_tags = reader.get_saved_model_tag_sets(saved_model_dir)[0]
         if not saved_model_tags:
-            msg = 'Unsupported SavedModel directory format: no tag_sets available'
+            msg = "Unsupported SavedModel directory format: no tag_sets available"
             raise NotImplementedError(msg)
 
         # get model outputs
         output_node_names = []
         with tf.compat.v1.Session() as sess:
             metagraph = tf.saved_model.loader.load(
-                sess, saved_model_tags, saved_model_dir)
+                sess, saved_model_tags, saved_model_dir
+            )
             for sd in metagraph.signature_def.values():
-                output_node_names += [
-                    o.name.split(':')[0] for o in sd.outputs.values()
-                ]
+                output_node_names += [o.name.split(":")[0] for o in sd.outputs.values()]
 
         # get frozen graph
         output_graph = mktemp()
@@ -233,7 +245,7 @@ class TF1Loader(TFLoader):
             input_saver=None,
             input_binary=None,
             input_checkpoint=None,
-            output_node_names=','.join(output_node_names),
+            output_node_names=",".join(output_node_names),
             restore_op_name=None,
             filename_tensor_name=None,
             output_graph=output_graph,
@@ -243,21 +255,22 @@ class TF1Loader(TFLoader):
             variable_names_blacklist="",
             input_meta_graph=None,
             input_saved_model_dir=saved_model_dir,
-            saved_model_tags=",".join(saved_model_tags))
+            saved_model_tags=",".join(saved_model_tags),
+        )
 
         graph_def = tf.compat.v1.GraphDef()
         with open(output_graph, "rb") as f:
             graph_def.ParseFromString(f.read())
         graph_def = tf.compat.v1.graph_util.remove_training_nodes(graph_def)
         with tf.Graph().as_default() as graph:
-            tf.graph_util.import_graph_def(graph_def, name='')
+            tf.graph_util.import_graph_def(graph_def, name="")
         return graph.as_graph_def(add_shapes=True)
 
     @staticmethod
     def _from_tf_keras_model(keras_model):
         from tensorflow.python.keras.saving import saving_utils
         from tensorflow.python.framework.convert_to_constants import (
-            convert_variables_to_constants_v2
+            convert_variables_to_constants_v2,
         )
 
         if not isinstance(keras_model, tf.keras.Model):
@@ -271,4 +284,4 @@ class TF1Loader(TFLoader):
             frozen_fn = convert_variables_to_constants_v2(cf)
             return frozen_fn.graph.as_graph_def(add_shapes=True)
         except Exception:
-            raise NotImplementedError('Unhandled tf.keras model format')
+            raise NotImplementedError("Unhandled tf.keras model format")

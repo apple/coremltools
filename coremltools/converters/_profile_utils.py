@@ -25,12 +25,11 @@ def _profile(_f=None):
 _INITIAL_CALL = True
 
 
-def _pr_color(skk, color="94m", end='\n'):
+def _pr_color(skk, color="94m", end="\n"):
     print("\033[{} {}\033[00m".format(color, skk), end=end)
 
 
 def _profiler(frame, event, arg, indent=[0]):
-
     if frame.f_globals.get("__name__", None) is None:
         return
 
@@ -66,11 +65,11 @@ def _profiler(frame, event, arg, indent=[0]):
             "{} exit {} {} ".format(
                 "<" + "=" * indent[0],
                 function_name.split(".")[-1],
-                " (" + ".".join(function_name.split(".")[2:-1]) + ")"
-            ), end=""
+                " (" + ".".join(function_name.split(".")[2:-1]) + ")",
+            ),
+            end="",
         )
-        _pr_color(": Time spent {} seconds ".format(
-                duration,), color="91m")
+        _pr_color(": Time spent {} seconds ".format(duration,), color="91m")
         indent[0] -= 3
         _FUNCTION_PROFILE_REGISTRY[function_name].pop()
 

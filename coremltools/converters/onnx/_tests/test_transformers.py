@@ -4,13 +4,15 @@ from __future__ import print_function as _
 from __future__ import unicode_literals as _
 
 import pytest
-onnx = pytest.importorskip('onnx')
+
+onnx = pytest.importorskip("onnx")
 
 import unittest
 import numpy as np
 import numpy.testing as npt  # type: ignore
 
 from coremltools._deps import _HAS_ONNX, MSG_ONNX_NOT_FOUND
+
 if _HAS_ONNX:
     import onnx
     from onnx import helper, numpy_helper, TensorProto

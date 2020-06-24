@@ -12,7 +12,10 @@ from coremltools._deps import _HAS_TORCH, _HAS_TF_1, _HAS_TF_2
 from coremltools.converters._profile_utils import _profile
 from coremltools import __version__ as ct_version
 from coremltools.models import _METADATA_VERSION, _METADATA_SOURCE
-from coremltools.converters.mil._deployment_compatibility import AvailableTarget, check_deployment_compatibility
+from coremltools.converters.mil._deployment_compatibility import (
+    AvailableTarget,
+    check_deployment_compatibility,
+)
 
 if _HAS_TF_1:
     import tensorflow as tf
@@ -23,17 +26,21 @@ if _HAS_TF_2:
 
 if _HAS_TORCH:
     import torch
-    from coremltools.converters.mil.frontend.torch.load import _torchscript_from_model as pytorch_load
+    from coremltools.converters.mil.frontend.torch.load import (
+        _torchscript_from_model as pytorch_load,
+    )
 
 
 @_profile
-def convert(model,
-            source="auto",
-            inputs=None,
-            outputs=None,
-            classifier_config=None,
-            minimum_deployment_target=None,
-            **kwargs):
+def convert(
+    model,
+    source="auto",
+    inputs=None,
+    outputs=None,
+    classifier_config=None,
+    minimum_deployment_target=None,
+    **kwargs
+):
     """
     Convert TensorFlow or Pytorch models to Core ML model format. Whether a
     parameter is required may differ between frameworks (see below). Note that
@@ -143,36 +150,43 @@ def convert(model,
     See `here <https://coremltools.readme.io/docs/neural-network-conversion>`_ for
     more advanced options
     """
-    if minimum_deployment_target is not None and not isinstance(minimum_deployment_target, AvailableTarget):
-        msg = "Unrecognized value of argument 'minimum_deployment_target': {}. " \
-              "It needs to be a member of 'coremltools.target' enumeration. " \
-              "For example, coremltools.target.iOS13"
+    if minimum_deployment_target is not None and not isinstance(
+        minimum_deployment_target, AvailableTarget
+    ):
+        msg = (
+            "Unrecognized value of argument 'minimum_deployment_target': {}. "
+            "It needs to be a member of 'coremltools.target' enumeration. "
+            "For example, coremltools.target.iOS13"
+        )
         raise TypeError(msg.format(minimum_deployment_target))
 
     source = source.lower()
-    if source not in {'auto', 'tensorflow', 'pytorch'}:
-        msg = "Unrecognized value of argument \"source\": {}. " \
-              "It must be one of [\"auto\", \"tensorflow\", \"pytorch\"]."
+    if source not in {"auto", "tensorflow", "pytorch"}:
+        msg = (
+            'Unrecognized value of argument "source": {}. '
+            'It must be one of ["auto", "tensorflow", "pytorch"].'
+        )
         raise ValueError(msg.format(source))
 
     def raise_if_duplicated(input_list):
         # Detect duplicated inputs
         input_names = [t.name for t in input_list if t.name is not None]
-        dups = [item for item, count in
-                collections.Counter(input_names).items() if count > 1]
+        dups = [
+            item
+            for item, count in collections.Counter(input_names).items()
+            if count > 1
+        ]
         if len(dups) > 0:
-            raise ValueError('Duplicated inputs: {}'.format(dups))
+            raise ValueError("Duplicated inputs: {}".format(dups))
 
     if inputs is not None:
         if not isinstance(inputs, list):
-            msg = "\"inputs\" must be of type list"
+            msg = '"inputs" must be of type list'
             raise ValueError(msg)
-
-
 
     if classifier_config is not None:
         if not isinstance(classifier_config, ClassifierConfig):
-            msg = "\"classfier_config\" must be of type ClassifierConfig"
+            msg = '"classifier_config" must be of type ClassifierConfig'
             raise ValueError(msg)
 
     if source == "tensorflow" and _HAS_TF_2:
@@ -204,8 +218,8 @@ def convert(model,
     if source == "auto" and isinstance(model, Program):
         source = "mil"
 
-    convert_to = kwargs.get('convert_to', 'nn_proto')
-    kwargs.pop('convert_to', None)
+    convert_to = kwargs.get("convert_to", "nn_proto")
+    kwargs.pop("convert_to", None)
 
     if source == "auto":
         msg = (
@@ -221,27 +235,32 @@ def convert(model,
 
     elif source in {"tensorflow", "tensorflow2"}:
 
-        if source == 'tensorflow' and not _HAS_TF_1:
-            raise ValueError('Converter was called with source="tensorflow", but missing tensorflow package')
+        if source == "tensorflow" and not _HAS_TF_1:
+            raise ValueError(
+                'Converter was called with source="tensorflow", but missing tensorflow package'
+            )
 
         if inputs is not None:
             raise_if_duplicated(inputs)
 
-        if inputs is not None and not all([isinstance(_input, InputType) for _input in inputs]):
-            raise ValueError('Input should be a list of TensorType or ImageType')
+        if inputs is not None and not all(
+            [isinstance(_input, InputType) for _input in inputs]
+        ):
+            raise ValueError("Input should be a list of TensorType or ImageType")
 
-        proto_spec = _convert(model,
-                              convert_from=source,
-                              convert_to=convert_to,
-                              inputs=inputs,
-                              outputs=outputs,
-                              classifier_config=classifier_config,
-                              **kwargs
-                              )
+        proto_spec = _convert(
+            model,
+            convert_from=source,
+            convert_to=convert_to,
+            inputs=inputs,
+            outputs=outputs,
+            classifier_config=classifier_config,
+            **kwargs
+        )
 
     elif source == "pytorch":
-        if 'example_inputs' in kwargs:
-            msg = "Unexpected argument \"example_inputs\" found"
+        if "example_inputs" in kwargs:
+            msg = 'Unexpected argument "example_inputs" found'
             raise ValueError(msg)
 
         def _flatten_list(_inputs):
@@ -252,25 +271,33 @@ def convert(model,
                 elif isinstance(_input, InputType):
                     ret.append(_input)
                 else:
-                    raise ValueError("Unknown type {} for flattening into InputType.".format(type(_input)))
+                    raise ValueError(
+                        "Unknown type {} for flattening into InputType.".format(
+                            type(_input)
+                        )
+                    )
             return ret
 
         flat_inputs = _flatten_list(inputs)
         raise_if_duplicated(flat_inputs)
-        if inputs is not None and not all([isinstance(_input, InputType) for _input in flat_inputs]):
-            raise ValueError('Input should be a list/tuple (or nested lists/tuples) of TensorType or ImageType')
+        if inputs is not None and not all(
+            [isinstance(_input, InputType) for _input in flat_inputs]
+        ):
+            raise ValueError(
+                "Input should be a list/tuple (or nested lists/tuples) of TensorType or ImageType"
+            )
         if outputs is not None:
-            raise ValueError('outputs must not be specified for PyTorch')
+            raise ValueError("outputs must not be specified for PyTorch")
 
         proto_spec = _convert(
-                    model,
-                    convert_from="torch",
-                    convert_to=convert_to,
-                    inputs=inputs,
-                    outputs=outputs,
-                    classifier_config=classifier_config,
-                    **kwargs
-                    )
+            model,
+            convert_from="torch",
+            convert_to=convert_to,
+            inputs=inputs,
+            outputs=outputs,
+            classifier_config=classifier_config,
+            **kwargs
+        )
 
     elif source == "mil":
         if not isinstance(model, Program):
@@ -278,30 +305,33 @@ def convert(model,
             raise ValueError(msg)
 
         proto_spec = _convert(
-                    model,
-                    convert_from="mil",
-                    convert_to=convert_to,
-                    example_inputs=inputs,
-                    classifier_config=classifier_config,
-                    **kwargs
-                    )
+            model,
+            convert_from="mil",
+            convert_to=convert_to,
+            example_inputs=inputs,
+            classifier_config=classifier_config,
+            **kwargs
+        )
 
     model = coremltools.models.MLModel(proto_spec, useCPUOnly=True)
 
     if minimum_deployment_target is not None:
-        check_deployment_compatibility(spec=proto_spec, representation=convert_to,
-                                       deployment_target= minimum_deployment_target)
+        check_deployment_compatibility(
+            spec=proto_spec,
+            representation=convert_to,
+            deployment_target=minimum_deployment_target,
+        )
 
     del proto_spec
     gc.collect()
 
     # recording metadata: coremltools version, source framework and version
-    if source in {'tensorflow', 'tensorflow2'} and (_HAS_TF_1 or _HAS_TF_2):
+    if source in {"tensorflow", "tensorflow2"} and (_HAS_TF_1 or _HAS_TF_2):
         src_pkg_version = "tensorflow=={0}".format(tf.__version__)
-    elif source == 'pytorch' and _HAS_TORCH:
+    elif source == "pytorch" and _HAS_TORCH:
         src_pkg_version = "torch=={0}".format(torch.__version__)
     else:
-        src_pkg_version = 'unknown'
+        src_pkg_version = "unknown"
 
     model.user_defined_metadata[_METADATA_VERSION] = ct_version
     model.user_defined_metadata[_METADATA_SOURCE] = src_pkg_version

@@ -29,14 +29,14 @@ def register_tf_op(_func=None, tf_alias=None, override=False):
         f_name = func.__name__
 
         if not override and f_name in _TF_OPS_REGISTRY:
-            raise ValueError('TF op {} already registered.'.format(f_name))
+            raise ValueError("TF op {} already registered.".format(f_name))
         _TF_OPS_REGISTRY[f_name] = func
         # If tf_alias is provided, then all the functions mentioned as aliased
         # are mapped to current function
         if tf_alias is not None:
             for name in tf_alias:
                 if not override and name in _TF_OPS_REGISTRY:
-                    msg = 'TF op alias {} already registered.'
+                    msg = "TF op alias {} already registered."
                     raise ValueError(msg.format(name))
                 _TF_OPS_REGISTRY[name] = func
         return func

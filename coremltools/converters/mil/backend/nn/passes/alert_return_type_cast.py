@@ -13,7 +13,8 @@ from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 from coremltools.converters.mil.mil import Var, types
 import logging
 
-@register_pass(namespace='nn_backend')
+
+@register_pass(namespace="nn_backend")
 def alert_return_type_cast(prog):
     """
     prog: Program
@@ -43,7 +44,9 @@ def alert_return_type_cast(prog):
     for f_name, f in prog.functions.items():
         for v in f.outputs:
             if isinstance(v, Var) and v.dtype != types.fp32:
-                msg = 'Output var {} of type {} in function {} is ' + \
-                        'cast to type fp32'
-                logging.warning(msg.format(v.name,
-                    types.builtin_to_string(v.dtype), f_name))
+                msg = (
+                    "Output var {} of type {} in function {} is " + "cast to type fp32"
+                )
+                logging.warning(
+                    msg.format(v.name, types.builtin_to_string(v.dtype), f_name)
+                )

@@ -24,6 +24,7 @@ def register_torch_op(_func=None, torch_alias=None, override=False):
         function.
         Otherwise, duplicate registration will error out.
     """
+
     def func_wrapper(func):
         f_name = func.__name__
         if not override and f_name in _TORCH_OPS_REGISTRY:

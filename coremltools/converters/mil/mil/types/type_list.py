@@ -46,18 +46,18 @@ def list(arg, init_length=None, dynamic_length=True):
 
         @annotate(void, other=T[0])
         def append(self, other):
-            assert (isinstance(other, self.T[0]))
+            assert isinstance(other, self.T[0])
             self.val.append(other)
 
         @annotate(T[0], index=type_int.int)
         def __getitem__(self, index):
-            assert (isinstance(index, type_int.int))
+            assert isinstance(index, type_int.int)
             return self.val[index.val]
 
         @annotate(void, index=type_int.int, newval=T[0])
         def __setitem__(self, index, newval):
-            assert (isinstance(index, type_int.int))
-            assert (isinstance(newval, self.T[0]))
+            assert isinstance(index, type_int.int)
+            assert isinstance(newval, self.T[0])
             self.val[index.val] = newval
 
         @annotate(type_int.int)
@@ -71,4 +71,4 @@ def list(arg, init_length=None, dynamic_length=True):
 def is_list(t):
     if t is None:
         return False
-    return get_type_info(t).name == 'list'
+    return get_type_info(t).name == "list"

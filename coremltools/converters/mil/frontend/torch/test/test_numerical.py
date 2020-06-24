@@ -22,7 +22,8 @@ class ModuleWrapper(nn.Module):
     def forward(self, x):
         return self.function(x, **self.kwargs)
 
-@pytest.mark.skipif(sys.version_info >= (3,8), reason="Segfault with Python 3.8+")
+
+@pytest.mark.skipif(sys.version_info >= (3, 8), reason="Segfault with Python 3.8+")
 class TestTorchNumerical:
     """Class containing numerical correctness tests for TorchIR -> CoreML op
         conversion.
@@ -474,5 +475,6 @@ class TestTorchNumerical:
         # TODO: Expected results are flipped due to naming issue:
         # rdar://62681982 (Determine the output names of MLModels)
         expected_results = model(input_data)[::-1]
-        run_numerical_test(input_data, model, expected_results=expected_results, input_as_shape=False)
-
+        run_numerical_test(
+            input_data, model, expected_results=expected_results, input_as_shape=False
+        )

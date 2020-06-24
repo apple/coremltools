@@ -17,7 +17,7 @@ DEBUG = False
 
 def _get_onnx_outputs_info(model):  # type: (...) -> Dict[Text, EdgeInfo]
     """
-    Takes in an onnx model and returns a dictionary 
+    Takes in an onnx model and returns a dictionary
     of onnx output names mapped to a tuple that is (output_name, type, shape)
     """
     if isinstance(model, _string_types):
@@ -70,15 +70,15 @@ class CoreMLBackend(Backend):
     ):  # type: (...) -> bool
         # Return whether the model is compatible with CoreML.
         """
-         This function will gradually grow to cover more cases. 
-         Need to be careful of false negatives. There are some cases that seemingly 
-         are not supported on CoreML, which the graph transformer optimizes and converts to 
-         a graph that can be converted to CoreML. 
-         
+         This function will gradually grow to cover more cases.
+         Need to be careful of false negatives. There are some cases that seemingly
+         are not supported on CoreML, which the graph transformer optimizes and converts to
+         a graph that can be converted to CoreML.
+
          1. Check whether the layers for which CoreML expects constant weights are in
             the list of initializers in the onnx graph
          2. unsupported ops like "And", "Or" etc
-            
+
          """
 
         node_set = set()
@@ -161,13 +161,13 @@ class CoreMLBackendND(Backend):
     ):  # type: (...) -> bool
         # Return whether the model is compatible with CoreML.
         """
-        This function will gradually grow to cover more cases. 
-        Need to be careful of false negatives. There are some cases that seemingly 
-        are not supported on CoreML, which the graph transformer optimizes and converts to 
-        a graph that can be converted to CoreML. 
-        
+        This function will gradually grow to cover more cases.
+        Need to be careful of false negatives. There are some cases that seemingly
+        are not supported on CoreML, which the graph transformer optimizes and converts to
+        a graph that can be converted to CoreML.
+
         2. Unsupported ops: If graph has one of unsupported op, exit
-           
+
         """
         ## TODO: Add un-supported ops
         unsupported_ops = []

@@ -30,7 +30,7 @@ class Pooling(Operation):
         D_in_rank = len(x_shape) - 2
 
         strides = [1] * D_in_rank if self.strides is None else self.strides.val
-        pad_type = 'valid' if self.pad_type is None else self.pad_type.val.lower()
+        pad_type = "valid" if self.pad_type is None else self.pad_type.val.lower()
         pad = None if self.pad is None else self.pad.val
         D_in = x_shape[2:]  # spatial dimensions
         D_out_shape = spatial_dimensions_out_shape(
@@ -38,9 +38,11 @@ class Pooling(Operation):
             input_shape=D_in,
             kernel_shape=ksize,
             strides=strides,
-            custom_pad=pad)
+            custom_pad=pad,
+        )
         ret_shape = list(x_shape[:2]) + D_out_shape
         return types.tensor(self.x.dtype, tuple(ret_shape))
+
 
 @register_op(doc_str="")
 class avg_pool(Pooling):
@@ -88,9 +90,11 @@ class avg_pool(Pooling):
     --------
     l2_pool, max_pool
     """
-    input_spec = InputSpec(
-        exclude_padding_from_average=BoolInputType(const=True, default=False)
-    ) + Pooling.input_spec
+
+    input_spec = (
+        InputSpec(exclude_padding_from_average=BoolInputType(const=True, default=False))
+        + Pooling.input_spec
+    )
 
     def __init__(self, **kwargs):
         super(avg_pool, self).__init__(**kwargs)
@@ -131,6 +135,7 @@ class l2_pool(Pooling):
     --------
     avg_pool, max_pool
     """
+
     def __init__(self, **kwargs):
         super(l2_pool, self).__init__(**kwargs)
 
@@ -170,5 +175,6 @@ class max_pool(Pooling):
     --------
     avg_pool, l2_pool
     """
+
     def __init__(self, **kwargs):
         super(max_pool, self).__init__(**kwargs)

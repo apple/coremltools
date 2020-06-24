@@ -31,9 +31,17 @@ class ParsedNode(object):
     outputs: The list of nodes which consume the result of this node (list[str])
     control_outputs: The list of nodes which have to be executed after this node (list[str])
     """
+
     __slots__ = [
-        'name', 'op', 'datatype', 'value', 'inputs', 'control_inputs', 'outputs', 'control_outputs',
-        'attr'
+        "name",
+        "op",
+        "datatype",
+        "value",
+        "inputs",
+        "control_inputs",
+        "outputs",
+        "control_outputs",
+        "attr",
     ]
 
     def __init__(self):
@@ -64,6 +72,7 @@ class ParsedNode(object):
 
     def copy(self):
         return self.__copy__()
+
 
 class SSAFunction(object):
     __slots__ = ["graph", "inputs", "input_types", "outputs", "output_types", "ret"]
@@ -105,11 +114,13 @@ class SSAFunction(object):
         # otherwise we find graph entry and exit points
         # TODO: op name should be fixed here.
         #       <rdar://problem/57081966> Remove wrappers that are used for old tfssa
-        enters = [n.name for n in self.graph.values() if ('entry' in n.op or 'Entry' in n.op)]
-        exits = [n.name for n in self.graph.values() if n.op in ('Return', 'return')]
+        enters = [
+            n.name for n in self.graph.values() if ("entry" in n.op or "Entry" in n.op)
+        ]
+        exits = [n.name for n in self.graph.values() if n.op in ("Return", "return")]
         if len(enters) > 0 or len(exits) > 0:
-            assert (len(enters) > 0)
-            assert (len(exits) > 0)
+            assert len(enters) > 0
+            assert len(exits) > 0
             self.inputs = enters
             self.input_types = [self.graph[v].datatype for v in self.inputs]
             self.outputs = exits
@@ -117,14 +128,18 @@ class SSAFunction(object):
         else:
             for k in sorted_keys:
                 v = self.graph[k]
-                if len(v.inputs) == 0 and v.op not in ['Const', 'get_global', 'NoOp']:
+                if len(v.inputs) == 0 and v.op not in ["Const", "get_global", "NoOp"]:
                     self.inputs.append(k)
                     self.input_types.append(v.datatype)
                 elif len(v.inputs) != 0 and v.op == "Placeholder":
                     assert len(v.inputs) == 1, "This is not a PlaceholderWithDefault!"
                     self.inputs.append(k)
                     self.input_types.append(v.datatype)
-                if len(v.outputs) == 0 and len(v.control_outputs) == 0 and v.op != "set_global":
+                if (
+                    len(v.outputs) == 0
+                    and len(v.control_outputs) == 0
+                    and v.op != "set_global"
+                ):
                     self.outputs.append(k)
                     self.output_types.append(v.datatype)
 
@@ -142,7 +157,7 @@ class SSAFunction(object):
             if k not in self.graph.keys():
                 continue
             v = self.graph[k]
-            if len(v.inputs) == 0 and v.op not in {'Const', 'get_global', 'NoOp'}:
+            if len(v.inputs) == 0 and v.op not in {"Const", "get_global", "NoOp"}:
                 filtered_inputs.append(k)
                 self.input_types.append(v.datatype)
             elif len(v.inputs) != 0 and v.op == "Placeholder":
@@ -184,7 +199,11 @@ class NetworkEnsemble(object):
             self.variables = instance.variables
             self.global_resource = instance.global_resource
         elif instance is not None:
-            raise ValueError("Instance type {} not compatible with NetworkEnsemble".format(type(instance)))
+            raise ValueError(
+                "Instance type {} not compatible with NetworkEnsemble".format(
+                    type(instance)
+                )
+            )
 
     def rename_function(self, src_func, tgt_func):
         """
@@ -198,7 +217,9 @@ class NetworkEnsemble(object):
             return
 
         self.functions[tgt_func] = self.functions.pop(src_func)
-        logging.debug("Successfully changed function name from (%s) to (%s)", src_func, tgt_func)
+        logging.debug(
+            "Successfully changed function name from (%s) to (%s)", src_func, tgt_func
+        )
 
     def rename_node(self, src_node, tgt_node):
         """
@@ -212,7 +233,9 @@ class NetworkEnsemble(object):
             if src_node in tfssa.graph:
                 in_ssa = True
                 if tgt_node in tfssa.graph:
-                    logging.warning("(%s) already exists in function (%s).", tgt_node, func)
+                    logging.warning(
+                        "(%s) already exists in function (%s).", tgt_node, func
+                    )
                     break
                 success = func
                 tfssa.graph[tgt_node] = tfssa.graph.pop(src_node)
@@ -245,7 +268,9 @@ class NetworkEnsemble(object):
         if not in_ssa:
             logging.warning("Couldn't find (%s) in any functions", src_node)
         if success is not None:
-            logging.debug("Changed (%s) to (%s) in function (%s)", src_node, tgt_node, success)
+            logging.debug(
+                "Changed (%s) to (%s) in function (%s)", src_node, tgt_node, success
+            )
 
     def extract_subgraph(self, outputs, target_inputs=None, name=""):
         """Add a new SSAFunction to the current NetworkEnsemble to produce the given outputs.
@@ -272,8 +297,11 @@ class NetworkEnsemble(object):
             vis.add(node)
             if node in target_inputs:
                 return [node]
-            if (len(graph[node].inputs) == 0 and
-                len(graph[node].control_inputs) == 0 and graph[node].op != "Const"):
+            if (
+                len(graph[node].inputs) == 0
+                and len(graph[node].control_inputs) == 0
+                and graph[node].op != "Const"
+            ):
                 return [node]
             inputs = []
             for i in graph[node].inputs + graph[node].control_inputs:
@@ -321,7 +349,9 @@ class NetworkEnsemble(object):
                 if new_k in target_inputs:
                     gdict[new_k].op = "Placeholder"
                 gdict[new_k].inputs = [inp for inp in new_v.inputs if inp in incl_nodes]
-                gdict[new_k].outputs = [out for out in new_v.outputs if out in incl_nodes]
+                gdict[new_k].outputs = [
+                    out for out in new_v.outputs if out in incl_nodes
+                ]
                 gdict[new_k].control_inputs = [
                     inp for inp in new_v.control_inputs if inp in incl_nodes
                 ]
@@ -379,7 +409,9 @@ class NetworkEnsemble(object):
         for func, v in self.functions.items():
             if func.startswith("body_function_") or func.startswith("f_body_function_"):
                 continue
-            elif func.startswith("cond_function_") or func.startswith("f_cond_function_"):
+            elif func.startswith("cond_function_") or func.startswith(
+                "f_cond_function_"
+            ):
                 continue
 
             ret += "Input Function Name: %s\n" % (func)
@@ -388,12 +420,14 @@ class NetworkEnsemble(object):
                 ret += "    %s\n" % (inp)
             ret += "  Outputs:\n"
             for out in v.outputs:
-                if out.startswith('fake_exit_'):
+                if out.startswith("fake_exit_"):
                     continue
                 ret += "    %s\n" % (out)
         return ret
 
-    def get_dot_string(self, name_and_op_style=False, annotation=False, highlight_debug_nodes=None):
+    def get_dot_string(
+        self, name_and_op_style=False, annotation=False, highlight_debug_nodes=None
+    ):
         """
         Return the dot string that can be used to show the whole graph
         with dot. By default, the graph contains op and type. If
@@ -422,42 +456,46 @@ class NetworkEnsemble(object):
             highlight_debug_nodes = []
         function_names = sorted(self.functions.keys())
 
-        dotstring = 'digraph g {\n' + \
-                    '\tcompound=true;\n'
+        dotstring = "digraph g {\n" + "\tcompound=true;\n"
         # find all tensor nodes with unknown sizes
         ctr = 0
         for k in function_names:
             const_nodes = const_determined_nodes(self.functions[k].graph)
             unknown_sized_tensor_ops = []
             for v, n in self.functions[k].graph.items():
-                if n.datatype is None or (n.datatype is not None and \
-                        types.is_tensor(n.datatype) and \
-                        (len(n.datatype.get_shape()) == 0 or -1 in n.datatype.get_shape())):
+                if n.datatype is None or (
+                    n.datatype is not None
+                    and types.is_tensor(n.datatype)
+                    and (
+                        len(n.datatype.get_shape()) == 0 or -1 in n.datatype.get_shape()
+                    )
+                ):
                     unknown_sized_tensor_ops.append(v)
                 if n.op in highlight_debug_nodes:
                     highlight_debug_nodes.append(v)
 
             v = self.functions[k]
             vis = DotVisitor(annotation)
-            vis.highlight_nodes(v.inputs, 'yellow') \
-               .highlight_nodes(const_nodes, 'azure2') \
-               .highlight_nodes(v.outputs, 'goldenrod2') \
-               .highlight_nodes(unknown_sized_tensor_ops, 'cyan2')
+            vis.highlight_nodes(v.inputs, "yellow").highlight_nodes(
+                const_nodes, "azure2"
+            ).highlight_nodes(v.outputs, "goldenrod2").highlight_nodes(
+                unknown_sized_tensor_ops, "cyan2"
+            )
             if len(highlight_debug_nodes) > 0:
-                vis.highlight_nodes(highlight_debug_nodes, 'green')
+                vis.highlight_nodes(highlight_debug_nodes, "green")
             if name_and_op_style:
-                vis.labeller(lambda n: n.name + ' (' + n.op + ')')
+                vis.labeller(lambda n: n.name + " (" + n.op + ")")
 
-            res = vis.visit_all(
-                v.graph,
-                nodename_prefix=str(ctr)).get_result('subgraph', 'cluster_' + k.replace('/', '_'))
-            dotstring += '\n'.join('\t' + r for r in res.split('\n')) + "\n"
+            res = vis.visit_all(v.graph, nodename_prefix=str(ctr)).get_result(
+                "subgraph", "cluster_" + k.replace("/", "_")
+            )
+            dotstring += "\n".join("\t" + r for r in res.split("\n")) + "\n"
             ctr += 1
         dotstring += "}"
         return dotstring
 
     def add_function_with_prefix(self, fprefix, tfssa):
-        assert (isinstance(tfssa, SSAFunction))
+        assert isinstance(tfssa, SSAFunction)
         s = 0
         while fprefix + str(s) in self.functions:
             s += 1
@@ -485,7 +523,7 @@ class NetworkEnsemble(object):
 
     def _find_free_name(self, prefix):
         idx = 0
-        while (True):
+        while True:
             name = prefix + str(idx)
             found = False
             for v in self.functions.values():
@@ -507,8 +545,11 @@ class NetworkEnsemble(object):
 
             for name in graph:
                 node = graph[name]
-                if node.attr.get('data_format', None) == 'NHWC' or node.attr.get('data_format') == 'NHWC_format_inserted':
-                    return 'NHWC'
-                elif node.attr.get('data_format', None) == 'NCHW':
-                    return 'NCHW'
+                if (
+                    node.attr.get("data_format", None) == "NHWC"
+                    or node.attr.get("data_format") == "NHWC_format_inserted"
+                ):
+                    return "NHWC"
+                elif node.attr.get("data_format", None) == "NCHW":
+                    return "NCHW"
         return None

@@ -12,7 +12,6 @@ from __future__ import absolute_import as _
 import six
 
 
-
 def connect_edge(g, source, dest):
     if isinstance(source, six.string_types):
         source = g[source]
@@ -93,7 +92,6 @@ def replace_control_dest(g, source, dest, new_dest):
         if d == dest.name:
             source.control_outputs[idx] = new_dest.name
             new_dest.control_inputs = new_dest.control_inputs[:] + [source.name]
-
 
     dest.control_inputs = [i for i in dest.control_inputs if i != source.name]
 
@@ -206,10 +204,10 @@ def fill_outputs(gd):
             gd[i].outputs.append(v.name)
         for i in v.control_inputs:
             gd[i].control_outputs.append(v.name)
-    get_tuple_ops = ['Split', 'SplitV', 'LSTMBlock']
+    get_tuple_ops = ["Split", "SplitV", "LSTMBlock"]
     for k, v in gd.items():
         if v.op in get_tuple_ops:
-            outputs = [[out, int(gd[out].attr['index'])] for out in v.outputs]
+            outputs = [[out, int(gd[out].attr["index"])] for out in v.outputs]
             outputs.sort(key=lambda x: x[1])
             gd[k].outputs = [out for [out, _] in outputs]
 
@@ -230,20 +228,26 @@ def check_connections(gd):
     for k, v in gd.items():
         for i in v.inputs:
             if isinstance(i, six.string_types):
-                assert (k in gd[i].outputs)
+                assert k in gd[i].outputs
             else:
-                assert (k in gd[i.name].outputs)
+                assert k in gd[i.name].outputs
         for i in v.outputs:
-            inputs = [inp if isinstance(inp, six.string_types) else inp.name for inp in gd[i].inputs]
-            assert (k in inputs)
+            inputs = [
+                inp if isinstance(inp, six.string_types) else inp.name
+                for inp in gd[i].inputs
+            ]
+            assert k in inputs
         for i in v.control_inputs:
             if isinstance(i, six.string_types):
-                assert (k in gd[i].control_outputs)
+                assert k in gd[i].control_outputs
             else:
-                assert (k in gd[i.name].control_outputs)
+                assert k in gd[i.name].control_outputs
         for i in v.control_outputs:
-            control_inputs = [inp if isinstance(inp, six.string_types) else inp.name for inp in gd[i].control_inputs]
-            assert (k in control_inputs)
+            control_inputs = [
+                inp if isinstance(inp, six.string_types) else inp.name
+                for inp in gd[i].control_inputs
+            ]
+            assert k in control_inputs
 
 
 def const_determined_nodes(gd, assume_variable_nodes=None):
@@ -263,14 +267,14 @@ def const_determined_nodes(gd, assume_variable_nodes=None):
         if node.name in vis:
             return
 
-        if 'Const' in node.op:
+        if "Const" in node.op:
             vis[node.name] = True
-        elif 'Variable' in node.op:
+        elif "Variable" in node.op:
             vis[node.name] = False
-        elif 'Placeholder' in node.op:
+        elif "Placeholder" in node.op:
             vis[node.name] = False
         # TF1 uses TensorArray* while TF2 uses TensorList* ops
-        elif 'TensorArray' in node.op or 'TensorList' in node.op:
+        elif "TensorArray" in node.op or "TensorList" in node.op:
             vis[node.name] = False
         elif "function" in node.op:
             vis[node.name] = False
@@ -315,7 +319,7 @@ def topsort(graph):
     if len(curboundary) == 0:
         raise ValueError("Graph is not a DAG!")
 
-    while (len(curboundary) > 0):
+    while len(curboundary) > 0:
         ret.extend(curboundary)
         for b in curboundary:
             for o in graph[b].outputs + graph[b].control_outputs:
@@ -344,7 +348,7 @@ def simple_topsort(inputs):
     if len(curboundary) == 0:
         raise ValueError("Graph is not a DAG!")
 
-    while (len(curboundary) > 0):
+    while len(curboundary) > 0:
         ret.extend(curboundary)
         for b in curboundary:
             for o in outputs[b]:

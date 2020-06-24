@@ -6,14 +6,15 @@
 from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
 import logging
 
+
 def nn_backend_passes(prog):
     passes = [
-        'nn_backend::commingle_loop_vars', # after loop_invariant_elimination
-        'nn_backend::handle_return_inputs_as_outputs',
-        'common::const_elimination',
-        'common::dead_code_elimination',
-        'nn_backend::handle_unused_inputs', # must come after dce.
-        'nn_backend::alert_return_type_cast', # must be at the end.
+        "nn_backend::commingle_loop_vars",  # after loop_invariant_elimination
+        "nn_backend::handle_return_inputs_as_outputs",
+        "common::const_elimination",
+        "common::dead_code_elimination",
+        "nn_backend::handle_unused_inputs",  # must come after dce.
+        "nn_backend::alert_return_type_cast",  # must be at the end.
     ]
 
     prog.validate()
@@ -22,4 +23,4 @@ def nn_backend_passes(prog):
         PASS_REGISTRY[p](prog)
         # No more validation from this point on as prog is not SSA anymore.
 
-    logging.debug('Program after nn backend passes:\n{}'.format(prog))
+    logging.debug("Program after nn backend passes:\n{}".format(prog))

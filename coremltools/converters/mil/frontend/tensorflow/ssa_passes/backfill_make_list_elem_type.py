@@ -14,7 +14,7 @@ from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import types
 
 
-@register_pass(namespace='tensorflow')
+@register_pass(namespace="tensorflow")
 def backfill_make_list_elem_type(prog):
     """
     TF's TensorArrayV3 (represented as make_list in mil) doesn't necessarily
@@ -35,7 +35,7 @@ def backfill_make_list_elem_type_block(block):
         for b in op.blocks:
             backfill_make_list_elem_type_block(b)
 
-        if op.op_type != 'tf_make_list':
+        if op.op_type != "tf_make_list":
             continue
         # op is `make_list`
 
@@ -46,20 +46,26 @@ def backfill_make_list_elem_type_block(block):
         list_var = op.outputs[0]
         elem_type = infer_elem_type(list_var)  # types.tensor
         if elem_type is None:
-            msg = "No list_write or list_scatter op to infer make_list " + \
-                  "'{}' element type. Block:\n{}"
+            msg = (
+                "No list_write or list_scatter op to infer make_list "
+                + "'{}' element type. Block:\n{}"
+            )
             raise ValueError(msg.format(op.name, op.enclosing_block))
 
         with block:
-            new_list = mb.make_list(init_length=op.init_length,
-                    dynamic_length=op.dynamic_length,
-                    # elem_shape cannot be symbolic by definition of list.
-                    elem_shape=elem_type.get_shape(),
-                    dtype=op.inputs['dtype'], before_op=op,
-                    name=op.name)
+            new_list = mb.make_list(
+                init_length=op.init_length,
+                dynamic_length=op.dynamic_length,
+                # elem_shape cannot be symbolic by definition of list.
+                elem_shape=elem_type.get_shape(),
+                dtype=op.inputs["dtype"],
+                before_op=op,
+                name=op.name,
+            )
 
-        block.replace_uses_of_var_after_op(anchor_op=op,
-                old_var=op.outputs[0], new_var=new_list)
+        block.replace_uses_of_var_after_op(
+            anchor_op=op, old_var=op.outputs[0], new_var=new_list
+        )
         block.remove_ops([op])
 
 
@@ -90,9 +96,9 @@ def infer_elem_type(list_var):
     """
     # Search for child op that have informative element types
     for o in list_var.child_ops:
-        if o.op_type in ['list_write', 'list_scatter']:
+        if o.op_type in ["list_write", "list_scatter"]:
             return o.outputs[0].elem_type
-        if o.op_type == 'while_loop':
+        if o.op_type == "while_loop":
             idx = list(o.loop_vars).index(list_var)
             block = o.blocks[0]
             # the corresponding Var in body block

@@ -11,8 +11,12 @@ from __future__ import absolute_import as _
 from ..parsed_tf_node import ParsedTFNode
 from ..basic_graph_ops import *  # pylint: disable=unused-wildcard-import,wildcard-import
 from ..tfssa import SSAFunction
-from .visitors import FindAllReachableNodes, FindImmediateDownstreamNodes, FindImmediateUpstreamNodes,\
-    FindSubgraph
+from .visitors import (
+    FindAllReachableNodes,
+    FindImmediateDownstreamNodes,
+    FindImmediateUpstreamNodes,
+    FindSubgraph,
+)
 import logging
 
 
@@ -36,6 +40,7 @@ class FunctionalizeLoops(object):
 
     Instead, use functionalize_loops.
     """
+
     def __init__(self):
         self.exits = None
         self.merges = None
@@ -56,38 +61,69 @@ class FunctionalizeLoops(object):
         # we look for NextIteration nodes
         assert node.op == "Enter"
 
-        frame_name = node.attr['frame_name']
+        frame_name = node.attr["frame_name"]
         logging.debug("Fixing frame name: %s", frame_name)
         # find all the enter args
         # this is basically the enter frame
         # functionalize_control_flow.cc:FunctionalizeControlFlow (1160-1196)
-        self.enters = [k for k, v in g.items() if v.attr.get('frame_name', '') == frame_name]
-        self.is_constant = [bool(g[n].attr.get('is_constant', False)) for n in self.enters]
-        self.merges = FindImmediateDownstreamNodes(lambda x: x.op == "Merge").visit_many(
-            g, self.enters).get_result()
-        self.next_iterations = FindImmediateUpstreamNodes(
-            lambda x: x.op == "NextIteration").visit_many(g, self.merges).get_result()
-        self.switches = FindImmediateDownstreamNodes(lambda x: x.op == "Switch").visit_many(
-            g, self.merges).get_result()
-        self.exits = FindImmediateDownstreamNodes(lambda x: x.op == "Exit").visit_many(
-            g, self.switches).get_result()
+        self.enters = [
+            k for k, v in g.items() if v.attr.get("frame_name", "") == frame_name
+        ]
+        self.is_constant = [
+            bool(g[n].attr.get("is_constant", False)) for n in self.enters
+        ]
+        self.merges = (
+            FindImmediateDownstreamNodes(lambda x: x.op == "Merge")
+            .visit_many(g, self.enters)
+            .get_result()
+        )
+        self.next_iterations = (
+            FindImmediateUpstreamNodes(lambda x: x.op == "NextIteration")
+            .visit_many(g, self.merges)
+            .get_result()
+        )
+        self.switches = (
+            FindImmediateDownstreamNodes(lambda x: x.op == "Switch")
+            .visit_many(g, self.merges)
+            .get_result()
+        )
+        self.exits = (
+            FindImmediateDownstreamNodes(lambda x: x.op == "Exit")
+            .visit_many(g, self.switches)
+            .get_result()
+        )
         self.loopcond = list(
             set(
-                FindImmediateUpstreamNodes(lambda x: x.op == "LoopCond").visit_many(
-                    g, self.switches).get_result()))
+                FindImmediateUpstreamNodes(lambda x: x.op == "LoopCond")
+                .visit_many(g, self.switches)
+                .get_result()
+            )
+        )
 
         self.subgraph = FindSubgraph(self.exits).visit_many(g, self.enters).get_result()
         self.cond = FindSubgraph(self.switches).visit_many(g, self.merges).get_result()
-        self.body = FindSubgraph([node.name] + self.exits).visit_many(g, self.switches).get_result()
+        self.body = (
+            FindSubgraph([node.name] + self.exits)
+            .visit_many(g, self.switches)
+            .get_result()
+        )
         # drop merges and switches from cond and body
-        self.cond = [i for i in self.cond if i not in (self.merges + self.switches + self.enters)]
-        self.body = [i for i in self.body if i not in ([node.name] + self.switches)
-                     ] + [node.name] + self.switches + self.merges + self.enters
+        self.cond = [
+            i for i in self.cond if i not in (self.merges + self.switches + self.enters)
+        ]
+        self.body = (
+            [i for i in self.body if i not in ([node.name] + self.switches)]
+            + [node.name]
+            + self.switches
+            + self.merges
+            + self.enters
+        )
 
         # ok. we can now rebuild.
 
     def _fix_graph_invariants(self, g):
         import copy
+
         check = lambda x: x is not None and len(x) > 0
         check(self.exits)
         check(self.merges)
@@ -96,15 +132,15 @@ class FunctionalizeLoops(object):
         check(self.subgraph)
         check(self.cond)
         check(self.loopcond)
-        assert (len(self.loopcond) == 1)
+        assert len(self.loopcond) == 1
         # maintain the invariant of a unique Enter node per argument
         # functionalize_control_flow.cc:FunctionalizeLoop (295)
         for i in copy.copy(self.enters):
             node = g[i]
-            assert (len(node.outputs) > 0)
-            assert (len(node.inputs) == 1)
-            assert (len(node.control_inputs) == 0)
-            assert (len(node.control_outputs) == 0)
+            assert len(node.outputs) > 0
+            assert len(node.inputs) == 1
+            assert len(node.control_inputs) == 0
+            assert len(node.control_outputs) == 0
             if len(node.outputs) == 1:
                 continue
             node_output_copy = copy.copy(node.outputs)
@@ -126,7 +162,7 @@ class FunctionalizeLoops(object):
 
     def functionalize_loops(self, tfssa, function_to_functionalize):
         g = tfssa.functions[function_to_functionalize].graph
-        loopni = [a for a in g if g[a].op == 'Enter']
+        loopni = [a for a in g if g[a].op == "Enter"]
         if len(loopni) == 0:
             return False
         self._search(g, loopni[0])
@@ -134,21 +170,30 @@ class FunctionalizeLoops(object):
         self.constant_enters = [
             self.enters[i] for i in range(len(self.enters)) if self.is_constant[i]
         ]
-        self.enters = [self.enters[i] for i in range(len(self.enters)) if not self.is_constant[i]]
+        self.enters = [
+            self.enters[i] for i in range(len(self.enters)) if not self.is_constant[i]
+        ]
         self._fix_graph_invariants(g)
         # for each enter node, find the corresponding downstream merge node
         enter_corresponding_merge = [
-            FindImmediateDownstreamNodes(lambda x: x.op == "Merge").visit(g, enter).get_result()[0]
+            FindImmediateDownstreamNodes(lambda x: x.op == "Merge")
+            .visit(g, enter)
+            .get_result()[0]
             for enter in self.enters
         ]
         merge_corresponding_ni = [
-            FindImmediateUpstreamNodes(lambda x: x.op == "NextIteration").visit(
-                g, merge).get_result()[0] for merge in enter_corresponding_merge
+            FindImmediateUpstreamNodes(lambda x: x.op == "NextIteration")
+            .visit(g, merge)
+            .get_result()[0]
+            for merge in enter_corresponding_merge
         ]
         switch_corresponding_merge = []
         for merge in enter_corresponding_merge:
-            switch_after_merge = FindImmediateDownstreamNodes(lambda x: x.op == "Switch").visit(
-                g, merge).get_result()
+            switch_after_merge = (
+                FindImmediateDownstreamNodes(lambda x: x.op == "Switch")
+                .visit(g, merge)
+                .get_result()
+            )
             if len(switch_after_merge) > 0:
                 switch_corresponding_merge.append(switch_after_merge[0])
             else:
@@ -166,8 +211,11 @@ class FunctionalizeLoops(object):
 
         exit_corresponding_switch = []
         for switch in switch_corresponding_merge:
-            res = FindImmediateDownstreamNodes(lambda x: x.op == "Exit").visit(g,
-                                                                               switch).get_result()
+            res = (
+                FindImmediateDownstreamNodes(lambda x: x.op == "Exit")
+                .visit(g, switch)
+                .get_result()
+            )
             if len(res) > 0:
                 exit_corresponding_switch.append(res[0])
             else:
@@ -269,8 +317,12 @@ class FunctionalizeLoops(object):
             body_connected = False
             for output in list(g[enter].outputs):
                 if output not in self.cond and output not in self.body:
-                    cond_intersection = FindSubgraph(self.cond).visit(g, output).get_result()
-                    body_intersection = FindSubgraph(self.body).visit(g, output).get_result()
+                    cond_intersection = (
+                        FindSubgraph(self.cond).visit(g, output).get_result()
+                    )
+                    body_intersection = (
+                        FindSubgraph(self.body).visit(g, output).get_result()
+                    )
                     if len(cond_intersection) > 0:
                         cond_intersection.append(output)
                         self.cond += cond_intersection
@@ -298,15 +350,15 @@ class FunctionalizeLoops(object):
             connect_edge(g, body.name, get_tuple.name)
             connect_edge(g, get_tuple.name, make_outputs.name)
 
-        assert (len(g[make_outputs.name].inputs) == len(g[make_inputs.name].inputs))
+        assert len(g[make_outputs.name].inputs) == len(g[make_inputs.name].inputs)
 
         output_return = ParsedTFNode()
         output_return.op = "return"
         output_return.name = tfssa._find_free_name("body_return_")
         g[output_return.name] = output_return
         connect_edge(g, make_outputs.name, output_return.name)
-        while_loop.attr['cond_function'] = cond_body.name
-        while_loop.attr['body_function'] = body.name
+        while_loop.attr["cond_function"] = cond_body.name
+        while_loop.attr["body_function"] = body.name
         for i in self.enters:
             delete_node(g, i)
         for i in self.next_iterations:
@@ -318,45 +370,69 @@ class FunctionalizeLoops(object):
             exit_node = exit_corresponding_switch[i]
             g[exit_node].op = "get_tuple"
             g[exit_node].attr = {"index": i}
-        cond_function = FindSubgraph(self.loopcond[0]).visit(g, cond_body.name).get_result()
+        cond_function = (
+            FindSubgraph(self.loopcond[0]).visit(g, cond_body.name).get_result()
+        )
         cond_function = set(cond_function + [self.loopcond[0], cond_body.name])
-        body_function = FindSubgraph(output_return.name).visit(g, body.name).get_result()
+        body_function = (
+            FindSubgraph(output_return.name).visit(g, body.name).get_result()
+        )
         body_function = set(body_function + [body.name, output_return.name])
 
         # trace input constants associated with the cond_graph
         # and the body_graph. These constants can only have one consumer
         # for now. Any more and we will either need to associate
         # it as an argument, or split the constant.
-        cond_constants = FindImmediateUpstreamNodes(lambda x: x.op == "Const").visit_many(
-            g, cond_function).get_result()
-        body_constants = FindImmediateUpstreamNodes(lambda x: x.op == "Const").visit_many(
-            g, body_function).get_result()
+        cond_constants = (
+            FindImmediateUpstreamNodes(lambda x: x.op == "Const")
+            .visit_many(g, cond_function)
+            .get_result()
+        )
+        body_constants = (
+            FindImmediateUpstreamNodes(lambda x: x.op == "Const")
+            .visit_many(g, body_function)
+            .get_result()
+        )
         # for const_node in cond_constants + body_constants:
         #    assert(len(g[const_node].outputs) == 1)
 
         cond_function = cond_function.union(set(cond_constants))
         body_function = body_function.union(set(body_constants))
 
-        downstream_cond = FindAllReachableNodes(lambda x: True).visit_many(
-            g, cond_function).get_result()
+        downstream_cond = (
+            FindAllReachableNodes(lambda x: True)
+            .visit_many(g, cond_function)
+            .get_result()
+        )
         downstream_cond = set(downstream_cond) - cond_function
         if len(downstream_cond) > 0:
             logging.debug(
-                "Disconnecting unused variables in condition function %s", downstream_cond)
+                "Disconnecting unused variables in condition function %s",
+                downstream_cond,
+            )
             for i in downstream_cond:
                 delete_node(g, i)
 
-        downstream_body = FindAllReachableNodes(lambda x: True).visit_many(
-            g, body_function).get_result()
+        downstream_body = (
+            FindAllReachableNodes(lambda x: True)
+            .visit_many(g, body_function)
+            .get_result()
+        )
         downstream_body = set(downstream_body) - body_function
         if len(downstream_body) > 0:
-            logging.debug("Disconnecting unused variables in body function %s", downstream_body)
+            logging.debug(
+                "Disconnecting unused variables in body function %s", downstream_body
+            )
             for i in downstream_body:
                 delete_node(g, i)
 
         cond_graph = {k: v for k, v in g.items() if k in cond_function}
         body_graph = {k: v for k, v in g.items() if k in body_function}
-        g = {k: v for k, v in g.items() if k not in cond_function and k not in body_function}
+        g = {
+            k: v
+            for k, v in g.items()
+            if k not in cond_function and k not in body_function
+        }
         # localize control dependencies
         # In the main graph, reattach the control dependency to the while op
         for k, v in g.items():

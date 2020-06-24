@@ -37,8 +37,7 @@ class empty_list:
 
 @memoize
 def tuple(args):
-    args = _global_tuple(i if i is not None else type_unknown.unknown
-                         for i in args)
+    args = _global_tuple(i if i is not None else type_unknown.unknown for i in args)
 
     class tuple:
         T = args
@@ -48,13 +47,13 @@ def tuple(args):
 
         @classmethod
         def __type_info__(cls):
-            return Type("tuple", [get_type_info(arg) for arg in args],
-                        python_class=cls)
+            return Type("tuple", [get_type_info(arg) for arg in args], python_class=cls)
 
         @annotate(type_int.int)
         def __len__(self):
             return len(args)
 
-    tuple.__template_name__ = "tuple[" + ",".join(
-        [get_type_info(arg).name for arg in args]) + "]"
+    tuple.__template_name__ = (
+        "tuple[" + ",".join([get_type_info(arg).name for arg in args]) + "]"
+    )
     return tuple

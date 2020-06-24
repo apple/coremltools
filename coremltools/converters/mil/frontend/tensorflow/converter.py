@@ -5,7 +5,13 @@
 
 import six
 import logging
-from coremltools.converters.mil.input_types import InputType, TensorType, ImageType, RangeDim, _get_shaping_class
+from coremltools.converters.mil.input_types import (
+    InputType,
+    TensorType,
+    ImageType,
+    RangeDim,
+    _get_shaping_class,
+)
 from coremltools.converters.mil.input_types import Shape as InputShape
 from coremltools.converters.mil.mil.var import Var
 from coremltools.converters.mil.mil import get_new_symbol
@@ -68,10 +74,11 @@ class TranscriptionContext:
         if tf_name in self.context:
             logging.warning("TF var %s is added again.", tf_name)
             return
-        if is_new_var and isinstance(ssa_vars, Var) and \
-                tf_name != ssa_vars.name:
-            msg = 'MIL op\'s name ({}) does not match TensorFlow\'s node name ({}).' \
-                  ' Warning: Node added to context must have the same name as the name passed to context.'
+        if is_new_var and isinstance(ssa_vars, Var) and tf_name != ssa_vars.name:
+            msg = (
+                "MIL op's name ({}) does not match TensorFlow's node name ({})."
+                " Warning: Node added to context must have the same name as the name passed to context."
+            )
             raise ValueError(msg.format(tf_name, ssa_vars.name))
         self.context[tf_name] = ssa_vars
 
@@ -89,12 +96,12 @@ class TranscriptionContext:
 
     def unstack_func_inputs(self):
         if len(self.func_input_stack) == 0:
-            raise ValueError('No func input available')
+            raise ValueError("No func input available")
         self.func_input_stack.pop()
 
     def get_func_inputs(self):
         if len(self.func_input_stack) == 0:
-            raise ValueError('No func input available')
+            raise ValueError("No func input available")
         return self.func_input_stack[-1]
 
     def __getitem__(self, tf_name):
@@ -121,18 +128,26 @@ class TFConverter:
         self.global_type = {}
         self.inputs = None
 
-        main_func = tfssa.functions['main']
+        main_func = tfssa.functions["main"]
         graph = main_func.graph
 
         # Filter the inputs to only Placeholder names
-        tf_placeholder_names = [n for n in graph if graph[n].op == 'Placeholder']
+        tf_placeholder_names = [n for n in graph if graph[n].op == "Placeholder"]
         placeholder_names = []
         if inputs is not None:
             # Check inputs format
             if not isinstance(inputs, (list, tuple)):
-                raise ValueError("Type of inputs should be list or tuple, got {} instead.".format(type(inputs)))
+                raise ValueError(
+                    "Type of inputs should be list or tuple, got {} instead.".format(
+                        type(inputs)
+                    )
+                )
             if not all([isinstance(i, InputType) for i in inputs]):
-                raise ValueError("Type of inputs should be list or tuple of TensorType or ImageType, got {} instead.".format([type(i) for i in inputs]))
+                raise ValueError(
+                    "Type of inputs should be list or tuple of TensorType or ImageType, got {} instead.".format(
+                        [type(i) for i in inputs]
+                    )
+                )
 
             # Special case: if there's only 1 input and 1 placeholder, we match them.
             if len(tf_placeholder_names) == 1 and len(inputs) == 1:
@@ -143,19 +158,29 @@ class TFConverter:
             for inp in inputs:
                 # Check inputs existence
                 if inp.name is None:
-                    raise ValueError("Unable to infer input's name or input name was not provided")
+                    raise ValueError(
+                        "Unable to infer input's name or input name was not provided"
+                    )
                 if inp.name not in tf_placeholder_names:
-                    raise ValueError("Input ({}) provided is not found in given tensorflow graph. Placeholders in graph are: {}".format(inp.name, tf_placeholder_names))
+                    raise ValueError(
+                        "Input ({}) provided is not found in given tensorflow graph. Placeholders in graph are: {}".format(
+                            inp.name, tf_placeholder_names
+                        )
+                    )
                 if inp.shape is None:
-                    if graph[inp.name].attr.get('_output_shapes', None) is not None:
-                        shape = graph[inp.name].attr['_output_shapes'][0]
+                    if graph[inp.name].attr.get("_output_shapes", None) is not None:
+                        shape = graph[inp.name].attr["_output_shapes"][0]
                         if shape is None:
                             # Scalar is given as None
                             shape = []
-                    elif graph[inp.name].attr.get('shape', None) is not None:
-                        shape = graph[inp.name].attr['shape']
+                    elif graph[inp.name].attr.get("shape", None) is not None:
+                        shape = graph[inp.name].attr["shape"]
                     else:
-                        raise ValueError("Can't extract shape from attribute of ({})".format(inp.name))
+                        raise ValueError(
+                            "Can't extract shape from attribute of ({})".format(
+                                inp.name
+                            )
+                        )
                     inp.shape = _get_shaping_class(shape)
 
             # Extract placeholders that users didn't specify.
@@ -171,15 +196,17 @@ class TFConverter:
         for inp in main_func.inputs:
             if inp not in placeholder_names:
                 continue
-            if graph[inp].attr.get('_output_shapes', None) is not None:
-                placeholder_inputs.update({inp: graph[inp].attr['_output_shapes'][0]})
-            elif graph[inp].attr.get('shape', None) is not None:
-                placeholder_inputs.update({inp: graph[inp].attr['shape']})
+            if graph[inp].attr.get("_output_shapes", None) is not None:
+                placeholder_inputs.update({inp: graph[inp].attr["_output_shapes"][0]})
+            elif graph[inp].attr.get("shape", None) is not None:
+                placeholder_inputs.update({inp: graph[inp].attr["shape"]})
             else:
                 raise ValueError("Can't find input shape for ({})".format(inp))
 
         if len(placeholder_inputs) > 0:
-            logging.info("Adding Input not specified by users: '{}'".format(placeholder_inputs))
+            logging.info(
+                "Adding Input not specified by users: '{}'".format(placeholder_inputs)
+            )
 
         for k, v in placeholder_inputs.items():
             inputs.append(TensorType(name=k, shape=v))
@@ -197,7 +224,7 @@ class TFConverter:
                 continue
             node = graph[inputtype.name]
             shape = [-1 if is_symbolic(s) else s for s in inputtype.shape.shape]
-            node.attr['_output_shapes'] = [shape] # list of length 1
+            node.attr["_output_shapes"] = [shape]  # list of length 1
 
         # infer outputs if not provided
         self._validate_outputs(tfssa, outputs)
@@ -219,16 +246,16 @@ class TFConverter:
             for node in tfssa.functions[fname].graph.values():
                 func_x, func_y = None, None
 
-                if node.op == 'while':
-                    func_x = node.attr['body_function']
-                    func_y = node.attr['cond_function']
+                if node.op == "while":
+                    func_x = node.attr["body_function"]
+                    func_y = node.attr["cond_function"]
 
                 if func_x and fname not in dep[func_x]:
                     dep[func_x].append(fname)
                 if func_y and fname not in dep[func_y]:
                     dep[func_y].append(fname)
 
-        assert (len(dep[root]) == 0)
+        assert len(dep[root]) == 0
         graph_stack = simple_topsort(dep)
 
         return graph_stack
@@ -246,7 +273,7 @@ class TFConverter:
     def _create_placeholder(node):
         node.parse_from_attr()
         shape = []
-        dtype = node.attr['dtype']
+        dtype = node.attr["dtype"]
         if types.is_tensor(node.datatype):
             shape = node.datatype.get_shape()
             shape = tuple(get_new_symbol() if s is None or s < 0 else s for s in shape)
@@ -280,12 +307,16 @@ class TFConverter:
         block = prog["main"]
         input_name = [x.name for x in list(block.inputs.values())]
         output_name = [x.name for x in block.outputs]
-        placeholder_output_name = [x for x in output_name if x in input_name and x not in self.outputs]
+        placeholder_output_name = [
+            x for x in output_name if x in input_name and x not in self.outputs
+        ]
         with block:
-            new_outputs = [x for x in block.outputs if x.name not in placeholder_output_name]
+            new_outputs = [
+                x for x in block.outputs if x.name not in placeholder_output_name
+            ]
             for name in placeholder_output_name:
                 x = block.inputs[name]
-                x = mb.identity(x=x, name=name+':0')
+                x = mb.identity(x=x, name=name + ":0")
                 new_outputs.append(x)
             block.set_outputs(new_outputs)
 
@@ -302,7 +333,7 @@ class TFConverter:
                 self.context.add(name, ssa_func.inputs[name])
             outputs = convert_graph(self.context, graph, self.outputs)
             ssa_func.set_outputs(outputs)
-            prog.add_function('main', ssa_func)
+            prog.add_function("main", ssa_func)
 
         # Rename outputs to TF's name. This is needed when the last op doesn't
         # generate a new Var (e.g., get_tuple, Identity etc.), and thus the
@@ -336,10 +367,11 @@ class TFConverter:
         # Note: only rename the output if the output is not Placeholder.
 
         input_names = [x.name for x in self.inputs]
-        for v_o, out_name in zip(prog['main'].outputs, self.outputs):
+        for v_o, out_name in zip(prog["main"].outputs, self.outputs):
             if v_o.name != out_name and v_o.name not in input_names:
-                logging.info("Renaming output var: '{}' -> '{}'".format(
-                    v_o.name, out_name))
+                logging.info(
+                    "Renaming output var: '{}' -> '{}'".format(v_o.name, out_name)
+                )
                 v_o.name = out_name
         self.check_placeholder_output(prog)
 
@@ -347,11 +379,11 @@ class TFConverter:
     def convert(self):
         prog = Program()
         if len(self.graph_stack) == 0:
-            raise ValueError('At least one TF function must be present')
-        if self.graph_stack[0] != 'main':
-            msg = 'TF root graph must be named \'main\'. Got {}'
+            raise ValueError("At least one TF function must be present")
+        if self.graph_stack[0] != "main":
+            msg = "TF root graph must be named 'main'. Got {}"
             raise ValueError(msg.format(self.graph_stack[0]))
-        graph = self.tfssa.functions['main'].graph
+        graph = self.tfssa.functions["main"].graph
         for g_name in self.graph_stack[1:]:
             self.context.add_graph(g_name, self.tfssa.functions[g_name].graph)
         self.convert_main_graph(prog, graph)

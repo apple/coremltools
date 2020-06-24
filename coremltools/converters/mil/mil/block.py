@@ -6,25 +6,35 @@
 from collections import Counter, OrderedDict
 import copy
 import logging
+import numpy as _np
 from . import SPACES, types
-from .var import Var, InternalVar
+from .var import Var, InternalVar, ListVar
 from .visitors.dot_visitor import DotVisitor
-from .types.symbolic import k_used_symbols, k_num_internal_syms
+from .types.symbolic import (
+    k_used_symbols,
+    k_num_internal_syms,
+    any_symbolic,
+    is_symbolic,
+)
+from .input_type import TupleInputType
 
 # BLOCK_STACK[-1] is the current block
 BLOCK_STACK = []
 
+
 class InvalidBlockStateError(Exception):
     pass
 
+
 def curr_block():
     if len(BLOCK_STACK) == 0:
-        raise ValueError("Must call Builder inside an Function" +
-                         " or Block")
+        raise ValueError("Must call Builder inside an Function" + " or Block")
     return BLOCK_STACK[-1]
+
 
 def is_internal_input(arg_name):
     return arg_name[0] == "_"
+
 
 def _is_compatible_symbolic_array(a, b):
     """
@@ -41,7 +51,7 @@ def _is_compatible_symbolic_array(a, b):
         return False
     a = a.flatten()
     b = b.flatten()
-    for t, v in zip(a,b):
+    for t, v in zip(a, b):
         if not is_symbolic(t) and not is_symbolic(v):
             if t != v:
                 return False
@@ -51,11 +61,13 @@ def _is_compatible_symbolic_array(a, b):
             logging.warning("Try to replace var with different symbolic values.")
     return True
 
+
 def _check_is_compatible_type(type1, type2):
     if not types.is_subtype(type1, type2):
         is_comp, _ = types.is_tensor_and_is_compatible(type1, type2)
         return is_comp
     return True
+
 
 VALUE = 1
 SYMBOL = 2
@@ -111,12 +123,13 @@ def precondition(allow=ALL):
 
                 if isinstance(in_type, TupleInputType):
                     for v in self._input_vars[in_name]:
-                        HAS_VALUE, HAS_SYMBOL, HAS_NONE = process(v,
-                                HAS_VALUE, HAS_SYMBOL, HAS_NONE)
+                        HAS_VALUE, HAS_SYMBOL, HAS_NONE = process(
+                            v, HAS_VALUE, HAS_SYMBOL, HAS_NONE
+                        )
                 else:
                     HAS_VALUE, HAS_SYMBOL, HAS_NONE = process(
-                            self._input_vars[in_name],
-                            HAS_VALUE, HAS_SYMBOL, HAS_NONE)
+                        self._input_vars[in_name], HAS_VALUE, HAS_SYMBOL, HAS_NONE
+                    )
 
             if HAS_VALUE and not ALLOW_VALUE:
                 msg = "Implementation of value_inference() for op {} doesn't support input with VALUE"
@@ -131,6 +144,7 @@ def precondition(allow=ALL):
                 return func(self)
 
         return wrapper
+
     return decorator
 
 
@@ -156,7 +170,7 @@ class Operation(object):
 
     def __init__(self, **kwargs):
         self._input_types = self.input_spec.input_types
-        self.name = kwargs.get('name', None)
+        self.name = kwargs.get("name", None)
 
         self._output_vars = None
         self._input_vars = {}
@@ -166,7 +180,7 @@ class Operation(object):
 
     def set_inputs(self, **kwargs):
         self._validate_and_set_inputs(**kwargs)
-        if not kwargs.get('no_check_var_types', False):
+        if not kwargs.get("no_check_var_types", False):
             self.type_value_inference()
 
     def get_flattened_inputs(self):
@@ -194,42 +208,43 @@ class Operation(object):
         """
         output_types = self.type_inference()
         if not isinstance(output_types, tuple):
-            output_types = (output_types, )
+            output_types = (output_types,)
         output_vals = self._auto_val(output_types)
         try:
             output_names = self.output_names()
             if not isinstance(output_names, tuple):
-                output_names = (output_names, )
+                output_names = (output_names,)
         except NotImplementedError as e:
             if len(output_types) > 1:
-                output_names = tuple(
-                    str(i) for i, _ in enumerate(output_types))
+                output_names = tuple(str(i) for i, _ in enumerate(output_types))
             else:
-                output_names = ("", )  # output name same as op name.
+                output_names = ("",)  # output name same as op name.
 
         # Combine (output_names, output_types, output_vals) to create output
         # Vars.
         if self._output_vars is None:
             self._output_vars = []
             for i, (n, sym_type, sym_val) in enumerate(
-                    zip(output_names, output_types, output_vals)):
-                name = self.name + ":" + n if n != '' else self.name
+                zip(output_names, output_types, output_vals)
+            ):
+                name = self.name + ":" + n if n != "" else self.name
                 if types.is_list(sym_type):
-                    new_var = ListVar(name, elem_type=sym_type.T[0],
-                            init_length=sym_type.T[1],
-                            dynamic_length=sym_type.T[2],
-                            op=self, op_output_idx=i)
+                    new_var = ListVar(
+                        name,
+                        elem_type=sym_type.T[0],
+                        init_length=sym_type.T[1],
+                        dynamic_length=sym_type.T[2],
+                        op=self,
+                        op_output_idx=i,
+                    )
                 else:
-                    new_var = Var(name,
-                                  sym_type,
-                                  sym_val,
-                                  op=self,
-                                  op_output_idx=i)
+                    new_var = Var(name, sym_type, sym_val, op=self, op_output_idx=i)
                 self._output_vars.append(new_var)
         else:
             # Check new inference result against existing self._output_vars.
             for i, (n, sym_type, sym_val) in enumerate(
-                    zip(output_names, output_types, output_vals)):
+                zip(output_names, output_types, output_vals)
+            ):
                 out_var = self._output_vars[i]
                 # Check type inference
                 if overwrite_output:
@@ -244,14 +259,16 @@ class Operation(object):
                         out_var._sym_val = sym_val
 
                 if sym_val is not None and out_var.sym_val is not None:
-                    if np.any(sym_val.val != out_var.sym_val):
+                    if _np.any(sym_val.val != out_var.sym_val):
                         if overwrite_output:
                             out_var._sym_val = sym_val
                         else:
-                            msg = 'value_inference differs for var {} in op {}'
+                            msg = "value_inference differs for var {} in op {}"
                             if not any_symbolic(sym_val.val):
                                 raise ValueError(msg.format(out_var.name, self.name))
-                            elif not _is_compatible_symbolic_array(sym_val.val, out_var.sym_val):
+                            elif not _is_compatible_symbolic_array(
+                                sym_val.val, out_var.sym_val
+                            ):
                                 raise ValueError(msg.format(out_var.name, self.name))
 
     def _auto_val(self, output_types):
@@ -292,7 +309,7 @@ class Operation(object):
             return tuple(None for _ in output_types)
 
         if not isinstance(vals, (tuple, list)):
-            vals = (vals, )
+            vals = (vals,)
         for val in vals:
             if val is None:
                 do_auto_val = False
@@ -333,8 +350,7 @@ class Operation(object):
         builtin_val may be None if symbolic_value is not attainable at compile
         time.
         """
-        raise NotImplementedError(
-            "This function must be implemented by each op")
+        raise NotImplementedError("This function must be implemented by each op")
 
     def build_nested_blocks(self):
         """
@@ -353,25 +369,27 @@ class Operation(object):
             "version",
             "before_op",
             "no_check_var_visibility",  # no_check_var_visibility==True to deviate from SSA
-            "no_check_var_types", # no_check_var_types==True to force set inputs, even if type does not match with earlier ones
+            "no_check_var_types",  # no_check_var_types==True to force set inputs, even if type does not match with earlier ones
         ]
         op_inputs = list(self._input_types.keys())
         legal_args = op_inputs + non_attributes
-        no_check_var_visibility = kwargs.get('no_check_var_visibility', False)
-        no_check_var_types = kwargs.get('no_check_var_types', False)
+        no_check_var_visibility = kwargs.get("no_check_var_visibility", False)
+        no_check_var_types = kwargs.get("no_check_var_types", False)
 
         for key in kwargs.keys():
             if key not in legal_args:
-                raise RuntimeError("Unknown input '{}' for op '{}'".format(
-                    key, self.op_type))
+                raise RuntimeError(
+                    "Unknown input '{}' for op '{}'".format(key, self.op_type)
+                )
 
         def check_and_detach(v_new, v_old, op, no_check_var_types):
             # Check new var's sym_type is compatible with the
             # existing's sym_type.
-            if not _check_is_compatible_type(v_new.sym_type, v_old.sym_type) and \
-                    not no_check_var_types:
-                msg = 'New var type {} not a subtype of ' +\
-                        'existing var type {}'
+            if (
+                not _check_is_compatible_type(v_new.sym_type, v_old.sym_type)
+                and not no_check_var_types
+            ):
+                msg = "New var type {} not a subtype of " + "existing var type {}"
                 raise ValueError(msg.format(v_new.sym_type, v_old.sym_type))
             v_old.remove_child_op(op, no_check_var_types)
 
@@ -384,16 +402,16 @@ class Operation(object):
                 if existing_input_var is not None:
                     if isinstance(existing_input_var, (list, tuple)):
                         for v_old, v_new in zip(existing_input_var, var):
-                            check_and_detach(v_new, v_old, self,
-                                    no_check_var_types)
+                            check_and_detach(v_new, v_old, self, no_check_var_types)
                     else:
-                        check_and_detach(var, existing_input_var, self,
-                                no_check_var_types)
+                        check_and_detach(
+                            var, existing_input_var, self, no_check_var_types
+                        )
 
                 # Set var as input_var
                 if isinstance(var, Var):
                     var.add_child_op(self)
-                elif isinstance(var, (tuple,list)):
+                elif isinstance(var, (tuple, list)):
                     for v in var:
                         v.add_child_op(self)
                 # ignore function inputs
@@ -430,22 +448,28 @@ class Operation(object):
         if self.outputs is not None:
             s += ", ".join([str(o) for o in self.outputs])
         s += " = " + self.op_type + "("
-        if self.op_type == 'const':
-            if self.mode.val == 'immediate_value':
+        if self.op_type == "const":
+            if self.mode.val == "immediate_value":
                 if isinstance(self.val.sym_val, (np.generic, np.ndarray)):
                     val_str = str(self.val.sym_val.tolist())
                 else:
-                    val_str = "\"" + self.val.sym_val + "\"" if \
-                        isinstance(self.val.sym_val, six.string_types) else \
-                                str(self.val.sym_val)
+                    val_str = (
+                        '"' + self.val.sym_val + '"'
+                        if isinstance(self.val.sym_val, six.string_types)
+                        else str(self.val.sym_val)
+                    )
                 s += "val=" + val_str
             else:
                 s += "val=(file_value)"
         else:
-            s += ", ".join([k + "=" + Operation.var_to_str(self.inputs[k]) \
-                    for k in self._input_types.keys() if \
-                    k in self.inputs and not is_internal_input(k)])
-        s += ", name=\"{}\")\n".format(self.name)
+            s += ", ".join(
+                [
+                    k + "=" + Operation.var_to_str(self.inputs[k])
+                    for k in self._input_types.keys()
+                    if k in self.inputs and not is_internal_input(k)
+                ]
+            )
+        s += ', name="{}")\n'.format(self.name)
         for b in self.blocks:
             s += b.indented_str(indent=indent + SPACES)
         return s
@@ -463,7 +487,11 @@ class InvalidBlockStateError(Exception):
 
 class Block(object):
     __slots__ = [
-        "name", "_block_inputs", "_outputs", "operations", "_internal_vars",
+        "name",
+        "_block_inputs",
+        "_outputs",
+        "operations",
+        "_internal_vars",
         "outer_op",
     ]
 
@@ -532,32 +560,45 @@ class Block(object):
                 for next_op, c in child_op_count.items():
                     c_actual = next_op.get_flattened_inputs().count(ov)
                     if c_actual != c:
-                        msg = 'Var {} should be consumed by op {} {}' +\
-                            ' times, but op {} uses it {} times.\n{}'
-                        raise InvalidBlockStateError(msg.format(ov.name,
-                            next_op.name, c, next_op.name, c_actual, next_op))
+                        msg = (
+                            "Var {} should be consumed by op {} {}"
+                            + " times, but op {} uses it {} times.\n{}"
+                        )
+                        raise InvalidBlockStateError(
+                            msg.format(
+                                ov.name,
+                                next_op.name,
+                                c,
+                                next_op.name,
+                                c_actual,
+                                next_op,
+                            )
+                        )
 
             # from inputs -> outputs
             input_var_count = Counter(op.get_flattened_inputs())
             for iv, c in input_var_count.items():
                 c_actual = iv.child_ops.count(op)
                 if c_actual != c:
-                    msg = 'Var {} should be consumed by op {} {}' +\
-                        ' times, but op {} uses it {} times.\n{}'
-                    raise InvalidBlockStateError(msg.format(iv.name,
-                        op.name, c_actual, op.name, c, op))
+                    msg = (
+                        "Var {} should be consumed by op {} {}"
+                        + " times, but op {} uses it {} times.\n{}"
+                    )
+                    raise InvalidBlockStateError(
+                        msg.format(iv.name, op.name, c_actual, op.name, c, op)
+                    )
 
         # 1 to 1 mapping between Block outputs and Var.consuming_blocks
         for op in self.operations:
             for ov in op.outputs:
                 for b in ov.consuming_blocks:
                     if ov not in b.outputs:
-                        msg = 'Var {} should be output of block {}: {}'
+                        msg = "Var {} should be output of block {}: {}"
                         raise ValueError(msg.format(ov.name, b.name, b))
 
         for v in self.outputs:
             if self not in v.consuming_blocks:
-                msg = 'Var {} should be output of block {}: {}'
+                msg = "Var {} should be output of block {}: {}"
                 raise ValueError(msg.format(ov.name, b.name, b))
 
     def set_inputs(self, block_inputs):
@@ -611,8 +652,9 @@ class Block(object):
         """
         self.validate()
         remove_idx = [self._block_inputs.index(v) for v in curr_input_vars]
-        self._block_inputs = [v for i, v in enumerate(self._block_inputs) \
-                if i not in remove_idx]
+        self._block_inputs = [
+            v for i, v in enumerate(self._block_inputs) if i not in remove_idx
+        ]
 
     def find_ops(self, prefix=None, op_type=None):
         """
@@ -624,11 +666,10 @@ class Block(object):
         Return list[Operation]. Empty list if no op satisfies.
         """
         if prefix is None and op_type is None:
-            raise ValueError('Must specify one of {prefix, op_type}')
+            raise ValueError("Must specify one of {prefix, op_type}")
         found_ops = []
         for op in self.operations:
-            prefix_match = prefix is None or \
-                    op.name[:len(prefix)] == prefix
+            prefix_match = prefix is None or op.name[: len(prefix)] == prefix
             op_type_match = op_type is None or op.op_type == op_type
             if prefix_match and op_type_match:
                 found_ops.append(op)
@@ -638,8 +679,7 @@ class Block(object):
 
     def add_internal_var(self, internal_var):
         if not isinstance(internal_var, InternalVar):
-            raise ValueError(
-                "Only InternalVar can be manually added to Block.")
+            raise ValueError("Only InternalVar can be manually added to Block.")
         self._internal_vars.add(internal_var)
 
     @property
@@ -663,8 +703,10 @@ class Block(object):
         visible_vars.update(visible_vars_in_block)
         for ov in outputs:
             if ov not in visible_vars:
-                msg = 'Var {} is not visible in block {} and thus cannot ' +\
-                        'be a block output.\n{}'
+                msg = (
+                    "Var {} is not visible in block {} and thus cannot "
+                    + "be a block output.\n{}"
+                )
                 raise ValueError(msg.format(ov.name, self.name, self))
 
         for ov in self._outputs:
@@ -750,7 +792,7 @@ class Block(object):
                 return i, visible_vars
             visible_vars.update(op.outputs)
         if target_op is not None:
-            msg = 'Op {} not found in {}: {}'
+            msg = "Op {} not found in {}: {}"
             raise ValueError(msg.format(target_op.name, self.name, self))
         return idx, visible_vars
 
@@ -803,7 +845,8 @@ class Block(object):
             vars_at_start = enclosing_block._visible_vars_from_enclosing_block()
             visible_vars.update(vars_at_start)
             _, visible_vars_in_block = enclosing_block._visible_vars_in_block(
-                    self.outer_op, inclusive=False)
+                self.outer_op, inclusive=False
+            )
             visible_vars.update(visible_vars_in_block)
 
         return visible_vars
@@ -843,8 +886,9 @@ class Block(object):
         self.validate()
         visible_vars = self._visible_vars_from_enclosing_block()
         if before_op is not None:
-            idx, visible_vars_in_block = self._visible_vars_in_block(before_op,
-                    inclusive=True)
+            idx, visible_vars_in_block = self._visible_vars_in_block(
+                before_op, inclusive=True
+            )
             visible_vars.update(visible_vars_in_block)
         else:
             _, visible_vars_in_block = self._visible_vars_in_block()
@@ -860,12 +904,11 @@ class Block(object):
                 vs = v
             for s in vs:
                 if s not in visible_vars:
-                    before_op_name = before_op.name \
-                            if before_op is not None else "None"
+                    before_op_name = before_op.name if before_op is not None else "None"
                     msg = "Op '{}' input {}={} is not in scope of {} before {}"
                     raise ValueError(
-                        msg.format(new_op.name, k, s.name, self.name,
-                                   before_op_name))
+                        msg.format(new_op.name, k, s.name, self.name, before_op_name)
+                    )
 
         # add new_op
         if before_op is None:
@@ -873,26 +916,32 @@ class Block(object):
         else:
             self.operations.insert(idx, new_op)
 
-    def _replace_var(self, old_var, new_var, start=0, end_id=-1,
-            no_check_var_visibility=False,
-            no_check_var_types=False):
+    def _replace_var(
+        self,
+        old_var,
+        new_var,
+        start=0,
+        end_id=-1,
+        no_check_var_visibility=False,
+        no_check_var_types=False,
+    ):
         """Helper function for replace_uses_of_var_after_op"""
         num_ops_affected = 0
 
         if end_id == -1:
             op_list = self.operations[start:]
         else:
-            op_list = self.operations[start:end_id+1]
+            op_list = self.operations[start : end_id + 1]
 
         for op in op_list:
             new_inputs = {
-                    'no_check_var_visibility': no_check_var_visibility,
-                    'no_check_var_types': no_check_var_types}
+                "no_check_var_visibility": no_check_var_visibility,
+                "no_check_var_types": no_check_var_types,
+            }
             affected = False
             for k, v in op.inputs.items():
                 if isinstance(v, (list, tuple)) and old_var in v:
-                    new_inputs[k] = tuple(new_var \
-                            if vv == old_var else vv for vv in v)
+                    new_inputs[k] = tuple(new_var if vv == old_var else vv for vv in v)
                     affected = True
                 elif v == old_var:
                     new_inputs[k] = new_var
@@ -919,16 +968,21 @@ class Block(object):
             # This block no longer uses `old_var` as its outputs
             old_var.consuming_blocks.remove(self)
 
-            #if rename_new_var_if_fn_output:
+            # if rename_new_var_if_fn_output:
             # Ensure output name is consistent
             if isinstance(self, Function):
                 new_var.name = old_var.name
         return num_ops_affected
 
-
-    def replace_uses_of_var_after_op(self, anchor_op, old_var, new_var,
-            no_check_var_visibility=False, end_op=None,
-            no_check_var_types=False,):
+    def replace_uses_of_var_after_op(
+        self,
+        anchor_op,
+        old_var,
+        new_var,
+        no_check_var_visibility=False,
+        end_op=None,
+        no_check_var_types=False,
+    ):
         """
         Replace all uses of `old_var` with `new_var` after `anchor_op`,
         and before `end_op` (inclusive).
@@ -1012,8 +1066,7 @@ class Block(object):
 
         if anchor_op is not None:
             # Get visible vars from the current block
-            idx, block_vars = self._visible_vars_in_block(anchor_op,
-                    inclusive=True)
+            idx, block_vars = self._visible_vars_in_block(anchor_op, inclusive=True)
             visible_vars.update(block_vars)
 
             # start from the next op, excluding `anchor_op`
@@ -1025,11 +1078,12 @@ class Block(object):
             start = 0
 
         if not no_check_var_visibility and new_var not in visible_vars:
-            msg = "new_var '{}' is not visible in block '{}' at or before "\
-                    + "anchor_op '{}'"
+            msg = (
+                "new_var '{}' is not visible in block '{}' at or before "
+                + "anchor_op '{}'"
+            )
             anchor_op_name = "None" if anchor_op is None else anchor_op.name
-            raise ValueError(
-                msg.format(new_var.name, self.name, anchor_op_name))
+            raise ValueError(msg.format(new_var.name, self.name, anchor_op_name))
 
         if end_op is not None:
             end_id, _ = self._visible_vars_in_block(end_op, inclusive=True)
@@ -1040,12 +1094,16 @@ class Block(object):
             msg = "end_op '{}' comes before the anchor_op '{}'"
             raise ValueError(msg.format(end_op.name, anchor_op.name))
 
-        num_ops_affected = self._replace_var(old_var, new_var,
-                start=start, end_id=end_id, no_check_var_visibility=no_check_var_visibility,
-                no_check_var_types=no_check_var_types)
+        num_ops_affected = self._replace_var(
+            old_var,
+            new_var,
+            start=start,
+            end_id=end_id,
+            no_check_var_visibility=no_check_var_visibility,
+            no_check_var_types=no_check_var_types,
+        )
 
-        logging.debug(
-            "Num ops affected in replacing var: {}".format(num_ops_affected))
+        logging.debug("Num ops affected in replacing var: {}".format(num_ops_affected))
 
     def remove_ops(self, existing_ops):
         """
@@ -1064,8 +1122,9 @@ class Block(object):
             for i, op in zip(idxs, existing_ops):
                 if i == -1:
                     not_found.append(op.name)
-            raise ValueError("Ops {} not found in block {}".format(
-                not_found, self.name))
+            raise ValueError(
+                "Ops {} not found in block {}".format(not_found, self.name)
+            )
 
         # Remove ops in reverse topological order
         pairs = list(zip(idxs, existing_ops))
@@ -1076,14 +1135,17 @@ class Block(object):
                 # Check that no ops depend on op's outputs
                 if len(v.child_ops) > 0:
                     child_op_names = [s.name for s in v.child_ops]
-                    msg = "Cannot delete op '{}' with active output at id {}: '{}' " +\
-                            "used by ops {}"
-                    raise ValueError(
-                        msg.format(op.name, i, v.name, child_op_names))
+                    msg = (
+                        "Cannot delete op '{}' with active output at id {}: '{}' "
+                        + "used by ops {}"
+                    )
+                    raise ValueError(msg.format(op.name, i, v.name, child_op_names))
                 # Check that the output Var isn't block's output
                 if v in self._outputs:
-                    msg = "cannot delete op {} with output {}: {} " +\
-                            "that's block {}'s output"
+                    msg = (
+                        "cannot delete op {} with output {}: {} "
+                        + "that's block {}'s output"
+                    )
                     raise ValueError(msg.format(op.name, i, v.name, self.name))
 
             for b in op.blocks:
@@ -1095,7 +1157,7 @@ class Block(object):
             op.enclosing_block = None
 
             for v in op.inputs.values():
-                if isinstance(v, (tuple,list)):
+                if isinstance(v, (tuple, list)):
                     for vv in v:
                         vv.remove_child_op(op)
                 else:
@@ -1119,7 +1181,7 @@ class Block(object):
             if not set(op.outputs).intersection(used_vars):
                 continue
 
-            used_ops.append(op) # append in reverse topological order
+            used_ops.append(op)  # append in reverse topological order
 
             # recursively search for nested blocks
             ops_to_check = []
@@ -1141,8 +1203,12 @@ class Block(object):
     def indented_str(self, indent=None):
         if indent is None:
             indent = ""
-        s = indent + self.name + "(" + ", ".join(
-            ["%" + var.name for var in self._block_inputs])
+        s = (
+            indent
+            + self.name
+            + "("
+            + ", ".join(["%" + var.name for var in self._block_inputs])
+        )
         s += ") {\n"
         for op in self.operations:
             s += op.indented_str(indent + SPACES * 1)
@@ -1158,9 +1224,13 @@ class Block(object):
     def __str__(self):
         return self.indented_str()
 
-    def get_dot_string(self, function_name='main', prefix_id=0,
-                       highlight_debug_op_types=None,
-                       highlight_debug_op_names=None):
+    def get_dot_string(
+        self,
+        function_name="main",
+        prefix_id=0,
+        highlight_debug_op_types=None,
+        highlight_debug_op_names=None,
+    ):
         """
         Return the dot string that can be used to show the block
         with dot. Const ops are not added to the dot string.
@@ -1182,8 +1252,7 @@ class Block(object):
         if highlight_debug_op_names is None:
             highlight_debug_op_names = []
 
-        dotstring = 'digraph g {\n' + \
-                    '\tcompound=true;\n'
+        dotstring = "digraph g {\n" + "\tcompound=true;\n"
 
         input_var_names = list(self.inputs.keys())
         output_var_names = [v.name for v in self.outputs]
@@ -1195,20 +1264,23 @@ class Block(object):
                     debug_op_types.append(op.name)
 
         vis = DotVisitor()
-        vis.highlight_nodes(input_var_names, 'yellow') \
-            .highlight_nodes(output_var_names, 'goldenrod2') \
-            .highlight_nodes(highlight_debug_op_names, 'cyan') \
-            .highlight_nodes(debug_op_types, 'green')
+        vis.highlight_nodes(input_var_names, "yellow").highlight_nodes(
+            output_var_names, "goldenrod2"
+        ).highlight_nodes(highlight_debug_op_names, "cyan").highlight_nodes(
+            debug_op_types, "green"
+        )
 
         vis.visit_all(self, nodename_prefix=str(prefix_id))
-        res = vis.get_result('subgraph', 'cluster_' + function_name.replace('/', '_'))
-        dotstring += '\n'.join('\t' + r for r in res.split('\n')) + "\n"
+        res = vis.get_result("subgraph", "cluster_" + function_name.replace("/", "_"))
+        dotstring += "\n".join("\t" + r for r in res.split("\n")) + "\n"
         dotstring += "}"
         return dotstring
+
 
 class Function(Block):
     """
     """
+
     def __init__(self, inputs):
         """
         inputs: str -> placeholder
@@ -1242,12 +1314,11 @@ class Function(Block):
     def __str__(self):
         return self.to_str("function")
 
-    def to_str(self, func_name='function'):
+    def to_str(self, func_name="function"):
         if len(self._input_dict) == 0:
             s = func_name + "() {"
         else:
-            inputs = [(in_name, ph)
-                      for in_name, ph in self._input_dict.items()]
+            inputs = [(in_name, ph) for in_name, ph in self._input_dict.items()]
             s = func_name + "(" + str(inputs[0][1])
             for in_name, ph in inputs[1:]:
                 s += ",\n" + " " * (len(func_name) + 1) + str(ph)

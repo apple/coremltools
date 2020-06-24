@@ -60,13 +60,21 @@ from ._scripts.converter import _main
 
 # expose unified converter in coremltools package level
 from .converters import convert
-from .converters import ClassifierConfig, TensorType, ImageType, RangeDim, Shape, EnumeratedShapes
+from .converters import (
+    ClassifierConfig,
+    TensorType,
+    ImageType,
+    RangeDim,
+    Shape,
+    EnumeratedShapes,
+)
 from .converters.mil._deployment_compatibility import AvailableTarget as target
 
 # Time profiling for functions in coremltools package, decorated with @profile
 import os as _os
 import sys as _sys
 from .converters._profile_utils import _profiler
+
 _ENABLE_PROFILING = _os.environ.get("ENABLE_PROFILING", False)
 
 if _ENABLE_PROFILING:

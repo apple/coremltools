@@ -5,7 +5,8 @@
 
 from ._op_reqs import *
 
-@register_op(doc_str='TODO')
+
+@register_op(doc_str="TODO")
 class batch_norm(Operation):
     input_spec = InputSpec(
         x=TensorInputType(),
@@ -23,7 +24,7 @@ class batch_norm(Operation):
         return self.x.sym_type
 
 
-@register_op(doc_str='TODO')
+@register_op(doc_str="TODO")
 class instance_norm(Operation):
     input_spec = InputSpec(
         x=TensorInputType(),
@@ -39,12 +40,12 @@ class instance_norm(Operation):
         return self.x.sym_type
 
 
-@register_op(doc_str='TODO')
+@register_op(doc_str="TODO")
 class l2_norm(Operation):
     input_spec = InputSpec(
         x=TensorInputType(),
         axes=IntTensorInputType(),
-        epsilon=FloatInputType(const=True, default=1e-12)
+        epsilon=FloatInputType(const=True, default=1e-12),
     )
 
     def __init__(self, **kwargs):
@@ -54,7 +55,7 @@ class l2_norm(Operation):
         return self.x.sym_type
 
 
-@register_op(doc_str='TODO')
+@register_op(doc_str="TODO")
 class layer_norm(Operation):
     input_spec = InputSpec(
         x=TensorInputType(),
@@ -73,13 +74,15 @@ class layer_norm(Operation):
     @precondition(allow=VALUE)
     def value_inference(self):
         def np_layer_norm(x, axes, gamma, beta, epsilon=1e-5):
-            normalized_shape = x.shape[-len(axes):]
+            normalized_shape = x.shape[-len(axes) :]
             gamma = np.ones(shape=normalized_shape) if gamma is None else gamma
             beta = np.zeros(shape=normalized_shape) if beta is None else beta
             num = x - np.mean(x, axis=tuple(axes), keepdims=True)
             dem = np.sqrt(
-                np.sum(np.square(num), axis=tuple(axes), keepdims=True) /
-                np.prod(normalized_shape) + epsilon)
+                np.sum(np.square(num), axis=tuple(axes), keepdims=True)
+                / np.prod(normalized_shape)
+                + epsilon
+            )
             return num / dem * gamma + beta
 
         _axes = self.x.shape if self.axes is None else self.axes.val
@@ -88,7 +91,7 @@ class layer_norm(Operation):
         return np_layer_norm(self.x.val, _axes, _gamma, _beta, self.epsilon.val)
 
 
-@register_op(doc_str='TODO')
+@register_op(doc_str="TODO")
 class local_response_norm(Operation):
     input_spec = InputSpec(
         x=TensorInputType(),

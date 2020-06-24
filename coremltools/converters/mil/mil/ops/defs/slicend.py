@@ -9,6 +9,7 @@ from coremltools.converters.mil.mil.types.symbolic import is_symbolic
 from coremltools.converters.mil.mil import get_new_symbol
 from ._op_reqs import *
 
+
 @register_op(doc_str="")
 class slice_by_index(Operation):
     """
@@ -56,7 +57,7 @@ class slice_by_index(Operation):
         stride=IntTensorInputType(const=True, optional=True),
         begin_mask=BoolTensorInputType(const=True, optional=True),
         end_mask=BoolTensorInputType(const=True, optional=True),
-        squeeze_mask=BoolTensorInputType(const=True, optional=True)
+        squeeze_mask=BoolTensorInputType(const=True, optional=True),
     )
 
     def __init__(self, **kwargs):
@@ -69,9 +70,13 @@ class slice_by_index(Operation):
         end = self.end.val
         x_rank = self.x.rank
         stride = self.stride.val if self.stride is not None else [1] * x_rank
-        begin_mask = self.begin_mask.val if self.begin_mask is not None else [False] * x_rank
+        begin_mask = (
+            self.begin_mask.val if self.begin_mask is not None else [False] * x_rank
+        )
         end_mask = self.end_mask.val if self.end_mask is not None else [False] * x_rank
-        squeeze_mask = self.squeeze_mask.val if self.squeeze_mask is not None else [False] * x_rank
+        squeeze_mask = (
+            self.squeeze_mask.val if self.squeeze_mask is not None else [False] * x_rank
+        )
 
         # solve shape
         x_shape = self.x.shape
@@ -97,7 +102,9 @@ class slice_by_index(Operation):
                         ret_shape.append(get_new_symbol())
                     continue
                 else:
-                    num = np.ceil(float(x_shape[idx])/abs(stride[idx])).astype(np.int32)
+                    num = np.ceil(float(x_shape[idx]) / abs(stride[idx])).astype(
+                        np.int32
+                    )
                     ret_shape.append(num)
                     continue
 
@@ -121,14 +128,22 @@ class slice_by_index(Operation):
                 end[idx] = max(0, end[idx] + x_shape[idx])
 
             # compute shape
-            low, high = [0, x_shape[idx]] if stride[idx] > 0 else [-1, x_shape[idx]-1]
-            begin_idx, end_idx = [begin[idx], end[idx]] if stride[idx] > 0 else [end[idx], begin[idx]]
-            is_begin_mask, is_end_mask = [begin_mask[idx], end_mask[idx]] if stride[idx] > 0 else [end_mask[idx], begin_mask[idx]]
+            low, high = [0, x_shape[idx]] if stride[idx] > 0 else [-1, x_shape[idx] - 1]
+            begin_idx, end_idx = (
+                [begin[idx], end[idx]] if stride[idx] > 0 else [end[idx], begin[idx]]
+            )
+            is_begin_mask, is_end_mask = (
+                [begin_mask[idx], end_mask[idx]]
+                if stride[idx] > 0
+                else [end_mask[idx], begin_mask[idx]]
+            )
             if is_begin_mask:
                 begin_idx = low
             end_idx = high if is_end_mask else min(end_idx, high)
-            num = np.ceil(float(end_idx-begin_idx)/abs(stride[idx])).astype(np.int32)
-            ret_shape.append(max(0., num))
+            num = np.ceil(float(end_idx - begin_idx) / abs(stride[idx])).astype(
+                np.int32
+            )
+            ret_shape.append(max(0.0, num))
 
         if len(ret_shape) == 0:
             # Scalar case.
@@ -143,9 +158,15 @@ class slice_by_index(Operation):
         begin = [int(i) for i in list(self.begin.val[:])]
         end = [int(i) for i in list(self.end.val[:])]
         stride = [1] * self.x.rank if self.stride is None else self.stride.val
-        begin_mask = [False] * self.x.rank if self.begin_mask is None else self.begin_mask.val
+        begin_mask = (
+            [False] * self.x.rank if self.begin_mask is None else self.begin_mask.val
+        )
         end_mask = [False] * self.x.rank if self.end_mask is None else self.end_mask.val
-        squeeze_mask = [False] * self.x.rank if self.squeeze_mask is None else self.squeeze_mask.val
+        squeeze_mask = (
+            [False] * self.x.rank
+            if self.squeeze_mask is None
+            else self.squeeze_mask.val
+        )
 
         slices = []
         for idx, mask in enumerate(begin_mask):
@@ -158,7 +179,9 @@ class slice_by_index(Operation):
         for idx, mask in enumerate(squeeze_mask):
             if mask:
                 end[idx] = None
-                stride[idx] = 2147483647 # We slice out only 1 element by setting stride to INF
+                stride[
+                    idx
+                ] = 2147483647  # We slice out only 1 element by setting stride to INF
                 squeeze_axes.append(idx)
         for idx in range(self.x.rank):
             slices.append(slice(begin[idx], end[idx], stride[idx]))
@@ -180,8 +203,9 @@ class slice_by_index(Operation):
                 elif self.x.dtype == types.float or self.x.dtype == types.double:
                     res = np.float32(res)
                 else:
-                    raise ValueError("Unable to convert type {}".format(self.x.sym_val.dtype))
+                    raise ValueError(
+                        "Unable to convert type {}".format(self.x.sym_val.dtype)
+                    )
             else:
                 res = np.squeeze(res, axis=tuple(squeeze_axes))
         return res
-

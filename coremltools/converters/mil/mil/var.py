@@ -5,9 +5,10 @@
 
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.types.symbolic import (
-        is_symbolic,
-        any_symbolic,
-        )
+    is_symbolic,
+    any_symbolic,
+)
+
 
 class Var(object):
     """
@@ -70,17 +71,18 @@ class Var(object):
     child_ops [_child_ops]: list[Operation]
         Ops that take this Var as an input.
     """
+
     __slots__ = [
-        "name", "_sym_type", "_sym_val", "_op", "op_output_idx", "_child_ops",
+        "name",
+        "_sym_type",
+        "_sym_val",
+        "_op",
+        "op_output_idx",
+        "_child_ops",
         "consuming_blocks",
     ]
 
-    def __init__(self,
-                 name,
-                 sym_type,
-                 sym_val=None,
-                 op=None,
-                 op_output_idx=None):
+    def __init__(self, name, sym_type, sym_val=None, op=None, op_output_idx=None):
         """
         sym_type (builtin type)
         sym_val (builtin value)
@@ -147,7 +149,7 @@ class Var(object):
     def remove_child_op(self, target_op, no_check=False):
         if target_op not in self._child_ops:
             if no_check:
-                return # no-op
+                return  # no-op
             msg = "Op {} does not takes Var {} as input"
             raise ValueError(msg.format(target_op.name, self.name))
         self._child_ops.remove(target_op)
@@ -168,12 +170,12 @@ class Var(object):
         return "%" + self.name + ": " + self.shape_str()
 
 
-
 class ListVar(Var):
     __slots__ = ["_elem_type", "init_length", "dynamic_length"]
 
-    def __init__(self, name, elem_type=None, init_length=None,
-            dynamic_length=True, **kwargs):
+    def __init__(
+        self, name, elem_type=None, init_length=None, dynamic_length=True, **kwargs
+    ):
         """
         elem_type (builtin.tensor)
 
@@ -182,17 +184,19 @@ class ListVar(Var):
         dynamic_length (bool): True to allow list to grow. False uses
         init_length as the fixed size (init_length is runtime length).
         """
-        super(ListVar, self).__init__(name=name,
-                                      sym_type=types.list(elem_type, init_length, dynamic_length),
-                                      sym_val=None, **kwargs)
+        super(ListVar, self).__init__(
+            name=name,
+            sym_type=types.list(elem_type, init_length, dynamic_length),
+            sym_val=None,
+            **kwargs
+        )
         self._elem_type = elem_type
         self.init_length = init_length
         self.dynamic_length = dynamic_length
 
     @property
     def shape(self):
-        raise ValueError("shape not applicable to ListVar '{}'.".format(
-            self.name))
+        raise ValueError("shape not applicable to ListVar '{}'.".format(self.name))
 
     @property
     def rank(self):
@@ -200,8 +204,7 @@ class ListVar(Var):
 
     @property
     def dtype(self):
-        raise ValueError("dtype not applicable to ListVar '{}'".format(
-            self.name))
+        raise ValueError("dtype not applicable to ListVar '{}'".format(self.name))
 
     @property
     def elem_type(self):
@@ -214,18 +217,18 @@ class ListVar(Var):
         return self._elem_type.get_shape()
 
     def shape_str(self):
-        length = '?'
+        length = "?"
         if not self.dynamic_length:
             length = str(self.init_length)
         if self._elem_type == types.unknown:
-            return 'List[{}, unknown]'.format(length)
+            return "List[{}, unknown]".format(length)
         elem_shape = self._elem_type.get_shape()
         elem_dtype = self._elem_type.get_primitive()
         shape_str = str(elem_shape)[:-1]  # trim the ")"
         if len(elem_shape) > 1:
             shape_str += ", "
         shape_str += types.builtin_to_string(elem_dtype) + ")"
-        return 'List[{}, {}]'.format(length, shape_str)
+        return "List[{}, {}]".format(length, shape_str)
 
 
 class InternalVar(Var):
@@ -236,7 +239,8 @@ class InternalVar(Var):
     Comment: Internal Var can be used to represent diverse types such as enum
     type `DataType.FLOAT32`.
     """
+
     def __init__(self, val, name=None):
-        super(InternalVar, self).__init__(name=name,
-                                          sym_type=types.unknown,
-                                          sym_val=types.unknown(val))
+        super(InternalVar, self).__init__(
+            name=name, sym_type=types.unknown, sym_val=types.unknown(val)
+        )

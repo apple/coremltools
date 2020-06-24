@@ -44,7 +44,7 @@ def convert_nodes(context, graph):
                 assign node outputs.
             graph: An InternalTorchIRGraph or InternalTorchIRBlock object.
     """
-    for node in _tqdm(graph.nodes, desc='Converting Frontend ==> MIL Ops', unit=' ops'):
+    for node in _tqdm(graph.nodes, desc="Converting Frontend ==> MIL Ops", unit=" ops"):
         _add_op = _TORCH_OPS_REGISTRY.get(node.kind, None)
         _logging.info("Converting op {} : {}".format(node.name, node.kind))
         if _add_op is None:
@@ -88,7 +88,7 @@ def convert_block(context, block, inputs):
     return outputs
 
 
-# Some ops will recieve a dtype input as an integer
+# Some ops will receive a dtype input as an integer
 # which maps to a torch dtype. The below mapping was found by
 # converting test models with different dtypes passed to ones.
 NUM_TO_TORCH_DTYPE = {
@@ -105,7 +105,11 @@ NUM_TO_TORCH_DTYPE = {
 
 
 def decide_immediate_or_file(val):
-    if val is not None and isinstance(val, (_np.ndarray, _np.generic)) and val.size >= 10:
+    if (
+        val is not None
+        and isinstance(val, (_np.ndarray, _np.generic))
+        and val.size >= 10
+    ):
         return "file_value"
     return "immediate_value"
 
@@ -334,7 +338,6 @@ def addmm(context, node):
 
 @register_torch_op(torch_alias=["conv2d"])
 def _convolution(context, node):
-
     inputs = _get_inputs(context, node)
 
     x = inputs[0]
@@ -373,7 +376,11 @@ def _convolution(context, node):
         transposed = False
         group = inputs[6]
     else:
-        raise ValueError("unexpected number of inputs for node {} ({}): {}".format(node.name, node.kind, len(inputs)))
+        raise ValueError(
+            "unexpected number of inputs for node {} ({}): {}".format(
+                node.name, node.kind, len(inputs)
+            )
+        )
 
     kwargs = {
         "x": x,
@@ -877,7 +884,11 @@ def numtotensor(context, node):
     inputs = _get_inputs(context, node, expected=1)
     x = inputs[0]
     if x.shape != ():
-        raise ValueError("numtotensor expected scalar input, got tensor with shape {}".format(x.shape))
+        raise ValueError(
+            "numtotensor expected scalar input, got tensor with shape {}".format(
+                x.shape
+            )
+        )
     if isinstance(x.sym_val, Symbol):
         context.add(x, node.name)
     else:
@@ -890,7 +901,7 @@ def _ifzo_to_ifoz(weights, name):
         i, f, z, o -> i, f, o, z
         where weights_split[0] == i, etc.
         Used to transform lstm weights from pytorch
-        to CoreML format 
+        to CoreML format
     """
     split_size = weights.shape[0] // 4
     weights_split = mb.split(x=weights, split_sizes=_np.array([split_size] * 4), axis=0)
@@ -906,8 +917,8 @@ def _ifzo_to_ifoz(weights, name):
 
 def _pytorch_hidden_to_coreml_milops(x, name):
     """
-        Used to transform lstm state values (hn, cn) 
-        from pytorch to CoreML format. 
+        Used to transform lstm state values (hn, cn)
+        from pytorch to CoreML format.
     """
     split_size = x.shape[0] // 2
     x_split = mb.split(x=x, split_sizes=_np.array([split_size] * 2), axis=0)
@@ -1141,7 +1152,11 @@ def tupleunpack(context, node):
     if not isinstance(values, tuple) and not isinstance(values, list):
         values = values.val
     if len(values) != len(node.outputs):
-        raise ValueError("unpack node expected {} outputs, got {}".format(len(node.outputs), len(values)))
+        raise ValueError(
+            "unpack node expected {} outputs, got {}".format(
+                len(node.outputs), len(values)
+            )
+        )
     assert len(values) == len(node.outputs)
     # @value is either a numpy primitive or a Var object
     for value, output in zip(values, node.outputs):
@@ -1233,7 +1248,10 @@ def loop(context, node):
 
         # Each dimension must have the same integer length, or else be
         # symbolic.
-        all_equivalent = [s1 == s2 or (isinstance(s1, Symbol) and isinstance(s2, Symbol)) for s1, s2 in zip(shape1, shape2)]
+        all_equivalent = [
+            s1 == s2 or (isinstance(s1, Symbol) and isinstance(s2, Symbol))
+            for s1, s2 in zip(shape1, shape2)
+        ]
         return all_equivalent
 
     def _loop_body(*loop_vars):
@@ -1244,8 +1262,17 @@ def loop(context, node):
 
         for input_var, output_var in zip(loop_vars[2:], res[1:]):
             if not _shapes_are_equivalent(input_var.shape, output_var.shape):
-                _logging.warning("detected change in shape of loop variable. this could lead to incorrect inference results!")
-                _logging.warning("{}:{} -> {}:{}".format(input_var.name, input_var.shape, output_var.name, output_var.shape))
+                _logging.warning(
+                    "detected change in shape of loop variable. this could lead to incorrect inference results!"
+                )
+                _logging.warning(
+                    "{}:{} -> {}:{}".format(
+                        input_var.name,
+                        input_var.shape,
+                        output_var.name,
+                        output_var.shape,
+                    )
+                )
 
         # Update the iteration count if we're keeping track.
         if has_iter_count:
@@ -1349,7 +1376,11 @@ def select(context, node):
         end_mask[dim] = False
 
     slice_by_index = mb.slice_by_index(
-        x=_input, begin=begin_array, end=end_array, end_mask=end_mask, name=node.name + "_slice_by_index"
+        x=_input,
+        begin=begin_array,
+        end=end_array,
+        end_mask=end_mask,
+        name=node.name + "_slice_by_index",
     )
     # Now we squeeze the dimension we have selected from to remove it
     squeeze = mb.squeeze(
@@ -1478,7 +1509,13 @@ def _slice(context, node):
         end_array[dim] = end
         end_mask[dim] = False
 
-    kwargs = {"x": x, "begin": begin_array, "end": end_array, "end_mask": end_mask, "name": node.name}
+    kwargs = {
+        "x": x,
+        "begin": begin_array,
+        "end": end_array,
+        "end_mask": end_mask,
+        "name": node.name,
+    }
 
     if step != 1:
         stride_array = _np.array([1] * len(x.shape))
@@ -1681,14 +1718,14 @@ def masked_fill(context, node):
 @register_torch_op
 def meshgrid(context, node):
     """
-    For N input tensors, a meshgrid is constructed by viewing each tensor as an N-dimension tensor 
+    For N input tensors, a meshgrid is constructed by viewing each tensor as an N-dimension tensor
     with values in the dimension corresponding it its order in the args. (a.)
     Then, it is expanded along dimensions corresponding to the dimensions of each
     1d tensor in the order that they were passed in. (b.)
-     
-    Each output tensor is put into a tuple that is returned. These tuples form 
+
+    Each output tensor is put into a tuple that is returned. These tuples form
     N, N-dimenional grids, where the ith grid is defined as expanding the ith input over
-    dimensions defined by the other inputs. 
+    dimensions defined by the other inputs.
     """
     inputs = _get_inputs(context, node)
     if len(inputs) < 2:
@@ -1819,4 +1856,3 @@ def sort(context, node):
     indices_name = node.outputs[1]
     context.add(values, torch_name=values_name)
     context.add(indices, torch_name=indices_name)
-

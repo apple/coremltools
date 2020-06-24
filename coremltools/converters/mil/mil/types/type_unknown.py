@@ -15,6 +15,7 @@ class unknown:
     """
     unknown is basically Any type.
     """
+
     @classmethod
     def __type_info__(cls):
         return Type("unknown", python_class=cls)
