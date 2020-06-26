@@ -878,15 +878,28 @@ def slice_by_index(const_context, builder, op):
     end_mask = [False] * rank if op.end_mask is None else op.end_mask.val
     squeeze_mask = [False] * rank if op.squeeze_mask is None else op.squeeze_mask.val
 
-    builder.add_slice_dynamic(
-        name=op.name,
-        input_names=make_input(const_context, builder, [op.x, op.begin, op.end]),
-        output_name=op.outputs[0].name,
-        strides=tuple(stride),
-        begin_masks=tuple(begin_mask),
-        end_masks=tuple(end_mask),
-        squeeze_masks=tuple(squeeze_mask),
-    )
+    if op.begin.val is not None and op.end.val is not None:
+        builder.add_slice_static(
+            name=op.name,
+            input_name=make_input(const_context, builder, op.x),
+            output_name=op.outputs[0].name,
+            begin_ids=op.begin.val,
+            end_ids=op.end.val,
+            strides=tuple(stride),
+            begin_masks=tuple(begin_mask),
+            end_masks=tuple(end_mask),
+            squeeze_masks=tuple(squeeze_mask)
+        )
+    else:
+        builder.add_slice_dynamic(
+            name=op.name,
+            input_names=make_input(const_context, builder, [op.x, op.begin, op.end]),
+            output_name=op.outputs[0].name,
+            strides=tuple(stride),
+            begin_masks=tuple(begin_mask),
+            end_masks=tuple(end_mask),
+            squeeze_masks=tuple(squeeze_mask),
+        )
 
 
 @register_v2_op
