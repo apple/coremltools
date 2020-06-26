@@ -2002,7 +2002,7 @@ def ResizeNearestNeighbor(context, node):
         and isinstance(Wout, (_np.int32, _np.int64))
     ):
         raise ValueError(
-            '"ResizeNearestNeighbor" op: the second input, which is the output size, must have elements of type int32'
+            '"ResizeNearestNeighbor" op: the second input, which is the output size, must have elements of type int32 or int64'
         )
 
     if Hout < Hin and Wout < Win:
@@ -2055,9 +2055,9 @@ def ResizeBilinear(context, node):
 
     Hout, Wout = context[node.inputs[1]].val
 
-    if not (isinstance(Hout, _np.int32) and isinstance(Wout, _np.int32)):
+    if not (isinstance(Hout, (_np.int32, _np.int64)) and isinstance(Wout, (_np.int32, _np.int64))):
         raise ValueError(
-            '"ResizeBilinear" op: the second input, which is the output size, must have elements of type int32'
+            '"ResizeBilinear" op: the second input, which is the output size, must have elements of type int32 or int64'
         )
 
     align_corners = node.attr.get("align_corners", False)
