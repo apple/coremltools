@@ -255,31 +255,6 @@ def avg_pool(const_context, builder, op):
 
 
 @register_mil_to_nn_mapping
-def addn(const_context, builder, op):
-    input_names = make_input(const_context, builder, op.values)
-    if len(input_names) == 1:
-        builder.add_copy(
-            name=op.name, input_name=input_names[0], output_name=op.outputs[0].name
-        )
-    else:
-        prev_name = input_names[0]
-        for i, input in enumerate(input_names[1:-1]):
-            builder.add_elementwise(
-                name=op.name + input,
-                input_names=[prev_name, input],
-                mode="ADD",
-                output_name=op.name + input,
-            )
-            prev_name = op.name + input
-        builder.add_elementwise(
-            name=op.name,
-            input_names=[prev_name, input_names[-1]],
-            mode="ADD",
-            output_name=op.outputs[0].name,
-        )
-
-
-@register_mil_to_nn_mapping
 def band_part(const_context, builder, op):
     builder.add_matrix_band_part(
         name=op.name,

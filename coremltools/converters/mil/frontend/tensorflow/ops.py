@@ -67,6 +67,21 @@ def Add(context, node):
 
 
 @register_tf_op
+def AddN(context, node):
+    values = [context[name] for name in node.inputs]
+    if len(values) == 1:
+        Identity(context, node)
+        return
+    prev_var = values[0]
+    for idx, var in enumerate(values[1:]):
+        if var == values[-1]:
+            x = mb.add(x=prev_var, y=var, name=node.name)
+        else:
+            prev_var = mb.add(x=prev_var, y=var, name=node.name+"_tmpAddN_"+str(idx))
+    context.add(node.name, x)
+
+
+@register_tf_op
 def Abs(context, node):
     x = context[node.inputs[0]]
     x = mb.abs(x=x, name=node.name)
@@ -201,13 +216,6 @@ def AvgPool3D(context, node):
             name=node.name,
         )
 
-    context.add(node.name, x)
-
-
-@register_tf_op
-def AddN(context, node):
-    values = [context[name] for name in node.inputs]
-    x = mb.addn(values=values, name=node.name)
     context.add(node.name, x)
 
 

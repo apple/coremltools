@@ -1056,40 +1056,6 @@ class stack(Operation):
 
 
 @register_op(doc_str="")
-class addn(Operation):
-    input_spec = InputSpec(values=TupleInputType(),)
-    """
-    Should deprecate this op.
-    """
-
-    def __init__(self, **kwargs):
-        super(addn, self).__init__(**kwargs)
-
-    def type_inference(self):
-        num_tensors = len(self.values)
-        if num_tensors == 0:
-            raise ValueError("Cannot addn 0 tensors.")
-
-        t_shape = self.values[0].shape
-        t_type = self.values[0].dtype
-
-        for t in self.values[1:]:
-            if t.shape != t_shape:
-                msg = "Component tensor {} has shape {}, others have {}"
-                raise ValueError(msg.format(t.name, t.shape, t_shape))
-            if t.dtype != t_type:
-                msg = "Component tensor {} has dtype {}, others have {}"
-                raise ValueError(msg.format(t.name, t.dtype, t_type))
-
-        return types.tensor(t_type, list(t_shape))
-
-    @precondition(allow=VALUE)
-    def value_inference(self):
-        inputs = np.array([v.val for v in self.values])
-        return np.sum(inputs, axis=0)
-
-
-@register_op(doc_str="")
 class isfinite(Operation):
     input_spec = InputSpec(x=ScalarOrTensorInputType(),)
     """
