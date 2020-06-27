@@ -16,17 +16,7 @@ from coremltools.converters.mil.mil.types.symbolic import (
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.ops.registry import SSAOpRegistry
 from tqdm import tqdm as _tqdm
-
-V2_TO_V1_OP_REGISTRY = {}
-
-
-def register_v2_op(func):
-    f_name = func.__name__
-    if f_name in V2_TO_V1_OP_REGISTRY:
-        raise ValueError("V2 op {} is already registered.".format(f_name))
-    V2_TO_V1_OP_REGISTRY[f_name] = func
-    return func
-
+from .mil_to_nn_mapping_registry import *
 
 def convert_ops(const_context, builder, ops, outputs):
     """
@@ -40,9 +30,9 @@ def convert_ops(const_context, builder, ops, outputs):
     custom_ops = SSAOpRegistry.custom_ops
     for op in _tqdm(ops, desc="Translating MIL ==> MLModel Ops", unit=" ops"):
         if op.op_type in custom_ops:
-            mapper = V2_TO_V1_OP_REGISTRY["custom_op"]
-        elif op.op_type in V2_TO_V1_OP_REGISTRY:
-            mapper = V2_TO_V1_OP_REGISTRY[op.op_type]
+            mapper = MIL_TO_NN_MAPPING_REGISTRY["custom_op"]
+        elif op.op_type in MIL_TO_NN_MAPPING_REGISTRY:
+            mapper = MIL_TO_NN_MAPPING_REGISTRY[op.op_type]
         else:
             msg = "{} is not implemented for nn backend. block: {}"
             raise ValueError(msg.format(op.op_type, op.enclosing_block))
@@ -253,7 +243,7 @@ def _split_bias(b, sections):
     return b
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def avg_pool(const_context, builder, op):
     _convert_pool(
         const_context=const_context,
@@ -264,7 +254,7 @@ def avg_pool(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def addn(const_context, builder, op):
     input_names = make_input(const_context, builder, op.values)
     if len(input_names) == 1:
@@ -289,7 +279,7 @@ def addn(const_context, builder, op):
         )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def band_part(const_context, builder, op):
     builder.add_matrix_band_part(
         name=op.name,
@@ -300,7 +290,7 @@ def band_part(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def batch_norm(const_context, builder, op):
     channels = op.x.shape[1]
     gamma = _np.array([1.0] * channels) if op.gamma is None else op.gamma.val
@@ -320,13 +310,13 @@ def batch_norm(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def const(const_context, builder, op):
     # const in V2 are added to V1 lazily.
     pass
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def conv(const_context, builder, op):
     # v2 x: (n, C_in/groups, spatial_dims)
     x_name = make_input(const_context, builder, op.x)
@@ -474,7 +464,7 @@ def conv(const_context, builder, op):
         )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def cumsum(const_context, builder, op):
     input_names = make_input(const_context, builder, [op.x])
     builder.add_cumsum(
@@ -641,37 +631,37 @@ def _add_logical(const_context, builder, op, mode):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def abs(const_context, builder, op):
     _add_elementwise_unary(const_context, builder, op, "abs")
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def acos(const_context, builder, op):
     _add_elementwise_unary(const_context, builder, op, "acos")
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def add(const_context, builder, op):
     _add_elementwise_binary(const_context, builder, op, "add")
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def asin(const_context, builder, op):
     _add_elementwise_unary(const_context, builder, op, "asin")
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def atan(const_context, builder, op):
     _add_elementwise_unary(const_context, builder, op, "atan")
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def atanh(const_context, builder, op):
     _add_elementwise_unary(const_context, builder, op, "atanh")
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def cast(const_context, builder, op):
     if op.dtype.val in ["int32", "int64"]:
         _add_elementwise_unary(
@@ -708,12 +698,12 @@ def cast(const_context, builder, op):
         )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def ceil(const_context, builder, op):
     _add_elementwise_unary(const_context, builder, op, "ceil")
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def clip(const_context, builder, op):
     _add_elementwise_unary(
         const_context,
@@ -725,152 +715,152 @@ def clip(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def cos(const_context, builder, op):
     _add_elementwise_unary(const_context, builder, op, "cos")
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def cosh(const_context, builder, op):
     _add_elementwise_unary(const_context, builder, op, "cosh")
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def equal(const_context, builder, op):
     _add_elementwise_binary(const_context, builder, op, "equal")
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def exp(const_context, builder, op):
     _add_elementwise_unary(const_context, builder, op, "exp")
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def exp2(const_context, builder, op):
     _add_elementwise_unary(const_context, builder, op, "exp2")
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def floor(const_context, builder, op):
     _add_elementwise_unary(const_context, builder, op, "floor")
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def floor_div(const_context, builder, op):
     _add_elementwise_binary(const_context, builder, op, "floor_div")
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def greater(const_context, builder, op):
     _add_elementwise_binary(const_context, builder, op, "greater_than")
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def greater_equal(const_context, builder, op):
     _add_elementwise_binary(const_context, builder, op, "greater_equal")
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def inverse(const_context, builder, op):
     _add_elementwise_unary(const_context, builder, op, "inverse")
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def less(const_context, builder, op):
     _add_elementwise_binary(const_context, builder, op, "less_than")
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def less_equal(const_context, builder, op):
     _add_elementwise_binary(const_context, builder, op, "less_equal")
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def log(const_context, builder, op):
     _add_elementwise_unary(const_context, builder, op, "log")
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def logical_and(const_context, builder, op):
     _add_logical(const_context, builder, op, "AND")
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def logical_not(const_context, builder, op):
     _add_logical(const_context, builder, op, "NOT")
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def logical_or(const_context, builder, op):
     _add_logical(const_context, builder, op, "OR")
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def logical_xor(const_context, builder, op):
     _add_logical(const_context, builder, op, "XOR")
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def maximum(const_context, builder, op):
     _add_elementwise_binary(const_context, builder, op, "max")
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def minimum(const_context, builder, op):
     _add_elementwise_binary(const_context, builder, op, "min")
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def mod(const_context, builder, op):
     _add_elementwise_binary(const_context, builder, op, "mod")
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def mul(const_context, builder, op):
     _add_elementwise_binary(const_context, builder, op, "multiply")
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def not_equal(const_context, builder, op):
     _add_elementwise_binary(const_context, builder, op, "not_equal")
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def pow(const_context, builder, op):
     _add_elementwise_binary(const_context, builder, op, "pow")
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def real_div(const_context, builder, op):
     _add_elementwise_binary(const_context, builder, op, "divide")
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def round(const_context, builder, op):
     _add_elementwise_unary(const_context, builder, op, "round")
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def rsqrt(const_context, builder, op):
     _add_elementwise_unary(const_context, builder, op, "rsqrt")
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def sign(const_context, builder, op):
     _add_elementwise_unary(const_context, builder, op, "sign")
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def sin(const_context, builder, op):
     _add_elementwise_unary(const_context, builder, op, "sin")
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def sinh(const_context, builder, op):
     _add_elementwise_unary(const_context, builder, op, "sinh")
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def slice_by_index(const_context, builder, op):
     rank = op.x.rank
     stride = [1] * rank if op.stride is None else op.stride.val
@@ -902,7 +892,7 @@ def slice_by_index(const_context, builder, op):
         )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def slice_by_size(const_context, builder, op):
     """
     A block of ops achieving slice_by_size with dynamic input x and size.
@@ -991,32 +981,32 @@ def slice_by_size(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def sqrt(const_context, builder, op):
     _add_elementwise_unary(const_context, builder, op, "sqrt")
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def square(const_context, builder, op):
     _add_elementwise_unary(const_context, builder, op, "power", alpha=2.0)
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def sub(const_context, builder, op):
     _add_elementwise_binary(const_context, builder, op, "subtract")
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def tan(const_context, builder, op):
     _add_elementwise_unary(const_context, builder, op, "tan")
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def threshold(const_context, builder, op):
     _add_elementwise_unary(const_context, builder, op, "threshold", alpha=op.alpha.val)
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def depth_to_space(const_context, builder, op):
     builder.add_reorganize_data(
         name=op.name,
@@ -1027,7 +1017,7 @@ def depth_to_space(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def expand_dims(const_context, builder, op):
     builder.add_expand_dims(
         name=op.name,
@@ -1037,7 +1027,7 @@ def expand_dims(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def fill(const_context, builder, op):
     if op.shape.val is None:
         builder.add_fill_dynamic(
@@ -1055,7 +1045,7 @@ def fill(const_context, builder, op):
         )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def random_bernoulli(const_context, builder, op):
     if op.shape.val is None:
         builder.add_random_bernoulli_dynamic(
@@ -1075,7 +1065,7 @@ def random_bernoulli(const_context, builder, op):
         )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def random_categorical(const_context, builder, op):
     builder.add_categorical_distribution(
         name=op.name,
@@ -1087,7 +1077,7 @@ def random_categorical(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def random_normal(const_context, builder, op):
     if op.shape.val is None:
         builder.add_random_normal_dynamic(
@@ -1109,7 +1099,7 @@ def random_normal(const_context, builder, op):
         )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def random_uniform(const_context, builder, op):
     if op.shape.val is None:
         builder.add_random_uniform_dynamic(
@@ -1131,7 +1121,7 @@ def random_uniform(const_context, builder, op):
         )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def gru(const_context, builder, op):
     make_input(const_context, builder, [op.x, op.initial_h])
     # Input shape: [b, s, I]
@@ -1204,7 +1194,7 @@ def gru(const_context, builder, op):
     _squeeze(builder, op.outputs[1].name, output_names[1], axes=[0, 3, 4])
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def squeeze(const_context, builder, op):
     axes = op.axes.val if op.axes is not None else None
     builder.add_squeeze(
@@ -1216,7 +1206,7 @@ def squeeze(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def topk(const_context, builder, op):
     builder.add_topk(
         name=op.name,
@@ -1228,12 +1218,12 @@ def topk(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def l2_pool(const_context, builder, op):
     _convert_pool(const_context=const_context, builder=builder, op=op, mode="l2")
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def linear(const_context, builder, op):
     out_channels, in_channels = op.weight.shape
     has_bias = op.bias.val is not None
@@ -1249,7 +1239,7 @@ def linear(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def matmul(const_context, builder, op):
     weight = None
     rows, columns = 0, 0
@@ -1292,12 +1282,12 @@ def matmul(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def max_pool(const_context, builder, op):
     _convert_pool(const_context=const_context, builder=builder, op=op, mode="max")
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def non_zero(const_context, builder, op):
     builder.add_where_nonzero(
         name=op.name,
@@ -1306,7 +1296,7 @@ def non_zero(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def lstm(const_context, builder, op):
     make_input(const_context, builder, [op.x, op.initial_h, op.initial_c])
     # Input shape [b, s, I]
@@ -1514,7 +1504,7 @@ def lstm(const_context, builder, op):
         )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def reshape(const_context, builder, op):
     if op.shape.val is None:
         builder.add_reshape_dynamic(
@@ -1544,7 +1534,7 @@ def reshape(const_context, builder, op):
         )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def reduce_argmax(const_context, builder, op):
     builder.add_argmax(
         name=op.name,
@@ -1555,7 +1545,7 @@ def reduce_argmax(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def reduce_argmin(const_context, builder, op):
     builder.add_argmin(
         name=op.name,
@@ -1578,59 +1568,59 @@ def _reduce_axes(const_context, builder, builder_op, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def reduce_l1_norm(const_context, builder, op):
     _reduce_axes(const_context, builder, builder.add_reduce_l1, op)
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def reduce_l2_norm(const_context, builder, op):
     _reduce_axes(const_context, builder, builder.add_reduce_l2, op)
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def reduce_log_sum(const_context, builder, op):
     _reduce_axes(const_context, builder, builder.add_reduce_logsum, op)
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def reduce_log_sum_exp(const_context, builder, op):
     _reduce_axes(const_context, builder, builder.add_reduce_logsumexp, op)
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def reduce_max(const_context, builder, op):
     if not _try_convert_global_pool(const_context, builder, op, mode="max"):
         _reduce_axes(const_context, builder, builder.add_reduce_max, op)
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def reduce_mean(const_context, builder, op):
     if not _try_convert_global_pool(const_context, builder, op, mode="average"):
         _reduce_axes(const_context, builder, builder.add_reduce_mean, op)
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def reduce_min(const_context, builder, op):
     _reduce_axes(const_context, builder, builder.add_reduce_min, op)
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def reduce_prod(const_context, builder, op):
     _reduce_axes(const_context, builder, builder.add_reduce_prod, op)
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def reduce_sum(const_context, builder, op):
     _reduce_axes(const_context, builder, builder.add_reduce_sum, op)
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def reduce_sum_square(const_context, builder, op):
     _reduce_axes(const_context, builder, builder.add_reduce_sumsquare, op)
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def reverse(const_context, builder, op):
     reverse_dim = [False] * op.x.rank
     if op.axes is None:
@@ -1646,7 +1636,7 @@ def reverse(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def reverse_sequence(const_context, builder, op):
     builder.add_reverse_sequence(
         name=op.name,
@@ -1657,7 +1647,7 @@ def reverse_sequence(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def rnn(const_context, builder, op):
     input_name = make_input(const_context, builder, op.x)  # [b, s, I]
     initial_h = make_input(const_context, builder, op.initial_h)  # [b, H]
@@ -1724,7 +1714,7 @@ def rnn(const_context, builder, op):
     _squeeze(builder, op.outputs[1].name, output_names[1], [0, 3, 4])
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def select(const_context, builder, op):
     builder.add_where_broadcastable(
         name=op.name,
@@ -1733,7 +1723,7 @@ def select(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def space_to_depth(const_context, builder, op):
     builder.add_reorganize_data(
         name=op.name,
@@ -1744,7 +1734,7 @@ def space_to_depth(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def transpose(const_context, builder, op):
     builder.add_transpose(
         name=op.name,
@@ -1754,7 +1744,7 @@ def transpose(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def gather(const_context, builder, op):
     is_embedding = False
 
@@ -1799,7 +1789,7 @@ def gather(const_context, builder, op):
         )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def scatter(const_context, builder, op):
     builder.add_scatter(
         name=op.name,
@@ -1812,7 +1802,7 @@ def scatter(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def gather_along_axis(const_context, builder, op):
     builder.add_gather_along_axis(
         name=op.name,
@@ -1822,7 +1812,7 @@ def gather_along_axis(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def scatter_along_axis(const_context, builder, op):
     builder.add_scatter_along_axis(
         name=op.name,
@@ -1835,7 +1825,7 @@ def scatter_along_axis(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def gather_nd(const_context, builder, op):
     builder.add_gather_nd(
         name=op.name,
@@ -1844,7 +1834,7 @@ def gather_nd(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def scatter_nd(const_context, builder, op):
     builder.add_scatter_nd(
         name=op.name,
@@ -1854,7 +1844,7 @@ def scatter_nd(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def tile(const_context, builder, op):
     inputs = [make_input(const_context, builder, op.x)]
     if op.reps.val is None:
@@ -1867,7 +1857,7 @@ def tile(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def tanh(const_context, builder, op):
     builder.add_activation(
         name=op.name,
@@ -1877,7 +1867,7 @@ def tanh(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def scaled_tanh(const_context, builder, op):
     builder.add_activation(
         name=op.name,
@@ -1888,7 +1878,7 @@ def scaled_tanh(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def sigmoid(const_context, builder, op):
     builder.add_activation(
         name=op.name,
@@ -1898,7 +1888,7 @@ def sigmoid(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def sigmoid_hard(const_context, builder, op):
     builder.add_activation(
         name=op.name,
@@ -1909,7 +1899,7 @@ def sigmoid_hard(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def erf(const_context, builder, op):
     builder.add_erf(
         name=op.name,
@@ -1918,7 +1908,7 @@ def erf(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def thresholded_relu(const_context, builder, op):
     builder.add_activation(
         name=op.name,
@@ -1929,7 +1919,7 @@ def thresholded_relu(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def elu(const_context, builder, op):
     builder.add_activation(
         name=op.name,
@@ -1940,7 +1930,7 @@ def elu(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def leaky_relu(const_context, builder, op):
     builder.add_activation(
         name=op.name,
@@ -1951,7 +1941,7 @@ def leaky_relu(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def gelu(const_context, builder, op):
     builder.add_gelu(
         name=op.name,
@@ -1961,7 +1951,7 @@ def gelu(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def softplus(const_context, builder, op):
     builder.add_activation(
         name=op.name,
@@ -1971,7 +1961,7 @@ def softplus(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def softmax(const_context, builder, op):
     rank = op.logit.rank
     if op.axis.val == -3 or op.axis.val > 0 and op.axis.val == rank - 3:
@@ -1987,7 +1977,7 @@ def softmax(const_context, builder, op):
         )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def softplus_parametric(const_context, builder, op):
     builder.add_activation(
         name=op.name,
@@ -2000,7 +1990,7 @@ def softplus_parametric(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def softsign(const_context, builder, op):
     builder.add_activation(
         name=op.name,
@@ -2010,7 +2000,7 @@ def softsign(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def linear_activation(const_context, builder, op):
     builder.add_activation(
         name=op.name,
@@ -2021,7 +2011,7 @@ def linear_activation(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def relu(const_context, builder, op):
     builder.add_activation(
         name=op.name,
@@ -2031,7 +2021,7 @@ def relu(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def clamped_relu(const_context, builder, op):
     builder.add_clamped_relu(
         name=op.name,
@@ -2042,7 +2032,7 @@ def clamped_relu(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def relu6(const_context, builder, op):
     builder.add_activation(
         name=op.name + "__relu6_relu__",
@@ -2073,7 +2063,7 @@ def relu6(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def prelu(const_context, builder, op):
     builder.add_activation(
         name=op.name,
@@ -2086,7 +2076,7 @@ def prelu(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def pad(const_context, builder, op):
     pad = op.pad.val
     mode = op.mode.val
@@ -2129,7 +2119,7 @@ def pad(const_context, builder, op):
         raise ValueError("Unsupported mode for Pad layer! {}".format(mode))
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def instance_norm(const_context, builder, op):
     channels = op.x.shape[1]
     gamma = _np.array([1.0] * channels) if op.gamma is None else op.gamma.val
@@ -2147,7 +2137,7 @@ def instance_norm(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def l2_norm(const_context, builder, op):
     builder.add_l2_normalize(
         name=op.name,
@@ -2157,7 +2147,7 @@ def l2_norm(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def layer_norm(const_context, builder, op):
     input_shape_full = list(op.x.shape)
     input_shape = [-1 if is_symbolic(s) else s for s in input_shape_full]
@@ -2216,7 +2206,7 @@ def layer_norm(const_context, builder, op):
         )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def local_response_norm(const_context, builder, op):
     builder.add_lrn(
         name=op.name,
@@ -2229,7 +2219,7 @@ def local_response_norm(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def conv_transpose(const_context, builder, op):
     x_name = make_input(const_context, builder, op.x)
     out_name = op.outputs[0].name
@@ -2356,7 +2346,7 @@ def conv_transpose(const_context, builder, op):
             )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def range_1d(const_context, builder, op):
     if op.start.val is not None and op.step.val is not None:
         inputs = [op.end]
@@ -2376,7 +2366,7 @@ def range_1d(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def one_hot(const_context, builder, op):
     if op.one_hot_vector_size.val is not None:
         inputs = [op.indices]
@@ -2394,7 +2384,7 @@ def one_hot(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def non_maximum_suppression(const_context, builder, op):
     builder.add_nms(
         name=op.name,
@@ -2407,7 +2397,7 @@ def non_maximum_suppression(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def flatten(const_context, builder, op):
     builder.add_flatten_to_2d(
         name=op.name,
@@ -2417,7 +2407,7 @@ def flatten(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def shape(const_context, builder, op):
     builder.add_get_shape(
         name=op.name,
@@ -2426,7 +2416,7 @@ def shape(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def upsample_nearest_neighbor(const_context, builder, op):
     builder.add_upsample(
         name=op.name,
@@ -2438,7 +2428,7 @@ def upsample_nearest_neighbor(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def upsample_bilinear(const_context, builder, op):
     if op.align_corners.val:
         builder.add_upsample(
@@ -2462,7 +2452,7 @@ def upsample_bilinear(const_context, builder, op):
         )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def resize_bilinear(const_context, builder, op):
     grid_sampling_mode_map = {}
     grid_sampling_mode_map["STRICT_ALIGN_CORNERS"] = "STRICT_ALIGN_ENDPOINTS_MODE"
@@ -2480,7 +2470,7 @@ def resize_bilinear(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def cond(const_context, builder, op):
     true_block = op.blocks[0]
     false_block = op.blocks[1]
@@ -2522,7 +2512,7 @@ def cond(const_context, builder, op):
         )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def while_loop(const_context, builder, op):
     block = op.blocks[0]
 
@@ -2586,7 +2576,7 @@ def while_loop(const_context, builder, op):
         )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def identity(const_context, builder, op):
     builder.add_copy(
         name=op.name,
@@ -2595,7 +2585,7 @@ def identity(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def concat(const_context, builder, op):
     rank = op.values[0].rank
     input_names = make_input(const_context, builder, op.values)
@@ -2616,7 +2606,7 @@ def concat(const_context, builder, op):
         )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def stack(const_context, builder, op):
     builder.add_stack(
         name=op.name,
@@ -2626,7 +2616,7 @@ def stack(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def split(const_context, builder, op):
     split_sizes = None
     if op.split_sizes is not None:
@@ -2643,7 +2633,7 @@ def split(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def argsort(const_context, builder, op):
     axis = op.x.rank + op.axis.val if op.axis.val < 0 else op.axis.val
     builder.add_argsort(
@@ -2655,7 +2645,7 @@ def argsort(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def pixel_shuffle(const_context, builder, op):
     builder.add_reorganize_data(
         name=op.name,
@@ -2666,7 +2656,7 @@ def pixel_shuffle(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def sliding_windows(const_context, builder, op):
     builder.add_sliding_windows(
         name=op.name,
@@ -2678,7 +2668,7 @@ def sliding_windows(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def crop(const_context, builder, op):
     builder.add_crop(
         name=op.name,
@@ -2692,7 +2682,7 @@ def crop(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def crop_resize(const_context, builder, op):
     grid_sampling_mode_map = {
         "STRICT_ALIGN_CORNERS": "STRICT_ALIGN_ENDPOINTS_MODE",
@@ -2723,7 +2713,7 @@ def crop_resize(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def custom_op(const_context, builder, op):
     class_name = op.bindings.get("class_name", op.name)
     input_order = op.bindings.get("input_order", [])
@@ -2777,7 +2767,7 @@ def custom_op(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def make_list(const_context, builder, op):
     # op.elem_shape is technically optional but ssa passes ensures it's
     # always there
@@ -2919,7 +2909,7 @@ def _realloc_list(const_context, builder, ls_var, index_var):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def list_write(const_context, builder, op):
     _realloc_list(const_context, builder, op.ls, op.index)
 
@@ -2941,7 +2931,7 @@ def list_write(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def list_gather(const_context, builder, op):
     builder.add_gather(
         name=op.name,
@@ -2951,7 +2941,7 @@ def list_gather(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def list_scatter(const_context, builder, op):
     max_idx_name = op.indices.name + "_max"
     builder.add_reduce_max(
@@ -2971,7 +2961,7 @@ def list_scatter(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def list_read(const_context, builder, op):
     # gathered_name has shape [1] + elem_shape
     gathered_name = op.name + "_gathered"
@@ -2992,7 +2982,7 @@ def list_read(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def list_length(const_context, builder, op):
     # list_shape_name == [list_length] + elem_shape
     list_shape_name = op.ls.name + "_shape"
@@ -3015,7 +3005,7 @@ def list_length(const_context, builder, op):
     )
 
 
-@register_v2_op
+@register_mil_to_nn_mapping
 def isfinite(const_context, builder, op):
     int_max = _np.iinfo(_np.int64).max
     int_min = -_np.iinfo(_np.int64).max - 1
