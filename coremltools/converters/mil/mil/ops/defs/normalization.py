@@ -9,7 +9,7 @@ from ._op_reqs import *
 class batch_norm(Operation):
     """
     Normalizes input tensor ``x`` by ``mean`` and ``variance``, and optionally applies a scale ``gamma`` and offset ``beta``.
-    ``mean``, ``variance``, ``gamma``, ``beta`` must be 1D tensors with length equal to the second axis (“depth” or “channel” dimension) of ``x``.
+    ``mean``, ``variance``, ``gamma``, ``beta`` must be 1D tensors with length equal to the second axis ("depth" or "channel" dimension) of ``x``.
 
     Parameters
     ----------
