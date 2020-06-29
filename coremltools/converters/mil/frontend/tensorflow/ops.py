@@ -287,8 +287,7 @@ def BatchToSpaceND(context, node):
         end = [resize_batch_size[0]]
         for i in range(spatial_rank):
             end.append(mb.sub(x=spatial_dims[i], y=crops[i][1]))
-        for i in range(spatial_rank + 1, rank):
-            end += remain_dims
+        end += remain_dims
         end = mb.concat(values=end, axis=0)
         x = mb.slice_by_index(x=reshape_permuted, begin=begin, end=end, name=node.name)
     else:

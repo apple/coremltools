@@ -3557,10 +3557,6 @@ class TestFill:
 
 
 class TestNonMaximumSuppression:
-    # TODO (rdar://60390856) TF may output fewer than max_boxes, but
-    # current TF frontend will always output max_boxes. Need to apply
-    # slice.
-    @pytest.mark.xfail
     @pytest.mark.parametrize(
         ",".join(
             [
