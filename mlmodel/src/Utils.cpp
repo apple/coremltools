@@ -554,7 +554,7 @@ bool CoreML::hasScenePrint(const Specification::Model& model) {
 }
 
 bool CoreML::hasObjectPrint(const Specification::Model& model) {
-    return (hasAppleImageFeatureExtractor(model) && model.visionfeatureprint().has_object());
+    return (hasAppleImageFeatureExtractor(model) && model.visionfeatureprint().has_objects());
 }
 
 bool CoreML::hasNonmaxSuppression(const Specification::Model& model) {

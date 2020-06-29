@@ -46,14 +46,14 @@ namespace CoreML {
                     }
                 }
                 break;
-            case Specification::CoreMLModels::VisionFeaturePrint::kObject:
-                if (visionFeaturePrint.object().version() == Specification::CoreMLModels::VisionFeaturePrint_Object_ObjectVersion_OBJECT_VERSION_INVALID) {
-                    return Result(ResultType::INVALID_MODEL_PARAMETERS, "Version for object is invalid");
+            case Specification::CoreMLModels::VisionFeaturePrint::kObjects:
+                if (visionFeaturePrint.objects().version() == Specification::CoreMLModels::VisionFeaturePrint_Objects_ObjectsVersion_OBJECTS_VERSION_INVALID) {
+                    return Result(ResultType::INVALID_MODEL_PARAMETERS, "Version for objects is invalid");
                 }
-                if (visionFeaturePrint.object().version() == Specification::CoreMLModels::VisionFeaturePrint_Object_ObjectVersion_OBJECT_VERSION_1) {
+                if (visionFeaturePrint.objects().version() == Specification::CoreMLModels::VisionFeaturePrint_Objects_ObjectsVersion_OBJECTS_VERSION_1) {
 
-                    if (visionFeaturePrint.object().output_size() != 2) {
-                        return Result(ResultType::INVALID_MODEL_PARAMETERS, "Two outputs for object need to be provided");
+                    if (visionFeaturePrint.objects().output_size() != 2) {
+                        return Result(ResultType::INVALID_MODEL_PARAMETERS, "Two outputs for objects need to be provided");
                     }
 
                     // validate the outputs: only two outputs with multiarray type is allowed for version 1
@@ -64,7 +64,7 @@ namespace CoreML {
                 }
                 for (auto modelOutputFeature : interface.output()) {
                     const std::string &modelOutputFeatureName = modelOutputFeature.name();
-                    const auto &visionFeaturePrintOutputNames = visionFeaturePrint.object().output();
+                    const auto &visionFeaturePrintOutputNames = visionFeaturePrint.objects().output();
                     if (find(visionFeaturePrintOutputNames.begin(), visionFeaturePrintOutputNames.end(), modelOutputFeatureName) == visionFeaturePrintOutputNames.end()) {
                         std::stringstream ss;
                         ss << "Model description declares an output: " << modelOutputFeatureName << " but it is not declared in Vision Feature Print output";

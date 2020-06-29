@@ -986,15 +986,15 @@ namespace CoreML {
                         return false;
                     }
                     break;
-                case CoreMLModels::VisionFeaturePrint::kObject:
-                    if (a.object().version() != b.object().version()) {
+                case CoreMLModels::VisionFeaturePrint::kObjects:
+                    if (a.objects().version() != b.objects().version()) {
                         return false;
                     }
-                    if (a.object().output_size() != b.object().output_size()) {
+                    if (a.objects().output_size() != b.objects().output_size()) {
                         return false;
                     }
-                    for (int i = 0; i < a.object().output_size(); i++) {
-                        if (a.object().output(i) != b.object().output(i)) {
+                    for (int i = 0; i < a.objects().output_size(); i++) {
+                        if (a.objects().output(i) != b.objects().output(i)) {
                             return false;
                         }
                     }

@@ -36,9 +36,9 @@ namespace CoreMLModels {
 class VisionFeaturePrint;
 class VisionFeaturePrintDefaultTypeInternal;
 extern VisionFeaturePrintDefaultTypeInternal _VisionFeaturePrint_default_instance_;
-class VisionFeaturePrint_Object;
-class VisionFeaturePrint_ObjectDefaultTypeInternal;
-extern VisionFeaturePrint_ObjectDefaultTypeInternal _VisionFeaturePrint_Object_default_instance_;
+class VisionFeaturePrint_Objects;
+class VisionFeaturePrint_ObjectsDefaultTypeInternal;
+extern VisionFeaturePrint_ObjectsDefaultTypeInternal _VisionFeaturePrint_Objects_default_instance_;
 class VisionFeaturePrint_Scene;
 class VisionFeaturePrint_SceneDefaultTypeInternal;
 extern VisionFeaturePrint_SceneDefaultTypeInternal _VisionFeaturePrint_Scene_default_instance_;
@@ -75,16 +75,16 @@ const VisionFeaturePrint_Scene_SceneVersion VisionFeaturePrint_Scene_SceneVersio
 const VisionFeaturePrint_Scene_SceneVersion VisionFeaturePrint_Scene_SceneVersion_SceneVersion_MAX = VisionFeaturePrint_Scene_SceneVersion_SCENE_VERSION_1;
 const int VisionFeaturePrint_Scene_SceneVersion_SceneVersion_ARRAYSIZE = VisionFeaturePrint_Scene_SceneVersion_SceneVersion_MAX + 1;
 
-enum VisionFeaturePrint_Object_ObjectVersion {
-  VisionFeaturePrint_Object_ObjectVersion_OBJECT_VERSION_INVALID = 0,
-  VisionFeaturePrint_Object_ObjectVersion_OBJECT_VERSION_1 = 1,
-  VisionFeaturePrint_Object_ObjectVersion_VisionFeaturePrint_Object_ObjectVersion_INT_MIN_SENTINEL_DO_NOT_USE_ = ::google::protobuf::kint32min,
-  VisionFeaturePrint_Object_ObjectVersion_VisionFeaturePrint_Object_ObjectVersion_INT_MAX_SENTINEL_DO_NOT_USE_ = ::google::protobuf::kint32max
+enum VisionFeaturePrint_Objects_ObjectsVersion {
+  VisionFeaturePrint_Objects_ObjectsVersion_OBJECTS_VERSION_INVALID = 0,
+  VisionFeaturePrint_Objects_ObjectsVersion_OBJECTS_VERSION_1 = 1,
+  VisionFeaturePrint_Objects_ObjectsVersion_VisionFeaturePrint_Objects_ObjectsVersion_INT_MIN_SENTINEL_DO_NOT_USE_ = ::google::protobuf::kint32min,
+  VisionFeaturePrint_Objects_ObjectsVersion_VisionFeaturePrint_Objects_ObjectsVersion_INT_MAX_SENTINEL_DO_NOT_USE_ = ::google::protobuf::kint32max
 };
-bool VisionFeaturePrint_Object_ObjectVersion_IsValid(int value);
-const VisionFeaturePrint_Object_ObjectVersion VisionFeaturePrint_Object_ObjectVersion_ObjectVersion_MIN = VisionFeaturePrint_Object_ObjectVersion_OBJECT_VERSION_INVALID;
-const VisionFeaturePrint_Object_ObjectVersion VisionFeaturePrint_Object_ObjectVersion_ObjectVersion_MAX = VisionFeaturePrint_Object_ObjectVersion_OBJECT_VERSION_1;
-const int VisionFeaturePrint_Object_ObjectVersion_ObjectVersion_ARRAYSIZE = VisionFeaturePrint_Object_ObjectVersion_ObjectVersion_MAX + 1;
+bool VisionFeaturePrint_Objects_ObjectsVersion_IsValid(int value);
+const VisionFeaturePrint_Objects_ObjectsVersion VisionFeaturePrint_Objects_ObjectsVersion_ObjectsVersion_MIN = VisionFeaturePrint_Objects_ObjectsVersion_OBJECTS_VERSION_INVALID;
+const VisionFeaturePrint_Objects_ObjectsVersion VisionFeaturePrint_Objects_ObjectsVersion_ObjectsVersion_MAX = VisionFeaturePrint_Objects_ObjectsVersion_OBJECTS_VERSION_1;
+const int VisionFeaturePrint_Objects_ObjectsVersion_ObjectsVersion_ARRAYSIZE = VisionFeaturePrint_Objects_ObjectsVersion_ObjectsVersion_MAX + 1;
 
 // ===================================================================
 
@@ -181,38 +181,38 @@ class VisionFeaturePrint_Scene : public ::google::protobuf::MessageLite /* @@pro
 };
 // -------------------------------------------------------------------
 
-class VisionFeaturePrint_Object : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:CoreML.Specification.CoreMLModels.VisionFeaturePrint.Object) */ {
+class VisionFeaturePrint_Objects : public ::google::protobuf::MessageLite /* @@protoc_insertion_point(class_definition:CoreML.Specification.CoreMLModels.VisionFeaturePrint.Objects) */ {
  public:
-  VisionFeaturePrint_Object();
-  virtual ~VisionFeaturePrint_Object();
+  VisionFeaturePrint_Objects();
+  virtual ~VisionFeaturePrint_Objects();
 
-  VisionFeaturePrint_Object(const VisionFeaturePrint_Object& from);
+  VisionFeaturePrint_Objects(const VisionFeaturePrint_Objects& from);
 
-  inline VisionFeaturePrint_Object& operator=(const VisionFeaturePrint_Object& from) {
+  inline VisionFeaturePrint_Objects& operator=(const VisionFeaturePrint_Objects& from) {
     CopyFrom(from);
     return *this;
   }
 
-  static const VisionFeaturePrint_Object& default_instance();
+  static const VisionFeaturePrint_Objects& default_instance();
 
-  static inline const VisionFeaturePrint_Object* internal_default_instance() {
-    return reinterpret_cast<const VisionFeaturePrint_Object*>(
-               &_VisionFeaturePrint_Object_default_instance_);
+  static inline const VisionFeaturePrint_Objects* internal_default_instance() {
+    return reinterpret_cast<const VisionFeaturePrint_Objects*>(
+               &_VisionFeaturePrint_Objects_default_instance_);
   }
   static PROTOBUF_CONSTEXPR int const kIndexInFileMessages =
     1;
 
-  void Swap(VisionFeaturePrint_Object* other);
+  void Swap(VisionFeaturePrint_Objects* other);
 
   // implements Message ----------------------------------------------
 
-  inline VisionFeaturePrint_Object* New() const PROTOBUF_FINAL { return New(NULL); }
+  inline VisionFeaturePrint_Objects* New() const PROTOBUF_FINAL { return New(NULL); }
 
-  VisionFeaturePrint_Object* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
+  VisionFeaturePrint_Objects* New(::google::protobuf::Arena* arena) const PROTOBUF_FINAL;
   void CheckTypeAndMergeFrom(const ::google::protobuf::MessageLite& from)
     PROTOBUF_FINAL;
-  void CopyFrom(const VisionFeaturePrint_Object& from);
-  void MergeFrom(const VisionFeaturePrint_Object& from);
+  void CopyFrom(const VisionFeaturePrint_Objects& from);
+  void MergeFrom(const VisionFeaturePrint_Objects& from);
   void Clear() PROTOBUF_FINAL;
   bool IsInitialized() const PROTOBUF_FINAL;
 
@@ -227,7 +227,7 @@ class VisionFeaturePrint_Object : public ::google::protobuf::MessageLite /* @@pr
   void SharedCtor();
   void SharedDtor();
   void SetCachedSize(int size) const;
-  void InternalSwap(VisionFeaturePrint_Object* other);
+  void InternalSwap(VisionFeaturePrint_Objects* other);
   private:
   inline ::google::protobuf::Arena* GetArenaNoVirtual() const {
     return NULL;
@@ -241,20 +241,20 @@ class VisionFeaturePrint_Object : public ::google::protobuf::MessageLite /* @@pr
 
   // nested types ----------------------------------------------------
 
-  typedef VisionFeaturePrint_Object_ObjectVersion ObjectVersion;
-  static const ObjectVersion OBJECT_VERSION_INVALID =
-    VisionFeaturePrint_Object_ObjectVersion_OBJECT_VERSION_INVALID;
-  static const ObjectVersion OBJECT_VERSION_1 =
-    VisionFeaturePrint_Object_ObjectVersion_OBJECT_VERSION_1;
-  static inline bool ObjectVersion_IsValid(int value) {
-    return VisionFeaturePrint_Object_ObjectVersion_IsValid(value);
+  typedef VisionFeaturePrint_Objects_ObjectsVersion ObjectsVersion;
+  static const ObjectsVersion OBJECTS_VERSION_INVALID =
+    VisionFeaturePrint_Objects_ObjectsVersion_OBJECTS_VERSION_INVALID;
+  static const ObjectsVersion OBJECTS_VERSION_1 =
+    VisionFeaturePrint_Objects_ObjectsVersion_OBJECTS_VERSION_1;
+  static inline bool ObjectsVersion_IsValid(int value) {
+    return VisionFeaturePrint_Objects_ObjectsVersion_IsValid(value);
   }
-  static const ObjectVersion ObjectVersion_MIN =
-    VisionFeaturePrint_Object_ObjectVersion_ObjectVersion_MIN;
-  static const ObjectVersion ObjectVersion_MAX =
-    VisionFeaturePrint_Object_ObjectVersion_ObjectVersion_MAX;
-  static const int ObjectVersion_ARRAYSIZE =
-    VisionFeaturePrint_Object_ObjectVersion_ObjectVersion_ARRAYSIZE;
+  static const ObjectsVersion ObjectsVersion_MIN =
+    VisionFeaturePrint_Objects_ObjectsVersion_ObjectsVersion_MIN;
+  static const ObjectsVersion ObjectsVersion_MAX =
+    VisionFeaturePrint_Objects_ObjectsVersion_ObjectsVersion_MAX;
+  static const int ObjectsVersion_ARRAYSIZE =
+    VisionFeaturePrint_Objects_ObjectsVersion_ObjectsVersion_ARRAYSIZE;
 
   // accessors -------------------------------------------------------
 
@@ -280,13 +280,13 @@ class VisionFeaturePrint_Object : public ::google::protobuf::MessageLite /* @@pr
   const ::google::protobuf::RepeatedPtrField< ::std::string>& output() const;
   ::google::protobuf::RepeatedPtrField< ::std::string>* mutable_output();
 
-  // .CoreML.Specification.CoreMLModels.VisionFeaturePrint.Object.ObjectVersion version = 1;
+  // .CoreML.Specification.CoreMLModels.VisionFeaturePrint.Objects.ObjectsVersion version = 1;
   void clear_version();
   static const int kVersionFieldNumber = 1;
-  ::CoreML::Specification::CoreMLModels::VisionFeaturePrint_Object_ObjectVersion version() const;
-  void set_version(::CoreML::Specification::CoreMLModels::VisionFeaturePrint_Object_ObjectVersion value);
+  ::CoreML::Specification::CoreMLModels::VisionFeaturePrint_Objects_ObjectsVersion version() const;
+  void set_version(::CoreML::Specification::CoreMLModels::VisionFeaturePrint_Objects_ObjectsVersion value);
 
-  // @@protoc_insertion_point(class_scope:CoreML.Specification.CoreMLModels.VisionFeaturePrint.Object)
+  // @@protoc_insertion_point(class_scope:CoreML.Specification.CoreMLModels.VisionFeaturePrint.Objects)
  private:
 
   ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
@@ -313,7 +313,7 @@ class VisionFeaturePrint : public ::google::protobuf::MessageLite /* @@protoc_in
 
   enum VisionFeaturePrintTypeCase {
     kScene = 20,
-    kObject = 21,
+    kObjects = 21,
     VISIONFEATUREPRINTTYPE_NOT_SET = 0,
   };
 
@@ -364,7 +364,7 @@ class VisionFeaturePrint : public ::google::protobuf::MessageLite /* @@protoc_in
   // nested types ----------------------------------------------------
 
   typedef VisionFeaturePrint_Scene Scene;
-  typedef VisionFeaturePrint_Object Object;
+  typedef VisionFeaturePrint_Objects Objects;
 
   // accessors -------------------------------------------------------
 
@@ -377,20 +377,20 @@ class VisionFeaturePrint : public ::google::protobuf::MessageLite /* @@protoc_in
   ::CoreML::Specification::CoreMLModels::VisionFeaturePrint_Scene* release_scene();
   void set_allocated_scene(::CoreML::Specification::CoreMLModels::VisionFeaturePrint_Scene* scene);
 
-  // .CoreML.Specification.CoreMLModels.VisionFeaturePrint.Object object = 21;
-  bool has_object() const;
-  void clear_object();
-  static const int kObjectFieldNumber = 21;
-  const ::CoreML::Specification::CoreMLModels::VisionFeaturePrint_Object& object() const;
-  ::CoreML::Specification::CoreMLModels::VisionFeaturePrint_Object* mutable_object();
-  ::CoreML::Specification::CoreMLModels::VisionFeaturePrint_Object* release_object();
-  void set_allocated_object(::CoreML::Specification::CoreMLModels::VisionFeaturePrint_Object* object);
+  // .CoreML.Specification.CoreMLModels.VisionFeaturePrint.Objects objects = 21;
+  bool has_objects() const;
+  void clear_objects();
+  static const int kObjectsFieldNumber = 21;
+  const ::CoreML::Specification::CoreMLModels::VisionFeaturePrint_Objects& objects() const;
+  ::CoreML::Specification::CoreMLModels::VisionFeaturePrint_Objects* mutable_objects();
+  ::CoreML::Specification::CoreMLModels::VisionFeaturePrint_Objects* release_objects();
+  void set_allocated_objects(::CoreML::Specification::CoreMLModels::VisionFeaturePrint_Objects* objects);
 
   VisionFeaturePrintTypeCase VisionFeaturePrintType_case() const;
   // @@protoc_insertion_point(class_scope:CoreML.Specification.CoreMLModels.VisionFeaturePrint)
  private:
   void set_has_scene();
-  void set_has_object();
+  void set_has_objects();
 
   inline bool has_VisionFeaturePrintType() const;
   void clear_VisionFeaturePrintType();
@@ -400,7 +400,7 @@ class VisionFeaturePrint : public ::google::protobuf::MessageLite /* @@protoc_in
   union VisionFeaturePrintTypeUnion {
     VisionFeaturePrintTypeUnion() {}
     ::CoreML::Specification::CoreMLModels::VisionFeaturePrint_Scene* scene_;
-    ::CoreML::Specification::CoreMLModels::VisionFeaturePrint_Object* object_;
+    ::CoreML::Specification::CoreMLModels::VisionFeaturePrint_Objects* objects_;
   } VisionFeaturePrintType_;
   mutable int _cached_size_;
   ::google::protobuf::uint32 _oneof_case_[1];
@@ -431,88 +431,88 @@ inline void VisionFeaturePrint_Scene::set_version(::CoreML::Specification::CoreM
 
 // -------------------------------------------------------------------
 
-// VisionFeaturePrint_Object
+// VisionFeaturePrint_Objects
 
-// .CoreML.Specification.CoreMLModels.VisionFeaturePrint.Object.ObjectVersion version = 1;
-inline void VisionFeaturePrint_Object::clear_version() {
+// .CoreML.Specification.CoreMLModels.VisionFeaturePrint.Objects.ObjectsVersion version = 1;
+inline void VisionFeaturePrint_Objects::clear_version() {
   version_ = 0;
 }
-inline ::CoreML::Specification::CoreMLModels::VisionFeaturePrint_Object_ObjectVersion VisionFeaturePrint_Object::version() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.CoreMLModels.VisionFeaturePrint.Object.version)
-  return static_cast< ::CoreML::Specification::CoreMLModels::VisionFeaturePrint_Object_ObjectVersion >(version_);
+inline ::CoreML::Specification::CoreMLModels::VisionFeaturePrint_Objects_ObjectsVersion VisionFeaturePrint_Objects::version() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.CoreMLModels.VisionFeaturePrint.Objects.version)
+  return static_cast< ::CoreML::Specification::CoreMLModels::VisionFeaturePrint_Objects_ObjectsVersion >(version_);
 }
-inline void VisionFeaturePrint_Object::set_version(::CoreML::Specification::CoreMLModels::VisionFeaturePrint_Object_ObjectVersion value) {
+inline void VisionFeaturePrint_Objects::set_version(::CoreML::Specification::CoreMLModels::VisionFeaturePrint_Objects_ObjectsVersion value) {
   
   version_ = value;
-  // @@protoc_insertion_point(field_set:CoreML.Specification.CoreMLModels.VisionFeaturePrint.Object.version)
+  // @@protoc_insertion_point(field_set:CoreML.Specification.CoreMLModels.VisionFeaturePrint.Objects.version)
 }
 
 // repeated string output = 100;
-inline int VisionFeaturePrint_Object::output_size() const {
+inline int VisionFeaturePrint_Objects::output_size() const {
   return output_.size();
 }
-inline void VisionFeaturePrint_Object::clear_output() {
+inline void VisionFeaturePrint_Objects::clear_output() {
   output_.Clear();
 }
-inline const ::std::string& VisionFeaturePrint_Object::output(int index) const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.CoreMLModels.VisionFeaturePrint.Object.output)
+inline const ::std::string& VisionFeaturePrint_Objects::output(int index) const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.CoreMLModels.VisionFeaturePrint.Objects.output)
   return output_.Get(index);
 }
-inline ::std::string* VisionFeaturePrint_Object::mutable_output(int index) {
-  // @@protoc_insertion_point(field_mutable:CoreML.Specification.CoreMLModels.VisionFeaturePrint.Object.output)
+inline ::std::string* VisionFeaturePrint_Objects::mutable_output(int index) {
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.CoreMLModels.VisionFeaturePrint.Objects.output)
   return output_.Mutable(index);
 }
-inline void VisionFeaturePrint_Object::set_output(int index, const ::std::string& value) {
-  // @@protoc_insertion_point(field_set:CoreML.Specification.CoreMLModels.VisionFeaturePrint.Object.output)
+inline void VisionFeaturePrint_Objects::set_output(int index, const ::std::string& value) {
+  // @@protoc_insertion_point(field_set:CoreML.Specification.CoreMLModels.VisionFeaturePrint.Objects.output)
   output_.Mutable(index)->assign(value);
 }
 #if LANG_CXX11
-inline void VisionFeaturePrint_Object::set_output(int index, ::std::string&& value) {
-  // @@protoc_insertion_point(field_set:CoreML.Specification.CoreMLModels.VisionFeaturePrint.Object.output)
+inline void VisionFeaturePrint_Objects::set_output(int index, ::std::string&& value) {
+  // @@protoc_insertion_point(field_set:CoreML.Specification.CoreMLModels.VisionFeaturePrint.Objects.output)
   output_.Mutable(index)->assign(std::move(value));
 }
 #endif
-inline void VisionFeaturePrint_Object::set_output(int index, const char* value) {
+inline void VisionFeaturePrint_Objects::set_output(int index, const char* value) {
   GOOGLE_DCHECK(value != NULL);
   output_.Mutable(index)->assign(value);
-  // @@protoc_insertion_point(field_set_char:CoreML.Specification.CoreMLModels.VisionFeaturePrint.Object.output)
+  // @@protoc_insertion_point(field_set_char:CoreML.Specification.CoreMLModels.VisionFeaturePrint.Objects.output)
 }
-inline void VisionFeaturePrint_Object::set_output(int index, const char* value, size_t size) {
+inline void VisionFeaturePrint_Objects::set_output(int index, const char* value, size_t size) {
   output_.Mutable(index)->assign(
     reinterpret_cast<const char*>(value), size);
-  // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.CoreMLModels.VisionFeaturePrint.Object.output)
+  // @@protoc_insertion_point(field_set_pointer:CoreML.Specification.CoreMLModels.VisionFeaturePrint.Objects.output)
 }
-inline ::std::string* VisionFeaturePrint_Object::add_output() {
-  // @@protoc_insertion_point(field_add_mutable:CoreML.Specification.CoreMLModels.VisionFeaturePrint.Object.output)
+inline ::std::string* VisionFeaturePrint_Objects::add_output() {
+  // @@protoc_insertion_point(field_add_mutable:CoreML.Specification.CoreMLModels.VisionFeaturePrint.Objects.output)
   return output_.Add();
 }
-inline void VisionFeaturePrint_Object::add_output(const ::std::string& value) {
+inline void VisionFeaturePrint_Objects::add_output(const ::std::string& value) {
   output_.Add()->assign(value);
-  // @@protoc_insertion_point(field_add:CoreML.Specification.CoreMLModels.VisionFeaturePrint.Object.output)
+  // @@protoc_insertion_point(field_add:CoreML.Specification.CoreMLModels.VisionFeaturePrint.Objects.output)
 }
 #if LANG_CXX11
-inline void VisionFeaturePrint_Object::add_output(::std::string&& value) {
+inline void VisionFeaturePrint_Objects::add_output(::std::string&& value) {
   output_.Add(std::move(value));
-  // @@protoc_insertion_point(field_add:CoreML.Specification.CoreMLModels.VisionFeaturePrint.Object.output)
+  // @@protoc_insertion_point(field_add:CoreML.Specification.CoreMLModels.VisionFeaturePrint.Objects.output)
 }
 #endif
-inline void VisionFeaturePrint_Object::add_output(const char* value) {
+inline void VisionFeaturePrint_Objects::add_output(const char* value) {
   GOOGLE_DCHECK(value != NULL);
   output_.Add()->assign(value);
-  // @@protoc_insertion_point(field_add_char:CoreML.Specification.CoreMLModels.VisionFeaturePrint.Object.output)
+  // @@protoc_insertion_point(field_add_char:CoreML.Specification.CoreMLModels.VisionFeaturePrint.Objects.output)
 }
-inline void VisionFeaturePrint_Object::add_output(const char* value, size_t size) {
+inline void VisionFeaturePrint_Objects::add_output(const char* value, size_t size) {
   output_.Add()->assign(reinterpret_cast<const char*>(value), size);
-  // @@protoc_insertion_point(field_add_pointer:CoreML.Specification.CoreMLModels.VisionFeaturePrint.Object.output)
+  // @@protoc_insertion_point(field_add_pointer:CoreML.Specification.CoreMLModels.VisionFeaturePrint.Objects.output)
 }
 inline const ::google::protobuf::RepeatedPtrField< ::std::string>&
-VisionFeaturePrint_Object::output() const {
-  // @@protoc_insertion_point(field_list:CoreML.Specification.CoreMLModels.VisionFeaturePrint.Object.output)
+VisionFeaturePrint_Objects::output() const {
+  // @@protoc_insertion_point(field_list:CoreML.Specification.CoreMLModels.VisionFeaturePrint.Objects.output)
   return output_;
 }
 inline ::google::protobuf::RepeatedPtrField< ::std::string>*
-VisionFeaturePrint_Object::mutable_output() {
-  // @@protoc_insertion_point(field_mutable_list:CoreML.Specification.CoreMLModels.VisionFeaturePrint.Object.output)
+VisionFeaturePrint_Objects::mutable_output() {
+  // @@protoc_insertion_point(field_mutable_list:CoreML.Specification.CoreMLModels.VisionFeaturePrint.Objects.output)
   return &output_;
 }
 
@@ -568,52 +568,52 @@ inline void VisionFeaturePrint::set_allocated_scene(::CoreML::Specification::Cor
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.CoreMLModels.VisionFeaturePrint.scene)
 }
 
-// .CoreML.Specification.CoreMLModels.VisionFeaturePrint.Object object = 21;
-inline bool VisionFeaturePrint::has_object() const {
-  return VisionFeaturePrintType_case() == kObject;
+// .CoreML.Specification.CoreMLModels.VisionFeaturePrint.Objects objects = 21;
+inline bool VisionFeaturePrint::has_objects() const {
+  return VisionFeaturePrintType_case() == kObjects;
 }
-inline void VisionFeaturePrint::set_has_object() {
-  _oneof_case_[0] = kObject;
+inline void VisionFeaturePrint::set_has_objects() {
+  _oneof_case_[0] = kObjects;
 }
-inline void VisionFeaturePrint::clear_object() {
-  if (has_object()) {
-    delete VisionFeaturePrintType_.object_;
+inline void VisionFeaturePrint::clear_objects() {
+  if (has_objects()) {
+    delete VisionFeaturePrintType_.objects_;
     clear_has_VisionFeaturePrintType();
   }
 }
-inline  const ::CoreML::Specification::CoreMLModels::VisionFeaturePrint_Object& VisionFeaturePrint::object() const {
-  // @@protoc_insertion_point(field_get:CoreML.Specification.CoreMLModels.VisionFeaturePrint.object)
-  return has_object()
-      ? *VisionFeaturePrintType_.object_
-      : ::CoreML::Specification::CoreMLModels::VisionFeaturePrint_Object::default_instance();
+inline  const ::CoreML::Specification::CoreMLModels::VisionFeaturePrint_Objects& VisionFeaturePrint::objects() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.CoreMLModels.VisionFeaturePrint.objects)
+  return has_objects()
+      ? *VisionFeaturePrintType_.objects_
+      : ::CoreML::Specification::CoreMLModels::VisionFeaturePrint_Objects::default_instance();
 }
-inline ::CoreML::Specification::CoreMLModels::VisionFeaturePrint_Object* VisionFeaturePrint::mutable_object() {
-  if (!has_object()) {
+inline ::CoreML::Specification::CoreMLModels::VisionFeaturePrint_Objects* VisionFeaturePrint::mutable_objects() {
+  if (!has_objects()) {
     clear_VisionFeaturePrintType();
-    set_has_object();
-    VisionFeaturePrintType_.object_ = new ::CoreML::Specification::CoreMLModels::VisionFeaturePrint_Object;
+    set_has_objects();
+    VisionFeaturePrintType_.objects_ = new ::CoreML::Specification::CoreMLModels::VisionFeaturePrint_Objects;
   }
-  // @@protoc_insertion_point(field_mutable:CoreML.Specification.CoreMLModels.VisionFeaturePrint.object)
-  return VisionFeaturePrintType_.object_;
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.CoreMLModels.VisionFeaturePrint.objects)
+  return VisionFeaturePrintType_.objects_;
 }
-inline ::CoreML::Specification::CoreMLModels::VisionFeaturePrint_Object* VisionFeaturePrint::release_object() {
-  // @@protoc_insertion_point(field_release:CoreML.Specification.CoreMLModels.VisionFeaturePrint.object)
-  if (has_object()) {
+inline ::CoreML::Specification::CoreMLModels::VisionFeaturePrint_Objects* VisionFeaturePrint::release_objects() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.CoreMLModels.VisionFeaturePrint.objects)
+  if (has_objects()) {
     clear_has_VisionFeaturePrintType();
-    ::CoreML::Specification::CoreMLModels::VisionFeaturePrint_Object* temp = VisionFeaturePrintType_.object_;
-    VisionFeaturePrintType_.object_ = NULL;
+    ::CoreML::Specification::CoreMLModels::VisionFeaturePrint_Objects* temp = VisionFeaturePrintType_.objects_;
+    VisionFeaturePrintType_.objects_ = NULL;
     return temp;
   } else {
     return NULL;
   }
 }
-inline void VisionFeaturePrint::set_allocated_object(::CoreML::Specification::CoreMLModels::VisionFeaturePrint_Object* object) {
+inline void VisionFeaturePrint::set_allocated_objects(::CoreML::Specification::CoreMLModels::VisionFeaturePrint_Objects* objects) {
   clear_VisionFeaturePrintType();
-  if (object) {
-    set_has_object();
-    VisionFeaturePrintType_.object_ = object;
+  if (objects) {
+    set_has_objects();
+    VisionFeaturePrintType_.objects_ = objects;
   }
-  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.CoreMLModels.VisionFeaturePrint.object)
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.CoreMLModels.VisionFeaturePrint.objects)
 }
 
 inline bool VisionFeaturePrint::has_VisionFeaturePrintType() const {
@@ -643,7 +643,7 @@ namespace google {
 namespace protobuf {
 
 template <> struct is_proto_enum< ::CoreML::Specification::CoreMLModels::VisionFeaturePrint_Scene_SceneVersion> : ::google::protobuf::internal::true_type {};
-template <> struct is_proto_enum< ::CoreML::Specification::CoreMLModels::VisionFeaturePrint_Object_ObjectVersion> : ::google::protobuf::internal::true_type {};
+template <> struct is_proto_enum< ::CoreML::Specification::CoreMLModels::VisionFeaturePrint_Objects_ObjectsVersion> : ::google::protobuf::internal::true_type {};
 
 }  // namespace protobuf
 }  // namespace google

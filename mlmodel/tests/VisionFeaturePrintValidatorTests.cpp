@@ -90,18 +90,18 @@ int testVisionFeatureObjectPrintBasic() {
     result = validate<MLModelType_visionFeaturePrint>(model);
     ML_ASSERT_BAD(result);
 
-    auto object = preprocessing->mutable_object();
+    auto objects = preprocessing->mutable_objects();
     result = validate<MLModelType_visionFeaturePrint>(model);
     ML_ASSERT_BAD(result);
 
-    object->set_version(Specification::CoreMLModels::VisionFeaturePrint_Object_ObjectVersion_OBJECT_VERSION_1);
+    objects->set_version(Specification::CoreMLModels::VisionFeaturePrint_Objects_ObjectsVersion_OBJECTS_VERSION_1);
     result = validate<MLModelType_visionFeaturePrint>(model);
     ML_ASSERT_BAD(result);
 
-    object->add_output("a");
+    objects->add_output("a");
     result = validate<MLModelType_visionFeaturePrint>(model);
     ML_ASSERT_BAD(result);
-    object->add_output("b");
+    objects->add_output("b");
     result = validate<MLModelType_visionFeaturePrint>(model);
     ML_ASSERT_GOOD(result);
 
