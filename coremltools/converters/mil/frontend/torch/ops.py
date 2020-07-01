@@ -279,13 +279,18 @@ def permute(context, node):
     perm = mb.transpose(x=inputs[0], perm=inputs[1], name=node.name)
     context.add(perm)
 
+@register_torch_op
+def pixel_shuffle(context, node):
+    inputs = _get_inputs(context, node, expected=2)
+    perm = mb.pixel_shuffle(x=inputs[0], upscale_factor=inputs[1], name=node.name)
+    context.add(perm)
+
 
 @register_torch_op
 def matmul(context, node):
     inputs = _get_inputs(context, node, expected=2)
     res = mb.matmul(x=inputs[0], y=inputs[1], name=node.name)
     context.add(res)
-
 
 @register_torch_op
 def add(context, node):

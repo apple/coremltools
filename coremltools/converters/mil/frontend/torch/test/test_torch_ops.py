@@ -420,7 +420,6 @@ class TestLSTM:
     @pytest.mark.parametrize(
         "input_size, hidden_size, num_layers, bias, batch_first, dropout, bidirectional, backend",
         [
-            (7, 3, 1, True, True, 0.3, True, list(backends)[0]),
             (7, 3, 2, True, True, 0.3, True, list(backends)[-1]),
             (7, 3, 2, False, False, 0.3, False, list(backends)[0]),
         ],
