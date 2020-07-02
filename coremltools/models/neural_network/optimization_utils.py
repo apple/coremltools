@@ -176,7 +176,11 @@ def _get_nn_mappings(layers):
 
 def _optimize_nn(layers):
     type_map, output_map, input_map = _get_nn_mappings(layers)
-    bn_layers = conv_layers = ip_layers = bias_layers = scale_layers = []
+    bn_layers = []
+    conv_layers = []
+    ip_layers = []
+    bias_layers = []
+    scale_layers = []
 
     # Only fuse with non-instance batchnorm layers
     if "batchnorm" in type_map.keys():
