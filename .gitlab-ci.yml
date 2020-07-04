@@ -11,7 +11,7 @@ stages:
 
 .build_linux: &build_linux
   tags:
-    - dockerized
+    - docker
   stage: build
   script:
     - bash -e scripts/make_wheel.sh --python=$PYTHON
@@ -22,23 +22,21 @@ stages:
 
 build_wheel_linux_py27:
   <<: *build_linux
-  image: docker.apple.com/turi/build-image-centos6-python2.7:1801
+  image: registry.gitlab.com/zach_nation/turicreate/build-image-centos-6:1.0.6
   variables:
-    PYTHON: /usr/local/bin/python
+    PYTHON: /usr/local/bin/python2.7
 
-# Uses Python 3.5 built from source (already on build image)
 build_wheel_linux_py35:
   <<: *build_linux
-  image: docker.apple.com/turi/build-image-centos6-python3.5:1801
+  image: registry.gitlab.com/zach_nation/turicreate/build-image-centos-6:1.0.6
   variables:
-    PYTHON: /usr/local/bin/python3
+    PYTHON: /usr/local/bin/python3.5
 
-# Uses Python 3.6 built from source (already on build image)
 build_wheel_linux_py36:
   <<: *build_linux
-  image: docker.apple.com/turi/build-image-centos6-python3.6:1801
+  image: registry.gitlab.com/zach_nation/turicreate/build-image-centos-6:1.0.6
   variables:
-    PYTHON: /usr/local/bin/python3
+    PYTHON: /usr/local/bin/python3.6
 
 build_wheel_linux_py37:
   <<: *build_linux
@@ -48,37 +46,37 @@ build_wheel_linux_py37:
 
 .test_linux: &test_linux
   tags:
-    - dockerized
+    - docker
   stage: test
   script:
     - bash -e scripts/test_wheel.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON} 
 
 test_wheel_linux_py27:
   <<: *test_linux
-  image: docker.apple.com/turi/build-image-centos7-python2.7:1801
+  image: registry.gitlab.com/zach_nation/turicreate/build-image-ubuntu-14.04:1.0.6
   dependencies:
     - build_wheel_linux_py27
   variables:
     WHEEL_PATH: build/dist/coremltools*cp27-none-manylinux1_x86_64.whl
-    PYTHON: /usr/local/bin/python
+    PYTHON: /usr/local/bin/python2.7
 
 test_wheel_linux_py35:
   <<: *test_linux
-  image: docker.apple.com/turi/build-image-centos7-python3.5:1801
+  image: registry.gitlab.com/zach_nation/turicreate/build-image-ubuntu-14.04:1.0.6
   dependencies:
     - build_wheel_linux_py35
   variables:
     WHEEL_PATH: build/dist/coremltools*cp35-none-manylinux1_x86_64.whl
-    PYTHON: /usr/local/bin/python3    
+    PYTHON: /usr/local/bin/python3.5
 
 test_wheel_linux_py36:
   <<: *test_linux
-  image: docker.apple.com/turi/build-image-centos7-python3.6:1801
+  image: registry.gitlab.com/zach_nation/turicreate/build-image-ubuntu-18.04:1.0.6
   dependencies:
     - build_wheel_linux_py36
   variables:
     WHEEL_PATH: build/dist/coremltools*cp36-none-manylinux1_x86_64.whl
-    PYTHON: /usr/local/bin/python3
+    PYTHON: /usr/local/bin/python3.6
 
 test_wheel_linux_py37:
   <<: *test_linux
@@ -202,9 +200,9 @@ test_wheel_macos_15_py37:
 #########################################################################
 build_documentation:
   tags:
-    - dockerized
+    - docker
   stage: test
-  image: docker.apple.com/turi/build-image-centos6-python2.7:1801
+  image: registry.gitlab.com/zach_nation/turicreate/build-image-ubuntu-18.04:1.0.6
   script:
     - bash -e scripts/make_docs.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON} 
   dependencies:
@@ -225,7 +223,7 @@ build_documentation:
 #########################################################################
 collect_artifacts:
   tags:
-    - dockerized
+    - docker
   services:
     - docker:18.09-dind
   image: alpine:latest
