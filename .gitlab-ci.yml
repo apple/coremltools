@@ -108,25 +108,25 @@ test_wheel_linux_py37:
 build_wheel_macos_py27:
   <<: *build_macos
   variables:
-    PYTHON: /Library/Frameworks/Python.framework/Versions/2.7/bin/python
+    PYTHON: 2.7
 
 ## Uses Python 3.5 from python.org (already on build machine)
 build_wheel_macos_py35:
   <<: *build_macos
   variables:
-    PYTHON: /Library/Frameworks/Python.framework/Versions/3.5/bin/python3
+    PYTHON: 3.5
 
 ## Uses Python 3.6 from python.org (already on build machine)
 build_wheel_macos_py36:
   <<: *build_macos
   variables:
-    PYTHON: /Library/Frameworks/Python.framework/Versions/3.6/bin/python3
+    PYTHON: 3.6
 
 ## Uses Python 3.7 from python.org (already on build machine)
 build_wheel_macos_py37:
   <<: *build_macos
   variables:
-    PYTHON: /Library/Frameworks/Python.framework/Versions/3.7/bin/python3
+    PYTHON: 3.7
 
 .test_macos: &test_macos
   stage: test
@@ -141,7 +141,7 @@ test_wheel_macos_13_py27:
     - build_wheel_macos_py27
   variables:
     WHEEL_PATH: build/dist/*cp27*10_13*
-    PYTHON: /Library/Frameworks/Python.framework/Versions/2.7/bin/python
+    PYTHON: 2.7
 
 test_wheel_macos_14_py27:
   <<: *test_macos
@@ -151,7 +151,7 @@ test_wheel_macos_14_py27:
     - build_wheel_macos_py27
   variables:
     WHEEL_PATH: build/dist/*cp27*10_14*
-    PYTHON: /Library/Frameworks/Python.framework/Versions/2.7/bin/python
+    PYTHON: 2.7
 
 test_wheel_macos_15_py27:
   <<: *test_macos
@@ -161,7 +161,7 @@ test_wheel_macos_15_py27:
     - build_wheel_macos_py27
   variables:
     WHEEL_PATH: build/dist/*cp27*10_15*
-    PYTHON: /Library/Frameworks/Python.framework/Versions/2.7/bin/python
+    PYTHON: 2.7
 
 test_wheel_macos_15_py35:
   <<: *test_macos
@@ -171,7 +171,7 @@ test_wheel_macos_15_py35:
     - build_wheel_macos_py35
   variables:
     WHEEL_PATH: build/dist/*cp35*10_15*
-    PYTHON: /Library/Frameworks/Python.framework/Versions/3.5/bin/python3
+    PYTHON: 3.5
 
 test_wheel_macos_15_py36:
   <<: *test_macos
@@ -181,7 +181,7 @@ test_wheel_macos_15_py36:
     - build_wheel_macos_py36
   variables:
     WHEEL_PATH: build/dist/*cp36*10_15*
-    PYTHON: /Library/Frameworks/Python.framework/Versions/3.6/bin/python3
+    PYTHON: 3.6
 
 test_wheel_macos_15_py37:
   <<: *test_macos
@@ -191,7 +191,7 @@ test_wheel_macos_15_py37:
     - build_wheel_macos_py37
   variables:
     WHEEL_PATH: build/dist/*cp37*10_15*
-    PYTHON: /Library/Frameworks/Python.framework/Versions/3.7/bin/python3
+    PYTHON: 3.7
 
 #########################################################################
 ##
