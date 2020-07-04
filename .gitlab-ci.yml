@@ -14,13 +14,12 @@ stages:
     - docker
   stage: build
   script:
+    - export PATH=$PATH:$HOME/miniconda3/condabin
     - bash -e scripts/build.sh --num-procs=4 --python=$PYTHON --dist
   artifacts:
     expire_in: 2 weeks
     paths:
       - build/dist/
-  variables:
-    PATH: $PATH:$HOME/miniconda3/bin
 
 build_wheel_linux_py27:
   <<: *build_linux
