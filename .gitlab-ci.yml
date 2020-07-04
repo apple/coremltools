@@ -22,27 +22,27 @@ stages:
 
 build_wheel_linux_py27:
   <<: *build_linux
-  image: registry.gitlab.com/zach_nation/turicreate/build-image-centos-6:1.0.6
+  image: registry.gitlab.com/zach_nation/coremltools/build-image-centos-6:1.0.0
   variables:
-    PYTHON: /usr/local/bin/python2.7
+    PYTHON: "2.7"
 
 build_wheel_linux_py35:
   <<: *build_linux
-  image: registry.gitlab.com/zach_nation/turicreate/build-image-centos-6:1.0.6
+  image: registry.gitlab.com/zach_nation/coremltools/build-image-centos-6:1.0.0
   variables:
-    PYTHON: /usr/local/bin/python3.5
+    PYTHON: "3.5"
 
 build_wheel_linux_py36:
   <<: *build_linux
-  image: registry.gitlab.com/zach_nation/turicreate/build-image-centos-6:1.0.6
+  image: registry.gitlab.com/zach_nation/coremltools/build-image-centos-6:1.0.0
   variables:
-    PYTHON: /usr/local/bin/python3.6
+    PYTHON: "3.6"
 
 build_wheel_linux_py37:
   <<: *build_linux
-  image: registry.gitlab.com/coremltools/coremltools/build-image-ubuntu:1.0.0
+  image: registry.gitlab.com/zach_nation/coremltools/build-image-centos-6:1.0.0
   variables:
-    PYTHON: /usr/local/bin/python3.7
+    PYTHON: "3.7"
 
 .test_linux: &test_linux
   tags:
@@ -58,7 +58,7 @@ test_wheel_linux_py27:
     - build_wheel_linux_py27
   variables:
     WHEEL_PATH: build/dist/coremltools*cp27-none-manylinux1_x86_64.whl
-    PYTHON: /usr/local/bin/python2.7
+    PYTHON: "2.7"
 
 test_wheel_linux_py35:
   <<: *test_linux
@@ -67,7 +67,7 @@ test_wheel_linux_py35:
     - build_wheel_linux_py35
   variables:
     WHEEL_PATH: build/dist/coremltools*cp35-none-manylinux1_x86_64.whl
-    PYTHON: /usr/local/bin/python3.5
+    PYTHON: "3.5"
 
 test_wheel_linux_py36:
   <<: *test_linux
@@ -76,7 +76,7 @@ test_wheel_linux_py36:
     - build_wheel_linux_py36
   variables:
     WHEEL_PATH: build/dist/coremltools*cp36-none-manylinux1_x86_64.whl
-    PYTHON: /usr/local/bin/python3.6
+    PYTHON: "3.6"
 
 test_wheel_linux_py37:
   <<: *test_linux
@@ -85,7 +85,7 @@ test_wheel_linux_py37:
     - build_wheel_linux_py37
   variables:
     WHEEL_PATH: build/dist/coremltools*cp37-none-manylinux1_x86_64.whl
-    PYTHON: /usr/local/bin/python3.7
+    PYTHON: "3.7"
 
 
 #########################################################################
