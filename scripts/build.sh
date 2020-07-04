@@ -93,7 +93,7 @@ cmake $ADDITIONAL_CMAKE_OPTIONS \
   ${COREMLTOOLS_HOME}
 
 # Make the python wheel
-make -j${NUM_PROCS}
+make -j${NUM_PROCS} VERBOSE=TRUE
 
 if [ $BUILD_DIST -eq 1 ]
 then
