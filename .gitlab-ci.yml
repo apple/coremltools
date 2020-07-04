@@ -19,6 +19,8 @@ stages:
     expire_in: 2 weeks
     paths:
       - build/dist/
+  variables:
+    PATH: $PATH:$HOME/miniconda3/bin
 
 build_wheel_linux_py27:
   <<: *build_linux
