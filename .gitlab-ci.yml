@@ -14,7 +14,7 @@ stages:
     - docker
   stage: build
   script:
-    - bash -e scripts/build.sh --num_procs=4 --python=$PYTHON --dist
+    - bash -e scripts/build.sh --num-procs=4 --python=$PYTHON --dist
   artifacts:
     expire_in: 2 weeks
     paths:
@@ -99,7 +99,7 @@ test_wheel_linux_py37:
       - macos10.15
     stage: build
     script:
-      - bash -e scripts/build.sh --num_procs=4 --python=$PYTHON --dist
+      - bash -e scripts/build.sh --num-procs=4 --python=$PYTHON --dist
     artifacts:
       expire_in: 2 weeks
       paths:
