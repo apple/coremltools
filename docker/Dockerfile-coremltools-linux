@@ -25,7 +25,11 @@ ENV PATH=/opt/cmake-3.13.4-Linux-x86_64/bin:/usr/local/bin:/usr/local/sbin:/usr/
 # Install Miniconda and initialize it for use in ZSH
 WORKDIR /opt
 RUN curl https://repo.anaconda.com/miniconda/Miniconda3-py38_4.8.2-Linux-x86_64.sh -o miniconda.sh
-RUN zsh miniconda.sh -b -p /opt/miniconda && eval "$(/opt/miniconda/bin/conda shell.zsh hook)" && conda init zsh
+RUN zsh miniconda.sh -b -p /opt/miniconda
+
+# hook conda into both bash and zsh
+RUN eval "$(/opt/miniconda/bin/conda shell.bash hook)" && conda init bash && conda config --set auto_activate_base false
+RUN zsh -c 'eval "$(/opt/miniconda/bin/conda shell.zsh hook)" && conda init zsh && conda config --set auto_activate_base false'
 
 # Give Cmake hints about compilers to use.
 ENV CC="/usr/bin/gcc"
