@@ -1,24 +1,36 @@
-# A CentOS 6 based image that is used for gitlab based ci infrastructure
-# (Using an older distribution like CentOS 6 allows for maximum binary compatibility)
-# Source for this image is https://github.com/apple/turicreate/blob/master/scripts/Dockerfile-CentOS-6
-# This image should be published to registry.gitlab.com/zach_nation/coremltools/build-image-centos-6:1.0.0
-FROM registry.gitlab.com/zach_nation/turicreate/build-image-centos-6:1.0.6
+# An Ubuntu based image that is used for gitlab based ci infrastructure
+# Start from an older version, for maximum binary compat at runtime
+FROM ubuntu:14.04
 
-# Install zsh
-RUN yum install -y zsh
+# Install dependencies, particularly libraries that python or CMake need
+RUN  apt-get -y update \
+     && apt-get -y install build-essential libstdc++6 \
+        python-setuptools curl git libssl-dev \
+        make vim-common zlib1g-dev libffi-dev \
+        libbz2-dev libopenblas-dev liblapack-dev \
+        zsh
+RUN curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash
+RUN apt-get -y install git-lfs
 
-# Install miniconda
-RUN mkdir -p /src
-WORKDIR /src
+WORKDIR /
+ENV PATH=/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ENV LD_LIBRARY_PATH=/usr/local/lib:/usr/local/lib64:
 
-RUN curl -O https://repo.anaconda.com/miniconda/Miniconda3-py38_4.8.2-Linux-x86_64.sh
-RUN bash Miniconda3-py38_4.8.2-Linux-x86_64.sh -b -p $HOME/miniconda3
-# hook conda into both bash and zsh
-RUN eval "$($HOME/miniconda3/bin/conda shell.bash hook)" && conda init bash && conda config --set auto_activate_base false
-RUN zsh -c 'eval "$($HOME/miniconda3/bin/conda shell.zsh hook)" && conda init zsh && conda config --set auto_activate_base false'
+# Install CMake
+WORKDIR /opt
+RUN  curl -L https://github.com/Kitware/CMake/releases/download/v3.13.4/cmake-3.13.4-Linux-x86_64.tar.gz -o cmake-3.13.4-Linux-x86_64.tar.gz \
+     && tar xf cmake-3.13.4-Linux-x86_64.tar.gz
+ENV PATH=/opt/cmake-3.13.4-Linux-x86_64/bin:/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
-# Clean up now-unnecessary paths in image
-RUN rm -rf /src
+# Install Miniconda and initialize it for use in ZSH
+WORKDIR /opt
+RUN curl https://repo.anaconda.com/miniconda/Miniconda3-py38_4.8.2-Linux-x86_64.sh -o miniconda.sh
+RUN zsh miniconda.sh -b -p /opt/miniconda && eval "$(/opt/miniconda/bin/conda shell.zsh hook)" && conda init zsh
 
-# start at gitlab build dir
-WORKDIR /build/
+# Give Cmake hints about compilers to use.
+ENV CC="/usr/bin/gcc"
+ENV CXX="/usr/bin/g++"
+CMD ["/bin/bash"]
+
+# Start at /root
+WORKDIR /root

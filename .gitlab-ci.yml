@@ -23,25 +23,25 @@ stages:
 
 build_wheel_linux_py27:
   <<: *build_linux
-  image: registry.gitlab.com/zach_nation/coremltools/build-image-centos-6:1.0.0
+  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-14.04:1.0.0
   variables:
     PYTHON: "2.7"
 
 build_wheel_linux_py35:
   <<: *build_linux
-  image: registry.gitlab.com/zach_nation/coremltools/build-image-centos-6:1.0.0
+  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-14.04:1.0.0
   variables:
     PYTHON: "3.5"
 
 build_wheel_linux_py36:
   <<: *build_linux
-  image: registry.gitlab.com/zach_nation/coremltools/build-image-centos-6:1.0.0
+  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-14.04:1.0.0
   variables:
     PYTHON: "3.6"
 
 build_wheel_linux_py37:
   <<: *build_linux
-  image: registry.gitlab.com/zach_nation/coremltools/build-image-centos-6:1.0.0
+  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-14.04:1.0.0
   variables:
     PYTHON: "3.7"
 
@@ -54,7 +54,7 @@ build_wheel_linux_py37:
 
 test_wheel_linux_py27:
   <<: *test_linux
-  image: registry.gitlab.com/zach_nation/turicreate/build-image-ubuntu-14.04:1.0.6
+  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-14.04:1.0.0
   dependencies:
     - build_wheel_linux_py27
   variables:
@@ -63,7 +63,7 @@ test_wheel_linux_py27:
 
 test_wheel_linux_py35:
   <<: *test_linux
-  image: registry.gitlab.com/zach_nation/turicreate/build-image-ubuntu-14.04:1.0.6
+  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-14.04:1.0.0
   dependencies:
     - build_wheel_linux_py35
   variables:
