@@ -76,7 +76,7 @@ if [[ $WHEEL_PATH == "" ]]; then
     pip install -e ${COREMLTOOLS_NAME} --upgrade
     cd ${COREMLTOOLS_NAME}
 else
-    $PIP_EXECUTABLE install $~WHEEL_PATH --upgrade
+    $PIP_EXECUTABLE install $WHEEL_PATH --upgrade
 fi
 
 # Install dependencies if specified

@@ -72,7 +72,7 @@ test_wheel_linux_py35:
 
 test_wheel_linux_py36:
   <<: *test_linux
-  image: registry.gitlab.com/zach_nation/turicreate/build-image-ubuntu-18.04:1.0.6
+  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-14.04:1.0.3
   dependencies:
     - build_wheel_linux_py36
   variables:
@@ -203,7 +203,7 @@ build_documentation:
   tags:
     - docker
   stage: test
-  image: registry.gitlab.com/zach_nation/turicreate/build-image-ubuntu-18.04:1.0.6
+  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-14.04:1.0.3
   script:
     - bash -e scripts/make_docs.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON} 
   dependencies:
