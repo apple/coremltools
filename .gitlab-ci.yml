@@ -215,7 +215,7 @@ build_documentation:
       - build/dist/
   variables:
     WHEEL_PATH: build/dist/coremltools*cp27-none-manylinux1_x86_64.whl
-    PYTHON: /usr/local/bin/python
+    PYTHON: "2.7"
 
 #########################################################################
 ##
