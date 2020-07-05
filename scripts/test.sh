@@ -87,7 +87,8 @@ fi
 # Now run the tests
 echo "Running tests"
 
-TEST_CMD=($PYTEST_EXECUTABLE -ra -W "ignore::FutureWarning" -W "ignore::DeprecationWarning" --durations=100 --pyargs ${TEST_PACKAGE} --junitxml=${BUILD_DIR}/py-test-report.xml --timeout=${TIME_OUT})
+# add -vv for temporary debugging
+TEST_CMD=($PYTEST_EXECUTABLE -vv -ra -W "ignore::FutureWarning" -W "ignore::DeprecationWarning" --durations=100 --pyargs ${TEST_PACKAGE} --junitxml=${BUILD_DIR}/py-test-report.xml --timeout=${TIME_OUT})
 echo $TEST_CMD
 
 if [[ $SLOW != 1 || $FAST != 1 ]]; then

@@ -205,7 +205,7 @@ build_documentation:
   stage: test
   image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-14.04:1.0.3
   script:
-    - bash -e scripts/make_docs.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON} 
+    - bash -e scripts/build_docs.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON}
   dependencies:
     - build_wheel_linux_py27
   artifacts:
