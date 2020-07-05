@@ -84,6 +84,12 @@ if [ ! -z "${REQUIREMENTS}" ]; then
    $PIP_EXECUTABLE install -r "${REQUIREMENTS}"
 fi
 
+if [[ ! -z "${WHEEL_PATH}" ]]; then
+    # in a test of a wheel, need to run from ${COREMLTOOLS_HOME}/coremltools for some reason.
+    # otherwise pytest picks up tests in deps, env, etc.
+    cd ${COREMLTOOLS_HOME}/coremltools
+fi
+
 # Now run the tests
 echo "Running tests"
 
