@@ -13,7 +13,7 @@ RUN curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.d
 RUN apt-get -y install git-lfs
 
 WORKDIR /
-ENV PATH=/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ENV PATH=/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/miniconda/bin
 ENV LD_LIBRARY_PATH=/usr/local/lib:/usr/local/lib64:
 
 # Install CMake
