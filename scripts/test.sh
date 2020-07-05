@@ -87,7 +87,7 @@ fi
 if [[ ! -z "${WHEEL_PATH}" ]]; then
     # in a test of a wheel, need to run from ${COREMLTOOLS_HOME}/coremltools for some reason.
     # otherwise pytest picks up tests in deps, env, etc.
-    cd ${COREMLTOOLS_HOME}/coremltools
+    cd ${COREMLTOOLS_HOME}/coremltools/test
 fi
 
 # Now run the tests
