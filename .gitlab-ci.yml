@@ -81,7 +81,7 @@ test_wheel_linux_py36:
 
 test_wheel_linux_py37:
   <<: *test_linux
-  image: registry.gitlab.com/coremltools/coremltools/build-image-ubuntu:1.0.0
+  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-14.04:1.0.3
   dependencies:
     - build_wheel_linux_py37
   variables:
