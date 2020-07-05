@@ -212,7 +212,7 @@ build_documentation:
     when: always
     expire_in: 2 weeks
     paths:
-      - build/dist/
+      - _build/html/
   variables:
     WHEEL_PATH: build/dist/coremltools*cp27-none-manylinux1_x86_64.whl
     PYTHON: "2.7"
