@@ -22,14 +22,13 @@ ALL = 7
 def _is_compatible_symbolic_array(a, b):
     """
     A helper function which check if two numpy array with symbolic value.
-    For instance, a = np.array([is0, 1])
+    For instance, a = np.array([is0, is2])
                   b = np.array([is1, 1])
     are considered compatible.
                   a = np.array([is0, 1])
                   b = np.array([is1, -1])
     are not.
     """
-    assert any_symbolic(a) and any_symbolic(b)
     if not a.shape == b.shape:
         return False
     a = a.flatten()
@@ -38,8 +37,6 @@ def _is_compatible_symbolic_array(a, b):
         if not is_symbolic(t) and not is_symbolic(v):
             if t != v:
                 return False
-        elif not is_symbolic(t) or not is_symbolic(v):
-            return False
     return True
 
 
@@ -226,21 +223,16 @@ class Operation(object):
                     raise ValueError(msg.format(out_var.name, self.name))
 
                 # Check value inference
-                if sym_val is not None and out_var.sym_val is None:
-                    if overwrite_output:
-                        out_var._sym_val = sym_val
+                if overwrite_output:
+                    out_var._sym_val = sym_val
 
                 if sym_val is not None and out_var.sym_val is not None:
                     if np.any(sym_val.val != out_var.sym_val):
                         if overwrite_output:
                             out_var._sym_val = sym_val
                         else:
-                            msg = "value_inference differs for var {} in op {}"
-                            if not any_symbolic(sym_val.val):
-                                raise ValueError(msg.format(out_var.name, self.name))
-                            elif not _is_compatible_symbolic_array(
-                                sym_val.val, out_var.sym_val
-                            ):
+                            msg = 'value_inference differs for var {} in op {}'
+                            if not _is_compatible_symbolic_array(sym_val.val, out_var.sym_val):
                                 raise ValueError(msg.format(out_var.name, self.name))
 
     def _auto_val(self, output_types):

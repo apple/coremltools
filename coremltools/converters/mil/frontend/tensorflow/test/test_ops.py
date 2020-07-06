@@ -589,6 +589,23 @@ class TestCond:
 
 
 class TestWhileLoop:
+
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend", itertools.product([True, False], backends))
+    def test_while_loop_with_changing_shape(self, use_cpu_only, backend):
+        @make_tf_graph([(2,1),(2,1)])
+        def build_model(x,y):
+            c = lambda i,j: tf.less(tf.shape(j)[1], 5)
+            b = lambda i,j: (i, tf.concat([i,j], axis=1))
+            return tf.while_loop(c, b, [x,y], shape_invariants=[x.get_shape(), tf.TensorShape([2, None])])
+
+        model, inputs, outputs = build_model
+        input_values = [np.array([[1],[2]], dtype=np.float32),np.array([[1],[2]], dtype=np.float32)]
+        input_dict = dict(zip(inputs, input_values))
+        run_compare_tf(model, input_dict, outputs,
+                       use_cpu_only=use_cpu_only,
+                       backend=backend)
+
     @pytest.mark.parametrize(
         "use_cpu_only, backend", itertools.product([True, False], backends)
     )
@@ -3892,39 +3909,48 @@ class TestTopK:
 
 
 class TestConcat:
-    @pytest.mark.parametrize(
-        "use_cpu_only, backend, op_version",
-        itertools.product([True, False], ["nn_proto"], ["v1", "v2"]),
-    )
-    def test_concat(self, use_cpu_only, backend, op_version):
-        input_shape1 = [3, 2, 1]
-        input_shape2 = [3, 1, 1]
+    @pytest.mark.parametrize("use_cpu_only, backend, op_version, rank, num_inputs",
+                             itertools.product(
+                                 [True, False],
+                                 ['nn_proto'],
+                                 ['v1', 'v2'],
+                                 [1,2,3,4,5],
+                                 list(range(1, 10)),
+                             ))
+    def test_concat(self, use_cpu_only, backend, op_version, rank, num_inputs):
+        import random
+        for axis in range(-rank,rank):
+            input_shape = np.random.randint(low=1, high=6, size=rank)
+            input_shapes = [input_shape.copy() for _ in range(num_inputs)]
+            concat_axis_value = np.random.randint(low=1, high=3, size=num_inputs)
+            for i, v in enumerate(concat_axis_value):
+                input_shapes[i][axis] = concat_axis_value[i]
 
-        @make_tf_graph([input_shape1, input_shape2])
-        def build_model(x, y):
-            if op_version == "v1":
-                # Seems like now the tf functions are using concatV2, so create as raw_ops here
-                res = tf.raw_ops.Concat(concat_dim=-2, values=[x, y], name="concat")
-            elif op_version == "v2":
-                res = tf.concat((x, y), axis=-2)
-            return res
+            @make_tf_graph(input_shapes)
+            def build_model(*inputs):
+                # add 5 zero size constants
+                zero_shape = input_shape.copy()
+                zero_shape[axis] = 0
+                const = [tf.constant([], shape=zero_shape) for _ in range(5)]
+                values = inputs + tuple(const)
+                values = list(values)
+                random.shuffle(values)
+                values = tuple(values)
+                if op_version == 'v1':
+                    # Seems like now the tf functions are using concatV2, so create as raw_ops here
+                    res = tf.raw_ops.Concat(concat_dim=axis, values=values)
+                elif op_version == 'v2':
+                    res = tf.raw_ops.ConcatV2(values=values, axis=axis)
+                return res
 
-        model, inputs, outputs = build_model
+            model, inputs, outputs = build_model
 
-        input_values = [
-            np.random.rand(*input_shape1).astype(np.float32),
-            np.random.rand(*input_shape2).astype(np.float32),
-        ]
-        input_dict = dict(zip(inputs, input_values))
+            input_values = [np.random.rand(*shape).astype(np.float32) for shape in input_shapes]
+            input_dict = dict(zip(inputs, input_values))
 
-        run_compare_tf(
-            model,
-            input_dict,
-            outputs,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
-            backend=backend,
-        )
+            run_compare_tf(model, input_dict, outputs,
+                   use_cpu_only=use_cpu_only,
+                   frontend_only=False, backend=backend)
 
 
 class TestSplit:
@@ -4277,6 +4303,39 @@ class TestReshape:
             backend=backend,
         )
 
+class TestMatrixDiag:
+    @pytest.mark.parametrize("use_cpu_only, backend, length, dynamic",
+                             itertools.product(
+                                 [True, False],
+                                 backends,
+                                 [length for length in range(1, 5)],
+                                 [True, False]))
+    def test(self, use_cpu_only, backend, length, dynamic):
+
+        if dynamic:
+            input_shape = np.random.randint(low=1, high=6, size=length)
+            a, b = np.prod(input_shape[:2]), np.prod(input_shape[2:])
+            size = np.array([a,b]).astype(np.int32)
+            reshape_shape = [2]
+            @make_tf_graph([input_shape, reshape_shape+[tf.int32]])
+            def build_model(x, reshape):
+                x = tf.reshape(x, reshape)
+                x = tf.reshape(x, [-1])
+                return tf.raw_ops.MatrixDiag(diagonal=x)
+            model, inputs, outputs = build_model
+            input_values = [random_gen(input_shape, -1, 1), size]
+        else:
+            input_shape = [length]
+            @make_tf_graph([input_shape])
+            def build_model(x):
+                return tf.raw_ops.MatrixDiag(diagonal=x)
+            model, inputs, outputs = build_model
+            input_values = [random_gen(input_shape, -1, 1)]
+
+        input_dict = dict(zip(inputs, input_values))
+        run_compare_tf(model, input_dict, outputs,
+                       use_cpu_only=use_cpu_only,
+                       frontend_only=False, backend=backend)
 
 class TestReverse:
     @pytest.mark.parametrize(

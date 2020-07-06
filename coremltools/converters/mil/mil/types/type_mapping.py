@@ -27,6 +27,7 @@ from .type_int import (
 from .type_str import str as types_str
 from .type_unknown import unknown
 import numpy as np
+import sympy as sm
 import six
 from .get_type_info import get_type_info
 
@@ -244,6 +245,34 @@ def numpy_val_to_builtin_val(npval):
         return ret, ret_type
 
 
+def is_subtype_tensor(type1, type2):
+    # requires primitive types match
+    if type1.get_primitive() != type2.get_primitive():
+        return False
+
+    shape1 = type1.get_shape()
+    shape2 = type2.get_shape()
+    # Same rank
+    if len(shape1) != len(shape2):
+        return False
+
+    for d1, d2 in zip(shape1, shape2):
+        if d1 == d2:
+            continue
+
+        # tensor with shape (3, s0) is not a subtype of tensor with shape (3,
+        # 1), but is a subtype of tensor with shape (3, s1)
+        d1_is_symbolic = issubclass(type(d1), sm.Basic)
+        d2_is_symbolic = issubclass(type(d2), sm.Basic)
+        if d1_is_symbolic and d2_is_symbolic:
+            continue
+        if d1_is_symbolic and not d2_is_symbolic:
+            return False
+        if not d1_is_symbolic and not d2_is_symbolic and d1 != d2:
+            return False
+    return True
+
+
 def is_subtype(type1, type2):
     """
     Return True if type1 is a subtype of type2. False otherwise.
@@ -252,7 +281,6 @@ def is_subtype(type1, type2):
         return True  # any class is a subclass of unknown (None) type.
     if is_list(type2):
         return is_list(type1) and is_subtype(type1.T[0], type2.T[0])
-
-    # simplistic handling of types is sufficient for now. Handling compatible
-    # tensor shape requires using types.is_tensor_and_is_compatible
+    if is_tensor(type1) and is_tensor(type2):
+        return is_subtype_tensor(type1, type2)
     return type1 == type2

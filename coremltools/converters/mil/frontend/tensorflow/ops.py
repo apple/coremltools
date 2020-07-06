@@ -1409,6 +1409,18 @@ def Mean(context, node):
     x = mb.reduce_mean(x=x, axes=axes, keep_dims=keep_dims, name=node.name)
     context.add(node.name, x)
 
+@register_tf_op
+def MatrixDiag(context, node):
+    x = context[node.inputs[0]]
+    if x.rank != 1:
+        raise NotImplementedError('Only support MatrixDiag op with input rank = 1.')
+    length = mb.shape(x=x)
+    x = mb.expand_dims(x=x, axes=[0])
+    reps = mb.concat(values=[length,[1]], axis=0)
+    x = mb.tile(x=x, reps=reps)
+    x = mb.band_part(x=x, lower=0, upper=0, name=node.name)
+    context.add(node.name, x)
+
 
 @register_tf_op
 def MirrorPad(context, node):

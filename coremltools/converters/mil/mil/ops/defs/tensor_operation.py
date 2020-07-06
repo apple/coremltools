@@ -153,7 +153,8 @@ class fill(Operation):
     """
 
     input_spec = InputSpec(
-        shape=IntTensorInputType(), value=IntOrFloatInputType(const=True, default=0.0),
+        shape=IntTensorInputType(),
+        value=ScalarOrTensorInputType(const=True, default=0.0),
     )
 
     def __init__(self, **kwargs):
@@ -162,12 +163,12 @@ class fill(Operation):
     def type_inference(self):
         if any_symbolic(self.shape.shape):
             # We can't infer any shape if shape has variable length.
-            return types.tensor(types.fp32, (get_new_variadic_symbol(),))
+            return types.tensor(self.value.dtype, (get_new_variadic_symbol(),))
 
         # shape has fixed length here.
         if self.shape.sym_val is None:
             ret_shape = tuple([get_new_symbol() for _ in range(self.shape.shape[0])])
-            return types.tensor(types.fp32, ret_shape)
+            return types.tensor(self.value.dtype, ret_shape)
 
         return types.tensor(self.value.dtype, tuple(self.shape.sym_val.tolist()))
 

@@ -203,9 +203,12 @@ class reshape(Operation):
         # shape is const, and thus sym_val is not None
         sym_shape = self.shape.sym_val
         sym_shape = [get_new_symbol() if d == -1 else d for d in sym_shape]
-        ret_shape = reshape.enforce_volumetric_constraint(x_vol, sym_shape)
+        try:
+            ret_shape = reshape.enforce_volumetric_constraint(x_vol, sym_shape)
+        except:
+            ret_shape = sym_shape
         ret_val = None
-        if self.x.val is not None and all(isscalar(a) for a in ret_shape):
+        if self.x.val is not None and all(isscalar(a) and not is_symbolic(a) for a in ret_shape):
             ret_val = reshape_with_symbol(self.x.val, ret_shape)
         return types.tensor(x_type, tuple(ret_shape)), ret_val
 

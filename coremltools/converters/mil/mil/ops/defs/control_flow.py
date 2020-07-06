@@ -9,6 +9,7 @@ from coremltools.converters.mil.mil.types.type_mapping import (
     numpy_val_to_builtin_val,
     is_subtype,
 )
+import copy
 from coremltools.converters.mil.mil import Block, SYMBOL, NONE
 from coremltools.converters.mil.mil.var import Var
 from coremltools.converters.mil.mil import get_new_symbol
@@ -235,13 +236,38 @@ class while_loop(Operation):
     def __init__(self, **kwargs):
         super(while_loop, self).__init__(**kwargs)
 
-    def build_nested_blocks(self):
-        # self.loop_vars is python tuple of Vars
-        # Cond block
-        block_name = self.name + "_block"
-        with Block(
-            block_inputs=self.loop_vars, outer_op=self, name=block_name
-        ) as block:
+    @staticmethod
+    def _check_is_compatible_type(type1, type2):
+        if not types.is_subtype(type1, type2):
+            is_comp, _ = types.is_tensor_and_is_compatible(type1, type2)
+            return is_comp
+        return True
+
+    @staticmethod
+    def _check_equal_value(val1, val2):
+        if val1 is None and val2 is None:
+            return True
+        if val1 is None or val2 is None:
+            return False
+        if isinstance(val1, np.ndarray) and isinstance(val2, np.ndarray):
+            return np.array_equal(val1, val2)
+        return val1 == val2
+
+    @staticmethod
+    def clean_up_child_ops(block):
+        for op in list(block.operations):
+
+            for b in op.blocks:
+                while_loop.clean_up_child_ops(b)
+
+            inputs = op.get_flattened_inputs()
+            for in_var in inputs:
+                in_var.remove_child_op(op)
+
+    def build_block(self, block_inputs):
+        block_name = self.name + '_block'
+        with Block(block_inputs=block_inputs, outer_op=self,
+                name=block_name) as block:
             # Body func
             body_func = self._body.val
             exit_vars = body_func(*block.inputs)
@@ -253,22 +279,102 @@ class while_loop(Operation):
 
             # Concatenate the outputs
             block.set_outputs(cond_vars + list(exit_vars))
-            self.blocks.append(block)
+        return block, exit_vars
+
+    def build_nested_blocks(self):
+        # self.loop_vars is python tuple of Vars.
+
+        # block_inputs Var are not produced by any op.
+        # We assume block_inputs have the same types as self.loop_var. If not
+        # (e.g., when certain dimensions change shape during iterate), we'd
+        # adjust later.
+
+        # We assume that sym_val is unchanging across the block iterate. If it
+        # changes, we rebuild the block and rerun type and value inference.
+
+        block_inputs = tuple(copy.copy(v) for v in self.loop_vars)
+        for v in block_inputs:
+            v._op = None
+            v.op_output_idx = None
+            v._child_ops = list()
+            v.name = v.name + ".x"
+            v._sym_val = v._sym_val
+            v.consuming_blocks = list()
+
+        block, exit_vars = self.build_block(block_inputs)
 
         # Verify exit_vars has the same types as loop_vars
-        for v_in, v_out in zip(self.loop_vars, exit_vars):
+        block_input_type_change = False
+        for i, (v_in, v_out) in enumerate(zip(block_inputs, exit_vars)):
             if not is_subtype(v_out.sym_type, v_in.sym_type):
-                msg = (
-                    "loop_vars '{}' changes in the body of "
-                    "while_loop '{}':\n {} -> {}"
-                )
-                raise ValueError(
-                    msg.format(v_in.name, self.name, v_in.sym_type, v_out.sym_type)
-                )
+                compat_shape = while_loop.get_compat_shape(v_out.sym_type,
+                        v_in.sym_type)
+                if compat_shape is None:
+                    msg = "loop_vars '{}' changes in the body of " \
+                          "while_loop '{}':\n {} -> {}"
+                    raise ValueError(msg.format(
+                        v_in.name, self.name,
+                        v_in.sym_type, v_out.sym_type))
+                else:
+                    block_inputs[i]._sym_type = types.tensor(
+                            v_in.dtype, compat_shape)
+                    block_input_type_change = True
+            if not while_loop._check_equal_value(v_out.sym_val, v_in.sym_val):
+                block_inputs[i]._sym_val = None
+                block_input_type_change = True
+
+        if block_input_type_change:
+            # Since we are going to build the block again, we first need to remove ops
+            # in the block from vars's _child_ops.
+            while_loop.clean_up_child_ops(block)
+
+            # Rebuild our block to invoke type inference.
+            block, exit_vars = self.build_block(block_inputs)
+            for i, (v_in, v_out) in enumerate(zip(block_inputs, exit_vars)):
+                if not is_subtype(v_out.sym_type, v_in.sym_type):
+                    msg = 'Block output {}: {} is not a subtype of ' +\
+                            'block input {}: {} after factoring shape changes'
+                    raise ValueError(msg.format(v_out.name. v.sym_type,
+                        v_in.name, v_in.sym_type))
+                if not while_loop._check_equal_value(v_out.sym_val, v_in.sym_val):
+                    msg = 'Block output {}: {} is not equal to ' +\
+                            'block input {}: {} after value changes'
+                    raise ValueError(msg.format(v_out.name. v.sym_val,
+                        v_in.name, v_in.sym_val))
+        self.blocks.append(block)
+
+    @staticmethod
+    def get_compat_shape(type1, type2):
+        """
+        For tensor types `type1`, `type2` that are of the same rank, return
+        compat_shape (python list) where compat_shape[i] is integer iff type1
+        and type2 have the same integer shape on dim i. compat_shape[i] is
+        symbolic otherwise.
+
+        Return None if `type1`, `type2` have different rank or non-tensor
+        type.
+        """
+        if not types.is_tensor(type1) or not types.is_tensor(type2):
+            return None
+
+        s1 = type1.get_shape()
+        s2 = type2.get_shape()
+
+        if len(s1) != len(s2):
+            return None
+
+        compat_shape = []
+        for d1, d2 in zip(s1, s2):
+            if d1 != d2:
+                compat_shape.append(get_new_symbol())
+            else:
+                compat_shape.append(d1)
+        return compat_shape
 
     def type_inference(self):
         # Skip the conditional var
         return tuple(v.sym_type for v in self.blocks[0].outputs[1:])
+
 
 
 # identity is used for renaming and is rarely necessary. See

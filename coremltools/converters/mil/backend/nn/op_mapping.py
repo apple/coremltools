@@ -2562,23 +2562,36 @@ def identity(const_context, builder, op):
 
 @register_mil_to_nn_mapping
 def concat(const_context, builder, op):
-    rank = op.values[0].rank
-    input_names = make_input(const_context, builder, op.values)
+    # filter out input tensor with 0 size
+    values = []
+    for v in op.values:
+        if len(v.shape) > 0 and v.shape[op.axis.val] == 0:
+            continue
+        values.append(v)
 
-    if op.axis.val == -3 or op.axis.val > 0 and op.axis.val == rank - 3:
-        builder.add_elementwise(
-            name=op.name,
-            input_names=input_names,
-            output_name=op.outputs[0].name,
-            mode="CONCAT",
-        )
+    if len(values) == 0:
+        raise NotImplementedError('0 size tensor unsopported.')
+
+    if len(values) >= 2:
+        rank = values[0].rank
+        if rank >= 4 and (op.axis.val == -3 or op.axis.val > 0 and op.axis.val == rank - 3):
+            builder.add_elementwise(
+                name=op.name,
+                input_names=make_input(const_context, builder, values),
+                output_name=op.outputs[0].name,
+                mode="CONCAT",
+            )
+        else:
+            builder.add_concat_nd(
+                    name=op.name,
+                    input_names=make_input(const_context, builder, values),
+                    output_name=op.outputs[0].name,
+                    axis=op.axis.val)
     else:
-        builder.add_concat_nd(
-            name=op.name,
-            input_names=input_names,
-            output_name=op.outputs[0].name,
-            axis=op.axis.val,
-        )
+        builder.add_copy(
+                name=op.name,
+                input_name=make_input(const_context, builder, values[0]),
+                output_name=op.outputs[0].name)
 
 
 @register_mil_to_nn_mapping
