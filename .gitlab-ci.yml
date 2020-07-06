@@ -50,35 +50,35 @@ build_wheel_linux_py37:
     - docker
   stage: test
   script:
-    - bash -e scripts/test.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON}
+    - bash -e scripts/test.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON} --fast
 
-test_wheel_linux_py27:
-  <<: *test_linux
-  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-14.04:1.0.3
-  dependencies:
-    - build_wheel_linux_py27
-  variables:
-    WHEEL_PATH: build/dist/coremltools*cp27-none-manylinux1_x86_64.whl
-    PYTHON: "2.7"
-
-test_wheel_linux_py35:
-  <<: *test_linux
-  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-14.04:1.0.3
-  dependencies:
-    - build_wheel_linux_py35
-  variables:
-    WHEEL_PATH: build/dist/coremltools*cp35-none-manylinux1_x86_64.whl
-    PYTHON: "3.5"
-
-test_wheel_linux_py36:
-  <<: *test_linux
-  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-14.04:1.0.3
-  dependencies:
-    - build_wheel_linux_py36
-  variables:
-    WHEEL_PATH: build/dist/coremltools*cp36-none-manylinux1_x86_64.whl
-    PYTHON: "3.6"
-
+#test_wheel_linux_py27:
+#  <<: *test_linux
+#  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-14.04:1.0.3
+#  dependencies:
+#    - build_wheel_linux_py27
+#  variables:
+#    WHEEL_PATH: build/dist/coremltools*cp27-none-manylinux1_x86_64.whl
+#    PYTHON: "2.7"
+#
+#test_wheel_linux_py35:
+#  <<: *test_linux
+#  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-14.04:1.0.3
+#  dependencies:
+#    - build_wheel_linux_py35
+#  variables:
+#    WHEEL_PATH: build/dist/coremltools*cp35-none-manylinux1_x86_64.whl
+#    PYTHON: "3.5"
+#
+#test_wheel_linux_py36:
+#  <<: *test_linux
+#  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-14.04:1.0.3
+#  dependencies:
+#    - build_wheel_linux_py36
+#  variables:
+#    WHEEL_PATH: build/dist/coremltools*cp36-none-manylinux1_x86_64.whl
+#    PYTHON: "3.6"
+#
 test_wheel_linux_py37:
   <<: *test_linux
   image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-14.04:1.0.3
@@ -132,71 +132,111 @@ build_wheel_macos_py37:
 .test_macos: &test_macos
   stage: test
   script:
-    - bash -e scripts/test.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON}
+    - bash -e scripts/test.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON} --fast
 
-test_wheel_macos_13_py27:
+#test_wheel_macos_13_py27:
+#  <<: *test_macos
+#  tags:
+#    - macos10.13
+#  dependencies:
+#    - build_wheel_macos_py27
+#  variables:
+#    WHEEL_PATH: build/dist/*cp27*10_13*
+#    PYTHON: "2.7"
+#
+#test_wheel_macos_14_py27:
+#  <<: *test_macos
+#  tags:
+#    - macos10.14
+#  dependencies:
+#    - build_wheel_macos_py27
+#  variables:
+#    WHEEL_PATH: build/dist/*cp27*10_14*
+#    PYTHON: "2.7"
+#
+#test_wheel_macos_15_py27:
+#  <<: *test_macos
+#  tags:
+#    - macos10.15
+#  dependencies:
+#    - build_wheel_macos_py27
+#  variables:
+#    WHEEL_PATH: build/dist/*cp27*10_15*
+#    PYTHON: "2.7"
+#
+#test_wheel_macos_15_py35:
+#  <<: *test_macos
+#  tags:
+#    - macos10.15
+#  dependencies:
+#    - build_wheel_macos_py35
+#  variables:
+#    WHEEL_PATH: build/dist/*cp35*10_15*
+#    PYTHON: "3.5"
+#
+#test_wheel_macos_15_py36:
+#  <<: *test_macos
+#  tags:
+#    - macos10.15
+#  dependencies:
+#    - build_wheel_macos_py36
+#  variables:
+#    WHEEL_PATH: build/dist/*cp36*10_15*
+#    PYTHON: "3.6"
+#
+#test_wheel_macos_15_py37:
+#  <<: *test_macos
+#  tags:
+#    - macos10.15
+#  dependencies:
+#    - build_wheel_macos_py37
+#  variables:
+#    WHEEL_PATH: build/dist/*cp37*10_15*
+#    PYTHON: "3.7"
+
+test_wheel_macos_16_py27:
   <<: *test_macos
   tags:
-    - macos10.13
+    - macos10.16
   dependencies:
     - build_wheel_macos_py27
   variables:
-    WHEEL_PATH: build/dist/*cp27*10_13*
+    WHEEL_PATH: build/dist/*cp27*10_16*
     PYTHON: "2.7"
 
-test_wheel_macos_14_py27:
+test_wheel_macos_16_py35:
   <<: *test_macos
   tags:
-    - macos10.14
-  dependencies:
-    - build_wheel_macos_py27
-  variables:
-    WHEEL_PATH: build/dist/*cp27*10_14*
-    PYTHON: "2.7"
-
-test_wheel_macos_15_py27:
-  <<: *test_macos
-  tags:
-    - macos10.15
-  dependencies:
-    - build_wheel_macos_py27
-  variables:
-    WHEEL_PATH: build/dist/*cp27*10_15*
-    PYTHON: "2.7"
-
-test_wheel_macos_15_py35:
-  <<: *test_macos
-  tags:
-    - macos10.15
+    - macos10.16
   dependencies:
     - build_wheel_macos_py35
   variables:
-    WHEEL_PATH: build/dist/*cp35*10_15*
+    WHEEL_PATH: build/dist/*cp35*10_16*
     PYTHON: "3.5"
 
-test_wheel_macos_15_py36:
+test_wheel_macos_16_py36:
   <<: *test_macos
   tags:
-    - macos10.15
+    - macos10.16
   dependencies:
     - build_wheel_macos_py36
   variables:
-    WHEEL_PATH: build/dist/*cp36*10_15*
+    WHEEL_PATH: build/dist/*cp36*10_16*
     PYTHON: "3.6"
 
-test_wheel_macos_15_py37:
+test_wheel_macos_16_py37:
   <<: *test_macos
   tags:
-    - macos10.15
+    - macos10.16
   dependencies:
     - build_wheel_macos_py37
   variables:
-    WHEEL_PATH: build/dist/*cp37*10_15*
+    WHEEL_PATH: build/dist/*cp37*10_16*
     PYTHON: "3.7"
 
 #########################################################################
 ##
-##                        Make docs 
+##                        Make docs
 ##
 #########################################################################
 build_documentation:
@@ -219,7 +259,7 @@ build_documentation:
 
 #########################################################################
 ##
-##                       Collect arfifacts 
+##                       Collect artifacts
 ##
 #########################################################################
 collect_artifacts:

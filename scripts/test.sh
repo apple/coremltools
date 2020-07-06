@@ -93,9 +93,7 @@ fi
 # Now run the tests
 echo "Running tests"
 
-# add -vv for temporary debugging
-TEST_CMD=($PYTEST_EXECUTABLE -vv -ra -W "ignore::FutureWarning" -W "ignore::DeprecationWarning" --durations=100 --pyargs ${TEST_PACKAGE} --junitxml=${BUILD_DIR}/py-test-report.xml --timeout=${TIME_OUT})
-echo $TEST_CMD
+TEST_CMD=($PYTEST_EXECUTABLE -ra -W "ignore::FutureWarning" -W "ignore::DeprecationWarning" --durations=100 --pyargs ${TEST_PACKAGE} --junitxml=${BUILD_DIR}/py-test-report.xml --timeout=${TIME_OUT})
 
 if [[ $SLOW != 1 || $FAST != 1 ]]; then
     if [[ $SLOW == 1 ]]; then
@@ -109,6 +107,7 @@ if [[ $COV != "" ]]; then
     TEST_CMD+=(--cov $COV)
 fi
 
-${TEST_CMD[@]}
+echo $TEST_CMD
+"${TEST_CMD[@]}"
 
 pip uninstall -y coremltools

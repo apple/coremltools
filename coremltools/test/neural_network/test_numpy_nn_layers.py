@@ -2423,6 +2423,9 @@ class NewLayersSimpleTest(CorrectnessTest):
     def test_tile_gpu(self):
         self.test_tile_cpu(cpu_only=False)
 
+    @pytest.mark.xfail(
+        reason="FIXME: will be available in later macOS 10.16 seed.", run=False,
+    )
     def test_dynamic_tile_cpu(self, cpu_only=True):
         for rank in range(1, 6):
             input_shape = np.random.randint(low=2, high=5, size=rank)
@@ -2889,7 +2892,7 @@ class NewLayersSimpleTest(CorrectnessTest):
     def test_const_pad_mode2_gpu(self):
         self.test_const_pad_mode2_cpu(cpu_only=False)
 
-    @pytest.mark.xfail(reason="rdar://problem/59486372")
+    @pytest.mark.xfail(reason="rdar://problem/59486372", run=False)
     def test_nms_cpu(self, cpu_only=True):
         def _compute_iou_matrix(boxes):
             # input is (N,4), in order [center_w, center_h, width, height]
@@ -3607,6 +3610,7 @@ class NewLayersSimpleTest(CorrectnessTest):
     def test_where_broadcastable_gpu(self):
         self.test_where_broadcastable_cpu(cpu_only=False)
 
+    @pytest.mark.slow
     def test_random_normal_like_cpu(self, cpu_only=True):
         mean, stddev, seed = 0.0, 1.0, 42
 
@@ -3649,6 +3653,7 @@ class NewLayersSimpleTest(CorrectnessTest):
                     builder.spec, inputs, expected, num_moments=6
                 )
 
+    @pytest.mark.slow
     def test_random_normal_like_gpu(self):
         self.test_random_normal_like_cpu(cpu_only=False)
 
@@ -5608,6 +5613,7 @@ def get_coreml_predictions_reduce(X, params):
     return coreml_preds, eval
 
 
+@pytest.mark.slow
 class StressTest(CorrectnessTest):
     def test_slice_layer(self):
         params_dict = dict(
@@ -5703,6 +5709,7 @@ class StressTest(CorrectnessTest):
         self.assertEqual(failed_tests_numerical, [])
 
 
+@pytest.mark.slow
 @unittest.skipIf(
     not _is_macos() or _macos_version() < LAYERS_10_15_MACOS_VERSION,
     "macOS 10.15+ required. Skipping tests.",
@@ -7027,6 +7034,7 @@ class IOS14SingleLayerTests(CorrectnessTest):
         self._test_conv3d(cpu_only=False, full_test=True)
 
 
+@pytest.mark.slow
 @unittest.skipUnless(
     _is_macos() and _macos_version() >= LAYERS_10_16_MACOS_VERSION,
     "Only supported on macOS 10.16+",

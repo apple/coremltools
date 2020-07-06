@@ -30,7 +30,7 @@ from coremltools._deps import (
 class TestTensorFlow1ConverterExamples:
 
     @staticmethod
-    def test_convert_from_frozen_graph():
+    def test_convert_from_frozen_graph(tmpdir):
         import tensorflow as tf
 
         with tf.Graph().as_default() as graph:
@@ -46,7 +46,7 @@ class TestTensorFlow1ConverterExamples:
         np.testing.assert_allclose(results["output"], expected_val)
 
     @staticmethod
-    def test_convert_from_frozen_graph_file():
+    def test_convert_from_frozen_graph_file(tmpdir):
         # create the model to convert
         import tensorflow as tf
 
