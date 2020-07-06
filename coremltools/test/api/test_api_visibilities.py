@@ -27,12 +27,15 @@ class TestApiVisibilities:
             "TensorType",
             "convert",
             "converters",
+            "libcoremlpython",
             "models",
             "proto",
             "target",
             "utils",
             "version",
         ]
+        if not ct.utils._is_macos():
+            expected.remove("libcoremlpython")
         _check_visible_modules(_get_visible_items(ct), expected)
 
     def test_utils(self):
