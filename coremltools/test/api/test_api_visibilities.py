@@ -58,6 +58,8 @@ class TestApiVisibilities:
             "pipeline",
             "tree_ensemble",
             "utils",
+            "feature_vectorizer",
+            "nearest_neighbors",
         ]
         _check_visible_modules(_get_visible_items(ct.models), expected)
 
@@ -145,6 +147,11 @@ class TestApiVisibilities:
     def test_converters_caffe(self):
         _check_visible_modules(_get_visible_items(ct.converters.caffe), ["convert"])
 
+    @pytest.mark.xfail(
+        condition=not ct.utils._is_macos(),
+        reason="rdar://65138103 (Keras converter not exposed on Linux)",
+        run=False,
+    )
     def test_converters_keras(self):
         _check_visible_modules(_get_visible_items(ct.converters.keras), ["convert"])
 
