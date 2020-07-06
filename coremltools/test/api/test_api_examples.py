@@ -26,9 +26,11 @@ from coremltools._deps import (
 
 
 @pytest.mark.skipif(not _HAS_TF_1, reason=MSG_TF1_NOT_FOUND)
+@pytest.mark.skipif(ct.utils._macos_version() < (10, 15), reason='Model produces specification 4.')
 class TestTensorFlow1ConverterExamples:
+
     @staticmethod
-    def test_convert_from_frozen_graph(tmpdir):
+    def test_convert_from_frozen_graph():
         import tensorflow as tf
 
         with tf.Graph().as_default() as graph:
@@ -44,7 +46,7 @@ class TestTensorFlow1ConverterExamples:
         np.testing.assert_allclose(results["output"], expected_val)
 
     @staticmethod
-    def test_convert_from_frozen_graph_file(tmpdir):
+    def test_convert_from_frozen_graph_file():
         # create the model to convert
         import tensorflow as tf
 
@@ -134,6 +136,7 @@ class TestTensorFlow1ConverterExamples:
 
 
 @pytest.mark.skipif(not _HAS_TF_2, reason=MSG_TF2_NOT_FOUND)
+@pytest.mark.skipif(ct.utils._macos_version() < (10, 15), reason='Model produces specification 4.')
 class TestTensorFlow2ConverterExamples:
     def setup_class(self):
         self._cwd = getcwd()
@@ -227,6 +230,7 @@ class TestTensorFlow2ConverterExamples:
 
 
 @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
+@pytest.mark.skipif(ct.utils._macos_version() < (10, 15), reason='Model produces specification 4.')
 class TestPyTorchConverterExamples:
     @staticmethod
     def test_convert_torch_vision_mobilenet_v2(tmpdir):
