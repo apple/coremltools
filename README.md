@@ -19,7 +19,7 @@ conversion, editing and validation. This includes deep learning frameworks like
 TensorFlow, PyTorch, Keras, Caffe as well as classical machine learning
 frameworks like LIBSVM, scikit-learn, and XGBoost.
 
-With coremltools, you can do the following:
+With coremltools, one can do the following:
 
 - Convert trained models from frameworks like TensorFlow and PyTorch to the
   Core ML format.
