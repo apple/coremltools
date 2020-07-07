@@ -489,6 +489,7 @@ bool CoreML::hasIOS14Features(const Specification::Model& model) {
     // - Apple Word Tagger using transfer learning (revision == 3)
 
     bool result = false;
+
     switch (model.Type_case()) {
         case Specification::Model::kPipeline:
             for (auto &m : model.pipeline().models()) {
@@ -776,6 +777,7 @@ bool CoreML::hasIOS14NeuralNetworkFeatures(const Specification::Model& model) {
     if (hasDefaultValueForOptionalInputs(model)) {
         return true;
     }
+
 
     auto layers = getNNSpec(model);
     if (layers) {
