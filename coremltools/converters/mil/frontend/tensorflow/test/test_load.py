@@ -134,21 +134,6 @@ class TestTf1ModelInputsOutputs:
         mlmodel = converter.convert(model, inputs=[ImageType(channel_first=True)])
         assert mlmodel is not None
 
-    def test_invalid_input_names(self):
-        x_shape = (3, 4, 5)
-
-        @make_tf_graph([x_shape])
-        def build_model(x):
-            return tf.nn.relu(x)
-
-        model, inputs, outputs = build_model
-
-        with pytest.raises(ValueError) as e:
-            converter.convert(model, inputs=[TensorType("invalid_name", x_shape)])
-        e.match(
-            r"Input \(invalid_name\) provided is not found in given tensorflow graph. Placeholders in graph are: .*"
-        )
-
     @pytest.mark.parametrize(
         "target",
         [ct.target.iOS13, ct.target.macOS15, ct.target.watchOS6, ct.target.tvOS13],

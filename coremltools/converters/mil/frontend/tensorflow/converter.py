@@ -156,6 +156,9 @@ class TFConverter:
                 if inputs[0].name is None:
                     inputs[0].name = tf_placeholder_names[0]
 
+            # filter out those inputs which is not in tf_placeholder_names
+            inputs = [x for x in inputs if x.name in tf_placeholder_names]
+
             # We fill in shapes for user-specified input that doesn't have shape
             for inp in inputs:
                 # Check inputs existence
