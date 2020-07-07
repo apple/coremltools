@@ -13,6 +13,7 @@ backends = testing_reqs.backends
 
 
 class TestConvTranspose:
+
     @pytest.mark.skipif(not testing_reqs._HAS_TORCH, reason="PyTorch not installed.")
     @pytest.mark.parametrize(
         ",".join(
@@ -33,7 +34,7 @@ class TestConvTranspose:
         itertools.product(
             [True, False],
             backends,
-            ["conv1d", "conv2d", "conv3d"],
+            ["conv1d", "conv2d"], # FIXME: "conv3d" will be available in later macOS.
             [(1, 2, 3), (2, 2, 2)],
             [(7, 7, 7, 2, 2, 2), (10, 12, 14, 3, 2, 4)],
             [(1, 1, 1), (2, 1, 2)],

@@ -87,36 +87,36 @@ build_wheel_linux_py37:
 #  variables:
 #    WHEEL_PATH: build/dist/coremltools*cp37-none-manylinux1_x86_64.whl
 #    PYTHON: "3.7"
-
-test_wheel_ubuntu_14_04_py27_mil:
-  tags:
-    - docker
-  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-14.04:1.0.3
-  dependencies:
-    - build_wheel_linux_py27
-  script:
-    - bash -e scripts/test.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON}
-      --test-package=${TEST_PACKAGE} --fast
-  stage: test
-  variables:
-    PYTHON: "2.7"
-    TEST_PACKAGE: coremltools.converters.mil
-    WHEEL_PATH: build/dist/coremltools*cp27-none-manylinux1_x86_64.whl
-
-test_wheel_ubuntu_14_04_py37_mil:
-  tags:
-    - docker
-  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-14.04:1.0.3
-  dependencies:
-    - build_wheel_linux_py37
-  script:
-    - bash -e scripts/test.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON}
-      --test-package=${TEST_PACKAGE} --fast
-  stage: test
-  variables:
-    PYTHON: "3.7"
-    TEST_PACKAGE: coremltools.converters.mil
-    WHEEL_PATH: build/dist/coremltools*cp37-none-manylinux1_x86_64.whl
+#
+#test_wheel_ubuntu_14_04_py27_mil:
+#  tags:
+#    - docker
+#  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-14.04:1.0.3
+#  dependencies:
+#    - build_wheel_linux_py27
+#  script:
+#    - bash -e scripts/test.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON}
+#      --test-package=${TEST_PACKAGE} --fast
+#  stage: test
+#  variables:
+#    PYTHON: "2.7"
+#    TEST_PACKAGE: coremltools.converters.mil
+#    WHEEL_PATH: build/dist/coremltools*cp27-none-manylinux1_x86_64.whl
+#
+#test_wheel_ubuntu_14_04_py37_mil:
+#  tags:
+#    - docker
+#  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-14.04:1.0.3
+#  dependencies:
+#    - build_wheel_linux_py37
+#  script:
+#    - bash -e scripts/test.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON}
+#      --test-package=${TEST_PACKAGE} --fast
+#  stage: test
+#  variables:
+#    PYTHON: "3.7"
+#    TEST_PACKAGE: coremltools.converters.mil
+#    WHEEL_PATH: build/dist/coremltools*cp37-none-manylinux1_x86_64.whl
 
 #########################################################################
 ##

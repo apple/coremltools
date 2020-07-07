@@ -1323,6 +1323,7 @@ class TestConvTranspose:
 
         test_static_W()
 
+    @pytest.mark.skip(reason="FIXME: will be available in later macOS")
     @pytest.mark.parametrize(
         ",".join(
             [
@@ -3857,6 +3858,7 @@ class TestTile:
             )
 
 
+@pytest.mark.skip(reason="FIXME: will be available in later macOS")
 class TestDynamicTile:
     @pytest.mark.parametrize(
         "use_cpu_only, backend, rank",
