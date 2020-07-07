@@ -3120,7 +3120,7 @@ mode == PIXEL_SHUFFLE
  blocks in the spatial dimensions. The difference is in the arrangement of
  the input-channels' data in the output space. See below example for more
  detail.
- (Only available in Core ML Specification >= 5 (iOS >= 14, macOS >= 10.16)
+ (Only available in Core ML Specification >= 5 (iOS >= 14, macOS >= 11.0)
 
 
 Examples:
@@ -7030,7 +7030,7 @@ This function has the following formula:
 
 Output shape is same as the input.
 
-Available (iOS >= 14, macOS >= 10.16, watchOS >= 7)
+Available (iOS >= 14, macOS >= 11.0, watchOS >= 7)
 
 
 .. code-block:: proto

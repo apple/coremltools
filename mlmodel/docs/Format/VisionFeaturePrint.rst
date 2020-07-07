@@ -29,7 +29,7 @@ according to the specified feature types
 	    message Object {
 	        enum ObjectVersion {
 	            OBJECT_VERSION_INVALID = 0;
-	            // VERSION_1 is available on iOS,tvOS 14.0+, macOS 10.16+
+	            // VERSION_1 is available on iOS,tvOS 14.0+, macOS 11.0+
 	            // It uses a 299x299 input image and yields two multiarray
 	            // features: one at high resolution of shape (288, 35, 35)
 	            // the other at low resolution of shape (768, 17, 17)
@@ -89,7 +89,7 @@ VisionFeaturePrint.Object
 	    message Object {
 	        enum ObjectVersion {
 	            OBJECT_VERSION_INVALID = 0;
-	            // VERSION_1 is available on iOS,tvOS 14.0+, macOS 10.16+
+	            // VERSION_1 is available on iOS,tvOS 14.0+, macOS 11.0+
 	            // It uses a 299x299 input image and yields two multiarray
 	            // features: one at high resolution of shape (288, 35, 35)
 	            // the other at low resolution of shape (768, 17, 17)
@@ -119,7 +119,7 @@ VisionFeaturePrint.Object.ObjectVersion
 
 	        enum ObjectVersion {
 	            OBJECT_VERSION_INVALID = 0;
-	            // VERSION_1 is available on iOS,tvOS 14.0+, macOS 10.16+
+	            // VERSION_1 is available on iOS,tvOS 14.0+, macOS 11.0+
 	            // It uses a 299x299 input image and yields two multiarray
 	            // features: one at high resolution of shape (288, 35, 35)
 	            // the other at low resolution of shape (768, 17, 17)
