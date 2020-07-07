@@ -7,7 +7,9 @@ import itertools
 
 import numpy as np
 import pytest
-import torch
+
+torch = pytest.importorskip("torch")
+
 import torch.nn as nn
 import torch.nn.functional as F
 
@@ -1417,6 +1419,12 @@ class TestTorchOps:
     def test_relu(self, context):
         self._test_activation(
             context, (3, 4, 5), [], "relu", ops.relu, nn.ReLU().eval(), atol=1e-6
+        )
+
+    @pytest.mark.parametrize("alpha", [0.1, 2.0, 1.5])
+    def test_leaky_relu(self, context, alpha):
+        self._test_activation(
+            context, (3, 4, 5), [alpha], "leaky_relu", ops.leaky_relu, nn.LeakyReLU(negative_slope=alpha).eval(), atol=1e-6
         )
 
     @pytest.mark.parametrize("dim", [0, 1, 2])

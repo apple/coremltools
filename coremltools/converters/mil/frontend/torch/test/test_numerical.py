@@ -207,6 +207,17 @@ class TestTorchNumerical:
         run_numerical_test(input_shape, model)
 
     @pytest.mark.parametrize(
+        "output_size", [(10, 10), (20, 30), (20, 20), (30, 20), (190, 170)]
+    )
+    def test_upsample_nearest2d_with_output_size(self, output_size):
+        input_shape = (1, 3, 10, 10)
+        model = ModuleWrapper(
+            nn.functional.interpolate,
+            {"size": output_size, "mode": "nearest"},
+        )
+        run_numerical_test(input_shape, model)
+
+    @pytest.mark.parametrize(
         "scales_h, scales_w, align_corners",
         [x for x in itertools.product([2, 3, 4.5], [4, 5, 5.5], [True, False])],
     )
@@ -218,6 +229,21 @@ class TestTorchNumerical:
                 "scale_factor": (scales_h, scales_w),
                 "mode": "bilinear",
                 "align_corners": align_corners,
+            },
+        )
+        run_numerical_test(input_shape, model)
+
+    @pytest.mark.parametrize(
+        "scales_h, scales_w",
+        [x for x in itertools.product([2, 3, 5], [4, 5, 2])],
+    )
+    def test_upsample_nearest2d_with_scales(self, scales_h, scales_w):
+        input_shape = (1, 3, 10, 10)
+        model = ModuleWrapper(
+            nn.functional.interpolate,
+            {
+                "scale_factor": (scales_h, scales_w),
+                "mode": "nearest",
             },
         )
         run_numerical_test(input_shape, model)
