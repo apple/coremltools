@@ -1970,7 +1970,12 @@ def NonMaxSuppression(context, node):
         iou_threshold=iou_threshold,
         score_threshold=score_threshold,
     )
-    x = mb.squeeze(x=x, axes=[0], name=node.name)
+    num_boxes = boxes.shape[1]
+    if not is_symbolic(num_boxes) and num_boxes < max_boxes.val:
+        x = mb.squeeze(x=x, axes=[0])
+        x = mb.slice_by_index(x=x, begin=[0], end=[num_boxes], name=node.name)
+    else:
+        x = mb.squeeze(x=x, axes=[0], name=node.name)
     context.add(node.name, x)
 
 

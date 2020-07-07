@@ -390,8 +390,8 @@ class MLModelTest(unittest.TestCase):
         _is_macos() and _macos_version() >= (10, 13), "Only supported on macOS 10.13+"
     )
     def test_nn_classifier_util(self):
-        input_features = [("data", datatypes.Array(3,))]
-        output_features = [("out", datatypes.Array(3,))]
+        input_features = [("data", datatypes.Array(3))]
+        output_features = [("out", datatypes.Array(3))]
         builder = NeuralNetworkBuilder(
             input_features, output_features, disable_rank5_shape_mapping=True
         )
@@ -414,8 +414,8 @@ class MLModelTest(unittest.TestCase):
         _is_macos() and _macos_version() >= (10, 13), "Only supported on macOS 10.13+"
     )
     def test_nn_classifier_util_file(self):
-        input_features = [("data", datatypes.Array(3,))]
-        output_features = [("out", datatypes.Array(3,))]
+        input_features = [("data", datatypes.Array(3))]
+        output_features = [("out", datatypes.Array(3))]
         builder = NeuralNetworkBuilder(
             input_features, output_features, disable_rank5_shape_mapping=True
         )
@@ -438,6 +438,32 @@ class MLModelTest(unittest.TestCase):
         self.assertEqual(
             mlmodel.get_spec().WhichOneof("Type"), "neuralNetworkClassifier"
         )
+
+    @unittest.skipUnless(
+        _is_macos() and _macos_version() >= (10, 13), "Only supported on macOS 10.13+"
+    )
+    def test_rename_output_nn_classifier(self):
+        input_features = [("data", datatypes.Array(3))]
+        output_features = [("out", datatypes.Array(3))]
+        builder = NeuralNetworkBuilder(
+            input_features, output_features, disable_rank5_shape_mapping=True
+        )
+        builder.add_activation("linear", "LINEAR", "data", "out")
+        spec = builder.spec
+        mlmodel = MLModel(spec)
+
+        class_labels = ["a", "b", "c"]
+        mlmodel = make_nn_classifier(mlmodel, class_labels=["a", "b", "c"])
+
+        # rename output
+        spec = mlmodel.get_spec()
+        rename_feature(spec, "out", "new_out_name")
+        mlmodel = MLModel(spec)
+
+        out_dict = mlmodel.predict({"data": np.array([4.0, 5.5, 6.0])}, useCPUOnly=True)
+        self.assertEqual(out_dict["classLabel"], "c")
+        self.assertTrue("new_out_name" in out_dict)
+        self.assertTrue(isinstance(out_dict["new_out_name"], dict))
 
 
 if __name__ == "__main__":

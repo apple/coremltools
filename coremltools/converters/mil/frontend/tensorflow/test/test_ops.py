@@ -3571,8 +3571,8 @@ class TestNonMaximumSuppression:
         itertools.product(
             [True, False],
             backends,
-            [20, 30, 100],
-            [5, 20],
+            [20, 30, 80],
+            [5, 20, 100],
             [1.0, 0.99],
             [float("-inf"), -200.0],
         ),
@@ -3586,13 +3586,6 @@ class TestNonMaximumSuppression:
         iou_threshold,
         score_threshold,
     ):
-        """
-        Note: TensorFlow and Core ML does not have exact same implementation,
-        Core ML pad -1s to the results while TensorFlow does not. Threshold
-        values are carefully choose to make test success as it fails when:
-        1) input num_boxes < max_boxes because of shape mis-match.
-        2) output num_boxes < max_boxes because of shape mis-match.
-        """
         boxes_val = random_gen(shape=(num_boxes, 4), rand_min=0, rand_max=32)
         scores_val = random_gen(shape=(num_boxes,), rand_min=-100, rand_max=100)
 

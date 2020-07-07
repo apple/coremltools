@@ -25,13 +25,13 @@ unknown_option() {
 print_help() {
   echo "Test the wheel by running all unit tests"
   echo
-  echo "Usage: zsh -i test_wheel.sh"
+  echo "Usage: zsh -i test.sh"
   echo
   echo "  --wheel-path=*          Specify which wheel to test. Otherwise, test the current coremltools dir."
   echo "  --test-package=*        Test package to run."
   echo "  --python=*              Python to use for configuration."
   echo "  --requirements=*        [Optional] Path to the requirements.txt file."
-  echo "  --cov=*                 Generate converage report for these dirs."
+  echo "  --cov=*                 Generate converge report for these dirs."
   echo "  --fast                  Run only fast tests."
   echo "  --slow                  Run only slow tests."
   echo "  --timeout               Timeout limit (on each test)"

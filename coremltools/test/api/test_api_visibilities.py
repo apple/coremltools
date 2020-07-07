@@ -1,4 +1,5 @@
 import coremltools as ct
+import pytest
 
 
 def _get_visible_items(d):
@@ -26,11 +27,13 @@ class TestApiVisibilities:
             "TensorType",
             "convert",
             "converters",
+            "libcoremlpython",
             "models",
             "proto",
             "target",
             "utils",
             "version",
+            "test",
         ]
         _check_visible_modules(_get_visible_items(ct), expected)
 
@@ -58,6 +61,8 @@ class TestApiVisibilities:
             "pipeline",
             "tree_ensemble",
             "utils",
+            "feature_vectorizer",
+            "nearest_neighbors",
         ]
         _check_visible_modules(_get_visible_items(ct.models), expected)
 
@@ -145,12 +150,20 @@ class TestApiVisibilities:
     def test_converters_caffe(self):
         _check_visible_modules(_get_visible_items(ct.converters.caffe), ["convert"])
 
+    @pytest.mark.skipif(
+        ct.utils._python_version() >= (3, 8, 0),
+        reason="Keras isn't compatible with Python 3.8+.",
+    )
     def test_converters_keras(self):
         _check_visible_modules(_get_visible_items(ct.converters.keras), ["convert"])
 
     def test_converters_libsvm(self):
         _check_visible_modules(_get_visible_items(ct.converters.libsvm), ["convert"])
 
+    @pytest.mark.skipif(
+        ct.utils._python_version() >= (3, 8, 0),
+        reason="ONNX isn't compatible with Python 3.8+.",
+    )
     def test_converters_onnx(self):
         _check_visible_modules(_get_visible_items(ct.converters.onnx), ["convert"])
 

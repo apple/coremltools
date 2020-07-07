@@ -22,7 +22,7 @@ from .._interface_management import (
 from .. import datatypes
 import numpy as _np
 from .quantization_utils import _unpack_to_bytes, _convert_array_to_nbit_quantized_bytes
-from .spec_inspection_utils import *
+from .spec_inspection_utils import _summarize_network_layer_info
 from .update_optimizer_utils import AdamParams, SgdParams
 from six import string_types as _string_types
 from math import floor as _math_floor
@@ -3497,7 +3497,7 @@ class NeuralNetworkBuilder(object):
         spec_layer_params = spec_layer.sliceBySize
 
         if size < 1:
-            raise ValueError("Invalid size value %d. Must be positive." % stride)
+            raise ValueError("Invalid size value %d. Must be positive." % size)
 
         spec_layer_params.axis = axis
         spec_layer_params.size = size

@@ -293,6 +293,20 @@ class TestTorchNumerical:
         model = nn.AvgPool2d(kernel_size, stride, pad, True, include_pad)
         run_numerical_test(input_shape, model)
 
+    @pytest.mark.parametrize(
+        "batch_size, CHW, r",
+        itertools.product(
+            [1, 3],
+            [(1, 4, 4), (3, 2, 3)],
+            [2, 4]
+        )
+    )
+    def test_pixel_shuffle(self, batch_size, CHW, r):
+        C, H, W = CHW
+        input_shape = (batch_size, C*r*r, H, W)
+        model = nn.PixelShuffle(upscale_factor=r)
+        run_numerical_test(input_shape, model)
+
     @pytest.mark.xfail(
         reason="PyTorch convert function for op max_pool1d not implemented, "
         "we will also likely run into rdar://problem/61064173"
