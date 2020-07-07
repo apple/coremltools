@@ -462,6 +462,12 @@ def relu(context, node):
     res = mb.relu(x=inputs[0], name=node.name)
     context.add(res)
 
+@register_torch_op(torch_alias=["leaky_relu_"])
+def leaky_relu(context, node):
+    inputs = _get_inputs(context, node, expected=2)
+
+    res = mb.leaky_relu(x=inputs[0], alpha=inputs[1], name=node.name)
+    context.add(res)
 
 def _adjust_pad_for_ceil_mode(input_shape, kernel_sizes, stride_sizes, pad_sizes):
     """ TODO Given an input tensor and pooling parameters, add the extra input
@@ -1101,19 +1107,8 @@ def lstm(context, node):
         else:
             context.add(output, name)
 
-
-@register_torch_op
-def upsample_bilinear2d(context, node):
-    inputs = _get_inputs(context, node)
-    _input = inputs[0]
-    output_size = inputs[1]
-    align_corners = bool(inputs[2].val)
-
-    if len(inputs) == 5:
-        # For torch==1.5.0, upsample_bilinear2d has 5 inputs.
-        scales_h = inputs[3]
-        scales_w = inputs[4]
-
+def _get_scales_from_output_size(output_size, input_shape):
+    scales = []
     if output_size is not None:
         # @output_size will be a list if scales was provided or a
         # single var if output size was provided
@@ -1131,8 +1126,26 @@ def upsample_bilinear2d(context, node):
         # e.g. if output size = 34 and input size = 2, then scale will be
         # 17, which can get represented as 16.9999, resulting in an output size of 33
         # instead of 34, without this correction.
-        scales_h = (output_size[0] + 1e-4) / float(_input.shape[-2])
-        scales_w = (output_size[1] + 1e-4) / float(_input.shape[-1])
+        scales_h = (output_size[0] + 1e-4) / float(input_shape[-2])
+        scales_w = (output_size[1] + 1e-4) / float(input_shape[-1])
+        scales = [scales_h, scales_w]
+    return scales
+
+@register_torch_op
+def upsample_bilinear2d(context, node):
+    inputs = _get_inputs(context, node)
+    _input = inputs[0]
+    output_size = inputs[1]
+    align_corners = bool(inputs[2].val)
+
+    if len(inputs) == 5:
+        # For torch==1.5.0, upsample_bilinear2d has 5 inputs.
+        scales_h = inputs[3]
+        scales_w = inputs[4]
+
+    scales = _get_scales_from_output_size(output_size, _input.shape)
+    if scales:
+        scales_h, scales_w = scales
 
     upsample_bilinear = mb.upsample_bilinear(
         x=_input,
@@ -1143,6 +1156,33 @@ def upsample_bilinear2d(context, node):
     )
     context.add(upsample_bilinear)
 
+@register_torch_op
+def upsample_nearest2d(context, node):
+    inputs = _get_inputs(context, node)
+    _input = inputs[0]
+    output_size = inputs[1]
+    if len(inputs) == 4:
+        scales_h = inputs[2]
+        scales_w = inputs[3]
+
+    scales = _get_scales_from_output_size(output_size, _input.shape)
+    if scales:
+        scales_h, scales_w = scales
+
+    if (
+        abs(scales_h - round(scales_h)) > 0.001
+        or abs(scales_w - round(scales_w)) > 0.001
+    ):
+        raise ValueError("Layer upsample_nearest2d only supports integral scales. Provided scales: {}. "
+                         "Please use upsample_bilinear2d for fractional scales".format(scales))
+
+    upsample_nearest2d = mb.upsample_nearest_neighbor(
+        x=_input,
+        upscale_factor_height=int(round(scales_h)),
+        upscale_factor_width=int(round(scales_w)),
+        name=node.name,
+    )
+    context.add(upsample_nearest2d)
 
 @register_torch_op(torch_alias=["listunpack"])
 def tupleunpack(context, node):
