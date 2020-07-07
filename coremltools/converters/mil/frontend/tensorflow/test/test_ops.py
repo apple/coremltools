@@ -1323,7 +1323,7 @@ class TestConvTranspose:
 
         test_static_W()
 
-    @pytest.mark.skip(reason="FIXME: will be available in later macOS")
+    @pytest.mark.skip(reason="rdar://65198011 (Re-enable Conv3dTranspose and DynamicTile unit tests)")
     @pytest.mark.parametrize(
         ",".join(
             [
@@ -3858,7 +3858,7 @@ class TestTile:
             )
 
 
-@pytest.mark.skip(reason="FIXME: will be available in later macOS")
+@pytest.mark.skip(reason="rdar://65198011 (Re-enable Conv3dTranspose and DynamicTile unit tests)")
 class TestDynamicTile:
     @pytest.mark.parametrize(
         "use_cpu_only, backend, rank",

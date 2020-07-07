@@ -34,7 +34,7 @@ class TestConvTranspose:
         itertools.product(
             [True, False],
             backends,
-            ["conv1d", "conv2d"], # FIXME: "conv3d" will be available in later macOS.
+            ["conv1d", "conv2d"], # FIXME: rdar://65198011 (Re-enable Conv3dTranspose and DynamicTile unit tests)
             [(1, 2, 3), (2, 2, 2)],
             [(7, 7, 7, 2, 2, 2), (10, 12, 14, 3, 2, 4)],
             [(1, 1, 1), (2, 1, 2)],

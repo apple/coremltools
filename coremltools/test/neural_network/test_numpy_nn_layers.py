@@ -2423,8 +2423,8 @@ class NewLayersSimpleTest(CorrectnessTest):
     def test_tile_gpu(self):
         self.test_tile_cpu(cpu_only=False)
 
-    @pytest.mark.xfail(
-        reason="FIXME: will be available in later macOS 10.16 seed.", run=False,
+    @pytest.mark.skip(
+        reason="rdar://65198011 (Re-enable Conv3dTranspose and DynamicTile unit tests)"
     )
     def test_dynamic_tile_cpu(self, cpu_only=True):
         for rank in range(1, 6):
