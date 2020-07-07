@@ -1015,6 +1015,7 @@ class TestTile:
         assert is_close(np.tile(x, reps=(2,)), v.val)
 
 
+@pytest.mark.skip(reason="FIXME: will be available in later macOS.")
 class TestDynamicTile:
     @pytest.mark.parametrize(
         "use_cpu_only, backend", itertools.product([True, False], backends,)
