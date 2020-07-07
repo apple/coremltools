@@ -45,7 +45,7 @@ build_wheel_linux_py37:
   variables:
     PYTHON: "3.7"
 
-.test_linux: &test_linux
+.test_linux_coremltools_test: &test_linux_coremltools_test
   tags:
     - docker
   stage: test
@@ -53,7 +53,7 @@ build_wheel_linux_py37:
     - bash -e scripts/test.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON} --fast
 
 #test_wheel_linux_py27:
-#  <<: *test_linux
+#  <<: *test_linux_coremltools_test
 #  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-14.04:1.0.3
 #  dependencies:
 #    - build_wheel_linux_py27
@@ -62,7 +62,7 @@ build_wheel_linux_py37:
 #    PYTHON: "2.7"
 #
 #test_wheel_linux_py35:
-#  <<: *test_linux
+#  <<: *test_linux_coremltools_test
 #  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-14.04:1.0.3
 #  dependencies:
 #    - build_wheel_linux_py35
@@ -71,7 +71,7 @@ build_wheel_linux_py37:
 #    PYTHON: "3.5"
 #
 #test_wheel_linux_py36:
-#  <<: *test_linux
+#  <<: *test_linux_coremltools_test
 #  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-14.04:1.0.3
 #  dependencies:
 #    - build_wheel_linux_py36
@@ -80,7 +80,7 @@ build_wheel_linux_py37:
 #    PYTHON: "3.6"
 #
 #test_wheel_linux_py37:
-#  <<: *test_linux
+#  <<: *test_linux_coremltools_test
 #  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-14.04:1.0.3
 #  dependencies:
 #    - build_wheel_linux_py37
@@ -129,12 +129,12 @@ build_wheel_macos_py37:
   variables:
     PYTHON: "3.7"
 
-.test_macos: &test_macos
+.test_macos_coremltools_test: &test_macos_coremltools_test
   stage: test
   script:
     - bash -e scripts/test.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON} --fast
 
-#test_wheel_macos_13_py27:
+#test_wheel_macOS_10_13_py27:
 #  <<: *test_macos
 #  tags:
 #    - macos10.13
@@ -144,7 +144,7 @@ build_wheel_macos_py37:
 #    WHEEL_PATH: build/dist/*cp27*10_13*
 #    PYTHON: "2.7"
 #
-#test_wheel_macos_14_py27:
+#test_wheel_macOS_10_14_py27:
 #  <<: *test_macos
 #  tags:
 #    - macos10.14
@@ -154,7 +154,7 @@ build_wheel_macos_py37:
 #    WHEEL_PATH: build/dist/*cp27*10_14*
 #    PYTHON: "2.7"
 #
-#test_wheel_macos_15_py27:
+#test_wheel_macOS_10_15_py27:
 #  <<: *test_macos
 #  tags:
 #    - macos10.15
@@ -164,7 +164,7 @@ build_wheel_macos_py37:
 #    WHEEL_PATH: build/dist/*cp27*10_15*
 #    PYTHON: "2.7"
 #
-#test_wheel_macos_15_py35:
+#test_wheel_macOS_10_15_py35:
 #  <<: *test_macos
 #  tags:
 #    - macos10.15
@@ -174,7 +174,7 @@ build_wheel_macos_py37:
 #    WHEEL_PATH: build/dist/*cp35*10_15*
 #    PYTHON: "3.5"
 #
-#test_wheel_macos_15_py36:
+#test_wheel_macOS_10_15_py36:
 #  <<: *test_macos
 #  tags:
 #    - macos10.15
@@ -184,7 +184,7 @@ build_wheel_macos_py37:
 #    WHEEL_PATH: build/dist/*cp36*10_15*
 #    PYTHON: "3.6"
 #
-#test_wheel_macos_15_py37:
+#test_wheel_macOS_10_15_py37:
 #  <<: *test_macos
 #  tags:
 #    - macos10.15
@@ -194,8 +194,8 @@ build_wheel_macos_py37:
 #    WHEEL_PATH: build/dist/*cp37*10_15*
 #    PYTHON: "3.7"
 
-test_wheel_macos_16_py27:
-  <<: *test_macos
+test_wheel_macOS_10_16_py27_coremltools_test:
+  <<: *test_macos_coremltools_test
   tags:
     - macos10.16
   dependencies:
@@ -204,35 +204,93 @@ test_wheel_macos_16_py27:
     WHEEL_PATH: build/dist/*cp27*10_16*
     PYTHON: "2.7"
 
-test_wheel_macos_16_py35:
-  <<: *test_macos
+#test_wheel_macOS_10_16_py35_coremltools_test:
+#  <<: *test_macos_coremltools_test
+#  tags:
+#    - macos10.16
+#  dependencies:
+#    - build_wheel_macos_py35
+#  variables:
+#    WHEEL_PATH: build/dist/*cp35*10_16*
+#    PYTHON: "3.5"
+#
+#test_wheel_macOS_10_16_py36_coremltools_test:
+#  <<: *test_macos_coremltools_test
+#  tags:
+#    - macos10.16
+#  dependencies:
+#    - build_wheel_macos_py36
+#  variables:
+#    WHEEL_PATH: build/dist/*cp36*10_16*
+#    PYTHON: "3.6"
+#
+#test_wheel_macOS_10_16_py37_coremltools_test:
+#  <<: *test_macos_coremltools_test
+#  tags:
+#    - macos10.16
+#  dependencies:
+#    - build_wheel_macos_py37
+#  variables:
+#    WHEEL_PATH: build/dist/*cp37*10_16*
+#    PYTHON: "3.7"
+
+test_wheel_macOS_10_16_py27_mil:
   tags:
     - macos10.16
   dependencies:
-    - build_wheel_macos_py35
+    - build_wheel_macos_py27
+  script:
+    - bash -e scripts/test.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON}
+      --test-package=${TEST_PACKAGE} --fast
+  stage: test
   variables:
-    WHEEL_PATH: build/dist/*cp35*10_16*
-    PYTHON: "3.5"
+    PYTHON: "2.7"
+    TEST_PACKAGE: coremltools.converters.mil
+    WHEEL_PATH: build/dist/*cp27*10_16*
 
-test_wheel_macos_16_py36:
-  <<: *test_macos
-  tags:
-    - macos10.16
-  dependencies:
-    - build_wheel_macos_py36
-  variables:
-    WHEEL_PATH: build/dist/*cp36*10_16*
-    PYTHON: "3.6"
-
-test_wheel_macos_16_py37:
-  <<: *test_macos
+test_wheel_macOS_10_16_py37_mil:
   tags:
     - macos10.16
   dependencies:
     - build_wheel_macos_py37
+  script:
+    - bash -e scripts/test.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON}
+      --test-package=${TEST_PACKAGE} --fast
+  stage: test
   variables:
-    WHEEL_PATH: build/dist/*cp37*10_16*
     PYTHON: "3.7"
+    TEST_PACKAGE: coremltools.converters.mil
+    WHEEL_PATH: build/dist/*cp37*10_16*
+
+test_wheel_macOS_10_16_py27_mil_tf2:
+  tags:
+    - macos10.16
+  dependencies:
+    - build_wheel_macos_py27
+  script:
+    - bash -e scripts/test.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON}
+      --test-package=${TEST_PACKAGE} --requirements=${REQUIREMENTS} --fast
+  stage: test
+  variables:
+    PYTHON: "2.7"
+    REQUIREMENTS: reqs/test_tf2.pip
+    TEST_PACKAGE: coremltools.converters.mil.frontend.tensorflow2
+    WHEEL_PATH: build/dist/*cp27*10_16*
+
+test_wheel_macOS_10_16_py37_mil_tf2:
+  tags:
+    - macos10.16
+  dependencies:
+    - build_wheel_macos_py37
+  script:
+    - bash -e scripts/test.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON}
+      --test-package=${TEST_PACKAGE} --requirements=${REQUIREMENTS} --fast
+  stage: test
+  variables:
+    PYTHON: "3.7"
+    REQUIREMENTS: reqs/test_tf2.pip
+    TEST_PACKAGE: coremltools.converters.mil.frontend.tensorflow2
+    WHEEL_PATH: build/dist/*cp37*10_16*
 
 #########################################################################
 ##
