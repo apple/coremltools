@@ -300,7 +300,7 @@ class TestPyTorchConverterExamples:
             results = mlmodel.predict({"input": example_input.numpy()})
             expected = model(example_input)
             np.testing.assert_allclose(
-                results["1651"], expected.detach().numpy(), rtol=1e-2
+                list(results.values())[0], expected.detach().numpy(), rtol=1e-2
             )
 
     @staticmethod
