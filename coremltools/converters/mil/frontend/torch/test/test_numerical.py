@@ -407,7 +407,7 @@ class TestTorchNumerical:
 
     @pytest.mark.parametrize(
         "input_size, hidden_size, num_layers, bias, batch_first, dropout, bidirectional",
-        itertools.product([7], [5], [1], [True, False], [False], [0.3], [True, False]),
+        itertools.product([7], [5], [1], [True, False], [True, False], [0.3], [True, False]),
     )
     def test_lstm(
         self,
@@ -432,7 +432,6 @@ class TestTorchNumerical:
     @pytest.mark.parametrize(
         "input_size, hidden_size, num_layers, bias, batch_first, dropout, bidirectional",
         [
-            (7, 3, 1, True, True, 0.3, True),
             (7, 3, 2, True, True, 0.3, True),
             (7, 3, 2, False, False, 0.3, False),
         ],
