@@ -955,7 +955,7 @@ def lstm(context, node):
         )
 
     if batch_first:
-        raise ValueError("CoreML does not support LSTM layer with batch_first==True.")
+        _input = mb.transpose(x=_input, perm=[1, 0, 2], name=_input.name + "_batch_first_transpose")
 
     expected_num_weights = 2 * num_layers * (int(bidirectional) + 1) * (int(bias) + 1)
     if len(weights) != expected_num_weights:
@@ -1095,7 +1095,7 @@ def lstm(context, node):
         bias=(final_biases if bias else None),
         direction=("bidirectional" if bidirectional is True else "forward"),
         output_sequence=True,
-        name=node.name,
+        name=node.name if not batch_first else node.name + "_batch_first",
     )
 
     # (6.)
@@ -1105,6 +1105,8 @@ def lstm(context, node):
             unsqueeze = mb.expand_dims(x=output, axes=[0], name=name)
             context.add(unsqueeze)
         else:
+            if batch_first:
+                output = mb.transpose(x=output, perm=[1, 0, 2], name=name)
             context.add(output, name)
 
 def _get_scales_from_output_size(output_size, input_shape):
