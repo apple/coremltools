@@ -74,6 +74,8 @@ echo PYTHON_VERSION=$PYTHON_VERSION
 echo PYTHON_LIBRARY=$PYTHON_LIBRARY
 echo 
 
+echo "Making sure conda hooks are enabled"
+eval "$(conda shell.bash hook)"
 echo "Activating conda env in $PYTHON_ENV"
 conda activate $PYTHON_ENV
 echo

@@ -129,6 +129,9 @@ class TestNormalizationInstanceNorm:
             backend=backend,
         )
 
+    @pytest.mark.xfail(
+        reason='ValueError: Expected more than 1 value per channel when training, got input size torch.Size([1, 3, 1, 1])',
+        run=False)
     @pytest.mark.skipif(not testing_reqs._HAS_TORCH, reason="PyTorch not found.")
     @pytest.mark.parametrize(
         "use_cpu_only, backend, epsilon",
