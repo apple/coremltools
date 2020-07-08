@@ -20,6 +20,7 @@ stages:
       paths:
         - build/dist/
 
+## Uses Python 2.7 from python.org (already on build machine)
 build_wheel_macos_py27:
   <<: *build_macos
   variables:
@@ -43,83 +44,111 @@ build_wheel_macos_py37:
   variables:
     PYTHON: "3.7"
 
+## Uses Python 3.8 from python.org (already on build machine)
+build_wheel_macos_py38:
+  <<: *build_macos
+  variables:
+    PYTHON: "3.8"
+
 .test_macos_coremltools_test: &test_macos_coremltools_test
   stage: test
   script:
     - bash -e scripts/test.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON} --fast
 
-test_wheel_macOS_10_16_py27_coremltools_test:
-  <<: *test_macos_coremltools_test
-  tags:
-    - macos10.16
-  dependencies:
-    - build_wheel_macos_py27
-  variables:
-    WHEEL_PATH: build/dist/*cp27*10_16*
-    PYTHON: "2.7"
-
-test_wheel_macOS_10_16_py37_coremltools_test:
-  <<: *test_macos_coremltools_test
-  tags:
-    - macos10.16
-  dependencies:
-    - build_wheel_macos_py37
-  variables:
-    WHEEL_PATH: build/dist/*cp37*10_16*
-    PYTHON: "3.7"
-
-test_wheel_macOS_10_16_py27_mil:
-  tags:
-    - macos10.16
-  dependencies:
-    - build_wheel_macos_py27
+.test_macos_pkg: &test_macos_pkg
+  stage: test
   script:
     - bash -e scripts/test.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON}
       --test-package=${TEST_PACKAGE} --fast
-  stage: test
-  variables:
-    PYTHON: "2.7"
-    TEST_PACKAGE: coremltools.converters.mil
-    WHEEL_PATH: build/dist/*cp27*10_16*
 
-test_wheel_macOS_10_16_py37_mil:
-  tags:
-    - macos10.16
-  dependencies:
-    - build_wheel_macos_py37
-  script:
-    - bash -e scripts/test.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON}
-      --test-package=${TEST_PACKAGE} --fast
+.test_macos_pkg_with_reqs: &test_macos_pkg_with_reqs
   stage: test
-  variables:
-    PYTHON: "3.7"
-    TEST_PACKAGE: coremltools.converters.mil
-    WHEEL_PATH: build/dist/*cp37*10_16*
-
-test_wheel_macOS_10_16_py27_mil_tf2:
-  tags:
-    - macos10.16
-  dependencies:
-    - build_wheel_macos_py27
   script:
     - bash -e scripts/test.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON}
       --test-package=${TEST_PACKAGE} --requirements=${REQUIREMENTS} --fast
-  stage: test
+
+test_macos11_py27_coremltools_test:
+  <<: *test_macos_coremltools_test
+  tags:
+    - macos11
+  dependencies:
+    - build_wheel_macos_py27
+  variables:
+    WHEEL_PATH: build/dist/*cp27*10_16*
+    PYTHON: "2.7"
+
+test_macos11_py37_coremltools_test:
+  <<: *test_macos_coremltools_test
+  tags:
+    - macos11
+  dependencies:
+    - build_wheel_macos_py37
+  variables:
+    WHEEL_PATH: build/dist/*cp37*10_16*
+    PYTHON: "3.7"
+
+test_macos11_py27_pytorch:
+  <<: *test_macos_pkg
+  tags:
+    - macos11
+  dependencies:
+    - build_wheel_macos_py27
+  variables:
+    PYTHON: "2.7"
+    TEST_PACKAGE: coremltools.converters.mil.frontend.torch
+    WHEEL_PATH: build/dist/*cp27*10_16*
+
+test_macos11_py37_pytorch:
+  <<: *test_macos_pkg
+  tags:
+    - macos11
+  dependencies:
+    - build_wheel_macos_py37
+  variables:
+    PYTHON: "3.7"
+    TEST_PACKAGE: coremltools.converters.mil.frontend.torch
+    WHEEL_PATH: build/dist/*cp37*10_16*
+
+test_macos11_py27_tensorflow1:
+  <<: *test_macos_pkg
+  tags:
+    - macos11
+  dependencies:
+    - build_wheel_macos_py27
+  variables:
+    PYTHON: "2.7"
+    TEST_PACKAGE: coremltools.converters.mil.frontend.tensorflow
+    WHEEL_PATH: build/dist/*cp27*10_16*
+
+test_macos11_py37_tensorflow1:
+  <<: *test_macos_pkg
+  tags:
+    - macos11
+  dependencies:
+    - build_wheel_macos_py37
+  variables:
+    PYTHON: "3.7"
+    TEST_PACKAGE: coremltools.converters.mil.frontend.tensorflow
+    WHEEL_PATH: build/dist/*cp37*10_16*
+
+test_macos11_py27_tensorflow2:
+  <<: *test_macos_pkg_with_reqs
+  tags:
+    - macos11
+  dependencies:
+    - build_wheel_macos_py27
   variables:
     PYTHON: "2.7"
     REQUIREMENTS: reqs/test_tf2.pip
     TEST_PACKAGE: coremltools.converters.mil.frontend.tensorflow2
     WHEEL_PATH: build/dist/*cp27*10_16*
 
-test_wheel_macOS_10_16_py37_mil_tf2:
+test_macos11_py37_tensorflow2:
+  <<: *test_macos_pkg_with_reqs
   tags:
-    - macos10.16
+    - macos11
   dependencies:
     - build_wheel_macos_py37
-  script:
-    - bash -e scripts/test.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON}
-      --test-package=${TEST_PACKAGE} --requirements=${REQUIREMENTS} --fast
-  stage: test
   variables:
     PYTHON: "3.7"
     REQUIREMENTS: reqs/test_tf2.pip
@@ -145,6 +174,7 @@ collect_artifacts:
     - build_wheel_macos_py35
     - build_wheel_macos_py36
     - build_wheel_macos_py37
+    - build_wheel_macos_py38
   artifacts:
     expire_in: 2 weeks
     paths:

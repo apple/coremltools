@@ -70,7 +70,7 @@ def trace_model(model, input_data):
 
 
 def run_numerical_test(
-    input_data, model, expected_results=None, places=5, input_as_shape=True, use_cpu_only=False,
+    input_data, model, expected_results=None, places=5, input_as_shape=True
 ):
     """
         Traces a model and runs a numerical test.
@@ -84,7 +84,7 @@ def run_numerical_test(
     model_spec = trace_model(model, input_data)
     convert_and_compare(
         input_data, model_spec, expected_results=expected_results,
-        atol=10.0 ** -places, use_cpu_only=use_cpu_only,
+        atol=10.0 ** -places,
     )
 
 
@@ -95,7 +95,7 @@ def flatten_and_detach_torch_results(torch_results):
     return [torch_results.detach().numpy()]
 
 
-def convert_and_compare(input_data, model_spec, expected_results=None, atol=1e-5, use_cpu_only=False):
+def convert_and_compare(input_data, model_spec, expected_results=None, atol=1e-5):
     """
         If expected results is not set, it will by default
         be set to the flattened output of the torch model.
@@ -114,7 +114,7 @@ def convert_and_compare(input_data, model_spec, expected_results=None, atol=1e-5
     mlmodel = convert_to_mlmodel(model_spec, input_data)
     coreml_inputs = convert_to_coreml_inputs(mlmodel.input_description, input_data)
     if _IS_MACOS:
-        coreml_results = mlmodel.predict(coreml_inputs, useCPUOnly=use_cpu_only)
+        coreml_results = mlmodel.predict(coreml_inputs)
         sorted_coreml_results = [
             coreml_results[key] for key in sorted(coreml_results.keys())
         ]
