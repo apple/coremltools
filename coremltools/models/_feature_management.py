@@ -11,7 +11,6 @@ import operator as op
 from six import (
     integer_types as _integer_types,
     string_types as _string_types,
-    PY3 as _PY3,
 )
 
 from . import datatypes
@@ -301,10 +300,7 @@ def process_or_validate_features(features, num_dimensions=None, feature_type_map
                 raise_type_error("Index in feature %s out of range." % k)
 
         iterable_types = [tuple, list, set]
-        if _PY3:
-            iterable_types.append(range)
-        else:
-            iterable_types.append(xrange)
+        iterable_types.append(range)
         if isinstance(v, tuple(iterable_types)):
             for idx in v:
                 test_index(idx)
@@ -312,7 +308,7 @@ def process_or_validate_features(features, num_dimensions=None, feature_type_map
             # Replace and update
             features[k] = v = list(sorted(v))
 
-        elif isinstance(v, (int, long)):
+        elif isinstance(v, _integer_types):
             test_index(v)
             features[k] = v = [v]
         else:
