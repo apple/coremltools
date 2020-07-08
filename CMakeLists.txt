@@ -53,7 +53,7 @@ include_directories(
   )
 
 if(APPLE)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fobjc-arc -Dprotobuf_WITH_ZLIB_DEFAULT=OFF")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fobjc-arc")
 endif()
 
 add_library(caffeconverter
