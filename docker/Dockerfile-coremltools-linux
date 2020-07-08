@@ -1,5 +1,6 @@
 # An Ubuntu based image that is used for gitlab based ci infrastructure
-FROM ubuntu:20.04
+# Start from an older version, for maximum binary compat at runtime
+FROM ubuntu:14.04
 
 # Install dependencies, particularly libraries that python or CMake need
 RUN  apt-get -y update \
@@ -12,7 +13,6 @@ RUN curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.d
 RUN apt-get -y install git-lfs
 
 WORKDIR /
-RUN  mkdir src
 ENV PATH=/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 ENV LD_LIBRARY_PATH=/usr/local/lib:/usr/local/lib64:
 
@@ -20,12 +20,16 @@ ENV LD_LIBRARY_PATH=/usr/local/lib:/usr/local/lib64:
 WORKDIR /opt
 RUN  curl -L https://github.com/Kitware/CMake/releases/download/v3.13.4/cmake-3.13.4-Linux-x86_64.tar.gz -o cmake-3.13.4-Linux-x86_64.tar.gz \
      && tar xf cmake-3.13.4-Linux-x86_64.tar.gz
-ENV PATH=/opt/cmake-3.13.4-Linux-x86_64/bin:/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ENV PATH=/opt/cmake-3.13.4-Linux-x86_64/bin:/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/miniconda/bin
 
-# Install Anaconda and initialize it for use in ZSH
+# Install Miniconda and initialize it for use in ZSH
 WORKDIR /opt
-RUN curl https://repo.anaconda.com/archive/Anaconda3-2020.02-Linux-x86_64.sh -o anaconda.sh
-RUN zsh anaconda.sh -b -p /opt/anaconda && eval "$(/opt/anaconda/bin/conda shell.zsh hook)" && conda init zsh
+RUN curl https://repo.anaconda.com/miniconda/Miniconda3-py38_4.8.2-Linux-x86_64.sh -o miniconda.sh
+RUN zsh miniconda.sh -b -p /opt/miniconda
+
+# hook conda into both bash and zsh
+RUN eval "$(/opt/miniconda/bin/conda shell.bash hook)" && conda init bash && conda config --set auto_activate_base false
+RUN zsh -c 'eval "$(/opt/miniconda/bin/conda shell.zsh hook)" && conda init zsh && conda config --set auto_activate_base false'
 
 # Give Cmake hints about compilers to use.
 ENV CC="/usr/bin/gcc"

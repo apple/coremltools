@@ -13,6 +13,9 @@ from coremltools.models import MLModel
 from coremltools._deps import _IS_MACOS
 
 
+np.random.seed(1984)
+
+
 def _flatten(object):
     flattened_list = []
     for item in object:
@@ -80,7 +83,8 @@ def run_numerical_test(
         input_data = generate_input_data(input_data)
     model_spec = trace_model(model, input_data)
     convert_and_compare(
-        input_data, model_spec, expected_results=expected_results, atol=10.0 ** -places
+        input_data, model_spec, expected_results=expected_results,
+        atol=10.0 ** -places,
     )
 
 

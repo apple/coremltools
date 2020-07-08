@@ -10,6 +10,7 @@ from __future__ import division as _
 from __future__ import absolute_import as _
 
 import pytest
+import coremltools as ct
 from coremltools import models
 import numpy as np
 from coremltools.converters.mil.mil import Builder as mb
@@ -49,8 +50,10 @@ def test_single_layer_example():
     }
     model = models.MLModel(proto)
     assert model is not None
-    prediction = model.predict(feed_dict)
-    assert len(prediction) == 1
+
+    if ct.utils._is_macos():
+        prediction = model.predict(feed_dict)
+        assert len(prediction) == 1
 
 
 def test_conv_example():
@@ -111,8 +114,10 @@ def test_conv_example():
     }
     model = models.MLModel(proto)
     assert model is not None
-    prediction = model.predict(feed_dict)
-    assert len(prediction) == 6
+
+    if ct.utils._is_macos():
+        prediction = model.predict(feed_dict)
+        assert len(prediction) == 6
 
 
 def test_while_example():
@@ -140,5 +145,7 @@ def test_while_example():
     }
     model = models.MLModel(proto)
     assert model is not None
-    prediction = model.predict(feed_dict)
-    assert len(prediction) == 2
+
+    if ct.utils._is_macos():
+        prediction = model.predict(feed_dict)
+        assert len(prediction) == 2

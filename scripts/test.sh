@@ -76,7 +76,7 @@ if [[ $WHEEL_PATH == "" ]]; then
     pip install -e ${COREMLTOOLS_NAME} --upgrade
     cd ${COREMLTOOLS_NAME}
 else
-    $PIP_EXECUTABLE install $~WHEEL_PATH --upgrade
+    $PIP_EXECUTABLE install $WHEEL_PATH --upgrade
 fi
 
 # Install dependencies if specified
@@ -84,11 +84,16 @@ if [ ! -z "${REQUIREMENTS}" ]; then
    $PIP_EXECUTABLE install -r "${REQUIREMENTS}"
 fi
 
+if [[ ! -z "${WHEEL_PATH}" ]]; then
+    # in a test of a wheel, need to run from ${COREMLTOOLS_HOME}/coremltools for some reason.
+    # otherwise pytest picks up tests in deps, env, etc.
+    cd ${COREMLTOOLS_HOME}/coremltools/test
+fi
+
 # Now run the tests
 echo "Running tests"
 
 TEST_CMD=($PYTEST_EXECUTABLE -ra -W "ignore::FutureWarning" -W "ignore::DeprecationWarning" --durations=100 --pyargs ${TEST_PACKAGE} --junitxml=${BUILD_DIR}/py-test-report.xml --timeout=${TIME_OUT})
-echo $TEST_CMD
 
 if [[ $SLOW != 1 || $FAST != 1 ]]; then
     if [[ $SLOW == 1 ]]; then
@@ -102,6 +107,7 @@ if [[ $COV != "" ]]; then
     TEST_CMD+=(--cov $COV)
 fi
 
-${TEST_CMD[@]}
+echo $TEST_CMD
+"${TEST_CMD[@]}"
 
 pip uninstall -y coremltools

@@ -26,7 +26,9 @@ from coremltools._deps import (
 
 
 @pytest.mark.skipif(not _HAS_TF_1, reason=MSG_TF1_NOT_FOUND)
+@pytest.mark.skipif(ct.utils._macos_version() < (10, 15), reason='Model produces specification 4.')
 class TestTensorFlow1ConverterExamples:
+
     @staticmethod
     def test_convert_from_frozen_graph(tmpdir):
         import tensorflow as tf
@@ -134,6 +136,7 @@ class TestTensorFlow1ConverterExamples:
 
 
 @pytest.mark.skipif(not _HAS_TF_2, reason=MSG_TF2_NOT_FOUND)
+@pytest.mark.skipif(ct.utils._macos_version() < (10, 15), reason='Model produces specification 4.')
 class TestTensorFlow2ConverterExamples:
     def setup_class(self):
         self._cwd = getcwd()
@@ -227,6 +230,7 @@ class TestTensorFlow2ConverterExamples:
 
 
 @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
+@pytest.mark.skipif(ct.utils._macos_version() < (10, 15), reason='Model produces specification 4.')
 class TestPyTorchConverterExamples:
     @staticmethod
     def test_convert_torch_vision_mobilenet_v2(tmpdir):
@@ -288,11 +292,16 @@ class TestPyTorchConverterExamples:
         """
         save_path = os.path.join(str(tmpdir), "mobilenet_v2.mlmodel")
         mlmodel.save(save_path)
-        results = mlmodel.predict({"input": example_input.numpy()})
-        expected = model(example_input)
-        np.testing.assert_allclose(
-            results["1651"], expected.detach().numpy(), rtol=1e-2
-        )
+
+        """
+        Running predict() is only supported on macOS.
+        """
+        if ct.utils._is_macos():
+            results = mlmodel.predict({"input": example_input.numpy()})
+            expected = model(example_input)
+            np.testing.assert_allclose(
+                list(results.values())[0], expected.detach().numpy(), rtol=1e-2
+            )
 
     @staticmethod
     def test_int64_inputs():
@@ -325,13 +334,15 @@ class TestPyTorchConverterExamples:
             ],
         )
 
-        result = mlmodel.predict(
-            {"input": example_input.detach().numpy().astype(np.float32)}
-        )
+        # running predict() is supported on macOS
+        if ct.utils._is_macos():
+            result = mlmodel.predict(
+                {"input": example_input.detach().numpy().astype(np.float32)}
+            )
 
-        # Verify outputs
-        expected = model(example_input)
-        np.testing.assert_allclose(result["5"], expected.detach().numpy())
+            # Verify outputs
+            expected = model(example_input)
+            np.testing.assert_allclose(result["5"], expected.detach().numpy())
 
         # Duplicated inputs are invalid
         with pytest.raises(ValueError, match=r"Duplicated inputs"):
@@ -391,7 +402,10 @@ class TestMILExamples:
         proto = _convert(prog, convert_from="mil")
 
         model = models.MLModel(proto)
-        prediction = model.predict(
-            {"x": np.random.rand(1, 100, 100, 3).astype(np.float32),}
-        )
-        assert len(prediction) == 1
+
+        # running predict() is only supported on macOS
+        if ct.utils._is_macos():
+            prediction = model.predict(
+                {"x": np.random.rand(1, 100, 100, 3).astype(np.float32),}
+            )
+            assert len(prediction) == 1
