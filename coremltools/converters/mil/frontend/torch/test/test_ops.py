@@ -1833,3 +1833,15 @@ class TestTorchOps:
         index_result = context["out2"].val
         np.testing.assert_allclose(expected_sort, sort_result)
         np.testing.assert_allclose(expected_index, index_result)
+
+    def test_abs(self, context):
+        test_input = torch.rand(3, 4, 5)
+        constants, input_list, output_name = self._gen_constants(1, [test_input])
+        node = InternalTorchIRNode(
+            kind="abs", inputs=input_list, outputs=[output_name]
+        )
+        ssa = self._construct_test_graph(
+            context, ops._abs, node, output_name, constants=constants
+        )
+        expected_result = torch.abs(test_input)
+        assert np.allclose(expected_result.numpy(), ssa.val)
