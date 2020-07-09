@@ -1841,7 +1841,7 @@ class TestTorchOps:
             kind="abs", inputs=input_list, outputs=[output_name]
         )
         ssa = self._construct_test_graph(
-            context, ops.abs, node, output_name, constants=constants
+            context, ops._abs, node, output_name, constants=constants
         )
         expected_result = torch.abs(test_input)
         assert np.allclose(expected_result.numpy(), ssa.val)
