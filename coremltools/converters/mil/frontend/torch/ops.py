@@ -1536,7 +1536,7 @@ def _slice(context, node):
     end = inputs[3].val if inputs[3] is not None else None
     step = inputs[4].val
 
-    if start == 0 and end is None and step is 1:
+    if start == 0 and end is None and step == 1:
         # Handling x[:], just pass through the tensor.
         context.add(x, node.name)
         return
