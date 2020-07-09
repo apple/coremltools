@@ -1,7 +1,3 @@
-[![Build Status](https://travis-ci.com/apple/coremltools.svg?branch=master)](#)
-[![PyPI Release](https://img.shields.io/pypi/v/coremltools.svg)](#)
-[![Python Versions](https://img.shields.io/pypi/pyversions/coremltools.svg)](#)
-
 [Core ML Tools](https://coremltools.readme.io/docs)
 =======================
 
