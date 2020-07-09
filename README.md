@@ -1,3 +1,5 @@
+[![pipeline status](https://gitlab.com/zach_nation/coremltools/badges/master/pipeline.svg)](https://gitlab.com/zach_nation/coremltools/-/commits/master)
+
 [Core ML Tools](https://coremltools.readme.io/docs)
 =======================
 
