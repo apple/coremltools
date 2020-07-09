@@ -1,7 +1,25 @@
 stages:
+  - check
   - build
   - test
   - collect
+
+#########################################################################
+##
+##                               Check
+##
+#########################################################################
+
+check_python_flake8:
+  tags:
+    - docker
+  image: "python:3.7"
+  stage: check
+  script:
+    - python -m pip install --upgrade pip
+    - pip install flake8
+    - flake8 ./coremltools --count --select=E9,F63,F7,F82 --show-source --statistics
+
 
 #########################################################################
 ##

@@ -74,7 +74,7 @@ class TestAddN:
         itertools.product([True, False], backends, list(range(6)), list(range(1, 10)),),
     )
     def test(self, use_cpu_only, backend, rank, num_inputs):
-        if use_cpu_only is False and rank is 5 and num_inputs is 9:
+        if use_cpu_only is False and rank == 5 and num_inputs == 9:
             # <rdar://63680019> Failure on this specific parameter set
             return
         if backend == "mil_proto" and rank == 0:

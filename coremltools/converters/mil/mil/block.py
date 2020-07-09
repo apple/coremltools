@@ -7,6 +7,7 @@ from collections import Counter, OrderedDict
 import copy
 import logging
 import numpy as _np
+from six import string_types as _string_types
 from . import SPACES, types
 from .var import Var, InternalVar, ListVar
 from .visitors.dot_visitor import DotVisitor
@@ -450,12 +451,12 @@ class Operation(object):
         s += " = " + self.op_type + "("
         if self.op_type == "const":
             if self.mode.val == "immediate_value":
-                if isinstance(self.val.sym_val, (np.generic, np.ndarray)):
+                if isinstance(self.val.sym_val, (_np.generic, _np.ndarray)):
                     val_str = str(self.val.sym_val.tolist())
                 else:
                     val_str = (
                         '"' + self.val.sym_val + '"'
-                        if isinstance(self.val.sym_val, six.string_types)
+                        if isinstance(self.val.sym_val, _string_types)
                         else str(self.val.sym_val)
                     )
                 s += "val=" + val_str
