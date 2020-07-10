@@ -49,7 +49,7 @@ def convert_nodes(context, graph):
         _logging.info("Converting op {} : {}".format(node.name, node.kind))
         if _add_op is None:
             raise RuntimeError(
-                "PyTorch convert function for op {} not implemented".format(node.kind)
+                "PyTorch convert function for op '{}' not implemented.".format(node.kind)
             )
         else:
             _add_op(context, node)
@@ -731,6 +731,23 @@ def batch_norm(context, node):
         name=node.name,
     )
     context.add(batch_norm)
+
+
+@register_torch_op
+def instance_norm(context, node):
+    inputs = _get_inputs(context, node, expected=9)
+    x = inputs[0]
+    weight = inputs[1]
+    bias = inputs[2]
+    eps = inputs[7]
+    x = mb.instance_norm(
+        x=x,
+        gamma=weight,
+        beta=bias,
+        epsilon=eps,
+        name=node.name,
+    )
+    context.add(x)
 
 
 @register_torch_op
