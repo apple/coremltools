@@ -1902,3 +1902,9 @@ def sort(context, node):
     indices_name = node.outputs[1]
     context.add(values, torch_name=values_name)
     context.add(indices, torch_name=indices_name)
+
+
+@register_torch_op(torch_alias=['abs'])
+def _abs(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+    context.add(mb.abs(x=inputs[0], name=node.name))
