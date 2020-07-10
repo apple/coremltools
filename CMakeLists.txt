@@ -16,6 +16,16 @@ if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
   ")
 endif()
 
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+# Globally ignore "no symbols" warnings during compilation
+SET(CMAKE_CXX_ARCHIVE_CREATE "<CMAKE_AR> Scr <TARGET> <LINK_FLAGS> <OBJECTS>")
+if(APPLE)
+    SET(CMAKE_CXX_ARCHIVE_FINISH "<CMAKE_RANLIB> -no_warning_for_no_symbols -c <TARGET>")
+endif()
+
 find_program(HAS_CCACHE ccache)
 if(HAS_CCACHE)
   set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
@@ -42,28 +52,10 @@ include_directories(
   ${PYTHON_INCLUDE_DIRS}
   )
 
-set(CMAKE_CXX_FLAGS " \
-${CMAKE_CXX_FLAGS} \
---std=c++14 \
-")
-
 if(APPLE)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fobjc-arc ")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fobjc-arc")
 endif()
 
-set(CMAKE_EXE_LINKER_FLAGS " \
-${CMAKE_EXE_LINKER_FLAGS} \
---std=c++14 \
-")
-set(CMAKE_MODULE_LINKER_FLAGS " \
-${CMAKE_MODULE_LINKER_FLAGS} \
---std=c++14 \
-")
-set(CMAKE_SHARED_LINKER_FLAGS " \
-${CMAKE_SHARED_LINKER_FLAGS} \
---std=c++14 \
-")
-  
 add_library(caffeconverter
   SHARED
   caffeconverter/CaffeConverterLib.cpp
@@ -117,18 +109,21 @@ if (APPLE)
   set_target_properties(caffeconverter PROPERTIES LINK_FLAGS "-undefined dynamic_lookup")
 endif()
 
-file(COPY ${CMAKE_SOURCE_DIR}/README.rst DESTINATION ${CMAKE_BINARY_DIR})
+file(COPY ${CMAKE_SOURCE_DIR}/README.md DESTINATION ${CMAKE_BINARY_DIR})
 file(COPY ${CMAKE_SOURCE_DIR}/coremltools/__init__.py
   DESTINATION ${CMAKE_BINARY_DIR}/coremltools)
 file(COPY ${CMAKE_SOURCE_DIR}/coremltools/__main__.py
   DESTINATION ${CMAKE_BINARY_DIR}/coremltools)
-set(copy_dirs _deps _scripts converters graph_visualization models proto)
+file(COPY ${CMAKE_SOURCE_DIR}/coremltools/version.py
+  DESTINATION ${CMAKE_BINARY_DIR}/coremltools)
+
+set(copy_dirs _deps _scripts converters models proto)
 foreach(cdir IN ITEMS ${copy_dirs})
   file(COPY ${CMAKE_SOURCE_DIR}/coremltools/${cdir}
     DESTINATION ${CMAKE_BINARY_DIR}/coremltools)
 endforeach()
 
-if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug") 
+if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
   set(_additional_caffeconverter_command COMMAND strip -x ${PROJECT_SOURCE_DIR}/coremltools/libcaffeconverter.so)
 endif()
 
@@ -174,14 +169,13 @@ if (APPLE AND CORE_VIDEO AND CORE_ML AND FOUNDATION)
     ${CORE_VIDEO}
     ${CORE_ML}
     ${FOUNDATION}
-    ${PYTHON_LIBRARIES}
   )
 
 if(APPLE)
   set(osx_export_file ${CMAKE_SOURCE_DIR}/coremlpython/exported_symbols_osx.ver)
   set_property(TARGET coremlpython APPEND PROPERTY LINK_DEPENDS "${osx_export_file}")
   set_property(TARGET coremlpython APPEND_STRING PROPERTY LINK_FLAGS " -Wl,-exported_symbols_list,${osx_export_file} ")
-    
+
   # Allow Python to be found at runtime instead of compile/link time
   # This is apparently the default on Linux
   set_property(TARGET coremlpython APPEND_STRING PROPERTY LINK_FLAGS "-undefined dynamic_lookup")
@@ -190,10 +184,10 @@ else()
   set(linux_export_file coremlpython/exported_symbols_linux.ver)
   set_property(TARGET coremlpython APPEND_STRING PROPERTY LINK_FLAGS " -Wl,--version-script=${linux_export_file} ")
 endif()
-  
+
   set_property(TARGET coremlpython APPEND_STRING PROPERTY LINK_FLAGS " -Wl,-dead_strip")
 
-  if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug") 
+  if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(_additional_libcoremlpython_command
       COMMAND strip -x ${PROJECT_SOURCE_DIR}/coremltools/libcoremlpython.so
     )
@@ -212,7 +206,7 @@ endif()
 
 set(PYTHON_TAG "cp${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR}")
 if(APPLE)
-  set(PLAT_NAME "macosx_10_15_intel;macosx_10_14_intel;macosx_10_13_intel;macosx_10_12_intel")
+  set(PLAT_NAME "macosx_10_16_intel;macosx_10_15_intel;macosx_10_14_intel;macosx_10_13_intel;macosx_10_12_intel")
 elseif("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
   set(PLAT_NAME "manylinux1_x86_64")
 else()
@@ -245,7 +239,7 @@ add_custom_target(pip_install_dev
 )
 
 add_custom_target(pytest
-  COMMAND pytest -r fs ${PROJECT_SOURCE_DIR}/coremltools/test/
+  COMMAND pytest -r fs ${PROJECT_SOURCE_DIR}/coremltools/test/ --timeout=600
   DEPENDS pip_install_dev
   USES_TERMINAL
 )

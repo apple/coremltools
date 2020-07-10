@@ -19,3 +19,4 @@ cmake_install.cmake
 *.xcodeproj/
 mlmodel_test_runner
 .idea/
+*.log
