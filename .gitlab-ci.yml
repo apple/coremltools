@@ -162,6 +162,8 @@ test_macos11_py27_pytorch:
   only:
     changes:
       - coremltools/converters/mil/frontend/torch/**/*.{py}
+      - coremltools/converters/mil/mil/**/*.{py}
+      - coremltools/converters/mil/backend/**/*.{py}
 
 test_macos11_py37_pytorch:
   <<: *test_macos_pkg
@@ -176,6 +178,8 @@ test_macos11_py37_pytorch:
   only:
     changes:
       - coremltools/converters/mil/frontend/torch/**/*.{py}
+      - coremltools/converters/mil/mil/**/*.{py}
+      - coremltools/converters/mil/backend/**/*.{py}
 
 test_macos11_py27_tensorflow1:
   <<: *test_macos_pkg
@@ -190,6 +194,8 @@ test_macos11_py27_tensorflow1:
   only:
     changes:
       - coremltools/converters/mil/frontend/tensorflow/**/*.{py}
+      - coremltools/converters/mil/mil/**/*.{py}
+      - coremltools/converters/mil/backend/**/*.{py}
 
 test_macos11_py37_tensorflow1:
   <<: *test_macos_pkg
@@ -204,6 +210,8 @@ test_macos11_py37_tensorflow1:
   only:
     changes:
       - coremltools/converters/mil/frontend/tensorflow/**/*.{py}
+      - coremltools/converters/mil/mil/**/*.{py}
+      - coremltools/converters/mil/backend/**/*.{py}
 
 test_macos11_py27_tensorflow2:
   <<: *test_macos_pkg_with_reqs
@@ -219,6 +227,8 @@ test_macos11_py27_tensorflow2:
   only:
     changes:
       - coremltools/converters/mil/frontend/tensorflow2/**/*.{py}
+      - coremltools/converters/mil/mil/**/*.{py}
+      - coremltools/converters/mil/backend/**/*.{py}
 
 test_macos11_py37_tensorflow2:
   <<: *test_macos_pkg_with_reqs
@@ -234,6 +244,8 @@ test_macos11_py37_tensorflow2:
   only:
     changes:
       - coremltools/converters/mil/frontend/tensorflow2/**/*.{py}
+      - coremltools/converters/mil/mil/**/*.{py}
+      - coremltools/converters/mil/backend/**/*.{py}
 
 test_macos11_py27_mil:
   <<: *test_macos_pkg
@@ -247,7 +259,8 @@ test_macos11_py27_mil:
     WHEEL_PATH: build/dist/*cp27*10_16*
   only:
     changes:
-      - coremltools/converters/mil/**/*.{py}
+      - coremltools/converters/mil/mil/**/*.{py}
+      - coremltools/converters/mil/backend/**/*.{py}
 
 test_macos11_py37_mil:
   <<: *test_macos_pkg
@@ -261,7 +274,9 @@ test_macos11_py37_mil:
     WHEEL_PATH: build/dist/*cp37*10_16*
   only:
     changes:
-      - coremltools/converters/mil/**/*.{py}
+      - coremltools/converters/mil/mil/**/*.{py}
+      - coremltools/converters/mil/backend/**/*.{py}
+
 
 
 #########################################################################
