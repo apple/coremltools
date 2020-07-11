@@ -333,8 +333,7 @@ def process_or_validate_features(features, num_dimensions=None, feature_type_map
     # Now, set num dimensions from the list if it's actually None
     if num_dimensions is None:
         from itertools import chain
-
-        num_dimensions = 1 + max(chain(*[il for k, il in features.items()]))
+        num_dimensions = 1 + max(chain.from_iterable(features.values()))
 
     if (
         set().union(*features.values()) != set(range(num_dimensions))
