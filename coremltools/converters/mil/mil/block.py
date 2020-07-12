@@ -634,7 +634,7 @@ class Block(object):
         else:
             end_id = -1
 
-        if end_id > start:
+        if end_id != -1 and end_id < start:
             msg = "end_op '{}' comes before the anchor_op '{}'"
             raise ValueError(msg.format(end_op.name, anchor_op.name))
 

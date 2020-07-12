@@ -27,6 +27,7 @@ The pass is divided into 3 phases
 1st phase: information gathering
 ---------------------------------
 
+- We first plug in Identity ops for all output nodes. This allows us to treat all ops uniformly during traversal.
 - Block is traversed in the topological order, starting from the ops connected to the inputs.
 - During the traversal, a value is associated with every var in the block
 - This value can be either of type "HypotheticalValue" or "LazyTransposeHypotheticalValue"
@@ -54,10 +55,6 @@ its attributes, and the types of the hypothetical values of its input vars
 - Materialzie ops: All "LazyTransposeHypotheticalValue" input vars, if present, materialize here. Output of this op
   is always of type "HypotheticalValue". If the input is a "LazyTransposeHypotheticalValue", update the dict
   "transpose_op_to_materialize_ops"
-
-- If the "LazyTransposeHypotheticalValue" hits a block output var, it is recorded in the dictionary
-"transpose_op_to_block_output_vars". A non cancelled transpose op has to be materialized before a block output
-
 - To treat an op like a unary op, add its type to "UNARY_LIKE_OP_TYPES". In future changes we want to make this process
 automatic, by automatically detecting an op as a unary like by its "traits"
 
@@ -75,7 +72,7 @@ in by the decorator "register_axis_update_op"
       that is, for every cancel op that is removed all its parent transpose ops upstream, must also be removed.
     - transpose ops should only be removed if the number of cancel ops is greater than the number of transpose ops
       that would get freshly introduced to the block as a result of materialization ops. Right now in the algorithm
-      each materialization op/output var (dicts "transpose_op_to_materialize_ops" and "transpose_op_to_block_output_vars"),
+      each materialization op/output var (dicts "transpose_op_to_materialize_ops"/"old_output_vars"),
       results in one more transpose op, although this can be further optimized in the future
 
 - To resolve this, we recognize that nodes consisting of sets (a) and (b) form a bipartitle graph, where,
@@ -96,7 +93,7 @@ of them are touched
   The starting transpose op can get materialized (inserted) multiple times, before each of the "materialize ops" downstream.
 - Block outputs are handled similar to the materialize ops
 - Type inference on all ops is invoked after all the transformations
-
+- All Identity ops that are plugged into the graph to treat outputs as materialized are removed.
 
 Debugging:
 ------------
@@ -130,6 +127,7 @@ UNARY_LIKE_OP_TYPES = set(
         "exp",
         "exp2",
         "floor",
+        "identity",
         "logical_not",
         "round",
         "rsqrt",
@@ -590,16 +588,33 @@ class TransposeOptimization(object):
             lambda: []
         )  # type : op : List[op]
 
-        # transpose op to "materialize" block output vars
-        # if a block output var gets a Lazy transpose value, this dictionary is updated
-        self.transpose_op_to_block_output_vars = defaultdict(
-            lambda: []
-        )  # type : op : List[Var]
-
         # for book keeping
         self.ops_updated = set()
         self.materialized_ops_handled = set()
         self.transpose_ops_removed = set()
+
+        # save the output sinks' information
+        self.old_output_vars = []
+        self.output_sink_ops = []
+
+        # We modify the graph temporarily for outputs
+        self._add_output_sinks()
+
+    def _add_output_sinks(self):
+        # We add a identity sink for all outputs.
+        self.old_output_vars = {var: var.name for var in self.block.outputs}
+        new_outputs = []
+        output_sinks_var = {}
+        for out_var in self.block.outputs:
+            with self.block:
+                if out_var not in output_sinks_var:
+                    out_sink = mb.identity(x=out_var)
+                    output_sinks_var[out_var] = out_sink
+                else:
+                    out_sink = output_sinks_var[out_var]
+                new_outputs.append(out_sink)
+                self.output_sink_ops.append(out_sink.op)
+        self.block.set_outputs(new_outputs)
 
     def _visit_unary_like_op(self, op, input_var=None):
         # pass the input var's hypothetical_value to the output var's, since shape invariant ops do
@@ -702,13 +717,18 @@ class TransposeOptimization(object):
         if isinstance(input_hypothetical_value, HypotheticalValue):
             # case 1
             # the input is not a lazy transpose.
-            # Since the current node is a transpose, it might get cancelled downstream, so
-            # make the output var's hypothetical_value a lazy transpose
-            self.var_to_hypothetical_value[
-                op.outputs[0]
-            ] = LazyTransposeHypotheticalValue(
-                input_hypothetical_value, set([op]), perm
-            )
+            # Since the current node is a transpose, there are two sub-cases.
+            #  a) It's a output node. We materialize it directly.
+            #  b) It might get cancelled downstream, so make the output var's
+            #     hypothetical_value a lazy transpose
+            if op.outputs[0] in self.old_output_vars:
+                self._visit_materialize_op(op)
+            else:
+                self.var_to_hypothetical_value[
+                    op.outputs[0]
+                ] = LazyTransposeHypotheticalValue(
+                    input_hypothetical_value, set([op]), perm
+                )
             return
 
         # input is a Lazy transpose hypothetical value. Lets first check whether the current
@@ -741,7 +761,9 @@ class TransposeOptimization(object):
                 var.name
             )
 
-        if op.op_type in UNARY_LIKE_OP_TYPES:
+        if op in self.output_sink_ops:
+            self._visit_materialize_op(op)
+        elif op.op_type in UNARY_LIKE_OP_TYPES:
             self._visit_unary_like_op(op)
         elif op.op_type in AXIS_UPDATE_OPS:
             self._visit_axis_update_op(op)
@@ -762,19 +784,6 @@ class TransposeOptimization(object):
         for op in self.block.operations:
             self._visit_op(op)
 
-        # after all the ops have been visited, every var being produced would
-        # have a corresponding hypothetical value associated with it
-        # update "transpose_op_to_block_output_vars"
-        # that is, if an output var has a lazy transpose hypothetical value associated
-        # with it, record this in "transpose_op_to_block_output_vars"
-        block_output_vars = self.block.outputs
-        for var in block_output_vars:
-            assert var in self.var_to_hypothetical_value
-            hypothetical_value = self.var_to_hypothetical_value[var]
-            if isinstance(hypothetical_value, LazyTransposeHypotheticalValue):
-                all_lazy_transpose_ops = hypothetical_value.transpose_ops
-                for transpose_op in all_lazy_transpose_ops:
-                    self.transpose_op_to_block_output_vars[transpose_op].append(var)
 
     def _verify_cancellable_transposes(self):
 
@@ -834,6 +843,13 @@ class TransposeOptimization(object):
                     for neighbor_op in self.transpose_op_to_cancel_ops[o]:
                         if neighbor_op not in visited:
                             queue.append(neighbor_op)
+                    if o in self.transpose_op_to_materialize_ops:
+                        materialize_ops_list = list(
+                            list(zip(*self.transpose_op_to_materialize_ops[o]))[0]
+                        )
+                        for neighbor_op in materialize_ops_list:
+                            if neighbor_op not in visited:
+                                queue.append(neighbor_op)
                 elif o in transpose_cancel_ops_to_starting_transpose_set:
                     set_b1.update(set([o]))
                     for neighbor_op in transpose_cancel_ops_to_starting_transpose_set[
@@ -866,15 +882,8 @@ class TransposeOptimization(object):
             if block_output:
                 continue
 
-            # check whether transposes resulting from materialization are not greater than cancel transposes
             materizalize_set = set(list(materialize_op_set))
-            # all the output nodes are like materialize ops , so add them here
-            for op in op_set:
-                materizalize_set.update(
-                    set(self.transpose_op_to_block_output_vars.get(op, []))
-                )
-
-            if len(materizalize_set) > len(op_cancel_set):
+            if len(materizalize_set) >= len(op_set) + len(op_cancel_set):
                 starting_ops_to_remove.update(op_set)
 
         # remove ops
@@ -897,6 +906,7 @@ class TransposeOptimization(object):
         # short circuit starting_transpose_op and its cancel ops
 
         to_be_removed_ops = []
+        name_changed_vars = set()
 
         for op in [starting_transpose_op] + self.transpose_op_to_cancel_ops[
             starting_transpose_op
@@ -911,11 +921,20 @@ class TransposeOptimization(object):
             output_var = op.outputs[0]  # output of the transpose op
             parent_op = input_var.op  # parent op of the transpose op
 
-            if output_var in self.block.outputs:
+            if output_var in self.old_output_vars:
                 # output is a block output, so this must be one of the "edge" transpose compliment ops
                 # We need to set `input_var` as the block output var
-                # Change the name of the input_var to match the block output
-                input_var.name = output_var.name
+                # Change the name of the input_var to match the block output if input_var is not changed.
+                # If the same input_var is in output twice, we can't rename it twice, therefore we initiate an
+                # Identity op to match the name
+                if input_var not in name_changed_vars:
+                    input_var.name = output_var.name
+                    input_var.op.name = output_var.op.name
+                    name_changed_vars.update([input_var])
+                else:
+                    with self.block:
+                        input_var = mb.identity(x=input_var, before_op=op, name=output_var.name)
+                        parent_op = input_var.op
 
             # connect all the child ops of the output_var to the parent of the transpose op.
             self.block.replace_uses_of_var_after_op(
@@ -950,10 +969,24 @@ class TransposeOptimization(object):
                 if input_var == starting_transpose_op_out_var:
                     # materialize op is connected to the starting transpose op
                     # in this case, connect to its parent
+                    if op in self.output_sink_ops:
+                        continue
                     i1 = starting_transpose_op_input_var
                 else:
                     i1 = input_var
-                x = mb.transpose(x=i1, perm=perm, before_op=op)
+
+                if op in self.output_sink_ops:
+                    # The input_var of output sink is itself a output. We can safely
+                    # modify the name of the input_var since it should only be consumed
+                    # by block output here.
+                    if i1 not in name_changed_vars:
+                        x = mb.transpose(x=i1, perm=perm, before_op=op, name=i1.name)
+                        i1.name = '_before_transpose_op_' + x.op.name
+                        i1.op.name = '_before_transpose_op_' + x.op.name
+                    else:
+                        x = mb.transpose(x=i1, perm=perm, before_op=op, name=self.old_output_vars[i1])
+                else:
+                    x = mb.transpose(x=i1, perm=perm, before_op=op)
 
             self.block.replace_uses_of_var_after_op(
                 anchor_op=x.op,
@@ -962,20 +995,6 @@ class TransposeOptimization(object):
                 new_var=x,
                 no_check_var_types=True,
             )
-
-        # materialize transpose JUST before output vars
-        for output_var in self.transpose_op_to_block_output_vars.get(
-            starting_transpose_op, []
-        ):
-            with self.block:
-                x = mb.transpose(x=output_var, perm=perm, name=output_var.name)
-
-            self.block.replace_uses_of_var_after_op(
-                anchor_op=x.op, old_var=output_var, new_var=x, no_check_var_types=True
-            )
-            output_var.name += "_before_transpose_op_" + x.op.name
-            if output_var.op.name == x.op.name:
-                output_var.op.name += "_before_transpose_op_" + x.op.name
 
         self.block.remove_ops(to_be_removed_ops)
 
@@ -1012,6 +1031,8 @@ class TransposeOptimization(object):
         # apply transform
         for transpose_op in self.transpose_op_to_cancel_ops:
             self._remove_transpose_ops(transpose_op)
+        self.block.set_outputs([sink_op.x for sink_op in self.output_sink_ops])
+        self.block.remove_ops(list(self.output_sink_ops))
 
         if DEBUG:
             graphviz.Source(
