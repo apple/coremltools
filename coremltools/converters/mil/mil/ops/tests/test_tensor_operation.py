@@ -603,7 +603,7 @@ class TestNonZero:
         def build(x):
             return [mb.non_zero(x=x)]
 
-        expected_output_types = [(UNK_SYM, 2, types.fp32)]
+        expected_output_types = [(UNK_SYM, 2, types.int)]
         expected_outputs = [np.array(np.transpose(np.nonzero(x_val)))]
 
         run_compare_builder(

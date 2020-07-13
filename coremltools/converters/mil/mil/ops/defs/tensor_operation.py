@@ -16,8 +16,11 @@ from coremltools.converters.mil.mil import (
     VALUE,
     NONE,
 )
+
+from coremltools.converters.mil.mil import types
 from ._op_reqs import *
 from ._utils import promoted_primitive_type
+
 
 
 @register_op(doc_str="")
@@ -271,7 +274,7 @@ class non_zero(Operation):
 
     def type_inference(self):
         shape = tuple([get_new_symbol(), self.x.rank])
-        return types.tensor(self.x.dtype, shape)
+        return types.tensor(types.int, shape)
 
     @precondition(allow=VALUE)
     def value_inference(self):
