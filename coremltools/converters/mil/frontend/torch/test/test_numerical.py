@@ -42,11 +42,30 @@ class TestTorchNumerical:
         run_numerical_test((1, in_features), model)
 
     @pytest.mark.parametrize(
-        "num_features, eps", itertools.product([5, 2, 1], [0.1, 1e-05]),
+        "input_shape, eps, momentum, affine",
+        itertools.product([
+            (1, 3, 15, 2), (1, 1, 1, 1), (3, 2, 1, 5)],
+            [0.1, 1e-5, 1e-9],
+            [0.1, 0.2],
+            [True, False],
+        ),
     )
-    def test_batchnorm(self, num_features, eps):
-        model = nn.BatchNorm2d(num_features, eps)
-        run_numerical_test((1, num_features, 5, 5), model)
+    def test_batch_norm(self, input_shape, eps, momentum, affine):
+        model = nn.BatchNorm2d(input_shape[-3], eps=eps, affine=affine)
+        run_numerical_test(input_shape, model)
+
+    @pytest.mark.parametrize(
+        "input_shape, eps, momentum, affine",
+        itertools.product([
+            (2, 3, 15, 2), (2, 1, 1, 1), (3, 2, 1, 5)],
+            [0.1, 1e-5, 1e-9],
+            [0.1, 0.2],
+            [True, False],
+        ),
+    )
+    def test_instance_norm(self, input_shape, eps, momentum, affine):
+        model = nn.InstanceNorm2d(input_shape[-3], eps=eps, affine=affine)
+        run_numerical_test(input_shape, model, places=3)
 
     @pytest.mark.parametrize(
         "height, width, in_channels, out_channels, kernel_size, stride, padding, dilation",
@@ -254,14 +273,6 @@ class TestTorchNumerical:
     )
     def test_layer_norm(self, input_shape, eps):
         model = nn.LayerNorm(input_shape, eps=eps)
-        run_numerical_test(input_shape, model)
-
-    @pytest.mark.parametrize(
-        "input_shape, eps",
-        itertools.product([(1, 3, 15, 15), (1, 1, 1, 1)], [1e-5, 1e-9]),
-    )
-    def test_batch_norm(self, input_shape, eps):
-        model = nn.BatchNorm2d(input_shape[-3], eps=eps)
         run_numerical_test(input_shape, model)
 
     @pytest.mark.xfail(reason="rdar://problem/61064173")

@@ -965,6 +965,34 @@ class TestTorchOps:
         assert ssa.val == None
         assert ssa.shape == tuple(test_input.shape)
 
+    @pytest.mark.parametrize("input_shape", [(1, 3, 15, 15), (1, 1, 1, 1)])
+    def test_instance_norm(self, context, input_shape):
+        test_input = torch.rand(input_shape)
+        channels = input_shape[1]
+        constants, input_list, output_name = self._gen_constants(
+            9,
+            [
+                torch.rand(input_shape),  # input
+                torch.rand(channels),  # weight
+                torch.rand(channels),  # bias
+                torch.rand(channels),  # running mean
+                torch.rand(channels),  # running var
+                0,  # training
+                0.1,  # momentum
+                1e-6,  # eps
+                1,  # cudnn_enabled
+            ],
+        )
+
+        instant_norm_node = InternalTorchIRNode(
+            kind="instance_norm", inputs=input_list, outputs=[output_name]
+        )
+        ssa = self._construct_test_graph(
+            context, ops.instance_norm, instant_norm_node, output_name, constants=constants
+        )
+        assert ssa.val == None
+        assert ssa.shape == tuple(test_input.shape)
+
     @pytest.mark.parametrize(
         "min_val, max_val", [(-1.0, 1.0), (0.0, 0.1), (1.0, 3.0), (-1.0, 6.0),]
     )

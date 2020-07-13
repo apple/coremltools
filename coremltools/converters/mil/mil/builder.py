@@ -114,7 +114,7 @@ class Builder:
             new_var_name = op_name + "_" + in_name
             if not in_type.optional and in_name not in kwargs:
                 raise ValueError(
-                    "Input {} is required for op {}.".format(in_name, op_cls.__name__)
+                    "Input '{}' is required for op '{}'.".format(in_name, op_cls.__name__)
                 )
 
             if in_name in kwargs and isinstance(kwargs[in_name], Var):
@@ -144,7 +144,7 @@ class Builder:
                     elif isinstance(in_type, ScalarOrTensorInputType):
                         var = cls._add_const(val, new_var_name, before_op)
                     else:
-                        msg = "Cannot convert input {} of type {} to Var (op: {})"
+                        msg = "Cannot convert input '{}' of type {} to Var (op: {})"
                         raise ValueError(
                             msg.format(in_name, type(in_type).__name__, op_name)
                         )
@@ -239,5 +239,5 @@ class Builder:
         return wrapper
 
 
-"""importing ops triggers installation of  all ops into Builder"""
+"""importing ops triggers installation of all ops into Builder"""
 from .ops import defs as _ops
