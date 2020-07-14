@@ -25,6 +25,7 @@ from .tfssa import NetworkEnsemble, SSAFunction
 from .parsed_tf_node import ParsedTFNode
 from coremltools.converters._profile_utils import _profile
 from tqdm import tqdm as _tqdm
+from distutils.version import StrictVersion as _StrictVersion
 
 
 class TFLoader:
@@ -104,7 +105,10 @@ class TFLoader:
         logging.debug(msg.format(outputs))
         outputs = outputs if isinstance(outputs, list) else [outputs]
         outputs = [i.split(":")[0] for i in outputs]
-        return tf.compat.v1.graph_util.extract_sub_graph(graph_def, outputs)
+        if tf.__version__ < _StrictVersion("1.13.1"):
+            return tf.graph_util.extract_sub_graph(graph_def, outputs)
+        else:
+            return tf.compat.v1.graph_util.extract_sub_graph(graph_def, outputs)
 
 
 class TF1Loader(TFLoader):
@@ -142,11 +146,18 @@ class TF1Loader(TFLoader):
             if not os.path.exists(str(self.model)):
                 raise ValueError('Input model "{}" does not exist'.format(self.model))
             elif os.path.isfile(str(self.model)) and self.model.endswith(".pb"):
-                with tf.io.gfile.GFile(self.model, "rb") as f:
-                    gd = tf.compat.v1.GraphDef()
-                    gd.ParseFromString(f.read())
-                with tf.Graph().as_default() as graph:
-                    tf.graph_util.import_graph_def(gd, name="")
+                if tf.__version__ < _StrictVersion("1.13.1"):
+                    with open(self.model, "rb") as f:
+                        gd = tf.GraphDef()
+                        gd.ParseFromString(f.read())
+                    with tf.Graph().as_default() as graph:
+                        tf.import_graph_def(gd, name="")
+                else:
+                    with tf.io.gfile.GFile(self.model, "rb") as f:
+                        gd = tf.compat.v1.GraphDef()
+                        gd.ParseFromString(f.read())
+                    with tf.Graph().as_default() as graph:
+                        tf.graph_util.import_graph_def(gd, name="")
                 graph_def = graph.as_graph_def(add_shapes=True)
                 return self.extract_sub_graph(graph_def, outputs)
             elif os.path.isfile(str(self.model)) and self.model.endswith(".h5"):
@@ -230,16 +241,20 @@ class TF1Loader(TFLoader):
 
         # get model outputs
         output_node_names = []
-        with tf.compat.v1.Session() as sess:
-            metagraph = tf.saved_model.loader.load(
-                sess, saved_model_tags, saved_model_dir
-            )
-            for sd in metagraph.signature_def.values():
-                output_node_names += [o.name.split(":")[0] for o in sd.outputs.values()]
+        if tf.__version__ < _StrictVersion("1.13.1"):
+            sess = tf.Session()
+        else:
+            sess = tf.compat.v1.Session()
+        metagraph = tf.saved_model.loader.load(
+            sess, saved_model_tags, saved_model_dir
+        )
+        for sd in metagraph.signature_def.values():
+            output_node_names += [o.name.split(":")[0] for o in sd.outputs.values()]
+        sess.close()
 
         # get frozen graph
         output_graph = mktemp()
-        tf.compat.v1.reset_default_graph()
+        tf.compat.v1.reset_default_graph() if tf.__version__ >= _StrictVersion("1.13.1") else tf.reset_default_graph()
         freeze_graph.freeze_graph(
             input_graph=None,
             input_saver=None,
@@ -258,10 +273,16 @@ class TF1Loader(TFLoader):
             saved_model_tags=",".join(saved_model_tags),
         )
 
-        graph_def = tf.compat.v1.GraphDef()
-        with open(output_graph, "rb") as f:
-            graph_def.ParseFromString(f.read())
-        graph_def = tf.compat.v1.graph_util.remove_training_nodes(graph_def)
+        if tf.__version__ < _StrictVersion("1.13.1"):
+            graph_def = tf.GraphDef()
+            with open(output_graph, "rb") as f:
+                graph_def.ParseFromString(f.read())
+            graph_def = tf.graph_util.remove_training_nodes(graph_def)
+        else:
+            graph_def = tf.compat.v1.GraphDef()
+            with open(output_graph, "rb") as f:
+                graph_def.ParseFromString(f.read())
+            graph_def = tf.compat.v1.graph_util.remove_training_nodes(graph_def)
         with tf.Graph().as_default() as graph:
             tf.graph_util.import_graph_def(graph_def, name="")
         return graph.as_graph_def(add_shapes=True)
