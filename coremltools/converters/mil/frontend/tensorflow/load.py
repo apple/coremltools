@@ -250,6 +250,7 @@ class TF1Loader(TFLoader):
         )
         for sd in metagraph.signature_def.values():
             output_node_names += [o.name.split(":")[0] for o in sd.outputs.values()]
+        
         sess.close()
 
         # get frozen graph
