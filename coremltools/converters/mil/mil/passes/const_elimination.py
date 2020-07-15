@@ -52,6 +52,8 @@ def const_elimination_block(block):
                 op.enclosing_block.replace_uses_of_var_after_op(
                     anchor_op=op, old_var=o, new_var=res
                 )
+                # rename the const output
+                o.set_name(o.name+'_ignored')
             else:
                 all_outputs_are_const = False
 

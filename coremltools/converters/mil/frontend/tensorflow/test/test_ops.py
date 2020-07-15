@@ -3693,81 +3693,98 @@ class TestOneHot:
 
 
 class TestPad:
-    @pytest.mark.parametrize(
-        "use_cpu_only, backend, rank, mode, trial",
-        itertools.product(
-            [True, False],
-            backends,
-            [2, 3, 4],
-            # rdar://59854962 ([Pad Precision issue] Rank 5 Pad precision dropped on GPU comparing to CPU)
-            ["reflect", "constant"],
-            list(range(10)),
-        ),
-    )
-    def test(self, use_cpu_only, backend, rank, mode, trial):
+    @pytest.mark.parametrize("use_cpu_only, backend, rank, mode, dynamic, trial",
+                             itertools.product(
+                                 [True, False],
+                                 backends,
+                                 [2, 3, 4],
+                                 ['constant', 'reflect'],
+                                 [True, False],
+                                 list(range(10)),
+                             )
+                             )
+    def test(self, use_cpu_only, backend, rank, mode, dynamic, trial):
+        if backend == "mil_proto" and dynamic:
+            return
         input_shape = np.random.randint(low=2, high=10, size=rank)
         min_input_dim_size = input_shape.min()
-        padding_val = np.random.randint(
-            low=0, high=min_input_dim_size, size=(rank, 2), dtype=np.int32
-        )
+        padding_val = np.random.randint(low=0, high=min_input_dim_size, size=(rank, 2), dtype=np.int32)
 
         # Only constant mode supports padding across all dimensions
         # All other padding modes are only applied on two dimensions.
         perm = list(range(rank))
         import random
-
         random.shuffle(perm)
         if mode != "constant":
             padding_val[perm[:-2]] = 0
-
         tf_mode = mode.upper()
 
-        @make_tf_graph([input_shape])
-        def build_model(x):
-            return tf.pad(x, paddings=padding_val, mode=tf_mode)
+        if dynamic:
+            if mode != "constant":
+                return
+            padding_shape = padding_val.shape
+            @make_tf_graph([input_shape, list(padding_shape)+[tf.int32]])
+            def build_model(x, paddings):
+                return tf.pad(x, paddings=paddings, mode=tf_mode)
 
-        model, inputs, outputs = build_model
+            model, inputs, outputs = build_model
+            input_values = [random_gen(input_shape, rand_min=0.2, rand_max=1000), padding_val]
+            input_dict = dict(zip(inputs, input_values))
 
-        input_values = [random_gen(input_shape, rand_min=0.2, rand_max=1000)]
-        input_dict = dict(zip(inputs, input_values))
-        run_compare_tf(
-            model,
-            input_dict,
-            outputs,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
-            backend=backend,
-        )
+        else:
+            @make_tf_graph([input_shape])
+            def build_model(x):
+                return tf.pad(x, paddings=padding_val, mode=tf_mode)
+
+            model, inputs, outputs = build_model
+            input_values = [random_gen(input_shape, rand_min=0.2, rand_max=1000)]
+            input_dict = dict(zip(inputs, input_values))
+
+        run_compare_tf(model, input_dict, outputs,
+                       use_cpu_only=use_cpu_only,
+                       frontend_only=False, backend=backend)
 
 
 class TestPadV2:
-    @pytest.mark.parametrize(
-        "use_cpu_only, backend, rank, constant_values",
-        itertools.product([True, False], backends, list(range(1, 6)), [0.0, 10, -1],),
-    )
-    def test(self, use_cpu_only, backend, rank, constant_values):
+    @pytest.mark.parametrize("use_cpu_only, backend, rank, constant_values, dynamic, trial",
+                             itertools.product(
+                                 [True, False],
+                                 backends,
+                                 list(range(1, 6)),
+                                 [0., 10, -1],
+                                 [True],
+                                 list(range(10))
+                             )
+                             )
+    def test(self, use_cpu_only, backend, rank, constant_values, dynamic, trial):
+        if backend == "mil_proto" and dynamic:
+            return
         input_shape = np.random.randint(low=2, high=10, size=rank)
-        paddings = np.random.randint(low=2, high=5, size=2 * rank)
-        paddings = paddings.reshape(-1, 2)
+        paddings = np.random.randint(low=2, high=5, size=2*rank)
+        padding_val = paddings.reshape(-1,2)
+        if dynamic:
+            padding_shape = padding_val.shape
+            @make_tf_graph([input_shape, list(padding_shape)+[tf.int32]])
+            def build_model(x, paddings):
+                return tf.raw_ops.PadV2(input=x, paddings=paddings, constant_values=constant_values)
 
-        @make_tf_graph([input_shape])
-        def build_model(x):
-            return tf.raw_ops.PadV2(
-                input=x, paddings=paddings, constant_values=constant_values
-            )
+            model, inputs, outputs = build_model
 
-        model, inputs, outputs = build_model
+            input_values = [random_gen(input_shape, rand_min=0.2, rand_max=1000), padding_val]
+            input_dict = dict(zip(inputs, input_values))
 
-        input_values = [random_gen(input_shape, rand_min=1, rand_max=10)]
-        input_dict = dict(zip(inputs, input_values))
-        run_compare_tf(
-            model,
-            input_dict,
-            outputs,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
-            backend=backend,
-        )
+        else:
+            @make_tf_graph([input_shape])
+            def build_model(x):
+                return tf.raw_ops.PadV2(input=x, paddings=padding_val, constant_values=constant_values)
+
+            model, inputs, outputs = build_model
+
+            input_values = [random_gen(input_shape, rand_min=0.2, rand_max=1000)]
+            input_dict = dict(zip(inputs, input_values))
+        run_compare_tf(model, input_dict, outputs,
+                       use_cpu_only=use_cpu_only,
+                       frontend_only=False, backend=backend)
 
 
 class TestRange:
@@ -5065,3 +5082,81 @@ class TestIsFinite:
             frontend_only=False,
             backend=backend,
         )
+
+class TestLogSoftMax:
+    @pytest.mark.parametrize('use_cpu_only, backend',
+                             itertools.product(
+                                 [True, False],
+                                 backends,
+                             ))
+    def test(self, use_cpu_only, backend):
+        input_shape = (100, 1000)
+        input_value = random_gen(input_shape, rand_min=-10, rand_max=10)
+        @make_tf_graph([input_shape])
+        def build_model(x):
+            return tf.math.log_softmax(x)
+
+        model, inputs, outputs = build_model
+        input_values = [input_value]
+        input_dict = dict(zip(inputs, input_values))
+        run_compare_tf(model, input_dict, outputs,
+                       use_cpu_only=use_cpu_only,
+                       frontend_only=False, backend=backend)
+
+class TestClipByValue:
+    @pytest.mark.parametrize('use_cpu_only, backend, rank, min_and_max',
+                             itertools.product(
+                                 [True, False],
+                                 backends,
+                                 [rank for rank in range(5)],
+                                 [(-1,1),(-1,-1),(1,2),(-3,-2)],
+                             ))
+    def test(self, use_cpu_only, backend, rank, min_and_max):
+        input_shape = np.random.randint(low=2, high=6, size=rank)
+        min_val, max_val = min_and_max
+        input_value = random_gen(input_shape, rand_min=min_val-1, rand_max=max_val+1)
+        @make_tf_graph([input_shape])
+        def build_model(x):
+            return tf.raw_ops.ClipByValue(t=x, clip_value_min=min_val, clip_value_max=max_val)
+
+        model, inputs, outputs = build_model
+        input_values = [input_value]
+        input_dict = dict(zip(inputs, input_values))
+        run_compare_tf(model, input_dict, outputs,
+                       use_cpu_only=use_cpu_only,
+                       frontend_only=False, backend=backend)
+
+class TestSize:
+    @pytest.mark.parametrize('use_cpu_only, backend, rank, dynamic',
+                             itertools.product(
+                                 [True, False],
+                                 backends,
+                                 [rank for rank in range(5)],
+                                 [True, False],
+                             ))
+    def test(self, use_cpu_only, backend, rank, dynamic):
+        input_shape = np.random.randint(low=2, high=6, size=rank)
+        input_value = random_gen(input_shape, rand_min=-1, rand_max=1)
+        if dynamic:
+            a, b = np.prod(input_shape[:2]), np.prod(input_shape[2:])
+            reshape_vals = np.array([a,b], dtype=np.int32)
+            reshape_input_shape = np.array([2], dtype=np.int32)
+
+            @make_tf_graph([input_shape, list(reshape_input_shape)+[tf.int32]])
+            def build_model(x, reshape):
+                x = tf.reshape(x, shape=reshape)
+                return tf.raw_ops.Size(input=x)
+
+            model, inputs, outputs = build_model
+            input_values = [input_value, reshape_vals]
+        else:
+            @make_tf_graph([input_shape])
+            def build_model(x):
+                return tf.raw_ops.Size(input=x)
+
+            model, inputs, outputs = build_model
+            input_values = [input_value]
+        input_dict = dict(zip(inputs, input_values))
+        run_compare_tf(model, input_dict, outputs,
+                       use_cpu_only=use_cpu_only,
+                       frontend_only=False, backend=backend)

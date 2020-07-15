@@ -542,6 +542,8 @@ class squeeze(Operation):
 
     @precondition(allow=VALUE)
     def value_inference(self):
+        if self.x.val is None:
+            return None
         if self.axes is None:
             return np.squeeze(self.x.val)
         else:

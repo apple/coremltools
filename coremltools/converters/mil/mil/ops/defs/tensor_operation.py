@@ -365,7 +365,7 @@ class pad(Operation):
     Parameters
     ----------
     x: tensor<[*D_in],T>  (Required)
-    * pad: const tensor<[2*N],i32> (Required)
+    * pad: tensor<[2*N],i32> (Required)
         * ``N <= D_in``: last ``N`` dimensions of ``x`` are padded as follows:
         * For each dimension ``i`` of ``x`` if ``i >= D_in - N``
             * pad ``pad[2*i]`` elements before ``x[..,i,..]``
@@ -394,7 +394,7 @@ class pad(Operation):
 
     input_spec = InputSpec(
         x=TensorInputType(),
-        pad=IntTensorInputType(const=True),
+        pad=IntTensorInputType(),
         mode=StringInputType(const=True, default="constant"),
         constant_val=FloatInputType(const=True, default=0.0),
     )
@@ -404,15 +404,20 @@ class pad(Operation):
 
     def type_inference(self):
         in_shape = self.x.shape
-        pad = self.pad.val
         ret_shape = list(in_shape)
+        pad = self.pad
         if len(pad.shape) != 1:
             raise ValueError("Pad should be a 1D tensor!")
-        pad = pad.copy()
-        pad = pad.reshape(-1, 2)
+        if pad.val is None:
+            for i in range(self.pad.shape[0]//2):
+                ret_shape[-self.pad.shape[0]//2+i] = get_new_symbol()
+        else:
+            pad = pad.val
+            pad = pad.copy()
+            pad = pad.reshape(-1, 2)
 
-        for i in range(len(pad)):
-            ret_shape[-len(pad) + i] = ret_shape[-len(pad) + i] + pad[i][0] + pad[i][1]
+            for i in range(len(pad)):
+                ret_shape[-len(pad) + i] = ret_shape[-len(pad) + i] + pad[i][0] + pad[i][1]
 
         return types.tensor(self.x.dtype, tuple(ret_shape))
 
@@ -421,6 +426,10 @@ class pad(Operation):
         # NumPy `edge` mode is equivalent to `replicate` mode of PyTorch and CoreML
         mode = "edge" if self.mode.val == "replicate" else self.mode.val
         pad_val = self.pad.val
+
+        if pad_val is None:
+            return None
+
         if len(self.x.val.shape) > (pad_val.shape[0] // 2):
             updated_pad = np.zeros(len(self.x.val.shape) * 2)
             updated_pad[-pad_val.shape[0] :] = pad_val
@@ -750,7 +759,7 @@ class shape(Operation):
     T: fp32
     """
 
-    input_spec = InputSpec(x=TensorInputType())
+    input_spec = InputSpec(x = ScalarOrTensorInputType())
 
     def __init__(self, **kwargs):
         super(shape, self).__init__(**kwargs)
@@ -924,6 +933,7 @@ class split(Operation):
         axis = self.axis.val
         for i, d in enumerate(sizes):
             ret_shapes[i][axis] = d
+        self.sizes = sizes
         return tuple([types.tensor(self.x.dtype, s) for s in ret_shapes])
 
     def _get_num_splits_and_sizes(self):

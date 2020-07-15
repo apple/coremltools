@@ -486,12 +486,12 @@ def _add_elementwise_binary(
     name = output_name if output_name else op.name
     if mode in ["add", "multiply"]:
         params = {"name": name, "output_name": output_name, "mode": mode.upper()}
-        if op.x.val is not None and op.x.rank == 0:
+        if op.x.val is not None and op.x.rank == 0 and _np.isfinite(op.x.val):
             params["input_names"] = make_input(const_context, builder, [op.y])
             params["alpha"] = op.x.val
             builder.add_elementwise(**params)
             return
-        elif op.y.val is not None and op.y.rank == 0:
+        elif op.y.val is not None and op.y.rank == 0 and _np.isfinite(op.y.val):
             params["input_names"] = make_input(const_context, builder, [op.x])
             params["alpha"] = op.y.val
             builder.add_elementwise(**params)
@@ -499,19 +499,19 @@ def _add_elementwise_binary(
     elif mode in ["equal", "not_equal"]:
         add_func = getattr(builder, "add_" + mode, None)
         params = {"name": name, "output_name": output_name}
-        if op.x.val is not None and op.x.rank == 0:
+        if op.x.val is not None and op.x.rank == 0 and _np.isfinite(op.x.val):
             params["input_names"] = make_input(const_context, builder, [op.y])
             params["alpha"] = op.x.val
             add_func(**params)
             return
-        elif op.y.val is not None and op.y.rank == 0:
+        elif op.y.val is not None and op.y.rank == 0 and _np.isfinite(op.y.val):
             params["input_names"] = make_input(const_context, builder, [op.x])
             params["alpha"] = op.y.val
             add_func(**params)
             return
     elif mode in ["greater_than", "greater_equal", "less_than", "less_equal"]:
         params = {"name": name, "output_name": output_name}
-        if op.x.val is not None and op.x.rank == 0:
+        if op.x.val is not None and op.x.rank == 0 and _np.isfinite(op.x.val):
             params["input_names"] = make_input(const_context, builder, [op.y])
             params["alpha"] = op.x.val
             if "less" in mode:
@@ -521,7 +521,7 @@ def _add_elementwise_binary(
                 params["use_less_than_equal"] = mode.endswith("_equal")
                 builder.add_less_than(**params)
             return
-        elif op.y.val is not None and op.y.rank == 0:
+        elif op.y.val is not None and op.y.rank == 0 and _np.isfinite(op.y.val):
             params["input_names"] = make_input(const_context, builder, [op.x])
             params["alpha"] = op.y.val
             if "greater" in mode:
@@ -1500,7 +1500,7 @@ def reshape(const_context, builder, op):
             # Does not support 0 in shape
             msg = "Use 0 in shape only if len(shape) == x.rank. Report bug."
             raise ValueError(msg)
-        output_shape = op.shape.val if len(op.shape.val) != 0 else (1,)
+        output_shape = (1,) if len(op.shape.val) == 0 or 0 in op.shape.shape else op.shape.val
         builder.add_reshape_static(
             name=op.name,
             input_name=make_input(const_context, builder, op.x),
@@ -2053,17 +2053,17 @@ def prelu(const_context, builder, op):
 
 @register_mil_to_nn_mapping
 def pad(const_context, builder, op):
+    if len(op.pad.shape) != 1:
+        raise ValueError("Pad should be a 1D tensor.")
+
     pad = op.pad.val
     mode = op.mode.val
-
-    if len(pad.shape) != 1:
-        raise ValueError("Pad should be a 1D tensor.")
     constant_val = op.constant_val.val
 
     nn_mode_mapping = {"reflect": "reflection", "replicate": "replication"}
     mode = nn_mode_mapping.get(mode, mode)
 
-    if op.x.rank > 1 and _np.all(pad[:-4] == 0):
+    if pad is not None and op.x.rank > 1 and _np.all(pad[:-4] == 0):
         # check and map mode
         if mode == "symmetric":
             mode = "reflection"
@@ -2082,14 +2082,22 @@ def pad(const_context, builder, op):
             value=constant_val,
         )
     elif mode == "constant":
-        builder.add_constant_pad(
-            name=op.name,
-            input_names=[op.x.name],
-            output_name=op.outputs[0].name,
-            value=constant_val,
-            pad_to_given_output_size_mode=False,
-            pad_amounts=pad,
-        )
+        if pad is None:
+            builder.add_constant_pad(
+                name=op.name,
+                input_names=make_input(const_context, builder, [op.x, op.pad]),
+                output_name=op.outputs[0].name,
+                value=constant_val
+            )
+        else:
+            builder.add_constant_pad(
+                name=op.name,
+                input_names=make_input(const_context, builder, [op.x]),
+                output_name=op.outputs[0].name,
+                value=constant_val,
+                pad_to_given_output_size_mode=False,
+                pad_amounts=pad,
+            )
     else:
         raise ValueError("Unsupported mode for Pad layer! {}".format(mode))
 
@@ -2609,16 +2617,29 @@ def split(const_context, builder, op):
     split_sizes = None
     if op.split_sizes is not None:
         if op.split_sizes.val is None:
-            raise ValueError("Non-const split_sizes unsupported in NN")
+            raise ValueError('Non-const split_sizes unsupported in NN')
         split_sizes = op.split_sizes.val.tolist()
-    builder.add_split_nd(
-        name=op.name,
-        input_name=make_input(const_context, builder, op.x),
-        output_names=[v.name for v in op.outputs],
-        axis=op.axis.val,
-        num_splits=len(op.outputs),
-        split_sizes=split_sizes,
-    )
+
+    split = op.sizes
+    split = [size for size in split if size != 0]
+    has_equal_splits = all([size == split[0] for size in split])
+    num_splits = len(split)
+    output_names = [op.outputs[i].name for i in range(num_splits)]
+
+    if has_equal_splits:
+        builder.add_split_nd(
+                name=op.name,
+                input_name=make_input(const_context, builder, op.x),
+                output_names=output_names,
+                axis=op.axis.val,
+                num_splits=num_splits)
+    else:
+        builder.add_split_nd(
+                name=op.name,
+                input_name=make_input(const_context, builder, op.x),
+                output_names=output_names,
+                axis=op.axis.val,
+                split_sizes=list(split))
 
 
 @register_mil_to_nn_mapping

@@ -118,7 +118,7 @@ class ImageType(InputType):
 
 
 class TensorType(InputType):
-    def __init__(self, name=None, shape=None, dtype=None):
+    def __init__(self, name=None, shape=None, dtype=None, is_optional=False, optional_value=None):
         super(TensorType, self).__init__(name, shape)
         if dtype is None:
             self.dtype = types.fp32
@@ -130,6 +130,10 @@ class TensorType(InputType):
                 self.dtype = numpy_type_to_builtin_type(dtype)
             except TypeError:
                 raise TypeError("dtype={} is unsupported".format(dtype))
+
+        # optional input values
+        self.is_optional = is_optional
+        self.optional_value = optional_value
 
 
 class RangeDim(object):
