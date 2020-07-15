@@ -108,8 +108,7 @@ def random_gen(
     If allow_duplicate is set to false, it is guaranteed that value generated are all different.
     Default data type is np.float32.
     """
-
-    elem = np.prod(shape)
+    elem = np.prod(shape).astype(np.int)
     ret = []
     for _ in range(elem):
         while True:

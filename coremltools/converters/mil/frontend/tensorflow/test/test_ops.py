@@ -1453,57 +1453,55 @@ class TestElementWiseBinary:
         if np.random.randint(2) == 0:
             y_shape = [1] + y_shape
 
-        if use_cpu_only:
-            dtype = np.float32
-        else:
-            dtype = np.float16
+        # lower precision input data for non-CPU tests
+        dtype = np.float32 if use_cpu_only else np.float16
 
         if mode == "add":
             res = tf.math.add
-            x_val = np.random.randint(low=-1000, high=1000, size=x_shape).astype(dtype)
-            y_val = np.random.randint(low=-1000, high=1000, size=y_shape).astype(dtype)
+            x_val = random_gen(x_shape, -1000, 1000, dtype=dtype).astype(np.float32)
+            y_val = random_gen(y_shape, -1000, 1000, dtype=dtype).astype(np.float32)
         elif mode == "floor_div":
             res = tf.math.floordiv
-            x_val = np.random.randint(low=0, high=1000, size=x_shape).astype(dtype)
-            y_val = np.random.randint(low=1, high=20, size=y_shape).astype(dtype)
+            x_val = random_gen(x_shape, 0, 1000, dtype=dtype).astype(np.float32)
+            y_val = random_gen(y_shape, 1, 20, dtype=dtype).astype(np.float32)
         elif mode == "floor_mod":
             res = tf.math.floormod
-            x_val = np.random.randint(low=0, high=100, size=x_shape).astype(dtype)
-            y_val = np.random.randint(low=1, high=20, size=y_shape).astype(dtype)
+            x_val = random_gen(x_shape, 0, 100, dtype=dtype).astype(np.float32)
+            y_val = random_gen(y_shape, 1, 20, dtype=dtype).astype(np.float32)
         elif mode == "maximum":
             res = tf.math.maximum
-            x_val = np.random.randint(low=-10, high=10, size=x_shape).astype(dtype)
-            y_val = np.random.randint(low=-10, high=10, size=y_shape).astype(dtype)
+            x_val = random_gen(x_shape, -10, 10, dtype=dtype).astype(np.float32)
+            y_val = random_gen(y_shape, -10, 10, dtype=dtype).astype(np.float32)
         elif mode == "minimum":
             res = tf.math.minimum
-            x_val = np.random.randint(low=-10, high=10, size=x_shape).astype(dtype)
-            y_val = np.random.randint(low=-10, high=10, size=y_shape).astype(dtype)
+            x_val = random_gen(x_shape, -10, 10, dtype=dtype).astype(np.float32)
+            y_val = random_gen(y_shape, -10, 10, dtype=dtype).astype(np.float32)
         elif mode == "mod":
             res = tf.math.mod
-            x_val = np.random.randint(low=0, high=1000, size=x_shape).astype(dtype)
-            y_val = np.random.randint(low=1, high=20, size=y_shape).astype(dtype)
+            x_val = random_gen(x_shape, 0, 1000, dtype=dtype).astype(np.float32)
+            y_val = random_gen(y_shape, 1, 20, dtype=dtype).astype(np.float32)
         elif mode == "mul":
             res = tf.math.multiply
-            x_val = np.random.randint(low=-100, high=100, size=x_shape).astype(dtype)
-            y_val = np.random.randint(low=-100, high=100, size=y_shape).astype(dtype)
+            x_val = random_gen(x_shape, -100, 100, dtype=dtype).astype(np.float32)
+            y_val = random_gen(y_shape, -100, 100, dtype=dtype).astype(np.float32)
         elif mode == "pow":
             res = tf.math.pow
-            x_val = np.random.randint(low=-5, high=5, size=x_shape).astype(dtype)
-            y_val = np.random.randint(low=-5, high=5, size=y_shape).astype(dtype)
+            x_val = np.random.randint(low=-5, high=5, size=x_shape).astype(np.float32)
+            y_val = np.random.randint(low=-5, high=5, size=y_shape).astype(np.float32)
         elif mode == "real_div":
             res = tf.math.truediv
-            x_val = np.random.randint(low=0, high=1000, size=x_shape).astype(dtype)
-            y_val = np.random.randint(low=1, high=20, size=y_shape).astype(dtype)
+            x_val = random_gen(x_shape, 0, 1000, dtype=dtype).astype(np.float32)
+            y_val = random_gen(y_shape, 1, 20, dtype=dtype).astype(np.float32)
         elif mode == "sub":
             res = tf.math.subtract
-            x_val = np.random.randint(low=-1000, high=1000, size=x_shape).astype(dtype)
-            y_val = np.random.randint(low=-1000, high=1000, size=y_shape).astype(dtype)
+            x_val = random_gen(x_shape, -1000, 1000, dtype=dtype).astype(np.float32)
+            y_val = random_gen(y_shape, -1000, 1000, dtype=dtype).astype(np.float32)
         elif mode == "squared_difference":
             if backend == "mil_proto":
                 return  # TODO
             res = tf.math.squared_difference
-            x_val = np.random.randint(low=-5, high=5, size=x_shape).astype(dtype)
-            y_val = np.random.randint(low=-5, high=5, size=y_shape).astype(dtype)
+            x_val = random_gen(x_shape, -5, 5, dtype=dtype).astype(np.float32)
+            y_val = random_gen(y_shape, -5, 5, dtype=dtype).astype(np.float32)
 
         @make_tf_graph([x_shape, y_shape])
         def build_model(x, y):
@@ -1533,10 +1531,8 @@ class TestElementWiseBinary:
         if np.random.randint(2) == 0:
             y_shape = [1] + y_shape
 
-        if use_cpu_only:
-            dtype = np.float32
-        else:
-            dtype = np.float16
+        # lower precision input data for non-CPU tests
+        dtype = np.float32 if use_cpu_only else np.float16
 
         @make_tf_graph([x_shape, y_shape])
         def build_model(x, y):
@@ -1545,8 +1541,8 @@ class TestElementWiseBinary:
         model, inputs, outputs = build_model
 
         input_values = [
-            np.random.randint(low=-5, high=3, size=x_shape).astype(dtype),
-            np.random.randint(low=-5, high=3, size=y_shape).astype(dtype),
+            random_gen(x_shape, -5, 3, dtype=dtype).astype(np.float32),
+            random_gen(y_shape, -5, 3, dtype=dtype).astype(np.float32),
         ]
 
         input_dict = dict(zip(inputs, input_values))
@@ -1570,10 +1566,8 @@ class TestElementWiseBinary:
         if np.random.randint(2) == 0:
             y_shape = [1] + y_shape
 
-        if use_cpu_only:
-            dtype = np.float32
-        else:
-            dtype = np.float16
+        # lower precision input data for non-CPU tests
+        dtype = np.float32 if use_cpu_only else np.float16
 
         @make_tf_graph([x_shape, y_shape])
         def build_model(x, y):
@@ -1582,8 +1576,8 @@ class TestElementWiseBinary:
         model, inputs, outputs = build_model
 
         input_values = [
-            np.random.randint(low=-5, high=3, size=x_shape).astype(dtype),
-            np.random.randint(low=-5, high=3, size=y_shape).astype(dtype),
+            random_gen(x_shape, -5, 3, dtype=dtype).astype(np.float32),
+            random_gen(y_shape, -5, 3, dtype=dtype).astype(np.float32),
         ]
 
         input_dict = dict(zip(inputs, input_values))
@@ -1607,10 +1601,8 @@ class TestElementWiseBinary:
         if np.random.randint(2) == 0:
             y_shape = [1] + y_shape
 
-        if use_cpu_only:
-            dtype = np.float32
-        else:
-            dtype = np.float16
+        # lower precision input data for non-CPU tests
+        dtype = np.float32 if use_cpu_only else np.float16
 
         @make_tf_graph([x_shape, y_shape])
         def build_model(x, y):
@@ -1619,8 +1611,8 @@ class TestElementWiseBinary:
         model, inputs, outputs = build_model
 
         input_values = [
-            np.random.randint(low=-5, high=3, size=x_shape).astype(dtype),
-            np.random.randint(low=-5, high=3, size=y_shape).astype(dtype),
+            random_gen(x_shape, -5, 3, dtype=dtype).astype(np.float32),
+            random_gen(y_shape, -5, 3, dtype=dtype).astype(np.float32),
         ]
 
         input_dict = dict(zip(inputs, input_values))
@@ -1644,10 +1636,8 @@ class TestElementWiseBinary:
         if np.random.randint(2) == 0:
             y_shape = [1] + y_shape
 
-        if use_cpu_only:
-            dtype = np.float32
-        else:
-            dtype = np.float16
+        # lower precision input data for non-CPU tests
+        dtype = np.float32 if use_cpu_only else np.float16
 
         @make_tf_graph([x_shape, y_shape])
         def build_model(x, y):
@@ -1656,8 +1646,8 @@ class TestElementWiseBinary:
         model, inputs, outputs = build_model
 
         input_values = [
-            np.random.randint(low=-5, high=3, size=x_shape).astype(dtype),
-            np.random.randint(low=-5, high=3, size=y_shape).astype(dtype),
+            random_gen(x_shape, -5, 3, dtype=dtype).astype(np.float32),
+            random_gen(y_shape, -5, 3, dtype=dtype).astype(np.float32),
         ]
 
         input_dict = dict(zip(inputs, input_values))
@@ -1681,10 +1671,8 @@ class TestElementWiseBinary:
         if np.random.randint(2) == 0:
             y_shape = [1] + y_shape
 
-        if use_cpu_only:
-            dtype = np.float32
-        else:
-            dtype = np.float16
+        # lower precision input data for non-CPU tests
+        dtype = np.float32 if use_cpu_only else np.float16
 
         @make_tf_graph([x_shape, y_shape])
         def build_model(x, y):
@@ -1693,8 +1681,8 @@ class TestElementWiseBinary:
         model, inputs, outputs = build_model
 
         input_values = [
-            np.random.randint(low=-5, high=3, size=x_shape).astype(dtype),
-            np.random.randint(low=-5, high=3, size=y_shape).astype(dtype),
+            random_gen(x_shape, -5, 3, dtype=dtype).astype(np.float32),
+            random_gen(y_shape, -5, 3, dtype=dtype).astype(np.float32),
         ]
 
         input_dict = dict(zip(inputs, input_values))
@@ -1718,10 +1706,8 @@ class TestElementWiseBinary:
         if np.random.randint(2) == 0:
             y_shape = [1] + y_shape
 
-        if use_cpu_only:
-            dtype = np.float32
-        else:
-            dtype = np.float16
+        # lower precision input data for non-CPU tests
+        dtype = np.float32 if use_cpu_only else np.float16
 
         @make_tf_graph([x_shape, y_shape])
         def build_model(x, y):
@@ -1730,8 +1716,8 @@ class TestElementWiseBinary:
         model, inputs, outputs = build_model
 
         input_values = [
-            np.random.randint(low=-5, high=3, size=x_shape).astype(dtype),
-            np.random.randint(low=-5, high=3, size=y_shape).astype(dtype),
+            random_gen(x_shape, -5, 3, dtype=dtype).astype(np.float32),
+            random_gen(y_shape, -5, 3, dtype=dtype).astype(np.float32),
         ]
 
         input_dict = dict(zip(inputs, input_values))
