@@ -63,6 +63,16 @@ _types_TO_STRINGS = {
     types_str: "str",
 }
 
+def np_dtype_to_py_type(np_dtype):
+    # Can't use dict, as hash(np.int32) != hash(val.dtype)
+    if np_dtype in [np.int32, np.int64]:
+        return int
+    if np_dtype == np.bool:
+        return bool
+    if np_dtype in [np.float32, np.float64]:
+        return float
+    raise NotImplementedError('{} is not supported'.format(np_dtype))
+
 _STRINGS_TO_types = {v: k for k, v in _types_TO_STRINGS.items()}
 
 

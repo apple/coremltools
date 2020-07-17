@@ -13,6 +13,7 @@ from coremltools.converters.mil.mil.types.symbolic import (
     any_symbolic,
     is_symbolic,
 )
+from coremltools.converters.mil.mil.types import np_dtype_to_py_type
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.ops.registry import SSAOpRegistry
 from tqdm import tqdm as _tqdm
@@ -67,6 +68,27 @@ def make_input(const_context, builder, variables):
         add_const(const_context, builder, v.name, v.val)
     return v.name
 
+def to_py_type(val):
+    """Convert numpy val to python primitive equivalent. Ex:
+
+    Given: val = np.array([True, False])
+    Returns: [True, False]
+
+    Given: val = np.array(32, dtype=np.int)
+    Returns 32
+    """
+    if not isinstance(val, (_np.ndarray, _np.generic)):
+        return val
+    # val is np.ndarray or np.generic
+    is_np_scalar = isinstance(val, _np.generic) or val.shape == ()
+    py_type = np_dtype_to_py_type(val.dtype)
+    if is_np_scalar:
+        return py_type(val)
+    if len(val.shape) > 1:
+        msg = 'Only 0D (mapped to python scalar) and 1D (mapped to ' +\
+                'python tuple) are supported. Got shape {}'
+        raise ValueError(msg.format(val.shape))
+    return tuple(py_type(v) for v in val)
 
 def _convert_pool(const_context, builder, op, mode, exclude_padding_from_average=True):
     num_spatial_dimensions = len(op.kernel_sizes.val)
@@ -179,6 +201,10 @@ def add_const(const_context, builder, name, val):
             return
     if not isinstance(val, (_np.ndarray, _np.generic)):
         val = _np.array([val])
+    if val.dtype != _np.float:
+        # nn proto only supports float32 activation. (e.g., pred in cond op
+        # needs to be converted to float)
+        val = val.astype(_np.float)
     rank = len(val.shape)
     if rank == 0:
         builder.add_load_constant_nd(
@@ -488,12 +514,12 @@ def _add_elementwise_binary(
         params = {"name": name, "output_name": output_name, "mode": mode.upper()}
         if op.x.val is not None and op.x.rank == 0 and _np.isfinite(op.x.val):
             params["input_names"] = make_input(const_context, builder, [op.y])
-            params["alpha"] = op.x.val
+            params["alpha"] = to_py_type(op.x.val)
             builder.add_elementwise(**params)
             return
         elif op.y.val is not None and op.y.rank == 0 and _np.isfinite(op.y.val):
             params["input_names"] = make_input(const_context, builder, [op.x])
-            params["alpha"] = op.y.val
+            params["alpha"] = to_py_type(op.y.val)
             builder.add_elementwise(**params)
             return
     elif mode in ["equal", "not_equal"]:
@@ -501,19 +527,19 @@ def _add_elementwise_binary(
         params = {"name": name, "output_name": output_name}
         if op.x.val is not None and op.x.rank == 0 and _np.isfinite(op.x.val):
             params["input_names"] = make_input(const_context, builder, [op.y])
-            params["alpha"] = op.x.val
+            params["alpha"] = to_py_type(op.x.val)
             add_func(**params)
             return
         elif op.y.val is not None and op.y.rank == 0 and _np.isfinite(op.y.val):
             params["input_names"] = make_input(const_context, builder, [op.x])
-            params["alpha"] = op.y.val
+            params["alpha"] = to_py_type(op.y.val)
             add_func(**params)
             return
     elif mode in ["greater_than", "greater_equal", "less_than", "less_equal"]:
         params = {"name": name, "output_name": output_name}
         if op.x.val is not None and op.x.rank == 0 and _np.isfinite(op.x.val):
             params["input_names"] = make_input(const_context, builder, [op.y])
-            params["alpha"] = op.x.val
+            params["alpha"] = to_py_type(op.x.val)
             if "less" in mode:
                 params["use_greater_than_equal"] = mode.endswith("_equal")
                 builder.add_greater_than(**params)
@@ -523,7 +549,7 @@ def _add_elementwise_binary(
             return
         elif op.y.val is not None and op.y.rank == 0 and _np.isfinite(op.y.val):
             params["input_names"] = make_input(const_context, builder, [op.x])
-            params["alpha"] = op.y.val
+            params["alpha"] = to_py_type(op.y.val)
             if "greater" in mode:
                 params["use_greater_than_equal"] = mode.endswith("_equal")
                 builder.add_greater_than(**params)
@@ -850,20 +876,20 @@ def slice_by_index(const_context, builder, op):
             output_name=op.outputs[0].name,
             begin_ids=op.begin.val,
             end_ids=op.end.val,
-            strides=tuple(stride),
-            begin_masks=tuple(begin_mask),
-            end_masks=tuple(end_mask),
-            squeeze_masks=tuple(squeeze_mask)
+            strides=to_py_type(stride),
+            begin_masks=to_py_type(begin_mask),
+            end_masks=to_py_type(end_mask),
+            squeeze_masks=to_py_type(squeeze_mask),
         )
     else:
         builder.add_slice_dynamic(
             name=op.name,
             input_names=make_input(const_context, builder, [op.x, op.begin, op.end]),
             output_name=op.outputs[0].name,
-            strides=tuple(stride),
-            begin_masks=tuple(begin_mask),
-            end_masks=tuple(end_mask),
-            squeeze_masks=tuple(squeeze_mask),
+            strides=to_py_type(stride),
+            begin_masks=to_py_type(begin_mask),
+            end_masks=to_py_type(end_mask),
+            squeeze_masks=to_py_type(squeeze_mask),
         )
 
 
