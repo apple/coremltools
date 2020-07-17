@@ -10,6 +10,7 @@ from coremltools.models.neural_network.quantization_utils import (
     quantize_weights,
 )
 from coremltools.models.utils import _macos_version, _is_macos
+from coremltools.converters.mil.backend.nn.op_mapping import to_py_type
 
 MIN_MACOS_VERSION_REQUIRED = (10, 13)
 LAYERS_10_14_MACOS_VERSION = (10, 14)
@@ -415,8 +416,8 @@ class BasicNumericCorrectnessTest_1015NewLayers(unittest.TestCase):
             is_quantized_weight=True,
             quantization_type="linear",
             nbits=7,
-            quant_scale=quant_scale,
-            quant_bias=quant_bias,
+            quant_scale=to_py_type(quant_scale),
+            quant_bias=to_py_type(quant_bias),
         )
 
         mlmodel = MLModel(builder.spec)

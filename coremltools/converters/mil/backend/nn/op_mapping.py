@@ -84,10 +84,8 @@ def to_py_type(val):
     py_type = np_dtype_to_py_type(val.dtype)
     if is_np_scalar:
         return py_type(val)
-    if len(val.shape) > 1:
-        msg = 'Only 0D (mapped to python scalar) and 1D (mapped to ' +\
-                'python tuple) are supported. Got shape {}'
-        raise ValueError(msg.format(val.shape))
+    # flatten them to 1D array
+    val = val.flatten()
     return tuple(py_type(v) for v in val)
 
 def _convert_pool(const_context, builder, op, mode, exclude_padding_from_average=True):
