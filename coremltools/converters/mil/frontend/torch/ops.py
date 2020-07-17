@@ -418,6 +418,11 @@ def _convolution(context, node):
 
     context.add(conv)
 
+@register_torch_op
+def sinh(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+    res = mb.sinh(x=inputs[0], name=node.name)
+    context.add(res)
 
 @register_torch_op
 def softmax(context, node):
