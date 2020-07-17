@@ -1906,3 +1906,26 @@ def sort(context, node):
     indices_name = node.outputs[1]
     context.add(values, torch_name=values_name)
     context.add(indices, torch_name=indices_name)
+
+
+@register_torch_op
+def append(context, node):
+    # Note: by applying torchir_passes.transform_inplace_ops the meaning of
+    # this op is changed from the original TorchIR. This op expects a python
+    # list or MIL List as its first input. If an MIL List, the second input
+    # must be a tensor of whatever shape the List expects. If not an MIL List,
+    # the second input can by anything. The result will be the second input
+    # joined to the first input, either by list_write if an MIL list, or
+    # append if a python list.
+    inputs = _get_inputs(context, node, expected=2)
+    ls = inputs[0]
+    value = inputs[1]
+
+    if isinstance(ls, list):
+        context.add(ls + [value], node.name)
+    elif isinstance(ls, ListVar):
+        index = mb.list_length(ls=ls, name=node.name + "_index")
+        res = mb.list_write(ls=ls, index=index, value=value, name=node.name)
+        context.add(res)
+    else:
+        raise ValueError("can only append to Python list or MIL ListVar, got {}.".format(type(inputs[0])))
