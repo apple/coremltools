@@ -49,7 +49,7 @@ def convert_nodes(context, graph):
         _logging.info("Converting op {} : {}".format(node.name, node.kind))
         if _add_op is None:
             raise RuntimeError(
-                "PyTorch convert function for op {} not implemented".format(node.kind)
+                "PyTorch convert function for op '{}' not implemented.".format(node.kind)
             )
         else:
             _add_op(context, node)
@@ -502,6 +502,9 @@ def max_pool2d(context, node):
     x = inputs[0]
     kernel_sizes = inputs[1]
     strides = inputs[2]
+    if strides.op.op_type == "const"  and (not list(strides.val)):
+        strides = mb.const(val=kernel_sizes.val, name=strides.name)
+
     pad_type = "custom"
 
     # Need to explicity state L-R, T-B pad
@@ -734,6 +737,23 @@ def batch_norm(context, node):
 
 
 @register_torch_op
+def instance_norm(context, node):
+    inputs = _get_inputs(context, node, expected=9)
+    x = inputs[0]
+    weight = inputs[1]
+    bias = inputs[2]
+    eps = inputs[7]
+    x = mb.instance_norm(
+        x=x,
+        gamma=weight,
+        beta=bias,
+        epsilon=eps,
+        name=node.name,
+    )
+    context.add(x)
+
+
+@register_torch_op
 def embedding(context, node):
     inputs = _get_inputs(context, node)
     _input = inputs[0]
@@ -955,7 +975,7 @@ def lstm(context, node):
         )
 
     if batch_first:
-        raise ValueError("CoreML does not support LSTM layer with batch_first==True.")
+        _input = mb.transpose(x=_input, perm=[1, 0, 2], name=_input.name + "_batch_first_transpose")
 
     expected_num_weights = 2 * num_layers * (int(bidirectional) + 1) * (int(bias) + 1)
     if len(weights) != expected_num_weights:
@@ -1095,7 +1115,7 @@ def lstm(context, node):
         bias=(final_biases if bias else None),
         direction=("bidirectional" if bidirectional is True else "forward"),
         output_sequence=True,
-        name=node.name,
+        name=node.name if not batch_first else node.name + "_batch_first",
     )
 
     # (6.)
@@ -1105,6 +1125,8 @@ def lstm(context, node):
             unsqueeze = mb.expand_dims(x=output, axes=[0], name=name)
             context.add(unsqueeze)
         else:
+            if batch_first:
+                output = mb.transpose(x=output, perm=[1, 0, 2], name=name)
             context.add(output, name)
 
 def _get_scales_from_output_size(output_size, input_shape):
@@ -1459,6 +1481,9 @@ def _avg_pool(context, node, inputs):
     x = inputs[0]
     kernel_sizes = inputs[1]
     strides = inputs[2]
+    if strides.op.op_type == "const"  and (not list(strides.val)):
+        strides = mb.const(val=kernel_sizes.val, name=strides.name)
+
     pad_type = "custom"
     # Need to explicity state L-R, T-B pad
     pad = inputs[3]

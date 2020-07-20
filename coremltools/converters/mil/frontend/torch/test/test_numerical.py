@@ -42,11 +42,30 @@ class TestTorchNumerical:
         run_numerical_test((1, in_features), model)
 
     @pytest.mark.parametrize(
-        "num_features, eps", itertools.product([5, 2, 1], [0.1, 1e-05]),
+        "input_shape, eps, momentum, affine",
+        itertools.product([
+            (1, 3, 15, 2), (1, 1, 1, 1), (3, 2, 1, 5)],
+            [0.1, 1e-5, 1e-9],
+            [0.1, 0.2],
+            [True, False],
+        ),
     )
-    def test_batchnorm(self, num_features, eps):
-        model = nn.BatchNorm2d(num_features, eps)
-        run_numerical_test((1, num_features, 5, 5), model)
+    def test_batch_norm(self, input_shape, eps, momentum, affine):
+        model = nn.BatchNorm2d(input_shape[-3], eps=eps, affine=affine)
+        run_numerical_test(input_shape, model)
+
+    @pytest.mark.parametrize(
+        "input_shape, eps, momentum, affine",
+        itertools.product([
+            (2, 3, 15, 2), (2, 1, 1, 1), (3, 2, 1, 5)],
+            [0.1, 1e-5, 1e-9],
+            [0.1, 0.2],
+            [True, False],
+        ),
+    )
+    def test_instance_norm(self, input_shape, eps, momentum, affine):
+        model = nn.InstanceNorm2d(input_shape[-3], eps=eps, affine=affine)
+        run_numerical_test(input_shape, model, places=3)
 
     @pytest.mark.parametrize(
         "height, width, in_channels, out_channels, kernel_size, stride, padding, dilation",
@@ -256,14 +275,6 @@ class TestTorchNumerical:
         model = nn.LayerNorm(input_shape, eps=eps)
         run_numerical_test(input_shape, model)
 
-    @pytest.mark.parametrize(
-        "input_shape, eps",
-        itertools.product([(1, 3, 15, 15), (1, 1, 1, 1)], [1e-5, 1e-9]),
-    )
-    def test_batch_norm(self, input_shape, eps):
-        model = nn.BatchNorm2d(input_shape[-3], eps=eps)
-        run_numerical_test(input_shape, model)
-
     @pytest.mark.xfail(reason="rdar://problem/61064173")
     @pytest.mark.parametrize(
         "input_shape, kernel_size, stride, pad, include_pad",
@@ -289,8 +300,8 @@ class TestTorchNumerical:
         "input_shape, kernel_size, stride, pad, include_pad",
         itertools.product(
             [(1, 3, 15, 15), (1, 1, 7, 7), (1, 3, 10, 10)],
-            [1, 2, 3],
-            [1, 2],
+            [4, 5, 6],
+            [1, 2, None],
             [0, 1],
             [True, False],
         ),
@@ -298,7 +309,10 @@ class TestTorchNumerical:
     def test_avg_pool2d(self, input_shape, kernel_size, stride, pad, include_pad):
         if pad > kernel_size / 2:
             return
-        model = nn.AvgPool2d(kernel_size, stride, pad, False, include_pad)
+        if stride:
+            model = nn.AvgPool2d(kernel_size, stride, pad, False, include_pad)
+        else:
+            model = nn.AvgPool2d(kernel_size, padding=pad, ceil_mode=False, count_include_pad=include_pad)
         run_numerical_test(input_shape, model)
 
     @pytest.mark.parametrize(
@@ -342,13 +356,16 @@ class TestTorchNumerical:
     @pytest.mark.parametrize(
         "input_shape, kernel_size, stride, pad",
         itertools.product(
-            [(1, 3, 15, 15), (1, 1, 7, 7), (1, 3, 10, 10)], [1, 2, 3], [1, 2], [0, 1],
+            [(1, 3, 15, 15), (1, 1, 7, 7), (1, 3, 10, 10)], [4, 5, 6], [1, 2, None], [0, 1],
         ),
     )
     def test_max_pool2d(self, input_shape, kernel_size, stride, pad):
         if pad > kernel_size / 2:
             return
-        model = nn.MaxPool2d(kernel_size, stride, pad, ceil_mode=False)
+        if stride:
+            model = nn.MaxPool2d(kernel_size, stride, pad, ceil_mode=False)
+        else:
+            model = nn.MaxPool2d(kernel_size, padding=pad, ceil_mode=False)
         run_numerical_test(input_shape, model)
 
     @pytest.mark.parametrize(
@@ -433,7 +450,7 @@ class TestTorchNumerical:
 
     @pytest.mark.parametrize(
         "input_size, hidden_size, num_layers, bias, batch_first, dropout, bidirectional",
-        itertools.product([7], [5], [1], [True, False], [False], [0.3], [True, False]),
+        itertools.product([7], [5], [1], [True, False], [True, False], [0.3], [True, False]),
     )
     def test_lstm(
         self,
@@ -458,7 +475,6 @@ class TestTorchNumerical:
     @pytest.mark.parametrize(
         "input_size, hidden_size, num_layers, bias, batch_first, dropout, bidirectional",
         [
-            (7, 3, 1, True, True, 0.3, True),
             (7, 3, 2, True, True, 0.3, True),
             (7, 3, 2, False, False, 0.3, False),
         ],

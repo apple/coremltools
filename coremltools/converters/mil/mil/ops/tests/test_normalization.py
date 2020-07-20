@@ -129,16 +129,13 @@ class TestNormalizationInstanceNorm:
             backend=backend,
         )
 
-    @pytest.mark.xfail(
-        reason='ValueError: Expected more than 1 value per channel when training, got input size torch.Size([1, 3, 1, 1])',
-        run=False)
     @pytest.mark.skipif(not testing_reqs._HAS_TORCH, reason="PyTorch not found.")
     @pytest.mark.parametrize(
         "use_cpu_only, backend, epsilon",
-        itertools.product([True, False], backends, [1e-5, 1e-10],),
+        itertools.product([True, False], backends, [1e-5, 1e-10]),
     )
     def test_builder_to_backend_stress(self, use_cpu_only, backend, epsilon):
-        shape = np.random.randint(low=1, high=6, size=4)
+        shape = np.random.randint(low=2, high=6, size=4)
         x_val = random_gen(shape=shape, rand_min=-10.0, rand_max=10.0)
         input_placeholders = {"x": mb.placeholder(shape=x_val.shape)}
         input_values = {"x": x_val}
@@ -146,7 +143,7 @@ class TestNormalizationInstanceNorm:
         def build(x):
             return mb.instance_norm(x=x, epsilon=epsilon)
 
-        torch_op = torch.nn.InstanceNorm2d(num_features=shape[1])
+        torch_op = torch.nn.InstanceNorm2d(num_features=shape[1], eps=epsilon)
         expected_outputs = [torch_op(torch.as_tensor(x_val)).numpy()]
         expected_output_types = [o.shape[:] + (types.fp32,) for o in expected_outputs]
 
@@ -158,8 +155,8 @@ class TestNormalizationInstanceNorm:
             expected_outputs,
             use_cpu_only=use_cpu_only,
             backend=backend,
-            atol=1e-2,
-            rtol=1e-3,
+            atol=1e-3,
+            rtol=1e-4,
         )
 
 

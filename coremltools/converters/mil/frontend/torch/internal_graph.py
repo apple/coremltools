@@ -142,7 +142,7 @@ class InternalTorchIRGraph:
           and .outputs() functions return iterators, so the only way to
           determine the number of inputs/outputs is by counting to the end.
           There are other examples of why the torch structure is hard to work
-          with, and this structure alleviates those isses.
+          with, and this structure alleviates those issues.
         2. torch._C.graph is an internal API and so we can't count on its
           stability. By inserting a layer in between, we can handle any changes
           to torch._C.graph here and isolate the ops code that processes the
