@@ -5,13 +5,26 @@
 
 import numpy as np
 import torch
-
+import torch.nn as nn
 from six import string_types as _string_types
 from coremltools import TensorType
-from coremltools.converters import convert
+from coremltools.converters.mil.testing_reqs import _converter
 from coremltools.models import MLModel
 from coremltools._deps import _IS_MACOS
 
+class ModuleWrapper(nn.Module):
+    """
+    Helper class to transform torch function into torch nn module.
+    This helps to keep the testing interface same for torch functional api.
+
+    """
+    def __init__(self, function, kwargs=None):
+        super(ModuleWrapper, self).__init__()
+        self.function = function
+        self.kwargs = kwargs if kwargs else {}
+
+    def forward(self, x):
+        return self.function(x, **self.kwargs)
 
 np.random.seed(1984)
 
@@ -37,7 +50,7 @@ def convert_to_coreml_inputs(input_description, inputs):
     return coreml_inputs
 
 
-def convert_to_mlmodel(model_spec, tensor_inputs):
+def convert_to_mlmodel(model_spec, tensor_inputs, backend="nn_proto"):
     def _convert_to_inputtype(inputs):
         if isinstance(inputs, list):
             return [_convert_to_inputtype(x) for x in inputs]
@@ -50,8 +63,9 @@ def convert_to_mlmodel(model_spec, tensor_inputs):
                 "Unable to parse type {} into InputType.".format(type(inputs))
             )
 
-    mlmodel = convert(model_spec, inputs=list(_convert_to_inputtype(tensor_inputs)))
-    return mlmodel
+    inputs = list(_convert_to_inputtype(tensor_inputs))
+    proto = _converter._convert(model_spec, inputs=inputs, convert_to=backend, convert_from="torch")
+    return MLModel(proto, useCPUOnly=True)
 
 
 def generate_input_data(input_size):
@@ -69,8 +83,8 @@ def trace_model(model, input_data):
     return torch_model
 
 
-def run_numerical_test(
-    input_data, model, expected_results=None, places=5, input_as_shape=True
+def run_compare_torch(
+    input_data, model, expected_results=None, places=5, input_as_shape=True, backend="nn_proto"
 ):
     """
         Traces a model and runs a numerical test.
@@ -83,8 +97,7 @@ def run_numerical_test(
         input_data = generate_input_data(input_data)
     model_spec = trace_model(model, input_data)
     convert_and_compare(
-        input_data, model_spec, expected_results=expected_results,
-        atol=10.0 ** -places,
+        input_data, model_spec, expected_results=expected_results, atol=10.0 ** -places, backend=backend
     )
 
 
@@ -95,7 +108,7 @@ def flatten_and_detach_torch_results(torch_results):
     return [torch_results.detach().numpy()]
 
 
-def convert_and_compare(input_data, model_spec, expected_results=None, atol=1e-5):
+def convert_and_compare(input_data, model_spec, expected_results=None, atol=1e-5, backend="nn_proto"):
     """
         If expected results is not set, it will by default
         be set to the flattened output of the torch model.
@@ -111,7 +124,7 @@ def convert_and_compare(input_data, model_spec, expected_results=None, atol=1e-5
     if not expected_results:
         expected_results = torch_model(*input_data)
     expected_results = flatten_and_detach_torch_results(expected_results)
-    mlmodel = convert_to_mlmodel(model_spec, input_data)
+    mlmodel = convert_to_mlmodel(model_spec, input_data, backend=backend)
     coreml_inputs = convert_to_coreml_inputs(mlmodel.input_description, input_data)
     if _IS_MACOS:
         coreml_results = mlmodel.predict(coreml_inputs)
