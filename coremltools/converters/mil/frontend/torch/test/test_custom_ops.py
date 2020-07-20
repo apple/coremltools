@@ -65,7 +65,7 @@ class TestCompositeOp:
     def test_composite_op(self, input_shape):
         _set_torch_reg_op("cosine_similarity", custom_cosine_similarity)
         model = nn.CosineSimilarity(dim=1, eps=1e-6)
-        run_numerical_test([input_shape, input_shape], model)
+        run_compare_torch([input_shape, input_shape], model)
         _set_torch_reg_op("cosine_similarity", default_cosine_similarity)
 
 
