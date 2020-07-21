@@ -68,9 +68,9 @@ build_wheel_linux_py27:
       expire_in: 2 weeks
       paths:
         - build/dist/
-  except:
-    refs:
-      - schedules
+    except:
+      refs:
+        - schedules
 
 ## Uses Python 2.7 from python.org (already on build machine)
 build_wheel_macos_py27:
