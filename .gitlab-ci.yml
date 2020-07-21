@@ -19,6 +19,9 @@ check_python_flake8:
     - python -m pip install --upgrade pip
     - pip install flake8
     - flake8 ./coremltools --count --select=E9,F63,F7,F82 --show-source --statistics
+  except:
+    refs:
+      - schedules
 
 
 ########################################################################
@@ -38,6 +41,9 @@ check_python_flake8:
     expire_in: 2 weeks
     paths:
       - build/dist/
+  except:
+    refs:
+      - schedules
 
 build_wheel_linux_py27:
   <<: *build_linux
@@ -62,6 +68,9 @@ build_wheel_linux_py27:
       expire_in: 2 weeks
       paths:
         - build/dist/
+    except:
+      refs:
+        - schedules
 
 ## Uses Python 2.7 from python.org (already on build machine)
 build_wheel_macos_py27:
@@ -97,18 +106,27 @@ build_wheel_macos_py38:
   stage: test
   script:
     - bash -e scripts/test.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON} --fast
+  except:
+    refs:
+      - schedules
 
 .test_macos_pkg: &test_macos_pkg
   stage: test
   script:
     - bash -e scripts/test.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON}
       --test-package=${TEST_PACKAGE} --fast
+  except:
+    refs:
+      - schedules
 
 .test_macos_pkg_with_reqs: &test_macos_pkg_with_reqs
   stage: test
   script:
     - bash -e scripts/test.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON}
       --test-package=${TEST_PACKAGE} --requirements=${REQUIREMENTS} --fast
+  except:
+    refs:
+      - schedules
 
 test_macos11_py27_coremltools_test:
   <<: *test_macos_coremltools_test
@@ -304,6 +322,9 @@ build_documentation:
   only:
     changes:
       - docs/**/*
+  except:
+    refs:
+      - schedules
 
 
 #########################################################################
@@ -330,3 +351,19 @@ collect_artifacts:
     expire_in: 2 weeks
     paths:
       - build/dist/
+  except:
+    refs:
+      - schedules
+
+
+#########################################################################
+##
+##                       Sync Gitlab CI with GitHub for PR CI builds
+##
+#########################################################################
+sync_gitlab_with_github:
+  image: "registry.gitlab.com/zach_nation/coremltools/sync-gitlab-with-github:1.0"
+  script: "bash scripts/sync_gitlab_with_github.sh"
+  only:
+    refs:
+      - schedules
