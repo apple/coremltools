@@ -24,6 +24,7 @@ for pr in pulls:
     if not(remote_name in current_remotes):
         print('Adding remote {} with url {}'.format(remote_name, remote_url))
         git.remote.Remote.add(local_repo, remote_name, remote_url)
+        current_remotes.add(remote_name)
     remote = git.remote.Remote(local_repo, remote_name)
     remote.fetch()
 

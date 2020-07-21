@@ -1,5 +1,14 @@
 #!/bin/bash
 
+# This script is designed to be run in the Docker container python:3.7.
+# For instance, on the command line from the root of this repo:
+#
+# docker run -ti -v "$PWD:/build" -v "$HOME/.ssh:/root/.ssh" -e COREMLTOOLS_GITHUB_API_TOKEN=$COREMLTOOLS_GITHUB_API_TOKEN registry.gitlab.com/zach_nation/coremltools/sync-gitlab-with-github:1.0 "/build/scripts/sync_gitlab_with_github.sh"
+#
+# Note that -v "$PWD:/build" mounts your local repo at /build within the container,
+#       and -v "$HOME/.ssh:/root/.ssh" mounts your .ssh directory within the container!
+# This is needed to `git push` to the CI repo.
+
 set -e
 
 ##=============================================================================
@@ -13,17 +22,7 @@ if [[ -z "$COREMLTOOLS_GITHUB_API_TOKEN" ]]; then
     exit 1
 fi
 
-# Create and set up Python env
-# Copied from test.sh
 cd ${COREMLTOOLS_HOME}
-zsh -i -e scripts/env_create.sh --python=3.7
-source scripts/env_activate.sh --python=3.7
-echo
-echo "Using python from $(which python)"
-echo
-
-# Install PyGithub and gitpython
-$PIP_EXECUTABLE install PyGithub gitpython
 
 # Now run sync_gitlab_with_github.py, which contains the real logic
-$PYTHON_EXECUTABLE scripts/sync_gitlab_with_github.py
+python3 scripts/sync_gitlab_with_github.py
