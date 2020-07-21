@@ -22,5 +22,7 @@ if [[ -z "$COREMLTOOLS_GITHUB_API_TOKEN" ]]; then
     exit 1
 fi
 
+cd ${COREMLTOOLS_HOME}
+
 # Now run sync_gitlab_with_github.py, which contains the real logic
-python3 $COREMLTOOLS_HOME/scripts/sync_gitlab_with_github.py
+python3 scripts/sync_gitlab_with_github.py
