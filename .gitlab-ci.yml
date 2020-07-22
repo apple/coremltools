@@ -363,7 +363,10 @@ collect_artifacts:
 #########################################################################
 sync_gitlab_with_github:
   image: "registry.gitlab.com/zach_nation/coremltools/sync-gitlab-with-github:1.0"
-  script: "bash scripts/sync_gitlab_with_github.sh"
+  script:
+    - echo "$COREMLTOOLS_SSH_PUBLIC_KEY" > ~/.ssh/id_rsa.pub
+    - echo "$COREMLTOOLS_SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+    - bash scripts/sync_gitlab_with_github.sh
   only:
     refs:
       - schedules
