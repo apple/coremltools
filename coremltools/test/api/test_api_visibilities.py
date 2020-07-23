@@ -1,5 +1,5 @@
-import pytest
 import coremltools as ct
+import pytest
 
 
 def _get_visible_items(d):
