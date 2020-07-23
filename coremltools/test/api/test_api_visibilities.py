@@ -36,7 +36,7 @@ class TestApiVisibilities:
             "test",
         ]
         if not ct.utils._is_macos():
-            expected.remove("libcoremlpython")
+             expected.remove("libcoremlpython")
         _check_visible_modules(_get_visible_items(ct), expected)
 
     def test_utils(self):
@@ -155,11 +155,12 @@ class TestApiVisibilities:
     @pytest.mark.skipif(
         ct.utils._python_version() >= (3, 8, 0),
         reason="Keras isn't compatible with Python 3.8+.",
-    @pytest.mark.xfail(
-        condition=not ct.utils._is_macos(),
-        reason="rdar://65138103 (Keras converter not exposed on Linux)",
-        run=False,
     )
+    @pytest.mark.xfail(
+         condition=not ct.utils._is_macos(),
+         reason="rdar://65138103 (Keras converter not exposed on Linux)",
+         run=False,
+     )
     def test_converters_keras(self):
         _check_visible_modules(_get_visible_items(ct.converters.keras), ["convert"])
 
