@@ -523,6 +523,10 @@ def rename_feature(
                         if name == current_name:
                             layer.output[index] = new_name
 
+        if spec.HasField("neuralNetworkClassifier"):
+            if nn.labelProbabilityLayerName == current_name:
+                nn.labelProbabilityLayerName = new_name
+
     # Rename internally for feature vectorizer
     if spec.HasField("featureVectorizer") and rename_inputs:
         for input in spec.featureVectorizer.inputList:

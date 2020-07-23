@@ -30,8 +30,8 @@ function print_help {
   echo "  --dev                Setup the environment for development."
   echo "  --exclude-build-deps Exclude packages needed for building"
   echo "  --exclude-test-deps  Exclude packages needed for testing"
-  echo "  --force              Rebuild the environment if it exists already." 
-  echo "  --include-docs-deps  Include packages needed for making docs" 
+  echo "  --force              Rebuild the environment if it exists already."
+  echo "  --include-docs-deps  Include packages needed for making docs"
   echo "  --python=*           Python to use for configuration."
   echo
   echo "Example: zsh -i env_create --python==3.7"
@@ -117,11 +117,11 @@ fi
 
 conda deactivate
 
-echo 
-echo 
-echo 
+echo
+echo
+echo
 echo "Python env created for coremltools development."
-echo 
+echo
 echo "Run the following command to to activate it."
 echo
 if [[ $DEV == 1 ]]; then

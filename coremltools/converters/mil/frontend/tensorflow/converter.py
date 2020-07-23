@@ -72,8 +72,10 @@ class TranscriptionContext:
         is_new_var: True if ssa_vars are newly created for tf_name.
         """
         if tf_name in self.context:
-            logging.warning("TF var %s is added again.", tf_name)
-            return
+            # Overriding allow us to translate while_loop body twice (which is
+            # needed to figure out shapes changes during iterates)
+            msg = "TF var %s is added again. Overriding previous value"
+            logging.info(msg % tf_name)
         if is_new_var and isinstance(ssa_vars, Var) and tf_name != ssa_vars.name:
             msg = (
                 "MIL op's name ({}) does not match TensorFlow's node name ({})."
@@ -153,6 +155,9 @@ class TFConverter:
             if len(tf_placeholder_names) == 1 and len(inputs) == 1:
                 if inputs[0].name is None:
                     inputs[0].name = tf_placeholder_names[0]
+
+            # filter out those inputs which is not in tf_placeholder_names
+            inputs = [x for x in inputs if x.name in tf_placeholder_names]
 
             # We fill in shapes for user-specified input that doesn't have shape
             for inp in inputs:

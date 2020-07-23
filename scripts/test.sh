@@ -25,7 +25,7 @@ unknown_option() {
 print_help() {
   echo "Test the wheel by running all unit tests"
   echo
-  echo "Usage: zsh -i test_wheel.sh"
+  echo "Usage: zsh -i test.sh"
   echo
   echo "  --wheel-path=*          Specify which wheel to test. Otherwise, test the current coremltools dir."
   echo "  --test-package=*        Test package to run."

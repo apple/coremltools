@@ -29,19 +29,19 @@ message VisionFeaturePrint {
         SceneVersion version = 1;
     }
 
-    // Object extracts features useful for identifying and localizing
+    // Objects extracts features useful for identifying and localizing
     // objects in natural images
-    message Object {
-        enum ObjectVersion {
-            OBJECT_VERSION_INVALID = 0;
-            // VERSION_1 is available on iOS,tvOS 14.0+, macOS 10.16+
+    message Objects {
+        enum ObjectsVersion {
+            OBJECTS_VERSION_INVALID = 0;
+            // VERSION_1 is available on iOS,tvOS 14.0+, macOS 11.0+
             // It uses a 299x299 input image and yields two multiarray
             // features: one at high resolution of shape (288, 35, 35)
             // the other at low resolution of shape (768, 17, 17)
-            OBJECT_VERSION_1 = 1;
+            OBJECTS_VERSION_1 = 1;
         }
 
-        ObjectVersion version = 1;
+        ObjectsVersion version = 1;
 
         /*
         * Stores the names of the output features according to the
@@ -57,7 +57,7 @@ message VisionFeaturePrint {
     // Vision feature print type
     oneof VisionFeaturePrintType {
         Scene scene = 20;
-        Object object = 21;
+        Objects objects = 21;
     }
 
 }

@@ -27,12 +27,15 @@ class TestSliceByIndex:
         input_values = {"x": x_val, "begin": begin_val, "end": end_val}
 
         def build(x, begin, end):
+            begin_c = mb.const(val=begin_val)
+            end_c = mb.const(val=end_val)
             return [
                 mb.slice_by_index(x=x, begin=begin, end=end),
+                mb.slice_by_index(x=x, begin=begin_c, end=end_c)
             ]
 
-        expected_output_types = [(UNK_SYM, UNK_SYM, UNK_SYM, types.fp32)]
-        expected_outputs = [np.array([[[17, 18], [21, 22]]], dtype=np.float32)]
+        expected_output_types = [(UNK_SYM, UNK_SYM, UNK_SYM, types.fp32)] * 2
+        expected_outputs = [np.array([[[17, 18], [21, 22]]], dtype=np.float32)] * 2
         run_compare_builder(
             build,
             input_placeholders,

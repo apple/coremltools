@@ -3,16 +3,16 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from coremltools.converters import convert
+from coremltools.converters.mil.testing_reqs import converter
 import pytest
 
 tf = pytest.importorskip("tensorflow", minversion="2.1.0")
 from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import (
-    get_tf_node_names,
+    get_tf_node_names
 )
 
 from coremltools.converters.mil.input_types import TensorType
-from coremltools.converters.mil.testing_utils import compare_shapes, compare_backend
+from coremltools.converters.mil.testing_utils import compare_backend
 from tensorflow.python.framework import dtypes
 
 
@@ -115,7 +115,7 @@ def run_compare_tf2(
         ref = [tf_outputs.numpy()]
     expected_outputs = {n: v for n, v in zip(outputs, ref)}
 
-    proto = convert(
+    proto = converter.convert(
         model,
         source=frontend,
         inputs=inputs,
@@ -171,7 +171,7 @@ def run_compare_tf_keras(
         The relative tolerance parameter.
     """
 
-    proto = convert(model, source=frontend, convert_to=backend).get_spec()
+    proto = converter.convert(model, source=frontend, convert_to=backend).get_spec()
 
     # assumes conversion preserve the i/o names
     inputs = sorted([str(i.name) for i in proto.description.input])

@@ -352,31 +352,28 @@ def _convolution(context, node):
 
     # Expand padding. Torch accepts either an int (for all dimensions) or an n-tuple of ints (one per dimension), but
     # we require a (2 * n)-tuple, where n is the number of spatial dimensions, start and end for each spatial dimension
-    pad = inputs[4]
+    pad = inputs[4].val
+
     if weight.val.ndim in (3, 4):
         # 1D and 2D: Need to explicitly state L-R, T-B pad
-        pad = _np.repeat(pad.val, 2)
+        pad = _np.repeat(pad, 2)
     elif weight.val.ndim == 5:
         # 3D: Need to explicitly state F-Bk, L-R, T-B pad
-        if type(pad.val) == int:
-            pad = _np.repeat(pad.val, 6)
-        elif len(pad.val) == 3:
-            pad = _np.repeat(pad.val, 2)
+        if type(pad) == int:
+            pad = _np.repeat(pad, 6)
+        elif len(pad) == 3:
+            pad = _np.repeat(pad, 2)
     else:
         raise ValueError(
             "Invalid weight dimension. Must be 3, 4, or 5 for 1D, 2D, or 3D convolution, respectively."
         )
 
     dilations = inputs[5]
+    out_pad = None
     if len(inputs) == 12:
         transposed = inputs[6].val
-        out_pad = inputs[7]  # unused
+        out_pad = inputs[7].val
         group = inputs[8]
-
-        if any([v != 0 for v in out_pad.val]):
-            raise ValueError(
-                "convolution does not support output_padding (given {})".format(out_pad)
-            )
     elif len(inputs) == 7:
         transposed = False
         group = inputs[6]
@@ -409,8 +406,50 @@ def _convolution(context, node):
         weight_transpose = mb.transpose(
             x=weight, perm=[1, 0, 2, 3], name=weight.name + "_transpose"
         )
+
+        # Handle output_padding using pre-pad or post-crop
+        pre_pad = [0] * len(pad)
+        post_crop = [0] * len(pad)
+
+        if out_pad is not None and any(out_pad):
+            output_padding = [0] * len(pad)
+            # output padding adds additional padding on one of the side of dimension
+            # i.e. bottom from top-bottom,
+            #      right  from left-right
+            #      back   from front-back
+            # CoreML padding structure is similar [top, bottom, left, right]
+            # mapping output_padding to simplify further processing!
+            #
+            # For ConvTranspose2d: [bottom, right] -> [0, b, 0, r]
+            output_padding = [0 if i % 2 == 0 else out_pad[i//2] for i in range(len(pad))]
+            # TODO: rdar://65588783 ([PyTorch] Define and error out on unsupported configuration for output_padding)
+            # error out here with unsupported configuration along with output padding
+            if sum(pad) == 0 and any(output_padding):
+                raise ValueError("ConvTransponse configuration of padding=0 and output_padding > 0 not supported!")
+            post_crop = pad.copy()
+            pad *= 0
+            for i in range(0, len(pad)):
+                if post_crop[i] >= output_padding[i]:
+                    post_crop[i] -= output_padding[i]
+                else:
+                    pre_pad[i] = output_padding[i] - post_crop[i]
+            kwargs["pad"] = pre_pad
+            if any(pre_pad):
+                # Constant pad requires pad to be of lenght 2*input_rank
+                pre_pad = [0] * 2 * (len(x.shape) - 2) + pre_pad
+                x = mb.pad(x=x, pad=pre_pad)
+                kwargs["x"] = x
+            if any(post_crop):
+                del kwargs["name"]
+
         kwargs["weight"] = weight_transpose
         conv = mb.conv_transpose(**kwargs)
+        if any(post_crop):
+            # TODO: rdar://65575826 (PyTorch converter: output_padding mapping to slice
+            # instead of crop layer for 1 and 3D ConvTranspose)
+            if len(post_crop) != 4:
+                raise ValueError("output_padding is supported only for ConvTranspose2D!")
+            conv = mb.crop(x=conv, crop_height=post_crop[:2], crop_width=post_crop[2:4], name=node.name)
     else:
         # Normal convolution
         kwargs["weight"] = weight
@@ -430,7 +469,7 @@ def softmax(context, node):
 
     x = inputs[0]
     axis = inputs[1]
-    res = mb.softmax(logit=x, axis=axis, name=node.name)
+    res = mb.softmax(x=x, axis=axis, name=node.name)
     context.add(res)
 
 
@@ -512,9 +551,6 @@ def max_pool2d(context, node):
     x = inputs[0]
     kernel_sizes = inputs[1]
     strides = inputs[2]
-    if strides.op.op_type == "const"  and (not list(strides.val)):
-        strides = mb.const(val=kernel_sizes.val, name=strides.name)
-
     pad_type = "custom"
 
     # Need to explicity state L-R, T-B pad
@@ -1491,9 +1527,6 @@ def _avg_pool(context, node, inputs):
     x = inputs[0]
     kernel_sizes = inputs[1]
     strides = inputs[2]
-    if strides.op.op_type == "const"  and (not list(strides.val)):
-        strides = mb.const(val=kernel_sizes.val, name=strides.name)
-
     pad_type = "custom"
     # Need to explicity state L-R, T-B pad
     pad = inputs[3]
@@ -1541,7 +1574,7 @@ def log_softmax(context, node):
     axis = inputs[1]
     out = inputs[2]  # Ignored.
     assert out is None
-    res = mb.softmax(logit=x, axis=axis, name=node.name + "_softmax")
+    res = mb.softmax(x=x, axis=axis, name=node.name + "_softmax")
     res = mb.log(x=res, name=node.name)
     context.add(res)
 
@@ -1931,6 +1964,29 @@ def sort(context, node):
     indices_name = node.outputs[1]
     context.add(values, torch_name=values_name)
     context.add(indices, torch_name=indices_name)
+
+
+@register_torch_op
+def append(context, node):
+    # Note: by applying torchir_passes.transform_inplace_ops the meaning of
+    # this op is changed from the original TorchIR. This op expects a python
+    # list or MIL List as its first input. If an MIL List, the second input
+    # must be a tensor of whatever shape the List expects. If not an MIL List,
+    # the second input can by anything. The result will be the second input
+    # joined to the first input, either by list_write if an MIL list, or
+    # append if a python list.
+    inputs = _get_inputs(context, node, expected=2)
+    ls = inputs[0]
+    value = inputs[1]
+
+    if isinstance(ls, list):
+        context.add(ls + [value], node.name)
+    elif isinstance(ls, ListVar):
+        index = mb.list_length(ls=ls, name=node.name + "_index")
+        res = mb.list_write(ls=ls, index=index, value=value, name=node.name)
+        context.add(res)
+    else:
+        raise ValueError("can only append to Python list or MIL ListVar, got {}.".format(type(inputs[0])))
 
 
 @register_torch_op(torch_alias=['abs'])
