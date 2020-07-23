@@ -1,0 +1,17 @@
+#########################################################################
+##
+##                       Sync Gitlab CI with GitHub for PR CI builds
+##
+#########################################################################
+sync_gitlab_with_github:
+  image: "registry.gitlab.com/zach_nation/coremltools/sync-gitlab-with-github:1.0"
+  script:
+    - mkdir -p ~/.ssh
+    - echo "StrictHostKeyChecking no" > ~/.ssh/config
+    - echo "UserKnownHostsFile /dev/null" >> ~/.ssh/config
+    - eval "$(ssh-agent -s)"
+    - ssh-add <(echo "$COREMLTOOLS_SSH_PRIVATE_KEY" | base64 -d)
+    - bash scripts/sync_gitlab_with_github.sh
+  only:
+    refs:
+      - schedules
