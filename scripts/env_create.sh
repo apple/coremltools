@@ -82,10 +82,6 @@ else
   conda activate $ENV_DIR
 fi
 
-# Upgrade pip if possible
-echo "Making sure pip is latest version"
-python -m pip install --upgrade pip
-
 # Activate and install packages in the environment
 echo "Installing basic build requirements."
 if [[ $include_build_deps == 1 ]]; then
