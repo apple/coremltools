@@ -33,7 +33,7 @@ check_python_flake8:
   stage: build
   script:
     - export PATH=$PATH:$HOME/miniconda3/condabin
-    - zsh -e scripts/build.sh --num-procs=4 --python=$PYTHON --dist
+    - zsh -i -c scripts/build.sh --num-procs=4 --python=$PYTHON --dist
   artifacts:
     expire_in: 2 weeks
     paths:
@@ -57,7 +57,7 @@ build_wheel_linux_py27:
       - macos10.15
     stage: build
     script:
-      - bash -e scripts/build.sh --num-procs=4 --python=$PYTHON --dist
+      - zsh -i -c scripts/build.sh --num-procs=4 --python=$PYTHON --dist
     artifacts:
       expire_in: 2 weeks
       paths:
@@ -96,18 +96,18 @@ build_wheel_macos_py38:
 .test_macos_coremltools_test: &test_macos_coremltools_test
   stage: test
   script:
-    - bash -e scripts/test.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON} --fast
+    - zsh -i -c scripts/test.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON} --fast
 
 .test_macos_pkg: &test_macos_pkg
   stage: test
   script:
-    - bash -e scripts/test.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON}
+    - zsh -i -c scripts/test.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON}
       --test-package=${TEST_PACKAGE} --fast
 
 .test_macos_pkg_with_reqs: &test_macos_pkg_with_reqs
   stage: test
   script:
-    - bash -e scripts/test.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON}
+    - zsh -i -c scripts/test.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON}
       --test-package=${TEST_PACKAGE} --requirements=${REQUIREMENTS} --fast
 
 test_macos11_py27_coremltools_test:
@@ -290,7 +290,7 @@ build_documentation:
   stage: test
   image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-14.04:1.0.3
   script:
-    - bash -e scripts/build_docs.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON}
+    - zsh -i -c scripts/build_docs.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON}
   dependencies:
     - build_wheel_linux_py27
   artifacts:
