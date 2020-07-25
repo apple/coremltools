@@ -206,7 +206,7 @@ endif()
 
 set(PYTHON_TAG "cp${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR}")
 if(APPLE)
-  set(PLAT_NAME "macosx_10_16_intel;macosx_10_15_intel;macosx_10_14_intel;macosx_10_13_intel;macosx_10_12_intel")
+  set(PLAT_NAME "macosx_11_0_intel;macosx_10_15_intel;macosx_10_14_intel;macosx_10_13_intel;macosx_10_12_intel")
 elseif("${CMAKE_SYSTEM_NAME}" MATCHES "Linux")
   set(PLAT_NAME "manylinux1_x86_64")
 else()

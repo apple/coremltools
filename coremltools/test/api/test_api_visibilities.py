@@ -7,9 +7,9 @@ def _get_visible_items(d):
 
 
 def _check_visible_modules(actual, expected):
-    assert set(actual) == set(expected), "API mis-matched. Expected %s. Got %s" % (
-        expected,
+    assert set(actual) == set(expected), "API mis-matched. Got %s, expected %s" % (
         actual,
+        expected,
     )
 
 
