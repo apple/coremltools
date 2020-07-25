@@ -10,6 +10,7 @@ olefile==0.44
 onnx==1.6.0; python_version <= "3.7"
 pandas
 pillow
+pybind11
 pytest; python_version < '3.7'
 pytest==5.3.4; python_version >= '3.7'
 pytest-cov
