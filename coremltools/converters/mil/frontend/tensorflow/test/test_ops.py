@@ -4317,6 +4317,7 @@ class TestMatrixDiag:
     def test(self, use_cpu_only, backend, length, dynamic):
 
         if dynamic:
+            return  # FIXME: "rdar://65198011 (Re-enable Conv3dTranspose and DynamicTile unit tests)"
             input_shape = np.random.randint(low=1, high=4, size=length)
             a, b = np.prod(input_shape[:2]), np.prod(input_shape[2:])
             size = np.array([a,b]).astype(np.int32)
