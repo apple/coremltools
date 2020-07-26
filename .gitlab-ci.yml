@@ -33,7 +33,7 @@ check_python_flake8:
   stage: build
   script:
     - export PATH=$PATH:$HOME/miniconda3/condabin
-    - zsh -i -c scripts/build.sh --num-procs=4 --python=$PYTHON --dist
+    - zsh -e scripts/build.sh --num-procs=4 --python=$PYTHON --dist
   artifacts:
     expire_in: 2 weeks
     paths:
