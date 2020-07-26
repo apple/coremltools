@@ -117,7 +117,7 @@ test_macos11_py27_coremltools_test:
   dependencies:
     - build_wheel_macos_py27
   variables:
-    WHEEL_PATH: build/dist/*cp27*11_0*
+    WHEEL_PATH: build/dist/*cp27*10_16*
     PYTHON: "2.7"
   only:
     changes:
@@ -137,7 +137,7 @@ test_macos11_py37_coremltools_test:
   dependencies:
     - build_wheel_macos_py37
   variables:
-    WHEEL_PATH: build/dist/*cp37*11_0*
+    WHEEL_PATH: build/dist/*cp37*10_16*
     PYTHON: "3.7"
   only:
     changes:
@@ -158,7 +158,7 @@ test_macos11_py27_pytorch:
   variables:
     PYTHON: "2.7"
     TEST_PACKAGE: coremltools.converters.mil.frontend.torch
-    WHEEL_PATH: build/dist/*cp27*11_0*
+    WHEEL_PATH: build/dist/*cp27*10_16*
   only:
     changes:
       - coremltools/converters/mil/frontend/torch/**/*.{py}
@@ -174,7 +174,7 @@ test_macos11_py37_pytorch:
   variables:
     PYTHON: "3.7"
     TEST_PACKAGE: coremltools.converters.mil.frontend.torch
-    WHEEL_PATH: build/dist/*cp37*11_0*
+    WHEEL_PATH: build/dist/*cp37*10_16*
   only:
     changes:
       - coremltools/converters/mil/frontend/torch/**/*.{py}
@@ -190,7 +190,7 @@ test_macos11_py27_tensorflow1:
   variables:
     PYTHON: "2.7"
     TEST_PACKAGE: coremltools.converters.mil.frontend.tensorflow
-    WHEEL_PATH: build/dist/*cp27*11_0*
+    WHEEL_PATH: build/dist/*cp27*10_16*
   only:
     changes:
       - coremltools/converters/mil/frontend/tensorflow/**/*.{py}
@@ -206,7 +206,7 @@ test_macos11_py37_tensorflow1:
   variables:
     PYTHON: "3.7"
     TEST_PACKAGE: coremltools.converters.mil.frontend.tensorflow
-    WHEEL_PATH: build/dist/*cp37*11_0*
+    WHEEL_PATH: build/dist/*cp37*10_16*
   only:
     changes:
       - coremltools/converters/mil/frontend/tensorflow/**/*.{py}
@@ -223,7 +223,7 @@ test_macos11_py27_tensorflow2:
     PYTHON: "2.7"
     REQUIREMENTS: reqs/test_tf2.pip
     TEST_PACKAGE: coremltools.converters.mil.frontend.tensorflow2
-    WHEEL_PATH: build/dist/*cp27*11_0*
+    WHEEL_PATH: build/dist/*cp27*10_16*
   only:
     changes:
       - coremltools/converters/mil/frontend/tensorflow2/**/*.{py}
@@ -240,7 +240,7 @@ test_macos11_py37_tensorflow2:
     PYTHON: "3.7"
     REQUIREMENTS: reqs/test_tf2.pip
     TEST_PACKAGE: coremltools.converters.mil.frontend.tensorflow2
-    WHEEL_PATH: build/dist/*cp37*11_0*
+    WHEEL_PATH: build/dist/*cp37*10_16*
   only:
     changes:
       - coremltools/converters/mil/frontend/tensorflow2/**/*.{py}
@@ -256,7 +256,7 @@ test_macos11_py27_mil:
   variables:
     PYTHON: "2.7"
     TEST_PACKAGE: coremltools.converters.mil.mil
-    WHEEL_PATH: build/dist/*cp27*11_0*
+    WHEEL_PATH: build/dist/*cp27*10_16*
   only:
     changes:
       - coremltools/converters/mil/mil/**/*.{py}
@@ -271,7 +271,7 @@ test_macos11_py37_mil:
   variables:
     PYTHON: "3.7"
     TEST_PACKAGE: coremltools.converters.mil.mil
-    WHEEL_PATH: build/dist/*cp37*11_0*
+    WHEEL_PATH: build/dist/*cp37*10_16*
   only:
     changes:
       - coremltools/converters/mil/mil/**/*.{py}
