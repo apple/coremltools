@@ -20,7 +20,6 @@ check_python_flake8:
     - pip install flake8
     - flake8 ./coremltools --count --select=E9,F63,F7,F82 --show-source --statistics
 
-
 ########################################################################
 #
 #                         linux - Build & Test
@@ -44,7 +43,6 @@ build_wheel_linux_py27:
   image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-14.04:1.0.3
   variables:
     PYTHON: "2.7"
-
 
 #########################################################################
 ##
@@ -181,7 +179,7 @@ test_macos11_py37_pytorch:
       - coremltools/converters/mil/mil/**/*.{py}
       - coremltools/converters/mil/backend/**/*.{py}
 
-test_macos11_py27_tensorflow1:
+test_macos11_py27_tf1:
   <<: *test_macos_pkg
   tags:
     - macos11
@@ -197,7 +195,7 @@ test_macos11_py27_tensorflow1:
       - coremltools/converters/mil/mil/**/*.{py}
       - coremltools/converters/mil/backend/**/*.{py}
 
-test_macos11_py37_tensorflow1:
+test_macos11_py37_tf1:
   <<: *test_macos_pkg
   tags:
     - macos11
@@ -213,7 +211,7 @@ test_macos11_py37_tensorflow1:
       - coremltools/converters/mil/mil/**/*.{py}
       - coremltools/converters/mil/backend/**/*.{py}
 
-test_macos11_py27_tensorflow2:
+test_macos11_py27_tf2:
   <<: *test_macos_pkg_with_reqs
   tags:
     - macos11
@@ -230,7 +228,7 @@ test_macos11_py27_tensorflow2:
       - coremltools/converters/mil/mil/**/*.{py}
       - coremltools/converters/mil/backend/**/*.{py}
 
-test_macos11_py37_tensorflow2:
+test_macos11_py37_tf2:
   <<: *test_macos_pkg_with_reqs
   tags:
     - macos11
@@ -277,8 +275,6 @@ test_macos11_py37_mil:
       - coremltools/converters/mil/mil/**/*.{py}
       - coremltools/converters/mil/backend/**/*.{py}
 
-
-
 #########################################################################
 ##
 ##                        Make docs
@@ -305,7 +301,6 @@ build_documentation:
     changes:
       - docs/**/*
 
-
 #########################################################################
 ##
 ##                       Collect artifacts
@@ -321,6 +316,7 @@ collect_artifacts:
   script:
     echo "Collect artifacts (wheels and documentation)"
   dependencies:
+    - build_wheel_linux_py27
     - build_wheel_macos_py27
     - build_wheel_macos_py35
     - build_wheel_macos_py36
