@@ -63,6 +63,8 @@ class TestApiVisibilities:
             "pipeline",
             "tree_ensemble",
             "utils",
+            "nearest_neighbors",
+            "feature_vectorizer",
         ]
         _check_visible_modules(_get_visible_items(ct.models), expected)
 

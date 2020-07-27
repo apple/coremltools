@@ -182,7 +182,8 @@ class TestTensorFlow1ConverterExamples:
         print("Tensorflow frozen graph saved at {}".format(frozen_graph_file))
 
         mlmodel = ct.convert(frozen_graph_file)
-        mlmodel.save(frozen_graph_file.replace("pb", "mlmodel"))
+        # optionally, you can save model to disk
+        # mlmodel.save(frozen_graph_file.replace("pb", "mlmodel"))
         import shutil
         try:
             shutil.rmtree(model_dir)
