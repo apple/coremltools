@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.com/apple/coremltools.svg?branch=master)](#)
+[![Build Status](https://img.shields.io/gitlab/pipeline/zach_nation/coremltools/master)](#)
 [![PyPI Release](https://img.shields.io/pypi/v/coremltools.svg)](#)
 [![Python Versions](https://img.shields.io/pypi/pyversions/coremltools.svg)](#)
 
