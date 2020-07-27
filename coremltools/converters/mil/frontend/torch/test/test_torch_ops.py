@@ -91,6 +91,50 @@ class TestConv:
         )
         run_compare_torch((1, in_channels, height, width), model, backend=backend)
 
+    # TODO: rdar://65588783 ([PyTorch] Define and error out on unsupported configuration for output_padding)
+    @pytest.mark.parametrize(
+        "height, width, in_channels, out_channels, kernel_size, stride, padding, dilation, output_padding, backend",
+        list(itertools.product(
+            [10], [10], [1, 3], [1, 3], [1, 3], [1, 2, 3], [1, 3], [1, 2], [1, 2, (1, 2)], backends
+        )) + [pytest.param(5, 5, 1, 1, 3, 4, 1, 1, 2, "nn_proto", marks=pytest.mark.xfail),
+            pytest.param(5, 5, 1, 1, 3, 2, 1, 3, 2, "nn_proto", marks=pytest.mark.xfail)],
+    )
+    def test_convolution_transpose2d_output_padding(
+        self,
+        height,
+        width,
+        in_channels,
+        out_channels,
+        kernel_size,
+        stride,
+        padding,
+        dilation,
+        output_padding,
+        backend,
+        groups=1,
+    ):
+
+        # Output padding must be less than either stride or dilation
+        # Skip testing invalid combinations
+        if isinstance(output_padding, int):
+            if output_padding >= stride and output_padding >= dilation:
+                return
+        elif isinstance(output_padding, tuple):
+            for _output_padding in output_padding:
+                if _output_padding >= stride and _output_padding >= dilation:
+                    return
+
+        model = nn.ConvTranspose2d(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            kernel_size=kernel_size,
+            stride=stride,
+            padding=padding,
+            dilation=dilation,
+            output_padding=output_padding
+        )
+        run_compare_torch((1, in_channels, height, width), model, backend=backend)
+
 
 class TestLoop:
     @pytest.mark.parametrize("backend", backends)

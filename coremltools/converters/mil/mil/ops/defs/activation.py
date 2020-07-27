@@ -531,18 +531,18 @@ class softmax(Operation):
     """
 
     input_spec = InputSpec(
-        logit=TensorInputType(), axis=IntInputType(const=True, default=-1),
+        x=TensorInputType(), axis=IntInputType(const=True, default=-1),
     )
 
     def __init__(self, **kwargs):
         super(softmax, self).__init__(**kwargs)
 
     def type_inference(self):
-        return self.logit.sym_type
+        return self.x.sym_type
 
     @precondition(allow=VALUE)
     def value_inference(self):
-        x = self.logit.val
+        x = self.x.val
         axis = self.axis.val
         return scipy.special.softmax(x, axis=axis)
 

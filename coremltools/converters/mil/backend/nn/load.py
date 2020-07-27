@@ -165,6 +165,32 @@ def _set_symbolic_inputs(proto, symbolic_inputs):
             proto, input_name, lower_bounds=lb, upper_bounds=ub
         )
 
+def _set_optional_inputs(proto, input_types):
+    # Set default values for optional input_types
+    default_map = {}
+    for input_type in input_types:
+        if isinstance(input_type, ImageType):
+            continue
+        is_optional = input_type.is_optional
+        optional_value = input_type.optional_value
+        shape = input_type.shape
+        if not is_optional:
+            continue
+        msg = "Not support optional inputs for flexible input shape."
+        if not isinstance(shape, Shape):
+            raise NotImplementedError(msg)
+        if any([isinstance(s, RangeDim) for s in shape.shape]):
+            raise NotImplementedError(msg)
+
+        default_map[input_type.name] = optional_value
+
+    for idx, input in enumerate(proto.description.input):
+        name = proto.description.input[idx].name
+        if name in default_map:
+            proto.description.input[idx].type.isOptional = True
+            default_value = default_map[name] if default_map[name] is not None else 0.
+            proto.description.input[idx].type.multiArrayType.floatDefaultValue = default_value
+
 
 @_profile
 def load(prog, **kwargs):
@@ -260,5 +286,6 @@ def load(prog, **kwargs):
 
     _set_user_inputs(proto, input_types)
     _set_symbolic_inputs(proto, symbolic_inputs)
+    _set_optional_inputs(proto, input_types)
 
     return proto

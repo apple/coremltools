@@ -67,6 +67,21 @@ def Add(context, node):
 
 
 @register_tf_op
+def AddN(context, node):
+    values = [context[name] for name in node.inputs]
+    if len(values) == 1:
+        Identity(context, node)
+        return
+    prev_var = values[0]
+    for idx, var in enumerate(values[1:]):
+        if var == values[-1]:
+            x = mb.add(x=prev_var, y=var, name=node.name)
+        else:
+            prev_var = mb.add(x=prev_var, y=var, name=node.name+"_tmpAddN_"+str(idx))
+    context.add(node.name, x)
+
+
+@register_tf_op
 def Abs(context, node):
     x = context[node.inputs[0]]
     x = mb.abs(x=x, name=node.name)
@@ -205,13 +220,6 @@ def AvgPool3D(context, node):
 
 
 @register_tf_op
-def AddN(context, node):
-    values = [context[name] for name in node.inputs]
-    x = mb.addn(values=values, name=node.name)
-    context.add(node.name, x)
-
-
-@register_tf_op
 def BatchToSpaceND(context, node):
     x = context[node.inputs[0]]
     block_shape = context[node.inputs[1]].val
@@ -279,8 +287,7 @@ def BatchToSpaceND(context, node):
         end = [resize_batch_size[0]]
         for i in range(spatial_rank):
             end.append(mb.sub(x=spatial_dims[i], y=crops[i][1]))
-        for i in range(spatial_rank + 1, rank):
-            end += remain_dims
+        end += remain_dims
         end = mb.concat(values=end, axis=0)
         x = mb.slice_by_index(x=reshape_permuted, begin=begin, end=end, name=node.name)
     else:
@@ -1404,6 +1411,19 @@ def Mean(context, node):
 
 
 @register_tf_op
+def MatrixDiag(context, node):
+    x = context[node.inputs[0]]
+    if x.rank != 1:
+        raise NotImplementedError('Only support MatrixDiag op with input rank = 1.')
+    length = mb.shape(x=x)
+    x = mb.expand_dims(x=x, axes=[0])
+    reps = mb.concat(values=[length,[1]], axis=0)
+    x = mb.tile(x=x, reps=reps)
+    x = mb.band_part(x=x, lower=0, upper=0, name=node.name)
+    context.add(node.name, x)
+
+
+@register_tf_op
 def MirrorPad(context, node):
     x = context[node.inputs[0]]
     pad = context[node.inputs[1]]
@@ -1464,8 +1484,6 @@ def MirrorPad(context, node):
 def Pad(context, node):
     x = context[node.inputs[0]]
     pad = context[node.inputs[1]]
-    if pad.val is None:
-        raise ValueError("TF `paddings` in Pad op must be const.")
 
     mode = node.attr.get("mode", "constant").lower()
     constant_val = node.attr.get("constant_val", 0.0)
@@ -1474,7 +1492,11 @@ def Pad(context, node):
     if in_rank > 5:
         raise ValueError("Unsupported Pad configuration!")
 
-    pad = pad.val.reshape(-1)
+    if pad.val is None:
+        pad = mb.reshape(x=pad, shape=[-1])
+    else:
+        pad = pad.val.reshape(-1)
+
     x = mb.pad(x=x, pad=pad, name=node.name, mode=mode, constant_val=constant_val)
     context.add(node.name, x)
 
@@ -1486,10 +1508,6 @@ def PadV2(context, node):
     pad = context[node.inputs[1]]
     constant_val = context[node.inputs[2]]
 
-    if pad.val is None or constant_val.val is None:
-        raise NotImplementedError(
-            "TF `paddings`, `constant_values` in PadV2 op must be const."
-        )
     if constant_val.shape != ():
         raise NotImplementedError(
             "TF `constant_values` in PadV2 op must be const scalar."
@@ -1498,7 +1516,11 @@ def PadV2(context, node):
     if in_rank > 5:
         raise ValueError("Unsupported Pad configuration!")
 
-    pad = pad.val.reshape(-1)
+    if pad.val is None:
+        pad = mb.reshape(x=pad, shape=[-1])
+    else:
+        pad = pad.val.reshape(-1)
+
     constant_val = constant_val.val
     if constant_val == -_np.inf:
         INT_MIN = -_np.iinfo(_np.int64).max - 1
@@ -1659,7 +1681,7 @@ def Softsign(context, node):
 def Softmax(context, node):
     logit = context[node.inputs[0]]
     axis = node.attr.get("axis")
-    x = mb.softmax(logit=logit, axis=axis, name=node.name)
+    x = mb.softmax(x=logit, axis=axis, name=node.name)
     context.add(node.name, x)
 
 
@@ -1963,7 +1985,12 @@ def NonMaxSuppression(context, node):
         iou_threshold=iou_threshold,
         score_threshold=score_threshold,
     )
-    x = mb.squeeze(x=x, axes=[0], name=node.name)
+    num_boxes = boxes.shape[1]
+    if not is_symbolic(num_boxes) and num_boxes < max_boxes.val:
+        x = mb.squeeze(x=x, axes=[0])
+        x = mb.slice_by_index(x=x, begin=[0], end=[num_boxes], name=node.name)
+    else:
+        x = mb.squeeze(x=x, axes=[0], name=node.name)
     context.add(node.name, x)
 
 
@@ -2626,3 +2653,26 @@ def BlockLSTM(context, node):
         **kwargs
     )
     context.add(node.name, res)
+
+@register_tf_op
+def ClipByValue(context, node):
+    x = context[node.inputs[0]]
+    min_value = context[node.inputs[1]]
+    max_value = context[node.inputs[2]]
+    x = mb.clip(x=x, alpha=min_value, beta=max_value, name=node.name)
+    context.add(node.name, x)
+
+@register_tf_op
+def Size(context, node):
+    x = context[node.inputs[0]]
+    x = mb.shape(x=x)
+    x = mb.reduce_prod(x=x, axes=[0], name=node.name)
+    context.add(node.name, x)
+
+@register_tf_op
+def LogSoftmax(context, node):
+    x = context[node.inputs[0]]
+    axis = node.attr.get('axis', -1)
+    y = mb.reduce_log_sum_exp(x=x, axes=[axis], keep_dims=True)
+    x = mb.sub(x=x, y=y, name=node.name)
+    context.add(node.name, x)

@@ -60,6 +60,9 @@ def run_compare_builder(
         ssa_func.set_outputs(output_vars)
         prog.add_function("main", ssa_func)
 
+    # get output names for output_vars
+    output_names = [x.name for x in output_vars]
+
     # Validate type inference
     msg = (
         "Provided expected outputs types {} should match number of output"
@@ -110,7 +113,7 @@ def run_compare_builder(
         )
 
         expected_outputs = {
-            o.name: val for o, val in zip(output_vars, expected_outputs)
+            name: val for name, val in zip(output_names, expected_outputs)
         }
 
     compare_backend(

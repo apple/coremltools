@@ -31,7 +31,7 @@ np.random.seed(10)
 
 MIN_MACOS_VERSION_REQUIRED = (10, 13)
 LAYERS_10_15_MACOS_VERSION = (10, 15)
-LAYERS_10_16_MACOS_VERSION = (10, 16)
+LAYERS_11_0_MACOS_VERSION = (11, 0)
 
 
 def _get_unary_model_spec(x, mode, alpha=1.0):
@@ -6030,8 +6030,8 @@ class CoreML3NetworkStressTest(CorrectnessTest):
 
 
 @unittest.skipIf(
-    _macos_version() < LAYERS_10_16_MACOS_VERSION,
-    "macOS 10.16+ required. Skipping tests.",
+    _macos_version() < LAYERS_11_0_MACOS_VERSION,
+    "macOS 11.0+ required. Skipping tests.",
 )
 class IOS14SingleLayerTests(CorrectnessTest):
     @unittest.skipIf(not _HAS_TF, MSG_TF1_NOT_FOUND)
@@ -7036,7 +7036,7 @@ class IOS14SingleLayerTests(CorrectnessTest):
 
 @pytest.mark.slow
 @unittest.skipUnless(
-    _is_macos() and _macos_version() >= LAYERS_10_16_MACOS_VERSION,
+    _is_macos() and _macos_version() >= LAYERS_11_0_MACOS_VERSION,
     "Only supported on macOS 10.16+",
 )
 class ReorganizeDataTests(CorrectnessTest):
@@ -7113,8 +7113,8 @@ class ReorganizeDataTests(CorrectnessTest):
         self.test_depth_to_space_cpu(cpu_only=False)
 
     @unittest.skipIf(
-        _macos_version() < LAYERS_10_16_MACOS_VERSION,
-        "macOS 10.16+ required. Skipping tests.",
+        _macos_version() < LAYERS_11_0_MACOS_VERSION,
+        "macOS 11.0+ required. Skipping tests.",
     )
     def test_pixel_shuffle_cpu(self, cpu_only=True):
 
@@ -7164,7 +7164,7 @@ class ReorganizeDataTests(CorrectnessTest):
             self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
     @unittest.skipIf(
-        _macos_version() < LAYERS_10_16_MACOS_VERSION,
+        _macos_version() < LAYERS_11_0_MACOS_VERSION,
         "macOS 10.16+ required. Skipping tests.",
     )
     def test_pixel_shuffle_gpu(self):

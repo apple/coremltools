@@ -3,6 +3,7 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+from scipy import special
 import scipy
 from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.testing_reqs import *
@@ -837,7 +838,7 @@ class TestSoftmax:
         input_values = {"x": t}
 
         def build(x):
-            return mb.softmax(logit=x, axis=0)
+            return mb.softmax(x=x, axis=0)
 
         expected_output_types = (2, 3, types.fp32)
         expected_outputs = np.array(
@@ -861,7 +862,7 @@ class TestSoftmax:
     @ssa_fn
     def test_builder_eval(self):
         x_val = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.float32)
-        v = mb.softmax(logit=x_val, axis=0)
+        v = mb.softmax(x=x_val, axis=0)
         assert is_close(scipy.special.softmax(x_val, axis=0), v.val)
 
 

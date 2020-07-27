@@ -135,8 +135,63 @@ class TestTensorFlow1ConverterExamples:
         np.testing.assert_allclose(results[output_name], expected_val)
 
 
+    @staticmethod
+    def test_freeze_and_convert_matmul_graph():
+        # testing : https://coremltools.readme.io/docs/tensorflow-1#export-as-frozen-graph-and-convert
+
+        import tensorflow as tf
+
+        graph = tf.Graph()
+        with graph.as_default():
+            x = tf.placeholder(tf.float32, shape=[None, 20], name="input")
+            W = tf.Variable(tf.truncated_normal([20, 10], stddev=0.1))
+            b = tf.Variable(tf.ones([10]))
+            y = tf.matmul(x, W) + b
+            output_names = [y.op.name]
+
+        import tempfile
+        import os
+        from tensorflow.python.tools.freeze_graph import freeze_graph
+
+        model_dir = tempfile.mkdtemp()
+        graph_def_file = os.path.join(model_dir, 'tf_graph.pb')
+        checkpoint_file = os.path.join(model_dir, 'tf_model.ckpt')
+        frozen_graph_file = os.path.join(model_dir, 'tf_frozen.pb')
+
+        with tf.Session(graph=graph) as sess:
+            # initialize variables
+            sess.run(tf.global_variables_initializer())
+            # save graph definition somewhere
+            tf.train.write_graph(sess.graph, model_dir, graph_def_file, as_text=False)
+            # save the weights
+            saver = tf.train.Saver()
+            saver.save(sess, checkpoint_file)
+
+            # take the graph definition and weights
+            # and freeze into a single .pb frozen graph file
+            freeze_graph(input_graph=graph_def_file,
+                         input_saver="",
+                         input_binary=True,
+                         input_checkpoint=checkpoint_file,
+                         output_node_names=",".join(output_names),
+                         restore_op_name="save/restore_all",
+                         filename_tensor_name="save/Const:0",
+                         output_graph=frozen_graph_file,
+                         clear_devices=True,
+                         initializer_nodes="")
+        print("Tensorflow frozen graph saved at {}".format(frozen_graph_file))
+
+        mlmodel = ct.convert(frozen_graph_file)
+        # optionally, you can save model to disk
+        # mlmodel.save(frozen_graph_file.replace("pb", "mlmodel"))
+        import shutil
+        try:
+            shutil.rmtree(model_dir)
+        except:
+            pass
+
+
 @pytest.mark.skipif(not _HAS_TF_2, reason=MSG_TF2_NOT_FOUND)
-@pytest.mark.skipif(ct.utils._macos_version() < (10, 15), reason='Model produces specification 4.')
 class TestTensorFlow2ConverterExamples:
     def setup_class(self):
         self._cwd = getcwd()
@@ -217,7 +272,7 @@ class TestTensorFlow2ConverterExamples:
 
         mlmodel = ct.convert(
             tf_keras_model,
-            inputs=[ct.TensorType(name=input_name, shape=(1, 224, 224, 3))],
+            inputs=[ct.TensorType(shape=(1, 224, 224, 3))],
             outputs=[tf_graph_output_name],
         )
         mlmodel.save("./mobilenet.mlmodel")
@@ -229,8 +284,122 @@ class TestTensorFlow2ConverterExamples:
         mlmodel.save("./model.mlmodel")
 
 
+    @staticmethod
+    def test_keras_custom_layer_model():
+        # testing : https://coremltools.readme.io/docs/tensorflow-2#conversion-from-user-defined-models
+
+        import tensorflow as tf
+        from tensorflow import keras
+        from tensorflow.keras import layers
+
+        class CustomDense(layers.Layer):
+            def __init__(self, units=32):
+                super(CustomDense, self).__init__()
+                self.units = units
+
+            def build(self, input_shape):
+                self.w = self.add_weight(
+                    shape=(input_shape[-1], self.units),
+                    initializer="random_normal",
+                    trainable=True,
+                )
+                self.b = self.add_weight(
+                    shape=(self.units,), initializer="random_normal", trainable=True
+                )
+
+            def call(self, inputs):
+                return tf.matmul(inputs, self.w) + self.b
+
+        inputs = keras.Input((4,))
+        outputs = CustomDense(10)(inputs)
+        model = keras.Model(inputs, outputs)
+        ct.convert(model)
+
+    @staticmethod
+    def test_concrete_function_conversion():
+        # testing : https://coremltools.readme.io/docs/tensorflow-2#conversion-from-user-defined-models
+
+        import tensorflow as tf
+
+        @tf.function(input_signature=[tf.TensorSpec(shape=(6,), dtype=tf.float32)])
+        def gelu_tanh_activation(x):
+            a = (np.sqrt(2 / np.pi) * (x + 0.044715 * tf.pow(x, 3)))
+            y = 0.5 * (1.0 + tf.tanh(a))
+            return x * y
+
+        conc_func = gelu_tanh_activation.get_concrete_function()
+        ct.convert([conc_func])
+
+
+    @staticmethod
+    def test_quickstart_example():
+        # testing: https://coremltools.readme.io/docs/introductory-quickstart#quickstart-example
+        import tensorflow as tf  # TF 2.2.0
+
+        # Download MobileNetv2 (using tf.keras)
+        keras_model = tf.keras.applications.MobileNetV2(
+            weights="imagenet",
+            input_shape=(224, 224, 3,),
+            classes=1000,
+        )
+
+        # Download class labels (from a separate file)
+        import urllib
+        label_url = 'https://storage.googleapis.com/download.tensorflow.org/data/ImageNetLabels.txt'
+        class_labels = urllib.request.urlopen(label_url).read().splitlines()
+        class_labels = class_labels[1:]  # remove the first class which is background
+        assert len(class_labels) == 1000
+
+        # make sure entries of class_labels are strings
+        for i, label in enumerate(class_labels):
+            if isinstance(label, bytes):
+                class_labels[i] = label.decode("utf8")
+
+        image_input = ct.ImageType(shape=(1, 224, 224, 3,),
+                                   bias=[-1, -1, -1], scale=1 / 127)
+
+        # set class labels
+        classifier_config = ct.ClassifierConfig(class_labels)
+
+        # Convert the model using the Unified Conversion API
+        model = ct.convert(
+            keras_model, inputs=[image_input], classifier_config=classifier_config,
+        )
+
+        # Set feature descriptions (these show up as comments in XCode)
+        model.input_description["input_1"] = "Input image to be classified"
+        model.output_description["classLabel"] = "Most likely image category"
+        model.author = "Original Paper: Mark Sandler, Andrew Howard, "\
+                        "Menglong Zhu, Andrey Zhmoginov, Liang-Chieh Chen"
+        model.license = "Please see https://github.com/tensorflow/tensorflow "\
+                        "for license information, and "\
+                        "https://github.com/tensorflow/models/tree/master/research/slim/nets/mobilenet"\
+                        "for the original source of the model."
+        model.short_description = "Detects the dominant objects present in an"\
+                                 "image from a set of 1001 categories such as trees, animals,"\
+                                 "food, vehicles, person etc. The top-1 accuracy"\
+                                " from the original publication is 74.7%."
+        model.version = "2.0"
+
+        # get an image
+        from PIL import Image
+        import requests
+        from io import BytesIO
+
+        img_url = 'https://files.readme.io/02e3586-daisy.jpg'
+        response = requests.get(img_url)
+        img = Image.open(BytesIO(response.content))
+
+        # Use PIL to load and resize the image to expected size
+        example_image = img.resize((224, 224))
+
+        # Make a prediction using Core ML
+        out_dict = model.predict({"input_1": example_image})
+
+        # Print out top-1 prediction
+        assert out_dict["classLabel"] == "daisy"
+
 @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
-@pytest.mark.skipif(ct.utils._macos_version() < (10, 15), reason='Model produces specification 4.')
 class TestPyTorchConverterExamples:
     @staticmethod
     def test_convert_torch_vision_mobilenet_v2(tmpdir):

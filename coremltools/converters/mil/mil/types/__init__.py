@@ -53,6 +53,7 @@ from .type_mapping import (
     is_subtype,
     string_to_builtin,
     nptype_from_builtin,
+    np_dtype_to_py_type,
 )
 from .annotate import annotate
 from .annotate import class_annotate

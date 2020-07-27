@@ -84,6 +84,38 @@ class TransposeOptimizationPass(unittest.TestCase):
 
     """
     Input graph:
+    input---->transpose(axis=[0,3,1,2])---->relu---->identity--->transpose(axis=[0,2,3,1])--->relu--->out
+
+    Output graph:
+    input----->relu----->identity----->relu--->out
+    """
+
+    def test_linear_graph_two_op_fusion_1(self):
+        @mb.program(input_specs=[mb.TensorSpec(shape=(1, 2, 3, 4))])
+        def prog(x):
+            x = mb.transpose(x=x, perm=[0, 3, 1, 2])
+            x = mb.relu(x=x)
+            x = mb.identity(x=x)
+            x = mb.transpose(x=x, perm=[0, 2, 3, 1])
+            x = mb.relu(x=x)
+            return x
+
+        prev_prog, prev_block, block = apply_pass_and_basic_check(
+            prog, "common::reduce_transposes"
+        )
+        self.assertEqual(
+            get_op_types_in_program(prev_prog),
+            ["transpose", "relu", "identity", "transpose", "relu"],
+        )
+        self.assertEqual(get_op_types_in_program(prog), ["relu", "identity", "relu"])
+        assert_model_is_valid(
+            prog,
+            {"x": (1, 2, 3, 4)},
+            expected_output_shapes={block.outputs[0].name: (1, 2, 3, 4)},
+        )
+
+    """
+    Input graph:
     input(shape=1,2,3,4)---->transpose(axis=[0,3,1,2])---->relu---->log--->transpose(axis=[0,2,3,1])--->relu--->out1(shape=1,2,3,4)
                                                                 |
                                                                 v
@@ -1405,3 +1437,198 @@ class TransposeOptimizationPass(unittest.TestCase):
             {"x": (1, 5, 5, 3)},
             expected_output_shapes={block.outputs[0].name: (1, 5, 5, 3)},
         )
+
+    """
+    Input graph:
+    input(shape=2,5)--->transpose(axis=[1,0])--->transpose(axis=[1,0])-->reduce(axis=1)
+                                |                                             |
+                                |                                             V
+                                |                                    transpose(axis=[1,0])
+                                |                                             |
+                                |                                             V
+                                -------------------------------------------->add------->out(shape=5,2)
+
+    Output graph:
+    input(shape=2,5)--->reduce(axis=1)---->add---->transpose(axis=[1,0])--->out(shape=5,2)
+                     |                      ^
+                     |                      |
+                     ------------------------
+    """
+
+    def test_residual_with_unmaterialized_output(self):
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 5))])
+        def prog(x):
+            x1 = mb.transpose(x=x, perm=[1,0])
+            t1 = mb.transpose(x=x1, perm=[1,0])
+            x2 = mb.reduce_mean(x=t1, axes=[1], keep_dims=True)
+            t2 = mb.transpose(x=x2, perm=[1,0])
+            return mb.add(x=x1, y=t2)
+
+        prev_prog, prev_block, block = apply_pass_and_basic_check(
+            prog, "common::reduce_transposes"
+        )
+        self.assertEqual(
+            get_op_types_in_program(prev_prog),
+            [
+                'transpose',
+                'transpose',
+                'reduce_mean',
+                'transpose',
+                'add'
+            ]
+        )
+        self.assertEqual(
+            get_op_types_in_program(prog), ['reduce_mean', 'add', 'transpose']
+        )
+
+        assert_model_is_valid(
+            prog,
+            {'x': (2, 5)},
+            expected_output_shapes={block.outputs[0].name: (5,2)}
+        )
+
+    """
+    Input graph:
+    input(shape=2,5)--->transpose(axis=[1,0])--->transpose(axis=[1,0])-->reduce(axis=1)
+                                |                                             |
+                                |                                             V
+                                |                                    transpose(axis=[1,0])
+                                |                                             |
+                                |                                             V
+                                -------------------------------------------->add------->out1(shape=5,2)
+                                                                              |
+                                                                              V
+                                                                            relu------->out2(shape=5,2)
+
+    Output graph:
+    input(shape=2,5)--->reduce(axis=1)----> add ----->transpose(axis=[1,0])----->out1(shape=5,2)
+                     |                       |
+                     |                       V
+                     ---------------------> relu----->transpose(axis=[1,0])----->out2(shape=5,2)
+    """
+
+    def test_residual_with_unmaterialized_multiple_output(self):
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 5))])
+        def prog(x):
+            x1 = mb.transpose(x=x, perm=[1,0])
+            t1 = mb.transpose(x=x1, perm=[1,0])
+            x2 = mb.reduce_mean(x=t1, axes=[1], keep_dims=True)
+            t2 = mb.transpose(x=x2, perm=[1,0])
+            out1 = mb.add(x=x1, y=t2)
+            out2 = mb.relu(x=out1)
+            return out1, out2
+
+        prev_prog, prev_block, block = apply_pass_and_basic_check(
+            prog, "common::reduce_transposes"
+        )
+        self.assertEqual(
+            get_op_types_in_program(prev_prog),
+            [
+                'transpose',
+                'transpose',
+                'reduce_mean',
+                'transpose',
+                'add',
+                'relu'
+            ]
+        )
+        self.assertEqual(
+            get_op_types_in_program(prog), ['reduce_mean', 'add', 'relu', 'transpose', 'transpose']
+        )
+
+        assert_model_is_valid(
+            prog,
+            {'x': (2, 5)},
+            expected_output_shapes={block.outputs[0].name: (5,2),
+                                    block.outputs[1].name: (5,2)}
+        )
+
+    """
+    Input graph:
+    input(shape=2,5)---->transpose(axis=[1,0])------>relu----->transpose(axis=[1,0])------>out2(shape=2,5)
+                                                       |
+                                                       ------->out1(shape=5,2)
+
+    Output graph:
+    input(shape=2,5)---->relu-----> out2(shape=2,5)
+                           |
+                           V
+                    transpose(axis=[1,0]) -----> out1(shape=5,2)
+    """
+
+    def test_materialized_output_reuse(self):
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 5))])
+        def prog(x):
+            x1 = mb.transpose(x=x, perm=[1,0])
+            y1 = mb.relu(x=x1)
+            y2 = mb.transpose(x=y1, perm=[1,0])
+            return y1, y2
+
+        prev_prog, prev_block, block = apply_pass_and_basic_check(
+            prog, "common::reduce_transposes"
+        )
+        self.assertEqual(
+            get_op_types_in_program(prev_prog),
+            [
+                'transpose',
+                'relu',
+                'transpose',
+            ]
+        )
+        self.assertEqual(
+            get_op_types_in_program(prog), ['relu', 'transpose']
+        )
+
+        assert_model_is_valid(
+            prog,
+            {'x': (2, 5)},
+            expected_output_shapes={block.outputs[0].name: (5,2),
+                                    block.outputs[1].name: (2,5)}
+        )
+
+    """
+    Input graph:
+    input(shape=1,2,5,5)----->transpose(axis=[0,2,3,1])------->add------------>transpose(axis=[0,3,1,2])--->out1(shape=1,2,5,5)
+                                                          |     ^        |
+                                                          |     |        |
+                                                          ---->relu      ----->transpose(axis=[0,3,1,2])--->out2(shape=1,2,5,5)
+
+    Output graph:
+    input(shape=1,2,5,5)----->add------->out1(shape=1,2,5,5)
+                      |        ^    |
+                      |        |    |
+                      |------>relu  ------identity(renaming)---->out2(shape=1,2,5,5)
+    """
+
+    def test_fusion_with_double_outputs(self):
+        @mb.program(input_specs=[mb.TensorSpec(shape=(1, 2, 5, 5))])
+        def prog(x):
+            x1 = mb.transpose(x=x, perm=[0, 2, 3, 1])
+            x2 = mb.relu(x=x1)
+            x3 = mb.add(x=x1, y=x2)
+            y1 = mb.transpose(x=x3, perm=[0, 3, 1, 2])
+            y2 = mb.transpose(x=x3, perm=[0, 3, 1, 2])
+            return y1, y2
+
+        prev_prog, prev_block, block = apply_pass_and_basic_check(
+            prog, "common::reduce_transposes"
+        )
+        self.assertEqual(
+            get_op_types_in_program(prev_prog),
+            ["transpose", "relu", "add", "transpose", "transpose"],
+        )
+        self.assertEqual(get_op_types_in_program(prog), ["relu", "add", "identity"])
+
+        assert block.find_ops(op_type="relu")[0].inputs["x"] == block.inputs["x"]
+        assert block.find_ops(op_type="add")[0].inputs["x"] == block.inputs["x"]
+        assert (
+            block.find_ops(op_type="add")[0].inputs["y"]
+            == block.find_ops(op_type="relu")[0].outputs[0]
+        )
+
+        assert_model_is_valid(
+            prog,
+            {"x": (1, 2, 5, 5)},
+            expected_output_shapes={block.outputs[0].name: (1, 2, 5, 5)},
+        )
+

@@ -14,10 +14,11 @@ def common_pass(prog):
     passes = [
         "common::const_elimination",
         "common::divide_to_multiply",
-        "common::fuse_matmul_weight_bias",
         "common::const_elimination",
         "common::loop_invariant_elimination",
         "common::remove_symbolic_reshape",
+        'common::noop_elimination',
+        "common::fuse_matmul_weight_bias",
         "common::fuse_gelu_tanh_approximation",
         "common::reduce_transposes",
         "common::fuse_bias_conv",

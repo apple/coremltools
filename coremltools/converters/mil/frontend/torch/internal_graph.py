@@ -23,25 +23,54 @@ def _ssa_name_list(names):
     return [_make_ssa_name(x) for x in names]
 
 
+def _find_new_name(old_name, node_names):
+    """Disambiguate a node's name from a list of existing node names by adding
+    successively larger integers.
+    """
+    count = 0
+    new_name = old_name + "." + str(count)
+    while new_name in node_names:
+        count += 1
+        new_name = old_name + "." + str(count)
+    return new_name
+
+
+def _replace_in_list(ls, old_val, new_val):
+    """Helper function to replace a value in a list."""
+    try:
+        idx = ls.index(old_val)
+    except ValueError:
+        pass
+    else:
+        ls[idx] = new_val
+
+
 class InternalTorchIRBlock:
     """CoreML internal representation of a torch IR block.
 
         Arguments:
             raw_block: The torch._C.Block to convert, or None.
+            parent: The InternalTorchIRNode this block belongs to.
             nodes: If @raw_block is None, the list of InternalTorchIRNodes in the block
             inputs: If @raw_block is None, the list of input symbols.
             outputs: If @raw_block is None, the list of output symbols.
     """
 
-    def __init__(self, raw_block=None, nodes=None, inputs=None, outputs=None):
+    def __init__(self, raw_block=None, parent=None, nodes=None, inputs=None, outputs=None):
         self.nodes = []
+        node_names = set()
         self.inputs = []
         self.outputs = []
+        self.parent = parent
 
         if raw_block:
             # Add nodes
             for raw_node in raw_block.nodes():
-                self.nodes.append(InternalTorchIRNode(raw_node))
+                new_node = InternalTorchIRNode(raw_node, parent=self)
+                if new_node.name == new_node.kind:
+                    new_node.name = _find_new_name(new_node.name, node_names)
+                self.nodes.append(new_node)
+                node_names.add(new_node.name)
 
             # Add inputs
             for inp in raw_block.inputs():
@@ -71,6 +100,16 @@ class InternalTorchIRBlock:
     def __repr__(self):
         return str(self)
 
+    def replace_name(self, old_name, new_name):
+        """Replaces all instances of @old_name with @new_name in @self."""
+
+        # Replace graph inputs/outputs
+        _replace_in_list(self.inputs, old_name, new_name)
+        _replace_in_list(self.outputs, old_name, new_name)
+
+        for node in self.nodes:
+            node.replace_name(old_name, new_name)
+
 
 class InternalTorchIRNode:
     """CoreML internal representation of a torch IR node.
@@ -81,6 +120,7 @@ class InternalTorchIRNode:
 
         Arguments:
             node: The torch._C.Node to convert, or None.
+            parent: The InternalTorchIRGraph/Block this node belongs to.
             attr: If @node is not specified, the dict of named attributes.
             inputs: If @node is not specified, the list of input symbols.
             outputs: If @node is not specified, the list of output symbols.
@@ -89,14 +129,14 @@ class InternalTorchIRNode:
     """
 
     def __init__(
-        self, node=None, attr=None, inputs=None, outputs=None, kind=None, blocks=None,
+        self, node=None, parent=None, attr=None, inputs=None, outputs=None, kind=None, blocks=None,
     ):
+        self.parent = parent
         if node:
             self.inputs = [_input.debugName() for _input in node.inputs()]
             self.outputs = [output.debugName() for output in node.outputs()]
-            self.name = self.outputs[0]
             self.kind = node.kind().split("::")[-1].lower()
-            self.blocks = [InternalTorchIRBlock(raw_block=b) for b in node.blocks()]
+            self.blocks = [InternalTorchIRBlock(raw_block=b, parent=self) for b in node.blocks()]
             self.attr = {
                 name: getattr(node, node.kindOf(name))(name)
                 for name in node.attributeNames()
@@ -110,10 +150,14 @@ class InternalTorchIRNode:
         else:
             self.inputs = inputs
             self.outputs = outputs
-            self.name = self.outputs[0]
             self.kind = kind
             self.blocks = blocks if blocks is not None else []
             self.attr = attr if attr is not None else {"value": None}
+        # On rare occassions, a node has no outputs. In that case, the node's
+        # name will be its kind. However, this no longer guarantees the node's
+        # name is unique. It will be up to the graph constructing the node to
+        # make sure names are unique.
+        self.name = self.outputs[0] if len(self.outputs) > 0 else self.kind
 
     def __str__(self, indent=2):
         node_str = " " * indent + "{} = {}".format(
@@ -132,6 +176,17 @@ class InternalTorchIRNode:
     def __repr__(self):
         return str(self)
 
+    def replace_name(self, old_name, new_name):
+        """Replaces all instances of @old_name with @new_name in @self."""
+
+        _replace_in_list(self.inputs, old_name, new_name)
+        _replace_in_list(self.outputs, old_name, new_name)
+
+        if self.name == old_name:
+            self.name = new_name
+        for block in self.blocks:
+            block.replace_name(old_name, new_name)
+
 
 class InternalTorchIRGraph:
     """CoreML internal representation of a torch IR graph. A torch._C.Graph
@@ -142,7 +197,7 @@ class InternalTorchIRGraph:
           and .outputs() functions return iterators, so the only way to
           determine the number of inputs/outputs is by counting to the end.
           There are other examples of why the torch structure is hard to work
-          with, and this structure alleviates those issues.
+          with, and this structure alleviates those isses.
         2. torch._C.graph is an internal API and so we can't count on its
           stability. By inserting a layer in between, we can handle any changes
           to torch._C.graph here and isolate the ops code that processes the
@@ -154,44 +209,63 @@ class InternalTorchIRGraph:
           unit testing.
 
         Arguments:
-            raw_graph: The torch._C.Graph to convert.
+            raw_graph: raw_graph: The torch._C.Graph to convert, or None.
             params_dict: A dictionary mapping graph parameter names to tensors.
-            input_spec: A list of InputType objects, describing the name,
-                shape, and dtype of graph inputs.
-            cut_at_symbols: The list of desired outputs from the graph. Must
-                be present in the graph. For debugging use only.
-                See kwarg in load.py for more information.
+                Must be given if @raw_graph is not None.
+            input_values: A list of inputs to the graph. Must be given is
+                @raw_graph if not None.
+            cut_at_symbols: The list of desired outputs from the graph. Symbols
+                must be present in the graph. For debugging use only. Can only
+                be given if @raw_graph is not None.
+            nodes: If @raw_graph is None, the list of InternalTorchIRNodes in
+                the graph.
+            params: If @raw_graph is None, the dict mapping parameter names to
+                their numpy value.
+            inputs: If @raw_graph is None, the OrderedDict mapping input names
+                to their example values.
+            outputs: If @raw_graph is None, the list of outputs from the graph.
     """
 
     def __init__(
-        self, raw_graph, params_dict, input_spec, cut_at_symbols=None,
+        self, raw_graph=None, params_dict=None, input_values=None, cut_at_symbols=None, nodes=None, params=None, inputs=None, outputs=None,
     ):
         self.nodes = []
+        node_names = set()
         self.params = {}
         self.inputs = OrderedDict()
         self.outputs = []
 
-        # Add nodes
-        for raw_node in raw_graph.nodes():
-            self.nodes.append(InternalTorchIRNode(raw_node))
+        if raw_graph is not None:
+            # Add nodes
+            for raw_node in raw_graph.nodes():
+                new_node = InternalTorchIRNode(raw_node, parent=self)
+                if new_node.name == new_node.kind:
+                    new_node.name = _find_new_name(new_node.name, node_names)
+                self.nodes.append(new_node)
+                node_names.add(new_node.name)
 
-        # Add params
-        for name, param in params_dict.items():
-            value = param.detach().numpy()
-            self.params[name] = value
+            # Add params
+            for name, param in params_dict.items():
+                value = param.detach().numpy()
+                self.params[name] = value
 
-        # Add inputs
-        for index, _input in enumerate(islice(raw_graph.inputs(), len(input_spec))):
-            name = _input.debugName()
-            spec = input_spec[index]
-            self.inputs[name] = spec
+            # Add inputs
+            for index, _input in enumerate(islice(raw_graph.inputs(), len(input_values))):
+                name = _input.debugName()
+                value = input_values[index]
+                self.inputs[name] = value
 
-        # Add outputs, cutting if @cut_at_symbols is set
-        output_names = cut_at_symbols
-        if output_names is None:
-            output_names = [x.debugName() for x in raw_graph.outputs()]
-        for output in output_names:
-            self.outputs.append(output)
+            # Add outputs, cutting if @cut_at_symbols is set
+            output_names = cut_at_symbols
+            if output_names is None:
+                output_names = [x.debugName() for x in raw_graph.outputs()]
+            for output in output_names:
+                self.outputs.append(output)
+        else:
+            self.nodes = nodes
+            self.params = params
+            self.inputs = inputs
+            self.outputs = outputs
 
     def __str__(self):
         graph_str = "graph(\n"
@@ -219,3 +293,13 @@ class InternalTorchIRGraph:
 
     def __repr__(self):
         return str(self)
+
+    def replace_name(self, old_name, new_name):
+        """Replaces all instances of @old_name with @new_name in @self."""
+
+        # Replace graph inputs/outputs
+        _replace_in_list(self.inputs, old_name, new_name)
+        _replace_in_list(self.outputs, old_name, new_name)
+
+        for node in self.nodes:
+            node.replace_name(old_name, new_name)

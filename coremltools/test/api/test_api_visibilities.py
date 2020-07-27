@@ -1,5 +1,5 @@
-import pytest
 import coremltools as ct
+import pytest
 
 
 def _get_visible_items(d):
@@ -7,9 +7,9 @@ def _get_visible_items(d):
 
 
 def _check_visible_modules(actual, expected):
-    assert set(actual) == set(expected), "API mis-matched. Expected %s. Got %s" % (
-        expected,
+    assert set(actual) == set(expected), "API mis-matched. Got %s, expected %s" % (
         actual,
+        expected,
     )
 
 
@@ -33,9 +33,10 @@ class TestApiVisibilities:
             "target",
             "utils",
             "version",
+            "test",
         ]
         if not ct.utils._is_macos():
-            expected.remove("libcoremlpython")
+             expected.remove("libcoremlpython")
         _check_visible_modules(_get_visible_items(ct), expected)
 
     def test_utils(self):
@@ -62,8 +63,8 @@ class TestApiVisibilities:
             "pipeline",
             "tree_ensemble",
             "utils",
-            "feature_vectorizer",
             "nearest_neighbors",
+            "feature_vectorizer",
         ]
         _check_visible_modules(_get_visible_items(ct.models), expected)
 
@@ -151,17 +152,25 @@ class TestApiVisibilities:
     def test_converters_caffe(self):
         _check_visible_modules(_get_visible_items(ct.converters.caffe), ["convert"])
 
-    @pytest.mark.xfail(
-        condition=not ct.utils._is_macos(),
-        reason="rdar://65138103 (Keras converter not exposed on Linux)",
-        run=False,
+    @pytest.mark.skipif(
+        ct.utils._python_version() >= (3, 8, 0),
+        reason="Keras isn't compatible with Python 3.8+.",
     )
+    @pytest.mark.xfail(
+         condition=not ct.utils._is_macos(),
+         reason="rdar://65138103 (Keras converter not exposed on Linux)",
+         run=False,
+     )
     def test_converters_keras(self):
         _check_visible_modules(_get_visible_items(ct.converters.keras), ["convert"])
 
     def test_converters_libsvm(self):
         _check_visible_modules(_get_visible_items(ct.converters.libsvm), ["convert"])
 
+    @pytest.mark.skipif(
+        ct.utils._python_version() >= (3, 8, 0),
+        reason="ONNX isn't compatible with Python 3.8+.",
+    )
     def test_converters_onnx(self):
         _check_visible_modules(_get_visible_items(ct.converters.onnx), ["convert"])
 
