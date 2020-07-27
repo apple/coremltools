@@ -65,8 +65,8 @@ class TestConv:
     @pytest.mark.parametrize(
         "height, width, in_channels, out_channels, kernel_size, stride, padding, dilation, backend",
         itertools.product(
-            [5, 6], [5, 7], [1, 3], [1, 3], [1, 3], [2, 3], [0, 1], [1, 3], backends
-        ),
+            [5, 6], [5, 7], [1, 3], [1, 3], [1, 3], [2, 3, (1, 3)], [0, 1, (1, 2)], [1, 3], backends
+        )
     )
     def test_convolution_transpose2d(
             self,
@@ -88,6 +88,50 @@ class TestConv:
             stride=stride,
             padding=padding,
             dilation=dilation,
+        )
+        run_compare_torch((1, in_channels, height, width), model, backend=backend)
+
+    # TODO: rdar://65588783 ([PyTorch] Define and error out on unsupported configuration for output_padding)
+    @pytest.mark.parametrize(
+        "height, width, in_channels, out_channels, kernel_size, stride, padding, dilation, output_padding, backend",
+        list(itertools.product(
+            [10], [10], [1, 3], [1, 3], [1, 3], [1, 2, 3], [1, 3], [1, 2], [1, 2, (1, 2)], backends
+        )) + [pytest.param(5, 5, 1, 1, 3, 4, 1, 1, 2, "nn_proto", marks=pytest.mark.xfail),
+            pytest.param(5, 5, 1, 1, 3, 2, 1, 3, 2, "nn_proto", marks=pytest.mark.xfail)],
+    )
+    def test_convolution_transpose2d_output_padding(
+        self,
+        height,
+        width,
+        in_channels,
+        out_channels,
+        kernel_size,
+        stride,
+        padding,
+        dilation,
+        output_padding,
+        backend,
+        groups=1,
+    ):
+
+        # Output padding must be less than either stride or dilation
+        # Skip testing invalid combinations
+        if isinstance(output_padding, int):
+            if output_padding >= stride and output_padding >= dilation:
+                return
+        elif isinstance(output_padding, tuple):
+            for _output_padding in output_padding:
+                if _output_padding >= stride and _output_padding >= dilation:
+                    return
+
+        model = nn.ConvTranspose2d(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            kernel_size=kernel_size,
+            stride=stride,
+            padding=padding,
+            dilation=dilation,
+            output_padding=output_padding
         )
         run_compare_torch((1, in_channels, height, width), model, backend=backend)
 
@@ -252,108 +296,121 @@ class TestBranch:
 
 
 class TestAvgPool:
-    @pytest.mark.xfail(reason="rdar://problem/61064173")
+    # rdar://66066001 (PyTorch converter: enable ceil_mode=True tests for pooling ops)
+
     @pytest.mark.parametrize(
-        "input_shape, kernel_size, stride, pad, include_pad, backend",
+        "input_shape, kernel_size, stride, padding, ceil_mode, include_pad, backend",
         itertools.product(
             [(1, 3, 15), (1, 1, 7), (1, 3, 10)],
             [1, 2, 3],
             [1, 2],
             [0, 1],
+            [False],
             [True, False],
             backends,
         ),
     )
-    def test_avg_pool1d(self, input_shape, kernel_size, stride, pad, include_pad, backend):
-        if pad > kernel_size / 2:
-            # Because this test is xfail, we have to fail rather than
-            # just return here, otherwise these test cases unexpectedly pass.
-            # This can be changed to `return` once the above radar
-            # is fixed and the test is no longer xfail.
-            raise ValueError("pad must be less than half the kernel size")
-        model = nn.AvgPool1d(kernel_size, stride, pad, False, include_pad)
+    def test_avg_pool1d(self, input_shape, kernel_size, stride,
+                        padding, ceil_mode, include_pad, backend):
+        if padding > kernel_size / 2:
+            return
+        model = nn.AvgPool1d(kernel_size, stride, padding,
+                             ceil_mode=ceil_mode,
+                             count_include_pad=include_pad)
         run_compare_torch(input_shape, model, backend=backend)
 
     @pytest.mark.parametrize(
-        "input_shape, kernel_size, stride, pad, include_pad, backend",
+        "input_shape, kernel_size, stride, padding, ceil_mode, include_pad, backend",
         itertools.product(
             [(1, 3, 15, 15), (1, 1, 7, 7), (1, 3, 10, 10)],
             [1, 2, 3],
             [1, 2],
             [0, 1],
+            [False],
             [True, False],
             backends,
         ),
     )
-    def test_avg_pool2d(self, input_shape, kernel_size, stride, pad, include_pad, backend):
-        if pad > kernel_size / 2:
+    def test_avg_pool2d(self, input_shape, kernel_size, stride,
+                        padding, ceil_mode, include_pad, backend):
+        if padding > kernel_size / 2:
             return
-        model = nn.AvgPool2d(kernel_size, stride, pad, False, include_pad)
+        model = nn.AvgPool2d(kernel_size, stride, padding,
+                             ceil_mode=ceil_mode,
+                             count_include_pad=include_pad)
         run_compare_torch(input_shape, model, backend=backend)
 
     @pytest.mark.parametrize(
-        "input_shape, kernel_size, stride, pad, include_pad, backend",
+        "input_shape, kernel_size, stride, padding, ceil_mode, include_pad, backend",
         itertools.product(
-            [(1, 3, 15, 15), (1, 1, 7, 7), (1, 3, 10, 10)],
-            [3],
+            [(1, 3, 11, 3, 11), (1, 1, 7, 4, 7), (1, 3, 6, 6, 3)],
+            [1, 2, 3],
             [1, 2],
             [0, 1],
+            [False],
             [True, False],
             backends,
         ),
     )
-    def test_avg_pool2d_ceil_mode(
-        self, input_shape, kernel_size, stride, pad, include_pad, backend
-    ):
-        if pad > kernel_size / 2:
+    def test_avg_pool3d(self, input_shape, kernel_size, stride,
+                        padding, ceil_mode, include_pad, backend):
+        if padding > kernel_size / 2:
             return
-        model = nn.AvgPool2d(kernel_size, stride, pad, True, include_pad)
+        model = nn.AvgPool3d(kernel_size, stride, padding,
+                             ceil_mode=ceil_mode,
+                             count_include_pad=include_pad)
         run_compare_torch(input_shape, model, backend=backend)
 
 
 class TestMaxPool:
-    @pytest.mark.xfail(
-        reason="PyTorch convert function for op max_pool1d not implemented, "
-        "we will also likely run into rdar://problem/61064173"
-    )
+    # rdar://66066001 (PyTorch converter: enable ceil_mode=True tests for pooling ops)
+
     @pytest.mark.parametrize(
-        "input_shape, kernel_size, stride, pad, backend",
+        "input_shape, kernel_size, stride, padding, ceil_mode, backend",
         itertools.product(
-            [(1, 3, 15), (1, 1, 7), (1, 3, 10)], [1, 2, 3], [1, 2], [0, 1], backends
+            [(1, 3, 15), (1, 1, 7), (1, 3, 10)], [1, 2, 3], [1, 2], [0, 1], [False], backends
         ),
     )
-    def test_max_pool1d(self, input_shape, kernel_size, stride, pad, backend):
-        if pad > kernel_size / 2:
-            # Because this test is xfail, we have to fail rather than
-            # just return here, otherwise these test cases unexpectedly pass.
-            # This can be changed to `return` once the above radar
-            # is fixed and the test is no longer xfail.
-            raise ValueError("pad must be less than half the kernel size")
-        model = nn.MaxPool1d(kernel_size, stride, pad, ceil_mode=False)
+    def test_max_pool1d(self, input_shape, kernel_size, stride,
+                        padding, ceil_mode, backend):
+        if padding > kernel_size / 2:
+            return
+        model = nn.MaxPool1d(kernel_size, stride, padding,
+                             dilation=1, return_indices=False, ceil_mode=ceil_mode)
         run_compare_torch(input_shape, model, backend=backend)
 
     @pytest.mark.parametrize(
-        "input_shape, kernel_size, stride, pad, backend",
+        "input_shape, kernel_size, stride, padding, ceil_mode, backend",
         itertools.product(
-            [(1, 3, 15, 15), (1, 1, 7, 7), (1, 3, 10, 10)], [1, 2, 3], [1, 2], [0, 1], backends,
+            [(1, 3, 15, 15), (1, 1, 7, 7), (1, 3, 10, 10)],
+            [1, 2, 3], [1, 2], [0, 1], [False], backends,
         ),
     )
-    def test_max_pool2d(self, input_shape, kernel_size, stride, pad, backend):
-        if pad > kernel_size / 2:
+    def test_max_pool2d(self, input_shape, kernel_size, stride,
+                        padding, ceil_mode, backend):
+        if padding > kernel_size / 2:
             return
-        model = nn.MaxPool2d(kernel_size, stride, pad, ceil_mode=False)
+        model = nn.MaxPool2d(kernel_size, stride, padding,
+                             dilation=1, return_indices=False, ceil_mode=ceil_mode)
         run_compare_torch(input_shape, model, backend=backend)
 
     @pytest.mark.parametrize(
-        "input_shape, kernel_size, stride, pad, backend",
+        "input_shape, kernel_size, stride, padding, ceil_mode, backend",
         itertools.product(
-            [(1, 3, 15, 15), (1, 1, 7, 7), (1, 3, 10, 10)], [3], [1, 2], [0, 1], backends,
+            [(1, 3, 11, 3, 11), (1, 1, 7, 4, 7), (1, 3, 6, 6, 3)],
+            [1, 2, 3],
+            [1, 2],
+            [0, 1],
+            [False],
+            backends,
         ),
     )
-    def test_max_pool2d_ceil_mode(self, input_shape, kernel_size, stride, pad, backend):
-        if pad > kernel_size / 2:
+    def test_max_pool3d(self, input_shape, kernel_size, stride,
+                        padding, ceil_mode, backend):
+        if padding > kernel_size / 2:
             return
-        model = nn.MaxPool2d(kernel_size, stride, pad, ceil_mode=True)
+        model = nn.MaxPool3d(kernel_size, stride, padding,
+                             dilation=1, return_indices=False, ceil_mode=ceil_mode)
         run_compare_torch(input_shape, model, backend=backend)
 
 
@@ -536,3 +593,60 @@ class TestElementWiseUnary:
 
         model = ModuleWrapper(function=operation)
         run_compare_torch(input_shape, model, backend=backend)
+
+
+class TestExpandDims:
+
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend, rank_and_axis",
+        itertools.product(
+            [True, False],
+            backends,
+            [
+                (rank, axis)
+                for rank in range(1, 5)
+                for axis in range(-rank - 1, rank + 1)
+            ],
+        ),
+    )
+    def test_unsqueeze(self, use_cpu_only, backend, rank_and_axis):
+        rank, axis = rank_and_axis
+        input_shape = tuple(np.random.randint(low=2, high=4, size=rank))
+        model = ModuleWrapper(function=torch.unsqueeze, kwargs={"dim": axis})
+        run_compare_torch(input_shape, model, backend=backend)
+
+
+
+
+class TestSqueeze:
+
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend, rank_and_axis",
+        itertools.product(
+            [True, False],
+            backends,
+            [
+                (2, 1),
+                (2, 0),
+                (3, 1),
+                (3, None),
+                (4, None),
+                (4, 2),
+                (5, None),
+                (5, -1),
+            ],
+        ),
+    )
+    def test_squeeze(self, use_cpu_only, backend, rank_and_axis):
+        rank, axis = rank_and_axis
+        input_shape = list(np.random.randint(low=2, high=4, size=rank))
+        if axis is not None:
+            input_shape[axis] = 1
+        else:
+            input_shape[0] = 1
+        input_shape = tuple(input_shape)
+        model = ModuleWrapper(function=torch.squeeze, kwargs={"dim": axis} if axis else {})
+        run_compare_torch(input_shape, model, backend=backend)
+
+
+

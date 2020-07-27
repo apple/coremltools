@@ -33,7 +33,7 @@ class TestActivation:
         ),
     )
     def test_layer(self, use_cpu_only, backend, rank, op):
-        shape = np.random.randint(low=2, high=6, size=rank)
+        shape = np.random.randint(low=2, high=4, size=rank)
         model = tf.keras.Sequential([op(batch_input_shape=shape)])
         run_compare_tf_keras(
             model,
@@ -71,7 +71,7 @@ class TestActivation:
         )
         if op == tf.keras.activations.softmax and rank == 1:
             return  # skip apply softmax to a tensor that is 1D
-        shape = np.random.randint(low=2, high=6, size=rank)
+        shape = np.random.randint(low=2, high=4, size=rank)
         model = tf.keras.Sequential(
             [tf.keras.layers.Activation(op, batch_input_shape=shape)]
         )
@@ -101,7 +101,7 @@ class TestBinary:
         ),
     )
     def test(self, use_cpu_only, backend, rank, op):
-        shape = np.random.randint(low=1, high=6, size=rank)
+        shape = np.random.randint(low=1, high=4, size=rank)
         input_x = tf.keras.layers.Input(batch_input_shape=tuple(shape))
         input_y = tf.keras.layers.Input(batch_input_shape=tuple(shape))
         out = op()([input_x, input_y])
@@ -124,7 +124,7 @@ class TestBinary:
         ),
     )
     def test_dot(self, use_cpu_only, rank, backend, axes, normalize):
-        shape = np.random.randint(low=2, high=6, size=rank)
+        shape = np.random.randint(low=2, high=4, size=rank)
         input_x = tf.keras.layers.Input(batch_input_shape=tuple(shape))
         input_y = tf.keras.layers.Input(batch_input_shape=tuple(shape))
         out = tf.keras.layers.Dot(axes=axes, normalize=normalize)([input_x, input_y])
@@ -145,7 +145,7 @@ class TestConcatenate:
         ),
     )
     def test(self, use_cpu_only, backend, rank, axis):
-        shape = np.random.randint(low=2, high=6, size=rank)
+        shape = np.random.randint(low=2, high=4, size=rank)
         inputs = []
         for _ in range(2):
             inputs.append(tf.keras.layers.Input(batch_input_shape=tuple(shape)))
@@ -186,7 +186,7 @@ class TestConvolution:
             ],
             ["same", "valid"],
             ["channels_last"],
-            [(2, 4, 4, 2, 2, 2), (3, 7, 5, 1, 3, 2), (5, 12, 11, 2, 3, 4)],
+            [(2, 4, 4, 2, 2, 2), (3, 7, 5, 1, 3, 2)],
             [(1, 1, 1), (1, 2, 3), (1, 3, 2)],
             [
                 (1, 1, 1)
@@ -568,7 +568,7 @@ class TestDense:
         ),
     )
     def test(self, use_cpu_only, backend, rank, units, activation, use_bias):
-        shape = np.random.randint(low=2, high=6, size=rank)
+        shape = np.random.randint(low=2, high=4, size=rank)
         model = tf.keras.Sequential(
             [
                 tf.keras.layers.Dense(
@@ -634,7 +634,7 @@ class TestFlatten:
         ),
     )
     def test(self, use_cpu_only, backend, rank, data_format):
-        shape = np.random.randint(low=2, high=6, size=rank)
+        shape = np.random.randint(low=2, high=4, size=rank)
         model = tf.keras.Sequential(
             [tf.keras.layers.Flatten(batch_input_shape=shape, data_format=data_format,)]
         )
@@ -662,7 +662,7 @@ class TestLambda:
         ),
     )
     def test_unary(self, use_cpu_only, backend, rank, function):
-        shape = np.random.randint(low=2, high=6, size=rank)
+        shape = np.random.randint(low=2, high=4, size=rank)
         model = tf.keras.Sequential(
             [tf.keras.layers.Lambda(batch_input_shape=shape, function=function,)]
         )
@@ -689,7 +689,7 @@ class TestNormalization:
     def test_batch_normalization(
         self, use_cpu_only, backend, rank, axis, momentum, epsilon
     ):
-        shape = np.random.randint(low=2, high=5, size=rank)
+        shape = np.random.randint(low=2, high=4, size=rank)
         model = tf.keras.Sequential(
             [
                 tf.keras.layers.BatchNormalization(
@@ -717,7 +717,7 @@ class TestNormalization:
         self, use_cpu_only, backend, rank_and_axis, momentum, epsilon
     ):
         rank, axis = rank_and_axis
-        shape = np.random.randint(low=2, high=5, size=rank)
+        shape = np.random.randint(low=2, high=4, size=rank)
         model = tf.keras.Sequential(
             [
                 tf.keras.layers.BatchNormalization(
@@ -742,7 +742,7 @@ class TestNormalization:
         ),
     )
     def test_layer_normalization(self, use_cpu_only, backend, rank, axis, epsilon):
-        shape = np.random.randint(low=2, high=6, size=rank)
+        shape = np.random.randint(low=2, high=4, size=rank)
         model = tf.keras.Sequential(
             [
                 tf.keras.layers.LayerNormalization(
@@ -775,7 +775,7 @@ class TestNormalization:
         tensorflow_addons = pytest.importorskip("tensorflow_addons")
         from tensorflow_addons.layers import InstanceNormalization
 
-        shape = np.random.randint(low=2, high=6, size=rank)
+        shape = np.random.randint(low=2, high=4, size=rank)
         model = tf.keras.Sequential(
             [
                 InstanceNormalization(
@@ -815,7 +815,7 @@ class TestNormalization:
         tensorflow_addons = pytest.importorskip("tensorflow_addons")
         from tensorflow_addons.layers import GroupNormalization
 
-        shape = np.random.randint(low=2, high=6, size=rank)
+        shape = np.random.randint(low=2, high=4, size=rank)
         shape[-1] = shape[-1] * groups  # groups must be a multiple of channels
         model = tf.keras.Sequential(
             [
@@ -859,14 +859,14 @@ class TestPadding:
         kwargs = {}
         if op == tf.keras.layers.ZeroPadding1D:
             padding = padding[-1]
-            shape = np.random.randint(low=2, high=6, size=3)
+            shape = np.random.randint(low=2, high=4, size=3)
         elif op == tf.keras.layers.ZeroPadding2D:
             padding = padding[1:]
             kwargs = {"data_format": data_format}
-            shape = np.random.randint(low=2, high=6, size=4)
+            shape = np.random.randint(low=2, high=4, size=4)
         elif op == tf.keras.layers.ZeroPadding3D:
             kwargs = {"data_format": data_format}
-            shape = np.random.randint(low=2, high=6, size=5)
+            shape = np.random.randint(low=2, high=4, size=5)
         model = tf.keras.Sequential(
             [op(batch_input_shape=shape, padding=padding, **kwargs)]
         )
@@ -893,7 +893,7 @@ class TestPermute:
     )
     def test(self, use_cpu_only, backend, rank_and_perm):
         rank, perm = rank_and_perm
-        shape = np.random.randint(low=2, high=6, size=rank)
+        shape = np.random.randint(low=2, high=4, size=rank)
         model = tf.keras.Sequential(
             [tf.keras.layers.Permute(batch_input_shape=shape, dims=perm)]
         )
@@ -928,17 +928,17 @@ class TestPooling:
             tf.keras.layers.GlobalAveragePooling1D,
             tf.keras.layers.GlobalMaxPool1D,
         }:
-            shape = np.random.randint(low=2, high=6, size=3)
+            shape = np.random.randint(low=2, high=4, size=3)
         elif op in {
             tf.keras.layers.GlobalAveragePooling2D,
             tf.keras.layers.GlobalMaxPool2D,
         }:
-            shape = np.random.randint(low=2, high=6, size=4)
+            shape = np.random.randint(low=2, high=4, size=4)
         elif op in {
             tf.keras.layers.GlobalAveragePooling3D,
             tf.keras.layers.GlobalMaxPool3D,
         }:
-            shape = np.random.randint(low=2, high=6, size=5)
+            shape = np.random.randint(low=2, high=4, size=5)
         model = tf.keras.Sequential(
             [op(batch_input_shape=shape, data_format=data_format)]
         )
@@ -997,9 +997,9 @@ class TestRecurrent:
             [True, False],
             backends,
             [rank for rank in range(3, 4)],
-            [1, 2, 5],
-            [None, tf.nn.tanh, tf.nn.softmax],
-            [None, tf.nn.sigmoid, tf.nn.relu],
+            [1, 3],
+            [None, tf.nn.tanh],
+            [None, tf.nn.relu],
             [True, False],
             [True, False],
         ),
@@ -1015,7 +1015,7 @@ class TestRecurrent:
         use_bias,
         return_sequences,
     ):
-        shape = np.random.randint(low=1, high=5, size=rank)
+        shape = np.random.randint(low=1, high=4, size=rank)
         model = tf.keras.Sequential(
             [
                 tf.keras.layers.LSTM(
@@ -1039,7 +1039,7 @@ class TestRecurrent:
         "use_cpu_only, backend", itertools.product([True, False], backends)
     )
     def test_lstmcell(self, use_cpu_only, backend):
-        shape = np.random.randint(low=1, high=5, size=3)
+        shape = np.random.randint(low=1, high=4, size=3)
         model = tf.keras.Sequential(
             [
                 tf.keras.layers.RNN(
@@ -1058,7 +1058,7 @@ class TestRecurrent:
         "use_cpu_only, backend", itertools.product([True, False], backends)
     )
     def test_lstm_time_distributed_dense(self, use_cpu_only, backend):
-        shape = list(np.random.randint(low=1, high=5, size=3))
+        shape = list(np.random.randint(low=1, high=4, size=3))
         k_in = tf.keras.layers.Input(batch_size=shape[0], shape=shape[1:])
         lstm = tf.keras.layers.LSTM(units=32, return_sequences=True)(k_in)
         k_out = tf.keras.layers.TimeDistributed(tf.keras.layers.Dense(1))(lstm)
@@ -1080,7 +1080,7 @@ class TestRepeatVector:
     def test(self, use_cpu_only, backend, n):
         # input shape 2D tensor (batch size, features)
         # output shape 3D tensor (batch size, n, features)
-        shape = np.random.randint(low=1, high=5, size=2)
+        shape = np.random.randint(low=1, high=4, size=2)
         model = tf.keras.Sequential(
             [tf.keras.layers.RepeatVector(batch_input_shape=shape, n=n)]
         )
@@ -1100,7 +1100,7 @@ class TestReshape:
         ),
     )
     def test(self, use_cpu_only, backend, rank, infer_shape):
-        shape = np.random.randint(low=2, high=5, size=rank)
+        shape = np.random.randint(low=2, high=4, size=rank)
         # target shape does not include the batch dimension
         target_shape = random.sample(list(shape[1:]), len(shape[1:]))
         if len(target_shape) > 0 and infer_shape:
@@ -1139,7 +1139,7 @@ class TestSkips:
         ),
     )
     def test_skip_dropout(self, use_cpu_only, backend, skip_op):
-        shape = np.random.randint(low=1, high=5, size=5)
+        shape = np.random.randint(low=1, high=4, size=5)
         if skip_op == tf.keras.layers.SpatialDropout1D:
             shape = shape[:3]
         elif skip_op == tf.keras.layers.SpatialDropout2D:
@@ -1156,7 +1156,7 @@ class TestSkips:
         "use_cpu_only, backend", itertools.product([True, False], backends,)
     )
     def test_skip_noise(self, use_cpu_only, backend):
-        shape = np.random.randint(low=1, high=5, size=5)
+        shape = np.random.randint(low=1, high=4, size=5)
         model = tf.keras.Sequential(
             [
                 # GaussianNoise should do nothing in inference mode
@@ -1181,7 +1181,7 @@ class TestSkips:
         ),
     )
     def test_skip_regularization(self, use_cpu_only, backend, rank, l1, l2):
-        shape = np.random.randint(low=2, high=6, size=rank)
+        shape = np.random.randint(low=2, high=4, size=rank)
         model = tf.keras.Sequential(
             [
                 tf.keras.layers.ActivityRegularization(
@@ -1219,15 +1219,15 @@ class TestUpSampling:
         kwargs = {}
         shape = None
         if op == tf.keras.layers.UpSampling1D:
-            shape = np.random.randint(low=2, high=6, size=3)
+            shape = np.random.randint(low=2, high=4, size=3)
             upsample_factor = upsample_factor[2]
         elif op == tf.keras.layers.UpSampling2D:
             kwargs = {"data_format": data_format, "interpolation": interpolation}
-            shape = np.random.randint(low=2, high=6, size=4)
+            shape = np.random.randint(low=2, high=4, size=4)
             upsample_factor = (upsample_factor[1], upsample_factor[2])
         elif op == tf.keras.layers.UpSampling3D:
             kwargs = {"data_format": data_format}
-            shape = np.random.randint(low=2, high=6, size=5)
+            shape = np.random.randint(low=2, high=4, size=5)
 
         model = tf.keras.Sequential(
             [op(batch_input_shape=shape, size=upsample_factor, **kwargs)]

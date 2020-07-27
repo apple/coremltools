@@ -64,7 +64,7 @@ def make_input(const_context, builder, variables):
         return variables
 
     v = variables  # variables is Var
-    if v.op is not None and v.op.op_type == "const" and not v.name in const_context[-1]:
+    if v.op is not None and v.op.op_type == "const" and v.name not in const_context[-1]:
         add_const(const_context, builder, v.name, v.val)
     return v.name
 
@@ -91,13 +91,47 @@ def to_py_type(val):
 def _convert_pool(const_context, builder, op, mode, exclude_padding_from_average=True):
     num_spatial_dimensions = len(op.kernel_sizes.val)
     op_pad = op.pad.val if op.pad is not None else [0] * num_spatial_dimensions * 2
-    if num_spatial_dimensions <= 2:
+    if num_spatial_dimensions == 1:
+        builder.add_expand_dims(
+            name=op.name + "_expanded",
+            input_name=op.x.name,
+            output_name=op.name + "_expanded",
+            axes=[3],
+        )
         padding_type = op.pad_type.val.upper()
         # nn's add_pool function does not support CUSTOM padding,
         # but VALID padding supports user-defined padding amounts.
         # Therefore we map CUSTOM padding to VALID padding.
-        if padding_type == "CUSTOM":
-            padding_type = "VALID"
+        padding_type = "VALID" if padding_type == "CUSTOM" else padding_type
+        builder.add_pooling(
+            name=op.name,
+            height=op.kernel_sizes.val[-1],
+            width=1,
+            stride_height=op.strides.val[-1],
+            stride_width=1,
+            layer_type=mode.upper(),
+            padding_type=padding_type,
+            input_name=make_input(const_context, builder, op.name + "_expanded"),
+            output_name=op.name + "_pool",
+            exclude_pad_area=exclude_padding_from_average,
+            padding_top=op_pad[0],
+            padding_bottom=op_pad[1],
+            padding_left=0,
+            padding_right=0,
+            is_global=False,
+        )
+        builder.add_squeeze(
+            name=op.name + "_squeeze",
+            input_name=op.name + "_pool",
+            output_name=op.outputs[0].name,
+            axes=[3],
+        )
+    elif num_spatial_dimensions == 2:
+        padding_type = op.pad_type.val.upper()
+        # nn's add_pool function does not support CUSTOM padding,
+        # but VALID padding supports user-defined padding amounts.
+        # Therefore we map CUSTOM padding to VALID padding.
+        padding_type = "VALID" if padding_type == "CUSTOM" else padding_type
         builder.add_pooling(
             name=op.name,
             height=op.kernel_sizes.val[-2],
@@ -138,7 +172,7 @@ def _convert_pool(const_context, builder, op, mode, exclude_padding_from_average
         )
     else:
         raise ValueError(
-            "Unsupported number of spatial dimensions.  Maximum is 3, but got %s"
+            "Unsupported number of spatial dimensions. Maximum is 3, but got %s"
             % num_spatial_dimensions
         )
 
@@ -1962,15 +1996,15 @@ def softplus(const_context, builder, op):
 
 @register_mil_to_nn_mapping
 def softmax(const_context, builder, op):
-    rank = op.logit.rank
+    rank = op.x.rank
     if op.axis.val == -3 or op.axis.val > 0 and op.axis.val == rank - 3:
         builder.add_softmax(
-            name=op.name, input_name=op.logit.name, output_name=op.outputs[0].name,
+            name=op.name, input_name=op.x.name, output_name=op.outputs[0].name,
         )
     else:
         builder.add_softmax_nd(
             name=op.name,
-            input_name=op.logit.name,
+            input_name=op.x.name,
             output_name=op.outputs[0].name,
             axis=op.axis.val,
         )

@@ -2,7 +2,27 @@
 
 ####  Usage ####
 # source env_activate.sh
-COREMLTOOLS_HOME=$( cd "$( dirname "$0" )/.." && pwd )
+
+if [ -n "$ZSH_VERSION" ]; then
+    if [[ $ZSH_EVAL_CONTEXT =~ :file$ ]]; then
+        THIS_SCRIPT=${0}
+    else
+        echo "env_activate.sh expects to be sourced, and not run."
+        exit 1
+    fi
+elif [ -n "$BASH_VERSION" ]; then
+    if [[ ${BASH_SOURCE[0]} == ${0} ]]; then
+        echo "env_activate.sh expects to be sourced, and not run."
+        # Every other exit from this point should be return to avoid terminating the process
+        exit 1
+    fi
+    # BASH_SOURCE is a list that is prepended to when a file is sourced.
+    THIS_SCRIPT=${BASH_SOURCE[0]}
+else
+    echo "Expect bash or zsh"
+    return 1
+fi
+COREMLTOOLS_HOME=$(pushd $(dirname ${THIS_SCRIPT})/.. > /dev/null && pwd && popd > /dev/null)
 COREMLTOOLS_NAME=$(basename $COREMLTOOLS_HOME)
 PYTHON=3.7
 ENV_DIR="${COREMLTOOLS_HOME}/envs"
@@ -18,13 +38,13 @@ function print_help {
   echo
   echo "Example: source env_activate --python=3.7"
   echo
-  exit 1
+  return 1
 } # end of print help
 
 function unknown_option {
   echo "Unrecognized option: $1"
   echo "To get help, run source env_activate --help"
-  exit 1
+  return 1
 } # end of unknown option
 
 ###############################################################################
@@ -35,8 +55,8 @@ while [ $# -gt 0 ]
   do case $1 in
     --python=*)            PYTHON=${1##--python=} ;;
     --dev)                 DEV=1 ;;
-    --help)                print_help ;;
-    *) unknown_option $1 ;;
+    --help)                print_help || return 1 ;;
+    *) unknown_option $1 || return 1;;
   esac
   shift
 done

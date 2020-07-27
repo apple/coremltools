@@ -1680,7 +1680,7 @@ def Softsign(context, node):
 def Softmax(context, node):
     logit = context[node.inputs[0]]
     axis = node.attr.get("axis")
-    x = mb.softmax(logit=logit, axis=axis, name=node.name)
+    x = mb.softmax(x=logit, axis=axis, name=node.name)
     context.add(node.name, x)
 
 

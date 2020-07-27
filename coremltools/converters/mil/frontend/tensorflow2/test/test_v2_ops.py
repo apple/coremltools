@@ -52,9 +52,9 @@ from coremltools.converters.mil.frontend.tensorflow.test.test_ops import (
     TestNormalization,
     TestPad,
     TestPack,
-    TestPooling1d,
-    TestPooling2d,
-    TestPooling3d,
+    TestPool1d,
+    TestPool2d,
+    TestPool3d,
     TestSeparableConv,
     TestSpaceToBatchND,
     TestTensorArray,
@@ -74,7 +74,7 @@ class TestNormalizationTF2:
         itertools.product([True, False], backends, [1e-1, 1e-10]),
     )
     def test_fused_batch_norm_v3(self, use_cpu_only, backend, epsilon):
-        input_shape = np.random.randint(low=1, high=6, size=4)
+        input_shape = np.random.randint(low=1, high=4, size=4)
         attr_shape = [list(input_shape)[-1]]
 
         m = random_gen(shape=attr_shape, rand_min=-1.0, rand_max=1.0)
@@ -95,9 +95,7 @@ class TestNormalizationTF2:
             )[0]
 
         model, inputs, outputs = build_model
-
-        input_values = [random_gen(shape=input_shape, rand_min=-100.0, rand_max=100.0)]
-
+        input_values = [random_gen(shape=input_shape)]
         input_dict = dict(zip(inputs, input_values))
 
         run_compare_tf(
@@ -117,7 +115,7 @@ class TestElementWiseBinaryTF2:
         itertools.product([True], backends, [rank for rank in range(1, 4)]),  # False
     )
     def test_add_v2(self, use_cpu_only, backend, rank):
-        x_shape = list(np.random.randint(low=2, high=6, size=rank))
+        x_shape = list(np.random.randint(low=2, high=5, size=rank))
         y_shape = x_shape[:]
         for i in range(rank):
             if np.random.randint(4) == 0:
