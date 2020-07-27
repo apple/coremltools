@@ -91,11 +91,6 @@ build_wheel_macos_py38:
   variables:
     PYTHON: "3.8"
 
-.test_macos_coremltools_test: &test_macos_coremltools_test
-  stage: test
-  script:
-    - zsh -e scripts/test.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON} --fast
-
 .test_macos_pkg: &test_macos_pkg
   stage: test
   script:
@@ -109,13 +104,14 @@ build_wheel_macos_py38:
       --test-package=${TEST_PACKAGE} --requirements=${REQUIREMENTS} --fast
 
 test_macos11_py27_coremltools_test:
-  <<: *test_macos_coremltools_test
+  <<: *test_macos_pkg
   tags:
     - macos11
   dependencies:
     - build_wheel_macos_py27
   variables:
     WHEEL_PATH: build/dist/*cp27*10_16*
+    TEST_PACKAGE: coremltools.test
     PYTHON: "2.7"
   only:
     changes:
@@ -129,13 +125,14 @@ test_macos11_py27_coremltools_test:
       - coremltools/converters/xgboost/**/*.{py}
 
 test_macos11_py37_coremltools_test:
-  <<: *test_macos_coremltools_test
+  <<: *test_macos_pkg
   tags:
     - macos11
   dependencies:
     - build_wheel_macos_py37
   variables:
     WHEEL_PATH: build/dist/*cp37*10_16*
+    TEST_PACKAGE: coremltools.test
     PYTHON: "3.7"
   only:
     changes:
