@@ -74,7 +74,7 @@ class TestAddN:
         itertools.product([True, False], backends, list(range(6)), list(range(1, 5)),),
     )
     def test(self, use_cpu_only, backend, rank, num_inputs):
-        if use_cpu_only is False and rank is 5 and num_inputs is 9:
+        if use_cpu_only is False and rank == 5 and num_inputs == 9:
             # <rdar://63680019> Failure on this specific parameter set
             return
         if backend == "mil_proto" and rank == 0:
@@ -1340,6 +1340,7 @@ class TestConvTranspose:
 
         test_static_W()
 
+    @pytest.mark.skip(reason="rdar://65198011 (Re-enable Conv3dTranspose and DynamicTile unit tests)")
     @pytest.mark.parametrize(
         ",".join(
             [
@@ -3853,6 +3854,7 @@ class TestTile:
             )
 
 
+@pytest.mark.skip(reason="rdar://65198011 (Re-enable Conv3dTranspose and DynamicTile unit tests)")
 class TestDynamicTile:
     @pytest.mark.parametrize(
         "use_cpu_only, backend, rank",
@@ -4303,6 +4305,7 @@ class TestMatrixDiag:
     def test(self, use_cpu_only, backend, length, dynamic):
 
         if dynamic:
+            return  # FIXME: "rdar://65198011 (Re-enable Conv3dTranspose and DynamicTile unit tests)"
             input_shape = np.random.randint(low=1, high=4, size=length)
             a, b = np.prod(input_shape[:2]), np.prod(input_shape[2:])
             size = np.array([a,b]).astype(np.int32)

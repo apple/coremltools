@@ -26,7 +26,9 @@ from coremltools._deps import (
 
 
 @pytest.mark.skipif(not _HAS_TF_1, reason=MSG_TF1_NOT_FOUND)
+@pytest.mark.skipif(ct.utils._macos_version() < (10, 15), reason='Model produces specification 4.')
 class TestTensorFlow1ConverterExamples:
+
     @staticmethod
     def test_convert_from_frozen_graph(tmpdir):
         import tensorflow as tf
@@ -180,7 +182,8 @@ class TestTensorFlow1ConverterExamples:
         print("Tensorflow frozen graph saved at {}".format(frozen_graph_file))
 
         mlmodel = ct.convert(frozen_graph_file)
-        mlmodel.save(frozen_graph_file.replace("pb", "mlmodel"))
+        # optionally, you can save model to disk
+        # mlmodel.save(frozen_graph_file.replace("pb", "mlmodel"))
         import shutil
         try:
             shutil.rmtree(model_dir)
@@ -458,11 +461,16 @@ class TestPyTorchConverterExamples:
         """
         save_path = os.path.join(str(tmpdir), "mobilenet_v2.mlmodel")
         mlmodel.save(save_path)
-        results = mlmodel.predict({"input": example_input.numpy()})
-        expected = model(example_input)
-        np.testing.assert_allclose(
-            list(results.values())[0], expected.detach().numpy(), rtol=1e-2
-        )
+
+        """
+        Running predict() is only supported on macOS.
+        """
+        if ct.utils._is_macos():
+            results = mlmodel.predict({"input": example_input.numpy()})
+            expected = model(example_input)
+            np.testing.assert_allclose(
+                list(results.values())[0], expected.detach().numpy(), rtol=1e-2
+            )
 
     @staticmethod
     def test_int64_inputs():
@@ -495,13 +503,15 @@ class TestPyTorchConverterExamples:
             ],
         )
 
-        result = mlmodel.predict(
-            {"input": example_input.detach().numpy().astype(np.float32)}
-        )
+        # running predict() is supported on macOS
+        if ct.utils._is_macos():
+            result = mlmodel.predict(
+                {"input": example_input.detach().numpy().astype(np.float32)}
+            )
 
-        # Verify outputs
-        expected = model(example_input)
-        np.testing.assert_allclose(result["5"], expected.detach().numpy())
+            # Verify outputs
+            expected = model(example_input)
+            np.testing.assert_allclose(result["5"], expected.detach().numpy())
 
         # Duplicated inputs are invalid
         with pytest.raises(ValueError, match=r"Duplicated inputs"):
@@ -542,7 +552,7 @@ class TestMILExamples:
         from coremltools.converters.mil import Builder as mb
 
         @mb.program(
-            input_specs=[mb.TensorSpec(shape=(1, 100, 100, 3)), ]
+            input_specs=[mb.TensorSpec(shape=(1, 100, 100, 3)),]
         )
         def prog(x):
             x = mb.relu(x=x, name="relu")
@@ -561,7 +571,10 @@ class TestMILExamples:
         proto = _convert(prog, convert_from="mil")
 
         model = models.MLModel(proto)
-        prediction = model.predict(
-            {"x": np.random.rand(1, 100, 100, 3).astype(np.float32), }
-        )
-        assert len(prediction) == 1
+
+        # running predict() is only supported on macOS
+        if ct.utils._is_macos():
+            prediction = model.predict(
+                {"x": np.random.rand(1, 100, 100, 3).astype(np.float32),}
+            )
+            assert len(prediction) == 1

@@ -12,3 +12,4 @@
 .vscode/
 .cache/
 .idea/
+*.log

@@ -31,7 +31,7 @@ np.random.seed(10)
 
 MIN_MACOS_VERSION_REQUIRED = (10, 13)
 LAYERS_10_15_MACOS_VERSION = (10, 15)
-LAYERS_10_16_MACOS_VERSION = (10, 16)
+LAYERS_11_0_MACOS_VERSION = (11, 0)
 
 
 def _get_unary_model_spec(x, mode, alpha=1.0):
@@ -2423,6 +2423,9 @@ class NewLayersSimpleTest(CorrectnessTest):
     def test_tile_gpu(self):
         self.test_tile_cpu(cpu_only=False)
 
+    @pytest.mark.skip(
+        reason="rdar://65198011 (Re-enable Conv3dTranspose and DynamicTile unit tests)"
+    )
     def test_dynamic_tile_cpu(self, cpu_only=True):
         for rank in range(1, 6):
             input_shape = np.random.randint(low=2, high=5, size=rank)
@@ -2889,7 +2892,7 @@ class NewLayersSimpleTest(CorrectnessTest):
     def test_const_pad_mode2_gpu(self):
         self.test_const_pad_mode2_cpu(cpu_only=False)
 
-    @pytest.mark.xfail(reason="rdar://problem/59486372")
+    @pytest.mark.xfail(reason="rdar://problem/59486372", run=False)
     def test_nms_cpu(self, cpu_only=True):
         def _compute_iou_matrix(boxes):
             # input is (N,4), in order [center_w, center_h, width, height]
@@ -3607,6 +3610,7 @@ class NewLayersSimpleTest(CorrectnessTest):
     def test_where_broadcastable_gpu(self):
         self.test_where_broadcastable_cpu(cpu_only=False)
 
+    @pytest.mark.slow
     def test_random_normal_like_cpu(self, cpu_only=True):
         mean, stddev, seed = 0.0, 1.0, 42
 
@@ -3649,6 +3653,7 @@ class NewLayersSimpleTest(CorrectnessTest):
                     builder.spec, inputs, expected, num_moments=6
                 )
 
+    @pytest.mark.slow
     def test_random_normal_like_gpu(self):
         self.test_random_normal_like_cpu(cpu_only=False)
 
@@ -5608,6 +5613,7 @@ def get_coreml_predictions_reduce(X, params):
     return coreml_preds, eval
 
 
+@pytest.mark.slow
 class StressTest(CorrectnessTest):
     def test_slice_layer(self):
         params_dict = dict(
@@ -5703,6 +5709,7 @@ class StressTest(CorrectnessTest):
         self.assertEqual(failed_tests_numerical, [])
 
 
+@pytest.mark.slow
 @unittest.skipIf(
     not _is_macos() or _macos_version() < LAYERS_10_15_MACOS_VERSION,
     "macOS 10.15+ required. Skipping tests.",
@@ -6023,8 +6030,8 @@ class CoreML3NetworkStressTest(CorrectnessTest):
 
 
 @unittest.skipIf(
-    _macos_version() < LAYERS_10_16_MACOS_VERSION,
-    "macOS 10.16+ required. Skipping tests.",
+    _macos_version() < LAYERS_11_0_MACOS_VERSION,
+    "macOS 11.0+ required. Skipping tests.",
 )
 class IOS14SingleLayerTests(CorrectnessTest):
     @unittest.skipIf(not _HAS_TF, MSG_TF1_NOT_FOUND)
@@ -7027,8 +7034,9 @@ class IOS14SingleLayerTests(CorrectnessTest):
         self._test_conv3d(cpu_only=False, full_test=True)
 
 
+@pytest.mark.slow
 @unittest.skipUnless(
-    _is_macos() and _macos_version() >= LAYERS_10_16_MACOS_VERSION,
+    _is_macos() and _macos_version() >= LAYERS_11_0_MACOS_VERSION,
     "Only supported on macOS 10.16+",
 )
 class ReorganizeDataTests(CorrectnessTest):
@@ -7105,8 +7113,8 @@ class ReorganizeDataTests(CorrectnessTest):
         self.test_depth_to_space_cpu(cpu_only=False)
 
     @unittest.skipIf(
-        _macos_version() < LAYERS_10_16_MACOS_VERSION,
-        "macOS 10.16+ required. Skipping tests.",
+        _macos_version() < LAYERS_11_0_MACOS_VERSION,
+        "macOS 11.0+ required. Skipping tests.",
     )
     def test_pixel_shuffle_cpu(self, cpu_only=True):
 
@@ -7156,7 +7164,7 @@ class ReorganizeDataTests(CorrectnessTest):
             self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
     @unittest.skipIf(
-        _macos_version() < LAYERS_10_16_MACOS_VERSION,
+        _macos_version() < LAYERS_11_0_MACOS_VERSION,
         "macOS 10.16+ required. Skipping tests.",
     )
     def test_pixel_shuffle_gpu(self):

@@ -59,19 +59,19 @@ A neural network.
 .. code-block:: proto
 
 	message NeuralNetwork {
-	
+
 	    repeated NeuralNetworkLayer layers = 1;
 	    repeated NeuralNetworkPreprocessing preprocessing = 2;
-	
+
 	    // use this enum value to determine the input tensor shapes to the neural network, for multiarray inputs
 	    NeuralNetworkMultiArrayShapeMapping arrayInputShapeMapping = 5;
-	
+
 	    // use this enum value to determine the input tensor shapes to the neural network, for image inputs
 	    NeuralNetworkImageShapeMapping imageInputShapeMapping = 6;
-	
-	
+
+
 	    NetworkUpdateParameters updateParams = 10;
-	
+
 	}
 
 
@@ -118,13 +118,13 @@ If the input image is in grayscale format:
 .. code-block:: proto
 
 	message NeuralNetworkImageScaler {
-	
-	    float channelScale = 10; 
-	    float blueBias = 20; 
-	    float greenBias = 21; 
-	    float redBias = 22; 
-	    float grayBias = 30; 
-	
+
+	    float channelScale = 10;
+	    float blueBias = 20;
+	    float greenBias = 21;
+	    float redBias = 22;
+	    float grayBias = 30;
+
 	}
 
 
@@ -144,9 +144,9 @@ The mean image is subtracted from the input named
 .. code-block:: proto
 
 	message NeuralNetworkMeanImage {
-	
+
 	    repeated float meanImage = 1;
-	
+
 	}
 
 
@@ -163,13 +163,13 @@ Preprocessing parameters for image inputs.
 .. code-block:: proto
 
 	message NeuralNetworkPreprocessing {
-	
-	    string featureName = 1; 
+
+	    string featureName = 1;
 	    oneof preprocessor {
 	        NeuralNetworkImageScaler scaler = 10;
 	        NeuralNetworkMeanImage meanImage = 11;
 	    }
-	
+
 	}
 
 
@@ -191,7 +191,7 @@ This function has the following formula:
 .. code-block:: proto
 
 	message ActivationReLU {
-	
+
 	}
 
 
@@ -216,9 +216,9 @@ This function has the following formula:
 .. code-block:: proto
 
 	message ActivationLeakyReLU {
-	
+
 	    float alpha = 1; //negative slope value for leakyReLU
-	
+
 	}
 
 
@@ -240,7 +240,7 @@ This function has the following formula:
 .. code-block:: proto
 
 	message ActivationTanh {
-	
+
 	}
 
 
@@ -262,10 +262,10 @@ This function has the following formula:
 .. code-block:: proto
 
 	message ActivationScaledTanh {
-	
+
 	    float alpha = 1;
 	    float beta = 2;
-	
+
 	}
 
 
@@ -287,7 +287,7 @@ This function has the following formula:
 .. code-block:: proto
 
 	message ActivationSigmoid {
-	
+
 	}
 
 
@@ -309,10 +309,10 @@ This function has the following formula:
 .. code-block:: proto
 
 	message ActivationLinear {
-	
+
 	    float alpha = 1;
 	    float beta = 2;
-	
+
 	}
 
 
@@ -334,10 +334,10 @@ This function has the following formula:
 .. code-block:: proto
 
 	message ActivationSigmoidHard {
-	
+
 	    float alpha = 1;
 	    float beta = 2;
-	
+
 	}
 
 
@@ -364,11 +364,11 @@ This function has the following formula:
 .. code-block:: proto
 
 	message ActivationPReLU {
-	
+
 	    // parameter of length C or 1.
 	    // If length is 1, same value is used for all channels
 	    WeightParams alpha = 1;
-	
+
 	}
 
 
@@ -393,9 +393,9 @@ This function has the following formula:
 .. code-block:: proto
 
 	message ActivationELU {
-	
+
 	    float alpha = 1;
-	
+
 	}
 
 
@@ -420,9 +420,9 @@ This function has the following formula:
 .. code-block:: proto
 
 	message ActivationThresholdedReLU {
-	
+
 	    float alpha = 1;
-	
+
 	}
 
 
@@ -444,7 +444,7 @@ This function has the following formula:
 .. code-block:: proto
 
 	message ActivationSoftsign {
-	
+
 	}
 
 
@@ -466,7 +466,7 @@ This function has the following formula:
 .. code-block:: proto
 
 	message ActivationSoftplus {
-	
+
 	}
 
 
@@ -490,11 +490,11 @@ This function has the following formula:
 .. code-block:: proto
 
 	message ActivationParametricSoftplus {
-	
+
 	    // If length is 1, same value is used for all channels
 	    WeightParams alpha = 1; //parameter of length C or 1
 	    WeightParams beta = 2; //parameter of length C or 1
-	
+
 	}
 
 
@@ -511,28 +511,28 @@ ________________________________________________________________________________
 .. code-block:: proto
 
 	message ActivationParams {
-	
+
 	    oneof NonlinearityType {
 	        ActivationLinear linear = 5;
-	
+
 	        ActivationReLU ReLU = 10;
 	        ActivationLeakyReLU leakyReLU = 15;
 	        ActivationThresholdedReLU thresholdedReLU = 20;
 	        ActivationPReLU PReLU = 25;
-	
+
 	        ActivationTanh tanh = 30;
 	        ActivationScaledTanh scaledTanh = 31;
-	
+
 	        ActivationSigmoid sigmoid = 40;
 	        ActivationSigmoidHard sigmoidHard = 41;
-	
+
 	        ActivationELU ELU = 50;
-	
+
 	        ActivationSoftsign softsign = 60;
 	        ActivationSoftplus softplus = 70;
 	        ActivationParametricSoftplus parametricSoftplus = 71;
 	    }
-	
+
 	}
 
 
@@ -549,13 +549,13 @@ Representation of the intermediate tensors
 .. code-block:: proto
 
 	message Tensor {
-	
+
 	    // Number of dimensions in the tensor shape
 	    uint32 rank = 1;
 	    // actual value of the tensor shape.
 	    // must be of length "rank". Can contain -1s for unknown dimensions.
 	    repeated int64 dimValue = 2;
-	
+
 	}
 
 
@@ -572,62 +572,62 @@ A single neural network layer.
 .. code-block:: proto
 
 	message NeuralNetworkLayer {
-	
+
 	    string name = 1; //descriptive name of the layer
 	    repeated string input = 2;
 	    repeated string output = 3;
-	
+
 	    repeated Tensor inputTensor = 4; // must be the same length as the "input" field
 	    repeated Tensor outputTensor = 5; // must be the same length as the "output" field
-	
+
 	    // Must be set to true to mark the layer as updatable.
 	    // If true, the weightParams in the layer's properties must also be set to updatable
 	    // If false, the value of the isUpdatable parameter within the layer's weights are ignored
 	    bool isUpdatable = 10;
-	
+
 	    oneof layer {
-	
+
 	        // Start at 100 here
 	        ConvolutionLayerParams convolution = 100;
-	
+
 	        PoolingLayerParams pooling = 120;
-	
+
 	        ActivationParams activation = 130;
-	
+
 	        InnerProductLayerParams innerProduct = 140;
 	        EmbeddingLayerParams embedding = 150;
-	
+
 	        // Normalization-related Layers
 	        BatchnormLayerParams batchnorm = 160;
 	        MeanVarianceNormalizeLayerParams mvn = 165;
 	        L2NormalizeLayerParams l2normalize = 170;
 	        SoftmaxLayerParams softmax = 175;
 	        LRNLayerParams lrn = 180;
-	
+
 	        CropLayerParams crop = 190;
 	        PaddingLayerParams padding = 200;
 	        UpsampleLayerParams upsample = 210;
-	
+
 	        ResizeBilinearLayerParams resizeBilinear = 211;
 	        CropResizeLayerParams cropResize = 212;
-	
+
 	        UnaryFunctionLayerParams unary = 220;
-	
+
 	        // Element-wise Operations
 	        AddLayerParams add = 230;
 	        MultiplyLayerParams multiply = 231;
-	
+
 	        AverageLayerParams average = 240;
 	        ScaleLayerParams scale = 245;
-	
+
 	        BiasLayerParams bias = 250;
 	        MaxLayerParams max = 260;
 	        MinLayerParams min = 261;
-	
+
 	        DotProductLayerParams dot = 270;
 	        ReduceLayerParams reduce = 280;
 	        LoadConstantLayerParams loadConstant = 290;
-	
+
 	        // Data Reorganization
 	        ReshapeLayerParams reshape = 300;
 	        FlattenLayerParams flatten = 301;
@@ -635,62 +635,62 @@ A single neural network layer.
 	        ConcatLayerParams concat = 320;
 	        SplitLayerParams split = 330;
 	        SequenceRepeatLayerParams sequenceRepeat = 340;
-	
+
 	        ReorganizeDataLayerParams reorganizeData = 345;
 	        SliceLayerParams slice = 350;
-	
+
 	        // Recurrent Layers
 	        SimpleRecurrentLayerParams simpleRecurrent = 400;
 	        GRULayerParams gru = 410;
 	        UniDirectionalLSTMLayerParams uniDirectionalLSTM = 420;
 	        BiDirectionalLSTMLayerParams biDirectionalLSTM = 430;
-	
+
 	        // Custom (user-implemented) Layer
 	        CustomLayerParams custom = 500;
-	
+
 	        // Following layers are available only after Core ML Specification
 	        // version >= 4 (iOS >= 13, macOS >= 10.15)
-	
+
 	        // Control Flow related Layers
 	        CopyLayerParams copy = 600;
 	        BranchLayerParams branch = 605;
-	
+
 	        LoopLayerParams loop = 615;
 	        LoopBreakLayerParams loopBreak = 620;
 	        LoopContinueLayerParams loopContinue = 625;
-	
+
 	        RangeStaticLayerParams rangeStatic = 635;
 	        RangeDynamicLayerParams rangeDynamic = 640;
-	
+
 	        // Element-wise Unary Layers
 	        ClipLayerParams clip = 660;
 	        CeilLayerParams ceil = 665;
 	        FloorLayerParams floor = 670;
-	
+
 	        SignLayerParams sign = 680;
 	        RoundLayerParams round = 685;
-	
+
 	        Exp2LayerParams exp2 = 700;
-	
+
 	        SinLayerParams sin = 710;
 	        CosLayerParams cos = 715;
 	        TanLayerParams tan = 720;
-	
+
 	        AsinLayerParams asin = 730;
 	        AcosLayerParams acos = 735;
 	        AtanLayerParams atan = 740;
-	
+
 	        SinhLayerParams sinh = 750;
 	        CoshLayerParams cosh = 755;
 	        TanhLayerParams tanh = 760;
-	
+
 	        AsinhLayerParams asinh = 770;
 	        AcoshLayerParams acosh = 775;
 	        AtanhLayerParams atanh = 780;
-	
+
 	        ErfLayerParams erf = 790;
 	        GeluLayerParams gelu = 795;
-	
+
 	        // Element-wise Binary with Broadcasting Support
 	        EqualLayerParams equal = 815;
 	        NotEqualLayerParams notEqual = 820;
@@ -698,12 +698,12 @@ A single neural network layer.
 	        LessEqualLayerParams lessEqual = 827;
 	        GreaterThanLayerParams greaterThan = 830;
 	        GreaterEqualLayerParams greaterEqual = 832;
-	
+
 	        LogicalOrLayerParams logicalOr = 840;
 	        LogicalXorLayerParams logicalXor = 845;
 	        LogicalNotLayerParams logicalNot = 850;
 	        LogicalAndLayerParams logicalAnd = 855;
-	
+
 	        ModBroadcastableLayerParams modBroadcastable = 865;
 	        MinBroadcastableLayerParams minBroadcastable = 870;
 	        MaxBroadcastableLayerParams maxBroadcastable = 875;
@@ -713,7 +713,7 @@ A single neural network layer.
 	        FloorDivBroadcastableLayerParams floorDivBroadcastable = 895;
 	        MultiplyBroadcastableLayerParams multiplyBroadcastable = 900;
 	        SubtractBroadcastableLayerParams subtractBroadcastable = 905;
-	
+
 	        // Tensor Manipulations
 	        TileLayerParams tile = 920;
 	        StackLayerParams stack = 925;
@@ -724,37 +724,37 @@ A single neural network layer.
 	        SoftmaxNDLayerParams softmaxND = 950;
 	        GatherAlongAxisLayerParams gatherAlongAxis = 952;
 	        ScatterAlongAxisLayerParams scatterAlongAxis = 954;
-	
+
 	        ReverseLayerParams reverse = 960;
 	        ReverseSeqLayerParams reverseSeq = 965;
-	
+
 	        SplitNDLayerParams splitND = 975;
 	        ConcatNDLayerParams concatND = 980;
 	        TransposeLayerParams transpose = 985;
-	
+
 	        SliceStaticLayerParams sliceStatic = 995;
 	        SliceDynamicLayerParams sliceDynamic = 1000;
 	        SlidingWindowsLayerParams slidingWindows = 1005;
-	
+
 	        TopKLayerParams topK = 1015;
 	        ArgMinLayerParams argMin = 1020;
 	        ArgMaxLayerParams argMax = 1025;
-	
+
 	        EmbeddingNDLayerParams embeddingND = 1040;
 	        BatchedMatMulLayerParams batchedMatmul = 1045;
-	
+
 	        // Tensor Allocation / Reshape-related Operations
 	        GetShapeLayerParams getShape = 1065;
 	        LoadConstantNDLayerParams loadConstantND = 1070;
-	
+
 	        FillLikeLayerParams fillLike = 1080;
 	        FillStaticLayerParams fillStatic = 1085;
 	        FillDynamicLayerParams fillDynamic = 1090;
-	
+
 	        BroadcastToLikeLayerParams broadcastToLike = 1100;
 	        BroadcastToStaticLayerParams broadcastToStatic = 1105;
 	        BroadcastToDynamicLayerParams broadcastToDynamic = 1110;
-	
+
 	        SqueezeLayerParams squeeze = 1120;
 	        ExpandDimsLayerParams expandDims = 1125;
 	        FlattenTo2DLayerParams flattenTo2D = 1130;
@@ -762,24 +762,24 @@ A single neural network layer.
 	        ReshapeStaticLayerParams reshapeStatic = 1140;
 	        ReshapeDynamicLayerParams reshapeDynamic = 1145;
 	        RankPreservingReshapeLayerParams rankPreservingReshape = 1150;
-	
+
 	        ConstantPaddingLayerParams constantPad = 1155;
-	
+
 	        // Random Distributions
 	        RandomNormalLikeLayerParams randomNormalLike = 1170;
 	        RandomNormalStaticLayerParams randomNormalStatic = 1175;
 	        RandomNormalDynamicLayerParams randomNormalDynamic = 1180;
-	
+
 	        RandomUniformLikeLayerParams randomUniformLike = 1190;
 	        RandomUniformStaticLayerParams randomUniformStatic = 1195;
 	        RandomUniformDynamicLayerParams randomUniformDynamic = 1200;
-	
+
 	        RandomBernoulliLikeLayerParams randomBernoulliLike = 1210;
 	        RandomBernoulliStaticLayerParams randomBernoulliStatic = 1215;
 	        RandomBernoulliDynamicLayerParams randomBernoulliDynamic = 1220;
-	
+
 	        CategoricalDistributionLayerParams categoricalDistribution = 1230;
-	
+
 	        // Reduction-related Layers:
 	        ReduceL1LayerParams reduceL1 = 1250;
 	        ReduceL2LayerParams reduceL2 = 1255;
@@ -791,19 +791,19 @@ A single neural network layer.
 	        ReduceLogSumLayerParams reduceLogSum = 1285;
 	        ReduceSumSquareLayerParams reduceSumSquare = 1290;
 	        ReduceLogSumExpLayerParams reduceLogSumExp = 1295;
-	
+
 	        // Masking / Selection Layers
 	        WhereNonZeroLayerParams whereNonZero = 1313;
 	        MatrixBandPartLayerParams matrixBandPart = 1315;
 	        LowerTriangularLayerParams lowerTriangular = 1320;
 	        UpperTriangularLayerParams upperTriangular = 1325;
 	        WhereBroadcastableLayerParams whereBroadcastable = 1330;
-	
+
 	        // Normalization Layers
 	        LayerNormalizationLayerParams layerNormalization = 1350;
-	
+
 	        NonMaximumSuppressionLayerParams NonMaximumSuppression = 1400;
-	
+
 	        // Following layers are available only after Core ML Specification
 	        // version >= 5 (iOS >= 14, macOS >= 10.16)
 	        OneHotLayerParams oneHot = 1450;
@@ -814,9 +814,9 @@ A single neural network layer.
 	        GlobalPooling3DLayerParams globalPooling3d = 1466;
 	        SliceBySizeLayerParams sliceBySize = 1470;
 	        Convolution3DLayerParams convolution3d = 1471;
-	
+
 	    }
-	
+
 	}
 
 
@@ -840,10 +840,10 @@ Input is the condition predicate. Must be a scalar (length 1 tensor).
 .. code-block:: proto
 
 	message BranchLayerParams {
-	
+
 	    NeuralNetwork ifBranch = 1;
 	    NeuralNetwork elseBranch = 2;
-	
+
 	}
 
 
@@ -904,12 +904,12 @@ while (conditionVar and loopIterator < maxLoopIterations):
 .. code-block:: proto
 
 	message LoopLayerParams {
-	
+
 	    uint64 maxLoopIterations = 1;
 	    string conditionVar = 2;
 	    NeuralNetwork conditionNetwork = 3;
 	    NeuralNetwork bodyNetwork = 4;
-	
+
 	}
 
 
@@ -931,7 +931,7 @@ No inputs/outputs
 .. code-block:: proto
 
 	message LoopBreakLayerParams {
-	
+
 	}
 
 
@@ -953,7 +953,7 @@ No inputs/outputs
 .. code-block:: proto
 
 	message LoopContinueLayerParams {
-	
+
 	}
 
 
@@ -975,7 +975,7 @@ in which case it will overwrite the output tensor.
 .. code-block:: proto
 
 	message CopyLayerParams {
-	
+
 	}
 
 
@@ -1006,9 +1006,9 @@ Broadcasting is supported.
 .. code-block:: proto
 
 	message GreaterThanLayerParams {
-	
+
 	    float alpha = 2;
-	
+
 	}
 
 
@@ -1039,9 +1039,9 @@ Broadcasting is supported.
 .. code-block:: proto
 
 	message GreaterEqualLayerParams {
-	
+
 	    float alpha = 2;
-	
+
 	}
 
 
@@ -1072,9 +1072,9 @@ Broadcasting is supported.
 .. code-block:: proto
 
 	message LessThanLayerParams {
-	
+
 	    float alpha = 2;
-	
+
 	}
 
 
@@ -1105,9 +1105,9 @@ Broadcasting is supported.
 .. code-block:: proto
 
 	message LessEqualLayerParams {
-	
+
 	    float alpha = 2;
-	
+
 	}
 
 
@@ -1138,9 +1138,9 @@ Broadcasting is supported.
 .. code-block:: proto
 
 	message EqualLayerParams {
-	
+
 	    float alpha = 1;
-	
+
 	}
 
 
@@ -1171,9 +1171,9 @@ Broadcasting is supported.
 .. code-block:: proto
 
 	message NotEqualLayerParams {
-	
+
 	    float alpha = 1;
-	
+
 	}
 
 
@@ -1202,7 +1202,7 @@ Broadcasting is supported.
 .. code-block:: proto
 
 	message LogicalAndLayerParams {
-	
+
 	}
 
 
@@ -1231,7 +1231,7 @@ Broadcasting is supported.
 .. code-block:: proto
 
 	message LogicalOrLayerParams {
-	
+
 	}
 
 
@@ -1260,7 +1260,7 @@ Broadcasting is supported.
 .. code-block:: proto
 
 	message LogicalXorLayerParams {
-	
+
 	}
 
 
@@ -1287,7 +1287,7 @@ Output is 1.0f if the condition is true otherwise 0.0f.
 .. code-block:: proto
 
 	message LogicalNotLayerParams {
-	
+
 	}
 
 
@@ -1328,15 +1328,15 @@ For cropping:
 .. code-block:: proto
 
 	message BorderAmounts {
-	
+
 	    message EdgeSizes {
 	        uint64 startEdgeSize = 1;
-	
+
 	        uint64 endEdgeSize = 2;
 	    }
-	
+
 	    repeated EdgeSizes borderAmounts = 10;
-	
+
 	}
 
 
@@ -1354,7 +1354,7 @@ BorderAmounts.EdgeSizes
 
 	    message EdgeSizes {
 	        uint64 startEdgeSize = 1;
-	
+
 	        uint64 endEdgeSize = 2;
 	    }
 
@@ -1408,9 +1408,9 @@ If non-zero values are provided for ``paddingAmounts``,
 .. code-block:: proto
 
 	message ValidPadding {
-	
+
 	    BorderAmounts paddingAmounts = 1;
-	
+
 	}
 
 
@@ -1471,15 +1471,15 @@ With Deconvolution:
 .. code-block:: proto
 
 	message SamePadding {
-	
+
 	    enum SamePaddingMode {
-	
+
 	        BOTTOM_RIGHT_HEAVY = 0;
 	        TOP_LEFT_HEAVY = 1;
-	
+
 	    }
 	    SamePaddingMode asymmetryMode = 1;
-	
+
 	}
 
 
@@ -1502,21 +1502,21 @@ The methods vary in how the ``start`` and ``end`` values are computed.
 .. code-block:: proto
 
 	message SamplingMode {
-	
+
 	    enum Method {
-	
+
 	        STRICT_ALIGN_ENDPOINTS_MODE = 0;
-	
+
 	        ALIGN_ENDPOINTS_MODE = 1;
-	
+
 	        UPSAMPLE_MODE = 2;
-	
+
 	        ROI_ALIGN_MODE = 3;
-	
+
 	    }
-	
+
 	    Method samplingMethod = 1;
-	
+
 	}
 
 
@@ -1534,21 +1534,21 @@ The (0,0) coordinate corresponds to the top-left corner of the image.
 .. code-block:: proto
 
 	message BoxCoordinatesMode {
-	
+
 	    enum Coordinates {
-	
+
 	        CORNERS_HEIGHT_FIRST = 0;
-	
+
 	        CORNERS_WIDTH_FIRST = 1;
-	
+
 	        CENTER_SIZE_HEIGHT_FIRST = 2;
-	
+
 	        CENTER_SIZE_WIDTH_FIRST = 3;
-	
+
 	    }
-	
+
 	    Coordinates boxMode = 1;
-	
+
 	}
 
 
@@ -1568,19 +1568,19 @@ and can represent 1-, 2-, 3-, or 4-dimensional data.
 .. code-block:: proto
 
 	message WeightParams {
-	
+
 	    repeated float floatValue = 1;
-	
+
 	    bytes float16Value = 2;
-	
+
 	    bytes rawValue = 30;
-	
+
 	    bytes int8RawValue = 31;
-	
+
 	    QuantizationParams quantization = 40;
-	
+
 	    bool isUpdatable = 50;
-	
+
 	}
 
 
@@ -1597,13 +1597,13 @@ Quantization parameters.
 .. code-block:: proto
 
 	message QuantizationParams {
-	
+
 	    uint64 numberOfBits = 1;
 	    oneof QuantizationType {
 	        LinearQuantizationParams linearQuantization = 101;
 	        LookUpTableQuantizationParams lookupTableQuantization = 102;
 	    }
-	
+
 	}
 
 
@@ -1620,10 +1620,10 @@ ________________________________________________________________________________
 .. code-block:: proto
 
 	message LinearQuantizationParams {
-	
+
 	    repeated float scale = 1;
 	    repeated float bias = 2;
-	
+
 	}
 
 
@@ -1640,10 +1640,10 @@ ________________________________________________________________________________
 .. code-block:: proto
 
 	message LookUpTableQuantizationParams {
-	
+
 	    (2^numberOfBits) Elements.
 	    repeated float floatValue = 1;
-	
+
 	}
 
 
@@ -1697,33 +1697,33 @@ For Deconvolution, ``ConvolutionPaddingType`` (``valid`` or ``same``) is ignored
 .. code-block:: proto
 
 	message ConvolutionLayerParams {
-	
+
 	    uint64 outputChannels = 1;
-	
+
 	    uint64 kernelChannels = 2;
-	
+
 	    uint64 nGroups = 10;
-	
+
 	    repeated uint64 kernelSize = 20;
-	
+
 	    repeated uint64 stride = 30;
-	
+
 	    repeated uint64 dilationFactor = 40;
-	
+
 	    oneof ConvolutionPaddingType {
 	        ValidPadding valid = 50;
 	        SamePadding same = 51;
 	    }
-	
+
 	    bool isDeconvolution = 60;
-	
+
 	    bool hasBias = 70;
-	
+
 	    WeightParams weights = 90;
-	    WeightParams bias = 91; 
-	
+	    WeightParams bias = 91;
+
 	    repeated uint64 outputShape = 100;
-	
+
 	}
 
 
@@ -1769,57 +1769,57 @@ Example
 .. code-block:: proto
 
 	message Convolution3DLayerParams {
-	
+
 	    int32 outputChannels = 1;
-	
+
 	    int32 inputChannels = 2;
-	
+
 	    int32 nGroups = 10;
-	
+
 	    int32 kernelDepth = 20;
-	
+
 	    int32 kernelHeight = 21;
-	
+
 	    int32 kernelWidth = 22;
-	
+
 	    int32 strideDepth = 31;
-	
+
 	    int32 strideHeight = 32;
-	
+
 	    int32 strideWidth = 33;
-	
+
 	    int32 dilationDepth = 40;
-	
+
 	    int32 dilationHeight = 41;
-	
+
 	    int32 dilationWidth = 42;
-	
+
 	    bool hasBias = 50;
-	
+
 	    WeightParams weights = 60;
-	
+
 	    WeightParams bias = 61;
-	
-	
+
+
 	    enum PaddingType {
 	        CUSTOM = 0;
 	        VALID = 1;
 	        SAME = 2;
 	    }
 	    PaddingType paddingType = 70;
-	
+
 	    int32 customPaddingFront = 80;
-	
+
 	    int32 customPaddingBack = 81;
-	
+
 	    int32 customPaddingTop = 82;
-	
+
 	    int32 customPaddingBottom = 83;
-	
+
 	    int32 customPaddingLeft = 84;
-	
+
 	    int32 customPaddingRight = 85;
-	
+
 	}
 
 
@@ -1860,17 +1860,17 @@ Output
 .. code-block:: proto
 
 	message InnerProductLayerParams {
-	
-	    uint64 inputChannels = 1; 
-	    uint64 outputChannels = 2; 
-	
-	    bool hasBias = 10; 
-	
-	    WeightParams weights = 20; 
-	    WeightParams bias = 21; 
-	
+
+	    uint64 inputChannels = 1;
+	    uint64 outputChannels = 2;
+
+	    bool hasBias = 10;
+
+	    WeightParams weights = 20;
+	    WeightParams bias = 21;
+
 	    bool int8DynamicQuantize = 22;
-	
+
 	}
 
 
@@ -1906,15 +1906,15 @@ Output
 .. code-block:: proto
 
 	message EmbeddingLayerParams {
-	
-	    uint64 inputDim = 1; 
-	    uint64 outputChannels = 2; 
-	
-	    bool hasBias = 10; 
-	
-	    WeightParams weights = 20; 
-	    WeightParams bias = 21; 
-	
+
+	    uint64 inputDim = 1;
+	    uint64 outputChannels = 2;
+
+	    bool hasBias = 10;
+
+	    WeightParams weights = 20;
+	    WeightParams bias = 21;
+
 	}
 
 
@@ -1953,13 +1953,13 @@ Output
 .. code-block:: proto
 
 	message EmbeddingNDLayerParams {
-	
-	    uint64 vocabSize = 1; 
-	    uint64 embeddingSize = 2; 
-	    bool hasBias = 3; 
-	    WeightParams weights = 20; 
-	    WeightParams bias = 21; 
-	
+
+	    uint64 vocabSize = 1;
+	    uint64 embeddingSize = 2;
+	    bool hasBias = 3;
+	    WeightParams weights = 20;
+	    WeightParams bias = 21;
+
 	}
 
 
@@ -1997,19 +1997,19 @@ Output
 .. code-block:: proto
 
 	message BatchnormLayerParams {
-	
-	    uint64 channels = 1; 
-	
+
+	    uint64 channels = 1;
+
 	    bool computeMeanVar = 5;
 	    bool instanceNormalization = 6;
-	
+
 	    float epsilon = 10;
-	
-	    WeightParams gamma = 15; 
-	    WeightParams beta = 16; 
-	    WeightParams mean = 17; 
-	    WeightParams variance = 18; 
-	
+
+	    WeightParams gamma = 15;
+	    WeightParams beta = 16;
+	    WeightParams mean = 17;
+	    WeightParams variance = 18;
+
 	}
 
 
@@ -2057,36 +2057,36 @@ Only symmetric padding is supported with this option.
 .. code-block:: proto
 
 	message PoolingLayerParams {
-	
+
 	    enum PoolingType {
-	
+
 	        MAX = 0;
 	        AVERAGE = 1;
 	        L2 = 2;
-	
+
 	    }
-	    PoolingType type = 1; 
-	
+	    PoolingType type = 1;
+
 	    repeated uint64 kernelSize = 10;
-	
+
 	    repeated uint64 stride = 20;
-	
+
 	    message ValidCompletePadding {
-	
+
 	        repeated uint64 paddingAmounts = 10;
-	
+
 	    }
-	
+
 	    oneof PoolingPaddingType {
 	        ValidPadding valid = 30;
 	        SamePadding same = 31;
 	        ValidCompletePadding includeLastPixel = 32;
 	    }
-	
+
 	    bool avgPoolExcludePadding = 50;
-	
+
 	    bool globalPooling = 60;
-	
+
 	}
 
 
@@ -2103,9 +2103,9 @@ PoolingLayerParams.ValidCompletePadding
 .. code-block:: proto
 
 	    message ValidCompletePadding {
-	
+
 	        repeated uint64 paddingAmounts = 10;
-	
+
 	    }
 
 
@@ -2122,58 +2122,58 @@ ________________________________________________________________________________
 .. code-block:: proto
 
 	message Pooling3DLayerParams {
-	    
+
 	    enum PoolingType3D {
 	        MAX = 0;
 	        AVERAGE = 1;
 	    }
-	    
+
 	    // Whether to use Max or Average
 	    PoolingType3D type = 1;
-	    
+
 	    // Depth of the pooling region.
 	    int32 kernelDepth = 2;
-	    
+
 	    // Height of the pooling region.
 	    int32 kernelHeight = 3;
-	    
+
 	    // Width of the pooling region.
 	    int32 kernelWidth = 4;
-	    
+
 	    // Stride along the depth direction
 	    int32 strideDepth = 5;
-	    
+
 	    // Stride along the height direction
 	    int32 strideHeight = 6;
-	    
+
 	    // Stride along the width direction
 	    int32 strideWidth = 7;
-	    
+
 	    enum Pooling3DPaddingType {
 	        CUSTOM = 0;
 	        VALID = 1;
 	        SAME = 2;
 	    }
 	    Pooling3DPaddingType paddingType = 15;
-	    
+
 	    // Padding before the input in the depth direction.
 	    int32 customPaddingFront = 8;
-	    
+
 	    // Padding after the input in the depth direction.
 	    int32 customPaddingBack = 9;
-	    
+
 	    // Padding before the input in the height direction.
 	    int32 customPaddingTop = 10;
-	    
+
 	    // Padding after the input in the height direction.
 	    int32 customPaddingBottom = 11;
-	    
+
 	    // Padding before the input in the width direction.
 	    int32 customPaddingLeft = 12;
-	    
+
 	    // Padding after the input in the width direction.
 	    int32 customPaddingRight = 13;
-	    
+
 	    // If true, exclude zeros from padding in Average pooling.  Meaningless in Max Pooling.
 	    bool countExcludePadding = 14;
 	}
@@ -2192,12 +2192,12 @@ ________________________________________________________________________________
 .. code-block:: proto
 
 	message GlobalPooling3DLayerParams {
-	    
+
 	    enum GlobalPoolingType3D {
 	        MAX = 0;
 	        AVERAGE = 1;
 	    }
-	    
+
 	    // Whether to use Max or Average
 	    GlobalPoolingType3D type = 1;
 	}
@@ -2289,25 +2289,25 @@ with each of the supported types:
 .. code-block:: proto
 
 	message PaddingLayerParams {
-	
+
 	    message PaddingConstant {
 	        float value = 1;
 	    }
-	
+
 	    message PaddingReflection {
 	    }
-	
+
 	    message PaddingReplication {
 	    }
-	
+
 	    oneof PaddingType {
 	        PaddingConstant constant = 1;
 	        PaddingReflection reflection = 2;
 	        PaddingReplication replication = 3;
 	    }
-	
-	    BorderAmounts paddingAmounts = 10; 
-	
+
+	    BorderAmounts paddingAmounts = 10;
+
 	}
 
 
@@ -2388,9 +2388,9 @@ Output
 .. code-block:: proto
 
 	message ConcatLayerParams {
-	
+
 	    bool sequenceConcat = 100;
-	
+
 	}
 
 
@@ -2428,12 +2428,12 @@ that is, over a window "across" channels in 1x1 spatial neighborhoods.
 .. code-block:: proto
 
 	message LRNLayerParams {
-	
+
 	    float alpha = 1;
 	    float beta = 2;
-	    uint64 localSize = 3; 
-	    float k = 4; 
-	
+	    uint64 localSize = 3;
+	    float k = 4;
+
 	}
 
 
@@ -2471,7 +2471,7 @@ This layer is described by the following formula:
 .. code-block:: proto
 
 	message SoftmaxLayerParams {
-	
+
 	}
 
 
@@ -2502,9 +2502,9 @@ Output
 .. code-block:: proto
 
 	message SplitLayerParams {
-	
-	    uint64 nOutputs = 1; 
-	
+
+	    uint64 nOutputs = 1;
+
 	}
 
 
@@ -2540,9 +2540,9 @@ If only one input is provided, scalar addition is performed:
 .. code-block:: proto
 
 	message AddLayerParams {
-	
+
 	    float alpha = 1;
-	
+
 	}
 
 
@@ -2578,9 +2578,9 @@ If only one input is provided, scalar multiplication is performed:
 .. code-block:: proto
 
 	message MultiplyLayerParams {
-	
+
 	    float alpha = 1;
-	
+
 	}
 
 
@@ -2613,7 +2613,7 @@ The input is first modified by shifting and scaling:
 .. code-block:: proto
 
 	message UnaryFunctionLayerParams {
-	
+
 	    enum Operation {
 	        SQRT = 0;
 	        RSQRT = 1;
@@ -2624,16 +2624,16 @@ The input is first modified by shifting and scaling:
 	        ABS = 6;
 	        THRESHOLD = 7;
 	    }
-	    Operation type = 1; 
-	
+	    Operation type = 1;
+
 	    float alpha = 2;
-	
+
 	    float epsilon = 3;
-	
+
 	    float shift = 4;
-	
+
 	    float scale = 5;
-	
+
 	}
 
 
@@ -2666,30 +2666,30 @@ Output
 .. code-block:: proto
 
 	message UpsampleLayerParams {
-	
+
 	    repeated uint64 scalingFactor = 1;
-	
+
 	    repeated float fractionalScalingFactor = 7;
-	
+
 	    enum InterpolationMode {
-	
-	        NN = 0; 
-	        BILINEAR = 1; 
-	
+
+	        NN = 0;
+	        BILINEAR = 1;
+
 	    }
-	
+
 	    InterpolationMode mode = 5;
-	
+
 	    enum LinearUpsampleMode {
-	
+
 	        DEFAULT = 0;
 	        ALIGN_CORNERS_TRUE = 1;
 	        ALIGN_CORNERS_FALSE = 2;
-	
+
 	    }
-	
+
 	    LinearUpsampleMode linearUpsampleMode = 6;
-	
+
 	}
 
 
@@ -2721,11 +2721,11 @@ Output
 .. code-block:: proto
 
 	message ResizeBilinearLayerParams {
-	
+
 	    repeated uint64 targetSize = 1;
-	
+
 	    SamplingMode mode = 2;
-	
+
 	}
 
 
@@ -2774,17 +2774,17 @@ Output
 .. code-block:: proto
 
 	message CropResizeLayerParams {
-	
+
 	    repeated uint64 targetSize = 1;
-	
+
 	    bool normalizedCoordinates = 2;
-	
+
 	    SamplingMode mode = 3;
-	
+
 	    BoxCoordinatesMode boxIndicesMode = 4;
-	
+
 	    float spatialScale = 5;
-	
+
 	}
 
 
@@ -2815,11 +2815,11 @@ Output
 .. code-block:: proto
 
 	message BiasLayerParams {
-	
+
 	    repeated uint64 shape = 1;
-	
+
 	    WeightParams bias = 2;
-	
+
 	}
 
 
@@ -2851,17 +2851,17 @@ Output
 .. code-block:: proto
 
 	message ScaleLayerParams {
-	
+
 	    repeated uint64 shapeScale = 1;
-	
-	    WeightParams scale = 2; 
-	
-	    bool hasBias = 3; 
-	
+
+	    WeightParams scale = 2;
+
+	    bool hasBias = 3;
+
 	    repeated uint64 shapeBias = 4;
-	
+
 	    WeightParams bias = 5;
-	
+
 	}
 
 
@@ -2888,11 +2888,11 @@ Output:
 .. code-block:: proto
 
 	message LoadConstantLayerParams {
-	
+
 	    repeated uint64 shape = 1;
-	
+
 	    WeightParams data = 2;
-	
+
 	}
 
 
@@ -2927,9 +2927,9 @@ This layer is described by the following formula:
 .. code-block:: proto
 
 	message L2NormalizeLayerParams {
-	
+
 	    float epsilon = 1;
-	
+
 	}
 
 
@@ -2965,15 +2965,15 @@ because row major ordering is used by internal storage.
 .. code-block:: proto
 
 	message FlattenLayerParams {
-	
+
 	    enum FlattenOrder {
-	
+
 	        CHANNEL_FIRST = 0;
 	        CHANNEL_LAST = 1;
-	
+
 	    }
 	    FlattenOrder mode = 1;
-	
+
 	}
 
 
@@ -3014,17 +3014,17 @@ both the flattening and permuting requires the data to be rearranged.
 .. code-block:: proto
 
 	message ReshapeLayerParams {
-	
+
 	    repeated int64 targetShape = 1;
-	
+
 	    enum ReshapeOrder {
-	
+
 	        CHANNEL_FIRST = 0;
 	        CHANNEL_LAST = 1;
-	
+
 	    }
 	    ReshapeOrder mode = 2;
-	
+
 	}
 
 
@@ -3071,9 +3071,9 @@ Examples:
 .. code-block:: proto
 
 	message PermuteLayerParams {
-	
+
 	    repeated uint64 axis = 1;
-	
+
 	}
 
 
@@ -3160,17 +3160,17 @@ If block_size == 2 and mode == PIXEL_SHUFFLE, output will be the following
 .. code-block:: proto
 
 	message ReorganizeDataLayerParams {
-	
+
 	    enum ReorganizationType {
-	
+
 	        SPACE_TO_DEPTH = 0;
 	        DEPTH_TO_SPACE = 1;
 	        PIXEL_SHUFFLE = 2;
-	
+
 	    }
 	    ReorganizationType mode = 1;
-	    uint64 blockSize = 2; 
-	
+	    uint64 blockSize = 2;
+
 	}
 
 
@@ -3206,24 +3206,24 @@ Negative indexing is supported for startIndex and endIndex.
 .. code-block:: proto
 
 	message SliceLayerParams {
-	
-	    int64 startIndex = 1; 
-	    int64 endIndex = 2; 
-	    uint64 stride = 3; 
-	
+
+	    int64 startIndex = 1;
+	    int64 endIndex = 2;
+	    uint64 stride = 3;
+
 	    enum SliceAxis {
-	
+
 	        CHANNEL_AXIS = 0;
 	        HEIGHT_AXIS = 1;
 	        WIDTH_AXIS = 2;
-	
+
 	    }
 	    // The following mapping is used for interpreting this parameter:
 	    // CHANNEL_AXIS => axis = -3, input must have rank at least 3.
 	    // HEIGHT_AXIS => axis = -2, input must have rank at least 2.
 	    // WIDTH_AXIS => axis = -1
 	    SliceAxis axis = 4;
-	
+
 	}
 
 
@@ -3256,9 +3256,9 @@ Output
 .. code-block:: proto
 
 	message ReduceLayerParams {
-	
+
 	    enum ReduceOperation {
-	
+
 	        SUM = 0;
 	        AVG = 1;
 	        PROD = 2;
@@ -3268,23 +3268,23 @@ Output
 	        L2 = 6;
 	        MAX = 7;
 	        MIN = 8;
-	        ARGMAX = 9; 
-	
+	        ARGMAX = 9;
+
 	    }
-	    ReduceOperation mode = 1; 
-	
+	    ReduceOperation mode = 1;
+
 	    float epsilon = 2;
-	
+
 	    enum ReduceAxis {
-	
+
 	        CHW = 0;
 	        HW = 1;
 	        C = 2;
 	        H = 3;
 	        W = 4;
-	
+
 	    }
-	
+
 	    // The following mapping is used for interpreting this parameter:
 	    // CHW = axis [-3, -2, -1], input must have rank at least 3.
 	    // HW = axis [-2, -1], input must have rank at least 2.
@@ -3292,7 +3292,7 @@ Output
 	    // H = axis [-2]
 	    // W = axis [-1]
 	    ReduceAxis axis = 3;
-	
+
 	}
 
 
@@ -3348,11 +3348,11 @@ If two inputs are used, output is computed as follows:
 .. code-block:: proto
 
 	message CropLayerParams {
-	
+
 	    BorderAmounts cropAmounts = 1;
-	
+
 	    repeated uint64 offset = 5;
-	
+
 	}
 
 
@@ -3383,7 +3383,7 @@ Output
 .. code-block:: proto
 
 	message AverageLayerParams {
-	
+
 	}
 
 
@@ -3413,7 +3413,7 @@ Output
 .. code-block:: proto
 
 	message MaxLayerParams {
-	
+
 	}
 
 
@@ -3443,7 +3443,7 @@ Output
 .. code-block:: proto
 
 	message MinLayerParams {
-	
+
 	}
 
 
@@ -3475,9 +3475,9 @@ Output
 .. code-block:: proto
 
 	message DotProductLayerParams {
-	
+
 	    bool cosineSimilarity = 1;
-	
+
 	}
 
 
@@ -3516,13 +3516,13 @@ across spatial dimensions (i.e. last two dimensions).
 .. code-block:: proto
 
 	message MeanVarianceNormalizeLayerParams {
-	
+
 	    bool acrossChannels = 1;
-	
+
 	    bool normalizeVariance = 2;
-	
+
 	    float epsilon = 3;
-	
+
 	}
 
 
@@ -3552,9 +3552,9 @@ Output
 .. code-block:: proto
 
 	message SequenceRepeatLayerParams {
-	
+
 	    uint64 nRepetitions = 1;
-	
+
 	}
 
 
@@ -3599,25 +3599,25 @@ This layer is described by the following equation:
 .. code-block:: proto
 
 	message SimpleRecurrentLayerParams {
-	
-	    uint64 inputVectorSize = 1; 
-	    uint64 outputVectorSize = 2; 
-	
-	    ActivationParams activation = 10; 
-	
+
+	    uint64 inputVectorSize = 1;
+	    uint64 outputVectorSize = 2;
+
+	    ActivationParams activation = 10;
+
 	        If false output is just the result after final state update.
 	        If true, output is a sequence, containing outputs at all time steps.
 	    bool sequenceOutput = 15;
-	
-	    bool hasBiasVector = 20; 
-	
-	    WeightParams weightMatrix = 30; 
-	    WeightParams recursionMatrix = 31; 
-	    WeightParams biasVector = 32; 
-	
+
+	    bool hasBiasVector = 20;
+
+	    WeightParams weightMatrix = 30;
+	    WeightParams recursionMatrix = 31;
+	    WeightParams biasVector = 32;
+
 	    bool reverseInput = 100;
 	    // If true, then the node processes the input sequence from right to left
-	
+
 	}
 
 
@@ -3689,30 +3689,30 @@ Output
 .. code-block:: proto
 
 	message GRULayerParams {
-	
-	    uint64 inputVectorSize = 1; 
-	    uint64 outputVectorSize = 2; 
-	
+
+	    uint64 inputVectorSize = 1;
+	    uint64 outputVectorSize = 2;
+
 	    repeated ActivationParams activations = 10;
-	
+
 	    bool sequenceOutput = 15;
-	
+
 	    bool hasBiasVectors = 20;
-	
-	    WeightParams updateGateWeightMatrix = 30; 
-	    WeightParams resetGateWeightMatrix = 31; 
-	    WeightParams outputGateWeightMatrix = 32; 
-	
-	    WeightParams updateGateRecursionMatrix = 50; 
-	    WeightParams resetGateRecursionMatrix = 51; 
-	    WeightParams outputGateRecursionMatrix = 52; 
-	
-	    WeightParams updateGateBiasVector = 70; 
-	    WeightParams resetGateBiasVector = 71; 
-	    WeightParams outputGateBiasVector = 72; 
-	
+
+	    WeightParams updateGateWeightMatrix = 30;
+	    WeightParams resetGateWeightMatrix = 31;
+	    WeightParams outputGateWeightMatrix = 32;
+
+	    WeightParams updateGateRecursionMatrix = 50;
+	    WeightParams resetGateRecursionMatrix = 51;
+	    WeightParams outputGateRecursionMatrix = 52;
+
+	    WeightParams updateGateBiasVector = 70;
+	    WeightParams resetGateBiasVector = 71;
+	    WeightParams outputGateBiasVector = 72;
+
 	    bool reverseInput = 100;
-	
+
 	}
 
 
@@ -3781,19 +3781,19 @@ Output
 .. code-block:: proto
 
 	message LSTMParams {
-	
+
 	    bool sequenceOutput = 10;
-	
+
 	    bool hasBiasVectors = 20;
-	
+
 	    bool forgetBias = 30;
-	
+
 	    bool hasPeepholeVectors = 40;
-	
+
 	    bool coupledInputAndForgetGate = 50;
-	
+
 	    float cellClipThreshold = 60;
-	
+
 	}
 
 
@@ -3810,28 +3810,28 @@ Weights for long short-term memory (LSTM) layers
 .. code-block:: proto
 
 	message LSTMWeightParams {
-	
-	    WeightParams inputGateWeightMatrix = 1; 
-	    WeightParams forgetGateWeightMatrix = 2; 
-	    WeightParams blockInputWeightMatrix = 3; 
-	    WeightParams outputGateWeightMatrix = 4; 
-	
-	    WeightParams inputGateRecursionMatrix = 20; 
-	    WeightParams forgetGateRecursionMatrix = 21; 
-	    WeightParams blockInputRecursionMatrix = 22; 
-	    WeightParams outputGateRecursionMatrix = 23; 
-	
+
+	    WeightParams inputGateWeightMatrix = 1;
+	    WeightParams forgetGateWeightMatrix = 2;
+	    WeightParams blockInputWeightMatrix = 3;
+	    WeightParams outputGateWeightMatrix = 4;
+
+	    WeightParams inputGateRecursionMatrix = 20;
+	    WeightParams forgetGateRecursionMatrix = 21;
+	    WeightParams blockInputRecursionMatrix = 22;
+	    WeightParams outputGateRecursionMatrix = 23;
+
 	    //biases:
-	    WeightParams inputGateBiasVector = 40; 
-	    WeightParams forgetGateBiasVector = 41; 
-	    WeightParams blockInputBiasVector = 42; 
-	    WeightParams outputGateBiasVector = 43; 
-	
+	    WeightParams inputGateBiasVector = 40;
+	    WeightParams forgetGateBiasVector = 41;
+	    WeightParams blockInputBiasVector = 42;
+	    WeightParams outputGateBiasVector = 43;
+
 	    //peepholes:
-	    WeightParams inputGatePeepholeVector = 60; 
-	    WeightParams forgetGatePeepholeVector = 61; 
-	    WeightParams outputGatePeepholeVector = 62; 
-	
+	    WeightParams inputGatePeepholeVector = 60;
+	    WeightParams forgetGatePeepholeVector = 61;
+	    WeightParams outputGatePeepholeVector = 62;
+
 	}
 
 
@@ -3862,18 +3862,18 @@ Output
 .. code-block:: proto
 
 	message UniDirectionalLSTMLayerParams {
-	
-	    uint64 inputVectorSize = 1; 
-	    uint64 outputVectorSize = 2; 
-	
+
+	    uint64 inputVectorSize = 1;
+	    uint64 outputVectorSize = 2;
+
 	    repeated ActivationParams activations = 10;
-	
+
 	    LSTMParams params = 15;
-	
-	    LSTMWeightParams weightParams = 20; 
-	
+
+	    LSTMWeightParams weightParams = 20;
+
 	    bool reverseInput = 100;
-	
+
 	}
 
 
@@ -3932,17 +3932,17 @@ Output of the bi-dir layer:
 .. code-block:: proto
 
 	message BiDirectionalLSTMLayerParams {
-	
+
 	    uint64 inputVectorSize = 1;
 	    uint64 outputVectorSize = 2;
-	
+
 	    repeated ActivationParams activationsForwardLSTM = 10;
 	    repeated ActivationParams activationsBackwardLSTM = 11;
-	
+
 	    LSTMParams params = 15;
-	
+
 	    repeated LSTMWeightParams weightParams = 20;
-	
+
 	}
 
 
@@ -3959,7 +3959,7 @@ ________________________________________________________________________________
 .. code-block:: proto
 
 	message CustomLayerParams {
-	
+
 	    message CustomLayerParamValue {
 	        oneof value {
 	            double doubleValue = 10;
@@ -3969,12 +3969,12 @@ ________________________________________________________________________________
 	            bool boolValue = 50;
 	        }
 	    }
-	
+
 	    string className = 10; // The name of the class (conforming to MLCustomLayer) corresponding to this layer
 	    repeated WeightParams weights = 20; // Any weights -- these are serialized in binary format and memmapped at runtime
 	    map<string, CustomLayerParamValue> parameters = 30; // these may be handled as strings, so this should not be large
 	    string description = 40; // An (optional) description of the layer provided by the model creator. This information is displayed when viewing the model, but does not affect the model's execution on device.
-	
+
 	}
 
 
@@ -4037,9 +4037,9 @@ ________________________________________________________________________________
 .. code-block:: proto
 
 	message TransposeLayerParams {
-	
+
 	    repeated uint64 axes = 1; //
-	
+
 	}
 
 
@@ -4090,21 +4090,21 @@ This operation behaves as following:
 .. code-block:: proto
 
 	message BatchedMatMulLayerParams {
-	
+
 	    bool transposeA = 1;
 	    bool transposeB = 2;
-	
-	
-	    uint64 weightMatrixFirstDimension = 5; 
-	    uint64 weightMatrixSecondDimension = 6; 
-	
-	    bool hasBias = 7; 
-	
+
+
+	    uint64 weightMatrixFirstDimension = 5;
+	    uint64 weightMatrixSecondDimension = 6;
+
+	    bool hasBias = 7;
+
 	    WeightParams weights = 8;
-	    WeightParams bias = 9; 
-	
+	    WeightParams bias = 9;
+
 	    bool int8DynamicQuantize = 10;
-	
+
 	}
 
 
@@ -4132,9 +4132,9 @@ Output
 .. code-block:: proto
 
 	message ConcatNDLayerParams {
-	
+
 	    int64 axis = 1;
-	
+
 	}
 
 
@@ -4159,9 +4159,9 @@ Output shape is same as the input.
 .. code-block:: proto
 
 	message SoftmaxNDLayerParams {
-	
+
 	    int64 axis = 1;
-	
+
 	}
 
 
@@ -4182,9 +4182,9 @@ Output shape is same as the input.
 .. code-block:: proto
 
 	message ReverseLayerParams {
-	
+
 	    repeated bool reverseDim = 1;
-	
+
 	}
 
 
@@ -4250,10 +4250,10 @@ Output shape is same as the input.
 .. code-block:: proto
 
 	message ReverseSeqLayerParams {
-	
+
 	    int64 batchAxis = 1; // batch axis has to be strictly less than seq_axis
 	    int64 sequenceAxis = 2;
-	
+
 	}
 
 
@@ -4278,10 +4278,10 @@ Output: A tensor with shape as provided in the parameter "shape"
 .. code-block:: proto
 
 	message LoadConstantNDLayerParams {
-	
+
 	    repeated uint64 shape = 1;
 	    WeightParams data = 2;
-	
+
 	}
 
 
@@ -4313,9 +4313,9 @@ Output
 .. code-block:: proto
 
 	message FillLikeLayerParams {
-	
+
 	    float value = 1;
-	
+
 	}
 
 
@@ -4342,10 +4342,10 @@ Output
 .. code-block:: proto
 
 	message FillStaticLayerParams {
-	
+
 	    float value = 1;
 	    repeated uint64 targetShape = 2;
-	
+
 	}
 
 
@@ -4375,9 +4375,9 @@ Output
 .. code-block:: proto
 
 	message FillDynamicLayerParams {
-	
+
 	    float value = 1;
-	
+
 	}
 
 
@@ -4408,7 +4408,7 @@ output.rank = max(input[0].rank, input[1].rank, input[2].rank)
 .. code-block:: proto
 
 	message WhereBroadcastableLayerParams {
-	
+
 	}
 
 
@@ -4433,7 +4433,7 @@ Output shape is same as the input.
 .. code-block:: proto
 
 	message SinLayerParams {
-	
+
 	}
 
 
@@ -4458,7 +4458,7 @@ Output shape is same as the input.
 .. code-block:: proto
 
 	message CosLayerParams {
-	
+
 	}
 
 
@@ -4483,7 +4483,7 @@ Output shape is same as the input.
 .. code-block:: proto
 
 	message TanLayerParams {
-	
+
 	}
 
 
@@ -4508,7 +4508,7 @@ Output shape is same as the input.
 .. code-block:: proto
 
 	message AsinLayerParams {
-	
+
 	}
 
 
@@ -4533,7 +4533,7 @@ Output shape is same as the input.
 .. code-block:: proto
 
 	message AcosLayerParams {
-	
+
 	}
 
 
@@ -4558,7 +4558,7 @@ Output shape is same as the input.
 .. code-block:: proto
 
 	message AtanLayerParams {
-	
+
 	}
 
 
@@ -4583,7 +4583,7 @@ Output shape is same as the input.
 .. code-block:: proto
 
 	message SinhLayerParams {
-	
+
 	}
 
 
@@ -4608,7 +4608,7 @@ Output shape is same as the input.
 .. code-block:: proto
 
 	message CoshLayerParams {
-	
+
 	}
 
 
@@ -4633,7 +4633,7 @@ Output shape is same as the input.
 .. code-block:: proto
 
 	message TanhLayerParams {
-	
+
 	}
 
 
@@ -4658,7 +4658,7 @@ Output shape is same as the input.
 .. code-block:: proto
 
 	message AsinhLayerParams {
-	
+
 	}
 
 
@@ -4683,7 +4683,7 @@ Output shape is same as the input.
 .. code-block:: proto
 
 	message AcoshLayerParams {
-	
+
 	}
 
 
@@ -4708,7 +4708,7 @@ Output shape is same as the input.
 .. code-block:: proto
 
 	message AtanhLayerParams {
-	
+
 	}
 
 
@@ -4740,7 +4740,7 @@ Output
 .. code-block:: proto
 
 	message PowBroadcastableLayerParams {
-	
+
 	}
 
 
@@ -4765,7 +4765,7 @@ Output shape is same as the input.
 .. code-block:: proto
 
 	message Exp2LayerParams {
-	
+
 	}
 
 
@@ -4811,7 +4811,7 @@ output {shape = (7,1)}:
 .. code-block:: proto
 
 	message WhereNonZeroLayerParams {
-	
+
 	}
 
 
@@ -4840,10 +4840,10 @@ For rank higher than 2, the last 2 dimensions are treated as the matrix, while t
 .. code-block:: proto
 
 	message MatrixBandPartLayerParams {
-	
+
 	    int64 numLower = 1;
 	    int64 numUpper = 2;
-	
+
 	}
 
 
@@ -4866,9 +4866,9 @@ For rank higher than 2, the last 2 dimensions are treated as the matrix, while t
 .. code-block:: proto
 
 	message UpperTriangularLayerParams {
-	
+
 	    int64 k = 1; // Diagonal below which to zero elements. k = 0 (the default) is the main diagonal, k < 0 is below it and k > 0 is above
-	
+
 	}
 
 
@@ -4891,9 +4891,9 @@ For rank higher than 2, the last 2 dimensions are treated as the matrix, while t
 .. code-block:: proto
 
 	message LowerTriangularLayerParams {
-	
+
 	    int64 k = 1; // Diagonal above which to zero elements. k = 0 (the default) is the main diagonal, k < 0 is below it and k > 0 is above
-	
+
 	}
 
 
@@ -4917,7 +4917,7 @@ Output is a tensor with the same shape as the second input.
 .. code-block:: proto
 
 	message BroadcastToLikeLayerParams {
-	
+
 	}
 
 
@@ -4939,9 +4939,9 @@ parameter "targetShape".
 .. code-block:: proto
 
 	message BroadcastToStaticLayerParams {
-	
+
 	    repeated uint64 targetShape = 1;
-	
+
 	}
 
 
@@ -4964,7 +4964,7 @@ Output tensor has shape as specified by the values in the 2nd input tensor.
 .. code-block:: proto
 
 	message BroadcastToDynamicLayerParams {
-	
+
 	}
 
 
@@ -4983,7 +4983,7 @@ Requires 2 inputs and produces 1 output.
 .. code-block:: proto
 
 	message AddBroadcastableLayerParams {
-	
+
 	}
 
 
@@ -5002,7 +5002,7 @@ Requires 2 inputs and produces 1 output.
 .. code-block:: proto
 
 	message MaxBroadcastableLayerParams {
-	
+
 	}
 
 
@@ -5021,7 +5021,7 @@ Requires 2 inputs and produces 1 output.
 .. code-block:: proto
 
 	message MinBroadcastableLayerParams {
-	
+
 	}
 
 
@@ -5040,7 +5040,7 @@ Requires 2 inputs and produces 1 output.
 .. code-block:: proto
 
 	message ModBroadcastableLayerParams {
-	
+
 	}
 
 
@@ -5059,7 +5059,7 @@ Requires 2 inputs and produces 1 output.
 .. code-block:: proto
 
 	message FloorDivBroadcastableLayerParams {
-	
+
 	}
 
 
@@ -5078,7 +5078,7 @@ Requires 2 inputs and produces 1 output.
 .. code-block:: proto
 
 	message SubtractBroadcastableLayerParams {
-	
+
 	}
 
 
@@ -5097,7 +5097,7 @@ Requires 2 inputs and produces 1 output.
 .. code-block:: proto
 
 	message MultiplyBroadcastableLayerParams {
-	
+
 	}
 
 
@@ -5116,7 +5116,7 @@ Requires 2 inputs and produces 1 output.
 .. code-block:: proto
 
 	message DivideBroadcastableLayerParams {
-	
+
 	}
 
 
@@ -5163,9 +5163,9 @@ output shape = (2,) + (6, 8) + (5,) =  (2, 6, 8, 5)
 .. code-block:: proto
 
 	message GatherLayerParams {
-	
+
 	    int64 axis = 1;
-	
+
 	}
 
 
@@ -5182,10 +5182,10 @@ ________________________________________________________________________________
 .. code-block:: proto
 
 	message ScatterLayerParams {
-	
+
 	    int64 axis = 1;
-	    ScatterMode mode = 2; 
-	
+	    ScatterMode mode = 2;
+
 	}
 
 
@@ -5236,7 +5236,7 @@ output shape = (2, 7, 3) + (2, 5) = (2, 7, 3, 2, 5)
 .. code-block:: proto
 
 	message GatherNDLayerParams {
-	
+
 	}
 
 
@@ -5253,9 +5253,9 @@ ________________________________________________________________________________
 .. code-block:: proto
 
 	message ScatterNDLayerParams {
-	
-	    ScatterMode mode = 1; 
-	
+
+	    ScatterMode mode = 1;
+
 	}
 
 
@@ -5296,9 +5296,9 @@ output shape = (4, 5, 7)
 .. code-block:: proto
 
 	message GatherAlongAxisLayerParams {
-	
+
 	    int64 axis = 1;
-	
+
 	}
 
 
@@ -5340,10 +5340,10 @@ output shape = (2, 5, 6)
 .. code-block:: proto
 
 	message ScatterAlongAxisLayerParams {
-	
+
 	    int64 axis = 1;
-	    ScatterMode mode = 2; 
-	
+	    ScatterMode mode = 2;
+
 	}
 
 
@@ -5379,9 +5379,9 @@ output shape = (2, 4, 5, 2)
 .. code-block:: proto
 
 	message StackLayerParams {
-	
+
 	    int64 axis = 1;
-	
+
 	}
 
 
@@ -5415,9 +5415,9 @@ output shape = (25,3,2)
 .. code-block:: proto
 
 	message RankPreservingReshapeLayerParams {
-	
+
 	    repeated int64 targetShape = 1;
-	
+
 	}
 
 
@@ -5468,9 +5468,9 @@ output shape = (20,17,14)
 
 	message ConstantPaddingLayerParams {
 	    float value = 1;
-	
+
 	    repeated uint64 padAmounts = 2;
-	
+
 	    bool padToGivenOutputSizeMode = 3;
 	}
 
@@ -5502,11 +5502,11 @@ Output
 .. code-block:: proto
 
 	message RandomNormalLikeLayerParams {
-	
+
 	    int64 seed = 1;
 	    float mean = 2;
 	    float stdDev = 3;
-	
+
 	}
 
 
@@ -5534,12 +5534,12 @@ Output
 .. code-block:: proto
 
 	message RandomNormalStaticLayerParams {
-	
+
 	    int64 seed = 1;
 	    float mean = 2;
 	    float stdDev = 3;
 	    repeated uint64 outputShape = 4;
-	
+
 	}
 
 
@@ -5569,11 +5569,11 @@ Output
 .. code-block:: proto
 
 	message RandomNormalDynamicLayerParams {
-	
+
 	    int64 seed = 1;
 	    float mean = 2;
 	    float stdDev = 3;
-	
+
 	}
 
 
@@ -5604,11 +5604,11 @@ Output
 .. code-block:: proto
 
 	message RandomUniformLikeLayerParams {
-	
+
 	    int64 seed = 1;
 	    float minVal = 2;
 	    float maxVal = 3;
-	
+
 	}
 
 
@@ -5636,12 +5636,12 @@ Output
 .. code-block:: proto
 
 	message RandomUniformStaticLayerParams {
-	
+
 	    int64 seed = 1;
 	    float minVal = 2;
 	    float maxVal = 3;
 	    repeated uint64 outputShape = 4;
-	
+
 	}
 
 
@@ -5671,11 +5671,11 @@ Output
 .. code-block:: proto
 
 	message RandomUniformDynamicLayerParams {
-	
+
 	    int64 seed = 1;
 	    float minVal = 2;
 	    float maxVal = 3;
-	
+
 	}
 
 
@@ -5705,10 +5705,10 @@ Output
 .. code-block:: proto
 
 	message RandomBernoulliLikeLayerParams {
-	
+
 	    int64 seed = 1;
 	    float prob = 2;
-	
+
 	}
 
 
@@ -5735,11 +5735,11 @@ Output
 .. code-block:: proto
 
 	message RandomBernoulliStaticLayerParams {
-	
+
 	    int64 seed = 1;
 	    float prob = 2;
 	    repeated uint64 outputShape = 3;
-	
+
 	}
 
 
@@ -5768,10 +5768,10 @@ Output
 .. code-block:: proto
 
 	message RandomBernoulliDynamicLayerParams {
-	
+
 	    int64 seed = 1;
 	    float prob = 2;
-	
+
 	}
 
 
@@ -5800,7 +5800,7 @@ Then the shape of the output is [D_1, D_2, ... , D_(R-1), numSamples] (Rank = R)
 .. code-block:: proto
 
 	message CategoricalDistributionLayerParams {
-	
+
 	    int64 seed = 1;
 	    int64 numSamples = 2;
 	    bool isLogits = 3;
@@ -5830,11 +5830,11 @@ Parameters:
 .. code-block:: proto
 
 	message ReduceL1LayerParams {
-	
+
 	    repeated int64 axes = 1;
 	    bool keepDims = 2;
 	    bool reduceAll = 3;
-	
+
 	}
 
 
@@ -5859,11 +5859,11 @@ Parameters:
 .. code-block:: proto
 
 	message ReduceL2LayerParams {
-	
+
 	    repeated int64 axes = 1;
 	    bool keepDims = 2;
 	    bool reduceAll = 3;
-	
+
 	}
 
 
@@ -5888,11 +5888,11 @@ Parameters:
 .. code-block:: proto
 
 	message ReduceMaxLayerParams {
-	
+
 	    repeated int64 axes = 1;
 	    bool keepDims = 2;
 	    bool reduceAll = 3;
-	
+
 	}
 
 
@@ -5917,11 +5917,11 @@ Parameters:
 .. code-block:: proto
 
 	message ReduceMinLayerParams {
-	
+
 	    repeated int64 axes = 1;
 	    bool keepDims = 2;
 	    bool reduceAll = 3;
-	
+
 	}
 
 
@@ -5946,11 +5946,11 @@ Parameters:
 .. code-block:: proto
 
 	message ReduceSumLayerParams {
-	
+
 	    repeated int64 axes = 1;
 	    bool keepDims = 2;
 	    bool reduceAll = 3;
-	
+
 	}
 
 
@@ -5975,11 +5975,11 @@ Parameters:
 .. code-block:: proto
 
 	message ReduceProdLayerParams {
-	
+
 	    repeated int64 axes = 1;
 	    bool keepDims = 2;
 	    bool reduceAll = 3;
-	
+
 	}
 
 
@@ -6004,11 +6004,11 @@ Parameters:
 .. code-block:: proto
 
 	message ReduceMeanLayerParams {
-	
+
 	    repeated int64 axes = 1;
 	    bool keepDims = 2;
 	    bool reduceAll = 3;
-	
+
 	}
 
 
@@ -6033,11 +6033,11 @@ Parameters:
 .. code-block:: proto
 
 	message ReduceLogSumLayerParams {
-	
+
 	    repeated int64 axes = 1;
 	    bool keepDims = 2;
 	    bool reduceAll = 3;
-	
+
 	}
 
 
@@ -6062,11 +6062,11 @@ Parameters:
 .. code-block:: proto
 
 	message ReduceSumSquareLayerParams {
-	
+
 	    repeated int64 axes = 1;
 	    bool keepDims = 2;
 	    bool reduceAll = 3;
-	
+
 	}
 
 
@@ -6091,11 +6091,11 @@ Parameters:
 .. code-block:: proto
 
 	message ReduceLogSumExpLayerParams {
-	
+
 	    repeated int64 axes = 1;
 	    bool keepDims = 2;
 	    bool reduceAll = 3;
-	
+
 	}
 
 
@@ -6128,9 +6128,9 @@ output shape = (10,5,1,1)
 .. code-block:: proto
 
 	message ExpandDimsLayerParams {
-	
+
 	    repeated int64 axes = 1;
-	
+
 	}
 
 
@@ -6178,9 +6178,9 @@ output shape:  (6, 2)
 .. code-block:: proto
 
 	message FlattenTo2DLayerParams {
-	
+
 	    int64 axis = 1;
-	
+
 	}
 
 
@@ -6202,9 +6202,9 @@ parameter "targetShape".
 .. code-block:: proto
 
 	message ReshapeStaticLayerParams {
-	
+
 	    repeated int64 targetShape = 1;
-	
+
 	}
 
 
@@ -6228,7 +6228,7 @@ Output is a tensor with the same shape as the second input.
 .. code-block:: proto
 
 	message ReshapeLikeLayerParams {
-	
+
 	}
 
 
@@ -6251,7 +6251,7 @@ Output tensor has shape as specified by the values in the 2nd input tensor.
 .. code-block:: proto
 
 	message ReshapeDynamicLayerParams {
-	
+
 	}
 
 
@@ -6291,10 +6291,10 @@ output shape = (1,)
 .. code-block:: proto
 
 	message SqueezeLayerParams {
-	
+
 	    repeated int64 axes = 1;
 	    bool squeezeAll = 2; // if true squeeze all dimensions that are 1.
-	
+
 	}
 
 
@@ -6326,11 +6326,11 @@ output shape, for both outputs = (45, K, 10, 5)
 .. code-block:: proto
 
 	message TopKLayerParams {
-	
-	    int64 axis = 1; 
-	    uint64 K = 2; 
-	    bool useBottomK = 3; 
-	
+
+	    int64 axis = 1;
+	    uint64 K = 2;
+	    bool useBottomK = 3;
+
 	}
 
 
@@ -6363,10 +6363,10 @@ output shape = (1,), if removeDim = False or True
 .. code-block:: proto
 
 	message ArgMaxLayerParams {
-	
+
 	    int64 axis = 1;
 	    bool removeDim = 2;
-	
+
 	}
 
 
@@ -6399,10 +6399,10 @@ output shape = (1,), if removeDim = False or True
 .. code-block:: proto
 
 	message ArgMinLayerParams {
-	
+
 	    int64 axis = 1;
 	    bool removeDim = 2;
-	
+
 	}
 
 
@@ -6437,11 +6437,11 @@ output shape:  (2, 3, 4)
 .. code-block:: proto
 
 	message SplitNDLayerParams {
-	
+
 	    int64 axis = 1;
 	    uint64 numSplits = 2;
 	    repeated uint64 splitSizes = 3;
-	
+
 	}
 
 
@@ -6462,7 +6462,7 @@ Output shape is same as the input.
 .. code-block:: proto
 
 	message CeilLayerParams {
-	
+
 	}
 
 
@@ -6483,7 +6483,7 @@ Output shape is same as the input.
 .. code-block:: proto
 
 	message RoundLayerParams {
-	
+
 	}
 
 
@@ -6504,7 +6504,7 @@ Output shape is same as the input.
 .. code-block:: proto
 
 	message FloorLayerParams {
-	
+
 	}
 
 
@@ -6525,7 +6525,7 @@ Output shape is same as the input.
 .. code-block:: proto
 
 	message SignLayerParams {
-	
+
 	}
 
 
@@ -6552,10 +6552,10 @@ Output shape is same as the input.
 .. code-block:: proto
 
 	message ClipLayerParams {
-	
+
 	    float minVal = 1;
 	    float maxVal = 2;
-	
+
 	}
 
 
@@ -6612,15 +6612,15 @@ This is equivalent to input[:3:2, 2, ::2]
 .. code-block:: proto
 
 	message SliceStaticLayerParams {
-	
+
 	    repeated int64 beginIds = 1;
 	    repeated bool beginMasks = 2;
 	    repeated int64 endIds = 3;
 	    repeated bool endMasks = 4;
 	    repeated int64 strides = 5;
 	    repeated bool squeezeMasks = 6;
-	
-	
+
+
 	}
 
 
@@ -6654,13 +6654,13 @@ The 7th input, if present, corresponds to "squeezeMasks". In this case the value
 .. code-block:: proto
 
 	message SliceDynamicLayerParams {
-	
+
 	    repeated bool beginMasks = 2;
 	    repeated int64 endIds = 3;
 	    repeated bool endMasks = 4;
 	    repeated int64 strides = 5;
 	    repeated bool squeezeMasks = 6;
-	
+
 	}
 
 
@@ -6705,9 +6705,9 @@ output shape = (2, 8, 12)
 .. code-block:: proto
 
 	message TileLayerParams {
-	
+
 	    repeated uint64 reps = 1;
-	
+
 	}
 
 
@@ -6730,7 +6730,7 @@ Output is always a rank 1 tensor.
 .. code-block:: proto
 
 	message GetShapeLayerParams {
-	
+
 	}
 
 
@@ -6754,7 +6754,7 @@ Output shape is same as the input.
 .. code-block:: proto
 
 	message ErfLayerParams {
-	
+
 	}
 
 
@@ -6787,17 +6787,17 @@ Output shape is same as the input.
 .. code-block:: proto
 
 	message GeluLayerParams {
-	
+
 	    enum GeluMode {
-	
+
 	        EXACT = 0;
 	        TANH_APPROXIMATION = 1;
 	        SIGMOID_APPROXIMATION = 2;
-	
+
 	    }
-	
-	    GeluMode mode = 1; 
-	
+
+	    GeluMode mode = 1;
+
 	}
 
 
@@ -6818,11 +6818,11 @@ Output is a rank 1 tensor.
 .. code-block:: proto
 
 	message RangeStaticLayerParams {
-	
+
 	    float endValue = 1;
 	    float startValue = 2;
 	    float stepSizeValue = 3;
-	
+
 	}
 
 
@@ -6849,10 +6849,10 @@ The third input, if present, corresponds to "stepSizeValue". In this case the va
 .. code-block:: proto
 
 	message RangeDynamicLayerParams {
-	
+
 	    float startValue = 2;
 	    float stepSizeValue = 3;
-	
+
 	}
 
 
@@ -6892,11 +6892,11 @@ where
 .. code-block:: proto
 
 	message SlidingWindowsLayerParams {
-	
+
 	    int64 axis = 1;
 	    uint64 windowSize = 2;
 	    uint64 step = 3;
-	
+
 	}
 
 
@@ -6932,12 +6932,12 @@ normalized shape = (7,) or (6,7) or (5,6,7) or (10,5,6,7)
 .. code-block:: proto
 
 	message LayerNormalizationLayerParams {
-	
+
 	    repeated int64 normalizedShape = 1;
 	    float eps = 2;
 	    WeightParams gamma = 3;
 	    WeightParams beta = 4;
-	
+
 	}
 
 
@@ -7000,11 +7000,11 @@ the padded outputs are not required.
 
 	message NonMaximumSuppressionLayerParams {
 	    float iouThreshold = 1;
-	
+
 	    float scoreThreshold = 2;
-	
+
 	    uint64 maxBoxes = 3;
-	
+
 	    bool perClassSuppression = 4;
 	}
 
@@ -7036,10 +7036,10 @@ Available (iOS >= 14, macOS >= 11.0, watchOS >= 7)
 .. code-block:: proto
 
 	message ClampedReLULayerParams {
-	
+
 	    float alpha = 1;
 	    float beta = 2;
-	
+
 	}
 
 
@@ -7078,10 +7078,10 @@ output values = [[2, 1, 0], [1, 2, 0]], descending = True
 .. code-block:: proto
 
 	message ArgSortLayerParams {
-	
-	    int64 axis = 1; 
+
+	    int64 axis = 1;
 	    bool descending = 2;
-	
+
 	}
 
 
@@ -7092,7 +7092,7 @@ output values = [[2, 1, 0], [1, 2, 0]], descending = True
 SliceBySizeLayerParams
 ________________________________________________________________________________
 
-A layer that does slice operation by providing size to be extracted 
+A layer that does slice operation by providing size to be extracted
 from the given input tensor.
 
 Requires 2 inputs and produces 1 output.
@@ -7113,10 +7113,10 @@ Output: x[:, begin:begin+2, :]
 .. code-block:: proto
 
 	message SliceBySizeLayerParams {
-	
+
 	    int64 size = 2;
 	    int64 axis = 3;
-	
+
 	}
 
 
@@ -7133,24 +7133,24 @@ A neural network specialized as a classifier.
 .. code-block:: proto
 
 	message NeuralNetworkClassifier {
-	
+
 	    repeated NeuralNetworkLayer layers = 1;
 	    repeated NeuralNetworkPreprocessing preprocessing = 2;
-	
+
 	    // use this enum value to determine the input tensor shapes to the neural network, for multiarray inputs
 	    NeuralNetworkMultiArrayShapeMapping arrayInputShapeMapping = 5;
-	
+
 	    // use this enum value to determine the input tensor shapes to the neural network, for image inputs
 	    NeuralNetworkImageShapeMapping imageInputShapeMapping = 6;
-	
+
 	    NetworkUpdateParameters updateParams = 10;
-	
+
 	    // The set of labels for every possible class.
 	    oneof ClassLabels {
 	        StringVector stringClassLabels = 100;
 	        Int64Vector int64ClassLabels = 101;
 	    }
-	
+
 	    // The name of the output blob containing the probability of each class.
 	    // In other words, the score vector. Must be a 1-D tensor with the same
 	    // number and order of elements as ClassLabels.
@@ -7171,9 +7171,9 @@ ________________________________________________________________________________
 .. code-block:: proto
 
 	message OneHotLayerParams {
-	
-	    uint64 oneHotVectorSize = 1; 
-	    int64 axis = 2; 
+
+	    uint64 oneHotVectorSize = 1;
+	    int64 axis = 2;
 	    float onValue = 3;
 	    float offValue = 4;
 	}
@@ -7192,12 +7192,12 @@ ________________________________________________________________________________
 .. code-block:: proto
 
 	message CumSumLayerParams {
-	
-	    int64 axis = 1; 
-	
+
+	    int64 axis = 1;
+
 	    bool excludeFinalSum = 2;
-	
-	    bool reverse = 3; 
+
+	    bool reverse = 3;
 	}
 
 
@@ -7214,18 +7214,18 @@ A neural network specialized as a regressor.
 .. code-block:: proto
 
 	message NeuralNetworkRegressor {
-	
+
 	    repeated NeuralNetworkLayer layers = 1;
 	    repeated NeuralNetworkPreprocessing preprocessing = 2;
-	
+
 	    // use this enum value to determine the input tensor shapes to the neural network, for multiarray inputs
 	    NeuralNetworkMultiArrayShapeMapping arrayInputShapeMapping = 5;
-	
+
 	    // use this enum value to determine the input tensor shapes to the neural network, for image inputs
 	    NeuralNetworkImageShapeMapping imageInputShapeMapping = 6;
-	
+
 	    NetworkUpdateParameters updateParams = 10;
-	
+
 	}
 
 
@@ -7242,13 +7242,13 @@ Details on how the network will be updated
 .. code-block:: proto
 
 	message NetworkUpdateParameters {
-	
+
 	    repeated LossLayer lossLayers = 1;
 	    Optimizer optimizer = 2;
 	    Int64Parameter epochs = 3;
-	
+
 	    BoolParameter shuffle = 10;
-	
+
 	    Int64Parameter seed = 20;
 	}
 
@@ -7266,15 +7266,15 @@ Loss layer - categorical cross entropy and mean squared error are the only suppo
 .. code-block:: proto
 
 	message LossLayer {
-	
+
 	    string name = 1;
 	    oneof LossLayerType {
-	
+
 	        CategoricalCrossEntropyLossLayer categoricalCrossEntropyLossLayer = 10;
 	        MeanSquaredErrorLossLayer meanSquaredErrorLossLayer = 11;
-	
+
 	    }
-	
+
 	}
 
 
@@ -7299,10 +7299,10 @@ Loss_{CCE}(input, target) = -\sum_{i=1}^{N} (target == i) log( input[i] ) = - lo
 .. code-block:: proto
 
 	message CategoricalCrossEntropyLossLayer {
-	
+
 	    string input = 1;
 	    string target = 2;
-	
+
 	}
 
 
@@ -7320,10 +7320,10 @@ specifying input and target
 .. code-block:: proto
 
 	message MeanSquaredErrorLossLayer {
-	
+
 	    string input = 1;
 	    string target = 2;
-	
+
 	}
 
 
@@ -7340,14 +7340,14 @@ Optimizer - stochastic gradient descent and adam are the only supported optimize
 .. code-block:: proto
 
 	message Optimizer {
-	
+
 	    oneof OptimizerType {
-	
+
 	        SGDOptimizer sgdOptimizer = 10;
 	        AdamOptimizer adamOptimizer = 11;
-	
+
 	    }
-	
+
 	}
 
 
@@ -7365,11 +7365,11 @@ specifying configurable learning rate, mini batch size, and momentum
 .. code-block:: proto
 
 	message SGDOptimizer {
-	
+
 	    DoubleParameter learningRate = 1;
 	    Int64Parameter miniBatchSize = 2;
 	    DoubleParameter momentum = 3;
-	
+
 	}
 
 
@@ -7387,13 +7387,13 @@ specifying configurable learning rate, mini batch size, betas, and eps
 .. code-block:: proto
 
 	message AdamOptimizer {
-	
+
 	    DoubleParameter learningRate = 1;
 	    Int64Parameter miniBatchSize = 2;
 	    DoubleParameter beta1 = 3;
 	    DoubleParameter beta2 = 4;
 	    DoubleParameter eps = 5;
-	
+
 	}
 
 
@@ -7413,15 +7413,15 @@ BoxCoordinatesMode.Coordinates
 .. code-block:: proto
 
 	    enum Coordinates {
-	
+
 	        CORNERS_HEIGHT_FIRST = 0;
-	
+
 	        CORNERS_WIDTH_FIRST = 1;
-	
+
 	        CENTER_SIZE_HEIGHT_FIRST = 2;
-	
+
 	        CENTER_SIZE_WIDTH_FIRST = 3;
-	
+
 	    }
 
 
@@ -7463,10 +7463,10 @@ FlattenLayerParams.FlattenOrder
 .. code-block:: proto
 
 	    enum FlattenOrder {
-	
+
 	        CHANNEL_FIRST = 0;
 	        CHANNEL_LAST = 1;
-	
+
 	    }
 
 
@@ -7479,11 +7479,11 @@ GeluLayerParams.GeluMode
 .. code-block:: proto
 
 	    enum GeluMode {
-	
+
 	        EXACT = 0;
 	        TANH_APPROXIMATION = 1;
 	        SIGMOID_APPROXIMATION = 2;
-	
+
 	    }
 
 
@@ -7510,12 +7510,12 @@ ________________________________________________________________________________
 .. code-block:: proto
 
 	enum NeuralNetworkImageShapeMapping {
-	
-	
+
+
 	    RANK5_IMAGE_MAPPING = 0;
-	
+
 	    RANK4_IMAGE_MAPPING = 1;
-	
+
 	}
 
 
@@ -7528,12 +7528,12 @@ ________________________________________________________________________________
 .. code-block:: proto
 
 	enum NeuralNetworkMultiArrayShapeMapping {
-	
-	
+
+
 	    RANK5_ARRAY_MAPPING = 0;
-	
+
 	    EXACT_ARRAY_MAPPING = 1;
-	
+
 	}
 
 
@@ -7587,11 +7587,11 @@ PoolingLayerParams.PoolingType
 .. code-block:: proto
 
 	    enum PoolingType {
-	
+
 	        MAX = 0;
 	        AVERAGE = 1;
 	        L2 = 2;
-	
+
 	    }
 
 
@@ -7604,13 +7604,13 @@ ReduceLayerParams.ReduceAxis
 .. code-block:: proto
 
 	    enum ReduceAxis {
-	
+
 	        CHW = 0;
 	        HW = 1;
 	        C = 2;
 	        H = 3;
 	        W = 4;
-	
+
 	    }
 
 
@@ -7623,7 +7623,7 @@ ReduceLayerParams.ReduceOperation
 .. code-block:: proto
 
 	    enum ReduceOperation {
-	
+
 	        SUM = 0;
 	        AVG = 1;
 	        PROD = 2;
@@ -7633,8 +7633,8 @@ ReduceLayerParams.ReduceOperation
 	        L2 = 6;
 	        MAX = 7;
 	        MIN = 8;
-	        ARGMAX = 9; 
-	
+	        ARGMAX = 9;
+
 	    }
 
 
@@ -7647,11 +7647,11 @@ ReorganizeDataLayerParams.ReorganizationType
 .. code-block:: proto
 
 	    enum ReorganizationType {
-	
+
 	        SPACE_TO_DEPTH = 0;
 	        DEPTH_TO_SPACE = 1;
 	        PIXEL_SHUFFLE = 2;
-	
+
 	    }
 
 
@@ -7664,10 +7664,10 @@ ReshapeLayerParams.ReshapeOrder
 .. code-block:: proto
 
 	    enum ReshapeOrder {
-	
+
 	        CHANNEL_FIRST = 0;
 	        CHANNEL_LAST = 1;
-	
+
 	    }
 
 
@@ -7680,10 +7680,10 @@ SamePadding.SamePaddingMode
 .. code-block:: proto
 
 	    enum SamePaddingMode {
-	
+
 	        BOTTOM_RIGHT_HEAVY = 0;
 	        TOP_LEFT_HEAVY = 1;
-	
+
 	    }
 
 
@@ -7696,15 +7696,15 @@ SamplingMode.Method
 .. code-block:: proto
 
 	    enum Method {
-	
+
 	        STRICT_ALIGN_ENDPOINTS_MODE = 0;
-	
+
 	        ALIGN_ENDPOINTS_MODE = 1;
-	
+
 	        UPSAMPLE_MODE = 2;
-	
+
 	        ROI_ALIGN_MODE = 3;
-	
+
 	    }
 
 
@@ -7717,15 +7717,15 @@ ________________________________________________________________________________
 .. code-block:: proto
 
 	enum ScatterMode {
-	
+
 	    SCATTER_UPDATE = 0;
-	    SCATTER_ADD = 1; 
-	    SCATTER_SUB = 2; 
-	    SCATTER_MUL = 3; 
-	    SCATTER_DIV = 4; 
-	    SCATTER_MAX = 5; 
-	    SCATTER_MIN = 6; 
-	
+	    SCATTER_ADD = 1;
+	    SCATTER_SUB = 2;
+	    SCATTER_MUL = 3;
+	    SCATTER_DIV = 4;
+	    SCATTER_MAX = 5;
+	    SCATTER_MIN = 6;
+
 	}
 
 
@@ -7738,11 +7738,11 @@ SliceLayerParams.SliceAxis
 .. code-block:: proto
 
 	    enum SliceAxis {
-	
+
 	        CHANNEL_AXIS = 0;
 	        HEIGHT_AXIS = 1;
 	        WIDTH_AXIS = 2;
-	
+
 	    }
 
 
@@ -7801,10 +7801,10 @@ UpsampleLayerParams.InterpolationMode
 .. code-block:: proto
 
 	    enum InterpolationMode {
-	
-	        NN = 0; 
-	        BILINEAR = 1; 
-	
+
+	        NN = 0;
+	        BILINEAR = 1;
+
 	    }
 
 
@@ -7828,9 +7828,9 @@ ALIGN_CORNERS_FALSE:
 .. code-block:: proto
 
 	    enum LinearUpsampleMode {
-	
+
 	        DEFAULT = 0;
 	        ALIGN_CORNERS_TRUE = 1;
 	        ALIGN_CORNERS_FALSE = 2;
-	
+
 	    }

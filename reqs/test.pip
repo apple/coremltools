@@ -19,8 +19,10 @@ scikit-learn; python_version > '3.7'
 scipy
 sympy
 tensorflow==1.14.0; python_version < '3.8'
-torch==1.5.0
-torchvision
+torch==1.4.0; python_version == '2.7'
+torch==1.5.0; python_version > '2.7'
+torchvision; python_version == '2.7'
+torchvision==0.6.0; python_version > '2.7'
 xgboost
 mock
 wrapt

@@ -12,18 +12,18 @@
 #include "../build/format/Model.pb.h"
 
 namespace CoreML {
-    
+
     template <>
     Result validate<MLModelType_visionFeaturePrint>(const Specification::Model &format) {
         const auto &interface = format.description();
-        
+
         // make sure model is a vision feature print
         if (!format.has_visionfeatureprint()) {
             return Result(ResultType::INVALID_MODEL_PARAMETERS, "Model not a vision feature print.");
         }
-        
+
         Result result;
-        
+
         // validate the inputs: only one input with image type is allowed
         result = validateDescriptionsContainFeatureWithTypes(interface.input(), 1, {Specification::FeatureType::kImageType});
         if (!result.good()) {
@@ -37,7 +37,7 @@ namespace CoreML {
                 if (visionFeaturePrint.scene().version() == Specification::CoreMLModels::VisionFeaturePrint_Scene_SceneVersion_SCENE_VERSION_INVALID) {
                     return Result(ResultType::INVALID_MODEL_PARAMETERS, "Version for scene is invalid");
                 }
-                
+
                 if (visionFeaturePrint.scene().version() == Specification::CoreMLModels::VisionFeaturePrint_Scene_SceneVersion_SCENE_VERSION_1) {
                     // validate the outputs: only one output with multiarray type is allowed for version 1
                     result = validateDescriptionsContainFeatureWithTypes(interface.output(), 1, {Specification::FeatureType::kMultiArrayType});
@@ -75,8 +75,8 @@ namespace CoreML {
             case Specification::CoreMLModels::VisionFeaturePrint::VISIONFEATUREPRINTTYPE_NOT_SET:
                 return Result(ResultType::INVALID_MODEL_PARAMETERS, "Type for vision feature print not set");
         }
-        
+
         return result;
     }
-    
+
 }

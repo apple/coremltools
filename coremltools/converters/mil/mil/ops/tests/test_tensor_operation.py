@@ -603,7 +603,7 @@ class TestNonZero:
         def build(x):
             return [mb.non_zero(x=x)]
 
-        expected_output_types = [(UNK_SYM, 2, types.fp32)]
+        expected_output_types = [(UNK_SYM, 2, types.int)]
         expected_outputs = [np.array(np.transpose(np.nonzero(x_val)))]
 
         run_compare_builder(
@@ -1015,6 +1015,7 @@ class TestTile:
         assert is_close(np.tile(x, reps=(2,)), v.val)
 
 
+@pytest.mark.skip(reason="rdar://65198011 (Re-enable Conv3dTranspose and DynamicTile unit tests)")
 class TestDynamicTile:
     @pytest.mark.parametrize(
         "use_cpu_only, backend", itertools.product([True, False], backends,)

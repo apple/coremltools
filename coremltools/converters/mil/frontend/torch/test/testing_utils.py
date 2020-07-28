@@ -26,6 +26,9 @@ class ModuleWrapper(nn.Module):
     def forward(self, x):
         return self.function(x, **self.kwargs)
 
+np.random.seed(1984)
+
+
 def _flatten(object):
     flattened_list = []
     for item in object:

@@ -49,7 +49,7 @@ def convert_nodes(context, graph):
         _logging.info("Converting op {} : {}".format(node.name, node.kind))
         if _add_op is None:
             raise RuntimeError(
-                "PyTorch convert function for op {} not implemented".format(node.kind)
+                "PyTorch convert function for op '{}' not implemented.".format(node.kind)
             )
         else:
             _add_op(context, node)
@@ -353,7 +353,7 @@ def _convolution(context, node):
     # Expand padding. Torch accepts either an int (for all dimensions) or an n-tuple of ints (one per dimension), but
     # we require a (2 * n)-tuple, where n is the number of spatial dimensions, start and end for each spatial dimension
     pad = inputs[4].val
-    
+
     if weight.val.ndim in (3, 4):
         # 1D and 2D: Need to explicitly state L-R, T-B pad
         pad = _np.repeat(pad, 2)
@@ -445,7 +445,7 @@ def _convolution(context, node):
         kwargs["weight"] = weight_transpose
         conv = mb.conv_transpose(**kwargs)
         if any(post_crop):
-            # TODO: rdar://65575826 (PyTorch converter: output_padding mapping to slice 
+            # TODO: rdar://65575826 (PyTorch converter: output_padding mapping to slice
             # instead of crop layer for 1 and 3D ConvTranspose)
             if len(post_crop) != 4:
                 raise ValueError("output_padding is supported only for ConvTranspose2D!")
@@ -798,6 +798,23 @@ def batch_norm(context, node):
 
 
 @register_torch_op
+def instance_norm(context, node):
+    inputs = _get_inputs(context, node, expected=9)
+    x = inputs[0]
+    weight = inputs[1]
+    bias = inputs[2]
+    eps = inputs[7]
+    x = mb.instance_norm(
+        x=x,
+        gamma=weight,
+        beta=bias,
+        epsilon=eps,
+        name=node.name,
+    )
+    context.add(x)
+
+
+@register_torch_op
 def embedding(context, node):
     inputs = _get_inputs(context, node)
     _input = inputs[0]
@@ -1019,7 +1036,7 @@ def lstm(context, node):
         )
 
     if batch_first:
-        raise ValueError("CoreML does not support LSTM layer with batch_first==True.")
+        _input = mb.transpose(x=_input, perm=[1, 0, 2], name=_input.name + "_batch_first_transpose")
 
     expected_num_weights = 2 * num_layers * (int(bidirectional) + 1) * (int(bias) + 1)
     if len(weights) != expected_num_weights:
@@ -1159,7 +1176,7 @@ def lstm(context, node):
         bias=(final_biases if bias else None),
         direction=("bidirectional" if bidirectional is True else "forward"),
         output_sequence=True,
-        name=node.name,
+        name=node.name if not batch_first else node.name + "_batch_first",
     )
 
     # (6.)
@@ -1169,6 +1186,8 @@ def lstm(context, node):
             unsqueeze = mb.expand_dims(x=output, axes=[0], name=name)
             context.add(unsqueeze)
         else:
+            if batch_first:
+                output = mb.transpose(x=output, perm=[1, 0, 2], name=name)
             context.add(output, name)
 
 def _get_scales_from_output_size(output_size, input_shape):
@@ -1609,7 +1628,7 @@ def _slice(context, node):
     end = inputs[3].val if inputs[3] is not None else None
     step = inputs[4].val
 
-    if start == 0 and end is None and step is 1:
+    if start == 0 and end is None and step == 1:
         # Handling x[:], just pass through the tensor.
         context.add(x, node.name)
         return
@@ -1992,3 +2011,9 @@ def append(context, node):
         context.add(res)
     else:
         raise ValueError("can only append to Python list or MIL ListVar, got {}.".format(type(inputs[0])))
+
+
+@register_torch_op(torch_alias=['abs'])
+def _abs(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+    context.add(mb.abs(x=inputs[0], name=node.name))

@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -e
+set -x
 
 ##=============================================================================
 ## Main configuration processing
@@ -61,13 +62,14 @@ if [[ $CHECK_ENV == 1 ]]; then
     zsh -i -e scripts/env_create.sh --python=$PYTHON --exclude-test-deps
 fi
 
-pip uninstall -y coremltools
-
 # Setup the right python
 source scripts/env_activate.sh --python=$PYTHON
 echo
 echo "Using python from $(which python)"
 echo
+
+# Uninstall any existing coremltools inside the build environment
+pip uninstall -y coremltools
 
 # Create a directory for building the artifacts
 mkdir -p ${BUILD_DIR}

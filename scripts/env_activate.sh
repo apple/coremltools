@@ -80,7 +80,7 @@ then
     else
         export PYTHON_INCLUDE_DIR=$PYTHON_ENV/include/python${PYTHON_VERSION}m/
     fi
-else 
+else
     export PYTHON_INCLUDE_DIR=$PYTHON_ENV/include/python${PYTHON_VERSION}/
 fi
 
@@ -92,8 +92,10 @@ echo PYTEST_EXECUTABLE=$PYTEST_EXECUTABLE
 echo PIP_EXECUTABLE=$PIP_EXECUTABLE
 echo PYTHON_VERSION=$PYTHON_VERSION
 echo PYTHON_LIBRARY=$PYTHON_LIBRARY
-echo 
+echo
 
+echo "Making sure conda hooks are enabled"
+eval "$(conda shell.bash hook)"
 echo "Activating conda env in $PYTHON_ENV"
 conda activate $PYTHON_ENV
 echo

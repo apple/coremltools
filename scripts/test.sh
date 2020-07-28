@@ -31,7 +31,7 @@ print_help() {
   echo "  --test-package=*        Test package to run."
   echo "  --python=*              Python to use for configuration."
   echo "  --requirements=*        [Optional] Path to the requirements.txt file."
-  echo "  --cov=*                 Generate converge report for these dirs."
+  echo "  --cov=*                 Generate coverage report for these dirs."
   echo "  --fast                  Run only fast tests."
   echo "  --slow                  Run only slow tests."
   echo "  --timeout               Timeout limit (on each test)"
@@ -84,11 +84,16 @@ if [ ! -z "${REQUIREMENTS}" ]; then
    $PIP_EXECUTABLE install -r "${REQUIREMENTS}"
 fi
 
+if [[ ! -z "${WHEEL_PATH}" ]]; then
+   # in a test of a wheel, need to run from ${COREMLTOOLS_HOME}/coremltools for some reason.
+   # otherwise pytest picks up tests in deps, env, etc.
+   cd ${COREMLTOOLS_HOME}/coremltools/test
+fi
+
 # Now run the tests
 echo "Running tests"
 
 TEST_CMD=($PYTEST_EXECUTABLE -ra -W "ignore::FutureWarning" -W "ignore::DeprecationWarning" --durations=100 --pyargs ${TEST_PACKAGE} --junitxml=${BUILD_DIR}/py-test-report.xml --timeout=${TIME_OUT})
-echo $TEST_CMD
 
 if [[ $SLOW != 1 || $FAST != 1 ]]; then
     if [[ $SLOW == 1 ]]; then
@@ -102,6 +107,7 @@ if [[ $COV != "" ]]; then
     TEST_CMD+=(--cov $COV)
 fi
 
+echo $TEST_CMD
 ${TEST_CMD[@]}
 
 pip uninstall -y coremltools

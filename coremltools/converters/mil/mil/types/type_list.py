@@ -62,7 +62,7 @@ def list(arg, init_length=None, dynamic_length=True):
 
         @annotate(type_int.int)
         def __len__(self):
-            return type_int.int(len(self.val)) if T[1] is None else T[1]
+            return type_int.int(len(self.val)) if self.T[1] is None else self.T[1]
 
     list.__template_name__ = "list[" + arg.__name__ + "]"
     return list

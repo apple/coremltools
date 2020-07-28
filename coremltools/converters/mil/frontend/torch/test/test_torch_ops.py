@@ -65,8 +65,8 @@ class TestConv:
     @pytest.mark.parametrize(
         "height, width, in_channels, out_channels, kernel_size, stride, padding, dilation, backend",
         itertools.product(
-            [5, 6], [5, 7], [1, 3], [1, 3], [1, 3], [2, 3, (1, 3)], [0, 1, (1, 2)], [1, 3], backends
-        )
+            [5, 6], [5, 7], [1, 3], [1, 3], [1, 3], [2, 3], [0, 1], [1, 3], backends
+        ),
     )
     def test_convolution_transpose2d(
             self,
@@ -477,7 +477,6 @@ class TestLSTM:
     @pytest.mark.parametrize(
         "input_size, hidden_size, num_layers, bias, batch_first, dropout, bidirectional, backend",
         [
-            (7, 3, 1, True, True, 0.3, True, list(backends)[0]),
             (7, 3, 2, True, True, 0.3, True, list(backends)[-1]),
             (7, 3, 2, False, False, 0.3, False, list(backends)[0]),
         ],
