@@ -46,6 +46,7 @@ from coremltools.converters.mil.frontend.tensorflow.test.test_ops import (
     TestConv,
     TestConv3d,
     TestDepthwiseConv,
+    TestDepthToSpace,
     TestElementWiseBinary,
     TestIsFinite,
     TestLinear,
@@ -63,6 +64,8 @@ from coremltools.converters.mil.frontend.tensorflow.test.test_ops import (
     TestSelect,
     TestSliceByIndex,
     TestSliceBySize,
+    TestSlice,
+    TestSpaceToDepth,
     TestZerosLike,
 )
 

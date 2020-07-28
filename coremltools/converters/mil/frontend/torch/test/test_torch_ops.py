@@ -522,6 +522,7 @@ class TestConcat:
         model = TestNet()
         run_compare_torch((1, 3, 16, 16), model, backend=backend)
 
+
 class TestReduction:
     @pytest.mark.parametrize(
         "input_shape, dim, keepdim, backend",
@@ -543,6 +544,7 @@ class TestReduction:
         run_compare_torch(
             input_data, model, expected_results=expected_results, input_as_shape=False, backend=backend
         )
+
 
 class TestLayerNorm:
     @pytest.mark.parametrize(
@@ -613,8 +615,6 @@ class TestExpandDims:
         input_shape = tuple(np.random.randint(low=2, high=4, size=rank))
         model = ModuleWrapper(function=torch.unsqueeze, kwargs={"dim": axis})
         run_compare_torch(input_shape, model, backend=backend)
-
-
 
 
 class TestSqueeze:

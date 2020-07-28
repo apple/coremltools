@@ -4104,7 +4104,7 @@ class TestArgSort:
 
 class TestDepthToSpace:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, shape, block_size",
+        "use_cpu_only, backend, input_shape, block_size",
         itertools.product(
             [True, False],
             backends,
@@ -4112,17 +4112,24 @@ class TestDepthToSpace:
             [2, 4],
         ),
     )
-    def test_depth_to_space(self, use_cpu_only, backend, shape, block_size):
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=shape)
-            ref = tf.depth_to_space(x, block_size)
-            run_compare_tf(
-                graph,
-                {x: np.random.rand(*shape)},
-                ref,
-                use_cpu_only=use_cpu_only,
-                backend=backend,
-            )
+    def test_depth_to_space(self, use_cpu_only, backend, input_shape, block_size):
+
+        @make_tf_graph([input_shape])
+        def build_model(x):
+            return tf.nn.depth_to_space(x, block_size)
+
+        model, inputs, outputs = build_model
+        input_values = [random_gen(input_shape)]
+        input_dict = dict(zip(inputs, input_values))
+
+        run_compare_tf(
+            model,
+            input_dict,
+            outputs,
+            use_cpu_only=use_cpu_only,
+            backend=backend,
+        )
+
 
 class TestExpandDims:
     @pytest.mark.parametrize(
@@ -4393,7 +4400,7 @@ class TestReverse:
 
 class TestSpaceToDepth:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, shape, block_size",
+        "use_cpu_only, backend, input_shape, block_size",
         itertools.product(
             [True, False],
             backends,
@@ -4401,17 +4408,22 @@ class TestSpaceToDepth:
             [2, 3],
         ),
     )
-    def test_space_to_depth(self, use_cpu_only, backend, shape, block_size):
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=shape)
-            ref = tf.space_to_depth(x, block_size)
-            run_compare_tf(
-                graph,
-                {x: np.random.rand(*shape)},
-                ref,
-                use_cpu_only=use_cpu_only,
-                backend=backend,
-            )
+    def test_space_to_depth(self, use_cpu_only, backend, input_shape, block_size):
+        @make_tf_graph([input_shape])
+        def build_model(x):
+            return tf.nn.space_to_depth(x, block_size)
+
+        model, inputs, outputs = build_model
+        input_values = [random_gen(input_shape)]
+        input_dict = dict(zip(inputs, input_values))
+
+        run_compare_tf(
+            model,
+            input_dict,
+            outputs,
+            use_cpu_only=use_cpu_only,
+            backend=backend,
+        )
 
 
 class TestSqueeze:

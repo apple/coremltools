@@ -905,7 +905,7 @@ class TestPermute:
         )
 
 
-class TestPooling:
+class TestGlobalPooling:
     @pytest.mark.parametrize(
         "use_cpu_only, backend, op, data_format",
         itertools.product(
@@ -949,6 +949,8 @@ class TestPooling:
             backend=backend,
         )
 
+
+class TestPooling:
     @pytest.mark.parametrize(
         "use_cpu_only, backend, op, data_format, pool_size",
         itertools.product(
