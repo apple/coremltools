@@ -326,7 +326,13 @@ class Block(object):
         raises ValueError (linear not found in loop_cond block)
         """
         visible_vars = set(self._internal_vars)
-        visible_vars.update(self.inputs)
+        if isinstance(self, Function):
+            # Function inputs
+            visible_vars.update(tuple(self.inputs.values()))
+        else:
+            # Block inputs
+            visible_vars.update(self.inputs)
+
         idx = -1
         # find the location of target_op
         for i, op in enumerate(self.operations):
@@ -616,6 +622,9 @@ class Block(object):
             # start from the next op, excluding `anchor_op`
             start = idx + 1
         else:
+            _, block_vars = self._visible_vars_in_block()
+            visible_vars.update(block_vars)
+
             visible_vars.update(self._block_inputs)
             visible_vars.update(self._internal_vars)
             # Perform replacement from beginning

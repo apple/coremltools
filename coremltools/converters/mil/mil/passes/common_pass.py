@@ -20,6 +20,7 @@ def common_pass(prog):
         'common::noop_elimination',
         "common::fuse_matmul_weight_bias",
         "common::fuse_gelu_tanh_approximation",
+        'common::image_input_preprocess',
         "common::reduce_transposes",
         "common::fuse_bias_conv",
         "common::fuse_elementwise_to_batchnorm",
