@@ -121,6 +121,10 @@ class conv(Operation):
         strides = [1] * num_dims if self.strides is None else self.strides.val
         dilations = [1] * num_dims if self.dilations is None else self.dilations.val
         custom_pad = None if self.pad is None else self.pad.val
+
+        if self.weight.val is None and any([True if d > 1 else False for d in dilations]):
+            raise ValueError("Convolution with dynamic weights does not support dilations!")
+
         N = inshape[0]
         C_out = f_shape[0]
         # spatial dimensions

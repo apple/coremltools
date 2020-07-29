@@ -64,7 +64,6 @@ from coremltools.converters.mil.frontend.tensorflow.test.test_ops import (
     TestSelect,
     TestSliceByIndex,
     TestSliceBySize,
-    TestSlice,
     TestSpaceToDepth,
     TestZerosLike,
 )

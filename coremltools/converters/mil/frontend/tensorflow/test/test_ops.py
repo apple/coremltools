@@ -886,6 +886,7 @@ class TestConv:
                     return
         W_shape = (kW, C_in, C_out) if conv_dim == "conv1d" else (kH, kW, C_in, C_out)
         dilations = dilations[1] if conv_dim == "conv1d" else dilations
+        strides = strides[1] if conv_dim == "conv1d" else strides
 
         # We do not support dynamic weight when dilations != 1.
         if dynamic_weights and dilations == (1, 1):
@@ -896,7 +897,7 @@ class TestConv:
                     conv = tf.nn.conv1d(
                         x,
                         W,
-                        stride=strides[1],
+                        stride=strides,
                         padding=padding,
                         dilations=dilations,
                         data_format=data_format,
@@ -928,7 +929,7 @@ class TestConv:
                     conv = tf.nn.conv1d(
                         x,
                         W,
-                        stride=strides[1],
+                        stride=strides,
                         padding=padding,
                         dilations=dilations,
                         data_format=data_format,
@@ -982,7 +983,7 @@ class TestConv3d:
             [(1, 1, 1), (2, 2, 2), (3, 2, 1)],  # strides
             [
                 (1, 1, 1)
-            ],  # , (2, 2, 2), (2, 3, 1)],  # dilations: dilations greater than 1 not supported on CPU
+            ], # , (2, 2, 2), (2, 3, 1)],  # dilations: dilations greater than 1 not supported on CPU
             ["SAME", "VALID"],  # padding_type
             [1, 3],  # batch_size
         ),
@@ -1115,7 +1116,8 @@ class TestDepthwiseConv:
                 frontend_only=False,
             )
 
-            assert layer_counts(proto, "reorganizeData") == 0
+            if backend == 'nnv1_proto':
+                assert layer_counts(proto, "reorganizeData") == 0
 
         def test_dynamic_W():
             @make_tf_graph([input_shape, W_shape])
@@ -1265,8 +1267,8 @@ class TestSeparableConv:
             )
 
         test_static_W()
-        test_dynamic_W()
-
+        if not any([True if d > 1 else False for d in dilations]):
+            test_dynamic_W()
 
 class TestConvTranspose:
     @pytest.mark.parametrize(

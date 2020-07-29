@@ -62,6 +62,7 @@ class TestConv:
         )
         run_compare_torch((1, in_channels, height, width), model, backend=backend)
 
+class TestConvTranspose:
     @pytest.mark.parametrize(
         "height, width, in_channels, out_channels, kernel_size, stride, padding, dilation, backend",
         itertools.product(
