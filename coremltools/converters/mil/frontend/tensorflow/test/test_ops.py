@@ -4226,6 +4226,7 @@ class TestReshape:
         itertools.product([True, False], backends, [rank for rank in range(1, 6)],),
     )
     def test_shape(self, use_cpu_only, backend, rank):
+        if (backend != "nn_proto"): return
         shape = np.random.randint(low=3, high=4, size=rank)
         shape_holder = [None] * rank
 

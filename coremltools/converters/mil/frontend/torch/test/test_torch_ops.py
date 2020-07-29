@@ -649,4 +649,20 @@ class TestSqueeze:
         run_compare_torch(input_shape, model, backend=backend)
 
 
+class TestReshape:
+    # TODO: <rdar://66239973> Add dynamic & rank preserving reshape tests for pytorch
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend, output_shape",
+        itertools.product([True, False], backends,
+            [
+                (3, 2),
+                (2, -1),
+                (2, 1, 1, 3),
+            ],
+        ),
+    )
+    def test_reshape(self, use_cpu_only, backend, output_shape):
+        input_shape = (2, 3)
+        model = ModuleWrapper(function=torch.reshape, kwargs={"shape": output_shape})
+        run_compare_torch(input_shape, model, backend=backend)
 
