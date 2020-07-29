@@ -298,7 +298,7 @@ class TFConverter:
             if self._get_tensor_name(n) not in output_nodes + all_nodes:
                 raise KeyError('Output node name "{}" does exist.'.format(n))
 
-    def check_placeholder_output(self, prog):
+    def check_placeholder_output(self, prog, outputs_name):
         """
         Handle the cases where placeholder is output.
         There is a case where the program is like
@@ -311,18 +311,14 @@ class TFConverter:
         """
         block = prog["main"]
         input_name = [x.name for x in list(block.inputs.values())]
-        output_name = [x.name for x in block.outputs]
-        placeholder_output_name = [
-            x for x in output_name if x in input_name and x not in self.outputs
-        ]
         with block:
-            new_outputs = [
-                x for x in block.outputs if x.name not in placeholder_output_name
-            ]
-            for name in placeholder_output_name:
-                x = block.inputs[name]
-                x = mb.identity(x=x, name=name + ":0")
-                new_outputs.append(x)
+            new_outputs = []
+            for output, output_name in zip(block.outputs, outputs_name):
+                if output.name not in input_name or output.name == output_name:
+                    new_output = output
+                else:
+                    new_output = mb.identity(x=output, name=output_name)
+                new_outputs.append(new_output)
             block.set_outputs(new_outputs)
 
     def convert_main_graph(self, prog, graph):
@@ -339,6 +335,22 @@ class TFConverter:
             outputs = convert_graph(self.context, graph, self.outputs)
             ssa_func.set_outputs(outputs)
             prog.add_function("main", ssa_func)
+        # check duplicate output
+        # Note: sometimes two outputs are pointing to the same Var, we should
+        # create mb.identity for those cases
+        block = prog["main"]
+        with block:
+            name_counts = {}
+            new_outputs = [output for output in block.outputs]
+            for i, v_o in enumerate(block.outputs):
+                if v_o.name not in name_counts:
+                    name_counts[v_o.name] = 1
+                else:
+                    name_counts[v_o.name] += 1
+                    new_name = v_o.name + "_duplicate_" + str(name_counts[v_o.name])
+                    x = mb.identity(x=v_o, name=new_name)
+                    new_outputs[i] = x
+            block.set_outputs(new_outputs)
 
         # Rename outputs to TF's name. This is needed when the last op doesn't
         # generate a new Var (e.g., get_tuple, Identity etc.), and thus the
@@ -378,7 +390,7 @@ class TFConverter:
                     "Renaming output var: '{}' -> '{}'".format(v_o.name, out_name)
                 )
                 v_o.name = out_name
-        self.check_placeholder_output(prog)
+        self.check_placeholder_output(prog, self.outputs)
 
     @_profile
     def convert(self):

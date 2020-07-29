@@ -14,6 +14,7 @@ from tensorflow.python.framework import dtypes
 import tempfile
 import os
 from tensorflow.python.tools.freeze_graph import freeze_graph as freeze_g
+from tensorflow.python.keras.saving import saving_utils as _saving_utils
 
 frontend = "tensorflow"
 
@@ -60,10 +61,21 @@ def get_tf_keras_io_names(model):
     model: tf.keras.Model
     """
     input_names, output_names = [], []
+    try:
+        # The order of outputs in conc_func.structured_outputs is the same order
+        # that Keras predicts in, which can be different from model.outputs
+        input_signature = _saving_utils.model_input_signature(
+            model, keep_original_batch_size=True
+        )
+        fn = _saving_utils.trace_model_call(model, input_signature)
+        conc_func = fn.get_concrete_function()
+        for key in conc_func.structured_outputs:
+            output_names.append(conc_func.structured_outputs[key].name.split(":")[0])
+    except:
+        for o in model.outputs:
+            output_names.append(o.name.split(":")[0].split("/")[-1])
     for i in model.inputs:
         input_names.append(i.name.split(":")[0])
-    for o in model.outputs:
-        output_names.append(o.name.split(":")[0].split("/")[-1])
     return input_names, output_names
 
 

@@ -25,9 +25,37 @@ class TestPlaceholderAsOutput:
     def test(self, use_cpu_only, backend, rank):
         input_shape = np.random.randint(low=1, high=4, size=rank)
 
-        @make_tf_graph([input_shape, input_shape, input_shape])
-        def build_model(x, y, z):
+        @make_tf_graph([input_shape, input_shape])
+        def build_model(x, y):
             return x, y, x + 1, x + y
+
+        model, inputs, outputs = build_model
+        input_values = [random_gen(input_shape, -1, 1), random_gen(input_shape, -1, 1)]
+        input_dict = dict(zip(inputs, input_values))
+        run_compare_tf(
+            model,
+            input_dict,
+            outputs,
+            use_cpu_only=use_cpu_only,
+            frontend_only=False,
+            backend=backend,
+        )
+
+
+class TestDuplicateOutputs:
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend, rank",
+        itertools.product([True, False], backends, [rank for rank in range(6)]),
+    )
+    def test(self, use_cpu_only, backend, rank):
+        input_shape = np.random.randint(low=1, high=4, size=rank)
+
+        @make_tf_graph([input_shape])
+        def build_model(x):
+            b = tf.identity(x)
+            c = tf.identity(x)
+            d = b + c
+            return b, c, d
 
         model, inputs, outputs = build_model
         input_values = [random_gen(input_shape, -1, 1), random_gen(input_shape, -1, 1)]
