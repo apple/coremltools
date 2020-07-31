@@ -1,109 +1,41 @@
-[![Build Status](https://travis-ci.com/apple/coremltools.svg?branch=master)](#)
+[![Build Status](https://img.shields.io/gitlab/pipeline/zach_nation/coremltools/master)](#)
 [![PyPI Release](https://img.shields.io/pypi/v/coremltools.svg)](#)
 [![Python Versions](https://img.shields.io/pypi/pyversions/coremltools.svg)](#)
 
-Core ML Community Tools
+[Core ML Tools](https://coremltools.readme.io/docs)
 =======================
 
-Core ML community tools contains all supporting tools for Core ML model
-conversion, editing and validation. This includes deep learning frameworks like
-TensorFlow, Keras, Caffe as well as classical machine learning frameworks like
-LIBSVB, scikit-learn, and XGBoost.
+Core ML is an Apple framework to integrate machine learning models into your
+app. Core ML provides a unified representation for all models. Your app uses
+Core ML APIs and user data to make predictions, and to fine-tune models, all on
+the user’s device. Core ML optimizes on-device performance by leveraging the
+CPU, GPU, and Neural Engine while minimizing its memory footprint and power
+consumption. Running a model strictly on the user’s device removes any need for
+a network connection, which helps keep the user’s data private and your app
+responsive.
+
+[Core ML tools](https://coremltools.readme.io/docs#what-is-coremltools) contains all supporting tools for [Core ML model
+conversion](https://coremltools.readme.io/docs), editing and validation. This includes deep learning frameworks like
+TensorFlow, PyTorch, Keras, Caffe as well as classical machine learning
+frameworks like LIBSVM, scikit-learn, and XGBoost.
+
+With coremltools, you can do the following:
+
+- [Convert trained models](https://coremltools.readme.io/docs) from frameworks like TensorFlow and PyTorch to the
+  Core ML format.
+- Read, write, and optimize Core ML models.
+- Verify conversion/creation (on macOS) by making predictions using Core ML.
 
 To get the latest version of coremltools:
 
 ```shell
-pip install --upgrade coremltools
+pip install coremltools==4.0b2
 ```
 
 For the latest changes please see the [release notes](https://github.com/apple/coremltools/releases/).
 
-# Table of Contents
+# Documentation
 
-* [Neural network conversion](#Neural-network-conversion)
-* [Core ML specification](#Core-ML-specification)
-* [coremltools user guide and examples](#user-guide-and-examples)
-* [Installation from Source](#Installation)
-
-
-## Neural Network Conversion
-
-[Link](examples/NeuralNetworkGuide.md) to the detailed NN conversion guide.
-
-There are several `converters` available to translate neural networks trained
-in various frameworks into the Core ML model format.  Following formats can be
-converted to the Core ML `.mlmodel` format through the coremltools python
-package (this repo):
-
-- Caffe V1 (`.prototxt`, `.caffemodel` format)
-- Keras API (2.2+) (`.h5` format)
-- TensorFlow 1 (1.13+) (`.pb` frozen graph def format)
-- TensorFlow 2 (`.h5` and `SavedModel` formats)
-
-In addition, there are two more neural network converters build on top of `coremltools`:
-- [onnx-coreml](https://github.com/onnx/onnx-coreml): to convert `.onnx` model format. Several frameworks such as PyTorch, MXNet, CaffeV2 etc
-provide native export to the ONNX format.
-- [tfcoreml](https://github.com/tf-coreml/tf-coreml): to convert TensorFlow models. For producing Core ML models targeting iOS 13 or later,
-tfcoreml defers to the TensorFlow converter implemented inside coremltools.
-For iOS 12 or earlier, the code path is different and lives entirely in the [tfcoreml](https://github.com/tf-coreml/tf-coreml) package.  
-
-To get an overview on how to use the converters and features such as
-post-training quantization using coremltools, please see the [neural network
-guide](examples/NeuralNetworkGuide.md).  
-
-## Core ML Specification
-
-- Core ML specification is fully described in a set of protobuf files.
-They are all located in the folder `mlmodel/format/`
-- For an overview of the Core ML framework API, see [here](https://developer.apple.com/documentation/coreml).
-- To find the list of model types supported by Core ML, see [this](https://github.com/apple/coremltools/blob/1fcac9eb087e20bcc91b41bc938112fa91b4e5a8/mlmodel/format/Model.proto#L229)
-portion of the `model.proto` file.
-- To find the list of neural network layer types supported see [this](https://github.com/apple/coremltools/blob/1fcac9eb087e20bcc91b41bc938112fa91b4e5a8/mlmodel/format/NeuralNetwork.proto#L472)
-portion of the `NeuralNetwork.proto` file.
-- Auto-generated documentation for all the protobuf files can be found at this [link](https://apple.github.io/coremltools/coremlspecification/)
-
-
-## User Guide and Examples
-
-- [API documentation](https://apple.github.io/coremltools)
-- [Updatable models](examples/updatable_models)
-- [Neural network inference examples](examples/neural_network_inference)
-- [Neural network guide](examples/NeuralNetworkGuide.md)
-- [Miscellaneous How-to code snippets](examples/APIExamples.md)
-
-## Installation
-
-We recommend using virtualenv to use, install, or build coremltools. Be
-sure to install virtualenv using your system pip.
-
-```shell
-pip install virtualenv
-```
-
-The method for installing `coremltools` follows the
-[standard python package installation steps](https://packaging.python.org/installing/).
-To create a Python virtual environment called `pythonenv` follow these steps:
-
-```shell
-# Create a folder for your virtualenv
-mkdir mlvirtualenv
-cd mlvirtualenv
-
-# Create a Python virtual environment for your Core ML project
-virtualenv pythonenv
-```
-
-To activate your new virtual environment and install `coremltools` in this
-environment, follow these steps:
-
-```
-# Active your virtual environment
-source pythonenv/bin/activate
-
-
-# Install coremltools in the new virtual environment, pythonenv
-(pythonenv) pip install -U coremltools
-```
-
-The package [documentation](https://apple.github.io/coremltools) contains
-more details on how to use coremltools.
+* [User Guides and Examples](https://coremltools.readme.io/)
+* [Core ML Specification](https://mlmodel.readme.io/)
+* [API Reference](https://coremltools.readme.io/reference/convertersconvert)

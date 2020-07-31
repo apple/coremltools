@@ -22,7 +22,7 @@ def preprocess():
     sections = map(str.strip, re.split(r"<!--\s*(.+)\s*-->", text))
     for section, content in pairwise(sections[1:]):
         if section.endswith(".proto"):
-            section_name = section[:-len(".proto")]
+            section_name = section[: -len(".proto")]
             file_name = "./_sources/reference/{0}.rst".format(section_name)
             with open(file_name, "w") as f:
                 f.truncate()
