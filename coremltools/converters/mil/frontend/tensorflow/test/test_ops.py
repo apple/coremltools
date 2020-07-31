@@ -4582,6 +4582,47 @@ class TestTranspose:
         with pytest.raises(ValueError, match=r".*must be const at compile time.*"):
             dynamic_perm()
 
+    @pytest.mark.xfail(
+        reason="The reduce_transpose graph pass fails on a model with sequence of transpose: <rdar://problem/66014733>",
+        run=False,
+    )
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend, rank",
+        itertools.product(
+            [True, False],
+            backends,
+            [1,2,3,4],
+        ),
+    )
+    def test_redundant_transpose(self, use_cpu_only, backend, rank):
+        import random
+        input_shape = np.random.randint(low=2, high=4, size=rank)
+        num_layers = 30
+        perms = []
+        for _ in range(num_layers):
+            perm = list(range(rank))
+            random.shuffle(perm)
+            perms.append(perm)
+
+        @make_tf_graph([input_shape])
+        def build_model(x):
+            net = x
+            for perm in perms:
+                net = tf.transpose(net, perm=perm)
+            return net
+
+        model, inputs, outputs = build_model
+        input_values = [random_gen(input_shape)]
+        input_dict = dict(zip(inputs, input_values))
+        run_compare_tf(
+            model,
+            input_dict,
+            outputs,
+            use_cpu_only=use_cpu_only,
+            frontend_only=False,
+            backend=backend,
+        )
+
 
 class TestSpaceToBatchND:
     # No direct mil smoke test since it's a TF op which is a composite of several ops.
