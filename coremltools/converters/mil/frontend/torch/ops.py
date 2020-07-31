@@ -2017,3 +2017,9 @@ def append(context, node):
 def _abs(context, node):
     inputs = _get_inputs(context, node, expected=1)
     context.add(mb.abs(x=inputs[0], name=node.name))
+
+@register_torch_op
+def gather(context, node):
+    inputs = _get_inputs(context, node)
+    res = mb.gather_along_axis(x=inputs[0], indices=inputs[2], axis=inputs[1], name=node.name)
+    context.add(res)

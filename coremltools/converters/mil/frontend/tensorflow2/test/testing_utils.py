@@ -5,6 +5,7 @@
 
 from coremltools.converters.mil.testing_reqs import converter
 import pytest
+import numpy as np
 
 tf = pytest.importorskip("tensorflow", minversion="2.1.0")
 from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import (
@@ -126,6 +127,10 @@ def run_compare_tf2(
 
     if frontend_only:
         return
+
+    for k,v in input_dict.items():
+        if isinstance(v, np.ndarray) and issubclass(v.dtype.type, np.integer):
+            input_dict[k] = v.astype(np.float) # Core ML only accepts floats
 
     compare_backend(
         proto,

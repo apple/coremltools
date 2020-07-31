@@ -666,3 +666,21 @@ class TestReshape:
         model = ModuleWrapper(function=torch.reshape, kwargs={"shape": output_shape})
         run_compare_torch(input_shape, model, backend=backend)
 
+class TestGather:
+    @pytest.mark.xfail(reason="Load constant not copied properly for integer valued constants. Enable after eng/PR-65551506 is merged", run=False)
+    @pytest.mark.parametrize("rank_and_axis, backend",
+                             itertools.product(
+                                 [(i,j) for i in range(1,6) for j in range(0,i)],
+                                 backends)
+                             )
+    def test_gather_along_axis(self, rank_and_axis, backend):
+        rank, axis = rank_and_axis
+        params_shape = np.random.randint(low=2, high=5, size=rank)
+        indices_shape = np.copy(params_shape)
+        indices_shape[axis] = np.random.randint(low=1, high=8)
+        indices = np.random.randint(
+                        0, params_shape[axis], size=indices_shape
+                    )
+        params_shape, indices_shape = tuple(params_shape), tuple(indices_shape)
+        model = ModuleWrapper(function=torch.gather, kwargs={"dim": axis, "index": torch.from_numpy(indices)})
+        run_compare_torch([params_shape], model, backend=backend)

@@ -2926,8 +2926,7 @@ class TestReduction:
         else:
             test_tf_reduction()
 
-
-class TestScatterGather:
+class TestGather:
     # TODO: <rdar://problem/59738824> [MIL] Gather layer with 0-d indices leads to input shape mismatch
     @pytest.mark.parametrize(
         "use_cpu_only, backend, rankX_rankIndices_axis, mode",
@@ -2955,29 +2954,32 @@ class TestScatterGather:
         x_rank, indices_rank, axis = rankX_rankIndices_axis
         x_shape = np.random.randint(low=2, high=4, size=x_rank)
         indices_shape = np.random.randint(low=2, high=4, size=indices_rank)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=x_shape)
-            indices = tf.placeholder(tf.int32, shape=indices_shape)
+
+        @make_tf_graph([x_shape, (*indices_shape, tf.int32)])
+        def build_model(x, indices):
             if mode == "Gather":
                 res = tf.raw_ops.Gather(params=x, indices=indices)
-                axis = 0
             elif mode == "GatherV2":
                 res = tf.raw_ops.GatherV2(params=x, indices=indices, axis=axis)
             elif mode == "gather":
                 res = tf.gather(x, indices, axis=axis)
-            run_compare_tf(
-                graph,
-                {
-                    x: np.random.rand(*x_shape),
-                    indices: np.random.randint(
-                        0, x_shape[axis], size=indices_shape, dtype=np.int32
-                    ),
-                },
-                res,
-                use_cpu_only=use_cpu_only,
-                frontend_only=False,
-                backend=backend,
-            )
+
+            return res
+
+        model, inputs, outputs = build_model
+
+        axis = 0 if mode == "Gather" else axis
+        input_dict = {inputs[0]: np.random.rand(*x_shape).astype(np.float32),
+                       inputs[1]: np.random.randint(0, x_shape[axis], size=indices_shape, dtype=np.int32)}
+
+        run_compare_tf(
+            model,
+            input_dict,
+            outputs,
+            use_cpu_only=use_cpu_only,
+            frontend_only=False,
+            backend=backend,
+        )
 
     @pytest.mark.parametrize(
         "use_cpu_only, backend, rankX_rankIndices",
@@ -3006,32 +3008,34 @@ class TestScatterGather:
         indices_shape = np.random.randint(low=2, high=4, size=indices_rank)
         indices_shape[-1] = np.random.randint(low=1, high=x_rank + 1)
 
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=x_shape)
-            indices = tf.placeholder(tf.int32, shape=indices_shape)
-            res = tf.gather_nd(x, indices)
+        @make_tf_graph([x_shape, (*indices_shape, tf.int32)])
+        def build_model(x, indices):
+            return tf.gather_nd(x, indices)
 
-            a = np.random.rand(*x_shape)
-            indices_list = []
-            for i in range(indices_shape[-1]):
-                indices_list.append(
-                    np.random.randint(0, x_shape[i], size=indices_shape[:-1])
-                )
+        model, inputs, outputs = build_model
 
-            input_values = {
-                x: a,
-                indices: np.stack(indices_list, axis=-1).astype(np.float),
-            }
-
-            run_compare_tf(
-                graph,
-                input_values,
-                res,
-                use_cpu_only=use_cpu_only,
-                frontend_only=False,
-                backend=backend,
+        a = np.random.rand(*x_shape).astype(np.float32)
+        indices_list = []
+        for i in range(indices_shape[-1]):
+            indices_list.append(
+                np.random.randint(0, x_shape[i], size=indices_shape[:-1])
             )
 
+        input_dict = {
+            inputs[0]: a,
+            inputs[1]: np.stack(indices_list, axis=-1).astype(np.int32),
+        }
+
+        run_compare_tf(
+            model,
+            input_dict,
+            outputs,
+            use_cpu_only=use_cpu_only,
+            frontend_only=False,
+            backend=backend,
+        )
+
+class TestScatter:
     @pytest.mark.parametrize(
         "use_cpu_only, backend, data_rank, indices_rank",
         itertools.product(
@@ -4482,30 +4486,22 @@ class TestSqueeze:
         for axis in axes:
             x_shape[axis] = 1
 
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=x_shape)
-            res = tf.squeeze(x, axis=axes)
-            run_compare_tf(
-                graph,
-                {x: np.random.rand(*x_shape)},
-                res,
-                use_cpu_only=use_cpu_only,
-                frontend_only=False,
-                backend=backend,
-            )
+        @make_tf_graph([x_shape])
+        def build_model(x):
+            return tf.squeeze(x, axis=axes)
 
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=x_shape)
-            res = tf.squeeze(x, axis=None)
-            run_compare_tf(
-                graph,
-                {x: np.random.rand(*x_shape)},
-                res,
-                use_cpu_only=use_cpu_only,
-                frontend_only=False,
-                backend=backend,
-            )
+        model, inputs, outputs = build_model
 
+        input_values = [np.random.rand(*x_shape).astype(np.float32)]
+        input_dict = dict(zip(inputs, input_values))
+        run_compare_tf(
+            model,
+            input_dict,
+            outputs,
+            use_cpu_only=use_cpu_only,
+            frontend_only=False,
+            backend=backend,
+        )
 
 class TestTranspose:
     @pytest.mark.parametrize(

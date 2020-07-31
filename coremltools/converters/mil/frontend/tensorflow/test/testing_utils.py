@@ -6,6 +6,7 @@
 import six
 from coremltools import TensorType
 import pytest
+import numpy as np
 
 tf = pytest.importorskip("tensorflow", minversion="1.14.0")
 from coremltools.converters.mil.testing_utils import compare_shapes, compare_backend
@@ -250,6 +251,10 @@ def run_compare_tf(
             sess.run(tf.global_variables_initializer())
             tf_outputs = sess.run(output_nodes, feed_dict=feed_dict)
     expected_outputs = {name: val for name, val in zip(output_names, tf_outputs)}
+
+    for k,v in input_key_values.items():
+        if isinstance(v, np.ndarray) and issubclass(v.dtype.type, np.integer):
+            input_key_values[k] = v.astype(np.float) # Core ML only accepts floats
 
     if validate_shapes_only:
         compare_shapes(proto, input_key_values, expected_outputs, use_cpu_only)
