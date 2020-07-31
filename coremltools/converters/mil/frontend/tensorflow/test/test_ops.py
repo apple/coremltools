@@ -3473,18 +3473,22 @@ class TestMatrixBandPart:
         ),
     )
     def test_matrix_band_part(self, use_cpu_only, backend, rank, lower_and_upper):
+
         lower, upper = lower_and_upper
         shape = np.random.randint(low=3, high=4, size=rank)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=shape)
-            res = tf.matrix_band_part(x, num_lower=lower, num_upper=upper)
-            run_compare_tf(
-                graph,
-                {x: random_gen(shape, rand_min=-100, rand_max=100)},
-                res,
-                use_cpu_only=use_cpu_only,
-                backend=backend,
-            )
+
+        @make_tf_graph([shape])
+        def build_model(x):
+            return tf.raw_ops.MatrixBandPart(input=x, num_lower=lower, num_upper=upper)
+
+        model, inputs, outputs = build_model
+        run_compare_tf(
+            model,
+            {inputs[0]: random_gen(shape, rand_min=-100, rand_max=100)},
+            outputs,
+            use_cpu_only=use_cpu_only,
+            backend=backend,
+        )
 
 
 class TestCumSum:

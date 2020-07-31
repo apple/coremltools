@@ -52,6 +52,7 @@ from coremltools.converters.mil.frontend.tensorflow.test.test_ops import (
     TestGather,
     TestIsFinite,
     TestLinear,
+    TestMatrixBandPart,
     TestNormalization,
     TestPad,
     TestPack,
