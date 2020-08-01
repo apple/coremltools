@@ -275,7 +275,7 @@ class reverse(Operation):
     x: tensor<*?, T> (Required)
         * Input tensor.
     axes: const<D, i32> Optional
-        * Dimension(s) to reverse. Each axis must be in the range ``[-rank(x), rank(x)]``.
+        * Dimension(s) to reverse. Each axis must be in the range ``[-rank(x), rank(x))``.
         * Defaults to None (reverse on all dimensions).
 
     Returns
@@ -319,7 +319,7 @@ class reverse_sequence(Operation):
     ----------
     x: tensor<*?, T> (Required)
         * Input tensor.
-    lengths: const<L, i32> (Required)
+    lengths: tensor<L, i32> (Required)
         * 1-dimensional tensor of length ``x.shape[batch_axis]`` specifying the length
           of the sequence to reverse.
         * Values must be in range ``[0, x.shape[seq_axis]]``.

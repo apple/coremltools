@@ -4378,6 +4378,7 @@ class TestMatrixDiag:
                        use_cpu_only=use_cpu_only,
                        frontend_only=False, backend=backend)
 
+
 class TestReverse:
     @pytest.mark.parametrize(
         "use_cpu_only, backend, rank_and_axes",
@@ -4402,17 +4403,25 @@ class TestReverse:
     def test_reverse(self, use_cpu_only, backend, rank_and_axes):
         rank, axes = rank_and_axes
         shape = np.random.randint(low=1, high=4, size=rank)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=shape)
-            res = tf.reverse(x, axis=axes)
-            run_compare_tf(
-                graph,
-                {x: np.random.rand(*shape)},
-                res,
-                use_cpu_only=use_cpu_only,
-                backend=backend,
-            )
 
+        @make_tf_graph([shape])
+        def build_model(x):
+            return tf.reverse(x, axis=axes)
+
+        model, inputs, outputs = build_model
+        input_values = [random_gen(shape)]
+        input_dict = dict(zip(inputs, input_values))
+
+        run_compare_tf(
+            model,
+            input_dict,
+            outputs,
+            use_cpu_only=use_cpu_only,
+            backend=backend,
+        )
+
+
+class TestReverseSequence:
     @pytest.mark.parametrize(
         "use_cpu_only, backend, rank",
         itertools.product([True, False], backends, [rank for rank in range(2, 6)]),
@@ -4423,18 +4432,23 @@ class TestReverse:
         batch_axis = np.random.randint(low=0, high=seq_axis)
         lengths = np.random.randint(low=0, high=shape[seq_axis], size=shape[batch_axis])
 
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=shape)
-            res = tf.reverse_sequence(
+        @make_tf_graph([shape])
+        def build_model(x):
+            return tf.reverse_sequence(
                 x, seq_lengths=lengths, seq_axis=seq_axis, batch_axis=batch_axis
             )
-            run_compare_tf(
-                graph,
-                {x: np.random.rand(*shape)},
-                res,
-                use_cpu_only=use_cpu_only,
-                backend=backend,
-            )
+
+        model, inputs, outputs = build_model
+        input_values = [random_gen(shape)]
+        input_dict = dict(zip(inputs, input_values))
+
+        run_compare_tf(
+            model,
+            input_dict,
+            outputs,
+            use_cpu_only=use_cpu_only,
+            backend=backend,
+        )
 
 
 class TestSpaceToDepth:

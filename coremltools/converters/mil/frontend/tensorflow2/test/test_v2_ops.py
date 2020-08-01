@@ -65,6 +65,8 @@ from coremltools.converters.mil.frontend.tensorflow.test.test_ops import (
     TestTensorArray,
     TestWhileLoop,
     TestReshape,
+    TestReverse,
+    TestReverseSequence,
     TestSelect,
     TestSliceByIndex,
     TestSliceBySize,
