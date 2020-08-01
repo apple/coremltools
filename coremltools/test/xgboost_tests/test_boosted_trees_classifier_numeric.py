@@ -66,6 +66,14 @@ class BoostedTreeClassificationBostonHousingScikitNumericTest(unittest.TestCase)
         # Convert the model
         spec = skl_converter.convert(scikit_model, self.feature_names, self.output_name)
 
+        if hasattr(scikit_model, '_init_decision_function') and scikit_model.n_classes_ > 2:
+            import numpy as np
+            # fix initial default prediction for multiclass classification
+            # https://github.com/scikit-learn/scikit-learn/pull/12983
+            assert hasattr(scikit_model, 'init_')
+            assert hasattr(scikit_model.init_, 'priors')
+            scikit_model.init_.priors = np.log(scikit_model.init_.priors)
+
         if _is_macos() and _macos_version() >= (10, 13):
             # Get predictions
             df = pd.DataFrame(self.X, columns=self.feature_names)
