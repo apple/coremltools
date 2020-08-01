@@ -16,6 +16,7 @@ import tempfile
 import os
 from tensorflow.python.tools.freeze_graph import freeze_graph as freeze_g
 from tensorflow.python.keras.saving import saving_utils as _saving_utils
+import numpy as np
 
 frontend = "tensorflow"
 
@@ -117,7 +118,7 @@ def tf_graph_to_proto(
     ----------
     graph: tf.Graph
         TensorFlow 1.x model in tf.Graph format.
-    feed_dict: dict of (tf.placeholder, np.array)
+    feed_dict: dict of {tf.placeholder -> np.array or python primitive)
         Dict of placeholder and value pairs representing inputs.
     output_nodes: tf.node or list[tf.node]
         List of names representing outputs.
@@ -138,9 +139,8 @@ def tf_graph_to_proto(
     output_names = get_tf_node_names(output_nodes, mode="outputs")
     input_values = {name: val for name, val in zip(input_names, feed_dict.values())}
 
-    inputs = [TensorType(name=input_name) for input_name in input_names]
     mlmodel = converter.convert(
-        graph, inputs=inputs, outputs=output_names, source=frontend, convert_to=backend
+        graph, inputs=None, outputs=output_names, source=frontend, convert_to=backend
     )
 
     proto = mlmodel.get_spec()

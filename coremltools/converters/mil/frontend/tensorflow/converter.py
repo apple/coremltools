@@ -16,6 +16,7 @@ from coremltools.converters.mil.input_types import Shape as InputShape
 from coremltools.converters.mil.mil.var import Var
 from coremltools.converters.mil.mil import get_new_symbol
 from coremltools.converters.mil.mil.types.symbolic import is_symbolic
+from coremltools.converters.mil.mil.types import is_tensor
 
 from coremltools.converters.mil.mil import types
 from .basic_graph_ops import topsort, simple_topsort
@@ -186,6 +187,9 @@ class TFConverter:
                                 inp.name
                             )
                         )
+                    # _get_shaping_class does not accept -1 or None dimension.
+                    shape = [get_new_symbol() if s is None or s == -1 else s \
+                            for s in shape]
                     inp.shape = _get_shaping_class(shape)
 
             # Extract placeholders that users didn't specify.
@@ -197,24 +201,29 @@ class TFConverter:
             inputs = []
             placeholder_names = tf_placeholder_names
 
-        placeholder_inputs = {}
+        # name -> (shape, mil_type) mapping. shape has type list[int]
+        added_inputs = {}
         for inp in main_func.inputs:
             if inp not in placeholder_names:
                 continue
-            if graph[inp].attr.get("_output_shapes", None) is not None:
-                placeholder_inputs.update({inp: graph[inp].attr["_output_shapes"][0]})
-            elif graph[inp].attr.get("shape", None) is not None:
-                placeholder_inputs.update({inp: graph[inp].attr["shape"]})
+            node = graph[inp]
+            node.parse_from_attr()
+            dtype = node.attr['dtype']
+            if is_tensor(node.datatype):
+                shape = node.datatype.get_shape()
             else:
-                raise ValueError("Can't find input shape for ({})".format(inp))
+                shape = []
+            shape = [get_new_symbol() if s is None or s == -1 else s \
+                    for s in shape]
+            inputs.append(TensorType(name=inp, shape=shape, dtype=dtype))
+            added_inputs[inp] = (shape, dtype)
 
-        if len(placeholder_inputs) > 0:
+        if len(added_inputs) > 0:
             logging.info(
-                "Adding Input not specified by users: '{}'".format(placeholder_inputs)
+                "Adding Input not specified by users: '{}'".format(
+                    added_inputs)
             )
 
-        for k, v in placeholder_inputs.items():
-            inputs.append(TensorType(name=k, shape=v))
         for idx, inp in enumerate(inputs):
             # We set the default image format in TF as NHWC, since NHWC is used
             # for TF unless GPU is specified as device.
@@ -274,16 +283,6 @@ class TFConverter:
             ret = tensor.name
         return ret.split(":")[0]
 
-    @staticmethod
-    def _create_placeholder(node):
-        node.parse_from_attr()
-        shape = []
-        dtype = node.attr["dtype"]
-        if types.is_tensor(node.datatype):
-            shape = node.datatype.get_shape()
-            shape = tuple(get_new_symbol() if s is None or s < 0 else s for s in shape)
-        return mb.placeholder(shape, dtype=dtype)
-
     def _validate_outputs(self, tfssa, outputs):
         if outputs is None:
             return
@@ -324,8 +323,8 @@ class TFConverter:
     def convert_main_graph(self, prog, graph):
         func_inputs = {}
         for input_type in self.inputs:
-            node = graph[input_type.name]
-            func_inputs[input_type.name] = TFConverter._create_placeholder(node)
+            func_inputs[input_type.name] = mb.placeholder(
+                    input_type.shape.symbolic_shape, dtype=input_type.dtype)
         prog.set_main_input_types(self.inputs)
 
         with Function(func_inputs) as ssa_func:

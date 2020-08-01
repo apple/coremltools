@@ -12,8 +12,8 @@ from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import (
     get_tf_node_names
 )
 
-from coremltools.converters.mil.input_types import TensorType
-from coremltools.converters.mil.testing_utils import compare_backend
+from coremltools.converters.mil.input_types import TensorType, RangeDim
+from coremltools.converters.mil.testing_utils import compare_shapes, compare_backend
 from tensorflow.python.framework import dtypes
 
 
@@ -101,7 +101,10 @@ def run_compare_tf2(
     cf_inputs = [t for t in model[0].inputs if t.dtype != dtypes.resource]
     for t in cf_inputs:
         name = get_tf_node_names(t.name)[0]
-        inputs.append(TensorType(name=name, shape=list(t.get_shape())))
+        shape = [RangeDim() if s is None or s == -1 else s \
+                for s in list(t.get_shape())]
+        inputs.append(TensorType(name=name, shape=shape,
+            dtype=t.dtype.as_numpy_dtype))
     outputs = []
     for t in output_names:
         name = get_tf_node_names(t)[0]

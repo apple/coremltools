@@ -2955,7 +2955,7 @@ class TestGather:
         x_shape = np.random.randint(low=2, high=4, size=x_rank)
         indices_shape = np.random.randint(low=2, high=4, size=indices_rank)
 
-        @make_tf_graph([x_shape, (*indices_shape, tf.int32)])
+        @make_tf_graph([x_shape, list(indices_shape) + [tf.int32]])
         def build_model(x, indices):
             if mode == "Gather":
                 res = tf.raw_ops.Gather(params=x, indices=indices)
@@ -3008,7 +3008,7 @@ class TestGather:
         indices_shape = np.random.randint(low=2, high=4, size=indices_rank)
         indices_shape[-1] = np.random.randint(low=1, high=x_rank + 1)
 
-        @make_tf_graph([x_shape, (*indices_shape, tf.int32)])
+        @make_tf_graph([x_shape, list(indices_shape) +[tf.int32]])
         def build_model(x, indices):
             return tf.gather_nd(x, indices)
 
@@ -3577,7 +3577,7 @@ class TestFill:
                 ref = tf.fill(dims=s, value=value)
                 run_compare_tf(
                     graph,
-                    {s: np.array(shape, dtype=np.float32)},
+                    {s: np.array(shape, dtype=np.int32)},
                     ref,
                     use_cpu_only=use_cpu_only,
                     backend=backend,

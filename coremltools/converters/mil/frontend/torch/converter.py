@@ -172,9 +172,11 @@ class TorchConverter:
 
     @staticmethod
     def _create_placeholder(_input):
-        """Converts an InputType torch.Tensor into a Placeholder.
+        """Converts an InputType into a Placeholder.
+
+        _input: TensorType
         """
-        shape = _input.shape.shape
+        shape = _input.shape.symbolic_shape
         dtype = _input.dtype
         return mb.placeholder(shape, dtype=dtype)
 
