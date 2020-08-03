@@ -17,6 +17,82 @@ backends = testing_reqs.backends
 tf = pytest.importorskip("tensorflow")
 
 
+class TestDebugging:
+    """
+    TF converter does not handling debugging nodes, they are
+    expected to be deleted by graph pass before op conversions
+    """
+
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend",
+        itertools.product([True, False], backends),
+    )
+    def test_assert(self, use_cpu_only, backend):
+        input_shape = (1,)
+
+        @make_tf_graph([input_shape])
+        def build_model(x):
+            tf.debugging.Assert(tf.reduce_all(tf.greater_equal(x, 0)), [x])
+            return tf.nn.relu(x)
+
+        model, inputs, outputs = build_model
+        input_values = [random_gen(input_shape, 0, 1)]
+        input_dict = dict(zip(inputs, input_values))
+        run_compare_tf(
+            model,
+            input_dict,
+            outputs,
+            use_cpu_only=use_cpu_only,
+            backend=backend,
+        )
+
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend",
+        itertools.product([True, False], backends),
+    )
+    def test_check_numerics(self, use_cpu_only, backend):
+        input_shape = (1,)
+
+        @make_tf_graph([input_shape])
+        def build_model(x):
+            tf.debugging.check_numerics(x, 'check')
+            return tf.nn.relu(x)
+
+        model, inputs, outputs = build_model
+        input_values = [random_gen(input_shape, 0, 1)]
+        input_dict = dict(zip(inputs, input_values))
+        run_compare_tf(
+            model,
+            input_dict,
+            outputs,
+            use_cpu_only=use_cpu_only,
+            backend=backend,
+        )
+
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend",
+        itertools.product([True, False], backends),
+    )
+    def test_print(self, use_cpu_only, backend):
+        input_shape = (1,)
+
+        @make_tf_graph([input_shape])
+        def build_model(x):
+            tf.print(x, [x], '[x]')
+            return tf.nn.relu(x)
+
+        model, inputs, outputs = build_model
+        input_values = [random_gen(input_shape, 0, 1)]
+        input_dict = dict(zip(inputs, input_values))
+        run_compare_tf(
+            model,
+            input_dict,
+            outputs,
+            use_cpu_only=use_cpu_only,
+            backend=backend,
+        )
+
+
 class TestPlaceholderAsOutput:
     @pytest.mark.parametrize(
         "use_cpu_only, backend, rank",
@@ -4520,6 +4596,7 @@ class TestSqueeze:
             frontend_only=False,
             backend=backend,
         )
+
 
 class TestTranspose:
     @pytest.mark.parametrize(

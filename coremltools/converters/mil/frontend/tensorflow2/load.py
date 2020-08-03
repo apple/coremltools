@@ -143,7 +143,6 @@ class TF2Loader(TFLoader):
         #   as it changes node names which constant propagation pass is relying on
         #   to perform session.run(), renamed nodes are not understandable for TF.
         tf_passes = [
-            # delete_asserts,  # FIXME: rdar://62472804
             constant_propagation,
             rewrite_control_flow_functions,
             flatten_sub_graph_namespaces,
@@ -311,7 +310,7 @@ class TF2Loader(TFLoader):
             graph_def,
             fn_inputs,
             frozen_fn.outputs,
-            config=_get_grappler_config(["constfold", "dependency"]),
+            config=_get_grappler_config(["constfold", "dependency", "debug_stripper"]),
             graph=frozen_fn.graph,
         )
         return graph_def
