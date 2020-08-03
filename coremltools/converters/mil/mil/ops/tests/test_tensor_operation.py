@@ -6,6 +6,7 @@
 from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.mil import get_new_symbol
 from coremltools.converters.mil.testing_reqs import *
+from coremltools.converters.mil.mil.input_type import InputTypeError
 
 from .testing_utils import UNK_SYM, UNK_VARIADIC, run_compare_builder
 
@@ -142,55 +143,55 @@ class TestCumSum:
     @ssa_fn
     def test_invalid_axis3(self):
         x_val = random_gen(shape=(1, 2, 3, 4, 5), rand_min=-100, rand_max=100)
-        with pytest.raises(TypeError):
+        with pytest.raises(InputTypeError):
             mb.cumsum(x=x_val, axis="")
 
     @ssa_fn
     def test_invalid_reverse1(self):
         x_val = random_gen(shape=(1, 2, 3, 4, 5), rand_min=-100, rand_max=100)
-        with pytest.raises(TypeError):
+        with pytest.raises(InputTypeError):
             mb.cumsum(x=x_val, reverse="")
 
     @ssa_fn
     def test_invalid_reverse2(self):
         x_val = random_gen(shape=(1, 2, 3, 4, 5), rand_min=-100, rand_max=100)
-        with pytest.raises(TypeError):
+        with pytest.raises(InputTypeError):
             pred = mb.cumsum(x=x_val, reverse=0)
 
     @ssa_fn
     def test_invalid_reverse3(self):
         x_val = random_gen(shape=(1, 2, 3, 4, 5), rand_min=-100, rand_max=100)
-        with pytest.raises(TypeError):
+        with pytest.raises(InputTypeError):
             pred = mb.cumsum(x=x_val, reverse=1)
 
     @ssa_fn
     def test_invalid_exclusive1(self):
         x_val = random_gen(shape=(1, 2, 3, 4, 5), rand_min=-100, rand_max=100)
-        with pytest.raises(TypeError):
+        with pytest.raises(InputTypeError):
             pred = mb.cumsum(x=x_val, exclusive="")
 
     @ssa_fn
     def test_invalid_exclusive2(self):
         x_val = random_gen(shape=(1, 2, 3, 4, 5), rand_min=-100, rand_max=100)
-        with pytest.raises(TypeError):
+        with pytest.raises(InputTypeError):
             pred = mb.cumsum(x=x_val, exclusive=0)
 
     @ssa_fn
     def test_invalid_exclusive3(self):
         x_val = random_gen(shape=(1, 2, 3, 4, 5), rand_min=-100, rand_max=100)
-        with pytest.raises(TypeError):
+        with pytest.raises(InputTypeError):
             pred = mb.cumsum(x=x_val, exclusive=1)
 
     @ssa_fn
     def test_invalid_input1(self):
         x_val = 1
-        with pytest.raises(TypeError):
+        with pytest.raises(InputTypeError):
             pred = mb.cumsum(x=x_val)
 
     @ssa_fn
     def test_invalid_input2(self):
         x_val = ["1"]
-        with pytest.raises(TypeError):
+        with pytest.raises(InputTypeError):
             pred = mb.cumsum(x=x_val)
 
 

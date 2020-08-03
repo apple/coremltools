@@ -285,7 +285,9 @@ class TensorInputType(ScalarOrTensorInputType):
         super(TensorInputType, self).__init__(**kwargs)
 
     def _is_compatible(self, v):
-        return types.is_tensor(v.sym_type)
+        # We only support scalar string type.
+        return types.is_tensor(v.sym_type) and \
+            v.sym_type.get_primitive() != types.str
 
     @property
     def type_str(self):
