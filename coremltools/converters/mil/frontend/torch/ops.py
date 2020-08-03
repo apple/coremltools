@@ -1993,3 +1993,11 @@ def append(context, node):
 def _abs(context, node):
     inputs = _get_inputs(context, node, expected=1)
     context.add(mb.abs(x=inputs[0], name=node.name))
+
+
+@register_torch_op
+def repeat(context, node):
+    print("repeat op")
+    x = context[node.inputs[0]]
+    reps = context[node.inputs[1]]
+    context.add(mb.tile(x=x, reps=reps, name=node.name))
