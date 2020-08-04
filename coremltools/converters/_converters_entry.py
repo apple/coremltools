@@ -270,6 +270,10 @@ def convert(
             msg = 'Unexpected argument "example_inputs" found'
             raise ValueError(msg)
 
+        if kwargs.get("inputs", None) is None:
+            msg = 'Expected argument for pytorch "inputs" not provided'
+            raise ValueError(msg)
+
         def _flatten_list(_inputs):
             ret = []
             for _input in _inputs:
