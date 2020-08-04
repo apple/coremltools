@@ -580,6 +580,7 @@ class TestElementWiseUnary:
         model = ModuleWrapper(function=operation)
         run_compare_torch(input_shape, model, backend=backend)
 
+
 class TestRepeat:
     @pytest.mark.parametrize(
         "use_cpu_only, backend, rank",
