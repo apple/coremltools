@@ -1997,7 +1997,6 @@ def _abs(context, node):
 
 @register_torch_op
 def repeat(context, node):
-    print("repeat op")
     x = context[node.inputs[0]]
     reps = context[node.inputs[1]]
     context.add(mb.tile(x=x, reps=reps, name=node.name))
