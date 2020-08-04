@@ -145,6 +145,28 @@ class TestDuplicateOutputs:
             backend=backend,
         )
 
+class TestIdentity:
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend, rank",
+        itertools.product([True, False], backends, [rank for rank in range(6)]),
+    )
+    def test(self, use_cpu_only, backend, rank):
+        input_shape = np.random.randint(low=1, high=4, size=rank)
+        @make_tf_graph([input_shape])
+        def build_model(x):
+            return x
+
+        model, inputs, outputs = build_model
+        input_values = [random_gen(input_shape, -1, 1)]
+        input_dict = dict(zip(inputs, input_values))
+        run_compare_tf(
+            model,
+            input_dict,
+            outputs,
+            use_cpu_only=use_cpu_only,
+            frontend_only=False,
+            backend=backend,
+        )
 
 class TestActivationElu:
     @pytest.mark.parametrize(
@@ -4306,32 +4328,6 @@ class TestReshape:
             )
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, rank",
-        itertools.product([True, False], backends, [rank for rank in range(1, 6)],),
-    )
-    def test_shape(self, use_cpu_only, backend, rank):
-        if (backend != "nn_proto"): return
-        shape = np.random.randint(low=3, high=4, size=rank)
-        shape_holder = [None] * rank
-
-        @make_tf_graph([shape_holder])
-        def build_model(x):
-            return tf.shape(x)
-
-        model, inputs, outputs = build_model
-
-        input_values = [random_gen(shape, rand_min=-100, rand_max=100)]
-        input_dict = dict(zip(inputs, input_values))
-        run_compare_tf(
-            model,
-            input_dict,
-            outputs,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
-            backend=backend,
-        )
-
-    @pytest.mark.parametrize(
         "use_cpu_only, backend, input_shape",
         itertools.product(
             [False],
@@ -4409,6 +4405,32 @@ class TestReshape:
         model, inputs, outputs = build_model
 
         input_values = [np.random.rand(*input_shape)]
+        input_dict = dict(zip(inputs, input_values))
+        run_compare_tf(
+            model,
+            input_dict,
+            outputs,
+            use_cpu_only=use_cpu_only,
+            frontend_only=False,
+            backend=backend,
+        )
+
+class TestShape:
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend, rank",
+        itertools.product([True, False], backends, [rank for rank in range(1, 6)],),
+    )
+    def test_shape(self, use_cpu_only, backend, rank):
+        shape = np.random.randint(low=3, high=4, size=rank)
+        shape_holder = [None] * rank
+
+        @make_tf_graph([shape_holder])
+        def build_model(x):
+            return tf.shape(x)
+
+        model, inputs, outputs = build_model
+
+        input_values = [random_gen(shape, rand_min=-100, rand_max=100)]
         input_dict = dict(zip(inputs, input_values))
         run_compare_tf(
             model,

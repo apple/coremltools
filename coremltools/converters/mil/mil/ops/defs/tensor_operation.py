@@ -1067,6 +1067,22 @@ class stack(Operation):
 
         return np.stack(values, self.axis.val)
 
+# identity is used for renaming and is rarely necessary. See
+# `loop_invariant_elimination` pass for a rare use case.
+@register_op(doc_str="")
+class identity(Operation):
+    input_spec = InputSpec(x=ListOrScalarOrTensorInputType())
+
+    def __init__(self, **kwargs):
+        super(identity, self).__init__(**kwargs)
+
+    def type_inference(self):
+        return self.x.sym_type
+
+    @precondition(allow=VALUE | SYMBOL)
+    def value_inference(self):
+        return self.x.sym_val
+
 
 @register_op(doc_str="")
 class isfinite(Operation):

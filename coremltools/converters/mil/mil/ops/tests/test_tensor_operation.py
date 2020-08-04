@@ -1234,21 +1234,22 @@ class TestFlatten:
 
 class TestShape:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "use_cpu_only, backend, input_type", itertools.product([True, False], backends, ["int32", "float32"])
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
-        t = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
-        pad = np.array([1, 1, 2, 2], dtype=np.int32)
-        input_placeholders = {"x": mb.placeholder(shape=t.shape)}
+    def test_builder_to_backend_smoke(self, use_cpu_only, backend, input_type):
+        np_type = np.int32 if input_type == "int32" else np.float32
+        mb_type = types.int32 if input_type == "int32" else types.fp32
+
+        t = np.array([[1, 2, 3], [4, 5, 6]], dtype=np_type)
+        input_placeholders = {"x": mb.placeholder(shape=t.shape, dtype=mb_type)}
         input_values = {"x": t}
 
         def build(x):
-            x = mb.pad(x=x, pad=pad, mode="constant", constant_val=0.0)
             return mb.shape(x=x)
 
         expected_output_types = (2, types.int32)
         expected_outputs = [
-            np.array([4, 7], dtype=np.int32),
+            np.array([2, 3], dtype=np.int32),
         ]
 
         run_compare_builder(
@@ -1270,23 +1271,94 @@ class TestShape:
         assert is_close(expected_f, f.val)
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "use_cpu_only, backend, input_type", itertools.product([True, False], backends, ["int32", "float32"])
     )
-    def test_builder_to_backend_symbolic(self, use_cpu_only, backend):
+    def test_builder_to_backend_symbolic(self, use_cpu_only, backend, input_type):
+        np_type = np.int32 if input_type == "int32" else np.float32
+        mb_type = types.int32 if input_type == "int32" else types.fp32
+
         s0 = get_new_symbol()
 
         # Test variadic (rdar://59559656)
         input_placeholders = {
-            "x": mb.placeholder(shape=(s0, 4, 5, 6)),
+            "x": mb.placeholder(shape=(s0, 4, 5, 6), dtype=mb_type),
         }
 
         def build(x):
             return [mb.shape(x=x)]
 
         input = np.random.rand(10, 4, 5, 6)
-        output = np.array([10, 4, 5, 6], dtype=np.float32)
+        input = input.astype(np_type)
+        output = np.array([10, 4, 5, 6], dtype=np.int32)
 
         expected_output_types = (4, types.int32)
+        expected_outputs = [output]
+
+        input_values = {"x": input}
+        run_compare_builder(
+            build,
+            input_placeholders,
+            input_values,
+            expected_output_types,
+            expected_outputs,
+            use_cpu_only=use_cpu_only,
+            frontend_only=False,
+            backend=backend,
+        )
+
+class TestIdentity:
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend, input_type", itertools.product([True, False], backends, ["int32", "float32"])
+    )
+    def test_builder_to_backend_smoke(self, use_cpu_only, backend, input_type):
+        np_type = np.int32 if input_type == "int32" else np.float32
+        mb_type = types.int32 if input_type == "int32" else types.fp32
+
+        t = np.array([[1, 2, 3], [4, 5, 6]], dtype=np_type)
+        input_placeholders = {"x": mb.placeholder(shape=t.shape, dtype=mb_type)}
+        input_values = {"x": t}
+
+        def build(x):
+            return mb.identity(x=x)
+
+        expected_output_types = [(2, 3, mb_type)]
+        expected_outputs = [
+            np.array([[1, 2, 3], [4, 5, 6]], dtype=np_type),
+        ]
+
+        run_compare_builder(
+            build,
+            input_placeholders,
+            input_values,
+            expected_output_types,
+            expected_outputs,
+            use_cpu_only=use_cpu_only,
+            frontend_only=False,
+            backend=backend,
+        )
+
+    @ssa_fn
+    def test_builder_eval(self):
+        t = np.array([[[1, 2, 3], [4, 5, 6]]], dtype=np.float32)
+        f = mb.identity(x=t)
+        expected_f = np.array([[[1, 2, 3], [4, 5, 6]]], dtype=np.float32)
+        assert is_close(expected_f, f.val)
+
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend", itertools.product([True, False], backends,)
+    )
+    def test_builder_to_backend_symbolic(self, use_cpu_only, backend):
+        input_placeholders = {
+            "x": mb.placeholder(shape=(10, 4, 5, 6)),
+        }
+
+        def build(x):
+            return [mb.identity(x=x)]
+
+        input = np.random.rand(10, 4, 5, 6)
+        output = input
+
+        expected_output_types = [(10, 4, 5, 6, types.fp32)]
         expected_outputs = [output]
 
         input_values = {"x": input}
