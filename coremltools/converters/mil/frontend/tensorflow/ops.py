@@ -856,13 +856,12 @@ def Conv3DBackpropInputV2(context, node):
     # Only the last op should have the same name as node.name
     conv_name = node.name + "_x" if data_format == "NDHWC" else node.name
     # Pass output shape provided above
-    # TODO: rdar://63968613 ([deconv3d] Deconv_3d top_shapes_for_bottom_shapes does not sets output channel if output shape is provided)
     x = mb.conv_transpose(
         x=x,
         weight=W_oidhw,
         pad_type=pad_type,
         strides=DHW_strides,
-        output_shape=None,
+        output_shape=output_shape,
         dilations=DHW_dilations,
         name=conv_name,
     )

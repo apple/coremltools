@@ -100,6 +100,7 @@ class TestConvTranspose:
         run_compare_torch((1, in_channels, height, width), model, backend=backend)
 
     # TODO: rdar://65588783 ([PyTorch] Define and error out on unsupported configuration for output_padding)
+    # TODO: rdar://65550420 (Add Image Resizing (crop, upsample, resize_bilinear) layers to the MIL backend)
     @pytest.mark.parametrize(
         "height, width, in_channels, out_channels, kernel_size, stride, padding, dilation, output_padding, backend",
         list(
@@ -113,7 +114,7 @@ class TestConvTranspose:
                 [1, 3],
                 [1, 2],
                 [1, 2, (1, 2)],
-                backends,
+                ["nn_proto"],
             )
         )
         + [

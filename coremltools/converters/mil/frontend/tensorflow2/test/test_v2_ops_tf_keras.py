@@ -520,14 +520,13 @@ class TestConvTranspose:
         itertools.product(
             [True, False],
             backends,
-            # TODO: rdar://63968613 ([deconv3d] Deconv_3d top_shapes_for_bottom_shapes does not sets output channel if output shape is provided)
-            [tf.keras.layers.Conv2DTranspose],  # tf.keras.layers.Conv3DTranspose],
+            [tf.keras.layers.Conv2DTranspose, tf.keras.layers.Conv3DTranspose],
             ["same", "valid"],
             ["channels_last"],
             [(7, 11, 12, 1, 2, 2), (9, 5, 7, 3, 3, 3)],
             [(1, 1, 1)],
             [(2, 2, 2), (2, 3, 3)],
-            [(1, 1, 1)],  # Dilation > 1 not supported by TF
+            [(1, 1, 1)], # Dilation > 1 not supported by TF
             [1, 3],
         ),
     )

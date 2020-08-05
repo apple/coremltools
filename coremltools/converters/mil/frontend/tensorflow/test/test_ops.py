@@ -1431,44 +1431,43 @@ class TestConvTranspose:
 
         w_shape = (kH, C_out, C_in) if conv_dim == "conv1d" else (kH, kW, C_out, C_in)
 
-        def test_static_W():
-            x_input = np.random.randn(*input_shape)
-            w_val = np.random.randn(*w_shape)
-            with tf.Graph().as_default() as graph:
-                x = tf.placeholder(tf.float32, shape=input_shape)
-                w = tf.constant(w_val, tf.float32)
-                if conv_dim == "conv1d":
-                    conv = tf.nn.conv1d_transpose(
+        @make_tf_graph([input_shape])
+        def build_model(x):
+            W = tf.constant(np.random.rand(*w_shape), tf.float32)
+            if conv_dim == "conv1d":
+                return tf.nn.conv1d_transpose(
+                    x,
+                    W,
+                    output_shape=output_shape,
+                    strides=strides[0],
+                    padding=padding,
+                    dilations=dilations[0],
+                    data_format=data_format,
+                )
+            elif conv_dim == "conv2d":
+                return tf.nn.conv2d_transpose(
                         x,
-                        w,
-                        output_shape=output_shape,
-                        strides=strides[0],
-                        padding=padding,
-                        dilations=dilations[0],
-                        data_format=data_format,
-                    )
-                else:
-                    conv = tf.nn.conv2d_transpose(
-                        x,
-                        w,
+                        W,
                         output_shape=output_shape,
                         strides=strides,
                         padding=padding,
                         dilations=dilations,
                         data_format=data_format,
                     )
-                run_compare_tf(
-                    graph,
-                    {x: x_input},
-                    conv,
-                    use_cpu_only=use_cpu_only,
-                    frontend_only=False,
-                    backend=backend,
-                )
+        model, inputs, outputs = build_model
 
-        test_static_W()
+        input_values = [(np.random.rand(*input_shape).astype(np.float32))]
+        input_dict = dict(zip(inputs, input_values))
 
-    @pytest.mark.skip(reason="rdar://65198011 (Re-enable Conv3dTranspose and DynamicTile unit tests)")
+        run_compare_tf(
+            model,
+            input_dict,
+            outputs,
+            use_cpu_only=use_cpu_only,
+            backend=backend,
+            frontend_only=False,
+        )
+
     @pytest.mark.parametrize(
         ",".join(
             [
@@ -1485,10 +1484,8 @@ class TestConvTranspose:
             [True, False],
             backends,
             [
-                "SAME"
-            ],  # VALID padding requires padding due to different output shape computation
-            # and blocked by rdar://63245116 ([deconv3d] Deconv 3d with deconv_out* parameter executes
-            # deconvolution kernel instead of deconv3d kernel on CPU)
+                "SAME", "VALID"
+            ],
             ["NDHWC"],
             [
                 (10, 12, 14, 2, 3, 5),
@@ -1525,27 +1522,32 @@ class TestConvTranspose:
         x_input = np.random.randn(*input_shape)
         w_val = np.random.randn(*w_shape)
 
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=input_shape)
-            w = tf.constant(w_val, tf.float32)
-            conv = tf.nn.conv3d_transpose(
-                x,
-                w,
-                output_shape=output_shape,
-                strides=strides,
-                padding=padding,
-                dilations=dilations,
-                data_format=data_format,
-            )
 
-            run_compare_tf(
-                graph,
-                {x: x_input},
-                conv,
-                use_cpu_only=use_cpu_only,
-                frontend_only=False,
-                backend=backend,
-            )
+        @make_tf_graph([input_shape])
+        def build_model(x):
+            w = tf.constant(np.random.rand(*w_shape), tf.float32)
+            return tf.nn.conv3d_transpose(
+                    x,
+                    w,
+                    output_shape=output_shape,
+                    strides=strides,
+                    padding=padding,
+                    dilations=dilations,
+                    data_format=data_format,
+                )
+        model, inputs, outputs = build_model
+
+        input_values = [(np.random.rand(*input_shape).astype(np.float32))]
+        input_dict = dict(zip(inputs, input_values))
+
+        run_compare_tf(
+            model,
+            input_dict,
+            outputs,
+            use_cpu_only=use_cpu_only,
+            backend=backend,
+            frontend_only=False,
+        )
 
 
 class TestElementWiseBinary:

@@ -2294,6 +2294,8 @@ def conv_transpose(const_context, builder, op):
         weight = _np.transpose(weight, [2, 3, 1, 0])
 
     # Adjust for Deconv1D case
+    # CoreML maps Deconv1D into Deconv2D
+    # Hence, adjust width dimension attributes by setting to 1 for 1D case
     rank_factor = 1 if is_conv_transpose_1d else 2
     strides = [1] * rank_factor
     dilations = [1] * rank_factor
@@ -2302,9 +2304,16 @@ def conv_transpose(const_context, builder, op):
         strides = op.strides.val.tolist()
     if op.dilations is not None:
         dilations = op.dilations.val.tolist()
+    # Get H and W from output shape
+    output_shape = []
+    if op.output_shape is not None:
+        output_shape = list(op.output_shape.val)
+
     if is_conv_transpose_1d:
         dilations = dilations + [1]
         strides = strides + [1]
+        if op.output_shape is not None:
+            output_shape = output_shape + [1]
 
     # padding
     padding_mode = "valid" if op.pad_type is None else op.pad_type.val
@@ -2327,8 +2336,6 @@ def conv_transpose(const_context, builder, op):
 
     groups = op.groups.val
     has_bias = op.bias is not None
-    # Get H and W from output shape
-    output_shape = None if op.output_shape is None else tuple(op.output_shape.val)
 
     if is_conv_transpose_3d:
         builder.add_convolution3d(

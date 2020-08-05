@@ -45,6 +45,7 @@ from coremltools.converters.mil.frontend.tensorflow.test.test_ops import (
     TestConcat,  # Redirects to ConcatV2 in TF2
     TestConv,
     TestConv3d,
+    TestConvTranspose,
     TestDebugging,
     TestDepthwiseConv,
     TestDepthToSpace,

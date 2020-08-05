@@ -34,17 +34,15 @@ class TestConvTranspose:
         itertools.product(
             [True, False],
             backends,
-            ["conv1d", "conv2d"], # FIXME: rdar://65198011 (Re-enable Conv3dTranspose and DynamicTile unit tests)
+            ["conv1d", "conv2d", "conv3d"],
             [(1, 2, 3), (2, 2, 2)],
             [(7, 7, 7, 2, 2, 2), (10, 12, 14, 3, 2, 4)],
             [(1, 1, 1), (2, 1, 2)],
             [(1, 1, 1), (1, 2, 1)],
             [True, False],
-            # TODO: rdar://64018048 (Deconv3d: Incorrect output for group > 1)
-            [1],
+            [1, 2],
             [True, False],
-            # TODO: rdar://63968613 ([deconv3d] Deconv_3d top_shapes_for_bottom_shapes does not sets output channel if output shape is provided)
-            [False],
+            [True, False],
         ),
     )
     def test_builder_to_backend_stress(
