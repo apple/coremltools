@@ -78,7 +78,7 @@ class TestDebugging:
 
         @make_tf_graph([input_shape])
         def build_model(x):
-            tf.print(x, [x], '[x]')
+            tf.raw_ops.Print(input=x, data=[x], message='[x]')
             return tf.nn.relu(x)
 
         model, inputs, outputs = build_model

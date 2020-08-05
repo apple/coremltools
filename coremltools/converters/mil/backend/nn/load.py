@@ -11,6 +11,7 @@ from __future__ import absolute_import as _
 import logging
 from collections import defaultdict
 
+import coremltools as ct
 from coremltools.converters.mil.input_types import (
     ClassifierConfig,
     ImageType,
@@ -185,7 +186,8 @@ def _set_optional_inputs(proto, input_types):
             if default_fill_val != 0 or list(default_value.shape) != \
                 array_t.shape:
                 # promote spec version to 5 and set the default value
-                proto.specificationVersion = max(proto.specificationVersion, 5)
+                proto.specificationVersion = max(proto.specificationVersion,
+                    ct._SPECIFICATION_VERSION_IOS_14)
                 # array_t.shape is not empty.
                 array_t.ClearField('shape')
                 array_t.shape.extend(list(default_value.shape))

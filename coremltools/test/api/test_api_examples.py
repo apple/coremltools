@@ -352,7 +352,7 @@ class TestTensorFlow2ConverterExamples:
         )
 
         # Download class labels (from a separate file)
-        import urllib
+        from six.moves import urllib
         label_url = 'https://storage.googleapis.com/download.tensorflow.org/data/ImageNetLabels.txt'
         class_labels = urllib.request.urlopen(label_url).read().splitlines()
         class_labels = class_labels[1:]  # remove the first class which is background
@@ -375,7 +375,8 @@ class TestTensorFlow2ConverterExamples:
         )
 
         # Set feature descriptions (these show up as comments in XCode)
-        model.input_description["input_3"] = "Input image to be classified"
+        input_name = model.input_description._fd_spec[0].name
+        model.input_description[input_name] = "Input image to be classified"
         model.output_description["classLabel"] = "Most likely image category"
         model.author = "Original Paper: Mark Sandler, Andrew Howard, "\
                         "Menglong Zhu, Andrey Zhmoginov, Liang-Chieh Chen"
@@ -402,7 +403,7 @@ class TestTensorFlow2ConverterExamples:
         example_image = img.resize((224, 224))
 
         # Make a prediction using Core ML
-        out_dict = model.predict({"input_3": example_image})
+        out_dict = model.predict({input_name: example_image})
 
         # Print out top-1 prediction
         assert out_dict["classLabel"] == "daisy"
@@ -659,7 +660,7 @@ class TestFlexibleShape:
         keras_model = tf.keras.Model(inputs=[x], outputs=[y])
 
         if use_symbol:
-            seq_len_dim = ct.RangeDim(symbol='seq_len', lower_bound=3,
+            seq_len_dim = ct.RangeDim(symbol='sequence_len', lower_bound=3,
                     upper_bound=5)
         else:
             seq_len_dim = ct.RangeDim(lower_bound=3, upper_bound=5)
@@ -717,7 +718,7 @@ class TestFlexibleShape:
         traced_model = torch.jit.trace(model, example_input)
 
         if use_symbol:
-            seq_len_dim = ct.RangeDim(symbol='seq_len')
+            seq_len_dim = ct.RangeDim(symbol='seq_length')
         else:
             # symbol is optional
             seq_len_dim = ct.RangeDim()
@@ -772,7 +773,7 @@ class TestFlexibleShape:
         traced_model = torch.jit.trace(model, example_input)
 
         if use_symbol:
-            seq_len_dim = ct.RangeDim(symbol='seq_len', lower_bound=3,
+            seq_len_dim = ct.RangeDim(symbol='len', lower_bound=3,
                     upper_bound=5)
         else:
             # symbol is optional
@@ -894,7 +895,7 @@ class TestFlexibleShape:
             # Verify outputs
             expected = model(example_input)
             np.testing.assert_allclose(result["20"], expected.detach().numpy(),
-                    rtol=1e-4)
+                    rtol=1e-3, atol=1e-4)
 
             # Test (1, 3, 56, 56) shape (can't verify numerical parity with Torch
             # which doesn't support enumerated shape)
