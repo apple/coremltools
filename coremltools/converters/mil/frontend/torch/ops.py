@@ -1529,7 +1529,7 @@ def _avg_pool(context, node, inputs):
     x = inputs[0]
     kernel_sizes = inputs[1]
     strides = inputs[2]
-    if strides.op.op_type == "const"  and (not strides.val.any()):
+    if strides.op.op_type == "const"  and (not list(strides.val)):
         strides = mb.const(val=kernel_sizes.val, name=strides.name)
     pad_type = "custom"
     # Need to explicity state L-R, T-B pad
