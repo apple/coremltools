@@ -3718,23 +3718,26 @@ class TestNonMaximumSuppression:
         boxes_val = random_gen(shape=(num_boxes, 4), rand_min=0, rand_max=32)
         scores_val = random_gen(shape=(num_boxes,), rand_min=-100, rand_max=100)
 
-        with tf.Graph().as_default() as graph:
-            boxes = tf.placeholder(tf.float32, shape=boxes_val.shape)
-            scores = tf.placeholder(tf.float32, shape=scores_val.shape)
-            ref = tf.image.non_max_suppression(
+        @make_tf_graph([boxes_val.shape, scores_val.shape])
+        def build_model(boxes, scores):
+            ret = tf.image.non_max_suppression(
                 boxes=boxes,
                 scores=scores,
                 max_output_size=max_boxes,
                 iou_threshold=iou_threshold,
                 score_threshold=score_threshold,
             )
-            run_compare_tf(
-                graph,
-                {boxes: boxes_val, scores: scores_val},
-                ref,
-                use_cpu_only=use_cpu_only,
-                backend=backend,
-            )
+            return ret
+
+        model, inputs, outputs = build_model
+        input_dict = dict(zip(inputs, [boxes_val, scores_val]))
+        run_compare_tf(
+            model,
+            input_dict,
+            outputs,
+            use_cpu_only=use_cpu_only,
+            backend=backend,
+        )
 
 
 class TestOneHot:
