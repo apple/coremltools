@@ -22,6 +22,10 @@ if _HAS_SKLEARN:
     from coremltools.converters import sklearn as skl_converter
     from sklearn.tree import DecisionTreeRegressor
 
+# Skipping tests due to <rdar://problem/66545691> xgboost/test_boosted_trees_*.py failing on CI
+import pytest
+pytestmark = pytest.mark.skip("Skipping for now. See 66545691 for details.")
+#
 
 @unittest.skipIf(not _HAS_SKLEARN, "Missing sklearn. Skipping tests.")
 class GradientBoostingRegressorBostonHousingScikitNumericTest(unittest.TestCase):

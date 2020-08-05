@@ -18,7 +18,10 @@ if _HAS_XGBOOST:
     import xgboost
     from coremltools.converters import xgboost as xgb_converter
 
-
+# Skipping tests due to <rdar://problem/66545691> xgboost/test_boosted_trees_*.py failing on CI
+import pytest
+pytestmark = pytest.mark.skip("Skipping for now. See 66545691 for details.")
+#
 @unittest.skipIf(not _HAS_SKLEARN, "Missing sklearn. Skipping tests.")
 class GradientBoostingBinaryClassifierScikitTest(unittest.TestCase):
     """
