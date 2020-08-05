@@ -503,6 +503,12 @@ def flatten(context, node):
     reshape = mb.reshape(x=x, shape=dims, name=node.name)
     context.add(reshape)
 
+@register_torch_op(torch_alias=["softsign_"])
+def softsign(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+
+    res = mb.softsign(x=inputs[0], name=node.name)
+    context.add(res)
 
 @register_torch_op(torch_alias=["relu_"])
 def relu(context, node):
@@ -511,11 +517,47 @@ def relu(context, node):
     res = mb.relu(x=inputs[0], name=node.name)
     context.add(res)
 
+@register_torch_op(torch_alias=["prelu_"])
+def prelu(context, node):
+    inputs = _get_inputs(context, node, expected=2)
+    x = inputs[0]
+    alpha = inputs[1]
+
+    res = mb.prelu(x=x, alpha=alpha, name=node.name)
+    context.add(res)
+
+@register_torch_op(torch_alias=["relu6_"])
+def relu6(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+
+    res = mb.relu6(x=inputs[0], name=node.name)
+    context.add(res)
+
+@register_torch_op(torch_alias=["elu_"])
+def elu(context, node):
+    ## Torch port to ATen adds scale and input_scale which is set to 1
+    inputs = _get_inputs(context, node, expected=4)
+
+    res = mb.elu(x=inputs[0], alpha = inputs[1], name=node.name)
+    context.add(res)
+
 @register_torch_op(torch_alias=["leaky_relu_"])
 def leaky_relu(context, node):
     inputs = _get_inputs(context, node, expected=2)
 
     res = mb.leaky_relu(x=inputs[0], alpha=inputs[1], name=node.name)
+    context.add(res)
+
+@register_torch_op(torch_alias=["softplus_"])
+def softplus(context, node):
+    inputs = _get_inputs(context, node, expected=3)
+    x = inputs[0]
+    beta_ = inputs[1].val
+    C = x.shape[1]
+    alpha_br = _np.repeat(1.0 / beta_, C).astype('float32')
+    beta_br = _np.repeat(beta_, C).astype('float32')
+
+    res = mb.softplus_parametric(x=x, alpha = alpha_br, beta = beta_br, name=node.name)
     context.add(res)
 
 def _adjust_pad_for_ceil_mode(input_shape, kernel_sizes, stride_sizes, pad_sizes):
@@ -843,7 +885,7 @@ def embedding(context, node):
 
 
 @register_torch_op
-def hardtanh_(context, node):
+def hardtanh(context, node):
     inputs = _get_inputs(context, node, expected=3)
     _input = inputs[0]
     min_val = inputs[1].val
@@ -1610,6 +1652,12 @@ def sigmoid(context, node):
     res = mb.sigmoid(x=inputs[0], name=node.name)
     context.add(res)
 
+@register_torch_op
+def hardsigmoid(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+
+    res = mb.sigmoid_hard(x=inputs[0], alpha=1.0/6, beta=0.5, name=node.name)
+    context.add(res)
 
 @register_torch_op
 def gelu(context, node):
