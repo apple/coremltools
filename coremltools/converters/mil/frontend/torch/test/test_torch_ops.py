@@ -811,6 +811,12 @@ class TestActivation:
             input_shape, model, backend=backend,
         )
 
+        model = ModuleWrapper(nn.functional.hardtanh_,
+                     {'min_val': range_val[0], 'max_val': range_val[1]})
+        run_compare_torch(
+            input_shape, model, backend=backend,
+        )
+
     @pytest.mark.parametrize(
         "backend, rank, alpha", itertools.product(backends, range(1, 6), [0.1, 2.0, 1.5]),
     )

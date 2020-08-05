@@ -884,7 +884,7 @@ def embedding(context, node):
     context.add(gather)
 
 
-@register_torch_op
+@register_torch_op(torch_alias=["hardtanh_"])
 def hardtanh(context, node):
     inputs = _get_inputs(context, node, expected=3)
     _input = inputs[0]
