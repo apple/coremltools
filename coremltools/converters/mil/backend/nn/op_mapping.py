@@ -1382,7 +1382,7 @@ def lstm(const_context, builder, op):
         _expand_dim(builder, initial_h + postfix_h, initial_h, [2, 3, 4])
         initial_h += postfix_h
         # initial_h may have the same name as initial_c (e.g., same Var)
-        _expand_dim(builder, initial_c +postfix_c", initial_c, [2, 3, 4])
+        _expand_dim(builder, initial_c + postfix_c, initial_c, [2, 3, 4])
         initial_c += postfix_c
 
         initial_h_f = initial_h + "_forward"
