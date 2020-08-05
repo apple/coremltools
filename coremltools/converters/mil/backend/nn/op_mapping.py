@@ -1375,12 +1375,15 @@ def lstm(const_context, builder, op):
         _squeeze(builder, op.outputs[2].name, output_names[2], axes=[0, 3, 4])
 
     elif direction == "bidirectional":
+        n_layers = len(builder.nn_spec.layers)
+        postfix_h = "_expanded_" + str(n_layers)
+        postfix_c = "_expanded2_" + str(n_layers)
         # Expand initial_h and initial_c
-        _expand_dim(builder, initial_h + "_expanded", initial_h, [2, 3, 4])
-        initial_h += "_expanded"
+        _expand_dim(builder, initial_h + postfix_h, initial_h, [2, 3, 4])
+        initial_h += postfix_h
         # initial_h may have the same name as initial_c (e.g., same Var)
-        _expand_dim(builder, initial_c + "_expanded2", initial_c, [2, 3, 4])
-        initial_c += "_expanded2"
+        _expand_dim(builder, initial_c +postfix_c", initial_c, [2, 3, 4])
+        initial_c += postfix_c
 
         initial_h_f = initial_h + "_forward"
         initial_h_r = initial_h + "_reverse"
