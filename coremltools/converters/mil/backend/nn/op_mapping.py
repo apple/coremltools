@@ -1377,7 +1377,7 @@ def lstm(const_context, builder, op):
     elif direction == "bidirectional":
         # Expand initial_h and initial_c once
         initial_h_expand = initial_h + "_expanded"
-        if not ((initial_h_expand) in set(builder.layers)):
+        if not (initial_h_expand in set(builder.layers)):
             _expand_dim(builder, initial_h_expand, initial_h, [2, 3, 4])
         initial_h = initial_h_expand
         
