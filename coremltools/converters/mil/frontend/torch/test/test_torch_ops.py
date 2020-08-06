@@ -834,6 +834,7 @@ class TestActivation:
             input_shape, model, backend=backend,
         )
 
+    @pytest.mark.skipif(sys.version_info < (3, 6), reason="requires python3.6 or higher")
     @pytest.mark.parametrize(
         "backend, rank", itertools.product(backends, range(1, 6)),
     )
@@ -932,7 +933,7 @@ class TestElementWiseUnary:
             input_shape, model, backend=backend,
         )
 
-    ## TODO (rdar://66577921): Needs to move to test_elementwise_no_params
+    ## TODO (rdar://66577921): Needs to move to test_elementwise_no_params after backend is added
     @pytest.mark.parametrize(
         "backend, rank",
         itertools.product(
@@ -940,6 +941,7 @@ class TestElementWiseUnary:
             [4],
         ),
     )
+    @pytest.mark.skipif(sys.version_info < (3, 6), reason="requires python3.6 or higher")
     def test_square(self, backend, rank):
         input_shape = tuple(np.random.randint(low=1, high=10, size=rank))
         model = ModuleWrapper(function=torch.square)
