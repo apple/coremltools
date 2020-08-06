@@ -778,6 +778,11 @@ class TestActivation:
             input_shape, model, backend=backend,
         )
 
+        model = ModuleWrapper(nn.functional.leaky_relu_, {'negative_slope': alpha})
+        run_compare_torch(
+            input_shape, model, backend=backend,
+        )
+
     @pytest.mark.parametrize(
         "backend, rank", itertools.product(backends, range(1, 6)),
     )

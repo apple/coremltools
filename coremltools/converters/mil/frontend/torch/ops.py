@@ -535,7 +535,7 @@ def elu(context, node):
     res = mb.elu(x=inputs[0], alpha = inputs[1], name=node.name)
     context.add(res)
 
-@register_torch_op
+@register_torch_op(torch_alias=["leaky_relu_"])
 def leaky_relu(context, node):
     inputs = _get_inputs(context, node, expected=2)
 
