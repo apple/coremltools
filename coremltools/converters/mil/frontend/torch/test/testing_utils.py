@@ -68,11 +68,12 @@ def convert_to_mlmodel(model_spec, tensor_inputs, backend="nn_proto"):
     return MLModel(proto, useCPUOnly=True)
 
 
-def generate_input_data(input_size):
+def generate_input_data(input_size, rand_range = (0.0, 1.0)):
+    r1, r2 = rand_range
     if isinstance(input_size, list):
-        return [torch.rand(_size) for _size in input_size]
+        return [(r1 - r2) * torch.rand(_size) + r2 for _size in input_size]
     else:
-        return torch.rand(input_size)
+        return (r1 - r2) * torch.rand(input_size) + r2
 
 
 def trace_model(model, input_data):
@@ -84,7 +85,8 @@ def trace_model(model, input_data):
 
 
 def run_compare_torch(
-    input_data, model, expected_results=None, places=5, input_as_shape=True, backend="nn_proto"
+    input_data, model, expected_results=None, places=5, input_as_shape=True, backend="nn_proto", 
+    rand_range = (0.0, 1.0)
 ):
     """
         Traces a model and runs a numerical test.
@@ -94,7 +96,7 @@ def run_compare_torch(
     """
     model.eval()
     if input_as_shape:
-        input_data = generate_input_data(input_data)
+        input_data = generate_input_data(input_data, rand_range)
     model_spec = trace_model(model, input_data)
     convert_and_compare(
         input_data, model_spec, expected_results=expected_results, atol=10.0 ** -places, backend=backend

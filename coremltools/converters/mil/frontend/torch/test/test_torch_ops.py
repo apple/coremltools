@@ -654,23 +654,6 @@ class TestPixelShuffle:
         run_compare_torch(input_shape, model, backend=backend)
 
 
-class TestElementWiseUnary:
-    @pytest.mark.parametrize(
-        "backend, rank, mode",
-        itertools.product(
-            backends, range(1, 6), ["sinh",],
-        ),
-    )
-    def test_unary(self, backend, rank, mode):
-        input_shape = np.random.randint(low=2, high=6, size=rank)
-        input_shape = tuple(input_shape)
-        if mode == "sinh":
-            operation = torch.sinh
-
-        model = ModuleWrapper(function=operation)
-        run_compare_torch(input_shape, model, backend=backend)
-
-
 class TestExpandDims:
     @pytest.mark.parametrize(
         "backend, rank_and_axis",
@@ -746,6 +729,7 @@ class TestGather:
         )
         run_compare_torch([params_shape], model, backend=backend)
 
+
 class TestActivation:
     @pytest.mark.parametrize(
         "backend, rank", itertools.product(backends, range(1, 6)),
@@ -779,7 +763,8 @@ class TestActivation:
         )
 
     @pytest.mark.parametrize(
-        "backend, rank, alpha", itertools.product(backends, range(1, 6), [0.1, 2.0, 1.5]),
+        "backend, rank, alpha",
+        itertools.product(backends, range(1, 6), [0.1, 2.0, 1.5]),
     )
     def test_leaky_relu(self, backend, rank, alpha):
         input_shape = tuple(np.random.randint(low=1, high=10, size=rank))
@@ -791,7 +776,7 @@ class TestActivation:
     @pytest.mark.parametrize(
         "backend, rank", itertools.product(backends, range(1, 6)),
     )
-    def test_softmax(self, backend, rank): 
+    def test_softmax(self, backend, rank):
         input_shape = tuple(np.random.randint(low=1, high=10, size=rank))
         model = nn.Softmax().eval()
         run_compare_torch(
@@ -818,7 +803,8 @@ class TestActivation:
         )
 
     @pytest.mark.parametrize(
-        "backend, rank, alpha", itertools.product(backends, range(1, 6), [0.1, 2.0, 1.5]),
+        "backend, rank, alpha",
+        itertools.product(backends, range(1, 6), [0.1, 2.0, 1.5]),
     )
     def test_elu(self, backend, rank, alpha):
         input_shape = tuple(np.random.randint(low=1, high=10, size=rank))
@@ -843,6 +829,7 @@ class TestActivation:
     )
     def test_erf(self, backend, rank):
         input_shape = tuple(np.random.randint(low=1, high=10, size=rank))
+
         class ERFActivation(nn.Module):
             def __init__(self):
                 super().__init__()
@@ -874,14 +861,13 @@ class TestActivation:
         run_compare_torch(
             input_shape, model, backend=backend,
         )
-    
+
     @pytest.mark.parametrize(
-        "backend, beta, threshold", 
-         itertools.product(backends, [1, 2, 5], [5, 10, 20]),
+        "backend, beta, threshold", itertools.product(backends, [1, 2, 5], [5, 10, 20]),
     )
     @pytest.mark.skipif(
-        _macos_version() <= (11, ),
-        reason = "Parametric SoftPlus segfaults on macOS 10.15 and below. (rdar://problem/66555235)",
+        _macos_version() <= (11,),
+        reason="Parametric SoftPlus segfaults on macOS 10.15 and below. (rdar://problem/66555235)",
     )
     def test_softplus(self, backend, beta, threshold):
         input_shape = (1, 10, 5, 15)
@@ -899,4 +885,104 @@ class TestActivation:
         model = nn.Softsign().eval()
         run_compare_torch(
             input_shape, model, backend=backend,
+        )
+
+
+class TestElementWiseUnary:
+    @pytest.mark.parametrize(
+        "backend, rank, op_string",
+        itertools.product(
+            backends,
+            [4],
+            [
+                "abs",
+                "acos",
+                "asin",
+                "atan",
+                "ceil",
+                "cos",
+                "cosh",
+                "exp",
+                "floor",
+                "round",
+                "sin",
+                "sinh",
+                "sqrt",
+                "tan",
+                "tanh",
+                "sign",
+            ],
+        ),
+    )
+    def test_elementwise_no_params(self, backend, rank, op_string):
+        input_shape = tuple(np.random.randint(low=1, high=10, size=rank))
+        op_func = getattr(torch, op_string)
+        model = ModuleWrapper(function=op_func)
+        run_compare_torch(
+            input_shape, model, backend=backend,
+        )
+
+    ## TODO (rdar://66577921): Needs to move to test_elementwise_no_params
+    @pytest.mark.parametrize(
+        "backend, rank",
+        itertools.product(
+            ['nn_proto'],
+            [4],
+        ),
+    )
+    def test_square(self, backend, rank):
+        input_shape = tuple(np.random.randint(low=1, high=10, size=rank))
+        model = ModuleWrapper(function=torch.square)
+        run_compare_torch(
+            input_shape, model, backend=backend,
+        )
+
+    @pytest.mark.parametrize(
+        "backend, rank, clamp_range",
+        itertools.product(
+            backends,
+            [4],
+            [(0.0, 1.0), (-1.0, 0.5), (0.2, 0.7)],
+        ),
+    )
+    def test_clamp(self, backend, rank, clamp_range):
+        input_shape = tuple(np.random.randint(low=1, high=10, size=rank))
+        model = ModuleWrapper(torch.clamp, {'min': clamp_range[0], 'max': clamp_range[1]})
+        run_compare_torch(
+            input_shape, model, backend=backend,
+        )
+
+    @pytest.mark.parametrize(
+        "backend, rank, threshold",
+        itertools.product(
+            ['nn_proto'], # rdar://66597974 Renable for all backends due to missing cast
+            [4],
+            [(0.0, 0.0), (0.5, 0.5), (0.5, 10), (0.9, 0.0)]
+        ),
+    )
+    def test_threshold(self, backend, rank, threshold):
+        input_shape = tuple(np.random.randint(low=1, high=10, size=rank))
+        model = torch.nn.Threshold(threshold[0], threshold[1]).eval()
+        run_compare_torch(
+            input_shape, model, backend=backend,
+        )
+
+    @pytest.mark.parametrize(
+        "backend, rank, op_string",
+        itertools.product(
+            backends,
+            [4],
+            [
+                "log",
+                "rsqrt",
+                "reciprocal",
+            ],
+        ),
+    )
+    def test_elementwise_numerically_stable(self, backend, rank, op_string):
+        input_shape = tuple(np.random.randint(low=1, high=10, size=rank))
+        op_func = getattr(torch, op_string)
+        model = ModuleWrapper(function=op_func)
+        run_compare_torch(
+            input_shape, model, backend=backend, rand_range=(20, 100)
         )
