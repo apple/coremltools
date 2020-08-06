@@ -741,6 +741,11 @@ class TestActivation:
             input_shape, model, backend=backend,
         )
 
+        model = ModuleWrapper(nn.functional.relu_)
+        run_compare_torch(
+            input_shape, model, backend=backend,
+        )
+
     @pytest.mark.parametrize(
         "backend, rank", itertools.product(backends, range(1, 6)),
     )

@@ -1,7 +1,7 @@
 from .builder import NeuralNetworkBuilder
 from coremltools.models.utils import _get_model
 import copy as _copy
-import six
+import six as _six
 
 
 def make_image_input(
@@ -120,7 +120,7 @@ def make_nn_classifier(
     elif isinstance(classes_in, list):  # list[int or str]
         classes = classes_in
         assert all([isinstance(x, \
-            (six.integer_types, six.string_types)) for x in classes]), message
+            (_six.integer_types, _six.string_types)) for x in classes]), message
     else:
         raise ValueError(message)
 

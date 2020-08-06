@@ -504,7 +504,7 @@ def softsign(context, node):
     res = mb.softsign(x=inputs[0], name=node.name)
     context.add(res)
 
-@register_torch_op
+@register_torch_op(torch_alias=["relu_"])
 def relu(context, node):
     inputs = _get_inputs(context, node, expected=1)
 
