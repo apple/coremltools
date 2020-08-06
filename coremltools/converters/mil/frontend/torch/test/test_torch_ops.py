@@ -491,6 +491,106 @@ class TestLSTM:
                 backend= backend,
             )
 
+class TestStackedBLSTM:
+
+    def _pytorch_hidden_to_coreml(self, x):
+        # Split of Direction axis
+        f, b = torch.split(x, [1] * x.shape[0], dim=0)
+        # Concat on Hidden Size axis
+        x = torch.cat((f, b), dim=2)
+        # NOTE:
+        # We are ommiting a squeeze because the conversion
+        # function for the mil op lstm unsqueezes the num_layers
+        # dimension
+        return x
+
+    @pytest.mark.parametrize(
+        "input_size, hidden_size, num_layers, bias, batch_first, dropout, bidirectional, backend",
+        itertools.product([7], [5], [1], [True, False], [False], [0.3], [True, False], backends),
+    )
+    def test_lstm(
+        self,
+        input_size,
+        hidden_size,
+        num_layers,
+        bias,
+        batch_first,
+        dropout,
+        bidirectional,
+        backend,
+    ):
+        # Check Issue #810
+        # assert num_layers == 2 and bidirectional == True
+        model = nn.Sequential(
+            nn.LSTM(
+                input_size=input_size,
+                hidden_size=hidden_size,
+                num_layers=1,
+                bias=bias,
+                batch_first=batch_first,
+                dropout=dropout,
+                bidirectional=True),
+            nn.LSTM(
+                input_size=hidden_size,
+                hidden_size=hidden_size,
+                num_layers=1,
+                bias=bias,
+                batch_first=batch_first,
+                dropout=dropout,
+                bidirectional=True)
+        )
+        SEQUENCE_LENGTH = 3
+        BATCH_SIZE = 2
+
+        num_directions = int(bidirectional) + 1
+
+        # (seq_len, batch, input_size)
+        if batch_first:
+            _input = torch.rand(BATCH_SIZE, SEQUENCE_LENGTH, input_size)
+        else:
+            _input = torch.randn(SEQUENCE_LENGTH, BATCH_SIZE, input_size)
+
+        h0 = torch.randn(num_layers * num_directions, BATCH_SIZE, hidden_size)
+        c0 = torch.randn(num_layers * num_directions, BATCH_SIZE, hidden_size)
+
+        inputs = (_input, (h0, c0))
+        expected_results = model(*inputs)
+        # Need to do some output reshaping if bidirectional
+        if bidirectional:
+            ex_hn = self._pytorch_hidden_to_coreml(expected_results[1][0])
+            ex_cn = self._pytorch_hidden_to_coreml(expected_results[1][1])
+            expected_results = (expected_results[0], (ex_hn, ex_cn))
+        run_compare_torch(inputs, model, expected_results, input_as_shape=False, backend=backend)
+
+    @pytest.mark.parametrize(
+        "input_size, hidden_size, num_layers, bias, batch_first, dropout, bidirectional, backend",
+        [
+            (7, 3, 2, True, True, 0.3, True, list(backends)[-1]),
+            (7, 3, 2, False, False, 0.3, True, list(backends)[-1]),
+        ],
+    )
+    def test_lstm_xexception(
+        self,
+        input_size,
+        hidden_size,
+        num_layers,
+        bias,
+        batch_first,
+        dropout,
+        bidirectional,
+        backend,
+    ):
+        with pytest.raises(ValueError):
+            self.test_lstm(
+                input_size,
+                hidden_size,
+                num_layers,
+                bias,
+                batch_first,
+                dropout,
+                bidirectional,
+                backend= backend,
+            )
 
 class TestConcat:
     # This tests an edge case where the list of tensors to concatenate only
