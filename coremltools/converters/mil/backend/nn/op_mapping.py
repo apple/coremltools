@@ -2647,7 +2647,14 @@ def concat(const_context, builder, op):
 
     if len(values) >= 2:
         rank = values[0].rank
-        if rank >= 4 and (op.axis.val == -3 or op.axis.val > 0 and op.axis.val == rank - 3):
+        if op.interleave.val:
+            builder.add_concat_nd(
+                    name=op.name,
+                    input_names=make_input(const_context, builder, values),
+                    output_name=op.outputs[0].name,
+                    axis=op.axis.val,
+                    interleave=True)
+        elif rank >= 4 and (op.axis.val == -3 or op.axis.val > 0 and op.axis.val == rank - 3):
             builder.add_elementwise(
                 name=op.name,
                 input_names=make_input(const_context, builder, values),

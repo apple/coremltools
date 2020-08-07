@@ -26,6 +26,7 @@ def common_pass(prog):
         "common::fuse_elementwise_to_batchnorm",
         "common::fuse_onehot_matmul_to_gather",
         "common::fuse_layernorm_or_instancenorm",  # should come after reduce_transposes, to detect instance_norm
+        "common::detect_concat_interleave",
         "common::dead_code_elimination",  # always end with dce
     ]
 

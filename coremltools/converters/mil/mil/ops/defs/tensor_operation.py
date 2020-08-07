@@ -791,6 +791,25 @@ class concat(Operation):
         * The tensors may be variadic, but the number of tensors must be determined at compile time (i.e. a tuple).
     axis: const<int32> (Required)
         * The dimension along which to concatenate. Must be in the range ``[-rank(values[i]), rank(values[i]))`` for all ``i``.
+    interleave: const<bool> (Optional, Default=False)
+        * If true, concatenate the inputs by interleaving them
+        * If true, all the inputs to this op must have the exact same shape.
+        * e.g.:
+        * in1 : shape (3, 2), value = [[1, 2], [3, 4], [5, 6]]
+        * in2 : shape (3, 2), value = [[7, 8], [9, 10], [11, 12]]
+        * axis = 0
+        *
+        * if interleave = False (default)
+        * output : shape (6, 2)
+        * output[0:3, :] = in1
+        * output[3:6, :] = in2
+        * value = [[1, 2], [3, 4], [5, 6], [7, 8], [9, 10], [11, 12]]
+        *
+        * if interleave = True
+        * output : shape (6, 2)
+        * output[0::2, :] = in1
+        * output[1::2, :] = in2
+        * value = [[1, 2], [7, 8], [3, 4], [9, 10], [5, 6], [11, 12]]
 
     Returns
     -------
@@ -802,7 +821,9 @@ class concat(Operation):
     T: fp32
     """
 
-    input_spec = InputSpec(values=TupleInputType(), axis=IntInputType(const=True),)
+    input_spec = InputSpec(values=TupleInputType(),
+                           axis=IntInputType(const=True),
+                           interleave=BoolInputType(const=True, default=False))
 
     def __init__(self, **kwargs):
         super(concat, self).__init__(**kwargs)
@@ -847,6 +868,12 @@ class concat(Operation):
                     raise ValueError(
                         msg.format(self.op_type, self.name, retshape, v.shape)
                     )
+                if self.interleave.val and retshape[i] != v.shape[i]:
+                    msg = 'Dimension mismatch in {} ("{}"): shapes {} vs. {}. ' \
+                          'All inputs must have same shape when \'interleave\' option is True.'
+                    raise ValueError(
+                        msg.format(self.op_type, self.name, retshape, v.shape)
+                    )
 
         # Get length of concat dim
         concat_dim_len = 0
@@ -880,6 +907,10 @@ class concat(Operation):
         # or don't have symbolic values.
         # Note that cases like values = [[1, is0], [2]] aren't in such case.
         if any([is_symbolic(v) for v in values]) and not is_all_rank_zero:
+            return None
+
+        # skip value inference when interleave on
+        if self.interleave.val:
             return None
 
         if not isinstance(values[0], np.ndarray) or values[0].shape == ():

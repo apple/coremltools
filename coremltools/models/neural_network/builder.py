@@ -4726,7 +4726,7 @@ class NeuralNetworkBuilder(object):
         spec_layer_params.axis = axis
         return spec_layer
 
-    def add_concat_nd(self, name, input_names, output_name, axis):
+    def add_concat_nd(self, name, input_names, output_name, axis, interleave=False):
         """
         Add a concat_nd layer to the model that performs concatenation along the
         given axis.
@@ -4742,11 +4742,18 @@ class NeuralNetworkBuilder(object):
             The output blob name of this layer.
         axis: int
             Axis to perform the concat operation on.
+        interleave : bool
+            (Only available in Core ML Specification >= 5 (iOS >= 14, macOS >= 11.0)
+            If true, concatenate by interleaving the inputs
         """
 
         spec_layer = self._add_generic_layer(name, input_names, [output_name])
         spec_layer_params = spec_layer.concatND
         spec_layer_params.axis = axis
+        if interleave:
+            spec_layer_params.interleave = True
+            if self.spec:
+                self.spec.specificationVersion = max(self.spec.specificationVersion, _SPECIFICATION_VERSION_IOS_14)
         return spec_layer
 
     def add_erf(self, name, input_name, output_name):
