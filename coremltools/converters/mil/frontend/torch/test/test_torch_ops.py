@@ -5,6 +5,7 @@
 
 import sys
 
+from coremltools.models.utils import _python_version
 from coremltools.models.utils import _macos_version
 from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.testing_reqs import *
@@ -834,7 +835,7 @@ class TestActivation:
             input_shape, model, backend=backend,
         )
 
-    @pytest.mark.skipif(sys.version_info < (3, 6), reason="requires python3.6 or higher")
+    @pytest.mark.skipif(_python_version() < (3, 6), reason="requires python 3.6")
     @pytest.mark.parametrize(
         "backend, rank", itertools.product(backends, range(1, 6)),
     )
@@ -863,6 +864,7 @@ class TestActivation:
             input_shape, model, backend=backend,
         )
 
+    @pytest.mark.skipif(_python_version() < (3, 6), reason="requires python 3.6")
     @pytest.mark.parametrize(
         "backend, rank", itertools.product(backends, range(1, 6)),
     )
