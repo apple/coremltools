@@ -100,6 +100,7 @@ def All(context, node):
     x = context[node.inputs[0]]
     axes = _check_axes_type(context[node.inputs[1]])
     keep_dims = node.attr.get("keep_dims", False)
+    x = mb.cast(x=x, dtype="int32")
     x = mb.reduce_prod(x=x, axes=axes, keep_dims=keep_dims, name=node.name)
     context.add(node.name, x)
 
@@ -109,6 +110,7 @@ def Any(context, node):
     x = context[node.inputs[0]]
     axes = _check_axes_type(context[node.inputs[1]])
     keep_dims = node.attr.get("keep_dims", False)
+    x = mb.cast(x=x, dtype="int32")
     x = mb.reduce_sum(x=x, axes=axes, keep_dims=keep_dims)
     x = mb.greater(x=x, y=0.0, name=node.name)
     context.add(node.name, x)

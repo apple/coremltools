@@ -2996,6 +2996,9 @@ class TestReduction:
             if isinstance(axes, list) and axes and len(axes) == rank and not keep_dims:
                 return  # TODO <rdar://problem/59152311> MIL: Add rank 0 and dim size 0 related tests for every op
 
+            if tf_op in {tf.reduce_any, tf.reduce_all, tf.reduce_logsumexp} and backend != "nn_proto":  # Remove backend constraint, rdar://66610973
+                return
+
             with tf.Graph().as_default() as graph:
                 x = tf.placeholder(tf.float32, shape=shape)
                 x_val = random_gen(shape=shape, rand_min=-5.0, rand_max=5.0)
