@@ -721,6 +721,117 @@ class NeuralNetworkBuilder(object):
                 idx
             ].type.multiArrayType.dataType = _Model_pb2.ArrayFeatureType.DOUBLE
 
+    def _check_fp16_weight_param_exists(self, layers):
+        """
+        Checks if the network has at least one weight_param which is in FP16 format
+
+        Parameters
+        ----------
+        layers: list of nn_spec.layer
+            List of layers.
+        """
+
+        for layer in layers:
+            layer_type = layer.WhichOneof("layer")
+
+            # Convolution
+            if layer_type == "convolution":
+                if len(layer.convolution.weights.float16Value) > 0:
+                    return True
+                if layer.convolution.hasBias and len(layer.convolution.bias.float16Value) > 0:
+                    return True
+            # Batchnorm
+            elif layer_type == "batchnorm":
+                if len(layer.batchnorm.mean.float16Value) > 0:
+                    return True
+
+            # InnerProduct
+            elif layer_type == "innerProduct":
+                if len(layer.innerProduct.weights.float16Value) > 0:
+                    return True
+                if layer.innerProduct.hasBias and len(layer.innerProduct.bias.float16Value) > 0:
+                    return True
+
+            # BatchedMatmul
+            elif layer_type == "batchedMatmul":
+                if len(layer.batchedMatmul.weights.float16Value) > 0:
+                    return True
+                if layer.batchedMatmul.hasBias and len(layer.batchedMatmul.bias.float16Value) > 0:
+                    return True
+
+            # Embedding layer
+            elif layer_type == "embedding":
+                if len(layer.embedding.weights.float16Value) > 0:
+                    return True
+                if layer.embedding.hasBias and len(layer.embedding.bias.float16Value) > 0:
+                    return True
+
+            # Embedding ND layer
+            elif layer_type == "embeddingND":
+                if len(layer.embeddingND.weights.float16Value) > 0:
+                    return True
+                if layer.embeddingND.hasBias and len(layer.embeddingND.bias.float16Value) > 0:
+                    return True
+
+            # Scale layer
+            elif layer_type == "scale":
+                if len(layer.scale.shapeScale.float16Value) > 0:
+                    return True
+                if layer.scale.hasBias and len(layer.scale.bias.float16Value) > 0:
+                    return True
+
+            # Bias layer
+            elif layer_type == "bias":
+                if len(layer.bias.bias.float16Value) > 0:
+                    return True
+
+            # LoadConstant layer
+            elif layer_type == "loadConstant":
+                if len(layer.loadConstant.data.float16Value) > 0:
+                    return True
+
+            # Simple Recurrent
+            elif layer_type == "simpleRecurrent":
+                if len(layer.simpleRecurrent.weightMatrix.float16Value) > 0:
+                    return True
+                if layer.simpleRecurrent.hasBiasVector and len(layer.simpleRecurrent.biasVector.float16Value) > 0:
+                    return True
+
+            # GRU
+            elif layer_type == "gru":
+                if len(layer.gru.updateGateWeightMatrix.float16Value) > 0:
+                    return True
+                if layer.gru.hasBiasVectors and len(layer.gru.outputGateBiasVector.float16Value) > 0:
+                        return True
+
+            # uniDirectionalLSTM Layers
+            elif layer_type == "uniDirectionalLSTM":
+                for lstm_wp in layer.uniDirectionalLSTM.weightParams:
+                    if len(lstm_wp.float16Value) > 0:
+                        return True
+
+            # biDirectionalLSTM Layers
+            elif layer_type == "biDirectionalLSTM":
+                for lstm_wp in layer.biDirectionalLSTM.weightParams:
+                    if len(lstm_wp.float16Value) > 0:
+                        return True
+
+            # branch Layers
+            elif layer_type == "branch":
+                if len(layer.branch.ifBranch.float16Value) > 0:
+                    return True
+                if len(layer.branch.elseBranch.float16Value) > 0:
+                    return True
+
+            # loop Layers
+            elif layer_type == "loop":
+                if len(layer.loop.conditionNetwork.float16Value) > 0:
+                    return True
+                if len(layer.loop.bodyNetwork.float16Value) > 0:
+                    return True
+
+            return False
+
     def make_updatable(self, trainables):
         """
         Make the builder's NeuralNetwork spec updatable.
@@ -732,6 +843,16 @@ class NeuralNetworkBuilder(object):
         """
         if self.spec is None:
             return
+
+        # check if any layer weights/biases is in FP16 format
+        if self._check_fp16_weight_param_exists(self.nn_spec.layers):
+            raise ValueError("This model has at least one layer with FP16 weights or bias formats. These networks will "
+                             "always be optimized to a full FP16 model format which is not supported to be marked "
+                             "updatable. Either make sure the model has no FP16 WeightParams or split the "
+                             "network to two models with updatable part of the model as a separate model with no FP16 "
+                             "WeightParams. Note that updatable pipelines model can only have the last sub model marked "
+                             "as updatable.")
+
         self.spec.isUpdatable = True
 
         if (
