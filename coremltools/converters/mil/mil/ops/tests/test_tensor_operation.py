@@ -644,10 +644,10 @@ class TestOneHot:
                 mb.one_hot(indices=x, one_hot_vector_size=4),
                 mb.one_hot(indices=x, one_hot_vector_size=4, axis=0),
                 mb.one_hot(
-                    indices=x, one_hot_vector_size=4, on_value=1.0, off_value=0.0
+                    indices=x, one_hot_vector_size=4, on_value=1.0, off_value=0.1
                 ),
                 mb.one_hot(
-                    indices=x, one_hot_vector_size=y, on_value=1.0, off_value=0.0
+                    indices=x, one_hot_vector_size=y, on_value=1, off_value=9
                 ),
             ]
 
@@ -655,14 +655,14 @@ class TestOneHot:
             (2, 4, types.int32),
             (4, 2, types.int32),
             (2, 4, types.fp32),
-            (2, UNK_SYM, types.fp32),
+            (2, UNK_SYM, types.int32),
         ]
 
         expected_outputs = [
             np.array([[0, 1, 0, 0], [1, 0, 0, 0]], dtype=np.float32),
             np.array([[0, 1], [1, 0], [0, 0], [0, 0]], dtype=np.float32),
-            np.array([[0, 1, 0, 0], [1, 0, 0, 0]], dtype=np.float32),
-            np.array([[0, 1, 0, 0], [1, 0, 0, 0]], dtype=np.float32),
+            np.array([[0.1, 1, 0.1, 0.1], [1, 0.1, 0.1, 0.1]], dtype=np.float32),
+            np.array([[9, 1, 9, 9], [1, 9, 9, 9]], dtype=np.float32),
         ]
 
         run_compare_builder(

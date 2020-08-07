@@ -2424,7 +2424,7 @@ def one_hot(const_context, builder, op):
     builder.add_one_hot(
         name=op.name,
         input_names=make_input(const_context, builder, inputs),
-        output_name=op.name,
+        output_name=op.outputs[0].name,
         one_hot_vector_size=op.one_hot_vector_size.val,
         axis=op.axis.val,
         on_value=op.on_value.val,

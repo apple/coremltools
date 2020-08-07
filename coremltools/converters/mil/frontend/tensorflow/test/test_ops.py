@@ -3767,46 +3767,29 @@ class TestOneHot:
         rank, axis = rank_and_axis
         depth, on_value, off_value = 30, 28.0, -4.0
         x_shape = np.random.randint(low=2, high=4, size=rank)
+        axis = (axis if axis >= -1 else axis + rank + 1)
 
         if not dynamic:
-            with tf.Graph().as_default() as graph:
-                x = tf.placeholder(tf.int32, shape=x_shape)
-                axis = (
-                    axis if axis >= -1 else axis + rank + 1
-                )  ## TF limitation: Doesn't support axis < -1
-                res = tf.one_hot(
-                    x, axis=axis, depth=depth, on_value=on_value, off_value=off_value
-                )
-                run_compare_tf(
-                    graph,
-                    {x: np.random.randint(0, depth, size=x_shape)},
-                    res,
-                    use_cpu_only=use_cpu_only,
-                    frontend_only=False,
-                    backend=backend,
-                )
+            @make_tf_graph([list(x_shape)+[tf.int32]])
+            def build_model(x):
+                return tf.one_hot(x, axis=axis, depth=depth, on_value=on_value, off_value=off_value)
+
+            model, inputs, outputs = build_model
+            input_values = [np.random.randint(0, depth, size=x_shape).astype(np.int32)]
+            input_dict = dict(zip(inputs, input_values))
+
         else:  # Dynamic Case with depth being an input
-            with tf.Graph().as_default() as graph:
-                x = tf.placeholder(tf.int32, shape=x_shape)
-                depth_input = tf.placeholder(tf.int32)
-                axis = (
-                    axis if axis >= -1 else axis + rank + 1
-                )  ## TF limitation: Doesn't support axis < -1
-                res = tf.one_hot(
-                    x,
-                    axis=axis,
-                    depth=depth_input,
-                    on_value=on_value,
-                    off_value=off_value,
-                )
-                run_compare_tf(
-                    graph,
-                    {x: np.random.randint(0, depth, size=x_shape), depth_input: depth},
-                    res,
-                    use_cpu_only=use_cpu_only,
-                    frontend_only=False,
-                    backend=backend,
-                )
+            @make_tf_graph([list(x_shape)+[tf.int32], [tf.int32]])
+            def build_model(x, depth_input):
+                return tf.one_hot(x, axis=axis, depth=depth_input, on_value=on_value, off_value=off_value)
+
+            model, inputs, outputs = build_model
+            input_values = [np.random.randint(0, depth, size=x_shape).astype(np.int32), depth]
+            input_dict = dict(zip(inputs, input_values))
+
+        run_compare_tf(model, input_dict, outputs,
+               use_cpu_only=use_cpu_only,
+               frontend_only=False, backend=backend)
 
 
 class TestPad:
