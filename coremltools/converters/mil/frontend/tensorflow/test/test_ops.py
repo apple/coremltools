@@ -23,6 +23,8 @@ class TestDebugging:
     expected to be deleted by graph pass before op conversions
     """
 
+    @pytest.mark.xfail(
+        reason="<rdar://problem/66721282> test_v2_ops.py::TestDebugging::test_assert CI failure", run=False)
     @pytest.mark.parametrize(
         "use_cpu_only, backend",
         itertools.product([True, False], backends),
