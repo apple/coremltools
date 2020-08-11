@@ -73,6 +73,7 @@ from coremltools.converters.mil.frontend.tensorflow.test.test_ops import (
     TestReshape,
     TestReverse,
     TestReverseSequence,
+    TestScatter,
     TestSelect,
     TestSliceByIndex,
     TestSliceBySize,

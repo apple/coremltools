@@ -3151,12 +3151,12 @@ class TestScatter:
         self, use_cpu_only, backend, data_rank, indices_rank
     ):
 
-        shape = np.random.randint(low=2, high=4, size=data_rank)
+        shape = np.random.randint(low=2, high=4, size=data_rank).astype(np.int32)
         indices_shape = np.random.randint(low=2, high=4, size=indices_rank)
         indices_shape[-1] = np.random.randint(low=1, high=data_rank + 1)
         updates_shape = list(indices_shape[:-1]) + list(shape[indices_shape[-1] :])
 
-        updates = np.random.rand(*updates_shape)
+        updates = np.random.rand(*updates_shape).astype(np.float32)
         indices_list = []
         for i in range(indices_shape[-1]):
             indices_list.append(np.random.randint(0, shape[i], size=indices_shape[:-1]))
