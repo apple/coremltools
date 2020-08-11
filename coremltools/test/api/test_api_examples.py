@@ -749,6 +749,104 @@ class TestFlexibleShape:
 
     @staticmethod
     @pytest.mark.parametrize(
+            "variable_length", [True, False])
+    @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
+    def test_torch_range_dim_lstm(variable_length):
+        """
+        This example shows how to run LSTM with previous hidden / cell states
+        """
+        import torch
+        import coremltools as ct
+
+        input_size = 3
+        hidden_size = 2
+
+        class TestNet(torch.nn.Module):
+            def __init__(self):
+              super(TestNet, self).__init__()
+              self.lstm = torch.nn.LSTM(input_size, hidden_size, 1)
+
+            def forward(self, x, hidden_state, cell_state):
+                # LSTM takes in previous hidden and cell states. The first
+                # invokation usually have zero vectors as initial states.
+                output, (new_hidden_state, new_cell_state) = \
+                    self.lstm(x, (hidden_state, cell_state))
+                # LSTM hidden / cell states are returned to be managed by the
+                # caller (and is fed in as inputs in the next call).
+                return output, new_hidden_state, new_cell_state
+
+        model = TestNet()
+        model.eval()
+
+        seq_len = 2 # we'll make seq_len dynamic later
+        batch = 1
+        input_shape = (seq_len, batch, input_size)
+        rand_input = torch.rand(*input_shape)
+        h_shape = (1, batch, hidden_size)
+        rand_h0 = torch.rand(*h_shape)
+        rand_c0 = torch.rand(*h_shape)
+
+        traced_model = torch.jit.trace(model, (rand_input, rand_h0, rand_c0))
+
+        # ct.RangeDim() tells coremltools that this dimension can change for
+        # each inference example (aka "runtime-determined"). If the sequence
+        # length is always the same (e.g., 2 step LSTM would have seq_len == 2)
+        # Note that fixed-length models usually run slightly faster
+        # than variable length models.
+        ct_seq_len = ct.RangeDim() if variable_length else seq_len
+        seq_input = ct.TensorType(shape=(ct_seq_len, batch, input_size),
+            name="seq_input")
+        h_input = ct.TensorType(shape=h_shape, name="h_input")
+        c_input = ct.TensorType(shape=h_shape, name="c_input")
+
+        mlmodel = ct.convert(
+            traced_model,
+            inputs=[seq_input, h_input, c_input],
+        )
+
+        if ct.utils._is_macos():
+            result = mlmodel.predict(
+                {"seq_input": rand_input.detach().numpy().astype(np.float32),
+                  "h_input": rand_h0.detach().numpy().astype(np.float32),
+                  "c_input": rand_c0.detach().numpy().astype(np.float32),
+                  }
+            )
+
+            # Verify outputs
+            expected = model(rand_input, rand_h0, rand_c0)
+            names = list(result.keys())
+            names.sort()
+            np.testing.assert_allclose(result[names[0]],
+                expected[0].detach().numpy(), atol=1e-4)
+            np.testing.assert_allclose(result[names[1]],
+                expected[1].detach().numpy(), atol=1e-4)
+            np.testing.assert_allclose(result[names[2]],
+                expected[2].detach().numpy(), atol=1e-4)
+
+            # Try example of different length
+            if variable_length:
+                seq_len = 10
+                input_shape = (seq_len, batch, input_size)
+                rand_input = torch.rand(*input_shape)
+
+                result = mlmodel.predict(
+                    {"seq_input": rand_input.detach().numpy().astype(np.float32),
+                      "h_input": rand_h0.detach().numpy().astype(np.float32),
+                      "c_input": rand_c0.detach().numpy().astype(np.float32),
+                      }
+                )
+                expected = model(rand_input, rand_h0, rand_c0)
+                names = list(result.keys())
+                names.sort()
+                np.testing.assert_allclose(result[names[0]],
+                    expected[0].detach().numpy(), atol=1e-4)
+                np.testing.assert_allclose(result[names[1]],
+                    expected[1].detach().numpy(), atol=1e-4)
+                np.testing.assert_allclose(result[names[2]],
+                    expected[2].detach().numpy(), atol=1e-4)
+
+    @staticmethod
+    @pytest.mark.parametrize(
             "use_symbol", [True, False])
     @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
     def test_torch_outofbound_range_dim(use_symbol):
