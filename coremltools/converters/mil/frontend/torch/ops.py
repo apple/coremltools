@@ -639,7 +639,15 @@ def div(context, node):
 @register_torch_op
 def floor_divide(context, node):
     inputs = _get_inputs(context, node, expected=2)
-    res = mb.floor_div(x=inputs[0], y=inputs[1], name=node.name)
+    div_res = mb.floor_div(x=inputs[0], y=inputs[1])
+    # Pytorch's floor_divide always returns fp32, even if the inputs are int
+    res = mb.cast(x=div_res, dtype='fp32', name=node.name)
+    context.add(res)
+
+@register_torch_op
+def true_divide(context, node):
+    inputs = _get_inputs(context, node, expected=2)
+    res = mb.real_div(x=inputs[0], y=inputs[1], name=node.name)
     context.add(res)
 
 
@@ -1735,7 +1743,14 @@ def split(context, node):
 def to(context, node):
     # @non_blocking and @copy are unused
     inputs = _get_inputs(context, node)
-    if len(inputs) == 5:
+    if len(inputs) == 6:
+        _input = inputs[0]
+        device = inputs[1]
+        dtype = inputs[2].val
+        # non_blocking = inputs[3]
+        # copy = inputs[4]
+        # memory_format = inputs[5] # usually None
+    elif len(inputs) == 5:
         _input = inputs[0]
         device = inputs[1]
         dtype = inputs[2].val
@@ -2190,3 +2205,9 @@ def threshold(context, node):
 def sign(context, node):
     inputs = _get_inputs(context, node, expected=1)
     context.add(mb.sign(x=inputs[0], name=node.name))
+
+@register_torch_op
+def is_floating_point(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+    is_float = types.is_float(inputs[0].dtype)
+    context.add(mb.const(val=is_float, name=node.name))

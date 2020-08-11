@@ -520,7 +520,8 @@ class TestPyTorchConverterExamples:
 
             # Verify outputs
             expected = model(example_input)
-            np.testing.assert_allclose(result["5"], expected.detach().numpy())
+            name = list(result.keys())[0]
+            np.testing.assert_allclose(result[name], expected.detach().numpy())
 
         # Duplicated inputs are invalid
         with pytest.raises(ValueError, match=r"Duplicated inputs"):
@@ -736,7 +737,8 @@ class TestFlexibleShape:
 
             # Verify outputs
             expected = model(example_input)
-            np.testing.assert_allclose(result["5"], expected.detach().numpy())
+            name = list(result.keys())[0]
+            np.testing.assert_allclose(result[name], expected.detach().numpy())
 
             # Try example of different length
             example_input2 = torch.randint(high=num_tokens, size=(99,),
@@ -745,7 +747,8 @@ class TestFlexibleShape:
                 {"input": example_input2.detach().numpy().astype(np.float32)}
             )
             expected = model(example_input2)
-            np.testing.assert_allclose(result["5"], expected.detach().numpy())
+            name = list(result.keys())[0]
+            np.testing.assert_allclose(result[name], expected.detach().numpy())
 
     @staticmethod
     @pytest.mark.parametrize(
@@ -890,7 +893,8 @@ class TestFlexibleShape:
 
             # Verify outputs
             expected = model(example_input)
-            np.testing.assert_allclose(result["5"], expected.detach().numpy())
+            name = list(result.keys())[0]
+            np.testing.assert_allclose(result[name], expected.detach().numpy())
 
             # seq_len below/above lower_bound/upper_bound
             with pytest.raises(RuntimeError,
@@ -992,7 +996,8 @@ class TestFlexibleShape:
 
             # Verify outputs
             expected = model(example_input)
-            np.testing.assert_allclose(result["20"], expected.detach().numpy(),
+            name = list(result.keys())[0]
+            np.testing.assert_allclose(result[name], expected.detach().numpy(),
                     rtol=1e-3, atol=1e-4)
 
             # Test (1, 3, 56, 56) shape (can't verify numerical parity with Torch
@@ -1088,4 +1093,5 @@ class TestOptionalInput:
             # Verify outputs
             torch_default_value = torch.tensor([3])
             expected = model(example_input[0].detach(), torch_default_value)
-            np.testing.assert_allclose(result["8"], expected.detach().numpy())
+            name = list(result.keys())[0]
+            np.testing.assert_allclose(result[name], expected.detach().numpy())

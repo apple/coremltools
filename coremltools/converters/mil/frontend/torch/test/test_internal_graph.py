@@ -1474,22 +1474,16 @@ class TestTorchOps:
         to_node = InternalTorchIRNode(
             kind="to", inputs=input_list, outputs=[output_name]
         )
-        if num_args == 6:
-            with pytest.raises(ValueError):
-                ssa = self._construct_test_graph(
-                    context, ops.to, to_node, output_name, constants=constants,
-                )
+        ssa = self._construct_test_graph(
+            context, ops.to, to_node, output_name, constants=constants,
+        )
+        if num_args == 3:
+            expected_result = test_input.numpy()
         else:
-            ssa = self._construct_test_graph(
-                context, ops.to, to_node, output_name, constants=constants,
-            )
-            if num_args == 3:
-                expected_result = test_input.numpy()
-            else:
-                expected_result = test_input.to(
-                    dtype=ops.NUM_TO_TORCH_DTYPE[dtype]
-                ).numpy()
-            assert np.allclose(expected_result, ssa.val)
+            expected_result = test_input.to(
+                dtype=ops.NUM_TO_TORCH_DTYPE[dtype]
+            ).numpy()
+        assert np.allclose(expected_result, ssa.val)
 
     def test_floor(self, context):
         test_input = torch.rand(1, 2, 3) * 10

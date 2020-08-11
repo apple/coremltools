@@ -12,6 +12,7 @@ import logging as _logging
 import platform as _platform
 import re as _re
 import sys as _sys
+from packaging import version
 
 
 def __get_version(version):
@@ -232,6 +233,7 @@ except:
     _HAS_TORCH = False
 MSG_TORCH_NOT_FOUND = "PyTorch not found."
 
+
 # ---------------------------------------------------------------------------------------
 _HAS_ONNX = True
 try:
@@ -246,3 +248,17 @@ try:
 except:
     _HAS_GRAPHVIZ = False
 MSG_ONNX_NOT_FOUND = "ONNX not found."
+
+# General utils
+def version_ge(module, target_version):
+    """
+    Example usage:
+
+    >>> import torch # v1.5.0
+    >>> version_ge(torch, '1.6.0') # False
+    """
+    return version.parse(module.__version__) >= version.parse(target_version)
+
+def version_lt(module, target_version):
+    """See version_ge"""
+    return version.parse(module.__version__) < version.parse(target_version)

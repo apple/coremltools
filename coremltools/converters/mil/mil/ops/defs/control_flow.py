@@ -83,10 +83,17 @@ class cond(Operation):
                     "true branch output {} type {} mismatch false branch"
                     + " output type {}"
                 )
-                raise ValueError(msg.format(vt.name, vt.sym_type, vf.sym_type))
+                raise ValueError(msg.format(vt.name,
+                    vt.sym_type.__type_info__(), vf.sym_type.__type_info__()))
 
         return tuple(v.sym_type for v in true_ret_vars)
 
+    def value_inference(self):
+        if self.pred.val is None:
+            raise NotImplementedError()
+        if self.pred.val:
+            return [v.val for v in self.blocks[0].outputs]
+        return [v.val for v in self.blocks[1].outputs]
 
 @register_op(doc_str="")
 class const(Operation):

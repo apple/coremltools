@@ -132,7 +132,7 @@ class InternalTorchIRNode:
         self, node=None, parent=None, attr=None, inputs=None, outputs=None, kind=None, blocks=None,
     ):
         self.parent = parent
-        if node:
+        if node is not None:
             self.inputs = [_input.debugName() for _input in node.inputs()]
             self.outputs = [output.debugName() for output in node.outputs()]
             self.kind = node.kind().split("::")[-1].lower()

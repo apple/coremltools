@@ -8,6 +8,7 @@ from __future__ import print_function as _
 from six import string_types as _string_types
 import logging as _logging
 import torch as _torch
+from coremltools._deps import version_lt
 
 from coremltools.converters.mil.input_types import InputType, ImageType
 from coremltools.converters.mil.mil import types
@@ -272,7 +273,11 @@ class TorchConverter:
         _torch._C._jit_pass_dce(graph)
         _torch._C._jit_pass_lint(graph)
         # Replaces a couple specific ops patterns (add, sub, mul, div, chunk).
-        _torch._C._jit_pass_canonicalize_ops(graph)
+        if version_lt(_torch, '1.6.0'):
+            _torch._C._jit_pass_canonicalize_ops(graph)
+        else:
+            # v1.6.0 pass renamed
+            _torch._C._jit_pass_canonicalize_graph_fuser_ops(graph)
         _torch._C._jit_pass_lint(graph)
         # From PyTorch code: This pass catches all of the small, easy to catch
         # peephole optimizations you might be interested in doing.
@@ -284,7 +289,13 @@ class TorchConverter:
         # equivalent graphs have same numbers.
         graph = _torch._C._jit_pass_canonicalize(graph)
         _torch._C._jit_pass_lint(graph)
-        _torch._C._jit_pass_constant_propagation(graph)
+        if version_lt(_torch, '1.6.0'):
+            # v1.6.0 JIT changes disallows pulling list values out of
+            # prim::Constant. We can only pull scalar values. constant
+            # propagation removes `listConstruct` and results in list values.
+            # We disallow constant prop pass to keep them as scalars, and rely
+            # on our own constant prop to interpret `listConstruct`.
+            _torch._C._jit_pass_constant_propagation(graph)
         # NOTE: Don't need another DCE, it's included in constant propagation.
         _torch._C._jit_pass_lint(graph)
 
