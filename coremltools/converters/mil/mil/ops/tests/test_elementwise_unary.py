@@ -95,12 +95,8 @@ class TestElementwiseUnary:
 
             build = lambda x: mb.atanh(x=x)
         elif mode == "cast":
-            if backend == "mil_proto":
-                # TODO <rdar://problem/61400566> [MIL] Add cast operation in MIL backend and enable tests
-                return
             val = np.array([[-1.2, 2, -3.6], [4.5, -5, 6.7]], dtype=np.float32)
             expected_outputs = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.int32)
-
             build = lambda x: mb.cast(x=x, dtype="int32")
         elif mode == "ceil":
             val = np.array([[-1.2, 2, -3.4], [4.5, -5, 6.7]], dtype=np.float32)

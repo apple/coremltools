@@ -551,6 +551,29 @@ class TestWhere:
             )
 
 
+class TestCast:
+    @pytest.mark.parametrize('use_cpu_only, backend, rank, dtype',
+                             itertools.product(
+                                 [True, False],
+                                 backends,
+                                 list(range(1, 6)),
+                                 ['int32', 'float64']
+                             ))
+    def test(self, use_cpu_only, backend, rank, dtype):
+        shape = np.random.randint(low=1, high=3, size=rank)
+
+        @make_tf_graph([shape])
+        def build_model(x):
+            return tf.cast(x, dtype=dtype)
+
+        model, inputs, outputs = build_model
+        input_values = [random_gen(shape, -100, 100)]
+        input_dict = dict(zip(inputs, input_values))
+        run_compare_tf(model, input_dict, outputs,
+                       use_cpu_only=use_cpu_only,
+                       backend=backend)
+
+
 class TestCond:
     @pytest.mark.parametrize(
         "use_cpu_only, backend", itertools.product([True, False], ["nn_proto"],)

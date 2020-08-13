@@ -12,7 +12,7 @@ backends = testing_reqs.backends
 
 class TestSelect:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "use_cpu_only, backend", itertools.product([True, False], backends)
     )
     def test_builder_to_backend_smoke(self, use_cpu_only, backend):
         cond_val = np.array([[3, 0, 0], [0, 4, 0], [5, 6, 0]], dtype=np.float32)
@@ -46,7 +46,7 @@ class TestSelect:
         )
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "use_cpu_only, backend", itertools.product([True, False], backends)
     )
     def test_builder_to_backend_smoke_broadcast(self, use_cpu_only, backend):
         cond_val = np.array([[1], [0], [2]], dtype=np.float32)

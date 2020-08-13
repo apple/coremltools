@@ -177,7 +177,9 @@ class select(Operation):
     Returns
     -------
     tensor<[*D_out], T> or tensor<[n, len(D1)], int32>
-        *  If ``a, b`` are both provided, return shape is based on broadcast rules from ``cond, a, b``. If ``a, b`` are ``None``, returns shape is 2D, where first dimension ``n`` is the number of matching indices in ``cond`` and ``len(D1)`` is the rank of ``cond``.
+        *  If ``a, b`` are both provided, return shape is based on broadcast rules from ``cond, a, b``.
+        If ``a, b`` are ``None``, returns shape is 2D, where first dimension ``n`` is the number of
+        matching indices in ``cond`` and ``len(D1)`` is the rank of ``cond``.
 
     Attributes
     ----------
