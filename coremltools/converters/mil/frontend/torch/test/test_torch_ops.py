@@ -966,6 +966,7 @@ class TestElementWiseUnary:
                 "sin",
                 "sinh",
                 "sqrt",
+                "square",
                 "tan",
                 "tanh",
                 "sign",

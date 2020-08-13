@@ -2047,8 +2047,6 @@ class TestElementWiseUnary:
                 res = tf.sqrt(x)
                 val = random_gen(input_shape, rand_min=0.5, rand_max=1000)
             elif mode == "square":
-                if backend == "mil_proto":
-                    return  # TODO
                 res = tf.math.square(x)
                 val = random_gen(input_shape, rand_min=-5, rand_max=5)
                 atol, rtol = 1e-2, 1e-3

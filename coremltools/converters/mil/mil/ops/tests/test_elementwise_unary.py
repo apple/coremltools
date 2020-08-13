@@ -41,6 +41,7 @@ class TestElementwiseUnary:
                 "sin",
                 "sinh",
                 "sqrt",
+                "square",
                 "tan",
                 "tanh",
                 "threshold",
@@ -225,6 +226,14 @@ class TestElementwiseUnary:
             )
 
             build = lambda x: mb.sqrt(x=x)
+        elif mode == "square":
+            val = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
+            expected_outputs = np.array(
+                [[1.0, 4.0, 9.0], [16.0, 25.0, 36.]],
+                dtype=np.float32,
+            )
+
+            build = lambda x: mb.square(x=x)
         elif mode == "tan":
             val = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.float32)
             expected_outputs = np.array(
