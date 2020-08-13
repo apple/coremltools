@@ -1000,3 +1000,14 @@ class TestElementWiseUnary:
         run_compare_torch(
             input_shape, model, backend=backend, rand_range=(20, 100)
         )
+
+class TestMatMul:
+
+    @pytest.mark.parametrize("backend", backends)
+    def test_bmm(self, backend):
+        shape_x, shape_y = (3,4,5), (3,5,6)
+        model = ModuleWrapper(function=torch.bmm)
+        run_compare_torch(
+            [shape_x, shape_y], model, backend=backend,
+        )
+

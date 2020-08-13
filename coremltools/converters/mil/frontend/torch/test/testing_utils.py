@@ -23,8 +23,8 @@ class ModuleWrapper(nn.Module):
         self.function = function
         self.kwargs = kwargs if kwargs else {}
 
-    def forward(self, x):
-        return self.function(x, **self.kwargs)
+    def forward(self, *args):
+        return self.function(*args, **self.kwargs)
 
 np.random.seed(1984)
 

@@ -724,6 +724,13 @@ def cast(const_context, builder, op):
             output_name=op.outputs[0].name,
             params=[1.0, 0.0],
         )
+    elif op.dtype.val == "bool":
+        builder.add_not_equal(
+            name=op.name,
+            input_names=op.x.name,
+            output_name=op.outputs[0].name,
+            alpha=0.0,
+        )
     else:
         raise NotImplementedError(
             "Parameter dtype of the cast operation can be one of the {}. "

@@ -785,6 +785,7 @@ class cast(Operation):
             "int64": types.int64,
             "fp32": types.fp32,
             "fp64": types.fp64,
+            "bool": types.bool,
         }
 
         if self.dtype.val not in type_map.keys():
@@ -806,6 +807,7 @@ class cast(Operation):
             "int64": np.int64,
             "fp32": np.float32,
             "fp64": np.float64,
+            "bool": np.bool,
         }
 
         if self.dtype.val not in type_map.keys():

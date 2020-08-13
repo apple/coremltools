@@ -286,7 +286,7 @@ def pixel_shuffle(context, node):
     context.add(perm)
 
 
-@register_torch_op
+@register_torch_op(torch_alias=["bmm"])
 def matmul(context, node):
     inputs = _get_inputs(context, node, expected=2)
     res = mb.matmul(x=inputs[0], y=inputs[1], name=node.name)
