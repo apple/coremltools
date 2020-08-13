@@ -16,7 +16,8 @@ class gru(Operation):
         bias=TensorInputType(const=True, optional=True, default=None),
         direction=StringInputType(const=True, default="forward"),
         output_sequence=BoolInputType(const=True, default=False),
-        activations=TupleInputType(const=True, default=("sigmoid", "tanh")),
+        recurrent_activation=StringInputType(const=True, default="sigmoid"),
+        activation=StringInputType(const=True, default="tanh")
     )
 
     def __init__(self, **kwargs):
@@ -79,7 +80,9 @@ class lstm(Operation):
         bias=TensorInputType(const=True, optional=True, default=None),  # ifoz layout
         direction=StringInputType(const=True, default="forward"),
         output_sequence=BoolInputType(const=True, default=False),
-        activations=TupleInputType(const=True, default=("sigmoid", "tanh", "tanh")),
+        recurrent_activation=StringInputType(const=True, default="sigmoid"),
+        cell_activation=StringInputType(const=True, default="tanh"),
+        activation=StringInputType(const=True, default="tanh"),
         peephole=TensorInputType(const=True, optional=True, default=None),  # ifo layout
         clip=FloatInputType(const=True, optional=True, default=None),
     )

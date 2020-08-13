@@ -1166,7 +1166,6 @@ def gru(const_context, builder, op):
     b = op.bias.val if op.bias is not None else None
     direction = op.direction.val
     output_sequence = op.output_sequence.val
-    activations = [v.val for v in op.activations]
 
     # Add expand dims for input, in
     _expand_dim(builder, input_name + "_expanded", input_name, [3, 4])
@@ -1213,8 +1212,8 @@ def gru(const_context, builder, op):
         input_size=input_size,
         input_names=[input_name, initial_h],
         output_names=output_names,
-        inner_activation=activations[0],
-        activation=activations[1],
+        inner_activation=op.recurrent_activation.val,
+        activation=op.activation.val,
         output_all=output_sequence,
         reverse_input=(direction == "reverse"),
     )
@@ -1342,7 +1341,6 @@ def lstm(const_context, builder, op):
     b = op.bias.val if op.bias is not None else None
     direction = op.direction.val
     output_sequence = op.output_sequence.val
-    activations = [v.val for v in op.activations]
     peephole = op.peephole.val if op.peephole is not None else None
     # High enough clip value to be ineffective!
     clip = 500.0 if op.clip is None else op.clip.val
@@ -1391,9 +1389,9 @@ def lstm(const_context, builder, op):
             input_size=input_size,
             input_names=[input_name, initial_h, initial_c],
             output_names=output_names,
-            inner_activation=activations[0].upper(),
-            cell_state_update_activation=activations[1].upper(),
-            output_activation=activations[2].upper(),
+            inner_activation=op.recurrent_activation.val,
+            cell_state_update_activation=op.cell_activation.val,
+            output_activation=op.activation.val,
             peep=peephole,
             output_all=output_sequence,
             cell_clip_threshold=clip,
@@ -1489,9 +1487,9 @@ def lstm(const_context, builder, op):
                 initial_c_r,
             ],
             output_names=output_names,
-            inner_activation=activations[0].upper(),
-            cell_state_update_activation=activations[1].upper(),
-            output_activation=activations[2].upper(),
+            inner_activation=op.recurrent_activation.val,
+            cell_state_update_activation=op.cell_activation.val,
+            output_activation=op.activation.val,
             peep=f_peephole,
             peep_back=r_peephole,
             output_all=output_sequence,
