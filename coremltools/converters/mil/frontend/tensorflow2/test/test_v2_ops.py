@@ -40,12 +40,14 @@ from coremltools.converters.mil.frontend.tensorflow.test.test_ops import (
     TestActivationSoftSign,
     TestAddN,
     TestBroadcastTo,
+    TestBatchNormalization,
     TestBatchToSpaceND,
     TestCond,
     TestConcat,  # Redirects to ConcatV2 in TF2
     TestConv,
     TestConv3d,
     TestConvTranspose,
+    TestCumSum,
     TestDebugging,
     TestDepthwiseConv,
     TestDepthToSpace,
@@ -78,6 +80,8 @@ from coremltools.converters.mil.frontend.tensorflow.test.test_ops import (
     TestSliceByIndex,
     TestSliceBySize,
     TestSpaceToDepth,
+    TestSplit,
+    TestTranspose,
     TestZerosLike,
 )
 

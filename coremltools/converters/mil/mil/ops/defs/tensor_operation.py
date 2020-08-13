@@ -90,7 +90,7 @@ class cumsum(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp32, int32
     """
 
     input_spec = InputSpec(
@@ -257,14 +257,14 @@ class non_zero(Operation):
 
     Returns
     -------
-    tensor<[N, R], T>
+    tensor<[N, R], int32>
         * 2-dimensional tensor contains indices of elements that are non-zero. Each
           row is the index for a non-zero value.
         * ``N`` is the number of non-zero elements, ``R`` is the rank of the input.
 
     Attributes
     ----------
-    T: fp32
+    T: fp32, int32
     """
 
     input_spec = InputSpec(x=TensorInputType())
@@ -519,7 +519,7 @@ class tile(Operation):
     ----------
     x: tensor<*?, T> (Required)
         * Input tensor.
-    reps: tensor<[rank(x)], T> (Required)
+    reps: tensor<[rank(x)], int32> (Required)
         * A 1D tensor with length ``rank(x)`` which indicates number to replicate the input along each dimension.
 
     Returns
@@ -529,7 +529,7 @@ class tile(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: Any
     """
 
     input_spec = InputSpec(x=TensorInputType(), reps=TensorInputType(),)
@@ -584,11 +584,11 @@ class argsort(Operation):
         * Default to ``-1`` (the last dimension).
         * Axis to perform the operation.
     * ascending: const<bool> (Optional)
-        * True to sort in ascending order. Default to ``Flattensalse``, sort in descending order.
+        * True to sort in ascending order. Default to ``False``, sort in descending order.
 
     Returns
     -------
-    tensor<*?, T>
+    tensor<*?, int32>
         * Tensor containing the indices of the sorted values
 
     Attributes
@@ -629,7 +629,7 @@ class topk(Operation):
         * Default to ``1``.
         * Number of values/indices to be computed along each axis.
     * axis: const<i32> (Optional)
-        * Defaults to ``1`` (channel dimension).
+        * Defaults to ``-1`` (last dimension).
         * Axis to perform the operation.
     * ascending: const<bool> (Optional)
         * Default to ``False``.
@@ -639,12 +639,12 @@ class topk(Operation):
     -------
     tensor<*?, T>
         * Values of top/bottom ``k`` elements
-    tensor<*?, T>
+    tensor<*?, int32>
         * Indices of the top/bottom ``k`` elements along axis
 
     Attributes
     ----------
-    T: fp32
+    T: fp32, int32
     """
 
     input_spec = InputSpec(
@@ -684,7 +684,7 @@ class topk(Operation):
 
 
 @register_op(doc_str="")
-class flatten(Operation):
+class flatten2d(Operation):
     """
     Flattens input tensor into 2d tensor by flattening dimensions before and after the provided axis
 
@@ -708,7 +708,7 @@ class flatten(Operation):
         2. ``input_shape = (3, ), axis = 1, output_shape = (3, 1)``
         3. ``input_shape = (4, 3), axis = -1, output_shape = (4, 3)``
         4. ``input_shape = (2, 3, 2), axis = -1, output_shape = (6, 2)``
-        5. ``input_shape = (5, 5, 2), axis = 1, output_shape = (2, 10)``
+        5. ``input_shape = (5, 5, 2), axis = 1, output_shape = (5, 10)``
 
     Attributes
     ----------
@@ -720,7 +720,7 @@ class flatten(Operation):
     )
 
     def __init__(self, **kwargs):
-        super(flatten, self).__init__(**kwargs)
+        super(flatten2d, self).__init__(**kwargs)
 
     def type_inference(self):
         shape = list(self.x.shape)

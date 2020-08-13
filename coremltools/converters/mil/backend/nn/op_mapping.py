@@ -19,6 +19,7 @@ from coremltools.converters.mil.mil.ops.registry import SSAOpRegistry
 from tqdm import tqdm as _tqdm
 from .mil_to_nn_mapping_registry import *
 
+
 def convert_ops(const_context, builder, ops, outputs):
     """
     const_context: list[set of str]: const name for v1 & v2 (the same)
@@ -503,7 +504,7 @@ def cumsum(const_context, builder, op):
     builder.add_cumsum(
         name=op.name,
         input_names=input_names,
-        output_name=op.name,
+        output_name=op.outputs[0].name,
         axis=op.axis.val,
         reverse=op.reverse.val,
         exclusive=op.exclusive.val,
@@ -2451,7 +2452,7 @@ def non_maximum_suppression(const_context, builder, op):
 
 
 @register_mil_to_nn_mapping
-def flatten(const_context, builder, op):
+def flatten2d(const_context, builder, op):
     builder.add_flatten_to_2d(
         name=op.name,
         input_name=make_input(const_context, builder, op.x),
@@ -2483,26 +2484,15 @@ def upsample_nearest_neighbor(const_context, builder, op):
 
 @register_mil_to_nn_mapping
 def upsample_bilinear(const_context, builder, op):
-    if op.align_corners.val:
-        builder.add_upsample(
-            name=op.name,
-            scaling_factor_h=op.scale_factor_height.val,
-            scaling_factor_w=op.scale_factor_width.val,
-            input_name=make_input(const_context, builder, op.x),
-            output_name=op.outputs[0].name,
-            mode="BILINEAR",
-            linear_upsample_mode="ALIGN_CORNERS_TRUE",
-        )
-    else:
-        builder.add_upsample(
-            name=op.name,
-            scaling_factor_h=op.scale_factor_height.val,
-            scaling_factor_w=op.scale_factor_width.val,
-            input_name=make_input(const_context, builder, op.x),
-            output_name=op.outputs[0].name,
-            mode="BILINEAR",
-            linear_upsample_mode="ALIGN_CORNERS_FALSE",
-        )
+    builder.add_upsample(
+        name=op.name,
+        scaling_factor_h=op.scale_factor_height.val,
+        scaling_factor_w=op.scale_factor_width.val,
+        input_name=make_input(const_context, builder, op.x),
+        output_name=op.outputs[0].name,
+        mode="BILINEAR",
+        linear_upsample_mode="ALIGN_CORNERS_TRUE" if op.align_corners.val else "ALIGN_CORNERS_FALSE",
+    )
 
 
 @register_mil_to_nn_mapping
@@ -2648,7 +2638,7 @@ def concat(const_context, builder, op):
         values.append(v)
 
     if len(values) == 0:
-        raise NotImplementedError('0 size tensor unsopported.')
+        raise NotImplementedError('0 size tensor unsupported.')
 
     if len(values) >= 2:
         rank = values[0].rank
@@ -2701,7 +2691,7 @@ def split(const_context, builder, op):
     split = [size for size in split if size != 0]
     has_equal_splits = all([size == split[0] for size in split])
     num_splits = len(split)
-    output_names = [op.outputs[i].name for i in range(num_splits)]
+    output_names = [op.outputs[i].name for i in range(len(op.sizes)) if op.sizes[i] != 0]
 
     if has_equal_splits:
         builder.add_split_nd(

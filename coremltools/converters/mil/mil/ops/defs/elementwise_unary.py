@@ -465,11 +465,9 @@ class logical_not(elementwise_unary):
     def __init__(self, **kwargs):
         super(logical_not, self).__init__(**kwargs)
 
-    def get_operator(self):
-        return np.logical_not
-
-    def get_dtype(self, promoted_dtype):
-        return types.bool
+    @precondition(allow=VALUE)
+    def value_inference(self):
+        return np.logical_not(self.x.val)
 
 
 @register_op(doc_str="")

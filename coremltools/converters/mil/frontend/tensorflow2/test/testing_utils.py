@@ -110,7 +110,7 @@ def run_compare_tf2(
         name = get_tf_node_names(t)[0]
         outputs.append(name)
 
-    # get TensorFlow 2.x output as reference and run comparision
+    # get TensorFlow 2.x output as reference and run comparison
     tf_input_values = [tf.constant(t) for t in input_dict.values()]
     tf_outputs = model[0](*tf_input_values)
     if isinstance(tf_outputs, (tuple, list)):

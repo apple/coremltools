@@ -909,11 +909,11 @@ class TestRange1d:
         "use_cpu_only, backend", itertools.product([True, False], backends,)
     )
     def test_builder_to_backend_smoke(self, use_cpu_only, backend):
-        x = np.array([15.0], dtype=np.float32)
+        x = 15.0
         y = 5.0
         z = 2.0
         input_placeholders = {
-            "x": mb.placeholder(shape=x.shape),
+            "x": mb.placeholder(shape=()),
             "y": mb.placeholder(shape=()),
             "z": mb.placeholder(shape=()),
         }
@@ -921,7 +921,6 @@ class TestRange1d:
 
         def build(x, y, z):
             return [
-                mb.mul(x=x, y=x),
                 mb.range_1d(start=y, end=15.0, step=2.0),
                 mb.range_1d(start=y, end=15.0, step=z),
                 mb.range_1d(start=y, end=x, step=2.0),
@@ -932,7 +931,6 @@ class TestRange1d:
             ]
 
         expected_output_types = [
-            (1, types.fp32),
             (UNK_SYM, types.fp32),
             (UNK_SYM, types.fp32),
             (UNK_SYM, types.fp32),
@@ -943,7 +941,6 @@ class TestRange1d:
         ]
 
         expected_outputs = [
-            np.array([225.0], dtype=np.float32),
             np.array([5, 7, 9, 11, 13], dtype=np.float32),
             np.array([5, 7, 9, 11, 13], dtype=np.float32),
             np.array([5, 7, 9, 11, 13], dtype=np.float32),
@@ -1160,7 +1157,7 @@ class TestTopK:
         )
 
 
-class TestFlatten:
+class TestFlatten2d:
     @pytest.mark.parametrize(
         "use_cpu_only, backend", itertools.product([True, False], backends,)
     )
@@ -1172,7 +1169,7 @@ class TestFlatten:
         input_values = {"x": t}
 
         def build(x):
-            return [mb.flatten(x=x)]
+            return [mb.flatten2d(x=x)]
 
         expected_output_types = [
             (2, 6, types.fp32),
@@ -1192,10 +1189,52 @@ class TestFlatten:
             backend=backend,
         )
 
+    @pytest.mark.parametrize(
+        "use_cpu_only, rank, axis, backend", itertools.product([True, False], range(1, 6), range(-5, 6), backends,)
+    )
+    def test_builder_to_backend_stress(self, use_cpu_only, rank, axis, backend):
+        if axis < -rank or axis >= rank + 1:
+            return
+
+        shape = np.random.randint(low=2, high=6, size=rank)
+        t = np.random.random(shape)
+
+        input_placeholders = {"x": mb.placeholder(shape=t.shape)}
+        input_values = {"x": t}
+
+        def build(x):
+            return [mb.flatten2d(x=x, axis=axis)]
+
+        np_axis = axis + rank if axis < 0 else axis
+        pl, pr = 1, 1
+        for i in range(0, np_axis):
+            pl *= shape[i]
+        for i in range(np_axis, len(shape)):
+            pr *= shape[i]
+
+        new_shape = [pl, pr]
+        ref = t.reshape(new_shape)
+
+        expected_outputs = [ref]
+        expected_output_types = [
+            (*ref.shape, types.fp32),
+        ]
+
+        run_compare_builder(
+            build,
+            input_placeholders,
+            input_values,
+            expected_output_types,
+            expected_outputs,
+            use_cpu_only=use_cpu_only,
+            frontend_only=False,
+            backend=backend,
+        )
+
     @ssa_fn
     def test_builder_eval(self):
         t = np.array([[[1, 2, 3], [4, 5, 6]]], dtype=np.float32)
-        f = mb.flatten(x=t)
+        f = mb.flatten2d(x=t)
         expected_f = np.array([[1, 2, 3, 4, 5, 6]], dtype=np.float32)
         assert is_close(expected_f, f.val)
 
@@ -1211,7 +1250,7 @@ class TestFlatten:
         }
 
         def build(x):
-            return [mb.flatten(x=x)]
+            return [mb.flatten2d(x=x)]
 
         input = np.random.rand(10, 4, 5, 6)
         output = input.reshape(10, -1)
@@ -1372,292 +1411,6 @@ class TestIdentity:
             frontend_only=False,
             backend=backend,
         )
-
-
-class TestConcat:
-    @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
-    )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
-        t1 = np.array([[1, 2], [4, 5]], dtype=np.float32)
-        t2 = np.array([[7, 8]], dtype=np.float32)
-
-        input_placeholders = {
-            "x": mb.placeholder(shape=t1.shape),
-            "y": mb.placeholder(shape=t2.shape),
-        }
-        input_values = {"x": t1, "y": t2}
-
-        def build(x, y):
-            return (mb.concat(values=(x, y), axis=0),)
-
-        expected_output_types = [
-            (3, 2, types.fp32),
-        ]
-        expected_outputs = [
-            np.array([[1, 2], [4, 5], [7, 8]], dtype=np.float32),
-        ]
-
-        run_compare_builder(
-            build,
-            input_placeholders,
-            input_values,
-            expected_output_types,
-            expected_outputs,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
-            backend=backend,
-        )
-
-    @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
-    )
-    def test_builder_to_backend_type_promotion(self, use_cpu_only, backend):
-        t1 = np.array([[1, 2], [4, 5]], dtype=np.float32)
-        t2 = np.array([[7, 8]], dtype=np.float32)
-
-        input_placeholders = {
-            "x": mb.placeholder(shape=t1.shape),
-        }
-        input_values = {"x": t1}
-
-        def build(x):
-            t2 = np.array([[7, 8]], dtype=np.int32)
-            return (mb.concat(values=(x, t2), axis=0),)
-
-        expected_output_types = [
-            # np.int32 should be promoted to fp32
-            (3, 2, types.fp32),
-        ]
-        expected_outputs = [
-            np.array([[1, 2], [4, 5], [7, 8]], dtype=np.float32),
-        ]
-
-        run_compare_builder(
-            build,
-            input_placeholders,
-            input_values,
-            expected_output_types,
-            expected_outputs,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
-            backend=backend,
-        )
-
-    @ssa_fn
-    def test_builder_eval(self):
-        values = [
-            np.random.rand(1, 1, 6, 2),
-            np.random.rand(1, 1, 3, 2),
-        ]
-        v = mb.concat(values=values, axis=2)
-        assert is_close(np.concatenate(values, 2), v.val)
-
-    @ssa_fn
-    def test_builder_eval_failure(self):
-        values = [
-            np.random.rand(1, 1, 6, 2),
-            np.random.rand(1, 1, 3, 1),
-        ]
-        with pytest.raises(ValueError):
-            v = mb.concat(values=values, axis=2)
-
-    @pytest.mark.parametrize(
-        "use_cpu_only, backend, rank, n_inputs, negative_index",
-        itertools.product(
-            [True, False],
-            backends,
-            [1, 2, 3, 4, 5],
-            [2, 3],
-            [False, True],
-        )
-    )
-    def test_builder_to_backend_stress_interleave(self, use_cpu_only, backend,
-                                                  rank, n_inputs, negative_index):
-
-        def np_concat_interleave(arrays, axis):
-            step = len(arrays)
-            in_shape = arrays[0].shape
-            out_shape = list(in_shape)
-            if axis < 0:
-                axis += len(in_shape)
-            out_shape[axis] = step * in_shape[axis]
-            concat_tensor = np.empty(tuple(out_shape), dtype=np.float32)
-            for i in range(step):
-                if rank == 5:
-                    if axis == 4:
-                        concat_tensor[:, :, :, :, i::step] = arrays[i]
-                    if axis == 3:
-                        concat_tensor[:, :, :, i::step, :] = arrays[i]
-                    if axis == 2:
-                        concat_tensor[:, :, i::step, :, :] = arrays[i]
-                    if axis == 1:
-                        concat_tensor[:, i::step, :, :, :] = arrays[i]
-                    if axis == 0:
-                        concat_tensor[i::step, :, :, :, :] = arrays[i]
-                if rank == 4:
-                    if axis == 3:
-                        concat_tensor[:, :, :, i::step] = arrays[i]
-                    if axis == 2:
-                        concat_tensor[:, :, i::step, :] = arrays[i]
-                    if axis == 1:
-                        concat_tensor[:, i::step, :, :] = arrays[i]
-                    if axis == 0:
-                        concat_tensor[i::step, :, :, :] = arrays[i]
-                if rank == 3:
-                    if axis == 2:
-                        concat_tensor[:, :, i::step] = arrays[i]
-                    if axis == 1:
-                        concat_tensor[:, i::step, :] = arrays[i]
-                    if axis == 0:
-                        concat_tensor[i::step, :, :] = arrays[i]
-                if rank == 2:
-                    if axis == 1:
-                        concat_tensor[:, i::step] = arrays[i]
-                    if axis == 0:
-                        concat_tensor[i::step, :] = arrays[i]
-                if rank == 1:
-                    concat_tensor[i::step] = arrays[i]
-            return concat_tensor
-
-
-        SHAPE = [4, 2, 3, 6, 5]
-        for axis in range(rank):
-            if negative_index:
-                axis = axis - rank
-            shape = tuple(SHAPE[:rank])
-            t1 = np.random.normal(size=shape).astype(np.float32)
-            t2 = np.random.normal(size=shape).astype(np.float32)
-            all_input_arrs = [t1, t2]
-            input_placeholders = {
-                "x": mb.placeholder(shape=t1.shape),
-                "y": mb.placeholder(shape=t2.shape),
-            }
-            input_values = {"x": t1, "y": t2}
-            if n_inputs == 3:
-                t3 = np.random.normal(size=shape).astype(np.float32)
-                input_placeholders["z"] = mb.placeholder(shape=t3.shape)
-                input_values["z"] = t3
-                all_input_arrs.append(t3)
-
-            def build_2_inputs(x, y):
-                return (mb.concat(values=(x, y), axis=axis, interleave=True),)
-
-            def build_3_inputs(x, y, z):
-                return (mb.concat(values=(x, y, z), axis=axis, interleave=True),)
-
-            np_out = np_concat_interleave(all_input_arrs, axis)
-            expected_output_types = [np_out.shape + (types.fp32,)]
-            expected_outputs = [np_out]
-
-            run_compare_builder(
-                build_3_inputs if n_inputs == 3 else build_2_inputs,
-                input_placeholders,
-                input_values,
-                expected_output_types,
-                expected_outputs,
-                use_cpu_only=use_cpu_only,
-                frontend_only=False,
-                backend=backend,
-            )
-
-
-
-class TestSplit:
-    @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
-    )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
-        t = np.array([[1, 2], [3, 4], [5, 6]], dtype=np.float32)
-
-        input_placeholders = {
-            "x": mb.placeholder(shape=t.shape),
-        }
-        input_values = {"x": t}
-
-        def build(x):
-            return mb.split(x=x, num_splits=2, axis=1) + mb.split(
-                x=x, split_sizes=[1, 2], axis=0
-            )
-
-        expected_output_types = [
-            (3, 1, types.fp32),
-            (3, 1, types.fp32),
-            (1, 2, types.fp32),
-            (2, 2, types.fp32),
-        ]
-        expected_outputs = [
-            np.array([[1], [3], [5]], dtype=np.float32),
-            np.array([[2], [4], [6]], dtype=np.float32),
-            np.array([[1, 2]], dtype=np.float32),
-            np.array([[3, 4], [5, 6]], dtype=np.float32),
-        ]
-
-        run_compare_builder(
-            build,
-            input_placeholders,
-            input_values,
-            expected_output_types,
-            expected_outputs,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
-            backend=backend,
-        )
-
-    @ssa_fn
-    def test_builder_eval(self):
-        t = np.array([[1, 2], [3, 4], [5, 6]], dtype=np.float32)
-        vs = mb.split(x=t, num_splits=3, axis=0)
-        es = np.split(t, [1, 2, 3], axis=0)
-        for v, e in zip(vs, es):
-            assert is_close(e, v.val)
-
-
-class TestStack:
-    @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
-    )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
-        t1 = np.array([1, 2, 3], dtype=np.float32)
-        t2 = np.array([7, 8, 9], dtype=np.float32)
-
-        input_placeholders = {
-            "x": mb.placeholder(shape=t1.shape),
-            "y": mb.placeholder(shape=t2.shape),
-        }
-        input_values = {"x": t1, "y": t2}
-
-        def build(x, y):
-            return [mb.stack(values=(x, y), axis=0), mb.stack(values=(x, y), axis=1)]
-
-        expected_output_types = [
-            (2, 3, types.fp32),
-            (3, 2, types.fp32),
-        ]
-        expected_outputs = [
-            np.array([[1, 2, 3], [7, 8, 9]], dtype=np.float32),
-            np.array([[1, 7], [2, 8], [3, 9]], dtype=np.float32),
-        ]
-
-        run_compare_builder(
-            build,
-            input_placeholders,
-            input_values,
-            expected_output_types,
-            expected_outputs,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
-            backend=backend,
-        )
-
-    @ssa_fn
-    def test_builder_eval(self):
-        values = [
-            np.random.rand(1, 1, 3, 2).astype(np.float32),
-            np.random.rand(1, 1, 3, 2).astype(np.float32),
-        ]
-        v = mb.stack(values=values, axis=2)
-        assert is_close(np.stack(values, 2), v.val)
 
 
 class TestArgSort:

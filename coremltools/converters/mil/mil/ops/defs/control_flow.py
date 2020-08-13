@@ -214,7 +214,7 @@ class select(Operation):
 @register_op(doc_str="")
 class while_loop(Operation):
     """
-    Perform body repeatly while the condition cond is true.
+    Perform body repeatedly while the condition cond is true.
 
     Parameters
     ----------

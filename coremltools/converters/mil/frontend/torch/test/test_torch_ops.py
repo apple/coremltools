@@ -19,6 +19,24 @@ pytestmark = pytest.mark.skipif(
 )  # rdar://problem/65730375
 
 
+class TestArgSort:
+    @pytest.mark.parametrize(
+        "rank, axis, descending, backend",
+        itertools.product(
+            [rank for rank in range(1, 6)],
+            [-1, 0],
+            [True, False],
+            backends
+        )
+    )
+    def test_argsort(self, rank, axis, descending, backend):
+        shape = tuple(np.random.randint(low=1, high=4, size=rank))
+        model = ModuleWrapper(
+            function=torch.argsort, kwargs={"dim": axis, "descending": descending}
+        )
+        run_compare_torch(shape, model, backend=backend)
+
+
 class TestBatchNorm:
     @pytest.mark.parametrize(
         "num_features, eps, backend",
@@ -26,7 +44,18 @@ class TestBatchNorm:
     )
     def test_batchnorm(self, num_features, eps, backend):
         model = nn.BatchNorm2d(num_features, eps)
-        run_compare_torch((1, num_features, 5, 5), model, backend=backend)
+        run_compare_torch((6, num_features, 5, 5), model, backend=backend)
+
+class TestInstanceNorm:
+    @pytest.mark.parametrize(
+        "num_features, eps, backend",
+        itertools.product([5, 3, 2, 1], [0.1, 1e-05, 1e-09], backends),
+    )
+    def test_instancenorm(self, num_features, eps, backend):
+        if backend == "nn_proto" and eps == 1e-09:
+            return
+        model = nn.InstanceNorm2d(num_features, eps)
+        run_compare_torch((6, num_features, 5, 5), model, backend=backend)
 
 
 class TestLinear:
@@ -695,6 +724,22 @@ class TestSqueeze:
         )
         run_compare_torch(input_shape, model, backend=backend)
 
+class TestCumSum:
+    @pytest.mark.parametrize(
+        "backend, axis",
+        itertools.product(
+            backends,
+            [-1, 0, 1, 2, 3],
+        ),
+    )
+    def test_cumsum(self, backend, axis):
+        input_shape = list(np.random.randint(low=2, high=10, size=4))
+        input_shape = tuple(input_shape)
+        model = ModuleWrapper(
+            function=torch.cumsum, kwargs={"dim": axis}
+        )
+        run_compare_torch(input_shape, model, backend=backend)
+
 
 class TestReshape:
     # TODO: <rdar://66239973> Add dynamic & rank preserving reshape tests for pytorch
@@ -1011,3 +1056,37 @@ class TestMatMul:
             [shape_x, shape_y], model, backend=backend,
         )
 
+
+class TestSplit:
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend, split_size_or_sections, dim",
+        itertools.product([True, False], backends, [1, 2, [1, 4]], [0, -2]),
+    )
+    def test_split(self, use_cpu_only, backend, split_size_or_sections, dim):
+        input_shape = (5, 2)
+        model = ModuleWrapper(function=torch.split,
+                              kwargs={"split_size_or_sections": split_size_or_sections, "dim": dim})
+        run_compare_torch(input_shape, model, backend=backend)
+
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend, split_sizes, dim",
+        itertools.product([True, False], backends, [[1, 4], [3, 2]], [-1, -2]),
+    )
+    def test_split_with_sizes(self, use_cpu_only, backend, split_sizes, dim):
+        input_shape = (5, 5)
+        model = ModuleWrapper(function=torch.split_with_sizes,
+                              kwargs={"split_sizes": split_sizes, "dim": dim})
+        run_compare_torch(input_shape, model, backend=backend)
+
+
+class TestTranspose:
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend, rank, dims",
+        itertools.product([True, False], backends, list(range(2, 6)),
+                          [(0, 1), (-2, -1), (1, 0), (-1, -2)]),
+    )
+    def test(self, use_cpu_only, backend, rank, dims):
+        input_shape = tuple(np.random.randint(low=1, high=4, size=rank))
+        model = ModuleWrapper(function=torch.transpose,
+                              kwargs={"dim0": dims[0], "dim1": dims[1]})
+        run_compare_torch(input_shape, model, backend=backend)

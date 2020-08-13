@@ -2194,10 +2194,10 @@ class TestImageResizing:
             itertools.product(
                 [True, False],
                 backends,
-                [1, 3, 5, 50],
-                [1, 2, 7, 30],
-                [(1, 1), (2, 1), (3, 5), (7, 13)],
-                [(1, 1), (1, 2), (5, 3), (13, 7)],
+                [1, 3, 5],
+                [2, 7, 12],
+                [(1, 1), (2, 1), (3, 5)],
+                [(1, 1), (1, 2), (5, 4)],
                 ["VALID", "SAME"],
             )
         ),
@@ -2291,7 +2291,7 @@ class TestLinear:
                     assert len(wp.floatValue) == 0
 
 
-class TestNormalization:
+class TestBatchNormalization:
     @pytest.mark.parametrize(
         "use_cpu_only, backend, rank, shape_mode, epsilon",
         itertools.product(
@@ -2425,6 +2425,8 @@ class TestNormalization:
             rtol=1e-3,
         )
 
+
+class TestNormalization:
     @pytest.mark.parametrize(
         "use_cpu_only, backend, epsilon",
         itertools.product([True, False], backends, [1e-1, 1e-10]),
@@ -3609,47 +3611,21 @@ class TestCumSum:
     )
     def test_cumsum(self, use_cpu_only, backend, rank, reverse, exclusive):
         input_shape = np.random.randint(low=1, high=4, size=rank)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=input_shape)
-            for axis in range(-1, rank, 3):
-                res = tf.math.cumsum(x, axis=axis, reverse=reverse, exclusive=exclusive)
-                if use_cpu_only:
-                    dtype = np.float32
-                else:
-                    dtype = np.float16
-                run_compare_tf(
-                    graph,
-                    {
-                        x: random_gen(
-                            input_shape, rand_min=-100, rand_max=100, dtype=dtype
-                        )
-                    },
-                    res,
-                    use_cpu_only=use_cpu_only,
-                    frontend_only=False,
-                    backend=backend,
-                )
+        for axis in range(-1, rank, 3):
+            @make_tf_graph([input_shape])
+            def build_model(x):
+                return tf.math.cumsum(x, axis=axis, reverse=reverse, exclusive=exclusive)
 
-    @pytest.mark.xfail(reason="Backend doesn't support empty counts", run=False)
-    @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
-    )
-    def test_cumsum_empty_input_tf(self, use_cpu_only, backend):
-        empty_inputs = [[], [[]], [[[]]], [[], []], [[[]], [[]]]]
-        for input_x in empty_inputs:
-            input_x = np.array(input_x)
-            with tf.Graph().as_default() as graph:
-                x = tf.placeholder(tf.float32, shape=input_x.shape)
-                for axis in range(-1, len(input_x.shape), 2):
-                    res = tf.math.cumsum(x, axis=axis)
-                    run_compare_tf(
-                        graph,
-                        {x: input_x},
-                        res,
-                        use_cpu_only=use_cpu_only,
-                        frontend_only=False,
-                        backend=backend,
-                    )
+            model, inputs, outputs = build_model
+            input_values = [random_gen(input_shape, rand_min=-10, rand_max=10)]
+            input_dict = dict(zip(inputs, input_values))
+
+            run_compare_tf(model,
+                           input_dict,
+                           outputs,
+                           use_cpu_only=use_cpu_only,
+                           frontend_only=False,
+                           backend=backend)
 
 
 class TestFill:
@@ -4084,15 +4060,17 @@ class TestSplit:
     def test_split(self, use_cpu_only, backend, rank, dynamic):
         input_shape1 = np.random.randint(low=1, high=3, size=rank)
         for axis in range(-rank, rank, 2):
-            for split_num in range(1, input_shape1[axis] + 1, 2):
+            # FIXME: skip split_num==1 due to: rdar://63030405. Rank 0 tensor for MIL
+            for split_num in range(2, input_shape1[axis] + 1, 2):
                 if input_shape1[axis] % split_num != 0:
                     continue
                 tf_input_shape = list(input_shape1)
                 if dynamic:
                     axis1 = np.random.randint(low=0, high=rank)
                     tf_input_shape[axis1] = None
-                with tf.Graph().as_default() as graph:
-                    x = tf.placeholder(tf.float32, shape=tf_input_shape)
+
+                @make_tf_graph([tf_input_shape])
+                def build_model(x):
                     res = tf.split(x, split_num, axis=axis)
                     # TODO (rdar://60358242) If tf.split output is returned, there's no
                     # get_tuple nodes. Some graph pass is needed. Example:
@@ -4106,39 +4084,65 @@ class TestSplit:
                     import random
 
                     random.shuffle(res)
-                    res = tuple(res)
-                    inputs = {
-                        x: np.random.rand(*input_shape1),
-                    }
-                    run_compare_tf(
-                        graph,
-                        inputs,
-                        res,
-                        use_cpu_only=use_cpu_only,
-                        frontend_only=False,
-                        backend=backend,
-                    )
+                    return tuple(res)
+
+                model, inputs, outputs = build_model
+                input_values = [random_gen(input_shape1)]
+                input_dict = dict(zip(inputs, input_values))
+                run_compare_tf(
+                    model,
+                    input_dict,
+                    outputs,
+                    use_cpu_only=use_cpu_only,
+                    backend=backend,
+                )
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "use_cpu_only, backend, sizes",
+        itertools.product([True, False], backends,
+                          [[1, 1, 2], [0, 2, 2], [1, 0, 3], [2, 0, 1, 1, 0]]),
+    )
+    def test_split_with_sizes(self, use_cpu_only, backend, sizes):
+        input_shape = (4, 2)
+
+        @make_tf_graph([input_shape])
+        def build_model(x):
+            res = tf.split(x, sizes, axis=0)
+            # split sizes can contain 0s, and we skip those in outputs
+            return tuple([res[i] for i in range(len(sizes)) if sizes[i] != 0])
+
+        model, inputs, outputs = build_model
+        input_values = [random_gen(input_shape)]
+        input_dict = dict(zip(inputs, input_values))
+        run_compare_tf(
+            model,
+            input_dict,
+            outputs,
+            use_cpu_only=use_cpu_only,
+            backend=backend,
+        )
+
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend", itertools.product([True, False], backends)
     )
     def test_splitv(self, use_cpu_only, backend):
-        input_shape1 = [3, 2, 1]
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=input_shape1)
+        input_shape = [3, 2, 1]
+
+        @make_tf_graph([input_shape])
+        def build_model(x):
             res = tf.split(x, [1, 2], axis=0)
-            res = (res[0], res[1])
-            inputs = {
-                x: np.random.rand(*input_shape1),
-            }
-            run_compare_tf(
-                graph,
-                inputs,
-                res,
-                use_cpu_only=use_cpu_only,
-                frontend_only=False,
-                backend=backend,
-            )
+            return res[0], res[1]
+
+        model, inputs, outputs = build_model
+        input_values = [random_gen(input_shape)]
+        input_dict = dict(zip(inputs, input_values))
+        run_compare_tf(
+            model,
+            input_dict,
+            outputs,
+            use_cpu_only=use_cpu_only,
+            backend=backend,
+        )
 
 
 class TestStack:
@@ -4635,53 +4639,62 @@ class TestTranspose:
     )
     def test_transpose_1(self, use_cpu_only, backend, rank_and_perm):
         rank, perm = rank_and_perm
-        x_shape = np.random.randint(low=2, high=4, size=rank)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=x_shape)
-            res = tf.transpose(x, perm=perm)
-            run_compare_tf(
-                graph,
-                {x: np.random.rand(*x_shape)},
-                res,
-                use_cpu_only=use_cpu_only,
-                frontend_only=False,
-                backend=backend,
-            )
+        x_shape = np.random.randint(low=1, high=4, size=rank)
+
+        @make_tf_graph([x_shape])
+        def build_model(x):
+            return tf.transpose(x, perm=perm)
+
+        model, inputs, outputs = build_model
+        input_values = [random_gen(x_shape)]
+        input_dict = dict(zip(inputs, input_values))
+        run_compare_tf(
+            model,
+            input_dict,
+            outputs,
+            use_cpu_only=use_cpu_only,
+            backend=backend,
+        )
 
     @pytest.mark.parametrize(
         "use_cpu_only, backend, rank",
-        itertools.product([True, False], backends, [1, 2, 3, 4],),
+        itertools.product([True, False], backends, [1, 2, 3, 4], ),
     )
     def test_transpose_2(self, use_cpu_only, backend, rank):
-        input_shape = np.random.randint(low=2, high=4, size=rank)
-        perm = np.random.permutation(rank).astype(np.float32)
+        input_shape = np.random.randint(low=1, high=4, size=rank)
+        perm = np.random.permutation(rank)
 
         def static_perm():
-            with tf.Graph().as_default() as graph:
-                x = tf.placeholder(tf.float32, shape=input_shape)
-                res = tf.transpose(x, perm)
-                run_compare_tf(
-                    graph,
-                    {x: np.random.rand(*input_shape)},
-                    res,
-                    use_cpu_only=use_cpu_only,
-                    frontend_only=False,
-                    backend=backend,
-                )
+            @make_tf_graph([input_shape])
+            def build_model(x):
+                return tf.transpose(x, perm=perm)
+
+            model, inputs, outputs = build_model
+            input_values = [random_gen(input_shape)]
+            input_dict = dict(zip(inputs, input_values))
+            run_compare_tf(
+                model,
+                input_dict,
+                outputs,
+                use_cpu_only=use_cpu_only,
+                backend=backend,
+            )
 
         def dynamic_perm():
-            with tf.Graph().as_default() as graph:
-                x = tf.placeholder(tf.float32, shape=input_shape)
-                tf_perm = tf.placeholder(tf.int32, shape=[None])
-                res = tf.transpose(x, tf_perm)
-                run_compare_tf(
-                    graph,
-                    {x: np.random.rand(*input_shape), tf_perm: perm},
-                    res,
-                    use_cpu_only=use_cpu_only,
-                    frontend_only=False,
-                    backend=backend,
-                )
+            @make_tf_graph([input_shape, list(perm.shape) + [tf.int32]])
+            def build_model(x, tf_perm):
+                return tf.transpose(x, perm=tf_perm)
+
+            model, inputs, outputs = build_model
+            input_values = [random_gen(input_shape), perm.astype(np.int32)]
+            input_dict = dict(zip(inputs, input_values))
+            run_compare_tf(
+                model,
+                input_dict,
+                outputs,
+                use_cpu_only=use_cpu_only,
+                backend=backend,
+            )
 
         static_perm()
         # Note that TF supports dynamic perm in tf.transpose.
@@ -4702,7 +4715,7 @@ class TestTranspose:
     )
     def test_redundant_transpose(self, use_cpu_only, backend, rank):
         import random
-        input_shape = np.random.randint(low=2, high=4, size=rank)
+        input_shape = np.random.randint(low=1, high=4, size=rank)
         num_layers = 30
         perms = []
         for _ in range(num_layers):

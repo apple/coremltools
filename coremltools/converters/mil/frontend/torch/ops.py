@@ -306,6 +306,12 @@ def add(context, node):
     add_node = mb.add(x=add_inputs[0], y=add_inputs[1], name=node.name)
     context.add(add_node)
 
+@register_torch_op
+def cumsum(context, node):
+    inputs = _get_inputs(context, node, expected=3)
+    res = mb.cumsum(x=inputs[0], axis=inputs[1], name=node.name)
+    context.add(res)
+
 
 @register_torch_op
 def addmm(context, node):
@@ -2008,6 +2014,14 @@ def max(context, node):
 
 
 @register_torch_op
+def argsort(context, node):
+    inputs = _get_inputs(context, node, expected=3)
+    ascending = mb.logical_not(x=inputs[2])
+    argsort = mb.argsort(x=inputs[0], axis=inputs[1], ascending=ascending, name=node.name)
+    context.add(argsort)
+
+
+@register_torch_op
 def sort(context, node):
     inputs = _get_inputs(context, node)
     _input = inputs[0]
@@ -2194,7 +2208,7 @@ def threshold(context, node):
     context.add(gt_node)
     gt_node_32 = mb.cast(x=gt_node, dtype="fp32", name=node.name + '_ge32')
 
-    mul_node = mb.linear_activation(x=gt_node_32, alpha=float(threshold_val.val - alpha.val), 
+    mul_node = mb.linear_activation(x=gt_node_32, alpha=float(threshold_val.val - alpha.val),
                                     name=node.name + '_mul')
     context.add(mul_node)
 

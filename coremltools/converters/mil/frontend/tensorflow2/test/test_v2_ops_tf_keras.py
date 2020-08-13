@@ -603,8 +603,8 @@ class TestCropping:
         itertools.product(
             [True, False],
             backends,
-            [(0, 0), (1, 1), (1, 2), (2, 1), (2, 4)],
-            [(0, 0), (1, 1), (1, 2), (2, 1), (4, 2)],
+            [(0, 0), (1, 1), (2, 1)],
+            [(0, 0), (1, 2), (4, 2)],
         ),
     )
     def test_cropping_2d(self, use_cpu_only, backend, begin_end1, begin_end2):
@@ -628,9 +628,9 @@ class TestCropping:
         itertools.product(
             [True, False],
             backends,
-            [(0, 0), (1, 1), (1, 2), (2, 1), (2, 4)],
-            [(0, 0), (1, 1), (1, 2), (2, 1), (4, 2)],
-            [(0, 0), (1, 1), (1, 2), (2, 1), (2, 4)],
+            [(0, 0), (1, 2), (2, 1)],
+            [(1, 1), (1, 2), (4, 2)],
+            [(0, 0), (1, 1), (2, 4)],
         ),
     )
     def test_cropping_3d(
@@ -771,8 +771,7 @@ class TestLambda:
             backend=backend,
         )
 
-
-class TestNormalization:
+class TestBatchNormalization:
     @pytest.mark.parametrize(
         "use_cpu_only, backend, rank, axis, momentum, epsilon",
         itertools.product(
@@ -833,28 +832,7 @@ class TestNormalization:
             backend=backend,
         )
 
-    @pytest.mark.parametrize(
-        "use_cpu_only, backend, rank, axis, epsilon",
-        itertools.product(
-            [True, False], backends, [rank for rank in range(3, 4)], [-1,], [1e-10],
-        ),
-    )
-    def test_layer_normalization(self, use_cpu_only, backend, rank, axis, epsilon):
-        shape = np.random.randint(low=2, high=4, size=rank)
-        model = tf.keras.Sequential(
-            [
-                tf.keras.layers.LayerNormalization(
-                    batch_input_shape=shape, axis=axis, epsilon=epsilon, trainable=False
-                )
-            ]
-        )
-        run_compare_tf_keras(
-            model,
-            [random_gen(shape, rand_min=-100, rand_max=100)],
-            use_cpu_only=use_cpu_only,
-            backend=backend,
-        )
-
+class TestInstanceNormalization:
     @pytest.mark.parametrize(
         "use_cpu_only, backend, rank, axis, epsilon, center, scale",
         itertools.product(
@@ -893,6 +871,31 @@ class TestNormalization:
             atol=1e-3,
             rtol=1e-4,
         )
+
+
+class TestNormalization:
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend, rank, axis, epsilon",
+        itertools.product(
+            [True, False], backends, [rank for rank in range(3, 4)], [-1,], [1e-10],
+        ),
+    )
+    def test_layer_normalization(self, use_cpu_only, backend, rank, axis, epsilon):
+        shape = np.random.randint(low=2, high=4, size=rank)
+        model = tf.keras.Sequential(
+            [
+                tf.keras.layers.LayerNormalization(
+                    batch_input_shape=shape, axis=axis, epsilon=epsilon, trainable=False
+                )
+            ]
+        )
+        run_compare_tf_keras(
+            model,
+            [random_gen(shape, rand_min=-100, rand_max=100)],
+            use_cpu_only=use_cpu_only,
+            backend=backend,
+        )
+
 
     @pytest.mark.parametrize(
         "use_cpu_only, backend, rank, groups, axis, epsilon, center, scale",
