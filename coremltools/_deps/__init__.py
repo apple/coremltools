@@ -105,7 +105,7 @@ try:
 
     if _HAS_TF_1:
         if tf_ver < _StrictVersion(_TF_1_MIN_VERSION):
-            _logging.warn(
+            _logging.warning(
                 (
                     "TensorFlow version %s is not supported. Minimum required version: %s ."
                     "TensorFlow conversion will be disabled."
@@ -113,7 +113,7 @@ try:
                 % (tensorflow.__version__, _TF_1_MIN_VERSION)
             )
         elif tf_ver > _StrictVersion(_TF_1_MAX_VERSION):
-            _logging.warn(
+            _logging.warning(
                 "TensorFlow version %s detected. Last version known to be fully compatible is %s ."
                 % (tensorflow.__version__, _TF_1_MAX_VERSION)
             )
@@ -127,7 +127,7 @@ try:
                 % (tensorflow.__version__, _TF_2_MIN_VERSION)
             )
         elif tf_ver > _StrictVersion(_TF_2_MAX_VERSION):
-            _logging.warn(
+            _logging.warning(
                 "TensorFlow version %s detected. Last version known to be fully compatible is %s ."
                 % (tensorflow.__version__, _TF_2_MAX_VERSION)
             )

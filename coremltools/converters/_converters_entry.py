@@ -324,6 +324,9 @@ def convert(
             **kwargs
         )
 
+    if convert_to == 'mil':
+        return proto_spec # Returns the MIL program
+
     model = coremltools.models.MLModel(proto_spec, useCPUOnly=True)
 
     if minimum_deployment_target is not None:

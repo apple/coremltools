@@ -93,6 +93,13 @@ class NNProtoBackend:
 
         return load(*args, **kwargs)
 
+@ConverterRegistry.backend
+class MILBackend:
+    name = "mil"
+
+    def __call__(self, *args, **kwargs):
+        return args[0]
+
 
 @ConverterRegistry.frontend
 class CustomFrontend:

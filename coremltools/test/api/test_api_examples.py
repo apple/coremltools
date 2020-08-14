@@ -1095,3 +1095,65 @@ class TestOptionalInput:
             expected = model(example_input[0].detach(), torch_default_value)
             name = list(result.keys())[0]
             np.testing.assert_allclose(result[name], expected.detach().numpy())
+
+###############################################################################
+# Note: all tests are examples provided to other teams for testing 
+# Each test case is expected to be runnable and self-complete.
+###############################################################################
+
+@pytest.mark.skipif(ct.utils._macos_version() < (10, 15), reason='Model produces specification 4.')
+class TestMILConverterExamples:
+
+    @staticmethod
+    @pytest.mark.skipif(not _HAS_TF_1, reason=MSG_TF1_NOT_FOUND)
+    def test_convert_tf1_frozen_graph(tmpdir):
+        import tensorflow as tf
+
+        with tf.Graph().as_default() as graph:
+            x = tf.placeholder(tf.float32, shape=(1, 2, 3), name="input")
+            y = tf.nn.relu(x, name="output")
+
+        model = ct.convert(graph, convert_to='mil')
+        assert isinstance(model, ct.converters.mil.Program)
+
+    @staticmethod
+    @pytest.mark.skipif(not _HAS_TF_2, reason=MSG_TF2_NOT_FOUND)
+    def test_convert_tf2_keras(tmpdir):
+        import tensorflow as tf
+
+        x = tf.keras.Input(shape=(32,), name="input")
+        y = tf.keras.layers.Dense(16, activation="softmax")(x)
+        keras_model = tf.keras.Model(x, y)
+        model = ct.convert(keras_model, convert_to='mil')
+        assert isinstance(model, ct.converters.mil.Program)
+
+    @staticmethod
+    @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
+    def test_convert_torch_traced_model(tmpdir):
+        import torch
+        from torch import nn
+        class Network(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.hidden = nn.Linear(100, 10)
+                self.output = nn.Linear(10, 2)
+                self.sigmoid = nn.Sigmoid()
+                self.softmax = nn.Softmax(dim=1)
+                
+            def forward(self, x):
+                x = self.hidden(x)
+                x = self.sigmoid(x)
+                x = self.output(x)
+                x = self.softmax(x)
+                return x
+
+        torch_model = Network()
+        torch_model.eval()
+        example_input = torch.rand(1, 100) 
+        traced_model = torch.jit.trace(torch_model, example_input)
+        model = ct.convert(
+            traced_model,
+            inputs=[ct.TensorType(name="input", shape=example_input.shape)],
+            convert_to='mil'
+        )
+        assert isinstance(model, ct.converters.mil.Program)
