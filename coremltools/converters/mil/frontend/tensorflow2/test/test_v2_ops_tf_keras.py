@@ -278,7 +278,7 @@ class TestConvolution:
         ),
         itertools.product(
             [True, False],
-            ["nn_proto"], # rdar://61135859 ([MIL] [SSAv2] SSA does not create Tuple Variable while mapping to MIL backend
+            ["nn_proto"], # rdar://66998312 ([MIL] concat layer with variable length input support)
             [
                 tf.keras.layers.LocallyConnected1D,
                 tf.keras.layers.LocallyConnected2D,
