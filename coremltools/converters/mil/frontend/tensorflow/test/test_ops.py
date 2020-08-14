@@ -3659,31 +3659,40 @@ class TestFill:
     def test_fill(self, use_cpu_only, backend, rank, value):
         def test_tf_static():
             shape = np.random.randint(low=1, high=3, size=rank)
-            with tf.Graph().as_default() as graph:
-                x = tf.placeholder(tf.float32, shape=shape)
-                ref = tf.add(
+            @make_tf_graph([shape])
+            def build_model(x):
+                return tf.add(
                     x, tf.fill(dims=np.array(shape, dtype=np.float32), value=value)
                 )
-                run_compare_tf(
-                    graph,
-                    {x: np.random.rand(*shape)},
-                    ref,
-                    use_cpu_only=use_cpu_only,
-                    backend=backend,
-                )
+
+            model, inputs, outputs = build_model
+            input_values = [np.random.rand(*shape).astype(np.float32)]
+            input_dict = dict(zip(inputs, input_values))
+
+            run_compare_tf(model,
+                           input_dict,
+                           outputs,
+                           use_cpu_only=use_cpu_only,
+                           frontend_only=False,
+                           backend=backend)
+
 
         def test_tf_dynamic():
             shape = np.random.randint(low=1, high=3, size=rank)
-            with tf.Graph().as_default() as graph:
-                s = tf.placeholder(tf.int32, shape=(len(shape),))
-                ref = tf.fill(dims=s, value=value)
-                run_compare_tf(
-                    graph,
-                    {s: np.array(shape, dtype=np.int32)},
-                    ref,
-                    use_cpu_only=use_cpu_only,
-                    backend=backend,
-                )
+            @make_tf_graph([(len(shape), tf.int32)])
+            def build_model(x):
+                return tf.fill(dims=x, value=value)
+
+            model, inputs, outputs = build_model
+            input_values = [np.array(shape, dtype=np.int32)]
+            input_dict = dict(zip(inputs, input_values))
+
+            run_compare_tf(model,
+                           input_dict,
+                           outputs,
+                           use_cpu_only=use_cpu_only,
+                           frontend_only=False,
+                           backend=backend)
 
         test_tf_static()
         test_tf_dynamic()

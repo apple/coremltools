@@ -275,6 +275,26 @@ class IntOrFloatInputType(ScalarOrTensorInputType):
     def type_str(self):
         return 'int32, int64, or fp32 tensor'
 
+class IntOrFloatOrBoolInputType(ScalarOrTensorInputType):
+    """
+    input with _sym_type == types.int32 or _sym_type == types.int64 or _sym_type == types.fp32
+    or _sym_type == types.bool
+    predefined to be types.fp32 by default.
+    """
+
+    def __init__(self, **kwargs):
+        super(IntOrFloatOrBoolInputType, self).__init__(**kwargs)
+
+    def _is_compatible(self, v):
+        return v.dtype in {types.int32, types.int64, types.fp32, types.bool}
+
+    def _get_predefined_datatype(self):
+        return types.fp32
+
+    @property
+    def type_str(self):
+        return 'int32, int64, fp32 or bool tensor'
+
 class TensorInputType(ScalarOrTensorInputType):
     """
     TensorInputType must be numpy ndarray of numeric types. Min rank = 1. (Use

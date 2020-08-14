@@ -140,8 +140,8 @@ class fill(Operation):
     shape: tensor<[K], i32> (Required)
         * Target output tensor shape.
         * ``K`` is the rank of the output tensor. ``shape[k] > 0`` for ``k = 0,..., K-1``.
-    value: const<f32> (Optional)
-        * default to ``0``.
+    value: const<T> (Optional)
+        * default to ``0.0``.
         * Constant value to fill in.
 
     Returns
@@ -156,7 +156,7 @@ class fill(Operation):
 
     input_spec = InputSpec(
         shape=IntTensorInputType(),
-        value=ScalarOrTensorInputType(const=True, default=0.0),
+        value=IntOrFloatOrBoolInputType(const=True, default=0.0),
     )
 
     def __init__(self, **kwargs):

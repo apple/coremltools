@@ -54,6 +54,7 @@ from coremltools.converters.mil.frontend.tensorflow.test.test_ops import (
     TestDepthToSpace,
     TestElementWiseBinary,
     TestExpandDims,
+    TestFill,
     TestGather,
     TestIsFinite,
     TestIdentity,
