@@ -1416,11 +1416,18 @@ def lstm(const_context, builder, op):
 
     elif direction == "bidirectional":
         # Expand initial_h and initial_c
-        _expand_dim(builder, initial_h + "_expanded", initial_h, [2, 3, 4])
-        initial_h += "_expanded"
+        # Issue #810
+        num_layer = len(builder.layers)
+        initial_h_expand = initial_h + "_expanded" + "_" + str(num_layer)
+         if not (initial_h_expand in set(builder.layers)):
+            _expand_dim(builder, initial_h_expand, initial_h, [2, 3, 4])
+        initial_h = initial_h_expand
+
         # initial_h may have the same name as initial_c (e.g., same Var)
-        _expand_dim(builder, initial_c + "_expanded2", initial_c, [2, 3, 4])
-        initial_c += "_expanded2"
+        initial_c_expand = initial_c + "_expanded2" + "_" + str(num_layer)
+        if not (initial_c_expand in set(builder.layers)):
+            _expand_dim(builder, initial_c_expand, initial_c, [2, 3, 4])
+        initial_c = initial_c_expand
 
         initial_h_f = initial_h + "_forward"
         initial_h_r = initial_h + "_reverse"

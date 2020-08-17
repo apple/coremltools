@@ -94,7 +94,7 @@ class ImageType(InputType):
             Valid values:
                 'G': Grayscale
                 'RGB': [Red, Green, Blue]
-                'BRG': [Blue, Red, Green]
+                'BGR': [Blue, Green, Red]
         channel_first: (bool) or None
             Set to True if input format is channel first.
             Default format is for TF is channel last. (channel_first=False)

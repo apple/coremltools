@@ -616,6 +616,73 @@ class TestLSTM:
                 backend=backend,
             )
 
+# Workaround for GitHub Issue #824
+# i.e. the return h_n/c_n for a converted BLSTM are mangled. 
+# Therefore, just look at output 'y' (for now) which is correct.
+class StripCellAndHidden(nn.Module):
+    def __init__(self,flagReturnTuple_):
+        super(StripCellAndHidden, self).__init__()
+        self.flagReturnTuple = flagReturnTuple_
+
+    def forward(self,x):
+        # Pass tuple, not tensor, to avoid issue in coremltools/converters/mil/frontend/torch/test/testing_utils.py on "if not expected_results:"
+        # Pass tensor when we need input for LSTM #2 as part of nn.Sequential()
+        return tuple(x[0]) if self.flagReturnTuple else x[0] 
+
+# Check GitHub Issue #810, assume num_layers == 2 and bidirectional == True
+class TestStackedBLSTM:
+    @pytest.mark.parametrize(
+        "input_size, hidden_size, num_layers, bias, batch_first, dropout, bidirectional, backend",
+        itertools.product([7], [5], [2], [True, False], [True, False], [0.3], [True], backends),
+    )
+    def test_lstm(
+        self,
+        input_size,
+        hidden_size,
+        num_layers,
+        bias,
+        batch_first,
+        dropout,
+        bidirectional,
+        backend,
+    ):
+        model = nn.Sequential(
+            nn.LSTM(
+                input_size=input_size,
+                hidden_size=hidden_size,
+                num_layers=1,
+                bias=bias,
+                batch_first=batch_first,
+                dropout=dropout,
+                bidirectional=True),
+            StripCellAndHidden(False),
+            nn.LSTM(
+                input_size=2*hidden_size,
+                hidden_size=hidden_size,
+                num_layers=1,
+                bias=bias,
+                batch_first=batch_first,
+                dropout=dropout,
+                bidirectional=True),
+            StripCellAndHidden(True)
+        )
+
+        SEQUENCE_LENGTH = 3
+        BATCH_SIZE = 2
+
+        num_directions = int(bidirectional) + 1
+
+        # (seq_len, batch, input_size)
+        if batch_first:
+            _input = torch.rand(BATCH_SIZE, SEQUENCE_LENGTH, input_size)
+        else:
+            _input = torch.randn(SEQUENCE_LENGTH, BATCH_SIZE, input_size)
+
+        # Do not use h_0/c_0 input and do not check h_n/c_n output, GitHub Issue #824     
+        expected_results = model(_input)
+
+        run_compare_torch(_input, model, expected_results, input_as_shape=False, backend=backend)
+
 
 class TestConcat:
     # This tests an edge case where the list of tensors to concatenate only
