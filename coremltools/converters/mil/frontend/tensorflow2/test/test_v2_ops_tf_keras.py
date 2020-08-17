@@ -181,8 +181,6 @@ class TestConvolution:
                 tf.keras.layers.Conv1D,
                 tf.keras.layers.Conv2D,
                 tf.keras.layers.Conv3D,
-                tf.keras.layers.LocallyConnected1D,
-                tf.keras.layers.LocallyConnected2D,
             ],
             ["same", "valid"],
             ["channels_last"],
@@ -273,7 +271,6 @@ class TestConvolution:
                 "padding",
                 "data_format",
                 "spatial_dim_and_ks",
-                "output_padding",
                 "strides",
                 "dilations",
                 "batch_size",
@@ -281,19 +278,22 @@ class TestConvolution:
         ),
         itertools.product(
             [True, False],
-            backends,
-            # TODO: rdar://63968613 ([deconv3d] Deconv_3d top_shapes_for_bottom_shapes does not sets output channel if output shape is provided)
-            [tf.keras.layers.Conv2DTranspose],  # tf.keras.layers.Conv3DTranspose],
+            ["nn_proto"], # rdar://66998312 ([MIL] concat layer with variable length input support)
+            [
+                tf.keras.layers.LocallyConnected1D,
+                tf.keras.layers.LocallyConnected2D,
+            ],
             ["same", "valid"],
             ["channels_last"],
-            [(7, 11, 12, 1, 2, 2), (9, 5, 7, 3, 3, 3)],
-            [(1, 1, 1)],
-            [(2, 2, 2), (2, 3, 3)],
-            [(1, 1, 1)],  # Dilation > 1 not supported by TF
+            [(2, 4, 4, 2, 2, 2), (3, 7, 5, 1, 3, 2)],
+            [(1, 1, 1), (1, 2, 3), (1, 3, 2)],
+            [
+                (1, 1, 1)
+            ],  # rdar://62951360 (Enhance SpaceToBatchND op to support more dialation rate of Conv)
             [1, 3],
         ),
     )
-    def test_conv_transpose(
+    def test_conv_locally_connected(
         self,
         use_cpu_only,
         backend,
@@ -301,7 +301,6 @@ class TestConvolution:
         padding,
         data_format,
         spatial_dim_and_ks,
-        output_padding,
         strides,
         dilations,
         batch_size,
@@ -310,30 +309,52 @@ class TestConvolution:
         c_in, c_out = 2, 3
         input_shape = None
         kernel_size = None
-        if op == tf.keras.layers.Conv2DTranspose:
+        if op in {tf.keras.layers.Conv1D, tf.keras.layers.LocallyConnected1D}:
+            input_shape = (batch_size, s3, c_in)
+            kernel_size = k3
+            strides = strides[2]
+            dilations = dilations[2]
+        elif op in {tf.keras.layers.Conv2D, tf.keras.layers.LocallyConnected2D}:
             input_shape = (batch_size, s2, s3, c_in)
             kernel_size = (k2, k3)
             strides = (strides[1], strides[2])
             dilations = dilations[1:]
-            output_padding = (output_padding[1], output_padding[2])
-        elif op == tf.keras.layers.Conv3DTranspose:
+        elif op == tf.keras.layers.Conv3D:
             input_shape = (batch_size, s1, s2, s3, c_in)
             kernel_size = (k1, k2, k3)
 
-        model = tf.keras.Sequential(
-            [
-                op(
-                    batch_input_shape=input_shape,
-                    filters=c_out,
-                    kernel_size=kernel_size,
-                    strides=strides,
-                    padding=padding.upper(),
-                    output_padding=output_padding,
-                    data_format=data_format,
-                    dilation_rate=dilations,
-                )
-            ]
-        )
+        if op in {
+            tf.keras.layers.LocallyConnected1D,
+            tf.keras.layers.LocallyConnected2D,
+        }:
+            if padding != "valid":
+                return  # tf.keras only supports "valid"
+            model = tf.keras.Sequential(
+                [
+                    op(
+                        batch_input_shape=input_shape,
+                        filters=c_out,
+                        kernel_size=kernel_size,
+                        strides=strides,
+                        padding=padding.upper(),
+                        data_format=data_format,
+                    )
+                ]
+            )
+        else:
+            model = tf.keras.Sequential(
+                [
+                    op(
+                        batch_input_shape=input_shape,
+                        filters=c_out,
+                        kernel_size=kernel_size,
+                        strides=strides,
+                        padding=padding.upper(),
+                        data_format=data_format,
+                        dilation_rate=dilations,
+                    )
+                ]
+            )
 
         run_compare_tf_keras(
             model,
@@ -480,6 +501,83 @@ class TestConvolution:
             backend=backend,
         )
 
+class TestConvTranspose:
+    @pytest.mark.parametrize(
+        ",".join(
+            [
+                "use_cpu_only",
+                "backend",
+                "op",
+                "padding",
+                "data_format",
+                "spatial_dim_and_ks",
+                "output_padding",
+                "strides",
+                "dilations",
+                "batch_size",
+            ]
+        ),
+        itertools.product(
+            [True, False],
+            backends,
+            [tf.keras.layers.Conv2DTranspose, tf.keras.layers.Conv3DTranspose],
+            ["same", "valid"],
+            ["channels_last"],
+            [(7, 11, 12, 1, 2, 2), (9, 5, 7, 3, 3, 3)],
+            [(1, 1, 1)],
+            [(2, 2, 2), (2, 3, 3)],
+            [(1, 1, 1)], # Dilation > 1 not supported by TF
+            [1, 3],
+        ),
+    )
+    def test_conv_transpose(
+        self,
+        use_cpu_only,
+        backend,
+        op,
+        padding,
+        data_format,
+        spatial_dim_and_ks,
+        output_padding,
+        strides,
+        dilations,
+        batch_size,
+    ):
+        s1, s2, s3, k1, k2, k3 = spatial_dim_and_ks
+        c_in, c_out = 2, 3
+        input_shape = None
+        kernel_size = None
+        if op == tf.keras.layers.Conv2DTranspose:
+            input_shape = (batch_size, s2, s3, c_in)
+            kernel_size = (k2, k3)
+            strides = (strides[1], strides[2])
+            dilations = dilations[1:]
+            output_padding = (output_padding[1], output_padding[2])
+        elif op == tf.keras.layers.Conv3DTranspose:
+            input_shape = (batch_size, s1, s2, s3, c_in)
+            kernel_size = (k1, k2, k3)
+
+        model = tf.keras.Sequential(
+            [
+                op(
+                    batch_input_shape=input_shape,
+                    filters=c_out,
+                    kernel_size=kernel_size,
+                    strides=strides,
+                    padding=padding.upper(),
+                    output_padding=output_padding,
+                    data_format=data_format,
+                    dilation_rate=dilations,
+                )
+            ]
+        )
+
+        run_compare_tf_keras(
+            model,
+            [random_gen(input_shape, rand_min=-10, rand_max=10)],
+            use_cpu_only=use_cpu_only,
+            backend=backend,
+        )
 
 class TestCropping:
     @pytest.mark.parametrize(
@@ -505,8 +603,8 @@ class TestCropping:
         itertools.product(
             [True, False],
             backends,
-            [(0, 0), (1, 1), (1, 2), (2, 1), (2, 4)],
-            [(0, 0), (1, 1), (1, 2), (2, 1), (4, 2)],
+            [(0, 0), (1, 1), (2, 1)],
+            [(0, 0), (1, 2), (4, 2)],
         ),
     )
     def test_cropping_2d(self, use_cpu_only, backend, begin_end1, begin_end2):
@@ -530,9 +628,9 @@ class TestCropping:
         itertools.product(
             [True, False],
             backends,
-            [(0, 0), (1, 1), (1, 2), (2, 1), (2, 4)],
-            [(0, 0), (1, 1), (1, 2), (2, 1), (4, 2)],
-            [(0, 0), (1, 1), (1, 2), (2, 1), (2, 4)],
+            [(0, 0), (1, 2), (2, 1)],
+            [(1, 1), (1, 2), (4, 2)],
+            [(0, 0), (1, 1), (2, 4)],
         ),
     )
     def test_cropping_3d(
@@ -673,8 +771,7 @@ class TestLambda:
             backend=backend,
         )
 
-
-class TestNormalization:
+class TestBatchNormalization:
     @pytest.mark.parametrize(
         "use_cpu_only, backend, rank, axis, momentum, epsilon",
         itertools.product(
@@ -735,28 +832,7 @@ class TestNormalization:
             backend=backend,
         )
 
-    @pytest.mark.parametrize(
-        "use_cpu_only, backend, rank, axis, epsilon",
-        itertools.product(
-            [True, False], backends, [rank for rank in range(3, 4)], [-1,], [1e-10],
-        ),
-    )
-    def test_layer_normalization(self, use_cpu_only, backend, rank, axis, epsilon):
-        shape = np.random.randint(low=2, high=4, size=rank)
-        model = tf.keras.Sequential(
-            [
-                tf.keras.layers.LayerNormalization(
-                    batch_input_shape=shape, axis=axis, epsilon=epsilon, trainable=False
-                )
-            ]
-        )
-        run_compare_tf_keras(
-            model,
-            [random_gen(shape, rand_min=-100, rand_max=100)],
-            use_cpu_only=use_cpu_only,
-            backend=backend,
-        )
-
+class TestInstanceNormalization:
     @pytest.mark.parametrize(
         "use_cpu_only, backend, rank, axis, epsilon, center, scale",
         itertools.product(
@@ -795,6 +871,31 @@ class TestNormalization:
             atol=1e-3,
             rtol=1e-4,
         )
+
+
+class TestNormalization:
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend, rank, axis, epsilon",
+        itertools.product(
+            [True, False], backends, [rank for rank in range(3, 4)], [-1,], [1e-10],
+        ),
+    )
+    def test_layer_normalization(self, use_cpu_only, backend, rank, axis, epsilon):
+        shape = np.random.randint(low=2, high=4, size=rank)
+        model = tf.keras.Sequential(
+            [
+                tf.keras.layers.LayerNormalization(
+                    batch_input_shape=shape, axis=axis, epsilon=epsilon, trainable=False
+                )
+            ]
+        )
+        run_compare_tf_keras(
+            model,
+            [random_gen(shape, rand_min=-100, rand_max=100)],
+            use_cpu_only=use_cpu_only,
+            backend=backend,
+        )
+
 
     @pytest.mark.parametrize(
         "use_cpu_only, backend, rank, groups, axis, epsilon, center, scale",
@@ -905,7 +1006,7 @@ class TestPermute:
         )
 
 
-class TestPooling:
+class TestGlobalPooling:
     @pytest.mark.parametrize(
         "use_cpu_only, backend, op, data_format",
         itertools.product(
@@ -949,6 +1050,8 @@ class TestPooling:
             backend=backend,
         )
 
+
+class TestPooling:
     @pytest.mark.parametrize(
         "use_cpu_only, backend, op, data_format, pool_size",
         itertools.product(

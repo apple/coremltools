@@ -1,4 +1,4 @@
-[![Build Status](https://img.shields.io/gitlab/pipeline/zach_nation/coremltools/master)](#)
+[![Build Status](https://travis-ci.com/apple/coremltools.svg?branch=master)](#)
 [![PyPI Release](https://img.shields.io/pypi/v/coremltools.svg)](#)
 [![Python Versions](https://img.shields.io/pypi/pyversions/coremltools.svg)](#)
 
@@ -29,7 +29,7 @@ With coremltools, you can do the following:
 To get the latest version of coremltools:
 
 ```shell
-pip install coremltools==4.0b2
+pip install coremltools==4.0b3
 ```
 
 For the latest changes please see the [release notes](https://github.com/apple/coremltools/releases/).

@@ -73,14 +73,21 @@ def convert(
         to determine the source framework.
 
     inputs: list of `TensorType` or `ImageType`
-        - Inputs are required for PyTorch model, but optional for TensorFlow.
-        - For PyTorch models, the inputs may be nested list or tuple, but for
-          TensorFlow models it must be a flat list.
-        - For TensorFlow, if inputs is `None`, the inputs are `Placeholder`
-          nodes in the model (if model is frozen graph) or function inputs (if
-          model is tf function).
-        - For TensorFlow, if inputs is not `None`, inputs may contain only a
-          subset of all Placeholder in the TF model.
+        TensorFlow 1 and 2:
+            - `inputs` are optional. If not provided, the inputs are
+              `Placeholder` nodes in the model (if model is frozen graph) or
+              function inputs (if model is tf function)
+            - `inputs` must corresponds to all or some of the Placeholder
+              nodes in the TF model
+            - `TensorType` and `ImageType` in `inputs` must have `name`
+              specified. `shape` is optional.
+            - If `inputs` is provided, it must be a flat list.
+
+        PyTorch:
+            - `inputs` are required.
+            - `inputs` may be nested list or tuple.
+            - `TensorType` and `ImageType` in `inputs` must have `name`
+              and `shape` specified.
 
     outputs: list[str] (optional)
 
@@ -263,6 +270,10 @@ def convert(
             msg = 'Unexpected argument "example_inputs" found'
             raise ValueError(msg)
 
+        if inputs is None:
+            msg = 'Expected argument for pytorch "inputs" not provided'
+            raise ValueError(msg)
+
         def _flatten_list(_inputs):
             ret = []
             for _input in _inputs:
@@ -312,6 +323,9 @@ def convert(
             classifier_config=classifier_config,
             **kwargs
         )
+
+    if convert_to == 'mil':
+        return proto_spec # Returns the MIL program
 
     model = coremltools.models.MLModel(proto_spec, useCPUOnly=True)
 

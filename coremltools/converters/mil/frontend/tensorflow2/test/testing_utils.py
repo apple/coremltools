@@ -5,14 +5,15 @@
 
 from coremltools.converters.mil.testing_reqs import converter
 import pytest
+import numpy as np
 
 tf = pytest.importorskip("tensorflow", minversion="2.1.0")
 from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import (
     get_tf_node_names
 )
 
-from coremltools.converters.mil.input_types import TensorType
-from coremltools.converters.mil.testing_utils import compare_backend
+from coremltools.converters.mil.input_types import TensorType, RangeDim
+from coremltools.converters.mil.testing_utils import compare_shapes, compare_backend
 from tensorflow.python.framework import dtypes
 
 
@@ -100,13 +101,16 @@ def run_compare_tf2(
     cf_inputs = [t for t in model[0].inputs if t.dtype != dtypes.resource]
     for t in cf_inputs:
         name = get_tf_node_names(t.name)[0]
-        inputs.append(TensorType(name=name, shape=list(t.get_shape())))
+        shape = [RangeDim() if s is None or s == -1 else s \
+                for s in list(t.get_shape())]
+        inputs.append(TensorType(name=name, shape=shape,
+            dtype=t.dtype.as_numpy_dtype))
     outputs = []
     for t in output_names:
         name = get_tf_node_names(t)[0]
         outputs.append(name)
 
-    # get TensorFlow 2.x output as reference and run comparision
+    # get TensorFlow 2.x output as reference and run comparison
     tf_input_values = [tf.constant(t) for t in input_dict.values()]
     tf_outputs = model[0](*tf_input_values)
     if isinstance(tf_outputs, (tuple, list)):
@@ -126,6 +130,10 @@ def run_compare_tf2(
 
     if frontend_only:
         return
+
+    for k,v in input_dict.items():
+        if isinstance(v, np.ndarray) and issubclass(v.dtype.type, np.integer):
+            input_dict[k] = v.astype(np.float) # Core ML only accepts floats
 
     compare_backend(
         proto,

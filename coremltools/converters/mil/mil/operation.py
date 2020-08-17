@@ -10,7 +10,7 @@ from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.types.symbolic import is_symbolic, any_symbolic
 from . import SPACES
 from .block import curr_block, _check_is_compatible_type
-from .input_type import TupleInputType
+from .input_type import TupleInputType, InputTypeError
 from .var import Var, InternalVar, ListVar
 
 VALUE = 1
@@ -357,7 +357,15 @@ class Operation(object):
                 raise ValueError(msg.format(v_new.sym_type, v_old.sym_type))
             v_old.remove_child_op(op, no_check_var_types)
 
-        parsed_inputs = self.input_spec.parse_inputs(kwargs)
+        try:
+            parsed_inputs = self.input_spec.parse_inputs(kwargs)
+        except InputTypeError as e:
+            # Add op name and op_type to the error msg
+            msg = "Op \"{}\" (op_type: {}) input {}=\"{}\" expects {} but got {}"
+            raise InputTypeError(msg.format(self.name, self.op_type,
+                e.input_arg_name, e.input_param_name,
+                e.input_type.type_str,
+                e.actual_type.__type_info__()))
         for (name, var) in parsed_inputs:
             setattr(self, name, var)
             if var is not None and not isinstance(var, InternalVar):

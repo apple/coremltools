@@ -12,7 +12,6 @@ from .testing_utils import run_compare_builder
 backends = testing_reqs.backends
 
 
-@pytest.mark.skip("Broken for mil backend")
 class TestResizeBilinear:
     def test_builder_to_backend_smoke(self, use_cpu_only=True, backend="nn_proto"):
         x = np.array([0, 1], dtype=np.float32).reshape(1, 1, 2)
@@ -87,7 +86,7 @@ class TestResizeBilinear:
         )
 
 
-@pytest.mark.skip("Broken for nn backend")
+@pytest.mark.skip("Broken for mil backend rdar://problem/66964398")
 class TestUpsampleBilinear:
     def test_builder_to_backend_smoke(self, use_cpu_only=True, backend="nn_proto"):
         x = np.array([0, 1], dtype=np.float32).reshape(1, 1, 2)
@@ -267,9 +266,9 @@ class TestCrop:
         itertools.product(
             [True, False],
             backends,
-            [x for x in range(1, 4)],
-            [x for x in range(5, 10)],
-            [x for x in range(5, 10)],
+            [x for x in range(2, 4)],
+            [x for x in range(5, 8)],
+            [x for x in range(8, 10)],
         ),
     )
     def test_builder_to_backend_stress(self, use_cpu_only, backend, C, H, W):

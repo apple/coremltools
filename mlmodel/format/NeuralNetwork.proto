@@ -689,7 +689,7 @@ message NeuralNetworkLayer {
         NonMaximumSuppressionLayerParams NonMaximumSuppression = 1400;
 
         // Following layers are available only after Core ML Specification
-        // version >= 5 (iOS >= 14, macOS >= 10.16)
+        // version >= 5 (iOS >= 14, macOS >= 11.0)
         OneHotLayerParams oneHot = 1450;
         CumSumLayerParams cumSum = 1455;
         ClampedReLULayerParams clampedReLU = 1460;
@@ -3998,10 +3998,29 @@ message BatchedMatMulLayerParams {
  * Requires at least 2 input and produces 1 output.
  *
  * Input
- *     A Sequence of N-dimensional tensors. The rank of the input tensors must match and all dimensions except 'axis' must be equal.
- * Output
- *     A N-Dimensional tensor with the same rank .
+ *     The rank of the input tensors must match and all dimensions also must match, except for the dimension 'axis'.
  *
+ *
+ * Output
+ *     Same rank as the input. The dimension along "axis", is the sum of the dimensions of the inputs.
+ *
+ * example:
+ *
+ * in1 : shape (3, 2), value = [[1, 2], [3, 4], [5, 6]]
+ * in2 : shape (3, 2), value = [[7, 8], [9, 10], [11, 12]]
+ * axis = 0
+ *
+ * if interleave = False (default)
+ * output : shape (6, 2)
+ * output[0:3, :] = in1
+ * output[3:6, :] = in2
+ * value = [[1, 2], [3, 4], [5, 6], [7, 8], [9, 10], [11, 12]]
+ *
+ * if interleave = True
+ * output : shape (6, 2)
+ * output[0::2, :] = in1
+ * output[1::2, :] = in2
+ * value = [[1, 2], [7, 8], [3, 4], [9, 10], [5, 6], [11, 12]]
  *
  */
 message ConcatNDLayerParams {
@@ -4010,6 +4029,14 @@ message ConcatNDLayerParams {
      * Dimension along which to concatenate. Supports negative values of the parameter 'axis'.
      */
     int64 axis = 1;
+    
+    /**
+     * (Only available in Core ML Specification >= 5 (iOS >= 14, macOS >= 11.0)
+     * Interleave option. If True, concatenation is done via interleaving the inputs.
+     * This requires all inputs to have the exact same shape.
+     */
+    bool interleave = 2;
+    
 
 }
 

@@ -423,3 +423,36 @@ def test_onehot_matmul_to_gather_fusion(rank):
         {"x": input_shape},
         expected_output_shapes={block.outputs[0].name: input_shape + (embedding_size,)},
     )
+
+def test_concat_interleave_fusion_pass():
+    """
+        Given:
+        %3 = concat(%1.a, %1.b, axis=-3, interleave=False) #shape = (B, n*C, H, W)
+        %4 = reshape(%3) #shape = (B, n, C, H, W)
+        %5 = transpose(%4, perm=[0, 2, 1, 3, 4]) # shape = (B, C, n, H, W)
+        %6 = reshape(%5) # shape = (B, C*n, H, W)
+
+    Result:
+        %6 = concat(%1.a, %1.b, axis=-3, interleave=True)
+    """
+    B, C, H, W = 1, 10, 20, 20
+    @mb.program(input_specs=[mb.TensorSpec(shape=(B,C,H,W)), mb.TensorSpec(shape=(B,C,H,W))])
+    def prog(x, y):
+        z = mb.concat(values=[x,y], axis=1)
+        z = mb.reshape(x=z, shape=(B, 2, C, H, W))
+        z = mb.transpose(x=z, perm=[0, 2, 1, 3, 4])
+        z = mb.reshape(x=z, shape=(B, -1, H, W))
+        return z
+
+    prev_prog, prev_block, block = apply_pass_and_basic_check(
+        prog, "common::detect_concat_interleave"
+    )
+    assert get_op_types_in_program(prev_prog) == ["concat", "reshape", "transpose", "reshape"]
+    assert get_op_types_in_program(prog) == ["concat"]
+    concat_op = prog.find_ops(op_type="concat", exactly_one=True)[0]
+    assert concat_op.interleave.val
+    assert_model_is_valid(
+        prog,
+        {"x": (B, C, H, W), "y": (B, C, H, W)},
+        expected_output_shapes={block.outputs[0].name: (B, 2*C, H, W)},
+    )

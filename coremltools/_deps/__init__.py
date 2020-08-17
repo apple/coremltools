@@ -12,6 +12,7 @@ import logging as _logging
 import platform as _platform
 import re as _re
 import sys as _sys
+from packaging import version
 
 
 def __get_version(version):
@@ -104,7 +105,7 @@ try:
 
     if _HAS_TF_1:
         if tf_ver < _StrictVersion(_TF_1_MIN_VERSION):
-            _logging.warn(
+            _logging.warning(
                 (
                     "TensorFlow version %s is not supported. Minimum required version: %s ."
                     "TensorFlow conversion will be disabled."
@@ -112,7 +113,7 @@ try:
                 % (tensorflow.__version__, _TF_1_MIN_VERSION)
             )
         elif tf_ver > _StrictVersion(_TF_1_MAX_VERSION):
-            _logging.warn(
+            _logging.warning(
                 "TensorFlow version %s detected. Last version known to be fully compatible is %s ."
                 % (tensorflow.__version__, _TF_1_MAX_VERSION)
             )
@@ -126,7 +127,7 @@ try:
                 % (tensorflow.__version__, _TF_2_MIN_VERSION)
             )
         elif tf_ver > _StrictVersion(_TF_2_MAX_VERSION):
-            _logging.warn(
+            _logging.warning(
                 "TensorFlow version %s detected. Last version known to be fully compatible is %s ."
                 % (tensorflow.__version__, _TF_2_MAX_VERSION)
             )
@@ -232,6 +233,7 @@ except:
     _HAS_TORCH = False
 MSG_TORCH_NOT_FOUND = "PyTorch not found."
 
+
 # ---------------------------------------------------------------------------------------
 _HAS_ONNX = True
 try:
@@ -246,3 +248,17 @@ try:
 except:
     _HAS_GRAPHVIZ = False
 MSG_ONNX_NOT_FOUND = "ONNX not found."
+
+# General utils
+def version_ge(module, target_version):
+    """
+    Example usage:
+
+    >>> import torch # v1.5.0
+    >>> version_ge(torch, '1.6.0') # False
+    """
+    return version.parse(module.__version__) >= version.parse(target_version)
+
+def version_lt(module, target_version):
+    """See version_ge"""
+    return version.parse(module.__version__) < version.parse(target_version)

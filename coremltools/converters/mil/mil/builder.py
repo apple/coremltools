@@ -18,6 +18,7 @@ from .input_type import (
     InternalStringInputType,
     InternalScalarOrTensorInputType,
     ScalarOrTensorInputType,
+    ListOrScalarOrTensorInputType,
     TupleInputType,
     InputSpec,
     InternalInputType,
@@ -141,7 +142,7 @@ class Builder:
                             var.append(
                                 cls._add_const(v, new_var_name + str(i), before_op)
                             )
-                    elif isinstance(in_type, ScalarOrTensorInputType):
+                    elif isinstance(in_type, (ScalarOrTensorInputType, ListOrScalarOrTensorInputType)):
                         var = cls._add_const(val, new_var_name, before_op)
                     else:
                         msg = "Cannot convert input '{}' of type {} to Var (op: {})"

@@ -816,6 +816,10 @@ bool CoreML::hasIOS14NeuralNetworkFeatures(const Specification::Model& model) {
                 case Specification::NeuralNetworkLayer::kBatchedMatmul:
                     if (layer.batchedmatmul().int8dynamicquantize())
                         return true;
+                case Specification::NeuralNetworkLayer::kConcatND:
+                    if (layer.concatnd().interleave()) {
+                        return true;
+                    }
                 default:
                     continue;
             }

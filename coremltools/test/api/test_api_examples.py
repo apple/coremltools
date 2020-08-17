@@ -255,7 +255,9 @@ class TestTensorFlow2ConverterExamples:
         np.testing.assert_allclose(results["Identity"], expected_val, rtol=1e-4)
 
     @staticmethod
-    def test_convert_tf_keras_applications_model():
+    @pytest.mark.parametrize(
+            "dtype", ['default', 'mil_type', 'np type'])
+    def test_convert_tf_keras_applications_model(dtype):
         import tensorflow as tf
 
         tf_keras_model = tf.keras.applications.MobileNet(
@@ -270,9 +272,16 @@ class TestTensorFlow2ConverterExamples:
         output_name = tf_keras_model.outputs[0].name.split(":")[0]
         tf_graph_output_name = output_name.split("/")[-1]
 
+        if dtype == 'default':
+            dtype = None
+        elif dtype == 'mil_type':
+            dtype = ct.converters.mil.types.fp32
+        else:
+            dtype = np.float32
+
         mlmodel = ct.convert(
             tf_keras_model,
-            inputs=[ct.TensorType(shape=(1, 224, 224, 3))],
+            inputs=[ct.TensorType(shape=(1, 224, 224, 3), dtype=dtype)],
             outputs=[tf_graph_output_name],
         )
         mlmodel.save("./mobilenet.mlmodel")
@@ -318,7 +327,6 @@ class TestTensorFlow2ConverterExamples:
     @staticmethod
     def test_concrete_function_conversion():
         # testing : https://coremltools.readme.io/docs/tensorflow-2#conversion-from-user-defined-models
-
         import tensorflow as tf
 
         @tf.function(input_signature=[tf.TensorSpec(shape=(6,), dtype=tf.float32)])
@@ -328,7 +336,7 @@ class TestTensorFlow2ConverterExamples:
             return x * y
 
         conc_func = gelu_tanh_activation.get_concrete_function()
-        ct.convert([conc_func])
+        mlmodel = ct.convert([conc_func])
 
 
     @staticmethod
@@ -344,7 +352,7 @@ class TestTensorFlow2ConverterExamples:
         )
 
         # Download class labels (from a separate file)
-        import urllib
+        from six.moves import urllib
         label_url = 'https://storage.googleapis.com/download.tensorflow.org/data/ImageNetLabels.txt'
         class_labels = urllib.request.urlopen(label_url).read().splitlines()
         class_labels = class_labels[1:]  # remove the first class which is background
@@ -367,7 +375,8 @@ class TestTensorFlow2ConverterExamples:
         )
 
         # Set feature descriptions (these show up as comments in XCode)
-        model.input_description["input_1"] = "Input image to be classified"
+        input_name = model.input_description._fd_spec[0].name
+        model.input_description[input_name] = "Input image to be classified"
         model.output_description["classLabel"] = "Most likely image category"
         model.author = "Original Paper: Mark Sandler, Andrew Howard, "\
                         "Menglong Zhu, Andrey Zhmoginov, Liang-Chieh Chen"
@@ -394,7 +403,7 @@ class TestTensorFlow2ConverterExamples:
         example_image = img.resize((224, 224))
 
         # Make a prediction using Core ML
-        out_dict = model.predict({"input_1": example_image})
+        out_dict = model.predict({input_name: example_image})
 
         # Print out top-1 prediction
         assert out_dict["classLabel"] == "daisy"
@@ -511,7 +520,8 @@ class TestPyTorchConverterExamples:
 
             # Verify outputs
             expected = model(example_input)
-            np.testing.assert_allclose(result["5"], expected.detach().numpy())
+            name = list(result.keys())[0]
+            np.testing.assert_allclose(result[name], expected.detach().numpy())
 
         # Duplicated inputs are invalid
         with pytest.raises(ValueError, match=r"Duplicated inputs"):
@@ -578,3 +588,572 @@ class TestMILExamples:
                 {"x": np.random.rand(1, 100, 100, 3).astype(np.float32),}
             )
             assert len(prediction) == 1
+
+class TestFlexibleShape:
+    @staticmethod
+    @pytest.mark.parametrize(
+            "use_symbol", [True, False])
+    @pytest.mark.skipif(not _HAS_TF_2, reason=MSG_TF2_NOT_FOUND)
+    def test_tf2keras_shared_range_dim(use_symbol):
+        # Test examples in https://coremltools.readme.io/docs/flexible-inputs
+        import tensorflow as tf
+
+        input_dim = 3
+        # None denotes seq_len dimension
+        x1 = tf.keras.Input(shape=(None,input_dim), name="seq1")
+        x2 = tf.keras.Input(shape=(None,input_dim), name="seq2")
+        y = x1 + x2
+        keras_model = tf.keras.Model(inputs=[x1, x2], outputs=[y])
+
+        # One RangeDim shared by two inputs
+        if use_symbol:
+            seq_len_dim = ct.RangeDim(symbol='seq_len')
+        else:
+            # symbol is optional
+            seq_len_dim = ct.RangeDim()
+        seq1_input = ct.TensorType(name="seq1", shape=(1, seq_len_dim, input_dim))
+        seq2_input = ct.TensorType(name="seq2", shape=(1, seq_len_dim, input_dim))
+        mlmodel = ct.convert(keras_model,
+                inputs=[seq1_input, seq2_input])
+
+        batch = 1
+        seq_len = 5
+        test_input_x1 = np.random.rand(batch, seq_len, input_dim).astype(np.float32)
+        test_input_x2 = np.random.rand(batch, seq_len, input_dim).astype(np.float32)
+        expected_val = keras_model([test_input_x1, test_input_x2])
+        if ct.utils._is_macos():
+            results = mlmodel.predict({
+                "seq1": test_input_x1,
+                "seq2": test_input_x2})
+            np.testing.assert_allclose(results["Identity"], expected_val, rtol=1e-4)
+
+
+    @staticmethod
+    @pytest.mark.skipif(not _HAS_TF_2, reason=MSG_TF2_NOT_FOUND)
+    def test_tf2keras_incorrect_range_dim():
+        import tensorflow as tf
+
+        input_dim = 3
+        # None denotes seq_len dimension
+        x1 = tf.keras.Input(shape=(None,input_dim), name="seq1")
+        y = x1 + 1
+        keras_model = tf.keras.Model(inputs=[x1], outputs=[y])
+
+        # Incorrectly using -1 instead of ct.RangeDim
+        # One RangeDim shared by two inputs
+        with pytest.raises(ValueError,
+            match=r"Can\'t convert to CoreML shaping"):
+            seq1_input = ct.TensorType(name="seq1", shape=(1, -1, input_dim))
+            mlmodel = ct.convert(keras_model, inputs=[seq1_input])
+
+    @staticmethod
+    @pytest.mark.parametrize(
+            "use_symbol", [True, False])
+    @pytest.mark.skipif(not _HAS_TF_2, reason=MSG_TF2_NOT_FOUND)
+    def test_tf2keras_outofbound_range_dim(use_symbol):
+        # Test examples in https://coremltools.readme.io/docs/flexible-inputs
+        import tensorflow as tf
+
+        input_dim = 3
+        # None denotes seq_len dimension
+        x = tf.keras.Input(shape=(None,input_dim), name="seq")
+        y = x * 2
+        keras_model = tf.keras.Model(inputs=[x], outputs=[y])
+
+        if use_symbol:
+            seq_len_dim = ct.RangeDim(symbol='sequence_len', lower_bound=3,
+                    upper_bound=5)
+        else:
+            seq_len_dim = ct.RangeDim(lower_bound=3, upper_bound=5)
+        seq_input = ct.TensorType(name="seq", shape=(1, seq_len_dim, input_dim))
+        mlmodel = ct.convert(keras_model, inputs=[seq_input])
+
+        # seq_len is within bound
+        batch = 1
+        seq_len = 3
+        test_input_x = np.random.rand(batch, seq_len, input_dim).astype(np.float32)
+        expected_val = keras_model([test_input_x])
+        if ct.utils._is_macos():
+            results = mlmodel.predict({"seq": test_input_x})
+            np.testing.assert_allclose(results["Identity"], expected_val, rtol=1e-4)
+
+            # seq_len below/above lower_bound/upper_bound
+            with pytest.raises(RuntimeError,
+                    match=r"not compatible with the model\'s feature"):
+                seq_len = 2
+                test_input_x = np.random.rand(batch, seq_len,
+                        input_dim).astype(np.float32)
+                results = mlmodel.predict({"seq": test_input_x})
+
+            with pytest.raises(RuntimeError,
+                    match=r"not compatible with the model\'s feature"):
+                seq_len = 6
+                test_input_x = np.random.rand(batch, seq_len,
+                        input_dim).astype(np.float32)
+                results = mlmodel.predict({"seq": test_input_x})
+
+
+    @staticmethod
+    @pytest.mark.parametrize(
+            "use_symbol", [True, False])
+    @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
+    def test_torch_range_dim(use_symbol):
+        import torch
+
+        num_tokens = 3
+        embedding_size = 5
+
+        class TestModule(torch.nn.Module):
+            def __init__(self):
+                super(TestModule, self).__init__()
+                self.embedding = torch.nn.Embedding(num_tokens, embedding_size)
+
+            def forward(self, x):
+                return self.embedding(x)
+
+        model = TestModule()
+        model.eval()
+
+        example_input = torch.randint(high=num_tokens, size=(2,),
+                dtype=torch.int64)
+        traced_model = torch.jit.trace(model, example_input)
+
+        if use_symbol:
+            seq_len_dim = ct.RangeDim(symbol='seq_length')
+        else:
+            # symbol is optional
+            seq_len_dim = ct.RangeDim()
+        seq_input = ct.TensorType(name="input", shape=(seq_len_dim,),
+                dtype=np.int64)
+        mlmodel = ct.convert(
+            traced_model,
+            inputs=[seq_input],
+        )
+
+        if ct.utils._is_macos():
+            result = mlmodel.predict(
+                {"input": example_input.detach().numpy().astype(np.float32)}
+            )
+
+            # Verify outputs
+            expected = model(example_input)
+            name = list(result.keys())[0]
+            np.testing.assert_allclose(result[name], expected.detach().numpy())
+
+            # Try example of different length
+            example_input2 = torch.randint(high=num_tokens, size=(99,),
+                    dtype=torch.int64)
+            result = mlmodel.predict(
+                {"input": example_input2.detach().numpy().astype(np.float32)}
+            )
+            expected = model(example_input2)
+            name = list(result.keys())[0]
+            np.testing.assert_allclose(result[name], expected.detach().numpy())
+
+    @staticmethod
+    @pytest.mark.parametrize(
+            "variable_length", [True, False])
+    @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
+    def test_torch_range_dim_lstm(variable_length):
+        """
+        This example shows how to run LSTM with previous hidden / cell states
+        """
+        import torch
+        import coremltools as ct
+
+        input_size = 3
+        hidden_size = 2
+
+        class TestNet(torch.nn.Module):
+            def __init__(self):
+              super(TestNet, self).__init__()
+              self.lstm = torch.nn.LSTM(input_size, hidden_size, 1)
+
+            def forward(self, x, hidden_state, cell_state):
+                # LSTM takes in previous hidden and cell states. The first
+                # invokation usually have zero vectors as initial states.
+                output, (new_hidden_state, new_cell_state) = \
+                    self.lstm(x, (hidden_state, cell_state))
+                # LSTM hidden / cell states are returned to be managed by the
+                # caller (and is fed in as inputs in the next call).
+                return output, new_hidden_state, new_cell_state
+
+        model = TestNet()
+        model.eval()
+
+        seq_len = 2 # we'll make seq_len dynamic later
+        batch = 1
+        input_shape = (seq_len, batch, input_size)
+        rand_input = torch.rand(*input_shape)
+        h_shape = (1, batch, hidden_size)
+        rand_h0 = torch.rand(*h_shape)
+        rand_c0 = torch.rand(*h_shape)
+
+        traced_model = torch.jit.trace(model, (rand_input, rand_h0, rand_c0))
+
+        # ct.RangeDim() tells coremltools that this dimension can change for
+        # each inference example (aka "runtime-determined"). If the sequence
+        # length is always the same (e.g., 2 step LSTM would have seq_len == 2)
+        # Note that fixed-length models usually run slightly faster
+        # than variable length models.
+        ct_seq_len = ct.RangeDim() if variable_length else seq_len
+        seq_input = ct.TensorType(shape=(ct_seq_len, batch, input_size),
+            name="seq_input")
+        h_input = ct.TensorType(shape=h_shape, name="h_input")
+        c_input = ct.TensorType(shape=h_shape, name="c_input")
+
+        mlmodel = ct.convert(
+            traced_model,
+            inputs=[seq_input, h_input, c_input],
+        )
+
+        if ct.utils._is_macos():
+            result = mlmodel.predict(
+                {"seq_input": rand_input.detach().numpy().astype(np.float32),
+                  "h_input": rand_h0.detach().numpy().astype(np.float32),
+                  "c_input": rand_c0.detach().numpy().astype(np.float32),
+                  }
+            )
+
+            # Verify outputs
+            expected = model(rand_input, rand_h0, rand_c0)
+            names = list(result.keys())
+            names.sort()
+            np.testing.assert_allclose(result[names[0]],
+                expected[0].detach().numpy(), atol=1e-4)
+            np.testing.assert_allclose(result[names[1]],
+                expected[1].detach().numpy(), atol=1e-4)
+            np.testing.assert_allclose(result[names[2]],
+                expected[2].detach().numpy(), atol=1e-4)
+
+            # Try example of different length
+            if variable_length:
+                seq_len = 10
+                input_shape = (seq_len, batch, input_size)
+                rand_input = torch.rand(*input_shape)
+
+                result = mlmodel.predict(
+                    {"seq_input": rand_input.detach().numpy().astype(np.float32),
+                      "h_input": rand_h0.detach().numpy().astype(np.float32),
+                      "c_input": rand_c0.detach().numpy().astype(np.float32),
+                      }
+                )
+                expected = model(rand_input, rand_h0, rand_c0)
+                names = list(result.keys())
+                names.sort()
+                np.testing.assert_allclose(result[names[0]],
+                    expected[0].detach().numpy(), atol=1e-4)
+                np.testing.assert_allclose(result[names[1]],
+                    expected[1].detach().numpy(), atol=1e-4)
+                np.testing.assert_allclose(result[names[2]],
+                    expected[2].detach().numpy(), atol=1e-4)
+
+    @staticmethod
+    @pytest.mark.parametrize(
+            "use_symbol", [True, False])
+    @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
+    def test_torch_outofbound_range_dim(use_symbol):
+        import torch
+
+        num_tokens = 3
+        embedding_size = 5
+
+        class TestModule(torch.nn.Module):
+            def __init__(self):
+                super(TestModule, self).__init__()
+                self.embedding = torch.nn.Embedding(num_tokens, embedding_size)
+
+            def forward(self, x):
+                return self.embedding(x)
+
+        model = TestModule()
+        model.eval()
+
+        example_input = torch.randint(high=num_tokens, size=(3,),
+                dtype=torch.int64)
+        traced_model = torch.jit.trace(model, example_input)
+
+        if use_symbol:
+            seq_len_dim = ct.RangeDim(symbol='len', lower_bound=3,
+                    upper_bound=5)
+        else:
+            # symbol is optional
+            seq_len_dim = ct.RangeDim(lower_bound=3, upper_bound=5)
+        seq_input = ct.TensorType(name="input", shape=(seq_len_dim,),
+                dtype=np.int64)
+        mlmodel = ct.convert(
+            traced_model,
+            inputs=[seq_input],
+        )
+
+        if ct.utils._is_macos():
+            result = mlmodel.predict(
+                {"input": example_input.detach().numpy().astype(np.float32)}
+            )
+
+            # Verify outputs
+            expected = model(example_input)
+            name = list(result.keys())[0]
+            np.testing.assert_allclose(result[name], expected.detach().numpy())
+
+            # seq_len below/above lower_bound/upper_bound
+            with pytest.raises(RuntimeError,
+                    match=r"not compatible with the model\'s feature"):
+                example_input2 = torch.randint(high=num_tokens, size=(99,),
+                        dtype=torch.int64)
+                result = mlmodel.predict(
+                    {"input": example_input2.detach().numpy().astype(np.float32)}
+                )
+
+            with pytest.raises(RuntimeError,
+                    match=r"not compatible with the model\'s feature"):
+                example_input2 = torch.randint(high=num_tokens, size=(2,),
+                        dtype=torch.int64)
+                result = mlmodel.predict(
+                    {"input": example_input2.detach().numpy().astype(np.float32)}
+                )
+
+    @staticmethod
+    @pytest.mark.skipif(not _HAS_TF_2, reason=MSG_TF2_NOT_FOUND)
+    def test_tf2keras_enumerated_shapes():
+        # Test examples in https://coremltools.readme.io/docs/flexible-inputs
+        import tensorflow as tf
+
+        input_shape = (28, 28, 3)
+        # None denotes seq_len dimension
+        x = tf.keras.Input(shape=input_shape, name="input")
+        C_out = 2
+        kHkW = 3
+        y = tf.keras.layers.Conv2D(C_out, kHkW, activation='relu',
+                input_shape=input_shape)(x)
+        keras_model = tf.keras.Model(inputs=[x], outputs=[y])
+
+        # One RangeDim shared by two inputs
+        shapes = [(1, 28, 28, 3), (1, 56, 56, 3)]
+        enumerated_shapes = ct.EnumeratedShapes(shapes=shapes)
+        tensor_input = ct.TensorType(name="input", shape=enumerated_shapes)
+        mlmodel = ct.convert(keras_model, inputs=[tensor_input])
+
+        # Test (1, 28, 28, 3) shape
+        test_input_x = np.random.rand(*shapes[0]).astype(np.float32)
+        expected_val = keras_model([test_input_x])
+        if ct.utils._is_macos():
+            results = mlmodel.predict({
+                "input": test_input_x})
+            np.testing.assert_allclose(results["Identity"],
+                    expected_val, rtol=1e-2)
+
+            # Test (1, 56, 56, 3) shape (can't verify numerical parity with Keras
+            # which doesn't support enumerated shape)
+            test_input_x = np.random.rand(*shapes[1]).astype(np.float32)
+            results = mlmodel.predict({
+                "input": test_input_x})
+
+            # Test with a wrong shape
+            with pytest.raises(RuntimeError,
+                    match=r"not compatible with the model\'s feature"):
+                test_input_x = np.random.rand(1, 29, 29, 3).astype(np.float32)
+                results = mlmodel.predict({
+                    "input": test_input_x})
+
+    @staticmethod
+    @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
+    def test_torch_enumerated_shapes():
+        import torch
+
+        in_channels = 3
+        out_channels = 2
+        kernel_size = 3
+
+        class TestModule(torch.nn.Module):
+            def __init__(self):
+                super(TestModule, self).__init__()
+                self.conv = torch.nn.Conv2d(in_channels, out_channels,
+                        kernel_size)
+
+            def forward(self, x):
+                return self.conv(x)
+
+        model = TestModule()
+        model.eval()
+
+        example_input = torch.randn(1, 3, 28, 28)
+        traced_model = torch.jit.trace(model, example_input)
+
+        shapes = [(1, 3, 28, 28), (1, 3, 56, 56)]
+        enumerated_shapes = ct.EnumeratedShapes(shapes=shapes)
+        tensor_input = ct.TensorType(name="input", shape=enumerated_shapes)
+
+        mlmodel = ct.convert(
+            traced_model,
+            inputs=[tensor_input],
+        )
+
+        if ct.utils._is_macos():
+            result = mlmodel.predict(
+                {"input": example_input.detach().numpy().astype(np.float32)}
+            )
+
+            # Verify outputs
+            expected = model(example_input)
+            name = list(result.keys())[0]
+            np.testing.assert_allclose(result[name], expected.detach().numpy(),
+                    rtol=1e-3, atol=1e-4)
+
+            # Test (1, 3, 56, 56) shape (can't verify numerical parity with Torch
+            # which doesn't support enumerated shape)
+            test_input_x = np.random.rand(*shapes[1]).astype(np.float32)
+            results = mlmodel.predict({
+                "input": test_input_x})
+
+            # Test with a wrong shape
+            with pytest.raises(RuntimeError,
+                    match=r"not compatible with the model\'s feature"):
+                test_input_x = np.random.rand(1, 3, 29, 29).astype(np.float32)
+                results = mlmodel.predict({
+                    "input": test_input_x})
+
+class TestOptionalInput:
+    @staticmethod
+    @pytest.mark.skipif(not _HAS_TF_2, reason=MSG_TF2_NOT_FOUND)
+    def test_tf2keras_optional_input():
+        # Test examples in https://coremltools.readme.io/docs/flexible-inputs
+        import tensorflow as tf
+
+        input_dim = 3
+        # None denotes seq_len dimension
+        x1 = tf.keras.Input(shape=(None,input_dim), name="optional_input")
+        x2 = tf.keras.Input(shape=(None,input_dim), name="required_input")
+        y = x1 + x2
+        keras_model = tf.keras.Model(inputs=[x1, x2], outputs=[y])
+
+        seq_len_dim = ct.RangeDim()
+        default_value = np.ones((1, 2, input_dim)).astype(np.float32)
+        optional_input = ct.TensorType(
+            name="optional_input",
+            shape=(1, seq_len_dim, input_dim),
+            default_value=default_value,
+          )
+        required_input = ct.TensorType(
+            name="required_input",
+            shape=(1, seq_len_dim, input_dim),
+          )
+        mlmodel = ct.convert(keras_model,
+                inputs=[optional_input, required_input])
+
+        batch = 1
+        seq_len = 2
+        test_input_x2 = np.random.rand(batch, seq_len, input_dim).astype(np.float32)
+        expected_val = keras_model([default_value, test_input_x2])
+        if ct.utils._is_macos():
+            results = mlmodel.predict({"required_input": test_input_x2})
+            np.testing.assert_allclose(results["Identity"], expected_val, rtol=1e-4)
+
+    @staticmethod
+    @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
+    def test_torch_optional_input():
+        import torch
+
+        num_tokens = 3
+        embedding_size = 5
+
+        class TestModule(torch.nn.Module):
+            def __init__(self):
+                super(TestModule, self).__init__()
+                self.embedding = torch.nn.Embedding(num_tokens, embedding_size)
+
+            def forward(self, x, y):
+                return self.embedding(x) + y
+
+        model = TestModule()
+        model.eval()
+
+        example_input = [
+            torch.randint(high=num_tokens, size=(2,), dtype=torch.int64),
+            torch.rand(1),
+            ]
+        traced_model = torch.jit.trace(model, example_input)
+
+        required_input = ct.TensorType(
+            name="required_input", shape=(ct.RangeDim(),), dtype=np.int64)
+        default_value = np.array([3]).astype(np.float32)
+        optional_input = ct.TensorType(name="optional_input", shape=(1,),
+            default_value=default_value)
+        mlmodel = ct.convert(
+            traced_model,
+            inputs=[required_input, optional_input],
+        )
+
+        if ct.utils._is_macos():
+            result = mlmodel.predict(
+                {"required_input":
+                  example_input[0].detach().numpy().astype(np.float32)}
+            )
+
+            # Verify outputs
+            torch_default_value = torch.tensor([3])
+            expected = model(example_input[0].detach(), torch_default_value)
+            name = list(result.keys())[0]
+            np.testing.assert_allclose(result[name], expected.detach().numpy())
+
+###############################################################################
+# Note: all tests are examples provided to other teams for testing 
+# Each test case is expected to be runnable and self-complete.
+###############################################################################
+
+@pytest.mark.skipif(ct.utils._macos_version() < (10, 15), reason='Model produces specification 4.')
+class TestMILConverterExamples:
+
+    @staticmethod
+    @pytest.mark.skipif(not _HAS_TF_1, reason=MSG_TF1_NOT_FOUND)
+    def test_convert_tf1_frozen_graph(tmpdir):
+        import tensorflow as tf
+
+        with tf.Graph().as_default() as graph:
+            x = tf.placeholder(tf.float32, shape=(1, 2, 3), name="input")
+            y = tf.nn.relu(x, name="output")
+
+        model = ct.convert(graph, convert_to='mil')
+        assert isinstance(model, ct.converters.mil.Program)
+
+    @staticmethod
+    @pytest.mark.skipif(not _HAS_TF_2, reason=MSG_TF2_NOT_FOUND)
+    def test_convert_tf2_keras(tmpdir):
+        import tensorflow as tf
+
+        x = tf.keras.Input(shape=(32,), name="input")
+        y = tf.keras.layers.Dense(16, activation="softmax")(x)
+        keras_model = tf.keras.Model(x, y)
+        model = ct.convert(keras_model, convert_to='mil')
+        assert isinstance(model, ct.converters.mil.Program)
+
+    @staticmethod
+    @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
+    def test_convert_torch_traced_model(tmpdir):
+        import torch
+        from torch import nn
+        class Network(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.hidden = nn.Linear(100, 10)
+                self.output = nn.Linear(10, 2)
+                self.sigmoid = nn.Sigmoid()
+                self.softmax = nn.Softmax(dim=1)
+
+            def forward(self, x):
+                x = self.hidden(x)
+                x = self.sigmoid(x)
+                x = self.output(x)
+                x = self.softmax(x)
+                return x
+
+        torch_model = Network()
+        torch_model.eval()
+        example_input = torch.rand(1, 100) 
+        traced_model = torch.jit.trace(torch_model, example_input)
+        model = ct.convert(
+            traced_model,
+            inputs=[ct.TensorType(name="input", shape=example_input.shape)],
+            convert_to='mil'
+        )
+        assert isinstance(model, ct.converters.mil.Program)

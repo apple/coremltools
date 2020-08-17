@@ -5,11 +5,12 @@
 
 if [ -n "$ZSH_VERSION" ]; then
     if [[ $ZSH_EVAL_CONTEXT =~ :file$ ]]; then
-        THIS_SCRIPT=${0}
+        THIS_SCRIPT_PARENT_DIR=${0:a:h:h} # a:h:h gets the parent directory of the script's parent directory
     else
         echo "env_activate.sh expects to be sourced, and not run."
         exit 1
     fi
+    COREMLTOOLS_HOME=${THIS_SCRIPT_PARENT_DIR}
 elif [ -n "$BASH_VERSION" ]; then
     if [[ ${BASH_SOURCE[0]} == ${0} ]]; then
         echo "env_activate.sh expects to be sourced, and not run."
@@ -17,12 +18,12 @@ elif [ -n "$BASH_VERSION" ]; then
         exit 1
     fi
     # BASH_SOURCE is a list that is prepended to when a file is sourced.
-    THIS_SCRIPT=${BASH_SOURCE[0]}
+    COREMLTOOLS_HOME=$(pushd $(dirname ${BASH_SOURCE[0]})/.. > /dev/null && pwd && popd > /dev/null)
 else
     echo "Expect bash or zsh"
     return 1
 fi
-COREMLTOOLS_HOME=$(pushd $(dirname ${THIS_SCRIPT})/.. > /dev/null && pwd && popd > /dev/null)
+
 COREMLTOOLS_NAME=$(basename $COREMLTOOLS_HOME)
 PYTHON=3.7
 ENV_DIR="${COREMLTOOLS_HOME}/envs"

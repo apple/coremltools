@@ -83,10 +83,17 @@ class cond(Operation):
                     "true branch output {} type {} mismatch false branch"
                     + " output type {}"
                 )
-                raise ValueError(msg.format(vt.name, vt.sym_type, vf.sym_type))
+                raise ValueError(msg.format(vt.name,
+                    vt.sym_type.__type_info__(), vf.sym_type.__type_info__()))
 
         return tuple(v.sym_type for v in true_ret_vars)
 
+    def value_inference(self):
+        if self.pred.val is None:
+            raise NotImplementedError()
+        if self.pred.val:
+            return [v.val for v in self.blocks[0].outputs]
+        return [v.val for v in self.blocks[1].outputs]
 
 @register_op(doc_str="")
 class const(Operation):
@@ -170,7 +177,9 @@ class select(Operation):
     Returns
     -------
     tensor<[*D_out], T> or tensor<[n, len(D1)], int32>
-        *  If ``a, b`` are both provided, return shape is based on broadcast rules from ``cond, a, b``. If ``a, b`` are ``None``, returns shape is 2D, where first dimension ``n`` is the number of matching indices in ``cond`` and ``len(D1)`` is the rank of ``cond``.
+        *  If ``a, b`` are both provided, return shape is based on broadcast rules from ``cond, a, b``.
+        If ``a, b`` are ``None``, returns shape is 2D, where first dimension ``n`` is the number of
+        matching indices in ``cond`` and ``len(D1)`` is the rank of ``cond``.
 
     Attributes
     ----------
@@ -207,7 +216,7 @@ class select(Operation):
 @register_op(doc_str="")
 class while_loop(Operation):
     """
-    Perform body repeatly while the condition cond is true.
+    Perform body repeatedly while the condition cond is true.
 
     Parameters
     ----------
@@ -374,24 +383,6 @@ class while_loop(Operation):
     def type_inference(self):
         # Skip the conditional var
         return tuple(v.sym_type for v in self.blocks[0].outputs[1:])
-
-
-
-# identity is used for renaming and is rarely necessary. See
-# `loop_invariant_elimination` pass for a rare use case.
-@register_op(doc_str="")
-class identity(Operation):
-    input_spec = InputSpec(x=ListOrScalarOrTensorInputType())
-
-    def __init__(self, **kwargs):
-        super(identity, self).__init__(**kwargs)
-
-    def type_inference(self):
-        return self.x.sym_type
-
-    @precondition(allow=VALUE | SYMBOL)
-    def value_inference(self):
-        return self.x.sym_val
 
 
 @register_op(doc_str="")

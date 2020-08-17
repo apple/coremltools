@@ -11,6 +11,7 @@ from __future__ import absolute_import as _
 import logging
 from collections import defaultdict
 
+import coremltools as ct
 from coremltools.converters.mil.input_types import (
     ClassifierConfig,
     ImageType,
@@ -171,25 +172,25 @@ def _set_optional_inputs(proto, input_types):
     for input_type in input_types:
         if isinstance(input_type, ImageType):
             continue
-        is_optional = input_type.is_optional
-        optional_value = input_type.optional_value
-        shape = input_type.shape
-        if not is_optional:
-            continue
-        msg = "Not support optional inputs for flexible input shape."
-        if not isinstance(shape, Shape):
-            raise NotImplementedError(msg)
-        if any([isinstance(s, RangeDim) for s in shape.shape]):
-            raise NotImplementedError(msg)
-
-        default_map[input_type.name] = optional_value
+        if input_type.default_value is not None:
+            default_map[input_type.name] = input_type.default_value
 
     for idx, input in enumerate(proto.description.input):
         name = proto.description.input[idx].name
         if name in default_map:
+            default_value = default_map[name]
             proto.description.input[idx].type.isOptional = True
-            default_value = default_map[name] if default_map[name] is not None else 0.
-            proto.description.input[idx].type.multiArrayType.floatDefaultValue = default_value
+            array_t = proto.description.input[idx].type.multiArrayType
+            default_fill_val = default_value.flatten()[0]
+            array_t.floatDefaultValue = default_fill_val
+            if default_fill_val != 0 or list(default_value.shape) != \
+                array_t.shape:
+                # promote spec version to 5 and set the default value
+                proto.specificationVersion = max(proto.specificationVersion,
+                    ct._SPECIFICATION_VERSION_IOS_14)
+                # array_t.shape is not empty.
+                array_t.ClearField('shape')
+                array_t.shape.extend(list(default_value.shape))
 
 
 @_profile
