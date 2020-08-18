@@ -664,7 +664,6 @@ class TestTranspose:
         x = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
 
         input_shape = x.shape
-        # is_symbolic = False
         if is_symbolic:
             input_shape = [get_new_symbol(), get_new_symbol()]
 
@@ -882,3 +881,190 @@ class TestSlidingWindows:
             use_cpu_only=use_cpu_only,
             backend=backend,
         )
+
+
+class TestConcat:
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend", itertools.product([True, False], backends, )
+    )
+    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+        t1 = np.array([[1, 2], [4, 5]], dtype=np.float32)
+        t2 = np.array([[7, 8]], dtype=np.float32)
+
+        input_placeholders = {
+            "x": mb.placeholder(shape=t1.shape),
+            "y": mb.placeholder(shape=t2.shape),
+        }
+        input_values = {"x": t1, "y": t2}
+
+        def build(x, y):
+            return (mb.concat(values=(x, y), axis=0),)
+
+        expected_output_types = [
+            (3, 2, types.fp32),
+        ]
+        expected_outputs = [
+            np.array([[1, 2], [4, 5], [7, 8]], dtype=np.float32),
+        ]
+
+        run_compare_builder(
+            build,
+            input_placeholders,
+            input_values,
+            expected_output_types,
+            expected_outputs,
+            use_cpu_only=use_cpu_only,
+            frontend_only=False,
+            backend=backend,
+        )
+
+
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend", itertools.product([True, False], backends, )
+    )
+    def test_builder_to_backend_type_promotion(self, use_cpu_only, backend):
+        t1 = np.array([[1, 2], [4, 5]], dtype=np.float32)
+        t2 = np.array([[7, 8]], dtype=np.float32)
+
+        input_placeholders = {
+            "x": mb.placeholder(shape=t1.shape),
+        }
+        input_values = {"x": t1}
+
+        def build(x):
+            t2 = np.array([[7, 8]], dtype=np.int32)
+            return (mb.concat(values=(x, t2), axis=0),)
+
+        expected_output_types = [
+            # np.int32 should be promoted to fp32
+            (3, 2, types.fp32),
+        ]
+        expected_outputs = [
+            np.array([[1, 2], [4, 5], [7, 8]], dtype=np.float32),
+        ]
+
+        run_compare_builder(
+            build,
+            input_placeholders,
+            input_values,
+            expected_output_types,
+            expected_outputs,
+            use_cpu_only=use_cpu_only,
+            frontend_only=False,
+            backend=backend,
+        )
+
+    @ssa_fn
+    def test_builder_eval(self):
+        values = [
+            np.random.rand(1, 1, 6, 2),
+            np.random.rand(1, 1, 3, 2),
+        ]
+        v = mb.concat(values=values, axis=2)
+        assert is_close(np.concatenate(values, 2), v.val)
+
+    @ssa_fn
+    def test_builder_eval_failure(self):
+        values = [
+            np.random.rand(1, 1, 6, 2),
+            np.random.rand(1, 1, 3, 1),
+        ]
+        with pytest.raises(ValueError):
+            v = mb.concat(values=values, axis=2)
+
+
+class TestSplit:
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend", itertools.product([True, False], backends, )
+    )
+    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+        t = np.array([[1, 2], [3, 4], [5, 6]], dtype=np.float32)
+
+        input_placeholders = {
+            "x": mb.placeholder(shape=t.shape),
+        }
+        input_values = {"x": t}
+
+        def build(x):
+            return mb.split(x=x, num_splits=2, axis=1) + mb.split(
+                x=x, split_sizes=[1, 2], axis=0
+            )
+
+        expected_output_types = [
+            (3, 1, types.fp32),
+            (3, 1, types.fp32),
+            (1, 2, types.fp32),
+            (2, 2, types.fp32),
+        ]
+        expected_outputs = [
+            np.array([[1], [3], [5]], dtype=np.float32),
+            np.array([[2], [4], [6]], dtype=np.float32),
+            np.array([[1, 2]], dtype=np.float32),
+            np.array([[3, 4], [5, 6]], dtype=np.float32),
+        ]
+
+        run_compare_builder(
+            build,
+            input_placeholders,
+            input_values,
+            expected_output_types,
+            expected_outputs,
+            use_cpu_only=use_cpu_only,
+            frontend_only=False,
+            backend=backend,
+        )
+
+    @ssa_fn
+    def test_builder_eval(self):
+        t = np.array([[1, 2], [3, 4], [5, 6]], dtype=np.float32)
+        vs = mb.split(x=t, num_splits=3, axis=0)
+        es = np.split(t, [1, 2, 3], axis=0)
+        for v, e in zip(vs, es):
+            assert is_close(e, v.val)
+
+
+class TestStack:
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend", itertools.product([True, False], backends, )
+    )
+    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+        t1 = np.array([1, 2, 3], dtype=np.float32)
+        t2 = np.array([7, 8, 9], dtype=np.float32)
+
+        input_placeholders = {
+            "x": mb.placeholder(shape=t1.shape),
+            "y": mb.placeholder(shape=t2.shape),
+        }
+        input_values = {"x": t1, "y": t2}
+
+        def build(x, y):
+            return [mb.stack(values=(x, y), axis=0), mb.stack(values=(x, y), axis=1)]
+
+        expected_output_types = [
+            (2, 3, types.fp32),
+            (3, 2, types.fp32),
+        ]
+        expected_outputs = [
+            np.array([[1, 2, 3], [7, 8, 9]], dtype=np.float32),
+            np.array([[1, 7], [2, 8], [3, 9]], dtype=np.float32),
+        ]
+
+        run_compare_builder(
+            build,
+            input_placeholders,
+            input_values,
+            expected_output_types,
+            expected_outputs,
+            use_cpu_only=use_cpu_only,
+            frontend_only=False,
+            backend=backend,
+        )
+
+    @ssa_fn
+    def test_builder_eval(self):
+        values = [
+            np.random.rand(1, 1, 3, 2).astype(np.float32),
+            np.random.rand(1, 1, 3, 2).astype(np.float32),
+        ]
+        v = mb.stack(values=values, axis=2)
+        assert is_close(np.stack(values, 2), v.val)

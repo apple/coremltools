@@ -193,7 +193,10 @@ class TestTf1ModelInputsOutputs:
 
         # static-Flexible shape
         mlmodel = converter.convert(
-            model, inputs=[TensorType(name=input_name)], outputs=[output_name]
+            model, inputs=[
+                # Use TF's input shapes (None, 4, 5)
+                TensorType(name=input_name)],
+                outputs=[output_name]
         )
         assert mlmodel is not None
         input_values = [random_gen((3, 4, 5), -10.0, 10.0)]

@@ -90,7 +90,7 @@ class cumsum(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp32, int32
     """
 
     input_spec = InputSpec(
@@ -140,8 +140,8 @@ class fill(Operation):
     shape: tensor<[K], i32> (Required)
         * Target output tensor shape.
         * ``K`` is the rank of the output tensor. ``shape[k] > 0`` for ``k = 0,..., K-1``.
-    value: const<f32> (Optional)
-        * default to ``0``.
+    value: const<T> (Optional)
+        * default to ``0.0``.
         * Constant value to fill in.
 
     Returns
@@ -156,7 +156,7 @@ class fill(Operation):
 
     input_spec = InputSpec(
         shape=IntTensorInputType(),
-        value=ScalarOrTensorInputType(const=True, default=0.0),
+        value=IntOrFloatOrBoolInputType(const=True, default=0.0),
     )
 
     def __init__(self, **kwargs):
@@ -257,14 +257,14 @@ class non_zero(Operation):
 
     Returns
     -------
-    tensor<[N, R], T>
+    tensor<[N, R], int32>
         * 2-dimensional tensor contains indices of elements that are non-zero. Each
           row is the index for a non-zero value.
         * ``N`` is the number of non-zero elements, ``R`` is the rank of the input.
 
     Attributes
     ----------
-    T: fp32
+    T: fp32, int32
     """
 
     input_spec = InputSpec(x=TensorInputType())
@@ -519,7 +519,7 @@ class tile(Operation):
     ----------
     x: tensor<*?, T> (Required)
         * Input tensor.
-    reps: tensor<[rank(x)], T> (Required)
+    reps: tensor<[rank(x)], int32> (Required)
         * A 1D tensor with length ``rank(x)`` which indicates number to replicate the input along each dimension.
 
     Returns
@@ -529,7 +529,7 @@ class tile(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: Any
     """
 
     input_spec = InputSpec(x=TensorInputType(), reps=TensorInputType(),)
@@ -584,11 +584,11 @@ class argsort(Operation):
         * Default to ``-1`` (the last dimension).
         * Axis to perform the operation.
     * ascending: const<bool> (Optional)
-        * True to sort in ascending order. Default to ``Flattensalse``, sort in descending order.
+        * True to sort in ascending order. Default to ``False``, sort in descending order.
 
     Returns
     -------
-    tensor<*?, T>
+    tensor<*?, int32>
         * Tensor containing the indices of the sorted values
 
     Attributes
@@ -629,7 +629,7 @@ class topk(Operation):
         * Default to ``1``.
         * Number of values/indices to be computed along each axis.
     * axis: const<i32> (Optional)
-        * Defaults to ``1`` (channel dimension).
+        * Defaults to ``-1`` (last dimension).
         * Axis to perform the operation.
     * ascending: const<bool> (Optional)
         * Default to ``False``.
@@ -639,12 +639,12 @@ class topk(Operation):
     -------
     tensor<*?, T>
         * Values of top/bottom ``k`` elements
-    tensor<*?, T>
+    tensor<*?, int32>
         * Indices of the top/bottom ``k`` elements along axis
 
     Attributes
     ----------
-    T: fp32
+    T: fp32, int32
     """
 
     input_spec = InputSpec(
@@ -684,7 +684,7 @@ class topk(Operation):
 
 
 @register_op(doc_str="")
-class flatten(Operation):
+class flatten2d(Operation):
     """
     Flattens input tensor into 2d tensor by flattening dimensions before and after the provided axis
 
@@ -708,7 +708,7 @@ class flatten(Operation):
         2. ``input_shape = (3, ), axis = 1, output_shape = (3, 1)``
         3. ``input_shape = (4, 3), axis = -1, output_shape = (4, 3)``
         4. ``input_shape = (2, 3, 2), axis = -1, output_shape = (6, 2)``
-        5. ``input_shape = (5, 5, 2), axis = 1, output_shape = (2, 10)``
+        5. ``input_shape = (5, 5, 2), axis = 1, output_shape = (5, 10)``
 
     Attributes
     ----------
@@ -720,7 +720,7 @@ class flatten(Operation):
     )
 
     def __init__(self, **kwargs):
-        super(flatten, self).__init__(**kwargs)
+        super(flatten2d, self).__init__(**kwargs)
 
     def type_inference(self):
         shape = list(self.x.shape)
@@ -791,6 +791,25 @@ class concat(Operation):
         * The tensors may be variadic, but the number of tensors must be determined at compile time (i.e. a tuple).
     axis: const<int32> (Required)
         * The dimension along which to concatenate. Must be in the range ``[-rank(values[i]), rank(values[i]))`` for all ``i``.
+    interleave: const<bool> (Optional, Default=False)
+        * If true, concatenate the inputs by interleaving them
+        * If true, all the inputs to this op must have the exact same shape.
+        * e.g.:
+        * in1 : shape (3, 2), value = [[1, 2], [3, 4], [5, 6]]
+        * in2 : shape (3, 2), value = [[7, 8], [9, 10], [11, 12]]
+        * axis = 0
+        *
+        * if interleave = False (default)
+        * output : shape (6, 2)
+        * output[0:3, :] = in1
+        * output[3:6, :] = in2
+        * value = [[1, 2], [3, 4], [5, 6], [7, 8], [9, 10], [11, 12]]
+        *
+        * if interleave = True
+        * output : shape (6, 2)
+        * output[0::2, :] = in1
+        * output[1::2, :] = in2
+        * value = [[1, 2], [7, 8], [3, 4], [9, 10], [5, 6], [11, 12]]
 
     Returns
     -------
@@ -802,7 +821,9 @@ class concat(Operation):
     T: fp32
     """
 
-    input_spec = InputSpec(values=TupleInputType(), axis=IntInputType(const=True),)
+    input_spec = InputSpec(values=TupleInputType(),
+                           axis=IntInputType(const=True),
+                           interleave=BoolInputType(const=True, default=False))
 
     def __init__(self, **kwargs):
         super(concat, self).__init__(**kwargs)
@@ -847,6 +868,12 @@ class concat(Operation):
                     raise ValueError(
                         msg.format(self.op_type, self.name, retshape, v.shape)
                     )
+                if self.interleave.val and retshape[i] != v.shape[i]:
+                    msg = 'Dimension mismatch in {} ("{}"): shapes {} vs. {}. ' \
+                          'All inputs must have same shape when \'interleave\' option is True.'
+                    raise ValueError(
+                        msg.format(self.op_type, self.name, retshape, v.shape)
+                    )
 
         # Get length of concat dim
         concat_dim_len = 0
@@ -880,6 +907,10 @@ class concat(Operation):
         # or don't have symbolic values.
         # Note that cases like values = [[1, is0], [2]] aren't in such case.
         if any([is_symbolic(v) for v in values]) and not is_all_rank_zero:
+            return None
+
+        # skip value inference when interleave on
+        if self.interleave.val:
             return None
 
         if not isinstance(values[0], np.ndarray) or values[0].shape == ():
@@ -1066,6 +1097,22 @@ class stack(Operation):
             return None
 
         return np.stack(values, self.axis.val)
+
+# identity is used for renaming and is rarely necessary. See
+# `loop_invariant_elimination` pass for a rare use case.
+@register_op(doc_str="")
+class identity(Operation):
+    input_spec = InputSpec(x=ListOrScalarOrTensorInputType())
+
+    def __init__(self, **kwargs):
+        super(identity, self).__init__(**kwargs)
+
+    def type_inference(self):
+        return self.x.sym_type
+
+    @precondition(allow=VALUE | SYMBOL)
+    def value_inference(self):
+        return self.x.sym_val
 
 
 @register_op(doc_str="")

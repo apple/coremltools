@@ -19,7 +19,7 @@ from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 def get_const_mode(val):
     # Heuristics to determine if a val should be file value or immediate
     # value.
-    if isinstance(val, six.string_types):
+    if isinstance(val, (six.string_types, bool, six.integer_types)):
         return "immediate_value"
     if isinstance(val, (np.generic, np.ndarray)):
         if val.size > 10:

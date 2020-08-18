@@ -141,22 +141,6 @@ class TestTorchOps:
         )
         assert ssa.val == python_type(test_val)
 
-    def _test_activation(
-        self, context, input_shape, constants_list, op_kind, op_func, torch_func, atol
-    ):
-        test_input = torch.rand(input_shape)
-        constants, input_list, output_name = self._gen_constants(
-            len(constants_list) + 1, [test_input] + constants_list
-        )
-        node = InternalTorchIRNode(
-            kind=op_kind, inputs=input_list, outputs=[output_name]
-        )
-        ssa = self._construct_test_graph(
-            context, op_func, node, output_name, constants=constants
-        )
-        expected_result = torch_func(test_input).numpy()
-        np.testing.assert_allclose(expected_result, ssa.val, atol=atol)
-
     def test_add(self, context):
         test_input_1 = np.random.rand(2, 3)
         test_input_2 = np.random.rand(2, 3)
@@ -993,20 +977,6 @@ class TestTorchOps:
         assert ssa.val == None
         assert ssa.shape == tuple(test_input.shape)
 
-    @pytest.mark.parametrize(
-        "min_val, max_val", [(-1.0, 1.0), (0.0, 0.1), (1.0, 3.0), (-1.0, 6.0),]
-    )
-    def test_hardtanh(self, context, min_val, max_val):
-        self._test_activation(
-            context,
-            (3, 4, 5),
-            [min_val, max_val],
-            "hardtanh_",
-            ops.hardtanh_,
-            nn.Hardtanh(min_val, max_val).eval(),
-            atol=1e-6,
-        )
-
     @pytest.mark.parametrize("axis", [1, 2, 3])
     def test_cat(self, context, axis):
         input_shape = (1, 3, 240, 320)
@@ -1432,57 +1402,6 @@ class TestTorchOps:
             expected_result,
         )
 
-    @pytest.mark.parametrize("dim", [0, 1, 2])
-    def test_softmax(self, context, dim):
-        self._test_activation(
-            context,
-            (3, 4, 5),
-            [dim, None],
-            "softmax",
-            ops.softmax,
-            nn.Softmax(dim=dim).eval(),
-            atol=1e-6,
-        )
-
-    def test_relu(self, context):
-        self._test_activation(
-            context, (3, 4, 5), [], "relu", ops.relu, nn.ReLU().eval(), atol=1e-6
-        )
-
-    @pytest.mark.parametrize("alpha", [0.1, 2.0, 1.5])
-    def test_leaky_relu(self, context, alpha):
-        self._test_activation(
-            context, (3, 4, 5), [alpha], "leaky_relu", ops.leaky_relu, nn.LeakyReLU(negative_slope=alpha).eval(), atol=1e-6
-        )
-
-    @pytest.mark.parametrize("dim", [0, 1, 2])
-    def test_log_softmax(self, context, dim):
-        self._test_activation(
-            context,
-            (3, 4, 5),
-            [dim, None],
-            "log_softmax",
-            ops.log_softmax,
-            nn.LogSoftmax(dim=dim).eval(),
-            atol=1e-6,
-        )
-
-    def test_sigmoid(self, context):
-        self._test_activation(
-            context,
-            (3, 4, 5),
-            [],
-            "sigmoid",
-            ops.sigmoid,
-            nn.Sigmoid().eval(),
-            atol=1e-6,
-        )
-
-    def test_gelu(self, context):
-        self._test_activation(
-            context, (3, 4, 5), [], "gelu", ops.gelu, nn.GELU().eval(), atol=1e-6
-        )
-
     @pytest.mark.parametrize(
         "dim, start, end, step",
         itertools.product([0, 1, 2], [0, 1, 2], [3, 4, 5, None], [1, 2]),
@@ -1555,22 +1474,16 @@ class TestTorchOps:
         to_node = InternalTorchIRNode(
             kind="to", inputs=input_list, outputs=[output_name]
         )
-        if num_args == 6:
-            with pytest.raises(ValueError):
-                ssa = self._construct_test_graph(
-                    context, ops.to, to_node, output_name, constants=constants,
-                )
+        ssa = self._construct_test_graph(
+            context, ops.to, to_node, output_name, constants=constants,
+        )
+        if num_args == 3:
+            expected_result = test_input.numpy()
         else:
-            ssa = self._construct_test_graph(
-                context, ops.to, to_node, output_name, constants=constants,
-            )
-            if num_args == 3:
-                expected_result = test_input.numpy()
-            else:
-                expected_result = test_input.to(
-                    dtype=ops.NUM_TO_TORCH_DTYPE[dtype]
-                ).numpy()
-            assert np.allclose(expected_result, ssa.val)
+            expected_result = test_input.to(
+                dtype=ops.NUM_TO_TORCH_DTYPE[dtype]
+            ).numpy()
+        assert np.allclose(expected_result, ssa.val)
 
     def test_floor(self, context):
         test_input = torch.rand(1, 2, 3) * 10
@@ -1861,15 +1774,3 @@ class TestTorchOps:
         index_result = context["out2"].val
         np.testing.assert_allclose(expected_sort, sort_result)
         np.testing.assert_allclose(expected_index, index_result)
-
-    def test_abs(self, context):
-        test_input = torch.rand(3, 4, 5)
-        constants, input_list, output_name = self._gen_constants(1, [test_input])
-        node = InternalTorchIRNode(
-            kind="abs", inputs=input_list, outputs=[output_name]
-        )
-        ssa = self._construct_test_graph(
-            context, ops._abs, node, output_name, constants=constants
-        )
-        expected_result = torch.abs(test_input)
-        assert np.allclose(expected_result.numpy(), ssa.val)

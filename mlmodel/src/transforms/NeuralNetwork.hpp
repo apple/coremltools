@@ -48,7 +48,7 @@ namespace CoreML {
         }
         
         const std::string& probBlob = nnClassifier.labelprobabilitylayername();
-        if (probBlob.compare("") != 0) {
+        if (!probBlob.empty()) {
             // then just add this to the set
             layerOutputs.insert(probBlob);
         }

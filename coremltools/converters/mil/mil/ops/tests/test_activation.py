@@ -382,7 +382,6 @@ class TestPReLU:
         with pytest.raises(ValueError, match=r"x .* rank 3"):
             v = mb.prelu(x=[1], alpha=np.array([[1, 2, 3]], dtype=np.float32))
 
-    # TODO (rdar://59672999): NN does not support PReLU with 1 input channel
     @pytest.mark.parametrize(
         "use_cpu_only, backend, dim, chan",
         itertools.product([True, False], backends, [1, 2, 4, 8], [2, 3, 4]),

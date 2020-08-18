@@ -210,8 +210,8 @@ def compare_backend(
                 pred=pred,
             )
         if not use_cpu_only:
-            atol = min(atol * 100.0, 1e-1)
-            rtol = min(rtol * 100.0, 1e-2)
+            atol = max(atol * 100.0, 5e-1)
+            rtol = max(rtol * 100.0, 5e-2)
         for o, expected in expected_outputs.items():
             msg = (
                 "Output {} differs. useCPUOnly={}.\nInput={}, "

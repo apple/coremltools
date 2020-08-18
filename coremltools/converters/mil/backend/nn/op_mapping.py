@@ -19,6 +19,7 @@ from coremltools.converters.mil.mil.ops.registry import SSAOpRegistry
 from tqdm import tqdm as _tqdm
 from .mil_to_nn_mapping_registry import *
 
+
 def convert_ops(const_context, builder, ops, outputs):
     """
     const_context: list[set of str]: const name for v1 & v2 (the same)
@@ -64,7 +65,7 @@ def make_input(const_context, builder, variables):
         return variables
 
     v = variables  # variables is Var
-    if v.op is not None and v.op.op_type == "const" and not v.name in const_context[-1]:
+    if v.op is not None and v.op.op_type == "const" and v.name not in const_context[-1]:
         add_const(const_context, builder, v.name, v.val)
     return v.name
 
@@ -91,13 +92,47 @@ def to_py_type(val):
 def _convert_pool(const_context, builder, op, mode, exclude_padding_from_average=True):
     num_spatial_dimensions = len(op.kernel_sizes.val)
     op_pad = op.pad.val if op.pad is not None else [0] * num_spatial_dimensions * 2
-    if num_spatial_dimensions <= 2:
+    if num_spatial_dimensions == 1:
+        builder.add_expand_dims(
+            name=op.name + "_expanded",
+            input_name=op.x.name,
+            output_name=op.name + "_expanded",
+            axes=[3],
+        )
         padding_type = op.pad_type.val.upper()
         # nn's add_pool function does not support CUSTOM padding,
         # but VALID padding supports user-defined padding amounts.
         # Therefore we map CUSTOM padding to VALID padding.
-        if padding_type == "CUSTOM":
-            padding_type = "VALID"
+        padding_type = "VALID" if padding_type == "CUSTOM" else padding_type
+        builder.add_pooling(
+            name=op.name,
+            height=op.kernel_sizes.val[-1],
+            width=1,
+            stride_height=op.strides.val[-1],
+            stride_width=1,
+            layer_type=mode.upper(),
+            padding_type=padding_type,
+            input_name=make_input(const_context, builder, op.name + "_expanded"),
+            output_name=op.name + "_pool",
+            exclude_pad_area=exclude_padding_from_average,
+            padding_top=op_pad[0],
+            padding_bottom=op_pad[1],
+            padding_left=0,
+            padding_right=0,
+            is_global=False,
+        )
+        builder.add_squeeze(
+            name=op.name + "_squeeze",
+            input_name=op.name + "_pool",
+            output_name=op.outputs[0].name,
+            axes=[3],
+        )
+    elif num_spatial_dimensions == 2:
+        padding_type = op.pad_type.val.upper()
+        # nn's add_pool function does not support CUSTOM padding,
+        # but VALID padding supports user-defined padding amounts.
+        # Therefore we map CUSTOM padding to VALID padding.
+        padding_type = "VALID" if padding_type == "CUSTOM" else padding_type
         builder.add_pooling(
             name=op.name,
             height=op.kernel_sizes.val[-2],
@@ -138,7 +173,7 @@ def _convert_pool(const_context, builder, op, mode, exclude_padding_from_average
         )
     else:
         raise ValueError(
-            "Unsupported number of spatial dimensions.  Maximum is 3, but got %s"
+            "Unsupported number of spatial dimensions. Maximum is 3, but got %s"
             % num_spatial_dimensions
         )
 
@@ -469,7 +504,7 @@ def cumsum(const_context, builder, op):
     builder.add_cumsum(
         name=op.name,
         input_names=input_names,
-        output_name=op.name,
+        output_name=op.outputs[0].name,
         axis=op.axis.val,
         reverse=op.reverse.val,
         exclusive=op.exclusive.val,
@@ -689,6 +724,13 @@ def cast(const_context, builder, op):
             input_name=make_input(const_context, builder, op.x),
             output_name=op.outputs[0].name,
             params=[1.0, 0.0],
+        )
+    elif op.dtype.val == "bool":
+        builder.add_not_equal(
+            name=op.name,
+            input_names=op.x.name,
+            output_name=op.outputs[0].name,
+            alpha=0.0,
         )
     else:
         raise NotImplementedError(
@@ -1132,7 +1174,6 @@ def gru(const_context, builder, op):
     b = op.bias.val if op.bias is not None else None
     direction = op.direction.val
     output_sequence = op.output_sequence.val
-    activations = [v.val for v in op.activations]
 
     # Add expand dims for input, in
     _expand_dim(builder, input_name + "_expanded", input_name, [3, 4])
@@ -1179,8 +1220,8 @@ def gru(const_context, builder, op):
         input_size=input_size,
         input_names=[input_name, initial_h],
         output_names=output_names,
-        inner_activation=activations[0],
-        activation=activations[1],
+        inner_activation=op.recurrent_activation.val,
+        activation=op.activation.val,
         output_all=output_sequence,
         reverse_input=(direction == "reverse"),
     )
@@ -1308,7 +1349,6 @@ def lstm(const_context, builder, op):
     b = op.bias.val if op.bias is not None else None
     direction = op.direction.val
     output_sequence = op.output_sequence.val
-    activations = [v.val for v in op.activations]
     peephole = op.peephole.val if op.peephole is not None else None
     # High enough clip value to be ineffective!
     clip = 500.0 if op.clip is None else op.clip.val
@@ -1357,9 +1397,9 @@ def lstm(const_context, builder, op):
             input_size=input_size,
             input_names=[input_name, initial_h, initial_c],
             output_names=output_names,
-            inner_activation=activations[0].upper(),
-            cell_state_update_activation=activations[1].upper(),
-            output_activation=activations[2].upper(),
+            inner_activation=op.recurrent_activation.val,
+            cell_state_update_activation=op.cell_activation.val,
+            output_activation=op.activation.val,
             peep=peephole,
             output_all=output_sequence,
             cell_clip_threshold=clip,
@@ -1375,13 +1415,14 @@ def lstm(const_context, builder, op):
         _squeeze(builder, op.outputs[2].name, output_names[2], axes=[0, 3, 4])
 
     elif direction == "bidirectional":
+        # Expand initial_h and initial_c
         # Issue #810
         num_layer = len(builder.layers)
         initial_h_expand = initial_h + "_expanded" + "_" + str(num_layer)
         if not (initial_h_expand in set(builder.layers)):
             _expand_dim(builder, initial_h_expand, initial_h, [2, 3, 4])
         initial_h = initial_h_expand
-        
+
         # initial_h may have the same name as initial_c (e.g., same Var)
         initial_c_expand = initial_c + "_expanded2" + "_" + str(num_layer)
         if not (initial_c_expand in set(builder.layers)):
@@ -1461,9 +1502,9 @@ def lstm(const_context, builder, op):
                 initial_c_r,
             ],
             output_names=output_names,
-            inner_activation=activations[0].upper(),
-            cell_state_update_activation=activations[1].upper(),
-            output_activation=activations[2].upper(),
+            inner_activation=op.recurrent_activation.val,
+            cell_state_update_activation=op.cell_activation.val,
+            output_activation=op.activation.val,
             peep=f_peephole,
             peep_back=r_peephole,
             output_all=output_sequence,
@@ -2266,6 +2307,8 @@ def conv_transpose(const_context, builder, op):
         weight = _np.transpose(weight, [2, 3, 1, 0])
 
     # Adjust for Deconv1D case
+    # CoreML maps Deconv1D into Deconv2D
+    # Hence, adjust width dimension attributes by setting to 1 for 1D case
     rank_factor = 1 if is_conv_transpose_1d else 2
     strides = [1] * rank_factor
     dilations = [1] * rank_factor
@@ -2274,9 +2317,16 @@ def conv_transpose(const_context, builder, op):
         strides = op.strides.val.tolist()
     if op.dilations is not None:
         dilations = op.dilations.val.tolist()
+    # Get H and W from output shape
+    output_shape = []
+    if op.output_shape is not None:
+        output_shape = list(op.output_shape.val)
+
     if is_conv_transpose_1d:
         dilations = dilations + [1]
         strides = strides + [1]
+        if op.output_shape is not None:
+            output_shape = output_shape + [1]
 
     # padding
     padding_mode = "valid" if op.pad_type is None else op.pad_type.val
@@ -2299,8 +2349,6 @@ def conv_transpose(const_context, builder, op):
 
     groups = op.groups.val
     has_bias = op.bias is not None
-    # Get H and W from output shape
-    output_shape = None if op.output_shape is None else tuple(op.output_shape.val)
 
     if is_conv_transpose_3d:
         builder.add_convolution3d(
@@ -2389,7 +2437,7 @@ def one_hot(const_context, builder, op):
     builder.add_one_hot(
         name=op.name,
         input_names=make_input(const_context, builder, inputs),
-        output_name=op.name,
+        output_name=op.outputs[0].name,
         one_hot_vector_size=op.one_hot_vector_size.val,
         axis=op.axis.val,
         on_value=op.on_value.val,
@@ -2411,7 +2459,7 @@ def non_maximum_suppression(const_context, builder, op):
 
 
 @register_mil_to_nn_mapping
-def flatten(const_context, builder, op):
+def flatten2d(const_context, builder, op):
     builder.add_flatten_to_2d(
         name=op.name,
         input_name=make_input(const_context, builder, op.x),
@@ -2443,26 +2491,15 @@ def upsample_nearest_neighbor(const_context, builder, op):
 
 @register_mil_to_nn_mapping
 def upsample_bilinear(const_context, builder, op):
-    if op.align_corners.val:
-        builder.add_upsample(
-            name=op.name,
-            scaling_factor_h=op.scale_factor_height.val,
-            scaling_factor_w=op.scale_factor_width.val,
-            input_name=make_input(const_context, builder, op.x),
-            output_name=op.outputs[0].name,
-            mode="BILINEAR",
-            linear_upsample_mode="ALIGN_CORNERS_TRUE",
-        )
-    else:
-        builder.add_upsample(
-            name=op.name,
-            scaling_factor_h=op.scale_factor_height.val,
-            scaling_factor_w=op.scale_factor_width.val,
-            input_name=make_input(const_context, builder, op.x),
-            output_name=op.outputs[0].name,
-            mode="BILINEAR",
-            linear_upsample_mode="ALIGN_CORNERS_FALSE",
-        )
+    builder.add_upsample(
+        name=op.name,
+        scaling_factor_h=op.scale_factor_height.val,
+        scaling_factor_w=op.scale_factor_width.val,
+        input_name=make_input(const_context, builder, op.x),
+        output_name=op.outputs[0].name,
+        mode="BILINEAR",
+        linear_upsample_mode="ALIGN_CORNERS_TRUE" if op.align_corners.val else "ALIGN_CORNERS_FALSE",
+    )
 
 
 @register_mil_to_nn_mapping
@@ -2608,11 +2645,18 @@ def concat(const_context, builder, op):
         values.append(v)
 
     if len(values) == 0:
-        raise NotImplementedError('0 size tensor unsopported.')
+        raise NotImplementedError('0 size tensor unsupported.')
 
     if len(values) >= 2:
         rank = values[0].rank
-        if rank >= 4 and (op.axis.val == -3 or op.axis.val > 0 and op.axis.val == rank - 3):
+        if op.interleave.val:
+            builder.add_concat_nd(
+                    name=op.name,
+                    input_names=make_input(const_context, builder, values),
+                    output_name=op.outputs[0].name,
+                    axis=op.axis.val,
+                    interleave=True)
+        elif rank >= 4 and (op.axis.val == -3 or op.axis.val > 0 and op.axis.val == rank - 3):
             builder.add_elementwise(
                 name=op.name,
                 input_names=make_input(const_context, builder, values),
@@ -2654,7 +2698,7 @@ def split(const_context, builder, op):
     split = [size for size in split if size != 0]
     has_equal_splits = all([size == split[0] for size in split])
     num_splits = len(split)
-    output_names = [op.outputs[i].name for i in range(num_splits)]
+    output_names = [op.outputs[i].name for i in range(len(op.sizes)) if op.sizes[i] != 0]
 
     if has_equal_splits:
         builder.add_split_nd(

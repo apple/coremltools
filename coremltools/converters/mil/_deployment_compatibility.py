@@ -93,6 +93,9 @@ def iOS14Features(spec):
         if layer_type == "sliceStatic" and layer.sliceDynamic.squeezeMasks:
             msg = "Squeeze mask for static slice operation"
 
+        if layer_type == "concatND" and layer.concatND.interleave:
+            msg = "Concat layer with interleave operation"
+
         if msg != "" and (msg not in features_list):
             features_list.append(msg)
 

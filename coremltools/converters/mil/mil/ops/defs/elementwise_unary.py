@@ -465,11 +465,9 @@ class logical_not(elementwise_unary):
     def __init__(self, **kwargs):
         super(logical_not, self).__init__(**kwargs)
 
-    def get_operator(self):
-        return np.logical_not
-
-    def get_dtype(self, promoted_dtype):
-        return types.bool
+    @precondition(allow=VALUE)
+    def value_inference(self):
+        return np.logical_not(self.x.val)
 
 
 @register_op(doc_str="")
@@ -785,6 +783,7 @@ class cast(Operation):
             "int64": types.int64,
             "fp32": types.fp32,
             "fp64": types.fp64,
+            "bool": types.bool,
         }
 
         if self.dtype.val not in type_map.keys():
@@ -806,6 +805,7 @@ class cast(Operation):
             "int64": np.int64,
             "fp32": np.float32,
             "fp64": np.float64,
+            "bool": np.bool,
         }
 
         if self.dtype.val not in type_map.keys():

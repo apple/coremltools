@@ -116,9 +116,66 @@ class ImageType(InputType):
             self.bias = bias
         self.channel_first = channel_first
 
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
+        str_repr = 'ImageType[name={}, shape={}, scale={}, bias={}, ' +\
+                'color_layout={}, channel_first={}]'
+        return str_repr.format(self.name, self.shape, self.scale, self.bias,
+                self.color_layout, self.channel_first)
+
 
 class TensorType(InputType):
-    def __init__(self, name=None, shape=None, dtype=None, is_optional=False, optional_value=None):
+    def __init__(self, name=None, shape=None, dtype=None,
+        default_value=None):
+        """
+        Specify a (dense) tensor input.
+
+        Parameters
+        ----------
+        name: str
+            Input name. Must match a input name in model (usually
+            Placeholder name for Tensorflow or input name for PyTorch)
+
+            Name is required except for TensorFlow model where there are
+            exactly one input Placeholder.
+
+        shape: (1) list of positive int or RangeDim, or (2) EnumeratedShapes
+            The shape of the input.
+
+            For TensorFlow:
+              - `shape` is optional. If omitted, shape is inferred from
+                TensorFlow graph's Placeholder shape.
+
+            For PyTorch:
+              - `shape` is required.
+
+        dtype: np.generic or mil.type type
+            Numpy dtype (e.g., np.int32). Default is np.float32
+
+        default_value: np.ndarray
+            If provided, the input is considered optional. At runtime, if the
+            input is not provided, `default_value` is used instead.
+
+            Limitations:
+
+            - Currently, if `default_value` is np.ndarray, we requires all
+              elements to have the same value.
+
+            - `default_value` may not be specified if `shape` is
+              `EnumeratedShapes`
+
+        Examples
+        --------
+        - `ct.TensorType(name="input", shape=(1, 2, 3))` implies `dtype ==
+          np.float32`
+
+        - `ct.TensorType(name="input", shape=(1, 2, 3), dtype=np.int32)`
+
+        - `ct.TensorType(name="input", shape=(1, 2, 3),
+          dtype=ct.converters.mil.types.fp32)`
+        """
         super(TensorType, self).__init__(name, shape)
         if dtype is None:
             self.dtype = types.fp32
@@ -131,13 +188,44 @@ class TensorType(InputType):
             except TypeError:
                 raise TypeError("dtype={} is unsupported".format(dtype))
 
-        # optional input values
-        self.is_optional = is_optional
-        self.optional_value = optional_value
+        if default_value is not None:
+            if isinstance(shape, EnumeratedShapes):
+                msg = 'TensorType input {} has EnumeratedShapes and ' +\
+                    'may not be optional'
+                raise ValueError(msg.format(name))
+            if not isinstance(default_value, np.ndarray):
+                msg = 'TensorType {} default_value is not np.ndarray'
+                raise ValueError(msg.format(name))
+            default_fill_val = default_value.flatten()[0]
+            if not np.all(default_value == default_fill_val):
+                msg = 'TensorType {} default_value can only have ' +\
+                    'same entries'
+                raise ValueError(msg.format(name))
+            if not self.shape.has_symbolic and \
+                list(default_value.shape) != list(self.shape.symbolic_shape):
+                msg = 'TensorType {} default_value shape {} != ' +\
+                    'TensorType.shape {}'
+                raise ValueError(msg.format(name, default_value.shape,
+                    self.shape.to_list()))
+            if numpy_type_to_builtin_type(default_value.dtype) != self.dtype:
+                msg = 'TensorType {} default_value dtype {} != ' +\
+                    'TensorType.dtype {}'
+                raise ValueError(msg.format(name, default_value.dtype,
+                    self.dtype.__type_info__()))
+
+        self.default_value = default_value
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
+        return 'TensorType[name={}, shape={}, dtype={}]'.format(self.name,
+                self.shape, self.dtype)
 
 
 class RangeDim(object):
-    def __init__(self, lower_bound=1, upper_bound=-1, default=None):
+    def __init__(self, lower_bound=1, upper_bound=-1, default=None,
+            symbol=None):
         """
         A class that can be used to give a range of accepted shapes.
 
@@ -150,9 +238,18 @@ class RangeDim(object):
             Set to -1 if there's no upper limit.
         default: (int) or None
             The default value that is used for initiating the model, and set in
-            the metadata of the model file.
+            input shape field of the model file
             If set to None, `lower_bound` would be used as default.
+        symbol: (str)
+            Optional symbol name for the dim. Autogenerate a symbol name if
+            not specified.
         """
+        if symbol is None:
+            from coremltools.converters.mil.mil import get_new_symbol
+            self.symbol = get_new_symbol()
+        else:
+            from coremltools.converters.mil.mil import Symbol
+            self.symbol = Symbol(symbol)
         self.lower_bound = lower_bound
         self.upper_bound = upper_bound
         if default is None:
@@ -190,17 +287,20 @@ class Shape(object):
         from coremltools.converters.mil.mil import get_new_symbol
 
         if not isinstance(shape, (list, tuple)):
-            raise ValueError(
-                "Shape should be list or tuple, got type {} instead".format(type(shape))
-            )
+            msg = "Shape should be list or tuple, got type {} instead"
+            raise ValueError(msg.format(type(shape)))
         self.symbolic_shape = []
         shape = list(shape)
         for idx, s in enumerate(shape):
-            if s is None or s == -1 or isinstance(s, RangeDim):
-                sym = get_new_symbol()
+            if s is None or s == -1:
+                msg = 'Dimension cannot be None of -1. Use ' +\
+                        'ct.RangeDim for runtime determined dimension. ' +\
+                        'Dim {}: {} ' +\
+                        'See https://coremltools.readme.io/docs/flexible-inputs'
+                raise ValueError(msg.format(idx, s))
+            if isinstance(s, RangeDim):
+                sym = s.symbol
                 self.symbolic_shape.append(sym)
-                if s is None or s == -1:
-                    shape[idx] = sym
             elif isinstance(s, (np.generic, six.integer_types)) or is_symbolic(s):
                 self.symbolic_shape.append(s)
             else:
@@ -235,6 +335,15 @@ class Shape(object):
                 else:
                     default.append(s)
         self.default = tuple(default)
+
+    @property
+    def has_symbolic(self):
+        return any(is_symbolic(s) for s in self.symbolic_shape)
+
+    def to_list(self, allow_symbolic=False):
+      if not allow_symbolic and self.has_symbolic:
+          return None
+      return self.symbolic_shape
 
 
 class EnumeratedShapes(object):

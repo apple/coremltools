@@ -8,6 +8,7 @@ from ._tree_ensemble import get_input_dimension
 
 from ..._deps import _HAS_SKLEARN
 from ...models import MLModel as _MLModel
+import numpy as np
 
 if _HAS_SKLEARN:
     import sklearn.ensemble as _ensemble
@@ -58,11 +59,28 @@ def convert(model, feature_names, target):
     _sklearn_util.check_fitted(model, is_gbr_model)
     post_evaluation_transform = None
     if model.n_classes_ == 2:
-        base_prediction = [model.init_.prior]
         post_evaluation_transform = "Regression_Logistic"
     else:
-        base_prediction = list(model.init_.priors)
         post_evaluation_transform = "Classification_SoftMax"
+    # Here we enumerate known methods GradientBoostingClassifier use for initializing the raw predictions.
+    # Alternatively we can enumerate known estimators/strategies combinations.
+    # This covers more combinations with less hacks
+    base_prediction = None
+    dummy_x = np.zeros((1, model.n_features_))
+    for base_init_func in ('_init_decision_function', '_raw_predict_init'):
+        if not hasattr(model, base_init_func):
+            continue
+        raw_predictions = getattr(model, base_init_func)(dummy_x)[0, :]
+        if '_init_decision_function' == base_init_func and model.n_classes_ > 2:
+            # fix initial default prediction for multiclass classification
+            # https://github.com/scikit-learn/scikit-learn/pull/12983
+            raw_predictions = np.log(raw_predictions)
+        base_prediction = list(raw_predictions)
+        break
+    if base_prediction is None:
+        raise ValueError("We don't support your classifier: cannot initialize base_prediction. "
+                         "Please file a bug report.")
+
     return _MLModel(
         _convert_tree_ensemble(
             model,

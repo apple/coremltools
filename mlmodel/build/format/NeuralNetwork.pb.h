@@ -13052,11 +13052,18 @@ class ConcatNDLayerParams : public ::google::protobuf::MessageLite /* @@protoc_i
   ::google::protobuf::int64 axis() const;
   void set_axis(::google::protobuf::int64 value);
 
+  // bool interleave = 2;
+  void clear_interleave();
+  static const int kInterleaveFieldNumber = 2;
+  bool interleave() const;
+  void set_interleave(bool value);
+
   // @@protoc_insertion_point(class_scope:CoreML.Specification.ConcatNDLayerParams)
  private:
 
   ::google::protobuf::internal::InternalMetadataWithArenaLite _internal_metadata_;
   ::google::protobuf::int64 axis_;
+  bool interleave_;
   mutable int _cached_size_;
   friend struct protobuf_NeuralNetwork_2eproto::TableStruct;
 };
@@ -38230,6 +38237,20 @@ inline void ConcatNDLayerParams::set_axis(::google::protobuf::int64 value) {
   
   axis_ = value;
   // @@protoc_insertion_point(field_set:CoreML.Specification.ConcatNDLayerParams.axis)
+}
+
+// bool interleave = 2;
+inline void ConcatNDLayerParams::clear_interleave() {
+  interleave_ = false;
+}
+inline bool ConcatNDLayerParams::interleave() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.ConcatNDLayerParams.interleave)
+  return interleave_;
+}
+inline void ConcatNDLayerParams::set_interleave(bool value) {
+  
+  interleave_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.ConcatNDLayerParams.interleave)
 }
 
 // -------------------------------------------------------------------

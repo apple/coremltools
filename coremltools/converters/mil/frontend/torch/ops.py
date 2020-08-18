@@ -286,7 +286,7 @@ def pixel_shuffle(context, node):
     context.add(perm)
 
 
-@register_torch_op
+@register_torch_op(torch_alias=["bmm"])
 def matmul(context, node):
     inputs = _get_inputs(context, node, expected=2)
     res = mb.matmul(x=inputs[0], y=inputs[1], name=node.name)
@@ -305,6 +305,12 @@ def add(context, node):
 
     add_node = mb.add(x=add_inputs[0], y=add_inputs[1], name=node.name)
     context.add(add_node)
+
+@register_torch_op
+def cumsum(context, node):
+    inputs = _get_inputs(context, node, expected=3)
+    res = mb.cumsum(x=inputs[0], axis=inputs[1], name=node.name)
+    context.add(res)
 
 
 @register_torch_op
@@ -458,12 +464,6 @@ def _convolution(context, node):
     context.add(conv)
 
 @register_torch_op
-def sinh(context, node):
-    inputs = _get_inputs(context, node, expected=1)
-    res = mb.sinh(x=inputs[0], name=node.name)
-    context.add(res)
-
-@register_torch_op
 def softmax(context, node):
     inputs = _get_inputs(context, node)
 
@@ -503,6 +503,12 @@ def flatten(context, node):
     reshape = mb.reshape(x=x, shape=dims, name=node.name)
     context.add(reshape)
 
+@register_torch_op
+def softsign(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+
+    res = mb.softsign(x=inputs[0], name=node.name)
+    context.add(res)
 
 @register_torch_op(torch_alias=["relu_"])
 def relu(context, node):
@@ -511,11 +517,47 @@ def relu(context, node):
     res = mb.relu(x=inputs[0], name=node.name)
     context.add(res)
 
+@register_torch_op
+def prelu(context, node):
+    inputs = _get_inputs(context, node, expected=2)
+    x = inputs[0]
+    alpha = inputs[1]
+
+    res = mb.prelu(x=x, alpha=alpha, name=node.name)
+    context.add(res)
+
+@register_torch_op
+def relu6(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+
+    res = mb.relu6(x=inputs[0], name=node.name)
+    context.add(res)
+
+@register_torch_op
+def elu(context, node):
+    ## Torch port to ATen adds scale and input_scale which is set to 1
+    inputs = _get_inputs(context, node, expected=4)
+
+    res = mb.elu(x=inputs[0], alpha = inputs[1], name=node.name)
+    context.add(res)
+
 @register_torch_op(torch_alias=["leaky_relu_"])
 def leaky_relu(context, node):
     inputs = _get_inputs(context, node, expected=2)
 
     res = mb.leaky_relu(x=inputs[0], alpha=inputs[1], name=node.name)
+    context.add(res)
+
+@register_torch_op
+def softplus(context, node):
+    inputs = _get_inputs(context, node, expected=3)
+    x = inputs[0]
+    beta_ = inputs[1].val
+    C = x.shape[1]
+    alpha_br = _np.repeat(1.0 / beta_, C).astype('float32')
+    beta_br = _np.repeat(beta_, C).astype('float32')
+
+    res = mb.softplus_parametric(x=x, alpha = alpha_br, beta = beta_br, name=node.name)
     context.add(res)
 
 def _adjust_pad_for_ceil_mode(input_shape, kernel_sizes, stride_sizes, pad_sizes):
@@ -544,25 +586,22 @@ def _adjust_pad_for_ceil_mode(input_shape, kernel_sizes, stride_sizes, pad_sizes
     return new_pad
 
 
-@register_torch_op
-def max_pool2d(context, node):
-    inputs = _get_inputs(context, node)
-
+def _max_pool(context, node, inputs):
     x = inputs[0]
     kernel_sizes = inputs[1]
     strides = inputs[2]
     if strides.op.op_type == "const"  and (not list(strides.val)):
         strides = mb.const(val=kernel_sizes.val, name=strides.name)
-    pad_type = "custom"
 
-    # Need to explicity state L-R, T-B pad
+    pad_type = "custom"
+    # Need to explicitly state L-R, T-B pad
     pad = inputs[3]
     pad = _np.repeat(pad.val, 2)
     dilation = inputs[4].val
     ceil_mode = inputs[5].val
     if _np.any(dilation > 1):
         # See: rdar://60633736 (Implement dilation for mil op max_pool)
-        raise ValueError("@max_pool2d does not support dilation > 1")
+        raise ValueError("@max_pool does not support dilation > 1")
     if ceil_mode is True:
         pad = _adjust_pad_for_ceil_mode(
             x.shape[-2:], kernel_sizes.val, strides.val, pad
@@ -580,6 +619,24 @@ def max_pool2d(context, node):
 
 
 @register_torch_op
+def max_pool1d(context, node):
+    inputs = _get_inputs(context, node, expected=6)
+    _max_pool(context, node, inputs)
+
+
+@register_torch_op
+def max_pool2d(context, node):
+    inputs = _get_inputs(context, node, expected=6)
+    _max_pool(context, node, inputs)
+
+
+@register_torch_op
+def max_pool3d(context, node):
+    inputs = _get_inputs(context, node, expected=6)
+    _max_pool(context, node, inputs)
+
+
+@register_torch_op
 def div(context, node):
     inputs = _get_inputs(context, node, expected=2)
 
@@ -590,7 +647,15 @@ def div(context, node):
 @register_torch_op
 def floor_divide(context, node):
     inputs = _get_inputs(context, node, expected=2)
-    res = mb.floor_div(x=inputs[0], y=inputs[1], name=node.name)
+    div_res = mb.floor_div(x=inputs[0], y=inputs[1])
+    # Pytorch's floor_divide always returns fp32, even if the inputs are int
+    res = mb.cast(x=div_res, dtype='fp32', name=node.name)
+    context.add(res)
+
+@register_torch_op
+def true_divide(context, node):
+    inputs = _get_inputs(context, node, expected=2)
+    res = mb.real_div(x=inputs[0], y=inputs[1], name=node.name)
     context.add(res)
 
 
@@ -829,8 +894,8 @@ def embedding(context, node):
     context.add(gather)
 
 
-@register_torch_op
-def hardtanh_(context, node):
+@register_torch_op(torch_alias=["hardtanh_"])
+def hardtanh(context, node):
     inputs = _get_inputs(context, node, expected=3)
     _input = inputs[0]
     min_val = inputs[1].val
@@ -1532,7 +1597,7 @@ def _avg_pool(context, node, inputs):
     if strides.op.op_type == "const"  and (not list(strides.val)):
         strides = mb.const(val=kernel_sizes.val, name=strides.name)
     pad_type = "custom"
-    # Need to explicity state L-R, T-B pad
+    # Need to explicitly state L-R, T-B pad
     pad = inputs[3]
     pad = _np.repeat(pad.val, 2)
     ceil_mode = inputs[4]
@@ -1571,6 +1636,15 @@ def avg_pool2d(context, node):
 
 
 @register_torch_op
+def avg_pool3d(context, node):
+    inputs = _get_inputs(context, node, expected=7)
+    divisor_override = inputs[6]
+    if divisor_override is not None:
+        raise ValueError("divisor_override is not supported for avg_pool3d")
+    _avg_pool(context, node, inputs)
+
+
+@register_torch_op
 def log_softmax(context, node):
     inputs = _get_inputs(context, node)
 
@@ -1590,6 +1664,12 @@ def sigmoid(context, node):
     res = mb.sigmoid(x=inputs[0], name=node.name)
     context.add(res)
 
+@register_torch_op
+def hardsigmoid(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+
+    res = mb.sigmoid_hard(x=inputs[0], alpha=1.0/6, beta=0.5, name=node.name)
+    context.add(res)
 
 @register_torch_op
 def gelu(context, node):
@@ -1673,7 +1753,14 @@ def split(context, node):
 def to(context, node):
     # @non_blocking and @copy are unused
     inputs = _get_inputs(context, node)
-    if len(inputs) == 5:
+    if len(inputs) == 6:
+        _input = inputs[0]
+        device = inputs[1]
+        dtype = inputs[2].val
+        # non_blocking = inputs[3]
+        # copy = inputs[4]
+        # memory_format = inputs[5] # usually None
+    elif len(inputs) == 5:
         _input = inputs[0]
         device = inputs[1]
         dtype = inputs[2].val
@@ -1705,14 +1792,6 @@ def to(context, node):
     casted_input = torch.tensor(_input).type(torch_dtype).numpy()
     const = mb.const(mode="immediate_value", val=casted_input, name=node.name)
     context.add(const)
-
-
-@register_torch_op
-def floor(context, node):
-    inputs = _get_inputs(context, node, expected=1)
-    _input = inputs[0]
-    floor = mb.floor(x=_input, name=node.name)
-    context.add(floor)
 
 
 @register_torch_op
@@ -1878,14 +1957,6 @@ def meshgrid(context, node):
     context.add(tuple(grids), node.name)
 
 
-@register_torch_op
-def tanh(context, node):
-    inputs = _get_inputs(context, node, expected=1)
-    _input = inputs[0]
-    tanh = mb.tanh(x=_input, name=node.name)
-    context.add(tanh)
-
-
 # Defines all the nodes that are noOps
 @register_torch_op(
     torch_alias=[
@@ -1931,13 +2002,6 @@ def zeros(context, node):
 
 
 @register_torch_op
-def exp(context, node):
-    inputs = _get_inputs(context, node, expected=1)
-    exp = mb.exp(x=inputs[0], name=node.name)
-    context.add(exp)
-
-
-@register_torch_op
 def max(context, node):
     inputs = _get_inputs(context, node, expected=3)
     _input = inputs[0]
@@ -1951,6 +2015,14 @@ def max(context, node):
     indices_name = node.outputs[1]
     context.add(values, torch_name=values_name)
     context.add(indices, torch_name=indices_name)
+
+
+@register_torch_op
+def argsort(context, node):
+    inputs = _get_inputs(context, node, expected=3)
+    ascending = mb.logical_not(x=inputs[2])
+    argsort = mb.argsort(x=inputs[0], axis=inputs[1], ascending=ascending, name=node.name)
+    context.add(argsort)
 
 
 @register_torch_op
@@ -1993,7 +2065,167 @@ def append(context, node):
         raise ValueError("can only append to Python list or MIL ListVar, got {}.".format(type(inputs[0])))
 
 
-@register_torch_op(torch_alias=['abs'])
+@register_torch_op
+def gather(context, node):
+    inputs = _get_inputs(context, node)
+    res = mb.gather_along_axis(x=inputs[0], indices=inputs[2], axis=inputs[1], name=node.name)
+    context.add(res)
+
+@register_torch_op(torch_alias=["abs"])
 def _abs(context, node):
     inputs = _get_inputs(context, node, expected=1)
     context.add(mb.abs(x=inputs[0], name=node.name))
+
+@register_torch_op
+def acos(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+    context.add(mb.acos(x=inputs[0], name=node.name))
+
+@register_torch_op
+def acosh(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+    context.add(mb.acosh(x=inputs[0], name=node.name))
+
+@register_torch_op
+def asin(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+    context.add(mb.asin(x=inputs[0], name=node.name))
+
+@register_torch_op
+def atan(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+    context.add(mb.atan(x=inputs[0], name=node.name))
+
+@register_torch_op
+def atanh(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+    context.add(mb.atanh(x=inputs[0], name=node.name))
+
+@register_torch_op
+def ceil(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+    context.add(mb.ceil(x=inputs[0], name=node.name))
+
+@register_torch_op
+def clamp(context, node):
+    inputs = _get_inputs(context, node, expected=3)
+    context.add(mb.clip(x=inputs[0], alpha=inputs[1], beta=inputs[2], name=node.name))
+
+@register_torch_op
+def cos(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+    context.add(mb.cos(x=inputs[0], name=node.name))
+
+@register_torch_op
+def cosh(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+    context.add(mb.cosh(x=inputs[0], name=node.name))
+
+@register_torch_op
+def exp(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+    context.add(mb.exp(x=inputs[0], name=node.name))
+
+@register_torch_op
+def exp2(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+    context.add(mb.exp2(x=inputs[0], name=node.name))
+
+@register_torch_op
+def floor(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+    context.add(mb.floor(x=inputs[0], name=node.name))
+
+@register_torch_op
+def reciprocal(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+    context.add(mb.inverse(x=inputs[0], name=node.name))
+
+@register_torch_op
+def log(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+    context.add(mb.log(x=inputs[0], name=node.name))
+
+@register_torch_op(torch_alias=["round"])
+def _round(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+    context.add(mb.round(x=inputs[0], name=node.name))
+
+@register_torch_op
+def rsqrt(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+    context.add(mb.rsqrt(x=inputs[0], name=node.name))
+
+@register_torch_op
+def sin(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+    context.add(mb.sin(x=inputs[0], name=node.name))
+
+@register_torch_op
+def sinh(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+    context.add(mb.sinh(x=inputs[0], name=node.name))
+
+@register_torch_op
+def asinh(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+    context.add(mb.asinh(x=inputs[0], name=node.name))
+
+@register_torch_op
+def sqrt(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+    context.add(mb.sqrt(x=inputs[0], name=node.name))
+
+@register_torch_op
+def square(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+    context.add(mb.square(x=inputs[0], name=node.name))
+
+@register_torch_op
+def tan(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+    context.add(mb.tan(x=inputs[0], name=node.name))
+
+@register_torch_op
+def tanh(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+    context.add(mb.tanh(x=inputs[0], name=node.name))
+
+@register_torch_op
+def threshold(context, node):
+    inputs = _get_inputs(context, node, expected=3)
+    x = inputs[0]
+    alpha = inputs[1]
+    threshold_val = inputs[2]
+
+    # Simple case (threshold_val == alpha)
+    if alpha.val == threshold_val.val:
+        threshold_node = mb.threshold(x=x, alpha=alpha, name=node.name)
+        context.add(threshold_node)
+        return
+
+    # Complex case (threshold_val != threshold)
+    threshold_node = mb.threshold(x=x, alpha=alpha, name=node.name + '_threshold')
+    context.add(threshold_node)
+
+    gt_node = mb.greater_equal(x=alpha, y=x, name=node.name + '_ge')
+    context.add(gt_node)
+    gt_node_32 = mb.cast(x=gt_node, dtype="fp32", name=node.name + '_ge32')
+
+    mul_node = mb.linear_activation(x=gt_node_32, alpha=float(threshold_val.val - alpha.val),
+                                    name=node.name + '_mul')
+    context.add(mul_node)
+
+    final_node = mb.add(x=mul_node, y=threshold_node, name=node.name)
+    context.add(final_node)
+
+@register_torch_op
+def sign(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+    context.add(mb.sign(x=inputs[0], name=node.name))
+
+@register_torch_op
+def is_floating_point(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+    is_float = types.is_float(inputs[0].dtype)
+    context.add(mb.const(val=is_float, name=node.name))

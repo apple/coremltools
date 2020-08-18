@@ -41,6 +41,7 @@ class TestElementwiseUnary:
                 "sin",
                 "sinh",
                 "sqrt",
+                "square",
                 "tan",
                 "tanh",
                 "threshold",
@@ -95,12 +96,8 @@ class TestElementwiseUnary:
 
             build = lambda x: mb.atanh(x=x)
         elif mode == "cast":
-            if backend == "mil_proto":
-                # TODO <rdar://problem/61400566> [MIL] Add cast operation in MIL backend and enable tests
-                return
             val = np.array([[-1.2, 2, -3.6], [4.5, -5, 6.7]], dtype=np.float32)
             expected_outputs = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.int32)
-
             build = lambda x: mb.cast(x=x, dtype="int32")
         elif mode == "ceil":
             val = np.array([[-1.2, 2, -3.4], [4.5, -5, 6.7]], dtype=np.float32)
@@ -229,6 +226,14 @@ class TestElementwiseUnary:
             )
 
             build = lambda x: mb.sqrt(x=x)
+        elif mode == "square":
+            val = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
+            expected_outputs = np.array(
+                [[1.0, 4.0, 9.0], [16.0, 25.0, 36.]],
+                dtype=np.float32,
+            )
+
+            build = lambda x: mb.square(x=x)
         elif mode == "tan":
             val = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.float32)
             expected_outputs = np.array(
