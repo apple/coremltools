@@ -465,6 +465,29 @@ class MLModelTest(unittest.TestCase):
         self.assertTrue("new_out_name" in out_dict)
         self.assertTrue(isinstance(out_dict["new_out_name"], dict))
 
+    @unittest.skipUnless(
+        _is_macos() and _macos_version() >= (10, 13), "Only supported on macOS 10.13+"
+    )
+    def test_rename_image_input(self):
+        input_features = [("data", datatypes.Array(3, 1, 1))]
+        output_features = [("out", datatypes.Array(3, 1, 1))]
+        builder = NeuralNetworkBuilder(
+            input_features, output_features, disable_rank5_shape_mapping=True
+        )
+        builder.add_activation("linear", "LINEAR", "data", "out")
+        spec = builder.spec
+        # make an image input
+        mlmodel = make_image_input(MLModel(spec), "data", image_format="NCHW", scale=2.0)
+        # rename the input
+        spec = mlmodel.get_spec()
+        rename_feature(spec, "data", "new_input_name")
+        mlmodel = MLModel(spec)
+        # test
+        x = np.array([4, 5, 6], dtype=np.uint8).reshape(1, 1, 3)
+        pil_img = PIL.Image.fromarray(x)
+        out = mlmodel.predict({"new_input_name": pil_img}, useCPUOnly=True)['out']
+        np.testing.assert_equal(out, np.array([8.0, 10.0, 12.0]).reshape(3, 1, 1))
+
 
 if __name__ == "__main__":
     unittest.main()
