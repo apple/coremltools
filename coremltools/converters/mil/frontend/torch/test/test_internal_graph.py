@@ -1775,6 +1775,10 @@ class TestTorchOps:
         np.testing.assert_allclose(expected_sort, sort_result)
         np.testing.assert_allclose(expected_index, index_result)
 
+    @pytest.mark.parametrize(
+         "input_shape, dim, keepdim",
+         itertools.product([(3, 20, 20), (1, 50, 50)], [[0], [1], [2], [0, 2]], [True, False]),
+     )
     def test_sum(self, context, input_shape, dim, keepdim):
         test_input = torch.rand(*input_shape)
 
@@ -1798,7 +1802,7 @@ class TestTorchOps:
             kind="sum", inputs=input_list, outputs=[output_name]
         )
         ssa = self._construct_test_graph(
-            context, ops.sum, sum_node, output_name, constants=constants
+            context, ops._sum, sum_node, output_name, constants=constants
         )
         expected_result = torch.sum(test_input)
         assert np.allclose(expected_result, ssa.val)

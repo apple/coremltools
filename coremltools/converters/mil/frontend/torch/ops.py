@@ -2235,24 +2235,26 @@ def _sum(context, node):
     inputs = _get_inputs(context, node)
     kwargs = {"x": inputs[0], "name": node.name}
 
-    # optional: @axes
+    # function declarations to handle: torch.sum(input, dtype=None) and torch.sum(input, dim, keepdim=False, dtype=None)
+    # the 2nd arguments dtype and dim allow int values causing ambiguity. To ensure reasonable outputs
+    # dtype is restricted to None and dim must be a tuple in the pytorch definition
     if len(inputs) >= 2:
-        if type(inputs[1]) == torch.dtype:
+        if inputs[1] is not None:
+            if isinstance(inputs[1].val, _np.ndarray):
+                kwargs["axes"] = inputs[1]
 
-    axes = inputs[1]
-    if axes is not None:
-        if not isinstance(axes.val, _np.ndarray):
-            axes = mb.const(val=[axes.val], name=axes.name + "_list")
-            context.add(axes)
-        kwargs["axes"] = axes
+                # optional: @keep_dims
+                if len(inputs) >= 3:
+                    keep_dims = inputs[2]
+                    kwargs["keep_dims"] = keep_dims
 
-    # optional: @keep_dims
-    if len(inputs) >= 3:
-        keep_dims = inputs[2]
-        kwargs["keep_dims"] = keep_dims
+                if len(inputs) >= 4:
+                    if inputs[3] is not None:
+                        raise Exception("dtype input to sum should be None but the input is {}".format(inputs[3].val))
+            else:
+                raise Exception("Unsupported input argument to sum. Allowed second input arguments are dtype=None or "
+                                "dim=<a tuple of integers>")
 
-    # TODO: Last input to sum is an optional dtype. Support this?
-    assert len(inputs) <= 3 or inputs[3] is None
     res = mb.reduce_sum(**kwargs)
     context.add(res)
 
@@ -2266,7 +2268,8 @@ def topk(context, node):
     inputs = _get_inputs(context, node)
     kwargs = {"name": node.name, "x": inputs[0], "k": inputs[1]}
 
-    assert len(inputs) <= 6
+    if len(inputs) > 6:
+        raise Exception("Number of inputs to topk exceeds 6")
     # optional: @axis
     if len(inputs) > 2:
         if inputs[2] is not None:
@@ -2277,11 +2280,15 @@ def topk(context, node):
         largest = inputs[3].val
         kwargs["ascending"] = not largest
 
-    # TODO: Last inputs to topk are optional - sorted and out.
+    # last inputs to topk are optional - sorted and out.
     if len(inputs) > 4:
-        assert inputs[4].val is True
+        if inputs[4].val is False:
+            raise Exception("Unsupported value for argument 'sorted' in topk. Supported values: True, but input "
+                            "is {}".format(inputs[4].val))
     if len(inputs) > 5:
-        assert inputs[5] is None
+        if inputs[5] is not None:
+            raise Exception("Unsupported value for argument 'out' in topk. Supported values: None, but input "
+                            "is {}".format(inputs[5].val))
 
     res = mb.topk(**kwargs)
 
