@@ -2296,3 +2296,4 @@ def topk(context, node):
     indices_name = node.outputs[1]
     context.add(res[0], torch_name=values_name)
     context.add(res[1], torch_name=indices_name)
+    
