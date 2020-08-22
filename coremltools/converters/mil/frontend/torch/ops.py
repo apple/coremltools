@@ -2229,3 +2229,63 @@ def is_floating_point(context, node):
     inputs = _get_inputs(context, node, expected=1)
     is_float = types.is_float(inputs[0].dtype)
     context.add(mb.const(val=is_float, name=node.name))
+
+@register_torch_op(torch_alias=['sum'])
+def _sum(context, node):
+    inputs = _get_inputs(context, node)
+    kwargs = {"x": inputs[0], "name": node.name}
+
+    # optional: @axes
+    if len(inputs) >= 2:
+        if type(inputs[1]) == torch.dtype:
+
+    axes = inputs[1]
+    if axes is not None:
+        if not isinstance(axes.val, _np.ndarray):
+            axes = mb.const(val=[axes.val], name=axes.name + "_list")
+            context.add(axes)
+        kwargs["axes"] = axes
+
+    # optional: @keep_dims
+    if len(inputs) >= 3:
+        keep_dims = inputs[2]
+        kwargs["keep_dims"] = keep_dims
+
+    # TODO: Last input to sum is an optional dtype. Support this?
+    assert len(inputs) <= 3 or inputs[3] is None
+    res = mb.reduce_sum(**kwargs)
+    context.add(res)
+
+@register_torch_op
+def neg(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+    context.add(mb.mul(x=inputs[0], y=-1, name=node.name))
+
+@register_torch_op
+def topk(context, node):
+    inputs = _get_inputs(context, node)
+    kwargs = {"name": node.name, "x": inputs[0], "k": inputs[1]}
+
+    assert len(inputs) <= 6
+    # optional: @axis
+    if len(inputs) > 2:
+        if inputs[2] is not None:
+            kwargs["axis"] = inputs[2].val
+
+    # optional: @ascending
+    if len(inputs) > 3:
+        largest = inputs[3].val
+        kwargs["ascending"] = not largest
+
+    # TODO: Last inputs to topk are optional - sorted and out.
+    if len(inputs) > 4:
+        assert inputs[4].val is True
+    if len(inputs) > 5:
+        assert inputs[5] is None
+
+    res = mb.topk(**kwargs)
+
+    values_name = node.outputs[0]
+    indices_name = node.outputs[1]
+    context.add(res[0], torch_name=values_name)
+    context.add(res[1], torch_name=indices_name)
