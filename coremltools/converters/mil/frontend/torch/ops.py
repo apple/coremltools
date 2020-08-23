@@ -998,6 +998,25 @@ def _int(context, node):
     _cast(context, node, int, "int32")
 
 
+def _get_axes_from_normalized_shape(original_shape, normalized_shape):
+    """Convert the `normalized_shape` argument of torch.nn.LayerNorm to the
+    backend argument `axes` in order to reuse the same backend signature
+    """
+    if not isinstance(normalized_shape, list):
+        normalized_shape = list(normalized_shape)
+
+    nb_reduced_axes = len(normalized_shape)
+    nb_total_axes = len(original_shape)
+    shape_to_reduce = original_shape[-nb_reduced_axes:]
+
+    if not list(shape_to_reduce) == normalized_shape:
+        raise ValueError(
+            f"normalized_shape ({normalized_shape}) is incompatible with input tensor shape ({original_shape}) for layer_norm op. "
+            "normalized_shape must match the last len(normalized_shape) entries in the input tensor shape"
+        )
+    return list(range(nb_total_axes-nb_reduced_axes,nb_total_axes))
+
+
 @register_torch_op
 def layer_norm(context, node):
     inputs = _get_inputs(context, node, expected=6)
@@ -1007,9 +1026,12 @@ def layer_norm(context, node):
     bias = inputs[3]
     eps = inputs[4]
     # cudnn_enable = inputs[5] unused
+    axes = _get_axes_from_normalized_shape(_input.shape, normalized_shape.val)
+    axes = mb.const(val=axes, name=node.name + "_axes")
+
     layer_norm = mb.layer_norm(
         x=_input,
-        axes=normalized_shape,
+        axes=axes,
         gamma=weight,
         beta=bias,
         epsilon=eps,
