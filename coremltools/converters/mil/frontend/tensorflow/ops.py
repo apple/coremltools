@@ -100,7 +100,9 @@ def All(context, node):
     x = context[node.inputs[0]]
     axes = _check_axes_type(context[node.inputs[1]])
     keep_dims = node.attr.get("keep_dims", False)
-    x = mb.reduce_prod(x=x, axes=axes, keep_dims=keep_dims, name=node.name)
+    x = mb.cast(x=x, dtype="int32")
+    x = mb.reduce_prod(x=x, axes=axes, keep_dims=keep_dims)
+    x = mb.cast(x=x, dtype="bool", name=node.name)
     context.add(node.name, x)
 
 
@@ -109,8 +111,9 @@ def Any(context, node):
     x = context[node.inputs[0]]
     axes = _check_axes_type(context[node.inputs[1]])
     keep_dims = node.attr.get("keep_dims", False)
+    x = mb.cast(x=x, dtype="int32")
     x = mb.reduce_sum(x=x, axes=axes, keep_dims=keep_dims)
-    x = mb.greater(x=x, y=0.0, name=node.name)
+    x = mb.cast(x=x, dtype="bool", name=node.name)
     context.add(node.name, x)
 
 
@@ -496,7 +499,7 @@ def ExtractImagePatches(context, node):
         for wi in w_index:
             boxes.append((hi, wi, hi + sizes[1] - 1, wi + sizes[2] - 1))
 
-    boxes = _np.array(boxes)
+    boxes = _np.array(boxes, dtype=_np.float32)
     box_indices = _np.arange(batch)
     box_indices = _np.tile(box_indices, (len(boxes), 1))
     box_indices = _np.transpose(box_indices)
@@ -856,13 +859,12 @@ def Conv3DBackpropInputV2(context, node):
     # Only the last op should have the same name as node.name
     conv_name = node.name + "_x" if data_format == "NDHWC" else node.name
     # Pass output shape provided above
-    # TODO: rdar://63968613 ([deconv3d] Deconv_3d top_shapes_for_bottom_shapes does not sets output channel if output shape is provided)
     x = mb.conv_transpose(
         x=x,
         weight=W_oidhw,
         pad_type=pad_type,
         strides=DHW_strides,
-        output_shape=None,
+        output_shape=output_shape,
         dilations=DHW_dilations,
         name=conv_name,
     )
@@ -2308,6 +2310,34 @@ def Unpack(context, node):
 
 
 @register_tf_op
+def Split(context, node):
+    axis = context[node.inputs[0]]
+    x = context[node.inputs[1]]
+    if "num_split" not in node.attr:
+        raise ValueError("num_splits not found in TF op {}".format(node.name))
+    num_splits = node.attr["num_split"]
+    if num_splits == 1:
+        if len(node.outputs) == 0:
+            x = mb.mul(x=x, y=1.0, name=node.name)
+            context.add(node.name, x)
+        else:
+            # Don't change tfssa. Just make downstream ops reference the pre-identity op.
+            context.add(node.name, [x], is_new_var=False)
+    else:
+        x = mb.split(x=x, num_splits=num_splits, axis=axis, name=node.name)
+        context.add(node.name, x)
+        # TODO (rdar://60358242) If tf.split output is returned, there's no
+        # get_tuple nodes. Some graph pass is needed. Example:
+        #
+        #    x = tf.placeholder(tf.float32, shape=input_shape1)
+        #    res = tf.split(x, 3, axis=0)
+        #
+        # res are ['split:0', 'split:1', 'split']
+        #
+        # but node.outputs == ['gto_1', 'gto_2', 'gto_3']
+
+
+@register_tf_op
 def SplitV(context, node):
     x = context[node.inputs[0]]
     split_sizes = context[node.inputs[1]]
@@ -2355,34 +2385,6 @@ def IsFinite(context, node):
     x = context[node.inputs[0]]
     x = mb.isfinite(x=x, name=node.name)
     context.add(node.name, x)
-
-
-@register_tf_op
-def Split(context, node):
-    axis = context[node.inputs[0]]
-    x = context[node.inputs[1]]
-    if "num_split" not in node.attr:
-        raise ValueError("num_splits not found in TF op {}".format(node.name))
-    num_splits = node.attr["num_split"]
-    if num_splits == 1:
-        if len(node.outputs) == 0:
-            x = mb.mul(x=x, y=1.0, name=node.name)
-            context.add(node.name, x)
-        else:
-            # Don't change tfssa. Just make downstream ops reference the pre-identity op.
-            context.add(node.name, [x], is_new_var=False)
-    else:
-        x = mb.split(x=x, num_splits=num_splits, axis=axis, name=node.name)
-        context.add(node.name, x)
-        # TODO (rdar://60358242) If tf.split output is returned, there's no
-        # get_tuple nodes. Some graph pass is needed. Example:
-        #
-        #    x = tf.placeholder(tf.float32, shape=input_shape1)
-        #    res = tf.split(x, 3, axis=0)
-        #
-        # res are ['split:0', 'split:1', 'split']
-        #
-        # but node.outputs == ['gto_1', 'gto_2', 'gto_3']
 
 
 @register_tf_op

@@ -6,6 +6,7 @@
 import six
 from coremltools import TensorType
 import pytest
+import numpy as np
 
 tf = pytest.importorskip("tensorflow", minversion="1.14.0")
 from coremltools.converters.mil.testing_utils import compare_shapes, compare_backend
@@ -14,6 +15,8 @@ from tensorflow.python.framework import dtypes
 import tempfile
 import os
 from tensorflow.python.tools.freeze_graph import freeze_graph as freeze_g
+from tensorflow.python.keras.saving import saving_utils as _saving_utils
+import numpy as np
 
 frontend = "tensorflow"
 
@@ -60,10 +63,21 @@ def get_tf_keras_io_names(model):
     model: tf.keras.Model
     """
     input_names, output_names = [], []
+    try:
+        # The order of outputs in conc_func.structured_outputs is the same order
+        # that Keras predicts in, which can be different from model.outputs
+        input_signature = _saving_utils.model_input_signature(
+            model, keep_original_batch_size=True
+        )
+        fn = _saving_utils.trace_model_call(model, input_signature)
+        conc_func = fn.get_concrete_function()
+        for key in conc_func.structured_outputs:
+            output_names.append(conc_func.structured_outputs[key].name.split(":")[0])
+    except:
+        for o in model.outputs:
+            output_names.append(o.name.split(":")[0].split("/")[-1])
     for i in model.inputs:
         input_names.append(i.name.split(":")[0])
-    for o in model.outputs:
-        output_names.append(o.name.split(":")[0].split("/")[-1])
     return input_names, output_names
 
 
@@ -104,7 +118,7 @@ def tf_graph_to_proto(
     ----------
     graph: tf.Graph
         TensorFlow 1.x model in tf.Graph format.
-    feed_dict: dict of (tf.placeholder, np.array)
+    feed_dict: dict of {tf.placeholder -> np.array or python primitive)
         Dict of placeholder and value pairs representing inputs.
     output_nodes: tf.node or list[tf.node]
         List of names representing outputs.
@@ -125,9 +139,8 @@ def tf_graph_to_proto(
     output_names = get_tf_node_names(output_nodes, mode="outputs")
     input_values = {name: val for name, val in zip(input_names, feed_dict.values())}
 
-    inputs = [TensorType(name=input_name) for input_name in input_names]
     mlmodel = converter.convert(
-        graph, inputs=inputs, outputs=output_names, source=frontend, convert_to=backend
+        graph, inputs=None, outputs=output_names, source=frontend, convert_to=backend
     )
 
     proto = mlmodel.get_spec()
@@ -238,6 +251,10 @@ def run_compare_tf(
             sess.run(tf.global_variables_initializer())
             tf_outputs = sess.run(output_nodes, feed_dict=feed_dict)
     expected_outputs = {name: val for name, val in zip(output_names, tf_outputs)}
+
+    for k,v in input_key_values.items():
+        if isinstance(v, np.ndarray) and issubclass(v.dtype.type, np.integer):
+            input_key_values[k] = v.astype(np.float) # Core ML only accepts floats
 
     if validate_shapes_only:
         compare_shapes(proto, input_key_values, expected_outputs, use_cpu_only)

@@ -16,6 +16,7 @@ from coremltools.converters.mil.input_types import Shape as InputShape
 from coremltools.converters.mil.mil.var import Var
 from coremltools.converters.mil.mil import get_new_symbol
 from coremltools.converters.mil.mil.types.symbolic import is_symbolic
+from coremltools.converters.mil.mil.types import is_tensor
 
 from coremltools.converters.mil.mil import types
 from .basic_graph_ops import topsort, simple_topsort
@@ -186,6 +187,9 @@ class TFConverter:
                                 inp.name
                             )
                         )
+                    # _get_shaping_class does not accept -1 or None dimension.
+                    shape = [get_new_symbol() if s is None or s == -1 else s \
+                            for s in shape]
                     inp.shape = _get_shaping_class(shape)
 
             # Extract placeholders that users didn't specify.
@@ -197,24 +201,29 @@ class TFConverter:
             inputs = []
             placeholder_names = tf_placeholder_names
 
-        placeholder_inputs = {}
+        # name -> (shape, mil_type) mapping. shape has type list[int]
+        added_inputs = {}
         for inp in main_func.inputs:
             if inp not in placeholder_names:
                 continue
-            if graph[inp].attr.get("_output_shapes", None) is not None:
-                placeholder_inputs.update({inp: graph[inp].attr["_output_shapes"][0]})
-            elif graph[inp].attr.get("shape", None) is not None:
-                placeholder_inputs.update({inp: graph[inp].attr["shape"]})
+            node = graph[inp]
+            node.parse_from_attr()
+            dtype = node.attr['dtype']
+            if is_tensor(node.datatype):
+                shape = node.datatype.get_shape()
             else:
-                raise ValueError("Can't find input shape for ({})".format(inp))
+                shape = []
+            shape = [get_new_symbol() if s is None or s == -1 else s \
+                    for s in shape]
+            inputs.append(TensorType(name=inp, shape=shape, dtype=dtype))
+            added_inputs[inp] = (shape, dtype)
 
-        if len(placeholder_inputs) > 0:
+        if len(added_inputs) > 0:
             logging.info(
-                "Adding Input not specified by users: '{}'".format(placeholder_inputs)
+                "Adding Input not specified by users: '{}'".format(
+                    added_inputs)
             )
 
-        for k, v in placeholder_inputs.items():
-            inputs.append(TensorType(name=k, shape=v))
         for idx, inp in enumerate(inputs):
             # We set the default image format in TF as NHWC, since NHWC is used
             # for TF unless GPU is specified as device.
@@ -274,16 +283,6 @@ class TFConverter:
             ret = tensor.name
         return ret.split(":")[0]
 
-    @staticmethod
-    def _create_placeholder(node):
-        node.parse_from_attr()
-        shape = []
-        dtype = node.attr["dtype"]
-        if types.is_tensor(node.datatype):
-            shape = node.datatype.get_shape()
-            shape = tuple(get_new_symbol() if s is None or s < 0 else s for s in shape)
-        return mb.placeholder(shape, dtype=dtype)
-
     def _validate_outputs(self, tfssa, outputs):
         if outputs is None:
             return
@@ -298,7 +297,7 @@ class TFConverter:
             if self._get_tensor_name(n) not in output_nodes + all_nodes:
                 raise KeyError('Output node name "{}" does exist.'.format(n))
 
-    def check_placeholder_output(self, prog):
+    def check_placeholder_output(self, prog, outputs_name):
         """
         Handle the cases where placeholder is output.
         There is a case where the program is like
@@ -311,25 +310,21 @@ class TFConverter:
         """
         block = prog["main"]
         input_name = [x.name for x in list(block.inputs.values())]
-        output_name = [x.name for x in block.outputs]
-        placeholder_output_name = [
-            x for x in output_name if x in input_name and x not in self.outputs
-        ]
         with block:
-            new_outputs = [
-                x for x in block.outputs if x.name not in placeholder_output_name
-            ]
-            for name in placeholder_output_name:
-                x = block.inputs[name]
-                x = mb.identity(x=x, name=name + ":0")
-                new_outputs.append(x)
+            new_outputs = []
+            for output, output_name in zip(block.outputs, outputs_name):
+                if output.name not in input_name or output.name == output_name:
+                    new_output = output
+                else:
+                    new_output = mb.identity(x=output, name=output_name)
+                new_outputs.append(new_output)
             block.set_outputs(new_outputs)
 
     def convert_main_graph(self, prog, graph):
         func_inputs = {}
         for input_type in self.inputs:
-            node = graph[input_type.name]
-            func_inputs[input_type.name] = TFConverter._create_placeholder(node)
+            func_inputs[input_type.name] = mb.placeholder(
+                    input_type.shape.symbolic_shape, dtype=input_type.dtype)
         prog.set_main_input_types(self.inputs)
 
         with Function(func_inputs) as ssa_func:
@@ -339,6 +334,22 @@ class TFConverter:
             outputs = convert_graph(self.context, graph, self.outputs)
             ssa_func.set_outputs(outputs)
             prog.add_function("main", ssa_func)
+        # check duplicate output
+        # Note: sometimes two outputs are pointing to the same Var, we should
+        # create mb.identity for those cases
+        block = prog["main"]
+        with block:
+            name_counts = {}
+            new_outputs = [output for output in block.outputs]
+            for i, v_o in enumerate(block.outputs):
+                if v_o.name not in name_counts:
+                    name_counts[v_o.name] = 1
+                else:
+                    name_counts[v_o.name] += 1
+                    new_name = v_o.name + "_duplicate_" + str(name_counts[v_o.name])
+                    x = mb.identity(x=v_o, name=new_name)
+                    new_outputs[i] = x
+            block.set_outputs(new_outputs)
 
         # Rename outputs to TF's name. This is needed when the last op doesn't
         # generate a new Var (e.g., get_tuple, Identity etc.), and thus the
@@ -378,7 +389,7 @@ class TFConverter:
                     "Renaming output var: '{}' -> '{}'".format(v_o.name, out_name)
                 )
                 v_o.name = out_name
-        self.check_placeholder_output(prog)
+        self.check_placeholder_output(prog, self.outputs)
 
     @_profile
     def convert(self):

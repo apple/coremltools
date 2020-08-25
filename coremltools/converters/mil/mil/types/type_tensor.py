@@ -76,7 +76,7 @@ def tensor(primitive, shape):
         @classmethod
         def __type_info__(cls):
             return Type(
-                "tensor", [get_type_info(primitive)] + list(shape), python_class=cls
+                "tensor", list(shape) + [get_type_info(primitive)], python_class=cls
             )
 
         @classmethod

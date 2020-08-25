@@ -166,11 +166,15 @@ class Var(object):
         shape_str += types.builtin_to_string(self.dtype) + ")" + annotation
         return shape_str
 
+    def type_str(self):
+        is_tensor = types.is_tensor(self.sym_type)
+        return "(Tensor)" if is_tensor else "(Scalar)"
+
     def set_name(self, name):
         self.name = name
 
     def __str__(self):
-        return "%" + self.name + ": " + self.shape_str()
+        return "%" + self.name + ": " + self.shape_str() + self.type_str()
 
 
 class ListVar(Var):

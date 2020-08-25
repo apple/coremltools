@@ -1636,6 +1636,8 @@ def quantize_weights(
 
     print("Quantizing using {} quantization".format(quantization_mode))
     spec = full_precision_model.get_spec()
+    if nbits == 16 and spec.isUpdatable:
+        raise Exception("updatable models cannot get quantized to FP16.")
     qspec = _quantize_spec_weights(spec, nbits, qmode, **kwargs)
 
     if _macos_version() < (10, 14):

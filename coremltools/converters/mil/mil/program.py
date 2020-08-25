@@ -16,11 +16,12 @@ from .block import Function
 from .var import Var
 from .types.symbolic import k_used_symbols, k_num_internal_syms
 from coremltools.converters.mil.input_types import InputType
+import six
 
 
 class Program(object):
     def __init__(self):
-        self.main_input_types = {}
+        self.main_input_types = []
         self.functions = {}
         self.parameters = {}
 
@@ -90,8 +91,12 @@ class Placeholder(object):
 
         dtype: types.float or other scalar builtin types.
         """
-        if not isinstance(sym_shape, (list, tuple, _np.generic, _np.ndarray)):
+        if not isinstance(sym_shape, (list, tuple, _np.ndarray)):
             raise ValueError("Illegal shape for Placeholder: {}".format(sym_shape))
+        for i, d in enumerate(sym_shape):
+            if not isinstance(d, (_np.generic, six.integer_types, Symbol)):
+                msg = 'Placeholder dim {} in {} is not integer or symbol'
+                raise ValueError(msg.format(i, sym_shape))
         self.sym_shape = sym_shape
         self.dtype = dtype
         if self.dtype is None:
@@ -99,8 +104,9 @@ class Placeholder(object):
         sym_type = self.type_inference()
 
         # Globally unique var name for placeholders
-        name = "placeholder_" + str(self.__class__.counter)
-        self.__class__.counter += 1
+        if name is None:
+            name = 'placeholder_' + str(self.__class__.counter)
+            self.__class__.counter += 1
 
         # List of output vars (consistent w/ other ops)
         self.outputs = [Var(name, sym_type)]

@@ -4,6 +4,4 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from coremltools._deps import _HAS_ONNX
-
-if _HAS_ONNX:
-    from ._converter import convert
+from ._converter import convert

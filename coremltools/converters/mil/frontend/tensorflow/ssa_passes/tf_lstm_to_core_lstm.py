@@ -135,8 +135,9 @@ def try_replace_with_core_lstm(op):
             initial_h=op.h_prev,
             weight=w,
             bias=bias,
-            # activations[2] should be "sigmoid" (rdar://62272632)
-            activations=("sigmoid", "tanh", "tanh"),
+            recurrent_activation="sigmoid",
+            cell_activation="tanh",
+            activation="tanh",
             peephole=mb_peep,
             clip=cell_clip,
             output_sequence=output_sequence,

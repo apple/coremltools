@@ -700,7 +700,7 @@ namespace CoreML {
         
         std::string probBlob = format.neuralnetworkclassifier().labelprobabilitylayername();
         // Check if the probability blob name was provided in the proto
-        if (probBlob.compare("") != 0) {
+        if (!probBlob.empty()) {
             // Check if it corresponds to some output of the network
             if (outputBlobNames.find(probBlob) == outputBlobNames.end()) {
                 std::string err = "For this neural network classifier, the probabilities are obtained from the layer '" + probBlob + "' which was not found in the network.";

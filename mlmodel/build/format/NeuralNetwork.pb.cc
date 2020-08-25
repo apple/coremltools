@@ -48745,6 +48745,7 @@ void BatchedMatMulLayerParams::set_int8dynamicquantize(bool value) {
 
 #if !defined(_MSC_VER) || _MSC_VER >= 1900
 const int ConcatNDLayerParams::kAxisFieldNumber;
+const int ConcatNDLayerParams::kInterleaveFieldNumber;
 #endif  // !defined(_MSC_VER) || _MSC_VER >= 1900
 
 ConcatNDLayerParams::ConcatNDLayerParams()
@@ -48760,12 +48761,15 @@ ConcatNDLayerParams::ConcatNDLayerParams(const ConcatNDLayerParams& from)
       _internal_metadata_(NULL),
       _cached_size_(0) {
   _internal_metadata_.MergeFrom(from._internal_metadata_);
-  axis_ = from.axis_;
+  ::memcpy(&axis_, &from.axis_,
+    reinterpret_cast<char*>(&interleave_) -
+    reinterpret_cast<char*>(&axis_) + sizeof(interleave_));
   // @@protoc_insertion_point(copy_constructor:CoreML.Specification.ConcatNDLayerParams)
 }
 
 void ConcatNDLayerParams::SharedCtor() {
-  axis_ = GOOGLE_LONGLONG(0);
+  ::memset(&axis_, 0, reinterpret_cast<char*>(&interleave_) -
+    reinterpret_cast<char*>(&axis_) + sizeof(interleave_));
   _cached_size_ = 0;
 }
 
@@ -48797,7 +48801,8 @@ ConcatNDLayerParams* ConcatNDLayerParams::New(::google::protobuf::Arena* arena) 
 
 void ConcatNDLayerParams::Clear() {
 // @@protoc_insertion_point(message_clear_start:CoreML.Specification.ConcatNDLayerParams)
-  axis_ = GOOGLE_LONGLONG(0);
+  ::memset(&axis_, 0, reinterpret_cast<char*>(&interleave_) -
+    reinterpret_cast<char*>(&axis_) + sizeof(interleave_));
 }
 
 bool ConcatNDLayerParams::MergePartialFromCodedStream(
@@ -48818,6 +48823,20 @@ bool ConcatNDLayerParams::MergePartialFromCodedStream(
           DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
                    ::google::protobuf::int64, ::google::protobuf::internal::WireFormatLite::TYPE_INT64>(
                  input, &axis_)));
+        } else {
+          goto handle_unusual;
+        }
+        break;
+      }
+
+      // bool interleave = 2;
+      case 2: {
+        if (static_cast< ::google::protobuf::uint8>(tag) ==
+            static_cast< ::google::protobuf::uint8>(16u)) {
+
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   bool, ::google::protobuf::internal::WireFormatLite::TYPE_BOOL>(
+                 input, &interleave_)));
         } else {
           goto handle_unusual;
         }
@@ -48856,6 +48875,11 @@ void ConcatNDLayerParams::SerializeWithCachedSizes(
     ::google::protobuf::internal::WireFormatLite::WriteInt64(1, this->axis(), output);
   }
 
+  // bool interleave = 2;
+  if (this->interleave() != 0) {
+    ::google::protobuf::internal::WireFormatLite::WriteBool(2, this->interleave(), output);
+  }
+
   // @@protoc_insertion_point(serialize_end:CoreML.Specification.ConcatNDLayerParams)
 }
 
@@ -48868,6 +48892,11 @@ size_t ConcatNDLayerParams::ByteSizeLong() const {
     total_size += 1 +
       ::google::protobuf::internal::WireFormatLite::Int64Size(
         this->axis());
+  }
+
+  // bool interleave = 2;
+  if (this->interleave() != 0) {
+    total_size += 1 + 1;
   }
 
   int cached_size = ::google::protobuf::internal::ToCachedSize(total_size);
@@ -48892,6 +48921,9 @@ void ConcatNDLayerParams::MergeFrom(const ConcatNDLayerParams& from) {
   if (from.axis() != 0) {
     set_axis(from.axis());
   }
+  if (from.interleave() != 0) {
+    set_interleave(from.interleave());
+  }
 }
 
 void ConcatNDLayerParams::CopyFrom(const ConcatNDLayerParams& from) {
@@ -48911,6 +48943,7 @@ void ConcatNDLayerParams::Swap(ConcatNDLayerParams* other) {
 }
 void ConcatNDLayerParams::InternalSwap(ConcatNDLayerParams* other) {
   std::swap(axis_, other->axis_);
+  std::swap(interleave_, other->interleave_);
   std::swap(_cached_size_, other->_cached_size_);
 }
 
@@ -48933,6 +48966,20 @@ void ConcatNDLayerParams::set_axis(::google::protobuf::int64 value) {
   
   axis_ = value;
   // @@protoc_insertion_point(field_set:CoreML.Specification.ConcatNDLayerParams.axis)
+}
+
+// bool interleave = 2;
+void ConcatNDLayerParams::clear_interleave() {
+  interleave_ = false;
+}
+bool ConcatNDLayerParams::interleave() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.ConcatNDLayerParams.interleave)
+  return interleave_;
+}
+void ConcatNDLayerParams::set_interleave(bool value) {
+  
+  interleave_ = value;
+  // @@protoc_insertion_point(field_set:CoreML.Specification.ConcatNDLayerParams.interleave)
 }
 
 #endif  // PROTOBUF_INLINE_NOT_IN_HEADERS

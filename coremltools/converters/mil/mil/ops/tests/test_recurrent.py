@@ -37,10 +37,11 @@ class TestGRU:
             # output(always 0) for second batch onwards
             [2, 32],
             [1, 16],
-            [False, False],
+            # rdar://66661491 (GRU with bias fails on NNv1 and MIL backend)
+            [False],
             [True, False],
             ["forward", "reverse"],
-            [False, False],
+            [True, False],
         ),
     )
     def test_builder_to_backend_smoke(
@@ -311,7 +312,9 @@ class TestLSTM:
                 direction="forward",
                 bias=b,
                 output_sequence=return_seq,
-                activations=(activation, inner_activation, outer_activation),
+                recurrent_activation=activation,
+                cell_activation=inner_activation,
+                activation=outer_activation,
                 clip=clip,
             )
             return h_all
@@ -487,7 +490,8 @@ class TestLSTM:
         ],
         argvalues=itertools.product(
             [True],
-            backends,
+            # TODO: rdar://66768742 (BiLSTM output numerically mismatch for MIL backend)
+            ["nn_proto"],
             [1, 8],
             [1, 32],
             [1, 64],

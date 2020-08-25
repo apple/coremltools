@@ -6,13 +6,6 @@ from typing import Text, Union, Optional, Dict, Any, Iterable, Sequence, Callabl
 
 import numpy as np
 
-from coremltools._deps import _HAS_ONNX
-
-if _HAS_ONNX:
-    import onnx
-    from onnx import shape_inference
-    from onnx import TensorProto
-
 from coremltools.models.neural_network import NeuralNetworkBuilder  # type: ignore
 from coremltools.models import datatypes, MLModel  # type: ignore
 from coremltools.proto import FeatureTypes_pb2 as ft  # type: ignore
@@ -25,37 +18,8 @@ from coremltools import (
 from coremltools import _MINIMUM_NDARRAY_SPEC_VERSION as IOS_13_SPEC_VERSION  # iOS 13.0
 from coremltools import __version__ as ct_version
 from coremltools.models import _METADATA_VERSION, _METADATA_SOURCE
-from typing import Tuple
 
-from ._operators import (
-    _convert_node,
-    _SEQUENCE_LAYERS_REGISTRY,
-    _ONNX_NODE_REGISTRY,
-    _add_const_inputs_if_required,
-)
-from ._operators_nd import _ONNX_NODE_REGISTRY_ND, _convert_node_nd
-
-from ._graph import Graph, EdgeInfo, Transformer
-
-from ._transformers import (
-    ConvAddFuser,
-    DropoutRemover,
-    ReshapeInitTensorFuser,
-    BNBroadcastedMulFuser,
-    BNBroadcastedAddFuser,
-    PixelShuffleFuser,
-    OutputRenamer,
-    AddModelInputsOutputs,
-    ConstantsToInitializers,
-    ImageScalerRemover,
-    ShapeOpRemover,
-    ConstantRemover,
-    ConstantFillToInitializers,
-    ReshapeTransposeReshape_pattern1,
-    CastOpRemover,
-    DeadCodeElimination,
-    PaddingOpRemover,
-)
+from coremltools._deps import _HAS_ONNX
 
 # ML model passes
 from coremltools.converters.mil.backend.nn.passes.mlmodel_passes import (
@@ -63,8 +27,46 @@ from coremltools.converters.mil.backend.nn.passes.mlmodel_passes import (
     transform_conv_crop,
 )
 
-from ._error_utils import ErrorHandling
-from ._graph_viz import plot_graph  # type: ignore
+if _HAS_ONNX:
+    import onnx
+    from onnx import shape_inference
+    from onnx import TensorProto
+
+    from typing import Tuple
+
+    from ._operators import (
+        _convert_node,
+        _SEQUENCE_LAYERS_REGISTRY,
+        _ONNX_NODE_REGISTRY,
+        _add_const_inputs_if_required,
+    )
+    from ._operators_nd import _ONNX_NODE_REGISTRY_ND, _convert_node_nd
+
+    from ._graph import Graph, EdgeInfo, Transformer
+
+    from ._transformers import (
+        ConvAddFuser,
+        DropoutRemover,
+        ReshapeInitTensorFuser,
+        BNBroadcastedMulFuser,
+        BNBroadcastedAddFuser,
+        PixelShuffleFuser,
+        OutputRenamer,
+        AddModelInputsOutputs,
+        ConstantsToInitializers,
+        ImageScalerRemover,
+        ShapeOpRemover,
+        ConstantRemover,
+        ConstantFillToInitializers,
+        ReshapeTransposeReshape_pattern1,
+        CastOpRemover,
+        DeadCodeElimination,
+        PaddingOpRemover,
+    )
+
+    from ._error_utils import ErrorHandling
+    from ._graph_viz import plot_graph  # type: ignore
+
 
 USE_SHAPE_MAPPING = True
 
@@ -537,6 +539,9 @@ def convert(
     -------
     model: A coreml model.
     """
+    if not _HAS_ONNX:
+        raise ModuleNotFoundError("Missing ONNX package.")
+
     if isinstance(model, Text):
         onnx_model = onnx.load(model)
     elif isinstance(model, onnx.ModelProto):

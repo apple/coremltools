@@ -14,9 +14,21 @@ from coremltools.models.neural_network import (
     NeuralNetworkBuilder,
     AdamParams,
     SgdParams,
+    quantization_utils,
 )
 from coremltools.models.pipeline import PipelineRegressor, PipelineClassifier
 
+
+class LayerSelector(quantization_utils.QuantizedLayerSelector):
+    def __init__(self, layer_name):
+        super(LayerSelector, self).__init__()
+        self.layer_name = layer_name
+
+    def do_quantize(self, layer, weight_param="bias"):
+        ret = super(LayerSelector, self).do_quantize(layer)
+        if not ret or layer.name == self.layer_name:
+            return False
+        return True
 
 class MLModelUpdatableTest(unittest.TestCase):
     @classmethod
@@ -28,7 +40,7 @@ class MLModelUpdatableTest(unittest.TestCase):
         if os.path.exists(self.model_dir):
             shutil.rmtree(self.model_dir)
 
-    def create_base_builder(self):
+    def create_base_builder(self, is_updatable=True):
         self.input_features = [("input", datatypes.Array(3))]
         self.output_features = [("output", None)]
         self.output_names = ["output"]
@@ -58,7 +70,9 @@ class MLModelUpdatableTest(unittest.TestCase):
             output_name="output",
         )
 
-        builder.make_updatable(["ip1", "ip2"])  # or a dict for weightParams
+        if is_updatable:
+            builder.make_updatable(["ip1", "ip2"])
+
         return builder
 
     def test_updatable_model_creation_ce_sgd(self):
@@ -592,6 +606,64 @@ class MLModelUpdatableTest(unittest.TestCase):
         self.assertEqual(
             spec.description.trainingInput[1].type.WhichOneof("Type"), "multiArrayType"
         )
+
+    def test_nn_fp16_make_updatable_fail(self):
+        nn_builder = self.create_base_builder(is_updatable=False)
+        model_path = os.path.join(self.model_dir, "updatable_creation.mlmodel")
+        print(model_path)
+        save_spec(nn_builder.spec, model_path)
+        mlmodel = MLModel(model_path)
+
+        quantized_model = quantization_utils.quantize_weights(mlmodel, 16, "linear")
+
+        q_nn_builder = NeuralNetworkBuilder(spec=quantized_model._spec)
+
+        # fails since an FP16 model cannot be marked updatable
+        with self.assertRaises(ValueError):
+            q_nn_builder.make_updatable(["ip1", "ip2"])
+
+    def test_nn_partial_fp16_make_updatable_fail(self):
+        nn_builder = self.create_base_builder(is_updatable=False)
+        model_path = os.path.join(self.model_dir, "updatable_creation.mlmodel")
+        print(model_path)
+        save_spec(nn_builder.spec, model_path)
+        mlmodel = MLModel(model_path)
+
+        selector = LayerSelector(layer_name='ip1')
+        quantized_model = quantization_utils.quantize_weights(mlmodel, 16, "linear", selector=selector)
+
+        q_nn_builder = NeuralNetworkBuilder(spec=quantized_model._spec)
+
+        # fails since model has a layer with FP16 bias
+        with self.assertRaises(ValueError):
+            q_nn_builder.make_updatable(["ip2"])
+
+    def test_nn_partial_fp16_make_updatable_quantized_layer_fail(self):
+        nn_builder = self.create_base_builder(is_updatable=False)
+        model_path = os.path.join(self.model_dir, "updatable_creation.mlmodel")
+        print(model_path)
+        save_spec(nn_builder.spec, model_path)
+        mlmodel = MLModel(model_path)
+
+        selector = LayerSelector(layer_name='ip2')
+        quantized_model = quantization_utils.quantize_weights(mlmodel, 16, "linear", selector=selector)
+
+        q_nn_builder = NeuralNetworkBuilder(spec=quantized_model._spec)
+
+        # fails since model has a layer with FP16 bias
+        with self.assertRaises(ValueError):
+            q_nn_builder.make_updatable(["ip2"])
+
+    def test_nn_partial_fp16_make_updatable_fail(self):
+        nn_builder = self.create_base_builder()
+        model_path = os.path.join(self.model_dir, "updatable_creation.mlmodel")
+        print(model_path)
+        save_spec(nn_builder.spec, model_path)
+        mlmodel = MLModel(model_path)
+
+        # fails since updatable models cannot get quantized to FP16
+        with self.assertRaises(Exception):
+            quantization_utils.quantize_weights(mlmodel, 16, "linear")
 
     def test_pipeline_regressor_make_updatable(self):
         builder = self.create_base_builder()

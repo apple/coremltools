@@ -523,6 +523,11 @@ def rename_feature(
                         if name == current_name:
                             layer.output[index] = new_name
 
+        if rename_inputs:
+            for preprocess_params in nn.preprocessing:
+                if preprocess_params.featureName == current_name:
+                    preprocess_params.featureName = new_name
+
         if spec.HasField("neuralNetworkClassifier"):
             if nn.labelProbabilityLayerName == current_name:
                 nn.labelProbabilityLayerName = new_name

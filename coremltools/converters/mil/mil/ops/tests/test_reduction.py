@@ -98,7 +98,7 @@ class TestReduction:
 
     @pytest.mark.parametrize(
         "use_cpu_only, backend, mode",
-        itertools.product([True, False], ["nn_proto"], ["max", "mean"]),
+        itertools.product([True, False], backends, ["max", "mean"]),
     )
     def test_builder_to_backend_global_pool_2d(self, use_cpu_only, backend, mode):
         # test lowering to spatial reduction to global_pool path
@@ -127,7 +127,7 @@ class TestReduction:
 
     @pytest.mark.parametrize(
         "use_cpu_only, backend, mode",
-        itertools.product([True, False], ["nn_proto"], ["max", "mean"]),
+        itertools.product([True, False], backends, ["max", "mean"]),
     )
     def test_builder_to_backend_global_pool_3d(self, use_cpu_only, backend, mode):
         # test lowering to spatial reduction to global_pool path
