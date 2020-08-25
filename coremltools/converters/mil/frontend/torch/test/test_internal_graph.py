@@ -17,6 +17,7 @@ from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import Function, get_new_symbol
 from coremltools.converters.mil.mil.var import Var
+from coremltools.converters.mil.testing_reqs import random_gen
 
 from .. import ops
 from ..converter import TorchConverter, TranscriptionContext
@@ -1821,10 +1822,10 @@ class TestTorchOps:
 
     @pytest.mark.parametrize(
         "input_shape, k, dim, largest",
-        itertools.product([(10, 20, 20), (20, 50, 50)], [0, 3, 10], [0, 1, 2], [True, False]),
+        itertools.product([(5, 10, 10), (10, 5, 5)], [0, 3, 5], [0, 1, 2], [True, False]),
     )
     def test_topk(self, context, input_shape, k, dim, largest):
-        test_input = torch.rand(*input_shape)
+        test_input = torch.tensor(random_gen(input_shape, allow_duplicate=False))
 
         constants, input_list, output_name = self._gen_constants(
             6, [test_input, k, dim, largest, True, None]
