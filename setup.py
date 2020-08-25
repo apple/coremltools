@@ -78,6 +78,7 @@ setup(
         "scipy",
         'enum34;python_version < "3.4"',
         "tqdm",
+        'typing;python_version < "3.4"',
     ],
     entry_points={"console_scripts": ["coremlconverter = coremltools:_main"]},
     classifiers=[
