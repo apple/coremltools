@@ -1774,3 +1774,70 @@ class TestTorchOps:
         index_result = context["out2"].val
         np.testing.assert_allclose(expected_sort, sort_result)
         np.testing.assert_allclose(expected_index, index_result)
+
+    @pytest.mark.parametrize(
+         "input_shape, dim, keepdim",
+         itertools.product([(3, 20, 20), (1, 50, 50)], [[0], [1], [2], [0, 2]], [True, False]),
+     )
+    def test_sum(self, context, input_shape, dim, keepdim):
+        test_input = torch.rand(*input_shape)
+
+        constants, input_list, output_name = self._gen_constants(
+            4, [test_input, dim, keepdim, None]
+        )
+        sum_node = InternalTorchIRNode(
+            kind="sum", inputs=input_list, outputs=[output_name]
+        )
+        ssa = self._construct_test_graph(
+            context, ops._sum, sum_node, output_name, constants=constants
+        )
+        expected_result = torch.sum(test_input, dim, keepdim)
+        assert np.allclose(expected_result, ssa.val)
+
+    def test_sum_no_dims(self, context):
+        test_input = torch.rand((3, 20, 20))
+
+        constants, input_list, output_name = self._gen_constants(2, [test_input, None])
+        sum_node = InternalTorchIRNode(
+            kind="sum", inputs=input_list, outputs=[output_name]
+        )
+        ssa = self._construct_test_graph(
+            context, ops._sum, sum_node, output_name, constants=constants
+        )
+        expected_result = torch.sum(test_input)
+        assert np.allclose(expected_result, ssa.val)
+
+    def test_neg(self, context):
+        test_input = torch.rand(3, 4, 5)
+        constants, input_list, output_name = self._gen_constants(1, [test_input])
+        node = InternalTorchIRNode(
+            kind="neg", inputs=input_list, outputs=[output_name]
+        )
+        ssa = self._construct_test_graph(
+            context, ops.neg, node, output_name, constants=constants
+        )
+        expected_result = torch.neg(test_input)
+        assert np.allclose(expected_result.numpy(), ssa.val)
+
+    @pytest.mark.parametrize(
+        "input_shape, k, dim, largest",
+        itertools.product([(10, 20, 20), (20, 50, 50)], [0, 3, 10], [0, 1, 2], [True, False]),
+    )
+    def test_topk(self, context, input_shape, k, dim, largest):
+        test_input = torch.rand(*input_shape)
+
+        constants, input_list, output_name = self._gen_constants(
+            6, [test_input, k, dim, largest, True, None]
+        )
+        topk_node = InternalTorchIRNode(
+            kind="topk", inputs=input_list, outputs=["out1", "out2"]
+        )
+        ssa = self._construct_test_graph(
+            context, ops.topk, topk_node, constants=constants
+        )
+        topk_result = context["out1"].val
+        index_result = context["out2"].val
+
+        expected_max, expected_indices = torch.topk(test_input, k, dim, largest)
+        np.testing.assert_allclose(expected_max.numpy(), topk_result)
+        np.testing.assert_allclose(expected_indices.numpy(), index_result)

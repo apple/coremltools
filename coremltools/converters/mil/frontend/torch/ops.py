@@ -2251,3 +2251,71 @@ def is_floating_point(context, node):
     inputs = _get_inputs(context, node, expected=1)
     is_float = types.is_float(inputs[0].dtype)
     context.add(mb.const(val=is_float, name=node.name))
+
+@register_torch_op(torch_alias=['sum'])
+def _sum(context, node):
+    inputs = _get_inputs(context, node)
+    kwargs = {"x": inputs[0], "name": node.name}
+
+    # function declarations to handle: torch.sum(input, dtype=None) and torch.sum(input, dim, keepdim=False, dtype=None)
+    # the 2nd arguments dtype and dim allow int values causing ambiguity. To ensure reasonable outputs
+    # dtype is restricted to None and dim must be a tuple in the pytorch definition
+    if len(inputs) >= 2:
+        if inputs[1] is not None:
+            if isinstance(inputs[1].val, _np.ndarray):
+                kwargs["axes"] = inputs[1]
+
+                # optional: @keep_dims
+                if len(inputs) >= 3:
+                    keep_dims = inputs[2]
+                    kwargs["keep_dims"] = keep_dims
+
+                if len(inputs) >= 4:
+                    if inputs[3] is not None:
+                        raise Exception("dtype input to sum should be None but the input is {}".format(inputs[3].val))
+            else:
+                raise Exception("Unsupported input argument to sum. Allowed second input arguments are dtype=None or "
+                                "dim=<a tuple of integers>")
+
+    res = mb.reduce_sum(**kwargs)
+    context.add(res)
+
+@register_torch_op
+def neg(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+    context.add(mb.mul(x=inputs[0], y=-1, name=node.name))
+
+@register_torch_op
+def topk(context, node):
+    inputs = _get_inputs(context, node)
+    kwargs = {"name": node.name, "x": inputs[0], "k": inputs[1]}
+
+    if len(inputs) > 6:
+        raise Exception("Number of inputs to topk exceeds 6")
+    # optional: @axis
+    if len(inputs) > 2:
+        if inputs[2] is not None:
+            kwargs["axis"] = inputs[2].val
+
+    # optional: @ascending
+    if len(inputs) > 3:
+        largest = inputs[3].val
+        kwargs["ascending"] = not largest
+
+    # last inputs to topk are optional - sorted and out.
+    if len(inputs) > 4:
+        if inputs[4].val is False:
+            raise Exception("Unsupported value for argument 'sorted' in topk. Supported values: True, but input "
+                            "is {}".format(inputs[4].val))
+    if len(inputs) > 5:
+        if inputs[5] is not None:
+            raise Exception("Unsupported value for argument 'out' in topk. Supported values: None, but input "
+                            "is {}".format(inputs[5].val))
+
+    res = mb.topk(**kwargs)
+
+    values_name = node.outputs[0]
+    indices_name = node.outputs[1]
+    context.add(res[0], torch_name=values_name)
+    context.add(res[1], torch_name=indices_name)
+    

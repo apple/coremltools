@@ -1041,6 +1041,8 @@ class TestElementWiseUnary:
         ),
     )
     def test_elementwise_no_params(self, backend, rank, op_string):
+        if not contains_op(torch, op_string):
+            return
         input_shape = tuple(np.random.randint(low=1, high=10, size=rank))
         op_func = getattr(torch, op_string)
         model = ModuleWrapper(function=op_func)
