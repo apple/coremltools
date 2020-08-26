@@ -1028,7 +1028,6 @@ def layer_norm(context, node):
     eps = inputs[4]
     # cudnn_enable = inputs[5] unused
     axes = _get_axes_from_normalized_shape(_input.shape, normalized_shape.val)
-    axes = mb.const(val=axes, name=node.name + "_axes")
 
     layer_norm = mb.layer_norm(
         x=_input,
