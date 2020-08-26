@@ -1011,8 +1011,9 @@ def _get_axes_from_normalized_shape(original_shape, normalized_shape):
 
     if not list(shape_to_reduce) == normalized_shape:
         raise ValueError(
-            f"normalized_shape ({normalized_shape}) is incompatible with input tensor shape ({original_shape}) for layer_norm op. "
-            "normalized_shape must match the last len(normalized_shape) entries in the input tensor shape"
+            "normalized_shape ({}) is incompatible with input tensor shape ({}) for layer_norm op. "
+            "normalized_shape must match the last len(normalized_shape) entries in the input tensor shape".format(
+                normalized_shape, original_shape)
         )
     return list(range(nb_total_axes-nb_reduced_axes,nb_total_axes))
 
