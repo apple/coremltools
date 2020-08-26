@@ -184,14 +184,17 @@ class TestTf2ModelFormats:
         e.match(r"Only a single concrete function is supported")
 
     def test_invalid_converter_type(self):
+        keras_model = tf.keras.Sequential(
+            [tf.keras.layers.ReLU(input_shape=(4, 5), batch_size=3)]
+        )
         with pytest.raises(ValueError) as e:
-            converter.convert(None, source="invalid")
+            converter.convert(keras_model, source="invalid")
 
         expected_msg = r'Unrecognized value of argument "source": .*'
         e.match(expected_msg)
 
         with pytest.raises(NotImplementedError) as e:
-            converter.convert(None, convert_to="invalid", source=frontend)
+            converter.convert(keras_model, convert_to="invalid", source=frontend)
         e.match(r"Backend converter .* not implemented")
 
     def test_invalid_format_non_exist(self):
