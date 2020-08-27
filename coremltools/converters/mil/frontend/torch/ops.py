@@ -835,11 +835,8 @@ def adaptive_max_pool2d(context, node):
     if output_size == (1, 1):
         # Represent (1,1) output size via @reduce_max
         # Assume channel first ordering, reduce the last two (HW) dims.
-        axes = mb.const(val=[-2, -1], name=node.name + "_axes")
-        keep_dims = mb.const(val=True, name=node.name + "_keep_dims")
-
         max_pool = mb.reduce_max(
-            x=_input, axes=axes, keep_dims=keep_dims, name=node.name
+            x=_input, axes=[-2,-1], keep_dims=True, name=node.name
         )
     elif _input.shape is not None:
         # TODO: The calculations to convert adaptive_pool to standard pool,
