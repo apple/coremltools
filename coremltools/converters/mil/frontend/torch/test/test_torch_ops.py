@@ -440,6 +440,26 @@ class TestAvgPool:
         )
         run_compare_torch(input_shape, model, backend=backend)
 
+class TestAdaptiveMaxPool:
+    @pytest.mark.parametrize(
+        "output_size, magnification, backend",
+        itertools.product(
+            [(1,1), (3,3),(6,6),(32,32)],
+            [1,2,4,5,6,7],
+            backends,
+        ),
+    )
+    def test_adaptive_max_pool2d(
+            self, output_size, magnification, backend
+    ):
+        # we maginify output_size to get input_size
+        # we only test adaptive pooling where input_size is a multiple of output_size
+        input_size = (magnification * output_size[0], magnification * output_size[1])
+        model = nn.AdaptiveMaxPool2d(
+            output_size
+        )
+        print("running compare torch")
+        run_compare_torch(input_size, model, backend=backend)
 
 class TestMaxPool:
     # rdar://66066001 (PyTorch converter: enable ceil_mode=True tests for pooling ops)
