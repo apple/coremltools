@@ -329,7 +329,7 @@ def einsum(context, node):
     else:
         raise NotImplementedError(
             "einsum unsupported equation format: ", equation)
-    context.add(x, node.name)
+    context.add(x)
 
 
 @register_torch_op
