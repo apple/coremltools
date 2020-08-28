@@ -293,6 +293,46 @@ def matmul(context, node):
     context.add(res)
 
 @register_torch_op
+def einsum(context, node):
+    inputs = _get_inputs(context, node, expected=2)
+    equation = inputs[0].val
+    operands = inputs[1]
+
+    a = operands[0]
+    b = operands[1]
+
+    if equation == "bnqd,bnkd->bnqk":
+        x = mb.matmul(x=a, y=b, transpose_x=False, transpose_y=True, name=node.name)
+    elif equation == "abc,cd->abd":
+        x = mb.matmul(x=a, y=b, transpose_x=False, transpose_y=False, name=node.name)
+    elif equation == "abc,cde->abde":
+        x_1 = mb.reshape(x=a, shape=[a.shape[0] * a.shape[1], a.shape[2]])
+        x_2 = mb.reshape(x=b, shape=[b.shape[0], b.shape[1] * b.shape[2]])
+        x = mb.matmul(x=x_1, y=x_2, transpose_x=False, transpose_y=False)
+        x = mb.reshape(
+            x=x, shape=[a.shape[0], a.shape[1], b.shape[1], b.shape[2]], name=node.name
+        )
+    elif equation == "BTNH,BFNH->BNFT":
+        a = mb.transpose(x=a, perm=[0, 2, 1, 3])
+        b = mb.transpose(x=b, perm=[0, 2, 1, 3])
+        x = mb.matmul(x=b, y=a, transpose_x=False, transpose_y=True, name=node.name)
+    elif equation == "BNFT,BTNH->BFNH":
+        b = mb.transpose(x=b, perm=[0, 2, 1, 3])
+        x = mb.matmul(x=a, y=b, transpose_x=False, transpose_y=False)
+        x = mb.transpose(x=x, perm=[0, 2, 1, 3], name=node.name)
+    elif equation == "abcd,cde->abe":
+        x_1 = mb.reshape(x=a, shape=[a.shape[0], a.shape[1], a.shape[2] * a.shape[3]])
+        x_2 = mb.reshape(x=b, shape=[b.shape[0] * b.shape[1], b.shape[2]])
+        x = mb.matmul(
+            x=x_1, y=x_2, transpose_x=False, transpose_y=False, name=node.name
+        )
+    else:
+        raise NotImplementedError(
+            "einsum unsupported equation format: ", equation)
+    context.add(x, node.name)
+
+
+@register_torch_op
 def add(context, node):
     add_inputs = _get_inputs(context, node)
     assert len(node.outputs) == 1
