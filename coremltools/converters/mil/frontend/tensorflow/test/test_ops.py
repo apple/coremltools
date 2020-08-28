@@ -1393,6 +1393,8 @@ class TestSeparableConv:
         if not any([True if d > 1 else False for d in dilations]):
             test_dynamic_W()
 
+
+@pytest.mark.skip(reason="rdar://65198011 (Re-enable Conv3dTranspose and DynamicTile unit tests)")
 class TestConvTranspose:
     @pytest.mark.parametrize(
         ",".join(

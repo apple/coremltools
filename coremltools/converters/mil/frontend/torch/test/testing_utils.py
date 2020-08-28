@@ -38,6 +38,10 @@ def _flatten(object):
             flattened_list.append(item)
     return flattened_list
 
+def contains_op(torch, op_string):
+    if hasattr(torch, op_string):
+        return True
+    return False
 
 def convert_to_coreml_inputs(input_description, inputs):
     """Convenience function to combine a CoreML model's input description and
@@ -85,7 +89,7 @@ def trace_model(model, input_data):
 
 
 def run_compare_torch(
-    input_data, model, expected_results=None, places=5, input_as_shape=True, backend="nn_proto", 
+    input_data, model, expected_results=None, places=5, input_as_shape=True, backend="nn_proto",
     rand_range = (0.0, 1.0)
 ):
     """
