@@ -1041,6 +1041,8 @@ class TestElementWiseUnary:
         ),
     )
     def test_elementwise_no_params(self, backend, rank, op_string):
+        if not contains_op(torch, op_string):
+            return
         input_shape = tuple(np.random.randint(low=1, high=10, size=rank))
         op_func = getattr(torch, op_string)
         model = ModuleWrapper(function=op_func)
@@ -1157,4 +1159,18 @@ class TestTranspose:
         input_shape = tuple(np.random.randint(low=1, high=4, size=rank))
         model = ModuleWrapper(function=torch.transpose,
                               kwargs={"dim0": dims[0], "dim1": dims[1]})
+        run_compare_torch(input_shape, model, backend=backend)
+
+
+class TestRepeat:
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend, rank",
+        itertools.product([True, False], backends, list(range(1, 6))),
+    )
+    def test_repeat(self, use_cpu_only, backend, rank):
+        input_shape = np.random.randint(low=2, high=6, size=rank)
+        repeats = np.random.randint(low=2, high=4, size=rank)
+        input_shape = tuple(input_shape)
+
+        model = ModuleWrapper(function=lambda x: x.repeat(*repeats))
         run_compare_torch(input_shape, model, backend=backend)

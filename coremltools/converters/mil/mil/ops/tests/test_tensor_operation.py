@@ -1217,7 +1217,7 @@ class TestFlatten2d:
 
         expected_outputs = [ref]
         expected_output_types = [
-            (*ref.shape, types.fp32),
+            tuple(ref.shape) + (types.fp32,),
         ]
 
         run_compare_builder(

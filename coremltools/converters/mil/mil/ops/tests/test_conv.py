@@ -12,6 +12,7 @@ from .testing_utils import run_compare_builder
 backends = testing_reqs.backends
 
 
+@pytest.mark.skip(reason="rdar://65198011 (Re-enable Conv3dTranspose and DynamicTile unit tests)")
 class TestConvTranspose:
 
     @pytest.mark.skipif(not testing_reqs._HAS_TORCH, reason="PyTorch not installed.")

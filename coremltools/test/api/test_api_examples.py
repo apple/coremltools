@@ -1097,7 +1097,7 @@ class TestOptionalInput:
             np.testing.assert_allclose(result[name], expected.detach().numpy())
 
 ###############################################################################
-# Note: all tests are examples provided to other teams for testing 
+# Note: all tests are examples provided to other teams for testing
 # Each test case is expected to be runnable and self-complete.
 ###############################################################################
 
@@ -1129,6 +1129,8 @@ class TestMILConverterExamples:
 
     @staticmethod
     @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
+    @pytest.mark.skipif(ct.utils._python_version() < (3, 0, 0),
+                        reason="PyTorch no longer supports Python 2.7")
     def test_convert_torch_traced_model(tmpdir):
         import torch
         from torch import nn
@@ -1149,7 +1151,7 @@ class TestMILConverterExamples:
 
         torch_model = Network()
         torch_model.eval()
-        example_input = torch.rand(1, 100) 
+        example_input = torch.rand(1, 100)
         traced_model = torch.jit.trace(torch_model, example_input)
         model = ct.convert(
             traced_model,
