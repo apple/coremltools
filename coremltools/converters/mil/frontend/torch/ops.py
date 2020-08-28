@@ -479,7 +479,7 @@ def flatten(context, node):
 
     x = inputs[0]
     dims = list(x.shape)
-    start = inputs[1].val
+    start_val = inputs[1].val
     end_val = inputs[2].val
 
     total = 1
@@ -487,6 +487,11 @@ def flatten(context, node):
         end = len(dims) + end_val
     else:
         end = end_val
+
+    if start_val < 0:
+        start = len(dims) + start_val
+    else:
+        start = start_val
 
     if start > len(dims) or end > len(dims) or start < 0 or end < 0:
         raise ValueError(
