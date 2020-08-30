@@ -1156,9 +1156,15 @@ class TestEinsum:
         else:
             raise NotImplementedError
 
-        model = ModuleWrapper(function=torch.einsum)
+        class EinSum(nn.Module):
+            def forward(self, *operands):
+                return torch.einsum(equation, *operands)
+
+        input_tensors = generate_input_data([shape_a, shape_b])
+        model = EinSum()
+
         run_compare_torch(
-            [shape_a, shape_b], model, backend=backend,
+            input_tensors, model, input_as_shape=False, backend=backend,
         )
 
 
