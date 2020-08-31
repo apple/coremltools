@@ -847,6 +847,17 @@ class TestReshape:
         run_compare_torch(input_shape, model, backend=backend)
 
 
+class TestFlatten:
+    @pytest.mark.parametrize(
+        "backend, start_dim",
+        itertools.product(backends, [2,-2],),
+    )
+    def test_reshape(self, backend, start_dim):
+        input_shape = (2, 3, 4, 5)
+        model = ModuleWrapper(function=torch.flatten, kwargs={"start_dim": start_dim})
+        run_compare_torch(input_shape, model, backend=backend)
+
+
 class TestGather:
     @pytest.mark.xfail(
         reason="Load constant not copied properly for integer valued constants. Enable after eng/PR-65551506 is merged",
