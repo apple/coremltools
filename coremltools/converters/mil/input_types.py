@@ -293,7 +293,7 @@ class Shape(object):
         shape = list(shape)
         for idx, s in enumerate(shape):
             if s is None or s == -1:
-                msg = 'Dimension cannot be None of -1. Use ' +\
+                msg = 'Dimension cannot be None or -1. Use ' +\
                         'ct.RangeDim for runtime determined dimension. ' +\
                         'Dim {}: {} ' +\
                         'See https://coremltools.readme.io/docs/flexible-inputs'

@@ -479,14 +479,13 @@ def flatten(context, node):
 
     x = inputs[0]
     dims = list(x.shape)
-    start = inputs[1].val
+    start_val = inputs[1].val
     end_val = inputs[2].val
 
     total = 1
-    if end_val < 0:
-        end = len(dims) + end_val
-    else:
-        end = end_val
+
+    start = len(dims) + start_val if start_val < 0 else start_val
+    end = len(dims) + end_val if end_val < 0 else end_val
 
     if start > len(dims) or end > len(dims) or start < 0 or end < 0:
         raise ValueError(
@@ -998,6 +997,26 @@ def _int(context, node):
     _cast(context, node, int, "int32")
 
 
+def _get_axes_from_normalized_shape(original_shape, normalized_shape):
+    """Convert the `normalized_shape` argument of torch.nn.LayerNorm to the
+    backend argument `axes` in order to reuse the same backend signature
+    """
+    if not isinstance(normalized_shape, list):
+        normalized_shape = list(normalized_shape)
+
+    nb_reduced_axes = len(normalized_shape)
+    nb_total_axes = len(original_shape)
+    shape_to_reduce = original_shape[-nb_reduced_axes:]
+
+    if not list(shape_to_reduce) == normalized_shape:
+        raise ValueError(
+            "normalized_shape ({}) is incompatible with input tensor shape ({}) for layer_norm op. "
+            "normalized_shape must match the last len(normalized_shape) entries in the input tensor shape".format(
+                normalized_shape, original_shape)
+        )
+    return list(range(nb_total_axes-nb_reduced_axes,nb_total_axes))
+
+
 @register_torch_op
 def layer_norm(context, node):
     inputs = _get_inputs(context, node, expected=6)
@@ -1007,9 +1026,11 @@ def layer_norm(context, node):
     bias = inputs[3]
     eps = inputs[4]
     # cudnn_enable = inputs[5] unused
+    axes = _get_axes_from_normalized_shape(_input.shape, normalized_shape.val)
+
     layer_norm = mb.layer_norm(
         x=_input,
-        axes=normalized_shape,
+        axes=axes,
         gamma=weight,
         beta=bias,
         epsilon=eps,
@@ -2076,6 +2097,14 @@ def _abs(context, node):
     inputs = _get_inputs(context, node, expected=1)
     context.add(mb.abs(x=inputs[0], name=node.name))
 
+
+@register_torch_op
+def repeat(context, node):
+    x = context[node.inputs[0]]
+    reps = context[node.inputs[1]]
+    context.add(mb.tile(x=x, reps=reps, name=node.name))
+
+
 @register_torch_op
 def acos(context, node):
     inputs = _get_inputs(context, node, expected=1)
@@ -2296,4 +2325,4 @@ def topk(context, node):
     indices_name = node.outputs[1]
     context.add(res[0], torch_name=values_name)
     context.add(res[1], torch_name=indices_name)
-    
+ 
