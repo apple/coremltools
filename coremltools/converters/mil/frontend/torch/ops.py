@@ -822,6 +822,55 @@ def adaptive_avg_pool2d(context, node):
 
     context.add(avg_pool)
 
+@register_torch_op
+def adaptive_max_pool2d(context, node):
+    inputs = _get_inputs(context, node, expected=2)
+
+    _input = inputs[0]
+    output_size = inputs[1].val
+    assert isinstance(output_size, _np.ndarray)
+    output_size = tuple(output_size)
+
+    if output_size == (1, 1):
+        # Represent (1,1) output size via @reduce_max
+        # Assume channel first ordering, reduce the last two (HW) dims.
+        max_pool = mb.reduce_max(
+            x=_input, axes=[-2,-1], keep_dims=True, name=node.name
+        )
+    elif _input.shape is not None:
+        # TODO: The calculations to convert adaptive_pool to standard pool,
+        # given a known input size, come from
+        # https://stackoverflow.com/questions/53841509/how-does-adaptive-pooling-in-pytorch-work
+        # However, as indicated in that SO, this isn't quite how PyTorch
+        # computes adaptive pooling, leading to inaccuracies in model outputs.
+        # rdar://60900834
+        strides = [ind // outd for ind, outd in zip(_input.shape[-2:], output_size)]
+        pad_type = "valid"
+        # Need to explicity state L-R, T-B pad
+        pad = [0, 0, 0, 0]
+        dilation = [1, 1]
+        kernel_sizes = [
+            ind - s * (outd - 1)
+            for ind, outd, s in zip(_input.shape[-2:], output_size, strides)
+        ]
+        max_pool = mb.max_pool(
+            x=_input,
+            kernel_sizes=kernel_sizes,
+            strides=strides,
+            pad_type=pad_type,
+            pad=pad,
+            name=node.name,
+        )
+    else:
+        raise ValueError(
+            "adaptive_max_pool2d only supported when input tensor size is known or output size == (1,1). Recived: input size == {}, output size == {}".format(
+                _input.shape_str(), output_size,
+            )
+        )
+
+    context.add(max_pool)
+
+
 
 @register_torch_op
 def batch_norm(context, node):
