@@ -15,10 +15,12 @@ The list of operators supported by MIL.
   .. autoclass:: prelu
   .. autoclass:: relu
   .. autoclass:: relu6
+  .. autoclass:: scaled_tanh
   .. autoclass:: sigmoid
   .. autoclass:: sigmoid_hard
   .. autoclass:: softplus
   .. autoclass:: softplus_parametric
+  .. autoclass:: softmax
   .. autoclass:: softsign
   .. autoclass:: thresholded_relu
 
@@ -28,7 +30,6 @@ The list of operators supported by MIL.
   .. autoclass:: const
   .. autoclass:: select
   .. autoclass:: while_loop
-  .. autoclass:: identity
   .. autoclass:: make_list
   .. autoclass:: list_length
   .. autoclass:: list_write
@@ -55,6 +56,7 @@ The list of operators supported by MIL.
   .. autoclass:: logical_xor
   .. autoclass:: maximum
   .. autoclass:: minimum
+  .. autoclass:: mod
   .. autoclass:: mul
   .. autoclass:: not_equal
   .. autoclass:: real_div
@@ -109,6 +111,7 @@ The list of operators supported by MIL.
   .. autoclass:: batch_norm
   .. autoclass:: instance_norm
   .. autoclass:: l2_norm
+  .. autoclass:: layer_norm
   .. autoclass:: local_response_norm
 
 .. automodule:: coremltools.converters.mil.mil.ops.defs.pool
@@ -135,8 +138,10 @@ The list of operators supported by MIL.
   .. autoclass:: reduce_arg
   .. autoclass:: reduce_argmax
   .. autoclass:: reduce_argmin
+  .. autoclass:: reduce_l1_norm
   .. autoclass:: reduce_l2_norm
   .. autoclass:: reduce_log_sum
+  .. autoclass:: reduce_log_sum_exp
   .. autoclass:: reduce_max
   .. autoclass:: reduce_mean
   .. autoclass:: reduce_min
@@ -153,10 +158,6 @@ The list of operators supported by MIL.
   .. autoclass:: gather_nd
   .. autoclass:: scatter_nd
 
-.. automodule:: coremltools.converters.mil.mil.ops.defs.slicend
-
-  .. autoclass:: slice_by_index
-  
 .. automodule:: coremltools.converters.mil.mil.ops.defs.tensor_operation
 
   .. autoclass:: band_part
@@ -170,12 +171,13 @@ The list of operators supported by MIL.
   .. autoclass:: tile
   .. autoclass:: argsort
   .. autoclass:: topk
-  .. autoclass:: flatten
+  .. autoclass:: flatten2d
   .. autoclass:: shape
   .. autoclass:: concat
   .. autoclass:: split
   .. autoclass:: stack
-  .. autoclass:: addn
+  .. autoclass:: identity
+  .. autoclass:: isfinite
 
 .. automodule:: coremltools.converters.mil.mil.ops.defs.tensor_transformation
 
@@ -184,6 +186,7 @@ The list of operators supported by MIL.
   .. autoclass:: reshape
   .. autoclass:: reverse
   .. autoclass:: reverse_sequence
+  .. autoclass:: slice_by_index
   .. autoclass:: slice_by_size
   .. autoclass:: space_to_depth
   .. autoclass:: squeeze

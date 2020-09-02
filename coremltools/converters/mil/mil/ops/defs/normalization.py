@@ -197,8 +197,7 @@ class layer_norm(Operation):
 @register_op(doc_str="")
 class local_response_norm(Operation):
     """
-    Applies local response normalization to the n-dimensional input tensor.\n
-    ``x_i \leftarrow \dfrac{x_i}{\left ( k + \dfrac{\alpha}{C} \sum_j x_j^2 \right )^\beta}``.
+    Applies local response normalization to the n-dimensional input tensor.
 
     Parameters
     ----------
