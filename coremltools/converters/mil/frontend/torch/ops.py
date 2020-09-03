@@ -1823,7 +1823,16 @@ def split(context, node):
 def to(context, node):
     # @non_blocking and @copy are unused
     inputs = _get_inputs(context, node)
-    if len(inputs) == 6:
+    if len(inputs) == 8:
+        _input = inputs[0]
+        dtype = inputs[1].val
+        # layout = input[2]
+        device = inputs[3]
+        # pin_memory = inputs[4]
+        # non_blocking = inputs[5]
+        # copy = inputs[6]
+        # memory_format = inputs[7]
+    elif len(inputs) == 6:
         _input = inputs[0]
         device = inputs[1]
         dtype = inputs[2].val
@@ -2374,4 +2383,4 @@ def topk(context, node):
     indices_name = node.outputs[1]
     context.add(res[0], torch_name=values_name)
     context.add(res[1], torch_name=indices_name)
- 
+
