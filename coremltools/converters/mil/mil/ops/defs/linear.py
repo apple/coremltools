@@ -73,14 +73,14 @@ class matmul(Operation):
     
     * ``x.shape == (10, 4, 3)``
     * ``y.shape == (5, 10, 3, 2)``
-    * ``Matmul(x, y).shape == (5, 10, 4, 2)``
+    * ``matmul(x, y).shape == (5, 10, 4, 2)``
     
     Conventional matrix multiplication is a special case where both ``x, y`` are
     exactly 2-D. For example:
     
     * ``x.shape == (4, 3)``
     * ``y.shape == (3, 2)``
-    * ``Matmul(x, y).shape == (4, 2)``
+    * ``matmul(x, y).shape == (4, 2)``
     
     If ``x`` is 1-D, and ``y`` is N-D where ``N >= 2``, ``x`` is first promoted to
     matrix ``xm`` by prepending a ``1`` to its dimension, and the resulting ``xm`` is
@@ -90,9 +90,9 @@ class matmul(Operation):
     * ``x.shape == (4)``
     * ``y.shape == (10, 4, 3)``
     * ``xm.shape == (1, 4)``
-    * ``Matmul(xm, y).shape == (10, 1, 3)``
-    * Removing the inserted dimension results in ``Matmul(x, y).shape == (10, 3)``.
-    * Note: ``xm`` and ``Matmul(xm, y)`` are for illustration only.
+    * ``matmul(xm, y).shape == (10, 1, 3)``
+    * Removing the inserted dimension results in ``matmul(x, y).shape == (10, 3)``.
+    * Note: ``xm`` and ``matmul(xm, y)`` are for illustration only.
     
     If ``x`` is N-D where ``N >= 2``, and ``y`` is 1-D, ``y`` is first promoted to
     matrix ``ym`` by appending a ``1`` to its dimension, and the resulting ``ym`` is
@@ -102,9 +102,9 @@ class matmul(Operation):
     * ``x.shape == (10, 3, 4)``
     * ``y.shape == (4,)``
     * ``ym.shape == (4, 1)``
-    * ``Matmul(x, ym).shape == (10, 3, 1)``
-    * Removing the inserted dimension results in ``Matmul(x, y).shape == (10, 3)``.
-    * Note: ``xm`` and ``Matmul(xm, y)`` are for illustration only.
+    * ``matmul(x, ym).shape == (10, 3, 1)``
+    * Removing the inserted dimension results in ``matmul(x, y).shape == (10, 3)``.
+    * Note: ``xm`` and ``matmul(xm, y)`` are for illustration only.
     
     Parameters
     ----------
