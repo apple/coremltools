@@ -269,6 +269,11 @@ class RangeDim(object):
                 )
             self.default = default
 
+    def __repr__(self):
+        return f'RangeDim({self.lower_bound}, {self.upper_bound}, {self.default}, "{self.symbol}")'
+
+    __str__ = __repr__
+
 
 class Shape(object):
     def __init__(self, shape, default=None):
