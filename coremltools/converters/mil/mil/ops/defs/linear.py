@@ -119,21 +119,21 @@ class matmul(Operation):
     Parameters
     ----------
     ``x: tensor<[*,K1], T>`` (required): ``x`` must be 1-D or higher.
-
+    
     ``y: tensor<[*,K2], T>`` (required): ``y`` must be 1-D or higher.
-
+    
     ``transpose_x: const bool`` (optional, defaults to ``False``): Use ``True`` to
     transpose the last two dimensions of ``x`` before multiplication. It has no effect
     when ``x`` is 1-D.
-        
+    
     ``transpose_y: const bool`` (optional, defaults to ``False``): Use ```True`` to
     transpose the last two dimensions of ``y`` before multiplication. It has no effect
     when ``y`` is 1-D.
-
+    
     Returns
     -------
     ``tensor<*, T>``: Scalar or tensor output.
-
+    
     Attributes
     ----------
     ``T: fp32``
