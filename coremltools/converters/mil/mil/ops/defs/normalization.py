@@ -9,8 +9,8 @@ from ._op_reqs import *
 class batch_norm(Operation):
     """
     Normalize input tensor ``x`` by ``mean`` and ``variance``, and optionally apply a
-    scale ``gamma`` and offset ``beta``. ``mean``, ``variance``, ``gamma``, and ``beta``
-    must be 1-D tensors whose length is equal to the second axis ("depth" or "channel"
+    scale ``gamma`` and an offset ``beta``. ``mean``, ``variance``, ``gamma``, and ``beta``
+    must be 1-D tensors whose lengths are equal to the second axis ("depth" or "channel"
     dimension) of ``x``.
 
     Parameters
@@ -23,10 +23,10 @@ class batch_norm(Operation):
     variance: const tensor<[C], T> (Required)
     gamma: const tensor<[C], T> (Optional)
         * Optional scale applied to normalized tensor.
-        * Default to all ``1``s.
+        * Default to all ones.
     beta: const tensor<[C], T> (Optional)
         * Optional offset applied to normalized tensor.
-        * Default to all ``0``s.
+        * Default to all zeros.
     epsilon: const f32 (Optional)
         * Default to ``1e-5``.
 
@@ -68,10 +68,10 @@ class instance_norm(Operation):
         * ``n`` is the batch dimension.
     gamma: const tensor<[C], T> (Optional)
         * Optional scale applied to normalized tensor.
-        * Default to all ``1``s.
+        * Default to all ones.
     beta: const tensor<[C], T> (Optional)
         * Optional offset applied to normalized tensor.
-        * Default to all ``0``s.
+        * Default to all zeros.
     epsilon: const f32 (Optional)
         * Default to ``1e-5``.
 
@@ -149,10 +149,10 @@ class layer_norm(Operation):
         * Defaults to ``None`` (all dimensions).
     gamma: const tensor<[K], T> (Optional)
         * Same shape as normalized_shape.
-        * Defaults to all ``1``s.
+        * Defaults to all ones.
     beta: const tensor<[K], T> (Optional)
         * Same shape as normalized_shape.
-        * Defaults to all ``0``s.
+        * Defaults to all zeros.
     epsilon: const fp32 (Optional)
         * Small constant to avoid division by ``0``.
         * Defaults to ``1e-5``.
