@@ -10,8 +10,9 @@ from ._utils import broadcast_shapes
 @register_op(doc_str="")
 class linear(Operation):
     """
-    Performs  ``x * weight.T + bias`` where ``weight`` and ``bias`` are const at compile time.
-
+    Perform  ``x * weight.T + bias`` where ``weight`` and ``bias`` are constant at
+    compile time.
+    
     Parameters
     ----------
     x: tensor<[*D,D_in], T> (Required)
@@ -20,12 +21,12 @@ class linear(Operation):
     weight: const tensor<[D_out,D_in], T> (Required)
     bias: const tensor<[D_out],T> (Optional)
         * Default to ``0``.
-
+    
     Returns
     -------
     tensor<[*D,D_out], T>
-        * same rank as the input ``x``.
-
+        * Same rank as the input ``x``.
+    
     Attributes
     ----------
     T: fp32
@@ -60,45 +61,71 @@ class linear(Operation):
 @register_op(doc_str="")
 class matmul(Operation):
     """
-    N-D batch matrix multiplication with Numpy like broadcasting:
-
-    * If both ``x, y`` are 1-D, return scalar from dot product.
-    * If both ``x, y`` are 2D or higher, perform broadcast on the batch dims
-      (all dims except the last ``2``). Ex: ``x.shape == (10, 4, 3)``, ``y.shape == (5, 10, 3, 2)``,
-      ``Matmul(x, y).shape == (5, 10, 4, 2)`` Conventional matrix multiplication is
-      a special case where both ``x, y`` are exactly 2D. Ex: ``x.shape == (4, 3), y.shape == (3, 2)``,
-      ``Matmul(x, y).shape == (4, 2)``.
-    * If ``x`` is 1-D, and ``y`` is N-D where ``N >= 2``, ``x`` is first promoted to matrix ``xm``
-      by prepending a ``1`` to its dimension, and the resulting ``xm`` is broadcast to ``y`` following
-      rule (2) above. Remove the inserted dim afterwards. Ex: ``x.shape == (4), y.shape == (10, 4, 3)``,
-      ``xm.shape == (1, 4)``. ``Matmul(xm, y).shape == (10, 1, 3)`` removing inserted dim resulting in
-      ``Matmul(x, y).shape == (10, 3)`` (``xm, Matmul(xm, y)`` are immaterial and for illustration only).
-    * If ``x`` is N-D where ``N >= 2``, and ``y`` is 1-D, ``y`` is first promoted to matrix ``ym`` by
-      appending a ``1`` to its dimension, and the resulting ``ym`` is broadcast to ``x`` following rule
-      (2) above. Remove the inserted dim afterwards. Ex: ``x.shape == (10, 3, 4), y.shape == (4,)``,
-      ``ym.shape == (4, 1)``. ``Matmul(x, ym).shape == (10, 3, 1)`` removing inserted dim resulting in
-      ``Matmul(x, y).shape == (10, 3)`` (``ym, Matmul(x, ym)`` are immaterial and for illustration only).
-
+    Perform N-D batch matrix multiplication with NumPy-style broadcasting
+    based on the following rules:
+    
+    Rule 1. If both ``x, y`` are 1-D, return the scalar from the dot product.
+    
+    Rule 2. If both ``x, y`` are 2-D or higher, perform a broadcast on the batch dimensions
+    (all dimensions except the last ``2``).
+    
+    For example:
+    
+    * ``x.shape == (10, 4, 3)``
+    * ``y.shape == (5, 10, 3, 2)``
+    * ``matmul(x, y).shape == (5, 10, 4, 2)``
+    
+    Conventional matrix multiplication is a special case where both ``x, y`` are
+    exactly 2-D. For example:
+    
+    * ``x.shape == (4, 3)``
+    * ``y.shape == (3, 2)``
+    * ``matmul(x, y).shape == (4, 2)``
+    
+    If ``x`` is 1-D, and ``y`` is N-D where ``N >= 2``, ``x`` is first promoted to
+    matrix ``xm`` by prepending a ``1`` to its dimension, and the resulting ``xm`` is
+    broadcast to ``y`` following Rule 2 above. After this, remove the inserted dimension.
+    For example:
+    
+    * ``x.shape == (4)``
+    * ``y.shape == (10, 4, 3)``
+    * ``xm.shape == (1, 4)``
+    * ``matmul(xm, y).shape == (10, 1, 3)``
+    * Removing the inserted dimension results in ``matmul(x, y).shape == (10, 3)``.
+    * Note: ``xm`` and ``matmul(xm, y)`` are for illustration only.
+    
+    If ``x`` is N-D where ``N >= 2``, and ``y`` is 1-D, ``y`` is first promoted to
+    matrix ``ym`` by appending a ``1`` to its dimension, and the resulting ``ym`` is
+    broadcast to ``x`` following Rule 2 above. After this, remove the inserted dimension.
+    For example:
+    
+    * ``x.shape == (10, 3, 4)``
+    * ``y.shape == (4,)``
+    * ``ym.shape == (4, 1)``
+    * ``matmul(x, ym).shape == (10, 3, 1)``
+    * Removing the inserted dimension results in ``matmul(x, y).shape == (10, 3)``.
+    * Note: ``xm`` and ``matmul(xm, y)`` are for illustration only.
+    
     Parameters
     ----------
     x: tensor<[*,K1], T> (Required)
-        * ``x`` must be 1D or higher.
+        * ``x`` must be 1-D or higher.
     y: tensor<[*,K2], T> (Required)
-        * ``y`` must be 1D or higher.
+        * ``y`` must be 1-D or higher.
     transpose_x: const bool (Optional)
-        * default to ``False``.
-        * ``True`` to transpose the last two dimensions of ``x`` before multiplication. It has no effect when
-          ``x`` is 1D.
+        * Default to ``False``.
+        * Use ``True`` to transpose the last two dimensions of ``x`` before multiplication.
+          It has no effect when ``x`` is 1-D.
     transpose_y: const bool (Optional)
-        * default to ``False``.
-        * ``True`` to transpose the last two dimensions of ``y`` before multiplication. It has no effect when
-          ``y`` is 1D.
-
+        * Default to ``False``.
+        * Use ``True`` to transpose the last two dimensions of ``y`` before multiplication.
+          It has no effect when ``y`` is 1-D.
+    
     Returns
     -------
     tensor<*, T>
         * Scalar or tensor output.
-
+    
     Attributes
     ----------
     T: fp32

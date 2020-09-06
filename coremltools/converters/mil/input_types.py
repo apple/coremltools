@@ -269,6 +269,13 @@ class RangeDim(object):
                 )
             self.default = default
 
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
+        return 'RangeDim(lower_bound={}, upper_bound={}, default={}, symbol="{}")'.format(
+            self.lower_bound, self.upper_bound, self.default, self.symbol)
+
 
 class Shape(object):
     def __init__(self, shape, default=None):
@@ -293,7 +300,7 @@ class Shape(object):
         shape = list(shape)
         for idx, s in enumerate(shape):
             if s is None or s == -1:
-                msg = 'Dimension cannot be None of -1. Use ' +\
+                msg = 'Dimension cannot be None or -1. Use ' +\
                         'ct.RangeDim for runtime determined dimension. ' +\
                         'Dim {}: {} ' +\
                         'See https://coremltools.readme.io/docs/flexible-inputs'

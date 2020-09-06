@@ -479,14 +479,13 @@ def flatten(context, node):
 
     x = inputs[0]
     dims = list(x.shape)
-    start = inputs[1].val
+    start_val = inputs[1].val
     end_val = inputs[2].val
 
     total = 1
-    if end_val < 0:
-        end = len(dims) + end_val
-    else:
-        end = end_val
+
+    start = len(dims) + start_val if start_val < 0 else start_val
+    end = len(dims) + end_val if end_val < 0 else end_val
 
     if start > len(dims) or end > len(dims) or start < 0 or end < 0:
         raise ValueError(
@@ -823,6 +822,55 @@ def adaptive_avg_pool2d(context, node):
 
     context.add(avg_pool)
 
+@register_torch_op
+def adaptive_max_pool2d(context, node):
+    inputs = _get_inputs(context, node, expected=2)
+
+    _input = inputs[0]
+    output_size = inputs[1].val
+    assert isinstance(output_size, _np.ndarray)
+    output_size = tuple(output_size)
+
+    if output_size == (1, 1):
+        # Represent (1,1) output size via @reduce_max
+        # Assume channel first ordering, reduce the last two (HW) dims.
+        max_pool = mb.reduce_max(
+            x=_input, axes=[-2,-1], keep_dims=True, name=node.name
+        )
+    elif _input.shape is not None:
+        # TODO: The calculations to convert adaptive_pool to standard pool,
+        # given a known input size, come from
+        # https://stackoverflow.com/questions/53841509/how-does-adaptive-pooling-in-pytorch-work
+        # However, as indicated in that SO, this isn't quite how PyTorch
+        # computes adaptive pooling, leading to inaccuracies in model outputs.
+        # rdar://60900834
+        strides = [ind // outd for ind, outd in zip(_input.shape[-2:], output_size)]
+        pad_type = "valid"
+        # Need to explicity state L-R, T-B pad
+        pad = [0, 0, 0, 0]
+        dilation = [1, 1]
+        kernel_sizes = [
+            ind - s * (outd - 1)
+            for ind, outd, s in zip(_input.shape[-2:], output_size, strides)
+        ]
+        max_pool = mb.max_pool(
+            x=_input,
+            kernel_sizes=kernel_sizes,
+            strides=strides,
+            pad_type=pad_type,
+            pad=pad,
+            name=node.name,
+        )
+    else:
+        raise ValueError(
+            "adaptive_max_pool2d only supported when input tensor size is known or output size == (1,1). Recived: input size == {}, output size == {}".format(
+                _input.shape_str(), output_size,
+            )
+        )
+
+    context.add(max_pool)
+
+
 
 @register_torch_op
 def batch_norm(context, node):
@@ -998,6 +1046,26 @@ def _int(context, node):
     _cast(context, node, int, "int32")
 
 
+def _get_axes_from_normalized_shape(original_shape, normalized_shape):
+    """Convert the `normalized_shape` argument of torch.nn.LayerNorm to the
+    backend argument `axes` in order to reuse the same backend signature
+    """
+    if not isinstance(normalized_shape, list):
+        normalized_shape = list(normalized_shape)
+
+    nb_reduced_axes = len(normalized_shape)
+    nb_total_axes = len(original_shape)
+    shape_to_reduce = original_shape[-nb_reduced_axes:]
+
+    if not list(shape_to_reduce) == normalized_shape:
+        raise ValueError(
+            "normalized_shape ({}) is incompatible with input tensor shape ({}) for layer_norm op. "
+            "normalized_shape must match the last len(normalized_shape) entries in the input tensor shape".format(
+                normalized_shape, original_shape)
+        )
+    return list(range(nb_total_axes-nb_reduced_axes,nb_total_axes))
+
+
 @register_torch_op
 def layer_norm(context, node):
     inputs = _get_inputs(context, node, expected=6)
@@ -1007,9 +1075,11 @@ def layer_norm(context, node):
     bias = inputs[3]
     eps = inputs[4]
     # cudnn_enable = inputs[5] unused
+    axes = _get_axes_from_normalized_shape(_input.shape, normalized_shape.val)
+
     layer_norm = mb.layer_norm(
         x=_input,
-        axes=normalized_shape,
+        axes=axes,
         gamma=weight,
         beta=bias,
         epsilon=eps,
@@ -2076,6 +2146,14 @@ def _abs(context, node):
     inputs = _get_inputs(context, node, expected=1)
     context.add(mb.abs(x=inputs[0], name=node.name))
 
+
+@register_torch_op
+def repeat(context, node):
+    x = context[node.inputs[0]]
+    reps = context[node.inputs[1]]
+    context.add(mb.tile(x=x, reps=reps, name=node.name))
+
+
 @register_torch_op
 def acos(context, node):
     inputs = _get_inputs(context, node, expected=1)
@@ -2229,3 +2307,71 @@ def is_floating_point(context, node):
     inputs = _get_inputs(context, node, expected=1)
     is_float = types.is_float(inputs[0].dtype)
     context.add(mb.const(val=is_float, name=node.name))
+
+@register_torch_op(torch_alias=['sum'])
+def _sum(context, node):
+    inputs = _get_inputs(context, node)
+    kwargs = {"x": inputs[0], "name": node.name}
+
+    # function declarations to handle: torch.sum(input, dtype=None) and torch.sum(input, dim, keepdim=False, dtype=None)
+    # the 2nd arguments dtype and dim allow int values causing ambiguity. To ensure reasonable outputs
+    # dtype is restricted to None and dim must be a tuple in the pytorch definition
+    if len(inputs) >= 2:
+        if inputs[1] is not None:
+            if isinstance(inputs[1].val, _np.ndarray):
+                kwargs["axes"] = inputs[1]
+
+                # optional: @keep_dims
+                if len(inputs) >= 3:
+                    keep_dims = inputs[2]
+                    kwargs["keep_dims"] = keep_dims
+
+                if len(inputs) >= 4:
+                    if inputs[3] is not None:
+                        raise Exception("dtype input to sum should be None but the input is {}".format(inputs[3].val))
+            else:
+                raise Exception("Unsupported input argument to sum. Allowed second input arguments are dtype=None or "
+                                "dim=<a tuple of integers>")
+
+    res = mb.reduce_sum(**kwargs)
+    context.add(res)
+
+@register_torch_op
+def neg(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+    context.add(mb.mul(x=inputs[0], y=-1, name=node.name))
+
+@register_torch_op
+def topk(context, node):
+    inputs = _get_inputs(context, node)
+    kwargs = {"name": node.name, "x": inputs[0], "k": inputs[1]}
+
+    if len(inputs) > 6:
+        raise Exception("Number of inputs to topk exceeds 6")
+    # optional: @axis
+    if len(inputs) > 2:
+        if inputs[2] is not None:
+            kwargs["axis"] = inputs[2].val
+
+    # optional: @ascending
+    if len(inputs) > 3:
+        largest = inputs[3].val
+        kwargs["ascending"] = not largest
+
+    # last inputs to topk are optional - sorted and out.
+    if len(inputs) > 4:
+        if inputs[4].val is False:
+            raise Exception("Unsupported value for argument 'sorted' in topk. Supported values: True, but input "
+                            "is {}".format(inputs[4].val))
+    if len(inputs) > 5:
+        if inputs[5] is not None:
+            raise Exception("Unsupported value for argument 'out' in topk. Supported values: None, but input "
+                            "is {}".format(inputs[5].val))
+
+    res = mb.topk(**kwargs)
+
+    values_name = node.outputs[0]
+    indices_name = node.outputs[1]
+    context.add(res[0], torch_name=values_name)
+    context.add(res[1], torch_name=indices_name)
+ 

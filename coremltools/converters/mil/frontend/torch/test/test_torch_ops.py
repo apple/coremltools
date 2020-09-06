@@ -440,6 +440,33 @@ class TestAvgPool:
         )
         run_compare_torch(input_shape, model, backend=backend)
 
+class TestAdaptiveMaxPool:
+    @pytest.mark.parametrize(
+        "output_size, magnification, delta, depth, backend",
+        itertools.product(
+            [(1,1), (3,2),(3,6),(32,32)],
+            [1,2,4,5,6,7],
+            [0,11],
+            [1,2,3],
+            backends,
+        ),
+    )
+    def test_adaptive_max_pool2d(
+            self, output_size, magnification, delta, depth, backend
+    ):
+        # input_size = output_size * magnification + delta
+        input_size = (delta + magnification * output_size[0], delta + magnification * output_size[1])
+        # since coremltools reproduces PyTorch's kernel sizes and
+        # offsets for adaptive pooling layers only when input_size is
+        # a multiple of output_size, we expect failures otherwise
+        if not (input_size[0] % output_size[0]  == 0 and input_size[1] % output_size[1] == 0):
+            pytest.xfail("Test should fail because input_size is not a multiple of output_size")
+        n = 1
+        in_shape = (n,depth) + input_size
+        model = nn.AdaptiveMaxPool2d(
+            output_size
+        )
+        run_compare_torch(in_shape, model, backend=backend)
 
 class TestMaxPool:
     # rdar://66066001 (PyTorch converter: enable ceil_mode=True tests for pooling ops)
@@ -820,6 +847,17 @@ class TestReshape:
         run_compare_torch(input_shape, model, backend=backend)
 
 
+class TestFlatten:
+    @pytest.mark.parametrize(
+        "backend, start_dim",
+        itertools.product(backends, [2,-2],),
+    )
+    def test_reshape(self, backend, start_dim):
+        input_shape = (2, 3, 4, 5)
+        model = ModuleWrapper(function=torch.flatten, kwargs={"start_dim": start_dim})
+        run_compare_torch(input_shape, model, backend=backend)
+
+
 class TestGather:
     @pytest.mark.xfail(
         reason="Load constant not copied properly for integer valued constants. Enable after eng/PR-65551506 is merged",
@@ -1041,6 +1079,8 @@ class TestElementWiseUnary:
         ),
     )
     def test_elementwise_no_params(self, backend, rank, op_string):
+        if not contains_op(torch, op_string):
+            return
         input_shape = tuple(np.random.randint(low=1, high=10, size=rank))
         op_func = getattr(torch, op_string)
         model = ModuleWrapper(function=op_func)
@@ -1157,4 +1197,18 @@ class TestTranspose:
         input_shape = tuple(np.random.randint(low=1, high=4, size=rank))
         model = ModuleWrapper(function=torch.transpose,
                               kwargs={"dim0": dims[0], "dim1": dims[1]})
+        run_compare_torch(input_shape, model, backend=backend)
+
+
+class TestRepeat:
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend, rank",
+        itertools.product([True, False], backends, list(range(1, 6))),
+    )
+    def test_repeat(self, use_cpu_only, backend, rank):
+        input_shape = np.random.randint(low=2, high=6, size=rank)
+        repeats = np.random.randint(low=2, high=4, size=rank)
+        input_shape = tuple(input_shape)
+
+        model = ModuleWrapper(function=lambda x: x.repeat(*repeats))
         run_compare_torch(input_shape, model, backend=backend)
