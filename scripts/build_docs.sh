@@ -15,6 +15,7 @@ MAIN_VERSION=0
 AUTH_TOKEN=""
 CHECK_ENV=1
 WHEEL_PATH=""
+VERSION=""
 
 unknown_option() {
   echo "Unknown option $1. Exiting."
@@ -28,6 +29,7 @@ print_help() {
   echo
   echo "  --wheel-path=*          Specify which wheel to use to make docs."
   echo "  --python=*              Python to use for configuration."
+  echo "  --version=*             ReadMe ersion to upload to. Default is the installed coremltools version."
   echo "  --upload                Upload these docs with the current coremltools version."
   echo "  --release               Release the uploaded docs with the current coremltools version."
   echo "  --from-source-version=* If a version must be created, use this as the base to copy from.\
@@ -44,6 +46,7 @@ print_help() {
 while [ $# -gt 0 ]
   do case $1 in
     --python=*)              PYTHON=${1##--python=} ;;
+    --version=*)             VERSION=${1##--version=} ;;
     --wheel-path=*)          WHEEL_PATH=${1##--wheel-path=} ;;
     --from-source-version=*) SOURCE_VERSION=${1##--from-source-version=} ;;
     --auth-token=*)          AUTH_TOKEN=${1##--auth-token=} ;;
@@ -51,7 +54,7 @@ while [ $# -gt 0 ]
     --release)               RELEASE_VERSION=1 ;;
     --no-check-env)          CHECK_ENV=0 ;;
     --set-main-version)      MAIN_VERSION=1 ;;
-    --help)              print_help ;;
+    --help)                  print_help ;;
     *) unknown_option $1 ;;
   esac
   shift
@@ -93,6 +96,9 @@ if [[ $UPLOAD == 1 ]]; then
   # Set up base API call
   DOC_COMMAND=(python docs/upload_docs.py --auth_token $AUTH_TOKEN)
 
+  if [[ $VERSION != "" ]]; then
+    DOC_COMMAND+=(--version $VERSION)
+  fi
   if [[ $SOURCE_VERSION != "" ]]; then
     DOC_COMMAND+=(--from_source_version $SOURCE_VERSION)
   fi
