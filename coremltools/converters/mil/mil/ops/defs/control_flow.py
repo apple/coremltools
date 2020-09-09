@@ -100,11 +100,15 @@ class cond(Operation):
 @register_op(doc_str="")
 class const(Operation):
     """
-    Return constant values represented as ``ImmediateValue`` or ``FileValue``
-    in the NNv2 proto.
+    Return constant values.
     
     Parameters
     ----------
+    mode: immediate_value, file_value (Optional)
+        * Determines how the constant value is stored in the internal MIL format.
+        * For  large constants such as convolution weights, use ``file_value``.
+        * For smaller-size constants such as values of a stride, use ``immediate_value``.
+
     val: const<*,T> (Required)
 
     Returns
@@ -177,7 +181,10 @@ class select(Operation):
     """
     Return the elements selected from either ``a`` or ``b``, depending on the ``cond``.
     
-    The shape of ``cond``, ``a``, and ``b`` must be broadcastable. You must provide ``a, b`` together, or provide neither. If you provide neither, the operation returns the indices of ``cond`` that are ``True``.
+    The shape of ``cond``, ``a``, and ``b`` must be broadcastable.
+    You must provide ``a, b`` together, or provide neither.
+    If you provide neither, the operation returns the indices
+    of ``cond`` that are ``True``.
 
     Parameters
     ----------
