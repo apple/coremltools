@@ -12,7 +12,8 @@ from .elementwise_unary import elementwise_unary
 @register_op(doc_str="")
 class clamped_relu(Operation):
     """
-    Returns elementwise ``min(beta, x)`` if ``x >= 0``, ``min(beta, alpha * x)`` otherwise.
+    If ``x >= 0`` return elementwise ``min(beta, x)``, otherwise return
+    ``min(beta, alpha * x)``.
 
     Parameters
     ----------
@@ -23,7 +24,7 @@ class clamped_relu(Operation):
     Returns
     -------
     tensor<*?, T>
-        * a tensor of the same type and shape as ``x``.
+        * A tensor of the same type and shape as ``x``.
 
     Attributes
     ----------
@@ -52,18 +53,18 @@ class clamped_relu(Operation):
 @register_op(doc_str="")
 class elu(Operation):
     """
-    Returns elementwise ``x`` if ``x > 0``,  ``alpha * e^(x - 1)`` otherwise.
+    If ``x > 0`` return elementwise ``x``, otherwise return ``alpha * e^(x - 1)``.
 
     Parameters
     ----------
     x: tensor<*?, T> (Required)
     alpha: const fp32 (Optional)
-        * Default to ``1``
+        * Default is ``1``.
 
     Returns
     -------
     tensor<*?, T>
-        * a tensor of the same shape and type as ``x``.
+        * A tensor of the same shape and type as ``x``.
 
     Attributes
     ----------
@@ -90,22 +91,38 @@ class elu(Operation):
 @register_op(doc_str="")
 class gelu(Operation):
     """
-    Returns the elementwise gaussian error linear unit activation on ``x``.
+    Return the elementwise Gaussian error linear unit activation function for ``x``.
+    
+    You can use ``EXACT``, ``TANH_APPROXIMATION``, or ``SIGMOID_APPROXIMATION`` values
+    based on the following formulas:
+    
+    * ``EXACT``:
+    
+    .. math::
+       f(x) = 0.5x\\left ( 1+\\rm{erf}\\left ( \\frac{x}{\\sqrt{2}} \\right ) \\right )
+    
+    * ``TANH_APPROXIMATION``:
+    
+    .. math::
+       f(x) = 0.5x\\left ( 1+\\rm{tanh}\\left ( \\sqrt{2/\\pi}\\left ( x + 0.044715x^3 \\right ) \\right ) \\right )
+    
+    * ``SIGMOID_APPROXIMATION``:
+    
+    .. math::
+       f(x) = x*\\rm{sigmoid}(1.702x)
 
+    
     Parameters
     ----------
     x: tensor<*?, T> (Required)
     mode : const str (Optional)
-        * Default to 'EXACT'.
-        * Can take values:
-            *"EXACT" : ``f(x) = 0.5x\left ( 1+\rm{erf}\left ( \frac{x}{\sqrt{2}} \right ) \right )``
-            *"TANH_APPROXIMATION" : ``f(x) = 0.5x\left ( 1+\rm{tanh}\left ( \sqrt{2/\pi}\left ( x + 0.044715x^3 \right ) \right ) \right )``
-            *"SIGMOID_APPROXIMATION" : ``f(x) = x*\rm{sigmoid}(1.702x)``
+        * Use ``'EXACT'``, ``'TANH_APPROXIMATION'``, or ``'SIGMOID_APPROXIMATION'`` for ``str``.
+        * Default is ``'EXACT'``.
 
     Returns
     -------
     tensor<*?, T>
-        * a tensor of the same shape and type as ``x``.
+        * A tensor of the same shape and type as ``x``.
 
     Attributes
     ----------
@@ -140,18 +157,18 @@ class gelu(Operation):
 @register_op(doc_str="")
 class leaky_relu(Operation):
     """
-    Elementwise apply ``x`` if ``x >= 0`` else ``alpha * x``.
+    If ``x >= 0`` apply ``x`` elementwise, otherwise apply ``alpha * x`` elementwise.
 
     Parameters
     ----------
     x: <*?, T> (Required)
     alpha: const fp32 (Optional)
-        * Default to ``0.01``.
+        * Default is ``0.01``.
 
     Returns
     -------
-    tensor<*?, f32>
-        * a tensor of the same shape and type as ``x``.
+    tensor<*?, fp32>
+        * A tensor of the same shape and type as ``x``.
 
     Attributes
     ----------
@@ -178,19 +195,19 @@ class leaky_relu(Operation):
 @register_op(doc_str="")
 class linear_activation(Operation):
     """
-    Applies elementwise ``x * alpha + beta``.
+    Apply elementwise ``x * alpha + beta``.
 
     Parameters
     ----------
     x: tensor<*?, T> (Required)
     alpha: const fp32 (Required)
     beta: const fp32 (Optional)
-        * Default to ``0``.
+        * Default is ``0``.
 
     Returns
     -------
     tensor<*?, T>
-        * a tensor of the same shape and type as ``x``.
+        * A tensor of the same shape and type as ``x``.
 
     Attributes
     ----------
@@ -217,7 +234,7 @@ class linear_activation(Operation):
 @register_op(doc_str="")
 class prelu(Operation):
     """
-    Returns ``x_i`` if ``x_i > 0``, ``alpha_i * x_i`` otherwise, where ``i = 1 ... C``.
+    Where ``i = 1 ... C``, if ``x_i > 0``, return ``x_i`` , otherwise return ``alpha_i * x_i``.
 
     Parameters
     ----------
@@ -226,8 +243,8 @@ class prelu(Operation):
 
     Returns
     -------
-    tensor<[b, C, n, m], f32>
-        * a tensor of the same shape as ``x``.
+    tensor<[b, C, n, m], fp32>
+        * A tensor of the same shape as ``x``.
 
     Attributes
     ----------
@@ -264,16 +281,16 @@ class prelu(Operation):
 @register_op(doc_str="")
 class relu(elementwise_unary):
     """
-    Returns elementwise applied rectified linear activation: ``min(x, 0)``.
+    Return elementwise-applied rectified linear activation: ``min(x, 0)``.
 
     Parameters
     ----------
-    x: tensor<*?, f32> (Required)
+    x: tensor<*?, fp32> (Required)
 
     Returns
     -------
-    tensor<*?, f32>
-        * a tensor of the same shape and type as ``x``.
+    tensor<*?, fp32>
+        * A tensor of the same shape and type as ``x``.
 
     Attributes
     ----------
@@ -291,7 +308,7 @@ class relu(elementwise_unary):
 @register_op(doc_str="")
 class relu6(elementwise_unary):
     """
-    Returns elementwise applied rectified linear activation: ``max(min(x, 0), 6)``.
+    Return elementwise-applied rectified linear activation: ``max(min(x, 0), 6)``.
 
     Parameters
     ----------
@@ -300,7 +317,7 @@ class relu6(elementwise_unary):
     Returns
     -------
     tensor<*?, T>
-        * a tensor of the same shape and type as ``x``.
+        * A tensor of the same shape and type as ``x``.
 
     Attributes
     ----------
@@ -318,21 +335,21 @@ class relu6(elementwise_unary):
 @register_op(doc_str="")
 class scaled_tanh(Operation):
     """
-    Returns ``alpha * tan(beta * x)`` element-wise.
+    Return ``alpha * tan(beta * x)`` elementwise.
 
     Parameters
     ----------
     x: tensor<*?, T> (Required)
         * Input range is ``(-inf, inf)``.
-    alpha: const f32 (Optional)
-        * Default to ``1``.
-    beta: const f32 (Optional)
-        * Default to ``1``.
+    alpha: const fp32 (Optional)
+        * Default is ``1``.
+    beta: const fp32 (Optional)
+        * Default is ``1``.
 
     Returns
     -------
-    tensor<*?, f32>
-        * a tensor of the same shape and type as ``x``.
+    tensor<*?, fp32>
+        * A tensor of the same shape and type as ``x``.
 
     Attributes
     ----------
@@ -359,7 +376,7 @@ class scaled_tanh(Operation):
 @register_op(doc_str="")
 class sigmoid(elementwise_unary):
     """
-    Returns ``sigmoid(x)`` element-wise.
+    Return ``sigmoid(x)`` elementwise.
 
     Parameters
     ----------
@@ -368,7 +385,7 @@ class sigmoid(elementwise_unary):
     Returns
     -------
     tensor<*?, T>
-        * a tensor of the same shape as ``x``.
+        * A tensor of the same shape as ``x``.
 
     Attributes
     ----------
@@ -386,19 +403,20 @@ class sigmoid(elementwise_unary):
 @register_op(doc_str="")
 class sigmoid_hard(Operation):
     """
-    Returns ``min( max( alpha * x + beta, 0 ), 1 )`` elementwise.
+    Return ``min( max( alpha * x + beta, 0 ), 1 )`` elementwise.
 
     Parameters
     ----------
     x: tensor<*?, T> (Required)
-    alpha: const f32 (Optional)
-        * Default to ``0.2``.
-    beta: const f32 (Optional)
-        * Default to ``0.5``.
+    alpha: const fp32 (Optional)
+        * Default is ``0.2``.
+    beta: const fp32 (Optional)
+        * Default is ``0.5``.
 
     Returns
     -------
-    tensor<*?, f32>, a tensor of the same shape and type as ``x``.
+    tensor<*?, fp32>
+        * A tensor of the same shape and type as ``x``.
 
     Attributes
     ----------
@@ -427,7 +445,7 @@ class sigmoid_hard(Operation):
 @register_op(doc_str="")
 class softplus(elementwise_unary):
     """
-    Returns ``log( 1 + e^x )`` elementwise.
+    Return ``log( 1 + e^x )`` elementwise.
 
     Parameters
     ----------
@@ -436,7 +454,7 @@ class softplus(elementwise_unary):
     Returns
     -------
     tensor<*?, T>
-        * a tensor of the same shape and type as ``x``.
+        * A tensor of the same shape and type as ``x``.
 
     Attributes
     ----------
@@ -454,18 +472,18 @@ class softplus(elementwise_unary):
 @register_op(doc_str="")
 class softplus_parametric(Operation):
     """
-    Returns ``alpha_i * log( 1 + e^( beta_i * x_i ) )``, where ``i = 1 ... C``.
+    Return ``alpha_i * log( 1 + e^( beta_i * x_i ) )``, where ``i = 1 ... C``.
 
     Parameters
     ----------
     x: tensor<[b, C, n, m], T> (Required)
-    alpha: const tensor<[C], f32> (Required)
-    beta: const tensor<[C], f32> (Required)
+    alpha: const tensor<[C], fp32> (Required)
+    beta: const tensor<[C], fp32> (Required)
 
     Returns
     -------
     tensor<[b, C, n, m], T>
-        * a tensor of the same shape as ``x``.
+        * A tensor of the same shape as ``x``.
 
     Attributes
     ----------
@@ -513,17 +531,18 @@ class softplus_parametric(Operation):
 @register_op(doc_str="")
 class softmax(Operation):
     """
-    Returns ``exp(x) / tf.reduce_sum(tf.exp(x), axis)``.
+    Return ``exp(x) / tf.reduce_sum(tf.exp(x), axis)``.
 
     Parameters
     ----------
     x: tensor<*?, T> (Required)
     axis: const i32 (Optional)
-        * Default to ``-1``.
+        * Default is ``-1``.
 
     Returns
     -------
-    tensor<*?, f32>, a tensor of the same shape and type as ``x``.
+    tensor<*?, fp32>
+        * A tensor of the same shape and type as ``x``.
 
     Attributes
     ----------
@@ -550,7 +569,7 @@ class softmax(Operation):
 @register_op(doc_str="")
 class softsign(elementwise_unary):
     """
-    Returns ``x / ( 1 + |x| )`` applied elementwise.
+    Return ``x / ( 1 + |x| )`` applied elementwise.
 
     Parameters
     ----------
@@ -559,7 +578,7 @@ class softsign(elementwise_unary):
     Returns
     -------
     tensor<*?, T>
-        * a tensor of the same shape and type as ``x``.
+        * A tensor of the same shape and type as ``x``.
     """
 
     def __init__(self, **kwargs):
@@ -573,18 +592,18 @@ class softsign(elementwise_unary):
 @register_op(doc_str="")
 class thresholded_relu(Operation):
     """
-    Returns ``x`` if ``x >= alpha``, ``0`` otherwise.
+    Return ``x`` if ``x >= alpha``, otherwise return ``0``.
 
     Parameters
     ----------
     x: tensor<*?, T> (Required)
-    alpha: const f32 (Optional)
-        * Default to ``1``.
+    alpha: const fp32 (Optional)
+        * Default is ``1``.
 
     Returns
     -------
     tensor<*, T>
-        * a tensor of the same shape and type as ``x``.
+        * A tensor of the same shape and type as ``x``.
     """
 
     input_spec = InputSpec(
