@@ -115,7 +115,8 @@ class gelu(Operation):
     Parameters
     ----------
     x: tensor<*?, T> (Required)
-    mode : const str (Optional)
+    
+    mode: const str (Optional)
         * Use ``'EXACT'``, ``'TANH_APPROXIMATION'``, or ``'SIGMOID_APPROXIMATION'`` for ``str``.
         * Default is ``'EXACT'``.
 
