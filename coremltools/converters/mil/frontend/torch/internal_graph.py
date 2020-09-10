@@ -246,7 +246,7 @@ class InternalTorchIRGraph:
 
             # Add params
             for name, param in params_dict.items():
-                value = param.detach().numpy()
+                value = param.detach().cpu().numpy()
                 self.params[name] = value
 
             # Add inputs

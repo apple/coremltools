@@ -194,9 +194,9 @@ class ReadMeSession:
 
         data = {
             "version": "v" + version,
-            "is_stable": is_stable,
-            "is_beta": is_beta,
-            "is_hidden": is_hidden,
+            "is_stable": str(is_stable).lower(),
+            "is_beta": str(is_beta).lower(),
+            "is_hidden": str(is_hidden).lower(),
             "from": from_version,
         }
         self.get_versions()[version] = self.__api_POST(
