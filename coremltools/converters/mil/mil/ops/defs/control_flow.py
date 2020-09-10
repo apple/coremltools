@@ -26,7 +26,7 @@ class cond(Operation):
     Parameters
     ----------
     pred: tensor<[], bool> (Required)
-        * 0D tensor (scalar) predicate to switch between true and false branches.
+        * 0-D tensor (scalar) predicate to switch between true and false branches.
 
     _true_fn: function (Required)
         * A Python function that executes if ``cond`` evaluates to ``True``.
@@ -514,7 +514,7 @@ class list_write(Operation):
     
     Attributes
     ----------
-    T: fp32
+    T: fp32, i32, bool
     """
 
     input_spec = InputSpec(
@@ -559,10 +559,6 @@ class list_read(Operation):
     index: <i32>  (Required)
         * Size of the list.
     
-    value: <*,T> (Optional)
-        * Element value.
-        * Default is ``None``.
-
     Returns
     -------
     <*,T>
@@ -570,7 +566,7 @@ class list_read(Operation):
  
     Attributes
     ----------
-    T: fp32
+    T: fp32, i32, bool
     """
 
     input_spec = InputSpec(ls=ListInputType(), index=IntInputType(),)
@@ -609,7 +605,7 @@ class list_gather(Operation):
     
     Attributes
     ----------
-    T: fp32
+    T: fp32, i32, bool
     """
 
     input_spec = InputSpec(ls=ListInputType(), indices=IntTensorInputType(),)
@@ -640,10 +636,12 @@ class list_scatter(Operation):
     ----------
     ls: List[*] (Required)
     
-    indices: <num_updates,i32> (Required)
+    indices: tensor<num_updates, i32> (Required)
         * Indices of ``ls`` to scatter to.
         * Elements of ``indices`` must be in ``[0, ls.length)`` at runtime.
-    
+        * If indices are greater than or equal to the list length, the list is
+        dynamically resized.
+
     Returns
     -------
     List[*]
@@ -651,7 +649,7 @@ class list_scatter(Operation):
     
     Attributes
     ----------
-    T: fp32
+    T: fp32, i32, bool
     """
 
     input_spec = InputSpec(
