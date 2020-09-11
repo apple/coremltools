@@ -9,10 +9,15 @@ from ._op_reqs import *
 class batch_norm(Operation):
     """
     Normalize input tensor ``x`` by ``mean`` and ``variance``, and optionally apply a
-    scale ``gamma`` and an offset ``beta``. ``mean``, ``variance``, ``gamma``, and ``beta``
-    must be 1-D tensors whose lengths are equal to the second axis ("depth" or "channel"
-    dimension) of ``x``.
-
+    scale ``gamma`` and an offset ``beta``:
+    
+    .. math::
+       y_i = \\gamma_i \\dfrac{ (x_i - mean_i)}{\\sqrt{variance_i^2 + epsilon}} + beta_i \\;,\\;i=1,....,C
+    
+    The ``mean``, ``variance``, ``gamma``, and ``beta``
+    must be 1-D tensors whose lengths are equal to the second axis (the "depth"
+    or "channel" dimension) of ``x``.
+    
     Parameters
     ----------
     x: tensor<[n,C,*D], T> (Required)
@@ -23,18 +28,18 @@ class batch_norm(Operation):
     variance: const tensor<[C], T> (Required)
     gamma: const tensor<[C], T> (Optional)
         * Optional scale applied to normalized tensor.
-        * Default to all ones.
+        * Default is all ones.
     beta: const tensor<[C], T> (Optional)
         * Optional offset applied to normalized tensor.
-        * Default to all zeros.
-    epsilon: const f32 (Optional)
-        * Default to ``1e-5``.
-
+        * Default is all zeros.
+    epsilon: const fp32 (Optional)
+        * Default is ``1e-5``.
+    
     Returns
     -------
     tensor<[n,C,*D], T>
         * Output tensor has the same shape and type as the input ``x``.
-
+    
     Attributes
     ----------
     T: fp32
@@ -59,7 +64,7 @@ class batch_norm(Operation):
 class instance_norm(Operation):
     """
     Apply instance normalization to the n-dimensional input tensor.
-
+    
     Parameters
     ----------
     x: tensor<[n,C,*D], T>  (Required)
@@ -74,7 +79,7 @@ class instance_norm(Operation):
         * Default to all zeros.
     epsilon: const f32 (Optional)
         * Default to ``1e-5``.
-
+    
     Returns
     -------
     tensor<[n,C,*D], T>
@@ -97,8 +102,12 @@ class instance_norm(Operation):
 @register_op(doc_str="")
 class l2_norm(Operation):
     """
-    Apply L2 normalization to the n-dimensional input tensor on given ``axes``.
-
+    Apply L2 normalization to the n-dimensional input tensor on given ``axes``:
+    
+    .. math::
+       x_i \\leftarrow \\dfrac{x_i}{\\sqrt{\\sum{x_i^2} + \\epsilon}}
+    
+    
     Parameters
     ----------
     x: tensor<[n,C,*D], T> (Required)
@@ -110,17 +119,17 @@ class l2_norm(Operation):
     epsilon: const fp32 (Optional)
         * Small constant to avoid division by ``0``.
         * Optional, defaults to ``1e-12``.
-
+    
     Returns
     -------
     tensor<[n,C,*D], T>
         * Same type and shape as the input tensor ``x``.
-
+    
     Attributes
     ----------
     T: fp32
-
     """
+    
     input_spec = InputSpec(
         x=TensorInputType(),
         axes=IntTensorInputType(),
@@ -137,31 +146,35 @@ class l2_norm(Operation):
 @register_op(doc_str="")
 class layer_norm(Operation):
     """
-    Apply layer normalization to the n-dimensional input tensor:\n
-    ``out = gamma * (input - mean) / sqrt(variance + epsilon) + beta``.
-
+    Apply layer normalization to the n-dimensional input tensor:
+    
+    .. math::
+       out = gamma * (input - mean) / sqrt(variance + epsilon) + beta
+    
+    
     Parameters
     ----------
     x: tensor<*?, T> (Required)
         * Input tensor.
     axes: const<[K], i32> (Optional)
         * Dimensions to perform layer normalization.
-        * Defaults to ``None`` (all dimensions).
+        * Default is ``None`` (all dimensions).
     gamma: const tensor<[K], T> (Optional)
         * Same shape as normalized_shape.
-        * Defaults to all ones.
+        * Default is all ones.
     beta: const tensor<[K], T> (Optional)
         * Same shape as normalized_shape.
-        * Defaults to all zeros.
+        * Default is all zeros.
     epsilon: const fp32 (Optional)
         * Small constant to avoid division by ``0``.
-        * Defaults to ``1e-5``.
-
+        * Default is ``1e-5``.
+    
     Returns
     -------
     tensor<*?, T>:
         * Tensor with same shape and type as the input tensor ``x``.
     """
+    
     input_spec = InputSpec(
         x=TensorInputType(),
         axes=IntTensorInputType(const=True, optional=True),
@@ -199,8 +212,12 @@ class layer_norm(Operation):
 @register_op(doc_str="")
 class local_response_norm(Operation):
     """
-    Apply local response normalization to the n-dimensional input tensor.
-
+    Apply local response normalization to the n-dimensional input tensor:
+    
+    .. math::
+       x_i \\leftarrow \\dfrac{x_i}{\\left ( k + \\dfrac{\\alpha}{C} \\sum_j x_j^2 \\right )^\\beta}
+    
+    
     Parameters
     ----------
     x: tensor<[n,C,*D], T> (Required)
@@ -211,23 +228,24 @@ class local_response_norm(Operation):
         * Amount of neighboring channels to normalize.
     alpha: const fp32 (Optional)
         * Scale factor.
-        * Defaults to ``1.0``.
+        * Default is ``1.0``.
     beta: const fp32 (Optional)
         * An exponent.
-        * Defaults to ``0.5``.
+        * Default is ``0.5``.
     k: const fp32 (Optional)
         * Additive factor.
-        * Defaults to ``1.0``.
+        * Default is ``1.0``.
     
     Returns
     -------
     tensor<[n,C,*D], T>
         * Same type and shape as the input tensor ``x``.
-
+    
     Attributes
     ----------
     T: fp32
     """
+    
     input_spec = InputSpec(
         x=TensorInputType(),
         size=IntInputType(const=True),
