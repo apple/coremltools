@@ -12,7 +12,7 @@ class batch_norm(Operation):
     scale ``gamma`` and an offset ``beta``:
     
     .. math::
-       y_i = \\gamma_i \\dfrac{ (x_i - mean_i)}{\\sqrt{variance_i^2 + epsilon}} + beta_i \\;,\\;i=1,....,C
+       y_i = \\gamma_i \\dfrac{ (x_i - mean_i)}{\\sqrt{variance_i + epsilon}} + beta_i \\;,\\;i=1,....,C
     
     The ``mean``, ``variance``, ``gamma``, and ``beta``
     must be 1-D tensors whose lengths are equal to the second axis (the "depth"
@@ -44,6 +44,7 @@ class batch_norm(Operation):
     ----------
     T: fp32
     """
+    
     input_spec = InputSpec(
         x=TensorInputType(),
         mean=TensorInputType(const=True),
@@ -85,6 +86,7 @@ class instance_norm(Operation):
     tensor<[n,C,*D], T>
         * Output tensor has the same shape and type as the input ``x``.
     """
+    
     input_spec = InputSpec(
         x=TensorInputType(),
         gamma=TensorInputType(const=True, optional=True),
