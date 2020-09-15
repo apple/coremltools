@@ -20,24 +20,28 @@ import logging
 @register_op(doc_str="")
 class cond(Operation):
     """
-    Conditional execution. The return types must be identical between the true
-    and false branches.
-
+    Perform a conditional execution. The return types must be identical
+    between the true and false branches.
+    
     Parameters
     ----------
     pred: tensor<[], bool> (Required)
-        * 0D tensor (scalar) predicate to switch between true and fall branches.
-
-    _true_fn: Python function (Required)
-	* A Python function that will be executed if ``cond`` evaluates to ``True``. It must take 0 input and return one or more values, whose types will be taken to be the return type of the operation.
-
-    _false_fn: Python function (Required)
-	* A Python function to be executed if ``cond`` evaluates to ``False``. It must take 0 input and has return types must match those of if_branch.
-
+        * 0-D tensor (scalar) predicate to switch between true and false branches.
+    
+    _true_fn: function (Required)
+        * A Python function that executes if ``cond`` evaluates to ``True``.
+        * It must take ``0`` as input, and return one or more values whose type becomes
+          the operation's return type.
+    
+    _false_fn: function (Required)
+        * A Python function that executes if ``cond`` evaluates to ``False``.
+        * It must take ``0`` as input, and have return types that match those of the
+          ``if`` branch.
+    
     Returns
     -------
-    Python tuple
-        * Tuple of ``Variables`` from one of the branches.
+    tuple
+        * Python tuple of ``Variables`` from one of the branches.
     """
 
     input_spec = InputSpec(
@@ -97,6 +101,27 @@ class cond(Operation):
 
 @register_op(doc_str="")
 class const(Operation):
+    """
+    Return constant values.
+    
+    Parameters
+    ----------
+    mode: immediate_value, file_value (Optional)
+        * Determines how the constant value is stored in the internal MIL format.
+        * For  large constants such as convolution weights, use ``file_value``.
+        * For smaller-size constants such as values of a stride, use ``immediate_value``.
+    
+    val: const<*,T> (Required)
+    
+    Returns
+    -------
+    const<*,T>
+    
+    Attributes
+    ----------
+    T: fp32, i32, str
+    """
+    
     input_spec = InputSpec(
         mode=InternalStringInputType(const=True, default="immediate_value"),
         val=InternalScalarOrTensorInputType(const=True),
@@ -157,35 +182,40 @@ class _const_symbolic(const):
 @register_op(doc_str="")
 class select(Operation):
     """
-    Returns the elements selected from either ``a`` or ``b``, depending on
-    ``cond``. Shape of ``cond``, ``a``, ``b`` must be broadcastable.
-
-    ``a, b`` must be provided together, or neither is provided. If neither is
-    provided, returns the indices of ``cond`` that are ``True``.
-
+    Return the elements selected from either ``a`` or ``b`` depending on the ``cond``.
+    
+    The shape of ``cond``, ``a``, and ``b`` must be broadcastable.
+    You must provide ``a`` and ``b`` together, or provide neither.
+    If you provide neither, the operation returns the indices
+    of ``cond`` that are ``True``.
+    
     Parameters
     ----------
     cond: tensor<[*D1], T> (Required)
-        * Tensor, when True (non-zero), select element from x, otherwise, y
-
-    a: tensor<[*D2], T> (Optional. Default to None)
-        * Values selected at indices where ``cond`` is True
-
-    b: tensor<[*D3], T> (Optional. Default to None)
-        * Values selected at indices where ``cond`` is False
-
+        * Tensor. When ``True`` (non-zero), select element from ``x``, otherwise, ``y``.
+    
+    a: tensor<[*D2], T> (Optional)
+        * Values selected at indices where ``cond`` is ``True``.
+        * Default is ``None``.
+    
+    b: tensor<[*D3], T> (Optional)
+        * Values selected at indices where ``cond`` is ``False``.
+        * Default is ``None``.
+    
     Returns
     -------
     tensor<[*D_out], T> or tensor<[n, len(D1)], int32>
-        *  If ``a, b`` are both provided, return shape is based on broadcast rules from ``cond, a, b``.
-        If ``a, b`` are ``None``, returns shape is 2D, where first dimension ``n`` is the number of
-        matching indices in ``cond`` and ``len(D1)`` is the rank of ``cond``.
-
+        *  If ``a, b`` are both provided, the return shape is based on broadcast rules
+           from ``cond, a, b``.
+        *  If ``a, b`` are ``None``, the return shape is 2-D, where the first dimension
+           ``n`` is the number of matching indices in ``cond``, and ``len(D1)`` is the
+           ``cond`` rank.
+    
     Attributes
     ----------
     T: fp32
     """
-
+    
     input_spec = InputSpec(
         cond=TensorInputType(), a=TensorInputType(), b=TensorInputType()
     )
@@ -216,23 +246,26 @@ class select(Operation):
 @register_op(doc_str="")
 class while_loop(Operation):
     """
-    Perform body repeatedly while the condition cond is true.
-
+    Perform the body repeatedly while the condition ``cond`` is true.
+    
     Parameters
     ----------
-    _cond: Python function  (Required)
-	* A Python function that takes ``loop_vars`` as positional arguments. The function must return a bool Var.
-
-    _body: Python function  (Required)
-	* A Python function that takes ``loop_vars`` as positional arguments. The function must return the same number of output vars as ``loop_var`` with the same types.
-
-    loop_vars: Python tuple (Required)
-	* Python tuple of ``Variables``.
-
+    _cond: function  (Required)
+        * A Python function that takes ``loop_vars`` as positional arguments.
+        * The function must return a ``bool`` ``Var``.
+    
+    _body: function  (Required)
+        * A Python function that takes ``loop_vars`` as positional arguments.
+        * The function must return the same number of output vars as ``loop_var``
+          with the same types.
+    
+    loop_vars: tuple (Required)
+        * Python tuple of ``Variables``.
+    
     Returns
     -------
-    Python tuple
-        * Same type as ``loop_vars``
+    tuple
+        * Python tuple (same type as ``loop_vars``).
     """
 
     input_spec = InputSpec(
@@ -387,6 +420,36 @@ class while_loop(Operation):
 
 @register_op(doc_str="")
 class make_list(Operation):
+    """
+    Create a list of tensor elements. The elements should have the same shape.
+    The list is similar to an auto-resizing array.
+    
+    Parameters
+    ----------
+    init_length: <i32> (Optional)
+        * Initial length for the list. If ``dynamic_length`` is ``False``,
+          ``init_length`` is the fixed length of the list throughout runtime.
+        * Default is ``1``.
+    
+    dynamic_length: <bool> (Optional)
+        * Initial length for the list. If ``dynamic_length`` is ``False``,
+          ``init_length`` is the fixed length of the list throughout runtime.
+        * Default is ``True``.
+    
+    elem_shape: <K,i32> (Required)
+        * Non-symbolic 1-D tensor denoting the shape of elements.
+        * If not provided, the resulting ``List`` won’t have the elementary shape
+          info, which may cause backend errors. Remedy this with SSA passes.
+    
+    dtype: const<str>  (Optional)
+        * Element tensor’s ``dtype``.
+        * Default is ``fp32``.
+    
+    Returns
+    -------
+    List[*]
+    """
+
     input_spec = InputSpec(
         init_length=IntInputType(optional=True, default=1),
         dynamic_length=BoolInputType(optional=True, default=True),
@@ -411,6 +474,19 @@ class make_list(Operation):
 
 @register_op(doc_str="")
 class list_length(Operation):
+    """
+    Return the length of ``ls``.
+    
+    Parameters
+    ----------
+    ls: List[*] (Required)
+    
+    Returns
+    -------
+    <i32>
+        * Length of ``ls``.
+    """
+
     input_spec = InputSpec(ls=ListInputType(),)
 
     def __init__(self, **kwargs):
@@ -428,6 +504,29 @@ class list_length(Operation):
 
 @register_op(doc_str="")
 class list_write(Operation):
+    """
+    Write a value into index ``index`` of ``ls``.
+    
+    Parameters
+    ----------
+    ls: List (Required)
+    
+    index: <i32> (Required)
+        * Size of the list.
+    
+    value: <*,T> (Optional)
+        * Element value to write, which must match the element shape of ``ls``.
+        * Default is ``None``.
+    
+    Returns
+    -------
+    List[*]
+    
+    Attributes
+    ----------
+    T: fp32, i32, bool
+    """
+
     input_spec = InputSpec(
         ls=ListInputType(), index=IntInputType(), value=TensorInputType(),
     )
@@ -460,6 +559,26 @@ class list_write(Operation):
 
 @register_op(doc_str="")
 class list_read(Operation):
+    """
+    Read the value at location ``index`` of ``ls``.
+    
+    Parameters
+    ----------
+    ls: List[*] (Required)
+    
+    index: <i32> (Required)
+        * Size of the list.
+    
+    Returns
+    -------
+    <*,T>
+        * The element's value.
+    
+    Attributes
+    ----------
+    T: fp32, i32, bool
+    """
+
     input_spec = InputSpec(ls=ListInputType(), index=IntInputType(),)
 
     def __init__(self, **kwargs):
@@ -478,6 +597,27 @@ class list_read(Operation):
 
 @register_op(doc_str="")
 class list_gather(Operation):
+    """
+    Return selected values in ``ls`` as a packed ``Tensor``.
+    
+    Parameters
+    ----------
+    ls: List[*] (Required)
+    
+    indices: <K,i32> (Required)
+        * Gather from indices, whose element must be in ``[0, ls.length)`` at runtime.
+    
+    Returns
+    -------
+    <*K,T>
+        * Selected tensors packed into a ``len(ls.elem_shape)+1`` rank tensor.
+        * ``K[0] == len(indices)``.
+    
+    Attributes
+    ----------
+    T: fp32, i32, bool
+    """
+
     input_spec = InputSpec(ls=ListInputType(), indices=IntTensorInputType(),)
 
     def __init__(self, **kwargs):
@@ -499,6 +639,33 @@ class list_gather(Operation):
 
 @register_op(doc_str="")
 class list_scatter(Operation):
+    """
+    Scatter ``values`` to ``ls`` at locations ``indices``.
+    
+    Parameters
+    ----------
+    ls: List[*] (Required)
+    
+    indices: tensor<num_updates, i32> (Required)
+        * Indices of ``ls`` to scatter to.
+        * Elements of ``indices`` must be in ``[0, ls.length)`` at runtime.
+        * If indices are greater than or equal to the list length, the list is
+          dynamically resized.
+    
+    value: <*,T> (Optional)
+        * Element value to write, which must match the element shape of ``ls``.
+        * Default is ``None``.
+    
+    Returns
+    -------
+    List[*]
+        * Updated list.
+    
+    Attributes
+    ----------
+    T: fp32, i32, bool
+    """
+
     input_spec = InputSpec(
         ls=ListInputType(), indices=IntTensorInputType(), value=TensorInputType(),
     )
