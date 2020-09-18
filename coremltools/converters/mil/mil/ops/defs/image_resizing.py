@@ -10,29 +10,29 @@ from ._op_reqs import *
 class upsample_nearest_neighbor(Operation):
     """
     Upsample the spatial dimensions (last two dimensions) of the input
-    by integer scale factors using nearest neighbor interpolation.
-
+    by integer scale factors using nearest-neighbor interpolation.
+    
     Parameters
     ----------
-    * x: tensor<[*D, H1, W1],T>  (Required)
-        * must be at least rank ``3``
-    * upscale_factor_height: const<i32> (Optional, default=1)
-        * scale factor for the height dimension (axis=-2)
-    * upscale_factor_width: const<i32> (Optional, default=1)
-        * scale factor for the width dimension (axis=-1)
-
+    x: tensor<[*D, H1, W1],T>  (Required)
+        * Must be at least rank ``3``.
+    upscale_factor_height: const<i32> (Optional, default=1)
+        * Scale factor for the height dimension (``axis=-2``).
+    upscale_factor_width: const<i32> (Optional, default=1)
+        * Scale factor for the width dimension (``axis=-1``).
+    
     Returns
     -------
     tensor<[*D, H2, W2],T>
         * Tensor with same type as the input.
-        * ``H2`` = ``H1`` * ``upscale_factor_height``
-        * ``W2`` = ``W1`` * ``upscale_factor_width``
-
+        * ``H2`` = ``H1`` * ``upscale_factor_height``.
+        * ``W2`` = ``W1`` * ``upscale_factor_width``.
+    
     Attributes
     ----------
     T: fp32
     """
-
+    
     input_spec = InputSpec(
         x=TensorInputType(),
         upscale_factor_height=IntInputType(const=True, default=1),
@@ -59,55 +59,76 @@ class upsample_bilinear(Operation):
     """
     Upsample the spatial dimensions (last two dimensions) of the input
     by scale factors using bilinear interpolation.
-
+    
     Parameters
     ----------
-    * x: tensor<[*D, H1, W1],T>  (Required)
-        * must be at least rank ``3``
-    * scale_factor_height: const<T2> (Optional, default=1)
-        * scale factor for the height dimension (axis=-2)
-    * scale_factor_width: const<T2> (Optional, default=1)
-        * scale factor for the width dimension (axis=-1)
-    * align_corners: const<bool> (Optional, default=True)
-        * This determines how samples are chosen for bilinear interpolation
-        * To understand this parameter, consider a 1D case.
-        * For linear interpolation, a grid of pixels must be sampled, at which values are
-        * computed using linear interpolation.
-        * This parameter controls how the grid is sampled.
-        * If input grid is ``[0, Xin-1]`` (corresponding to an input size of Xin),
-        * and if the output size is ``Xout``,
-        * then the grid points are sampled in the following manner :
-        * if ``align_corners == True`` :
-        * ``spacing = (Xin - 1) / (Xout - 1)``
-        * ``grid_point[i] = min(Xin - 1, max(0, i*spacing)), for i=0,1,...,Xout-1``
-        *
-        * if ``align_corners == False`` :
-        * ``spacing = Xin / Xout``
-        * ``grid_point[i] = min(Xin - 1, max(0, i*spacing + 0.5*spacing - 0.5)), for i=0,1,...,Xout-1``
-        *
-        * e.g.:
-        * ``Xin = 2``, ``input_interval = [0,1]``, grid points:
-        * ``[0., 0.1, 0.5, 0.9, 1.] (Xout = 5, align_corners=False)``
-        * ``[0., 0.25, 0.5, 0.75, 1.] (Xout = 5, align_corners=True)``
-        * ``[0., 0., 0.33, 0.67, 1., 1.] (Xout = 6, align_corners=False)``
-        * ``[0., 0.2, 0.4, 0.6, 0.8, 1.] (Xout = 6, align_corners=True)``
-        *
-        * ``align_corners=False`` is same as ``tf.raw_ops.ResizeBilinear(align_corners=False, half_pixel_centers=True)``
-        * ``align_corners=True`` is same as ``tf.raw_ops.ResizeBilinear(align_corners=True, half_pixel_centers=False)``
+    x: tensor<[*D, H1, W1],T>  (Required)
+        * Must be at least rank ``3``.
+    scale_factor_height: const<T2> (Optional, default=1)
+        * Scale factor for the height dimension (``axis=-2``).
+    scale_factor_width: const<T2> (Optional, default=1)
+        * Scale factor for the width dimension (``axis=-1``).
+    align_corners: const<bool> (Optional, default=True)
+        * This parameter determines how samples are chosen for bilinear
+          interpolation. For details, see the Notes section.
+    
+    Notes
+    -----
+    To understand the ``align_corners`` parameter, consider the 1-D case.
+    You need to sample a grid of pixels whose values are computed using linear
+    interpolation. This parameter controls how the grid is sampled. If the
+    input grid is ``[0, Xin-1]`` (corresponding to an input size of ``Xin``),
+    and if the output size is ``Xout``, then the grid points are sampled in
+    the following manner:
+    
+    .. sourcecode:: python
+    
+        # If align_corners == True:
+        spacing = (Xin - 1) / (Xout - 1)
+        grid_point[i] = min(Xin - 1, max(0, i*spacing)), for i=0,1,...,Xout-1
+    
+        # If align_corners == False:
+        spacing = Xin / Xout
+        grid_point[i] = min(Xin - 1, max(0, i*spacing + 0.5*spacing - 0.5)),
+        ...   for i=0,1,...,Xout-1
+    
+    For example:
+    
+    .. sourcecode:: python
+    
+        Xin = 2
+        input_interval = [0,1]
+    
+    Grid points:
+
+    .. sourcecode:: python
+    
+        [0., 0.1, 0.5, 0.9, 1.] (Xout = 5, align_corners=False)
+        [0., 0.25, 0.5, 0.75, 1.] (Xout = 5, align_corners=True)
+        [0., 0., 0.33, 0.67, 1., 1.] (Xout = 6, align_corners=False)
+        [0., 0.2, 0.4, 0.6, 0.8, 1.] (Xout = 6, align_corners=True)
+    
+    Note the following simularities:
+    
+    * ``align_corners=False`` is the same as
+      ``tf.raw_ops.ResizeBilinear(align_corners=False, half_pixel_centers=True)``.
+   
+    * ``align_corners=True`` is the same as
+      ``tf.raw_ops.ResizeBilinear(align_corners=True, half_pixel_centers=False)``.
 
     Returns
     -------
     tensor<[*D, H2, W2],T>
         * Tensor with same type as the input.
-        * ``H2`` = floor(``H1`` * ``scale_factor_height``)
-        * ``W2`` = floor(``W1`` * ``scale_factor_width``)
-
+        * ``H2`` = floor(``H1`` * ``scale_factor_height``).
+        * ``W2`` = floor(``W1`` * ``scale_factor_width``).
+    
     Attributes
     ----------
     T: fp32
     T2 : fp32 or int32
     """
-
+    
     input_spec = InputSpec(
         x=TensorInputType(),
         scale_factor_height=IntOrFloatInputType(const=True, default=1),
@@ -133,68 +154,93 @@ class upsample_bilinear(Operation):
 @register_op(doc_str="TODO")
 class resize_bilinear(Operation):
     """
-    Resize the spatial (last two) dimensions using bilinear interpolation,
-    to the specified target size. Similar to the ``upsample_bilinear`` op,
-    however, this op works with a target size instead of scale factors.
-
+    Resize the spatial (last two) dimensions to the specified target size
+    using bilinear interpolation. Although this op is similar to
+    ``upsample_bilinear``, ``resize_bilinear`` works with a target size
+    rather than with scale factors.
+    
     Parameters
     ----------
-    * x: tensor<[*D, H1, W1],T>  (Required)
-        * must be at least rank ``3``
-    * target_size_height: const<int32> (Optional, default=1)
-        * target spatial size for the height dimension (axis=-2)
-    * target_size_width: const<int32> (Optional, default=1)
-        * target spatial size for the width dimension (axis=-1)
-    * sampling_mode: const<str> (Optional, default="DEFAULT")
-        * can take values "STRICT_ALIGN_CORNERS”, “ALIGN_CORNERS”, “DEFAULT”, “OFFSET_CORNERS”
-        * To understand this mode, consider a 1D case.
-        * For linear interpolation, a grid of pixels must be sampled,
-        * at which values are computed using linear interpolation.
-        * This parameter controls how the grid is sampled.
-        * If input grid is ``[0, Xin-1]`` (corresponding to an input size of ``Xin``),
-        * and if the output size is ``Xout``, then the grid points are sampled in the following manner:
-        *
-        * "STRICT_ALIGN_CORNERS" :
-        * ``spacing = (Xin - 1) / (Xout - 1)``
-        * ``grid_point[i] = min(Xin-1, max(0, i*spacing)), for i=0,1,...,Xout-1``
-        *
-        * "ALIGN_CORNERS":
-        * same as "STRICT_ALIGN_CORNERS" unless ``Xout=1``, in which case:
-        * ``grid_point[0] = (Xin-1) / 2, if Xout==1``
-        *
-        * "DEFAULT":
-        * ``spacing = (Xin - Xin/Xout) / (Xout - 1)``
-        * ``grid_point[i] = min(Xin-1, max(0, i*spacing)), for i=0,1,...,Xout-1``
-        *
-        * "OFFSET_CORNERS":
-        * ``delta = max(1, Xin - 1) / Xout``
-        * ``spacing = ((Xout - 1) * delta) / (Xout - 1)``
-        * ``grid_point[i] = min(Xin-1, max(0, 0.5*delta + i*spacing)), for i=0,1,...,Xout-1``
-        *
-        * e.g.:
-        * ``Xin = 2``, ``input_interval = [0,1]``, ``grid points: ``
-        * [0., 0.25, 0.5, 0.75, 1.] (Xout = 5, "STRICT_ALIGN_CORNERS" / "ALIGN_CORNERS")
-        * [0., 0.4, 0.8, 1., 1.] (Xout = 5, "DEFAULT")
-        * [0.1, 0.3, 0.5, 0.7, 0.9] (Xout = 5, "OFFSET_CORNERS")
-        *
-        * [0., 0.2, 0.4, 0.6, 0.8, 1.] (Xout = 6, "STRICT_ALIGN_CORNERS" / "ALIGN_CORNERS")
-        * [0., 0.33, 0.67, 1., 1., 1.] (Xout = 6, "DEFAULT")
-        * [0.08, 0.25, 0.42, 0.58, 0.75, 0.92] (Xout = 6, "OFFSET_CORNERS")
-        *
-        * “DEFAULT” is same as ``tf.raw_ops.ResizeBilinear(align_corners=False, half_pixel_centers=False)``
-        * “STRICT_ALIGN_CORNERS” is same as ``tf.raw_ops.ResizeBilinear(align_corners=True, half_pixel_centers=False)``
+    x: tensor<[*D, H1, W1],T> (Required)
+        * Must be at least rank ``3``.
+    target_size_height: const<int32> (Optional, default=1)
+        * Target spatial size for the height dimension (``axis=-2``).
+    target_size_width: const<int32> (Optional, default=1)
+        * Target spatial size for the width dimension (``axis=-1``).
+    sampling_mode: const<str> (Optional, default="DEFAULT")
+        * This parameter can take ``"STRICT_ALIGN_CORNERS”``, ``"ALIGN_CORNERS"``,
+          ``"DEFAULT"``, or ``"OFFSET_CORNERS"`` as values. For details,
+          see the Notes section.
+    
+    Notes
+    -----
+    To understand the ``sampling_mode`` parameter, consider the 1-D case.
+    You need to sample a grid of pixels whose values are computed using
+    linear interpolation. This parameter controls how the grid is sampled.
+    If the input grid is ``[0, Xin-1]`` (corresponding to an input size of
+    ``Xin``), and if the output size is ``Xout``, then the grid points are
+    sampled in the following manner:
+    
+    .. sourcecode:: python
+    
+        # "STRICT_ALIGN_CORNERS":
+        spacing = (Xin - 1) / (Xout - 1)
+        grid_point[i] = min(Xin-1, max(0, i*spacing)), for i=0,1,...,Xout-1
+        
+        # "ALIGN_CORNERS": Same as "STRICT_ALIGN_CORNERS" unless Xout=1,
+        # in which case:
+        grid_point[0] = (Xin-1) / 2, if Xout==1
+        
+        # "DEFAULT":
+        spacing = (Xin - Xin/Xout) / (Xout - 1)
+        grid_point[i] = min(Xin-1, max(0, i*spacing)), for i=0,1,...,Xout-1
+    
+        # "OFFSET_CORNERS":
+        delta = max(1, Xin - 1) / Xout
+        spacing = ((Xout - 1) * delta) / (Xout - 1)
+        grid_point[i] = min(Xin-1, max(0, 0.5*delta + i*spacing)), for
+        ...   i=0,1,...,Xout-1
+    
+    For example:
+    
+    .. sourcecode:: python
 
+        Xin = 2
+        input_interval = [0,1]
+        
+    Grid points:
+    
+    .. sourcecode:: python
+    
+        [0., 0.25, 0.5, 0.75, 1.] (Xout = 5, "STRICT_ALIGN_CORNERS" / "ALIGN_CORNERS")
+        [0., 0.4, 0.8, 1., 1.] (Xout = 5, "DEFAULT")
+        [0.1, 0.3, 0.5, 0.7, 0.9] (Xout = 5, "OFFSET_CORNERS")
+        
+        [0., 0.2, 0.4, 0.6, 0.8, 1.] (Xout = 6, "STRICT_ALIGN_CORNERS" / "ALIGN_CORNERS")
+        [0., 0.33, 0.67, 1., 1., 1.] (Xout = 6, "DEFAULT")
+        [0.08, 0.25, 0.42, 0.58, 0.75, 0.92] (Xout = 6, "OFFSET_CORNERS")
+        
+    Note the following simularities:
+    
+        * ``"DEFAULT"`` is same as
+          ``tf.raw_ops.ResizeBilinear(align_corners=False,
+          half_pixel_centers=False)``.
+        * ``"STRICT_ALIGN_CORNERS"`` is same as
+          ``tf.raw_ops.ResizeBilinear(align_corners=True,
+          half_pixel_centers=False)``.
+    
     Returns
     -------
     tensor<[*D, H2, W2],T>
         * Tensor with same type as the input.
-        * ``H2`` = ``target_size_height``
-        * ``W2`` = ``target_size_width``
+        * ``H2`` = ``target_size_height``.
+        * ``W2`` = ``target_size_width``.
 
     Attributes
     ----------
     T: fp32
     """
+    
     input_spec = InputSpec(
         x=TensorInputType(),
         target_size_height=IntInputType(const=True, default=1),
@@ -232,67 +278,89 @@ class resize_bilinear(Operation):
 class crop_resize(Operation):
     """
     Resize the spatial dimensions (last two dimensions) of the first input
-    according to the bounding boxes specified in
-    the second input. Resizing is done using bilinear interpolation.
+    according to the bounding boxes specified in the second input, using
+    bilinear interpolation.
 
     Parameters
     ----------
-    * x: tensor<[B, C, H, W],T>  (Required)
-        * input from which patches (regions of interest) are extracted and resized using bilinear interpolation
-        * rank 4
-    * roi: tensor<[N,1,4,1,1], T> or tensor<[N,1,5,1,1], T> (Required)
-        * regions of interest, or coordinates of the boxes
-        * this input represents coordinates of ``N`` boxes
-        * convention to express coordinates  depends on the value of the input ``box_coordinate_mode``
-        * rank 5
-        * if tensor<[N,1,4,1,1], T> :
-            * resized images are computed for all ``B`` input images
-        * if tensor<[N,1,5,1,1], T> :
-            * first element from ``axis=-3`` is an index,
-            * which is choosen to be resized
-            * It must be within range [0, B)
-    * target_height: const<i32> (Optional, Default=1)
-        * target height to which each patch should be resized to
-    * target_width: const<i32> (Optional, Default=1)
-        * target width to which each patch should be resized to
-    * normalized_coordinates : const<bool> (Optional, default=False)
-        * If true the bounding box coordinates must be in the interval ``[0, 1]``.
-        * They are scaled by ``(H_in - 1)``, ``(W_in - 1)``,
-        * i.e. based on the input spatial dimensions.
-        * If false the bounding box coordinates must be in the interval
-        * ``[0, H_in - 1]`` and ``[0, W_in - 1]``, respectively for height and width dimensions
-    * spatial_scale : const<fp32> (Optional, default=1.0)
-        * Additional spatial scale that multiplies the bounding
-        * box coordinates. Generally used while implementing
-        * the RoI Align layer, which typically uses
-        * unnormalized RoI coordinates along with a spatial scale less than or equal to 1
-    * box_coordinate_mode: const<str> (Optional, default="CORNERS_HEIGHT_FIRST")
-        * Specifies the convention used to specify four bounding box coordinates
-        * for an image of size (Height, Width). The (0,0) coordinate corresponds to the top-left corner of the image
-        * can take one of 4 values
-            * "CORNERS_HEIGHT_FIRST": ``[h_start, w_start, h_end, w_end]``
-            * "CORNERS_WIDTH_FIRST": ``[w_start, h_start, w_end, h_end]``
-            * "CENTER_SIZE_HEIGHT_FIRST": ``[h_center, w_center, box_height, box_width]``
-            * "CENTER_SIZE_WIDTH_FIRST": ``[w_center, h_center, box_width, box_height]``
-    * sampling_mode : const<str> (Optional, default="DEFAULT")
-        * can take values “STRICT_ALIGN_CORNERS”, “ALIGN_CORNERS”, “DEFAULT”, “OFFSET_CORNERS”
-        * same convention as used by the ``resize_bilinear`` op. Refer to that op for documentation
-
+    
+    x: tensor<[B, C, H, W],T> (Required)
+        * The input, from which patches (regions of interest) are extracted
+          and resized using bilinear interpolation.
+        * Rank ``4``.
+    
+    roi: tensor<[N,1,4,1,1], T> or tensor<[N,1,5,1,1], T> (Required)
+        * Regions of interest, or coordinates of the boxes. The above input
+          represents coordinates of ``N`` boxes.
+        * The convention to express coordinates  depends on the value of the
+          input ``box_coordinate_mode``.
+        * Rank ``5``.
+        * If ``tensor<[N,1,4,1,1], T>``: Resized images are computed for all
+          ``B`` input images.
+        * If ``tensor<[N,1,5,1,1], T>``: The first element from ``axis=-3``
+          to be resized is an index. It must be within range ``[0, B)``.
+    
+    target_height: const<i32> (Optional, Default=1)
+        * Target height for resizing each patch.
+    
+    target_width: const<i32> (Optional, Default=1)
+        * Target width for resizing each patch.
+    
+    normalized_coordinates : const<bool> (Optional, default=False)
+        * If true, the bounding box coordinates must be in the
+          interval ``[0, 1]``. Scaling is based on the input spatial
+          dimensions: ``(H_in - 1)`` for height and ``(W_in - 1)`` for width.
+        * If false, the bounding box coordinates must be in the interval
+          ``[0, H_in - 1]`` for height dimensions and ``[0, W_in - 1]`` for
+          width dimensions.
+    
+    spatial_scale : const<fp32> (Optional, default=1.0)
+        * Additional spatial scale that multiplies the bounding box coordinates.
+          You would use this to implement the RoI Align layer, which typically
+          uses unnormalized RoI coordinates along with a spatial scale that is
+          less than or equal to 1.
+    
+    box_coordinate_mode: const<str> (Optional, default="CORNERS_HEIGHT_FIRST")
+        * Specifies the convention for specifying the four bounding box
+          coordinates for an image of size ``(Height, Width)``. The ``(0,0)``
+          coordinate corresponds to the top-left corner of the image.
+        * This parameter can take one of four values:
+        
+          "CORNERS_HEIGHT_FIRST": ``[h_start, w_start, h_end, w_end]``
+          
+          "CORNERS_WIDTH_FIRST": ``[w_start, h_start, w_end, h_end]``
+          
+          "CENTER_SIZE_HEIGHT_FIRST": ``[h_center, w_center, box_height, box_width]``
+          
+          "CENTER_SIZE_WIDTH_FIRST": ``[w_center, h_center, box_width, box_height]``
+    
+    sampling_mode : const<str> (Optional, default="DEFAULT")
+        * This parameter can take ``"STRICT_ALIGN_CORNERS"``,
+          ``"ALIGN_CORNERS"``, ``"DEFAULT"``, or ``"OFFSET_CORNERS"`` as values.
+        * This same convention is used by the ``resize_bilinear`` op (see
+          that op for details).
+    
+    See Also
+    --------
+    resize_bilinear
+    
     Returns
     -------
     tensor<[N, B, C, target_height, target_width],T> or tensor<[N, 1, C, target_height, target_width],T>
-        * Tensor with same type as the input
-        * If roi : tensor<[N,1,4,1,1], T>
-            * output is tensor<[N, B, C, target_height, target_width],T>
-            * Total crops = ``N*B``, i.e. ``N`` crops for each input in batch
-        * If roi : tensor<[N,1,5,1,1], T>
-            * output is tensor<[N, 1, C, target_height, target_width],T>
-            * Total crops = ``N``, i.e. 1 crop for given input image index in batch
+        * Tensor with same type as the input.
+        * If ``roi : tensor<[N,1,4,1,1], T>``, the output is
+          ``tensor<[N, B, C, target_height, target_width],T>``.
+          Total crops = ``N*B``; that is, ``N`` crops for each input in the batch.
+        * If ``roi : tensor<[N,1,5,1,1], T>``, the output is
+          ``tensor<[N, 1, C, target_height, target_width],T>``.
+          Total crops = ``N``; that is, 1 crop for given input image index
+          in the batch.
 
     Attributes
     ----------
     T: fp32
     """
+    
     input_spec = InputSpec(
         x=TensorInputType(),
         roi=TensorInputType(),
@@ -345,28 +413,31 @@ class crop_resize(Operation):
 @register_op(doc_str="TODO")
 class crop(Operation):
     """
-    Crop the spatial dimensions (last two dimensions) of the input, by the specified amounts.
+    Crop the spatial dimensions (last two dimensions) of the input by the
+    specified amounts.
 
     Parameters
     ----------
-    * x: tensor<[*D, H1, W1],T>  (Required)
-        * must be at least rank ``3``
-    * crop_height: const<2, i32> (Required)
-        * amount to be cropped from top and bottom of the height dimension, i.e. axis=-2, respectively
+    x: tensor<[*D, H1, W1],T> (Required)
+        * Must be at least rank ``3``.
+    crop_height: const<2, i32> (Required)
+        * Amount to be cropped from the top and bottom of the height dimension
+          (``axis=-2``).
     * crop_width: const<2, i32> (Required)
-        * amount to be cropped from left and right side of the width dimension, i.e. axis=-1, respectively
+        * Amount to be cropped from the left and right sides of the width dimension (``axis=-1``).
 
     Returns
     -------
     tensor<[*D, H2, W2],T>
         * Tensor with same type as the input.
-        * ``H2`` = ``H1`` - crop_height[0] - crop_height[1]
-        * ``W2`` = ``W1`` - crop_width[0] - crop_width[1]
+        * ``H2`` = ``H1`` - crop_height[0] - crop_height[1].
+        * ``W2`` = ``W1`` - crop_width[0] - crop_width[1].
 
     Attributes
     ----------
     T: fp32
     """
+    
     input_spec = InputSpec(
         x=TensorInputType(),
         crop_height=IntTensorInputType(const=True),
