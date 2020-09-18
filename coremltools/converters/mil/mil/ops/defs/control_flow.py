@@ -30,12 +30,12 @@ class cond(Operation):
     
     _true_fn: function (Required)
         * A Python function that executes if ``cond`` evaluates to ``True``.
-        * It must take ``0`` as input, and return one or more values whose type becomes
+        * It should take no input, and return one or more values whose type becomes
           the operation's return type.
     
     _false_fn: function (Required)
         * A Python function that executes if ``cond`` evaluates to ``False``.
-        * It must take ``0`` as input, and have return types that match those of the
+        * It should take no input, and have return types that match those of the
           ``if`` branch.
     
     Returns
