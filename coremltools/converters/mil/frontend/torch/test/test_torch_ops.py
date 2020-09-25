@@ -101,6 +101,33 @@ class TestConv:
 
 class TestConvTranspose:
     @pytest.mark.parametrize(
+        "width, in_channels, out_channels, kernel_size, stride, padding, dilation, backend",
+        itertools.product(
+            [5, 7], [1, 3], [1, 3], [1, 3], [2, 3], [0, 1], [1, 3], backends
+        ),
+    )
+    def test_convolution_transpose1d(
+        self,
+        width,
+        in_channels,
+        out_channels,
+        kernel_size,
+        stride,
+        padding,
+        dilation,
+        backend,
+    ):
+        model = nn.ConvTranspose1d(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            kernel_size=kernel_size,
+            stride=stride,
+            padding=padding,
+            dilation=dilation,
+        )
+        run_compare_torch((1, in_channels, width), model, backend=backend)
+
+    @pytest.mark.parametrize(
         "height, width, in_channels, out_channels, kernel_size, stride, padding, dilation, backend",
         itertools.product(
             [5, 6], [5, 7], [1, 3], [1, 3], [1, 3], [2, 3], [0, 1], [1, 3], backends
