@@ -159,7 +159,7 @@ class TestConvTranspose:
     @pytest.mark.parametrize(
         "depth, height, width, in_channels, out_channels, kernel_size, stride, padding, dilation, backend",
         itertools.product(
-            [3, 4], [5, 6], [5, 7], [1, 3], [1, 3], [1, 3], [2, 3], [0, 1], [1, 3], backends
+            [3], [3], [3], [3], [4], [3], [1], [1], [1], backends
         ),
     )
     def test_convolution_transpose3d(
