@@ -1,6 +1,6 @@
 ### Building
 
-To build coremltools from source, you require you need
+To build coremltools from source, you require you need 
 [CMake](https://cmake.org) and
 [Miniconda](https://docs.conda.io/en/latest/miniconda.html) to configure the
 project.
