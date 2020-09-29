@@ -162,6 +162,8 @@ class TestConvTranspose:
             [3, 4], [5, 6], [5, 7], [1, 3], [1, 3], [1, 3], [2, 3], [0, 1], [1, 3], backends
         ),
     )
+    @pytest.mark.skip(reason="old macOS version on the CI machine does not have fixes for convolution transposed 3D. "
+                             "Please, see details in https://github.com/apple/coremltools/pull/942")
     def test_convolution_transpose3d(
             self,
             depth,
