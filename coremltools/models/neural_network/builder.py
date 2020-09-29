@@ -86,12 +86,12 @@ def _verify_quantization_arguments(weight=bytes(), output_channels=1, **kwargs):
                 raise ValueError(
                     "quant_scale and quant_bias parameters must be provided for linear quantization type"
                 )
-        if len(quant_scale) != 1 and len(quant_scale) != output_channels:
+        if not _np.isscalar(quant_scale) and (len(quant_scale) != 1 and len(quant_scale) != output_channels):
             raise ValueError(
                 "quant_scale should be of type float or an array of length outputChannels"
             )
         if not int_8_dynamic_quantize:
-            if len(quant_bias) != 1 and len(quant_bias) != output_channels:
+            if not _np.isscalar(quant_scale) and len(quant_bias) != 1 and len(quant_bias) != output_channels:
                 raise ValueError(
                     "quant_bias should be of type float or an array of length outputChannels"
                 )
@@ -2346,7 +2346,8 @@ class NeuralNetworkBuilder(object):
             return
 
         # Weight assignments
-        if len(kwargs) > 0:
+        quantization = len(kwargs) > 0 and ('quantization_type' in kwargs and kwargs.get('quantization_type') != None)
+        if quantization:
             _verify_quantization_arguments(
                 weight=W, output_channels=output_channels, **kwargs
             )
@@ -2377,7 +2378,7 @@ class NeuralNetworkBuilder(object):
 
         # Assign weights
         weights = spec_layer_params.weights
-        if len(kwargs) == 0:  # no quantization
+        if not quantization:  # no quantization
             weights.floatValue.extend(Wt.flatten())
         else:  # there is quantization
             W_bytes = bytes()
@@ -4091,7 +4092,7 @@ class NeuralNetworkBuilder(object):
         alpha=1.0,
         shift=0,
         scale=1.0,
-        epsilon=1e-6,
+        epsilon=None,
     ):
         """
         Add a Unary layer. Applies the specified function (mode) to all the elements of the input.
@@ -4128,6 +4129,14 @@ class NeuralNetworkBuilder(object):
         """
         spec_layer = self._add_generic_layer(name, [input_name], [output_name])
         spec_layer_params = spec_layer.unary
+        if epsilon is None:
+            # Use the default value of epsilon to be 1e-4, instead of 1e-6, if mode = "rsqrt" or "inverse"
+            if mode == "inverse" or mode == "rsqrt":
+                epsilon = 1e-4
+            elif mode == "log":
+                epsilon = 1e-45
+            else:
+                epsilon = 1e-6
         spec_layer_params.epsilon = epsilon
         spec_layer_params.alpha = alpha
         spec_layer_params.shift = shift

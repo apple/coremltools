@@ -28,7 +28,7 @@ class MILFrontend:
     name = "mil"
 
     def __call__(self, model, *args, **kwargs):
-        if "inputs" in kwargs:
+        if "inputs" in kwargs and kwargs["inputs"] is not None:
             inputs = kwargs["inputs"]
             if not isinstance(inputs, (list, tuple)):
                 raise ValueError(
@@ -93,6 +93,7 @@ class NNProtoBackend:
 
         return load(*args, **kwargs)
 
+
 @ConverterRegistry.frontend
 class CustomFrontend:
     name = "custom"
@@ -129,6 +130,7 @@ def _convert(
             msg.format(convert_from, list(converter_registry.frontends.keys()))
         )
     frontend_converter = frontend_converter_type()
+
     prog = frontend_converter(model, **kwargs)
     common_pass(prog)
 

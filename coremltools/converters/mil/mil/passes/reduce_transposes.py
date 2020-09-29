@@ -927,7 +927,11 @@ class TransposeOptimization(object):
                 # Change the name of the input_var to match the block output if input_var is not changed.
                 # If the same input_var is in output twice, we can't rename it twice, therefore we initiate an
                 # Identity op to match the name
-                if input_var not in name_changed_vars:
+                if input_var in self.block.inputs.values():
+                    with self.block:
+                        input_var = mb.identity(x=input_var, before_op=op, name=output_var.name)
+                        parent_op = None  # set anchor op as None.
+                elif input_var not in name_changed_vars:
                     input_var.name = output_var.name
                     input_var.op.name = output_var.op.name
                     name_changed_vars.update([input_var])

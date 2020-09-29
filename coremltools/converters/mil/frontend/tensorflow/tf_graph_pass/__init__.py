@@ -17,6 +17,7 @@ from .tensor_array_transform import tensor_array_resource_removal
 # graph passes
 from .delete_asserts import delete_asserts
 from .constant_propagation import constant_propagation
+from .quantization_pass import quantization_pass
 from .variable_node_transform import remove_variable_nodes
 from .functionalize_loops import functionalize_loops
 from .cond_to_where import cond_to_where

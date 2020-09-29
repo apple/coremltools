@@ -12,6 +12,7 @@ from __future__ import absolute_import as _
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import types
+from coremltools.converters.mil.mil.var import ListVar
 
 
 @register_pass(namespace="tensorflow")
@@ -53,11 +54,17 @@ def backfill_make_list_elem_type_block(block):
             raise ValueError(msg.format(op.name, op.enclosing_block))
 
         with block:
+            # elem_shape can be runtime-detemrined, which cannot be inferred here at this point,
+            # so we add an internal _const_symbolic node to cover both static and dynamic cases.
+            elem_shape_var = mb._const_symbolic(
+                mode="immediate_value",
+                val=elem_type.get_shape(),
+                before_op=op,
+            )
             new_list = mb.make_list(
                 init_length=op.init_length,
                 dynamic_length=op.dynamic_length,
-                # elem_shape cannot be symbolic by definition of list.
-                elem_shape=elem_type.get_shape(),
+                elem_shape=elem_shape_var,
                 dtype=op.inputs["dtype"],
                 before_op=op,
                 name=op.name,
@@ -105,6 +112,17 @@ def infer_elem_type(list_var):
             block_var = block.inputs[idx]
             elem_type = infer_elem_type(block_var)
             if elem_type is not None:
+
+                def _set_types_for_block_inputs(block):
+                    block_var = block.inputs[idx]
+                    new_block_var = ListVar(name=block_var.name, elem_type=elem_type,
+                                            init_length=block_var.sym_type.T[1],
+                                            dynamic_length=block_var.sym_type.T[2])
+                    block._replace_var(block_var, new_block_var)
+
+                _set_types_for_block_inputs(o.blocks[0])  # condition block
+                _set_types_for_block_inputs(o.blocks[1])  # body block
+
                 return elem_type
             # otherwise continue to other block_var (a list_var can be
             # passed into while_loop twice).

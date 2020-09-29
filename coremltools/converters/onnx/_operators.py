@@ -430,7 +430,8 @@ def _get_conv_params(builder, node, graph, err, params_dict, axis=None):
         else:
             params_dict["W"] = params_dict["W"].transpose((2, 3, 0, 1))  # type: ignore
 
-    if "auto_pad" in node.attrs and not _compare(node.attrs["auto_pad"], "VALID"):
+    if "auto_pad" in node.attrs and \
+        not (_compare(node.attrs["auto_pad"], 'VALID') or _compare(node.attrs["auto_pad"], 'NOTSET')):
         params_dict["padding_type"] = "same"
         if _compare(node.attrs["auto_pad"], "SAME_LOWER"):
             params_dict["same_padding_asymmetry_mode"] = "TOP_LEFT_HEAVY"
@@ -820,7 +821,8 @@ def _get_pool_params(builder, node, graph, err, params_dict, axis=None):
             params_dict["stride_height"] = strides[0]
             params_dict["stride_width"] = strides[1]
 
-        if "auto_pad" in node.attrs and not _compare(node.attrs["auto_pad"], "VALID"):
+        if "auto_pad" in node.attrs and \
+            not (_compare(node.attrs["auto_pad"], 'VALID') or _compare(node.attrs["auto_pad"], 'NOTSET')):
             params_dict["padding_type"] = "SAME"
             if _compare(node.attrs["auto_pad"], "SAME_LOWER"):
                 params_dict["same_padding_asymmetry_mode"] = "TOP_LEFT_HEAVY"

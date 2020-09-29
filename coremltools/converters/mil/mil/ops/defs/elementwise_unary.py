@@ -22,7 +22,7 @@ class elementwise_unary(Operation):
 
 
 """
-Elementwise unary op implmentation(s)
+Elementwise unary op implementation(s)
 """
 
 
@@ -390,13 +390,17 @@ class floor(elementwise_unary):
 
 
 @register_op(doc_str="")
-class inverse(elementwise_unary):
+class inverse(Operation):
     """
     Returns the reciprocal value of the input ``x``, element-wise.
 
     Parameters
     ----------
     x: tensor<[*d], T> (Required)
+    epsilon: const f32 (Optional, default=1e-4)
+        * this is a small constant that is added to the input, before taking its inverse,
+          for stability.
+        * y = 1 / (x + epsilon)
 
     Returns
     -------
@@ -408,22 +412,33 @@ class inverse(elementwise_unary):
     T: fp32
     """
 
+    input_spec = InputSpec(
+        x=ScalarOrTensorInputType(),
+        epsilon=FloatInputType(const=True, default=1e-4),
+    )
+
     def __init__(self, **kwargs):
         super(inverse, self).__init__(**kwargs)
 
+    def type_inference(self):
+        return self.x.sym_type
+
     @precondition(allow=VALUE)
     def value_inference(self):
-        return np.reciprocal(self.x.val)
+        return np.reciprocal(self.x.val + self.epsilon.val)
 
 
 @register_op(doc_str="")
-class log(elementwise_unary):
+class log(Operation):
     """
     Returns the natural logarithm value of the input ``x``, element-wise.
 
     Parameters
     ----------
     x: tensor<[*d], T> (Required)
+    epsilon: const f32 (Optional, default=1e-45)
+        * this is a small constant that is added to the input, before taking log.
+        * y = log(x + epsilon)
 
     Returns
     -------
@@ -435,12 +450,20 @@ class log(elementwise_unary):
     T: fp32
     """
 
+    input_spec = InputSpec(
+        x=ScalarOrTensorInputType(),
+        epsilon=FloatInputType(const=True, default=1e-45),
+    )
+
     def __init__(self, **kwargs):
         super(log, self).__init__(**kwargs)
 
+    def type_inference(self):
+        return self.x.sym_type
+
     @precondition(allow=VALUE)
     def value_inference(self):
-        return np.log(self.x.val)
+        return np.log(self.x.val + self.epsilon.val)
 
 
 @register_op(doc_str="")
@@ -498,13 +521,17 @@ class round(elementwise_unary):
 
 
 @register_op(doc_str="")
-class rsqrt(elementwise_unary):
+class rsqrt(Operation):
     """
     Returns the reciprocal value of the square root of the input ``x``, element-wise.
 
     Parameters
     ----------
     x: tensor<[*d], T> (Required)
+    epsilon: const f32 (Optional, default=1e-12)
+        * this is a small constant that is added to the input, before applying the rsqrt function,
+          for stability.
+        * y = 1 / sqrt(x + epsilon)
 
     Returns
     -------
@@ -516,12 +543,20 @@ class rsqrt(elementwise_unary):
     T: fp32
     """
 
+    input_spec = InputSpec(
+        x=ScalarOrTensorInputType(),
+        epsilon=FloatInputType(const=True, default=1e-12),
+    )
+
     def __init__(self, **kwargs):
         super(rsqrt, self).__init__(**kwargs)
 
+    def type_inference(self):
+        return self.x.sym_type
+
     @precondition(allow=VALUE)
     def value_inference(self):
-        return 1.0 / np.sqrt(self.x.val)
+        return 1.0 / np.sqrt(self.x.val + self.epsilon.val)
 
 
 @register_op(doc_str="")

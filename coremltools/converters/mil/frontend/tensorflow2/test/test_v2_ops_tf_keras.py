@@ -434,6 +434,49 @@ class TestConvolution:
             [
                 "use_cpu_only",
                 "backend",
+                "padding",
+            ]
+        ),
+        itertools.product(
+            [True, False],
+            backends,
+            ["same", "valid"],
+        ),
+    )
+    @pytest.mark.skip(reason="rdar://65198011 (Re-enable Conv3dTranspose and DynamicTile unit tests)")
+    def test_conv2d_padding_dynamic_input(
+        self,
+        use_cpu_only,
+        backend,
+        padding,
+    ):
+        from tensorflow.keras import Input
+        from tensorflow.keras.models import Model
+        from tensorflow.keras.layers import Conv2D, GlobalMaxPooling2D
+
+        # Test same padding
+        input_layer = Input(batch_size=1, shape=(None, None, 1))
+        layer = Conv2D(
+            filters=16,
+            kernel_size=(3, 3),
+            padding=padding,
+            activation="relu"
+        )(input_layer)
+        output_layer = GlobalMaxPooling2D()(layer)
+        model = Model(inputs=[input_layer], outputs=[output_layer])
+        run_compare_tf_keras(
+            model,
+            [random_gen((1, 80, 40 ,1), rand_min=-10, rand_max=10)],
+            use_cpu_only=use_cpu_only,
+            backend=backend,
+        )
+
+
+    @pytest.mark.parametrize(
+        ",".join(
+            [
+                "use_cpu_only",
+                "backend",
                 "op",
                 "padding",
                 "data_format",
@@ -501,8 +544,85 @@ class TestConvolution:
             backend=backend,
         )
 
+class TestConvTranspose:
+    @pytest.mark.parametrize(
+        ",".join(
+            [
+                "use_cpu_only",
+                "backend",
+                "op",
+                "padding",
+                "data_format",
+                "spatial_dim_and_ks",
+                "output_padding",
+                "strides",
+                "dilations",
+                "batch_size",
+            ]
+        ),
+        itertools.product(
+            [True, False],
+            backends,
+            [tf.keras.layers.Conv2DTranspose, tf.keras.layers.Conv3DTranspose],
+            ["same", "valid"],
+            ["channels_last"],
+            [(7, 11, 12, 1, 2, 2), (9, 5, 7, 3, 3, 3)],
+            [(1, 1, 1)],
+            [(2, 2, 2), (2, 3, 3)],
+            [(1, 1, 1)], # Dilation > 1 not supported by TF
+            [1, 3],
+        ),
+    )
+    @pytest.mark.skip(reason="rdar://65198011 (Re-enable Conv3dTranspose and DynamicTile unit tests)")
+    def test_conv_transpose(
+        self,
+        use_cpu_only,
+        backend,
+        op,
+        padding,
+        data_format,
+        spatial_dim_and_ks,
+        output_padding,
+        strides,
+        dilations,
+        batch_size,
+    ):
+        s1, s2, s3, k1, k2, k3 = spatial_dim_and_ks
+        c_in, c_out = 2, 3
+        input_shape = None
+        kernel_size = None
+        if op == tf.keras.layers.Conv2DTranspose:
+            input_shape = (batch_size, s2, s3, c_in)
+            kernel_size = (k2, k3)
+            strides = (strides[1], strides[2])
+            dilations = dilations[1:]
+            output_padding = (output_padding[1], output_padding[2])
+        elif op == tf.keras.layers.Conv3DTranspose:
+            input_shape = (batch_size, s1, s2, s3, c_in)
+            kernel_size = (k1, k2, k3)
 
-@pytest.mark.skip(reason="rdar://65198011 (Re-enable Conv3dTranspose and DynamicTile unit tests)")
+        model = tf.keras.Sequential(
+            [
+                op(
+                    batch_input_shape=input_shape,
+                    filters=c_out,
+                    kernel_size=kernel_size,
+                    strides=strides,
+                    padding=padding.upper(),
+                    output_padding=output_padding,
+                    data_format=data_format,
+                    dilation_rate=dilations,
+                )
+            ]
+        )
+
+        run_compare_tf_keras(
+            model,
+            [random_gen(input_shape, rand_min=-10, rand_max=10)],
+            use_cpu_only=use_cpu_only,
+            backend=backend,
+        )
+
 class TestConvTranspose:
     @pytest.mark.parametrize(
         ",".join(
@@ -870,8 +990,8 @@ class TestInstanceNormalization:
             [random_gen(shape, rand_min=-1, rand_max=1)],
             use_cpu_only=use_cpu_only,
             backend=backend,
-            atol=1e-3,
-            rtol=1e-4,
+            atol=1e-2,
+            rtol=1e-3,
         )
 
 

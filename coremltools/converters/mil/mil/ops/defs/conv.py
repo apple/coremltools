@@ -141,6 +141,49 @@ class conv(Operation):
 
 
 @register_op(doc_str="")
+class conv_quantized(conv):
+    """
+    Note: This is experimental and may change in the future.
+    Supports weight quantization for parameters while performing convolution over input.
+    ``W_float = W_quantized * scale + bias``
+
+    Parameters
+    ----------
+    In addition to convolutional layer parameters the following additional parameters are required.
+
+    quantization_type: const str (Required)
+    * One of ``linear``, or ``lut``
+
+    nbits: const tensor<[], i32> (Optional. Default to 8)
+    * Denotes the bit-width of the quantization. ``1 <= nbits <= 8``
+
+    quant_scale: tensor<*?, T> (Required)
+    * Denotes the scale of quantization.
+
+    quant_bias: tensor<*?, T> (Required)
+    * Denotes the bias that is used to quantize/dequantize.
+
+    Returns
+    -------
+    tensor<[n, C_out, *d_out], T>
+        * Output activation has the same rank and spatial dimension as the input (i.e., ``len(d_out) == len(d_in)``)
+
+    Attributes
+    ----------
+    T: fp32
+    """
+
+    input_spec = InputSpec(
+        quantization_type=StringInputType(const=True, optional=False, default=None),
+        nbits=IntInputType(const=True, optional=False, default=8),
+        quant_scale=ScalarOrTensorInputType(const=True, optional=False, default=None),
+        quant_bias=ScalarOrTensorInputType(const=True, optional=False, default=None)) + conv.input_spec
+
+    def __init__(self, **kwargs):
+        super(conv_quantized, self).__init__(**kwargs)
+
+
+@register_op(doc_str="")
 class conv_transpose(Operation):
     """
     Perform transposed convolution (aka deconvolution, fractionally stride

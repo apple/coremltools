@@ -388,6 +388,45 @@ class TestGather:
             backend=backend,
         )
 
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend", itertools.product([True, False], backends,)
+    )
+    def test_embedding_builder_to_backend_smoke(self, use_cpu_only, backend):
+        x = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
+        indices = np.array([1, 0], dtype=np.int32)
+        input_placeholders = {
+            "indices": mb.placeholder(shape=indices.shape, dtype=types.int32),
+        }
+
+        input_values = {"indices": indices}
+
+        def build(indices):
+            return [
+                mb.gather(x=x, indices=indices, axis=0),
+                mb.gather(x=x, indices=indices, axis=-2),
+            ]
+
+        expected_output_types = [
+            (2, 3, types.fp32),
+            (2, 3, types.fp32),
+        ]
+
+        expected_outputs = [
+            np.array([[4, 5, 6], [1, 2, 3]], dtype=np.float32),
+            np.array([[4, 5, 6], [1, 2, 3]], dtype=np.float32),
+        ]
+
+        run_compare_builder(
+            build,
+            input_placeholders,
+            input_values,
+            expected_output_types,
+            expected_outputs,
+            use_cpu_only=use_cpu_only,
+            frontend_only=False,
+            backend=backend,
+        )
+
     @ssa_fn
     def test_builder_eval(self):
         x = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)

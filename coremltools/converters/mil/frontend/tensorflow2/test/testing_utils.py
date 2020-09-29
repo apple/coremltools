@@ -23,7 +23,7 @@ def make_tf2_graph(input_types):
 
     Parameters
     ----------
-    input_types: list of tuple
+    input_types: list of tuple or list of list
         List of input types. E.g. [(3, 224, 224, tf.int32)] represent 1 input,
         with shape (3, 224, 224), and the expected data type is tf.int32. The
         dtype is optional, in case it's missing, tf.float32 will be used.
@@ -34,21 +34,19 @@ def make_tf2_graph(input_types):
     """
 
     def wrapper(ops):
-        class TensorFlowModule(tf.Module):
-            input_signature = []
-            for input_type in input_types:
-                if len(input_type) > 0 and isinstance(input_type[-1], dtypes.DType):
-                    shape, dtype = input_type[:-1], input_type[-1]
-                else:
-                    shape, dtype = input_type, tf.float32
-                input_signature.append(tf.TensorSpec(shape=shape, dtype=dtype))
+        input_signature = []
+        for input_type in input_types:
+            if len(input_type) > 0 and isinstance(input_type[-1], dtypes.DType):
+                shape, dtype = input_type[:-1], input_type[-1]
+            else:
+                shape, dtype = input_type, tf.float32
+            input_signature.append(tf.TensorSpec(shape=shape, dtype=dtype))
 
-            @tf.function(input_signature=input_signature)
-            def __call__(self, *args):
-                return ops(*args)
+        @tf.function(input_signature=input_signature)
+        def tf2_model(*args):
+            return ops(*args)
 
-        module = TensorFlowModule()
-        concrete_func = module.__call__.get_concrete_function()
+        concrete_func = tf2_model.get_concrete_function()
         inputs = get_tf_node_names(
             [t.name for t in concrete_func.inputs if t.dtype != dtypes.resource],
             mode="input",
@@ -188,7 +186,7 @@ def run_compare_tf_keras(
     if frontend_only:
         return
 
-    # get tf.keras model output as reference and run comparision
+    # get tf.keras model output as reference and run comparison
     ref = [model(input_values).numpy()]
     expected_outputs = {n: v for n, v in zip(outputs, ref)}
     input_key_values = {n: v for n, v in zip(inputs, input_values)}

@@ -67,7 +67,7 @@ def insert_get_tuple(gddict):
         "TensorArrayV3",
         "Const",
     ]
-    inclusions = ["Split", "SplitV", "LSTMBlockCell"]
+    inclusions = ["Split", "SplitV", "LSTMBlockCell", "TopK", "TopKV2", "Unpack"]
     gto_make_op_cache = {}
     for name in list(gddict.keys()):
         new_node = ParsedTFNode()

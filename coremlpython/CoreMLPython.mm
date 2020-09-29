@@ -134,7 +134,7 @@ void NeuralNetworkShapeInformation::print() const {
 /*
  * NeuralNetworkBuffer - NeuralNetworkBuffer
  */
-NeuralNetworkBufferInformation::NeuralNetworkBufferInformation(const std::string &bufferFilePath, NNBuffer::bufferMode mode)
+NeuralNetworkBufferInformation::NeuralNetworkBufferInformation(const std::string &bufferFilePath, NNBuffer::BufferMode mode)
     : nnBuffer(std::make_unique<NNBuffer::NeuralNetworkBuffer>(bufferFilePath, mode))
 {
 }
@@ -149,18 +149,20 @@ NeuralNetworkBufferInformation::~NeuralNetworkBufferInformation() = default;
  * Writes given buffer into file
  * Returns offset from the beginning of buffer
  */
-inline u_int64_t NeuralNetworkBufferInformation::addBuffer(const std::vector<float> &buffer) {
-    return nnBuffer->addBuffer(buffer);
+template <typename T>
+inline u_int64_t NeuralNetworkBufferInformation::addBuffer(const std::vector<T>& buffer) {
+    return nnBuffer->AddBuffer(buffer);
 }
 
 /*
  * NeuralNetworkBufferInformation - getBuffer
  * Reads buffer from given offset and of given size and writes to data
  */
-inline std::vector<float> NeuralNetworkBufferInformation::getBuffer(const u_int64_t offset) {
+template <typename T>
+inline std::vector<T> NeuralNetworkBufferInformation::getBuffer(const u_int64_t offset) {
     // TODO: Explore Pybind11 Opaque to pass vector by reference
-    std::vector<float> buffer;
-    nnBuffer->getBuffer(offset, buffer);
+    std::vector<T> buffer;
+    nnBuffer->GetBuffer(offset, buffer);
     return buffer;
 }
 
@@ -180,13 +182,18 @@ PYBIND11_PLUGIN(libcoremlpython) {
         .def("print", &NeuralNetworkShapeInformation::print);
 
     py::class_<NeuralNetworkBufferInformation> netBuffer(m, "_NeuralNetworkBuffer");
-    netBuffer.def(py::init<const std::string&, NNBuffer::bufferMode>())
-        .def("add_buffer", &NeuralNetworkBufferInformation::addBuffer)
-        .def("get_buffer", &NeuralNetworkBufferInformation::getBuffer);
-    py::enum_<NNBuffer::bufferMode>(netBuffer, "mode")
-        .value("write", NNBuffer::bufferMode::write)
-        .value("append", NNBuffer::bufferMode::append)
-        .value("read", NNBuffer::bufferMode::read)
+    netBuffer.def(py::init<const std::string&, NNBuffer::BufferMode>())
+        .def("add_buffer_float", &NeuralNetworkBufferInformation::addBuffer<float>)
+        .def("add_buffer_int", &NeuralNetworkBufferInformation::addBuffer<int32_t>)
+        .def("add_buffer_bool", &NeuralNetworkBufferInformation::addBuffer<uint8_t>)
+        .def("get_buffer_float", &NeuralNetworkBufferInformation::getBuffer<float>)
+        .def("get_buffer_int", &NeuralNetworkBufferInformation::getBuffer<int32_t>)
+        .def("get_buffer_bool", &NeuralNetworkBufferInformation::getBuffer<uint8_t>);
+    
+    py::enum_<NNBuffer::BufferMode>(netBuffer, "mode")
+        .value("write", NNBuffer::BufferMode::Write)
+        .value("append", NNBuffer::BufferMode::Append)
+        .value("read", NNBuffer::BufferMode::Read)
         .export_values();
 
     return m.ptr();

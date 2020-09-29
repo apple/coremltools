@@ -7,10 +7,12 @@ import numpy as np
 import torch
 import torch.nn as nn
 from six import string_types as _string_types
-from coremltools import TensorType
+from coremltools import TensorType, RangeDim
+from ..converter import torch_to_mil_types
 from coremltools.converters.mil.testing_reqs import _converter
 from coremltools.models import MLModel
 from coremltools._deps import _IS_MACOS
+from coremltools.converters.mil.mil.types.type_mapping import nptype_from_builtin
 
 class ModuleWrapper(nn.Module):
     """
@@ -49,8 +51,13 @@ def convert_to_coreml_inputs(input_description, inputs):
     """
     flattened_inputs = _flatten(inputs)
     coreml_inputs = {
-        str(x): inp.numpy() for x, inp in zip(input_description, flattened_inputs)
+        str(x): inp.numpy().astype(np.float32) for x, inp in zip(input_description, flattened_inputs)
     }
+
+    for k, v in coreml_inputs.items():
+        if isinstance(v, np.ndarray) and v.ndim == 0:
+            coreml_inputs[k] = np.expand_dims(v, axis=-1)
+
     return coreml_inputs
 
 
@@ -60,8 +67,10 @@ def convert_to_mlmodel(model_spec, tensor_inputs, backend="nn_proto"):
             return [_convert_to_inputtype(x) for x in inputs]
         elif isinstance(inputs, tuple):
             return tuple([_convert_to_inputtype(x) for x in inputs])
+        elif isinstance(inputs, TensorType):
+            return inputs
         elif isinstance(inputs, torch.Tensor):
-            return TensorType(shape=inputs.shape)
+            return TensorType(shape=inputs.shape, dtype=torch_to_mil_types[inputs.dtype])
         else:
             raise ValueError(
                 "Unable to parse type {} into InputType.".format(type(inputs))
@@ -72,12 +81,28 @@ def convert_to_mlmodel(model_spec, tensor_inputs, backend="nn_proto"):
     return MLModel(proto, useCPUOnly=True)
 
 
-def generate_input_data(input_size, rand_range = (0.0, 1.0)):
+def generate_input_data(input_size, rand_range=(0, 1)):
     r1, r2 = rand_range
+
+    def random_data(spec):
+        if isinstance(spec, TensorType):
+            spec_shape = spec.shape.shape
+            dtype = nptype_from_builtin(spec.dtype)
+        else:
+            spec_shape = spec
+            dtype = np.float32
+
+        static_shape = tuple([np.random.randint(dim.lower_bound, dim.upper_bound if dim.upper_bound > 0 else 10)
+                              if isinstance(dim, RangeDim) else dim for dim in spec_shape])
+
+        data = np.random.rand(*static_shape) if static_shape != () else np.random.rand()
+        data = (r1 - r2) * data + r2
+        return torch.from_numpy(np.array(data).astype(dtype))
+
     if isinstance(input_size, list):
-        return [(r1 - r2) * torch.rand(_size) + r2 for _size in input_size]
+        return [random_data(size) for size in input_size]
     else:
-        return (r1 - r2) * torch.rand(input_size) + r2
+        return random_data(input_size)
 
 
 def trace_model(model, input_data):
@@ -90,7 +115,7 @@ def trace_model(model, input_data):
 
 def run_compare_torch(
     input_data, model, expected_results=None, places=5, input_as_shape=True, backend="nn_proto",
-    rand_range = (0.0, 1.0)
+    rand_range=(0.0, 1.0), use_scripting=False,
 ):
     """
         Traces a model and runs a numerical test.
@@ -101,9 +126,9 @@ def run_compare_torch(
     model.eval()
     if input_as_shape:
         input_data = generate_input_data(input_data, rand_range)
-    model_spec = trace_model(model, input_data)
+    model_spec = torch.jit.script(model) if use_scripting else trace_model(model, input_data)
     convert_and_compare(
-        input_data, model_spec, expected_results=expected_results, atol=10.0 ** -places, backend=backend
+        input_data, model_spec, expected_results=expected_results, atol=10.0 ** -places, backend=backend,
     )
 
 
@@ -116,8 +141,12 @@ def flatten_and_detach_torch_results(torch_results):
 
 def convert_and_compare(input_data, model_spec, expected_results=None, atol=1e-5, backend="nn_proto"):
     """
-        If expected results is not set, it will by default
-        be set to the flattened output of the torch model.
+    If expected results is not set, it will by default
+    be set to the flattened output of the torch model.
+
+    Inputs:
+
+    - input_data: torch.tensor or list[torch.tensor]
     """
     if isinstance(model_spec, _string_types):
         torch_model = torch.jit.load(model_spec)

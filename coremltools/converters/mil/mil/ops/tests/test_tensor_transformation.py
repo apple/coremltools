@@ -918,7 +918,6 @@ class TestConcat:
             backend=backend,
         )
 
-
     @pytest.mark.parametrize(
         "use_cpu_only, backend", itertools.product([True, False], backends, )
     )
@@ -953,6 +952,105 @@ class TestConcat:
             frontend_only=False,
             backend=backend,
         )
+
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend, rank, n_inputs, negative_index",
+        itertools.product(
+            [True, False],
+            backends,
+            [1, 2, 3, 4, 5],
+            [2, 3],
+            [False, True],
+        )
+    )
+    @pytest.mark.skip(reason="rdar://65198011 (Re-enable Conv3dTranspose, concat interleave and DynamicTile unit tests)")
+    def test_builder_to_backend_stress_interleave(self, use_cpu_only, backend,
+                                                  rank, n_inputs, negative_index):
+
+        def np_concat_interleave(arrays, axis):
+            step = len(arrays)
+            in_shape = arrays[0].shape
+            out_shape = list(in_shape)
+            if axis < 0:
+                axis += len(in_shape)
+            out_shape[axis] = step * in_shape[axis]
+            concat_tensor = np.empty(tuple(out_shape), dtype=np.float32)
+            for i in range(step):
+                if rank == 5:
+                    if axis == 4:
+                        concat_tensor[:, :, :, :, i::step] = arrays[i]
+                    if axis == 3:
+                        concat_tensor[:, :, :, i::step, :] = arrays[i]
+                    if axis == 2:
+                        concat_tensor[:, :, i::step, :, :] = arrays[i]
+                    if axis == 1:
+                        concat_tensor[:, i::step, :, :, :] = arrays[i]
+                    if axis == 0:
+                        concat_tensor[i::step, :, :, :, :] = arrays[i]
+                if rank == 4:
+                    if axis == 3:
+                        concat_tensor[:, :, :, i::step] = arrays[i]
+                    if axis == 2:
+                        concat_tensor[:, :, i::step, :] = arrays[i]
+                    if axis == 1:
+                        concat_tensor[:, i::step, :, :] = arrays[i]
+                    if axis == 0:
+                        concat_tensor[i::step, :, :, :] = arrays[i]
+                if rank == 3:
+                    if axis == 2:
+                        concat_tensor[:, :, i::step] = arrays[i]
+                    if axis == 1:
+                        concat_tensor[:, i::step, :] = arrays[i]
+                    if axis == 0:
+                        concat_tensor[i::step, :, :] = arrays[i]
+                if rank == 2:
+                    if axis == 1:
+                        concat_tensor[:, i::step] = arrays[i]
+                    if axis == 0:
+                        concat_tensor[i::step, :] = arrays[i]
+                if rank == 1:
+                    concat_tensor[i::step] = arrays[i]
+            return concat_tensor
+
+        input_shape = [4, 2, 3, 6, 5]
+        for axis in range(rank):
+            if negative_index:
+                axis = axis - rank
+            shape = tuple(input_shape[:rank])
+            t1 = np.random.normal(size=shape).astype(np.float32)
+            t2 = np.random.normal(size=shape).astype(np.float32)
+            all_input_arrs = [t1, t2]
+            input_placeholders = {
+                "x": mb.placeholder(shape=t1.shape),
+                "y": mb.placeholder(shape=t2.shape),
+            }
+            input_values = {"x": t1, "y": t2}
+            if n_inputs == 3:
+                t3 = np.random.normal(size=shape).astype(np.float32)
+                input_placeholders["z"] = mb.placeholder(shape=t3.shape)
+                input_values["z"] = t3
+                all_input_arrs.append(t3)
+
+            def build_2_inputs(x, y):
+                return (mb.concat(values=(x, y), axis=axis, interleave=True),)
+
+            def build_3_inputs(x, y, z):
+                return (mb.concat(values=(x, y, z), axis=axis, interleave=True),)
+
+            np_out = np_concat_interleave(all_input_arrs, axis)
+            expected_output_types = [np_out.shape + (types.fp32,)]
+            expected_outputs = [np_out]
+
+            run_compare_builder(
+                build_3_inputs if n_inputs == 3 else build_2_inputs,
+                input_placeholders,
+                input_values,
+                expected_output_types,
+                expected_outputs,
+                use_cpu_only=use_cpu_only,
+                frontend_only=False,
+                backend=backend,
+            )
 
     @ssa_fn
     def test_builder_eval(self):

@@ -15,7 +15,7 @@ from coremltools.converters.mil.mil.var import Var
 from coremltools.converters.mil.mil import get_new_symbol
 from ._op_reqs import *
 import logging
-
+from coremltools.converters.mil.mil import mil_list
 
 @register_op(doc_str="")
 class cond(Operation):
@@ -29,13 +29,13 @@ class cond(Operation):
         * 0-D tensor (scalar) predicate to switch between true and false branches.
     
     _true_fn: function (Required)
-        * A Python function that executes if ``cond`` evaluates to ``True``.
-        * It should take no input, and return one or more values whose type becomes
+        * A Python function that executes if ``pred`` evaluates to ``True``.
+        * It must take zero input (i.e, no input), and return one or more values whose type becomes
           the operation's return type.
     
     _false_fn: function (Required)
-        * A Python function that executes if ``cond`` evaluates to ``False``.
-        * It should take no input, and have return types that match those of the
+        * A Python function that executes if ``pred`` evaluates to ``False``.
+        * It must take zero input (i.e. no input), and have return types that match those of the
           ``if`` branch.
     
     Returns
@@ -156,7 +156,19 @@ class const(Operation):
                 # We use float32 by default.
                 value = value.astype(np.float32)
 
-        if not isinstance(value, (np.generic, np.ndarray, six.string_types, bool)):
+        elif isinstance(value, mil_list):
+            # if val that was passed in is of type mil_list, which is just a wrapper on top of python list
+            # then construct the list type
+            list_value = value.ls
+            if len(list_value) == 0:
+                raise ValueError("'mil_list' points to an empty list")
+            builtin_elem_type, _ = self._get_type_val(list_value[0])
+            from coremltools.converters.mil.mil.types.type_list import list as types_list
+            builtin_type = types_list(builtin_elem_type, init_length=len(list_value), dynamic_length=False)
+            return builtin_type, value
+
+
+        if not isinstance(value, (np.generic, np.ndarray, six.string_types, bool, mil_list)):
             raise ValueError("Unknown value for constant: {}".format(value))
 
         _, builtin_type = numpy_val_to_builtin_val(value)
@@ -209,8 +221,7 @@ class select(Operation):
            from ``cond, a, b``.
         *  If ``a, b`` are ``None``, the return shape is 2-D, where the first dimension
            ``n`` is the number of matching indices in ``cond``, and ``len(D1)`` is the
-           ``cond`` rank.
-    
+           rank of ``cond``.
     Attributes
     ----------
     T: fp32
@@ -247,7 +258,7 @@ class select(Operation):
 class while_loop(Operation):
     """
     Perform the body repeatedly while the condition ``cond`` is true.
-    
+
     Parameters
     ----------
     _cond: function  (Required)
@@ -296,32 +307,39 @@ class while_loop(Operation):
         return val1 == val2
 
     @staticmethod
-    def clean_up_child_ops(block):
+    def _clean_up_child_ops(block):
         for op in list(block.operations):
 
             for b in op.blocks:
-                while_loop.clean_up_child_ops(b)
+                while_loop._clean_up_child_ops(b)
 
             inputs = op.get_flattened_inputs()
             for in_var in inputs:
                 in_var.remove_child_op(op)
 
-    def build_block(self, block_inputs):
-        block_name = self.name + '_block'
+    def _build_block(self, block_inputs):
+        # Cond block:
+        block_name = self.name + '_cond_block'
         with Block(block_inputs=block_inputs, outer_op=self,
-                name=block_name) as block:
-            # Body func
-            body_func = self._body.val
-            exit_vars = body_func(*block.inputs)
+                name=block_name) as cond_block:
 
-            # Cond func:
             cond_func = self._cond.val
-            cond_var = cond_func(*block.inputs)
+            cond_var = cond_func(*cond_block.inputs)
             cond_vars = cond_var if isinstance(cond_var, list) else [cond_var]
+            cond_block.set_outputs(cond_vars)
 
-            # Concatenate the outputs
-            block.set_outputs(cond_vars + list(exit_vars))
-        return block, exit_vars
+        # Body block
+        block_name = self.name + '_body_block'
+        with Block(block_inputs=block_inputs, outer_op=self,
+                name=block_name) as body_block:
+            body_func = self._body.val
+            exit_vars = body_func(*body_block.inputs)
+            exit_vars = list(exit_vars) if isinstance(exit_vars, (list, tuple)) \
+                else [exit_vars]
+            body_block.set_outputs(exit_vars)
+            #self.blocks.append(body_block)
+
+        return cond_block, body_block, exit_vars
 
     def build_nested_blocks(self):
         # self.loop_vars is python tuple of Vars.
@@ -334,6 +352,29 @@ class while_loop(Operation):
         # We assume that sym_val is unchanging across the block iterate. If it
         # changes, we rebuild the block and rerun type and value inference.
 
+        # Design notes on two blocks (cond and body):
+        #
+        # - Observe that two blocks can always be represented as a single
+        # block that contains both cond and body logic, which would return
+        # [loop_cond] + loop_carries. `loop_cond` is a bool.
+        #
+        # - Observe that single block implies a do-while logic,
+        # in which the first iterate is always executed. It's possible to add
+        # a cond input to while_loop to modify do-while behavior:
+        #
+        #   %first_cond = cond_logic(...)
+        #   while_loop(cond=%first_cond, loop_vars=(...))
+        #
+        # and we enter the first iterate only if cond is True. But this would
+        # require caller to execute cond logic outside of while_loop first
+        # (which also needs to be duplicated within the loop),
+        # resulting in duplicated code / ops.
+        #
+        # - Thus, single block is unnatural for the natural execution order,
+        # in which we execute the cond block first to get the loop_cond. Only
+        # if `loop_cond` is True do we execute the body block. This is the
+        # semantics of tf.while_loop.
+
         block_inputs = tuple(copy.copy(v) for v in self.loop_vars)
         for v in block_inputs:
             v._op = None
@@ -343,7 +384,7 @@ class while_loop(Operation):
             v._sym_val = v._sym_val
             v.consuming_blocks = list()
 
-        block, exit_vars = self.build_block(block_inputs)
+        cond_block, body_block, exit_vars = self._build_block(block_inputs)
 
         # Verify exit_vars has the same types as loop_vars
         block_input_type_change = False
@@ -368,10 +409,11 @@ class while_loop(Operation):
         if block_input_type_change:
             # Since we are going to build the block again, we first need to remove ops
             # in the block from vars's _child_ops.
-            while_loop.clean_up_child_ops(block)
+            while_loop._clean_up_child_ops(cond_block)
+            while_loop._clean_up_child_ops(body_block)
 
             # Rebuild our block to invoke type inference.
-            block, exit_vars = self.build_block(block_inputs)
+            cond_block, body_block, exit_vars = self._build_block(block_inputs)
             for i, (v_in, v_out) in enumerate(zip(block_inputs, exit_vars)):
                 if not is_subtype(v_out.sym_type, v_in.sym_type):
                     msg = 'Block output {}: {} is not a subtype of ' +\
@@ -383,7 +425,8 @@ class while_loop(Operation):
                             'block input {}: {} after value changes'
                     raise ValueError(msg.format(v_out.name. v.sym_val,
                         v_in.name, v_in.sym_val))
-        self.blocks.append(block)
+        self.blocks.append(cond_block)
+        self.blocks.append(body_block)
 
     @staticmethod
     def get_compat_shape(type1, type2):
@@ -415,7 +458,7 @@ class while_loop(Operation):
 
     def type_inference(self):
         # Skip the conditional var
-        return tuple(v.sym_type for v in self.blocks[0].outputs[1:])
+        return tuple(v.sym_type for v in self.blocks[1].outputs)
 
 
 @register_op(doc_str="")
@@ -452,8 +495,8 @@ class make_list(Operation):
 
     input_spec = InputSpec(
         init_length=IntInputType(optional=True, default=1),
-        dynamic_length=BoolInputType(optional=True, default=True),
-        elem_shape=TensorInputType(const=True),
+        dynamic_length=BoolInputType(const=True, optional=True, default=True),
+        elem_shape=IntTensorInputType(),
         dtype=StringInputType(const=True, optional=True, default="fp32"),
     )
 

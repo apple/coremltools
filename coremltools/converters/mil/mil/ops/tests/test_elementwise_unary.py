@@ -85,9 +85,6 @@ class TestElementwiseUnary:
             )
             build = lambda x: mb.atan(x=x)
         elif mode == "atanh":
-            if backend == "mil_proto":
-                # TODO
-                return
             val = np.array([[-0.8, -0.5, 0], [0.4, 0.5, 0.8]], dtype=np.float32)
             expected_outputs = np.array(
                 [[-1.09861229, -0.54930614, 0.0], [0.42364893, 0.54930614, 1.09861229]],
@@ -166,8 +163,6 @@ class TestElementwiseUnary:
 
             build = lambda x: mb.floor(x=x)
         elif mode == "inverse":
-            if backend == "mil_proto":  # TODO
-                return
             val = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.float32)
             expected_outputs = np.array(
                 [[-1.0, 0.5, -0.33333334], [0.25, -0.2, 0.16666667]], dtype=np.float32
@@ -522,3 +517,99 @@ class TestElementwiseUnary:
         expected_outputs = np.array([[1.0, 2, 1.0], [4.5, 1.0, 6.7]], dtype=np.float32)
 
         assert is_close(expected_outputs, v.val)
+
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend, epsilon",
+        itertools.product(
+            [True, False],
+            backends,
+            [1e-3, 1e-1, 1.0],
+        ),
+    )
+    def test_builder_to_backend_stress_inverse(
+        self, use_cpu_only, backend, epsilon
+    ):
+        x = np.array([[1, -2, 3], [4, -5, 6]], dtype=np.float32)
+        numpy_pred = 1 / (x + epsilon)
+
+        input_placeholder_dict = {"x": mb.placeholder(shape=x.shape)}
+        input_value_dict = {"x": x}
+
+        def build(x):
+            return mb.inverse(x=x, epsilon=epsilon)
+
+        expected_output_type = x.shape + (types.fp32,)
+        run_compare_builder(
+            build,
+            input_placeholder_dict,
+            input_value_dict,
+            expected_output_type,
+            numpy_pred,
+            use_cpu_only=use_cpu_only,
+            frontend_only=False,
+            backend=backend,
+        )
+
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend, epsilon",
+        itertools.product(
+            [True, False],
+            backends,
+            [1e-3, 1e-1, 1.0],
+        ),
+    )
+    def test_builder_to_backend_stress_rsqrt(
+        self, use_cpu_only, backend, epsilon
+    ):
+        x = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
+        numpy_pred = 1.0 / np.sqrt(x + epsilon)
+
+        input_placeholder_dict = {"x": mb.placeholder(shape=x.shape)}
+        input_value_dict = {"x": x}
+
+        def build(x):
+            return mb.rsqrt(x=x, epsilon=epsilon)
+
+        expected_output_type = x.shape + (types.fp32,)
+        run_compare_builder(
+            build,
+            input_placeholder_dict,
+            input_value_dict,
+            expected_output_type,
+            numpy_pred,
+            use_cpu_only=use_cpu_only,
+            frontend_only=False,
+            backend=backend,
+        )
+
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend, epsilon",
+        itertools.product(
+            [True, False],
+            backends,
+            [1e-3, 1e-1, 1.0],
+        ),
+    )
+    def test_builder_to_backend_stress_log(
+            self, use_cpu_only, backend, epsilon
+    ):
+        x = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
+        numpy_pred = np.log(x + epsilon)
+
+        input_placeholder_dict = {"x": mb.placeholder(shape=x.shape)}
+        input_value_dict = {"x": x}
+
+        def build(x):
+            return mb.log(x=x, epsilon=epsilon)
+
+        expected_output_type = x.shape + (types.fp32,)
+        run_compare_builder(
+            build,
+            input_placeholder_dict,
+            input_value_dict,
+            expected_output_type,
+            numpy_pred,
+            use_cpu_only=use_cpu_only,
+            frontend_only=False,
+            backend=backend,
+        )

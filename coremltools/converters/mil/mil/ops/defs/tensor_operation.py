@@ -410,6 +410,9 @@ class pad(Operation):
         pad = self.pad
         if len(pad.shape) != 1:
             raise ValueError("Pad should be a 1D tensor!")
+        if self.mode and not self.mode.val in {'constant', 'reflect', 'replicate'}:
+            raise ValueError("Pad mode should be one of {'constant', 'reflect', 'replicate'}")
+
         if pad.val is None:
             for i in range(self.pad.shape[0]//2):
                 ret_shape[-self.pad.shape[0]//2+i] = get_new_symbol()
@@ -818,12 +821,12 @@ class concat(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp32, int32
     """
 
     input_spec = InputSpec(values=TupleInputType(),
                            axis=IntInputType(const=True),
-                           interleave=BoolInputType(const=True, default=False))
+                           interleave=BoolInputType(const=True, optional=True, default=False))
 
     def __init__(self, **kwargs):
         super(concat, self).__init__(**kwargs)
@@ -1113,21 +1116,3 @@ class identity(Operation):
     @precondition(allow=VALUE | SYMBOL)
     def value_inference(self):
         return self.x.sym_val
-
-
-@register_op(doc_str="")
-class isfinite(Operation):
-    input_spec = InputSpec(x=ScalarOrTensorInputType(),)
-    """
-    Should deprecate this op.
-    """
-
-    def __init__(self, **kwargs):
-        super(isfinite, self).__init__(**kwargs)
-
-    def type_inference(self):
-        return types.tensor(types.bool, list(self.x.shape))
-
-    @precondition(allow=VALUE)
-    def value_inference(self):
-        return np.isfinite(self.x.val)

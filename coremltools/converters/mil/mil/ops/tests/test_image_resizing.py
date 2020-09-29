@@ -13,7 +13,10 @@ backends = testing_reqs.backends
 
 
 class TestResizeBilinear:
-    def test_builder_to_backend_smoke(self, use_cpu_only=True, backend="nn_proto"):
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend", itertools.product([True, False], backends,)
+    )
+    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
         x = np.array([0, 1], dtype=np.float32).reshape(1, 1, 2)
         input_placeholder_dict = {"x": mb.placeholder(shape=x.shape)}
         input_value_dict = {"x": x}
@@ -86,9 +89,11 @@ class TestResizeBilinear:
         )
 
 
-@pytest.mark.skip("Broken for mil backend rdar://problem/66964398")
 class TestUpsampleBilinear:
-    def test_builder_to_backend_smoke(self, use_cpu_only=True, backend="nn_proto"):
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend", itertools.product([True, False], backends,)
+    )
+    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
         x = np.array([0, 1], dtype=np.float32).reshape(1, 1, 2)
         input_placeholder_dict = {"x": mb.placeholder(shape=x.shape)}
         input_value_dict = {"x": x}
@@ -135,7 +140,9 @@ class TestUpsampleBilinear:
             backend=backend,
         )
 
+
     # TODO: enable GPU test: rdar://problem/60309338
+    @pytest.mark.skip("Broken for mil backend rdar://problem/66964398")
     @pytest.mark.skipif(not testing_reqs._HAS_TORCH, reason="PyTorch not installed.")
     @pytest.mark.parametrize(
         "use_cpu_only, backend, input_shape, scale_factor, align_corners",
@@ -188,7 +195,10 @@ class TestUpsampleBilinear:
 
 
 class TestUpsampleNearestNeighbor:
-    def test_builder_to_backend_smoke(self, use_cpu_only=True, backend="nn_proto"):
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend", itertools.product([True, False], backends,)
+    )
+    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
         x = np.array([1.5, 2.5, 3.5], dtype=np.float32).reshape(1, 1, 1, 3)
         input_placeholder_dict = {"x": mb.placeholder(shape=x.shape)}
         input_value_dict = {"x": x}

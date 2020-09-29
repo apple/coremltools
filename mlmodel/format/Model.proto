@@ -224,6 +224,27 @@ message SerializedModel {
  * - NLP Gazeteer
  * - NLP WordEmbedding
  *
+ * 5 : iOS 14, macOS 11, tvOS 14, watchOS 7 (Core ML 4)
+ * - Model Deployment
+ * - Model Encryption
+ * - Unified converter API with PyTorch and Tensorflow 2 Support in coremltools 4
+ * - MIL builder for neural networks and composite ops in coremltools 4
+ * - New layers in neural network:
+ *      - CumSum
+ *      - OneHot
+ *      - ClampedReLu
+ *      - ArgSort
+ *      - SliceBySize
+ *      - Convolution3D
+ *      - Pool3D
+ *      - Bilinear Upsample with align corners and fractional factors
+ *      - PixelShuffle
+ *      - MatMul with int8 weights and int8 activations
+ *      - Concat interleave
+ *      - See NeuralNetwork.proto
+ * - Enhanced Xcode model view with interactive previews
+ * - Enhanced Xcode Playground support for Core ML models
+ *
  */
 message Model {
     int32 specificationVersion = 1;

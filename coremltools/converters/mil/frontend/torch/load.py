@@ -89,14 +89,14 @@ def load(model_spec, debug=False, **kwargs):
 
 
 def _torchscript_from_model(model_spec):
-    if isinstance(model_spec, _string_types) and model_spec.endswith(".pt"):
+    if isinstance(model_spec, _string_types) and (model_spec.endswith(".pt") or model_spec.endswith(".pth")):
         filename = _os_path.abspath(model_spec)
         return _torch.jit.load(filename)
     elif isinstance(model_spec, _torch.jit.ScriptModule):
         return model_spec
     else:
         raise TypeError(
-            "@model must either be a PyTorch .pt file or a TorchScript object, received: {}".format(
+            "@model must either be a PyTorch .pt or .pth file or a TorchScript object, received: {}".format(
                 type(model_spec)
             )
         )

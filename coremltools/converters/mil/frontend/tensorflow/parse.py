@@ -19,6 +19,7 @@ import numpy as _np
 
 def parse_type(t):
     mapping = {
+        DataType.DT_HALF: types.fp16,
         DataType.DT_FLOAT: types.float,
         DataType.DT_DOUBLE: types.double,
         DataType.DT_INT32: types.int32,

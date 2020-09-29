@@ -12,26 +12,10 @@ from __future__ import print_function as _
 import logging as _logging
 import os.path as _os_path
 
-from six import string_types as _string_types
-from tqdm import tqdm as _tqdm
 import tensorflow as _tf
-
-from tensorflow.python.framework import dtypes as _dtypes
-from tensorflow.python.framework.convert_to_constants import (
-    convert_variables_to_constants_v2 as _convert_variables_to_constants_v2,
-)
-from tensorflow.python.framework.function_def_to_graph import (
-    function_def_to_graph as _function_def_to_graph,
-)
-from tensorflow.python.keras.saving import saving_utils as _saving_utils
-
-from tensorflow.lite.python.util import (
-    run_graph_optimizations as _run_graph_optimizations,
-)
-from tensorflow.lite.python.util import get_grappler_config as _get_grappler_config
-
-from .converter import TF2Converter
 from coremltools.converters.mil.frontend.tensorflow.basic_graph_ops import fill_outputs
+from coremltools.converters.mil.frontend.tensorflow.load import TFLoader
+from coremltools.converters.mil.frontend.tensorflow.parsed_tf_node import ParsedTFNode
 from coremltools.converters.mil.frontend.tensorflow.tf_graph_pass import (
     constant_propagation,
     remove_variable_nodes,
@@ -40,16 +24,30 @@ from coremltools.converters.mil.frontend.tensorflow.tf_graph_pass import (
     delete_disconnected_nodes,
     fuse_dilation_conv,
 )
-from coremltools.converters.mil.frontend.tensorflow2.tf_graph_pass import (
-    flatten_sub_graph_namespaces,
-    rewrite_control_flow_functions,
-)
 from coremltools.converters.mil.frontend.tensorflow.tfssa import (
     NetworkEnsemble,
     SSAFunction,
 )
-from coremltools.converters.mil.frontend.tensorflow.parsed_tf_node import ParsedTFNode
-from coremltools.converters.mil.frontend.tensorflow.load import TFLoader
+from coremltools.converters.mil.frontend.tensorflow2.tf_graph_pass import (
+    flatten_sub_graph_namespaces,
+    rewrite_control_flow_functions,
+)
+from six import string_types as _string_types
+from tensorflow.lite.python.util import get_grappler_config as _get_grappler_config
+from tensorflow.lite.python.util import (
+    run_graph_optimizations as _run_graph_optimizations,
+)
+from tensorflow.python.framework import dtypes as _dtypes
+from tensorflow.python.framework.convert_to_constants import (
+    convert_variables_to_constants_v2 as _convert_variables_to_constants_v2,
+)
+from tensorflow.python.framework.function_def_to_graph import (
+    function_def_to_graph as _function_def_to_graph,
+)
+from tensorflow.python.keras.saving import saving_utils as _saving_utils
+from tqdm import tqdm as _tqdm
+
+from .converter import TF2Converter
 
 
 class TF2Loader(TFLoader):
@@ -261,23 +259,22 @@ class TF2Loader(TFLoader):
 
         for name, sg in graph._functions.items():
             sg_def = sg.definition
-            input_shapes = sg_input_shapes[name]
-            input_shapes = input_shapes[-len(sg_def.signature.input_arg) :]
-            fn_graph = _function_def_to_graph(sg_def, input_shapes=input_shapes)
+            if name in sg_input_shapes:
+                input_shapes = sg_input_shapes[name]
+                input_shapes = input_shapes[-len(sg_def.signature.input_arg):]
+                fn_graph = _function_def_to_graph(sg_def, input_shapes=input_shapes)
 
-            graph_dict.update(
-                TF2Loader._dict_from_graph_def(fn_graph, name, sg_input_shapes)[0]
-            )
-            graph_inputs.update({name: [t.name.split(":")[0] for t in fn_graph.inputs]})
-            graph_outputs.update(
-                {name: [t.name.split(":")[0] for t in fn_graph.outputs]}
-            )
+                graph_dict.update(
+                    TF2Loader._dict_from_graph_def(fn_graph, name, sg_input_shapes)[0]
+                )
+                graph_inputs.update({name: [t.name.split(":")[0] for t in fn_graph.inputs]})
+                graph_outputs.update(
+                    {name: [t.name.split(":")[0] for t in fn_graph.outputs]}
+                )
 
-            # ret is a mapping from the output arg names from `signature` to the
-            # outputs from `node_def` that should be returned by the function.
-            sg_def_ret = sg_def.ret
-            sg_def_ret["identity_0"] = sg_def_ret.pop("identity")
-            graph_ret.update({name: sg_def_ret})
+                # ret is a mapping from the output arg names from `signature` to the
+                # outputs from `node_def` that should be returned by the function.
+                graph_ret.update({name: sg_def.ret})
 
         return graph_dict, graph_inputs, graph_outputs, graph_ret
 

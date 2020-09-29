@@ -103,6 +103,26 @@ NUM_TO_TORCH_DTYPE = {
     11: torch.bool,
 }
 
+NUMPY_DTYPE_TO_TORCH_NUM = {
+    _np.uint8: 0,
+    _np.int8: 1,
+    _np.int16: 2,
+    _np.int32: 3,
+    _np.int64: 4,
+    _np.float16: 5,
+    _np.float32: 6,
+    _np.float64: 7,
+    _np.bool: 11,
+}
+
+NUM_TO_DTYPE_STRING = {
+    3: "int32",
+    4: "int64",
+    6: "fp32",
+    7: "fp64",
+    11: "bool",
+}
+
 
 def decide_immediate_or_file(val):
     if (
@@ -115,17 +135,22 @@ def decide_immediate_or_file(val):
 
 
 def _get_inputs(context, node, expected=None):
-    """Look up a node's inputs in @context and return them as a list. If
-        @expected is not None, also verifies the number of inputs matches the
-        value of @expcted.
+    """
+    Look up a node's inputs in @context and return them as a list. If
+    @expected is not None, also verifies the number of inputs matches the
+    value of @expected.
     """
     inputs = [context[name] for name in node.inputs]
-    if expected is not None and len(inputs) != expected:
-        raise ValueError(
-            "node {} ({}) got {} input(s), expected {}".format(
-                node.name, node.kind, len(inputs), expected
+    if expected is not None:
+        expected = [expected] if not isinstance(expected, (list, tuple)) else expected
+
+        if len(inputs) not in expected:
+            raise ValueError(
+                "node {} ({}) got {} input(s), expected {}".format(
+                    node.name, node.kind, len(inputs), expected
+                )
             )
-        )
+
     return inputs
 
 
@@ -407,8 +432,8 @@ def _convolution(context, node):
     if transposed is True:
         # Transposed convolution
 
-        # PyTorch weight ordering [Cin, Cout, H, W]
-        # MIL expects [Cout, Cin, H, W]
+        # PyTorch weight ordering [Cin, Cout, *D]
+        # MIL expects [Cout, Cin, *D]
         perm = _np.arange(len(weight.shape))
         perm[[0, 1]] = perm[[1, 0]]
         weight_transpose = mb.transpose(
@@ -433,7 +458,7 @@ def _convolution(context, node):
             # TODO: rdar://65588783 ([PyTorch] Define and error out on unsupported configuration for output_padding)
             # error out here with unsupported configuration along with output padding
             if sum(pad) == 0 and any(output_padding):
-                raise ValueError("ConvTransponse configuration of padding=0 and output_padding > 0 not supported!")
+                raise ValueError("ConvTranspose configuration of padding=0 and output_padding > 0 not supported!")
             post_crop = pad.copy()
             pad *= 0
             for i in range(0, len(pad)):
@@ -443,7 +468,7 @@ def _convolution(context, node):
                     pre_pad[i] = output_padding[i] - post_crop[i]
             kwargs["pad"] = pre_pad
             if any(pre_pad):
-                # Constant pad requires pad to be of lenght 2*input_rank
+                # Constant pad requires pad to be of length 2*input_rank
                 pre_pad = [0] * 2 * (len(x.shape) - 2) + pre_pad
                 x = mb.pad(x=x, pad=pre_pad)
                 kwargs["x"] = x
@@ -645,7 +670,7 @@ def div(context, node):
     context.add(res)
 
 
-@register_torch_op
+@register_torch_op(torch_alias=["floordiv"])
 def floor_divide(context, node):
     inputs = _get_inputs(context, node, expected=2)
     div_res = mb.floor_div(x=inputs[0], y=inputs[1])
@@ -678,7 +703,7 @@ def pow_(context, node):
 
 @register_torch_op(torch_alias=["rsub"])
 def sub(context, node):
-    inputs = _get_inputs(context, node, expected=3)
+    inputs = _get_inputs(context, node, expected=[2, 3])
     assert len(node.outputs) == 1
 
     if node.kind == "rsub":
@@ -688,19 +713,21 @@ def sub(context, node):
     else:
         x = inputs[0]
         y = inputs[1]
-    alpha = inputs[2].val
 
-    # TODO (sberardi): 3rd param to aten::sub is a scale factor, need to handle that.
-    # out=input-alpha x other
-    # rdar://60175736
-    if alpha != 1:
-        raise ValueError("SUB does not support scale factor param")
+    if len(inputs) > 2:
+        alpha = inputs[2].val
+
+        # TODO (sberardi): 3rd param to aten::sub is a scale factor, need to handle that.
+        # out=input-alpha x other
+        # rdar://60175736
+        if alpha != 1:
+            raise ValueError("SUB does not support scale factor param")
 
     res = mb.sub(x=x, y=y, name=node.name)
     context.add(res)
 
 
-@register_torch_op
+@register_torch_op(torch_alias=["sum"])
 def mean(context, node):
     inputs = _get_inputs(context, node)
 
@@ -725,9 +752,9 @@ def mean(context, node):
     # Last input to mean is an optional output tensor. We always expect this to
     # be None or absent.
     assert len(inputs) <= 3 or inputs[3] is None
-    res = mb.reduce_mean(**kwargs)
+    func = mb.reduce_sum if node.kind == "sum" else mb.reduce_mean
+    res = func(**kwargs)
     context.add(res)
-
 
 @register_torch_op
 def squeeze(context, node):
@@ -749,13 +776,14 @@ def unsqueeze(context, node):
 
 @register_torch_op
 def size(context, node):
-    inputs = _get_inputs(context, node, expected=2)
+    inputs = _get_inputs(context, node, expected=[1, 2])
 
     # Get the shape of the tensor.
-    shape_node = mb.shape(x=inputs[0], name=node.name + "_shape")
+    size_node = mb.shape(x=inputs[0], name=node.name + "_shape")
     # Get the size of the tensor along the input dimension.
-    dim = inputs[1].val
-    size_node = _list_select(shape_node, dim)
+    if len(node.inputs) == 2:
+        dim = inputs[1].val
+        size_node = _list_select(size_node, dim)
     context.add(size_node, node.name)
 
 
@@ -769,6 +797,10 @@ def view(context, node):
         length = mb.list_length(ls=shape)
         indices = mb.range_1d(start=0, end=length, step=1)
         shape = mb.list_gather(ls=shape, indices=indices)
+
+    if isinstance(shape, list) and all([isinstance(dim, Var) and len(dim.shape) == 0 for dim in shape]) and any([dim.val is None for dim in shape]):
+        shape = mb.concat(values=shape, axis=0)
+
     view = mb.reshape(x=x, shape=shape, name=node.name)
     context.add(view)
 
@@ -958,20 +990,8 @@ def hardtanh(context, node):
 @register_torch_op
 def cat(context, node):
     inputs = _get_inputs(context, node)
-
-    values = inputs[0]
-    if len(values) == 1:
-        # Only one item to "concatenate", so treat it as a no-OP. Otherwise,
-        # NN concatND layer will complain it only has one input.
-        context.add(values[0], node.name)
-        return
-
-    if len(inputs) < 2:
-        axis = 0
-    else:
-        axis = inputs[1]
-
-    concat = mb.concat(values=values, axis=axis, name=node.name)
+    axis = 0 if len(inputs) == 1 else inputs[1]
+    concat = mb.concat(values=inputs[0], axis=axis, name=node.name)
     context.add(concat)
 
 
@@ -1022,6 +1042,9 @@ def _cast(context, node, dtype, dtype_name):
             res = mb.const(val=dtype(x.val), name=node.name)
         else:
             res = x
+    elif x.shape == (1,):
+        x = mb.squeeze(x=x, name=node.name + "_item")
+        res = mb.cast(x=x, dtype=dtype_name, name=node.name)
     else:
         if len(x.shape) > 0:
             # TODO: There's no MIL op to extract a value from a symbolic tensor,
@@ -1033,39 +1056,12 @@ def _cast(context, node, dtype, dtype_name):
 
 @register_torch_op(torch_alias=["bool"])
 def _bool(context, node):
-    inputs = _get_inputs(context, node, expected=1)
-
-    x = inputs[0]
-    # TODO: this is a hack and should be replaced once MIL supports cast to
-    # bool.
-    if x.val is not None and not isinstance(x.val, bool):
-        x = mb.const(val=bool(x.val), name=node.name)
-    context.add(x, node.name)
+    _cast(context, node, bool, "bool")
 
 
 @register_torch_op(torch_alias=["int"])
 def _int(context, node):
     _cast(context, node, int, "int32")
-
-
-def _get_axes_from_normalized_shape(original_shape, normalized_shape):
-    """Convert the `normalized_shape` argument of torch.nn.LayerNorm to the
-    backend argument `axes` in order to reuse the same backend signature
-    """
-    if not isinstance(normalized_shape, list):
-        normalized_shape = list(normalized_shape)
-
-    nb_reduced_axes = len(normalized_shape)
-    nb_total_axes = len(original_shape)
-    shape_to_reduce = original_shape[-nb_reduced_axes:]
-
-    if not list(shape_to_reduce) == normalized_shape:
-        raise ValueError(
-            "normalized_shape ({}) is incompatible with input tensor shape ({}) for layer_norm op. "
-            "normalized_shape must match the last len(normalized_shape) entries in the input tensor shape".format(
-                normalized_shape, original_shape)
-        )
-    return list(range(nb_total_axes-nb_reduced_axes,nb_total_axes))
 
 
 @register_torch_op
@@ -1077,11 +1073,10 @@ def layer_norm(context, node):
     bias = inputs[3]
     eps = inputs[4]
     # cudnn_enable = inputs[5] unused
-    axes = _get_axes_from_normalized_shape(_input.shape, normalized_shape.val)
 
     layer_norm = mb.layer_norm(
         x=_input,
-        axes=axes,
+        axes=list(range(-len(normalized_shape.val),0)),
         gamma=weight,
         beta=bias,
         epsilon=eps,
@@ -1638,7 +1633,7 @@ def select(context, node):
 
 @register_torch_op
 def ones(context, node):
-    inputs = _get_inputs(context, node, expected=6)
+    inputs = _get_inputs(context, node, expected=[5, 6])
     size = inputs[0]
     # dtype = NUM_TO_TORCH_DTYPE[inputs[1].val] unused
     # layout = inputs[2] unused
@@ -1756,8 +1751,21 @@ def _slice(context, node):
     inputs = _get_inputs(context, node, expected=5)
     x = inputs[0]
     dim = inputs[1].val
-    start = inputs[2].val if inputs[2].val is not None else 0
-    end = inputs[3].val if inputs[3] is not None else None
+
+    if inputs[2] and inputs[2].val is not None:
+        start = inputs[2].val
+    elif isinstance(inputs[2], Var):
+        start = inputs[2]
+    else:
+        start = 0
+
+    if inputs[3] and inputs[3].val is not None:
+        end = inputs[3].val
+    elif isinstance(inputs[3], Var):
+        end = inputs[3]
+    else:
+        end = None
+
     step = inputs[4].val
 
     if start == 0 and end is None and step == 1:
@@ -1772,6 +1780,12 @@ def _slice(context, node):
     if end is not None:
         end_array[dim] = end
         end_mask[dim] = False
+
+    if isinstance(start, Var):
+        begin_array = mb.concat(values=begin_array, axis=0)
+
+    if isinstance(end, Var):
+        end_array = mb.concat(values=end_array, axis=0)
 
     kwargs = {
         "x": x,
@@ -1825,7 +1839,14 @@ def split(context, node):
 def to(context, node):
     # @non_blocking and @copy are unused
     inputs = _get_inputs(context, node)
-    if len(inputs) == 6:
+
+    if len(inputs) == 8:
+        _input = inputs[0]
+        dtype = inputs[1].val
+    elif len(inputs) == 7:
+        _input = inputs[0]
+        dtype = inputs[1].val
+    elif len(inputs) == 6:
         _input = inputs[0]
         device = inputs[1]
         dtype = inputs[2].val
@@ -1834,10 +1855,10 @@ def to(context, node):
         # memory_format = inputs[5] # usually None
     elif len(inputs) == 5:
         _input = inputs[0]
-        device = inputs[1]
-        dtype = inputs[2].val
-        # non_blocking = inputs[3]
-        # copy = inputs[4]
+        dtype = NUMPY_DTYPE_TO_TORCH_NUM[inputs[1].val.dtype.type] if isinstance(inputs[1].val, _np.ndarray) else inputs[1].val
+        # non_blocking = inputs[2]
+        # copy = inputs[3]
+        # memory_format = inputs[4]
     elif len(inputs) == 4:
         _input = inputs[0]
         dtype = inputs[1].val
@@ -1856,14 +1877,15 @@ def to(context, node):
         )
 
     torch_dtype = NUM_TO_TORCH_DTYPE[dtype]
-    if isinstance(_input, Var):
+    if isinstance(_input, Var) and _input.val is not None:
         _input = _input.val
-
-    # numpy -> torch -> torch cast -> numpy
-    # This path is needed to use the mapping of passed in dtypes to torch dtypes.
-    casted_input = torch.tensor(_input).type(torch_dtype).numpy()
-    const = mb.const(mode="immediate_value", val=casted_input, name=node.name)
-    context.add(const)
+        # numpy -> torch -> torch cast -> numpy
+        # This path is needed to use the mapping of passed in dtypes to torch dtypes.
+        casted_input = torch.tensor(_input).type(torch_dtype).numpy()
+        res = mb.const(mode="immediate_value", val=casted_input, name=node.name)
+    else:
+        res = mb.cast(x=_input, dtype=NUM_TO_DTYPE_STRING[dtype], name=node.name)
+    context.add(res)
 
 
 @register_torch_op
@@ -1874,14 +1896,18 @@ def erf(context, node):
     context.add(erf)
 
 
-@register_torch_op
+@register_torch_op(torch_alias=["scalarimplicit"])
 def implicittensortonum(context, node):
     inputs = _get_inputs(context, node, expected=1)
     _input = inputs[0]
-    assert _input.shape == (1,)
-    # shape: (1,) -> ()
-    squeeze = mb.squeeze(x=_input, name=node.name)
-    context.add(squeeze)
+
+    if _input.shape == (): #already a scalar
+        context.add(_input, node.name)
+    else:
+        assert _input.shape == (1,)
+        # shape: (1,) -> ()
+        squeeze = mb.squeeze(x=_input, name=node.name)
+        context.add(squeeze)
 
 
 @register_torch_op
@@ -1912,7 +1938,9 @@ def _expand(context, name, tensor, shape):
 
 @register_torch_op
 def expand(context, node):
-    inputs = _get_inputs(context, node, expected=2)
+    # PyTorch 1.6+ has 3 inputs while older version has 2
+    inputs = _get_inputs(context, node, expected=[2, 3])
+
     x = inputs[0]
     shape = inputs[1].val
 
@@ -1921,7 +1949,8 @@ def expand(context, node):
 
 @register_torch_op
 def expand_as(context, node):
-    inputs = _get_inputs(context, node, expected=2)
+    # PyTorch 1.6+ has 3 inputs while older version has 2
+    inputs = _get_inputs(context, node, expected=[2, 3])
     x = inputs[0]
     other = inputs[1]
 
@@ -2148,13 +2177,11 @@ def _abs(context, node):
     inputs = _get_inputs(context, node, expected=1)
     context.add(mb.abs(x=inputs[0], name=node.name))
 
-
 @register_torch_op
 def repeat(context, node):
     x = context[node.inputs[0]]
     reps = context[node.inputs[1]]
     context.add(mb.tile(x=x, reps=reps, name=node.name))
-
 
 @register_torch_op
 def acos(context, node):
@@ -2259,7 +2286,8 @@ def sqrt(context, node):
 @register_torch_op
 def square(context, node):
     inputs = _get_inputs(context, node, expected=1)
-    context.add(mb.square(x=inputs[0], name=node.name))
+    # mb.square is not supported in some backend
+    context.add(mb.mul(x=inputs[0], y=inputs[0], name=node.name))
 
 @register_torch_op
 def tan(context, node):
@@ -2310,40 +2338,16 @@ def is_floating_point(context, node):
     is_float = types.is_float(inputs[0].dtype)
     context.add(mb.const(val=is_float, name=node.name))
 
-@register_torch_op(torch_alias=['sum'])
-def _sum(context, node):
-    inputs = _get_inputs(context, node)
-    kwargs = {"x": inputs[0], "name": node.name}
-
-    # function declarations to handle: torch.sum(input, dtype=None) and torch.sum(input, dim, keepdim=False, dtype=None)
-    # the 2nd arguments dtype and dim allow int values causing ambiguity. To ensure reasonable outputs
-    # dtype is restricted to None and dim must be a tuple in the pytorch definition
-    if len(inputs) >= 2:
-        if inputs[1] is not None:
-            if isinstance(inputs[1].val, _np.ndarray):
-                kwargs["axes"] = inputs[1]
-
-                # optional: @keep_dims
-                if len(inputs) >= 3:
-                    keep_dims = inputs[2]
-                    kwargs["keep_dims"] = keep_dims
-
-                if len(inputs) >= 4:
-                    if inputs[3] is not None:
-                        raise Exception("dtype input to sum should be None but the input is {}".format(inputs[3].val))
-            else:
-                raise Exception("Unsupported input argument to sum. Allowed second input arguments are dtype=None or "
-                                "dim=<a tuple of integers>")
-
-    res = mb.reduce_sum(**kwargs)
-    context.add(res)
+@register_torch_op
+def where(context, node):
+    inputs = _get_inputs(context, node, expected=3)
+    context.add(mb.select(cond=inputs[0], a=inputs[1], b=inputs[2], name=node.name))
 
 @register_torch_op
 def neg(context, node):
     inputs = _get_inputs(context, node, expected=1)
     context.add(mb.mul(x=inputs[0], y=-1, name=node.name))
 
-@register_torch_op
 def topk(context, node):
     inputs = _get_inputs(context, node)
     kwargs = {"name": node.name, "x": inputs[0], "k": inputs[1]}
@@ -2376,4 +2380,3 @@ def topk(context, node):
     indices_name = node.outputs[1]
     context.add(res[0], torch_name=values_name)
     context.add(res[1], torch_name=indices_name)
- 

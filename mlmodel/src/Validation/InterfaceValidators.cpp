@@ -494,7 +494,8 @@ namespace CoreML {
                         // only for NeuralNetwork models with Spec 5 (iOS 14) onwards.
                         if (format.Type_case() != Specification::Model::kNeuralNetwork &&
                             format.Type_case() != Specification::Model::kNeuralNetworkRegressor &&
-                            format.Type_case() != Specification::Model::kNeuralNetworkClassifier) {
+                            format.Type_case() != Specification::Model::kNeuralNetworkClassifier &&
+                            format.Type_case() != Specification::Model::kSerializedModel ) {
                             return Result(ResultType::INVALID_MODEL_PARAMETERS,
                                           "Default optional values are only allowed for neural networks.");
                         }
@@ -542,6 +543,7 @@ namespace CoreML {
             case Specification::Model::kNeuralNetwork:
             case Specification::Model::kNeuralNetworkRegressor:
             case Specification::Model::kNeuralNetworkClassifier:
+            case Specification::Model::kSerializedModel:
                 r = validateOptionalNN(format.description());
                 break;
             case Specification::Model::kTreeEnsembleRegressor:

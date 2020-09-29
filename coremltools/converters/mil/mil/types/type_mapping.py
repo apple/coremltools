@@ -67,7 +67,7 @@ def np_dtype_to_py_type(np_dtype):
     # Can't use dict, as hash(np.int32) != hash(val.dtype)
     if np_dtype in [np.int32, np.int64]:
         return int
-    if np_dtype == np.bool:
+    if np_dtype in [np.bool, np.bool_]:
         return bool
     if np_dtype in [np.float32, np.float64]:
         return float
@@ -166,6 +166,15 @@ def is_tuple(t):
     except TypeError:
         return False
     return type_info == "tuple"
+
+def is_dict(t):
+    if t is None:
+        return False
+    try:
+        type_info = get_type_info(t).name
+    except TypeError:
+        return False
+    return type_info == "dict"
 
 
 def is_builtin(t):
