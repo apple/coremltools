@@ -409,8 +409,10 @@ def _convolution(context, node):
 
         # PyTorch weight ordering [Cin, Cout, H, W]
         # MIL expects [Cout, Cin, H, W]
+        perm = _np.arange(len(weight.shape))
+        perm[[0, 1]] = perm[[1, 0]]
         weight_transpose = mb.transpose(
-            x=weight, perm=[1, 0, 2, 3], name=weight.name + "_transpose"
+            x=weight, perm=perm, name=weight.name + "_transpose"
         )
 
         # Handle output_padding using pre-pad or post-crop

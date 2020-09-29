@@ -101,6 +101,33 @@ class TestConv:
 
 class TestConvTranspose:
     @pytest.mark.parametrize(
+        "width, in_channels, out_channels, kernel_size, stride, padding, dilation, backend",
+        itertools.product(
+            [5, 7], [1, 3], [1, 3], [1, 3], [2, 3], [0, 1], [1, 3], backends
+        ),
+    )
+    def test_convolution_transpose1d(
+        self,
+        width,
+        in_channels,
+        out_channels,
+        kernel_size,
+        stride,
+        padding,
+        dilation,
+        backend,
+    ):
+        model = nn.ConvTranspose1d(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            kernel_size=kernel_size,
+            stride=stride,
+            padding=padding,
+            dilation=dilation,
+        )
+        run_compare_torch((1, in_channels, width), model, backend=backend)
+
+    @pytest.mark.parametrize(
         "height, width, in_channels, out_channels, kernel_size, stride, padding, dilation, backend",
         itertools.product(
             [5, 6], [5, 7], [1, 3], [1, 3], [1, 3], [2, 3], [0, 1], [1, 3], backends
@@ -128,6 +155,37 @@ class TestConvTranspose:
             dilation=dilation,
         )
         run_compare_torch((1, in_channels, height, width), model, backend=backend)
+
+    @pytest.mark.parametrize(
+        "depth, height, width, in_channels, out_channels, kernel_size, stride, padding, dilation, backend",
+        itertools.product(
+            [3, 4], [5, 6], [5, 7], [1, 3], [1, 3], [1, 3], [2, 3], [0, 1], [1, 3], backends
+        ),
+    )
+    @pytest.mark.skip(reason="old macOS version on the CI machine does not have fixes for convolution transposed 3D. "
+                             "Please, see details in https://github.com/apple/coremltools/pull/942")
+    def test_convolution_transpose3d(
+            self,
+            depth,
+            height,
+            width,
+            in_channels,
+            out_channels,
+            kernel_size,
+            stride,
+            padding,
+            dilation,
+            backend,
+    ):
+        model = nn.ConvTranspose3d(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            kernel_size=kernel_size,
+            stride=stride,
+            padding=padding,
+            dilation=dilation,
+        )
+        run_compare_torch((1, in_channels, depth, height, width), model, backend=backend)
 
     # TODO: rdar://65588783 ([PyTorch] Define and error out on unsupported configuration for output_padding)
     # TODO: rdar://65550420 (Add Image Resizing (crop, upsample, resize_bilinear) layers to the MIL backend)
