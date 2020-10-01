@@ -22,7 +22,7 @@ check_python_flake8:
 
 ########################################################################
 #
-#                         linux - Build & Test
+#                         linux - Build
 #
 ########################################################################
 
@@ -44,9 +44,33 @@ build_wheel_linux_py27:
   variables:
     PYTHON: "2.7"
 
+build_wheel_linux_py35:
+  <<: *build_linux
+  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-14.04:1.0.3
+  variables:
+    PYTHON: "3.5"
+
+build_wheel_linux_py36:
+  <<: *build_linux
+  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-14.04:1.0.3
+  variables:
+    PYTHON: "3.6"
+
+build_wheel_linux_py37:
+  <<: *build_linux
+  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-14.04:1.0.3
+  variables:
+    PYTHON: "3.7"
+
+build_wheel_linux_py38:
+  <<: *build_linux
+  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-14.04:1.0.3
+  variables:
+    PYTHON: "3.8"
+
 #########################################################################
 ##
-##                         macOS - Build & Test
+##                         macOS - Build
 ##
 #########################################################################
 
@@ -90,6 +114,12 @@ build_wheel_macos_py38:
   <<: *build_macos
   variables:
     PYTHON: "3.8"
+
+#########################################################################
+##
+##                         macOS - Test
+##
+#########################################################################
 
 .test_macos_pkg: &test_macos_pkg
   stage: test
@@ -274,6 +304,45 @@ test_macos11_py37_mil:
 
 #########################################################################
 ##
+##                macOS - Smoke Test on older versions
+##
+#########################################################################
+
+test_macos11_py38_coremltools_smoke_test:
+  <<: *test_macos_pkg
+  tags:
+    - macos11
+  dependencies:
+    - build_wheel_macos_py38
+  variables:
+    WHEEL_PATH: build/dist/*cp38*10_16*
+    TEST_PACKAGE: coremltools.test.neural_network.test_simple_nn_inference
+    PYTHON: "3.8"
+
+test_macos15_py38_coremltools_smoke_test:
+  <<: *test_macos_pkg
+  tags:
+    - macos10.15
+  dependencies:
+    - build_wheel_macos_py38
+  variables:
+    WHEEL_PATH: build/dist/*cp38*10_15*
+    TEST_PACKAGE: coremltools.test.neural_network.test_simple_nn_inference
+    PYTHON: "3.8"
+
+test_macos14_py38_coremltools_smoke_test:
+  <<: *test_macos_pkg
+  tags:
+    - macos10.14
+  dependencies:
+    - build_wheel_macos_py38
+  variables:
+    WHEEL_PATH: build/dist/*cp38*10_14*
+    TEST_PACKAGE: coremltools.test.neural_network.test_simple_nn_inference
+    PYTHON: "3.8"
+
+#########################################################################
+##
 ##                        Make docs
 ##
 #########################################################################
@@ -314,6 +383,10 @@ collect_artifacts:
     echo "Collect artifacts (wheels and documentation)"
   dependencies:
     - build_wheel_linux_py27
+    - build_wheel_linux_py35
+    - build_wheel_linux_py36
+    - build_wheel_linux_py37
+    - build_wheel_linux_py38
     - build_wheel_macos_py27
     - build_wheel_macos_py35
     - build_wheel_macos_py36
