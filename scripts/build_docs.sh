@@ -29,7 +29,7 @@ print_help() {
   echo
   echo "  --wheel-path=*          Specify which wheel to use to make docs."
   echo "  --python=*              Python to use for configuration."
-  echo "  --version=*             ReadMe ersion to upload to. Default is the installed coremltools version."
+  echo "  --version=*             ReadMe version to upload to. Default is the installed coremltools version."
   echo "  --upload                Upload these docs with the current coremltools version."
   echo "  --release               Release the uploaded docs with the current coremltools version."
   echo "  --from-source-version=* If a version must be created, use this as the base to copy from.\

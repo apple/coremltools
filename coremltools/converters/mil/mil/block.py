@@ -510,6 +510,12 @@ class Block(object):
         if end_id != -1 and old_var.op not in op_list:
             return num_ops_affected
 
+        if old_var in self._block_inputs:
+            idx = self._block_inputs.index(old_var)
+            self._block_inputs = list(self._block_inputs)
+            self._block_inputs[idx] = new_var
+            self._block_inputs = tuple(self._block_inputs)
+
         # If old_var is block's output, replace as well.
         if old_var in self._outputs:
             idx = self._outputs.index(old_var)

@@ -136,74 +136,70 @@ class TestCustomMatMul:
             ), "Incorrect parameter value k"
 
 
-# TODO: rdar://61241807 ([MIL] [Polish] Custom layer operator documentation)
-# Following logging is to ensure testing of TopK implemented in tf converter
-# default path is testing with appropriate conversion function
-# Log default tf topk
-default_tf_topk = _TF_OPS_REGISTRY.get("TopKV2", None)
-
-
-# Override TopK op with override=True flag
-@register_tf_op(tf_alias=["TopKV2"], override=True)
-def CustomTopK(context, node):
-    x = context[node.inputs[0]]
-    k = context[node.inputs[1]]
-    sorted = node.attr.get("sorted", False)
-    x = mb.custom_topk(x=x, k=k.val, axis=-1, sorted=sorted, name=node.name)
-    context.add(node.name, x)
-
-
-# Custom TF TopK
-custom_tf_topk = _TF_OPS_REGISTRY["TopKV2"]
-
-
-def _set_tf_op(op_type, _op_func):
-    _TF_OPS_REGISTRY[op_type] = _op_func
-
-
 class TestCustomTopK:
-    # Defining SSA TopK Op
-    @register_op(doc_str="Custom TopK Layer", is_custom_op=True)
-    class custom_topk(Operation):
-        input_spec = InputSpec(
-            x=TensorInputType(),
-            k=IntInputType(const=True, default=1),
-            axis=IntInputType(const=True, default=-1),
-            sorted=BoolInputType(const=True, default=False),
-        )
+    @pytest.fixture(scope="class")
+    def create_custom_TopK(self):
+        # Defining SSA TopK Op
+        @register_op(doc_str="Custom TopK Layer", is_custom_op=True)
+        class custom_topk(Operation):
+            input_spec = InputSpec(
+                x=TensorInputType(),
+                k=IntInputType(const=True, default=1),
+                axis=IntInputType(const=True, default=-1),
+                sorted=BoolInputType(const=True, default=False),
+            )
 
-        bindings = {
-            "class_name": "TopK",
-            "input_order": ["x"],
-            "parameters": ["k", "axis", "sorted"],
-            "description": "Top K Custom layer",
-        }
+            bindings = {
+                "class_name": "TopK",
+                "input_order": ["x"],
+                "parameters": ["k", "axis", "sorted"],
+                "description": "Top K Custom layer",
+            }
 
-        def __init__(self, **kwargs):
-            super(TestCustomTopK.custom_topk, self).__init__(**kwargs)
+            def __init__(self, **kwargs):
+                super(custom_topk, self).__init__(**kwargs)
 
-        def type_inference(self):
-            x_type = self.x.dtype
-            x_shape = self.x.shape
-            k = self.k.val
-            axis = self.axis.val
+            def type_inference(self):
+                x_type = self.x.dtype
+                x_shape = self.x.shape
+                k = self.k.val
+                axis = self.axis.val
 
-            if not is_symbolic(x_shape[axis]) and k > x_shape[axis]:
-                msg = "K={} is greater than size of the given axis={}"
-                raise ValueError(msg.format(k, axis))
+                if not is_symbolic(x_shape[axis]) and k > x_shape[axis]:
+                    msg = "K={} is greater than size of the given axis={}"
+                    raise ValueError(msg.format(k, axis))
 
-            ret_shape = list(x_shape)
-            ret_shape[axis] = k
-            return types.tensor(x_type, ret_shape), types.tensor(types.int32, ret_shape)
+                ret_shape = list(x_shape)
+                ret_shape[axis] = k
+                return types.tensor(x_type, ret_shape), types.tensor(types.int32, ret_shape)
+
+        # TODO: rdar://61241807 ([MIL] [Polish] Custom layer operator documentation)
+        # Following logging is to ensure testing of TopK implemented in tf converter
+        # default path is testing with appropriate conversion function
+        # Log default tf topk
+        default_tf_topk = _TF_OPS_REGISTRY.get("TopKV2", None)
+
+        # Override TopK op with override=True flag
+        @register_tf_op(tf_alias=["TopKV2"], override=True)
+        def CustomTopK(context, node):
+            x = context[node.inputs[0]]
+            k = context[node.inputs[1]]
+            sorted = node.attr.get("sorted", False)
+            x = mb.custom_topk(x=x, k=k.val, axis=-1, sorted=sorted, name=node.name)
+            context.add(node.name, x)
+
+        yield
+
+        _TF_OPS_REGISTRY["TopKV2"] = default_tf_topk
+
 
     @pytest.mark.skipif(not testing_reqs._HAS_TF_1, reason=MSG_TF1_NOT_FOUND)
     @pytest.mark.parametrize(
         "use_cpu_only, backend, rank, k",
         itertools.product([True], backends, [rank for rank in range(1, 4)], [1, 2],),
     )
+    @pytest.mark.usefixtures("create_custom_TopK")
     def test_tf(self, use_cpu_only, backend, rank, k):
-        # Set TopK to custom TF function
-        _set_tf_op("TopKV2", custom_tf_topk)
         shape = np.random.randint(low=3, high=6, size=rank)
         with tf.Graph().as_default() as graph:
             x = tf.placeholder(tf.float32, shape=shape)
@@ -226,49 +222,4 @@ class TestCustomTopK:
             assert (
                 True == layers[-1].custom.parameters["sorted"].boolValue
             ), "Incorrect parameter value for Sorted"
-        # Set TopK to default conversion function
-        _set_tf_op("TopKV2", default_tf_topk)
 
-
-default_selu = _TF_OPS_REGISTRY.get("Selu", None)
-
-
-@register_tf_op(tf_alias=[], override=True)
-def Selu(context, node):
-    x = context[node.inputs[0]]
-    alpha = 1.6732631921768188
-    lamda = 1.0507010221481323
-    out_elu = mb.elu(x=x, alpha=alpha)
-    out = mb.mul(x=out_elu, y=lamda, name=node.name)
-    context.add(node.name, out)
-
-
-composite_selu = _TF_OPS_REGISTRY["Selu"]
-
-
-class TestCompositeOp:
-    @pytest.mark.parametrize(
-        "use_cpu_only, backend, rank",
-        itertools.product([True, False], backends, list(range(1, 5))),
-    )
-    def test_selu(self, use_cpu_only, backend, rank):
-        _set_tf_op("Selu", composite_selu)
-        input_shape = np.random.randint(low=1, high=6, size=rank)
-
-        @make_tf_graph([input_shape])
-        def build_model(x):
-            return tf.keras.activations.selu(x)
-
-        model, inputs, outputs = build_model
-
-        input_values = [random_gen(input_shape, -10.0, 10.0)]
-        input_dict = dict(zip(inputs, input_values))
-        run_compare_tf(
-            model,
-            input_dict,
-            outputs,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
-            backend=backend,
-        )
-        _set_tf_op("Selu", default_selu)

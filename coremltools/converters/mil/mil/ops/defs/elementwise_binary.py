@@ -70,7 +70,7 @@ class elementwise_binary(Operation):
 
 
 """
-Elementwise Binary Op Implmentation(s)
+Elementwise Binary Op Implementation(s)
 """
 
 

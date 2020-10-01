@@ -5,12 +5,12 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from __future__ import print_function as _
-from __future__ import division as _
 from __future__ import absolute_import as _
+from __future__ import division as _
+from __future__ import print_function as _
 
 import logging
-from coremltools.converters.mil.frontend.tensorflow.parsed_tf_node import ParsedTFNode
+
 from coremltools.converters.mil.frontend.tensorflow.basic_graph_ops import (
     disconnect_edge,
     connect_edge,
@@ -19,6 +19,7 @@ from coremltools.converters.mil.frontend.tensorflow.basic_graph_ops import (
     replace_dest,
     connect_edge_at_index,
 )
+from coremltools.converters.mil.frontend.tensorflow.parsed_tf_node import ParsedTFNode
 
 
 def _rename_node_in_fn(node, new_name, fn):
@@ -252,8 +253,17 @@ def _rewrite_cond_functions(tf_ssa, fn):
                 c_input = [n for n in o_original.input if str(n).startswith(cond_name)][
                     0
                 ]
-                c_index = c_input.split(":")[-1] if ":" in c_input else 0
-                mapped_name = then_fn.ret["identity_{}".format(c_index)].split(":")[0]
+                if ":" in c_input:
+                    identity_postfix = "identity_{}".format(c_input.split(":")[-1])
+                else:  # access identity "0"
+                    identity_postfix = "identity"
+
+                identity_keys = [t for t in then_fn.ret.keys() if t.endswith(identity_postfix)]
+                if len(identity_keys) != 1:
+                    raise NotImplementedError("Branch not found.")
+
+                mapped_name = then_fn.ret[identity_keys[0]].split(":")[0]
+
                 if mapped_name in then_fn.outputs:
                     idx = then_fn.outputs.index(mapped_name)
                 else:  # in else_fn.outputs
@@ -491,7 +501,16 @@ def _rewrite_while_loop_functions(tf_ssa, fn):
                 n for n in o_original.input if str(n).startswith(while_name)
             ][0]
             while_index = while_input.split(":")[-1]
-            mapped_name = body_fn.ret["identity_{}".format(while_index)].split(":")[0]
+            if while_index != 0:
+                identity_postfix = "identity_{}".format(while_index)
+            else:  # access identity "0"
+                identity_postfix = "identity"
+
+            identity_keys = [t for t in body_fn.ret.keys() if t.endswith(identity_postfix)]
+            if len(identity_keys) != 1:
+                raise NotImplementedError("Branch not found.")
+
+            mapped_name = body_fn.ret[identity_keys[0]].split(":")[0]
             idx = body_fn.outputs.index(mapped_name)
 
             loop_output = _insert_get_tuple(

@@ -16,6 +16,9 @@ from coremltools.converters.mil.mil.types.symbolic import (
 from coremltools.converters.mil.mil.types import np_dtype_to_py_type
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.ops.registry import SSAOpRegistry
+from coremltools.models.neural_network.quantization_utils import (
+    _convert_array_to_nbit_quantized_bytes,
+)
 from tqdm import tqdm as _tqdm
 from .mil_to_nn_mapping_registry import *
 
@@ -189,14 +192,16 @@ def _try_convert_global_pool(const_context, builder, op, mode):
     if is_variadic(rank) or rank not in {4, 5}:
         return False
     keep_dims = op.keep_dims.val
+    if keep_dims is False:
+        return False
+
     if op.axes is not None:
         axes = op.axes.val
         axes = sorted([rank + axis if axis < 0 else axis for axis in axes])
-        if keep_dims is False:
+
+        if tuple(op.outputs[0].shape[:-2]) != tuple(op.inputs["x"].shape[:-2]):
             return False
-        if rank == 4 and tuple(axes) != (2, 3):
-            return False
-        if rank == 5 and tuple(axes) != (2, 3, 4):
+        if not all([s == 1 for s in op.outputs[0].shape[-2:]]):
             return False
     builder.add_pooling(
         name=op.name,
@@ -329,6 +334,17 @@ def batch_norm(const_context, builder, op):
     channels = op.x.shape[1]
     gamma = _np.array([1.0] * channels) if op.gamma is None else op.gamma.val
     beta = _np.array([0.0] * channels) if op.beta is None else op.beta.val
+
+    x_name = make_input(const_context, builder, op.x)
+    out_name = op.outputs[0].name
+
+    if op.x.rank == 3:
+        x_name = op.name + "_expanded"
+        builder.add_expand_dims(
+            name=x_name, input_name=op.x.name, output_name=x_name, axes=[-1],
+        )
+        out_name += "_batch_norm"
+
     builder.add_batchnorm(
         name=op.name,
         channels=channels,
@@ -336,13 +352,22 @@ def batch_norm(const_context, builder, op):
         beta=beta,
         mean=op.mean.val,
         variance=op.variance.val,
-        input_name=make_input(const_context, builder, op.x),
-        output_name=op.outputs[0].name,
+        input_name=x_name,
+        output_name=out_name,
         compute_mean_var=False,
         instance_normalization=False,
         epsilon=op.epsilon.val,
     )
 
+    # Squeeze added `Width` dimension for 1d case
+    if op.x.rank == 3:
+        x_name = op.name + "_squeeze"
+        builder.add_squeeze(
+            name=x_name,
+            input_name=out_name,
+            output_name=op.outputs[0].name,
+            axes=[-1],
+        )
 
 @register_mil_to_nn_mapping
 def const(const_context, builder, op):
@@ -350,8 +375,7 @@ def const(const_context, builder, op):
     pass
 
 
-@register_mil_to_nn_mapping
-def conv(const_context, builder, op):
+def conv_helper(const_context, builder, op):
     # v2 x: (n, C_in/groups, spatial_dims)
     x_name = make_input(const_context, builder, op.x)
     out_name = op.outputs[0].name
@@ -440,6 +464,18 @@ def conv(const_context, builder, op):
         dilations = dilations + [1]
         strides = strides + [1]
 
+    if weights is not None and weights.dtype == 'uint8':
+        nbits = op.nbits.val
+        weights = _convert_array_to_nbit_quantized_bytes(weights.flatten(), nbits).tobytes()
+        quantization_type = op.quantization_type.val
+        quant_bias = op.quant_bias.val
+        quant_scale = op.quant_scale.val
+    else:
+        quantization_type = None
+        nbits = None
+        quant_bias = None
+        quant_scale = None
+
     if is_conv1d or is_conv2d:
         builder.add_convolution(
             name=out_name,
@@ -458,6 +494,10 @@ def conv(const_context, builder, op):
             input_name=input_names,
             output_name=out_name,
             dilation_factors=dilations,
+            quantization_type=quantization_type,
+            nbits=nbits,
+            quant_bias=quant_bias,
+            quant_scale=quant_scale,
             **pad  # Python 2.7.16 will fail with a syntax error if a comma is included after `**pad`
         )
 
@@ -496,6 +536,15 @@ def conv(const_context, builder, op):
             output_name=out_name,
             **pad  # Python 2.7.16 will fail with a syntax error if a comma is included after `**pad`
         )
+
+@register_mil_to_nn_mapping
+def conv(const_context, builder, op):
+    conv_helper(const_context, builder, op)
+
+
+@register_mil_to_nn_mapping()
+def conv_quantized(const_context, builder, op):
+    conv_helper(const_context, builder, op)
 
 
 @register_mil_to_nn_mapping
@@ -606,7 +655,60 @@ def _add_elementwise_binary(
             return
         add_const(const_context, builder, op.y.name, op.y.val)
 
-    if mode in ["add", "multiply", "max", "min", "ave"]:
+    if mode in {"add", "multiply", "subtract"} and op.x.rank <= 5 and op.y.rank <= 5:
+        shape_x = _np.array([1] * (5 - op.x.rank) + list(op.x.shape))
+        shape_y = _np.array([1] * (5 - op.y.rank) + list(op.y.shape))
+
+        internal_x = internal_y = None
+        if all(shape_x == 1):
+            internal_y = op.x
+            internal_x = op.y
+        elif all(shape_y == 1):
+            internal_x = op.x
+            internal_y = op.y
+
+        for indices in ([1], [2], [3, 4], [2, 3, 4], [1, 2, 3, 4]):
+            if indices == [1, 2, 3, 4] and mode == "multiply":
+                # INTERNAL_MUL_XYKN not implemented
+                continue
+            if all(shape_x[indices] == shape_y[indices]):
+                if all([True if i in indices else s == 1 for i, s in enumerate(shape_x)]):
+                    internal_y = op.x
+                    internal_x = op.y
+                    break
+                if all([True if i in indices else s == 1 for i, s in enumerate(shape_y)]):
+                    internal_x = op.x
+                    internal_y = op.y
+                    break
+
+        if internal_x is not None:
+            if mode in {"add", "multiply"}:
+                builder.add_elementwise(
+                    name=name,
+                    input_names=make_input(const_context, builder, [internal_x, internal_y]),
+                    output_name=output_name,
+                    mode=mode.upper(),
+                )
+            elif mode == "subtract":
+                builder.add_activation(
+                    name="_neg_y_" + name,
+                    input_name=make_input(const_context, builder, op.y),
+                    output_name="_neg_y_" + output_name,
+                    non_linearity="LINEAR",
+                    params=[-1, 0])
+                if op.x == internal_y:
+                    internal_x = "_neg_y_" + output_name
+                else:
+                    internal_y = "_neg_y_" + output_name
+                builder.add_elementwise(
+                    name=name,
+                    input_names=make_input(const_context, builder, [internal_x, internal_y]),
+                    output_name=output_name,
+                    mode="ADD",
+                )
+            return
+
+    if mode in {"add", "multiply", "max", "min"}:
         if op.x.shape == op.y.shape:
             builder.add_elementwise(
                 name=name,
@@ -618,11 +720,8 @@ def _add_elementwise_binary(
             add_func = getattr(builder, "add_" + mode + "_broadcastable", None)
 
             if add_func is None:
-                _logging.error(
-                    "Elementwise binary broadcastable method {} not found in builder.".format(
-                        mode
-                    )
-                )
+                msg = "Element-wise binary method {} not found in builder."
+                raise ValueError(msg.format(mode))
 
             add_func(
                 name=name,
@@ -643,7 +742,7 @@ def _add_elementwise_binary(
             add_func = getattr(builder, "add_" + mode, None)
 
         if add_func is None:
-            msg = "Elementwise binary method {} not found in builder."
+            msg = "Element-wise binary method {} not found in builder."
             raise ValueError(msg.format(mode))
 
         add_func(
@@ -803,7 +902,7 @@ def greater_equal(const_context, builder, op):
 
 @register_mil_to_nn_mapping
 def inverse(const_context, builder, op):
-    _add_elementwise_unary(const_context, builder, op, "inverse")
+    _add_elementwise_unary(const_context, builder, op, "inverse", epsilon=op.epsilon.val)
 
 
 @register_mil_to_nn_mapping
@@ -818,7 +917,7 @@ def less_equal(const_context, builder, op):
 
 @register_mil_to_nn_mapping
 def log(const_context, builder, op):
-    _add_elementwise_unary(const_context, builder, op, "log")
+    _add_elementwise_unary(const_context, builder, op, "log", epsilon=op.epsilon.val)
 
 
 @register_mil_to_nn_mapping
@@ -883,7 +982,7 @@ def round(const_context, builder, op):
 
 @register_mil_to_nn_mapping
 def rsqrt(const_context, builder, op):
-    _add_elementwise_unary(const_context, builder, op, "rsqrt")
+    _add_elementwise_unary(const_context, builder, op, "rsqrt", epsilon=op.epsilon.val)
 
 
 @register_mil_to_nn_mapping
@@ -1251,7 +1350,7 @@ def topk(const_context, builder, op):
     builder.add_topk(
         name=op.name,
         input_names=make_input(const_context, builder, [op.x]),
-        output_names=[op.name + ":0", op.name + ":1"],
+        output_names=[output.name for output in op.outputs],
         k=op.k.val,
         axis=op.axis.val,
         use_bottom_k=op.ascending.val,
@@ -1266,18 +1365,28 @@ def l2_pool(const_context, builder, op):
 @register_mil_to_nn_mapping
 def linear(const_context, builder, op):
     out_channels, in_channels = op.weight.shape
-    has_bias = op.bias.val is not None
-    builder.add_inner_product(
-        name=op.name,
-        W=op.weight.val,
-        b=op.bias.val,
-        input_channels=in_channels,
-        output_channels=out_channels,
-        has_bias=has_bias,
-        input_name=make_input(const_context, builder, op.x),
-        output_name=op.outputs[0].name,
-    )
-
+    if op.x.rank and op.x.rank <= 3 and op.x.rank > 0:
+        has_bias = op.bias.val is not None
+        builder.add_inner_product(
+            name=op.name,
+            W=op.weight.val,
+            b=op.bias.val,
+            input_channels=in_channels,
+            output_channels=out_channels,
+            has_bias=has_bias,
+            input_name=make_input(const_context, builder, op.x),
+            output_name=op.outputs[0].name,
+        )
+    else:
+        builder.add_batched_mat_mul(
+            name=op.name,
+            input_names=make_input(const_context, builder, [op.x]),
+            output_name=op.outputs[0].name,
+            W=op.weight.val.T,
+            bias=op.bias.val,
+            weight_matrix_rows=in_channels,
+            weight_matrix_columns=out_channels,
+        )
 
 @register_mil_to_nn_mapping
 def matmul(const_context, builder, op):
@@ -2135,9 +2244,6 @@ def pad(const_context, builder, op):
     mode = nn_mode_mapping.get(mode, mode)
 
     if pad is not None and op.x.rank > 1 and _np.all(pad[:-4] == 0):
-        # check and map mode
-        if mode == "symmetric":
-            mode = "reflection"
         pad = pad[-4:]
         left, right = pad[2], pad[3]
         top, bottom = pad[0], pad[1]
@@ -2166,7 +2272,6 @@ def pad(const_context, builder, op):
                 input_names=make_input(const_context, builder, [op.x]),
                 output_name=op.outputs[0].name,
                 value=constant_val,
-                pad_to_given_output_size_mode=False,
                 pad_amounts=pad,
             )
     else:
@@ -2203,18 +2308,19 @@ def l2_norm(const_context, builder, op):
 
 @register_mil_to_nn_mapping
 def layer_norm(const_context, builder, op):
-    input_shape_full = list(op.x.shape)
-    input_shape = [-1 if is_symbolic(s) else s for s in input_shape_full]
-    axes = None if op.axes is None else op.axes.val
-    normalized_shape = input_shape[-len(axes) :]
-    gamma = _np.ones(normalized_shape) if op.gamma is None else op.gamma.val
-    beta = _np.zeros(normalized_shape) if op.beta is None else op.beta.val
-    if (
-        len(input_shape) in [2, 3]
-        and len(axes) == 1
-        and axes[0] == len(input_shape) - 1
-        and input_shape.count(-1) < 2
-    ):
+
+    rank = op.x.rank
+    input_shape = [-1 if is_symbolic(dim) else dim for dim in list(op.x.shape)]
+    axes = list(range(op.x.rank)) if op.axes.val is None else op.axes.val
+    axes = [axis+rank if axis < 0 else axis for axis in op.axes.val]
+    epsilon = op.epsilon.val
+
+    if rank in [2, 3] and len(axes) == 1 and axes[0] == rank - 1 and input_shape.count(-1) < 2 and input_shape[-1] != -1:
+
+        normalized_shape = input_shape[-len(axes) :]
+        gamma = _np.ones(normalized_shape) if op.gamma is None else op.gamma.val
+        beta = _np.zeros(normalized_shape) if op.beta is None else op.beta.val
+
         builder.add_reshape_static(
             name=op.name + "_reshape",
             input_name=make_input(const_context, builder, op.x),
@@ -2228,7 +2334,7 @@ def layer_norm(const_context, builder, op):
             output_name=op.x.name + "_mvn",
             across_channels=True,
             normalize_variance=True,
-            epsilon=op.epsilon.val,
+            epsilon=epsilon,
         )
 
         builder.add_scale(
@@ -2249,14 +2355,100 @@ def layer_norm(const_context, builder, op):
             output_shape=input_shape,
         )
     else:
-        builder.add_layer_normalization(
-            name=op.name,
+        mean_name = op.name + "_mean"
+        builder.add_reduce_mean(
+            name=mean_name,
             input_name=make_input(const_context, builder, op.x),
+            output_name=mean_name,
+            axes=axes,
+            keepdims=True,
+            reduce_all=False,
+        )
+
+        sub_mean_name = op.name + "_sub_mean"
+        builder.add_subtract_broadcastable(
+                name=sub_mean_name,
+                input_names=[op.x.name, mean_name],
+                output_name=sub_mean_name,
+        )
+
+        square_name = op.name + '_square'
+        builder.add_unary(
+                name=square_name,
+                input_name=sub_mean_name,
+                output_name=square_name,
+                mode="power",
+                alpha=2.0,
+        )
+
+        square_sum_name = op.name + '_square_sum'
+        builder.add_reduce_sum(
+            name=square_sum_name,
+            input_name=square_name,
+            output_name=square_sum_name,
+            axes=axes,
+            keepdims=True,
+            reduce_all=False,
+        )
+
+        normalized_shape = [op.x.shape[i] if i in axes else 1 for i in range(rank)]
+        if not any_symbolic(normalized_shape):
+            div_prod_name = op.name + '_div_constant'
+            add_const(const_context, builder, div_prod_name, _np.prod(normalized_shape))
+        else:
+            raise NotImplementedError("dynamic shape input nor supported for layer_norm")
+
+        div_square_sum_name = op.name + '_div_square_sum'
+        builder.add_divide_broadcastable(
+            name=div_square_sum_name,
+            input_names=[square_sum_name, div_prod_name],
+            output_name=div_square_sum_name
+        )
+
+        epsilon_const_name = op.name + '_epsilon'
+        add_const(const_context, builder, epsilon_const_name, epsilon)
+        add_epsilon_name = op.name + '_add_epsilon'
+        builder.add_elementwise(
+            name=add_epsilon_name,
+            input_names=[div_square_sum_name, epsilon_const_name],
+            output_name=add_epsilon_name,
+            mode="ADD",
+        )
+
+        sqrt_name = op.name + '_sqrt'
+        builder.add_unary(
+            name=sqrt_name,
+            input_name=add_epsilon_name,
+            output_name=sqrt_name,
+            mode="sqrt",
+        )
+
+        div_name = op.name + '_divide'
+        builder.add_divide_broadcastable(
+            name=div_name,
+            input_names=[sub_mean_name, sqrt_name],
+            output_name=div_name
+        )
+
+        gamma = _np.ones(normalized_shape) if op.gamma is None else _np.reshape(op.gamma.val, normalized_shape)
+        beta = _np.zeros(normalized_shape) if op.beta is None else _np.reshape(op.beta.val, normalized_shape)
+
+        gamma_name = op.name + '_gamma'
+        beta_name = op.name + '_beta'
+        add_const(const_context, builder, gamma_name, gamma)
+        add_const(const_context, builder, beta_name, beta)
+
+        mul_name = op.name + '_mul'
+        builder.add_multiply_broadcastable(
+            name=mul_name,
+            input_names=[div_name, gamma_name],
+            output_name=mul_name,
+        )
+
+        builder.add_add_broadcastable(
+            name=op.name,
+            input_names=[mul_name, beta_name],
             output_name=op.outputs[0].name,
-            normalized_shape=normalized_shape,
-            gamma=gamma,
-            beta=beta,
-            eps=op.epsilon.val,
         )
 
 
@@ -2564,11 +2756,12 @@ def cond(const_context, builder, op):
 
 @register_mil_to_nn_mapping
 def while_loop(const_context, builder, op):
-    block = op.blocks[0]
+    cond_block = op.blocks[0]
+    body_block = op.blocks[1]
 
     # Assume that all loop vars aren't loop invariant (invariant loop vars
     # should've be optimized away in graph passes).
-    for v_in, vx_in in zip(op.loop_vars, block.inputs):
+    for v_in, vx_in in zip(op.loop_vars, cond_block.inputs):
         assert v_in.name != vx_in.name, "Loop invariant detected in {}".format(op)
         builder.add_copy(
             name=vx_in.name + "_input_copy",
@@ -2588,36 +2781,37 @@ def while_loop(const_context, builder, op):
         disable_rank5_shape_mapping=True,
         use_float_arraytype=True,
     )
-    cond_builder.rank_dict = {k.name: builder.rank_dict[k.name] for k in block.inputs}
+    cond_builder.rank_dict = {k.name: builder.rank_dict[k.name] for k in cond_block.inputs}
     convert_ops(
         const_context,
         cond_builder,
-        block.operations_for_vars(block.outputs[:1]),
-        block.outputs[:1],
+        cond_block.operations,
+        cond_block.outputs,
     )
 
-    loop_layer.loop.conditionVar = block.outputs[0].name
+    loop_layer.loop.conditionVar = cond_block.outputs[0].name
 
-    # while_loop body produces [cond_var] + loop_vars
+    # while_loop body produces loop_vars
     body_builder = neural_network.NeuralNetworkBuilder(
         nn_spec=loop_layer.loop.bodyNetwork,
         disable_rank5_shape_mapping=True,
         use_float_arraytype=True,
     )
-    body_builder.rank_dict = {k.name: builder.rank_dict[k.name] for k in block.inputs}
+    body_builder.rank_dict = {k.name: builder.rank_dict[k.name] for k in body_block.inputs}
     convert_ops(
         const_context,
         body_builder,
-        block.operations_for_vars(block.outputs[1:]),
-        block.outputs[1:],
+        body_block.operations,
+        body_block.outputs,
     )
 
     # Also assume all outputs are different from loop inputs (i.e., no loop
     # invariant.)
-    for vx_in, vx_out in zip(block.inputs, block.outputs[1:]):
+    #for vx_in, vx_out in zip(block.inputs, block.outputs[1:]):
+    for vx_in, vx_out in zip(body_block.inputs, body_block.outputs):
         if vx_in.name == vx_out.name:
             msg = "Loop invariant var {} detected in block {}"
-            _logging.warning(msg.format(vx_in.name, block.name))
+            _logging.warning(msg.format(vx_in.name, body_block.name))
             continue
         body_builder.add_copy(
             name=vx_in.name + "_ret_copy",
@@ -2854,21 +3048,27 @@ def custom_op(const_context, builder, op):
 def make_list(const_context, builder, op):
     # op.elem_shape is technically optional but ssa passes ensures it's
     # always there
-    elem_shape = op.elem_shape.val
-    has_static_elem_shape = all([dim > 0 for dim in elem_shape])
+    # symbolic value in op.elem_shape means runtime-determined dimension,
+    # Ex: if op.elem_shape = [i0, 128], it means that the first dimension is runtime-determined.
+    elem_shape = op.elem_shape.sym_val
 
-    # Set a default initial size
+    # Set a initial size
     size = op.init_length.val
-    if size is not None and has_static_elem_shape:
+
+    # set the dynamic dimensions to 1 for initialization
+    # Ex: op.elem_shape = [i0, 128] will result in [1, 128]
+    elem_shape = [1 if is_symbolic(dim) else dim for dim in elem_shape]
+
+    if size is not None:
         array_size = size if size > 0 else 1
-        array_shape = [array_size] + list(elem_shape)
+        array_shape = [array_size] + elem_shape
         add_const(
             const_context,
             builder,
             op.outputs[0].name,
             val=_np.zeros(array_shape, dtype="float"),
         )
-    elif has_static_elem_shape:
+    else:
         if len(elem_shape) > 0:
             node_es_name = op.name + "_element_shape"
             add_const(
@@ -2878,7 +3078,7 @@ def make_list(const_context, builder, op):
                 val=_np.array(elem_shape, dtype="float"),
             )
 
-            # Concatenate list length (the input, should be a constant vector of size 1) with element shape
+            # Concatenate list length of the input, should be a constant vector of size 1) with element shape
             node_arr_shape_name = op.name + "_arr_shape"
             layer = builder.add_concat_nd(
                 name=node_arr_shape_name,
@@ -2887,20 +3087,33 @@ def make_list(const_context, builder, op):
                 axis=0,
             )
         else:
-            node_es_name = op.init_length.name
+            raise ValueError("elem_shape should have length > 0.")
+
         builder.add_fill_dynamic(
             name=op.name, input_name=node_arr_shape_name, output_name=op.outputs[0].name
         )
-    else:
-        raise ValueError("TensorArray cannot determine element shapes statically")
 
 
-def _realloc_list(const_context, builder, ls_var, index_var):
+def _realloc_list(const_context, builder, ls_var, index_var, value_var, mode):
+    # we do two things in this helper function
+    # (1)
+    # check if we need to re-initialize the tensorarray:
+    # it happens when the elem_shape is runtime determined and the runtime shape is not equal to
+    # the default shape. Ex: elem_shape is = [i0, 10] (initilized with [1, 10]) and at the runtime we get [2, 10].
+
+    # (2)
     # If index_var >= len(ls_var), reallocate the array and copy over existing
     # contents
+
     # index_var: str or Var
     # ls_var: Var
 
+    # check if elem_shape is runtime-determined
+    elem_shape = tuple(value_var.shape)
+    has_dynamic_shape = any([is_symbolic(i) for i in elem_shape])
+
+    # get the fill shape of the tensor array
+    # [length, elem_dim1, elem_dim2, ...]
     full_shape_name = ls_var.name + "_full_shape"
     builder.add_get_shape(
         name=full_shape_name,
@@ -2908,7 +3121,7 @@ def _realloc_list(const_context, builder, ls_var, index_var):
         output_name=full_shape_name,
     )
 
-    # slice shape [length, elem_size1, ...] to get current length
+    # slice shape [length, elem_dim1, elem_dim2, ...] to get current length
     curr_len_name = ls_var.name + "_length"
     builder.add_slice_static(
         name=curr_len_name,
@@ -2921,6 +3134,107 @@ def _realloc_list(const_context, builder, ls_var, index_var):
         strides=[1],
     )
 
+    value_elem_shape_name = ls_var.name + '_value_elem_shape'
+    if has_dynamic_shape:
+        # get elem_shape from value if it is runtime-determined
+        # this is similar to what the backfill_make_list_elem_type tf graph pass does.
+        # if mode == "list_write", elem_shape equal to value.shape,
+        # if mode == "list_scatter", elem_shape equal to value.shape[1:]
+        if mode == "list_write":
+            builder.add_get_shape(
+                name=value_elem_shape_name,
+                input_name=make_input(const_context, builder, value_var),
+                output_name=value_elem_shape_name,
+            )
+        elif mode == "list_scatter":
+            raw_value_elem_shape_name = ls_var.name + '_raw_value_elem_shape'
+            builder.add_get_shape(
+                name=raw_value_elem_shape_name,
+                input_name=make_input(const_context, builder, value_var),
+                output_name=raw_value_elem_shape_name,
+            )
+
+            builder.add_slice_static(
+                name=value_elem_shape_name,
+                input_name=raw_value_elem_shape_name,
+                output_name=value_elem_shape_name,
+                begin_ids=[1],
+                end_ids=[-1],
+                begin_masks=[False],
+                end_masks=[True],
+                strides=[1],
+            )
+    else:
+        add_const(const_context, builder, value_elem_shape_name, _np.array(elem_shape))
+
+
+    # if elem_shape is runtime-determined, check if we need to re-initialize the array
+
+    if has_dynamic_shape:
+        # slice shape [length, elem_dim1, elem_dim2, ...] to get list elem_shape
+        curr_elem_shape_name = ls_var.name + "_ls_elem_shape"
+        builder.add_slice_static(
+            name=curr_elem_shape_name,
+            input_name=full_shape_name,
+            output_name=curr_elem_shape_name,
+            begin_ids=[1],
+            end_ids=[-1],
+            begin_masks=[False],
+            end_masks=[True],
+            strides=[1],
+        )
+
+        # test if the runtime elem_shape from the list and value are equal
+        not_equal_name = ls_var.name + '_elem_shape_not_equal'
+        builder.add_not_equal(
+            name=not_equal_name,
+            input_names=[curr_elem_shape_name, value_elem_shape_name],
+            output_name=not_equal_name,
+        )
+
+        reduce_any_name = ls_var.name + '_reduce_any'
+        builder.add_reduce_sum(
+            name=reduce_any_name,
+            input_name=not_equal_name,
+            output_name=reduce_any_name,
+            axes=[0],
+            keepdims=False,
+            reduce_all=True,
+        )
+
+        # if the two elem_shape are different, then re initialize the list with elem_shape from the value
+        re_initialize_condition_name = ls_var.name + "_condition_re_initialize"
+        layer = builder.add_branch(name=re_initialize_condition_name, input_name=reduce_any_name)
+        true_builder = neural_network.NeuralNetworkBuilder(
+            nn_spec=layer.branch.ifBranch,
+            disable_rank5_shape_mapping=True,
+            use_float_arraytype=True,
+        )
+
+        re_initialize_shape_name = ls_var.name + "_re_initialize_shape"
+        true_builder.add_concat_nd(
+            name=re_initialize_shape_name,
+            input_names=[curr_len_name, value_elem_shape_name],
+            output_name=re_initialize_shape_name,
+            axis=0,
+        )
+
+        re_initialize_name = ls_var.name + "_re_initialize"
+        true_builder.add_fill_dynamic(
+            name=re_initialize_name,
+            input_name=re_initialize_shape_name,
+            output_name=re_initialize_name,
+            value=0.0,
+        )
+
+        true_builder.add_copy(
+            name=ls_var.name + "_re_initialize_assign",
+            input_name=re_initialize_name,
+            output_name=ls_var.name
+        )
+
+    # after re-initialize the list, we now check if we need to reallocate the list
+    # check if the index > curr_length
     is_growing_name = ls_var.name + "_is_growing"
     builder.add_greater_than(
         name=is_growing_name,
@@ -2928,9 +3242,6 @@ def _realloc_list(const_context, builder, ls_var, index_var):
         output_name=is_growing_name,
         use_greater_than_equal=True,
     )
-
-    elem_shape_name = ls_var.name + "_elem_shape"
-    add_const(const_context, builder, elem_shape_name, _np.array(ls_var.elem_shape))
 
     condition_name = ls_var.name + "_condition"
     layer = builder.add_branch(name=condition_name, input_name=is_growing_name)
@@ -2963,7 +3274,7 @@ def _realloc_list(const_context, builder, ls_var, index_var):
     alloc_shape_name = ls_var.name + "_alloc_shape"
     true_builder.add_concat_nd(
         name=alloc_shape_name,
-        input_names=[alloc_length_name1, elem_shape_name],
+        input_names=[alloc_length_name1, value_elem_shape_name],
         output_name=alloc_shape_name,
         axis=0,
     )
@@ -2994,10 +3305,10 @@ def _realloc_list(const_context, builder, ls_var, index_var):
 
 @register_mil_to_nn_mapping
 def list_write(const_context, builder, op):
-    _realloc_list(const_context, builder, op.ls, op.index)
+    _realloc_list(const_context, builder, op.ls, op.index, op.value, "list_write")
 
     # expanded_value_name is [1, op.value]
-    expanded_value_name = op.value.name + "_expanded"
+    expanded_value_name = op.ls.name + '_' + op.value.name + "_expanded"
     builder.add_expand_dims(
         name=expanded_value_name,
         input_name=make_input(const_context, builder, op.value),
@@ -3034,9 +3345,7 @@ def list_scatter(const_context, builder, op):
         input_name=make_input(const_context, builder, op.indices),
         output_name=max_idx_name,
     )
-
-    _realloc_list(const_context, builder, op.ls, max_idx_name)
-
+    _realloc_list(const_context, builder, op.ls, max_idx_name, op.value, "list_scatter")
     builder.add_scatter(
         name=op.name,
         input_names=make_input(const_context, builder, [op.ls, op.indices, op.value]),
@@ -3087,61 +3396,8 @@ def list_length(const_context, builder, op):
         strides=[1],
     )
 
-
 @register_mil_to_nn_mapping
-def isfinite(const_context, builder, op):
-    int_max = _np.iinfo(_np.int64).max
-    int_min = -_np.iinfo(_np.int64).max - 1
-    const_name_max = op.name + "_const_name_max"
-    const_name_min = op.name + "_const_name_min"
-    if any_symbolic(op.x.shape):
-        shape_name = op.name + "_shape"
-        builder.add_get_shape(
-            name=shape_name,
-            input_name=make_input(const_context, builder, op.x),
-            output_name=shape_name,
-        )
-        builder.add_fill_dynamic(
-            name=const_name_max,
-            input_name=shape_name,
-            output_name=const_name_max,
-            value=int_max,
-        )
-        builder.add_fill_dynamic(
-            name=const_name_min,
-            input_name=shape_name,
-            output_name=const_name_min,
-            value=int_min,
-        )
-    else:
-        shape = [1] if op.x.shape == () else op.x.shape
-        builder.add_fill_static(
-            name=const_name_max,
-            output_name=const_name_max,
-            output_shape=shape,
-            value=int_max,
-        )
-        builder.add_fill_static(
-            name=const_name_min,
-            output_name=const_name_min,
-            output_shape=shape,
-            value=int_min,
-        )
-    smaller_than_name = op.name + "_smaller"
-    greater_than_name = op.name + "_greater"
-    builder.add_less_than(
-        name=smaller_than_name,
-        input_names=make_input(const_context, builder, [op.x, const_name_max]),
-        output_name=smaller_than_name,
-    )
-    builder.add_greater_than(
-        name=greater_than_name,
-        input_names=make_input(const_context, builder, [op.x, const_name_min]),
-        output_name=greater_than_name,
-    )
-    builder.add_logical(
-        name=op.name,
-        input_names=[smaller_than_name, greater_than_name],
-        output_name=op.outputs[0].name,
-        mode="AND",
-    )
+def _const_symbolic(const_context, builder, op):
+    # do nothing
+    pass
+

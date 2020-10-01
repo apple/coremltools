@@ -28,12 +28,12 @@ def register_torch_op(_func=None, torch_alias=None, override=False):
     def func_wrapper(func):
         f_name = func.__name__
         if not override and f_name in _TORCH_OPS_REGISTRY:
-            raise ValueError("Torch Op {} already registered.".format(f_name))
+            raise ValueError("Torch op {} already registered.".format(f_name))
         _TORCH_OPS_REGISTRY[f_name] = func
         if torch_alias is not None:
             for name in torch_alias:
                 if not override and name in _TORCH_OPS_REGISTRY:
-                    msg = "Torch Op alias {} already registered."
+                    msg = "Torch op alias {} already registered."
                     raise ValueError(msg.format(name))
                 _TORCH_OPS_REGISTRY[name] = func
         return func

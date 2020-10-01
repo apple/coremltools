@@ -130,7 +130,7 @@ class TestTorchOps:
         ssa = self._construct_test_graph(
             context, op, eb_node, output_name, constants=constants
         )
-        np.testing.assert_allclose(expected_result, ssa.val, atol=1e-7)
+        np.testing.assert_allclose(expected_result, ssa.val, atol=1e-6)
 
     def _test_cast(self, context, test_val, op_kind, op_func, python_type):
         constants, input_list, output_name = self._gen_constants(1, [test_val])
@@ -1093,13 +1093,12 @@ class TestTorchOps:
     @pytest.mark.parametrize("input_shape", [(1, 3, 15, 15), (1, 1, 1, 1)])
     def test_layer_norm(self, context, input_shape):
         graph_inputs = {"input": mb.placeholder(input_shape, dtype=types.float)}
-        channels = input_shape[1]
         constants, input_list, output_name = self._gen_constants(
             5,
             [
                 input_shape,  # normalized shape
-                torch.rand(channels),  # weight
-                torch.rand(channels),  # running bias
+                torch.rand(*input_shape),  # weight
+                torch.rand(*input_shape),  # running bias
                 1e-6,
                 1,  # cudnn enabled
             ],
@@ -1451,41 +1450,6 @@ class TestTorchOps:
         for ex_res, ssa_res in zip(expected_result, ssa):
             np.testing.assert_allclose(ex_res.numpy(), ssa_res.val, atol=1e-6)
 
-    @pytest.mark.parametrize(
-        "num_args, dtype", itertools.product([4, 5, 6], [0, 1, 2, 3, 4, 5, 6, 7, 11])
-    )
-    def test_to(self, context, num_args, dtype):
-        test_input = torch.rand(1, 2, 3)
-        # These args should be unused
-        copy = True
-        non_blocking = True
-        device = 1337
-
-        constants_list = [non_blocking, copy]
-        if num_args == 4:
-            constants_list = [dtype] + constants_list
-        elif num_args == 5:
-            constants_list = [device, dtype] + constants_list
-        else:
-            constants_list = [device, dtype, copy] + constants_list
-        constants_list = [test_input] + constants_list
-        constants, input_list, output_name = self._gen_constants(
-            len(constants_list), constants_list
-        )
-        to_node = InternalTorchIRNode(
-            kind="to", inputs=input_list, outputs=[output_name]
-        )
-        ssa = self._construct_test_graph(
-            context, ops.to, to_node, output_name, constants=constants,
-        )
-        if num_args == 3:
-            expected_result = test_input.numpy()
-        else:
-            expected_result = test_input.to(
-                dtype=ops.NUM_TO_TORCH_DTYPE[dtype]
-            ).numpy()
-        assert np.allclose(expected_result, ssa.val)
-
     def test_floor(self, context):
         test_input = torch.rand(1, 2, 3) * 10
         constants, input_list, output_name = self._gen_constants(1, test_input)
@@ -1778,7 +1742,10 @@ class TestTorchOps:
 
     @pytest.mark.parametrize(
          "input_shape, dim, keepdim",
-         itertools.product([(3, 20, 20), (1, 50, 50)], [[0], [1], [2], [0, 2]], [True, False]),
+         itertools.product(
+             [(3, 20, 20), (1, 50, 50)],
+             [[0], [1], [2], [0, 2]],
+             [True, False]),
      )
     def test_sum(self, context, input_shape, dim, keepdim):
         test_input = torch.rand(*input_shape)
@@ -1790,7 +1757,7 @@ class TestTorchOps:
             kind="sum", inputs=input_list, outputs=[output_name]
         )
         ssa = self._construct_test_graph(
-            context, ops._sum, sum_node, output_name, constants=constants
+            context, ops.mean, sum_node, output_name, constants=constants
         )
         expected_result = torch.sum(test_input, dim, keepdim)
         assert np.allclose(expected_result, ssa.val)
@@ -1803,7 +1770,7 @@ class TestTorchOps:
             kind="sum", inputs=input_list, outputs=[output_name]
         )
         ssa = self._construct_test_graph(
-            context, ops._sum, sum_node, output_name, constants=constants
+            context, ops.mean, sum_node, output_name, constants=constants
         )
         expected_result = torch.sum(test_input)
         assert np.allclose(expected_result, ssa.val)

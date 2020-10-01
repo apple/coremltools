@@ -118,7 +118,7 @@ class TestParse(unittest.TestCase):
         compare(None, types.DataType.DT_QUINT16)
         compare(mil_types.uint16, types.DataType.DT_UINT16)
         compare(None, types.DataType.DT_COMPLEX128)
-        compare(None, types.DataType.DT_HALF)
+        compare(mil_types.fp16, types.DataType.DT_HALF)
         compare(None, types.DataType.DT_RESOURCE)
         compare(None, types.DataType.DT_VARIANT)
         compare(mil_types.uint32, types.DataType.DT_UINT32)

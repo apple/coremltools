@@ -13,6 +13,7 @@ from coremltools.converters.mil import converter as _converter
 from coremltools.converters.mil.mil import Program, Function
 from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
 from coremltools._deps import _IS_MACOS
+import PIL.Image
 
 converter = converter
 _converter = _converter
@@ -115,7 +116,7 @@ def random_gen(
             r = dtype((rand_max - rand_min) * np.random.random() + rand_min)
             if not allow_duplicate and r in ret:
                 continue
-            if np.fabs(np.round(r) - r) > eps_from_int:
+            if np.issubdtype(dtype, np.integer) or np.fabs(np.round(r) - r) > eps_from_int:
                 ret.append(r)
                 break
     ret = np.array(ret).reshape(shape)
@@ -164,17 +165,13 @@ def is_close(expected, actual, atol=1e-04, rtol=1e-05):
 
 def run_core_ml_predict(proto, input_key_values, use_cpu_only=False):
     model = coremltools.models.MLModel(proto, useCPUOnly=use_cpu_only)
-    input_key_values = dict(
-        [
-            (
-                k,
-                v.astype(np.float32)
-                if not np.isscalar(v) and not v.shape == ()
-                else np.array([v], dtype=np.float32),
-            )
-            for k, v in input_key_values.items()
-        ]
-    )
+    for k, v in input_key_values.items():
+        if isinstance(v, PIL.Image.Image):
+            continue
+        elif not np.isscalar(v) and not v.shape == ():
+            input_key_values[k] = v.astype(np.float32)
+        else:
+            input_key_values[k] = np.array([v], dtype=np.float32)
     return model.predict(input_key_values, useCPUOnly=use_cpu_only)
 
 
@@ -215,7 +212,7 @@ def compare_backend(
         for o, expected in expected_outputs.items():
             msg = (
                 "Output {} differs. useCPUOnly={}.\nInput={}, "
-                + "Expected={}, Output={}\n"
+                + "\nExpected={}, \nOutput={}\n"
             )
             assert is_close(expected, pred[o], atol, rtol), msg.format(
                 o, use_cpu_only, input_key_values, expected, pred[o]
@@ -229,7 +226,7 @@ def compare_shapes(
     Inputs:
         - proto: MLModel proto.
 
-        - input_key_values: str -> np.array. Keys must match those in
+        - input_key_values: str -> np.array or PIL.Image. Keys must match those in
           input_placeholders.
 
         - expected_outputs: dict[str, np.array].

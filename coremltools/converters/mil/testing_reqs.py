@@ -6,6 +6,7 @@
 import os
 import itertools
 import numpy as np
+from numpy import linalg as la
 import pytest
 
 from coremltools.converters.mil.mil import Builder as mb
@@ -21,7 +22,7 @@ from coremltools._deps import (
 )
 from .testing_utils import ssa_fn, is_close, random_gen, converter, _converter
 
-backends = _converter.ConverterRegistry.backends.keys()
+backends = ['nn_proto']
 
 np.random.seed(1984)
 

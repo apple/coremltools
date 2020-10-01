@@ -137,6 +137,7 @@ class BasicNumericCorrectnessTest_1014NewLayers(unittest.TestCase):
         quant_scale=None,
         quant_bias=None,
         quant_lut=None,
+        output_channels=2,
     ):
         input_features = [("data", datatypes.Array(1, 2, 2))]
         output_features = [("out", datatypes.Array(2, 1, 1))]
@@ -144,7 +145,7 @@ class BasicNumericCorrectnessTest_1014NewLayers(unittest.TestCase):
         builder.add_convolution(
             name="conv",
             kernel_channels=1,
-            output_channels=2,
+            output_channels=output_channels,
             height=2,
             width=2,
             stride_height=1,
@@ -194,6 +195,24 @@ class BasicNumericCorrectnessTest_1014NewLayers(unittest.TestCase):
         data_dict = {"data": data}
         out = mlmodel.predict(data_dict, useCPUOnly=True)["out"]
         expected_out = np.reshape(np.array([8, 44]), (2, 1, 1))
+        self.assertTrue(np.allclose(out, expected_out))
+
+    @unittest.skip("<rdar://problem/68866645> Investigate numerical discrepancy during quantization in CoreML")
+    def test_linear_quant_convolution_8bit_float_scale_and_bias(self):
+        W = np.array(([[[[1, 248], [248, 248]]]]), dtype=np.uint8)
+        mlmodel = self.build_quant_conv_layer(
+            W=W.flatten().tobytes(),
+            quantization_type="linear",
+            nbits=8,
+            quant_scale=[15.346457],
+            quant_bias=[-3913.3464],
+            output_channels=1,
+        )
+        data = np.ones((1, 2, 2))
+        data_dict = {"data": data}
+        out = mlmodel.predict(data_dict, useCPUOnly=True)["out"]
+        # Output should be equal to: (scale*(1+248+248+248)+(4*bias))
+        expected_out = np.reshape(np.array([-4220.275]), (1, 1, 1, 1, 1))
         self.assertTrue(np.allclose(out, expected_out))
 
     def test_lut_quant_convolution_2bit(self):

@@ -62,8 +62,7 @@ class ReductionAxis(Operation):
     def __init__(self, **kwargs):
         super(ReductionAxis, self).__init__(**kwargs)
 
-    def type_inference(self):
-        x_type = self.x.dtype
+    def _find_reduced_shape(self):
         x_shape = self.x.shape
         axis = self.axis.val
 
@@ -73,12 +72,20 @@ class ReductionAxis(Operation):
             reduced_shape[axis] = 1
         else:
             reduced_shape.pop(axis)
+        return reduced_shape
 
+    def type_inference(self):
+        x_type = self.x.dtype
+        reduced_shape = self._find_reduced_shape_and_axis()
         return types.tensor(x_type, tuple(reduced_shape))
 
     @precondition(allow=VALUE)
     def value_inference(self):
-        return self.get_operator()(self.x.val, axis=self.axis.val)
+        tmp = self.get_operator()(self.x.val, axis=self.axis.val)
+        reduced_shape = self._find_reduced_shape()
+        if self.keep_dims.val:
+            tmp = np.reshape(tmp, reduced_shape)
+        return tmp
 
     def get_operator(self):
         raise NotImplementedError()

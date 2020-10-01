@@ -327,7 +327,8 @@ def convert(
     if convert_to == 'mil':
         return proto_spec # Returns the MIL program
 
-    model = coremltools.models.MLModel(proto_spec, useCPUOnly=True)
+    useCPUOnly = kwargs.get("useCPUOnly", True)
+    model = coremltools.models.MLModel(proto_spec, useCPUOnly=useCPUOnly)
 
     if minimum_deployment_target is not None:
         check_deployment_compatibility(

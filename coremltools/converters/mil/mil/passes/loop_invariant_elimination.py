@@ -17,10 +17,10 @@ from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 
 
 def detect_loop_invariants(while_op):
-    block = while_op.blocks[0]
+    block = while_op.blocks[1]  # body block
     loop_invariant_ids = []  # list of index in op.loop_vars, block.inputs
     for i, vx_in in enumerate(block.inputs):
-        vx_out = block.outputs[i + 1]  # first output is cond var.
+        vx_out = block.outputs[i]  # first output is cond var.
         return_input_as_output = vx_in == vx_out
         # this block output is a var from outside of the block
         output_from_outside_of_block = (
@@ -77,7 +77,6 @@ def loop_invariant_elimination_block(block):
     for op in list(block.operations):
         if op.op_type != "while_loop":
             continue
-        block = op.blocks[0]
         loop_invariant_ids = detect_loop_invariants(op)
 
         loop_variant_vars = []
@@ -85,12 +84,15 @@ def loop_invariant_elimination_block(block):
         # replace uses of loop_invariants with its source from outside of the
         # while_loop op.
         for i in loop_invariant_ids:
-            block.replace_uses_of_var_after_op(
-                anchor_op=None, old_var=block.inputs[i], new_var=op.loop_vars[i]
-            )
+            for block in op.blocks:
+                block.replace_uses_of_var_after_op(
+                    anchor_op=None, old_var=block.inputs[i],
+                    new_var=op.loop_vars[i]
+                )
 
         # replace block inputs
-        block.remove_inputs([block.inputs[i] for i in loop_invariant_ids])
+        for block in op.blocks:
+            block.remove_inputs([block.inputs[i] for i in loop_invariant_ids])
 
         # remove invariants from while_loop loop_vars
         for i in loop_invariant_ids:
@@ -108,13 +110,12 @@ def loop_invariant_elimination_block(block):
         )
         op._input_vars["loop_vars"] = op.loop_vars
 
-        # remove invariants from while_loop outputs
-        # block.outputs[0] is cond var
-        block.set_outputs(
-            [block.outputs[0]]
-            + [
+        # remove invariants from while_loop body_block outputs
+        body_block = op.blocks[1]
+        body_block.set_outputs(
+            [
                 v
-                for i, v in enumerate(block.outputs[1:])
+                for i, v in enumerate(body_block.outputs)
                 if i not in loop_invariant_ids
             ]
         )

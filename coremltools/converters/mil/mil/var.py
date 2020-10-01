@@ -163,12 +163,22 @@ class Var(object):
         shape_str = str(self.shape)[:-1]  # trim the ")"
         if self.rank > 1:
             shape_str += ", "
-        shape_str += types.builtin_to_string(self.dtype) + ")" + annotation
+        if types.builtin_to_string(self.dtype) is None:
+            shape_str += ")" + annotation
+        else:
+            shape_str += types.builtin_to_string(self.dtype) + ")" + annotation
         return shape_str
 
     def type_str(self):
         is_tensor = types.is_tensor(self.sym_type)
-        return "(Tensor)" if is_tensor else "(Scalar)"
+        is_list = types.is_list(self.sym_type)
+        if is_tensor:
+            type_string = "(Tensor)"
+        elif is_list:
+            type_string = "(List)"
+        else:
+            type_string = "(Scalar)"
+        return type_string
 
     def set_name(self, name):
         self.name = name
@@ -181,7 +191,7 @@ class ListVar(Var):
     __slots__ = ["_elem_type", "init_length", "dynamic_length"]
 
     def __init__(
-        self, name, elem_type=None, init_length=None, dynamic_length=True, **kwargs
+        self, name, elem_type=None, init_length=None, dynamic_length=True, sym_val=None, **kwargs
     ):
         """
         elem_type (builtin.tensor)
@@ -190,11 +200,13 @@ class ListVar(Var):
 
         dynamic_length (bool): True to allow list to grow. False uses
         init_length as the fixed size (init_length is runtime length).
+
+        sym_val: value of the list, if available
         """
         super(ListVar, self).__init__(
             name=name,
             sym_type=types.list(elem_type, init_length, dynamic_length),
-            sym_val=None,
+            sym_val=sym_val,
             **kwargs
         )
         self._elem_type = elem_type
@@ -229,13 +241,18 @@ class ListVar(Var):
             length = str(self.init_length)
         if self._elem_type == types.unknown:
             return "List[{}, unknown]".format(length)
-        elem_shape = self._elem_type.get_shape()
-        elem_dtype = self._elem_type.get_primitive()
-        shape_str = str(elem_shape)[:-1]  # trim the ")"
-        if len(elem_shape) > 1:
-            shape_str += ", "
-        shape_str += types.builtin_to_string(elem_dtype) + ")"
-        return "List[{}, {}]".format(length, shape_str)
+        if self._elem_type == types.str:
+            return "List[{}, str]".format(length)
+        elif self._elem_type == types.int64:
+            return "List[{}, int]".format(length)
+        else:
+            elem_shape = self._elem_type.get_shape()
+            elem_dtype = self._elem_type.get_primitive()
+            shape_str = str(elem_shape)[:-1]  # trim the ")"
+            if len(elem_shape) > 1:
+                shape_str += ", "
+            shape_str += types.builtin_to_string(elem_dtype) + ")"
+            return "List[{}, {}]".format(length, shape_str)
 
 
 class InternalVar(Var):

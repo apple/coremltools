@@ -27,7 +27,7 @@ def make_tf_graph(input_types):
 
     Parameters
     ----------
-    input_types: list of tuple
+    input_types: list of tuple or list of list
         List of input types. E.g. [(3, 224, 224, tf.int32)] represent 1 input,
         with shape (3, 224, 224), and the expected data type is tf.int32. The
         dtype is optional, in case it's missing, tf.float32 will be used.
@@ -177,6 +177,7 @@ def run_compare_tf(
     rtol=1e-05,
     validate_shapes_only=False,
     freeze_graph=False,
+    tf_outputs=None,
 ):
     """
     Utility function to convert and compare a given TensorFlow 1.x model.
@@ -203,6 +204,8 @@ def run_compare_tf(
         The relative tolerance parameter.
     validate_shapes_only: bool
         If true, skip element-wise value comparision.
+    tf_outputs: float or list[float]
+        If present, use it as TensorFlow predictions
     """
     proto, input_key_values, output_names, output_nodes = tf_graph_to_proto(
         graph, feed_dict, output_nodes, frontend, backend
@@ -247,9 +250,10 @@ def run_compare_tf(
             graph, feed_dict, output_nodes, frontend, backend
         )
     else:
-        with tf.Session(graph=graph) as sess:
-            sess.run(tf.global_variables_initializer())
-            tf_outputs = sess.run(output_nodes, feed_dict=feed_dict)
+        if not tf_outputs:
+            with tf.Session(graph=graph) as sess:
+                sess.run(tf.global_variables_initializer())
+                tf_outputs = sess.run(output_nodes, feed_dict=feed_dict)
     expected_outputs = {name: val for name, val in zip(output_names, tf_outputs)}
 
     for k,v in input_key_values.items():

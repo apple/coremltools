@@ -280,6 +280,8 @@ def const_determined_nodes(gd, assume_variable_nodes=None):
             vis[node.name] = False
         elif "global" in node.op:
             vis[node.name] = False
+        elif "FakeQuant" in node.op:
+            vis[node.name] = False
         elif node.name in assume_variable_nodes:
             vis[node.name] = False
         else:

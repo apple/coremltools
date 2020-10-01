@@ -55,10 +55,11 @@ class TestLinear:
         itertools.product([True, False], backends, [2, 4, 8]),
     )
     def test_builder_to_backend_stress(self, use_cpu_only, backend, dim):
-        shape = np.array([dim, dim])
+        out_channels, in_channels = dim, dim + 4
+        shape = np.array([out_channels, in_channels])
         x_val = np.random.rand(*shape)
         weight_val = np.random.rand(*shape).astype(np.float32)
-        bias_val = np.random.rand(dim).astype(np.float32)
+        bias_val = np.random.rand(out_channels).astype(np.float32)
         input_placeholders = {
             "x": mb.placeholder(shape=x_val.shape),
         }

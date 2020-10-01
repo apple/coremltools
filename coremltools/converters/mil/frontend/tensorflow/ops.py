@@ -13,7 +13,23 @@ from coremltools.converters.mil.mil.ops.defs._utils import broadcast_shapes
 from .convert_utils import convert_graph
 from .tf_op_registry import register_tf_op
 from coremltools.converters.mil.mil import types
-from coremltools.converters.mil.mil.types.symbolic import is_symbolic
+from coremltools.converters.mil.mil.types.symbolic import is_symbolic, any_symbolic
+
+
+def _adjust_min_max(min, max, num_bits=8):
+    if (min <= max) and (max <= 0):
+        min = (min - max) * 1.0
+        max = 0.0
+    elif (min >= 0) and (max >= min):
+        max = (max - min) * 1.0
+        min = 0.0
+    else:
+        scale = (max - min) / (2 ** num_bits - 1)
+        min_adj = scale * round(min / scale)
+        max_adj = max + min_adj - min
+        min = min_adj
+        max = max_adj
+    return min, max
 
 
 def _is_scalar(type_):
@@ -733,8 +749,65 @@ def DepthwiseConv2dNative(context, node):
 
 
 @register_tf_op
+def FakeQuantWithMinMaxVars(context, node):
+    w = context[node.inputs[0]]
+    min = context[node.inputs[1]].val
+    max = context[node.inputs[2]].val
+    num_bits = node.attr['num_bits']
+    narrow_range = node.attr['narrow_range']
+
+    min, max = _adjust_min_max(min, max, num_bits)
+
+    if narrow_range:
+        scale = (max-min) / (2 ** (num_bits) - 2)
+        bias = min - scale
+    else:
+        scale = (max-min) / (2 ** (num_bits) - 1)
+        bias = min
+
+    w = mb.clip(x=w, alpha=min, beta=max)
+    w = mb.sub(x=w, y=bias)
+    x = mb.real_div(x=w, y=scale)
+    x = mb.round(x=x)
+    x = mb.mul(x=x, y=scale)
+    x = mb.add(x=x, y=bias, name=node.name)
+    context.add(node.name, x)
+
+
+@register_tf_op
 def Conv2D(context, node):
-    W_hwio = context[node.inputs[1]]
+    if "quantize" in node.attr:
+        quantization_type = "linear"
+        min = node.attr['quantize_min']
+        max = node.attr['quantize_max']
+        nbits = node.attr['num_bits']
+        narrow_range = node.attr['narrow_range']
+
+        w = context[node.inputs[1]].sym_val
+
+        min, max = _adjust_min_max(min, max, nbits)
+
+        if narrow_range:
+            quant_scale = (max - min) / (2 ** (nbits) - 2)
+            quant_bias = (min-quant_scale)
+        else:
+            quant_scale = (max - min) / (2 ** (nbits) - 1)
+            quant_bias = (min)
+
+        w_clip = _np.clip(w, min, max)
+        w_round = _np.round((w_clip-quant_bias)/quant_scale)
+        W_hwio = w_round.astype(_np.uint8)
+
+        if not isinstance(quant_scale, list) and not isinstance(quant_scale, tuple):
+            quant_bias = [quant_bias]
+            quant_scale = [quant_scale]
+    else:
+        quantization_type = None
+        nbits = None
+        quant_scale = None
+        quant_bias = None
+        W_hwio = context[node.inputs[1]]
+
     W_oihw = mb.transpose(x=W_hwio, perm=[3, 2, 0, 1])
     data_format = node.attr.get("data_format", "NHWC")
     HW_dilations = _conv2d3d_strides_or_dilations(
@@ -759,7 +832,21 @@ def Conv2D(context, node):
         pad_val = pad_val[4:]
     # Only the last op should have the same name as node.name
     conv_name = node.name + "x" if data_format == "NHWC" else node.name
-    if pad_type == "custom":
+
+    if quantization_type is not None:
+        x = mb.conv_quantized(
+            x=x,
+            weight=W_oihw,
+            pad_type=pad_type,
+            strides=HW_strides,
+            dilations=HW_dilations,
+            name=conv_name,
+            quantization_type=quantization_type,
+            nbits=nbits,
+            quant_scale=quant_scale,
+            quant_bias=quant_bias,
+        )
+    elif pad_type == "custom":
         x = mb.conv(
             x=x,
             weight=W_oihw,
@@ -895,7 +982,6 @@ def EuclideanNorm(context, node):
     keep_dims = node.attr.get("keep_dims", False)
     x = mb.reduce_l2_norm(x=x, axes=axes, keep_dims=keep_dims, name=node.name)
     context.add(node.name, x)
-
 
 @register_tf_op
 def ExpandDims(context, node):
@@ -1198,7 +1284,7 @@ def Sqrt(context, node):
 @register_tf_op
 def Square(context, node):
     x = context[node.inputs[0]]
-    x = mb.square(x=x, name=node.name)
+    x = mb.mul(x=x, y=x, name=node.name)
     context.add(node.name, x)
 
 
@@ -1435,6 +1521,8 @@ def MirrorPad(context, node):
         raise ValueError("TF `paddings` in Pad op must be const.")
 
     mode = node.attr.get("mode", "reflect").lower()
+    if mode == "symmetric":
+        mode = "reflect"
     in_rank = len(x.sym_type.get_shape())
 
     if in_rank > 5 or in_rank < 2:
@@ -1488,6 +1576,8 @@ def Pad(context, node):
     pad = context[node.inputs[1]]
 
     mode = node.attr.get("mode", "constant").lower()
+    if mode == "symmetric":
+        mode = "reflect"
     constant_val = node.attr.get("constant_val", 0.0)
     in_rank = len(x.sym_type.get_shape())
 
@@ -2299,7 +2389,10 @@ def Unpack(context, node):
     num_splits = node.attr.get("num", None)
     if num_splits is None:
         num_splits = x.shape[axis]
-    y = mb.split(x=x, num_splits=num_splits, axis=axis, name=node.name + "_unsqueezed")
+    if num_splits == 1:
+        y = [x]
+    else:
+        y = mb.split(x=x, num_splits=num_splits, axis=axis, name=node.name + "_unsqueezed")
     output_vars = []
     for i in range(num_splits):
         output_vars.append(
@@ -2383,7 +2476,15 @@ def ZerosLike(context, node):
 @register_tf_op
 def IsFinite(context, node):
     x = context[node.inputs[0]]
-    x = mb.isfinite(x=x, name=node.name)
+    if any_symbolic(x.shape):
+        x_shape = mb.shape(x=x)
+    else:
+        x_shape = [1] if x.shape == () else x.shape
+    max_tensor = mb.fill(shape=x_shape, value=_np.finfo(_np.float32).max)
+    min_tensor = mb.fill(shape=x_shape, value=_np.finfo(_np.float32).min)
+    less_then = mb.less_equal(x=x, y=max_tensor)
+    greater_than = mb.greater_equal(x=x, y=min_tensor)
+    x = mb.logical_and(x=less_then, y=greater_than, name=node.name)
     context.add(node.name, x)
 
 
@@ -2468,12 +2569,19 @@ def TensorArrayV3(context, node):
     elem_shape = node.attr.get("element_shape", None)
     size = node.attr.get("size", None)
     if size is None:
-        size = context[node.inputs[0]]
+        size = context[node.inputs[0]].val
+    if size is None:
+        msg = 'TensorArrayV3 size must be compile-time known. Got {}'
+        raise ValueError(msg.format(size))
+    init_length = size
+    if init_length == 0:
+        # Dynamic list. Use 1 as init_length
+        init_length = 1
     builtin_dtype = node.attr["dtype"]
     dtype_str = types.builtin_to_string(builtin_dtype)
     if elem_shape is not None:
         ls = mb.make_list(
-            init_length=size,
+            init_length=init_length,
             dtype=dtype_str,
             elem_shape=elem_shape,
             dynamic_length=dynamic_length,
@@ -2481,7 +2589,7 @@ def TensorArrayV3(context, node):
         )
     else:
         ls = mb.tf_make_list(
-            init_length=size,
+            init_length=init_length,
             dtype=dtype_str,
             dynamic_length=dynamic_length,
             name=node.name,

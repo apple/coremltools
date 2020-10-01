@@ -20,19 +20,18 @@ def commingle_loop_vars_block(block):
         if op.op_type != "while_loop":
             continue
 
-        block = op.blocks[0]
+        for block in op.blocks:
+          for v_out, vx_in in zip(op.outputs, block.inputs):
+              # Disable check as v_out is not visible in block.
+              block.replace_uses_of_var_after_op(
+                  anchor_op=None,
+                  old_var=vx_in,
+                  new_var=v_out,
+                  no_check_var_visibility=True,
+              )
 
-        for v_out, vx_in in zip(op.outputs, block.inputs):
-            # Disable check as v_out is not visible in block.
-            block.replace_uses_of_var_after_op(
-                anchor_op=None,
-                old_var=vx_in,
-                new_var=v_out,
-                no_check_var_visibility=True,
-            )
-
-        # replace block inputs
-        block._block_inputs = op.outputs
+          # replace block inputs
+          block._block_inputs = op.outputs
 
 
 @register_pass(namespace="nn_backend")

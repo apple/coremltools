@@ -43,6 +43,7 @@ from .type_mapping import (
     is_scalar,
     is_tensor,
     is_tuple,
+    is_dict,
     is_str,
     is_builtin,
     promote_types,

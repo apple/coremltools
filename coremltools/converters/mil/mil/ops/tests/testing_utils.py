@@ -25,6 +25,7 @@ def run_compare_builder(
     backend="nn_proto",
     atol=1e-04,
     rtol=1e-05,
+    inputs=None,
 ):
     """
     Inputs:
@@ -36,6 +37,9 @@ def run_compare_builder(
                               dict as MLModel doesn't support function with
                               no input.
 
+        - input_values: str -> np.array or PIL.Image. Keys must match those in
+          input_placeholders.
+
         - expected_output_types: list[(shape, builtin_type)] or (shape,
           builtin_type).  None skips type inference validation.
 
@@ -43,6 +47,8 @@ def run_compare_builder(
           frontend_only == False
 
         - frontend_only: True to test up to proto generation.
+
+        - inputs: type of inputs (either None (defaults to tensor) or [ct.ImageType])
     """
     if not isinstance(expected_output_types, list):
         expected_output_types = [expected_output_types]
@@ -100,7 +106,7 @@ def run_compare_builder(
         if output_shape != expected_shape:
             raise ValueError(msg)
 
-    proto = converter._convert(prog, convert_from="mil", convert_to=backend)
+    proto = converter._convert(prog, convert_from="mil", convert_to=backend, inputs=inputs)
 
     if frontend_only:
         return

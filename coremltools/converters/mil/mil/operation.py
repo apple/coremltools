@@ -117,6 +117,17 @@ def is_internal_input(arg_name):
     return arg_name[0] == "_"
 
 
+class mil_list(object):
+    '''
+    A wrapper around python list
+    '''
+
+    def __init__(self, ls=None):
+        self.ls = ls if ls is not None else []
+        if not isinstance(self.ls, list):
+            raise TypeError("Type of 'ls' must be list in the 'mil_list' class")
+
+
 class Operation(object):
     """
     Represents Operation in MIL.
@@ -203,6 +214,7 @@ class Operation(object):
                         elem_type=sym_type.T[0],
                         init_length=sym_type.T[1],
                         dynamic_length=sym_type.T[2],
+                        sym_val=sym_val if (sym_val is not None and isinstance(sym_val.val, list)) else None,
                         op=self,
                         op_output_idx=i,
                     )
@@ -284,7 +296,10 @@ class Operation(object):
         auto_val = []
         for t, v in zip(output_types, vals):
             builtin_val = t()
-            builtin_val.val = v
+            if isinstance(v, mil_list):
+                builtin_val.val = v.ls
+            else:
+                builtin_val.val = v
             auto_val.append(builtin_val)
         return auto_val
 

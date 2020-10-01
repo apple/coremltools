@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*- 
 #  Copyright (c) 2020, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
@@ -20,19 +21,18 @@ class upsample_nearest_neighbor(Operation):
         * Scale factor for the height dimension (``axis=-2``).
     upscale_factor_width: const<i32> (Optional, default=1)
         * Scale factor for the width dimension (``axis=-1``).
-    
+
     Returns
     -------
     tensor<[*D, H2, W2],T>
         * Tensor with same type as the input.
         * ``H2`` = ``H1`` * ``upscale_factor_height``.
         * ``W2`` = ``W1`` * ``upscale_factor_width``.
-    
+
     Attributes
     ----------
     T: fp32
     """
-    
     input_spec = InputSpec(
         x=TensorInputType(),
         upscale_factor_height=IntInputType(const=True, default=1),
@@ -122,13 +122,13 @@ class upsample_bilinear(Operation):
         * Tensor with same type as the input.
         * ``H2`` = floor(``H1`` * ``scale_factor_height``).
         * ``W2`` = floor(``W1`` * ``scale_factor_width``).
-    
+
     Attributes
     ----------
     T: fp32
     T2 : fp32 or int32
     """
-    
+
     input_spec = InputSpec(
         x=TensorInputType(),
         scale_factor_height=IntOrFloatInputType(const=True, default=1),
@@ -229,6 +229,7 @@ class resize_bilinear(Operation):
           ``tf.raw_ops.ResizeBilinear(align_corners=True,
           half_pixel_centers=False)``.
     
+
     Returns
     -------
     tensor<[*D, H2, W2],T>
@@ -240,7 +241,7 @@ class resize_bilinear(Operation):
     ----------
     T: fp32
     """
-    
+
     input_spec = InputSpec(
         x=TensorInputType(),
         target_size_height=IntInputType(const=True, default=1),
@@ -360,7 +361,7 @@ class crop_resize(Operation):
     ----------
     T: fp32
     """
-    
+
     input_spec = InputSpec(
         x=TensorInputType(),
         roi=TensorInputType(),
@@ -437,7 +438,7 @@ class crop(Operation):
     ----------
     T: fp32
     """
-    
+
     input_spec = InputSpec(
         x=TensorInputType(),
         crop_height=IntTensorInputType(const=True),

@@ -144,7 +144,7 @@ class TestCond:
 
 class TestWhileLoop:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "use_cpu_only, backend", itertools.product([True,False], backends,)
     )
     def test_builder_to_backend_smoke(self, use_cpu_only, backend):
         def body(a, b):
@@ -186,6 +186,116 @@ class TestWhileLoop:
             backend=backend,
         )
 
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend", itertools.product([True, False], backends,)
+    )
+    def test_builder_to_backend_power(self, use_cpu_only, backend):
+
+        input_placeholders = {
+            "a": mb.placeholder(shape=(1,)),
+            "b": mb.placeholder(shape=(1,)),
+        }
+
+        def build(a, b):
+            # Compute a^b
+            def body(res, bx):
+                return mb.mul(x=res, y=a), mb.add(x=bx, y=np.float32(1))
+
+            def cond(res, bx):
+                return mb.less(x=bx, y=b)
+
+            res, ignored = mb.while_loop(_cond=cond, _body=body,
+                loop_vars=([1.], [0.]))
+            return res
+
+        input_values = {
+            "a": np.array([2], dtype=np.float32),
+            "b": np.array([4], dtype=np.float32),
+        }
+
+        expected_output_types = [
+            (1, types.fp32),
+        ]
+
+        expected_outputs = [
+            np.array([16], dtype=np.float32),
+        ]
+        run_compare_builder(
+            build,
+            input_placeholders,
+            input_values,
+            expected_output_types,
+            expected_outputs,
+            use_cpu_only=use_cpu_only,
+            frontend_only=False,
+            backend=backend,
+        )
+
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend", itertools.product([True, False], backends,)
+    )
+    def test_builder_to_backend_nested(self, use_cpu_only, backend):
+        if backend == 'nn_proto':
+            pytest.xfail("nn_proto backend add const has issue")
+
+        input_placeholders = {
+            "x": mb.placeholder(shape=(1,)),
+            "y": mb.placeholder(shape=(1,)),
+        }
+
+        def build(x, y):
+            # i, j = x, y
+            # while i < j:
+            #   while 2*i < i+2:
+            #     i += 1
+            #   i += 2
+            # return i, j
+
+            # Create const outside of while loop for testing purpose
+            two = mb.const(val=[2.], name='const_two')
+            one = mb.const(val=[1.], name='const_one')
+
+            def cond2(i):
+                return mb.less(x=mb.mul(x=two, y=i), y=mb.add(x=i, y=two))
+
+            def body2(i):
+                return mb.add(x=i, y=one)
+
+            def cond1(i, j):
+                return mb.less(x=i, y=j)
+
+            def body1(i, j):
+                new_i = mb.while_loop(_cond=cond2, _body=body2,
+                    loop_vars=(i,))
+                return mb.add(x=new_i, y=two), j
+
+            return mb.while_loop(_cond=cond1, _body=body1,
+                loop_vars=(x, y))
+
+        input_values = {
+            "x": np.array([0], dtype=np.float32),
+            "y": np.array([10], dtype=np.float32),
+        }
+
+        expected_output_types = [
+            (1, types.fp32),
+            (1, types.fp32),
+        ]
+
+        expected_outputs = [
+            np.array([10], dtype=np.float32),
+            np.array([10], dtype=np.float32),
+        ]
+        run_compare_builder(
+            build,
+            input_placeholders,
+            input_values,
+            expected_output_types,
+            expected_outputs,
+            use_cpu_only=use_cpu_only,
+            frontend_only=False,
+            backend=backend,
+        )
 
 class TestList:
     @pytest.mark.parametrize(
@@ -247,6 +357,7 @@ class TestList:
         "use_cpu_only, backend", itertools.product([True, False], backends,)
     )
     def test_builder_to_backend_while(self, use_cpu_only, backend):
+
         # The while_loop appends [1, 2]*i to `ls` for each iteration
         # i = 0, ... num_iters-1.
         def body(i, num_iters, ls, update):

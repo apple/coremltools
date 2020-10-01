@@ -4,6 +4,9 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from ._op_reqs import *
+from coremltools.converters.mil.mil.types.symbolic import (
+    any_symbolic,
+)
 
 @register_op(doc_str="")
 class batch_norm(Operation):
@@ -39,7 +42,7 @@ class batch_norm(Operation):
     -------
     tensor<[n,C,*D], T>
         * Output tensor has the same shape and type as the input ``x``.
-    
+
     Attributes
     ----------
     T: fp32
@@ -58,7 +61,8 @@ class batch_norm(Operation):
         super(batch_norm, self).__init__(**kwargs)
 
     def type_inference(self):
-        return self.x.sym_type
+        x_shape = self.x.shape
+        return types.tensor(types.fp32, tuple(x_shape))
 
 
 @register_op(doc_str="")
@@ -98,13 +102,15 @@ class instance_norm(Operation):
         super(instance_norm, self).__init__(**kwargs)
 
     def type_inference(self):
-        return self.x.sym_type
+        x_shape = self.x.shape
+        return types.tensor(types.fp32, tuple(x_shape))
 
 
 @register_op(doc_str="")
 class l2_norm(Operation):
     """
-    Apply L2 normalization to the n-dimensional input tensor on given ``axes``:
+    Apply L2 normalization to the n-dimensional input tensor. That is, divide the input
+    tensor by the square root of the sum of squares of all elements of the input.
     
     .. math::
        x_i \\leftarrow \\dfrac{x_i}{\\sqrt{\\sum{x_i^2} + \\epsilon}}
@@ -112,19 +118,19 @@ class l2_norm(Operation):
     
     Parameters
     ----------
-    x: tensor<[n,C,*D], T> (Required)
-        * Input tensor, ``3 <= rank(x) <= 4``.
-        * ``*D`` refers to the spatial dimensions, ``1 <= rank(*D) <= 2``.
+    x: tensor<[*D,C,H,W], T> (Required)
+        * Input tensor, ``rank(x) >= 3``.
+        * ``*D`` refers to the spatial dimensions, ``rank(*D) >= 0``.
         * ``n`` is the batch dimension.
-    axes: const tensor<[K], i32> (Required)
-        * Dimensions to perform normalizations.
+        * For ranks greater than 3, the leading dimensions, starting from ``0`` to ``-4`` (inclusive),
+          are all treated as batch.
     epsilon: const fp32 (Optional)
         * Small constant to avoid division by ``0``.
-        * Optional, defaults to ``1e-12``.
-    
+        * Optional, defaults to ``1e-6``.
+
     Returns
     -------
-    tensor<[n,C,*D], T>
+    tensor<[*D,C,H,W], T>
         * Same type and shape as the input tensor ``x``.
     
     Attributes
@@ -134,15 +140,15 @@ class l2_norm(Operation):
     
     input_spec = InputSpec(
         x=TensorInputType(),
-        axes=IntTensorInputType(),
-        epsilon=FloatInputType(const=True, default=1e-12),
+        epsilon=FloatInputType(const=True, default=1e-6),
     )
 
     def __init__(self, **kwargs):
         super(l2_norm, self).__init__(**kwargs)
 
     def type_inference(self):
-        return self.x.sym_type
+        x_shape = self.x.shape
+        return types.tensor(types.fp32, tuple(x_shape))
 
 
 @register_op(doc_str="")
@@ -151,7 +157,7 @@ class layer_norm(Operation):
     Apply layer normalization to the n-dimensional input tensor:
     
     .. math::
-       out = gamma * (input - mean) / sqrt(variance + epsilon) + beta
+       out = gamma * (input - E[x]) / sqrt(Var[x] + epsilon) + beta
     
     
     Parameters
@@ -162,10 +168,12 @@ class layer_norm(Operation):
         * Dimensions to perform layer normalization.
         * Default is ``None`` (all dimensions).
     gamma: const tensor<[K], T> (Optional)
-        * Same shape as normalized_shape.
+        * if provided, the shape must be be ``x.shape[axes]``,
+        *  for instance, if with input ``x`` with shape ``(3,4,5,6)`` and ``axes = [2,3]``,
+          gamma must have shape ``(5,6)``.
         * Default is all ones.
     beta: const tensor<[K], T> (Optional)
-        * Same shape as normalized_shape.
+        * Same shape as gamma.
         * Default is all zeros.
     epsilon: const fp32 (Optional)
         * Small constant to avoid division by ``0``.
@@ -174,7 +182,11 @@ class layer_norm(Operation):
     Returns
     -------
     tensor<*?, T>:
-        * Tensor with same shape and type as the input tensor ``x``.
+     * Tensor with same shape and type as the input tensor ``x``.
+
+    Attributes
+    ----------
+    T: fp32
     """
     
     input_spec = InputSpec(
@@ -188,15 +200,45 @@ class layer_norm(Operation):
     def __init__(self, **kwargs):
         super(layer_norm, self).__init__(**kwargs)
 
+    @staticmethod
+    def _is_compatible_shape(shapea, shapeb):
+        if not len(shapea) == len(shapeb):
+            return False
+        for a,b in zip(shapea, shapeb):
+            if any_symbolic([a,b]):
+                continue
+            if a != b:
+                return False
+        return True
+
     def type_inference(self):
-        return self.x.sym_type
+        rank = self.x.rank
+
+        # check valid axes
+        positive_axes = [axis + rank if axis < 0 else axis for axis in self.axes.val]
+        if not all([axis >= 0 and axis < rank for axis in positive_axes]):
+            raise ValueError("axes must in the range of [-x.rank, x.rank-1].")
+
+        # check shape of gamma and beta
+        normalized_shape = [self.x.shape[i] for i in range(rank) if i in positive_axes]
+        if self.gamma is not None and not layer_norm._is_compatible_shape(list(self.gamma.shape), normalized_shape):
+            raise ValueError("Expect shape {} for gamma, but get shape {} instead".format(normalized_shape, self.gamma.shape))
+
+        if self.beta is not None and not layer_norm._is_compatible_shape(list(self.gamma.shape), normalized_shape):
+            raise ValueError("Expect shape {} for beta, but get shape {} instead".format(normalized_shape, self.beta.shape))
+
+        x_shape = self.x.shape
+        return types.tensor(types.fp32, tuple(x_shape))
+
 
     @precondition(allow=VALUE)
     def value_inference(self):
         def np_layer_norm(x, axes, gamma, beta, epsilon=1e-5):
-            normalized_shape = x.shape[-len(axes) :]
-            gamma = np.ones(shape=normalized_shape) if gamma is None else gamma
-            beta = np.zeros(shape=normalized_shape) if beta is None else beta
+            rank = len(x.shape)
+            axes = [axis + rank if axis < 0 else axis for axis in axes]
+            normalized_shape = [x.shape[i] if i in axes else 1 for i in range(rank)]
+            gamma = np.ones(shape=normalized_shape) if gamma is None else np.reshape(gamma, normalized_shape)
+            beta = np.zeros(shape=normalized_shape) if beta is None else np.reshape(beta, normalized_shape)
             num = x - np.mean(x, axis=tuple(axes), keepdims=True)
             dem = np.sqrt(
                 np.sum(np.square(num), axis=tuple(axes), keepdims=True)
@@ -230,10 +272,10 @@ class local_response_norm(Operation):
         * Amount of neighboring channels to normalize.
     alpha: const fp32 (Optional)
         * Scale factor.
-        * Default is ``1.0``.
+        * Default is ``1e-4``.
     beta: const fp32 (Optional)
         * An exponent.
-        * Default is ``0.5``.
+        * Default is ``0.75``.
     k: const fp32 (Optional)
         * Additive factor.
         * Default is ``1.0``.
@@ -260,4 +302,5 @@ class local_response_norm(Operation):
         super(local_response_norm, self).__init__(**kwargs)
 
     def type_inference(self):
-        return self.x.sym_type
+        x_shape = self.x.shape
+        return types.tensor(types.fp32, tuple(x_shape))

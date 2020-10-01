@@ -1606,6 +1606,12 @@ def _convert_pad(builder, node, graph, err):
     if mode == "constant":
         pads = node.attrs.get("pads", [])
         value = node.attrs.get("value", 0.0)
+        # onnx padding spec: [x1_top, ..., xn_top, x1_bottom, ..., xn_bottom]
+        # coreml padding spec: [x1_top, x1_bottom, ..., xn_top, xn_bottom]
+        assert len(pads) % 2 == 0, 'even number of pads expected'
+        pads_coreml = [None] * len(pads)
+        pads_coreml[::2] = pads[:len(pads) // 2]
+        pads_coreml[1::2] = pads[len(pads) // 2:]
 
         builder.add_constant_pad(
             name=node.name,
@@ -1613,7 +1619,7 @@ def _convert_pad(builder, node, graph, err):
             output_name=node.outputs[0],
             value=value,
             pad_to_given_output_size_mode=False,
-            pad_amounts=pads,
+            pad_amounts=pads_coreml,
         )
     else:
         _convert_pad_5d(builder, node, graph, err)

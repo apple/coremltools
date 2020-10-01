@@ -275,16 +275,19 @@ class TorchConverter:
         # Replaces a couple specific ops patterns (add, sub, mul, div, chunk).
         if version_lt(_torch, '1.6.0'):
             _torch._C._jit_pass_canonicalize_ops(graph)
+            _torch._C._jit_pass_lint(graph)
+
+            # From PyTorch code: This pass catches all of the small, easy to catch
+            # peephole optimizations you might be interested in doing.
+            #     Eliminate no-op 'expand' nodes
+            #     Simplify x.t().t() to x
+            # pass disabled for v1.6.0 and onwards, wrongly captures the shape of dummy inputs during tracing.
+            _torch._C._jit_pass_peephole(graph, addmm_fusion_enabled=False)
         else:
             # v1.6.0 pass renamed
             _torch._C._jit_pass_canonicalize_graph_fuser_ops(graph)
         _torch._C._jit_pass_lint(graph)
-        # From PyTorch code: This pass catches all of the small, easy to catch
-        # peephole optimizations you might be interested in doing.
-        #     Eliminate no-op 'expand' nodes
-        #     Simplify x.t().t() to x
-        _torch._C._jit_pass_peephole(graph, addmm_fusion_enabled=False)
-        _torch._C._jit_pass_lint(graph)
+
         # From PyTorch docs: Renumber the graph so that all structurally
         # equivalent graphs have same numbers.
         graph = _torch._C._jit_pass_canonicalize(graph)
@@ -300,7 +303,7 @@ class TorchConverter:
         _torch._C._jit_pass_lint(graph)
 
         input_and_param_names = [val.debugName() for val in graph.inputs()]
-        param_names = input_and_param_names[len(input_and_param_names) - len(params) :]
+        param_names = input_and_param_names[len(input_and_param_names) - len(params):]
         params_dict = dict(zip(param_names, params))
 
         return graph, params_dict

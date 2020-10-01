@@ -6,8 +6,8 @@
 import math
 
 import coremltools.converters
-import sympy as sm
 
+from coremltools.converters.mil.mil import get_new_symbol
 from coremltools.converters.mil.mil.types.symbolic import is_symbolic
 from ._op_reqs import *
 
@@ -54,7 +54,7 @@ def broadcast_shapes(shape_x, shape_y):
                 )
             ret_shapes.append(shape_x[i])
         elif x_unknown or y_unknown:
-            ret_shapes.append(sm.functions.Max(shape_x[i], shape_y[i]))
+            ret_shapes.append(get_new_symbol())
         else:
             assert shape_x[i] == shape_y[i]
             ret_shapes.append(shape_x[i])
@@ -158,6 +158,7 @@ def aggregated_pad(
         effective_ks = effective_kernel(kernel_shape, dilations)
         return [
             int(max(0, s * math.ceil(float(i) / float(s)) - i + k - s))
+            if not is_symbolic(i) else get_new_symbol()
             for i, k, s in zip(input_shape, effective_ks, strides)
         ]
     if pad_type == "valid":
@@ -222,6 +223,7 @@ def spatial_dimensions_out_shape(
                 len(custom_pad),
             )
         )
+
     pad = aggregated_pad(
         pad_type=pad_type,
         kernel_shape=kernel_shape,
@@ -231,7 +233,8 @@ def spatial_dimensions_out_shape(
         custom_pad=custom_pad,
     )
     effective_ks = effective_kernel(kernel_shape, dilations)
-    return [
+    out_shape = [
         (input_shape[r] + pad[r] - effective_ks[r]) // strides[r] + 1
         for r in range(num_spatial_dims)
     ]
+    return [dim if not is_symbolic(dim) else get_new_symbol() for dim in out_shape]

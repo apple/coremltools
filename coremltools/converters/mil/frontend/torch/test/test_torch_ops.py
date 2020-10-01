@@ -10,6 +10,7 @@ from coremltools.models.utils import _macos_version
 from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.testing_reqs import *
 from .testing_utils import *
+from coremltools import TensorType, ImageType, RangeDim
 
 backends = testing_reqs.backends
 
@@ -45,6 +46,22 @@ class TestBatchNorm:
     def test_batchnorm(self, num_features, eps, backend):
         model = nn.BatchNorm2d(num_features, eps)
         run_compare_torch((6, num_features, 5, 5), model, backend=backend)
+
+    @pytest.mark.parametrize("backend", backends)
+    def test_batchnorm_1d(self, backend):
+        class CRNNBase(nn.Module):
+            def __init__(self, ch_in, ch_out, kernel_size=3, use_bn=True):
+                super(CRNNBase, self).__init__()
+                self.conv = nn.Conv1d(ch_in, ch_out, kernel_size=kernel_size)
+                self.norm = nn.BatchNorm1d(ch_out)
+
+            def forward(self, x):
+                x = self.conv(x)
+                x = self.norm(x)
+                return x
+        model = CRNNBase(ch_in=6, ch_out=16)
+        run_compare_torch((1, 6, 15), model, backend=backend)
+
 
 class TestInstanceNorm:
     @pytest.mark.parametrize(
@@ -107,15 +124,16 @@ class TestConvTranspose:
         ),
     )
     def test_convolution_transpose1d(
-        self,
-        width,
-        in_channels,
-        out_channels,
-        kernel_size,
-        stride,
-        padding,
-        dilation,
-        backend,
+            self,
+            width,
+            in_channels,
+            out_channels,
+            kernel_size,
+            stride,
+            padding,
+            dilation,
+            backend,
+            groups=1,
     ):
         model = nn.ConvTranspose1d(
             in_channels=in_channels,
@@ -124,8 +142,10 @@ class TestConvTranspose:
             stride=stride,
             padding=padding,
             dilation=dilation,
+            groups=groups
         )
         run_compare_torch((1, in_channels, width), model, backend=backend)
+
 
     @pytest.mark.parametrize(
         "height, width, in_channels, out_channels, kernel_size, stride, padding, dilation, backend",
@@ -155,37 +175,6 @@ class TestConvTranspose:
             dilation=dilation,
         )
         run_compare_torch((1, in_channels, height, width), model, backend=backend)
-
-    @pytest.mark.parametrize(
-        "depth, height, width, in_channels, out_channels, kernel_size, stride, padding, dilation, backend",
-        itertools.product(
-            [3, 4], [5, 6], [5, 7], [1, 3], [1, 3], [1, 3], [2, 3], [0, 1], [1, 3], backends
-        ),
-    )
-    @pytest.mark.skip(reason="old macOS version on the CI machine does not have fixes for convolution transposed 3D. "
-                             "Please, see details in https://github.com/apple/coremltools/pull/942")
-    def test_convolution_transpose3d(
-            self,
-            depth,
-            height,
-            width,
-            in_channels,
-            out_channels,
-            kernel_size,
-            stride,
-            padding,
-            dilation,
-            backend,
-    ):
-        model = nn.ConvTranspose3d(
-            in_channels=in_channels,
-            out_channels=out_channels,
-            kernel_size=kernel_size,
-            stride=stride,
-            padding=padding,
-            dilation=dilation,
-        )
-        run_compare_torch((1, in_channels, depth, height, width), model, backend=backend)
 
     # TODO: rdar://65588783 ([PyTorch] Define and error out on unsupported configuration for output_padding)
     # TODO: rdar://65550420 (Add Image Resizing (crop, upsample, resize_bilinear) layers to the MIL backend)
@@ -250,6 +239,56 @@ class TestConvTranspose:
         )
         run_compare_torch((1, in_channels, height, width), model, backend=backend)
 
+    @pytest.mark.parametrize(
+        "depth, height, width, in_channels, out_channels, kernel_size, stride, padding, dilation, backend",
+        itertools.product(
+            [3, 4], [5, 6], [5, 7], [1, 3], [1, 3], [1, 3], [2, 3], [0, 1], [1, 3], backends
+        ),
+    )
+    @pytest.mark.skip(reason="rdar://65198011 (Re-enable Conv3dTranspose and DynamicTile unit tests)")
+    def test_convolution_transpose3d(
+             self,
+             depth,
+             height,
+             width,
+             in_channels,
+             out_channels,
+             kernel_size,
+             stride,
+             padding,
+             dilation,
+             backend,
+    ):
+        model = nn.ConvTranspose3d(
+             in_channels=in_channels,
+             out_channels=out_channels,
+             kernel_size=kernel_size,
+             stride=stride,
+             padding=padding,
+             dilation=dilation,
+         )
+        run_compare_torch((1, in_channels, depth, height, width), model, backend=backend)
+
+
+class TestCond:
+    @pytest.mark.parametrize("backend", backends)
+    def test_cond(self, backend):
+        in_features = 1
+        out_features = 2
+        class TestNet(nn.Module):
+            def forward(self, x):
+                if torch.squeeze(x) < 10.:
+                    return x*10.
+                else:
+                    return x*2.
+
+        model = TestNet().eval()
+        torch_model = torch.jit.script(model)
+
+        run_compare_torch(torch.tensor([1.]), torch_model,
+            input_as_shape=False, backend=backend)
+        run_compare_torch(torch.tensor([11.]), torch_model,
+            input_as_shape=False, backend=backend)
 
 class TestLoop:
     @pytest.mark.parametrize("backend", backends)
@@ -615,7 +654,7 @@ class TestLSTM:
         # Concat on Hidden Size axis
         x = torch.cat((f, b), dim=2)
         # NOTE:
-        # We are ommiting a squeeze because the conversion
+        # We are omitting a squeeze because the conversion
         # function for the mil op lstm unsqueezes the num_layers
         # dimension
         return x
@@ -702,7 +741,7 @@ class TestLSTM:
             )
 
 # Workaround for GitHub Issue #824
-# i.e. the return h_n/c_n for a converted BLSTM are mangled. 
+# i.e. the return h_n/c_n for a converted BLSTM are mangled.
 # Therefore, just look at output 'y' (for now) which is correct.
 class StripCellAndHidden(nn.Module):
     def __init__(self,flagReturnTuple_):
@@ -712,7 +751,7 @@ class StripCellAndHidden(nn.Module):
     def forward(self,x):
         # Pass tuple, not tensor, to avoid issue in coremltools/converters/mil/frontend/torch/test/testing_utils.py on "if not expected_results:"
         # Pass tensor when we need input for LSTM #2 as part of nn.Sequential()
-        return tuple(x[0]) if self.flagReturnTuple else x[0] 
+        return tuple(x[0]) if self.flagReturnTuple else x[0]
 
 # Check GitHub Issue #810, assume num_layers == 2 and bidirectional == True
 class TestStackedBLSTM:
@@ -763,7 +802,7 @@ class TestStackedBLSTM:
         else:
             _input = torch.randn(SEQUENCE_LENGTH, BATCH_SIZE, input_size)
 
-        # Do not use h_0/c_0 input and do not check h_n/c_n output, GitHub Issue #824     
+        # Do not use h_0/c_0 input and do not check h_n/c_n output, GitHub Issue #824
         expected_results = model(_input)
 
         run_compare_torch(_input, model, expected_results, input_as_shape=False, backend=backend)
@@ -834,6 +873,42 @@ class TestPixelShuffle:
         input_shape = (batch_size, C * r * r, H, W)
         model = nn.PixelShuffle(upscale_factor=r)
         run_compare_torch(input_shape, model, backend=backend)
+
+
+class TestExpand:
+    @pytest.mark.parametrize(
+        "backend, shapes",
+        itertools.product(
+            backends,
+            [[(2, 1), (2, 2)], [(3, 1), (-1, 4)], [(1, 3, 4, 4), (3, 3, 4, 4)]]
+        ),
+    )
+    def test_expand(self, backend, shapes):
+        input_shape, output_shape = shapes
+
+        class TestModel(torch.nn.Module):
+            def forward(self, x):
+                return x.expand(*output_shape)
+
+        model = TestModel()
+
+        run_compare_torch(input_shape, model, backend=backend)
+
+    @pytest.mark.parametrize(
+        "backend, input_shapes",
+        itertools.product(
+            backends,
+            [[(2, 1), (2, 2)], [(3, 1), (3, 4)], [(1, 3, 4, 4), (3, 3, 4, 4)]]
+        ),
+    )
+    def test_expand_as(self, backend, input_shapes):
+        class TestModel(torch.nn.Module):
+            def forward(self, x, y):
+                return x.expand_as(y)
+
+        model = TestModel()
+
+        run_compare_torch(input_shapes, model, backend=backend)
 
 
 class TestExpandDims:
@@ -1108,7 +1183,6 @@ class TestActivation:
             input_shape, model, backend=backend,
         )
 
-
 class TestElementWiseUnary:
     @pytest.mark.parametrize(
         "backend, rank, op_string",
@@ -1256,6 +1330,63 @@ class TestTranspose:
         model = ModuleWrapper(function=torch.transpose,
                               kwargs={"dim0": dims[0], "dim1": dims[1]})
         run_compare_torch(input_shape, model, backend=backend)
+
+
+class TestTo:
+    @pytest.mark.parametrize(
+        "backend", backends,
+    )
+    def test_cast_bug(self, backend):
+        class TestModel(torch.nn.Module):
+            def forward(self, spans, embedding):
+                spans = spans.float().relu().int()
+
+                max1, _ = torch.max(spans, dim=1, keepdim=False)
+                max1, _ = torch.max(max1, dim=1, keepdim=False)
+                max2, _ = torch.max(embedding, dim=1, keepdim=False)
+                max2, _ = torch.max(max2, dim=1, keepdim=False)
+                sigmoided_scores = max1 + max2
+                return sigmoided_scores
+
+        model = TestModel()
+        run_compare_torch([(1, 21, 2), (1, 6, 384)], model, backend=backend)# [spans.shape, embedding.shape]
+
+class TestSlice:
+    @pytest.mark.skipif(_python_version() < (3, 6), reason="requires python 3.6")
+    @pytest.mark.parametrize(
+        "backend", backends,
+    )
+    def test_dynamic_slice(self, backend):
+        class DynamicSlicer(torch.nn.Module):
+            def __init__(self):
+                super(DynamicSlicer, self).__init__()
+
+            def forward(self, x, context_length):
+                return x[context_length:, :, :]
+
+        class Model(torch.nn.Module):
+
+            def __init__(self):
+                super(Model, self).__init__()
+                self.tokens_embedding = torch.nn.Embedding(10, 10, 0)
+                self.context_embedding = torch.nn.Embedding(10, 10, 0)
+                self.dynamic_slicer = DynamicSlicer()
+
+            def forward(self, tokens, context, context_length):
+                tokens_embeddings = self.tokens_embedding(tokens)
+                context_embeddings = self.context_embedding(context)
+                embeddings = torch.cat((context_embeddings, tokens_embeddings), dim=0)
+                embeddings = self.dynamic_slicer(embeddings, context_length)
+
+                return embeddings
+
+        model = Model()
+        batch_size = 5
+        inputs = [ TensorType(name="tokens", shape=(10, batch_size), dtype=np.int64),
+                   TensorType(name="context", shape=(3, batch_size), dtype=np.int64),
+                   TensorType(name="context_length", shape=(), dtype=np.int32),
+                   ]
+        run_compare_torch(inputs, model, rand_range=(0, 8), backend=backend, use_scripting=False)
 
 
 class TestRepeat:

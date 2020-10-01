@@ -23,6 +23,34 @@ class TransposeOptimizationPass(unittest.TestCase):
 
     """
     Input graph:
+    input -----> transpose(axis=[1,0]) -----> transpose(axis=[1,0]) ---> out
+
+    Output graph:
+    input -----> relu -----> out
+    """
+
+    def test_simple_consecutive_ops_fusion_direct_output(self):
+        @mb.program(input_specs=[mb.TensorSpec(shape=(10, 20))])
+        def prog(x):
+            x = mb.transpose(x=x, perm=[1, 0])
+            x = mb.transpose(x=x, perm=[1, 0])
+            return x
+
+        prev_prog, prev_block, block = apply_pass_and_basic_check(
+            prog, "common::reduce_transposes"
+        )
+        self.assertEqual(
+            get_op_types_in_program(prev_prog), ["transpose", "transpose"]
+        )
+        self.assertEqual(get_op_types_in_program(prog), ["identity"])
+        assert_model_is_valid(
+            prog,
+            {"x": (10, 20)},
+            expected_output_shapes={block.outputs[0].name: (10, 20)},
+        )
+
+    """
+    Input graph:
     input -----> transpose(axis=[1,0]) -----> transpose(axis=[1,0]) ----> relu ---> out
 
     Output graph:

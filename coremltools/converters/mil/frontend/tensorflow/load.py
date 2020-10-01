@@ -194,6 +194,7 @@ class TF1Loader(TFLoader):
             delete_asserts,
             functionalize_loops,
             constant_propagation,
+            quantization_pass,
             cond_to_where,
             remove_variable_nodes,
             fuse_dilation_conv,
