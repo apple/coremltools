@@ -402,7 +402,7 @@ Result NeuralNetworkSpecValidator::validateNeuralNetwork(const T& nn) {
                     }
                     if (!(ModelIOBlobNameToRank.find(layer.output(idx)) == ModelIOBlobNameToRank.end())) {
                         if (static_cast<int>(tensor.rank()) != ModelIOBlobNameToRank[layer.output(idx)]) {
-                            std::string err = "Layer '" + std::string(layer.name()) + "''s output '" + std::string(layer.input(idx)) + \
+                            std::string err = "Layer '" + std::string(layer.name()) + "''s output '" + std::string(layer.output(idx)) + \
                             "' is also an output of the model. However, for this tensor the rank provided in the layer description" + \
                             " does not match the one provided in the model description";
                             return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
