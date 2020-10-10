@@ -67,4 +67,3 @@ def quantization_pass(tfssa):
     """
     for v in tfssa.functions.values():
         quantization_pass_impl(v)
-    print("pass completed")

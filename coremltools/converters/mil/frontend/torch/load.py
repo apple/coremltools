@@ -45,7 +45,6 @@ def load(model_spec, debug=False, **kwargs):
         terminate once these symbols have been generated. For debugging use
         only.
     """
-
     torchscript = _torchscript_from_model(model_spec)
 
     def _convert_to_inputtype(inputs):

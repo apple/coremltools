@@ -89,7 +89,7 @@ _HAS_TF_2 = False
 _TF_1_MIN_VERSION = "1.12.0"
 _TF_1_MAX_VERSION = "1.15.0"
 _TF_2_MIN_VERSION = "2.1.0"
-_TF_2_MAX_VERSION = "2.3.0"
+_TF_2_MAX_VERSION = "2.3.1"
 
 try:
     import tensorflow

@@ -2,7 +2,6 @@ from __future__ import absolute_import as _
 from __future__ import division as _
 from __future__ import print_function as _
 from __future__ import unicode_literals as _
-from typing import Text, Union, Optional, Dict, Any, Iterable, Sequence, Callable, List
 
 import numpy as np
 
@@ -33,6 +32,7 @@ if _HAS_ONNX:
     from onnx import TensorProto
 
     from typing import Tuple
+    from typing import Text, Union, Optional, Dict, Any, Iterable, Sequence, Callable, List
 
     from ._operators import (
         _convert_node,

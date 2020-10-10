@@ -7,16 +7,10 @@ import logging
 import numpy as np
 import copy
 
-import coremltools
-from coremltools import converters as converter
-from coremltools.converters.mil import converter as _converter
 from coremltools.converters.mil.mil import Program, Function
 from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
 from coremltools._deps import _IS_MACOS
 import PIL.Image
-
-converter = converter
-_converter = _converter
 
 
 def assert_op_count_match(program, expect, op=None, verbose=False):
@@ -51,16 +45,18 @@ def assert_model_is_valid(
     input_dict = dict()
     for name, shape in inputs.items():
         input_dict[name] = np.random.rand(*shape)
-    proto = _converter._convert(program, convert_from="mil", convert_to=backend)
+
+    # Avoid circular import
+    from coremltools.converters.mil.testing_reqs import ct
+    mlmodel = ct.convert(program, source="mil", convert_to=backend)
+    assert mlmodel is not None
+
     if verbose:
         from coremltools.models.neural_network.printer import print_network_spec
+        print_network_spec(mlmodel.get_spec(), style="coding")
 
-        print_network_spec(proto, style="coding")
-
-    model = coremltools.models.MLModel(proto)
-    assert model is not None
     if _IS_MACOS:
-        prediction = model.predict(input_dict, useCPUOnly=True)
+        prediction = mlmodel.predict(input_dict, useCPUOnly=True)
         assert prediction is not None
         if expected_output_shapes is not None:
             for out_name, out_shape in expected_output_shapes.items():
@@ -163,8 +159,7 @@ def is_close(expected, actual, atol=1e-04, rtol=1e-05):
     return True
 
 
-def run_core_ml_predict(proto, input_key_values, use_cpu_only=False):
-    model = coremltools.models.MLModel(proto, useCPUOnly=use_cpu_only)
+def run_core_ml_predict(mlmodel, input_key_values, use_cpu_only=False):
     for k, v in input_key_values.items():
         if isinstance(v, PIL.Image.Image):
             continue
@@ -172,11 +167,11 @@ def run_core_ml_predict(proto, input_key_values, use_cpu_only=False):
             input_key_values[k] = v.astype(np.float32)
         else:
             input_key_values[k] = np.array([v], dtype=np.float32)
-    return model.predict(input_key_values, useCPUOnly=use_cpu_only)
+    return mlmodel.predict(input_key_values, useCPUOnly=use_cpu_only)
 
 
 def compare_backend(
-    proto,
+    mlmodel,
     input_key_values,
     expected_outputs,
     use_cpu_only=False,
@@ -186,7 +181,7 @@ def compare_backend(
 ):
     """
     Inputs:
-        - proto: MLModel proto.
+        - mlmodel: MLModel.
 
         - input_key_values: str -> np.array. Keys must match those in
           input_placeholders.
@@ -197,10 +192,11 @@ def compare_backend(
         - use_cpu_only: True/False.
     """
     if _IS_MACOS:
-        pred = run_core_ml_predict(proto, input_key_values, use_cpu_only=use_cpu_only)
+        pred = run_core_ml_predict(mlmodel, input_key_values,
+            use_cpu_only=use_cpu_only)
         if also_compare_shapes:
             compare_shapes(
-                proto,
+                mlmodel,
                 input_key_values,
                 expected_outputs,
                 use_cpu_only=use_cpu_only,
@@ -220,11 +216,11 @@ def compare_backend(
 
 
 def compare_shapes(
-    proto, input_key_values, expected_outputs, use_cpu_only=False, pred=None
+    mlmodel, input_key_values, expected_outputs, use_cpu_only=False, pred=None
 ):
     """
     Inputs:
-        - proto: MLModel proto.
+        - mlmodel: MLModel.
 
         - input_key_values: str -> np.array or PIL.Image. Keys must match those in
           input_placeholders.
@@ -238,7 +234,8 @@ def compare_shapes(
 
     if _IS_MACOS:
         if not pred:
-            pred = run_core_ml_predict(proto, input_key_values, use_cpu_only)
+            pred = run_core_ml_predict(mlmodel, input_key_values,
+                use_cpu_only)
         for o, expected in expected_outputs.items():
             msg = "Output: {}. expected shape {} != actual shape {}".format(
                 o, expected.shape, pred[o].shape
@@ -251,8 +248,8 @@ def compare_shapes(
 
 
 def get_core_ml_prediction(
-    build, input_placeholders, input_values, use_cpu_only=False, backend="nn_proto"
-):
+    build, input_placeholders, input_values, use_cpu_only=False, 
+    backend="nn_proto"):
     """
     Return predictions of the given model.
     """
@@ -266,9 +263,11 @@ def get_core_ml_prediction(
         ssa_func.set_outputs(output_vars)
         program.add_function("main", ssa_func)
 
-    proto = _converter._convert(program, convert_from="mil", convert_to=backend)
-    model = coremltools.models.MLModel(proto, use_cpu_only)
-    return model.predict(input_values, useCPUOnly=use_cpu_only)
+    # Avoid circular import
+    from coremltools.converters.mil.testing_reqs import ct
+    mlmodel = ct.convert(program, source="mil",
+        convert_to=backend, useCPUOnly=use_cpu_only)
+    return mlmodel.predict(input_values, useCPUOnly=use_cpu_only)
 
 
 def apply_pass_and_basic_check(prog, pass_name):

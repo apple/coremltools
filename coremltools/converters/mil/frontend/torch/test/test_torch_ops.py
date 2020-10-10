@@ -84,6 +84,14 @@ class TestLinear:
         model = nn.Linear(in_features, out_features)
         run_compare_torch((1, in_features), model, backend=backend)
 
+    @pytest.mark.parametrize(
+        "in_features, out_features, backend",
+        itertools.product([5], [10], backends),
+    )
+    def test_linear_rank1_input(self, in_features, out_features, backend):
+        model = nn.Linear(in_features, out_features)
+        run_compare_torch((in_features,), model, backend=backend)
+
 
 class TestConv:
     @pytest.mark.parametrize(
@@ -1299,20 +1307,20 @@ class TestMatMul:
 
 class TestSplit:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, split_size_or_sections, dim",
-        itertools.product([True, False], backends, [1, 2, [1, 4]], [0, -2]),
+        "backend, split_size_or_sections, dim",
+        itertools.product(backends, [1, 2, [1, 4]], [0, -2]),
     )
-    def test_split(self, use_cpu_only, backend, split_size_or_sections, dim):
+    def test_split(self, backend, split_size_or_sections, dim):
         input_shape = (5, 2)
         model = ModuleWrapper(function=torch.split,
                               kwargs={"split_size_or_sections": split_size_or_sections, "dim": dim})
         run_compare_torch(input_shape, model, backend=backend)
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, split_sizes, dim",
-        itertools.product([True, False], backends, [[1, 4], [3, 2]], [-1, -2]),
+        "backend, split_sizes, dim",
+        itertools.product(backends, [[1, 4], [3, 2]], [-1, -2]),
     )
-    def test_split_with_sizes(self, use_cpu_only, backend, split_sizes, dim):
+    def test_split_with_sizes(self, backend, split_sizes, dim):
         input_shape = (5, 5)
         model = ModuleWrapper(function=torch.split_with_sizes,
                               kwargs={"split_sizes": split_sizes, "dim": dim})
@@ -1321,11 +1329,11 @@ class TestSplit:
 
 class TestTranspose:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, rank, dims",
-        itertools.product([True, False], backends, list(range(2, 6)),
+        "backend, rank, dims",
+        itertools.product(backends, list(range(2, 6)),
                           [(0, 1), (-2, -1), (1, 0), (-1, -2)]),
     )
-    def test(self, use_cpu_only, backend, rank, dims):
+    def test(self, backend, rank, dims):
         input_shape = tuple(np.random.randint(low=1, high=4, size=rank))
         model = ModuleWrapper(function=torch.transpose,
                               kwargs={"dim0": dims[0], "dim1": dims[1]})
@@ -1391,13 +1399,36 @@ class TestSlice:
 
 class TestRepeat:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, rank",
-        itertools.product([True, False], backends, list(range(1, 6))),
+        "backend, rank",
+        itertools.product(backends, list(range(1, 6))),
     )
-    def test_repeat(self, use_cpu_only, backend, rank):
+    def test_repeat(self, backend, rank):
         input_shape = np.random.randint(low=2, high=6, size=rank)
         repeats = np.random.randint(low=2, high=4, size=rank)
         input_shape = tuple(input_shape)
 
         model = ModuleWrapper(function=lambda x: x.repeat(*repeats))
+        run_compare_torch(input_shape, model, backend=backend)
+
+class TestStd:
+    @pytest.mark.parametrize(
+        "backend, unbiased",
+        itertools.product(backends, [True, False]),
+    )
+    def test_std_2_inputs(self, backend, unbiased):
+        model = ModuleWrapper(function=torch.std,
+                              kwargs={"unbiased": unbiased})
+        x = torch.randn(1, 5, 10) * 3
+        out = torch.std(x, unbiased=unbiased).unsqueeze(0)
+        run_compare_torch(x, model, expected_results=out, input_as_shape=False, backend=backend)
+
+
+    @pytest.mark.parametrize(
+        "backend, unbiased, dim, keepdim",
+        itertools.product(backends, [True, False], [[0,2], [1], [2]], [True, False]),
+    )
+    def test_std_4_inputs(self, backend, unbiased, dim, keepdim):
+        model = ModuleWrapper(function=torch.std,
+                              kwargs={"unbiased": unbiased, "dim" : dim, "keepdim": keepdim})
+        input_shape = (2, 5, 10)
         run_compare_torch(input_shape, model, backend=backend)

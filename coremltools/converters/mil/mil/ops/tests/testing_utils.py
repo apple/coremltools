@@ -5,10 +5,10 @@
 
 import logging
 
-from coremltools.converters.mil.testing_reqs import _converter as converter
 from coremltools.converters.mil.mil.types.symbolic import is_symbolic
 from coremltools.converters.mil.mil import Program, Function
 from coremltools.converters.mil.testing_utils import compare_backend
+from coremltools.converters.mil.testing_reqs import ct
 
 UNK_VARIADIC = "*s_unk"
 UNK_SYM = "s_unk"
@@ -106,7 +106,7 @@ def run_compare_builder(
         if output_shape != expected_shape:
             raise ValueError(msg)
 
-    proto = converter._convert(prog, convert_from="mil", convert_to=backend, inputs=inputs)
+    mlmodel = ct.convert(prog, source="mil", convert_to=backend, inputs=inputs)
 
     if frontend_only:
         return
@@ -123,7 +123,7 @@ def run_compare_builder(
         }
 
     compare_backend(
-        proto=proto,
+        mlmodel=mlmodel,
         input_key_values=input_values,
         expected_outputs=expected_outputs,
         use_cpu_only=use_cpu_only,

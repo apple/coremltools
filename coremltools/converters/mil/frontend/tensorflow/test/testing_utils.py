@@ -10,7 +10,7 @@ import numpy as np
 
 tf = pytest.importorskip("tensorflow", minversion="1.14.0")
 from coremltools.converters.mil.testing_utils import compare_shapes, compare_backend
-from coremltools.converters.mil.testing_reqs import converter
+from coremltools.converters.mil.testing_reqs import ct
 from tensorflow.python.framework import dtypes
 import tempfile
 import os
@@ -41,8 +41,8 @@ def make_tf_graph(input_types):
         with tf.Graph().as_default() as model:
             inputs = []
             for input_type in input_types:
-                input_type = tuple(input_type)
-                if len(input_type) > 0 and isinstance(input_type[-1], dtypes.DType):
+                input_type = tuple(input_type) if input_type is not None else None
+                if input_type is not None and len(input_type) > 0 and isinstance(input_type[-1], dtypes.DType):
                     shape, dtype = input_type[:-1], input_type[-1]
                 else:
                     shape, dtype = input_type, tf.float32
@@ -110,7 +110,7 @@ def get_tf_node_names(tf_nodes, mode="inputs"):
     return names
 
 
-def tf_graph_to_proto(
+def tf_graph_to_mlmodel(
     graph, feed_dict, output_nodes, frontend="tensorflow", backend="nn_proto"
 ):
     """
@@ -127,7 +127,7 @@ def tf_graph_to_proto(
     backend: str
         Backend to convert to.
     -----------
-    Returns Proto, Input Values, Output Names
+    Returns MLModel, Input Values, Output Names
     """
     if isinstance(output_nodes, tuple):
         output_nodes = list(output_nodes)
@@ -139,12 +139,11 @@ def tf_graph_to_proto(
     output_names = get_tf_node_names(output_nodes, mode="outputs")
     input_values = {name: val for name, val in zip(input_names, feed_dict.values())}
 
-    mlmodel = converter.convert(
+    mlmodel = ct.convert(
         graph, inputs=None, outputs=output_names, source=frontend, convert_to=backend
     )
 
-    proto = mlmodel.get_spec()
-    return proto, input_values, output_names, output_nodes
+    return mlmodel, input_values, output_names, output_nodes
 
 
 def load_tf_pb(pb_file):
@@ -206,8 +205,11 @@ def run_compare_tf(
         If true, skip element-wise value comparision.
     tf_outputs: float or list[float]
         If present, use it as TensorFlow predictions
+
+    Return:
+        Proto
     """
-    proto, input_key_values, output_names, output_nodes = tf_graph_to_proto(
+    mlmodel, input_key_values, output_names, output_nodes = tf_graph_to_mlmodel(
         graph, feed_dict, output_nodes, frontend, backend
     )
 
@@ -246,7 +248,7 @@ def run_compare_tf(
         graph = load_tf_pb(static_model_file)
 
         # Need to convert again using frozen graph
-        proto, input_key_values, output_names, output_nodes = tf_graph_to_proto(
+        mlmodel, input_key_values, output_names, output_nodes = tf_graph_to_mlmodel(
             graph, feed_dict, output_nodes, frontend, backend
         )
     else:
@@ -261,10 +263,10 @@ def run_compare_tf(
             input_key_values[k] = v.astype(np.float) # Core ML only accepts floats
 
     if validate_shapes_only:
-        compare_shapes(proto, input_key_values, expected_outputs, use_cpu_only)
+        compare_shapes(mlmodel, input_key_values, expected_outputs, use_cpu_only)
     else:
         compare_backend(
-            proto,
+            mlmodel,
             input_key_values,
             expected_outputs,
             use_cpu_only,
@@ -273,7 +275,7 @@ def run_compare_tf(
             also_compare_shapes=True,
         )
 
-    return proto
+    return mlmodel._spec
 
 
 def layer_counts(spec, layer_type):

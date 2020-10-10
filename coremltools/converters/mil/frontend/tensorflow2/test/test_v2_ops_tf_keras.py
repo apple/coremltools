@@ -1218,6 +1218,33 @@ class TestRecurrent:
             backend=backend,
         )
 
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend", itertools.product([True, False], backends)
+    )
+    def test_lstm_dynamic_batch(self, use_cpu_only, backend):
+         # Support dynamic elem_shape <rdar://problem/69522780>
+        if backend != "nn_proto":
+            return
+        input_shape = (1, 1280)
+        inp = tf.keras.layers.Input(shape=input_shape)
+        h0 = tf.keras.layers.Input(shape=(512,))
+        c0 = tf.keras.layers.Input(shape=(512,))
+        out, hn, cn = tf.keras.layers.LSTM(512,
+                                        return_sequences=True,
+                                        return_state=True,
+                                        recurrent_activation='sigmoid')(inp)
+        model = tf.keras.models.Model(inputs=[inp, h0, c0], outputs=[out, hn, cn])
+        batch_size = 2
+        run_compare_tf_keras(
+            model,
+            [
+                random_gen((batch_size, 1, 1280), -1, 1),
+                random_gen((batch_size, 512), -1, 1),
+                random_gen((batch_size, 512), -1, 1),
+            ],
+            use_cpu_only=use_cpu_only,
+            backend=backend,
+        )
 
 class TestRepeatVector:
     @pytest.mark.parametrize(

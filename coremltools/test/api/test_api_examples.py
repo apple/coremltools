@@ -42,7 +42,7 @@ class TestTensorFlow1ConverterExamples:
         test_input = np.random.rand(1, 2, 3) - 0.5
         with tf.compat.v1.Session(graph=graph) as sess:
             expected_val = sess.run(y, feed_dict={x: test_input})
-        results = mlmodel.predict({"input": test_input})
+        results = mlmodel.predict({"input": test_input}, useCPUOnly=True)
         np.testing.assert_allclose(results["output"], expected_val)
 
     @staticmethod
@@ -93,14 +93,14 @@ class TestTensorFlow1ConverterExamples:
         # nodes.
         mlmodel = ct.convert(pb_path, outputs=["output"])
 
-        results = mlmodel.predict({"input": test_input})
+        results = mlmodel.predict({"input": test_input}, useCPUOnly=True)
         np.testing.assert_allclose(results["output"], expected_val)
         mlmodel_path = os.path.join(save_path, "model.mlmodel")
         # Save the converted model
         mlmodel.save(mlmodel_path)
 
         results = mlmodel.predict({"input": test_input})
-        np.testing.assert_allclose(results["output"], expected_val)
+        np.testing.assert_allclose(results["output"], expected_val, atol=1e-3)
 
     @staticmethod
     def test_convert_from_saved_model_dir(tmpdir):
@@ -129,7 +129,7 @@ class TestTensorFlow1ConverterExamples:
         # Need input output names to call mlmodel
         # x.name == 'Placeholder:0'. Strip out ':0'
         input_name = x.name.split(":")[0]
-        results = mlmodel.predict({input_name: test_input})
+        results = mlmodel.predict({input_name: test_input}, useCPUOnly=True)
         # y.name == 'Relu:0'. output_name == 'Relu'
         output_name = y.name.split(":")[0]
         np.testing.assert_allclose(results[output_name], expected_val)
@@ -478,8 +478,8 @@ class TestPyTorchConverterExamples:
             results = mlmodel.predict({"input": example_input.numpy()})
             expected = model(example_input)
             np.testing.assert_allclose(
-                list(results.values())[0], expected.detach().numpy(), rtol=1e-2
-            )
+                list(results.values())[0], expected.detach().numpy(),
+                atol=1e-8, rtol=1e-2)
 
     @staticmethod
     def test_int64_inputs():
@@ -575,16 +575,13 @@ class TestMILExamples:
         print("prog:\n", prog)
 
         # Convert and verify
-        from coremltools.converters.mil.converter import _convert
-        from coremltools import models
+        import coremltools as ct
 
-        proto = _convert(prog, convert_from="mil")
-
-        model = models.MLModel(proto)
+        mlmodel = ct.convert(prog)
 
         # running predict() is only supported on macOS
         if ct.utils._is_macos():
-            prediction = model.predict(
+            prediction = mlmodel.predict(
                 {"x": np.random.rand(1, 100, 100, 3).astype(np.float32),}
             )
             assert len(prediction) == 1
@@ -625,7 +622,8 @@ class TestFlexibleShape:
             results = mlmodel.predict({
                 "seq1": test_input_x1,
                 "seq2": test_input_x2})
-            np.testing.assert_allclose(results["Identity"], expected_val, rtol=1e-4)
+            np.testing.assert_allclose(results["Identity"], expected_val,
+                rtol=1e-4, atol=1e-3)
 
 
     @staticmethod
@@ -675,7 +673,8 @@ class TestFlexibleShape:
         expected_val = keras_model([test_input_x])
         if ct.utils._is_macos():
             results = mlmodel.predict({"seq": test_input_x})
-            np.testing.assert_allclose(results["Identity"], expected_val, rtol=1e-4)
+            np.testing.assert_allclose(results["Identity"], expected_val,
+                rtol=1e-4, atol=1e-3)
 
             # seq_len below/above lower_bound/upper_bound
             with pytest.raises(RuntimeError,
@@ -991,7 +990,8 @@ class TestFlexibleShape:
 
         if ct.utils._is_macos():
             result = mlmodel.predict(
-                {"input": example_input.detach().numpy().astype(np.float32)}
+                {"input": example_input.detach().numpy().astype(np.float32)},
+                useCPUOnly=True,
             )
 
             # Verify outputs

@@ -5088,8 +5088,8 @@ class TestTensorArray:
         "use_cpu_only, backend", itertools.product([True, False], backends)
     )
     def test_tf_dynamic_elem_shape(self, use_cpu_only, backend):
-        # Suport dynamic elem_shape in mil proto<rdar://problem/69522780>
-        if backend == "mil_proto":
+        # Support dynamic elem_shape <rdar://problem/69522780>
+        if backend != "nn_proto":
             return
 
         # TF1: TensorArrayV3, TensorArrayWriteV3, TensorArrayScatterV3,
