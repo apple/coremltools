@@ -1221,6 +1221,7 @@ class TestRecurrent:
     @pytest.mark.parametrize(
         "use_cpu_only, backend", itertools.product([True, False], backends)
     )
+    @pytest.mark.skip(reason="rdar://65198011 (Re-enable unit tests after os update)")
     def test_lstm_dynamic_batch(self, use_cpu_only, backend):
          # Support dynamic elem_shape <rdar://problem/69522780>
         if backend != "nn_proto":

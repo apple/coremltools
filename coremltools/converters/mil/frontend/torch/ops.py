@@ -2429,7 +2429,7 @@ def std(context, node):
                 if N > 1:
                     need_rescale = True
     if need_rescale:
-        rescale_factor = _np.sqrt(N/(N-1))
+        rescale_factor = _np.sqrt(N/float(N-1))
 
     x_mean = mb.reduce_mean(x=x, axes=axes, keep_dims=True)
     x_demeaned = mb.sub(x=x, y=x_mean)
