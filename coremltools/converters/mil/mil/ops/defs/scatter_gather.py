@@ -51,7 +51,7 @@ class gather(Operation):
 
     input_spec = InputSpec(
         x=TensorInputType(),
-        indices=IntOrIntTensorInputType(),
+        indices=IntInputType(),
         axis=IntInputType(const=True, default=0),
     )
 

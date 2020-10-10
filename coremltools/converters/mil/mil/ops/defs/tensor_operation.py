@@ -900,16 +900,20 @@ class concat(Operation):
     @precondition(allow=VALUE | SYMBOL | NONE)
     def value_inference(self):
 
-        is_all_rank_zero = all([v.rank == 0 for v in self.values])
-        values = [
-            v.sym_val if v.sym_val is not None else get_new_symbol()
-            for v in self.values
-        ]
+        is_all_rank_less_than_2 = all([v.rank < 2 for v in self.values])
+        values = []
+        for v in self.values:
+            if v.sym_val is not None:
+                values.append(v.sym_val)
+            else:
+                if v.rank == 1:
+                    values.append(np.array([get_new_symbol() for _ in range(v.shape[0])]))
+                else:
+                    values.append(get_new_symbol())
 
-        # we only infer values for values whose ranks are all zero,
+        # we only infer value for values whose ranks are all <= 1,
         # or don't have symbolic values.
-        # Note that cases like values = [[1, is0], [2]] aren't in such case.
-        if any([is_symbolic(v) for v in values]) and not is_all_rank_zero:
+        if any([any_symbolic(v) for v in values]) and not is_all_rank_less_than_2:
             return None
 
         # skip value inference when interleave on

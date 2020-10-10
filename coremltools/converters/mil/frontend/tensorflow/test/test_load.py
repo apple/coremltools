@@ -182,6 +182,37 @@ class TestTf1ModelInputsOutputs:
             converter.convert(model, source=frontend, outputs=["invalid_name"])
         e.match(r".* is not in graph")
 
+    def test_missing_placeholder_shape(self):
+        x_shape = None  # Missing Placeholder shape
+
+        @make_tf_graph([x_shape])
+        def build_model(x):
+            return tf.nn.relu(x)
+
+        model, inputs, outputs = build_model
+        with pytest.raises(ValueError) as e:
+            converter.convert(model, source=frontend)
+            e.match(r"Unable to determine the shape of input .*")
+
+        # Test must pass if a user provides shape during conversion,
+        mlmodel = converter.convert(model, source=frontend, inputs=[ct.TensorType(shape=())])
+        assert mlmodel is not None
+
+    def test_scalar_placeholder_shape(self):
+        x_shape = ()  # Scalar Placeholder Shape
+
+        @make_tf_graph([x_shape])
+        def build_model(x):
+            return tf.nn.relu(x)
+
+        model, inputs, outputs = build_model
+        mlmodel = converter.convert(model, source=frontend)
+        assert mlmodel is not None
+
+        input_values = [random_gen(x_shape, -10.0, 10.0)]
+        input_dict = dict(zip(inputs, input_values))
+        run_compare_tf(model, input_dict, outputs)
+
     def test_shaping_utils(self):
         @make_tf_graph([(None, 4, 5)])
         def build_flexible_model(x):

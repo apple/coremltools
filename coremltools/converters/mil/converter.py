@@ -3,6 +3,7 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+from coremltools.models import MLModel
 from coremltools.converters._profile_utils import _profile
 from . import InputType, ImageType
 from .mil.passes.common_pass import common_pass
@@ -76,7 +77,7 @@ class TensorFlow2Frontend:
 
 @ConverterRegistry.frontend
 class TorchFrontend:
-    name = "torch"
+    name = "pytorch"
 
     def __call__(self, *args, **kwargs):
         from .frontend.torch import load
@@ -94,34 +95,70 @@ class NNProtoBackend:
         return load(*args, **kwargs)
 
 
-@ConverterRegistry.frontend
-class CustomFrontend:
-    name = "custom"
-
-    def __call__(self, *args, **kwargs):
-        from coremltools.converters.mil.mil.passes.common_pass import common_pass
-
-        return common_pass(*args, **kwargs)
-
-
 @_profile
-def _convert(
+def mil_convert(
     model,
-    convert_from="TensorFlow",
-    convert_to="nn_proto",
-    converter_registry=ConverterRegistry,
+    convert_from,
+    convert_to,
     **kwargs
 ):
     """
-    Convert from an external representation.
+    Convert model from a specified frontend `convert_from` to a specified
+    converter backend `convert_to`.
 
-    Args:
-        model (Any): The model to convert.
-        convert_from (str): The name of the input converter.
-        convert_to (str): The name of the output converter.
-        converter_registry: Converter registries.
-    Returns:
-        The converted model.
+    Parameters
+    ----------
+    model: TF, PyTorch, or `coremltools.converters.mil.Program`.
+        See `coremltools.converters.convert`
+
+    convert_from: str
+        The value must be one of ['tensorflow', 'tensorflow2',
+        'pytorch', 'mil'] (aka name of a `ConverterRegistry.frontend`).
+
+    convert_to: str
+       Value must be one of ['nn_proto', 'mil'] (aka name of
+       `ConverterRegistry.backend`). See `coremltools.converters.convert`
+
+    Returns
+    -------
+    model: `coremltools.models.MLModel` or
+    `coremltools.converters.mil.Program`
+        See `coremltools.converters.convert`
+    """
+    proto = mil_convert_to_proto(model, convert_from, convert_to,
+        ConverterRegistry, **kwargs)
+    if convert_to == 'mil':
+        return proto
+    useCPUOnly = kwargs.get("useCPUOnly", False)
+    return MLModel(proto, useCPUOnly=useCPUOnly)
+
+
+def mil_convert_to_proto(
+    model,
+    convert_from,
+    convert_to,
+    converter_registry,
+    **kwargs
+):
+    """
+    Convert model to proto object.
+
+    Parameters
+    ----------
+    model: See `mil_convert`
+
+    convert_from: See `mil_convert`
+
+    convert_to: See `mil_convert`
+
+    converter_registry: `ConverterRegistry`
+      Available frontend and backend converters
+
+    Returns
+    -------
+    model: `coremltools.models.MLModel` or
+    `coremltools.converters.mil.Program`
+        See `coremltools.converters.convert`
     """
     frontend_converter_type = converter_registry.frontends.get(convert_from.lower())
     if not frontend_converter_type:
@@ -135,7 +172,7 @@ def _convert(
     common_pass(prog)
 
     if convert_to == 'mil':
-        return prog # Returns the MIL program
+        return prog # Returns `coremltools.converters.mil.Program`
 
     backend_converter_type = converter_registry.backends.get(convert_to.lower())
     if not backend_converter_type:

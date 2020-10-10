@@ -69,7 +69,10 @@ static void RaiseException(NSInteger code, NSString *reason) {
 }
 
 static void CheckSize(GPBCodedInputStreamState *state, size_t size) {
-  size_t newSize = state->bufferPos + size;
+  size_t newSize;
+  if (__builtin_add_overflow(state->bufferPos, size, &newSize)) {
+    RaiseException(GPBCodedInputStreamErrorInvalidSize, @"Buffer size overflow");
+  }
   if (newSize > state->bufferSize) {
     RaiseException(GPBCodedInputStreamErrorInvalidSize, nil);
   }
@@ -246,6 +249,11 @@ int32_t GPBCodedInputStreamReadTag(GPBCodedInputStreamState *state) {
 NSString *GPBCodedInputStreamReadRetainedString(
     GPBCodedInputStreamState *state) {
   int32_t size = ReadRawVarint32(state);
+  if (size < 0) {
+    RaiseException(GPBCodedInputStreamErrorInvalidUTF8,
+                   @"Field delimited with negative length");
+  }
+
   NSString *result;
   if (size == 0) {
     result = @"";
@@ -371,9 +379,15 @@ void GPBCodedInputStreamCheckLastTagWas(GPBCodedInputStreamState *state,
     case GPBWireFormatFixed64:
       SkipRawData(&state_, sizeof(int64_t));
       return YES;
-    case GPBWireFormatLengthDelimited:
-      SkipRawData(&state_, ReadRawVarint32(&state_));
+    case GPBWireFormatLengthDelimited: {
+      int32_t signedSize = ReadRawVarint32(&state_);
+      if (signedSize < 0) {
+          RaiseException(GPBCodedInputStreamErrorInvalidSize,
+                         @"Field delimited with negative length");
+      }
+      SkipRawData(&state_, signedSize);
       return YES;
+    }
     case GPBWireFormatStartGroup:
       [self skipMessage];
       GPBCodedInputStreamCheckLastTagWas(

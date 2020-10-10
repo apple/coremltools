@@ -15,6 +15,7 @@ from coremltools.converters.mil.mil.var import Var, ListVar
 from coremltools.converters.mil.mil import Placeholder, Symbol
 from .internal_graph import *
 from .torch_op_registry import _TORCH_OPS_REGISTRY, register_torch_op
+from coremltools.converters.mil.mil.types.symbolic import any_symbolic, is_symbolic
 
 # The pytorch args for many of the below ops were sourced from
 # https://github.com/pytorch/pytorch/blob/d971007c291c0ead1003d12cd553d18ddb582207/torch/csrc/jit/mobile/register_mobile_ops.cpp#L216
@@ -279,7 +280,7 @@ def transpose(context, node):
     x = inputs[0]
 
     if len(node.inputs) == 1:
-        # PyTorch has several tranpose ops that can be emitted. This one is only
+        # PyTorch has several transpose ops that can be emitted. This one is only
         # emitted when .t() is called on a tensor, which means it can only be
         # called on a matrix.
         if len(x.shape) > 2:
@@ -314,7 +315,11 @@ def pixel_shuffle(context, node):
 @register_torch_op(torch_alias=["bmm"])
 def matmul(context, node):
     inputs = _get_inputs(context, node, expected=2)
-    res = mb.matmul(x=inputs[0], y=inputs[1], name=node.name)
+    if inputs[1].val is not None and \
+            len(inputs[1].shape) == 2 and len(inputs[0].shape) <= 3:
+        res = mb.linear(x=inputs[0], weight=_np.transpose(inputs[1].val), name=node.name)
+    else:
+        res = mb.matmul(x=inputs[0], y=inputs[1], name=node.name)
     context.add(res)
 
 @register_torch_op
@@ -2382,6 +2387,63 @@ def topk(context, node):
     context.add(res[1], torch_name=indices_name)
 
 @register_torch_op
+def std(context, node):
+    inputs = _get_inputs(context, node)
+    x = inputs[0]
+    if not (len(inputs) == 2 or len(inputs) == 4):
+        raise ValueError("Number of inputs to the 'std' op must be"
+                         "2 or 4")
+
+    keep_dim = False
+    axes = None
+    if len(inputs) == 2:
+        unbiased = inputs[1].val
+    if len(inputs) == 4:
+        axes = inputs[1].val
+        if isinstance(axes, int):
+            axes = [axes]
+        unbiased = inputs[2].val
+        keep_dim = inputs[3].val
+
+    need_rescale = False
+    if unbiased:
+        # If "unbiased" is True,
+        # then we need to divide by "N-1" (instead of "N") to compute the mean of (x-E[x])^2
+        # for an unbiased estimate of the variance /  standard deviation.
+        # In the sequence of MIL ops added below, we first compute the mean using "N", and only if its unbiased
+        # we rescale later, the final result.
+        # We ignore the "unbiased" flag, if any of the dimensions involved in this operation are dynamic
+        # (we could have still handled that case by using "get_shape" etc ops, but we don't do that here,
+        # trading performance for numerical accuracy)
+        if axes is None:
+            if not any_symbolic(x.shape) and _np.prod(x.shape) > 1:
+                N = _np.prod(x.shape)
+                need_rescale = True
+        else:
+            dims = []
+            # collect dimensions corresponding to "axes"
+            for axis in axes:
+                dims.append(x.shape[axis])
+            if all([not is_symbolic(s) for s in dims]):
+                N = _np.prod(dims)
+                if N > 1:
+                    need_rescale = True
+    if need_rescale:
+        rescale_factor = _np.sqrt(N/float(N-1))
+
+    x_mean = mb.reduce_mean(x=x, axes=axes, keep_dims=True)
+    x_demeaned = mb.sub(x=x, y=x_mean)
+    x_demeaned_square = mb.square(x=x_demeaned)
+    x_demeaned_square_mean = mb.reduce_mean(x=x_demeaned_square, axes=axes, keep_dims=keep_dim)
+    if need_rescale:
+        y_before_scale = mb.sqrt(x=x_demeaned_square_mean)
+        y = mb.mul(x=y_before_scale, y=rescale_factor, name=node.name)
+    else:
+        y = mb.sqrt(x=x_demeaned_square_mean, name=node.name)
+
+    context.add(y)
+
+@register_torch_op
 def copy_(context, node):
     inputs = _get_inputs(context, node, expected=3)
-    context.add(mb.identity(x=inputs[0]))
+    context.add(mb.identity(x=inputs[0], name=node.name))

@@ -1366,11 +1366,11 @@ def l2_pool(const_context, builder, op):
 def linear(const_context, builder, op):
     out_channels, in_channels = op.weight.shape
     if op.x.rank and op.x.rank <= 3 and op.x.rank > 0:
-        has_bias = op.bias.val is not None
+        has_bias = op.bias is not None and op.bias.val is not None
         builder.add_inner_product(
             name=op.name,
             W=op.weight.val,
-            b=op.bias.val,
+            b=op.bias.val if has_bias else None,
             input_channels=in_channels,
             output_channels=out_channels,
             has_bias=has_bias,

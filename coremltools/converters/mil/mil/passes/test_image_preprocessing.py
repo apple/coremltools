@@ -4,7 +4,7 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from coremltools import ImageType, models
-from coremltools.converters.mil import converter
+from coremltools.converters.mil.testing_reqs import ct
 from coremltools.converters.mil.testing_utils import (
     assert_op_count_match,
     assert_model_is_valid,
@@ -61,7 +61,9 @@ class ImagePreprocessingPass(unittest.TestCase):
             x4 = mb.add(x=x1, y=x3)
             return mb.relu(x=x4)
 
-        proto = converter._convert(prog, inputs=[ImageType(name="x", shape=(10, 20, 30, 3), channel_first=False)], convert_from="mil", convert_to="nn_proto")
-        model = models.MLModel(proto)
-        assert model is not None
-        assert len(model._spec.neuralNetwork.layers) == 3
+        mlmodel = ct.convert(prog,
+            inputs=[ImageType(name="x", shape=(10, 20, 30, 3),
+              channel_first=False)],
+            source="mil", convert_to="nn_proto")
+        assert mlmodel is not None
+        assert len(mlmodel.get_spec().neuralNetwork.layers) == 3

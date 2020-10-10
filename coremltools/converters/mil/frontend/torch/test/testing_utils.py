@@ -9,10 +9,10 @@ import torch.nn as nn
 from six import string_types as _string_types
 from coremltools import TensorType, RangeDim
 from ..converter import torch_to_mil_types
-from coremltools.converters.mil.testing_reqs import _converter
 from coremltools.models import MLModel
 from coremltools._deps import _IS_MACOS
 from coremltools.converters.mil.mil.types.type_mapping import nptype_from_builtin
+from coremltools.converters.mil.testing_reqs import ct
 
 class ModuleWrapper(nn.Module):
     """
@@ -77,8 +77,8 @@ def convert_to_mlmodel(model_spec, tensor_inputs, backend="nn_proto"):
             )
 
     inputs = list(_convert_to_inputtype(tensor_inputs))
-    proto = _converter._convert(model_spec, inputs=inputs, convert_to=backend, convert_from="torch")
-    return MLModel(proto, useCPUOnly=True)
+    return ct.convert(model_spec, inputs=inputs, convert_to=backend,
+        source="pytorch")
 
 
 def generate_input_data(input_size, rand_range=(0, 1)):
@@ -162,7 +162,7 @@ def convert_and_compare(input_data, model_spec, expected_results=None, atol=1e-5
     mlmodel = convert_to_mlmodel(model_spec, input_data, backend=backend)
     coreml_inputs = convert_to_coreml_inputs(mlmodel.input_description, input_data)
     if _IS_MACOS:
-        coreml_results = mlmodel.predict(coreml_inputs)
+        coreml_results = mlmodel.predict(coreml_inputs, useCPUOnly=True)
         sorted_coreml_results = [
             coreml_results[key] for key in sorted(coreml_results.keys())
         ]

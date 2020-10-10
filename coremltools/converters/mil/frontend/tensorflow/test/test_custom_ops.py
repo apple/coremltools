@@ -7,7 +7,7 @@ from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.testing_reqs import *
 from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import (
     make_tf_graph,
-    tf_graph_to_proto,
+    tf_graph_to_mlmodel,
     run_compare_tf,
 )
 
@@ -108,7 +108,7 @@ class TestCustomMatMul:
                 a_is_sparse=a_is_sparse,
                 b_is_sparse=b_is_sparse,
             )
-            spec, _, _, _ = tf_graph_to_proto(
+            mlmodel, _, _, _ = tf_graph_to_mlmodel(
                 graph,
                 {
                     x: random_gen(shape, rand_min=-100, rand_max=100),
@@ -117,7 +117,7 @@ class TestCustomMatMul:
                 ref,
                 backend=backend,
             )
-            layers = spec.neuralNetwork.layers
+            layers = mlmodel.get_spec().neuralNetwork.layers
             assert layers[-1].custom is not None, "Expecting a custom layer"
             assert (
                 "SparseMatMul" == layers[-1].custom.className
@@ -205,13 +205,13 @@ class TestCustomTopK:
             x = tf.placeholder(tf.float32, shape=shape)
             ref = tf.math.top_k(x, k=k, sorted=True)
             ref = (ref[1], ref[0])
-            spec, _, _, _ = tf_graph_to_proto(
+            mlmodel, _, _, _ = tf_graph_to_mlmodel(
                 graph,
                 {x: random_gen(shape, rand_min=-100, rand_max=100)},
                 ref,
                 backend=backend,
             )
-            layers = spec.neuralNetwork.layers
+            layers = mlmodel.get_spec().neuralNetwork.layers
             assert layers[-1].custom is not None, "Expecting a custom layer"
             assert (
                 "TopK" == layers[-1].custom.className

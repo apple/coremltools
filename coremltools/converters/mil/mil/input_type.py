@@ -7,6 +7,23 @@ from coremltools.converters.mil.mil import types
 from .var import InternalVar
 from collections import OrderedDict
 
+SUPPORT_INT_TYPES = [
+                        types.uint8,
+                        types.int8,
+                        types.uint16,
+                        types.int16,
+                        types.uint32,
+                        types.int32,
+                        types.uint64,
+                        types.int64,
+                    ]
+
+SUPPORT_FLOAT_TYPES = [
+                        types.fp16,
+                        types.fp32,
+                        types.fp64,
+                    ]
+
 class InputTypeError(Exception):
     def __init__(self, message, input_arg_name=None, input_param_name=None,
         input_type=None,
@@ -173,7 +190,7 @@ class ScalarOrTensorInputType(_InputType):
 
     @property
     def type_str(self):
-        return 'tensor'
+        return 'tensor or scalar'
 
 
 class ListOrScalarOrTensorInputType(_InputType):
@@ -189,12 +206,13 @@ class ListOrScalarOrTensorInputType(_InputType):
 
     @property
     def type_str(self):
-        return 'list or tensor'
+        return 'list, tensor, or scalar'
 
 
 class IntInputType(ScalarOrTensorInputType):
     """
-    Int input with _sym_type == types.int32 or _sym_type == types.int64
+    Int input with _sym_type in [types.uint8, types.int8, types.uint16, types.int16,
+                                 types.uint32, types.int32, types.uint64, types.int64]
     predefined to be types.int32 by default.
 
     Set with IntAttribute.val
@@ -205,14 +223,14 @@ class IntInputType(ScalarOrTensorInputType):
         super(IntInputType, self).__init__(**kwargs)
 
     def _is_compatible(self, v):
-        return v.dtype in {types.int32, types.int64}
+        return v.dtype in SUPPORT_INT_TYPES
 
     def _get_predefined_datatype(self):
         return types.int32
 
     @property
     def type_str(self):
-        return 'int32 or int64 tensor'
+        return 'integer tensor or scalar'
 
 class BoolInputType(ScalarOrTensorInputType):
     """
@@ -233,7 +251,7 @@ class BoolInputType(ScalarOrTensorInputType):
 
     @property
     def type_str(self):
-        return 'bool tensor'
+        return 'bool tensor or scalar'
 
 class FloatInputType(ScalarOrTensorInputType):
     """
@@ -247,18 +265,20 @@ class FloatInputType(ScalarOrTensorInputType):
         super(FloatInputType, self).__init__(**kwargs)
 
     def _is_compatible(self, v):
-        return v.dtype == types.fp32
+        return v.dtype in SUPPORT_FLOAT_TYPES
 
     def _get_predefined_datatype(self):
         return types.fp32
 
     @property
     def type_str(self):
-        return 'fp32 tensor'
+        return 'float tensor or scalar'
 
 class IntOrFloatInputType(ScalarOrTensorInputType):
     """
-    input with _sym_type == types.int32 or _sym_type == types.int64 or _sym_type == types.fp32
+    input with _sym_type in [types.uint8, types.int8, types.uint16, types.int16,
+                             types.uint32, types.int32, types.uint64, types.int64,
+                             types.fp32]
     predefined to be types.fp32 by default.
     """
 
@@ -266,19 +286,21 @@ class IntOrFloatInputType(ScalarOrTensorInputType):
         super(IntOrFloatInputType, self).__init__(**kwargs)
 
     def _is_compatible(self, v):
-        return v.dtype in {types.int32, types.int64, types.fp32}
+        return v.dtype in SUPPORT_INT_TYPES + SUPPORT_FLOAT_TYPES
+
 
     def _get_predefined_datatype(self):
         return types.fp32
 
     @property
     def type_str(self):
-        return 'int32, int64, or fp32 tensor'
+        return 'integer, float tensor or scalar'
 
 class IntOrFloatOrBoolInputType(ScalarOrTensorInputType):
     """
-    input with _sym_type == types.int32 or _sym_type == types.int64 or _sym_type == types.fp32
-    or _sym_type == types.bool
+    input with _sym_type in [types.uint8, types.int8, types.uint16, types.int16,
+                             types.uint32, types.int32, types.uint64, types.int64,
+                             types.fp32, types.bool]
     predefined to be types.fp32 by default.
     """
 
@@ -286,14 +308,14 @@ class IntOrFloatOrBoolInputType(ScalarOrTensorInputType):
         super(IntOrFloatOrBoolInputType, self).__init__(**kwargs)
 
     def _is_compatible(self, v):
-        return v.dtype in {types.int32, types.int64, types.fp32, types.bool}
+        return v.dtype in SUPPORT_INT_TYPES + SUPPORT_FLOAT_TYPES + [types.bool]
 
     def _get_predefined_datatype(self):
         return types.fp32
 
     @property
     def type_str(self):
-        return 'int32, int64, fp32 or bool tensor'
+        return 'integer, float, bool tensor or scalar'
 
 class TensorInputType(ScalarOrTensorInputType):
     """
@@ -315,8 +337,9 @@ class TensorInputType(ScalarOrTensorInputType):
 
 class IntTensorInputType(ScalarOrTensorInputType):
     """
-    Tensor input with int values, _sym_type == types.int32 or
-    _sym_type == types.int64
+    Tensor input with int values
+    with _sym_type in [types.uint8, types.int8, types.uint16, types.int16,
+                       types.uint32, types.int32, types.uint64, types.int64]
 
     Raise error when value set is not integer.
     """
@@ -325,29 +348,10 @@ class IntTensorInputType(ScalarOrTensorInputType):
         super(IntTensorInputType, self).__init__(**kwargs)
 
     def _is_compatible(self, v):
-        return types.is_tensor(v.sym_type) and v.dtype in {types.int32, types.int64}
-
+        return types.is_tensor(v.sym_type) and v.dtype in SUPPORT_INT_TYPES
     @property
     def type_str(self):
-        return 'int32 or int64 tensor'
-
-class IntOrIntTensorInputType(ScalarOrTensorInputType):
-    """
-    builtins.in32 or Tensor with int values, _sym_type == builtins.int32 or
-    _sym_type == builtins.int64
-
-    Raise error when value set is not integer.
-    """
-
-    def __init__(self, **kwargs):
-        super(IntOrIntTensorInputType, self).__init__(**kwargs)
-
-    def _is_compatible(self, v):
-        return v.dtype in {types.int32, types.int64}
-
-    @property
-    def type_str(self):
-        return 'int32 or int64 tensor'
+        return 'integer tensor'
 
 class BoolTensorInputType(ScalarOrTensorInputType):
     def __init__(self, **kwargs):

@@ -190,21 +190,24 @@ def numpy_type_to_builtin_type(nptype):
     if np.issubclass_(nptype, np.bool) or np.issubclass_(nptype, np.bool_):
         # numpy as 2 bool types it looks like. what is the difference?
         return types_bool
+    # Because np.uint is a subclass of np.int,
+    # we need to first check for np.uint before
+    # checking for np.int
+    elif np.issubclass_(nptype, np.uint8):
+        return types_uint8
     elif np.issubclass_(nptype, np.int8):
         return types_int8
+    elif np.issubclass_(nptype, np.uint16):
+        return types_uint16
     elif np.issubclass_(nptype, np.int16):
         return types_int16
+    elif np.issubclass_(nptype, np.uint32):
+        return types_uint32
     elif np.issubclass_(nptype, np.int32):
         return types_int32
-    elif np.issubclass_(nptype, np.int64):
-        return types_int64
-    elif np.issubclass_(nptype, np.uint8):
-        return types_int8
-    elif np.issubclass_(nptype, np.uint16):
-        return types_int16
-    elif np.issubclass_(nptype, np.uint32):
-        return types_int32
     elif np.issubclass_(nptype, np.uint64):
+        return types_uint64
+    elif np.issubclass_(nptype, np.int64):
         return types_int64
     # np.int == int (python native)
     elif np.issubclass_(nptype, np.int) or nptype == int:

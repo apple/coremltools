@@ -2569,17 +2569,19 @@ def TensorArrayV3(context, node):
     elem_shape = node.attr.get("element_shape", None)
     size = node.attr.get("size", None)
     if size is None:
-        size = context[node.inputs[0]].val
-    if size is None:
-        msg = 'TensorArrayV3 size must be compile-time known. Got {}'
-        raise ValueError(msg.format(size))
-    init_length = size
-    if init_length == 0:
-        # Dynamic list. Use 1 as init_length
-        init_length = 1
+        size = context[node.inputs[0]]
+
+    if size.val is None:
+        init_length = size
+    else:
+        init_length = size.val
+        if init_length == 0:
+            # Dynamic list. Use 1 as init_length
+            init_length = 1
+
     builtin_dtype = node.attr["dtype"]
     dtype_str = types.builtin_to_string(builtin_dtype)
-    if elem_shape is not None:
+    if elem_shape is not None and not -1 in elem_shape:
         ls = mb.make_list(
             init_length=init_length,
             dtype=dtype_str,
