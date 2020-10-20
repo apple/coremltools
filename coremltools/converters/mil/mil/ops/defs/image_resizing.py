@@ -33,6 +33,7 @@ class upsample_nearest_neighbor(Operation):
     ----------
     T: fp32
     """
+    
     input_spec = InputSpec(
         x=TensorInputType(),
         upscale_factor_height=IntInputType(const=True, default=1),
@@ -229,7 +230,6 @@ class resize_bilinear(Operation):
           ``tf.raw_ops.ResizeBilinear(align_corners=True,
           half_pixel_centers=False)``.
     
-
     Returns
     -------
     tensor<[*D, H2, W2],T>
@@ -424,9 +424,9 @@ class crop(Operation):
     crop_height: const<2, i32> (Required)
         * Amount to be cropped from the top and bottom of the height dimension
           (``axis=-2``).
-    * crop_width: const<2, i32> (Required)
+    crop_width: const<2, i32> (Required)
         * Amount to be cropped from the left and right sides of the width dimension (``axis=-1``).
-
+    
     Returns
     -------
     tensor<[*D, H2, W2],T>

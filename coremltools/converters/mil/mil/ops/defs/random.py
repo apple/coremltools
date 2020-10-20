@@ -36,37 +36,39 @@ Random Op Implementation(s)
 """
 
 
-@register_op(
-    doc_str=r"""
-Returns a tensor with specified shape with random values from a Bernoulli distribution.
-
-.. math::
-
-    f(k) = \begin{cases}1-p  &\text{if } k = 0\\
+@register_op(doc_str="")
+class random_bernoulli(RandomDistribution):
+    r"""
+    Returns a tensor with the specified shape, with random values from a Bernoulli
+    distribution.
+    
+    .. math::
+       f(k) = \begin{cases}1-p  &\text{if } k = 0\\
                         p    &\text{if } k = 1\end{cases}
 
-for :math:`k` in :math:`\{0, 1\}`.
-
-Parameters
-----------
-shape: <K, i32>, required
-    Target output tensor shape.
-    K is the rank of the output tensor. shape[k] > 0 for k = 0,..., K-1.
-prob: const<f32>, optional
-    The probability of sampling 1. Defaults to 0.5.
-seed: const<i32>, optional
-    Seed to create a reproducible sequence of values across multiple invokes.
-
-Returns
--------
-<*, T>, a tensor of given target output shape filled with random values.
-
-See Also
---------
-random_categorical, random_normal, random_uniform
-"""
-)
-class random_bernoulli(RandomDistribution):
+    for :math:`k` in :math:`\{0, 1\}`.
+    
+    Parameters
+    ----------
+    shape: <K, i32> (Required)
+        * Target output tensor shape.
+        * ``K`` is the rank of the output tensor.
+          ``shape[k] > 0`` for ``k = 0,..., K-1``.
+    prob: const<f32> (Optional)
+        * The probability of sampling ``1``. Defaults to ``0.5``.
+    seed: const<i32> (Optional)
+        * Seed to create a reproducible sequence of values across multiple invokes.
+    
+    Returns
+    -------
+    <*, T>
+        * A tensor of the given target output shape filled with random values.
+    
+    See Also
+    --------
+    random_categorical, random_normal, random_uniform
+    """
+    
     input_spec = (
         InputSpec(
             shape=IntTensorInputType(),
@@ -80,33 +82,37 @@ class random_bernoulli(RandomDistribution):
         super(random_bernoulli, self).__init__(**kwargs)
 
 
-@register_op(
-    doc_str=r"""
-Returns random values from a categorical distribution.
-
-Parameters
-----------
-shape: <*D_in, T>
-    N-dimensional tensor, one of logits (event log-probabilities) or probs
-    (event probabilities). The first N - 1 dimensions specifies distributions,
-    the last dimension represents a vector of probabilities.
-mode: const<str>, optional
-    One of ['logits', 'probs']. Defaults to 'logits'.
-size: const<i32>, optional
-    Number of samples to draw. Defaults to 1.
-seed: const<i32>, optional
-    Seed to create a reproducible sequence of values across multiple invokes.
-
-Returns
--------
-<*D_in[:-1] + [size], T>, a tensor of given target output shape filled with random values.
-
-See Also
---------
-random_bernoulli, random_normal, random_uniform
-"""
-)
+@register_op(doc_str="")
 class random_categorical(Operation):
+    """
+    Returns random values from a categorical distribution.
+    
+    Parameters
+    ----------
+    shape: <*D_in, T>
+        * N-dimensional tensor, one of ``logits`` (event log-probabilities) or ``probs``
+          (event probabilities). The first ``N - 1`` dimensions specifies distributions,
+          and the last dimension represents a vector of probabilities.
+
+    mode: const<str> (Optional)
+        One of ``['logits', 'probs']``. Defaults to ``logits``.
+
+    size: const<i32> (Optional)
+        Number of samples to draw. Defaults to ``1``.
+
+    seed: const<i32> (Optional)
+        Seed to create a reproducible sequence of values across multiple invokes.
+    
+    Returns
+    -------
+    <*D_in[:-1] + [size], T>
+        * A tensor of the given target output shape filled with random values.
+    
+    See Also
+    --------
+    random_bernoulli, random_normal, random_uniform
+    """
+    
     input_spec = InputSpec(
         x=TensorInputType(),
         mode=StringInputType(const=True, default="logits"),
@@ -122,38 +128,35 @@ class random_categorical(Operation):
         return types.tensor(types.fp32, output_shape)
 
 
-@register_op(
-    doc_str=r"""
-Returns a tensor with specified shape with random values from a normal distribution.
-
-.. math::
-
-    f(x) = \frac{\exp(-x^2/2)}{\sqrt{2\pi}}
-
-for a real number :math:`x`.
-
-Parameters
-----------
-shape: <K, i32>, required
-    Target output tensor shape.
-    K is the rank of the output tensor. shape[k] > 0 for k = 0,..., K-1.
-mean: const<f32>, optional
-    The mean (center) of the normal distribution. Defaults to 0.0.
-stddev: const<f32>, optional
-    The standard deviation (width) of the normal distribution. Defaults to 1.0.
-seed: const<i32>, optional
-    Seed to create a reproducible sequence of values across multiple invokes.
-
-Returns
--------
-<*, T>, a tensor of given target output shape filled with random values.
-
-See Also
---------
-random_categorical, random_bernoulli, random_uniform
-"""
-)
+@register_op(doc_str="")
 class random_normal(RandomDistribution):
+    r"""
+    Returns a tensor with the specified shape, with random values from a normal
+    distribution.
+    
+    Parameters
+    ----------
+    shape: <K, i32> (Required)
+        * Target output tensor shape.
+        * ``K`` is the rank of the output tensor.
+          ``shape[k] > 0`` for ``k = 0,..., K-1``.
+    mean: const<f32> (Optional)
+        The mean (center) of the normal distribution. Defaults to 0.0.
+    stddev: const<f32> (Optional)
+        The standard deviation (width) of the normal distribution. Defaults to ``1.0``.
+    seed: const<i32> (Optional)
+        Seed to create a reproducible sequence of values across multiple invokes.
+    
+    Returns
+    -------
+    <*, T>
+        * A tensor of the given target output shape filled with random values.
+    
+    See Also
+    --------
+    random_categorical, random_bernoulli, random_uniform
+    """
+    
     input_spec = (
         InputSpec(
             shape=IntTensorInputType(),
@@ -168,38 +171,44 @@ class random_normal(RandomDistribution):
         super(random_normal, self).__init__(**kwargs)
 
 
-@register_op(
-    doc_str=r"""
-Returns a tensor with specified shape with random values from a normal distribution.
-
-.. math::
-
-    p(x) = \frac{1}{high - low}
-
-for a real number :math:`x`.
-
-Parameters
-----------
-shape: <K, i32>, required
-    Target output tensor shape.
-    K is the rank of the output tensor. shape[k] > 0 for k = 0,..., K-1.
-low: const<f32>, optional
-    Lower boundary of the output interval (inclusive). Defaults to 0.0.
-high: const<f32>, optional
-    Upper boundary of the output interval (exclusive). Defaults to 1.0.
-seed: const<i32>, optional
-    Seed to create a reproducible sequence of values across multiple invokes.
-
-Returns
--------
-<*, T>, a tensor of given target output shape filled with random values.
-
-See Also
---------
-random_categorical, random_bernoulli, random_normal
-"""
-)
+@register_op(doc_str="")
 class random_uniform(RandomDistribution):
+    r"""
+    Returns a tensor with the specified shape with random values from a uniform
+    distribution. Samples are uniformly distributed over the half-open interval
+    ``[low, high)`` (includes low, but excludes high).
+    
+    .. math::
+       p(x) = \frac{1}{high - low}
+    
+    For a real number :math:`x`.
+    
+    When ``high == low``, values of ``low`` will be returned. If ``high < low``,
+    the results are officially undefined and may eventually raise an error.
+    
+    Parameters
+    ----------
+    shape: <K, i32> (Required)
+        * Target output tensor shape.
+        * ``K`` is the rank of the output tensor.
+          ``shape[k] > 0`` for ``k = 0,..., K-1``.
+    low: const<f32> (Optional)
+        * Lower boundary of the output interval (inclusive). Defaults to ``0.0``.
+    high: const<f32> (Optional)
+        * Upper boundary of the output interval (exclusive). Defaults to ``1.0``.
+    seed: const<i32> (Optional)
+        * Seed to create a reproducible sequence of values across multiple invokes.
+    
+    Returns
+    -------
+    <*, T>
+        * A tensor of the given target output shape filled with random values.
+    
+    See Also
+    --------
+    random_categorical, random_bernoulli, random_normal
+    """
+    
     input_spec = (
         InputSpec(
             shape=IntTensorInputType(),

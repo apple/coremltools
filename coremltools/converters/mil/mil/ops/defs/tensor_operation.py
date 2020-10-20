@@ -25,7 +25,8 @@ from ._utils import promoted_primitive_type
 @register_op(doc_str="")
 class band_part(Operation):
     """
-    Returns a tensor setting everything outside a center band to zeros for the innermost matrix. Special cases:
+    Returns a tensor setting everything outside a center band to zeros for the innermost
+    matrix. Special cases:
 
     - ``band_part(x, 0, -1)`` returns upper triangular part.
     - ``band_part(x, -1, 0)`` returns lower triangular part.
@@ -36,18 +37,20 @@ class band_part(Operation):
     x: tensor<*?, T> (Required)
         * Input tensor.
     lower: const<i32> (Optional)
-        * Number of lower / below sub-diagonals to keep. If negative, keep entire lower triangle.
-        * Defaults to ``-1`` (keep the entire lower triangle)
+        * Number of lower / below sub-diagonals to keep. If negative, keep entire
+          lower triangle.
+        * Defaults to ``-1`` (keep the entire lower triangle).
     upper: const<i32> (Optional)
-        * Number of upper / above sub-diagonals to keep. If negative, keep entire lower triangle.
-        * Defaults to ``-1`` (keep the entire upper triangle)
-
+        * Number of upper / above sub-diagonals to keep. If negative, keep entire
+          lower triangle.
+        * Defaults to ``-1`` (keep the entire upper triangle).
+    
     Returns
     -------
     tensor<*?, T>
         * Same type and shape as the input tensor.
     """
-
+    
     input_spec = InputSpec(
         x=TensorInputType(),
         lower=IntInputType(const=True, default=-1),
@@ -64,7 +67,7 @@ class band_part(Operation):
 @register_op(doc_str="")
 class cumsum(Operation):
     """
-    Returns the cumulative sum the input along the given axis.
+    Returns the cumulative sum of the input along the given axis.
 
     Parameters
     ----------
@@ -74,13 +77,13 @@ class cumsum(Operation):
         * default to ``0``.
         * Axis for which the cumulative sum is computed.
     exclusive: const<bool> (Optional)
-        * default to ``False``.
+        * Default to ``False``.
         * When set to ``False``, inclusive cumsum is computed, that is the first element of
           the output is identical to the first element in the input.
         * When set to ``True``, exclusive cumsum is computed, which makes the first element
           of output to ``0``.
     reverse: const<bool> (Optional)
-        * default to ``False``.
+        * Default to ``False``.
         * When set to ``True``, perform cumsum in the reverse order.
 
     Returns
@@ -133,7 +136,7 @@ class cumsum(Operation):
 @register_op(doc_str="")
 class fill(Operation):
     """
-    Returns a tensor with given shape filled with a constant value.
+    Returns a tensor with a given shape filled with a constant value.
 
     Parameters
     ----------
@@ -141,7 +144,7 @@ class fill(Operation):
         * Target output tensor shape.
         * ``K`` is the rank of the output tensor. ``shape[k] > 0`` for ``k = 0,..., K-1``.
     value: const<T> (Optional)
-        * default to ``0.0``.
+        * Default to ``0.0``.
         * Constant value to fill in.
 
     Returns
@@ -183,26 +186,33 @@ class fill(Operation):
 class non_maximum_suppression(Operation):
     """
     Applies non-maximum suppression (NMS) on the input box coordinates according
-    to their intersection-over-union (IoU). NMS selects as subset of bounding
-    boxes with the descending scores. Removes boxes that have high
-    intersection-over-union (IOU) overlap with previously selected boxes.
-
+    to their intersection-over-union (IoU).
+    
+    NMS selects a subset of bounding boxes in descending order of score, and removes
+    boxes that have high intersection-over-union (IOU) overlap with previously-selected
+    boxes.
+    
+    
     Parameters
-    ---------
+    ----------
+    
     boxes: tensor<[n, B, 4], T> (Required)
-        * Box coordinates to perform NMS on.
+        * Box coordinates on which to perform NMS.
     scores: tensor<[n, B, K], T> (Required)
-        * Scores for each one of the boxes
+        * Scores for each one of the boxes.
     iou_threshold: const<T> (Required)
-        * The intersection over union (``IoU``) threshold over which boxes are suppressed. NMS remove all overlapping boxes with ``IoU > iou_threshold``.
+        * The intersection over union (``IoU``) threshold over which boxes are
+          suppressed. NMS remove all overlapping boxes with ``IoU > iou_threshold``.
     score_threshold: const<T> (Required)
-        * Before IoU suppression is performed, boxes with class scores below this threshold are rejected.
+        * Before IoU suppression is performed, boxes with class scores below this
+          threshold are rejected.
     max_boxes: const<i32> (Required)
-        * Maximum number of boxes to select. If the number of surviving boxes are less, output is padded up to this number.
+        * Maximum number of boxes to select. If the number of surviving boxes are
+          less, output is padded up to this number.
     per_class_suppression: const<bool> (Optional)
         * Default to ``False``.
         * If ``True``, suppression is performed independently within boxes of each class.
-
+    
     Returns
     -------
     tensor<[n, max_boxes, 4], T>
@@ -258,15 +268,15 @@ class non_zero(Operation):
     Returns
     -------
     tensor<[N, R], int32>
-        * 2-dimensional tensor contains indices of elements that are non-zero. Each
-          row is the index for a non-zero value.
+        * 2-dimensional tensor contains indices of elements that are non-zero.
+          Each row is the index for a non-zero value.
         * ``N`` is the number of non-zero elements, ``R`` is the rank of the input.
-
+    
     Attributes
     ----------
     T: fp32, int32
     """
-
+    
     input_spec = InputSpec(x=TensorInputType())
 
     def __init__(self, **kwargs):
@@ -284,13 +294,13 @@ class non_zero(Operation):
 @register_op(doc_str="")
 class one_hot(Operation):
     """
-    Returns one hot vectors whose locations represented in ``indices`` take the ``on_value``,
+    Returns one-hot vectors whose locations represented in ``indices`` take the ``on_value``,
     while other locations take the ``off_value``.
 
     Parameters
     ----------
     indices: tensor<[D],T> (Required)
-        * Tensor, values indicated the locations for each one hot vector to take the ``on_value``.
+        * Tensor, values indicate the locations for each one-hot vector to take the ``on_value``.
     one_got_vector_size: i32 (Required)
         * Indicates the number of returning vectors.
     axis: const i32 (Optional)
@@ -306,7 +316,7 @@ class one_hot(Operation):
     Returns
     -------
     tensor<*?,T>
-        * A tensor contains one hot vectors.
+        * A tensor that contains one-hot vectors.
 
     Attributes
     ----------
@@ -367,27 +377,31 @@ class pad(Operation):
     Parameters
     ----------
     x: tensor<[*D_in],T>  (Required)
-    * pad: tensor<[2*N],i32> (Required)
-        * ``N <= D_in``: last ``N`` dimensions of ``x`` are padded as follows:
-        * For each dimension ``i`` of ``x`` if ``i >= D_in - N``
+    pad: tensor<[2*N],i32> (Required)
+        ``N <= D_in``: Last ``N`` dimensions of ``x`` are padded as follows: For
+        each dimension ``i`` of ``x`` if ``i >= D_in - N``:
             * pad ``pad[2*i]`` elements before ``x[..,i,..]``
             * pad ``pad[2*i+1]`` elements after ``x[..,i,..]``
-        * If mode is "reflect" then ``pad[2*i]`` and ``pad[2*i+1]`` can be at most ``D[i]-1``.
-        * If mode is "replicate" then ``pad[2*i]`` and ``pad[2*i+1]`` can be at most ``D[i]``.
-    * mode: const<str> (Optional)
-        * Default to 'constant'.
+            
+        If mode is "reflect" then ``pad[2*i]`` and ``pad[2*i+1]`` can be at
+        most ``D[i]-1``.
+        
+        If mode is "replicate" then ``pad[2*i]`` and ``pad[2*i+1]`` can be
+        at most ``D[i]``.
+
+    mode: const<str> (Optional)
+        * Default to ``constant``.
         * Must be one of the following values:
-            * constant
-            * reflect
-            * replicate
-    * constant_val: const<T> (Optional)
+          ``constant``, ``reflect``, or ``replicate``.
+            
+    constant_val: const<T> (Optional)
         * Default to ``0``.
         * Constant value to pad. Ignored if ``mode != constant``.
-
+    
     Returns
     -------
     tensor<[*D_out],T>
-        % Tensor with same type as the input.
+        * Tensor with same type as the input.
 
     Attributes
     ----------
@@ -451,7 +465,7 @@ class pad(Operation):
 @register_op(doc_str="")
 class range_1d(Operation):
     """
-    Returns a numpy-like 1d range sequence.
+    Returns a numpy-like 1- range sequence.
 
     Parameters
     ----------
@@ -465,7 +479,7 @@ class range_1d(Operation):
     Returns
     -------
     tensor<M, T>
-        * An 1D tensor. where ``M`` is the length of the sequence.
+        * A 1-D tensor, where ``M`` is the length of the sequence.
 
     Attributes
     ----------
@@ -516,19 +530,19 @@ class range_1d(Operation):
 class tile(Operation):
     """
     Returns a new tensor by replicating input ``x`` multiples times.
-    The ``i``th dimention of ``x`` will be replicated ``reps[i]`` times.
+    Dimension ``i`` of ``x`` will be replicated ``reps[i]`` times.
 
     Parameters
     ----------
     x: tensor<*?, T> (Required)
         * Input tensor.
     reps: tensor<[rank(x)], int32> (Required)
-        * A 1D tensor with length ``rank(x)`` which indicates number to replicate the input along each dimension.
+        * A 1-D tensor with length ``rank(x)``, which indicates the number to replicate the input along each dimension.
 
     Returns
     -------
     tensor<*?, T>:
-        * An Nd tensor with same type as the input.
+        * An n-D tensor with same type as the input.
 
     Attributes
     ----------
@@ -576,7 +590,7 @@ class tile(Operation):
 @register_op(doc_str="")
 class argsort(Operation):
     """
-    Returns a tensor containing the indices of the sorted values along given axis
+    Returns a tensor containing the indices of the sorted values along a given axis
     of the input tensor.
 
     Paramters
@@ -587,8 +601,9 @@ class argsort(Operation):
         * Default to ``-1`` (the last dimension).
         * Axis to perform the operation.
     * ascending: const<bool> (Optional)
-        * True to sort in ascending order. Default to ``False``, sort in descending order.
-
+        * Default to ``False``, sort in descending order. ``True`` to sort in
+          ascending order.
+    
     Returns
     -------
     tensor<*?, int32>
@@ -621,7 +636,7 @@ class argsort(Operation):
 @register_op(doc_str="")
 class topk(Operation):
     """
-    Returns a tensor containing top or bottom k values and the corresponding
+    Returns a tensor containing top or bottom ``k`` values and the corresponding
     indices of the input tensor along a given axis.
 
     Parameters
@@ -635,21 +650,21 @@ class topk(Operation):
         * Defaults to ``-1`` (last dimension).
         * Axis to perform the operation.
     * ascending: const<bool> (Optional)
-        * Default to ``False``.
-        * Whether or not to sort in ascending order, sort in descending order.
-
+        * Default to ``False``, sort in descending order. ``True`` to sort in
+          ascending order.
+    
     Returns
     -------
     tensor<*?, T>
-        * Values of top/bottom ``k`` elements
+        * Values of top/bottom ``k`` elements.
     tensor<*?, int32>
-        * Indices of the top/bottom ``k`` elements along axis
-
+        * Indices of the top/bottom ``k`` elements along axis.
+    
     Attributes
     ----------
     T: fp32, int32
     """
-
+    
     input_spec = InputSpec(
         x=TensorInputType(),
         k=IntInputType(const=True, default=1),
@@ -689,15 +704,16 @@ class topk(Operation):
 @register_op(doc_str="")
 class flatten2d(Operation):
     """
-    Flattens input tensor into 2d tensor by flattening dimensions before and after the provided axis
-
+    Flattens input tensor into 2d tensor by flattening dimensions before and
+    after the provided axis.
+    
     Parameters
     ----------
     x: tensor<[*d], T> (Required)
         * Input tensor.
     * axis: const<f32>  (Optional)
         * Defaults to ``1``.
-        * negative axis is supported.
+        * Negative axis is supported.
 
     Returns
     -------
@@ -746,7 +762,7 @@ class flatten2d(Operation):
 @register_op(doc_str="")
 class shape(Operation):
     """
-    Returns 1-dimensional tensor with shape of input tensor
+    Returns a 1-dimensional tensor with the shape of the input tensor
 
     Parameters
     ----------
@@ -756,7 +772,7 @@ class shape(Operation):
     Returns
     -------
     tensor<K, i32>
-        * Shape of input tensor.
+        * Shape of the input tensor.
         * ``K = x.rank``.
 
     Attributes
@@ -789,41 +805,49 @@ class concat(Operation):
 
     Parameters
     ----------
-    values: Tuple[tensor<[d0, d1, ..., d_axis_i, ..., d_n],T>]  (Required)
-        * The number of dimensions of the input tensors must match, and all dimensions except ``axis`` must be equal.
-        * The tensors may be variadic, but the number of tensors must be determined at compile time (i.e. a tuple).
+    values: Tuple[tensor<[d0, d1, ..., d_axis_i, ..., d_n],T>] (Required)
+        * The number of dimensions of the input tensors must match, and all
+          dimensions except ``axis`` must be equal.
+        * The tensors may be variadic, but the number of tensors must be
+          determined at compile time (i.e. a tuple).
     axis: const<int32> (Required)
-        * The dimension along which to concatenate. Must be in the range ``[-rank(values[i]), rank(values[i]))`` for all ``i``.
+        * The dimension along which to concatenate. Must be in the range
+          ``[-rank(values[i]), rank(values[i]))`` for all ``i``.
     interleave: const<bool> (Optional, Default=False)
-        * If true, concatenate the inputs by interleaving them
+        * If true, concatenate the inputs by interleaving them.
         * If true, all the inputs to this op must have the exact same shape.
-        * e.g.:
-        * in1 : shape (3, 2), value = [[1, 2], [3, 4], [5, 6]]
-        * in2 : shape (3, 2), value = [[7, 8], [9, 10], [11, 12]]
-        * axis = 0
-        *
-        * if interleave = False (default)
-        * output : shape (6, 2)
-        * output[0:3, :] = in1
-        * output[3:6, :] = in2
-        * value = [[1, 2], [3, 4], [5, 6], [7, 8], [9, 10], [11, 12]]
-        *
-        * if interleave = True
-        * output : shape (6, 2)
-        * output[0::2, :] = in1
-        * output[1::2, :] = in2
-        * value = [[1, 2], [7, 8], [3, 4], [9, 10], [5, 6], [11, 12]]
-
+    
+    Examples
+    --------
+    
+    .. sourcecode:: python
+        
+        in1 : shape (3, 2), value = [[1, 2], [3, 4], [5, 6]]
+        in2 : shape (3, 2), value = [[7, 8], [9, 10], [11, 12]]
+        axis = 0
+        
+        if interleave = False (default)
+        output : shape (6, 2)
+        output[0:3, :] = in1
+        output[3:6, :] = in2
+        value = [[1, 2], [3, 4], [5, 6], [7, 8], [9, 10], [11, 12]]
+        
+        if interleave = True
+        output : shape (6, 2)
+        output[0::2, :] = in1
+        output[1::2, :] = in2
+        value = [[1, 2], [7, 8], [3, 4], [9, 10], [5, 6], [11, 12]]
+    
     Returns
     -------
     tensor<[d0, d1,...d_axis_out, ..., d_n],T>
-        * where ``d_axis_out = sum(d_axis_i)``.
+        * Where ``d_axis_out = sum(d_axis_i)``.
 
     Attributes
     ----------
     T: fp32, int32
     """
-
+    
     input_spec = InputSpec(values=TupleInputType(),
                            axis=IntInputType(const=True),
                            interleave=BoolInputType(const=True, optional=True, default=False))
@@ -935,21 +959,34 @@ class split(Operation):
     ----------
     x: <*?,T>  (Required)
         * The tensor to split.
-        * The tensors may be variadic, but the number of tensors must be determined at compile time (i.e. a tuple).
+        * The tensors may be variadic, but the number of tensors must be determined
+          at compile time (i.e. a tuple).
+
     num_splits: <i32> (Optional)
-        * If specified, divide ``x`` into ``num_splits`` tensors along ``axis``. Its behavior depends on ``split_sizes``:
-            * If ``split_sizes`` is defined, ``num_splits == S``, and the output sizes may be uneven
-            * If ``split_sizes`` is not defined, ``value.shape[axis]`` must be divisible by ``num_splits``, and the output sizes must be even
-        * At least one of ``num_splits`` or ``split_sizes`` must be provided. If ``split_sizes`` length ``S`` cannot be determined at compile time, ``num_splits`` must be supplied to determine the number of outputs.
-    * split_sizes: const<S,i32> (Optional)
-        * Sizes to split to. The sum of ``split_sizes`` must equal to ``value.shape[axis]``.
-    * axis: const<i32> (Required)
-        * The dimension along which to concatenate. Must be in the range ``[-rank(x), rank(x))``.
+        If specified, divide ``x`` into ``num_splits`` tensors along ``axis``.
+        Its behavior depends on ``split_sizes``:
+            * If ``split_sizes`` is defined, ``num_splits == S``, and the output
+              sizes may be uneven.
+            * If ``split_sizes`` is not defined, ``value.shape[axis]`` must be
+              divisible by ``num_splits``, and the output sizes must be even.
+              
+        At least one of ``num_splits`` or ``split_sizes`` must be provided.
+        If ``split_sizes`` length ``S`` cannot be determined at compile time,
+        ``num_splits`` must be supplied to determine the number of outputs.
+    
+    split_sizes: const<S,i32> (Optional)
+        * Sizes to split to. The sum of ``split_sizes`` must equal to
+          ``value.shape[axis]``.
+    
+    axis: const<i32> (Required)
+        * The dimension along which to concatenate. Must be in the
+          range ``[-rank(x), rank(x))``.
 
     Returns
     -------
     Tuple[tensor<*?,T>]
-        * where the length of the tuple is the number of splits (determined from ``num_splits`` or ``split_sizes``).
+        * Where the length of the tuple is the number of splits (determined
+          from ``num_splits`` or ``split_sizes``).
 
     Attributes
     ----------
@@ -1056,13 +1093,13 @@ class stack(Operation):
     Returns
     -------
     tenor<[d0, d1,...d_axis_out, ..., d_n],T>
-        * where ``d_axis_out = sum(d_axis_i)``
-
+        * Where ``d_axis_out = sum(d_axis_i)``.
+    
     Attributes
     ----------
     T: fp32
     """
-
+    
     input_spec = InputSpec(values=TupleInputType(), axis=IntInputType(const=True),)
 
     def __init__(self, **kwargs):
@@ -1109,6 +1146,21 @@ class stack(Operation):
 # `loop_invariant_elimination` pass for a rare use case.
 @register_op(doc_str="")
 class identity(Operation):
+    """
+    Returns a tensor with the same shape and contents as input.
+    
+    Parameters
+    ----------
+    x: tensor<*?, T> (Required)
+        * Input tensor.
+    
+    Returns
+    -------
+    tensor<*?, T>
+        * Same type and shape as the input tensor.
+    
+    """
+    
     input_spec = InputSpec(x=ListOrScalarOrTensorInputType())
 
     def __init__(self, **kwargs):
