@@ -88,9 +88,10 @@ class SupportedVersion:
     def is_nd_array_supported(minimum_ios_deployment_target):
         if not SupportedVersion.ios_support_check(minimum_ios_deployment_target):
             raise TypeError(
-                "{} not supported. Please provide one of target iOS: {}",
+                "{} not supported. Please provide one of target iOS: {}".format(
                 minimum_ios_deployment_target,
-                SupportedVersion.supported_ios_version,
+                SupportedVersion.supported_ios_version
+                )
             )
 
         minimum_ios_deployment_target_index = SupportedVersion.supported_ios_version.index(
