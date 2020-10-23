@@ -12,43 +12,59 @@ import numbers
 @register_op(doc_str="")
 class gather(Operation):
     """
-    Gather slices from input ``x`` along dimension ``axis`` according to ``indices``, similar to ``tf.gather``.
-
-    If ``indices`` is scalar (0-D):
-    ``output[p_0, ..., p_{axis-1},            ,p_{axis+1}, ..., p_{rank(x)-1}]
-    = x[p_0, ..., p_{axis-1}, indices, p_{axis+1}, ..., p_{rank(x)-1}]``
-    where ``rank(x)`` is the rank of ``x``.\n
-    The output has rank ``rank(x) - 1``.
-
-    If indices is 1-D tensor:
-    ``output[p_0, ..., p_{axis-1},            i, p_{axis+1}, ..., p_{rank(*D)-1}]
-    = x[p_0, ..., p_{axis-1}, indices[i], p_{axis+1}, ..., p_{rank(*D)-1}]``.
+    Gather slices from input ``x`` along dimension ``axis`` according to ``indices``,
+    similar to `tf.gather <https://www.tensorflow.org/api_docs/python/tf/gather>`_.
+    
+    * If ``indices`` is scalar (0-D):
+    
+    .. math::
+       output[p_0, ..., p_{axis-1}, ~~~~~~~~~~~~~~~~~~~~~~~~ p_{axis+1}, ..., p_{rank(x)-1}] =
+    .. math::
+       x[p_0, ..., p_{axis-1}, ~~~~~~~~~ indices, ~~~~~~~~ p_{axis+1}, ..., p_{rank(x)-1}]
+    
+    Where ``rank(x)`` is the rank of ``x``. The ``output`` has rank ``rank(x) - 1``.
+    
+    * If ``indices`` is 1-D tensor:
+    
+    .. math::
+       output[p_0, ..., p_{axis-1}, ~~~~~~~~~~~~~ i, ~~~~~~~~~~~~~ p_{axis+1}, ..., p_{rank(*D)-1}] =
+    .. math::
+       x[p_0, ..., p_{axis-1}, ~~~~~~~~ indices[i], ~~~~~~~~ p_{axis+1}, ..., p_{rank(*D)-1}]
+    
     The output has rank ``rank(x)``.
-
-    In general,
-    ``output[p_0, ..., p_{axis-1},           i_0, ..., i_{M-1} , p_{axis+1}, ..., p_{rank(x)-1}]
-    = x[p_0, ..., p_{axis-1}, indices[i_0, ..., i_{M-1}], p_{axis+1}, ..., p_{rank(x)-1}]``.
-
-    where ``M = rank(x)``.
-
+    
+    * In general:
+    
+    .. math::
+       output[p_0, ..., p_{axis-1}, ~~~~~~~~ i_0, ..., i_{M-1}, ~~~~~~~~ p_{axis+1}, ..., p_{rank(x)-1}] =
+    .. math::
+       x[p_0, ..., p_{axis-1}, ~~~~~~~ indices[i_0, ..., i_{M-1}], ~~~~~~~ p_{axis+1}, ..., p_{rank(x)-1}]
+    
+    Where ``M = rank(x)``.
+    
     Parameters
     ----------
-    * x: tensor<*D,T> (Required)
-    * indices: tensor<*N,i32> (Required)
+    x: tensor<*D,T> (Required)
+    indices: tensor<*N,i32> (Required)
         * Indices values may be negative. More precisely, ``-D[axis]<= v < D[axis]`` for ``v`` in ``indices``.
-    * axis: const i32 (Optional)
-        * Default to ``0``.
-
+    axis: const i32 (Optional. Default=``0``)
+        * Negative axis is supported.
+    
     Returns
     -------
     tensor<*K,T>
-        * where ``K = D[:axis] + N + D[axis+1:]``.
-
+        * Where ``K = D[:axis] + N + D[axis+1:]``.
+    
     Attributes
     ----------
     T: fp32
+    
+    References
+    ----------
+    See `tf.gather <https://www.tensorflow.org/api_docs/python/tf/gather>`_.
+    
     """
-
+    
     input_spec = InputSpec(
         x=TensorInputType(),
         indices=IntInputType(),
@@ -101,53 +117,60 @@ class gather(Operation):
 @register_op(doc_str="")
 class scatter(Operation):
     """
-    Scatter ``updates`` to ``data`` at locations ``indices`` at dimension ``axis`` by operation ``mode``.
-    ``mode == update`` for instance.
-    ``
-    output[p_0, ..., p_{axis-1}, indice[i], p_{axis+1}, ..., p_D] =
-    updates[p_0, ..., p_{axis-1}, i, p_{axis+1}, ..., p_D]
-    `` for ``i`` in ``[0, len(indices)]``.
-    Otherwise
-    ``
-    output[p_0, ..., p_{axis-1}, j, p_{axis+1}, ..., p_D] =
-    data[p_0, ..., p_{axis-1}, j, p_{axis+1}, ..., p_D]
-    ``
-
-    ``mode == add`` for instance.
-    ``
-    output[p_0, ..., p_{axis-1}, indice[i], p_{axis+1}, ..., p_D] =
-    updates[p_0, ..., p_{axis-1}, i, p_{axis+1}, ..., p_D] +
-    x[p_0, ..., p_{axis-1}, indice[i], p_{axis+1}, ..., p_D]
-    `` for ``i`` in ``[0, len(indices)]
-    Otherwise
-    ``
-    output[p_0, ..., p_{axis-1}, j, p_{axis+1}, ..., p_D] =
-    data[p_0, ..., p_{axis-1}, j, p_{axis+1}, ..., p_D]
-    ``
-
+    Scatter ``updates`` to ``data`` at locations ``indices`` at dimension ``axis``
+    by operation ``mode``.
+    
+    Example: ``mode == update``.
+    
+    * For ``i`` in ``[0, len(indices)]``:
+    
+    .. math::
+       output[p_0, ..., p_{axis-1}, indice[i], p_{axis+1}, ..., p_D] =
+    .. math::
+       updates[p_0, ..., p_{axis-1}, i, p_{axis+1}, ..., p_D]
+    
+    * For ``j! = i``:
+    
+    .. math::
+       output[p_0, ..., p_{axis-1}, j, p_{axis+1}, ..., p_D] =
+    .. math::
+       data[p_0, ..., p_{axis-1}, j, p_{axis+1}, ..., p_D]
+    
+    Example: ``mode == add``.
+    
+    * For ``i`` in ``[0, len(indices)]``:
+    
+    .. math::
+       output[p_0, ..., p_{axis-1}, indice[i], p_{axis+1}, ..., p_D] =
+    .. math::
+       updates[p_0, ..., p_{axis-1}, i, p_{axis+1}, ..., p_D] +
+    .. math::
+       x[p_0, ..., p_{axis-1}, indice[i], p_{axis+1}, ..., p_D]
+    
+    * For ``j! = i``:
+    
+    .. math::
+       output[p_0, ..., p_{axis-1}, j, p_{axis+1}, ..., p_D] =
+    .. math::
+       data[p_0, ..., p_{axis-1}, j, p_{axis+1}, ..., p_D]
+    
     Parameters
     ----------
     data: tensor<*D, T> (Required)
     indices: tensor<[C],T> (Required)
-        * 1D tensor.
+        * 1-D tensor.
     updates: tensor<*K, T> (Required)
         * ``K = data.shape[:axis] + [len(indices)] + data.shape[axis+1:]``.
     axis: const i32 (Optional)
         * Default to ``0``.
     mode: const string (Optional)
-        * Can be the following modes:
-            * update
-            * add
-            * sub
-            * mul
-            * div
-            * max
-            * min
-
+        * Can be the following modes: ``update``, ``add``, ``sub``, ``mul``,
+          ``div``, ``max``, ``min``.
+    
     Returns
     -------
     tensor<*D, T>
-        * with the same type and shape as input ``x``.
+        * With the same type and shape as input ``x``.
 
     Attributes
     ----------
@@ -187,12 +210,12 @@ class scatter(Operation):
 class gather_along_axis(Operation):
     """
     Take the values along ``axis`` at locations ``indices``.
-    ``
-    idx = indices[p_0, ..., p_{axis-1}, i, p_{axis+1}, ..., p_D],
-    output[p_0, ..., p_{axis-1}, i, p_{axis+1}, ..., p_D] =
-    = x[p_0, ..., p_{axis-1}, idx, p_{axis+1}, ..., p_D]
-    ``
-
+    
+    .. math::
+       idx = indices[p_0, ..., p_{axis-1}, i, p_{axis+1}, ..., p_D]
+    .. math::
+       output[p_0, ..., p_{axis-1}, i, p_{axis+1}, ..., p_D] = = x[p_0, ..., p_{axis-1}, idx, p_{axis+1}, ..., p_D]
+    
     Parameters
     ----------
     x: tensor<*D, T> (Required)
@@ -200,12 +223,12 @@ class gather_along_axis(Operation):
         * ``rank(indices) == rank(x)``.
     axis: const i32 (Optional):
         * Default to ``0``.
-
+    
     Returns
     -------
     tensor<*D, T>:
-        * output tensor has the same shape as ``indices``.
-
+        * Output tensor has the same shape as ``indices``.
+    
     Attributes
     ----------
     T: fp32
@@ -257,62 +280,71 @@ class gather_along_axis(Operation):
 @register_op(doc_str="")
 class scatter_along_axis(Operation):
     """
-    Scatter ``updates`` to ``data`` at locations ``indices`` at dimension ``axis`` by operation ``mode``.
-    ``mode == update`` for instance.
-    ``
-    idx = indices[p_0, ..., p_{axis-1}, i, p_{axis+1}, ..., p_D]
-    output[p_0, ..., p_{axis-1}, idx, p_{axis+1}, ..., p_D] =
-    updates[p_0, ..., p_{axis-1}, i, p_{axis+1}, ..., p_D]
-    `` for ``i`` in ``[0, len(indices)]``.
-    Otherwise
-    ``
-    output[p_0, ..., p_{axis-1}, j, p_{axis+1}, ..., p_D] =
-    data[p_0, ..., p_{axis-1}, j, p_{axis+1}, ..., p_D]
-    ``
-
-    ``mode == add`` for instance.
-    ``
-    idx = indices[p_0, ..., p_{axis-1}, i, p_{axis+1}, ..., p_D]
-    output[p_0, ..., p_{axis-1}, idx, p_{axis+1}, ..., p_D] =
-    updates[p_0, ..., p_{axis-1}, i, p_{axis+1}, ..., p_D] +
-    x[p_0, ..., p_{axis-1}, indice[i], p_{axis+1}, ..., p_D]
-    `` for ``i`` in ``[0, len(indices)]
-    Otherwise
-    ``
-    output[p_0, ..., p_{axis-1}, j, p_{axis+1}, ..., p_D] =
-    data[p_0, ..., p_{axis-1}, j, p_{axis+1}, ..., p_D]
-    ``
-
+    Scatter ``updates`` to ``data`` at locations ``indices`` at dimension ``axis``
+    by operation ``mode``.
+    
+    Example: ``mode == update``.
+    
+    * For ``i`` in ``[0, len(indices)]``:
+    
+    .. math::
+       idx = indices[p_0, ..., p_{axis-1}, i, p_{axis+1}, ..., p_D]
+    .. math::
+       output[p_0, ..., p_{axis-1}, idx, p_{axis+1}, ..., p_D] =
+    .. math::
+       updates[p_0, ..., p_{axis-1}, i, p_{axis+1}, ..., p_D]
+    
+    * For ``j! = i``:
+    
+    .. math::
+       output[p_0, ..., p_{axis-1}, j, p_{axis+1}, ..., p_D] =
+    .. math::
+       data[p_0, ..., p_{axis-1}, j, p_{axis+1}, ..., p_D]
+    
+    Example: ``mode == add``.
+    
+    * For ``i`` in ``[0, len(indices)]``:
+    
+    .. math::
+       idx = indices[p_0, ..., p_{axis-1}, i, p_{axis+1}, ..., p_D]
+    .. math::
+       output[p_0, ..., p_{axis-1}, idx, p_{axis+1}, ..., p_D] =
+    .. math::
+       updates[p_0, ..., p_{axis-1}, i, p_{axis+1}, ..., p_D] +
+    .. math::
+       x[p_0, ..., p_{axis-1}, indice[i], p_{axis+1}, ..., p_D]
+    
+    * For ``j! = i``:
+    
+    .. math::
+       output[p_0, ..., p_{axis-1}, j, p_{axis+1}, ..., p_D] =
+    .. math::
+       data[p_0, ..., p_{axis-1}, j, p_{axis+1}, ..., p_D]
+    
     Parameters
     ----------
     data: tensor<*D, T> (Required)
     indices: tensor<*K,T> (Required)
         * ``rank(indices) == rank(data)``.
     updates: tensor<*K, T> (Required)
-        * must be the same shape as ``indices``.
+        * Must be the same shape as ``indices``.
     axis: const i32 (Optional)
         * Default to ``0``.
     mode: const string (Optional)
         * Default to ``add``.
-        * Can be the following modes:
-            * ``update``
-            * ``add``
-            * ``sub``
-            * ``mul``
-            * ``div``
-            * ``max``
-            * ``min``
-
+        * Can be the following modes: ``update``, ``add``, ``sub``, ``mul``,
+          ``div``, ``max``, ``min``.
+    
     Returns
     -------
     tensor<*D, T>
-        * with the same type and shape as input ``x``.
+        * With the same type and shape as input ``x``.
 
     Attributes
     ----------
     T: fp32
     """
-
+    
     input_spec = InputSpec(
         data=TensorInputType(),
         indices=IntTensorInputType(),
@@ -357,29 +389,36 @@ class scatter_along_axis(Operation):
 @register_op(doc_str="")
 class gather_nd(Operation):
     """
-    Gather slices from ``x`` according to ``indices``, similar to ``tf.gather_nd``.
-
-    ``indices`` is an K-dim tensor, where ``indices[i_0,...,i_{K-2}]`` defines a slice of ``x``:
-
-    ``output[i_0, ..., i_{K-2}]= x[indices[i_0, ..., i_{K-2}]]``
-
-    where ``K = rank(indices)`` , and ``x[indices[i_0, ..., i_{K-2}]]`` has rank ``rank(x) - indices.shape[-1]``.
-
+    Gather slices from ``x`` according to ``indices``, similar to `tf.gather_nd <https://www.tensorflow.org/api_docs/python/tf/gather_nd>`_.
+    
+    The ``indices`` is a K-dim tensor, where ``indices[i_0,...,i_{K-2}]`` defines a slice
+    of ``x``:
+    
+    .. math::
+       output[i_0, ..., i_{K-2}]= x[indices[i_0, ..., i_{K-2}]]
+    
+    Where ``K = rank(indices)`` and ``x[indices[i_0, ..., i_{K-2}]]`` has rank
+    ``rank(x) - indices.shape[-1]``.
+    
     Parameters
     ----------
-    * x: tensor<*D,T>  (Required)
-    * indices: tensor<*K,i32> (Required)
+    x: tensor<*D,T> (Required)
+    indices: tensor<*K,i32> (Required)
 
     Returns
     -------
-    * tensor<*V,T>
-        * V = K[:-1] + D[K[-1]:], where ``D = x.shape`` and ``K = indices.shape``.
+    tensor<*V,T>
+        * ``V = K[:-1] + D[K[-1]:]``, where ``D = x.shape`` and ``K = indices.shape``.
 
     Attributes
     ----------
     T: fp32
+    
+    References
+    ----------
+    See `tf.gather_nd <https://www.tensorflow.org/api_docs/python/tf/gather_nd>`_.
     """
-
+    
     input_spec = InputSpec(x=TensorInputType(), indices=IntTensorInputType(),)
 
     def __init__(self, **kwargs):
@@ -395,37 +434,38 @@ class gather_nd(Operation):
 @register_op(doc_str="")
 class scatter_nd(Operation):
     """
-    Scatter ``updates`` to ``data`` at locations ``indices``.\n
+    Scatter ``updates`` to ``data`` at locations ``indices``.
 
-    ``indices`` is an K-dim tensor, where ``indices[i_0,...,i_{K-2}]`` defines a slice of ``data``,
-    where ``K = rank(indices)`` , and ``data[indices[i_0, ..., i_{K-2}]]`` has rank ``rank(data) - indices.shape[-1]``.\n
-
-    Take ``mode == update`` for instance:
-    ``output`` is set to ``data`` initially, and the op updates ``output`` as following:
-    ``output[indices[i_0, ..., i_{K-2}]]= updates[indices[i_0, ..., i_{K-2}]]``,
-    One more example for ``mode == add``, the update rule with be:
-    ``output[indices[i_0, ..., i_{K-2}]] += updates[indices[i_0, ..., i_{K-2}]]``
-
+    The ``indices`` is a K-dim tensor, where ``indices[i_0,...,i_{K-2}]`` defines a
+    slice of ``data``, ``K = rank(indices)``, and ``data[indices[i_0, ..., i_{K-2}]]``
+    has rank ``rank(data) - indices.shape[-1]``.
+    
+    * Example: ``mode == update``: The ``output`` is set to ``data`` initially, and
+      the op updates ``output`` as follows:
+    
+    .. math::
+       output[indices[i_0, ..., i_{K-2}]]= updates[indices[i_0, ..., i_{K-2}]]
+    
+    * Example: ``mode == add``. The update rule is:
+    
+    .. math::
+       output[indices[i_0, ..., i_{K-2}]] += updates[indices[i_0, ..., i_{K-2}]]
+    
     Parameters
     ----------
-    data: tensor<*D,T>  (Required)
+    data: tensor<*D,T> (Required)
     indices: tensor<*K,i32> (Required)
     updates: tensor<*K, T> (Required)
-        * must be the shape as ``K[:-1]+data.shape[K[-1]:]``.
+        * Must be the shape as ``K[:-1]+data.shape[K[-1]:]``.
     mode: const string (Optional)
         * Default to ``add``.
-        * Can be the following modes:
-            * ``update``
-            * ``add``
-            * ``sub``
-            * ``mul``
-            * ``div``
-            * ``max``
-            * ``min``
+        * Can be the following modes: ``update``, ``add``, ``sub``, ``mul``,
+          ``div``, ``max``, ``min``.
+    
     Returns
     -------
     tensor<*D,T>
-        * a tensor with the same shape and type as ``data``.
+        * A tensor with the same shape and type as ``data``.
 
     Attributes
     ----------
