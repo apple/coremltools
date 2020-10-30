@@ -16,6 +16,7 @@ class conv(Operation):
     Parameters
     ----------
     x: tensor<[n, C_in, *d_in], T> (Required)
+    
         * ``d_in`` are (possibly runtime-determined) spatial dimensions. For example,
           ``d_in = [224, 224]`` for 2D convolution.
         * ``1 <= len(d_in) <= 2``: Only 1-D and 2-D convolution.
@@ -23,6 +24,7 @@ class conv(Operation):
         * ``n``  is the batch dimension.
     
     weight: tensor<[C_out, C_in/groups, *K], T> (Required)
+    
         * Filter weights.
         * ``C_in`` is the number of input channels.
         * ``C_in`` must be divisible by ``groups``.
@@ -31,25 +33,31 @@ class conv(Operation):
           at compile time
     
     strides: const tensor<[S], i32> (Optional)
+    
         * Default to one vector of length equal to the number of spatial dimensions.
         * Strides along each of the spatial dimensions.
         * ``S == len(d_in)``.
     
     pad_type: const str (Required)
-        * Must be one of the following:
+    
+        Must be one of the following:
+        
             * ``valid``: No padding. This is equivalent to custom pad with
               ``pad[2*i] == pad[2*i+1] == 0, for i=0,...,len(d_in)-1``.
             * ``custom``: Specify custom padding in the parameter ``pad``.
             * ``same``: input is padded such that out spatial shapes are
               ``d_out[i] = ceil(d_in[i] / strides[i])``.
-        * Specifically, for ``i = 0,..,,len(d_in)-1``, the equivalent paddings are
-          as follows, when dilated kernel is even
-          (for example, ``(K[i]-1)*dilations[i]+1)``):
+        
+        Specifically, for ``i = 0,..,,len(d_in)-1``, the equivalent paddings are
+        as follows, when dilated kernel is even (for example, ``(K[i]-1)*dilations[i]+1)``):
+          
             * ``pad[2*i] = ceil[((K[i]-1)*dilations[i]+1)/2]``.
             * ``pad[2*i+1] = floor[((K[i]-1)*dilations[i]+1)/2]``.
-        * Otherwise, ``pad[2*i] = pad[2*i+1] = (K[i]-1) * dilations[i] / 2``.
+        
+        Otherwise, ``pad[2*i] = pad[2*i+1] = (K[i]-1) * dilations[i] / 2``.
     
     pad: const tensor<[P], i32> (Optional. Default to all zeros)
+    
         * ``len(P) = 2 * len(d_in)``
         * ``pad`` should be specified if and only if ``pad_type == custom``,
           otherwise errors occur.
@@ -59,16 +67,20 @@ class conv(Operation):
           spatial dimension 1, etc.
     
     dilations: const tensor<[S], i32> (Optional. Default to all 1s)
+    
         * Dilation value along each spatial dimension in ``d_in``.
           See `visualization <https://github.com/vdumoulin/conv_arithmetic/blob/master/README.md>`_.
         * ``S == len(d_in)``.
     
     groups: const tensor<[], i32> (Optional, default to 1)
+    
         * Input and output channels are split by ``groups``.
         * ``C_in`` must be divisible by ``groups``.
         * Maximum value for group is ``C_in``, in which case it is a depthwise
           convolution.
-        * For examples (assuming ``C_in = 16, C_out = 32``):
+          
+        For examples (assuming ``C_in = 16, C_out = 32``):
+        
             * ``groups == 1``, ``weight`` has shape ``[32, 16, KH, KW]``: All input
               channels are convolved with the ``weight`` kernel to produce all output
               channels.

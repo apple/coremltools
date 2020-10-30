@@ -148,12 +148,16 @@ class reshape(Operation):
     Parameters
     ----------
     x: tensor<*?, T> (Required)
+    
         * A n-D tensor or a scalar.
         * If ``x`` is fixed rank (and possibly contains symbolic dimension),
           shape may contain elements that are not positive integers (see below).
         * If ``x`` is variadic rank, shape can only contain positive integers.
+        
     shape: tensor<[K], i32> (Required)
-        * A 1-D tensor, with elements from the following:
+    
+        A 1-D tensor, with elements from the following:
+        
             * Positive integers.
             * Symbols: All but one symbol in shape must be present in ``x.shape``.
               The new symbol that is not present in ``x.shape`` represent a dimension
@@ -789,10 +793,7 @@ class transpose(Operation):
     
     References
     ----------
-        * `TF <https://www.tensorflow.org/api_docs/python/tf/transpose?version=nightly>`_
-        * `PyTorch <https://pytorch.org/docs/stable/tensors.html#torch.Tensor.permute>`_
-        * `CoreML <https://apple.github.io/coremltools/generated/coremltools.models.neural_network.builder.html#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_transpose>`_
-        * `Onnx <https://github.com/onnx/onnx/blob/master/docs/Operators.md#transpose>`_
+    `torch.Tensor.permute <https://pytorch.org/docs/stable/tensors.html#torch.Tensor.permute>`_
     """
     
     input_spec = InputSpec(x=TensorInputType(), perm=IntTensorInputType(const=True),)
@@ -844,9 +845,9 @@ class pixel_shuffle(Operation):
     
     References
     ----------
-    `PixelShuffle <https://pytorch.org/docs/stable/generated/torch.nn.PixelShuffle.html?highlight=pixel%20shuffle#torch.nn.PixelShuffle>`_
+    `torch.nn.PixelShuffle <https://pytorch.org/docs/stable/generated/torch.nn.PixelShuffle.html?highlight=pixel%20shuffle#torch.nn.PixelShuffle>`_
     """
-
+    
     input_spec = InputSpec(
         x=TensorInputType(), upscale_factor=IntInputType(const=True),
     )
