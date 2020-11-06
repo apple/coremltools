@@ -2353,6 +2353,7 @@ def neg(context, node):
     inputs = _get_inputs(context, node, expected=1)
     context.add(mb.mul(x=inputs[0], y=-1, name=node.name))
 
+@register_torch_op
 def topk(context, node):
     inputs = _get_inputs(context, node)
     kwargs = {"name": node.name, "x": inputs[0], "k": inputs[1]}

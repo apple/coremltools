@@ -1432,3 +1432,41 @@ class TestStd:
                               kwargs={"unbiased": unbiased, "dim" : dim, "keepdim": keepdim})
         input_shape = (2, 5, 10)
         run_compare_torch(input_shape, model, backend=backend)
+
+class TestTopk:
+    @pytest.mark.parametrize(
+        "backend, largest, shape_dim_k",
+        itertools.product(
+            backends,
+            [True, False],
+            [
+             ((4, 6, 7, 3), -1, 2),
+             ((10, 3, 4), 2, 2),
+             ((10, 5), -2, 3),
+             ((5,), 0, 2)
+             ],
+        ),
+    )
+    def test_topk(self, backend, largest, shape_dim_k):
+        input_shape = shape_dim_k[0]
+        dim = shape_dim_k[1]
+        k = shape_dim_k[2]
+
+        class TopkModel(nn.Module):
+            def __init__(self):
+                super(TopkModel, self).__init__()
+
+            def forward(self, x):
+                return torch.topk(x, k, dim=dim, largest=largest)
+
+        input_data = torch.rand(input_shape)
+        model = TopkModel()
+        expected_results = model(input_data)
+        expected_results = [expected_results.values, expected_results.indices]
+        run_compare_torch(
+            input_data,
+            model,
+            expected_results=expected_results,
+            input_as_shape=False,
+            backend=backend,
+        )
