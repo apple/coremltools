@@ -84,7 +84,7 @@ def _set_user_inputs(proto, inputs):
         if isinstance(shape, EnumeratedShapes):
             if isinstance(input_type, ImageType):
                 image_sizes = []
-                if input_type.image_config.channel_first:
+                if input_type.channel_first:
                     for s in shape.shapes:
                         image_sizes.append(
                             flexible_shape_utils.NeuralNetworkImageSize(
@@ -99,7 +99,7 @@ def _set_user_inputs(proto, inputs):
                             )
                         )
                 add_enumerated_image_sizes(
-                    proto, input_type.name, image_sizes=image_sizes
+                    proto, input_type.name, sizes=image_sizes
                 )
             else:
                 add_multiarray_ndshape_enumeration(
