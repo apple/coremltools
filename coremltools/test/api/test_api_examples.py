@@ -482,6 +482,47 @@ class TestPyTorchConverterExamples:
                 atol=1e-8, rtol=1e-2)
 
     @staticmethod
+    def test_convert_torch_vision_mobilenet_v2_flexible(tmpdir):
+        import torch
+        import torchvision
+        """
+        Mostly follows `test_convert_torch_vision_mobilenet_v2`, so
+        skipped duplicating comments where not necessary.
+        """
+        model = torchvision.models.mobilenet_v2().features
+        model.eval()
+        example_input = torch.rand(1, 3, 256, 256)
+        traced_model = torch.jit.trace(model, example_input)
+        """
+        Define a list of shapes, and create an EnumeratedShapes object
+        """
+        shapes = [(1, 3, 360, 640), (1, 3, 640, 360)]
+        input_shapes = ct.EnumeratedShapes(shapes=shapes)
+        """
+        Try to exporting to coreml
+        """
+        mlmodel = ct.convert(
+            traced_model,
+            inputs=[ct.ImageType(name="input", shape=input_shapes)],
+        )
+
+        """
+        Now with a conversion complete, we can save the MLModel and run inference.
+        """
+        save_path = os.path.join(str(tmpdir), "mobilenet_v2_flexible.mlmodel")
+        mlmodel.save(save_path)
+
+        """
+        Running predict() is only supported on macOS.
+        """
+        if ct.utils._is_macos():
+            results = mlmodel.predict({"input": example_input.numpy()})
+            expected = model(example_input)
+            np.testing.assert_allclose(
+                list(results.values())[0], expected.detach().numpy(),
+                atol=1e-8, rtol=1e-2)
+
+    @staticmethod
     def test_int64_inputs():
         import torch
 
