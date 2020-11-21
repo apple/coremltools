@@ -38,12 +38,6 @@ check_python_flake8:
     paths:
       - build/dist/
 
-build_wheel_linux_py27:
-  <<: *build_linux
-  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-14.04:1.0.3
-  variables:
-    PYTHON: "2.7"
-
 build_wheel_linux_py35:
   <<: *build_linux
   image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-14.04:1.0.3
@@ -75,8 +69,6 @@ build_wheel_linux_py38:
 #########################################################################
 
 .build_macos: &build_macos
-    tags:
-      - macos10.15
     stage: build
     script:
       - zsh -e scripts/build.sh --num-procs=4 --python=$PYTHON --dist
@@ -85,31 +77,25 @@ build_wheel_linux_py38:
       paths:
         - build/dist/
 
-## Uses Python 2.7 from python.org (already on build machine)
-build_wheel_macos_py27:
-  <<: *build_macos
-  variables:
-    PYTHON: "2.7"
-
-## Uses Python 3.5 from python.org (already on build machine)
+## Uses Python 3.5 from python.org
 build_wheel_macos_py35:
   <<: *build_macos
   variables:
     PYTHON: "3.5"
 
-## Uses Python 3.6 from python.org (already on build machine)
+## Uses Python 3.6 from python.org
 build_wheel_macos_py36:
   <<: *build_macos
   variables:
     PYTHON: "3.6"
 
-## Uses Python 3.7 from python.org (already on build machine)
+## Uses Python 3.7 from python.org
 build_wheel_macos_py37:
   <<: *build_macos
   variables:
     PYTHON: "3.7"
 
-## Uses Python 3.8 from python.org (already on build machine)
+## Uses Python 3.8 from python.org
 build_wheel_macos_py38:
   <<: *build_macos
   variables:
@@ -133,27 +119,6 @@ build_wheel_macos_py38:
     - zsh -e scripts/test.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON}
       --test-package=${TEST_PACKAGE} --requirements=${REQUIREMENTS} --fast
 
-test_macos11_py27_coremltools_test:
-  <<: *test_macos_pkg
-  tags:
-    - macos11
-  dependencies:
-    - build_wheel_macos_py27
-  variables:
-    WHEEL_PATH: build/dist/*cp27*10_16*
-    TEST_PACKAGE: coremltools.test
-    PYTHON: "2.7"
-  only:
-    changes:
-      - mlmodel/**/*
-      - coremltools/test/**/*.{py}
-      - coremltools/models/**/*.{py}
-      - coremltools/converters/caffe/**/*.{py}
-      - coremltools/converters/keras/**/*.{py}
-      - coremltools/converters/libsvm/**/*.{py}
-      - coremltools/converters/sklearn/**/*.{py}
-      - coremltools/converters/xgboost/**/*.{py}
-
 test_macos11_py37_coremltools_test:
   <<: *test_macos_pkg
   tags:
@@ -174,22 +139,6 @@ test_macos11_py37_coremltools_test:
       - coremltools/converters/sklearn/**/*.{py}
       - coremltools/converters/xgboost/**/*.{py}
 
-test_macos11_py27_pytorch:
-  <<: *test_macos_pkg
-  tags:
-    - macos11
-  dependencies:
-    - build_wheel_macos_py27
-  variables:
-    PYTHON: "2.7"
-    TEST_PACKAGE: coremltools.converters.mil.frontend.torch
-    WHEEL_PATH: build/dist/*cp27*10_16*
-  only:
-    changes:
-      - coremltools/converters/mil/frontend/torch/**/*.{py}
-      - coremltools/converters/mil/mil/**/*.{py}
-      - coremltools/converters/mil/backend/**/*.{py}
-
 test_macos11_py37_pytorch:
   <<: *test_macos_pkg
   tags:
@@ -203,22 +152,6 @@ test_macos11_py37_pytorch:
   only:
     changes:
       - coremltools/converters/mil/frontend/torch/**/*.{py}
-      - coremltools/converters/mil/mil/**/*.{py}
-      - coremltools/converters/mil/backend/**/*.{py}
-
-test_macos11_py27_tf1:
-  <<: *test_macos_pkg
-  tags:
-    - macos11
-  dependencies:
-    - build_wheel_macos_py27
-  variables:
-    PYTHON: "2.7"
-    TEST_PACKAGE: coremltools.converters.mil.frontend.tensorflow
-    WHEEL_PATH: build/dist/*cp27*10_16*
-  only:
-    changes:
-      - coremltools/converters/mil/frontend/tensorflow/**/*.{py}
       - coremltools/converters/mil/mil/**/*.{py}
       - coremltools/converters/mil/backend/**/*.{py}
 
@@ -238,23 +171,6 @@ test_macos11_py37_tf1:
       - coremltools/converters/mil/mil/**/*.{py}
       - coremltools/converters/mil/backend/**/*.{py}
 
-test_macos11_py27_tf2:
-  <<: *test_macos_pkg_with_reqs
-  tags:
-    - macos11
-  dependencies:
-    - build_wheel_macos_py27
-  variables:
-    PYTHON: "2.7"
-    REQUIREMENTS: reqs/test_tf2.pip
-    TEST_PACKAGE: coremltools.converters.mil.frontend.tensorflow2
-    WHEEL_PATH: build/dist/*cp27*10_16*
-  only:
-    changes:
-      - coremltools/converters/mil/frontend/tensorflow2/**/*.{py}
-      - coremltools/converters/mil/mil/**/*.{py}
-      - coremltools/converters/mil/backend/**/*.{py}
-
 test_macos11_py37_tf2:
   <<: *test_macos_pkg_with_reqs
   tags:
@@ -269,21 +185,6 @@ test_macos11_py37_tf2:
   only:
     changes:
       - coremltools/converters/mil/frontend/tensorflow2/**/*.{py}
-      - coremltools/converters/mil/mil/**/*.{py}
-      - coremltools/converters/mil/backend/**/*.{py}
-
-test_macos11_py27_mil:
-  <<: *test_macos_pkg
-  tags:
-    - macos11
-  dependencies:
-    - build_wheel_macos_py27
-  variables:
-    PYTHON: "2.7"
-    TEST_PACKAGE: coremltools.converters.mil.mil
-    WHEEL_PATH: build/dist/*cp27*10_16*
-  only:
-    changes:
       - coremltools/converters/mil/mil/**/*.{py}
       - coremltools/converters/mil/backend/**/*.{py}
 
@@ -354,15 +255,15 @@ build_documentation:
   script:
     - bash -e scripts/build_docs.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON}
   dependencies:
-    - build_wheel_linux_py27
+    - build_wheel_linux_py37
   artifacts:
     when: always
     expire_in: 2 weeks
     paths:
       - _build/html/
   variables:
-    WHEEL_PATH: build/dist/coremltools*cp27-none-manylinux1_x86_64.whl
-    PYTHON: "2.7"
+    WHEEL_PATH: build/dist/coremltools*cp37-none-manylinux1_x86_64.whl
+    PYTHON: "3.7"
   only:
     changes:
       - docs/**/*
@@ -382,12 +283,10 @@ collect_artifacts:
   script:
     echo "Collect artifacts (wheels and documentation)"
   dependencies:
-    - build_wheel_linux_py27
     - build_wheel_linux_py35
     - build_wheel_linux_py36
     - build_wheel_linux_py37
     - build_wheel_linux_py38
-    - build_wheel_macos_py27
     - build_wheel_macos_py35
     - build_wheel_macos_py36
     - build_wheel_macos_py37
