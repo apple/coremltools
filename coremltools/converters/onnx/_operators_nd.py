@@ -2566,6 +2566,7 @@ def _convert_topk(builder, node, graph, err):
     load_input_constants(builder, node, graph, err)
     axis = node.attrs.get("axis", -1)
     bottom_k = node.attrs.get("largest", True) == False
+    k = node.attrs.get('k', 0)
     # NOTE: Sorted order attribute is currently ignored in CoreML
     sorted_order = node.attrs.get("sorted", True)
     if "sorted" in node.attrs:
@@ -2577,6 +2578,7 @@ def _convert_topk(builder, node, graph, err):
         name=node.name,
         input_names=node.inputs,
         output_names=node.outputs,
+        k=k,
         axis=axis,
         use_bottom_k=bottom_k,
     )
