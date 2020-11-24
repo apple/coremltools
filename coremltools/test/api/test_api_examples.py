@@ -482,47 +482,6 @@ class TestPyTorchConverterExamples:
                 atol=1e-8, rtol=1e-2)
 
     @staticmethod
-    def test_convert_torch_vision_mobilenet_v2_flexible(tmpdir):
-        import torch
-        import torchvision
-        """
-        Mostly follows `test_convert_torch_vision_mobilenet_v2`, so
-        skipped duplicating comments where not necessary.
-        """
-        model = torchvision.models.mobilenet_v2().features
-        model.eval()
-        example_input = torch.rand(1, 3, 256, 256)
-        traced_model = torch.jit.trace(model, example_input)
-        """
-        Define a list of shapes, and create an EnumeratedShapes object
-        """
-        shapes = [(1, 3, 360, 640), (1, 3, 640, 360)]
-        input_shapes = ct.EnumeratedShapes(shapes=shapes)
-        """
-        Try to exporting to coreml
-        """
-        mlmodel = ct.convert(
-            traced_model,
-            inputs=[ct.ImageType(name="input", shape=input_shapes)],
-        )
-
-        """
-        Now with a conversion complete, we can save the MLModel and run inference.
-        """
-        save_path = os.path.join(str(tmpdir), "mobilenet_v2_flexible.mlmodel")
-        mlmodel.save(save_path)
-
-        """
-        Running predict() is only supported on macOS.
-        """
-        if ct.utils._is_macos():
-            results = mlmodel.predict({"input": example_input.numpy()})
-            expected = model(example_input)
-            np.testing.assert_allclose(
-                list(results.values())[0], expected.detach().numpy(),
-                atol=1e-8, rtol=1e-2)
-
-    @staticmethod
     def test_int64_inputs():
         import torch
 
@@ -1053,6 +1012,40 @@ class TestFlexibleShape:
                 test_input_x = np.random.rand(1, 3, 29, 29).astype(np.float32)
                 results = mlmodel.predict({
                     "input": test_input_x})
+
+    @staticmethod
+    @pytest.mark.skipif(not _HAS_TF_2, reason=MSG_TF2_NOT_FOUND)
+    def test_tf2_image_enumerated_shapes():
+        import tensorflow as tf
+        keras_model = tf.keras.applications.MobileNetV2(
+            input_shape=(None, None, 3,),
+            classes=1000,
+            include_top=False,
+        )
+        input_shapes = ct.EnumeratedShapes(shapes=[(1, 192, 192, 3), (1, 224, 224, 3)])
+        image_input = ct.ImageType(shape=input_shapes,
+                                   bias=[-1,-1,-1], scale=1/127)
+        model = ct.convert(keras_model, inputs=[image_input])
+        assert model is not None
+        spec = model.get_spec()
+        assert len(spec.description.input[0].type.imageType.enumeratedSizes.sizes) == 2
+
+    @staticmethod
+    @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
+    def test_torch_image_enumerated_shapes():
+        import torch
+        import torchvision
+        torch_model = torchvision.models.mobilenet_v2().features
+        torch_model.eval()
+        example_input = torch.rand(1, 3, 256, 256)
+        traced_model = torch.jit.trace(torch_model, example_input)
+        input_shapes = ct.EnumeratedShapes(shapes=[(1, 3, 256, 256), (1, 3, 224, 224)])
+        image_input = ct.ImageType(shape=input_shapes,
+                                   bias=[-1, -1, -1], scale=1 / 127)
+        model = ct.convert(traced_model, inputs=[image_input])
+        assert model is not None
+        spec = model.get_spec()
+        assert len(spec.description.input[0].type.imageType.enumeratedSizes.sizes) == 2
 
 class TestOptionalInput:
     @staticmethod

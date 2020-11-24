@@ -44,7 +44,10 @@ def _image_input_preprocess(prog):
             elif isinstance(input_type.shape, EnumeratedShapes):
                 shape_list = []
                 for shape in input_type.shape.shapes:
-                    shape_list.append(_transform_to_channel_first(shape))
+                    if isinstance(shape, Shape):
+                        shape_list.append(_transform_to_channel_first(shape.shape))
+                    else:
+                        shape_list.append(_transform_to_channel_first(shape))
                 shape_type = EnumeratedShapes(shapes=shape_list,
                                               default=_transform_to_channel_first(input_type.shape.default))
             new_image_type = ImageType(name=name,
