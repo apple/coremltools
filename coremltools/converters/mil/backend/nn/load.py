@@ -83,19 +83,29 @@ def _set_user_inputs(proto, inputs):
         shape = input_type.shape
         if isinstance(shape, EnumeratedShapes):
             if isinstance(input_type, ImageType):
+                default_height , default_width = 0, 0
+                for inp in proto.description.input:
+                    if inp.name == input_type.name:
+                        default_height = inp.type.imageType.height
+                        default_width = inp.type.imageType.width
+                        break
                 image_sizes = []
                 if input_type.channel_first:
                     for s in shape.shapes:
+                        if s.shape[-2] == default_height and s.shape[-1] == default_width:
+                            continue
                         image_sizes.append(
                             flexible_shape_utils.NeuralNetworkImageSize(
-                                s.shape[-2], s.shape[-1]
+                                height=s.shape[-2], width=s.shape[-1]
                             )
                         )
                 else:
                     for s in shape.shapes:
+                        if s.shape[-3] == default_height and s.shape[-2] == default_width:
+                            continue
                         image_sizes.append(
                             flexible_shape_utils.NeuralNetworkImageSize(
-                                s.shape[-3], s.shape[-2]
+                                height=s.shape[-3], width=s.shape[-2]
                             )
                         )
                 add_enumerated_image_sizes(
