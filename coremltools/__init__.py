@@ -25,7 +25,7 @@ For more information: http://developer.apple.com/documentation/coreml
 # Backup root logger handlers
 from logging import getLogger
 root_logger = getLogger()
-root_logger_handlers = root_logger.handlers.copy()
+root_logger_handlers_backup = root_logger.handlers.copy()
 
 from .version import __version__
 
@@ -89,4 +89,4 @@ if _ENABLE_PROFILING:
 root_logger = getLogger()
 coreml_logger = getLogger(__name__)
 coreml_logger.handlers = root_logger.handlers.copy()
-root_logger.handlers = root_logger_handlers
+root_logger.handlers = root_logger_handlers_backup
