@@ -9,8 +9,9 @@ from coremltools._deps import _HAS_TF_1
 import os
 import logging
 
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"  # FATAL
-logging.getLogger("tensorflow").setLevel(logging.FATAL)
+if os.getenv("TF_SUPPRESS_LOGS", "1") == "1":
+    os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"  # FATAL
+    logging.getLogger("tensorflow").setLevel(logging.FATAL)
 
 register_tf_op = None
 
