@@ -84,7 +84,7 @@
       <dependency>
         <groupId>com.google.guava</groupId>
         <artifactId>guava</artifactId>
-        <version>20.0</version>
+        <version>30.0-jre</version>
       </dependency>
       <dependency>
         <groupId>com.google.truth</groupId>
