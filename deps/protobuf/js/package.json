@@ -6,21 +6,26 @@
   "files": [
     "google"
   ],
-  "dependencies": {},
+  "dependencies": {
+    "snyk": "^1.431.4"
+  },
   "devDependencies": {
     "glob": "~6.0.4",
     "google-closure-compiler": "~20160619.0.0",
-    "google-closure-library": "~20160125.0.0",
-    "gulp": "~3.9.0",
-    "jasmine": "~2.4.1"
+    "google-closure-library": "~20200315.0.0",
+    "gulp": "~4.0.0",
+    "jasmine": "~3.1.0"
   },
   "scripts": {
-    "test": "node ./node_modules/gulp/bin/gulp.js test"
+    "test": "node ./node_modules/gulp/bin/gulp.js test",
+    "snyk-protect": "snyk protect",
+    "prepublish": "npm run snyk-protect"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/google/protobuf/tree/master/js"
   },
   "author": "Google Protocol Buffers Team",
-  "license" : "BSD-3-Clause"
+  "license": "BSD-3-Clause",
+  "snyk": true
 }
