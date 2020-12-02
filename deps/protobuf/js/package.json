@@ -14,7 +14,7 @@
     "google-closure-compiler": "~20160619.0.0",
     "google-closure-library": "~20200315.0.0",
     "gulp": "~4.0.0",
-    "jasmine": "~3.1.0"
+    "jasmine": "~3.6.3"
   },
   "scripts": {
     "test": "node ./node_modules/gulp/bin/gulp.js test",
