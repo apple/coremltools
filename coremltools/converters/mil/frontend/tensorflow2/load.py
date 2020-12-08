@@ -96,7 +96,7 @@ class TF2Loader(TFLoader):
             fuse_dilation_conv,
         ]
 
-    def _get_concrete_functions_and_graph_def(self):
+    def _get_concrete_functions_and_graph_def(self, tags=None):
         msg = (
             "Expected model format: [SavedModel | [concrete_function] | "
             "tf.keras.Model | .h5], got {}"
@@ -120,7 +120,7 @@ class TF2Loader(TFLoader):
                      and (self.model.endswith(".h5") or self.model.endswith(".hdf5")):
                     cfs = self._concrete_fn_from_tf_keras_or_h5(self.model)
                 elif _os_path.isdir(self.model):
-                    saved_model = _tf.saved_model.load(self.model)
+                    saved_model = _tf.saved_model.load(self.model, tags=tags)
                     sv = saved_model.signatures.values()
                     cfs = sv if isinstance(sv, list) else list(sv)
                 else:
@@ -132,9 +132,9 @@ class TF2Loader(TFLoader):
         
         return cfs, graph_def
 
-    def _graph_def_from_model(self, output_names=None):
+    def _graph_def_from_model(self, output_names=None, tags=None):
         """Overwrites TFLoader._graph_def_from_model()"""
-        _, graph_def = self._get_concrete_functions_and_graph_def()
+        _, graph_def = self._get_concrete_functions_and_graph_def(tags=tags)
         return self.extract_sub_graph(graph_def, output_names)
 
     def _tf_ssa_from_graph_def(self, fn_name="main"):
