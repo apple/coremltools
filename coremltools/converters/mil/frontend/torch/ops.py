@@ -406,7 +406,7 @@ def _convolution(context, node):
 
     dilations = inputs[5]
     out_pad = None
-    if len(inputs) == 12:
+    if len(inputs) >= 12:
         transposed = inputs[6].val
         out_pad = inputs[7].val
         group = inputs[8]
