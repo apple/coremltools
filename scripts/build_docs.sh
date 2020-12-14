@@ -65,7 +65,7 @@ cd ${COREMLTOOLS_HOME}
 if [[ $PYTHON != "None" ]]; then
   # Setup the right python
   if [[ $CHECK_ENV == 1 ]]; then
-    zsh -i scripts/env_create.sh --python=$PYTHON --include-docs-deps
+    zsh -i scripts/env_create.sh --python=$PYTHON --include-docs-deps --exclude-test-deps
   fi
   source scripts/env_activate.sh --python=$PYTHON
 fi
