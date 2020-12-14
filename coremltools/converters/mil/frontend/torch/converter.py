@@ -49,9 +49,9 @@ class TranscriptionContext:
     def add(self, ssa_var, torch_name=None):
         """
         Arguments:
-            ssa_var: Varable to add to the graph being constructed.
+            ssa_var: Variable to add to the graph being constructed.
             torch_name: Optional unique string identifier of the operation. If
-                ommitted, it will use @ssa_var.name.
+                omitted, it will use @ssa_var.name.
         """
         if torch_name is None:
             torch_name = ssa_var.name
