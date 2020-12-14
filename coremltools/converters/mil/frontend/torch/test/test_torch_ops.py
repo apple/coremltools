@@ -74,6 +74,17 @@ class TestInstanceNorm:
         model = nn.InstanceNorm2d(num_features, eps)
         run_compare_torch((6, num_features, 5, 5), model, backend=backend)
 
+class TestGroupNorm:
+    @pytest.mark.parametrize(
+        "group_features, eps,affine, backend",
+        itertools.product([(16,32), (32,64), (1,1)], [0.1, 1e-05, 1e-09],[True, False], backends),
+    )
+    def test_groupnorm(self, group_features, eps, affine, backend):
+        if backend == "nn_proto" and eps == 1e-09:
+            return
+        model = nn.GroupNorm(group_features[0],group_features[1], eps=eps, affine=affine)
+        run_compare_torch((6, group_features[1], 5, 5), model, backend=backend)
+
 
 class TestLinear:
     @pytest.mark.parametrize(
@@ -1324,6 +1335,18 @@ class TestSplit:
         input_shape = (5, 5)
         model = ModuleWrapper(function=torch.split_with_sizes,
                               kwargs={"split_sizes": split_sizes, "dim": dim})
+        run_compare_torch(input_shape, model, backend=backend)
+
+
+class TestUnbind:
+    @pytest.mark.parametrize(
+        "backend, dim",
+        itertools.product(backends,[0,1,2]),
+    )
+    def test_unbind(self, backend, dim):
+        input_shape = (3, 3, 4)
+        model = ModuleWrapper(function=torch.unbind,
+                              kwargs={"dim": dim})
         run_compare_torch(input_shape, model, backend=backend)
 
 
