@@ -952,6 +952,30 @@ def instance_norm(context, node):
     )
     context.add(x)
 
+@register_torch_op
+def group_norm(context, node):
+    inputs = _get_inputs(context, node, expected=6)
+    x = inputs[0]
+    num_groups = inputs[1].val
+    weight = inputs[2]
+    bias = inputs[3]
+    eps = inputs[4]
+    n,c,h,w = x.shape[0],x.shape[1],x.shape[2],x.shape[3]
+    num_groups = min(num_groups,c)
+    x = mb.reshape(x=x, shape=[n,num_groups,c//num_groups,h,w])
+    mean = mb.reduce_mean(x=x, axes=[2,3,4], keep_dims=True)
+    var = _std(x,[2,3,4],True,False,eps.val)
+    x = mb.sub(x=x,y=mean)
+    x = mb.real_div(x=x,y=var)
+    x = mb.reshape(x=x, shape=[n,c,h,w])
+    if weight is not None:
+        weight = mb.reshape(x=weight, shape=[1,c,1,1])
+        x = mb.mul(x=x,y=weight)
+    if bias is not None:
+        bias = mb.reshape(x=bias, shape=[1,c,1,1])
+        x = mb.add(x=x,y=bias)
+    context.add(x,node.name)
+
 
 @register_torch_op
 def embedding(context, node):
@@ -1353,6 +1377,10 @@ def upsample_bilinear2d(context, node):
     scales = _get_scales_from_output_size(output_size, _input.shape)
     if scales:
         scales_h, scales_w = scales
+    else:
+        factors = inputs[-1].val
+        scales_h = factors[0]
+        scales_w = factors[1]
 
     upsample_bilinear = mb.upsample_bilinear(
         x=_input,
@@ -1375,6 +1403,10 @@ def upsample_nearest2d(context, node):
     scales = _get_scales_from_output_size(output_size, _input.shape)
     if scales:
         scales_h, scales_w = scales
+    else:
+        factors = inputs[-1].val
+        scales_h = factors[0]
+        scales_w = factors[1]
 
     if (
         abs(scales_h - round(scales_h)) > 0.001
@@ -1841,6 +1873,16 @@ def split(context, node):
 
 
 @register_torch_op
+def unbind(context, node):
+    inputs = _get_inputs(context, node, expected=2)
+    x = inputs[0]
+    dim = inputs[1].val
+    split_sizes = [1]*x.shape[dim]
+    res = mb.split(x=x, split_sizes=split_sizes, axis=dim, name=node.name)
+    res = [mb.squeeze(x=x, axes=[dim]) for x in res]
+    context.add(res, torch_name=node.name)
+
+@register_torch_op
 def to(context, node):
     # @non_blocking and @copy are unused
     inputs = _get_inputs(context, node)
@@ -1886,7 +1928,7 @@ def to(context, node):
         _input = _input.val
         # numpy -> torch -> torch cast -> numpy
         # This path is needed to use the mapping of passed in dtypes to torch dtypes.
-        casted_input = torch.tensor(_input).type(torch_dtype).numpy()
+        casted_input = torch.tensor(_input).type(torch_dtype).cpu().numpy()
         res = mb.const(mode="immediate_value", val=casted_input, name=node.name)
     else:
         res = mb.cast(x=_input, dtype=NUM_TO_DTYPE_STRING[dtype], name=node.name)
@@ -2047,7 +2089,7 @@ def meshgrid(context, node):
         view_shape = [1] * size
         view_shape[i] = -1
         view_shape = tuple(view_shape)
-        tensor = torch.tensor(inputs[i].val)
+        tensor = torch.tensor(inputs[i].val).cpu()
         # (a.) in docstring
         view = mb.reshape(
             x=inputs[i], shape=view_shape, name=node.name + "_view_" + str(i)
@@ -2387,25 +2429,7 @@ def topk(context, node):
     context.add(res[0], torch_name=values_name)
     context.add(res[1], torch_name=indices_name)
 
-@register_torch_op
-def std(context, node):
-    inputs = _get_inputs(context, node)
-    x = inputs[0]
-    if not (len(inputs) == 2 or len(inputs) == 4):
-        raise ValueError("Number of inputs to the 'std' op must be"
-                         "2 or 4")
-
-    keep_dim = False
-    axes = None
-    if len(inputs) == 2:
-        unbiased = inputs[1].val
-    if len(inputs) == 4:
-        axes = inputs[1].val
-        if isinstance(axes, int):
-            axes = [axes]
-        unbiased = inputs[2].val
-        keep_dim = inputs[3].val
-
+def _std(x,axes,keep_dim,unbiased,eps):
     need_rescale = False
     if unbiased:
         # If "unbiased" is True,
@@ -2436,13 +2460,37 @@ def std(context, node):
     x_demeaned = mb.sub(x=x, y=x_mean)
     x_demeaned_square = mb.square(x=x_demeaned)
     x_demeaned_square_mean = mb.reduce_mean(x=x_demeaned_square, axes=axes, keep_dims=keep_dim)
+    if eps>0:
+        x_demeaned_square_mean = mb.add(x=x_demeaned_square_mean,y=eps)
     if need_rescale:
         y_before_scale = mb.sqrt(x=x_demeaned_square_mean)
-        y = mb.mul(x=y_before_scale, y=rescale_factor, name=node.name)
+        y = mb.mul(x=y_before_scale, y=rescale_factor)
     else:
-        y = mb.sqrt(x=x_demeaned_square_mean, name=node.name)
+        y = mb.sqrt(x=x_demeaned_square_mean)
+    return y
 
-    context.add(y)
+@register_torch_op
+def std(context, node):
+    inputs = _get_inputs(context, node)
+    x = inputs[0]
+    if not (len(inputs) == 2 or len(inputs) == 4):
+        raise ValueError("Number of inputs to the 'std' op must be"
+                         "2 or 4")
+
+    keep_dim = False
+    axes = None
+    if len(inputs) == 2:
+        unbiased = inputs[1].val
+    if len(inputs) == 4:
+        axes = inputs[1].val
+        if isinstance(axes, int):
+            axes = [axes]
+        unbiased = inputs[2].val
+        keep_dim = inputs[3].val
+
+    y = _std(x,axes,keep_dim,unbiased,0)
+
+    context.add(y,node.name)
 
 @register_torch_op
 def copy_(context, node):
