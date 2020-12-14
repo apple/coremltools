@@ -1928,7 +1928,7 @@ def to(context, node):
         _input = _input.val
         # numpy -> torch -> torch cast -> numpy
         # This path is needed to use the mapping of passed in dtypes to torch dtypes.
-        casted_input = torch.tensor(_input).type(torch_dtype).numpy()
+        casted_input = torch.tensor(_input).type(torch_dtype).cpu().numpy()
         res = mb.const(mode="immediate_value", val=casted_input, name=node.name)
     else:
         res = mb.cast(x=_input, dtype=NUM_TO_DTYPE_STRING[dtype], name=node.name)
@@ -2089,7 +2089,7 @@ def meshgrid(context, node):
         view_shape = [1] * size
         view_shape[i] = -1
         view_shape = tuple(view_shape)
-        tensor = torch.tensor(inputs[i].val)
+        tensor = torch.tensor(inputs[i].val).cpu()
         # (a.) in docstring
         view = mb.reshape(
             x=inputs[i], shape=view_shape, name=node.name + "_view_" + str(i)
