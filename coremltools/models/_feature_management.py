@@ -31,7 +31,7 @@ def process_or_validate_classifier_output_features(
     class_labels = list(class_labels)
 
     # First, we need to determine the type of the classes.
-    _int_types = int + (bool, _np.bool_, _np.int32, _np.int64)
+    _int_types = (int, bool, _np.bool_, _np.int32, _np.int64)
 
     if all(isinstance(cl, _int_types) for cl in class_labels):
         output_class_type = datatypes.Int64()

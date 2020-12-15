@@ -563,7 +563,7 @@ def _sanitize_value(x):
     Performs cleaning steps on the data so various type comparisons can
     be performed correctly.
     """
-    if isinstance(x, str + int + (float,)):
+    if isinstance(x, (str, int, float,)):
         return x
     elif _HAS_SKLEARN and _sp.issparse(x):
         return x.todense()

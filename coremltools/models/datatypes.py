@@ -80,7 +80,7 @@ class Array(_DatatypeBase):
         """
         assert len(dimensions) >= 1
         assert all(
-            isinstance(d, int + (_np.int64, _np.int32)) for d in dimensions
+            isinstance(d, (int, _np.int64, _np.int32)) for d in dimensions
         ), "Dimensions must be ints, not {}".format(str(dimensions))
         self.dimensions = dimensions
 
