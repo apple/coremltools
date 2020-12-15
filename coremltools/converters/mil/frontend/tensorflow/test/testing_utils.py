@@ -3,7 +3,6 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import six
 from coremltools import TensorType
 import pytest
 import numpy as np
@@ -96,7 +95,7 @@ def get_tf_node_names(tf_nodes, mode="inputs"):
         tf_nodes = [tf_nodes]
     names = list()
     for n in tf_nodes:
-        tensor_name = n if isinstance(n, six.string_types) else n.name
+        tensor_name = n if isinstance(n, str) else n.name
         if mode == "outputs":
             names.append(tensor_name)
             continue

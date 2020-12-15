@@ -50,12 +50,7 @@ def _get_activation_name_from_keras_layer(keras_layer):
     elif isinstance(keras_layer, _keras.layers.advanced_activations.Softmax):
         non_linearity = "SOFTMAX"
     else:
-        import six
-
-        if six.PY2:
-            act_name = keras_layer.activation.func_name
-        else:
-            act_name = keras_layer.activation.__name__
+        act_name = keras_layer.activation.__name__
 
         if act_name == "softmax":
             non_linearity = "SOFTMAX"

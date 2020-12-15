@@ -9,7 +9,6 @@ from __future__ import print_function as _
 from __future__ import division as _
 from __future__ import absolute_import as _
 
-import six
 
 _varname_charset = set(
     [chr(i) for i in range(ord("A"), ord("Z") + 1)]
@@ -37,6 +36,6 @@ def escape_fn_name(name):
 
 
 def normalize_names(names):
-    if isinstance(names, six.string_types):
+    if isinstance(names, str):
         return names.replace(":", "__").replace("/", "__")
     return [i.replace(":", "__").replace("/", "__") for i in names]

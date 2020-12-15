@@ -1,6 +1,5 @@
 import keras as _keras
 import numpy as _np
-import six
 
 _KERAS_LAYERS_1D = [
     _keras.layers.Conv1D,
@@ -538,9 +537,7 @@ class NetGraph(object):
             ):
 
                 func_name = (
-                    k_layer.activation.func_name
-                    if six.PY2
-                    else k_layer.activation.__name__
+                    k_layer.activation.__name__
                 )
 
                 if func_name != "linear":

@@ -3,8 +3,6 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from six import integer_types as _integer_types
-
 from . import datatypes
 from .. import SPECIFICATION_VERSION
 from ..proto import Model_pb2 as _Model_pb2
@@ -33,13 +31,13 @@ def create_array_feature_extractor(
     spec = _Model_pb2.Model()
     spec.specificationVersion = SPECIFICATION_VERSION
 
-    if isinstance(extract_indices, _integer_types):
+    if isinstance(extract_indices, int):
         extract_indices = [extract_indices]
         if output_type is None:
             output_type = datatypes.Double()
 
     elif isinstance(extract_indices, (list, tuple)):
-        if not all(isinstance(x, _integer_types) for x in extract_indices):
+        if not all(isinstance(x, int) for x in extract_indices):
             raise TypeError("extract_indices must be an integer or a list of integers.")
 
         if output_type is None:

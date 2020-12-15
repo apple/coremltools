@@ -150,17 +150,11 @@ MSG_KERAS2_NOT_FOUND = "Keras 2 not found."
 
 try:
     # Prevent keras from printing things that are not errors to standard error.
-    import six
     import sys
 
-    if six.PY2:
-        import StringIO
+    import io
 
-        temp = StringIO.StringIO()
-    else:
-        import io
-
-        temp = io.StringIO()
+    temp = io.StringIO()
     stderr = sys.stderr
     try:
         sys.stderr = temp

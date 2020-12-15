@@ -9,7 +9,6 @@ Utilities for the entire package.
 import math as _math
 import numpy as _np
 import os as _os
-import six as _six
 import warnings as _warnings
 import sys as _sys
 from coremltools.proto import Model_pb2 as _Model_pb2
@@ -21,7 +20,7 @@ if _HAS_SKLEARN:
 
 
 def _to_unicode(x):
-    if isinstance(x, _six.binary_type):
+    if isinstance(x, bytes):
         return x.decode()
     else:
         return x
@@ -564,7 +563,7 @@ def _sanitize_value(x):
     Performs cleaning steps on the data so various type comparisons can
     be performed correctly.
     """
-    if isinstance(x, _six.string_types + _six.integer_types + (float,)):
+    if isinstance(x, str + int + (float,)):
         return x
     elif _HAS_SKLEARN and _sp.issparse(x):
         return x.todense()

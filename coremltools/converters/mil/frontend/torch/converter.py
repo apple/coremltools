@@ -5,7 +5,6 @@
 
 from __future__ import print_function as _
 
-from six import string_types as _string_types
 import logging as _logging
 import torch as _torch
 from coremltools._deps import version_lt

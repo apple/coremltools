@@ -7,7 +7,6 @@ import os as _os
 import tempfile as _tempfile
 import warnings as _warnings
 from copy import deepcopy as _deepcopy
-from six import string_types as _string_types
 
 from .utils import _has_custom_layer as _has_custom_layer
 from .utils import load_spec as _load_spec
@@ -191,7 +190,7 @@ class MLModel(object):
         >>> loaded_model = MLModel('my_model_file.mlmodel')
         """
 
-        if isinstance(model, _string_types):
+        if isinstance(model, str):
             self.__proxy__, self._spec, self._framework_error = _get_proxy_and_spec(
                 model, useCPUOnly
             )

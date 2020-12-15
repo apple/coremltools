@@ -6,7 +6,6 @@
 import numpy as np
 import torch
 import torch.nn as nn
-from six import string_types as _string_types
 from coremltools import TensorType, RangeDim
 from ..converter import torch_to_mil_types
 from coremltools.models import MLModel
@@ -148,7 +147,7 @@ def convert_and_compare(input_data, model_spec, expected_results=None, atol=1e-5
 
     - input_data: torch.tensor or list[torch.tensor]
     """
-    if isinstance(model_spec, _string_types):
+    if isinstance(model_spec, str):
         torch_model = torch.jit.load(model_spec)
     else:
         torch_model = model_spec

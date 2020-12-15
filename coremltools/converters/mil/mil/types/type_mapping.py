@@ -28,7 +28,6 @@ from .type_str import str as types_str
 from .type_unknown import unknown
 import numpy as np
 import sympy as sm
-import six
 from .get_type_info import get_type_info
 
 _types_TO_NPTYPES = {
@@ -224,7 +223,7 @@ def numpy_type_to_builtin_type(nptype):
     elif np.issubclass_(nptype, np.float64) or np.issubclass_(nptype, np.double):
         return types_fp64
     elif (
-        np.issubclass_(nptype, six.string_types)
+        np.issubclass_(nptype, str)
         or np.issubclass_(nptype, np.string_)
         or np.issubclass_(nptype, np.str_)
     ):
@@ -243,9 +242,9 @@ def type_to_builtin_type(type):
     # Otherwise, try to infer from a few generic python types
     if np.issubclass_(type, bool):
         return types_bool
-    elif np.issubclass_(type, six.integer_types):
+    elif np.issubclass_(type, int):
         return types_int32
-    elif np.issubclass_(type, six.string_types):
+    elif np.issubclass_(type, str):
         return types_str
     elif np.issubclass_(type, float):
         return types_fp32

@@ -10,7 +10,6 @@ import os.path as _os_path
 
 import torch as _torch
 
-from six import string_types as _string_types
 from .converter import TorchConverter, torch_to_mil_types
 from coremltools.converters.mil.input_types import InputType, TensorType
 from coremltools.converters.mil.mil import Program, types
@@ -88,7 +87,7 @@ def load(model_spec, debug=False, **kwargs):
 
 
 def _torchscript_from_model(model_spec):
-    if isinstance(model_spec, _string_types) and (model_spec.endswith(".pt") or model_spec.endswith(".pth")):
+    if isinstance(model_spec, str) and (model_spec.endswith(".pt") or model_spec.endswith(".pth")):
         filename = _os_path.abspath(model_spec)
         return _torch.jit.load(filename)
     elif isinstance(model_spec, _torch.jit.ScriptModule):

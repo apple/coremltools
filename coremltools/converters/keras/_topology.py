@@ -428,12 +428,7 @@ class NetGraph(object):
                 or isinstance(k_layer, _keras.layers.core.Dense)
             ):
 
-                import six
-
-                if six.PY2:
-                    func_name = k_layer.activation.func_name
-                else:
-                    func_name = k_layer.activation.__name__
+                func_name = k_layer.activation.__name__
 
                 if func_name != "linear":
                     # Create new layer

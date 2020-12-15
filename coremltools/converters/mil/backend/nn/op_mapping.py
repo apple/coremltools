@@ -5,7 +5,6 @@
 
 import numpy as _np
 import logging as _logging
-from six import string_types as _string_types
 from coremltools.models import neural_network as neural_network
 from coremltools.proto import NeuralNetwork_pb2
 from coremltools.converters.mil.mil.types.symbolic import (
@@ -64,7 +63,7 @@ def make_input(const_context, builder, variables):
     """
     if isinstance(variables, (list, tuple)):
         return [make_input(const_context, builder, v) for v in variables]
-    if isinstance(variables, _string_types):
+    if isinstance(variables, str):
         return variables
 
     v = variables  # variables is Var

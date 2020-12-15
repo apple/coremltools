@@ -6,7 +6,6 @@
 from collections import defaultdict
 import copy
 import logging
-import six
 import numbers
 import numpy as np
 
@@ -39,7 +38,7 @@ def is_python_value(val):
     return (
         isinstance(val, (np.generic, np.ndarray))
         or isinstance(val, numbers.Number)
-        or isinstance(val, six.string_types)
+        or isinstance(val, str)
         or isinstance(val, bool)
         or (isinstance(val, (tuple, list)) and all(is_python_value(v) for v in val))
     )

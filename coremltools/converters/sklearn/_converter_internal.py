@@ -22,7 +22,6 @@ if _HAS_SKLEARN:
 
 from collections import namedtuple as _namedtuple
 import numpy as _np
-from six import string_types as _string_types
 
 from . import _one_hot_encoder
 from . import _dict_vectorizer
@@ -176,7 +175,7 @@ def _convert_sklearn_model(
         dv_obj = obj_list[0].sk_obj
         output_dim = len(_dict_vectorizer.get_input_feature_names(dv_obj))
 
-        if not isinstance(input_features, _string_types):
+        if not isinstance(input_features, str):
             raise TypeError(
                 "If the first transformer in a pipeline is a "
                 "DictVectorizer, then the input feature must be the name "
@@ -192,7 +191,7 @@ def _convert_sklearn_model(
             if output_feature_names is None:
                 output_feature_name = "transformed_features"
 
-            elif isinstance(output_feature_names, _string_types):
+            elif isinstance(output_feature_names, str):
                 output_feature_name = output_feature_names
 
             else:
@@ -303,7 +302,7 @@ def _convert_sklearn_model(
     elif overall_mode == "regressor":
         if output_feature_names is None:
             output_features = [("prediction", datatypes.Double())]
-        elif isinstance(output_feature_names, _string_types):
+        elif isinstance(output_feature_names, str):
             output_features = [(output_feature_names, datatypes.Double())]
         else:
             raise TypeError(
@@ -321,7 +320,7 @@ def _convert_sklearn_model(
                 ("transformed_features", datatypes.Array(final_output_dimension))
             ]
 
-        elif isinstance(output_feature_names, _string_types):
+        elif isinstance(output_feature_names, str):
             output_features = [
                 (output_feature_names, datatypes.Array(final_output_dimension))
             ]

@@ -16,7 +16,6 @@ from .block import Function
 from .var import Var
 from .types.symbolic import k_used_symbols, k_num_internal_syms
 from coremltools.converters.mil.input_types import InputType
-import six
 
 
 class Program(object):
@@ -94,7 +93,7 @@ class Placeholder(object):
         if not isinstance(sym_shape, (list, tuple, _np.ndarray)):
             raise ValueError("Illegal shape for Placeholder: {}".format(sym_shape))
         for i, d in enumerate(sym_shape):
-            if not isinstance(d, (_np.generic, six.integer_types, Symbol)):
+            if not isinstance(d, (_np.generic, int, Symbol)):
                 msg = 'Placeholder dim {} in {} is not integer or symbol'
                 raise ValueError(msg.format(i, sym_shape))
         self.sym_shape = sym_shape

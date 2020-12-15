@@ -32,7 +32,6 @@ from coremltools.converters.mil.frontend.tensorflow2.tf_graph_pass import (
     flatten_sub_graph_namespaces,
     rewrite_control_flow_functions,
 )
-from six import string_types as _string_types
 from tensorflow.lite.python.util import get_grappler_config as _get_grappler_config
 from tensorflow.lite.python.util import (
     run_graph_optimizations as _run_graph_optimizations,
@@ -81,14 +80,14 @@ class TF2Loader(TFLoader):
         if (
             isinstance(self.model, list)
             or isinstance(self.model, _tf.keras.Model)
-            or isinstance(self.model, _string_types)
+            or isinstance(self.model, str)
         ):
             cfs = []
             if isinstance(self.model, list):
                 cfs = self.model
             if isinstance(self.model, _tf.keras.Model):
                 cfs = self._concrete_fn_from_tf_keras_or_h5(self.model)
-            elif isinstance(self.model, _string_types):
+            elif isinstance(self.model, str):
                 if not _os_path.exists(self.model):
                     raise ValueError(
                         'Input model "{}" does not exist'.format(self.model)

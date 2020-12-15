@@ -5,7 +5,6 @@
 
 import numpy as np
 import os
-import six
 import pytest
 import shutil
 import tempfile
@@ -52,7 +51,7 @@ class TestTf1ModelInputsOutputs:
             outputs = [outputs]
 
         output_names = [
-            j if isinstance(j, six.string_types) else j.op.name for j in outputs
+            j if isinstance(j, str) else j.op.name for j in outputs
         ]
         mlmodel = converter.convert(model, outputs=output_names)
         assert mlmodel is not None
@@ -70,7 +69,7 @@ class TestTf1ModelInputsOutputs:
 
         model, inputs, outputs = build_model
         input_name = (
-            inputs[0] if isinstance(inputs[0], six.string_types) else inputs[0].op.name
+            inputs[0] if isinstance(inputs[0], str) else inputs[0].op.name
         )
         mlmodel = converter.convert(model, inputs=[TensorType(input_name, (3, 4, 5))])
         assert mlmodel is not None
@@ -103,7 +102,7 @@ class TestTf1ModelInputsOutputs:
             return tf.nn.relu(x), tf.math.add(x, y)
 
         model, inputs, outputs = build_model
-        if isinstance(outputs[0], six.string_types):
+        if isinstance(outputs[0], str):
             first_output_name = outputs[0]
         else:
             first_output_name = outputs[0].name.split(":")[0]

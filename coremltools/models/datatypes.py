@@ -6,7 +6,6 @@
 """
 Basic Data Types.
 """
-from six import integer_types as _integer_types
 import numpy as _np
 
 from ..proto import FeatureTypes_pb2 as _FeatureTypes_pb2
@@ -81,7 +80,7 @@ class Array(_DatatypeBase):
         """
         assert len(dimensions) >= 1
         assert all(
-            isinstance(d, _integer_types + (_np.int64, _np.int32)) for d in dimensions
+            isinstance(d, int + (_np.int64, _np.int32)) for d in dimensions
         ), "Dimensions must be ints, not {}".format(str(dimensions))
         self.dimensions = dimensions
 

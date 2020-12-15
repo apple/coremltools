@@ -8,10 +8,6 @@ from copy import copy
 from functools import reduce
 import numpy as _np
 import operator as op
-from six import (
-    integer_types as _integer_types,
-    string_types as _string_types,
-)
 
 from . import datatypes
 from .. import SPECIFICATION_VERSION
@@ -35,12 +31,12 @@ def process_or_validate_classifier_output_features(
     class_labels = list(class_labels)
 
     # First, we need to determine the type of the classes.
-    _int_types = _integer_types + (bool, _np.bool_, _np.int32, _np.int64)
+    _int_types = int + (bool, _np.bool_, _np.int32, _np.int64)
 
     if all(isinstance(cl, _int_types) for cl in class_labels):
         output_class_type = datatypes.Int64()
 
-    elif all(isinstance(cl, _string_types) for cl in class_labels):
+    elif all(isinstance(cl, str) for cl in class_labels):
         output_class_type = datatypes.String()
 
     else:
@@ -53,7 +49,7 @@ def process_or_validate_classifier_output_features(
         if supports_class_scores:
             out += [("classProbability", datatypes.Dictionary(output_class_type))]
 
-    elif isinstance(output_features, _string_types):
+    elif isinstance(output_features, str):
 
         out = [(output_features, output_class_type)]
 
@@ -62,7 +58,7 @@ def process_or_validate_classifier_output_features(
 
     elif (
         isinstance(output_features, (list, tuple))
-        and all(isinstance(fn, _string_types) for fn in output_features)
+        and all(isinstance(fn, str) for fn in output_features)
         and len(output_features) == 2
     ):
 
@@ -129,7 +125,7 @@ def is_valid_feature_list(features):
         type(features) is list
         and len(features) >= 1
         and all(type(t) is tuple and len(t) == 2 for t in features)
-        and all(isinstance(n, _string_types) for n, td in features)
+        and all(isinstance(n, str) for n, td in features)
         and all(datatypes._is_valid_datatype(td) for n, td in features)
     )
 
@@ -207,7 +203,7 @@ def process_or_validate_features(features, num_dimensions=None, feature_type_map
 
     original_features = copy(features)
 
-    if num_dimensions is not None and not isinstance(num_dimensions, _integer_types):
+    if num_dimensions is not None and not isinstance(num_dimensions, int):
         raise TypeError(
             "num_dimensions must be None, an integer or a long, not '%s'"
             % str(type(num_dimensions))
@@ -238,7 +234,7 @@ def process_or_validate_features(features, num_dimensions=None, feature_type_map
         # datatype class -- e.g. translate str to datatypes.String().
         return [(k, datatypes._normalize_datatype(dt)) for k, dt in features]
 
-    if isinstance(features, _string_types):
+    if isinstance(features, str):
         if num_dimensions is None:
             raise_type_error(
                 "If a single feature name is given, then "
@@ -252,7 +248,7 @@ def process_or_validate_features(features, num_dimensions=None, feature_type_map
         mapping = defaultdict(lambda: [])
 
         for i, k in enumerate(features):
-            if not isinstance(k, _string_types):
+            if not isinstance(k, str):
                 raise_type_error(
                     "List of feature names must either be a list of strings, or a list of (name, datatypes.Array instance) tuples."
                 )
@@ -280,7 +276,7 @@ def process_or_validate_features(features, num_dimensions=None, feature_type_map
 
     for k, v in list(features.items()):
 
-        if not isinstance(k, _string_types):
+        if not isinstance(k, str):
             raise_type_error("Feature names must be strings.")
 
         def test_index(val):
@@ -308,7 +304,7 @@ def process_or_validate_features(features, num_dimensions=None, feature_type_map
             # Replace and update
             features[k] = v = list(sorted(v))
 
-        elif isinstance(v, _integer_types):
+        elif isinstance(v, int):
             test_index(v)
             features[k] = v = [v]
         else:

@@ -3,7 +3,6 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 import logging
-from six import string_types as _string_types
 
 from ...models.neural_network import NeuralNetworkBuilder as _NeuralNetworkBuilder
 from ...models.neural_network.update_optimizer_utils import AdamParams
@@ -349,7 +348,7 @@ def _convert(
     # Check custom conversion functions / custom objects
     add_custom_layers = custom_conversion_functions is not None
 
-    if isinstance(model, _string_types):
+    if isinstance(model, str):
         model = _keras.models.load_model(model, custom_objects=custom_objects)
     elif isinstance(model, tuple):
         model = _load_keras_model(model[0], model[1])
@@ -370,18 +369,18 @@ def _convert(
 
     # check input / output names validity
     if input_names is not None:
-        if isinstance(input_names, _string_types):
+        if isinstance(input_names, str):
             input_names = [input_names]
     else:
         input_names = ["input" + str(i + 1) for i in range(len(inputs))]
 
     if output_names is not None:
-        if isinstance(output_names, _string_types):
+        if isinstance(output_names, str):
             output_names = [output_names]
     else:
         output_names = ["output" + str(i + 1) for i in range(len(outputs))]
 
-    if image_input_names is not None and isinstance(image_input_names, _string_types):
+    if image_input_names is not None and isinstance(image_input_names, str):
         image_input_names = [image_input_names]
 
     graph.reset_model_input_names(input_names)
@@ -552,12 +551,7 @@ def _convert(
             )
         else:
             if _is_activation_layer(keras_layer):
-                import six
-
-                if six.PY2:
-                    layer_name = keras_layer.activation.func_name
-                else:
-                    layer_name = keras_layer.activation.__name__
+                layer_name = keras_layer.activation.__name__
             else:
                 layer_name = type(keras_layer).__name__
             if layer_name in custom_conversion_functions:
@@ -574,7 +568,7 @@ def _convert(
     # Add classifier classes (if applicable)
     if is_classifier:
         classes_in = class_labels
-        if isinstance(classes_in, _string_types):
+        if isinstance(classes_in, str):
             import os
 
             if not os.path.isfile(classes_in):
