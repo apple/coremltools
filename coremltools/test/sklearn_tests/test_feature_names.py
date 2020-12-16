@@ -23,9 +23,7 @@ class FeatureManagementTests(unittest.TestCase):
         self.assertTrue(fm.is_valid_feature_list(out))
 
     def test_single_array(self):
-        # test both int and long as input to num_dimensions
-        for t in [int]:
-            self.assertEquals(
-                fm.process_or_validate_features("a", num_dimensions=t(10)),
-                [("a", dt.Array(10))],
-            )
+        self.assertEquals(
+            fm.process_or_validate_features("a", num_dimensions=10),
+            [("a", dt.Array(10))],
+        )
