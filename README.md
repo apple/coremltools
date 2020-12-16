@@ -1,4 +1,4 @@
-[![Build Status](https://img.shields.io/gitlab/pipeline/zach_nation/coremltools/master)](#)
+[![Build Status](https://img.shields.io/gitlab/pipeline/zach_nation/coremltools/master)](https://gitlab.com/zach_nation/coremltools/-/pipelines?page=1&scope=branches&ref=master)
 [![PyPI Release](https://img.shields.io/pypi/v/coremltools.svg)](#)
 [![Python Versions](https://img.shields.io/pypi/pyversions/coremltools.svg)](#)
 
