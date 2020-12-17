@@ -34,7 +34,7 @@ class band_part(Operation):
 
     Parameters
     ----------
-    x: tensor<*?, T> (Required)
+    x: tensor<\*?, T> (Required)
         * Input tensor.
     lower: const<i32> (Optional)
         * Number of lower / below sub-diagonals to keep. If negative, keep entire
@@ -47,7 +47,7 @@ class band_part(Operation):
     
     Returns
     -------
-    tensor<*?, T>
+    tensor<\*?, T>
         * Same type and shape as the input tensor.
     """
     
@@ -71,7 +71,7 @@ class cumsum(Operation):
 
     Parameters
     ----------
-    x: tensor<*?, T> (Required)
+    x: tensor<\*?, T> (Required)
         * Input tensor.
     axis: const<i32> (Optional)
         * default to ``0``.
@@ -88,7 +88,7 @@ class cumsum(Operation):
 
     Returns
     -------
-    tensor<*?, T>
+    tensor<\*?, T>
         * Same type and shape as the input tensor.
 
     Attributes
@@ -149,7 +149,7 @@ class fill(Operation):
 
     Returns
     -------
-    tensor<*?, T>
+    tensor<\*?, T>
         * Tensor with shape determined by the input shape.
 
     Attributes
@@ -262,7 +262,7 @@ class non_zero(Operation):
 
     Parameters
     ----------
-    x: tensor<*?, T> (Required)
+    x: tensor<\*?, T> (Required)
         * Tensor, values selected at indices where its values is not equal to ``0``.
 
     Returns
@@ -315,7 +315,7 @@ class one_hot(Operation):
 
     Returns
     -------
-    tensor<*?,T>
+    tensor<\*?,T>
         * A tensor that contains one-hot vectors.
 
     Attributes
@@ -373,36 +373,35 @@ class one_hot(Operation):
 class pad(Operation):
     """
     Pad a tensor.
-
+    
     Parameters
     ----------
-    x: tensor<[*D_in],T>  (Required)
-    pad: tensor<[2*N],i32> (Required)
-        ``N <= D_in``: Last ``N`` dimensions of ``x`` are padded as follows: For
-        each dimension ``i`` of ``x`` if ``i >= D_in - N``:
+    x: tensor<[\*D_in],T>  (Required)
+    
+    pad: tensor<[2\*N],i32> (Required)
+        * ``N <= D_in``: Last ``N`` dimensions of ``x`` are padded as follows: For
+          each dimension ``i`` of ``x`` if ``i >= D_in - N``:
             * pad ``pad[2*i]`` elements before ``x[..,i,..]``
             * pad ``pad[2*i+1]`` elements after ``x[..,i,..]``
-            
-        If mode is "reflect" then ``pad[2*i]`` and ``pad[2*i+1]`` can be at
+        * If mode is "reflect" then ``pad[2*i]`` and ``pad[2*i+1]`` can be at
         most ``D[i]-1``.
-        
-        If mode is "replicate" then ``pad[2*i]`` and ``pad[2*i+1]`` can be
+        * If mode is "replicate" then ``pad[2*i]`` and ``pad[2*i+1]`` can be
         at most ``D[i]``.
-
+    
     mode: const<str> (Optional)
         * Default to ``constant``.
         * Must be one of the following values:
           ``constant``, ``reflect``, or ``replicate``.
-            
+    
     constant_val: const<T> (Optional)
         * Default to ``0``.
         * Constant value to pad. Ignored if ``mode != constant``.
     
     Returns
     -------
-    tensor<[*D_out],T>
+    tensor<[\*D_out],T>
         * Tensor with same type as the input.
-
+    
     Attributes
     ----------
     T: fp32
@@ -534,14 +533,14 @@ class tile(Operation):
 
     Parameters
     ----------
-    x: tensor<*?, T> (Required)
+    x: tensor<\*?, T> (Required)
         * Input tensor.
     reps: tensor<[rank(x)], int32> (Required)
         * A 1-D tensor with length ``rank(x)``, which indicates the number to replicate the input along each dimension.
 
     Returns
     -------
-    tensor<*?, T>:
+    tensor<\*?, T>:
         * An n-D tensor with same type as the input.
 
     Attributes
@@ -593,9 +592,9 @@ class argsort(Operation):
     Returns a tensor containing the indices of the sorted values along a given axis
     of the input tensor.
 
-    Paramters
-    ---------
-    x: <*?, T> (Required)
+    Parameters
+    ----------
+    x: <\*?, T> (Required)
         * Input tensor.
     * axis: const<i32> (Optional)
         * Default to ``-1`` (the last dimension).
@@ -606,7 +605,7 @@ class argsort(Operation):
     
     Returns
     -------
-    tensor<*?, int32>
+    tensor<\*?, int32>
         * Tensor containing the indices of the sorted values
 
     Attributes
@@ -641,7 +640,7 @@ class topk(Operation):
 
     Parameters
     ----------
-    x: <*?, T> (Required)
+    x: <\*?, T> (Required)
         * Input tensor.
     k: const<i32> (Optional)
         * Default to ``1``.
@@ -655,9 +654,9 @@ class topk(Operation):
     
     Returns
     -------
-    tensor<*?, T>
+    tensor<\*?, T>
         * Values of top/bottom ``k`` elements.
-    tensor<*?, int32>
+    tensor<\*?, int32>
         * Indices of the top/bottom ``k`` elements along axis.
     
     Attributes
@@ -954,22 +953,23 @@ class concat(Operation):
 class split(Operation):
     """
     Split tensors into a tuple
-
+    
     Parameters
     ----------
-    x: <*?,T>  (Required)
+    x: <\*?,T>  (Required)
         * The tensor to split.
         * The tensors may be variadic, but the number of tensors must be determined
           at compile time (i.e. a tuple).
-
+    
     num_splits: <i32> (Optional)
         If specified, divide ``x`` into ``num_splits`` tensors along ``axis``.
         Its behavior depends on ``split_sizes``:
+        
             * If ``split_sizes`` is defined, ``num_splits == S``, and the output
               sizes may be uneven.
             * If ``split_sizes`` is not defined, ``value.shape[axis]`` must be
               divisible by ``num_splits``, and the output sizes must be even.
-              
+        
         At least one of ``num_splits`` or ``split_sizes`` must be provided.
         If ``split_sizes`` length ``S`` cannot be determined at compile time,
         ``num_splits`` must be supplied to determine the number of outputs.
@@ -981,13 +981,13 @@ class split(Operation):
     axis: const<i32> (Required)
         * The dimension along which to concatenate. Must be in the
           range ``[-rank(x), rank(x))``.
-
+    
     Returns
     -------
-    Tuple[tensor<*?,T>]
+    Tuple[tensor<\*?,T>]
         * Where the length of the tuple is the number of splits (determined
           from ``num_splits`` or ``split_sizes``).
-
+    
     Attributes
     ----------
     T: fp32
@@ -1151,12 +1151,12 @@ class identity(Operation):
     
     Parameters
     ----------
-    x: tensor<*?, T> (Required)
+    x: tensor<\*?, T> (Required)
         * Input tensor.
     
     Returns
     -------
-    tensor<*?, T>
+    tensor<\*?, T>
         * Same type and shape as the input tensor.
     
     """

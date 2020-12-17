@@ -15,7 +15,7 @@ class conv(Operation):
     
     Parameters
     ----------
-    x: tensor<[n, C_in, *d_in], T> (Required)
+    x: tensor<[n, C_in, \*d_in], T> (Required)
     
         * ``d_in`` are (possibly runtime-determined) spatial dimensions. For example,
           ``d_in = [224, 224]`` for 2D convolution.
@@ -23,7 +23,7 @@ class conv(Operation):
         * ``C_in`` is the number of input channels or depth dimensions.
         * ``n``  is the batch dimension.
     
-    weight: tensor<[C_out, C_in/groups, *K], T> (Required)
+    weight: tensor<[C_out, C_in/groups, \*K], T> (Required)
     
         * Filter weights.
         * ``C_in`` is the number of input channels.
@@ -98,7 +98,7 @@ class conv(Operation):
     
     Returns
     -------
-    tensor<[n, C_out, *d_out], T>
+    tensor<[n, C_out, \*d_out], T>
         * Output activation has the same rank and spatial dimension as the input.
           That is, ``len(d_out) == len(d_in)``.
         * For ``i=0,..,len(d_in)-1, d_out[i] = floor [(D_in[i] + pad[2*i] +

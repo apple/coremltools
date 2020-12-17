@@ -52,11 +52,11 @@ class avg_pool(Pooling):
     
     Parameters
     ----------
-    x: tensor<[n,C_in,*D_in],T> (Required)
+    x: tensor<[n,C_in,\*D_in],T> (Required)
         *  ``3 <= rank <= 5``.
-        *  ``D_in`` are spatial dimensions,  ``1 <= len(D_in) <= 2``.
+        *  ``D_in`` are spatial dimensions, ``1 <= len(D_in) <= 2``.
         *  ``C_in`` is the number of input channels or depth dimensions.
-        *  ``n``  is the batch dimension.
+        *  ``n`` is the batch dimension.
     
     kernel_sizes: const tensor<[K],T> (Required)
         * The size of the window for each spatial dimension ``D_in`` of the
@@ -70,11 +70,16 @@ class avg_pool(Pooling):
     pad_type: const str (Required)
         Must be one of the following:
         
-        * ``valid``: No padding. This is equivalent to custom pad with ``pad[i] = 0, for all i``.
-        * ``custom``: Specify custom padding in the parameter pad. note that "same" padding is equivalent to custom padding with ``pad[2*i] + pad[2*i+1] = kernel_size[i]``.
+        * ``valid``: No padding. This is equivalent to custom pad with ``pad[i] = 0, for
+          all i``.
+        * ``custom``: Specify custom padding in the parameter pad. note that "same"
+          padding is equivalent to custom padding with
+          ``pad[2*i] + pad[2*i+1] = kernel_size[i]``.
     
     pad: const<[P],i32> (Optional. Default to all 0s)
-        *  ``pad`` represents the number of elements to pad before and after each dimension: `pad[2*i], pad[2*i+1]` are the pad size before and after spatial dimension ``i``.
+        * ``pad`` represents the number of elements to pad before and after each 
+          dimension: `pad[2*i], pad[2*i+1]` are the pad size before and after spatial
+          dimension ``i``.
         * ``P = 2 * len(D_in)``.
         * ``pad`` should be specified if and only if ``pad_type == custom``
     
@@ -84,11 +89,12 @@ class avg_pool(Pooling):
     
     Returns
     -------
-    tensor<[n, C_out,*D_out],T>
+    tensor<[n, C_out,\*D_out],T>
         * Same rank as ``x``.
         * ``D_out[i] = floor[(D_in[i] + pad[2*i] + pad[2*i+1] - kernel_sizes[i]) /
           strides[i]] +1, for i = 0, .., len(D_in) - 1`` is mathematically the same
           as (when all parameters involved are integers):
+          
               * ``D_out[i] = ceil [(D_in[i] + pad[2*i] + pad[2*i+1] - kernel_size[i] - 1) / stride[i]], for i = 0, .., len(D_in) - 1``.
               * ``*D_out`` is all 1s if ``global_pooling`` is ``true``.
     
