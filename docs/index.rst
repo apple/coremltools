@@ -6,6 +6,7 @@
     convert
     keras.convert
     caffe.convert
+    onnx.convert
     libsvm.convert
     sklearn.convert
     xgboost.convert

@@ -112,11 +112,11 @@ class const(Operation):
         * For  large constants such as convolution weights, use ``file_value``.
         * For smaller-size constants such as values of a stride, use ``immediate_value``.
     
-    val: const<*,T> (Required)
+    val: const<\*,T> (Required)
     
     Returns
     -------
-    const<*,T>
+    const<\*,T>
     
     Attributes
     ----------
@@ -204,25 +204,26 @@ class select(Operation):
     
     Parameters
     ----------
-    cond: tensor<[*D1], T> (Required)
+    cond: tensor<[\*D1], T> (Required)
         * Tensor. When ``True`` (non-zero), select element from ``x``, otherwise, ``y``.
     
-    a: tensor<[*D2], T> (Optional)
+    a: tensor<[\*D2], T> (Optional)
         * Values selected at indices where ``cond`` is ``True``.
         * Default is ``None``.
     
-    b: tensor<[*D3], T> (Optional)
+    b: tensor<[\*D3], T> (Optional)
         * Values selected at indices where ``cond`` is ``False``.
         * Default is ``None``.
     
     Returns
     -------
-    tensor<[*D_out], T> or tensor<[n, len(D1)], int32>
+    tensor<[\*D_out], T> or tensor<[n, len(D1)], int32>
         *  If ``a, b`` are both provided, the return shape is based on broadcast rules
            from ``cond, a, b``.
         *  If ``a, b`` are ``None``, the return shape is 2-D, where the first dimension
            ``n`` is the number of matching indices in ``cond``, and ``len(D1)`` is the
            rank of ``cond``.
+    
     Attributes
     ----------
     T: fp32
@@ -608,14 +609,14 @@ class list_read(Operation):
     
     Parameters
     ----------
-    ls: List[*] (Required)
+    ls: List[\*] (Required)
     
     index: <i32> (Required)
         * Size of the list.
     
     Returns
     -------
-    <*,T>
+    <\*,T>
         * The element's value.
     
     Attributes
@@ -646,14 +647,14 @@ class list_gather(Operation):
     
     Parameters
     ----------
-    ls: List[*] (Required)
+    ls: List[\*] (Required)
     
     indices: <K,i32> (Required)
         * Gather from indices, whose element must be in ``[0, ls.length)`` at runtime.
     
     Returns
     -------
-    <*K,T>
+    <\*K,T>
         * Selected tensors packed into a ``len(ls.elem_shape)+1`` rank tensor.
         * ``K[0] == len(indices)``.
     

@@ -43,7 +43,7 @@ def convert(
     **kwargs
 ):
     """
-    Convert TensorFlow or Pytorch models to Core ML model format. Whether a
+    Convert TensorFlow or Pytorch models to the Core ML model format. Whether a
     parameter is required may differ between frameworks (see below). Note that
     this function is aliased as `ct.convert` in the tutorials.
 
@@ -51,96 +51,96 @@ def convert(
     ----------
     model:
         TensorFlow 1, TensorFlow 2 or Pytorch model in one of the following
-        format:
+        formats:
 
         For TensorFlow versions 1.x:
             - Frozen `tf.Graph <https://www.tensorflow.org/api_docs/python/tf/Graph>`_
-            - Frozen graph (`.pb`) file path
+            - Frozen graph (``.pb``) file path
             - `tf.keras.Model <https://www.tensorflow.org/api_docs/python/tf/keras>`_
-            -  `HDF5 <https://keras.io/api/models/model_saving_apis/>`_ file path (`.h5`)
+            -  `HDF5 <https://keras.io/api/models/model_saving_apis/>`_ file path (``.h5``)
             - `SavedModel <https://www.tensorflow.org/guide/saved_model>`_ directory path
         For TensorFlow versions 2.x:
             - `tf.keras.Model <https://www.tensorflow.org/api_docs/python/tf/keras>`_
-            - `HDF5 file path <https://keras.io/api/models/model_saving_apis/>`_ (`.h5`)
+            - `HDF5 file path <https://keras.io/api/models/model_saving_apis/>`_ (``.h5``)
             - `SavedModel <https://www.tensorflow.org/guide/saved_model>`_ directory path
             - A `concrete function <https://www.tensorflow.org/guide/concrete_function>`_
         For Pytorch:
             - A `TorchScript <https://pytorch.org/docs/stable/jit.html>`_ object
-            - Path to a `.pt` file
+            - Path to a ``.pt`` file
 
     source: str (optional)
-        One of [`auto`, `tensorflow`, `pytorch`, `mil`]. `auto` determines the
+        One of [``auto``, ``tensorflow``, ``pytorch``, ``mil``]. `auto` determines the
         framework automatically for most cases. Raise ValueError if it fails
         to determine the source framework.
 
     inputs: list of `TensorType` or `ImageType`
         TensorFlow 1 and 2:
-            - `inputs` are optional. If not provided, the inputs are
-              `Placeholder` nodes in the model (if model is frozen graph) or
+            - ``inputs`` are optional. If not provided, the inputs are
+              Placeholder nodes in the model (if model is frozen graph) or
               function inputs (if model is tf function)
-            - `inputs` must corresponds to all or some of the Placeholder
+            - ``inputs`` must corresponds to all or some of the Placeholder
               nodes in the TF model
-            - `TensorType` and `ImageType` in `inputs` must have `name`
-              specified. `shape` is optional.
-            - If `inputs` is provided, it must be a flat list.
+            - ``TensorType`` and ``ImageType`` in ``inputs`` must have ``name``
+              specified. ``shape`` is optional.
+            - If ``inputs`` is provided, it must be a flat list.
 
         PyTorch:
-            - `inputs` are required.
-            - `inputs` may be nested list or tuple.
-            - `TensorType` and `ImageType` in `inputs` must have `name`
-              and `shape` specified.
+            - ``inputs`` are required.
+            - ``inputs`` may be nested list or tuple.
+            - ``TensorType`` and ``ImageType`` in ``inputs`` must have ``name``
+              and ``shape`` specified.
 
     outputs: list[str] (optional)
 
         TensorFlow 1 and 2:
-            - `outputs` are optional.
+            - ``outputs`` are optional.
 
-            - If specified, `outputs` is a list of string representing node
+            - If specified, ``outputs`` is a list of string representing node
               names.
 
-            - If `outputs` are not specified, converter infers outputs as all
+            - If ``outputs`` are not specified, converter infers outputs as all
               terminal identity nodes.
 
         PyTorch:
-            - `outputs` must not be specified.
+            - ``outputs`` must not be specified.
 
     classifier_config: ClassifierConfig class (optional)
         The configuration if the mlmodel is intended to be a classifier.
 
     minimum_deployment_target: coremltools.target enumeration (optional)
-        - one of the members of enum "coremltools.target."
+        - one of the members of enum ``coremltools.target``.
         - When not-specified or None, converter aims for as minimum of a
           deployment target as possible
 
     convert_to: str (optional)
-        - Must be one of ['nn_proto', 'mil'].
-        - 'nn_proto': Returns MLModel containing a NeuralNetwork
+        - Must be one of [``'nn_proto'``, ``'mil'``].
+        - ``'nn_proto'``: Returns MLModel containing a NeuralNetwork
           proto
-        - 'mil': Returns MIL program object. MIL program is primarily used
+        - ``'mil'``: Returns MIL program object. MIL program is primarily used
           for debugging purpose and currently cannot be compiled to
           executable.
 
     Returns
     -------
-    model: `coremltools.models.MLModel` or
-    `coremltools.converters.mil.Program`
-        A Core ML MLModel object or MIL Program object (see `convert_to`)
+    model: `coremltools.models.MLModel` or `coremltools.converters.mil.Program`
+        A Core ML MLModel object or MIL Program object (see ``convert_to``)
 
     Examples
     --------
-    TensorFlow 1, 2 (`model` is a frozen graph):
+    TensorFlow 1, 2 (``model`` is a frozen graph):
 
         >>> with tf.Graph().as_default() as graph:
         >>>     x = tf.placeholder(tf.float32, shape=(1, 2, 3), name="input")
         >>>     y = tf.nn.relu(x, name="output")
-
+        
         # Automatically infer inputs and outputs
+        
         >>> mlmodel = ct.convert(graph)
 	    >>> test_input = np.random.rand(1, 2, 3) - 0.5
         >>> results = mlmodel.predict({"input": test_input})
         >>> print(results['output'])
 
-    TensorFlow 2 (`model` is tf.Keras model path):
+    TensorFlow 2 (``model`` is tf.Keras model path):
 
         >>> x = tf.keras.Input(shape=(32,), name='input')
         >>> y = tf.keras.layers.Dense(16, activation='softmax')(x)
@@ -165,8 +165,8 @@ def convert(
         >>> results = mlmodel.predict({"input": example_input.numpy()})
         >>> print(results['1651']) # 1651 is the node name given by PyTorch's JIT
 
-    See `here <https://coremltools.readme.io/docs/neural-network-conversion>`_ for
-    more advanced options
+    See `neural-network-conversion <https://coremltools.readme.io/docs/neural-network-conversion>`_ for
+    more advanced options.
     """
     _check_deployment_target(minimum_deployment_target)
     exact_source = _determine_source(model, source, outputs)

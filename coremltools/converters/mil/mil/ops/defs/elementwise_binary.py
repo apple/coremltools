@@ -82,15 +82,15 @@ class add(elementwise_binary):
     
     Parameters
     ----------
-    x: <*,T> (Required)
+    x: <\*,T> (Required)
         * Shape must be compatible with ``y`` in broadcast.
     
-    y: <*,T> (Required)
+    y: <\*,T> (Required)
         * Shape must be compatible with ``x`` in broadcast.
     
     Returns
     -------
-    <*,T>
+    <\*,T>
     
     Attributes
     ----------
@@ -113,15 +113,15 @@ class equal(elementwise_binary):
     
     Parameters
     ----------
-    x: <*,T> (Required)
+    x: <\*,T> (Required)
         * Shape must be compatible with ``y`` in broadcast.
     
-    y: <*,T> (Required)
+    y: <\*,T> (Required)
         * Shape must be compatible with ``x`` in broadcast.
     
     Returns
     -------
-    <*, bool>
+    <\*, bool>
         * A boolean tensor with the same shape as the inputs.
     
     Attributes
@@ -148,15 +148,15 @@ class floor_div(elementwise_binary):
     
     Parameters
     ----------
-    x: tensor<*, T> (Required)
+    x: tensor<\*, T> (Required)
         * Shape must be compatible with ``y`` in broadcast.
     
-    y: tensor<*, T> (Required)
+    y: tensor<\*, T> (Required)
         * Shape must be compatible with ``x`` in broadcast.
     
     Returns
     -------
-    tensor<*, T>
+    tensor<\*, T>
         * A tensor of the same type and shape as the inputs.
     
     Attributes
@@ -180,15 +180,15 @@ class greater(elementwise_binary):
 
     Parameters
     ----------
-    x: tensor<*, T> (Required)
+    x: tensor<\*, T> (Required)
         * Shape must be compatible with ``y`` in broadcast.
     
-    y: tensor<*, T> (Required)
+    y: tensor<\*, T> (Required)
         * Shape must be compatible with ``x`` in broadcast.
     
     Returns
     -------
-    tensor<*, bool>
+    tensor<\*, bool>
         * A boolean tensor with the same shape as the inputs.
 
     Attributes
@@ -215,15 +215,15 @@ class greater_equal(elementwise_binary):
     
     Parameters
     ----------
-    x: tensor<*, T> (Required)
+    x: tensor<\*, T> (Required)
         * Shape must be compatible with ``y`` in broadcast.
     
-    y: tensor<*, T> (Required)
+    y: tensor<\*, T> (Required)
         * Shape must be compatible with ``x`` in broadcast.
     
     Returns
     -------
-    tensor<*?, bool>
+    tensor<\*?, bool>
         * A boolean tensor with the same shape as the inputs.
     
     Attributes
@@ -250,15 +250,15 @@ class less(elementwise_binary):
     
     Parameters
     ----------
-    x: tensor<*, T> (Required)
+    x: tensor<\*, T> (Required)
         * Shape must be compatible with ``y`` in broadcast.
     
-    y: tensor<*, T> (Required)
+    y: tensor<\*, T> (Required)
         * Shape must be compatible with ``x`` in broadcast.
     
     Returns
     -------
-    tensor<*?, bool>
+    tensor<\*?, bool>
         * A boolean tensor with the same shape as the inputs.
     
     Attributes
@@ -285,15 +285,15 @@ class less_equal(elementwise_binary):
     
     Parameters
     ----------
-    x: tensor<*, T> (Required)
+    x: tensor<\*, T> (Required)
         * Shape must be compatible with ``y`` in broadcast.
     
-    y: tensor<*, T> (Required)
+    y: tensor<\*, T> (Required)
         * Shape must be compatible with ``x`` in broadcast.
     
     Returns
     -------
-    tensor<*?, bool>
+    tensor<\*?, bool>
         * A boolean tensor with the same shape as the inputs.
     
     Attributes
@@ -321,15 +321,15 @@ class logical_and(elementwise_binary):
 
     Parameters
     ----------
-    x: tensor<*, T> (Required)
+    x: tensor<\*, T> (Required)
         * Shape must be compatible with ``y`` in broadcast.
     
-    y: tensor<*, T> (Required)
+    y: tensor<\*, T> (Required)
         * Shape must be compatible with ``x`` in broadcast.
     
     Returns
     -------
-    tensor<*?, bool>
+    tensor<\*?, bool>
         * A boolean tensor with the same shape as the inputs.
     
     Attributes
@@ -358,15 +358,15 @@ class logical_or(elementwise_binary):
     
     Parameters
     ----------
-    x: tensor<*, T> (Required)
+    x: tensor<\*, T> (Required)
         * Shape must be compatible with ``y`` in broadcast.
     
-    y: tensor<*, T> (Required)
+    y: tensor<\*, T> (Required)
         * Shape must be compatible with ``x`` in broadcast.
     
     Returns
     -------
-    tensor<*?, bool>
+    tensor<\*?, bool>
         * A boolean tensor with the same shape as the inputs.
     
     Attributes
@@ -395,15 +395,15 @@ class logical_xor(elementwise_binary):
     
     Parameters
     ----------
-    x: tensor<*, T> (Required)
+    x: tensor<\*, T> (Required)
         * Shape must be compatible with ``y`` in broadcast.
     
-    y: tensor<*, T> (Required)
+    y: tensor<\*, T> (Required)
         * Shape must be compatible with ``x`` in broadcast.
     
     Returns
     -------
-    tensor<*?, bool>
+    tensor<\*?, bool>
         * A boolean tensor with the same shape as the inputs.
     
     Attributes
@@ -430,15 +430,15 @@ class maximum(elementwise_binary):
     
     Parameters
     ----------
-    x: tensor<*, T> (Required)
+    x: tensor<\*, T> (Required)
         * Shape must be compatible with ``y`` in broadcast.
     
-    y: tensor<*, T> (Required)
+    y: tensor<\*, T> (Required)
         * Shape must be compatible with ``x`` in broadcast.
     
     Returns
     -------
-    tensor<*?, bool>
+    tensor<\*?, bool>
         * A boolean tensor with the same shape as the inputs.
     
     Attributes
@@ -461,15 +461,15 @@ class minimum(elementwise_binary):
     
     Parameters
     ----------
-    x: tensor<*, T> (Required)
+    x: tensor<\*, T> (Required)
         * Shape must be compatible with ``y`` in broadcast.
     
-    y: tensor<*, T> (Required)
+    y: tensor<\*, T> (Required)
         * Shape must be compatible with ``x`` in broadcast.
     
     Returns
     -------
-    tensor<*?, bool>
+    tensor<\*?, bool>
         * A boolean tensor with the same shape as the inputs.
     
     Attributes
@@ -492,15 +492,15 @@ class mod(elementwise_binary):
 
     Parameters
     ----------
-    x: tensor<*, T> (Required)
+    x: tensor<\*, T> (Required)
         * Shape must be compatible with ``y`` in broadcast.
     
-    y: tensor<*, T> (Required)
+    y: tensor<\*, T> (Required)
         * Shape must be compatible with ``x`` in broadcast.
     
     Returns
     -------
-    tensor<*?, bool>
+    tensor<\*?, bool>
         * A boolean tensor with the same shape as the inputs.
     
     Attributes
@@ -523,15 +523,15 @@ class mul(elementwise_binary):
 
     Parameters
     ----------
-    x: tensor<*, T> (Required)
+    x: tensor<\*, T> (Required)
         * Shape must be compatible with ``y`` in broadcast.
     
-    y: tensor<*, T> (Required)
+    y: tensor<\*, T> (Required)
         * Shape must be compatible with ``x`` in broadcast.
     
     Returns
     -------
-    tensor<*?, bool>
+    tensor<\*?, bool>
         * A boolean tensor with the same shape as the inputs.
     
     Attributes
@@ -555,15 +555,15 @@ class not_equal(elementwise_binary):
     
     Parameters
     ----------
-    x: tensor<*, T> (Required)
+    x: tensor<\*, T> (Required)
         * Shape must be compatible with ``y`` in broadcast.
     
-    y: tensor<*, T> (Required)
+    y: tensor<\*, T> (Required)
         * Shape must be compatible with ``x`` in broadcast.
     
     Returns
     -------
-    tensor<*?, bool>
+    tensor<\*?, bool>
         * A boolean tensor with the same shape as the inputs.
 
     Attributes
@@ -589,15 +589,15 @@ class real_div(elementwise_binary):
 
     Parameters
     ----------
-    x: tensor<*, T> (Required)
+    x: tensor<\*, T> (Required)
         * Shape must be compatible with ``y`` in broadcast.
     
-    y: tensor<*, T> (Required)
+    y: tensor<\*, T> (Required)
         * Shape must be compatible with ``x`` in broadcast.
     
     Returns
     -------
-    tensor<*?, bool>
+    tensor<\*?, bool>
         * A boolean tensor with the same shape as the inputs.
     
     Attributes
@@ -623,15 +623,15 @@ class pow(elementwise_binary):
 
     Parameters
     ----------
-    x: tensor<*, T> (Required)
+    x: tensor<\*, T> (Required)
         * Shape must be compatible with ``y`` in broadcast.
     
-    y: tensor<*, T> (Required)
+    y: tensor<\*, T> (Required)
         * Shape must be compatible with ``x`` in broadcast.
     
     Returns
     -------
-    tensor<*?, bool>
+    tensor<\*?, bool>
         * A boolean tensor with the same shape as the inputs.
     
     Attributes
@@ -654,15 +654,15 @@ class sub(elementwise_binary):
 
     Parameters
     ----------
-    x: tensor<*, T> (Required)
+    x: tensor<\*, T> (Required)
         * Shape must be compatible with ``y`` in broadcast.
     
-    y: tensor<*, T> (Required)
+    y: tensor<\*, T> (Required)
         * Shape must be compatible with ``x`` in broadcast.
     
     Returns
     -------
-    tensor<*?, bool>
+    tensor<\*?, bool>
         * A boolean tensor with the same shape as the inputs.
     
     Attributes

@@ -130,7 +130,7 @@ class l2_norm(Operation):
 
     Returns
     -------
-    tensor<[*D,C,H,W], T>
+    tensor<[\*D,C,H,W], T>
         * Same type and shape as the input tensor ``x``.
     
     Attributes
@@ -162,26 +162,31 @@ class layer_norm(Operation):
     
     Parameters
     ----------
-    x: tensor<*?, T> (Required)
+    x: tensor<\*?, T> (Required)
         * Input tensor.
+    
     axes: const<[K], i32> (Optional)
         * Dimensions to perform layer normalization.
         * Default is ``None`` (all dimensions).
+    
     gamma: const tensor<[K], T> (Optional)
-        * if provided, the shape must be be ``x.shape[axes]``,
-        *  for instance, if with input ``x`` with shape ``(3,4,5,6)`` and ``axes = [2,3]``,
-          gamma must have shape ``(5,6)``.
+        * if provided, the shape must be be ``x.shape[axes]``. For instance, if
+          input ``x`` with shape ``(3,4,5,6)`` and ``axes = [2,3]``, gamma must have
+          shape ``(5,6)``.
         * Default is all ones.
+    
     beta: const tensor<[K], T> (Optional)
         * Same shape as gamma.
         * Default is all zeros.
+    
     epsilon: const fp32 (Optional)
         * Small constant to avoid division by ``0``.
         * Default is ``1e-5``.
     
+    
     Returns
     -------
-    tensor<*?, T>:
+    tensor<\*?, T>:
      * Tensor with same shape and type as the input tensor ``x``.
 
     Attributes

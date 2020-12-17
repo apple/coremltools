@@ -123,7 +123,7 @@ class reduce_argmax(reduce_arg):
     
     Parameters
     ----------
-    x: <*,T> (Required)
+    x: <\*,T> (Required)
         * Must be 1-dimensional or higher.
     
     axis: const<i32> (Optional)
@@ -135,7 +135,7 @@ class reduce_argmax(reduce_arg):
     
     Returns
     -------
-    <*, int32>
+    <\*, int32>
     
     Attributes
     ----------
@@ -162,7 +162,7 @@ class reduce_argmin(reduce_arg):
     
     Parameters
     ----------
-    x: <*,T> (Required)
+    x: <\*,T> (Required)
         * Must be 1-dimensional or higher.
     
     axis: const<i32> (Optional)
@@ -174,7 +174,7 @@ class reduce_argmin(reduce_arg):
     
     Returns
     -------
-    <*, int32>
+    <\*, int32>
     
     Attributes
     ----------
@@ -200,7 +200,7 @@ class reduce_l1_norm(ReductionAxes):
     
     Parameters
     ----------
-    x: <*,T> (Required)
+    x: <\*,T> (Required)
         * Must be 1-dimensional or higher.
     
     axes: const<K,i32> (Optional, default="None", reduce on all axes.)
@@ -212,7 +212,7 @@ class reduce_l1_norm(ReductionAxes):
     
     Returns
     -------
-    <*,T>
+    <\*,T>
         * Scalar or tensor: The reduced tensor.
     
     Attributes
@@ -242,7 +242,7 @@ class reduce_l2_norm(ReductionAxes):
     
     Parameters
     ----------
-    x: <*,T> (Required)
+    x: <\*,T> (Required)
         * Must be 1-dimensional or higher.
     
     axes: const<K,i32> (Optional, default="None", reduce on all axes.)
@@ -254,7 +254,7 @@ class reduce_l2_norm(ReductionAxes):
     
     Returns
     -------
-    <*,T>
+    <\*,T>
         * Scalar or tensor: The reduced tensor.
     
     Attributes
@@ -281,7 +281,7 @@ class reduce_log_sum(ReductionAxes):
     
     Parameters
     ----------
-    x: <*,T> (Required)
+    x: <\*,T> (Required)
         * Must be 1-dimensional or higher.
     
     axes: const<K,i32> (Optional, default="None", reduce on all axes.)
@@ -293,7 +293,7 @@ class reduce_log_sum(ReductionAxes):
     
     Returns
     -------
-    <*,T>
+    <\*,T>
         * Scalar or tensor: The reduced tensor.
     
     Attributes
@@ -323,7 +323,7 @@ class reduce_log_sum_exp(ReductionAxes):
     
     Parameters
     ----------
-    x: <*,T> (Required)
+    x: <\*,T> (Required)
         * Must be 1-dimensional or higher.
     
     axes: const<K,i32> (Optional, default="None", reduce on all axes.)
@@ -335,7 +335,7 @@ class reduce_log_sum_exp(ReductionAxes):
     
     Returns
     -------
-    <*,T>
+    <\*,T>
         * Scalar or tensor: The reduced tensor.
     
     Attributes
@@ -362,7 +362,7 @@ class reduce_max(ReductionAxes):
     
     Parameters
     ----------
-    x: <*,T> (Required)
+    x: <\*,T> (Required)
         * Must be 1-dimensional or higher.
     
     axes: const<K,i32> (Optional, default="None", reduce on all axes.)
@@ -374,7 +374,7 @@ class reduce_max(ReductionAxes):
     
     Returns
     -------
-    <*,T>
+    <\*,T>
         * Scalar or tensor: The reduced tensor.
     
     Attributes
@@ -397,7 +397,7 @@ class reduce_mean(ReductionAxes):
     
     Parameters
     ----------
-    x: <*,T> (Required)
+    x: <\*,T> (Required)
         * Must be 1-dimensional or higher.
     
     axes: const<K,i32> (Optional, default="None", reduce on all axes.)
@@ -409,7 +409,7 @@ class reduce_mean(ReductionAxes):
     
     Returns
     -------
-    <*,T>
+    <\*,T>
         * Scalar or tensor: The reduced tensor.
     
     Attributes
@@ -435,7 +435,7 @@ class reduce_min(ReductionAxes):
     
     Parameters
     ----------
-    x: <*,T> (Required)
+    x: <\*,T> (Required)
         * Must be 1-dimensional or higher.
     
     axes: const<K,i32> (Optional, default="None", reduce on all axes.)
@@ -447,7 +447,7 @@ class reduce_min(ReductionAxes):
     
     Returns
     -------
-    <*,T>
+    <\*,T>
         * Scalar or tensor: The reduced tensor.
     
     Attributes
@@ -470,7 +470,7 @@ class reduce_prod(ReductionAxes):
     
     Parameters
     ----------
-    x: <*,T> (Required)
+    x: <\*,T> (Required)
         * Must be 1-dimensional or higher.
     
     axes: const<K,i32> (Optional, default="None", reduce on all axes.)
@@ -482,7 +482,7 @@ class reduce_prod(ReductionAxes):
     
     Returns
     -------
-    <*,T>
+    <\*,T>
         * Scalar or tensor: The reduced tensor.
     
     Attributes
@@ -505,7 +505,7 @@ class reduce_sum(ReductionAxes):
     
     Parameters
     ----------
-    x: <*,T> (Required)
+    x: <\*,T> (Required)
         * Must be 1-dimensional or higher.
     
     axes: const<K,i32> (Optional, default="None", reduce on all axes.)
@@ -517,7 +517,7 @@ class reduce_sum(ReductionAxes):
     
     Returns
     -------
-    <*,T>
+    <\*,T>
         * Scalar or tensor: The reduced tensor.
     
     Attributes
@@ -540,7 +540,7 @@ class reduce_sum_square(ReductionAxes):
     
     Parameters
     ----------
-    x: <*,T> (Required)
+    x: <\*,T> (Required)
         * Must be 1-dimensional or higher.
     
     axes: const<K,i32> (Optional, default="None", reduce on all axes.)
@@ -552,7 +552,7 @@ class reduce_sum_square(ReductionAxes):
     
     Returns
     -------
-    <*,T>
+    <\*,T>
         * Scalar or tensor: The reduced tensor.
     
     Attributes

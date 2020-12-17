@@ -33,11 +33,11 @@ class abs(elementwise_unary):
     
     Parameters
     ----------
-    x: tensor<[*d], T> (Required)
+    x: tensor<[\*d], T> (Required)
     
     Returns
     -------
-    tensor<[*d], f32>
+    tensor<[\*d], f32>
         * A tensor of the same shape as ``x``.
     
     Attributes
@@ -60,11 +60,11 @@ class acos(elementwise_unary):
     
     Parameters
     ----------
-    x: tensor<[*d], T> (Required)
+    x: tensor<[\*d], T> (Required)
     
     Returns
     -------
-    tensor<[*d], f32>
+    tensor<[\*d], f32>
         * A tensor of the same shape as ``x``.
     
     Attributes
@@ -87,11 +87,11 @@ class asin(elementwise_unary):
     
     Parameters
     ----------
-    x: tensor<[*d], T> (Required)
+    x: tensor<[\*d], T> (Required)
     
     Returns
     -------
-    tensor<[*d], f32>
+    tensor<[\*d], f32>
         * A tensor of the same shape as ``x``.
     
     Attributes
@@ -114,11 +114,11 @@ class atan(elementwise_unary):
     
     Parameters
     ----------
-    x: tensor<[*d], T> (Required)
+    x: tensor<[\*d], T> (Required)
     
     Returns
     -------
-    tensor<[*d], f32>
+    tensor<[\*d], f32>
         * A tensor of the same shape as ``x``.
     
     Attributes
@@ -142,11 +142,11 @@ class atanh(elementwise_unary):
     
     Parameters
     ----------
-    x: tensor<[*d], T> (Required)
+    x: tensor<[\*d], T> (Required)
     
     Returns
     -------
-    tensor<[*d], f32>
+    tensor<[\*d], f32>
         * A tensor of the same shape as ``x``.
     
     Attributes
@@ -169,11 +169,11 @@ class ceil(elementwise_unary):
     
     Parameters
     ----------
-    x: tensor<[*d], T> (Required)
+    x: tensor<[\*d], T> (Required)
     
     Returns
     -------
-    tensor<[*d], f32>
+    tensor<[\*d], f32>
         * A tensor of the same shape as ``x``.
     
     Attributes
@@ -198,13 +198,13 @@ class clip(Operation):
     
     Parameters
     ----------
-    x: tensor<[*d], T> (Required)
+    x: tensor<[\*d], T> (Required)
     alpha: const f32 (Required)
     beta: const f32 (Required)
     
     Returns
     -------
-    tensor<[*d], f32>
+    tensor<[\*d], f32>
         * A tensor of the same shape as ``x``.
     
     Attributes
@@ -237,11 +237,11 @@ class cos(elementwise_unary):
     
     Parameters
     ----------
-    x: tensor<[*d], T> (Required)
+    x: tensor<[\*d], T> (Required)
     
     Returns
     -------
-    tensor<[*d], T>
+    tensor<[\*d], T>
     
     Attributes
     ----------
@@ -263,11 +263,11 @@ class cosh(elementwise_unary):
     
     Parameters
     ----------
-    x: tensor<[*d], T> (Required)
+    x: tensor<[\*d], T> (Required)
     
     Returns
     -------
-    tensor<[*d], T>
+    tensor<[\*d], T>
         * A tensor of the same shape as ``x``.
     
     Attributes
@@ -290,11 +290,11 @@ class erf(elementwise_unary):
     
     Parameters
     ----------
-    x: tensor<[*d], T> (Required)
+    x: tensor<[\*d], T> (Required)
     
     Returns
     -------
-    tensor<[*d], f32>
+    tensor<[\*d], f32>
         * A tensor of the same shape as ``x``.
     
     Attributes
@@ -317,11 +317,11 @@ class exp(elementwise_unary):
     
     Parameters
     ----------
-    x: tensor<[*d], T> (Required)
+    x: tensor<[\*d], T> (Required)
     
     Returns
     -------
-    tensor<[*d], f32>
+    tensor<[\*d], f32>
         * A tensor of the same shape as ``x``.
     
     Attributes
@@ -344,11 +344,11 @@ class exp2(elementwise_unary):
     
     Parameters
     ----------
-    x: tensor<[*d], T> (Required)
+    x: tensor<[\*d], T> (Required)
     
     Returns
     -------
-    tensor<[*d], f32>
+    tensor<[\*d], f32>
         * A tensor of the same shape as ``x``.
     
     Attributes
@@ -372,11 +372,11 @@ class floor(elementwise_unary):
     
     Parameters
     ----------
-    x: tensor<[*d], T> (Required)
+    x: tensor<[\*d], T> (Required)
     
     Returns
     -------
-    tensor<[*d], f32>
+    tensor<[\*d], f32>
         * A tensor of the same shape as ``x``.
     
     Attributes
@@ -399,7 +399,7 @@ class inverse(Operation):
     
     Parameters
     ----------
-    x: tensor<[*d], T> (Required)
+    x: tensor<[\*d], T> (Required)
     epsilon: const fp32 (Optional, default=1e-4)
         * This is a small constant that is added to the input, before taking its
           inverse, for stability.
@@ -407,7 +407,7 @@ class inverse(Operation):
     
     Returns
     -------
-    tensor<[*d], f32>
+    tensor<[\*d], f32>
         * A tensor of the same shape as ``x``.
     
     Attributes
@@ -438,14 +438,14 @@ class log(Operation):
     
     Parameters
     ----------
-    x: tensor<[*d], T> (Required)
+    x: tensor<[\*d], T> (Required)
     epsilon: const fp32 (Optional, default=1e-45)
         * This is a small constant that is added to the input, before taking log.
         * ``y = log(x + epsilon)``.
     
     Returns
     -------
-    tensor<[*d], f32>
+    tensor<[\*d], f32>
         * A tensor of the same shape as ``x``.
     
     Attributes
@@ -478,11 +478,11 @@ class logical_not(elementwise_unary):
     
     Parameters
     ----------
-    x: tensor<[*d], T> (Required)
+    x: tensor<[\*d], T> (Required)
     
     Returns
     -------
-    tensor<[*d], f32>
+    tensor<[\*d], f32>
         * A tensor of the same shape as ``x``.
     
     Attributes
@@ -505,11 +505,11 @@ class round(elementwise_unary):
     
     Parameters
     ----------
-    x: tensor<[*d], T> (Required)
+    x: tensor<[\*d], T> (Required)
     
     Returns
     -------
-    tensor<[*d], f32>
+    tensor<[\*d], f32>
         * A tensor of the same shape as ``x``.
     
     Attributes
@@ -532,7 +532,7 @@ class rsqrt(Operation):
     
     Parameters
     ----------
-    x: tensor<[*d], T> (Required)
+    x: tensor<[\*d], T> (Required)
     epsilon: const fp32 (Optional, default=1e-12)
         * This is a small constant that is added to the input, before applying the
           ``rsqrt`` function, for stability.
@@ -540,7 +540,7 @@ class rsqrt(Operation):
     
     Returns
     -------
-    tensor<[*d], f32>
+    tensor<[\*d], f32>
         * A tensor of the same shape as ``x``.
     
     Attributes
@@ -571,11 +571,11 @@ class sign(elementwise_unary):
     
     Parameters
     ----------
-    x: tensor<[*d], T> (Required)
+    x: tensor<[\*d], T> (Required)
     
     Returns
     -------
-    tensor<[*d], f32>
+    tensor<[\*d], f32>
         * A tensor of the same shape as ``x``.
     
     Attributes
@@ -598,11 +598,11 @@ class sin(elementwise_unary):
     
     Parameters
     ----------
-    x: tensor<[*d], T> (Required)
+    x: tensor<[\*d], T> (Required)
     
     Returns
     -------
-    tensor<[*d], f32>
+    tensor<[\*d], f32>
         * A tensor of the same shape as ``x``.
     
     Attributes
@@ -625,11 +625,11 @@ class sinh(elementwise_unary):
     
     Parameters
     ----------
-    x: tensor<[*d], T> (Required)
+    x: tensor<[\*d], T> (Required)
     
     Returns
     -------
-    tensor<[*d], f32>
+    tensor<[\*d], f32>
         * A tensor of the same shape as ``x``.
     
     Attributes
@@ -652,11 +652,11 @@ class sqrt(elementwise_unary):
     
     Parameters
     ----------
-    x: tensor<[*d], T> (Required)
+    x: tensor<[\*d], T> (Required)
     
     Returns
     -------
-    tensor<[*d], f32>
+    tensor<[\*d], f32>
         * A tensor of the same shape as ``x``.
     
     Attributes
@@ -679,11 +679,11 @@ class square(elementwise_unary):
     
     Parameters
     ----------
-    x: tensor<[*d], T> (Required)
+    x: tensor<[\*d], T> (Required)
     
     Returns
     -------
-    tensor<[*d], f32>
+    tensor<[\*d], f32>
         * A tensor of the same shape as ``x``.
     
     Attributes
@@ -707,11 +707,11 @@ class tan(elementwise_unary):
     
     Parameters
     ----------
-    x: tensor<[*d], T> (Required)
+    x: tensor<[\*d], T> (Required)
     
     Returns
     -------
-    tensor<[*d], f32>
+    tensor<[\*d], f32>
         * A tensor of the same shape as ``x``.
     
     Attributes
@@ -735,11 +735,11 @@ class tanh(elementwise_unary):
     
     Parameters
     ----------
-    x: tensor<[*d], T> (Required)
+    x: tensor<[\*d], T> (Required)
     
     Returns
     -------
-    tensor<[*d], f32>
+    tensor<[\*d], f32>
         * A tensor of the same shape as ``x``.
     
     Attributes
@@ -763,12 +763,12 @@ class threshold(Operation):
     
     Parameters
     ----------
-    x: tensor<[*d], T> (Required)
+    x: tensor<[\*d], T> (Required)
     alpha: const fp32 (Required)
     
     Returns
     -------
-    tensor<[*d], f32>
+    tensor<[\*d], f32>
         * A tensor of the same shape as ``x``.
     
     Attributes
@@ -798,13 +798,13 @@ class cast(Operation):
     
     Parameters
     ----------
-    x: tensor<[*d], T> (Required)
+    x: tensor<[\*d], T> (Required)
     dtype: const str (Required)
         * Can be one of the following types: ``int32``, ``int64``, ``fp32``, ``fp64``.
     
     Returns
     -------
-    tensor<[*d], dtype>
+    tensor<[\*d], dtype>
         * A tensor of the same shape as ``x``, with type ``dtype``.
     
     Attributes
