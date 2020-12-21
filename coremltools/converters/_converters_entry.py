@@ -363,6 +363,9 @@ def convert(
           - For Tensorflow conversion, it will cause to display extra logging
             and visualizations.
 
+    Note that for TensorFlow SaveModel models with more than 1 tag set,
+    ``tags: list[str]``, can be used to specify a set of tags.
+
     Returns
     -------
     
