@@ -11,8 +11,12 @@
     sklearn.convert
     xgboost.convert
 
-.. currentmodule:: coremltools.converters.mil
+.. currentmodule:: coremltools.converters.mil.input_types
 .. autosummary::
+  :toctree: MIL/generated
+  
+.. currentmodule:: coremltools.converters.mil.mil.ops
+.. autosummary:: 
   :toctree: MIL/generated
 
 ..
