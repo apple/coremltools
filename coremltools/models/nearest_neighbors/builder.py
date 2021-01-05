@@ -14,7 +14,7 @@ import six as _six
 
 class KNearestNeighborsClassifierBuilder(object):
     """
-    KNearestNeighborsClassifierBuilder class to construct a CoreML KNearestNeighborsClassifier specification.
+    Construct a CoreML KNearestNeighborsClassifier specification.
 
     Please see the Core ML Nearest Neighbors protobuf message for more information
     on KNearestNeighborsClassifier parameters.
@@ -34,10 +34,8 @@ class KNearestNeighborsClassifierBuilder(object):
 
         # save the spec by the builder
         >>> save_spec(builder.spec, 'knnclassifier.mlmodel')
+        
 
-    See Also
-    --------
-    MLModel, save_spec
     """
 
     _VALID_INDEX_TYPES = ["linear", "kd_tree"]
@@ -70,14 +68,36 @@ class KNearestNeighborsClassifierBuilder(object):
     ):
         """
         Create a KNearestNeighborsClassifierBuilder object.
-        :param input_name: Name of the model input
-        :param output_name: Name of the output
-        :param number_of_dimensions: Number of dimensions of the input data
-        :param default_class_label: The default class label to use for predictions. Must be either an int64 or a string.
-        :param number_of_neighbors: Number of neighbors to use for predictions. Default = 5 with allowed values between 1-1000.
-        :param weighting_scheme: Weight function used in prediction. One of 'uniform' (default) or 'inverse_distance'
-        :param index_type: Algorithm to compute nearest neighbors. One of 'linear' (default), or 'kd_tree'.
-        :param leaf_size: Leaf size for the kd-tree. Ignored if index type is 'linear'. Default = 30.
+        
+        Parameters
+        ----------
+        input_name
+        	Name of the model input.
+        
+        output_name
+        	Name of the output.
+        
+        number_of_dimensions
+        	Number of dimensions of the input data.
+        
+        default_class_label
+        	The default class label to use for predictions. Must be either an
+        	int64 or a string.
+        
+        number_of_neighbors
+        	Number of neighbors to use for predictions. Default = 5 with allowed values
+        	between 1-1000.
+        
+        weighting_scheme
+        	Weight function used in prediction. One of ``'uniform'`` (default) or
+        	``'inverse_distance'``.
+        
+        index_type
+        	Algorithm to compute nearest neighbors. One of ``'linear'`` (default), or
+        	``'kd_tree'``.
+        
+        leaf_size
+        	Leaf size for the kd-tree. Ignored if index type is ``'linear'``. Default = 30.
         """
         super(KNearestNeighborsClassifierBuilder, self).__init__()
 
@@ -174,42 +194,65 @@ class KNearestNeighborsClassifierBuilder(object):
     @property
     def author(self):
         """
-        Get the author for the KNearestNeighborsClassifier model
-        :return: the author
+        Get the author for the KNearestNeighborsClassifier model.
+        
+        Returns
+        -------
+        The author
         """
         return self.spec.description.metadata.author
 
     @author.setter
     def author(self, author):
         """
-        Add an author for the KNearestNeighborsClassifier model
-        :param author: the author
-        :return: None
+        Add an author for the KNearestNeighborsClassifier model.
+        
+        Parameters
+        ----------
+        author
+        	The author.
+        
+        Returns
+        -------
+        None
         """
         self.spec.description.metadata.author = author
 
     @property
     def license(self):
         """
-        Get the license for the KNearestNeighborsClassifier model
-        :return: the license
+        Get the license for the KNearestNeighborsClassifier model.
+
+        Returns
+        -------
+        The license.
         """
         return self.spec.description.metadata.license
 
     @author.setter
     def license(self, license):
         """
-        Add a license for the KNearestNeighborsClassifier model
-        :param license: the license
-        :return: None
+        Add a license for the KNearestNeighborsClassifier model.
+
+        Parameters
+        ----------
+        license
+        	The license.
+        	
+        Returns
+        -------
+        None
         """
         self.spec.description.metadata.license = license
 
     @property
     def description(self):
         """
-        Get the description for the KNearestNeighborsClassifier model
-        :return: the description
+        Get the description for the KNearestNeighborsClassifier model.
+        
+        Returns
+        -------
+        The description.
         """
         return self.spec.description.metadata.shortDescription
 
@@ -218,42 +261,68 @@ class KNearestNeighborsClassifierBuilder(object):
         """
         Add a description for the model.
 
-        :param description: the description
-        :return: None
+        Parameters
+        ----------
+        description
+        	The description
+        
+        Returns
+        -------
+        None
         """
         self.spec.description.metadata.shortDescription = description
 
     @property
     def is_updatable(self):
         """
-        Check if the KNearestNeighborsClassifier is updatable
-        :return: is updatable
+        Check if the KNearestNeighborsClassifier is updatable.
+        
+        Returns
+        -------
+        Is updatable.
         """
         return self.spec.isUpdatable
 
     @is_updatable.setter
     def is_updatable(self, is_updatable):
         """
-        Set the KNearestNeighborsClassifier to be updatable
-        :param is_updatable: boolean
-        :return:
+        Set the KNearestNeighborsClassifier to be updatable.
+        
+        Parameters
+        ----------
+        is_updatable
+        	Boolean
+
+        Returns
+        -------
+        None
         """
         self.spec.isUpdatable = is_updatable
 
     @property
     def weighting_scheme(self):
         """
-        Get the weighting scheme for the KNearestNeighborsClassifier model
-        :return: the weighting scheme
+        Get the weighting scheme for the KNearestNeighborsClassifier model.
+        
+        Returns
+        -------
+        The weighting scheme.
         """
         return self._weighting_scheme
 
     @weighting_scheme.setter
     def weighting_scheme(self, weighting_scheme):
         """
-        Set the weighting scheme for the KNearestNeighborsClassifier model
-        :param weighting_scheme: One of [ 'uniform', 'inverse_distance' ]
-        :return: None
+        Set the weighting scheme for the KNearestNeighborsClassifier model.
+        
+        Parameters
+        ----------
+        weighting_scheme
+        	One of [ ``'uniform'``, ``'inverse_distance'`` ].
+        
+        Returns
+        -------
+        None
         """
         weighting_scheme = weighting_scheme.lower()
         if weighting_scheme not in self._VALID_WEIGHTING_SCHEMES:
@@ -272,17 +341,29 @@ class KNearestNeighborsClassifierBuilder(object):
     @property
     def index_type(self):
         """
-        Get the index type for the KNearestNeighborsClassifier model
-        :return: the index type
+        Get the index type for the KNearestNeighborsClassifier model.
+        
+        Returns
+        -------
+        The index type.
         """
         return self._index_type
 
     def set_index_type(self, index_type, leaf_size=30):
         """
-        Set the index type for the KNearestNeighborsClassifier model
-        :param index_type: One of [ 'linear', 'kd_tree' ]
-        :param leaf_size: For kd_tree indexes, the leaf size to use (default = 30)
-        :return: None
+        Set the index type for the KNearestNeighborsClassifier model.
+        
+        Parameters
+        ----------
+        index_type
+        	One of [ ``'linear'``, ``'kd_tree'`` ].
+        
+        leaf_size
+        	For kd_tree indexes, the leaf size to use (default = 30).
+        
+        Returns
+        -------
+        None
         """
         index_type = index_type.lower()
         if not index_type in self._VALID_INDEX_TYPES:
@@ -305,8 +386,11 @@ class KNearestNeighborsClassifierBuilder(object):
     @property
     def leaf_size(self):
         """
-        Get the leaf size for the KNearestNeighborsClassifier
-        :return: the leaf size
+        Get the leaf size for the KNearestNeighborsClassifier.
+        
+        Returns
+        -------
+        The leaf size.
         """
         return (
             self.spec.kNearestNeighborsClassifier.nearestNeighborsIndex.singleKdTreeIndex.leafSize
@@ -316,8 +400,15 @@ class KNearestNeighborsClassifierBuilder(object):
     def leaf_size(self, leaf_size):
         """
         Set the leaf size for a KNearestNeighborsClassifier model. Only for kd-tree indexes.
-        :param leaf_size: the leaf size
-        :return:
+        
+        Parameters
+        ----------
+        leaf_size
+        	The leaf size.
+        
+        Returns
+        -------
+        None
         """
         if leaf_size <= 0:
             raise ValueError("leaf_size must be > 0")
@@ -328,8 +419,12 @@ class KNearestNeighborsClassifierBuilder(object):
     @property
     def number_of_dimensions(self):
         """
-        Get the number of dimensions of the input data for the KNearestNeighborsClassifier model
-        :return: number of dimensions
+        Get the number of dimensions of the input data for the
+        KNearestNeighborsClassifier model.
+        
+        Returns
+        -------
+        Number of dimensions.
         """
         return (
             self.spec.kNearestNeighborsClassifier.nearestNeighborsIndex.numberOfDimensions
@@ -338,8 +433,11 @@ class KNearestNeighborsClassifierBuilder(object):
     @property
     def number_of_neighbors(self):
         """
-        Get the number of neighbors value for the KNearestNeighborsClassifier model
-        :return: the number of neighbors default value
+        Get the number of neighbors value for the KNearestNeighborsClassifier model.
+        
+        Returns
+        -------
+        The number of neighbors default value.
         """
         return self.spec.kNearestNeighborsClassifier.numberOfNeighbors.defaultValue
 
@@ -348,9 +446,18 @@ class KNearestNeighborsClassifierBuilder(object):
     ):
         """
         Set the numberOfNeighbors parameter for the KNearestNeighborsClassifier model.
-        :param allowed_range: tuple of (min_value, max_value) defining the range of allowed values
-        :param allowed_values: set of allowed values for the number of neighbors
-        :return: None
+        
+        Parameters
+        ----------
+        allowed_range
+        	Tuple of (``min_value``, ``max_value``) defining the range of allowed values.
+        
+        allowed_values
+        	Set of allowed values for the number of neighbors.
+    	
+        Returns
+        -------
+        None
         """
         if number_of_neighbors <= 0:
             raise ValueError("number_of_neighbors must be > 0")
@@ -420,7 +527,10 @@ class KNearestNeighborsClassifierBuilder(object):
     def number_of_neighbors_allowed_range(self):
         """
         Get the range of allowed values for the numberOfNeighbors parameter.
-        :return: tuple of (min_value, max_value) or None if the range hasn't been set
+        
+        Returns
+        -------
+        Tuple of (``min_value``, ``max_value``) or ``None`` if the range hasn't been set.
         """
         if self.spec.kNearestNeighborsClassifier.numberOfNeighbors.HasField("range"):
             return (
@@ -432,7 +542,11 @@ class KNearestNeighborsClassifierBuilder(object):
     def number_of_neighbors_allowed_set(self):
         """
         Get the set of allowed values for the numberOfNeighbors parameter.
-        :return: set of allowed values or None if the set of allowed values hasn't been populated
+        
+        Returns
+        -------
+        Set of allowed values or ``None`` if the set of allowed values hasn't been
+        populated.
         """
         if self.spec.kNearestNeighborsClassifier.numberOfNeighbors.HasField("set"):
             spec_values = (
@@ -446,10 +560,19 @@ class KNearestNeighborsClassifierBuilder(object):
 
     def add_samples(self, data_points, labels):
         """
-        Add some samples to the KNearestNeighborsClassifier model
-        :param data_points: List of input data points
-        :param labels: List of corresponding labels
-        :return: None
+        Add some samples to the KNearestNeighborsClassifier model.
+        
+        Parameters
+        ----------
+        data_points
+        	List of input data points.
+        
+        labels
+        	List of corresponding labels.
+        
+        Returns
+        -------
+        None
         """
         if len(data_points) == 0:
             raise TypeError("data_points is empty")
@@ -490,9 +613,18 @@ class KNearestNeighborsClassifierBuilder(object):
     def _validate_label_types(self, labels):
         """
         Ensure the label types matched the expected types.
-        :param spec: the spec
-        :param labels: the list of labels
-        :return: None, throws a TypeError if not expected
+        
+        Parameters
+        ----------
+        spec
+        	The spec.
+        
+        labels
+        	The list of labels.
+        
+        Returns
+        -------
+        None, throws a TypeError if not expected.
         """
         if self.spec.kNearestNeighborsClassifier.HasField("int64ClassLabels"):
             check_is_valid = KNearestNeighborsClassifierBuilder._is_valid_number_type
@@ -506,8 +638,15 @@ class KNearestNeighborsClassifierBuilder(object):
     def _is_valid_text_type(obj):
         """
         Checks if the object is a valid text type.
-        :param obj: the object to check
-        :return: True if a valid text type, False otherwise
+        
+        Parameters
+        ----------
+        obj
+        	The object to check.
+        
+        Returns
+        -------
+        True if a valid text type, False otherwise.
         """
         return isinstance(obj, _six.string_types)
 
@@ -515,7 +654,14 @@ class KNearestNeighborsClassifierBuilder(object):
     def _is_valid_number_type(obj):
         """
         Checks if the object is a valid number type.
-        :param obj: the object to check
-        :return: True if a valid number type, False otherwise
+        
+        Parameters
+        ----------
+        obj
+        	The object to check.
+        
+        Returns
+        -------
+        True if a valid number type, False otherwise.
         """
         return isinstance(obj, (_six.integer_types, _np.integer))
