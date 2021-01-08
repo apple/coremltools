@@ -250,10 +250,6 @@ class NeuralNetworkBuilder(object):
 
         # save the spec by the builder
         >>> save_spec(builder.spec, 'network.mlmodel')
-
-    See Also
-    --------
-    MLModel, datatypes, save_spec
     """
 
     def __init__(

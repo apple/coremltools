@@ -15,7 +15,7 @@ class linear(Operation):
     
     Parameters
     ----------
-    x: tensor<[*D,D_in], T> (Required)
+    x: tensor<[\*D,D_in], T> (Required)
         * ``1 <= rank <= 3``.
         * ``0 <= rank(*D) <= 2``.
     weight: const tensor<[D_out,D_in], T> (Required)
@@ -24,7 +24,7 @@ class linear(Operation):
     
     Returns
     -------
-    tensor<[*D,D_out], T>
+    tensor<[\*D,D_out], T>
         * Same rank as the input ``x``.
     
     Attributes
@@ -108,9 +108,9 @@ class matmul(Operation):
     
     Parameters
     ----------
-    x: tensor<[*,K1], T> (Required)
+    x: tensor<[\*,K1], T> (Required)
         * ``x`` must be 1-D or higher.
-    y: tensor<[*,K2], T> (Required)
+    y: tensor<[\*,K2], T> (Required)
         * ``y`` must be 1-D or higher.
     transpose_x: const bool (Optional)
         * Default to ``False``.
@@ -123,7 +123,7 @@ class matmul(Operation):
     
     Returns
     -------
-    tensor<*, T>
+    tensor<\*, T>
         * Scalar or tensor output.
     
     Attributes

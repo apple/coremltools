@@ -13,23 +13,21 @@ from ._feature_management import is_valid_feature_list, process_or_validate_feat
 
 def create_feature_vectorizer(input_features, output_feature_name, known_size_map={}):
     """
-    Creates a feature vectorizer from input features, return the spec for
-    a feature vectorizer that puts everything into a single array of length
-    equal to the total size of all the input features.  Returns a 2-tuple
-    `(spec, num_dimension)`
+    Create a feature vectorizer from input features. This returns a 2-tuple
+    ``(spec, num_dimension)`` for a feature vectorizer that puts everything into a
+    single array with a length equal to the total size of all the input features.
 
     Parameters
     ----------
     input_features: [list of 2-tuples]
-        Name(s) of the input features, given as a list of `('name', datatype)`
+        Name(s) of the input features, given as a list of ``('name', datatype)``
         tuples.  The datatypes entry is one of the data types defined in the
-        :ref:`datatypes` module.  Allowed datatypes are :ref:`datatype.Int64`,
-        :ref:`datatype.Double`, :ref:`datatypes.Dictionary`,
-        or :ref:`datatype.Array`.
+        ``datatypes`` module.  Allowed ``datatypes`` are ``datatype.Int64``,
+        ``datatype.Double``, ``datatypes.Dictionary``, and ``datatype.Array``.
 
         If the feature is a dictionary type, then the dictionary must have integer
-        keys, and the number of dimensions to expand it into must be given by
-        `known_size_map`.
+        keys, and the number of dimensions to expand it into must be provided by
+        ``known_size_map``.
 
         Feature indices in the final array are counted sequentially from the
         from 0 through the total number of features.
@@ -37,7 +35,7 @@ def create_feature_vectorizer(input_features, output_feature_name, known_size_ma
 
     output_feature_name: str
         The name of the output feature.  The type is an Array
-        List of output feature of the network.
+        List of the output features of the network.
 
     known_size_map:
         A dictionary mapping the feature name to the expanded size in the final

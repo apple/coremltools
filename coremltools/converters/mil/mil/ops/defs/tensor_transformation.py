@@ -64,7 +64,7 @@ class expand_dims(Operation):
     
     Parameters
     ----------
-    x: tensor<*?, T> (Required)
+    x: tensor<\*?, T> (Required)
         * Scalar or tensor.
     axes: const tensor<[K], i32> Required
         * ``K`` is the number of dimensions expanded.
@@ -74,7 +74,7 @@ class expand_dims(Operation):
     
     Returns
     -------
-    tensor<*(rank(x)+K), T>
+    tensor<\*(rank(x)+K), T>
         * Same type as the input ``x`` with rank ``rank(x)+K``.
     
     Attributes
@@ -147,7 +147,7 @@ class reshape(Operation):
     
     Parameters
     ----------
-    x: tensor<*?, T> (Required)
+    x: tensor<\*?, T> (Required)
     
         * A n-D tensor or a scalar.
         * If ``x`` is fixed rank (and possibly contains symbolic dimension),
@@ -171,7 +171,7 @@ class reshape(Operation):
     
     Returns
     -------
-    tensor<*?, T>
+    tensor<\*?, T>
         * Tensor with shape determined by the input shape.
     
     Attributes
@@ -277,15 +277,16 @@ class reverse(Operation):
     
     Parameters
     ----------
-    x: tensor<*?, T> (Required)
+    x: tensor<\*?, T> (Required)
         * Input tensor.
+    
     axes: const<D, i32> (Optional)
         * Dimension(s) to reverse. Each axis must be in the range ``[-rank(x), rank(x))``.
         * Defaults to None (reverse on all dimensions).
     
     Returns
     -------
-    tensor<*?, T>
+    tensor<\*?, T>
         * Same type and shape as the input tensor.
     
     Attributes
@@ -294,8 +295,8 @@ class reverse(Operation):
     
     References
     ----------
-        * `tf.reverse <https://www.tensorflow.org/api_docs/python/tf/reverse>`_
-        * `TORCH <https://pytorch.org/docs/stable/torch.html#torch.flip>`_
+    See `tf.reverse <https://www.tensorflow.org/api_docs/python/tf/reverse>`_
+    and `TORCH <https://pytorch.org/docs/stable/torch.html#torch.flip>`_.
     """
     
     input_spec = InputSpec(
@@ -327,7 +328,7 @@ class reverse_sequence(Operation):
 
     Parameters
     ----------
-    x: tensor<*?, T> (Required)
+    x: tensor<\*?, T> (Required)
         * Input tensor.
     lengths: tensor<L, i32> (Required)
         * 1-dimensional tensor of length ``x.shape[batch_axis]`` specifying the length
@@ -342,7 +343,7 @@ class reverse_sequence(Operation):
     
     Returns
     -------
-    tensor<*?, T>
+    tensor<\*?, T>
         * Same type and shape as the input tensor.
     
     Attributes
@@ -386,21 +387,28 @@ class slice_by_index(Operation):
     
     Parameters
     ----------
-    x: tensor<*?, T> (Required)
+    x: tensor<\*?, T> (Required)
         * Input tensor.
+    
     begin: tensor<[rank<x>], i32> (Required)
         * Starting index for the dimension of slicing.
+    
     end: tensor<[rank(x)], i32> (Required)
         * Ending index for the dimension of slicing.
+    
     stride: tensor<[rank(x)], i32> (Optional)
-        * Default as all ``1``s.
+        * Default to all ones (``1``).
         * Stride for the dimension of slicing.
+    
     begin_mask: tensor<[rank(x)], bool> (Optional)
         * Default to all ``False``.
         * If ``begin_mask[i]==True``, neglect ``begin[i]``, and set ``begin[i]`` to ``0``.
+    
     end_mask: tensor<[rank(x)], bool> (Optional)
         * Default to all ``False``.
-        * If ``end_mask[i]==True``, neglect ``end[i]``, and set ``end[i]`` to ``x.shape[i]``.
+        * If ``end_mask[i]==True``, neglect ``end[i]``, and set ``end[i]``
+          to ``x.shape[i]``.
+    
     squeeze_mask: tensor<[rank(x)], bool> (Optional)
         * Default to all ``False``.
         * If ``squeeze_mask[i]==true``, neglect ``end[i]``, and do the pure index at
@@ -408,7 +416,7 @@ class slice_by_index(Operation):
     
     Returns
     -------
-    tensor<*?, T>
+    tensor<\*?, T>
         * Scalar or tensor.
     
     Attributes
@@ -583,7 +591,7 @@ class slice_by_size(Operation):
     
     Parameters
     ----------
-    x: tensor<*?, T> (Required)
+    x: tensor<\*?, T> (Required)
         * Input tensor.
     begin: tensor<[rank(x)], i32> Required
         * The begin index for slice.
@@ -593,7 +601,7 @@ class slice_by_size(Operation):
     
     Returns
     -------
-    tensor<*?, T>
+    tensor<\*?, T>
         * Scalar or tensor. Same type as the input tensor.
     
     Attributes
@@ -717,7 +725,7 @@ class squeeze(Operation):
     
     Parameters
     ----------
-    x: tensor<*?,T> (Required)
+    x: tensor<\*?,T> (Required)
         * Must be at least 1-D.
     axes: const<K,i32> (Optional)
         * Axes to squeeze out.
@@ -725,7 +733,7 @@ class squeeze(Operation):
     
     Returns
     -------
-    tensor<*(rank(x)-K),T>
+    tensor<\*(rank(x)-K),T>
         * Tensor with same type as input ``x`` and rank ``rank(x)-K``.
     
     Attributes
@@ -777,14 +785,14 @@ class transpose(Operation):
     
     Parameters
     ----------
-    x: tensor<*?, T> (Required)
+    x: tensor<\*?, T> (Required)
         * Must be at least 1-D. ``x`` may have a symbolic shape.
     perm: const<[rank(x)], i32> (Required)
         * Permutation order. Must be non-negative integers.
     
     Returns
     -------
-    tensor<*?,T>
+    tensor<\*?,T>
         * Tensor with same rank and type as ``x``.
     
     Attributes
@@ -871,20 +879,24 @@ class sliding_windows(Operation):
     
     Parameters
     ----------
-    x: tensor<[*d0, d_axis, *dn], T>
+    x: tensor<[\*d0, d_axis, *dn], T>
         * Input tensor.
+    
     axis: const<i32>
         * Axis to perform the operation.
+    
     size: const<i32>
         * Number of elements in the sliding window.
+    
     stride: const<i32> Optional
         * Default to ``1``.
         * The stride of the input elements in the sliding window.
     
     Returns
     -------
-    tensor<[*d0, d_axis - size // stride + 1, size, *dn], T>
-        * The output will be a tensor of rank ``N+1`` where ``N`` is the input tensor rank.
+    tensor<[\*d0, d_axis - size // stride + 1, size, \*dn], T>
+        * The output will be a tensor of rank ``N+1`` where ``N`` is the input tensor
+          rank.
     
     Attributes
     ----------
