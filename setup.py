@@ -71,15 +71,12 @@ setup(
     install_requires=[
         "numpy >= 1.14.5",
         "protobuf >= 3.1.0",
-        "six>=1.10.0",
         "attr",
         "attrs",
         "sympy",
         "scipy",
-        'enum34;python_version < "3.4"',
         "tqdm",
         "packaging",
-        'typing;python_version < "3.5"',
     ],
     entry_points={"console_scripts": ["coremlconverter = coremltools:_main"]},
     classifiers=[
@@ -88,7 +85,6 @@ setup(
         "Intended Audience :: Developers",
         "Operating System :: MacOS :: MacOS X",
         "Operating System :: POSIX :: Linux",
-        "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
