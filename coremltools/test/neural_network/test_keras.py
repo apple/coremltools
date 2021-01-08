@@ -8,7 +8,6 @@ import unittest
 from coremltools._deps import _HAS_KERAS_TF
 from coremltools.proto import FeatureTypes_pb2
 import pytest
-import six
 
 if _HAS_KERAS_TF:
     import tensorflow as tf
@@ -50,11 +49,11 @@ class KerasSingleLayerTest(unittest.TestCase):
 
         # Test the inputs and outputs
         self.assertEquals(len(spec.description.input), len(input_names))
-        six.assertCountEqual(
+        self.assertCountEqual(
             self, input_names, [x.name for x in spec.description.input]
         )
         self.assertEquals(len(spec.description.output), len(output_names))
-        six.assertCountEqual(
+        self.assertCountEqual(
             self, output_names, [x.name for x in spec.description.output]
         )
 
@@ -106,11 +105,11 @@ class KerasSingleLayerTest(unittest.TestCase):
 
             # Test the inputs and outputs
             self.assertEquals(len(spec.description.input), len(input_names))
-            six.assertCountEqual(
+            self.assertCountEqual(
                 self, input_names, [x.name for x in spec.description.input]
             )
             self.assertEquals(len(spec.description.output), len(output_names))
-            six.assertCountEqual(
+            self.assertCountEqual(
                 self, output_names, [x.name for x in spec.description.output]
             )
 
@@ -142,11 +141,11 @@ class KerasSingleLayerTest(unittest.TestCase):
 
         # Test the inputs and outputs
         self.assertEquals(len(spec.description.input), len(input_names))
-        six.assertCountEqual(
+        self.assertCountEqual(
             self, input_names, [x.name for x in spec.description.input]
         )
         self.assertEquals(len(spec.description.output), len(output_names))
-        six.assertCountEqual(
+        self.assertCountEqual(
             self, output_names, [x.name for x in spec.description.output]
         )
 
@@ -180,11 +179,11 @@ class KerasSingleLayerTest(unittest.TestCase):
 
         # Test the inputs and outputs
         self.assertEquals(len(spec.description.input), len(input_names))
-        six.assertCountEqual(
+        self.assertCountEqual(
             self, input_names, [x.name for x in spec.description.input]
         )
         self.assertEquals(len(spec.description.output), len(output_names))
-        six.assertCountEqual(
+        self.assertCountEqual(
             self, output_names, [x.name for x in spec.description.output]
         )
 
@@ -227,11 +226,11 @@ class KerasSingleLayerTest(unittest.TestCase):
 
         # Test the inputs and outputs
         self.assertEquals(len(spec.description.input), len(input_names))
-        six.assertCountEqual(
+        self.assertCountEqual(
             self, input_names, [x.name for x in spec.description.input]
         )
         self.assertEquals(len(spec.description.output), len(output_names))
-        six.assertCountEqual(
+        self.assertCountEqual(
             self, output_names, [x.name for x in spec.description.output]
         )
 
@@ -263,11 +262,11 @@ class KerasSingleLayerTest(unittest.TestCase):
 
         # Test the inputs and outputs
         self.assertEquals(len(spec.description.input), len(input_names))
-        six.assertCountEqual(
+        self.assertCountEqual(
             self, input_names, [x.name for x in spec.description.input]
         )
         self.assertEquals(len(spec.description.output), len(output_names))
-        six.assertCountEqual(
+        self.assertCountEqual(
             self, output_names, [x.name for x in spec.description.output]
         )
 
@@ -313,11 +312,11 @@ class KerasSingleLayerTest(unittest.TestCase):
 
         # Test the inputs and outputs
         self.assertEquals(len(spec.description.input), len(input_names))
-        six.assertCountEqual(
+        self.assertCountEqual(
             self, input_names, [x.name for x in spec.description.input]
         )
         self.assertEquals(len(spec.description.output), len(output_names))
-        six.assertCountEqual(
+        self.assertCountEqual(
             self, output_names, [x.name for x in spec.description.output]
         )
 
@@ -347,11 +346,11 @@ class KerasSingleLayerTest(unittest.TestCase):
 
         # Test the inputs and outputs
         self.assertEquals(len(spec.description.input), len(input_names))
-        six.assertCountEqual(
+        self.assertCountEqual(
             self, input_names, [x.name for x in spec.description.input]
         )
         self.assertEquals(len(spec.description.output), len(output_names))
-        six.assertCountEqual(
+        self.assertCountEqual(
             self, output_names, [x.name for x in spec.description.output]
         )
 
@@ -591,11 +590,11 @@ class KerasSingleLayerTest(unittest.TestCase):
 
         # Test the inputs and outputs
         self.assertEquals(len(spec.description.input), len(input_names))
-        six.assertCountEqual(
+        self.assertCountEqual(
             self, input_names, [x.name for x in spec.description.input]
         )
         self.assertEquals(len(spec.description.output), len(output_names))
-        six.assertCountEqual(
+        self.assertCountEqual(
             self, output_names, [x.name for x in spec.description.output]
         )
 
@@ -626,11 +625,11 @@ class KerasSingleLayerTest(unittest.TestCase):
 
         # Test the inputs and outputs
         self.assertEquals(len(spec.description.input), len(input_names))
-        six.assertCountEqual(
+        self.assertCountEqual(
             self, input_names, [x.name for x in spec.description.input]
         )
         self.assertEquals(len(spec.description.output), len(output_names))
-        six.assertCountEqual(
+        self.assertCountEqual(
             self, output_names, [x.name for x in spec.description.output]
         )
 
@@ -676,11 +675,11 @@ class KerasSingleLayerTest(unittest.TestCase):
 
         # Test the inputs and outputs
         self.assertEquals(len(spec.description.input), len(input_names))
-        six.assertCountEqual(
+        self.assertCountEqual(
             self, input_names, [x.name for x in spec.description.input]
         )
         self.assertEquals(len(spec.description.output), len(output_names))
-        six.assertCountEqual(
+        self.assertCountEqual(
             self, output_names, [x.name for x in spec.description.output]
         )
 
@@ -704,11 +703,11 @@ class KerasSingleLayerTest(unittest.TestCase):
         self.assertTrue(spec.HasField("neuralNetwork"))
         # Test the inputs and outputs
         self.assertEquals(len(spec.description.input), len(input_names))
-        six.assertCountEqual(
+        self.assertCountEqual(
             self, input_names, [x.name for x in spec.description.input]
         )
         self.assertEquals(len(spec.description.output), len(output_names))
-        six.assertCountEqual(
+        self.assertCountEqual(
             self, output_names, [x.name for x in spec.description.output]
         )
         layers = spec.neuralNetwork.layers
@@ -896,7 +895,7 @@ class KerasSingleLayerTest(unittest.TestCase):
 
         # Test the inputs and outputs
         self.assertEquals(len(spec.description.input), len(input_names))
-        six.assertCountEqual(
+        self.assertCountEqual(
             self, input_names, [x.name for x in spec.description.input]
         )
         self.assertEquals(len(spec.description.output), len(expected_output_names))
@@ -928,7 +927,7 @@ class KerasSingleLayerTest(unittest.TestCase):
             spec.neuralNetworkClassifier.WhichOneof("ClassLabels"), "stringClassLabels"
         )
         class_from_proto = list(spec.neuralNetworkClassifier.stringClassLabels.vector)
-        six.assertCountEqual(self, classes, class_from_proto)
+        self.assertCountEqual(self, classes, class_from_proto)
 
     def test_classifier_file(self):
         from keras.layers import Dense
@@ -960,7 +959,7 @@ class KerasSingleLayerTest(unittest.TestCase):
 
         # Test the inputs and outputs
         self.assertEquals(len(spec.description.input), len(input_names))
-        six.assertCountEqual(
+        self.assertCountEqual(
             self, input_names, [x.name for x in spec.description.input]
         )
         self.assertEquals(len(spec.description.output), len(expected_output_names))
@@ -1010,7 +1009,7 @@ class KerasSingleLayerTest(unittest.TestCase):
 
         # Test the inputs and outputs
         self.assertEquals(len(spec.description.input), len(input_names))
-        six.assertCountEqual(
+        self.assertCountEqual(
             self, input_names, [x.name for x in spec.description.input]
         )
         self.assertEquals(len(spec.description.output), len(expected_output_names))
@@ -1042,7 +1041,7 @@ class KerasSingleLayerTest(unittest.TestCase):
             spec.neuralNetworkClassifier.WhichOneof("ClassLabels"), "int64ClassLabels"
         )
         class_from_proto = list(spec.neuralNetworkClassifier.int64ClassLabels.vector)
-        six.assertCountEqual(self, classes, class_from_proto)
+        self.assertCountEqual(self, classes, class_from_proto)
 
     def test_classifier_custom_class_name(self):
         from keras.layers import Dense
@@ -1073,7 +1072,7 @@ class KerasSingleLayerTest(unittest.TestCase):
 
         # Test the inputs and outputs
         self.assertEquals(len(spec.description.input), len(input_names))
-        six.assertCountEqual(
+        self.assertCountEqual(
             self, input_names, [x.name for x in spec.description.input]
         )
         self.assertEquals(len(spec.description.output), len(expected_output_names))
@@ -1107,7 +1106,7 @@ class KerasSingleLayerTest(unittest.TestCase):
             spec.neuralNetworkClassifier.WhichOneof("ClassLabels"), "stringClassLabels"
         )
         class_from_proto = list(spec.neuralNetworkClassifier.stringClassLabels.vector)
-        six.assertCountEqual(self, classes, class_from_proto)
+        self.assertCountEqual(self, classes, class_from_proto)
 
     def test_default_interface_names(self):
         from keras.layers import Dense
@@ -1129,7 +1128,7 @@ class KerasSingleLayerTest(unittest.TestCase):
 
         # Test the inputs and outputs
         self.assertEquals(len(spec.description.input), len(expected_input_names))
-        six.assertCountEqual(
+        self.assertCountEqual(
             self, expected_input_names, [x.name for x in spec.description.input]
         )
         self.assertEquals(len(spec.description.output), len(expected_output_names))

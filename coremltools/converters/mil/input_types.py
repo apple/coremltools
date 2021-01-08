@@ -5,7 +5,6 @@
 
 import logging
 import numpy as np
-import six
 from coremltools.converters.mil.mil.types.symbolic import is_symbolic
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.types.type_mapping import (
@@ -326,7 +325,7 @@ class Shape(object):
             if isinstance(s, RangeDim):
                 sym = s.symbol
                 self.symbolic_shape.append(sym)
-            elif isinstance(s, (np.generic, six.integer_types)) or is_symbolic(s):
+            elif isinstance(s, (np.generic, int)) or is_symbolic(s):
                 self.symbolic_shape.append(s)
             else:
                 raise ValueError(
@@ -343,7 +342,7 @@ class Shape(object):
                 )
             for idx, s in enumerate(default):
                 if not isinstance(
-                    s, (np.generic, six.integer_types)
+                    s, (np.generic, int)
                 ) and not is_symbolic(s):
                     raise ValueError(
                         "Default shape invalid, got error at index {} which is {}".format(
@@ -431,7 +430,7 @@ class EnumeratedShapes(object):
                 )
             for idx, s in enumerate(default):
                 if not isinstance(
-                    s, (np.generic, six.integer_types)
+                    s, (np.generic, int)
                 ) and not is_symbolic(s):
                     raise ValueError(
                         "Default shape invalid, got error at index {} which is {}".format(

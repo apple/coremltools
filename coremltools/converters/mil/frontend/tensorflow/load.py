@@ -13,8 +13,6 @@ import logging
 import os
 import gc
 
-import six
-
 import tensorflow as tf
 
 from tempfile import mktemp
@@ -143,7 +141,7 @@ class TF1Loader(TFLoader):
         elif isinstance(self.model, tf.keras.Model):
             graph_def = self._from_tf_keras_model(self.model)
             return self.extract_sub_graph(graph_def, outputs)
-        elif isinstance(self.model, six.string_types):
+        elif isinstance(self.model, str):
             if not os.path.exists(str(self.model)):
                 raise ValueError('Input model "{}" does not exist'.format(self.model))
             elif os.path.isfile(str(self.model)) and self.model.endswith(".pb"):

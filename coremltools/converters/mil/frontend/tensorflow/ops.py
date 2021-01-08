@@ -4,7 +4,6 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import logging as _logging
-from six import string_types as _string_types
 import numpy as _np
 
 from coremltools.converters.mil.mil.ops import get_const_mode
@@ -883,7 +882,7 @@ def Conv3D(context, node):
     )
 
     pad_type = node.attr.get("padding")
-    if not isinstance(pad_type, _string_types):
+    if not isinstance(pad_type, str):
         pad_type = "custom"
         raise NotImplementedError("Custom padding not implemented for TF")
     pad_type = pad_type.lower()
@@ -929,7 +928,7 @@ def Conv3DBackpropInputV2(context, node):
     if pad_type is None:
         raise ValueError("Padding type not specified for op: {}".format(node.name))
 
-    if not isinstance(pad_type, _string_types):
+    if not isinstance(pad_type, str):
         pad_type = "custom"
         raise NotImplementedError("Custom padding not implemented for TF")
     pad_type = pad_type.lower()
@@ -1980,7 +1979,7 @@ def Conv2DBackpropInput(context, node):
     )
     pad_type = node.attr.get("padding")
 
-    if not isinstance(pad_type, _string_types):
+    if not isinstance(pad_type, str):
         pad_type = "custom"
         raise NotImplementedError("Custom padding not implemented for TF")
 

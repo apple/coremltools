@@ -4,7 +4,6 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import logging as _logging
-from six import string_types as _string_types
 
 # expose files as imports
 from ..models import utils
@@ -112,56 +111,56 @@ def _main():
     )
     parser.add_argument(
         "--srcModelFormat",
-        type=_string_types,
+        type=str,
         choices=["auto", "caffe", "keras"],
         default="auto",
         help="Format of model at srcModelPath (default is to auto-detect).",
     )
     parser.add_argument(
         "--srcModelPath",
-        type=_string_types,
+        type=str,
         required=True,
         help="Path to the model file of the external tool (e.g caffe weights proto binary, keras h5 binary",
     )
     parser.add_argument(
         "--dstModelPath",
-        type=_string_types,
+        type=str,
         required=True,
         help="Path to save the model in format .mlmodel",
     )
     parser.add_argument(
         "--caffeProtoTxtPath",
-        type=_string_types,
+        type=str,
         default="",
         help="Path to the .prototxt file if network differs from the source file (optional)",
     )
     parser.add_argument(
         "--meanImageProtoPath",
-        type=_string_types,
+        type=str,
         default="",
         help="Path to the .binaryproto file containing the mean image if required by the network (optional). This requires a prototxt file to be specified.",
     )
     parser.add_argument(
         "--kerasJsonPath",
-        type=_string_types,
+        type=str,
         default=None,
         help="Path to the .json file for keras if the network differs from the weights file (optional)",
     )
     parser.add_argument(
         "--inputNames",
-        type=_string_types,
+        type=str,
         nargs="*",
         help="Names of the feature (input) columns, in order (required for keras models).",
     )
     parser.add_argument(
         "--outputNames",
-        type=_string_types,
+        type=str,
         nargs="*",
         help="Names of the target (output) columns, in order (required for keras models).",
     )
     parser.add_argument(
         "--imageInputNames",
-        type=_string_types,
+        type=str,
         default=[],
         action="append",
         help="Label the named input as an image. Can be specified more than once for multiple image inputs.",
@@ -204,13 +203,13 @@ def _main():
     )
     parser.add_argument(
         "--classInputPath",
-        type=_string_types,
+        type=str,
         default="",
         help="Path to class labels (ordered new line separated) for treating the neural network as a classifier",
     )
     parser.add_argument(
         "--predictedFeatureName",
-        type=_string_types,
+        type=str,
         default="class_output",
         help="Name of the output feature that captures the class name (for classifiers models).",
     )

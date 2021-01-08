@@ -5,7 +5,6 @@
 
 import logging
 import numpy as np
-import six
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.types.symbolic import is_symbolic, any_symbolic
 from . import SPACES
@@ -442,7 +441,7 @@ class Operation(object):
                 else:
                     val_str = (
                         '"' + self.val.sym_val + '"'
-                        if isinstance(self.val.sym_val, six.string_types)
+                        if isinstance(self.val.sym_val, str)
                         else str(self.val.sym_val)
                     )
                 s += "val=" + val_str

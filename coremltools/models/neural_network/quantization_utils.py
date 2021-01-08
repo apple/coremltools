@@ -14,7 +14,6 @@ from __future__ import absolute_import as _
 import numpy as _np
 from sys import stdout as _stdout
 from os import listdir as _listdir
-from six import string_types as _string_types
 from .optimization_utils import _optimize_nn
 
 from coremltools.models import (
@@ -215,7 +214,7 @@ class MatrixMultiplyLayerSelector(QuantizedLayerSelector):
         if not (
             isinstance(self.include_layers_with_names, (list, tuple))
             and all(
-                [isinstance(s, _string_types) for s in self.include_layers_with_names]
+                [isinstance(s, str) for s in self.include_layers_with_names]
             )
         ):
             raise ValueError(
@@ -1393,7 +1392,7 @@ def compare_models(full_precision_model, quantized_model, sample_data):
 
     spec = full_precision_model.get_spec()
     num_inputs = len(spec.description.input)
-    if isinstance(sample_data, _string_types):
+    if isinstance(sample_data, str):
         input_type = spec.description.input[0].type.WhichOneof("Type")
         if num_inputs != 1 or input_type != "imageType":
             raise Exception(

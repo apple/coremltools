@@ -8,7 +8,6 @@
 from __future__ import print_function as _
 from __future__ import division as _
 from __future__ import absolute_import as _
-from six import string_types as _string_types
 
 
 class delay_type_cls:
@@ -112,7 +111,7 @@ def apply_delayed_types(
     for func in fnlist:
         if (
             hasattr(func, "return_type")
-            and isinstance(func.return_type, _string_types)
+            and isinstance(func.return_type, str)
             and func.return_type in type_map
         ):
             func.return_type = type_map[func.return_type]

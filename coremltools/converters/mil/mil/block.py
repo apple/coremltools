@@ -7,7 +7,6 @@ from collections import Counter, OrderedDict
 import copy
 import logging
 import numpy as _np
-from six import string_types as _string_types
 from . import SPACES, types
 from .var import Var, InternalVar, ListVar
 from .visitors.dot_visitor import DotVisitor

@@ -9,7 +9,6 @@ from .. import datatypes
 import coremltools
 
 import numpy as _np
-import six as _six
 
 
 class KNearestNeighborsClassifierBuilder(object):
@@ -648,7 +647,7 @@ class KNearestNeighborsClassifierBuilder(object):
         -------
         True if a valid text type, False otherwise.
         """
-        return isinstance(obj, _six.string_types)
+        return isinstance(obj, str)
 
     @staticmethod
     def _is_valid_number_type(obj):
@@ -664,4 +663,4 @@ class KNearestNeighborsClassifierBuilder(object):
         -------
         True if a valid number type, False otherwise.
         """
-        return isinstance(obj, (_six.integer_types, _np.integer))
+        return isinstance(obj, (int, _np.integer))

@@ -352,7 +352,7 @@ class TestTensorFlow2ConverterExamples:
         )
 
         # Download class labels (from a separate file)
-        from six.moves import urllib
+        import urllib.request
         label_url = 'https://storage.googleapis.com/download.tensorflow.org/data/ImageNetLabels.txt'
         class_labels = urllib.request.urlopen(label_url).read().splitlines()
         class_labels = class_labels[1:]  # remove the first class which is background

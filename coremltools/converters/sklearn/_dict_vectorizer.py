@@ -3,8 +3,6 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import six as _six
-
 from . import _sklearn_util
 
 from ... import SPECIFICATION_VERSION
@@ -70,14 +68,14 @@ def convert(model, input_features, output_features):
     tr_spec = dv_spec.dictVectorizer
     is_str = None
     for feature_name in model.feature_names_:
-        if isinstance(feature_name, _six.string_types):
+        if isinstance(feature_name, str):
             if is_str == False:
                 raise ValueError("Mapping of DictVectorizer mixes int and str types.")
 
             tr_spec.stringToIndex.vector.append(feature_name)
             is_str == True
 
-        if isinstance(feature_name, _six.integer_types):
+        if isinstance(feature_name, int):
             if is_str == True:
                 raise ValueError("Mapping of DictVectorizer mixes int and str types.")
 

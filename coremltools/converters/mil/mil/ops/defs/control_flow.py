@@ -4,7 +4,6 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import six
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.types.type_mapping import (
     numpy_val_to_builtin_val,
@@ -145,7 +144,7 @@ class const(Operation):
             value = np.float32(value)
         elif isinstance(value, bool):
             value = np.bool(value)
-        elif isinstance(value, (six.integer_types, np.int64)):
+        elif isinstance(value, (int, np.int64)):
             value = np.int32(value)
         elif isinstance(value, (tuple, list, np.ndarray)):
             value = np.array(value)
@@ -169,7 +168,7 @@ class const(Operation):
             return builtin_type, value
 
 
-        if not isinstance(value, (np.generic, np.ndarray, six.string_types, bool, mil_list)):
+        if not isinstance(value, (np.generic, np.ndarray, str, bool, mil_list)):
             raise ValueError("Unknown value for constant: {}".format(value))
 
         _, builtin_type = numpy_val_to_builtin_val(value)

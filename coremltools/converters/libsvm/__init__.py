@@ -3,7 +3,6 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from six import string_types as _string_types
 
 from . import _libsvm_converter
 from . import _libsvm_util
@@ -76,7 +75,7 @@ def convert(
     if not (_HAS_LIBSVM):
         raise RuntimeError("libsvm not found. libsvm conversion API is disabled.")
 
-    if isinstance(model, _string_types):
+    if isinstance(model, str):
         libsvm_model = _libsvm_util.load_model(model)
     else:
         libsvm_model = model
@@ -86,7 +85,7 @@ def convert(
             % (_svmutil.svm_model, type(libsvm_model))
         )
 
-    if not isinstance(target_name, _string_types):
+    if not isinstance(target_name, str):
         raise TypeError(
             "Expected 'target_name' of type str (got %s)" % type(libsvm_model)
         )
@@ -96,12 +95,12 @@ def convert(
             "Expected 'input_length' of type int, got %s" % type(input_length)
         )
 
-    if input_length != "auto" and not isinstance(input_names, _string_types):
+    if input_length != "auto" and not isinstance(input_names, str):
         raise ValueError(
             "'input_length' should not be used unless the input will be only one array."
         )
 
-    if not isinstance(probability, _string_types):
+    if not isinstance(probability, str):
         raise TypeError(
             "Expected 'probability' of type str (got %s)" % type(probability)
         )

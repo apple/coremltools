@@ -2,7 +2,6 @@ from __future__ import absolute_import as _
 
 import gc
 import coremltools
-from six import string_types as _string_types
 import collections
 
 from coremltools.converters.mil.input_types import InputType, ClassifierConfig

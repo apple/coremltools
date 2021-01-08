@@ -10,7 +10,6 @@ from __future__ import division as _
 from __future__ import absolute_import as _
 
 import numpy as np
-import six
 
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass

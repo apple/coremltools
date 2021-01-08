@@ -7,7 +7,6 @@ from ... import SPECIFICATION_VERSION
 from ..._deps import _HAS_LIBSVM
 from coremltools import __version__ as ct_version
 from coremltools.models import _METADATA_VERSION, _METADATA_SOURCE
-from six import string_types as _string_types
 
 
 def _infer_min_num_features(model):
@@ -73,7 +72,7 @@ def convert(libsvm_model, feature_names, target, input_length, probability):
 
     # Set the features names
     inferred_length = _infer_min_num_features(libsvm_model)
-    if isinstance(feature_names, _string_types):
+    if isinstance(feature_names, str):
         # input will be a single array
         if input_length == "auto":
             print(

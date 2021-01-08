@@ -4,7 +4,6 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import os
-import six as _six
 from ...models import (
     _MLMODEL_FULL_PRECISION,
     _MLMODEL_HALF_PRECISION,
@@ -255,7 +254,7 @@ def _export(
 ):
     from ... import libcaffeconverter
 
-    if isinstance(model, _six.string_types):
+    if isinstance(model, str):
         src_model_path = model
         prototxt_path = u""
         binaryproto_path = dict()
@@ -266,7 +265,7 @@ def _export(
             src_model_path, prototxt_path = model
             binaryproto_path = dict()
 
-    if isinstance(image_input_names, _six.string_types):
+    if isinstance(image_input_names, str):
         image_input_names = [image_input_names]
     if predicted_feature_name is None:
         predicted_feature_name = u"classLabel"
@@ -279,7 +278,7 @@ def _export(
                 "'image_input_names' must be provided when a mean image binaryproto path is specified. "
             )
 
-    if isinstance(binaryproto_path, _six.string_types):
+    if isinstance(binaryproto_path, str):
         binaryproto_paths = dict()
         binaryproto_paths[image_input_names[0]] = binaryproto_path
     elif isinstance(binaryproto_path, dict):

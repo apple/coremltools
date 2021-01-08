@@ -3,7 +3,6 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import six
 import logging
 from coremltools.converters.mil.input_types import (
     InputType,
@@ -228,7 +227,7 @@ class TFConverter:
         self._validate_outputs(tfssa, outputs)
         outputs = main_func.outputs if outputs is None else outputs
         outputs = outputs if isinstance(outputs, (tuple, list)) else [outputs]
-        outputs = [x if isinstance(x, six.string_types) else x.name for x in outputs]
+        outputs = [x if isinstance(x, str) else x.name for x in outputs]
         self.outputs = outputs
 
         # We would like a stack so that we run conversion sequentially.
@@ -279,7 +278,7 @@ class TFConverter:
     @staticmethod
     def _get_tensor_name(tensor):
         ret = None
-        if isinstance(tensor, six.string_types):
+        if isinstance(tensor, str):
             ret = tensor
         else:
             ret = tensor.name

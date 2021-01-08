@@ -3,8 +3,6 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from six import string_types as _string_types
-
 from . import datatypes
 from .. import SPECIFICATION_VERSION
 from ..proto import Model_pb2 as _Model_pb2
@@ -80,7 +78,7 @@ def create_feature_vectorizer(input_features, output_feature_name, known_size_ma
         new_feature.inputColumn = n
         new_feature.inputDimensions = dim
 
-    if not isinstance(output_feature_name, _string_types):
+    if not isinstance(output_feature_name, str):
         if (
             is_valid_feature_list(output_feature_name)
             and len(output_feature_name) == 1

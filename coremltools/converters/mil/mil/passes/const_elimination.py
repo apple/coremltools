@@ -10,7 +10,6 @@ from __future__ import division as _
 from __future__ import absolute_import as _
 
 import numpy as np
-import six
 
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
@@ -19,7 +18,7 @@ from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 def get_const_mode(val):
     # Heuristics to determine if a val should be file value or immediate
     # value.
-    if isinstance(val, (six.string_types, bool, six.integer_types)):
+    if isinstance(val, (str, bool, int)):
         return "immediate_value"
     if isinstance(val, (np.generic, np.ndarray)):
         if val.size > 10:
