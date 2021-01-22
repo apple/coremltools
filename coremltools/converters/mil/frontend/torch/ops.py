@@ -2496,3 +2496,10 @@ def std(context, node):
 def copy_(context, node):
     inputs = _get_inputs(context, node, expected=3)
     context.add(mb.identity(x=inputs[0], name=node.name))
+
+@register_torch_op
+def log10(context, node):
+    inputs = _get_inputs(context, node)
+    x = inputs[0]
+    log_x = mb.log(x=x)
+    context.add(mb.mul(x=log_x, y=1/_np.log(10.0)), node.name)
