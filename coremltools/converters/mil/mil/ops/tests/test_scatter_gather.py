@@ -359,6 +359,9 @@ class TestGather:
                 mb.gather(x=x, indices=indices, axis=-2),
                 mb.gather(x=x, indices=indices, axis=-1),
                 mb.gather(x=x, indices=indices),
+                mb.gather(x=x, indices=1),
+                # mb.gather(x=x, indices=1, axis=1), #Scalar index passes on axis=0 but fails on axis=1,
+                # Need to handle rank 0 correctly, rdar://73160449
             ]
 
         expected_output_types = [
@@ -367,6 +370,7 @@ class TestGather:
             (2, 3, types.fp32),
             (2, 2, types.fp32),
             (2, 3, types.fp32),
+            (3, types.fp32),
         ]
 
         expected_outputs = [
@@ -374,6 +378,46 @@ class TestGather:
             np.array([[2, 1], [5, 4]], dtype=np.float32),
             np.array([[4, 5, 6], [1, 2, 3]], dtype=np.float32),
             np.array([[2, 1], [5, 4]], dtype=np.float32),
+            np.array([[4, 5, 6], [1, 2, 3]], dtype=np.float32),
+            np.array([4, 5, 6], dtype=np.float32),
+        ]
+
+        run_compare_builder(
+            build,
+            input_placeholders,
+            input_values,
+            expected_output_types,
+            expected_outputs,
+            use_cpu_only=use_cpu_only,
+            frontend_only=False,
+            backend=backend,
+        )
+
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend", itertools.product([True, False], backends,)
+    )
+    def test_embedding_builder_to_backend_smoke(self, use_cpu_only, backend):
+        x = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
+        indices = np.array([1, 0], dtype=np.int32)
+        input_placeholders = {
+            "indices": mb.placeholder(shape=indices.shape, dtype=types.int32),
+        }
+
+        input_values = {"indices": indices}
+
+        def build(indices):
+            return [
+                mb.gather(x=x, indices=indices, axis=0),
+                mb.gather(x=x, indices=indices, axis=-2),
+            ]
+
+        expected_output_types = [
+            (2, 3, types.fp32),
+            (2, 3, types.fp32),
+        ]
+
+        expected_outputs = [
+            np.array([[4, 5, 6], [1, 2, 3]], dtype=np.float32),
             np.array([[4, 5, 6], [1, 2, 3]], dtype=np.float32),
         ]
 

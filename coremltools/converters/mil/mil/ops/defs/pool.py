@@ -21,6 +21,13 @@ class Pooling(Operation):
         pad=IntTensorInputType(const=True, optional=True),
     )
 
+    def default_inputs(self):
+        num_spatial_dims = self.x.rank - 2
+        return DefaultInputs(
+            strides=[1]*num_spatial_dims,
+            pad=[0]*2*num_spatial_dims,
+            )
+
     def __init__(self, **kwargs):
         super(Pooling, self).__init__(**kwargs)
 
@@ -108,9 +115,18 @@ class avg_pool(Pooling):
     """
     
     input_spec = (
-        InputSpec(exclude_padding_from_average=BoolInputType(const=True, default=False))
+        InputSpec(
+          exclude_padding_from_average=BoolInputType(const=True,
+            optional=True))
         + Pooling.input_spec
     )
+
+    def default_inputs(self):
+        num_spatial_dims = self.x.rank - 2
+        return super().default_inputs() + \
+            DefaultInputs(
+                exclude_padding_from_average=False,
+                )
 
     def __init__(self, **kwargs):
         super(avg_pool, self).__init__(**kwargs)

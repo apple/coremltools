@@ -3,8 +3,8 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from scipy import special
 import scipy
+from scipy import special
 from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.testing_reqs import *
 
@@ -325,16 +325,16 @@ class TestPReLU:
         "use_cpu_only, backend", itertools.product([True, False], backends,)
     )
     def test_builder_to_backend_smoke(self, use_cpu_only, backend):
-        t = np.array([[[-1, 3, 6]], [[-1, 2, -3]], [[4, -5, 6]]], dtype=np.float32)
+        t = np.array([[[[-1, 3, 6]], [[-1, 2, -3]], [[4, -5, 6]]]], dtype=np.float32)
         input_placeholders = {"x": mb.placeholder(shape=t.shape)}
         input_values = {"x": t}
 
         def build(x):
             return mb.prelu(x=x, alpha=np.array([1, 2, 3], dtype=np.float32))
 
-        expected_output_types = (3, 1, 3, types.fp32)
+        expected_output_types = (1, 3, 1, 3, types.fp32)
         expected_outputs = np.array(
-            [[[-1, 3, 6]], [[-2, 2, -6]], [[4, -15, 6]]], dtype=np.float32
+            [[[[-1, 3, 6]], [[-2, 2, -6]], [[4, -15, 6]]]], dtype=np.float32
         )
 
         run_compare_builder(
@@ -350,7 +350,7 @@ class TestPReLU:
 
     @ssa_fn
     def test_builder_eval(self):
-        x_val = np.array([[[-1, 3, 6]], [[-1, 2, -3]], [[4, -5, 6]]], dtype=np.float32)
+        x_val = np.array([[[[-1, 3, 6]], [[-1, 2, -3]], [[4, -5, 6]]]], dtype=np.float32)
         alpha = np.array([1, 2, 3], dtype=np.float32)
         v = mb.prelu(x=x_val, alpha=alpha)
 
@@ -367,7 +367,7 @@ class TestPReLU:
     @ssa_fn
     def test_builder_eval1(self):
         x_val = np.array([[[-1, 3, 6]], [[-1, 2, -3]], [[4, -5, 6]]], dtype=np.float32)
-        with pytest.raises(ValueError, match=r".* dimension -3 .*"):
+        with pytest.raises(ValueError, match=r".* dimension 1 .*"):
             v = mb.prelu(x=x_val, alpha=np.array([1, 2], dtype=np.float32))
 
     @ssa_fn
@@ -387,7 +387,7 @@ class TestPReLU:
         itertools.product([True, False], backends, [1, 2, 4, 8], [2, 3, 4]),
     )
     def test_builder_to_backend_stress(self, use_cpu_only, backend, dim, chan):
-        shape = np.array([chan, dim, dim])
+        shape = np.array([1, chan, dim, dim])
         x_val = np.random.rand(*shape)
         alpha_val = np.random.rand(chan).astype(np.float32)
 
@@ -398,7 +398,7 @@ class TestPReLU:
             return [mb.prelu(x=x, alpha=alpha_val)]
 
         alpha_br = np.copy(alpha_val)
-        for i in range(1, len(x_val.shape)):
+        for i in range(1, len(x_val.shape)-1):
             alpha_br = np.expand_dims(alpha_br, i)
         x_pos = np.maximum(x_val, 0)
         b = np.minimum(x_val, 0)
@@ -692,7 +692,7 @@ class TestSoftplusParametric:
         "use_cpu_only, backend", itertools.product([True, False], backends,)
     )
     def test_builder_to_backend_smoke(self, use_cpu_only, backend):
-        t = np.array([[[-1, 3, 6]], [[-1, 2, -3]], [[4, -5, 6]]], dtype=np.float32)
+        t = np.array([[[[-1, 3, 6]], [[-1, 2, -3]], [[4, -5, 6]]]], dtype=np.float32)
         input_placeholders = {"x": mb.placeholder(shape=t.shape)}
         input_values = {"x": t}
 
@@ -703,13 +703,13 @@ class TestSoftplusParametric:
                 beta=np.array([4, 5, 6], dtype=np.float32),
             )
 
-        expected_output_types = (3, 1, 3, types.fp32)
+        expected_output_types = (1, 3, 1, 3, types.fp32)
         expected_outputs = np.array(
-            [
+            [[
                 [[1.8142700e-02, 1.2000000e01, 2.4000000e01]],
                 [[1.3427734e-02, 2.0000000e01, 7.1525574e-07]],
                 [[7.2000000e01, 0.0000000e00, 1.0800000e02]],
-            ],
+            ]],
             dtype=np.float32,
         )
 
@@ -726,7 +726,7 @@ class TestSoftplusParametric:
 
     @ssa_fn
     def test_builder_eval(self):
-        x_val = np.array([[[-1, 3, 6]], [[-1, 2, -3]], [[4, -5, 6]]], dtype=np.float32)
+        x_val = np.array([[[[-1, 3, 6]], [[-1, 2, -3]], [[4, -5, 6]]]], dtype=np.float32)
         v = mb.softplus_parametric(
             x=x_val,
             alpha=np.array([1, 2, 3], dtype=np.float32),
@@ -745,7 +745,7 @@ class TestSoftplusParametric:
     @ssa_fn
     def test_builder_eval2(self):
         x_val = np.array([[[-1, 3, 6]], [[-1, 2, -3]], [[4, -5, 6]]], dtype=np.float32)
-        with pytest.raises(ValueError, match=r".* dimension -3 .*"):
+        with pytest.raises(ValueError, match=r".* dimension 1 .*"):
             v = mb.softplus_parametric(
                 x=x_val,
                 alpha=np.array([1, 2], dtype=np.float32),
@@ -775,7 +775,7 @@ class TestSoftplusParametric:
     @ssa_fn
     def test_builder_eval5(self):
         x_val = np.array([[[-1, 3, 6]], [[-1, 2, -3]], [[4, -5, 6]]], dtype=np.float32)
-        with pytest.raises(ValueError, match=r".* dimension -3 .*"):
+        with pytest.raises(ValueError, match=r".* dimension 1 .*"):
             v = mb.softplus_parametric(
                 x=x_val,
                 alpha=np.array([1, 2, 3], dtype=np.float32),
@@ -784,7 +784,7 @@ class TestSoftplusParametric:
 
     @ssa_fn
     def test_builder_eval6(self):
-        x_val = np.array([[[-1, 3, 6]], [[-1, 2, -3]], [[4, -5, 6]]], dtype=np.float32)
+        x_val = np.array([[[[-1, 3, 6]], [[-1, 2, -3]], [[4, -5, 6]]]], dtype=np.float32)
         with pytest.raises(ValueError, match=r"beta .* rank 1"):
             v = mb.softplus_parametric(
                 x=x_val,
@@ -797,7 +797,7 @@ class TestSoftplusParametric:
         itertools.product([True, False], backends, [1, 2, 4, 8], [1, 2, 3]),
     )
     def test_builder_to_backend_stress(self, use_cpu_only, backend, dim, chan):
-        shape = np.array([chan, dim, dim])
+        shape = np.array([1, chan, dim, dim])
         x_val = np.random.rand(*shape)
         alpha_val = np.random.rand(chan).astype(np.float32)
         beta_val = np.random.rand(chan).astype(np.float32)
@@ -810,7 +810,7 @@ class TestSoftplusParametric:
 
         alpha_br = np.copy(alpha_val)
         beta_br = np.copy(beta_val)
-        for i in range(1, len(x_val.shape)):
+        for i in range(1, len(x_val.shape)-1):
             alpha_br = np.expand_dims(alpha_br, i)
             beta_br = np.expand_dims(beta_br, i)
         expected_outputs = [alpha_br * np.log(np.exp(x_val * beta_br) + 1)]
@@ -931,7 +931,9 @@ class TestThresholdedReLU:
     def test_builder_eval(self):
         x_val = np.array([[0, 2, 0], [4, 0, 6]], dtype=np.float32)
         v = mb.thresholded_relu(x=x_val, alpha=2.0)
-        assert is_close(np.maximum(x_val - 2.0, 0), v.val)
+        y = x_val
+        y[y < 2.0] = 0
+        assert is_close(y, v.val)
 
     @pytest.mark.parametrize(
         "use_cpu_only, backend, dim, alpha",
@@ -946,7 +948,9 @@ class TestThresholdedReLU:
         def build(x):
             return [mb.thresholded_relu(x=x, alpha=alpha)]
 
-        expected_outputs = [np.maximum(x_val - alpha, 0)]
+        y = x_val
+        y[y < alpha] = 0
+        expected_outputs = [y]
         expected_output_types = [o.shape[:] + (types.fp32,) for o in expected_outputs]
 
         run_compare_builder(

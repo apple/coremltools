@@ -7,8 +7,7 @@ from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.testing_reqs import *
 from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import (
     make_tf_graph,
-    tf_graph_to_mlmodel,
-    run_compare_tf,
+    tf_graph_to_mlmodel
 )
 
 # Custom Op imports
@@ -36,10 +35,10 @@ class TestCustomMatMul:
         input_spec = InputSpec(
             x=TensorInputType(),
             y=TensorInputType(),
-            transpose_x=BoolInputType(const=True, default=False),
-            transpose_y=BoolInputType(const=True, default=False),
-            x_is_sparse=BoolInputType(const=True, default=False),
-            y_is_sparse=BoolInputType(const=True, default=False),
+            transpose_x=BoolInputType(const=True, optional=True),
+            transpose_y=BoolInputType(const=True, optional=True),
+            x_is_sparse=BoolInputType(const=True, optional=True),
+            y_is_sparse=BoolInputType(const=True, optional=True),
         )
 
         # Specifying binding for custom op for specifying inputs,
@@ -50,6 +49,14 @@ class TestCustomMatMul:
             "parameters": ["transpose_x", "transpose_y", "x_is_sparse", "y_is_sparse"],
             "description": "Custom Sparse MatMul Layer",
         }
+
+        def default_inputs(self):
+            return DefaultInputs(
+                transpose_x=False,
+                transpose_y=False,
+                x_is_sparse=False,
+                y_is_sparse=False,
+                )
 
         def __init__(self, **kwargs):
             super(TestCustomMatMul.custom_sparse_matmul, self).__init__(**kwargs)
@@ -144,9 +151,9 @@ class TestCustomTopK:
         class custom_topk(Operation):
             input_spec = InputSpec(
                 x=TensorInputType(),
-                k=IntInputType(const=True, default=1),
-                axis=IntInputType(const=True, default=-1),
-                sorted=BoolInputType(const=True, default=False),
+                k=IntInputType(const=True, optional=True),
+                axis=IntInputType(const=True, optional=True),
+                sorted=BoolInputType(const=True, optional=True),
             )
 
             bindings = {
@@ -155,6 +162,13 @@ class TestCustomTopK:
                 "parameters": ["k", "axis", "sorted"],
                 "description": "Top K Custom layer",
             }
+
+            def default_inputs(self):
+                return DefaultInputs(
+                    k=1,
+                    axis=-1,
+                    sorted=False,
+                    )
 
             def __init__(self, **kwargs):
                 super(custom_topk, self).__init__(**kwargs)

@@ -24,11 +24,18 @@ register_op = SSAOpRegistry.register_op
 @register_op(doc_str="TODO", namespace="tf")
 class tf_make_list(Operation):
     input_spec = InputSpec(
-        init_length=IntInputType(optional=True, default=1),
-        dynamic_length=BoolInputType(optional=True, default=True),
+        init_length=IntInputType(optional=True),
+        dynamic_length=BoolInputType(optional=True),
         elem_shape=TensorInputType(const=True, optional=True),
-        dtype=StringInputType(const=True, optional=True, default="fp32"),
+        dtype=StringInputType(const=True, optional=True),
     )
+
+    def default_inputs(self):
+        return DefaultInputs(
+            init_length=1,
+            dynamic_length=True,
+            dtype="fp32",
+            )
 
     def __init__(self, **kwargs):
         super(tf_make_list, self).__init__(**kwargs)
@@ -60,16 +67,22 @@ class TfLSTMBase(Operation):
         h_prev=TensorInputType(),  # [batch, hidden_dim]
         # weight: [input_dim + hidden_dim, 4*hidden_dim] (icfo layout)
         weight=TensorInputType(const=True),
-        forget_bias=FloatInputType(const=True, optional=True, default=1.0),
+        forget_bias=FloatInputType(const=True, optional=True),
         # cell_clip == None implies not using cell clip
         cell_clip=FloatInputType(const=True, optional=True),
         # If use_peephole == False, weight_peep_* is ignored
-        use_peephole=BoolInputType(const=True, optional=True, default=False),
+        use_peephole=BoolInputType(const=True, optional=True),
         weight_peep_i=TensorInputType(const=True, optional=True),  # [hidden_dim,]
         weight_peep_f=TensorInputType(const=True, optional=True),  # [hidden_dim,]
         weight_peep_o=TensorInputType(const=True, optional=True),  # [hidden_dim,]
         bias=TensorInputType(const=True),  # [4*hidden_dim] (icfo layout)
     )
+
+    def default_inputs(self):
+        return DefaultInputs(
+            forget_bias=1.,
+            use_peephole=False,
+            )
 
     def _check_peephole_weights(self):
         # Check weight_peep_*

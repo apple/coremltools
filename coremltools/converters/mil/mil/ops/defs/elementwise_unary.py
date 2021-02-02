@@ -396,7 +396,7 @@ class floor(elementwise_unary):
 class inverse(Operation):
     """
     Return the reciprocal value of the input ``x``, element-wise.
-    
+
     Parameters
     ----------
     x: tensor<[\*d], T> (Required)
@@ -404,21 +404,26 @@ class inverse(Operation):
         * This is a small constant that is added to the input, before taking its
           inverse, for stability.
         * ``y = 1 / (x + epsilon)``.
-    
+
     Returns
     -------
     tensor<[\*d], f32>
         * A tensor of the same shape as ``x``.
-    
+
     Attributes
     ----------
     T: fp32
     """
-    
+
     input_spec = InputSpec(
         x=ScalarOrTensorInputType(),
-        epsilon=FloatInputType(const=True, default=1e-4),
+        epsilon=FloatInputType(const=True, optional=True),
     )
+
+    def default_inputs(self):
+        return DefaultInputs(
+            epsilon=1e-4,
+            )
 
     def __init__(self, **kwargs):
         super(inverse, self).__init__(**kwargs)
@@ -435,28 +440,32 @@ class inverse(Operation):
 class log(Operation):
     """
     Return the natural logarithm value of the input ``x``, element-wise.
-    
+
     Parameters
     ----------
     x: tensor<[\*d], T> (Required)
     epsilon: const fp32 (Optional, default=1e-45)
         * This is a small constant that is added to the input, before taking log.
         * ``y = log(x + epsilon)``.
-    
+
     Returns
     -------
     tensor<[\*d], f32>
         * A tensor of the same shape as ``x``.
-    
+
     Attributes
     ----------
     T: fp32
     """
-    
+
     input_spec = InputSpec(
         x=ScalarOrTensorInputType(),
-        epsilon=FloatInputType(const=True, default=1e-45),
+        epsilon=FloatInputType(const=True, optional=True),
     )
+
+    def default_inputs(self):
+        return DefaultInputs(
+            epsilon=1e-45)
 
     def __init__(self, **kwargs):
         super(log, self).__init__(**kwargs)
@@ -529,7 +538,7 @@ class round(elementwise_unary):
 class rsqrt(Operation):
     """
     Return the reciprocal value of the square root of the input ``x``, element-wise.
-    
+
     Parameters
     ----------
     x: tensor<[\*d], T> (Required)
@@ -537,21 +546,26 @@ class rsqrt(Operation):
         * This is a small constant that is added to the input, before applying the
           ``rsqrt`` function, for stability.
         * ``y = 1 / sqrt(x + epsilon)``.
-    
+
     Returns
     -------
     tensor<[\*d], f32>
         * A tensor of the same shape as ``x``.
-    
+
     Attributes
     ----------
     T: fp32
     """
-    
+
     input_spec = InputSpec(
         x=ScalarOrTensorInputType(),
-        epsilon=FloatInputType(const=True, default=1e-12),
+        epsilon=FloatInputType(const=True, optional=True),
     )
+
+    def default_inputs(self):
+        return DefaultInputs(
+            epsilon=1e-12,
+            )
 
     def __init__(self, **kwargs):
         super(rsqrt, self).__init__(**kwargs)

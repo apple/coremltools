@@ -491,7 +491,8 @@ class TestPyTorchConverterExamples:
         class TestModule(torch.nn.Module):
             def __init__(self):
                 super(TestModule, self).__init__()
-                self.embedding = torch.nn.Embedding(num_tokens, embedding_size)
+                self.embedding = torch.nn.Embedding(num_tokens, 
+                    embedding_size)
 
             def forward(self, x):
                 return self.embedding(x)
@@ -554,6 +555,51 @@ class TestPyTorchConverterExamples:
                 ],
                 outputs=["output"],
             )
+
+    @staticmethod
+    def test_fully_dynamic_inputs():
+        """
+        All dims of the inputs are dynamic, and write to slice to one of the
+        inputs.
+        """
+        import torch
+
+        class Model(torch.nn.Module):
+            def __init__(self, index):
+                super(Model, self).__init__()
+                self.index = index
+
+            def forward(self, x, y):
+                x[:, int(self.index.item())] = 0.0
+                y = y.unsqueeze(0)
+                return y, x
+
+        model = Model(torch.tensor(3))
+        scripted_model = torch.jit.script(model)
+
+        mlmodel = ct.convert(
+            scripted_model,
+            inputs=[
+                ct.TensorType("x", shape=(ct.RangeDim(), ct.RangeDim())),
+                ct.TensorType("y", shape=(ct.RangeDim(), ct.RangeDim()))
+            ],
+        )
+
+        # running predict() is supported on macOS
+        if ct.utils._is_macos():
+            x, y = torch.rand(2, 4), torch.rand(1, 2)
+            torch_res = model(x, y)
+            results = mlmodel.predict({"x": x.cpu().detach().numpy(),
+              "y": y.cpu().detach().numpy()})
+            np.testing.assert_allclose(torch_res[0], results['y.3'])
+            np.testing.assert_allclose(torch_res[1], results['x'])
+
+            x, y = torch.rand(1, 6), torch.rand(2, 3)
+            torch_res = model(x, y)
+            results = mlmodel.predict({"x": x.cpu().detach().numpy(),
+              "y": y.cpu().detach().numpy()})
+            np.testing.assert_allclose(torch_res[0], results['y.3'])
+            np.testing.assert_allclose(torch_res[1], results['x'])
 
 
 class TestMILExamples:
@@ -1046,6 +1092,7 @@ class TestFlexibleShape:
         assert model is not None
         spec = model.get_spec()
         assert len(spec.description.input[0].type.imageType.enumeratedSizes.sizes) == 2
+
 
 class TestOptionalInput:
     @staticmethod

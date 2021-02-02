@@ -59,6 +59,10 @@ class TestConvTranspose:
         test_symbolic,
         test_output_shape,
     ):
+        if test_symbolic and test_output_shape:
+            # conv_transpose output_shape can only be constant (non-symbolic)
+            return
+
         D, H, W, Kd, Kh, Kw = DHWKdKhKw
         N, C_in, C_out = 1, 1 * groups, 2 * groups
 
@@ -171,7 +175,7 @@ class TestConvTranspose:
             if has_bias:
                 arguments["bias"] = bias
             if test_output_shape:
-                arguments["output_shape"] = output.shape[2:]
+                arguments["output_shape"] = output.shape
             return mb.conv_transpose(**arguments)
 
         run_compare_builder(

@@ -195,8 +195,8 @@ def test_loop_invariant_elimination1():
     assert len(while_op.blocks[0].inputs) == 2
     assert len(while_op.outputs) == 2
     assert len(while_op.loop_vars) == 2
-    assert while_op.blocks[0].inputs[0].name == "a.x"
-    assert while_op.blocks[0].inputs[1].name == "b.x"
+    assert while_op.blocks[0].inputs[0].name == "a_x1"
+    assert while_op.blocks[0].inputs[1].name == "b_x1"
 
     prev_prog = copy.deepcopy(prog)
     PASS_REGISTRY["common::loop_invariant_elimination"](prog)
@@ -206,7 +206,7 @@ def test_loop_invariant_elimination1():
     assert len(while_op.blocks[0].inputs) == 1
     assert len(while_op.outputs) == 1
     assert len(while_op.loop_vars) == 1
-    assert while_op.blocks[0].inputs[0].name == "a.x"
+    assert while_op.blocks[0].inputs[0].name == "a_x1"
 
     if validate_model:
         assert_model_is_valid(prog, {"a": (1, 2), "b": (1, 2)})
@@ -236,8 +236,8 @@ def test_loop_invariant_elimination2():
     assert len(while_op.blocks[0].inputs) == 2
     assert len(while_op.outputs) == 2
     assert len(while_op.loop_vars) == 2
-    assert while_op.blocks[0].inputs[0].name == "a.x"
-    assert while_op.blocks[0].inputs[1].name == "b.x"
+    assert while_op.blocks[0].inputs[0].name == "a_x1"
+    assert while_op.blocks[0].inputs[1].name == "b_x1"
 
     prev_prog = copy.deepcopy(prog)
     PASS_REGISTRY["common::loop_invariant_elimination"](prog)
@@ -247,7 +247,7 @@ def test_loop_invariant_elimination2():
     assert len(while_op.blocks[0].inputs) == 1
     assert len(while_op.outputs) == 1
     assert len(while_op.loop_vars) == 1
-    assert while_op.blocks[0].inputs[0].name == "a.x"
+    assert while_op.blocks[0].inputs[0].name == "a_x1"
 
     if validate_model:
         assert_model_is_valid(prog, {"a": (1, 2), "b": (1, 2)})
@@ -456,3 +456,31 @@ def test_concat_interleave_fusion_pass():
         {"x": (B, C, H, W), "y": (B, C, H, W)},
         expected_output_shapes={block.outputs[0].name: (B, 2*C, H, W)},
     )
+
+def test_add_conv_transpose_output_shape():
+    """
+    Given:
+      %1: (1, 5, 39, fp32) = conv_transpose(...) # no output_shape input.
+
+    Result:
+      %2: (3, i32) = const(val=[1,5,39])
+      %3: (1, 5, 39, fp32) = conv_transpose(..., output_shape=%2)
+    """
+    N, C_in, C_out, D1 = 1, 3, 5, 20
+
+    @mb.program(input_specs=[mb.TensorSpec(shape=(N, C_in, D1))])
+    def prog(x):
+        weight = np.random.rand(C_out, C_in, D1).astype(np.float32)
+        return mb.conv_transpose(x=x, weight=weight)
+
+    prev_prog, prev_block, block = apply_pass_and_basic_check(
+        prog, "common::add_conv_transpose_output_shape"
+    )
+    assert get_op_types_in_program(prev_prog) == ["conv_transpose"]
+    assert get_op_types_in_program(prog) == ["conv_transpose"]
+    prev_conv_transpose_op = prev_prog.find_ops(op_type="conv_transpose",
+        exactly_one=True)[0]
+    conv_transpose_op = prog.find_ops(op_type="conv_transpose",
+        exactly_one=True)[0]
+    assert np.all(conv_transpose_op.output_shape.val ==
+        prev_conv_transpose_op.outputs[0].shape)

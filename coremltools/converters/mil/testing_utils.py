@@ -6,6 +6,7 @@
 import logging
 import numpy as np
 import copy
+import re
 
 from coremltools.converters.mil.mil import Program, Function
 from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
@@ -169,6 +170,13 @@ def run_core_ml_predict(mlmodel, input_key_values, use_cpu_only=False):
             input_key_values[k] = np.array([v], dtype=np.float32)
     return mlmodel.predict(input_key_values, useCPUOnly=use_cpu_only)
 
+def _get_coreml_out_from_dict(out_dict, out_name):
+    if out_name in out_dict:
+        return out_dict[out_name]
+    elif re.sub("[^a-zA-Z0-9_]", "_", out_name) in out_dict:
+        return out_dict[re.sub("[^a-zA-Z0-9_]", "_", out_name)]
+    else:
+        raise KeyError("{} output not found in Core ML outputs".format(out_name))
 
 def compare_backend(
     mlmodel,
@@ -206,12 +214,13 @@ def compare_backend(
             atol = max(atol * 100.0, 5e-1)
             rtol = max(rtol * 100.0, 5e-2)
         for o, expected in expected_outputs.items():
+            coreml_out = _get_coreml_out_from_dict(pred, o)
             msg = (
                 "Output {} differs. useCPUOnly={}.\nInput={}, "
                 + "\nExpected={}, \nOutput={}\n"
             )
-            assert is_close(expected, pred[o], atol, rtol), msg.format(
-                o, use_cpu_only, input_key_values, expected, pred[o]
+            assert is_close(expected, coreml_out, atol, rtol), msg.format(
+                o, use_cpu_only, input_key_values, expected, coreml_out
             )
 
 
@@ -237,14 +246,15 @@ def compare_shapes(
             pred = run_core_ml_predict(mlmodel, input_key_values,
                 use_cpu_only)
         for o, expected in expected_outputs.items():
+            coreml_out = _get_coreml_out_from_dict(pred, o)
             msg = "Output: {}. expected shape {} != actual shape {}".format(
-                o, expected.shape, pred[o].shape
+                o, expected.shape, coreml_out.shape
             )
             # Core ML does not support scalar as output
             # remove this special case when support is added
-            if expected.shape == () and pred[o].shape == (1,):
+            if expected.shape == () and coreml_out.shape == (1,):
                 continue
-            assert pred[o].shape == expected.shape, msg
+            assert coreml_out.shape == expected.shape, msg
 
 
 def get_core_ml_prediction(

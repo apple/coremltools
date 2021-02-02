@@ -6,6 +6,7 @@
 import logging as _logging
 
 import math as _math
+import numbers
 import numpy as _np
 from tqdm import tqdm as _tqdm
 
@@ -16,6 +17,7 @@ from coremltools.converters.mil.mil import Placeholder, Symbol
 from .internal_graph import *
 from .torch_op_registry import _TORCH_OPS_REGISTRY, register_torch_op
 from coremltools.converters.mil.mil.types.symbolic import any_symbolic, is_symbolic
+from coremltools.converters.mil.mil.types import is_bool
 
 # The pytorch args for many of the below ops were sourced from
 # https://github.com/pytorch/pytorch/blob/d971007c291c0ead1003d12cd553d18ddb582207/torch/csrc/jit/mobile/register_mobile_ops.cpp#L216
@@ -146,7 +148,7 @@ def _get_inputs(context, node, expected=None):
         expected = [expected] if not isinstance(expected, (list, tuple)) else expected
 
         if len(inputs) not in expected:
-            raise ValueError(
+            raise _logging.warning(
                 "node {} ({}) got {} input(s), expected {}".format(
                     node.name, node.kind, len(inputs), expected
                 )
@@ -155,16 +157,16 @@ def _get_inputs(context, node, expected=None):
     return inputs
 
 
-def _list_select(ls, index):
+def _list_select(shape_var, index):
     """ Sometimes we need to select a specific item from a list. If that item
         is known at compile time, extract it as a const. Otherwise, if it's
         symbolic, use gather.
     """
     # TODO: gather doesn't work when the shape is known size.
-    if ls.sym_val is not None and not isinstance(ls.sym_val[index], Symbol):
-        res = mb.const(val=ls.sym_val[index])
+    if shape_var.val is not None:
+        res = mb.const(val=shape_var.val[index])
     else:
-        res = mb.gather(x=ls, indices=index)
+        res = mb.gather(x=shape_var, indices=index)
     return res
 
 
@@ -179,6 +181,14 @@ def _construct_constant(val, name):
     if isinstance(val, int) and val == PYTORCH_MAGIC_DEFAULT:
         val = None
 
+    # Pytorch uses inf
+    if val is not None and isinstance(val, numbers.Number) \
+        and _np.isinf(val):
+          if val < 0:  # neg inf
+              # most negative number in fp32
+              val = -3.4e+38
+          else: # positive inf
+              val = 3.4e+38
     mode = decide_immediate_or_file(val)
     if val is None:
         return None
@@ -339,7 +349,10 @@ def add(context, node):
 @register_torch_op
 def cumsum(context, node):
     inputs = _get_inputs(context, node, expected=3)
-    res = mb.cumsum(x=inputs[0], axis=inputs[1], name=node.name)
+    x = inputs[0]
+    if is_bool(x.dtype):
+        x = mb.cast(x=x, dtype='int32')
+    res = mb.cumsum(x=x, axis=inputs[1], name=node.name)
     context.add(res)
 
 
@@ -485,9 +498,15 @@ def _convolution(context, node):
         if any(post_crop):
             # TODO: rdar://65575826 (PyTorch converter: output_padding mapping to slice
             # instead of crop layer for 1 and 3D ConvTranspose)
-            if len(post_crop) != 4:
-                raise ValueError("output_padding is supported only for ConvTranspose2D!")
-            conv = mb.crop(x=conv, crop_height=post_crop[:2], crop_width=post_crop[2:4], name=node.name)
+            if len(post_crop) == 2 and conv.rank == 3:
+                # Number of elements to crop from right = post_crop[-1].
+                # Since slicing supports negative indexing, end_id = -1 * post_crop[-1]
+                conv = mb.slice_by_index(x=conv, begin=[0, 0, post_crop[0]], end=[0, 0, -1*post_crop[-1]],
+                                         begin_mask=[True, True, False], end_mask=[True, True, False], name=node.name)
+            elif len(post_crop) == 4 and conv.rank == 4:
+                conv = mb.crop(x=conv, crop_height=post_crop[:2], crop_width=post_crop[2:4], name=node.name)
+            else:
+                raise ValueError("output_padding is supported only for ConvTranspose1D or ConvTranspose2D!")
     else:
         # Normal convolution
         kwargs["weight"] = weight
@@ -534,6 +553,14 @@ def flatten(context, node):
     reshape = mb.reshape(x=x, shape=dims, name=node.name)
     context.add(reshape)
 
+
+@register_torch_op
+def _reshape_from_tensor(context, node):
+    inputs = _get_inputs(context, node, expected=2)
+
+    reshape = mb.reshape(x=inputs[0], shape=inputs[1], name=node.name)
+    context.add(reshape)
+
 @register_torch_op
 def softsign(context, node):
     inputs = _get_inputs(context, node, expected=1)
@@ -552,9 +579,9 @@ def relu(context, node):
 def prelu(context, node):
     inputs = _get_inputs(context, node, expected=2)
     x = inputs[0]
-    alpha = inputs[1]
-
-    res = mb.prelu(x=x, alpha=alpha, name=node.name)
+    alpha = inputs[1].val
+    alpha_vec = _np.ones((x.shape[1],))*alpha
+    res = mb.prelu(x=x, alpha=alpha_vec, name=node.name)
     context.add(res)
 
 @register_torch_op
@@ -633,9 +660,15 @@ def _max_pool(context, node, inputs):
     if _np.any(dilation > 1):
         # See: rdar://60633736 (Implement dilation for mil op max_pool)
         raise ValueError("@max_pool does not support dilation > 1")
-    if ceil_mode is True:
+    if ceil_mode is True and list(strides.val) != [1] * len(strides.val):
+        # need to adjust padding values if ceil_mode is True
+        # ceil_mode only causes any difference though, if the strides are not 1 
+        rank = len(pad) // 2
+        x_spatial_dimensions = x.shape[-rank:]
+        if any_symbolic(x_spatial_dimensions):
+            raise ValueError("@max_pool does not support symbolic input spatial shape when ceil_mode is True")
         pad = _adjust_pad_for_ceil_mode(
-            x.shape[-2:], kernel_sizes.val, strides.val, pad
+            x_spatial_dimensions, kernel_sizes.val, strides.val, pad
         )
 
     pool = mb.max_pool(
@@ -693,6 +726,10 @@ def true_divide(context, node):
 @register_torch_op
 def mul(context, node):
     inputs = _get_inputs(context, node, expected=2)
+
+    for i, input in enumerate(inputs):
+        if is_bool(input.dtype):
+            inputs[i] = mb.cast(x=inputs[i], dtype="int32")
 
     res = mb.mul(x=inputs[0], y=inputs[1], name=node.name)
     context.add(res)
@@ -792,6 +829,16 @@ def size(context, node):
     context.add(size_node, node.name)
 
 
+@register_torch_op
+def _shape_as_tensor(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+
+    # Get the shape of the tensor.
+    shape_node = mb.shape(x=inputs[0], name=node.name)
+    context.add(shape_node, node.name)
+
+
+
 @register_torch_op(torch_alias=["reshape"])
 def view(context, node):
     inputs = _get_inputs(context, node, expected=2)
@@ -862,6 +909,23 @@ def adaptive_avg_pool2d(context, node):
     context.add(avg_pool)
 
 @register_torch_op
+def constant_pad_nd(context, node):
+    inputs = _get_inputs(context, node)
+    x = inputs[0]
+    pad = inputs[1]
+    if pad.op.op_type == "const":
+        pad = pad.val.reshape((-1, 2))[::-1].reshape(-1).tolist()
+        missing_dims = x.rank - (len(pad) // 2)
+        pad = [0, 0] * missing_dims + pad
+
+    scalar_val = inputs[2] if inputs[2] else 0.0
+    if inputs[2] and inputs[2].op.op_type == "const":
+        scalar_val = float(scalar_val.val)
+
+    res = mb.pad(x=x, pad=pad, mode="constant", constant_val=scalar_val, name=node.name)
+    context.add(res)
+
+@register_torch_op
 def adaptive_max_pool2d(context, node):
     inputs = _get_inputs(context, node, expected=2)
 
@@ -918,12 +982,24 @@ def batch_norm(context, node):
     #   bool training (5)
     #   float momentum (6)
     #   bool cudnn_enabled (8)
+    input_rank = inputs[0].rank
+    if input_rank > 4:
+        raise NotImplementedError("Translation for BatchNorm3d not supported")
+
+    if input_rank < 2:
+        raise ValueError("BatchNorm: Encountered invalid input rank during translation in torch frontend.")
+
     _input = inputs[0]
     weight = inputs[1]
     bias = inputs[2]
     running_mean = inputs[3]
     running_var = inputs[4]
     eps = inputs[7]
+    name = node.name
+    if input_rank == 2:
+        _input = mb.expand_dims(x=_input, axes=[-1], name=node.name + "_rank2_expansion")
+        name = node.name + "_batch_norm_1d"
+
     batch_norm = mb.batch_norm(
         x=_input,
         mean=running_mean,
@@ -931,8 +1007,12 @@ def batch_norm(context, node):
         gamma=weight,
         beta=bias,
         epsilon=eps,
-        name=node.name,
+        name=name,
     )
+
+    if input_rank == 2:
+        batch_norm = mb.squeeze(x=batch_norm, name=node.name, axes=[-1])
+
     context.add(batch_norm)
 
 
@@ -1124,12 +1204,12 @@ def numtotensor(context, node):
                 x.shape
             )
         )
-    if isinstance(x.sym_val, Symbol):
-        context.add(x, node.name)
-    else:
-        res = mb.const(val=[x.sym_val], name=node.name)
-        context.add(res)
 
+    if x.val is not None:
+        res = mb.const(val=[x.val], name=node.name)
+        context.add(res)
+    else:
+        context.add(x, node.name)
 
 def _ifzo_to_ifoz(weights, name):
     """
@@ -1162,73 +1242,43 @@ def _pytorch_hidden_to_coreml_milops(x, name):
     return mb.squeeze(x=x_concat, axes=_np.array([0]), name=name)
 
 
-@register_torch_op
-def lstm(context, node):
-    inputs = _get_inputs(context, node, expected=9)
+def _add_mil_lstm(input, initial_h, initial_c, weights, has_bias, bidirectional, name):
 
-    _input = inputs[0]
-    h0, c0 = inputs[1]
-    weights = inputs[2]
-    bias = inputs[3].val
-    num_layers = inputs[4].val
-    dropout = inputs[5]
-    bidirectional = inputs[7].val
-    batch_first = inputs[8].val
+    '''
+    Most of this code is to transform the tensors into
+    a shape acceptable by the CoreML implementation of LSTM.
 
-    if num_layers != 1:
-        raise ValueError(
-            "CoreML does not support stacked LSTM layers (LSTM "
-            "with num_layers > 1). Received {}. Redefine as "
-            " multiple layers if this is the desired "
-            "implementation.".format(num_layers)
-        )
+    For weights, biases,  per direction, pytorch uses two tensors:
+    (ii, if, ig, io) stacked on top of each other for each layer (tensor 1)
+    and (hi, hf, hg, ho) stacked on top of each other for each layer (tensor 2).
+    That is,  (W_ii|W_if|W_ig|W_io), of shape (4*hidden_size, input_size) and
+    (W_hi|W_hf|W_hg|W_ho), of shape (4*hidden_size, hidden_size).
 
-    if batch_first:
-        _input = mb.transpose(x=_input, perm=[1, 0, 2], name=_input.name + "_batch_first_transpose")
 
-    expected_num_weights = 2 * num_layers * (int(bidirectional) + 1) * (int(bias) + 1)
-    if len(weights) != expected_num_weights:
-        raise ValueError(
-            "Incorrect weights shape for lstm layer: Expected: {}. Recieved {}".format(
-                expected_num_weights, len(weights)
-            )
-        )
+    The CoreML LSTM op expects two tensors, weight and bias. So
+    the tensors for weight and bias are seperated from pytorch's @weights list (1.).
+    For each individual weight and bias tensor, the CoreML LSTM op expects the form
+    ii, if, io, ig and hi, hf, ho, hg, requiring the ifzo_to_ifoz function (2.).
+    Each seperate weight and bias tensor is concatinated to
+    form the two weight and bias tensors. (3.)
+    In the bidirectional case, the forward and backward weights and biases
+    are stacked on top of eachother instead of stored as seperate tensors in
+    the @weights list. (4.)
 
-    # NOTE:
-    # Most of this code is to transform the tensors into
-    # a shape acceptable by the CoreML implementation of LSTM.
-    # Since this transforming is complicated and unintuitive we include
-    # a description of what is happening:
+    initial_h and initial_c are list of "num_layers" tensors, each of shape [n_directions, B, H],
+    where n_directions = 1 or 2
+    whereas the shapes of the initial states to MIL's LSTM, BiLSTM must be [B, H] and [B, 2*H] respectively.
+    This means we need to do the following transformations:
+    - if its an LSTM (n_directions=1):
+            squeeze the first dimension of initial_h/initial_c , before feeding it to MIL's LSTM
+    - if its a BiLSTM (n_directions=2):
+            - split the input, shape=(2, B, H), to get (1,B,H) and (1,B,H)
+            - concatenate to get (1,B,2*H)
+            - squeeze to get (B,2*H)
+    '''
 
-    # For weights, biases and per direction, pytorch uses two tensors:
-    # (ii, if, ig, io) stacked on top of eachother for each layer (tensor 1)
-    # and (hi, hf, hg, ho) stacked on top of eachother for each layer (tensor 2)
-    # These weights are used in the calculation of the layers found in the torch.nn documentation:
-    # https://pytorch.org/docs/stable/nn.html
-
-    # The CoreML LSTM op expects two tensors, weight and bias. So
-    # the tensors for weight and bias are seperated from pytorch's @weights list (1.).
-    # For each individual weight and bias tensor, the CoreML LSTM op expects the form
-    # ii, if, io, ig and hi, hf, ho, hg, requiring the ifzo_to_ifoz function (2.).
-    # Each seperate weight and bias tensor is concatinated to
-    # form the two weight and bias tensors. (3.)
-    # In the bidirectional case, the forward and backward weights and biases
-    # are stacked on top of eachother instead of stored as seperate tensors in
-    # the @weights list. (4.)
-
-    # In the initial cell and hidden states, pytorch's tensor's 0th
-    # dimension stores each layer and direction.
-    # However, since CoreML's LSTM allows only one layer, the direction is squeezed out the state
-    # tensor. (4.)
-    # In the bidirectional case, the forward and backward state tensors are stacked on top of eachother.
-    # instead of stored in the layer and direction dimension
-    # using @_pytorch_hidden_to_coreml_milops (5.).
-
-    # For output: The CoreML LSTM op returns the final states with the first dimension: @num_layers
-    # squeezed out. To fit with the rest of the shapes expected down the line in
-    # the TorchIR graph- we unsqueeze that dimension in the final state output. (6.)
     if bidirectional:
-        if bias:
+        if has_bias:
             # (1.)
             biases = weights[2:4] + weights[6:8]
             weights = weights[0:2] + weights[4:6]
@@ -1238,105 +1288,235 @@ def lstm(context, node):
             for index in range(len(biases)):
                 biases[index] = _ifzo_to_ifoz(
                     biases[index],
-                    name="{}_lstm_bias_reshape_{}".format(node.name, index),
+                    name="{}_lstm_bias_reshape_{}".format(name, index),
                 )
 
             # (4.)
-            f_stack = mb.stack(values=biases[0:2], axis=0,)
-            r_stack = mb.stack(values=biases[2:4], axis=0,)
+            f_stack = mb.stack(values=biases[0:2], axis=0, )
+            r_stack = mb.stack(values=biases[2:4], axis=0, )
             # (3.)
             final_biases = mb.concat(
                 values=(f_stack, r_stack),
                 axis=1,
-                name=node.name + "_lstm_biases_concat",
+                name=name + "_lstm_biases_concat",
             )
 
         # (4.)
         forward_concat = mb.concat(
             values=[weights[0], weights[1]],
             axis=1,
-            name=node.name + "_lstm_weights_forward_concat",
+            name=name + "_lstm_weights_forward_concat",
         )
         backward_concat = mb.concat(
             values=[weights[2], weights[3]],
             axis=1,
-            name=node.name + "_lstm_weights_backward_concat",
+            name=name + "_lstm_weights_backward_concat",
         )
         # (2.)
         forward_transformed = _ifzo_to_ifoz(
-            forward_concat, name=node.name + "_lstm_forward_weights_ifoz_to_ifzo",
+            forward_concat, name=name + "_lstm_forward_weights_ifoz_to_ifzo",
         )
         backward_transformed = _ifzo_to_ifoz(
-            backward_concat, name=node.name + "_lstm_backward_weights_ifoz_to_ifzo"
+            backward_concat, name=name + "_lstm_backward_weights_ifoz_to_ifzo"
         )
         # (3.)
         final_weights = mb.concat(
             values=[forward_transformed, backward_transformed],
             axis=1,
-            name=node.name + "_lstm_weights_final_concat",
+            name=name + "_lstm_weights_final_concat",
         )
 
         # (5.)
-        h = _pytorch_hidden_to_coreml_milops(h0, name="_lstm_h0_reshaped")
-        c = _pytorch_hidden_to_coreml_milops(c0, name="_lstm_c0_reshaped")
+        h = _pytorch_hidden_to_coreml_milops(initial_h, name=name + "_lstm_h0_reshaped")
+        c = _pytorch_hidden_to_coreml_milops(initial_c, name=name + "_lstm_c0_reshaped")
 
     else:
-        if bias:
+        if has_bias:
             # (1.)
-            biases = weights[len(weights) // 2 :]
+            biases = weights[len(weights) // 2:]
             weights = weights[: len(weights) // 2]
             ih_b = biases[0]
             hh_b = biases[1]
 
             # (2.)
             ih_b_transformed = _ifzo_to_ifoz(
-                ih_b, name=node.name + "_lstm_ih_bias_transformed",
+                ih_b, name=name + "_lstm_ih_bias_transformed",
             )
             hh_b_transformed = _ifzo_to_ifoz(
-                hh_b, name=node.name + "_lstm_hh_bias_transformed",
+                hh_b, name=name + "_lstm_hh_bias_transformed",
             )
 
             # (3.)
             final_biases = mb.stack(
                 values=(ih_b_transformed, hh_b_transformed),
                 axis=0,
-                name=node.name + "_lstm_bias_stacked",
+                name=name + "_lstm_bias_stacked",
             )
 
         # (3.)
         weights_concat = mb.concat(
-            values=weights, axis=1, name=node.name + "_lstm_weights_concat"
+            values=weights, axis=1, name=name + "_lstm_weights_concat"
         )
         # (2.)
         final_weights = _ifzo_to_ifoz(
-            weights_concat, name=node.name + "_lstm_weights_ifoz_to_ifzo",
+            weights_concat, name=name + "_lstm_weights_ifoz_to_ifzo",
         )
 
         # (4.)
-        h = mb.squeeze(x=h0, axes=_np.array([0]), name=node.name + "_lstm_h0_squeeze")
-        c = mb.squeeze(x=c0, axes=_np.array([0]), name=node.name + "_lstm_c0_squeeze")
+        h = mb.squeeze(x=initial_h, axes=_np.array([0]), name=name + "_lstm_h0_squeeze")
+        c = mb.squeeze(x=initial_c, axes=_np.array([0]), name=name + "_lstm_c0_squeeze")
 
     lstm = mb.lstm(
-        x=_input,
+        x=input,
         initial_h=h,
         initial_c=c,
         weight=final_weights,
-        bias=(final_biases if bias else None),
+        bias=(final_biases if has_bias else None),
         direction=("bidirectional" if bidirectional is True else "forward"),
         output_sequence=True,
-        name=node.name if not batch_first else node.name + "_batch_first",
+        name=name,
     )
 
-    # (6.)
-    for index, (name, output) in enumerate(zip(node.outputs, lstm)):
+    return lstm
+
+
+@register_torch_op
+def lstm(context, node):
+    inputs = _get_inputs(context, node, expected=9)
+
+    _input = inputs[0]
+    h0, c0 = inputs[1]
+    weights_list = inputs[2]
+    has_bias = inputs[3].val # bool
+    num_layers = inputs[4].val
+    dropout = inputs[5] # ignored in the translation
+    bidirectional = inputs[7].val
+    batch_first = inputs[8].val
+
+    '''
+    Torch LSTM layer's input shapes: 
+    
+    (1) first input
+        (Seq, B, C) : if batch_first = False
+        (B, Seq, C) : if batch_first = True
+        
+    (2) & (3) initialization states
+        (num_layers, B, H) : if bidirectional = False
+        (num_layers * 2, B, H) : if bidirectional = True
+        
+        
+    For the MIL LSTM layer, these are the input shapes:
+     
+    (1) first input: (Seq, B, C)
+           this means, if batch_first=True, we need to insert a transpose op first
+           
+    (2) & (3) initialization states
+        MIL's LSTM layer does not natively support the "num_layers" parameters.
+        So, when num_layers > 1, we add multiple MIL LSTM ops in a sequence.
+        Each of these LSTM ops will take in initialization states in the following shape:
+        (B, H) if bidirectional = False
+        (B, 2*H) if bidirectional = True
+    '''
+
+    if batch_first:
+        _input = mb.transpose(x=_input, perm=[1, 0, 2], name=_input.name + "_batch_first_transpose")
+
+    expected_num_weights = 2 * num_layers * (int(bidirectional) + 1) * (int(has_bias) + 1)
+    if len(weights_list) != expected_num_weights:
+        raise ValueError(
+            "Incorrect weights shape for lstm layer: Expected: {}. Recieved {}".format(
+                expected_num_weights, len(weights_list)
+            )
+        )
+
+    # shape of h0 and c0 are (num_layers * n_directions, B, H)
+    if num_layers == 1:
+        all_initial_h = [h0]   # [(n_directions, B, H)]
+        all_initial_c = [c0]   # [(n_directions, B, H)]
+    else:
+        all_initial_h = mb.split(x=h0, num_splits=num_layers, axis=0) # [(n_directions, B, H)]
+        all_initial_c = mb.split(x=c0, num_splits=num_layers, axis=0) # [(n_directions, B, H)]
+
+    n_weights_per_layer = int(len(weights_list) / num_layers)
+    x = _input
+    h_out_list = []
+    c_out_list = []
+    for i in range(num_layers):
+        if i < num_layers - 1:
+            op_name = node.name + "_lstm_layer_{}".format(i)
+        else:
+            if batch_first:
+                op_name = node.name + "_batch_first"
+            else:
+                op_name = node.name
+
+        lstm_out = _add_mil_lstm(input=x,
+                                 initial_h=all_initial_h[i],
+                                 initial_c=all_initial_c[i],
+                                 weights=weights_list[i * n_weights_per_layer : (i+1) * n_weights_per_layer],
+                                 has_bias=has_bias,
+                                 bidirectional=bidirectional,
+                                 name=op_name,
+                                 )
+        x = lstm_out[0] # shape of lstm_out[0] == (S,B,H) if bidirectional = True else (S, B, 2*H)
+        h_out_list.append(lstm_out[1]) # shape of lstm_out[1] == (B,H) if bidirectional = False else (B, 2*H)
+        c_out_list.append(lstm_out[2]) # shape of lstm_out[2] == (B,H) if bidirectional = False else (B, 2*H)
+
+
+    '''
+    For torch, these are the dimensions of the 3 output tensors: 
+    (1) output[0] : 
+            (Seq, B, H) if batch_first = False, bidirectional = False
+            (Seq, B, 2*H) if batch_first = False, bidirectional = True
+            (B, Seq, H) if batch_first = True, bidirectional = False
+            (B, Seq, 2*H) if batch_first = True, bidirectional = True
+            
+    (2) & (3) these are the state outputs: 
+            (num_layers, B, H) if bidirectional = False
+            (num_layers * 2, B, H) if bidirectional = True
+            
+    MIL lstm layer's output shapes:
+    (1) output[0]: 
+        (Seq, B, H) if bidirectional = False
+        (Seq, B, 2*H) if bidirectional = True
+        This means we need a transpose op if batch_first is True
+        
+    (2) & (3) shapes of the state outputs:
+        each MIL LSTM op will produce final state tensors with the following shape: 
+        (B, H) if bidirectional = False
+        (B, 2*H) if bidirectional = True
+        
+        stack/expand the final state tensors to match the Torch output
+    '''
+    for index, (name, output) in enumerate(zip(node.outputs, lstm_out)):
         if index > 0:
-            # Add in @num_layers in first dimension to hn, cn output
-            unsqueeze = mb.expand_dims(x=output, axes=[0], name=name)
-            context.add(unsqueeze)
+            # index > 0 ===> its one of the state outputs (h or c)
+            if bidirectional:
+                if num_layers == 1:
+                    out1, out2 = mb.split(x=output, num_splits=2, axis=1) # each output of shape [B, H] after the split
+                    final_out = mb.stack(values=[out1, out2], axis=0, name=name) # [2, B, H]
+                    context.add(final_out, name)
+                else:
+                    out_state_tensors_list = h_out_list if index == 1 else c_out_list # each tensor in the list is of shape (B, 2*H)
+                    list_of_tensors_to_stack = []
+                    for i in range(num_layers):
+                        out1, out2 = mb.split(x=out_state_tensors_list[i], num_splits=2, axis=1) # each output of shape [B, H] after the split
+                        out = mb.stack(values=[out1, out2], axis=0)  # [2, B, H]
+                        list_of_tensors_to_stack.append(out)
+                    final_out = mb.concat(values=list_of_tensors_to_stack, axis=0) # output of shape (num_layers * 2, B, H)
+                    context.add(final_out, name)
+            else:
+                if num_layers == 1:
+                    unsqueeze = mb.expand_dims(x=output, axes=[0], name=name)
+                    context.add(unsqueeze, name)
+                else:
+                    out = mb.stack(values=h_out_list if index == 1 else c_out_list, axis=0, name=name)
+                    context.add(out, name)
         else:
             if batch_first:
                 output = mb.transpose(x=output, perm=[1, 0, 2], name=name)
             context.add(output, name)
+
 
 def _get_scales_from_output_size(output_size, input_shape):
     scales = []
@@ -1362,6 +1542,7 @@ def _get_scales_from_output_size(output_size, input_shape):
         scales = [scales_h, scales_w]
     return scales
 
+
 @register_torch_op
 def upsample_bilinear2d(context, node):
     inputs = _get_inputs(context, node)
@@ -1369,18 +1550,25 @@ def upsample_bilinear2d(context, node):
     output_size = inputs[1]
     align_corners = bool(inputs[2].val)
 
-    if len(inputs) == 5:
-        # For torch==1.5.0, upsample_bilinear2d has 5 inputs.
-        scales_h = inputs[3]
-        scales_w = inputs[4]
-
-    scales = _get_scales_from_output_size(output_size, _input.shape)
-    if scales:
-        scales_h, scales_w = scales
+    scales_h, scales_w = None, None
+    if output_size is None:
+        # get scale factors from provided inputs
+        scale_factors = inputs[3].val
+        scales_h = scale_factors[0]
+        scales_w = scale_factors[1]
     else:
-        factors = inputs[-1].val
-        scales_h = factors[0]
-        scales_w = factors[1]
+        # infer scale factors from output sizes
+        scales = _get_scales_from_output_size(output_size, _input.shape)
+        if scales:
+            scales_h, scales_w = scales
+
+    if scales_h is None or scales_w is None:
+        if len(inputs) == 5:
+            # For torch==1.5.0, upsample_bilinear2d has 5 inputs.
+            scales_h = inputs[3]
+            scales_w = inputs[4]
+        else:
+            raise ValueError(f"Failed to infer scale factors from inputs.")
 
     upsample_bilinear = mb.upsample_bilinear(
         x=_input,
@@ -1391,37 +1579,41 @@ def upsample_bilinear2d(context, node):
     )
     context.add(upsample_bilinear)
 
+
 @register_torch_op
 def upsample_nearest2d(context, node):
     inputs = _get_inputs(context, node)
     _input = inputs[0]
+    scales_h, scales_w = None, None
+
     output_size = inputs[1]
-    if len(inputs) == 4:
-        scales_h = inputs[2]
-        scales_w = inputs[3]
-
-    scales = _get_scales_from_output_size(output_size, _input.shape)
-    if scales:
-        scales_h, scales_w = scales
+    if output_size is None:
+        # get scale factors from provided inputs
+        scale_factors = inputs[2].val
+        scales_h = scale_factors[0]
+        scales_w = scale_factors[1]
     else:
-        factors = inputs[-1].val
-        scales_h = factors[0]
-        scales_w = factors[1]
+        # infer scale factors from output sizes
+        scales = _get_scales_from_output_size(output_size, _input.shape)
+        if scales:
+            scales_h, scales_w = scales
 
-    if (
-        abs(scales_h - round(scales_h)) > 0.001
-        or abs(scales_w - round(scales_w)) > 0.001
-    ):
-        raise ValueError("Layer upsample_nearest2d only supports integral scales. Provided scales: {}. "
-                         "Please use upsample_bilinear2d for fractional scales".format(scales))
+    if scales_h is None or scales_w is None:
+        if len(inputs) == 5:
+            # For torch==1.5.0, upsample_bilinear2d has 5 inputs.
+            scales_h = inputs[3]
+            scales_w = inputs[4]
+        else:
+            raise ValueError(f"Failed to infer scale factors from inputs.")
 
     upsample_nearest2d = mb.upsample_nearest_neighbor(
         x=_input,
-        upscale_factor_height=int(round(scales_h)),
-        upscale_factor_width=int(round(scales_w)),
+        scale_factor_height=scales_h,
+        scale_factor_width=scales_w,
         name=node.name,
     )
     context.add(upsample_nearest2d)
+
 
 @register_torch_op(torch_alias=["listunpack"])
 def tupleunpack(context, node):
@@ -1705,10 +1897,15 @@ def _avg_pool(context, node, inputs):
     pad = inputs[3]
     pad = _np.repeat(pad.val, 2)
     ceil_mode = inputs[4]
-    if ceil_mode.val is True:
+    if ceil_mode.val is True and list(strides.val) != [1] * len(strides.val):
+        # need to adjust padding values if ceil_mode is True
+        # ceil_mode only causes any difference though, if the strides are not 1
         rank = len(pad) // 2
+        x_spatial_dimensions = x.shape[-rank:]
+        if any_symbolic(x_spatial_dimensions):
+            raise ValueError("@avg_pool does not support symbolic input spatial shape when ceil_mode is True")
         pad = _adjust_pad_for_ceil_mode(
-            x.shape[-rank:], kernel_sizes.val, strides.val, pad
+            x_spatial_dimensions, kernel_sizes.val, strides.val, pad
         )
     include_pad = inputs[5].val
 
@@ -2049,7 +2246,8 @@ def masked_fill(context, node):
         # @mb.fill cannot handle value with dtype integer
         # so we cast the value.
         value = mb.cast(x=value, dtype="fp32")
-    value = mb.fill(shape=x.shape, value=value, name=node.name + "_value")
+    shape = mb.shape(x=x, name=node.name + "_shape")
+    value = mb.fill(shape=shape, value=value, name=node.name + "_value")
     res = mb.select(cond=mask, a=value, b=x, name=node.name)
     context.add(res)
 
@@ -2219,6 +2417,13 @@ def gather(context, node):
     res = mb.gather_along_axis(x=inputs[0], indices=inputs[2], axis=inputs[1], name=node.name)
     context.add(res)
 
+@register_torch_op
+def index_select(context, node):
+    x = context[node.inputs[0]]
+    axis = context[node.inputs[1]]
+    indices = context[node.inputs[2]]
+    context.add(mb.gather(x=x, indices=indices, axis=axis, name=node.name))
+
 @register_torch_op(torch_alias=["abs"])
 def _abs(context, node):
     inputs = _get_inputs(context, node, expected=1)
@@ -2263,7 +2468,10 @@ def ceil(context, node):
 @register_torch_op
 def clamp(context, node):
     inputs = _get_inputs(context, node, expected=3)
-    context.add(mb.clip(x=inputs[0], alpha=inputs[1], beta=inputs[2], name=node.name))
+    min_val = inputs[1] if inputs[1] else _np.finfo(_np.float32).min
+    max_val = inputs[2] if inputs[2] else _np.finfo(_np.float32).max
+    context.add(mb.clip(x=inputs[0], alpha=min_val, beta=max_val, name=node.name))
+
 
 @register_torch_op
 def cos(context, node):
@@ -2395,6 +2603,7 @@ def neg(context, node):
     inputs = _get_inputs(context, node, expected=1)
     context.add(mb.mul(x=inputs[0], y=-1, name=node.name))
 
+
 @register_torch_op
 def topk(context, node):
     inputs = _get_inputs(context, node)
@@ -2423,11 +2632,12 @@ def topk(context, node):
                             "is {}".format(inputs[5].val))
 
     res = mb.topk(**kwargs)
-
     values_name = node.outputs[0]
     indices_name = node.outputs[1]
     context.add(res[0], torch_name=values_name)
     context.add(res[1], torch_name=indices_name)
+
+
 
 def _std(x,axes,keep_dim,unbiased,eps):
     need_rescale = False
@@ -2489,10 +2699,31 @@ def std(context, node):
         keep_dim = inputs[3].val
 
     y = _std(x,axes,keep_dim,unbiased,0)
-
     context.add(y,node.name)
 
 @register_torch_op
 def copy_(context, node):
     inputs = _get_inputs(context, node, expected=3)
     context.add(mb.identity(x=inputs[0], name=node.name))
+
+@register_torch_op
+def dtype(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+    dtype_str = inputs[0].dtype.__name__
+    context.add(mb.const(val=dtype_str, name=node.name))
+
+@register_torch_op
+def tensor(context, node):
+    inputs = _get_inputs(context, node, expected=4)
+    val = inputs[0].val # element val to fill
+    msg_prefix = 'torch::tensor {} '.format(node.name)
+    if val is None:
+        raise ValueError(msg_prefix + 'val is None')
+    dtype_str = inputs[1].val
+    if dtype_str != 'fp32':
+        raise NotImplementedError(msg_prefix + \
+            'Unsupported dtype: {}'.format(dtype_str))
+    # inputs[3] is a bool (not sure what it is)
+    shape = mb.shape(x=inputs[2], name=node.name+"_shape")
+    context.add(mb.fill(shape=shape, value=val, name=node.name))
+

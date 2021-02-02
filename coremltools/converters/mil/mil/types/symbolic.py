@@ -6,7 +6,7 @@
 import sympy as sm
 import numpy as np
 
-k_used_symbols = set()
+k_used_symbols = {}
 k_num_internal_syms = 0
 
 
