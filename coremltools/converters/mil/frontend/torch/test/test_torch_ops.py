@@ -1374,7 +1374,6 @@ class TestConstantPad(TorchBaseTest):
         model = torch.constant_pad_nd(input_data, (1,1,1,1))
         self.run_compare_torch(input_shape,model,backend=backend)
         
-        
     @pytest.mark.parametrize("backend", backends)
     def test_constant_pad_1d(self, backend):
         input_shape = (3, 4, 5)
