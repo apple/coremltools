@@ -1516,7 +1516,7 @@ class TestTopk(TorchBaseTest):
             backend=backend,
         )
 
-class TestLog10:
+class TestLog10(TorchBaseTest):
     @pytest.mark.parametrize(
         "backend, rank", itertools.product(backends, range(1, 6)),
     )
@@ -1531,6 +1531,6 @@ class TestLog10:
 
         input_shape = tuple(np.random.randint(low=1, high=10, size=rank))
         model = Log10Model()
-        run_compare_torch(
+        self.run_compare_torch(
             input_shape, model, backend=backend,
         )
