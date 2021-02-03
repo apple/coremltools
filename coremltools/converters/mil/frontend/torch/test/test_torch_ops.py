@@ -1515,3 +1515,12 @@ class TestTopk(TorchBaseTest):
             input_as_shape=False,
             backend=backend,
         )
+class TestConstantPad:
+    @pytest.mark.parametrize(
+        "input_shape, pad, backend",
+        itertools.product([2,2], (1,1), backends)
+    )
+    def test_constant_pad_nd(self, input_shape, pad, backend):
+        input_data = torch.rand(input_shape)
+        model = torch.constant_pad_nd(input_data, pad)
+        run_compare_torch(input_shape,model,backend=backend)

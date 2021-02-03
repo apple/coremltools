@@ -2726,4 +2726,10 @@ def tensor(context, node):
     # inputs[3] is a bool (not sure what it is)
     shape = mb.shape(x=inputs[2], name=node.name+"_shape")
     context.add(mb.fill(shape=shape, value=val, name=node.name))
+def constant_pad_nd(context, node):
+    inputs = _get_inputs(context, node, expected=3)
+    new_pad = inputs[1].val.reshape((-1, 2))[::-1].reshape(-1).tolist()
+    new_pad = [0]*(2*len(inputs[0].shape)-len(new_pad)) + new_pad
 
+    padded = mb.pad(x=inputs[0], pad=_np.array(new_pad), mode="constant", constant_val=float(0), name=node.name)
+    context.add(padded)
