@@ -62,6 +62,12 @@ build_wheel_linux_py38:
   variables:
     PYTHON: "3.8"
 
+build_wheel_linux_py39:
+  <<: *build_linux
+  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-14.04:1.0.3
+  variables:
+    PYTHON: "3.9"
+
 #########################################################################
 ##
 ##                         macOS - Build
@@ -102,6 +108,12 @@ build_wheel_macos_py38:
   <<: *build_macos
   variables:
     PYTHON: "3.8"
+
+## Uses Python 3.9 from python.org
+build_wheel_macos_py39:
+  <<: *build_macos
+  variables:
+    PYTHON: "3.9"
 
 #########################################################################
 ##
@@ -211,38 +223,38 @@ test_macos11_py37_mil:
 ##
 #########################################################################
 
-test_macos11_py38_coremltools_smoke_test:
+test_macos11_py39_coremltools_smoke_test:
   <<: *test_macos_pkg
   tags:
     - macos11
   dependencies:
-    - build_wheel_macos_py38
+    - build_wheel_macos_py39
   variables:
-    WHEEL_PATH: build/dist/*cp38*10_16*
+    WHEEL_PATH: build/dist/*cp39*10_16*
     TEST_PACKAGE: coremltools.test.neural_network.test_simple_nn_inference
-    PYTHON: "3.8"
+    PYTHON: "3.9"
 
-test_macos10_15_py38_coremltools_smoke_test:
+test_macos10_15_py39_coremltools_smoke_test:
   <<: *test_macos_pkg
   tags:
     - macos10.15
   dependencies:
-    - build_wheel_macos_py38
+    - build_wheel_macos_py39
   variables:
-    WHEEL_PATH: build/dist/*cp38*10_15*
+    WHEEL_PATH: build/dist/*cp39*10_15*
     TEST_PACKAGE: coremltools.test.neural_network.test_simple_nn_inference
-    PYTHON: "3.8"
+    PYTHON: "3.9"
 
-test_macos10_14_py38_coremltools_smoke_test:
+test_macos10_14_py39_coremltools_smoke_test:
   <<: *test_macos_pkg
   tags:
     - macos10.14
   dependencies:
-    - build_wheel_macos_py38
+    - build_wheel_macos_py39
   variables:
-    WHEEL_PATH: build/dist/*cp38*10_14*
+    WHEEL_PATH: build/dist/*cp39*10_14*
     TEST_PACKAGE: coremltools.test.neural_network.test_simple_nn_inference
-    PYTHON: "3.8"
+    PYTHON: "3.9"
 
 #########################################################################
 ##
@@ -289,10 +301,12 @@ collect_artifacts:
     - build_wheel_linux_py36
     - build_wheel_linux_py37
     - build_wheel_linux_py38
+    - build_wheel_linux_py39
     - build_wheel_macos_py35
     - build_wheel_macos_py36
     - build_wheel_macos_py37
     - build_wheel_macos_py38
+    - build_wheel_macos_py39
   artifacts:
     expire_in: 2 weeks
     paths:
