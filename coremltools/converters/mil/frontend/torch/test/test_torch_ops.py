@@ -1367,12 +1367,12 @@ class TestTranspose(TorchBaseTest):
 class TestConstantPad(TorchBaseTest):
     @pytest.mark.parametrize(
         "input_shape, pad, backend",
-        itertools.product([2,2], (1,1), backends)
+        itertools.product([2,2], backends)
     )
-    def test_constant_pad_nd(self, input_shape, pad, backend):
+    def test_constant_pad_nd(self, input_shape, backend):
         input_data = torch.rand(input_shape)
-        model = torch.constant_pad_nd(input_data, pad)
-        run_compare_torch(input_shape,model,backend=backend)
+        model = torch.constant_pad_nd(input_data, (1,1,1,1))
+        self.run_compare_torch(input_shape,model,backend=backend)
 
     @pytest.mark.parametrize("backend", backends)
     def test_constant_pad_2d(self, backend):
