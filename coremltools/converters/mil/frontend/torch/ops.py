@@ -2727,3 +2727,9 @@ def tensor(context, node):
     shape = mb.shape(x=inputs[2], name=node.name+"_shape")
     context.add(mb.fill(shape=shape, value=val, name=node.name))
 
+@register_torch_op
+def log10(context, node):
+    inputs = _get_inputs(context, node)
+    x = inputs[0]
+    log_x = mb.log(x=x)
+    context.add(mb.mul(x=log_x, y=1/_np.log(10.0)), node.name)
