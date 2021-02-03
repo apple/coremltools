@@ -26,6 +26,7 @@ def run_compare_builder(
     atol=1e-04,
     rtol=1e-05,
     inputs=None,
+    also_compare_shapes=False,
 ):
     """
     Inputs:
@@ -81,7 +82,8 @@ def run_compare_builder(
         if out_var.dtype != s[-1]:
             raise ValueError(
                 "Output {} type: expect {}, got {}. Program:\n{}".format(
-                    out_var.name, s[-1], out_var.dtype, prog
+                    out_var.name, s[-1].__type_info__(),
+                    out_var.dtype.__type_info__(), prog
                 )
             )
         if UNK_VARIADIC in s[:-1]:
@@ -129,5 +131,5 @@ def run_compare_builder(
         use_cpu_only=use_cpu_only,
         atol=atol,
         rtol=rtol,
-        also_compare_shapes=False,
+        also_compare_shapes=also_compare_shapes,
     )

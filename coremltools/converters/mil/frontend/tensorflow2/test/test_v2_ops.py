@@ -3,13 +3,22 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import itertools
+import numpy as np
 from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.frontend.tensorflow.test import (
     testing_utils as tf_testing_utils,
 )
+
 from coremltools.converters.mil.frontend.tensorflow2.test.testing_utils import (
-    make_tf2_graph as make_tf_graph,
-    run_compare_tf2 as run_compare_tf,
+    TensorFlow2BaseTest
+)
+from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import (
+    TensorFlowBaseTest
+)
+TensorFlowBaseTest.run_compare_tf = TensorFlow2BaseTest.run_compare_tf2
+from coremltools.converters.mil.frontend.tensorflow2.test.testing_utils import (
+    make_tf2_graph as make_tf_graph
 )
 from coremltools.converters.mil.testing_reqs import *
 
@@ -21,7 +30,6 @@ backends = testing_reqs.backends
 # Overwrite utilities to enable different conversion / compare method
 tf_testing_utils.frontend = "TensorFlow2"
 tf_testing_utils.make_tf_graph = make_tf_graph
-tf_testing_utils.run_compare_tf = run_compare_tf
 
 # -----------------------------------------------------------------------------
 # Import TF 2.x-compatible TF 1.x test cases
@@ -37,6 +45,7 @@ from coremltools.converters.mil.frontend.tensorflow.test.test_ops import (
     TestActivationSoftSign,
     TestAddN,
     TestArgSort,
+    TestAudioSpectrogram,
     TestBatchNormalization,
     TestBatchToSpaceND,
     TestBroadcastTo,
@@ -65,6 +74,7 @@ from coremltools.converters.mil.frontend.tensorflow.test.test_ops import (
     TestLogSoftMax,
     TestMatrixBandPart,
     TestMatrixDiag,
+    TestMfcc,
     TestNonMaximumSuppression,
     TestNormalization,
     TestOneHot,
@@ -103,7 +113,7 @@ from coremltools.converters.mil.frontend.tensorflow.test.test_ops import (
 del TestWhileLoop.test_nested_while_body  # tf.function() error in TF2
 
 
-class TestNormalizationTF2:
+class TestNormalizationTF2(TensorFlowBaseTest):
     @pytest.mark.parametrize(
         "use_cpu_only, backend, epsilon",
         itertools.product([True, False], backends, [1e-1, 1e-10]),
@@ -133,7 +143,7 @@ class TestNormalizationTF2:
         input_values = [random_gen(shape=input_shape)]
         input_dict = dict(zip(inputs, input_values))
 
-        run_compare_tf(
+        TensorFlowBaseTest.run_compare_tf(
             model,
             input_dict,
             outputs,
@@ -144,7 +154,7 @@ class TestNormalizationTF2:
         )
 
 
-class TestElementWiseBinaryTF2:
+class TestElementWiseBinaryTF2(TensorFlowBaseTest):
     @pytest.mark.parametrize(
         "use_cpu_only, backend, rank",
         itertools.product([True], backends, [rank for rank in range(1, 4)]),  # False
@@ -176,12 +186,12 @@ class TestElementWiseBinaryTF2:
 
         input_dict = dict(zip(inputs, input_values))
 
-        run_compare_tf(
+        TensorFlowBaseTest.run_compare_tf(
             model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend
         )
 
 
-class TestControlFlowFromAutoGraph:
+class TestControlFlowFromAutoGraph(TensorFlowBaseTest):
     @pytest.mark.parametrize(
         "use_cpu_only, backend", itertools.product([True, False], backends)
     )
@@ -197,7 +207,7 @@ class TestControlFlowFromAutoGraph:
         model, inputs, outputs = build_model
         input_values = [np.array([0.7], dtype=np.float32)]
         input_dict = dict(zip(inputs, input_values))
-        run_compare_tf(
+        TensorFlowBaseTest.run_compare_tf(
             model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend
         )
 
@@ -216,7 +226,7 @@ class TestControlFlowFromAutoGraph:
         model, inputs, outputs = build_model
         input_values = [np.array([2], dtype=np.float32)]
         input_dict = dict(zip(inputs, input_values))
-        run_compare_tf(
+        TensorFlowBaseTest.run_compare_tf(
             model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend
         )
 
@@ -238,7 +248,7 @@ class TestControlFlowFromAutoGraph:
             np.array([7], dtype=np.float32),
         ]
         input_dict = dict(zip(inputs, input_values))
-        run_compare_tf(
+        TensorFlowBaseTest.run_compare_tf(
             model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend
         )
 
@@ -257,7 +267,7 @@ class TestControlFlowFromAutoGraph:
         model, inputs, outputs = build_model
         input_values = [np.array([2.0], dtype=np.float32)]
         input_dict = dict(zip(inputs, input_values))
-        run_compare_tf(
+        TensorFlowBaseTest.run_compare_tf(
             model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend
         )
 
@@ -276,7 +286,7 @@ class TestControlFlowFromAutoGraph:
         model, inputs, outputs = build_model
         input_values = [np.array([2.0], dtype=np.float32)]
         input_dict = dict(zip(inputs, input_values))
-        run_compare_tf(
+        TensorFlowBaseTest.run_compare_tf(
             model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend
         )
 
@@ -298,12 +308,12 @@ class TestControlFlowFromAutoGraph:
         model, inputs, outputs = build_model
         input_values = [np.array([9.0], dtype=np.float32)]
         input_dict = dict(zip(inputs, input_values))
-        run_compare_tf(
+        TensorFlowBaseTest.run_compare_tf(
             model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend
         )
 
 
-class TestTensorList:
+class TestTensorList(TensorFlowBaseTest):
     @pytest.mark.parametrize(
         "use_cpu_only, backend, size_dynamic_shape",
         itertools.product(
@@ -333,7 +343,7 @@ class TestTensorList:
             np.array([6.17], dtype=np.float32),
         ]
         input_dict = dict(zip(inputs, input_values))
-        run_compare_tf(
+        TensorFlowBaseTest.run_compare_tf(
             model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend
         )
 
@@ -362,7 +372,7 @@ class TestTensorList:
         model, inputs, outputs = build_model
         input_values = [np.array([[3.14], [6.17], [12.14]], dtype=np.float32)]
         input_dict = dict(zip(inputs, input_values))
-        run_compare_tf(
+        TensorFlowBaseTest.run_compare_tf(
             model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend
         )
 
@@ -395,7 +405,7 @@ class TestTensorList:
             np.array([6.17], dtype=np.float32),
         ]
         input_dict = dict(zip(inputs, input_values))
-        run_compare_tf(
+        TensorFlowBaseTest.run_compare_tf(
             model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend
         )
 
@@ -424,7 +434,7 @@ class TestTensorList:
         model, inputs, outputs = build_model
         input_values = [np.array([[3.14], [6.17], [12.14]], dtype=np.float32)]
         input_dict = dict(zip(inputs, input_values))
-        run_compare_tf(
+        TensorFlowBaseTest.run_compare_tf(
             model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend
         )
 
@@ -449,6 +459,6 @@ class TestTensorList:
         model, inputs, outputs = build_model
         input_values = [np.random.rand(3, 1, 8).astype(np.float32)]
         input_dict = dict(zip(inputs, input_values))
-        run_compare_tf(
+        TensorFlowBaseTest.run_compare_tf(
             model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend
         )

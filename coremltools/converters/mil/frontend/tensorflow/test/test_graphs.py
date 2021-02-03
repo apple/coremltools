@@ -7,18 +7,15 @@ from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.testing_reqs import *
 from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import (
     make_tf_graph,
-    run_compare_tf,
     layer_counts,
+    TensorFlowBaseTest
 )
-import math
-
 backends = testing_reqs.backends
 
 tf = pytest.importorskip("tensorflow")
 
 
-class TestTF1Graphs:
-
+class TestTF1Graphs(TensorFlowBaseTest):
     @pytest.mark.parametrize(
         "use_cpu_only, backend", itertools.product([True, False], backends)
     )
@@ -38,7 +35,7 @@ class TestTF1Graphs:
 
         input_values = [val]
         input_dict = dict(zip(inputs, input_values))
-        run_compare_tf(
+        TensorFlowBaseTest.run_compare_tf(
             model,
             input_dict,
             outputs,

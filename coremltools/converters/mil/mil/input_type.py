@@ -24,15 +24,23 @@ SUPPORT_FLOAT_TYPES = [
                         types.fp64,
                     ]
 
-class InputTypeError(Exception):
-    def __init__(self, message, input_arg_name=None, input_param_name=None,
-        input_type=None,
-            actual_type=None):
-        super(InputTypeError, self).__init__(message)
-        self.input_arg_name = input_arg_name
-        self.input_param_name = input_param_name
-        self.input_type = input_type
-        self.actual_type = actual_type
+class DefaultInputs(object):
+    def __init__(self, **kwargs):
+        # Since python 3.6, kwargs preserves the input order. See
+        # https://docs.python.org/3/whatsnew/3.6.html#whatsnew36-pep468
+        self._default_inputs = [(k, v) for k, v in kwargs.items()]
+        self._ordered_dict = OrderedDict()
+        for k, v in self._default_inputs:
+            self._ordered_dict[k] = v
+
+    def items(self):
+        return self._ordered_dict.items()
+
+    def __add__(self, default_inputs):
+        self._default_inputs.extend(default_inputs._default_inputs)
+        for k, v in default_inputs._default_inputs:
+            self._ordered_dict[k] = v
+        return self
 
 class InputSpec(object):
     def __init__(self, **kwargs):
@@ -56,58 +64,62 @@ class InputSpec(object):
         """
         return self._ordered_dict
 
-    def parse_inputs(self, kwargs):
-        """ Parse and extract (name, value) pairs from kwargs according to the spec.
+    def validate_inputs(self, op_name, op_type, candidate_kvs):
+        """
+        For each key K in `candidate_kvs`, if K is found in
+        self.input_types, perform the followings:
 
-        Args:
-            kwargs: must contain a Var compatible with
-                    compatible type for each
-                    1) required _InputType
-                    2) optional _InputType with default value
+        - check that candidate_kvs[K] is a Var and satisfies
+        requirements in InputType (const, types)
+        - Place K, candidate_kvs[K] in output (list of (name, var) pairs).
 
-        Return:
-            out: List[(name, Var or None)]
-                The list has the same length as the `input_types`.
-                `(k, None)` is in the list iff input_type of `k`
-                is optional, has no default value, and
-                `k` is not specified in the input.
+        Note that this does not ensure the presence of all required
+        input_spec (optional == False).
+
+        Parameters
+        ----------
+        - op_name: str
+
+        - op_type: str
+
+        - candidate_kvs: Dict[str, Var]
+          Values cannot be None
+
+        Return
+        ------
+        None
 
         Raise:
-            TypeError if value type is incompatible
-            ValueError if a require input is missing
+            ValueErrr if value type is incompatible
         """
-        ret = []
-        no_check_var_visibility = kwargs.get("no_check_var_visibility", False)
-        for name, input_type in self.input_types.items():
-            if name in kwargs:
-                var = kwargs[name]
-                # TODO (jay): we should remove this internal var later as we
-                # further cleanup the interface
-                if isinstance(var, InternalVar) or input_type.is_compatible(var):
-                    ret.append((name, var))
-                else:
-                    msg = (
-                        "Input {} has type {} not compatible with "
-                        "expected type {}".format(name, var.sym_type, input_type)
-                    )
-                    raise InputTypeError(msg, name, var.name,
-                            input_type=input_type,
-                            actual_type=var.sym_type)
-            else:
-                # if input is not found in kwargs, it must be optional has no
-                # default value
-                if not input_type.optional or input_type.default:
-                    # Skip check on PyFunctionInput since created while_loop /
-                    # cond ops don't need to rebuild the nested blocks
-                    if no_check_var_visibility or isinstance(
-                        input_type, PyFunctionInputType
-                    ):
-                        continue
-                    raise ValueError("Input {} is required".format(name))
-                else:
-                    assert input_type.default is None
-                    ret.append((name, None))
-        return ret
+        msg_prefix = 'Op \"{}\" (op_type: {}) '.format(op_name, op_type)
+
+        # Ensure candidate_kvs doesn't contain None
+        for name, var in candidate_kvs.items():
+            if var is None:
+                raise ValueError(msg_prefix + 'Input {} is None'.format(name))
+
+            if name not in self.input_types:
+                raise ValueError(msg_prefix + \
+                    'Unrecognized input {}'.format(name))
+
+            input_type = self.input_types[name]
+            # Check constness
+            # Don't check InternalInputType (so _const_symbolic can work)
+            if input_type.const and \
+                not isinstance(input_type, InternalInputType) \
+                and var.val is None:
+                msg = msg_prefix + \
+                    'Input {} must be const at compile time'
+                raise ValueError(msg.format(name), name, var.name)
+
+            if not isinstance(var, InternalVar) and \
+                not input_type.is_compatible(var):
+                msg = msg_prefix + "Input {}=\"{}\" expects " +\
+                        "{} but got {}"
+                raise ValueError(msg.format(name, var.name, input_type.type_str,
+                            var.sym_type.__type_info__()))
+
 
 
 class _InputType(object):
@@ -116,7 +128,7 @@ class _InputType(object):
     Operation:
     """
 
-    def __init__(self, const=False, default=None, optional=False):
+    def __init__(self, const=False, optional=False):
         """
         const (bool):
             True if the InputType has to be constant / materialized at compile time.
@@ -124,19 +136,14 @@ class _InputType(object):
             default False. Read-only.
 
         optional (bool):
-            If default is not None, optional will be set to True
-
-        default:
-            Default value of optional input. InputType is optional if a default
-            is provided or optional == True.  default can be int, float,
-            string, np.ndarray etc depending on subclass.
+            True to allow user not to specify this input and rely on default
+            values (defined in default_inputs).
 
         Note: _InputType should not be directly instantiated. Only its subclasses may
         be instantiated.
         """
-        self.default = default
         self.const = const
-        self.optional = True if default is not None else optional
+        self.optional = optional
 
     def is_compatible(self, v):
         """

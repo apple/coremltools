@@ -13,6 +13,7 @@ from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.var import ListVar
+from coremltools.converters.mil.mil.types.symbolic import is_symbolic
 
 
 @register_pass(namespace="tensorflow")
@@ -56,15 +57,12 @@ def backfill_make_list_elem_type_block(block):
         with block:
             # elem_shape can be runtime-detemrined, which cannot be inferred here at this point,
             # so we add an internal _const_symbolic node to cover both static and dynamic cases.
-            elem_shape_var = mb._const_symbolic(
-                mode="immediate_value",
-                val=elem_type.get_shape(),
-                before_op=op,
-            )
+            elem_shape = [dim.name if is_symbolic(dim) else dim for dim in
+                elem_type.get_shape()]
             new_list = mb.make_list(
                 init_length=op.init_length,
                 dynamic_length=op.dynamic_length,
-                elem_shape=elem_shape_var,
+                elem_shape=tuple(elem_shape),
                 dtype=op.inputs["dtype"],
                 before_op=op,
                 name=op.name,

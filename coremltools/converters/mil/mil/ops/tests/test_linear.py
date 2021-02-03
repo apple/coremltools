@@ -51,14 +51,15 @@ class TestLinear:
         assert is_close(np.matmul(x_val, weight_val.T) + bias_val, v.val)
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, dim",
-        itertools.product([True, False], backends, [2, 4, 8]),
+        "use_cpu_only, backend, rank",
+        itertools.product([True, False], backends, [2, 3, 5]),
     )
-    def test_builder_to_backend_stress(self, use_cpu_only, backend, dim):
-        out_channels, in_channels = dim, dim + 4
-        shape = np.array([out_channels, in_channels])
-        x_val = np.random.rand(*shape)
-        weight_val = np.random.rand(*shape).astype(np.float32)
+    def test_builder_to_backend_stress(self, use_cpu_only, backend, rank):
+        x_shape = np.random.randint(low=1, high=3, size=(rank,))
+        x_val = np.random.rand(*x_shape)
+        out_channels = 3
+        w_shape = np.array([out_channels, x_shape[-1]])
+        weight_val = np.random.rand(*w_shape).astype(np.float32)
         bias_val = np.random.rand(out_channels).astype(np.float32)
         input_placeholders = {
             "x": mb.placeholder(shape=x_val.shape),
@@ -183,5 +184,42 @@ class TestMatMul:
             expected_output_types,
             expected_outputs,
             use_cpu_only=use_cpu_only,
+            backend=backend,
+        )
+
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend, shape_x",
+        itertools.product(
+            [True, False],
+            backends,
+            [
+                (5,),
+                (2, 5),
+                (2, 2, 5),
+                (4, 3, 2, 5),
+                (5, 4, 2, 3, 5),
+            ],
+        ),
+    )
+    def test_builder_y_rank_2_const(self, use_cpu_only, backend, shape_x):
+        x_val = np.random.rand(*shape_x)
+        y_val = np.random.rand(5, 10)
+        input_placeholders = {
+            "x": mb.placeholder(shape=x_val.shape),
+        }
+        input_values = {"x": x_val}
+        def build(x):
+            return [mb.matmul(x=x, y=y_val, transpose_x=False, transpose_y=False)]
+
+        expected_outputs = [np.matmul(x_val, y_val)]
+        expected_output_types = [o.shape[:] + (types.fp32,) for o in expected_outputs]
+
+        run_compare_builder(
+            build,
+            input_placeholders,
+            input_values,
+            expected_output_types,
+            expected_outputs,
+            use_cpu_only=True,
             backend=backend,
         )

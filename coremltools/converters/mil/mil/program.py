@@ -153,6 +153,12 @@ def get_new_symbol(name=None):
     k_num_internal_syms += 1
     return s
 
+def get_existing_symbol(name):
+    global k_used_symbols
+    if name not in k_used_symbols:
+      msg = 'Symbol name {} does not exist'
+      raise ValueError(msg.format(name))
+    return k_used_symbols[name]
 
 class Symbol(_sm.Symbol):
     def __init__(self, sym_name):
@@ -172,5 +178,5 @@ class Symbol(_sm.Symbol):
         if sym_name in k_used_symbols:
             msg = "Symbol `{}` is used already."
             raise ValueError(msg.format(sym_name))
-        k_used_symbols.add(sym_name)
+        k_used_symbols[sym_name] = self
         self.name = sym_name

@@ -7,7 +7,7 @@ from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.testing_reqs import *
 from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import (
     make_tf_graph,
-    run_compare_tf,
+    TensorFlowBaseTest
 )
 
 # Custom Op imports
@@ -24,7 +24,7 @@ from coremltools.converters.mil.mil.ops.defs._op_reqs import *
 from coremltools.converters.mil.mil import Builder as mb
 
 
-class TestCompositeOp:
+class TestCompositeOp(TensorFlowBaseTest):
     @pytest.fixture(scope="class")
     def create_custom_selu(self):
         default_selu = _TF_OPS_REGISTRY.get("Selu", None)
@@ -58,7 +58,7 @@ class TestCompositeOp:
 
         input_values = [random_gen(input_shape, -10.0, 10.0)]
         input_dict = dict(zip(inputs, input_values))
-        run_compare_tf(
+        TensorFlowBaseTest.run_compare_tf(
             model,
             input_dict,
             outputs,

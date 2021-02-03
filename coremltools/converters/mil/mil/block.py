@@ -28,13 +28,6 @@ def curr_block():
     return BLOCK_STACK[-1]
 
 
-def _check_is_compatible_type(type1, type2):
-    if not types.is_subtype(type1, type2):
-        is_comp, _ = types.is_tensor_and_is_compatible(type1, type2)
-        return is_comp
-    return True
-
-
 class InvalidBlockStateError(Exception):
     pass
 
@@ -274,19 +267,19 @@ class Block(object):
 
     def _visible_vars_in_block(self, target_op=None, inclusive=True):
         """
-        Returns:
-
-        index (int) of target_op in self.operations if target_op not None,
+        Returns
+        -------
+        - index (int) of target_op in self.operations if target_op not None,
         undefined otherwise.
 
-        Raises:
-
-        ValueError if target_op not None and not found in self.operations.
-
-        visible_vars: set[Var]
+        - visible_vars: set[Var]
             Vars returned by ops in the block (self) visible (and equal to
             if inclusive==True) target_op.  If target_op is not found or None,
             include all vars output by self.operations. Examples:
+
+        Raises
+        ------
+        - ValueError if target_op not None and not found in self.operations.
 
         #    main(%a: (1, 2, fp32),
         #         %b: (1, 2, fp32),
@@ -337,10 +330,13 @@ class Block(object):
         # find the location of target_op
         for i, op in enumerate(self.operations):
             if op == target_op:
-                if inclusive:
+                if inclusive and op.outputs is not None:
                     visible_vars.update(op.outputs)
                 return i, visible_vars
-            visible_vars.update(op.outputs)
+            # When op is being constructed (e.g.,type_inference), op.outputs
+            # is None
+            if op.outputs is not None:
+                visible_vars.update(op.outputs)
         if target_op is not None:
             msg = "Op {} not found in {}: {}"
             raise ValueError(msg.format(target_op.name, self.name, self))
@@ -472,7 +468,6 @@ class Block(object):
         new_var,
         start=0,
         end_id=-1,
-        no_check_var_visibility=False,
         no_check_var_types=False,
     ):
         """Helper function for replace_uses_of_var_after_op"""
@@ -484,10 +479,7 @@ class Block(object):
             op_list = self.operations[start : end_id + 1]
 
         for op in op_list:
-            new_inputs = {
-                "no_check_var_visibility": no_check_var_visibility,
-                "no_check_var_types": no_check_var_types,
-            }
+            new_inputs = {}
             affected = False
             for k, v in op.inputs.items():
                 if isinstance(v, (list, tuple)) and old_var in v:
@@ -500,7 +492,8 @@ class Block(object):
                     new_inputs[k] = v
             if affected:
                 num_ops_affected += 1
-                op.set_inputs(**new_inputs)
+                op.set_inputs(no_check_var_types=no_check_var_types,
+                    **new_inputs)
 
             # Replace recursively.
             for b in op.blocks:
@@ -658,7 +651,6 @@ class Block(object):
             new_var,
             start=start,
             end_id=end_id,
-            no_check_var_visibility=no_check_var_visibility,
             no_check_var_types=no_check_var_types,
         )
 

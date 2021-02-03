@@ -18,14 +18,14 @@ from coremltools.converters.mil.frontend.tensorflow.converter import TFConverter
 from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import (
     frontend,
     make_tf_graph,
-    run_compare_tf,
     get_tf_keras_io_names,
+    TensorFlowBaseTest
 )
 
 tf = pytest.importorskip("tensorflow")
 
 
-class TestTf1ModelInputsOutputs:
+class TestTf1ModelInputsOutputs(TensorFlowBaseTest):
     def setup(self):
         self.saved_model_dir = tempfile.mkdtemp()
         _, self.model_path_h5 = tempfile.mkstemp(
@@ -58,7 +58,7 @@ class TestTf1ModelInputsOutputs:
 
         input_values = [random_gen(x_shape, -10.0, 10.0)]
         input_dict = dict(zip(inputs, input_values))
-        run_compare_tf(model, input_dict, outputs)
+        TensorFlowBaseTest.run_compare_tf(model, input_dict, outputs)
 
     def test_infer_outputs(self):
         x_shape = (3, 4, 5)
@@ -76,7 +76,7 @@ class TestTf1ModelInputsOutputs:
 
         input_values = [random_gen(x_shape, -10.0, 10.0)]
         input_dict = dict(zip(inputs, input_values))
-        run_compare_tf(model, input_dict, outputs)
+        TensorFlowBaseTest.run_compare_tf(model, input_dict, outputs)
 
     def test_infer_inputs_and_outputs(self):
         x_shape = (3, 4, 5)
@@ -91,7 +91,7 @@ class TestTf1ModelInputsOutputs:
 
         input_values = [random_gen(x_shape, -10.0, 10.0)]
         input_dict = dict(zip(inputs, input_values))
-        run_compare_tf(model, input_dict, outputs)
+        TensorFlowBaseTest.run_compare_tf(model, input_dict, outputs)
 
     def test_extract_sub_model(self):
         x_shape = (3, 4, 5)
@@ -210,7 +210,7 @@ class TestTf1ModelInputsOutputs:
 
         input_values = [random_gen(x_shape, -10.0, 10.0)]
         input_dict = dict(zip(inputs, input_values))
-        run_compare_tf(model, input_dict, outputs)
+        TensorFlowBaseTest.run_compare_tf(model, input_dict, outputs)
 
     def test_shaping_utils(self):
         @make_tf_graph([(None, 4, 5)])

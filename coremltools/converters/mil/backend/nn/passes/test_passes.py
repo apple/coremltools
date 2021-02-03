@@ -27,8 +27,8 @@ def test_commingle_loop_vars():
         return mb.while_loop(_cond=cond, _body=body, loop_vars=(a, b))
 
     while_op = prog.find_ops(op_type="while_loop", exactly_one=True)[0]
-    assert while_op.blocks[0].inputs[0].name == "a.x"
-    assert while_op.blocks[0].inputs[1].name == "b.x"
+    assert while_op.blocks[0].inputs[0].name == "a_x1"
+    assert while_op.blocks[0].inputs[1].name == "b_x1"
 
     prev_prog = copy.deepcopy(prog)
     PASS_REGISTRY["nn_backend::commingle_loop_vars"](prog)

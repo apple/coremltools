@@ -1,7 +1,6 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 set -e
-set -x
 
 ##=============================================================================
 ## Main configuration processing
@@ -24,7 +23,7 @@ unknown_option() {
 print_help() {
   echo "Builds coremltools and dependent libraries."
   echo
-  echo "Usage: zsh -i build.sh"
+  echo "Usage: build.sh"
   echo
   echo "  --num_procs=n (default 1)       Specify the number of proceses to run in parallel."
   echo "  --python=*                      Python to use for configuration."
@@ -51,6 +50,8 @@ while [ $# -gt 0 ]
   esac
   shift
 done
+
+set -x
 
 # First configure
 echo
