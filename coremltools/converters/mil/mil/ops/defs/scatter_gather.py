@@ -68,8 +68,13 @@ class gather(Operation):
     input_spec = InputSpec(
         x=TensorInputType(),
         indices=IntInputType(),
-        axis=IntInputType(const=True, default=0),
+        axis=IntInputType(const=True, optional=True),
     )
+
+    def default_inputs(self):
+        return DefaultInputs(
+            axis=0,
+            )
 
     def __init__(self, **kwargs):
         super(gather, self).__init__(**kwargs)
@@ -181,9 +186,15 @@ class scatter(Operation):
         data=TensorInputType(),
         indices=IntTensorInputType(),
         updates=TensorInputType(),
-        axis=IntInputType(const=True, default=0),
-        mode=StringInputType(const=True, default="add"),
+        axis=IntInputType(const=True, optional=True),
+        mode=StringInputType(const=True, optional=True),
     )
+
+    def default_inputs(self):
+        return DefaultInputs(
+            axis=0,
+            mode="add",
+            )
 
     def __init__(self, **kwargs):
         super(scatter, self).__init__(**kwargs)
@@ -237,8 +248,13 @@ class gather_along_axis(Operation):
     input_spec = InputSpec(
         x=TensorInputType(),
         indices=IntTensorInputType(),
-        axis=IntInputType(const=True, default=0),
+        axis=IntInputType(const=True, optional=True),
     )
+
+    def default_inputs(self):
+        return DefaultInputs(
+            axis=0,
+            )
 
     def __init__(self, **kwargs):
         super(gather_along_axis, self).__init__(**kwargs)
@@ -349,9 +365,15 @@ class scatter_along_axis(Operation):
         data=TensorInputType(),
         indices=IntTensorInputType(),
         updates=TensorInputType(),
-        axis=IntInputType(const=True, default=0),
-        mode=StringInputType(const=True, default="add"),
+        axis=IntInputType(const=True, optional=True),
+        mode=StringInputType(const=True, optional=True),
     )
+
+    def default_inputs(self):
+        return DefaultInputs(
+            axis=0,
+            mode="add",
+            )
 
     def __init__(self, **kwargs):
         super(scatter_along_axis, self).__init__(**kwargs)
@@ -418,8 +440,11 @@ class gather_nd(Operation):
     ----------
     See `tf.gather_nd <https://www.tensorflow.org/api_docs/python/tf/gather_nd>`_.
     """
-    
-    input_spec = InputSpec(x=TensorInputType(), indices=IntTensorInputType(),)
+
+    input_spec = InputSpec(
+        x=TensorInputType(),
+        indices=IntTensorInputType(),
+        )
 
     def __init__(self, **kwargs):
         super(gather_nd, self).__init__(**kwargs)
@@ -476,8 +501,13 @@ class scatter_nd(Operation):
         data=TensorInputType(),
         indices=IntTensorInputType(),
         updates=TensorInputType(),
-        mode=StringInputType(const=True, default="add"),
+        mode=StringInputType(const=True, optional=True),
     )
+
+    def default_inputs(self):
+        return DefaultInputs(
+            mode="add",
+            )
 
     def __init__(self, **kwargs):
         super(scatter_nd, self).__init__(**kwargs)

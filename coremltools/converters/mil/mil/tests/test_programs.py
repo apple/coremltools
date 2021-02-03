@@ -15,6 +15,7 @@ from coremltools import models
 import numpy as np
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil import converter
+import coremltools as ct
 import logging
 
 np.random.seed(0)
@@ -41,18 +42,17 @@ def test_single_layer_example():
 
         return mb.linear(x=x, weight=W, bias=b, name="lin")
 
-    logging.info("prog:\n", prog)
+    logging.info("prog:\n" + str(prog))
 
-    proto = converter._convert(prog, convert_from="mil", convert_to="nn_proto")
+    mlmodel = ct.convert(prog, source="mil", convert_to="nn_proto")
 
     feed_dict = {
         "x": np.random.rand(batch_size, input_dim).astype(np.float32),
     }
-    model = models.MLModel(proto)
-    assert model is not None
+    assert mlmodel is not None
 
     if ct.utils._is_macos():
-        prediction = model.predict(feed_dict)
+        prediction = mlmodel.predict(feed_dict)
         assert len(prediction) == 1
 
 
@@ -106,17 +106,16 @@ def test_conv_example():
 
         return conv1, conv2, conv3, pool1, pool2, conv4
 
-    proto = converter._convert(prog, convert_from="mil", convert_to="nn_proto")
+    mlmodel = ct.convert(prog, source="mil", convert_to="nn_proto")
 
     feed_dict = {
         "img": np.random.rand(*img_shape).astype(np.float32),
         "seq": np.random.rand(*seq_shape).astype(np.float32),
     }
-    model = models.MLModel(proto)
-    assert model is not None
+    assert mlmodel is not None
 
     if ct.utils._is_macos():
-        prediction = model.predict(feed_dict)
+        prediction = mlmodel.predict(feed_dict)
         assert len(prediction) == 6
 
 
@@ -135,17 +134,16 @@ def test_while_example():
     def prog(a, b):
         return mb.while_loop(_cond=cond, _body=body, loop_vars=(a, b))
 
-    logging.info("prog:\n", prog)
+    logging.info("prog:\n" + str(prog))
 
-    proto = converter._convert(prog, convert_from="mil", convert_to="nn_proto")
+    mlmodel = ct.convert(prog, source="mil", convert_to="nn_proto")
 
     feed_dict = {
         "a": np.random.rand(1, 2).astype(np.float32),
         "b": np.random.rand(1, 2).astype(np.float32),
     }
-    model = models.MLModel(proto)
-    assert model is not None
+    assert mlmodel is not None
 
     if ct.utils._is_macos():
-        prediction = model.predict(feed_dict)
+        prediction = mlmodel.predict(feed_dict)
         assert len(prediction) == 2

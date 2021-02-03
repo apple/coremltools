@@ -72,11 +72,18 @@ class random_bernoulli(RandomDistribution):
     input_spec = (
         InputSpec(
             shape=IntTensorInputType(),
-            prob=FloatInputType(const=True, default=0.5),
-            seed=IntInputType(const=True, default=-1),
+            prob=FloatInputType(const=True, optional=True),
+            seed=IntInputType(const=True, optional=True),
         )
         + RandomDistribution.input_spec
     )
+
+    def default_inputs(self):
+        return super().default_inputs() + \
+            DefaultInputs(
+                seed=-1,
+                prob=0.5,
+                )
 
     def __init__(self, **kwargs):
         super(random_bernoulli, self).__init__(**kwargs)
@@ -115,10 +122,17 @@ class random_categorical(Operation):
     
     input_spec = InputSpec(
         x=TensorInputType(),
-        mode=StringInputType(const=True, default="logits"),
-        size=IntInputType(const=True, default=1),
-        seed=IntInputType(const=True, default=-1),
+        mode=StringInputType(const=True, optional=True),
+        size=IntInputType(const=True, optional=True),
+        seed=IntInputType(const=True, optional=True),
     )
+
+    def default_inputs(self):
+        return DefaultInputs(
+            mode="logits",
+            size=1,
+            seed=-1,
+            )
 
     def __init__(self, **kwargs):
         super(random_categorical, self).__init__(**kwargs)
@@ -160,12 +174,20 @@ class random_normal(RandomDistribution):
     input_spec = (
         InputSpec(
             shape=IntTensorInputType(),
-            mean=FloatInputType(const=True, default=0.0),
-            stddev=FloatInputType(const=True, default=1.0),
-            seed=IntInputType(const=True, default=-1),
+            mean=FloatInputType(const=True, optional=True),
+            stddev=FloatInputType(const=True, optional=True),
+            seed=IntInputType(const=True, optional=True),
         )
         + RandomDistribution.input_spec
     )
+
+    def default_inputs(self):
+        return super().default_inputs() + \
+            DefaultInputs(
+                mean=0.,
+                stddev=1.,
+                seed=-1,
+                )
 
     def __init__(self, **kwargs):
         super(random_normal, self).__init__(**kwargs)
@@ -212,12 +234,20 @@ class random_uniform(RandomDistribution):
     input_spec = (
         InputSpec(
             shape=IntTensorInputType(),
-            low=FloatInputType(const=True, default=0.0),
-            high=FloatInputType(const=True, default=1.0),
-            seed=IntInputType(const=True, default=-1),
+            low=FloatInputType(const=True, optional=True),
+            high=FloatInputType(const=True, optional=True),
+            seed=IntInputType(const=True, optional=True),
         )
         + RandomDistribution.input_spec
     )
+
+    def default_inputs(self):
+        return super().default_inputs() + \
+            DefaultInputs(
+                low=0.,
+                high=1.,
+                seed=-1,
+                )
 
     def __init__(self, **kwargs):
         super(random_uniform, self).__init__(**kwargs)

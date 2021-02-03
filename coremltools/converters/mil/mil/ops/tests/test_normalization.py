@@ -205,11 +205,11 @@ class TestNormalizationInstanceNorm:
 
     @pytest.mark.skipif(not testing_reqs._HAS_TORCH, reason="PyTorch not found.")
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, epsilon",
-        itertools.product([True, False], backends, [1e-3, 1e-5, 1e-10]),
+        "rank, use_cpu_only, backend, epsilon",
+        itertools.product([3, 4], [True, False], backends, [1e-3, 1e-5, 1e-10]),
     )
-    def test_builder_to_backend_stress(self, use_cpu_only, backend, epsilon):
-        shape = np.random.randint(low=2, high=6, size=4)
+    def test_builder_to_backend_stress(self, rank, use_cpu_only, backend, epsilon):
+        shape = np.random.randint(low=2, high=6, size=rank)
         x_val = random_gen(shape=shape, rand_min=-100.0, rand_max=100.0)
         input_placeholders = {"x": mb.placeholder(shape=x_val.shape)}
         input_values = {"x": x_val}
@@ -217,7 +217,8 @@ class TestNormalizationInstanceNorm:
         def build(x):
             return mb.instance_norm(x=x, epsilon=epsilon)
 
-        torch_op = torch.nn.InstanceNorm2d(num_features=shape[1], eps=epsilon)
+        layer = torch.nn.InstanceNorm2d if rank == 4 else torch.nn.InstanceNorm1d
+        torch_op = layer(num_features=shape[1], eps=epsilon)
         expected_outputs = [torch_op(torch.as_tensor(x_val)).numpy()]
         expected_output_types = [o.shape[:] + (types.fp32,) for o in expected_outputs]
 
@@ -231,6 +232,7 @@ class TestNormalizationInstanceNorm:
             backend=backend,
             atol=1e-3,
             rtol=1e-4,
+            also_compare_shapes=True
         )
 
 
@@ -464,6 +466,8 @@ class TestNormalizationLayerNorm:
             expected_outputs,
             use_cpu_only=use_cpu_only,
             backend=backend,
+            atol=1e-3,
+            rtol=1e-4,
         )
 
     @pytest.mark.skipif(not testing_reqs._HAS_TF_2, reason="Tensorflow not found.")

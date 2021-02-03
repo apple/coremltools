@@ -29,9 +29,10 @@ from .type_bool import bool, is_bool
 from .type_list import list, empty_list, is_list
 from .type_tensor import (
     tensor,
+    tensor_has_complete_shape,
     is_tensor_and_is_compatible,
     is_tensor_and_is_compatible_general_shape,
-    tensor_has_complete_shape,
+    is_compatible_type,
 )
 from .type_dict import dict, empty_dict
 from .type_void import void

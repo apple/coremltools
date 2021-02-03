@@ -92,85 +92,69 @@ class Builder:
         const_name = cls._get_free_name(name)
         mode = get_const_mode(val)
         logging.debug("Adding const op '{}'".format(const_name))
-        output_var = cls.const(mode=mode, val=val, name=const_name, before_op=before_op)
+        output_var = cls.const(mode=mode, val=val, name=const_name,
+            before_op=before_op)
         return output_var
 
+
     @classmethod
-    def _create_input_vars(cls, input_spec, op_name, op_cls, before_op, kwargs):
+    def _create_vars(cls, input_spec, op_name, before_op,
+        candidate_kv):
         """
-        1. Create Var for optional input types with default values that's not
-        specified.
+        For each key K in `candidate_kv`, create a Var if the
+        followings are satisfied:
 
-        2. Convert python primitive types to Var.
+        - K exists in input_spec and is not an InternalInputType
+        - candidate_kv[K] is not already a Var
 
-        Inputs:
+        Inputs
+        ------
+        - candidate_kv: Dict[str, Any]
+          Key-values may be inputs to an op (whose inputs is defined by
+          input_spec)
 
-        input_spec (InputSpec)
-        op_name (str): op name.
-        before_op: created all vars / const op will come right before
-                   `before_op` in the block's order. None to append at the end.
+        Returns
+        -------
+        - var_kv: Dict[str, Var]
+          For the K satisfying the above, var_kv[K] is the newly
+          created Var
         """
         update_dict = {}
-        for in_name, in_type in input_spec.input_types.items():
-            new_var_name = op_name + "_" + in_name
-            if not in_type.optional and in_name not in kwargs:
-                raise ValueError(
-                    "Input '{}' is required for op '{}'.".format(in_name, op_cls.__name__)
-                )
+        for k, val in candidate_kv.items():
+            if isinstance(val, Var):
+                continue # already a Var
 
-            if in_name in kwargs and isinstance(kwargs[in_name], Var):
-                # check const
-                if in_type.const and kwargs[in_name].val is None:
-                    msg = "Input '{}' of op '{}' ({}) must be const at compile time."
-                    raise ValueError(msg.format(in_name, op_name, op_cls.__name__))
+            if k not in input_spec.input_types:
+                continue # k is not an op input
 
-            elif in_name in kwargs:
-                # Provided value is not Var. Create a Var from kwargs[in_name]
-                val = kwargs[in_name]
-                # create Var for numpy / python primitive
-                if isinstance(in_type, InternalInputType):
-                    # Shove all internal inputs to InternalVar (unknown type).
-                    var = InternalVar(val, name=new_var_name)
-                    curr_block().add_internal_var(var)
-                else:
-                    if isinstance(in_type, TupleInputType):
-                        var = []
-                        for i, v in enumerate(val):
-                            if isinstance(v, Var):
-                                var.append(v)
-                                continue
-                            var.append(
-                                cls._add_const(v, new_var_name + str(i), before_op)
-                            )
-                    elif isinstance(in_type, (ScalarOrTensorInputType, ListOrScalarOrTensorInputType)):
-                        var = cls._add_const(val, new_var_name, before_op)
-                    else:
-                        msg = "Cannot convert input '{}' of type {} to Var (op: {})"
-                        raise ValueError(
-                            msg.format(in_name, type(in_type).__name__, op_name)
-                        )
-                update_dict[in_name] = var
+            in_type = input_spec.input_types[k]
+            if isinstance(in_type, InternalInputType):
+                new_var_name = op_name + "_" + k
+                var = InternalVar(val, name=new_var_name)
+                curr_block().add_internal_var(var)
+                update_dict[k] = var
+                continue # Not a regular Var
 
-            elif in_name not in kwargs and in_type.default is not None:
-                if isinstance(in_type, PyFunctionInputType):
-                    msg = "Default value is not allowed for PyFunctionInputType"
-                    raise ValueError(msg)
-                # Create a Var from the default value.
-                if is_internal_input(in_name):
-                    var = InternalVar(in_type.default, name=new_var_name)
-                    curr_block().add_internal_var(var)
-                elif isinstance(in_type, TupleInputType):
-                    var = tuple(
-                        cls._add_const(v, new_var_name + str(i), before_op)
-                        for i, v in enumerate(in_type.default)
+            new_var_name = op_name + "_" + k
+            if isinstance(in_type, TupleInputType):
+                var = []
+                for i, v in enumerate(val):
+                    if isinstance(v, Var):
+                        var.append(v)
+                        continue
+                    var.append(
+                        cls._add_const(v, new_var_name + str(i),
+                          before_op)
                     )
-                else:
-                    var = cls._add_const(in_type.default, new_var_name, before_op)
-                update_dict[in_name] = var
+                update_dict[k] = var
+                continue
 
-        kwargs.update(update_dict)
+            if isinstance(in_type, (ScalarOrTensorInputType,
+              ListOrScalarOrTensorInputType)):
+                var = cls._add_const(val, new_var_name, before_op)
+                update_dict[k] = var
 
-        return kwargs
+        return update_dict
 
     @classmethod
     def _add_op(cls, op_cls, **kwargs):
@@ -183,10 +167,23 @@ class Builder:
         )
         before_op = kwargs.get("before_op", None)
         kwargs = {k: v for k, v in kwargs.items() if v is not None}
-        kwargs = cls._create_input_vars(
-            op_cls.input_spec, kwargs["name"], op_cls, before_op, kwargs
-        )
+        kwargs.update(cls._create_vars(
+            input_spec=op_cls.input_spec,
+            op_name=kwargs["name"], before_op=before_op,
+            candidate_kv=kwargs))
         new_op = op_cls(**kwargs)
+
+        # Initialize optional input Vars if it wasn't in kwargs
+        default_inputs = new_op.default_inputs()
+        missing_optional_vals = {k: v for k, v in default_inputs.items()
+            if k not in kwargs and v is not None}
+        missing_optional_vars = cls._create_vars(
+            input_spec=op_cls.input_spec,
+            op_name=kwargs["name"], before_op=before_op,
+            candidate_kv=missing_optional_vals)
+        new_op.set_inputs(type_inference=False,
+            **missing_optional_vars)
+
         curr_block()._insert_op_before(new_op, before_op=before_op)
         new_op.build_nested_blocks()
         new_op.type_value_inference()

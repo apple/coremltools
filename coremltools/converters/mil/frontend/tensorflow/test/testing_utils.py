@@ -4,11 +4,13 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from coremltools import TensorType
+import coremltools.models.utils as coremltoolsutils
 import pytest
 import numpy as np
-
+from six import string_types as _string_types
 tf = pytest.importorskip("tensorflow", minversion="1.14.0")
-from coremltools.converters.mil.testing_utils import compare_shapes, compare_backend
+from coremltools.converters.mil.testing_utils import compare_shapes, \
+    compare_backend, run_core_ml_predict
 from coremltools.converters.mil.testing_reqs import ct
 from tensorflow.python.framework import dtypes
 import tempfile
@@ -206,7 +208,7 @@ def run_compare_tf(
         If present, use it as TensorFlow predictions
 
     Return:
-        Proto
+        Proto, mlmodel, input dictionay, prediction(if possible)
     """
     mlmodel, input_key_values, output_names, output_nodes = tf_graph_to_mlmodel(
         graph, feed_dict, output_nodes, frontend, backend
@@ -273,8 +275,12 @@ def run_compare_tf(
             rtol=rtol,
             also_compare_shapes=True,
         )
-
-    return mlmodel._spec
+    pred=None
+    if not coremltoolsutils._has_custom_layer(mlmodel.get_spec()):
+        pred = run_core_ml_predict(mlmodel, input_key_values, use_cpu_only)
+    else:
+        print('Skipping model prediction as it has a custom nn layer!')
+    return mlmodel._spec, mlmodel, input_key_values, pred
 
 
 def layer_counts(spec, layer_type):
@@ -292,3 +298,33 @@ def layer_counts(spec, layer_type):
         if layer.WhichOneof("layer") == layer_type:
             n += 1
     return n
+
+
+class TensorFlowBaseTest(object):
+    testclassname=''
+    testmodelname=''
+    @pytest.fixture(autouse=True)
+    def store_testname_with_args(self, request):
+        TensorFlowBaseTest.testclassname = type(self).__name__
+        TensorFlowBaseTest.testmodelname = request.node.name
+
+    def teardown_method(self, method):
+        pass
+
+    @staticmethod
+    def run_compare_tf(graph, feed_dict, output_nodes, use_cpu_only=False,
+                       frontend_only=False, frontend="tensorflow",
+                       backend="nn_proto", atol=1e-04, rtol=1e-05,
+                       validate_shapes_only=False, freeze_graph=False,
+                       tf_outputs=None):
+        res = run_compare_tf(graph, feed_dict, output_nodes,
+                        use_cpu_only=use_cpu_only,
+                       frontend_only=frontend_only, frontend=frontend,
+                       backend=backend, atol=atol,
+                       rtol=rtol,
+                       validate_shapes_only=validate_shapes_only,
+                       freeze_graph=freeze_graph, tf_outputs=tf_outputs)
+        alist = list(res)
+        alist.append(TensorFlowBaseTest.testclassname)
+        alist.append(TensorFlowBaseTest.testmodelname)
+        return tuple(alist)

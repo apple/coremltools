@@ -123,14 +123,22 @@ void NeuralNetworkBuffer::GetBuffer(uint64_t offset, std::vector<T>& buffer) {
 
 // Explicit include templated functions
 template uint64_t NeuralNetworkBuffer::AddBuffer(const std::vector<uint8_t>&);
+template uint64_t NeuralNetworkBuffer::AddBuffer(const std::vector<uint16_t>&);
+template uint64_t NeuralNetworkBuffer::AddBuffer(const std::vector<uint32_t>&);
+template uint64_t NeuralNetworkBuffer::AddBuffer(const std::vector<uint64_t>&);
 template uint64_t NeuralNetworkBuffer::AddBuffer(const std::vector<int8_t>&);
+template uint64_t NeuralNetworkBuffer::AddBuffer(const std::vector<int16_t>&);
 template uint64_t NeuralNetworkBuffer::AddBuffer(const std::vector<int32_t>&);
 template uint64_t NeuralNetworkBuffer::AddBuffer(const std::vector<int64_t>&);
 template uint64_t NeuralNetworkBuffer::AddBuffer(const std::vector<float>&);
 template uint64_t NeuralNetworkBuffer::AddBuffer(const std::vector<double>&);
 
 template void NeuralNetworkBuffer::GetBuffer(const uint64_t, std::vector<uint8_t>&);
+template void NeuralNetworkBuffer::GetBuffer(const uint64_t, std::vector<uint16_t>&);
+template void NeuralNetworkBuffer::GetBuffer(const uint64_t, std::vector<uint32_t>&);
+template void NeuralNetworkBuffer::GetBuffer(const uint64_t, std::vector<uint64_t>&);
 template void NeuralNetworkBuffer::GetBuffer(const uint64_t, std::vector<int8_t>&);
+template void NeuralNetworkBuffer::GetBuffer(const uint64_t, std::vector<int16_t>&);
 template void NeuralNetworkBuffer::GetBuffer(const uint64_t, std::vector<int32_t>&);
 template void NeuralNetworkBuffer::GetBuffer(const uint64_t, std::vector<int64_t>&);
 template void NeuralNetworkBuffer::GetBuffer(const uint64_t, std::vector<float>&);

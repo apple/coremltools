@@ -58,14 +58,14 @@ def _set_torch_reg_op(op_type, op_func):
     _TORCH_OPS_REG[op_type] = op_func
 
 
-class TestCompositeOp:
+class TestCompositeOp(TorchBaseTest):
 
     @pytest.mark.xfail(reason="rdar://65230439 fails with stochastic numeric mismatch", run=False)
     @pytest.mark.parametrize("input_shape", [(100, 180), (56, 123)])
     def test_composite_op(self, input_shape):
         _set_torch_reg_op("cosine_similarity", custom_cosine_similarity)
         model = nn.CosineSimilarity(dim=1, eps=1e-6)
-        run_compare_torch([input_shape, input_shape], model)
+        self.run_compare_torch([input_shape, input_shape], model)
         _set_torch_reg_op("cosine_similarity", default_cosine_similarity)
 
 
@@ -79,11 +79,19 @@ class TestCustomOp:
         input_spec = InputSpec(
             x=TensorInputType(),
             y=TensorInputType(),
-            transpose_x=BoolInputType(const=True, default=False),
-            transpose_y=BoolInputType(const=True, default=False),
-            x_is_sparse=BoolInputType(const=True, default=False),
-            y_is_sparse=BoolInputType(const=True, default=False),
+            transpose_x=BoolInputType(const=True, optional=True),
+            transpose_y=BoolInputType(const=True, optional=True),
+            x_is_sparse=BoolInputType(const=True, optional=True),
+            y_is_sparse=BoolInputType(const=True, optional=True),
         )
+
+        def default_inputs(self):
+            return DefaultInputs(
+                transpose_x=False,
+                transpose_y=False,
+                x_is_sparse=False,
+                y_is_sparse=False,
+                )
 
         # Specifying binding for custom op for specifying inputs,
         # parameters required for creating custom op to be synced with Swift API

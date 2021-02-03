@@ -53,9 +53,14 @@ class band_part(Operation):
     
     input_spec = InputSpec(
         x=TensorInputType(),
-        lower=IntInputType(const=True, default=-1),
-        upper=IntInputType(const=True, default=-1),
+        lower=IntInputType(const=True, optional=True),
+        upper=IntInputType(const=True, optional=True),
     )
+
+    def default_inputs(self):
+        return DefaultInputs(
+            lower=-1,
+            upper=-1)
 
     def __init__(self, **kwargs):
         super(band_part, self).__init__(**kwargs)
@@ -98,10 +103,16 @@ class cumsum(Operation):
 
     input_spec = InputSpec(
         x=TensorInputType(),
-        axis=IntInputType(const=True, default=0),
-        exclusive=BoolInputType(const=True, default=False),
-        reverse=BoolInputType(const=True, default=False),
+        axis=IntInputType(const=True, optional=True),
+        exclusive=BoolInputType(const=True, optional=True),
+        reverse=BoolInputType(const=True, optional=True),
     )
+
+    def default_inputs(self):
+        return DefaultInputs(
+            axis=0,
+            exclusive=False,
+            reverse=False)
 
     def __init__(self, **kwargs):
         super(cumsum, self).__init__(**kwargs)
@@ -159,8 +170,12 @@ class fill(Operation):
 
     input_spec = InputSpec(
         shape=IntTensorInputType(),
-        value=IntOrFloatOrBoolInputType(const=True, default=0.0),
+        value=IntOrFloatOrBoolInputType(const=True, optional=True),
     )
+
+    def default_inputs(self):
+        return DefaultInputs(
+            value=0.)
 
     def __init__(self, **kwargs):
         super(fill, self).__init__(**kwargs)
@@ -235,8 +250,12 @@ class non_maximum_suppression(Operation):
         iou_threshold=FloatInputType(const=True),
         score_threshold=FloatInputType(const=True),
         max_boxes=IntInputType(const=True),
-        per_class_suppression=BoolInputType(const=True, default=False),
+        per_class_suppression=BoolInputType(const=True, optional=True),
     )
+
+    def default_inputs(self):
+        return DefaultInputs(
+            per_class_suppression=False)
 
     def __init__(self, **kwargs):
         super(non_maximum_suppression, self).__init__(**kwargs)
@@ -276,7 +295,7 @@ class non_zero(Operation):
     ----------
     T: fp32, int32
     """
-    
+
     input_spec = InputSpec(x=TensorInputType())
 
     def __init__(self, **kwargs):
@@ -326,10 +345,17 @@ class one_hot(Operation):
     input_spec = InputSpec(
         indices=IntTensorInputType(),
         one_hot_vector_size=IntInputType(),
-        axis=IntInputType(const=True, default=-1),
-        on_value=IntOrFloatInputType(const=True, default=1),
-        off_value=IntOrFloatInputType(const=True, default=0),
+        axis=IntInputType(const=True, optional=True),
+        on_value=IntOrFloatInputType(const=True, optional=True),
+        off_value=IntOrFloatInputType(const=True, optional=True),
     )
+
+    def default_inputs(self):
+        return DefaultInputs(
+            axis=-1,
+            on_value=1,
+            off_value=0,
+            )
 
     def __init__(self, **kwargs):
         super(one_hot, self).__init__(**kwargs)
@@ -352,7 +378,7 @@ class one_hot(Operation):
 
         indices_shape = list(self.indices.shape)
 
-        depth_value = self.one_hot_vector_size.sym_val
+        depth_value = self.one_hot_vector_size.val
         if depth_value is None:
             depth_value = get_new_symbol()
         elif depth_value < 0:
@@ -410,9 +436,15 @@ class pad(Operation):
     input_spec = InputSpec(
         x=TensorInputType(),
         pad=IntTensorInputType(),
-        mode=StringInputType(const=True, default="constant"),
-        constant_val=FloatInputType(const=True, default=0.0),
+        mode=StringInputType(const=True, optional=True),
+        constant_val=FloatInputType(const=True, optional=True),
     )
+
+    def default_inputs(self):
+        return DefaultInputs(
+            mode="constant",
+            constant_val=0.,
+            )
 
     def __init__(self, **kwargs):
         super(pad, self).__init__(**kwargs)
@@ -432,7 +464,14 @@ class pad(Operation):
         else:
             pad = pad.val
             pad = pad.copy()
+
+            if len(pad) % 2 != 0:
+                raise ValueError("Number of elements in the argument Pad must be divisible by 2.")
+
             pad = pad.reshape(-1, 2)
+
+            if pad.shape[0] > len(ret_shape):
+                raise ValueError("Number of dimensions specified through pad must less than or equal to rank of input x")
 
             for i in range(len(pad)):
                 ret_shape[-len(pad) + i] = ret_shape[-len(pad) + i] + pad[i][0] + pad[i][1]
@@ -556,7 +595,9 @@ class tile(Operation):
     def type_inference(self):
         x_type = self.x.dtype
         x_shape = np.array(self.x.shape)
-        reps = self.reps.val
+
+        reps = self.reps.sym_val
+
         if reps is None:
             out_shape = tuple([get_new_symbol() for _ in range(self.x.rank)])
             return types.tensor(x_type, out_shape)
@@ -568,13 +609,22 @@ class tile(Operation):
             )
             raise ValueError(msg.format(len(reps), self.x.rank))
 
-        if any(i <= 0 for i in reps):
-            raise ValueError("All entries of reps parameter must be greater than 0")
 
         if len(reps) < self.x.rank:
             reps = [1] * (self.x.rank - len(reps)) + list(reps)
 
-        out_shape = tuple([reps[i] * x_shape[i] for i in range(len(reps))])
+        out_shape = []
+        for i, rep in enumerate(reps):
+            if not is_symbolic(rep):
+                if rep <= 0:
+                    raise ValueError("All entries of reps parameter must be greater than 0")
+
+            if is_symbolic(rep) or is_symbolic(x_shape[i]):
+                out_shape.append(get_new_symbol())
+            else:
+                out_shape.append(rep * x_shape[i])
+
+        out_shape = tuple(out_shape)
 
         return types.tensor(x_type, out_shape)
 
@@ -615,9 +665,15 @@ class argsort(Operation):
 
     input_spec = InputSpec(
         x=TensorInputType(),
-        axis=IntInputType(const=True, default=-1),
-        ascending=BoolInputType(const=True, default=False),
+        axis=IntInputType(const=True, optional=True),
+        ascending=BoolInputType(const=True, optional=True),
     )
+
+    def default_inputs(self):
+        return DefaultInputs(
+            axis=-1,
+            ascending=False,
+            )
 
     def __init__(self, **kwargs):
         super(argsort, self).__init__(**kwargs)
@@ -658,7 +714,7 @@ class topk(Operation):
         * Values of top/bottom ``k`` elements.
     tensor<\*?, int32>
         * Indices of the top/bottom ``k`` elements along axis.
-    
+
     Attributes
     ----------
     T: fp32, int32
@@ -666,10 +722,17 @@ class topk(Operation):
     
     input_spec = InputSpec(
         x=TensorInputType(),
-        k=IntInputType(const=True, default=1),
-        axis=IntInputType(const=True, default=-1),
-        ascending=BoolInputType(const=True, default=False),
+        k=IntInputType(const=True, optional=True),
+        axis=IntInputType(const=True, optional=True),
+        ascending=BoolInputType(const=True, optional=True),
     )
+
+    def default_inputs(self):
+        return DefaultInputs(
+            k=1,
+            axis=-1,
+            ascending=False,
+            )
 
     def __init__(self, **kwargs):
         super(topk, self).__init__(**kwargs)
@@ -734,8 +797,14 @@ class flatten2d(Operation):
     """
 
     input_spec = InputSpec(
-        x=TensorInputType(), axis=IntInputType(const=True, default=1)
+        x=TensorInputType(),
+        axis=IntInputType(const=True, optional=True)
     )
+
+    def default_inputs(self):
+        return DefaultInputs(
+            axis=1,
+            )
 
     def __init__(self, **kwargs):
         super(flatten2d, self).__init__(**kwargs)
@@ -815,28 +884,28 @@ class concat(Operation):
     interleave: const<bool> (Optional, Default=False)
         * If true, concatenate the inputs by interleaving them.
         * If true, all the inputs to this op must have the exact same shape.
-    
+
     Examples
     --------
-    
+
     .. sourcecode:: python
-        
+
         in1 : shape (3, 2), value = [[1, 2], [3, 4], [5, 6]]
         in2 : shape (3, 2), value = [[7, 8], [9, 10], [11, 12]]
         axis = 0
-        
+
         if interleave = False (default)
         output : shape (6, 2)
         output[0:3, :] = in1
         output[3:6, :] = in2
         value = [[1, 2], [3, 4], [5, 6], [7, 8], [9, 10], [11, 12]]
-        
+
         if interleave = True
         output : shape (6, 2)
         output[0::2, :] = in1
         output[1::2, :] = in2
         value = [[1, 2], [7, 8], [3, 4], [9, 10], [5, 6], [11, 12]]
-    
+
     Returns
     -------
     tensor<[d0, d1,...d_axis_out, ..., d_n],T>
@@ -846,10 +915,16 @@ class concat(Operation):
     ----------
     T: fp32, int32
     """
-    
+
     input_spec = InputSpec(values=TupleInputType(),
                            axis=IntInputType(const=True),
-                           interleave=BoolInputType(const=True, optional=True, default=False))
+                           interleave=BoolInputType(const=True,
+                             optional=True))
+
+    def default_inputs(self):
+        return DefaultInputs(
+            interleave=False,
+            )
 
     def __init__(self, **kwargs):
         super(concat, self).__init__(**kwargs)
@@ -923,31 +998,36 @@ class concat(Operation):
     @precondition(allow=VALUE | SYMBOL | NONE)
     def value_inference(self):
 
-        is_all_rank_less_than_2 = all([v.rank < 2 for v in self.values])
         values = []
         for v in self.values:
             if v.sym_val is not None:
                 values.append(v.sym_val)
-            else:
-                if v.rank == 1:
-                    values.append(np.array([get_new_symbol() for _ in range(v.shape[0])]))
-                else:
-                    values.append(get_new_symbol())
+                continue
+            if v.rank == 0:
+                values.append(get_new_symbol())
+                continue
+            if any_symbolic(v.shape):
+                values.append(None)
+                continue
 
-        # we only infer value for values whose ranks are all <= 1,
-        # or don't have symbolic values.
-        if any([any_symbolic(v) for v in values]) and not is_all_rank_less_than_2:
-            return None
+            # we support value inference when number of elements for each tensor is less than 10
+            shape = v.shape
+            num_element = np.prod(shape)
+            if num_element > 10:
+                values.append(None)
+                continue
 
-        # skip value inference when interleave on
-        if self.interleave.val:
+            symbolic_tensor = [get_new_symbol() for _ in range(num_element)]
+            symbolic_tensor = np.reshape(np.array(symbolic_tensor), shape)
+            values.append(symbolic_tensor)
+
+        if any([val is None for val in values]):
             return None
 
         if not isinstance(values[0], np.ndarray) or values[0].shape == ():
             return np.stack(values, axis=self.axis.val)
 
         return np.concatenate(values, axis=self.axis.val)
-
 
 @register_op(doc_str="")
 class split(Operation):
@@ -1099,8 +1179,9 @@ class stack(Operation):
     ----------
     T: fp32
     """
-    
-    input_spec = InputSpec(values=TupleInputType(), axis=IntInputType(const=True),)
+
+    input_spec = InputSpec(values=TupleInputType(),
+        axis=IntInputType(const=True),)
 
     def __init__(self, **kwargs):
         super(stack, self).__init__(**kwargs)
@@ -1142,25 +1223,26 @@ class stack(Operation):
 
         return np.stack(values, self.axis.val)
 
+
 # identity is used for renaming and is rarely necessary. See
 # `loop_invariant_elimination` pass for a rare use case.
 @register_op(doc_str="")
 class identity(Operation):
     """
     Returns a tensor with the same shape and contents as input.
-    
+
     Parameters
     ----------
     x: tensor<\*?, T> (Required)
         * Input tensor.
-    
+
     Returns
     -------
     tensor<\*?, T>
         * Same type and shape as the input tensor.
-    
+
     """
-    
+
     input_spec = InputSpec(x=ListOrScalarOrTensorInputType())
 
     def __init__(self, **kwargs):

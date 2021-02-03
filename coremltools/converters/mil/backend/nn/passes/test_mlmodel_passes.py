@@ -125,7 +125,6 @@ class MLModelPassesTest(unittest.TestCase):
             np.testing.assert_almost_equal(before_pass_out, after_pass_out, decimal=2)
             np.testing.assert_equal(len(builder.spec.neuralNetwork.layers), 1)
 
-    @pytest.mark.xfail
     def test_dead_layer_partial_branch(self):
         convergence_tolerance = 1e-8
 
