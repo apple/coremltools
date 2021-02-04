@@ -1535,7 +1535,7 @@ class TestLog10(TorchBaseTest):
             input_shape, model, backend=backend,
         )
 
-class TestPad:
+class TestPad(TorchBaseTest):
     @pytest.mark.parametrize(
         "backend, rank, mode",
         itertools.product(backends, range(3, 5), ['reflect', 'replicate'])
@@ -1553,7 +1553,7 @@ class TestPad:
                                      size=pad_len))
         model = ModuleWrapper(function=torch.nn.functional.pad,
                               kwargs={"pad": pad, "mode": mode})
-        run_compare_torch(
+        self.run_compare_torch(
             input_shape, model, backend=backend,
         )
 
@@ -1571,6 +1571,6 @@ class TestPad:
                                      size=pad_dims*2))
         model = ModuleWrapper(function=torch.nn.functional.pad,
                               kwargs={"pad": pad, "mode": "constant", "value": val})
-        run_compare_torch(
+        self.run_compare_torch(
             input_shape, model, backend=backend,
         )
