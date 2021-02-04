@@ -2706,6 +2706,7 @@ def copy_(context, node):
     inputs = _get_inputs(context, node, expected=3)
     context.add(mb.identity(x=inputs[0], name=node.name))
 
+@register_torch_op
 def dtype(context, node):
     inputs = _get_inputs(context, node, expected=1)
     dtype_str = inputs[0].dtype.__name__
