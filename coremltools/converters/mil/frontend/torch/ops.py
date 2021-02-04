@@ -2732,3 +2732,43 @@ def log10(context, node):
     x = inputs[0]
     log_x = mb.log(x=x)
     context.add(mb.mul(x=log_x, y=1/_np.log(10.0)), node.name)
+
+@register_torch_op
+def reflection_pad2d(context, node):
+    inputs = _get_inputs(context, node)
+    x = inputs[0]
+    torch_pad = inputs[1].val
+    pad_flipped = torch_pad.reshape((-1, 2))[::-1].ravel()
+    pad = _np.pad(pad_flipped, (len(x.shape) * 2 - len(pad_flipped), 0))
+    context.add(mb.pad(x=x, pad=pad, mode='reflect'), node.name)
+
+
+@register_torch_op
+def reflection_pad1d(context, node):
+    inputs = _get_inputs(context, node)
+    x = inputs[0]
+    torch_pad = inputs[1].val
+    pad_flipped = torch_pad.reshape((-1, 2))[::-1].ravel()
+    pad = _np.pad(pad_flipped, (len(x.shape) * 2 - len(pad_flipped), 0))
+    context.add(mb.pad(x=x, pad=pad, mode='reflect'), node.name)
+
+
+@register_torch_op
+def replication_pad2d(context, node):
+    inputs = _get_inputs(context, node)
+    x = inputs[0]
+    torch_pad = inputs[1].val
+    pad_flipped = torch_pad.reshape((-1, 2))[::-1].ravel()
+    pad = _np.pad(pad_flipped, (len(x.shape) * 2 - len(pad_flipped), 0))
+    context.add(mb.pad(x=x, pad=pad, mode='replicate'), node.name)
+
+
+@register_torch_op
+def replication_pad1d(context, node):
+    inputs = _get_inputs(context, node)
+    x = inputs[0]
+    torch_pad = inputs[1].val
+    pad_flipped = torch_pad.reshape((-1, 2))[::-1].ravel()
+    pad = _np.pad(pad_flipped, (len(x.shape) * 2 - len(pad_flipped), 0))
+    context.add(mb.pad(x=x, pad=pad, mode='replicate'), node.name)
+
