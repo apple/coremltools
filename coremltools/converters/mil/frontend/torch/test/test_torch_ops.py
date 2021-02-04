@@ -1534,3 +1534,43 @@ class TestLog10(TorchBaseTest):
         self.run_compare_torch(
             input_shape, model, backend=backend,
         )
+
+class TestPad:
+    @pytest.mark.parametrize(
+        "backend, rank, mode",
+        itertools.product(backends, range(3, 5), ['reflect', 'replicate'])
+    )
+    def test_pad_reflect_replicate(self, backend, rank: int, mode: str):
+        input_shape = tuple(np.random.randint(low=1, high=10, size=rank))
+        if rank == 3:
+            pad_len = 2
+        elif rank == 4:
+            pad_len = 4
+        else:
+            raise NotImplementedError("Only 3D, 4D padding with non-constant padding are supported for now")
+        max_pad = min(input_shape[-1], input_shape[-2])
+        pad = list(np.random.randint(low=0, high=max_pad,
+                                     size=pad_len))
+        model = ModuleWrapper(function=torch.nn.functional.pad,
+                              kwargs={"pad": pad, "mode": mode})
+        run_compare_torch(
+            input_shape, model, backend=backend,
+        )
+
+    @pytest.mark.parametrize(
+        "backend, rank",
+        itertools.product(backends, range(1, 6))
+    )
+    def test_pad_constant(self, backend, rank: int):
+        if rank > 5:
+            raise NotImplementedError("Only supports < 6D constant padding")
+        val = float(np.random.random(1))
+        input_shape = tuple(np.random.randint(low=1, high=10, size=rank))
+        pad_dims = np.random.randint(low=1, high=rank+1)
+        pad = list(np.random.randint(low=0, high=10,
+                                     size=pad_dims*2))
+        model = ModuleWrapper(function=torch.nn.functional.pad,
+                              kwargs={"pad": pad, "mode": "constant", "value": val})
+        run_compare_torch(
+            input_shape, model, backend=backend,
+        )

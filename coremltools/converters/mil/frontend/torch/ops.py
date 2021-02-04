@@ -2738,31 +2738,38 @@ def reflection_pad2d(context, node):
     inputs = _get_inputs(context, node)
     x = inputs[0]
     torch_pad = inputs[1].val
-    pad = [torch_pad[2], torch_pad[3], torch_pad[0], torch_pad[1]]
+    pad_flipped = torch_pad.reshape((-1, 2))[::-1].ravel()
+    pad = _np.pad(pad_flipped, (len(x.shape) * 2 - len(pad_flipped), 0))
     context.add(mb.pad(x=x, pad=pad, mode='reflect'), node.name)
+
 
 @register_torch_op
 def reflection_pad1d(context, node):
     inputs = _get_inputs(context, node)
     x = inputs[0]
     torch_pad = inputs[1].val
-    pad = [0, 0, torch_pad[0], torch_pad[1]]
+    pad_flipped = torch_pad.reshape((-1, 2))[::-1].ravel()
+    pad = _np.pad(pad_flipped, (len(x.shape) * 2 - len(pad_flipped), 0))
     context.add(mb.pad(x=x, pad=pad, mode='reflect'), node.name)
+
 
 @register_torch_op
 def replication_pad2d(context, node):
     inputs = _get_inputs(context, node)
     x = inputs[0]
     torch_pad = inputs[1].val
-    pad = [torch_pad[2], torch_pad[3], torch_pad[0], torch_pad[1]]
+    pad_flipped = torch_pad.reshape((-1, 2))[::-1].ravel()
+    pad = _np.pad(pad_flipped, (len(x.shape) * 2 - len(pad_flipped), 0))
     context.add(mb.pad(x=x, pad=pad, mode='replicate'), node.name)
+
 
 @register_torch_op
 def replication_pad1d(context, node):
     inputs = _get_inputs(context, node)
     x = inputs[0]
     torch_pad = inputs[1].val
-    pad = [0, 0, torch_pad[0], torch_pad[1]]
+    pad_flipped = torch_pad.reshape((-1, 2))[::-1].ravel()
+    pad = _np.pad(pad_flipped, (len(x.shape) * 2 - len(pad_flipped), 0))
     context.add(mb.pad(x=x, pad=pad, mode='replicate'), node.name)
 
 @register_torch_op
@@ -2780,5 +2787,6 @@ def constant_pad_nd(context, node):
         )
 
     pad_flipped = torch_pad.reshape((-1, 2))[::-1].ravel()
-    pad = _np.pad(pad_flipped, (len(x.shape)*2 - len(pad_flipped), 0))
+    pad = _np.pad(pad_flipped, (len(x.shape) * 2 - len(pad_flipped), 0))
     context.add(mb.pad(x=x, pad=pad, mode='constant', constant_val=float(constant_val)), node.name)
+
