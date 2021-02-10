@@ -4,16 +4,19 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from coremltools.converters.mil.testing_reqs import ct
+import coremltools.models.utils as coremltoolsutils
 import pytest
 import numpy as np
 
 tf = pytest.importorskip("tensorflow", minversion="2.1.0")
 from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import (
-    get_tf_node_names
+    get_tf_node_names,
+    TensorFlowBaseTest
 )
 
 from coremltools.converters.mil.input_types import TensorType, RangeDim
-from coremltools.converters.mil.testing_utils import compare_shapes, compare_backend
+from coremltools.converters.mil.testing_utils import compare_shapes, \
+    compare_backend, run_core_ml_predict
 from tensorflow.python.framework import dtypes
 
 
@@ -143,7 +146,12 @@ def run_compare_tf2(
         also_compare_shapes=True,
     )
 
-    return mlmodel.get_spec()
+    pred = None
+    if not coremltoolsutils._has_custom_layer(mlmodel.get_spec()):
+        pred = run_core_ml_predict(mlmodel, input_dict, use_cpu_only)
+    else:
+        print('Skipping model prediction as it has a custom nn layer!')
+    return mlmodel._spec, mlmodel, input_dict, pred
 
 
 def run_compare_tf_keras(
@@ -176,7 +184,6 @@ def run_compare_tf_keras(
     rtol: float
         The relative tolerance parameter.
     """
-
     mlmodel = ct.convert(model, source=frontend, convert_to=backend)
 
     # assumes conversion preserve the i/o names
@@ -204,4 +211,52 @@ def run_compare_tf_keras(
         also_compare_shapes=True,
     )
 
-    return proto
+    pred = None
+    if not coremltoolsutils._has_custom_layer(proto):
+        pred = run_core_ml_predict(mlmodel, input_key_values, use_cpu_only)
+    else:
+        print('Skipping model prediction as it has a custom nn layer!')
+    return proto, mlmodel, input_key_values, pred
+
+
+class TensorFlow2BaseTest(TensorFlowBaseTest):
+
+    @staticmethod
+    def run_compare_tf2(model,
+            input_dict,
+            output_names,
+            use_cpu_only=False,
+            frontend_only=False,
+            frontend="tensorflow",
+            backend="nn_proto",
+            debug=False,
+            atol=1e-04,
+            rtol=1e-05):
+        res = run_compare_tf2(model,
+                              input_dict,
+                              output_names,
+                              use_cpu_only=use_cpu_only,
+                              frontend_only=frontend_only,
+                              frontend=frontend,
+                              backend=backend,
+                              debug=debug,
+                              atol=atol,
+                              rtol=rtol)
+        alist = list(res)
+        alist.append(TensorFlow2BaseTest.testclassname)
+        alist.append(TensorFlow2BaseTest.testmodelname)
+        return tuple(alist)
+
+    @staticmethod
+    def run_compare_tf_keras(model, input_values, use_cpu_only=False,
+            frontend_only=False, frontend="tensorflow",
+            backend="nn_proto", atol=1e-04, rtol=1e-05):
+        res = run_compare_tf_keras(model, input_values, use_cpu_only=
+        use_cpu_only,
+                                   frontend_only=frontend_only,
+                                   frontend=frontend,
+                                   backend=backend, atol=atol, rtol=rtol)
+        alist = list(res)
+        alist.append(TensorFlow2BaseTest.testclassname)
+        alist.append(TensorFlow2BaseTest.testmodelname)
+        return tuple(alist)

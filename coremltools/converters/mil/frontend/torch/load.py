@@ -9,7 +9,6 @@ import logging as _logging
 import os.path as _os_path
 
 import torch as _torch
-
 from .converter import TorchConverter, torch_to_mil_types
 from coremltools.converters.mil.input_types import InputType, TensorType
 from coremltools.converters.mil.mil import Program, types

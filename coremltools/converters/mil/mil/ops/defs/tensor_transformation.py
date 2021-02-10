@@ -43,8 +43,11 @@ class depth_to_space(Operation):
     ----------
     T: fp32
     """
-    
-    input_spec = InputSpec(x=TensorInputType(), block_size=IntInputType(const=True),)
+
+    input_spec = InputSpec(
+        x=TensorInputType(),
+        block_size=IntInputType(const=True),
+        )
 
     def __init__(self, **kwargs):
         super(depth_to_space, self).__init__(**kwargs)
@@ -83,7 +86,8 @@ class expand_dims(Operation):
     """
     
     input_spec = InputSpec(
-        x=ScalarOrTensorInputType(), axes=IntTensorInputType(const=True),
+        x=ScalarOrTensorInputType(), 
+        axes=IntTensorInputType(const=True),
     )
 
     def __init__(self, **kwargs):
@@ -178,8 +182,11 @@ class reshape(Operation):
     ----------
     T: fp32
     """
-    
-    input_spec = InputSpec(x=ScalarOrTensorInputType(), shape=IntTensorInputType(),)
+
+    input_spec = InputSpec(
+        x=ScalarOrTensorInputType(),
+        shape=IntTensorInputType(),
+        )
 
     def __init__(self, **kwargs):
         super(reshape, self).__init__(**kwargs)
@@ -300,8 +307,14 @@ class reverse(Operation):
     """
     
     input_spec = InputSpec(
-        x=TensorInputType(), axes=IntTensorInputType(const=True, optional=True),
+        x=TensorInputType(),
+        axes=IntTensorInputType(const=True, optional=True),
     )
+
+    def default_inputs(self):
+        return DefaultInputs(
+            axes=None,
+            )
 
     def __init__(self, **kwargs):
         super(reverse, self).__init__(**kwargs)
@@ -359,9 +372,14 @@ class reverse_sequence(Operation):
     input_spec = InputSpec(
         x=TensorInputType(),
         lengths=IntTensorInputType(),
-        seq_axis=IntInputType(const=True, default=0),
-        batch_axis=IntInputType(const=True, default=0),
+        seq_axis=IntInputType(const=True, optional=True),
+        batch_axis=IntInputType(const=True, optional=True),
     )
+
+    def default_inputs(self):
+        return DefaultInputs(
+            seq_axis=0,
+            batch_axis=0)
 
     def __init__(self, **kwargs):
         super(reverse_sequence, self).__init__(**kwargs)
@@ -377,53 +395,43 @@ class reverse_sequence(Operation):
 @register_op(doc_str="")
 class slice_by_index(Operation):
     """
-    Perform numpy-style indexing and slicing. For example, if you have a
-    tensor ``x``, this method produces:
-    
+    Method for numpy style indexing and slicing.
+    Suppose we have a tensor ``x``, this method achieves:
     ``result = x[begin[0]: end[0]: stride[0], begin[1]: end[1]: stride[1], ...]``
-    
-    Note: This method does not support pure indexing. You would need to do a squeeze if
-    indexing is intended.
-    
+    Note this method does not support pure indexing. You would need to do squeeze if indexing is intended.
+
     Parameters
     ----------
-    x: tensor<\*?, T> (Required)
-        * Input tensor.
-    
+    x: tensor<*?, T> (Required)
+        * Input tensor
     begin: tensor<[rank<x>], i32> (Required)
         * Starting index for the dimension of slicing.
-    
     end: tensor<[rank(x)], i32> (Required)
         * Ending index for the dimension of slicing.
-    
     stride: tensor<[rank(x)], i32> (Optional)
-        * Default to all ones (``1``).
+        * Default as all ``1``s.
         * Stride for the dimension of slicing.
-    
     begin_mask: tensor<[rank(x)], bool> (Optional)
         * Default to all ``False``.
         * If ``begin_mask[i]==True``, neglect ``begin[i]``, and set ``begin[i]`` to ``0``.
-    
     end_mask: tensor<[rank(x)], bool> (Optional)
         * Default to all ``False``.
-        * If ``end_mask[i]==True``, neglect ``end[i]``, and set ``end[i]``
-          to ``x.shape[i]``.
-    
+        * If ``end_mask[i]==True``, neglect ``end[i]``, and set ``end[i]`` to ``x.shape[i]``.
     squeeze_mask: tensor<[rank(x)], bool> (Optional)
         * Default to all ``False``.
-        * If ``squeeze_mask[i]==true``, neglect ``end[i]``, and do the pure index at
-          ``begin[i]``.
-    
+        * If ``squeeze_mask[i]==true``, neglect ``end[i]``, and do the pure index at ``begin[i]``.
+
     Returns
     -------
-    tensor<\*?, T>
-        * Scalar or tensor.
-    
+    tensor<*?, T>
+        - Scalar or tensor.
+
     Attributes
     ----------
     T: fp32
+
     """
-    
+
     input_spec = InputSpec(
         x=TensorInputType(),
         begin=IntTensorInputType(),
@@ -433,6 +441,14 @@ class slice_by_index(Operation):
         end_mask=BoolTensorInputType(const=True, optional=True),
         squeeze_mask=BoolTensorInputType(const=True, optional=True),
     )
+
+    def default_inputs(self):
+        return DefaultInputs(
+            stride=None,
+            begin_mask=None,
+            end_mask=None,
+            squeeze_mask=None,
+            )
 
     def __init__(self, **kwargs):
         super(slice_by_index, self).__init__(**kwargs)
@@ -584,33 +600,61 @@ class slice_by_index(Operation):
                 res = np.squeeze(res, axis=tuple(squeeze_axes))
         return res
 
+
 @register_op(doc_str="")
 class slice_by_size(Operation):
     """
-    Slice input tensor with given ``size`` for each rank.
-    
+    Perform numpy-style indexing and slicing. For example, if you have a
+    tensor ``x``, this method produces:
+
+    ``result = x[begin[0]: end[0]: stride[0], begin[1]: end[1]: stride[1], ...]``
+
+    Note: This method does not support pure indexing. You would need to do a squeeze if
+    indexing is intended.
+
     Parameters
     ----------
     x: tensor<\*?, T> (Required)
         * Input tensor.
-    begin: tensor<[rank(x)], i32> Required
-        * The begin index for slice.
-    size: tensor<[rank(x)], i32> Required
-        * The size to be sliced. If ``size`` is ``-1``, slice all the remaining
-          elements.
-    
+
+    begin: tensor<[rank<x>], i32> (Required)
+        * Starting index for the dimension of slicing.
+
+    end: tensor<[rank(x)], i32> (Required)
+        * Ending index for the dimension of slicing.
+
+    stride: tensor<[rank(x)], i32> (Optional)
+        * Default to all ones (``1``).
+        * Stride for the dimension of slicing.
+
+    begin_mask: tensor<[rank(x)], bool> (Optional)
+        * Default to all ``False``.
+        * If ``begin_mask[i]==True``, neglect ``begin[i]``, and set ``begin[i]`` to ``0``.
+
+    end_mask: tensor<[rank(x)], bool> (Optional)
+        * Default to all ``False``.
+        * If ``end_mask[i]==True``, neglect ``end[i]``, and set ``end[i]``
+          to ``x.shape[i]``.
+
+    squeeze_mask: tensor<[rank(x)], bool> (Optional)
+        * Default to all ``False``.
+        * If ``squeeze_mask[i]==true``, neglect ``end[i]``, and do the pure index at
+          ``begin[i]``.
+
     Returns
     -------
     tensor<\*?, T>
-        * Scalar or tensor. Same type as the input tensor.
-    
+        * Scalar or tensor.
+
     Attributes
     ----------
     T: fp32
     """
-    
+
     input_spec = InputSpec(
-        x=TensorInputType(), begin=IntTensorInputType(), size=IntTensorInputType(),
+        x=TensorInputType(),
+        begin=IntTensorInputType(),
+        size=IntTensorInputType(),
     )
 
     def __init__(self, **kwargs):
@@ -704,8 +748,10 @@ class space_to_depth(Operation):
     ----------
     T: fp32
     """
-    
-    input_spec = InputSpec(x=TensorInputType(), block_size=IntInputType(const=True),)
+
+    input_spec = InputSpec(
+        x=TensorInputType(),
+        block_size=IntInputType(const=True),)
 
     def __init__(self, **kwargs):
         super(space_to_depth, self).__init__(**kwargs)
@@ -742,8 +788,14 @@ class squeeze(Operation):
     """
     
     input_spec = InputSpec(
-        x=TensorInputType(), axes=IntTensorInputType(const=True, optional=True),
+        x=TensorInputType(),
+        axes=IntTensorInputType(const=True, optional=True),
     )
+
+    def default_inputs(self):
+        return DefaultInputs(
+            axes=None,
+            )
 
     def __init__(self, **kwargs):
         super(squeeze, self).__init__(**kwargs)
@@ -803,8 +855,10 @@ class transpose(Operation):
     ----------
     `torch.Tensor.permute <https://pytorch.org/docs/stable/tensors.html#torch.Tensor.permute>`_
     """
-    
-    input_spec = InputSpec(x=TensorInputType(), perm=IntTensorInputType(const=True),)
+
+    input_spec = InputSpec(
+        x=TensorInputType(),
+        perm=IntTensorInputType(const=True),)
 
     def __init__(self, **kwargs):
         super(transpose, self).__init__(**kwargs)
@@ -907,8 +961,11 @@ class sliding_windows(Operation):
         x=TensorInputType(),
         axis=IntInputType(const=True),
         size=IntInputType(const=True),
-        stride=IntInputType(const=True, default=1),
+        stride=IntInputType(const=True, optional=True),
     )
+
+    def default_inputs(self):
+        return DefaultInputs(stride=1)
 
     def __init__(self, **kwargs):
         super(sliding_windows, self).__init__(**kwargs)

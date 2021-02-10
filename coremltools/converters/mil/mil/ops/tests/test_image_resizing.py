@@ -88,6 +88,30 @@ class TestResizeBilinear:
             backend=backend,
         )
 
+        if backend != "nn_proto":
+            def build_mode_4(x):
+                return mb.resize_bilinear(
+                    x=x,
+                    target_size_height=1,
+                    target_size_width=5,
+                    sampling_mode="UNALIGN_CORNERS",
+                )
+
+            expected_output = np.array([0.0, 0.1, 0.5, 0.9, 1.0], dtype=np.float32).reshape(
+                1, 1, 5
+            )
+
+            run_compare_builder(
+                build_mode_4,
+                input_placeholder_dict,
+                input_value_dict,
+                expected_output_type,
+                expected_output,
+                use_cpu_only=use_cpu_only,
+                frontend_only=False,
+                backend=backend,
+            )
+
 
 class TestUpsampleBilinear:
     @pytest.mark.parametrize(
@@ -199,19 +223,19 @@ class TestUpsampleNearestNeighbor:
         "use_cpu_only, backend", itertools.product([True, False], backends,)
     )
     def test_builder_to_backend_smoke(self, use_cpu_only, backend):
-        x = np.array([1.5, 2.5, 3.5], dtype=np.float32).reshape(1, 1, 1, 3)
+        x = np.array([1.5, 2.5, 3.5], dtype=np.float32).reshape([1, 1, 1, 3])
         input_placeholder_dict = {"x": mb.placeholder(shape=x.shape)}
         input_value_dict = {"x": x}
 
         def build(x):
             return mb.upsample_nearest_neighbor(
-                x=x, upscale_factor_height=1, upscale_factor_width=2
+                x=x, scale_factor_height=1, scale_factor_width=2
             )
 
         expected_output_type = (1, 1, 1, 6, types.fp32)
         expected_output = np.array(
             [1.5, 1.5, 2.5, 2.5, 3.5, 3.5], dtype=np.float32
-        ).reshape(1, 1, 1, 6)
+        ).reshape([1, 1, 1, 6])
 
         run_compare_builder(
             build,
@@ -344,54 +368,72 @@ class TestCropResize:
         ).reshape(1, 1, 5, 1, 1)
         roi_invert = np.array([[2, 2, 1, 1]], dtype=np.float32).reshape(1, 1, 4, 1, 1)
 
-        def build(x):
-            return [
-                mb.crop_resize(
-                    x=x,
-                    roi=roi,
-                    target_width=2,
-                    target_height=2,
-                    normalized_coordinates=False,
-                    box_coordinate_mode="CORNERS_HEIGHT_FIRST",
-                    sampling_mode="ALIGN_CORNERS",
-                ),
-                mb.crop_resize(
-                    x=x,
-                    roi=roi,
-                    target_width=4,
-                    target_height=4,
-                    normalized_coordinates=False,
-                    box_coordinate_mode="CORNERS_HEIGHT_FIRST",
-                    sampling_mode="ALIGN_CORNERS",
-                ),
-                mb.crop_resize(
-                    x=x,
-                    roi=roi,
-                    target_width=1,
-                    target_height=1,
-                    normalized_coordinates=False,
-                    box_coordinate_mode="CORNERS_HEIGHT_FIRST",
-                    sampling_mode="ALIGN_CORNERS",
-                ),
-                mb.crop_resize(
-                    x=x,
-                    roi=roi_normalized,
-                    target_width=2,
-                    target_height=2,
-                    normalized_coordinates=True,
-                    box_coordinate_mode="CORNERS_HEIGHT_FIRST",
-                    sampling_mode="ALIGN_CORNERS",
-                ),
-                mb.crop_resize(
-                    x=x,
-                    roi=roi_invert,
-                    target_width=2,
-                    target_height=2,
-                    normalized_coordinates=False,
-                    box_coordinate_mode="CORNERS_HEIGHT_FIRST",
-                    sampling_mode="ALIGN_CORNERS",
-                ),
-            ]
+        def build(x, mode=0):
+            if mode == 0:
+                return mb.crop_resize(
+                        x=x,
+                        roi=roi,
+                        target_width=2,
+                        target_height=2,
+                        normalized_coordinates=False,
+                        box_coordinate_mode="CORNERS_HEIGHT_FIRST",
+                        sampling_mode="ALIGN_CORNERS",
+                    )
+
+            elif mode == 1:
+                return mb.crop_resize(
+                        x=x,
+                        roi=roi,
+                        target_width=4,
+                        target_height=4,
+                        normalized_coordinates=False,
+                        box_coordinate_mode="CORNERS_HEIGHT_FIRST",
+                        sampling_mode="ALIGN_CORNERS",
+                    )
+
+            elif mode == 2:
+                return mb.crop_resize(
+                        x=x,
+                        roi=roi,
+                        target_width=1,
+                        target_height=1,
+                        normalized_coordinates=False,
+                        box_coordinate_mode="CORNERS_HEIGHT_FIRST",
+                        sampling_mode="ALIGN_CORNERS",
+                    )
+
+            elif mode == 3:
+                return mb.crop_resize(
+                        x=x,
+                        roi=roi_normalized,
+                        target_width=2,
+                        target_height=2,
+                        normalized_coordinates=True,
+                        box_coordinate_mode="CORNERS_HEIGHT_FIRST",
+                        sampling_mode="ALIGN_CORNERS",
+                    )
+
+            elif mode == 4:
+                return mb.crop_resize(
+                        x=x,
+                        roi=roi_invert,
+                        target_width=2,
+                        target_height=2,
+                        normalized_coordinates=False,
+                        box_coordinate_mode="CORNERS_HEIGHT_FIRST",
+                        sampling_mode="ALIGN_CORNERS",
+                    )
+
+            elif mode == 5:
+                return mb.crop_resize(
+                        x=x,
+                        roi=roi_invert,
+                        target_width=2,
+                        target_height=2,
+                        normalized_coordinates=True,
+                        box_coordinate_mode="CORNERS_HEIGHT_FIRST",
+                        sampling_mode="UNALIGN_CORNERS",
+                    )
 
         expected_output_type = [
             (
@@ -434,6 +476,14 @@ class TestCropResize:
                 2,
                 types.fp32,
             ),
+            (
+                N,
+                placeholder_input_shape[0],
+                placeholder_input_shape[1],
+                2,
+                2,
+                types.fp32,
+            ),
         ]
         expected_output = [
             np.array([6, 7, 10, 11], dtype=np.float32).reshape(1, 1, 1, 2, 2),
@@ -449,15 +499,20 @@ class TestCropResize:
             np.array([8.5], dtype=np.float32).reshape(1, 1, 1, 1, 1),
             np.array([1, 2, 5, 6], dtype=np.float32).reshape(1, 1, 1, 2, 2),
             np.array([11, 10, 7, 6], dtype=np.float32).reshape(1, 1, 1, 2, 2),
+            np.array([3.5, 5.5, 11.5, 13.5], dtype=np.float32).reshape(1, 1, 1, 2, 2),
         ]
 
-        run_compare_builder(
-            build,
-            input_placeholder_dict,
-            input_value_dict,
-            expected_output_type,
-            expected_output,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
-            backend=backend,
-        )
+        import functools
+        for mode in range(6):
+            ## nn-proto does not support UNALIGN_CORNERS
+            if not (backend == 'nn_proto' and mode == 5):
+                run_compare_builder(
+                    functools.partial(build, mode=mode),
+                    input_placeholder_dict,
+                    input_value_dict,
+                    expected_output_type[mode],
+                    expected_output[mode],
+                    use_cpu_only=use_cpu_only,
+                    frontend_only=False,
+                    backend=backend,
+                )

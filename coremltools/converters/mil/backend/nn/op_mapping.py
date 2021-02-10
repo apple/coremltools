@@ -93,7 +93,8 @@ def to_py_type(val):
 
 def _convert_pool(const_context, builder, op, mode, exclude_padding_from_average=True):
     num_spatial_dimensions = len(op.kernel_sizes.val)
-    op_pad = op.pad.val if op.pad is not None else [0] * num_spatial_dimensions * 2
+    op_pad = op.pad.val if op.pad_type.val == 'custom' \
+        else [0] * num_spatial_dimensions * 2
     if num_spatial_dimensions == 1:
         builder.add_expand_dims(
             name=op.name + "_expanded",
@@ -424,9 +425,9 @@ def conv_helper(const_context, builder, op):
         input_names.append(weights_name)
 
     # padding
-    padding_mode = "valid" if op.pad_type is None else op.pad_type.val
+    padding_mode = op.pad_type.val
     pad = {}
-    if padding_mode == "custom" or op.pad:
+    if padding_mode == "custom":
         if not is_conv3d:
             padding_mode = "valid"
             pad["padding_top"] = op.pad.val[0]
@@ -452,13 +453,9 @@ def conv_helper(const_context, builder, op):
         rank_factor = 2
     elif is_conv3d:
         rank_factor = 3
-    strides = [1] * rank_factor
-    dilations = [1] * rank_factor
 
-    if op.strides is not None:
-        strides = op.strides.val.tolist()
-    if op.dilations is not None:
-        dilations = op.dilations.val.tolist()
+    strides = op.strides.val.tolist()
+    dilations = op.dilations.val.tolist()
     if is_conv1d:
         dilations = dilations + [1]
         strides = strides + [1]
@@ -1158,12 +1155,22 @@ def depth_to_space(const_context, builder, op):
 
 @register_mil_to_nn_mapping
 def expand_dims(const_context, builder, op):
-    builder.add_expand_dims(
-        name=op.name,
-        input_name=make_input(const_context, builder, op.x),
-        output_name=op.outputs[0].name,
-        axes=op.axes.val,
-    )
+    if op.x.rank == 0 and not (op.x.op.op_type == 'slice_by_index' and len(op.x.op.squeeze_mask.val) == 1 and op.x.op.squeeze_mask.val[0] == True):
+        # Hacky solution to handle rank 0 inconsistency across squeeze and slice with squeeze mask ops
+        # TODO: rdar://73160449
+        builder.add_copy(
+            name=op.name,
+            input_name=make_input(const_context, builder, op.x),
+            output_name=op.outputs[0].name,
+        )
+    else:
+        builder.add_expand_dims(
+            name=op.name,
+            input_name=make_input(const_context, builder, op.x),
+            output_name=op.outputs[0].name,
+            axes=op.axes.val,
+        )
+
 
 
 @register_mil_to_nn_mapping
@@ -1466,12 +1473,13 @@ def lstm(const_context, builder, op):
     input_name += "_expanded"
 
     if direction in {"forward", "reverse"}:
-        # Expand initial_h and initial_c
-        _expand_dim(builder, initial_h + "_expanded", initial_h, [2, 3, 4])
+        # Expand initial_h and initial_c,
+        # from shape (B, H) to shape (1, Batch, H, 1, 1)
+        _expand_dim(builder, initial_h + "_expanded", initial_h, [0, 3, 4])
         initial_h += "_expanded"
         # initial_h may have the same name as initial_c (e.g., same Var).
         # Append a different string to avoid conflict
-        _expand_dim(builder, initial_c + "_expanded2", initial_c, [2, 3, 4])
+        _expand_dim(builder, initial_c + "_expanded2", initial_c, [0, 3, 4])
         initial_c += "_expanded2"
 
         # Get weights here
@@ -1527,14 +1535,15 @@ def lstm(const_context, builder, op):
         # Issue #810
         num_layer = len(builder.layers)
         initial_h_expand = initial_h + "_expanded" + "_" + str(num_layer)
+        # from shape (B, 2*H) to shape (1, Batch, 2*H, 1, 1)
         if not (initial_h_expand in set(builder.layers)):
-            _expand_dim(builder, initial_h_expand, initial_h, [2, 3, 4])
+            _expand_dim(builder, initial_h_expand, initial_h, [0, 3, 4])
         initial_h = initial_h_expand
 
         # initial_h may have the same name as initial_c (e.g., same Var)
         initial_c_expand = initial_c + "_expanded2" + "_" + str(num_layer)
         if not (initial_c_expand in set(builder.layers)):
-            _expand_dim(builder, initial_c_expand, initial_c, [2, 3, 4])
+            _expand_dim(builder, initial_c_expand, initial_c, [0, 3, 4])
         initial_c = initial_c_expand
 
         initial_h_f = initial_h + "_forward"
@@ -1547,13 +1556,13 @@ def lstm(const_context, builder, op):
             name=op.name + "_split_h",
             input_name=initial_h,
             output_names=[initial_h_f, initial_h_r],
-            axis=1,
+            axis=2,
         )
         builder.add_split_nd(
             name=op.name + "_split_c",
             input_name=initial_c,
             output_names=[initial_c_f, initial_c_r],
-            axis=1,
+            axis=2,
         )
 
         # Get weights here
@@ -2242,7 +2251,12 @@ def pad(const_context, builder, op):
     nn_mode_mapping = {"reflect": "reflection", "replicate": "replication"}
     mode = nn_mode_mapping.get(mode, mode)
 
-    if pad is not None and op.x.rank > 1 and _np.all(pad[:-4] == 0):
+    if pad is not None:
+        missing_dims = op.x.rank - len(pad) // 2
+        pad = [0, 0] * missing_dims + list(pad)
+
+
+    if pad is not None and op.x.rank > 1 and all(i == 0 for i in pad[:-4]):
         pad = pad[-4:]
         left, right = pad[2], pad[3]
         top, bottom = pad[0], pad[1]
@@ -2282,17 +2296,40 @@ def instance_norm(const_context, builder, op):
     channels = op.x.shape[1]
     gamma = _np.array([1.0] * channels) if op.gamma is None else op.gamma.val
     beta = _np.array([0.0] * channels) if op.beta is None else op.beta.val
+
+    x_name = make_input(const_context, builder, op.x)
+    out_name = op.outputs[0].name
+
+    if op.x.rank == 3:
+        x_name = op.name + "_expanded"
+        builder.add_expand_dims(
+            name=x_name, input_name=op.x.name, output_name=x_name, axes=[-1],
+        )
+        out_name += "_instance_norm"
+
     builder.add_batchnorm(
         name=op.name,
         channels=channels,
         gamma=gamma,
         beta=beta,
-        input_name=make_input(const_context, builder, op.x),
-        output_name=op.outputs[0].name,
+        input_name=x_name,
+        output_name=out_name,
         compute_mean_var=True,
         instance_normalization=True,
         epsilon=op.epsilon.val,
     )
+
+    # Squeeze added `Width` dimension for 1d case
+    if op.x.rank == 3:
+        x_name = op.name + "_squeeze"
+        builder.add_squeeze(
+            name=x_name,
+            input_name=out_name,
+            output_name=op.outputs[0].name,
+            axes=[-1],
+        )
+
+
 
 
 @register_mil_to_nn_mapping
@@ -2501,26 +2538,19 @@ def conv_transpose(const_context, builder, op):
     # CoreML maps Deconv1D into Deconv2D
     # Hence, adjust width dimension attributes by setting to 1 for 1D case
     rank_factor = 1 if is_conv_transpose_1d else 2
-    strides = [1] * rank_factor
-    dilations = [1] * rank_factor
 
-    if op.strides is not None:
-        strides = op.strides.val.tolist()
-    if op.dilations is not None:
-        dilations = op.dilations.val.tolist()
-    # Get H and W from output shape
-    output_shape = []
-    if op.output_shape is not None:
-        output_shape = list(op.output_shape.val)
+    strides = op.strides.val.tolist()
+    dilations = op.dilations.val.tolist()
 
+    output_spatial_dims = list(op.outputs[0].shape[2:])
     if is_conv_transpose_1d:
         dilations = dilations + [1]
         strides = strides + [1]
-        if op.output_shape is not None:
-            output_shape = output_shape + [1]
+        # Must be at least 2D
+        output_spatial_dims += [1]
 
     # padding
-    padding_mode = "valid" if op.pad_type is None else op.pad_type.val
+    padding_mode = op.pad_type.val
     pad = {}
     if padding_mode == "custom" or op.pad is not None:
         if not is_conv_transpose_3d:
@@ -2561,7 +2591,7 @@ def conv_transpose(const_context, builder, op):
             dilation_width=dilations[2],
             padding_mode=padding_mode,
             is_deconv=True,
-            output_shape=output_shape,
+            output_shape=output_spatial_dims,
             input_name=input_names,
             output_name=out_name,
             **pad
@@ -2581,7 +2611,7 @@ def conv_transpose(const_context, builder, op):
             b=op.bias.val if has_bias else None,
             has_bias=has_bias,
             is_deconv=True,
-            output_shape=output_shape,
+            output_shape=output_spatial_dims,
             input_name=input_names,
             output_name=out_name,
             dilation_factors=dilations,
@@ -2670,10 +2700,26 @@ def shape(const_context, builder, op):
 
 @register_mil_to_nn_mapping
 def upsample_nearest_neighbor(const_context, builder, op):
+    scale_factor_h = op.scale_factor_height.val
+    scale_factor_w = op.scale_factor_width.val
+
+    if _np.abs(_np.round(scale_factor_h) - scale_factor_h) < 1e-4 and scale_factor_h >= 1 - 1e-4:
+        scale_factor_h = int(scale_factor_h)
+    else:
+        raise NotImplementedError(
+            f"Unsupported float type 'scale_factor_height' ({scale_factor_h}) for nn_proto."
+        )
+    if _np.abs(_np.round(scale_factor_w) - scale_factor_w) < 1e-4 and scale_factor_w >= 1 - 1e-4:
+        scale_factor_w = int(scale_factor_w)
+    else:
+        raise NotImplementedError(
+            f"Unsupported float type 'scale_factor_width' ({scale_factor_w}) for nn_proto."
+        )
+
     builder.add_upsample(
         name=op.name,
-        scaling_factor_h=op.upscale_factor_height.val,
-        scaling_factor_w=op.upscale_factor_width.val,
+        scaling_factor_h=scale_factor_h,
+        scaling_factor_w=scale_factor_w,
         input_name=make_input(const_context, builder, op.x),
         output_name=op.outputs[0].name,
         mode="NN",
@@ -2695,11 +2741,17 @@ def upsample_bilinear(const_context, builder, op):
 
 @register_mil_to_nn_mapping
 def resize_bilinear(const_context, builder, op):
-    grid_sampling_mode_map = {}
-    grid_sampling_mode_map["STRICT_ALIGN_CORNERS"] = "STRICT_ALIGN_ENDPOINTS_MODE"
-    grid_sampling_mode_map["ALIGN_CORNERS"] = "ALIGN_ENDPOINTS_MODE"
-    grid_sampling_mode_map["DEFAULT"] = "UPSAMPLE_MODE"
-    grid_sampling_mode_map["OFFSET_CORNERS"] = "ROI_ALIGN_MODE"
+    grid_sampling_mode_map = {
+        "STRICT_ALIGN_CORNERS": "STRICT_ALIGN_ENDPOINTS_MODE",
+        "ALIGN_CORNERS": "ALIGN_ENDPOINTS_MODE",
+        "DEFAULT": "UPSAMPLE_MODE",
+        "OFFSET_CORNERS": "ROI_ALIGN_MODE"
+    }
+
+    if op.sampling_mode.val not in grid_sampling_mode_map:
+        raise NotImplementedError(
+            f"Unsupported 'sampling_mode' ('{op.sampling_mode.val}') in nn_proto backend"
+        )
 
     builder.add_resize_bilinear(
         name=op.name,
@@ -2967,6 +3019,11 @@ def crop_resize(const_context, builder, op):
         "OFFSET_CORNERS": "ROI_ALIGN_MODE",
     }
 
+    if op.sampling_mode.val not in grid_sampling_mode_map:
+        raise NotImplementedError(
+            f"Unsupported 'sampling_mode' ('{op.sampling_mode.val}') in nn_proto backend"
+        )
+
     mode = grid_sampling_mode_map[op.sampling_mode.val]
 
     input_expanded = op.name + "_x_expand"
@@ -3045,18 +3102,13 @@ def custom_op(const_context, builder, op):
 
 @register_mil_to_nn_mapping
 def make_list(const_context, builder, op):
-    # op.elem_shape is technically optional but ssa passes ensures it's
-    # always there
-    # symbolic value in op.elem_shape means runtime-determined dimension,
-    # Ex: if op.elem_shape = [i0, 128], it means that the first dimension is runtime-determined.
-    elem_shape = op.elem_shape.sym_val
-
     # Set a initial size
     size = op.init_length.val
 
     # set the dynamic dimensions to 1 for initialization
     # Ex: op.elem_shape = [i0, 128] will result in [1, 128]
-    elem_shape = [1 if is_symbolic(dim) else dim for dim in elem_shape]
+    elem_shape = [1 if isinstance(dim_var.val, str) else
+        dim_var.val for dim_var in op.elem_shape]
 
     if size is not None:
         array_size = size if size > 0 else 1

@@ -185,7 +185,7 @@ def _fill_tensor_fields(tensor_field, ranks=None, shapes=None):
             continue
 
         if not _np.issubclass_(type(rank), (int, _np.integer)):
-            rank = -1  # Symbolic rank set to -1
+            rank = -1  # Variable rank set to -1
 
         field = tensor_field.add()
         field.rank = rank
@@ -716,6 +716,46 @@ class NeuralNetworkBuilder(object):
                 idx
             ].type.multiArrayType.dataType = _Model_pb2.ArrayFeatureType.DOUBLE
 
+
+    def _check_fp16_weight_params_lstms(self, lstm_wp, has_peephole=True):
+        """
+        Checks if a lstm layer has at least one weight_param which is in FP16 format
+
+        Parameters
+        ----------
+        lstm_wp: lstm weights
+        has_peephole: if the lstm has peephole
+        """
+        if len(lstm_wp.inputGateWeightMatrix.float16Value) > 0:
+            return True
+        if len(lstm_wp.forgetGateWeightMatrix.float16Value) > 0:
+            return True
+        if len(lstm_wp.blockInputWeightMatrix.float16Value) > 0:
+            return True
+        if len(lstm_wp.outputGateWeightMatrix.float16Value) > 0:
+            return True
+        if len(lstm_wp.inputGateRecursionMatrix.float16Value) > 0:
+            return True
+        if len(lstm_wp.forgetGateRecursionMatrix.float16Value) > 0:
+            return True
+        if len(lstm_wp.blockInputRecursionMatrix.float16Value) > 0:
+            return True
+        if len(lstm_wp.outputGateRecursionMatrix.float16Value) > 0:
+            return True
+        if len(lstm_wp.inputGateWeightMatrix.float16Value) > 0:
+            return True
+
+        if has_peephole:
+            if len(lstm_wp.inputGatePeepholeVector.float16Value) > 0:
+                return True
+            if len(lstm_wp.forgetGatePeepholeVector.float16Value) > 0:
+                return True
+            if len(lstm_wp.outputGatePeepholeVector.float16Value) > 0:
+                return True
+
+        return False
+
+
     def _check_fp16_weight_param_exists(self, layers):
         """
         Checks if the network has at least one weight_param which is in FP16 format
@@ -797,18 +837,18 @@ class NeuralNetworkBuilder(object):
                 if len(layer.gru.updateGateWeightMatrix.float16Value) > 0:
                     return True
                 if layer.gru.hasBiasVectors and len(layer.gru.outputGateBiasVector.float16Value) > 0:
-                        return True
+                    return True
 
             # uniDirectionalLSTM Layers
             elif layer_type == "uniDirectionalLSTM":
-                for lstm_wp in layer.uniDirectionalLSTM.weightParams:
-                    if len(lstm_wp.float16Value) > 0:
-                        return True
+                return self._check_fp16_weight_params_lstms(lstm_wp=layer.uniDirectionalLSTM.weightParams,
+                                                            has_peephole=layer.uniDirectionalLSTM.params.hasPeepholeVectors)
 
             # biDirectionalLSTM Layers
             elif layer_type == "biDirectionalLSTM":
                 for lstm_wp in layer.biDirectionalLSTM.weightParams:
-                    if len(lstm_wp.float16Value) > 0:
+                    if self._check_fp16_weight_params_lstms(lstm_wp=lstm_wp,
+                                                            has_peephole=layer.biDirectionalLSTM.params.hasPeepholeVectors):
                         return True
 
             # branch Layers

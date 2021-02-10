@@ -87,12 +87,21 @@ class gru(Operation):
         x=TensorInputType(),
         initial_h=TensorInputType(),
         weight=TensorInputType(const=True),
-        bias=TensorInputType(const=True, optional=True, default=None),
-        direction=StringInputType(const=True, default="forward"),
-        output_sequence=BoolInputType(const=True, default=False),
-        recurrent_activation=StringInputType(const=True, default="sigmoid"),
-        activation=StringInputType(const=True, default="tanh")
+        bias=TensorInputType(const=True, optional=True),
+        direction=StringInputType(const=True, optional=True),
+        output_sequence=BoolInputType(const=True, optional=True),
+        recurrent_activation=StringInputType(const=True, optional=True),
+        activation=StringInputType(const=True, optional=True)
     )
+
+    def default_inputs(self):
+        return DefaultInputs(
+            bias=None,
+            direction="forward",
+            output_sequence=False,
+            recurrent_activation="sigmoid",
+            activation="tanh",
+            )
 
     def __init__(self, **kwargs):
         super(gru, self).__init__(**kwargs)
@@ -250,15 +259,26 @@ class lstm(Operation):
         initial_h=TensorInputType(),
         initial_c=TensorInputType(),
         weight=TensorInputType(const=True),  # ifoz layout
-        bias=TensorInputType(const=True, optional=True, default=None),  # ifoz layout
-        direction=StringInputType(const=True, default="forward"),
-        output_sequence=BoolInputType(const=True, default=False),
-        recurrent_activation=StringInputType(const=True, default="sigmoid"),
-        cell_activation=StringInputType(const=True, default="tanh"),
-        activation=StringInputType(const=True, default="tanh"),
-        peephole=TensorInputType(const=True, optional=True, default=None),  # ifo layout
-        clip=FloatInputType(const=True, optional=True, default=None),
+        bias=TensorInputType(const=True, optional=True),  # ifoz layout
+        direction=StringInputType(const=True, optional=True),
+        output_sequence=BoolInputType(const=True, optional=True),
+        recurrent_activation=StringInputType(const=True, optional=True),
+        cell_activation=StringInputType(const=True, optional=True),
+        activation=StringInputType(const=True, optional=True),
+        peephole=TensorInputType(const=True, optional=True),  # ifo layout
+        clip=FloatInputType(const=True, optional=True),
     )
+
+    def default_inputs(self):
+        return DefaultInputs(
+            bias=None,
+            direction="forward",
+            output_sequence=False,
+            recurrent_activation="sigmoid",
+            cell_activation="tanh",
+            activation="tanh",
+            peephole=None,
+            clip=None)
 
     def __init__(self, **kwargs):
         super(lstm, self).__init__(**kwargs)
@@ -373,11 +393,18 @@ class rnn(Operation):
         x=TensorInputType(),
         initial_h=TensorInputType(),
         weight=TensorInputType(const=True),
-        bias=TensorInputType(const=True, optional=True, default=None),
-        direction=StringInputType(const=True, default="forward"),
-        output_sequence=BoolInputType(const=True, default=False),
-        activation=StringInputType(const=True, default="tanh"),
+        bias=TensorInputType(const=True, optional=True),
+        direction=StringInputType(const=True, optional=True),
+        output_sequence=BoolInputType(const=True, optional=True),
+        activation=StringInputType(const=True, optional=True),
     )
+
+    def default_inputs(self):
+        return DefaultInputs(
+            bias=None,
+            direction="forward",
+            output_sequence=False,
+            activation="tanh")
 
     def __init__(self, **kwargs):
         super(rnn, self).__init__(**kwargs)

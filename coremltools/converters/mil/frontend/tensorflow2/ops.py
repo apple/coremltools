@@ -116,7 +116,8 @@ def TensorListFromTensor(context, node):
     length = mb.slice_by_index(x=length, begin=[0], end=[1], squeeze_mask=[True])
 
     if element_shape is not None and all(_np.atleast_1d(element_shape.val) != -1):
-        ls = mb.make_list(init_length=length, elem_shape=element_shape, dtype=dtype_str)
+        ls = mb.make_list(init_length=length,
+            elem_shape=tuple(element_shape.val.tolist()), dtype=dtype_str)
     else:
         ls = mb.tf_make_list(init_length=length, dtype=dtype_str)
 
@@ -165,7 +166,7 @@ def TensorListReserve(context, node):
     if element_shape is not None and all(_np.atleast_1d(element_shape.val) != -1):
         ls = mb.make_list(
             init_length=num_elements,
-            elem_shape=element_shape,
+            elem_shape=tuple(element_shape.val.tolist()),
             dtype=dtype,
             name=node.name,
         )
