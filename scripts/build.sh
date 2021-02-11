@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 set -e
+set -x
 
 ##=============================================================================
 ## Main configuration processing
@@ -32,7 +33,8 @@ print_help() {
   echo "  --dist                          Build the distribution (wheel)."
   echo "  --no-check-env                  Don't check the environment to verify it's up to date."
   echo
-  exit 1
+  echo ""
+  exit 0
 } # end of print help
 
 # command flag options
@@ -50,8 +52,6 @@ while [ $# -gt 0 ]
   esac
   shift
 done
-
-set -x
 
 # First configure
 echo
