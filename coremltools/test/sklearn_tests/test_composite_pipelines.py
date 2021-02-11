@@ -49,14 +49,14 @@ class GradientBoostingRegressorBostonHousingScikitNumericTest(unittest.TestCase)
             result = evaluate_transformer(spec, input_data, output_data)
             assert result["num_errors"] == 0
 
-    def test_boston_OHE_plus_trees(self):
+    def _test_boston_OHE_plus_trees(self, loss='ls'):
 
         data = load_boston()
 
         pl = Pipeline(
             [
                 ("OHE", OneHotEncoder(categorical_features=[8], sparse=False)),
-                ("Trees", GradientBoostingRegressor(random_state=1)),
+                ("Trees", GradientBoostingRegressor(random_state=1, loss=loss)),
             ]
         )
 
@@ -74,3 +74,9 @@ class GradientBoostingRegressorBostonHousingScikitNumericTest(unittest.TestCase)
             result = evaluate_regressor(spec, df, "target", verbose=False)
 
             assert result["max_error"] < 0.0001
+
+    def test_boston_OHE_plus_trees(self):
+        self._test_boston_OHE_plus_trees()
+
+    def test_boston_OHE_plus_trees_with_huber_loss(self):
+        self._test_boston_OHE_plus_trees(loss='huber')
