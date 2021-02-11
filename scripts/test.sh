@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -e
+set -x
 
 ##=============================================================================
 ## Main configuration processing
@@ -37,7 +38,7 @@ print_help() {
   echo "  --timeout               Timeout limit (on each test)"
   echo "  --no-check-env          Don't check the environment to verify it's up to date."
   echo
-  exit 1
+  exit 0
 } # end of print help
 
 # command flag options
