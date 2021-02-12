@@ -252,17 +252,15 @@ def _get_model(spec):
 def evaluate_regressor(model, data, target="target", verbose=False):
     """
     Evaluate a CoreML regression model and compare against predictions
-    from the original framework (for testing correctness of conversion)
+    from the original framework (for testing correctness of conversion).
 
     Parameters
     ----------
-    filename: list of str or list of MLModel
-        File path from which to load the MLModel from (OR) a loaded version of
-        MLModel.
+    model: MLModel or str
+        A loaded MLModel or a path to a saved MLModel
 
-    data: list of str or list of Dataframe
-        Test data on which to evaluate the models (dataframe,
-        or path to a .csv file).
+    data: Dataframe
+        Test data on which to evaluate the models
 
     target: str
        Name of the column in the dataframe that must be interpreted
