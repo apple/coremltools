@@ -131,7 +131,6 @@ class OneHotEncoderScikitTest(unittest.TestCase):
 
             assert result["num_errors"] == 0
 
-    # This test still isn't working
     @unittest.skipUnless(
         _is_macos() and _macos_version() >= (10, 13), "Only supported on macOS 10.13+"
     )
