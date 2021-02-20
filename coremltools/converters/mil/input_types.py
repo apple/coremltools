@@ -5,7 +5,6 @@
 
 import logging
 import numpy as np
-import six
 from coremltools.converters.mil.mil.types.symbolic import is_symbolic
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.types.type_mapping import (
@@ -24,23 +23,25 @@ class ClassifierConfig(object):
         """
         Configuration for classifier models.
 
-        Attributes:
-
+        Parameters
+        ----------
         class_labels: str / list of int / list of str
-            If a list if given, the list maps the index of the output of a
+            If a ``list`` if given, the ``list`` maps the index of the output of a
             neural network to labels in a classifier.
-            If a str is given, the str points to a file which maps the index
+            
+            If a ``str`` is given, the ``str`` points to a file which maps the index
             to labels in a classifier.
-
+        
         predicted_feature_name: str
             Name of the output feature for the class labels exposed in the
-            Core ML neural network classifier, defaults: 'classLabel'.
-
+            Core ML neural network classifier. Default: ``'classLabel'``.
+        
         predicted_probabilities_output: str
             If provided, then this is the name of the neural network blob which
             generates the probabilities for each class label (typically the output
-            of a softmax layer). If not provided, then the last output layer is
-            assumed.
+            of a softmax layer). 
+            
+            If not provided, then the last output layer is assumed.
         """
         self.class_labels = class_labels
         self.predicted_feature_name = predicted_feature_name
@@ -52,13 +53,15 @@ class InputType(object):
         """
         The Input Type for inputs fed into the model.
 
-        Attributes:
-
+        Parameters
+        ----------
         name: (str)
             The name of the input.
-        shape: list, tuple, Shape object, EnumeratedShapes object or None
+        
+        shape: list, tuple, Shape object, EnumeratedShapes object, or None
             The shape(s) that are valid for this input.
-            If set to None, the shape will be infered from the model itself.
+            
+            If set to ``None``, the shape will be infered from the model itself.
         """
 
         self.name = name
@@ -82,23 +85,31 @@ class ImageType(InputType):
         """
         Configuration class used for image inputs in CoreML.
 
-        Attributes:
-
+        Parameters
+        ----------
         scale: (float)
             The scaling factor for all values in the image channels.
+        
         bias: float or list of float
-            If `color_layout` is 'G', bias would be a float
-            If `color_layout` is 'RGB' or 'BGR', bias would be a list of float
+            If ``color_layout`` is ``'G'``, bias would be a ``float``.
+            
+            If `color_layout` is ``'RGB'`` or ``'BGR'``, bias would be a list of ``float``.
+        
         color_layout: string
             Color layout of the image.
+            
             Valid values:
-                'G': Grayscale
-                'RGB': [Red, Green, Blue]
-                'BGR': [Blue, Green, Red]
+                * ``'G'``: Grayscale
+                * ``'RGB'``: [Red, Green, Blue]
+                * ``'BGR'``: [Blue, Green, Red]
+            
         channel_first: (bool) or None
-            Set to True if input format is channel first.
-            Default format is for TF is channel last. (channel_first=False)
-                              for PyTorch is channel first. (channel_first=True)
+            Set to ``True`` if input format is channel first.
+            
+            Default format:
+            	For TensorFlow: channel last (``channel_first=False``).
+            	
+                For PyTorch: channel first (``channel_first=True``).
         """
         super(ImageType, self).__init__(name, shape)
         self.scale = scale
@@ -135,46 +146,45 @@ class TensorType(InputType):
         Parameters
         ----------
         name: str
-            Input name. Must match a input name in model (usually
-            Placeholder name for Tensorflow or input name for PyTorch)
-
-            Name is required except for TensorFlow model where there are
+            Input name. Must match an input name in the model (usually the
+            Placeholder name for TensorFlow or the input name for PyTorch).
+            
+            The ``name`` is required except for a TensorFlow model in which there is
             exactly one input Placeholder.
-
+        
         shape: (1) list of positive int or RangeDim, or (2) EnumeratedShapes
             The shape of the input.
-
+            
             For TensorFlow:
-              - `shape` is optional. If omitted, shape is inferred from
+              * The ``shape`` is optional. If omitted, the shape is inferred from
                 TensorFlow graph's Placeholder shape.
-
+            
             For PyTorch:
-              - `shape` is required.
-
+              * The ``shape`` is required.
+        
         dtype: np.generic or mil.type type
-            Numpy dtype (e.g., np.int32). Default is np.float32
-
+            Numpy ``dtype`` (for example, ``np.int32``). Default is ``np.float32``.
+        
         default_value: np.ndarray
             If provided, the input is considered optional. At runtime, if the
-            input is not provided, `default_value` is used instead.
-
+            input is not provided, ``default_value`` is used.
+            
             Limitations:
+              *  If ``default_value`` is ``np.ndarray``, all
+                 elements are required to have the same value.
 
-            - Currently, if `default_value` is np.ndarray, we requires all
-              elements to have the same value.
-
-            - `default_value` may not be specified if `shape` is
-              `EnumeratedShapes`
+              * The ``default_value`` may not be specified if ``shape`` is
+                ``EnumeratedShapes``.
 
         Examples
         --------
-        - `ct.TensorType(name="input", shape=(1, 2, 3))` implies `dtype ==
-          np.float32`
-
-        - `ct.TensorType(name="input", shape=(1, 2, 3), dtype=np.int32)`
-
-        - `ct.TensorType(name="input", shape=(1, 2, 3),
-          dtype=ct.converters.mil.types.fp32)`
+        * ``ct.TensorType(name="input", shape=(1, 2, 3))` implies `dtype ==
+          np.float32``
+        
+        * ``ct.TensorType(name="input", shape=(1, 2, 3), dtype=np.int32)``
+    	
+        * ``ct.TensorType(name="input", shape=(1, 2, 3),
+          dtype=ct.converters.mil.types.fp32)``
         """
         super(TensorType, self).__init__(name, shape)
         if dtype is None:
@@ -229,17 +239,23 @@ class RangeDim(object):
         """
         A class that can be used to give a range of accepted shapes.
 
-        Attribute:
-
+        Parameters
+        ----------
         lower_bound: (int)
             The minimum valid value for the shape.
+        
         upper_bound: (int)
             The maximum valid value for the shape.
-            Set to -1 if there's no upper limit.
+            
+            Set to ``-1`` if there's no upper limit.
+        
         default: (int) or None
             The default value that is used for initiating the model, and set in
-            input shape field of the model file
-            If set to None, `lower_bound` would be used as default.
+
+            input shape field of the model file.
+            
+            If set to ``None``, ``lower_bound`` would be used as default.
+
         symbol: (str)
             Optional symbol name for the dim. Autogenerate a symbol name if
             not specified.
@@ -282,14 +298,16 @@ class Shape(object):
         """
         The basic shape class to be set in InputType.
 
-        Attribute:
-
+        Parameters
+        ----------
         shape: list of (int), symbolic values, RangeDim object
-            The valid shape of the input
+            The valid shape of the input.
+        
         default: tuple of int or None
             The default shape that is used for initiating the model, and set in
             the metadata of the model file.
-            If None, then `shape` would be used.
+            
+            If None, then ``shape`` is used.
         """
         from coremltools.converters.mil.mil import get_new_symbol
 
@@ -308,7 +326,7 @@ class Shape(object):
             if isinstance(s, RangeDim):
                 sym = s.symbol
                 self.symbolic_shape.append(sym)
-            elif isinstance(s, (np.generic, six.integer_types)) or is_symbolic(s):
+            elif isinstance(s, (np.generic, int)) or is_symbolic(s):
                 self.symbolic_shape.append(s)
             else:
                 raise ValueError(
@@ -325,7 +343,7 @@ class Shape(object):
                 )
             for idx, s in enumerate(default):
                 if not isinstance(
-                    s, (np.generic, six.integer_types)
+                    s, (np.generic, int)
                 ) and not is_symbolic(s):
                     raise ValueError(
                         "Default shape invalid, got error at index {} which is {}".format(
@@ -358,14 +376,19 @@ class EnumeratedShapes(object):
         """
         A shape class that is used for setting multiple valid shape in InputType.
 
+        Parameters
+        ----------
         shapes: list of Shape objects, or Shape-compatible lists.
             The valid shapes of the inputs.
+            
             If input provided is not Shape object, but can be converted to Shape,
-            the Shape object would be stored in `shapes` instead.
+            the Shape object would be stored in ``shapes`` instead.
+        
         default: tuple of int or None
             The default shape that is used for initiating the model, and set in
             the metadata of the model file.
-            If None, then the first element in `shapes` would be used.
+            
+            If None, then the first element in ``shapes`` is used.
         """
         from coremltools.converters.mil.mil import get_new_symbol
 
@@ -408,7 +431,7 @@ class EnumeratedShapes(object):
                 )
             for idx, s in enumerate(default):
                 if not isinstance(
-                    s, (np.generic, six.integer_types)
+                    s, (np.generic, int)
                 ) and not is_symbolic(s):
                     raise ValueError(
                         "Default shape invalid, got error at index {} which is {}".format(

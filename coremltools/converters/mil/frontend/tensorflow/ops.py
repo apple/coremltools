@@ -4,7 +4,6 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import logging as _logging
-from six import string_types as _string_types
 import numpy as _np
 
 from coremltools.converters.mil.mil.ops import get_const_mode
@@ -72,6 +71,91 @@ def _value_at(x, idx):
     """
     assert x.rank == 1
     return mb.slice_by_index(x=x, begin=[idx], end=[0], squeeze_mask=[True])
+
+
+def _freq_to_mel(freq):
+    return 1127.0 * _np.log(1 + freq / 700.0)
+
+def _get_MFCC_constants(spectrogram_N,
+                        sample_rate,
+                        upper_frequency_limit,
+                        lower_frequency_limit,
+                        filterbank_channel_count,
+                        dct_coefficient_count):
+
+    """
+    params:
+    spectrogram_N : int
+    sample_rate: int
+    upper_frequency_limit : int
+    filterbank_channel_count : int
+    dct_coefficient_count : int
+
+    returns:
+    array(shape: (spectrogram_N,))
+    array(shape: (spectrogram_N, filterbank_channel_count))
+    array(shape: (spectrogram_N, filterbank_channel_count))
+    array(shape: (filterbank_channel_count, dct_coefficient_count))
+
+    reference:
+    https://github.com/tensorflow/tensorflow/blob/dec8e0b11f4f87693b67e125e67dfbc68d26c205/tensorflow/core/kernels/mfcc_mel_filterbank.cc
+    """
+
+    center_frequencies = _np.zeros((filterbank_channel_count + 1))
+    mel_low = _freq_to_mel(lower_frequency_limit)
+    mel_hi = _freq_to_mel(upper_frequency_limit)
+    mel_span = mel_hi - mel_low
+    mel_spacing = mel_span / (filterbank_channel_count + 1)
+    for i in range(filterbank_channel_count + 1):
+        center_frequencies[i] = mel_low + (mel_spacing * (i + 1))
+
+    hz_per_sbin = 0.5 * sample_rate / (spectrogram_N - 1)
+    start_index = int(1.5 + (lower_frequency_limit / hz_per_sbin))
+    end_index = int(upper_frequency_limit / hz_per_sbin)
+
+    band_mapper = _np.zeros((spectrogram_N))
+    channel = 0
+    for i in range(spectrogram_N):
+        melf = _freq_to_mel(i * hz_per_sbin)
+        if (i < start_index) or (i > end_index):
+            band_mapper[i] = -2
+        else:
+            while channel < filterbank_channel_count and center_frequencies[channel] < melf:
+                channel += 1
+            band_mapper[i] = channel - 1  # Can be == -1
+
+    weights = _np.zeros((spectrogram_N))
+    for i in range(spectrogram_N):
+        channel = int(band_mapper[i])
+        if (i < start_index) or (i > end_index):
+            weights[i] = 0
+        else:
+            if channel >= 0:
+                weights[i] = (center_frequencies[channel + 1] - _freq_to_mel(i * hz_per_sbin)) / (
+                            center_frequencies[channel + 1] - center_frequencies[channel])
+            else:
+                weights[i] = (center_frequencies[0] - _freq_to_mel(i * hz_per_sbin)) / (center_frequencies[0] - mel_low)
+
+    mat_spec_val = _np.zeros((spectrogram_N, filterbank_channel_count))
+    mat_weighted = _np.zeros((spectrogram_N, filterbank_channel_count))
+    for i in range(start_index, end_index + 1): # For each FFT bin
+        channel = int(band_mapper[i])
+        if channel >= 0:
+            mat_weighted[i, channel] = 1 # Right side of triangle, downward slope
+        channel += 1
+        if channel < filterbank_channel_count:
+            mat_weighted[i, channel] = -1 # Left side of triangle
+            mat_spec_val[i, channel] = 1 # Left side of triangle
+
+    # compute the dct matrix
+    cosines = _np.zeros((filterbank_channel_count, dct_coefficient_count))
+    fnorm = _np.sqrt(2.0 / filterbank_channel_count)
+    arg = _np.pi / filterbank_channel_count
+    for i in range(filterbank_channel_count):
+        for j in range(dct_coefficient_count):
+            cosines[i, j] = fnorm * _np.cos(j * arg * (i + 0.5))
+
+    return weights, mat_weighted, mat_spec_val, cosines
 
 
 @register_tf_op(tf_alias=["BiasAdd", "AddV2"])
@@ -883,7 +967,7 @@ def Conv3D(context, node):
     )
 
     pad_type = node.attr.get("padding")
-    if not isinstance(pad_type, _string_types):
+    if not isinstance(pad_type, str):
         pad_type = "custom"
         raise NotImplementedError("Custom padding not implemented for TF")
     pad_type = pad_type.lower()
@@ -929,7 +1013,7 @@ def Conv3DBackpropInputV2(context, node):
     if pad_type is None:
         raise ValueError("Padding type not specified for op: {}".format(node.name))
 
-    if not isinstance(pad_type, _string_types):
+    if not isinstance(pad_type, str):
         pad_type = "custom"
         raise NotImplementedError("Custom padding not implemented for TF")
     pad_type = pad_type.lower()
@@ -938,10 +1022,8 @@ def Conv3DBackpropInputV2(context, node):
         # Convert input to NCDHW
         x = _transpose_NDHWC_to_NCDHW(x)
         if output_shape is not None:
-            output_shape = [output_shape[1], output_shape[2], output_shape[3]]
-    else:
-        if output_shape is not None:
-            output_shape = [output_shape[2], output_shape[3], output_shape[4]]
+            output_shape = [output_shape[0], output_shape[4],
+                output_shape[1], output_shape[2], output_shape[3]]
 
     # Only the last op should have the same name as node.name
     conv_name = node.name + "_x" if data_format == "NDHWC" else node.name
@@ -1956,7 +2038,7 @@ def Where(context, node):
 def SquaredDifference(context, node):
     x = context[node.inputs[0]]
     y = context[node.inputs[1]]
-    x = mb.sub(x=x, y=y)
+    x = mb.sub(x=x, y=y, name=node.name + '_sub')
     x = mb.square(x=x, name=node.name)
     context.add(node.name, x)
 
@@ -1980,7 +2062,7 @@ def Conv2DBackpropInput(context, node):
     )
     pad_type = node.attr.get("padding")
 
-    if not isinstance(pad_type, _string_types):
+    if not isinstance(pad_type, str):
         pad_type = "custom"
         raise NotImplementedError("Custom padding not implemented for TF")
 
@@ -1990,10 +2072,8 @@ def Conv2DBackpropInput(context, node):
     if data_format == "NHWC":
         x = _transpose_NHWC_to_NCHW(x)
         if output_shape is not None:
-            output_shape = [output_shape[1], output_shape[2]]
-    else:
-        if output_shape is not None:
-            output_shape = [output_shape[2], output_shape[3]]
+            output_shape = [output_shape[0], output_shape[3],
+                output_shape[1], output_shape[2]]
 
     # Only the last op should have the same name as node.name
     conv_name = node.name + "x" if data_format == "NHWC" else node.name
@@ -2128,21 +2208,16 @@ def ResizeNearestNeighbor(context, node):
         ResizeBilinear(context, node)
         return
 
-    if Hout % Hin > 0 or Wout % Win > 0:
-        raise ValueError(
-            '"ResizeNearestNeighbor" op: fractional upsampling factors not supported'
-        )
-
-    scaling_factor_h = int(Hout / Hin)
-    scaling_factor_w = int(Wout / Win)
+    scaling_factor_h = Hout / Hin
+    scaling_factor_w = Wout / Win
 
     # first transpose to from channel last to channel first format for coreml
     x = _transpose_NHWC_to_NCHW(x)
     # add the upsample layer
     x = mb.upsample_nearest_neighbor(
         x=x,
-        upscale_factor_height=scaling_factor_h,
-        upscale_factor_width=scaling_factor_w,
+        scale_factor_height=scaling_factor_h,
+        scale_factor_width=scaling_factor_w,
         name=node.name + "_channel_first_upsample",
     )
     # transpose again
@@ -2569,17 +2644,19 @@ def TensorArrayV3(context, node):
     elem_shape = node.attr.get("element_shape", None)
     size = node.attr.get("size", None)
     if size is None:
-        size = context[node.inputs[0]].val
-    if size is None:
-        msg = 'TensorArrayV3 size must be compile-time known. Got {}'
-        raise ValueError(msg.format(size))
-    init_length = size
-    if init_length == 0:
-        # Dynamic list. Use 1 as init_length
-        init_length = 1
+        size = context[node.inputs[0]]
+
+    if size.val is None:
+        init_length = size
+    else:
+        init_length = size.val
+        if init_length == 0:
+            # Dynamic list. Use 1 as init_length
+            init_length = 1
+
     builtin_dtype = node.attr["dtype"]
     dtype_str = types.builtin_to_string(builtin_dtype)
-    if elem_shape is not None:
+    if elem_shape is not None and not -1 in elem_shape:
         ls = mb.make_list(
             init_length=init_length,
             dtype=dtype_str,
@@ -2786,3 +2863,123 @@ def LogSoftmax(context, node):
     y = mb.reduce_log_sum_exp(x=x, axes=[axis], keep_dims=True)
     x = mb.sub(x=x, y=y, name=node.name)
     context.add(node.name, x)
+
+@register_tf_op
+def AudioSpectrogram(context, node):
+    """
+    input shape: (Tin, channels)
+    attributes: stride (int), window_size (int), magnitude_squared (bool)
+
+    output shape : (channels, Tout, fout)
+    where,
+    Tout = floor((Tin - window_size)/stride + 1)
+    fout = N / 2 + 1
+    where N = next_power_of_2(window_size) = 2 ^ ceil(log2(window_size))
+
+    reference:
+    https://github.com/tensorflow/tensorflow/blob/dec8e0b11f4f87693b67e125e67dfbc68d26c205/tensorflow/core/kernels/spectrogram_op.cc
+    """
+
+    x = context[node.inputs[0]] # (Tin, channels)
+    if x.rank != 2:
+        raise NotImplementedError("AudioSpectrogram op: rank of the input must be 2")
+
+    if "magnitude_squared" not in node.attr:
+        raise ValueError("AudioSpectrogram op: missing attribute: 'magnitude_squared'")
+    if "stride" not in node.attr:
+        raise ValueError("AudioSpectrogram op: missing attribute: 'stride'")
+    if "window_size" not in node.attr:
+        raise ValueError("AudioSpectrogram op: missing attribute: 'window_size'")
+
+    magnitude_squared = node.attr["magnitude_squared"]
+    stride = node.attr["stride"]
+    window_size = node.attr["window_size"]
+
+    N = 2 ** _np.ceil(_np.log2(window_size))
+    N = N.astype(_np.int)
+    fout = N / 2 + 1
+    fout = fout.astype(_np.int)
+
+    # construct constant for hann window tensor, of shape (window_size,)
+    h = _np.arange(window_size) * ((2*_np.pi) / window_size)
+    h = 0.5 - 0.5 * _np.cos(h)
+
+    # construct the constant DFT matrices
+    k = _np.arange(fout).reshape(1, fout) # (1, fout)
+    n = _np.arange(N).reshape(N, 1)  # (N, 1)
+    kn = _np.matmul(n, k) * (2 * _np.pi / N) # (N, fout)
+    Re_DFT_matrix_const = _np.cos(kn)  # (N, fout)
+    Im_DFT_matrix_const = -_np.sin(kn) # (N, fout)
+
+    # transpose input
+    x = mb.transpose(x=x, perm=[1,0]) # (channels, Tin)
+    # extract slices from the input
+    x = mb.sliding_windows(x=x, axis=1, size=window_size, stride=stride) # (channels, Tout, window_size)
+    # multiply with hann window
+    x = mb.mul(x=x, y=h)
+    # pad the last dimension to size N
+    x = mb.pad(x=x, pad=[0,0,0,0,0,N - window_size], mode="constant", constant_val=0.0) # (channels, Tout, N)
+    # multiply by DFT matrices
+    re = mb.matmul(x=x, y=Re_DFT_matrix_const) # (channels, Tout, fout)
+    im = mb.matmul(x=x, y=Im_DFT_matrix_const)  # (channels, Tout, fout)
+
+    # compute spectrogram
+    re = mb.mul(x=re, y=re)
+    im = mb.mul(x=im, y=im)
+    if not magnitude_squared:
+        y = mb.add(x=re, y=im)
+        y = mb.sqrt(x=y, name=node.name)
+    else:
+        y = mb.add(x=re, y=im, name=node.name)
+    context.add(node.name, y)
+
+@register_tf_op
+def Mfcc(context, node):
+    """
+    inputs:
+    - x : (channels, T, N)
+    - sampling rate: int
+
+    attributes:
+    - upper_frequency_limit : int
+    - lower_frequency_limit : int
+    - filterbank_channel_count : int
+    - dct_coefficient_count : int
+
+    output shape: (channels, T, dct_coefficient_count)
+    """
+    x = context[node.inputs[0]]  # (channels, T, F)
+    if x.rank != 3:
+        raise NotImplementedError("Mfcc op: rank of the input must be 3")
+    sampling_rate_var = context[node.inputs[1]]
+    if sampling_rate_var.val is None:
+        raise NotImplementedError("Mfcc op: dynamic sampling rate not supported")
+    sample_rate = sampling_rate_var.val
+    if is_symbolic(x.shape[2]):
+        raise NotImplementedError("Mfcc op: the last dimension, i.e. spectrogram size of the input must be known")
+
+    spectrogram_N = x.shape[2]
+    upper_frequency_limit = node.attr.get("upper_frequency_limit", 4000)
+    lower_frequency_limit = node.attr.get("lower_frequency_limit", 20)
+    filterbank_channel_count = node.attr.get("filterbank_channel_count", 40)
+    dct_coefficient_count = node.attr.get("dct_coefficient_count", 13)
+
+    # get the constant weights, matrices for MFCC filterbank and for DCT
+    # weights: (N,)
+    # mat_weighted, mat_spec_val : (N, filterbank_channel_count)
+    # cosines : (filterbank_channel_count, dct_coefficient_count)
+    weights, mat_weighted, mat_spec_val, cosines = _get_MFCC_constants(spectrogram_N,
+                                                                       sample_rate,
+                                                                       upper_frequency_limit,
+                                                                       lower_frequency_limit,
+                                                                       filterbank_channel_count,
+                                                                       dct_coefficient_count)
+
+    spectogram_value = mb.sqrt(x=x) # (channels, T, N)
+    weighted_spectogram_value = mb.mul(x=spectogram_value, y=weights)  # (channels, T, N)
+    x1 = mb.matmul(x=weighted_spectogram_value, y=mat_weighted) # (channels, T, filterbank_channel_count)
+    x2 = mb.matmul(x=spectogram_value, y=mat_spec_val) # (channels, T, filterbank_channel_count)
+    y = mb.add(x=x1, y=x2) # (channels, T, filterbank_channel_count)
+    y = mb.log(x=y, epsilon=1e-12)
+    y = mb.matmul(x=y, y=cosines, name=node.name) # (channels, T, dct_coefficient_count)
+    context.add(node.name, y)

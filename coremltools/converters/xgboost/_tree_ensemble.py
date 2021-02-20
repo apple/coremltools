@@ -10,7 +10,6 @@ from ...models.tree_ensemble import (
 from ..._deps import _HAS_XGBOOST
 
 import numpy as _np
-from six import string_types as _string_types
 
 if _HAS_XGBOOST:
     import xgboost as _xgboost
@@ -213,7 +212,7 @@ def convert_tree_ensemble(
             feature_map = {f: i for i, f in enumerate(model.feature_names)}
 
     # Path on the file system where the XGboost model exists.
-    elif isinstance(model, _string_types):
+    elif isinstance(model, str):
         if not os.path.exists(model):
             raise TypeError("Invalid path %s." % model)
         with open(model) as f:

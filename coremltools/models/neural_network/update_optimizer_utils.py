@@ -133,6 +133,16 @@ class SgdParams(object):
 
 
 class RangeParam:
+    """
+    Range Parameter optimizer.
+
+    Attributes
+    ----------
+    value: float
+    min: float
+    max: float
+    """
+
     def __init__(self, value, min=0, max=1):
         self._value = value
         if min >= max:
@@ -154,6 +164,15 @@ class RangeParam:
 
 
 class Batch:
+    """
+    Batch optimizer.
+
+    Attributes
+    ----------
+    value: float
+    allowed_set: float
+    """
+
     def __init__(self, value, allowed_set=None):
         self._value = value
         if allowed_set is None:

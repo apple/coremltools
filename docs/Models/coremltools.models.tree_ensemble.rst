@@ -1,6 +1,6 @@
-**********
+*************
 Tree Ensemble
-**********
+*************
 
 .. automodule:: coremltools.models.tree_ensemble
 

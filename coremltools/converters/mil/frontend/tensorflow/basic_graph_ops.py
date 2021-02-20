@@ -9,33 +9,31 @@ from __future__ import print_function as _
 from __future__ import division as _
 from __future__ import absolute_import as _
 
-import six
-
 
 def connect_edge(g, source, dest):
-    if isinstance(source, six.string_types):
+    if isinstance(source, str):
         source = g[source]
-    if isinstance(dest, six.string_types):
+    if isinstance(dest, str):
         dest = g[dest]
     source.outputs.append(dest.name)
     dest.inputs.append(source.name)
 
 
 def connect_edge_at_index(g, source, dest, idx):
-    if isinstance(source, six.string_types):
+    if isinstance(source, str):
         source = g[source]
-    if isinstance(dest, six.string_types):
+    if isinstance(dest, str):
         dest = g[dest]
     source.outputs.insert(idx, dest.name)
     dest.inputs.insert(idx, source.name)
 
 
 def replace_source(g, source, dest, new_source):
-    if isinstance(source, six.string_types):
+    if isinstance(source, str):
         source = g[source]
-    if isinstance(dest, six.string_types):
+    if isinstance(dest, str):
         dest = g[dest]
-    if isinstance(new_source, six.string_types):
+    if isinstance(new_source, str):
         new_source = g[new_source]
     dest_inputs = []
     for inp in dest.inputs:
@@ -49,11 +47,11 @@ def replace_source(g, source, dest, new_source):
 
 
 def replace_control_source(g, source, dest, new_source):
-    if isinstance(source, six.string_types):
+    if isinstance(source, str):
         source = g[source]
-    if isinstance(dest, six.string_types):
+    if isinstance(dest, str):
         dest = g[dest]
-    if isinstance(new_source, six.string_types):
+    if isinstance(new_source, str):
         new_source = g[new_source]
     dest_inputs = []
     for inp in dest.control_inputs:
@@ -67,11 +65,11 @@ def replace_control_source(g, source, dest, new_source):
 
 
 def replace_dest(g, source, dest, new_dest):
-    if isinstance(source, six.string_types):
+    if isinstance(source, str):
         source = g[source]
-    if isinstance(dest, six.string_types):
+    if isinstance(dest, str):
         dest = g[dest]
-    if isinstance(new_dest, six.string_types):
+    if isinstance(new_dest, str):
         new_dest = g[new_dest]
     for idx, d in enumerate(source.outputs):
         if d == dest.name:
@@ -82,11 +80,11 @@ def replace_dest(g, source, dest, new_dest):
 
 
 def replace_control_dest(g, source, dest, new_dest):
-    if isinstance(source, six.string_types):
+    if isinstance(source, str):
         source = g[source]
-    if isinstance(dest, six.string_types):
+    if isinstance(dest, str):
         dest = g[dest]
-    if isinstance(new_dest, six.string_types):
+    if isinstance(new_dest, str):
         new_dest = g[new_dest]
     for idx, d in enumerate(source.control_outputs):
         if d == dest.name:
@@ -107,9 +105,9 @@ def connect_sources(g, sources, dest):
 
 
 def disconnect_edge(g, source, dest):
-    if isinstance(source, six.string_types):
+    if isinstance(source, str):
         source = g[source]
-    if isinstance(dest, six.string_types):
+    if isinstance(dest, str):
         dest = g[dest]
     source.outputs = [i for i in source.outputs if i != dest.name]
 
@@ -117,9 +115,9 @@ def disconnect_edge(g, source, dest):
 
 
 def disconnect_control_edge(g, source, dest):
-    if isinstance(source, six.string_types):
+    if isinstance(source, str):
         source = g[source]
-    if isinstance(dest, six.string_types):
+    if isinstance(dest, str):
         dest = g[dest]
     source.control_outputs = [i for i in source.control_outputs if i != dest.name]
 
@@ -127,7 +125,7 @@ def disconnect_control_edge(g, source, dest):
 
 
 def disconnect_vertex_outs(g, source):
-    if isinstance(source, six.string_types):
+    if isinstance(source, str):
         source = g[source]
     for out in source.outputs:
         g[out].inputs = [i for i in g[out].inputs if i != source.name]
@@ -135,10 +133,10 @@ def disconnect_vertex_outs(g, source):
 
 
 def disconnect_vertex_ins(g, dest):
-    if isinstance(dest, six.string_types):
+    if isinstance(dest, str):
         dest = g[dest]
     for inp in dest.inputs:
-        if isinstance(inp, six.string_types):
+        if isinstance(inp, str):
             innode = g[inp]
         else:
             innode = inp
@@ -147,10 +145,10 @@ def disconnect_vertex_ins(g, dest):
 
 
 def disconnect_vertex_control_ins(g, dest):
-    if isinstance(dest, six.string_types):
+    if isinstance(dest, str):
         dest = g[dest]
     for inp in dest.control_inputs:
-        if isinstance(inp, six.string_types):
+        if isinstance(inp, str):
             innode = g[inp]
         else:
             innode = inp
@@ -159,7 +157,7 @@ def disconnect_vertex_control_ins(g, dest):
 
 
 def disconnect_vertex_control_outs(g, source):
-    if isinstance(source, six.string_types):
+    if isinstance(source, str):
         source = g[source]
     for out in source.control_outputs:
         g[out].control_inputs = [i for i in g[out].control_inputs if i != source.name]
@@ -167,7 +165,7 @@ def disconnect_vertex_control_outs(g, source):
 
 
 def delete_node(g, node):
-    if not isinstance(node, six.string_types):
+    if not isinstance(node, str):
         node = node.name
     disconnect_vertex_ins(g, node)
     disconnect_vertex_outs(g, node)
@@ -177,9 +175,9 @@ def delete_node(g, node):
 
 
 def replace_node(g, original_node, new_node):
-    if isinstance(new_node, six.string_types):
+    if isinstance(new_node, str):
         new_node = g[new_node]
-    if not isinstance(original_node, six.string_types):
+    if not isinstance(original_node, str):
         original_node = original_node.name
 
     for o in list(g[original_node].control_outputs):
@@ -227,24 +225,24 @@ def check_connections(gd):
     # check that inputs and outputs line up
     for k, v in gd.items():
         for i in v.inputs:
-            if isinstance(i, six.string_types):
+            if isinstance(i, str):
                 assert k in gd[i].outputs
             else:
                 assert k in gd[i.name].outputs
         for i in v.outputs:
             inputs = [
-                inp if isinstance(inp, six.string_types) else inp.name
+                inp if isinstance(inp, str) else inp.name
                 for inp in gd[i].inputs
             ]
             assert k in inputs
         for i in v.control_inputs:
-            if isinstance(i, six.string_types):
+            if isinstance(i, str):
                 assert k in gd[i].control_outputs
             else:
                 assert k in gd[i.name].control_outputs
         for i in v.control_outputs:
             control_inputs = [
-                inp if isinstance(inp, six.string_types) else inp.name
+                inp if isinstance(inp, str) else inp.name
                 for inp in gd[i].control_inputs
             ]
             assert k in control_inputs
@@ -262,7 +260,7 @@ def const_determined_nodes(gd, assume_variable_nodes=None):
 
     def visit(node):
         # make sure node is a ParsedNode
-        if isinstance(node, six.string_types):
+        if isinstance(node, str):
             node = gd[node]
         if node.name in vis:
             return
@@ -288,7 +286,7 @@ def const_determined_nodes(gd, assume_variable_nodes=None):
             ret = True
             vis[node.name] = False
             for innode in node.inputs:
-                if isinstance(innode, six.string_types):
+                if isinstance(innode, str):
                     inname = innode
                 else:
                     inname = innode.name

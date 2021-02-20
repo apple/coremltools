@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -e
+set -x
 
 ##=============================================================================
 ## Main configuration processing
@@ -37,7 +38,7 @@ print_help() {
   echo "  --timeout               Timeout limit (on each test)"
   echo "  --no-check-env          Don't check the environment to verify it's up to date."
   echo
-  exit 1
+  exit 0
 } # end of print help
 
 # command flag options
@@ -93,7 +94,7 @@ fi
 # Now run the tests
 echo "Running tests"
 
-TEST_CMD=($PYTEST_EXECUTABLE -ra -W "ignore::FutureWarning" -W "ignore::DeprecationWarning" --durations=100 --pyargs ${TEST_PACKAGE} --junitxml=${BUILD_DIR}/py-test-report.xml --timeout=${TIME_OUT})
+TEST_CMD=($PYTEST_EXECUTABLE -ra -W "ignore::UserWarning" -W "ignore::FutureWarning" -W "ignore::DeprecationWarning" --durations=100 --pyargs ${TEST_PACKAGE} --junitxml=${BUILD_DIR}/py-test-report.xml --timeout=${TIME_OUT})
 
 if [[ $SLOW != 1 || $FAST != 1 ]]; then
     if [[ $SLOW == 1 ]]; then

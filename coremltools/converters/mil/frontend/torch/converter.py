@@ -5,7 +5,6 @@
 
 from __future__ import print_function as _
 
-from six import string_types as _string_types
 import logging as _logging
 import torch as _torch
 from coremltools._deps import version_lt
@@ -49,9 +48,9 @@ class TranscriptionContext:
     def add(self, ssa_var, torch_name=None):
         """
         Arguments:
-            ssa_var: Varable to add to the graph being constructed.
+            ssa_var: Variable to add to the graph being constructed.
             torch_name: Optional unique string identifier of the operation. If
-                ommitted, it will use @ssa_var.name.
+                omitted, it will use @ssa_var.name.
         """
         if torch_name is None:
             torch_name = ssa_var.name
@@ -72,6 +71,10 @@ class TranscriptionContext:
         raise ValueError(
             "Torch var {} not found in context {}".format(torch_name, self.name)
         )
+
+    def __contains__(self, torch_name):
+        """Returns whether or not the torch var exist in context."""
+        return torch_name in self._current_graph[-1]
 
     def push(self, inputs=None):
         """
@@ -224,6 +227,15 @@ class TorchConverter:
             convert_nodes(self.context, self.graph)
 
             graph_outputs = [self.context[name] for name in self.graph.outputs]
+
+            # An output can be None when it's a None constant, which happens
+            # in Fairseq MT.
+            for g in graph_outputs:
+                if g is None:
+                    msg = "Droping output {} which is None"
+                    _logging.warning(msg.format(g))
+            graph_outputs = [g for g in graph_outputs if g is not None]
+
             # Output renaming occurs
             if self.output_names:
                 for index, var in enumerate(graph_outputs):

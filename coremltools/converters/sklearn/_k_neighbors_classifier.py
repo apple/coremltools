@@ -16,7 +16,6 @@ if _HAS_SKLEARN:
 
 import numpy as np
 import scipy as sp
-import six as _six
 
 model_type = "classifier"
 sklearn_class = _neighbors.KNeighborsClassifier
@@ -273,7 +272,7 @@ def _is_algorithm_kd_tree(model):
 
 def _is_printable(obj):
     """Check if the object is a valid text type."""
-    return isinstance(obj, _six.string_types)
+    return isinstance(obj, str)
 
 
 def _is_valid_sparse_format(obj):

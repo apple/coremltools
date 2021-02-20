@@ -67,9 +67,9 @@ class TreeEnsembleBase(object):
 
             A value denoting the transform applied.  Possible values are:
 
-            - "NoTransform" (default).  Do not apply a transform.
+            - ``"NoTransform"`` (default).  Do not apply a transform.
 
-            - "Classification_SoftMax".
+            - ``"Classification_SoftMax"``.
 
               Apply a softmax function to the outcome to produce normalized,
               non-negative scores that sum to 1.  The transformation applied to
@@ -82,7 +82,7 @@ class TreeEnsembleBase(object):
               Note: This is the output transformation applied by the XGBoost package
               with multiclass classification.
 
-            - "Regression_Logistic".
+            - ``"Regression_Logistic"``.
 
               Applies a logistic transform the predicted value, specifically:
 
@@ -130,45 +130,45 @@ class TreeEnsembleBase(object):
 
         branch_mode: str
             Branch mode of the node, specifying the condition under which the node
-            referenced by `true_child_id` is called next.
+            referenced by ``true_child_id`` is called next.
 
             Must be one of the following:
 
-              - `"BranchOnValueLessThanEqual"`. Traverse to node `true_child_id`
-                if `input[feature_index] <= feature_value`, and `false_child_id`
+              - ``"BranchOnValueLessThanEqual"``. Traverse to node ``true_child_id``
+                if ``input[feature_index] <= feature_value``, and ``false_child_id``
                 otherwise.
 
-              - `"BranchOnValueLessThan"`. Traverse to node `true_child_id`
-                if `input[feature_index] < feature_value`, and `false_child_id`
+              - ``"BranchOnValueLessThan"``. Traverse to node ``true_child_id``
+                if ``input[feature_index] < feature_value``, and ``false_child_id``
                 otherwise.
 
-              - `"BranchOnValueGreaterThanEqual"`. Traverse to node `true_child_id`
-                if `input[feature_index] >= feature_value`, and `false_child_id`
+              - ``"BranchOnValueGreaterThanEqual"``. Traverse to node ``true_child_id``
+                if ``input[feature_index] >= feature_value``, and ``false_child_id``
                 otherwise.
 
-              - `"BranchOnValueGreaterThan"`. Traverse to node `true_child_id`
-                if `input[feature_index] > feature_value`, and `false_child_id`
+              - ``"BranchOnValueGreaterThan"``. Traverse to node ``true_child_id``
+                if ``input[feature_index] > feature_value``, and ``false_child_id``
                 otherwise.
 
-              - `"BranchOnValueEqual"`. Traverse to node `true_child_id`
-                if `input[feature_index] == feature_value`, and `false_child_id`
+              - ``"BranchOnValueEqual"``. Traverse to node ``true_child_id``
+                if ``input[feature_index] == feature_value``, and ``false_child_id``
                 otherwise.
 
-              - `"BranchOnValueNotEqual"`. Traverse to node `true_child_id`
-                if `input[feature_index] != feature_value`, and `false_child_id`
+              - ``"BranchOnValueNotEqual"``. Traverse to node ``true_child_id``
+                if ``input[feature_index] != feature_value``, and ``false_child_id``
                 otherwise.
 
         true_child_id: int
             ID of the child under the true condition of the split.  An error will
-            be raised at model validation if this does not match the `node_id`
-            of a node instantiated by `add_branch_node` or `add_leaf_node` within
-            this `tree_id`.
+            be raised at model validation if this does not match the ``node_id``
+            of a node instantiated by ``add_branch_node`` or ``add_leaf_node`` within
+            this ``tree_id``.
 
         false_child_id: int
             ID of the child under the false condition of the split.  An error will
-            be raised at model validation if this does not match the `node_id`
-            of a node instantiated by `add_branch_node` or `add_leaf_node` within
-            this `tree_id`.
+            be raised at model validation if this does not match the ``node_id``
+            of a node instantiated by ``add_branch_node`` or ``add_leaf_node`` within
+            this ``tree_id``.
 
         relative_hit_rate: float [optional]
             When the model is converted compiled by CoreML, this gives hints to
@@ -317,9 +317,9 @@ class TreeEnsembleRegressor(TreeEnsembleBase):
         ----------
 
         features: [list of features]
-            Name(s) of the input features, given as a list of `('name', datatype)`
-            tuples.  The features are one of :py:class:`models.datatypes.Int64`,
-            :py:class:`datatypes.Double`, or :py:class:`models.datatypes.Array`.
+            Name(s) of the input features, given as a list of ``('name', datatype)``
+            tuples.  The features are one of ``models.datatypes.Int64``,
+            ``datatypes.Double``, or ``models.datatypes.Array``.
             Feature indices in the nodes are counted sequentially from 0 through
             the features.
 
@@ -394,9 +394,9 @@ class TreeEnsembleClassifier(TreeEnsembleBase):
         Parameters
         ----------
         features: [list of features]
-            Name(s) of the input features, given as a list of `('name', datatype)`
-            tuples.  The features are one of :py:class:`models.datatypes.Int64`,
-            :py:class:`datatypes.Double`, or :py:class:`models.datatypes.Array`.
+            Name(s) of the input features, given as a list of ``('name', datatype)``
+            tuples.  The features are one of ``models.datatypes.Int64``,
+            ``datatypes.Double``, or ``models.datatypes.Array``.
             Feature indices in the nodes are counted sequentially from 0 through
             the features.
 
@@ -408,9 +408,9 @@ class TreeEnsembleClassifier(TreeEnsembleBase):
             A string or a list of two strings specifying the names of the two
             output features, the first being a class label corresponding
             to the class with the highest predicted score, and the second being
-            a dictionary mapping each class to its score. If `output_features`
+            a dictionary mapping each class to its score. If ``output_features``
             is a string, it specifies the predicted class label and the class
-            scores is set to the default value of `"classProbability."`
+            scores is set to the default value of ``"classProbability"``.
         """
         super(TreeEnsembleClassifier, self).__init__()
         spec = self.spec

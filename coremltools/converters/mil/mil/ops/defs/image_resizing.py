@@ -12,32 +12,41 @@ class upsample_nearest_neighbor(Operation):
     """
     Upsample the spatial dimensions (last two dimensions) of the input
     by integer scale factors using nearest-neighbor interpolation.
-    
+
     Parameters
     ----------
-    x: tensor<[*D, H1, W1],T>  (Required)
+    x: tensor<[\*D, H1, W1],T>  (Required)
         * Must be at least rank ``3``.
-    upscale_factor_height: const<i32> (Optional, default=1)
+    scale_factor_height: const<i32> or const<fp32> (Optional, default=1)
         * Scale factor for the height dimension (``axis=-2``).
-    upscale_factor_width: const<i32> (Optional, default=1)
+        * Can be either an integer or fractional.
+    scale_factor_width: const<i32> or const<fp32> (Optional, default=1)
         * Scale factor for the width dimension (``axis=-1``).
+        * Can be either an integer or fractional.
 
     Returns
     -------
-    tensor<[*D, H2, W2],T>
+    tensor<[\*D, H2, W2],T>
         * Tensor with same type as the input.
-        * ``H2`` = ``H1`` * ``upscale_factor_height``.
-        * ``W2`` = ``W1`` * ``upscale_factor_width``.
+        * ``H2`` = floor(``H1`` * ``scale_factor_height``).
+        * ``W2`` = floor(``W1`` * ``scale_factor_width``).
 
     Attributes
     ----------
     T: fp32
     """
+
     input_spec = InputSpec(
         x=TensorInputType(),
-        upscale_factor_height=IntInputType(const=True, default=1),
-        upscale_factor_width=IntInputType(const=True, default=1),
+        scale_factor_height=IntOrFloatInputType(const=True, optional=True),
+        scale_factor_width=IntOrFloatInputType(const=True, optional=True),
     )
+
+    def default_inputs(self):
+        return DefaultInputs(
+            scale_factor_height=1,
+            scale_factor_width=1,
+        )
 
     def __init__(self, **kwargs):
         super(upsample_nearest_neighbor, self).__init__(**kwargs)
@@ -49,8 +58,8 @@ class upsample_nearest_neighbor(Operation):
             )
 
         ret_shape = list(self.x.shape)
-        ret_shape[-1] *= self.upscale_factor_width.val
-        ret_shape[-2] *= self.upscale_factor_height.val
+        ret_shape[-1] = np.floor(self.scale_factor_width.val * ret_shape[-1])
+        ret_shape[-2] = np.floor(self.scale_factor_height.val * ret_shape[-2])
         return types.tensor(self.x.dtype, ret_shape)
 
 
@@ -62,7 +71,7 @@ class upsample_bilinear(Operation):
     
     Parameters
     ----------
-    x: tensor<[*D, H1, W1],T>  (Required)
+    x: tensor<[\*D, H1, W1],T>  (Required)
         * Must be at least rank ``3``.
     scale_factor_height: const<T2> (Optional, default=1)
         * Scale factor for the height dimension (``axis=-2``).
@@ -108,7 +117,7 @@ class upsample_bilinear(Operation):
         [0., 0., 0.33, 0.67, 1., 1.] (Xout = 6, align_corners=False)
         [0., 0.2, 0.4, 0.6, 0.8, 1.] (Xout = 6, align_corners=True)
     
-    Note the following simularities:
+    Note the following similarities:
     
     * ``align_corners=False`` is the same as
       ``tf.raw_ops.ResizeBilinear(align_corners=False, half_pixel_centers=True)``.
@@ -118,7 +127,7 @@ class upsample_bilinear(Operation):
 
     Returns
     -------
-    tensor<[*D, H2, W2],T>
+    tensor<[\*D, H2, W2],T>
         * Tensor with same type as the input.
         * ``H2`` = floor(``H1`` * ``scale_factor_height``).
         * ``W2`` = floor(``W1`` * ``scale_factor_width``).
@@ -131,10 +140,19 @@ class upsample_bilinear(Operation):
 
     input_spec = InputSpec(
         x=TensorInputType(),
-        scale_factor_height=IntOrFloatInputType(const=True, default=1),
-        scale_factor_width=IntOrFloatInputType(const=True, default=1),
-        align_corners=BoolInputType(const=True, default=True),
+        scale_factor_height=IntOrFloatInputType(const=True,
+          optional=True),
+        scale_factor_width=IntOrFloatInputType(const=True,
+          optional=True),
+        align_corners=BoolInputType(const=True, optional=True),
     )
+
+    def default_inputs(self):
+        return DefaultInputs(
+            scale_factor_height=1,
+            scale_factor_width=1,
+            align_corners=True,
+            )
 
     def __init__(self, **kwargs):
         super(upsample_bilinear, self).__init__(**kwargs)
@@ -161,7 +179,7 @@ class resize_bilinear(Operation):
     
     Parameters
     ----------
-    x: tensor<[*D, H1, W1],T> (Required)
+    x: tensor<[\*D, H1, W1],T> (Required)
         * Must be at least rank ``3``.
     target_size_height: const<int32> (Optional, default=1)
         * Target spatial size for the height dimension (``axis=-2``).
@@ -169,8 +187,8 @@ class resize_bilinear(Operation):
         * Target spatial size for the width dimension (``axis=-1``).
     sampling_mode: const<str> (Optional, default="DEFAULT")
         * This parameter can take ``"STRICT_ALIGN_CORNERS”``, ``"ALIGN_CORNERS"``,
-          ``"DEFAULT"``, or ``"OFFSET_CORNERS"`` as values. For details,
-          see the Notes section.
+          ``"DEFAULT"``, ``"OFFSET_CORNERS"`` or ``UNALIGN_CORNERS`` as values.
+          For details, see the Notes section.
     
     Notes
     -----
@@ -200,7 +218,11 @@ class resize_bilinear(Operation):
         spacing = ((Xout - 1) * delta) / (Xout - 1)
         grid_point[i] = min(Xin-1, max(0, 0.5*delta + i*spacing)), for
         ...   i=0,1,...,Xout-1
-    
+
+        # "UNALIGN_CORNERS":
+        spacing = Xin / Xout
+        grid_point[i] = min(Xin - 1, max(0, i*spacing + 0.5*spacing - 0.5)), for i=0,1,...,Xout-1
+
     For example:
     
     .. sourcecode:: python
@@ -211,16 +233,18 @@ class resize_bilinear(Operation):
     Grid points:
     
     .. sourcecode:: python
-    
+
+        [0., 0.1, 0.5, 0.9, 1.] (Xout = 5, UNALIGN_CORNERS)
         [0., 0.25, 0.5, 0.75, 1.] (Xout = 5, "STRICT_ALIGN_CORNERS" / "ALIGN_CORNERS")
         [0., 0.4, 0.8, 1., 1.] (Xout = 5, "DEFAULT")
         [0.1, 0.3, 0.5, 0.7, 0.9] (Xout = 5, "OFFSET_CORNERS")
-        
+
+        [0., 0., 0.33, 0.67, 1., 1.] (Xout = 6, UNALIGN_CORNERS)
         [0., 0.2, 0.4, 0.6, 0.8, 1.] (Xout = 6, "STRICT_ALIGN_CORNERS" / "ALIGN_CORNERS")
         [0., 0.33, 0.67, 1., 1., 1.] (Xout = 6, "DEFAULT")
         [0.08, 0.25, 0.42, 0.58, 0.75, 0.92] (Xout = 6, "OFFSET_CORNERS")
-        
-    Note the following simularities:
+
+    Note the following similarities:
     
         * ``"DEFAULT"`` is same as
           ``tf.raw_ops.ResizeBilinear(align_corners=False,
@@ -228,11 +252,10 @@ class resize_bilinear(Operation):
         * ``"STRICT_ALIGN_CORNERS"`` is same as
           ``tf.raw_ops.ResizeBilinear(align_corners=True,
           half_pixel_centers=False)``.
-    
 
     Returns
     -------
-    tensor<[*D, H2, W2],T>
+    tensor<[\*D, H2, W2],T>
         * Tensor with same type as the input.
         * ``H2`` = ``target_size_height``.
         * ``W2`` = ``target_size_width``.
@@ -244,10 +267,17 @@ class resize_bilinear(Operation):
 
     input_spec = InputSpec(
         x=TensorInputType(),
-        target_size_height=IntInputType(const=True, default=1),
-        target_size_width=IntInputType(const=True, default=1),
-        sampling_mode=StringInputType(const=True, default="DEFAULT"),
+        target_size_height=IntInputType(const=True, optional=True),
+        target_size_width=IntInputType(const=True, optional=True),
+        sampling_mode=StringInputType(const=True, optional=True),
     )
+
+    def default_inputs(self):
+        return DefaultInputs(
+            target_size_height=1,
+            target_size_width=1,
+            sampling_mode="DEFAULT",
+            )
 
     def __init__(self, **kwargs):
         super(resize_bilinear, self).__init__(**kwargs)
@@ -261,6 +291,7 @@ class resize_bilinear(Operation):
         if self.sampling_mode.val not in {
             "STRICT_ALIGN_CORNERS",
             "ALIGN_CORNERS",
+            "UNALIGN_CORNERS",
             "DEFAULT",
             "OFFSET_CORNERS",
         }:
@@ -274,6 +305,7 @@ class resize_bilinear(Operation):
         ret_shape[-1] = self.target_size_width.val
         ret_shape[-2] = self.target_size_height.val
         return types.tensor(self.x.dtype, ret_shape)
+
 
 @register_op(doc_str="TODO")
 class crop_resize(Operation):
@@ -337,7 +369,8 @@ class crop_resize(Operation):
     
     sampling_mode : const<str> (Optional, default="DEFAULT")
         * This parameter can take ``"STRICT_ALIGN_CORNERS"``,
-          ``"ALIGN_CORNERS"``, ``"DEFAULT"``, or ``"OFFSET_CORNERS"`` as values.
+          ``"ALIGN_CORNERS"``, ``"DEFAULT"``, ``"OFFSET_CORNERS"`` or
+          ``UNALIGN_CORNERS`` as values.
         * This same convention is used by the ``resize_bilinear`` op (see
           that op for details).
     
@@ -365,15 +398,23 @@ class crop_resize(Operation):
     input_spec = InputSpec(
         x=TensorInputType(),
         roi=TensorInputType(),
-        target_height=IntInputType(const=True, default=1),
-        target_width=IntInputType(const=True, default=1),
-        normalized_coordinates=BoolInputType(const=True, default=False),
-        spatial_scale=FloatInputType(const=True, default=1.0),
-        box_coordinate_mode=StringInputType(
-            const=True, default="CONRNERS_HEIGHT_FIRST"
-        ),
-        sampling_mode=StringInputType(const=True, default="DEFAULT"),
+        target_height=IntInputType(const=True, optional=True),
+        target_width=IntInputType(const=True, optional=True),
+        normalized_coordinates=BoolInputType(const=True, optional=True),
+        spatial_scale=FloatInputType(const=True, optional=True),
+        box_coordinate_mode=StringInputType(const=True, optional=True),
+        sampling_mode=StringInputType(const=True, optional=True),
     )
+
+    def default_inputs(self):
+        return DefaultInputs(
+            target_height=1,
+            target_width=1,
+            normalized_coordinates=False,
+            spatial_scale=1.,
+            box_coordinate_mode="CONRNERS_HEIGHT_FIRST",
+            sampling_mode="DEFAULT",
+            )
 
     def __init__(self, **kwargs):
         super(crop_resize, self).__init__(**kwargs)
@@ -396,6 +437,7 @@ class crop_resize(Operation):
         if self.sampling_mode.val not in {
             "STRICT_ALIGN_CORNERS",
             "ALIGN_CORNERS",
+            "UNALIGN_CORNERS",
             "DEFAULT",
             "OFFSET_CORNERS",
         }:
@@ -419,17 +461,17 @@ class crop(Operation):
 
     Parameters
     ----------
-    x: tensor<[*D, H1, W1],T> (Required)
+    x: tensor<[\*D, H1, W1],T> (Required)
         * Must be at least rank ``3``.
     crop_height: const<2, i32> (Required)
         * Amount to be cropped from the top and bottom of the height dimension
           (``axis=-2``).
-    * crop_width: const<2, i32> (Required)
+    crop_width: const<2, i32> (Required)
         * Amount to be cropped from the left and right sides of the width dimension (``axis=-1``).
-
+    
     Returns
     -------
-    tensor<[*D, H2, W2],T>
+    tensor<[\*D, H2, W2],T>
         * Tensor with same type as the input.
         * ``H2`` = ``H1`` - crop_height[0] - crop_height[1].
         * ``W2`` = ``W1`` - crop_width[0] - crop_width[1].

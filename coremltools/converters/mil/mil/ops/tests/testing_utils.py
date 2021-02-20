@@ -5,10 +5,10 @@
 
 import logging
 
-from coremltools.converters.mil.testing_reqs import _converter as converter
 from coremltools.converters.mil.mil.types.symbolic import is_symbolic
 from coremltools.converters.mil.mil import Program, Function
 from coremltools.converters.mil.testing_utils import compare_backend
+from coremltools.converters.mil.testing_reqs import ct
 
 UNK_VARIADIC = "*s_unk"
 UNK_SYM = "s_unk"
@@ -26,6 +26,7 @@ def run_compare_builder(
     atol=1e-04,
     rtol=1e-05,
     inputs=None,
+    also_compare_shapes=False,
 ):
     """
     Inputs:
@@ -81,7 +82,8 @@ def run_compare_builder(
         if out_var.dtype != s[-1]:
             raise ValueError(
                 "Output {} type: expect {}, got {}. Program:\n{}".format(
-                    out_var.name, s[-1], out_var.dtype, prog
+                    out_var.name, s[-1].__type_info__(),
+                    out_var.dtype.__type_info__(), prog
                 )
             )
         if UNK_VARIADIC in s[:-1]:
@@ -106,7 +108,7 @@ def run_compare_builder(
         if output_shape != expected_shape:
             raise ValueError(msg)
 
-    proto = converter._convert(prog, convert_from="mil", convert_to=backend, inputs=inputs)
+    mlmodel = ct.convert(prog, source="mil", convert_to=backend, inputs=inputs)
 
     if frontend_only:
         return
@@ -123,11 +125,11 @@ def run_compare_builder(
         }
 
     compare_backend(
-        proto=proto,
+        mlmodel=mlmodel,
         input_key_values=input_values,
         expected_outputs=expected_outputs,
         use_cpu_only=use_cpu_only,
         atol=atol,
         rtol=rtol,
-        also_compare_shapes=False,
+        also_compare_shapes=also_compare_shapes,
     )

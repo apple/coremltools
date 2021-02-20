@@ -6,7 +6,6 @@
 from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.mil import get_new_symbol
 from coremltools.converters.mil.testing_reqs import *
-from coremltools.converters.mil.mil.input_type import InputTypeError
 
 from .testing_utils import UNK_SYM, UNK_VARIADIC, run_compare_builder
 
@@ -129,6 +128,12 @@ class TestCumSum:
         assert is_close(np.cumsum(x_val, axis=0), v.val)
 
     @ssa_fn
+    def test_invalid_arg(self):
+        x_val = random_gen(shape=(1, 2, 3, 4, 5), rand_min=-100, rand_max=100)
+        with pytest.raises(ValueError):
+            mb.cumsum(x=x_val, axis=0, invalid_arg=3)
+
+    @ssa_fn
     def test_invalid_axis1(self):
         x_val = random_gen(shape=(1, 2, 3, 4, 5), rand_min=-100, rand_max=100)
         with pytest.raises(ValueError):
@@ -143,55 +148,55 @@ class TestCumSum:
     @ssa_fn
     def test_invalid_axis3(self):
         x_val = random_gen(shape=(1, 2, 3, 4, 5), rand_min=-100, rand_max=100)
-        with pytest.raises(InputTypeError):
+        with pytest.raises(ValueError):
             mb.cumsum(x=x_val, axis="")
 
     @ssa_fn
     def test_invalid_reverse1(self):
         x_val = random_gen(shape=(1, 2, 3, 4, 5), rand_min=-100, rand_max=100)
-        with pytest.raises(InputTypeError):
+        with pytest.raises(ValueError):
             mb.cumsum(x=x_val, reverse="")
 
     @ssa_fn
     def test_invalid_reverse2(self):
         x_val = random_gen(shape=(1, 2, 3, 4, 5), rand_min=-100, rand_max=100)
-        with pytest.raises(InputTypeError):
+        with pytest.raises(ValueError):
             pred = mb.cumsum(x=x_val, reverse=0)
 
     @ssa_fn
     def test_invalid_reverse3(self):
         x_val = random_gen(shape=(1, 2, 3, 4, 5), rand_min=-100, rand_max=100)
-        with pytest.raises(InputTypeError):
+        with pytest.raises(ValueError):
             pred = mb.cumsum(x=x_val, reverse=1)
 
     @ssa_fn
     def test_invalid_exclusive1(self):
         x_val = random_gen(shape=(1, 2, 3, 4, 5), rand_min=-100, rand_max=100)
-        with pytest.raises(InputTypeError):
+        with pytest.raises(ValueError):
             pred = mb.cumsum(x=x_val, exclusive="")
 
     @ssa_fn
     def test_invalid_exclusive2(self):
         x_val = random_gen(shape=(1, 2, 3, 4, 5), rand_min=-100, rand_max=100)
-        with pytest.raises(InputTypeError):
+        with pytest.raises(ValueError):
             pred = mb.cumsum(x=x_val, exclusive=0)
 
     @ssa_fn
     def test_invalid_exclusive3(self):
         x_val = random_gen(shape=(1, 2, 3, 4, 5), rand_min=-100, rand_max=100)
-        with pytest.raises(InputTypeError):
+        with pytest.raises(ValueError):
             pred = mb.cumsum(x=x_val, exclusive=1)
 
     @ssa_fn
     def test_invalid_input1(self):
         x_val = 1
-        with pytest.raises(InputTypeError):
+        with pytest.raises(ValueError):
             pred = mb.cumsum(x=x_val)
 
     @ssa_fn
     def test_invalid_input2(self):
         x_val = ["1"]
-        with pytest.raises(InputTypeError):
+        with pytest.raises(ValueError):
             pred = mb.cumsum(x=x_val)
 
 
@@ -1011,7 +1016,6 @@ class TestTile:
         x = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
         v = mb.tile(x=x, reps=(2,))
         assert is_close(np.tile(x, reps=(2,)), v.val)
-
 
 @pytest.mark.skip(reason="rdar://65198011 (Re-enable Conv3dTranspose and DynamicTile unit tests)")
 class TestDynamicTile:

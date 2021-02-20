@@ -1,9 +1,11 @@
 #!/bin/bash
 
 
-##=============================================================================
 # Exit immediately on failure of a subcommand
 set -e
+
+# Echo commands before running
+set -x
 
 ## Main configuration processing
 COREMLTOOLS_HOME=$( cd "$( dirname "$0" )/.." && pwd )
@@ -11,7 +13,6 @@ COREMLTOOLS_NAME=$(basename $COREMLTOOLS_HOME)
 ENV_DIR="${COREMLTOOLS_HOME}/envs"
 
 # command flag options
-cleanup_option=0
 include_build_deps=1
 include_test_deps=1
 include_docs_deps=0
@@ -34,9 +35,13 @@ function print_help {
   echo "  --include-docs-deps  Include packages needed for making docs"
   echo "  --python=*           Python to use for configuration."
   echo
-  echo "Example: zsh -i env_create --python==3.7"
+  echo "Example: zsh -i env_create.sh --python==3.7"
   echo
-  exit 1
+  echo "This script must be run using Z shell (i.e. zsh)."
+  echo
+  echo "Anaconda or Miniconda must be installed prior to running this scripts".
+  echo "Z shell must also be initialized for conda. Run: conda init zsh"
+  exit 0
 } # end of print help
 
 function unknown_option {
@@ -64,7 +69,7 @@ while [ $# -gt 0 ]
   shift
 done
 
-if [[ $DEV == 1 ]] then
+if [[ $DEV == 1 ]]; then
     ENV_DIR="${ENV_DIR}/${COREMLTOOLS_NAME}-dev-py${PYTHON}"
 else
     ENV_DIR="${ENV_DIR}/${COREMLTOOLS_NAME}-py${PYTHON}"
@@ -78,7 +83,7 @@ then
   echo "Build environment already exists in $ENV_DIR."
 else
   echo "Creating a new conda environment in $ENV_DIR"
-  conda create --prefix "$ENV_DIR" python="$PYTHON"
+  conda create --prefix "$ENV_DIR" python="$PYTHON" -y
   conda activate $ENV_DIR
 fi
 

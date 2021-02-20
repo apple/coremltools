@@ -37,9 +37,9 @@ function print_help {
   echo "  --dev                Init an environment setup for development."
   echo "  --python=*           Python to use for configuration."
   echo
-  echo "Example: source env_activate --python=3.7"
+  echo "Example: source env_activate.sh --python=3.7"
   echo
-  return 1
+  return 0
 } # end of print help
 
 function unknown_option {

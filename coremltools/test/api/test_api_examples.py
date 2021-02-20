@@ -42,7 +42,7 @@ class TestTensorFlow1ConverterExamples:
         test_input = np.random.rand(1, 2, 3) - 0.5
         with tf.compat.v1.Session(graph=graph) as sess:
             expected_val = sess.run(y, feed_dict={x: test_input})
-        results = mlmodel.predict({"input": test_input})
+        results = mlmodel.predict({"input": test_input}, useCPUOnly=True)
         np.testing.assert_allclose(results["output"], expected_val)
 
     @staticmethod
@@ -93,14 +93,14 @@ class TestTensorFlow1ConverterExamples:
         # nodes.
         mlmodel = ct.convert(pb_path, outputs=["output"])
 
-        results = mlmodel.predict({"input": test_input})
+        results = mlmodel.predict({"input": test_input}, useCPUOnly=True)
         np.testing.assert_allclose(results["output"], expected_val)
         mlmodel_path = os.path.join(save_path, "model.mlmodel")
         # Save the converted model
         mlmodel.save(mlmodel_path)
 
         results = mlmodel.predict({"input": test_input})
-        np.testing.assert_allclose(results["output"], expected_val)
+        np.testing.assert_allclose(results["output"], expected_val, atol=1e-3)
 
     @staticmethod
     def test_convert_from_saved_model_dir(tmpdir):
@@ -129,7 +129,7 @@ class TestTensorFlow1ConverterExamples:
         # Need input output names to call mlmodel
         # x.name == 'Placeholder:0'. Strip out ':0'
         input_name = x.name.split(":")[0]
-        results = mlmodel.predict({input_name: test_input})
+        results = mlmodel.predict({input_name: test_input}, useCPUOnly=True)
         # y.name == 'Relu:0'. output_name == 'Relu'
         output_name = y.name.split(":")[0]
         np.testing.assert_allclose(results[output_name], expected_val)
@@ -352,7 +352,7 @@ class TestTensorFlow2ConverterExamples:
         )
 
         # Download class labels (from a separate file)
-        from six.moves import urllib
+        import urllib.request
         label_url = 'https://storage.googleapis.com/download.tensorflow.org/data/ImageNetLabels.txt'
         class_labels = urllib.request.urlopen(label_url).read().splitlines()
         class_labels = class_labels[1:]  # remove the first class which is background
@@ -478,8 +478,8 @@ class TestPyTorchConverterExamples:
             results = mlmodel.predict({"input": example_input.numpy()})
             expected = model(example_input)
             np.testing.assert_allclose(
-                list(results.values())[0], expected.detach().numpy(), rtol=1e-2
-            )
+                list(results.values())[0], expected.detach().numpy(),
+                atol=1e-8, rtol=1e-2)
 
     @staticmethod
     def test_int64_inputs():
@@ -491,7 +491,8 @@ class TestPyTorchConverterExamples:
         class TestModule(torch.nn.Module):
             def __init__(self):
                 super(TestModule, self).__init__()
-                self.embedding = torch.nn.Embedding(num_tokens, embedding_size)
+                self.embedding = torch.nn.Embedding(num_tokens, 
+                    embedding_size)
 
             def forward(self, x):
                 return self.embedding(x)
@@ -555,6 +556,51 @@ class TestPyTorchConverterExamples:
                 outputs=["output"],
             )
 
+    @staticmethod
+    def test_fully_dynamic_inputs():
+        """
+        All dims of the inputs are dynamic, and write to slice to one of the
+        inputs.
+        """
+        import torch
+
+        class Model(torch.nn.Module):
+            def __init__(self, index):
+                super(Model, self).__init__()
+                self.index = index
+
+            def forward(self, x, y):
+                x[:, int(self.index.item())] = 0.0
+                y = y.unsqueeze(0)
+                return y, x
+
+        model = Model(torch.tensor(3))
+        scripted_model = torch.jit.script(model)
+
+        mlmodel = ct.convert(
+            scripted_model,
+            inputs=[
+                ct.TensorType("x", shape=(ct.RangeDim(), ct.RangeDim())),
+                ct.TensorType("y", shape=(ct.RangeDim(), ct.RangeDim()))
+            ],
+        )
+
+        # running predict() is supported on macOS
+        if ct.utils._is_macos():
+            x, y = torch.rand(2, 4), torch.rand(1, 2)
+            torch_res = model(x, y)
+            results = mlmodel.predict({"x": x.cpu().detach().numpy(),
+              "y": y.cpu().detach().numpy()})
+            np.testing.assert_allclose(torch_res[0], results['y.3'])
+            np.testing.assert_allclose(torch_res[1], results['x'])
+
+            x, y = torch.rand(1, 6), torch.rand(2, 3)
+            torch_res = model(x, y)
+            results = mlmodel.predict({"x": x.cpu().detach().numpy(),
+              "y": y.cpu().detach().numpy()})
+            np.testing.assert_allclose(torch_res[0], results['y.3'])
+            np.testing.assert_allclose(torch_res[1], results['x'])
+
 
 class TestMILExamples:
     @staticmethod
@@ -575,16 +621,13 @@ class TestMILExamples:
         print("prog:\n", prog)
 
         # Convert and verify
-        from coremltools.converters.mil.converter import _convert
-        from coremltools import models
+        import coremltools as ct
 
-        proto = _convert(prog, convert_from="mil")
-
-        model = models.MLModel(proto)
+        mlmodel = ct.convert(prog)
 
         # running predict() is only supported on macOS
         if ct.utils._is_macos():
-            prediction = model.predict(
+            prediction = mlmodel.predict(
                 {"x": np.random.rand(1, 100, 100, 3).astype(np.float32),}
             )
             assert len(prediction) == 1
@@ -625,7 +668,8 @@ class TestFlexibleShape:
             results = mlmodel.predict({
                 "seq1": test_input_x1,
                 "seq2": test_input_x2})
-            np.testing.assert_allclose(results["Identity"], expected_val, rtol=1e-4)
+            np.testing.assert_allclose(results["Identity"], expected_val,
+                rtol=1e-4, atol=1e-3)
 
 
     @staticmethod
@@ -675,7 +719,8 @@ class TestFlexibleShape:
         expected_val = keras_model([test_input_x])
         if ct.utils._is_macos():
             results = mlmodel.predict({"seq": test_input_x})
-            np.testing.assert_allclose(results["Identity"], expected_val, rtol=1e-4)
+            np.testing.assert_allclose(results["Identity"], expected_val,
+                rtol=1e-4, atol=1e-3)
 
             # seq_len below/above lower_bound/upper_bound
             with pytest.raises(RuntimeError,
@@ -991,7 +1036,8 @@ class TestFlexibleShape:
 
         if ct.utils._is_macos():
             result = mlmodel.predict(
-                {"input": example_input.detach().numpy().astype(np.float32)}
+                {"input": example_input.detach().numpy().astype(np.float32)},
+                useCPUOnly=True,
             )
 
             # Verify outputs
@@ -1012,6 +1058,41 @@ class TestFlexibleShape:
                 test_input_x = np.random.rand(1, 3, 29, 29).astype(np.float32)
                 results = mlmodel.predict({
                     "input": test_input_x})
+
+    @staticmethod
+    @pytest.mark.skipif(not _HAS_TF_2, reason=MSG_TF2_NOT_FOUND)
+    def test_tf2_image_enumerated_shapes():
+        import tensorflow as tf
+        keras_model = tf.keras.applications.MobileNetV2(
+            input_shape=(None, None, 3,),
+            classes=1000,
+            include_top=False,
+        )
+        input_shapes = ct.EnumeratedShapes(shapes=[(1, 192, 192, 3), (1, 224, 224, 3)])
+        image_input = ct.ImageType(shape=input_shapes,
+                                   bias=[-1,-1,-1], scale=1/127)
+        model = ct.convert(keras_model, inputs=[image_input])
+        assert model is not None
+        spec = model.get_spec()
+        assert len(spec.description.input[0].type.imageType.enumeratedSizes.sizes) == 2
+
+    @staticmethod
+    @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
+    def test_torch_image_enumerated_shapes():
+        import torch
+        import torchvision
+        torch_model = torchvision.models.mobilenet_v2().features
+        torch_model.eval()
+        example_input = torch.rand(1, 3, 256, 256)
+        traced_model = torch.jit.trace(torch_model, example_input)
+        input_shapes = ct.EnumeratedShapes(shapes=[(1, 3, 256, 256), (1, 3, 224, 224)])
+        image_input = ct.ImageType(shape=input_shapes,
+                                   bias=[-1, -1, -1], scale=1 / 127)
+        model = ct.convert(traced_model, inputs=[image_input])
+        assert model is not None
+        spec = model.get_spec()
+        assert len(spec.description.input[0].type.imageType.enumeratedSizes.sizes) == 2
+
 
 class TestOptionalInput:
     @staticmethod

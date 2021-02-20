@@ -1,10 +1,11 @@
+# -*- coding: utf-8 -*-
 #  Copyright (c) 2020, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import six
 from coremltools.converters.mil.mil import types
+from coremltools.converters.mil.mil.types import is_compatible_type
 from coremltools.converters.mil.mil.types.type_mapping import (
     numpy_val_to_builtin_val,
     is_subtype,
@@ -12,7 +13,7 @@ from coremltools.converters.mil.mil.types.type_mapping import (
 import copy
 from coremltools.converters.mil.mil import Block, SYMBOL, NONE
 from coremltools.converters.mil.mil.var import Var
-from coremltools.converters.mil.mil import get_new_symbol
+from coremltools.converters.mil.mil import get_new_symbol, get_existing_symbol
 from ._op_reqs import *
 import logging
 from coremltools.converters.mil.mil import mil_list
@@ -22,22 +23,22 @@ class cond(Operation):
     """
     Perform a conditional execution. The return types must be identical
     between the true and false branches.
-    
+
     Parameters
     ----------
     pred: tensor<[], bool> (Required)
         * 0-D tensor (scalar) predicate to switch between true and false branches.
-    
+
     _true_fn: function (Required)
         * A Python function that executes if ``pred`` evaluates to ``True``.
         * It must take zero input (i.e, no input), and return one or more values whose type becomes
           the operation's return type.
-    
+
     _false_fn: function (Required)
         * A Python function that executes if ``pred`` evaluates to ``False``.
         * It must take zero input (i.e. no input), and have return types that match those of the
           ``if`` branch.
-    
+
     Returns
     -------
     tuple
@@ -82,7 +83,7 @@ class cond(Operation):
         false_ret_vars = self.blocks[1].outputs
         # Verify true_ret_vars has the same types as false_ret_vars
         for i, (vt, vf) in enumerate(zip(true_ret_vars, false_ret_vars)):
-            if vt.sym_type != vf.sym_type:
+            if not is_compatible_type(vt.sym_type, vf.sym_type):
                 msg = (
                     "true branch output {} type {} mismatch false branch"
                     + " output type {}"
@@ -103,29 +104,34 @@ class cond(Operation):
 class const(Operation):
     """
     Return constant values.
-    
+
     Parameters
     ----------
     mode: immediate_value, file_value (Optional)
         * Determines how the constant value is stored in the internal MIL format.
         * For  large constants such as convolution weights, use ``file_value``.
         * For smaller-size constants such as values of a stride, use ``immediate_value``.
-    
-    val: const<*,T> (Required)
-    
+
+    val: const<\*,T> (Required)
+
     Returns
     -------
-    const<*,T>
-    
+    const<\*,T>
+
     Attributes
     ----------
     T: fp32, i32, str
     """
-    
+
     input_spec = InputSpec(
-        mode=InternalStringInputType(const=True, default="immediate_value"),
+        mode=InternalStringInputType(const=True, optional=True),
         val=InternalScalarOrTensorInputType(const=True),
     )
+
+    def default_inputs(self):
+        return DefaultInputs(
+            mode="immediate_value",
+            )
 
     def __init__(self, **kwargs):
         super(const, self).__init__(**kwargs)
@@ -144,7 +150,7 @@ class const(Operation):
             value = np.float32(value)
         elif isinstance(value, bool):
             value = np.bool(value)
-        elif isinstance(value, (six.integer_types, np.int64)):
+        elif isinstance(value, (int, np.int64)):
             value = np.int32(value)
         elif isinstance(value, (tuple, list, np.ndarray)):
             value = np.array(value)
@@ -168,7 +174,7 @@ class const(Operation):
             return builtin_type, value
 
 
-        if not isinstance(value, (np.generic, np.ndarray, six.string_types, bool, mil_list)):
+        if not isinstance(value, (np.generic, np.ndarray, str, bool, mil_list)):
             raise ValueError("Unknown value for constant: {}".format(value))
 
         _, builtin_type = numpy_val_to_builtin_val(value)
@@ -195,33 +201,34 @@ class _const_symbolic(const):
 class select(Operation):
     """
     Return the elements selected from either ``a`` or ``b`` depending on the ``cond``.
-    
+
     The shape of ``cond``, ``a``, and ``b`` must be broadcastable.
     You must provide ``a`` and ``b`` together, or provide neither.
     If you provide neither, the operation returns the indices
     of ``cond`` that are ``True``.
-    
+
     Parameters
     ----------
-    cond: tensor<[*D1], T> (Required)
+    cond: tensor<[\*D1], T> (Required)
         * Tensor. When ``True`` (non-zero), select element from ``x``, otherwise, ``y``.
-    
-    a: tensor<[*D2], T> (Optional)
+
+    a: tensor<[\*D2], T> (Optional)
         * Values selected at indices where ``cond`` is ``True``.
         * Default is ``None``.
-    
-    b: tensor<[*D3], T> (Optional)
+
+    b: tensor<[\*D3], T> (Optional)
         * Values selected at indices where ``cond`` is ``False``.
         * Default is ``None``.
-    
+
     Returns
     -------
-    tensor<[*D_out], T> or tensor<[n, len(D1)], int32>
+    tensor<[\*D_out], T> or tensor<[n, len(D1)], int32>
         *  If ``a, b`` are both provided, the return shape is based on broadcast rules
            from ``cond, a, b``.
         *  If ``a, b`` are ``None``, the return shape is 2-D, where the first dimension
            ``n`` is the number of matching indices in ``cond``, and ``len(D1)`` is the
            rank of ``cond``.
+
     Attributes
     ----------
     T: fp32
@@ -264,15 +271,15 @@ class while_loop(Operation):
     _cond: function  (Required)
         * A Python function that takes ``loop_vars`` as positional arguments.
         * The function must return a ``bool`` ``Var``.
-    
+
     _body: function  (Required)
         * A Python function that takes ``loop_vars`` as positional arguments.
         * The function must return the same number of output vars as ``loop_var``
           with the same types.
-    
+
     loop_vars: tuple (Required)
         * Python tuple of ``Variables``.
-    
+
     Returns
     -------
     tuple
@@ -288,13 +295,6 @@ class while_loop(Operation):
 
     def __init__(self, **kwargs):
         super(while_loop, self).__init__(**kwargs)
-
-    @staticmethod
-    def _check_is_compatible_type(type1, type2):
-        if not types.is_subtype(type1, type2):
-            is_comp, _ = types.is_tensor_and_is_compatible(type1, type2)
-            return is_comp
-        return True
 
     @staticmethod
     def _check_equal_value(val1, val2):
@@ -376,13 +376,26 @@ class while_loop(Operation):
         # semantics of tf.while_loop.
 
         block_inputs = tuple(copy.copy(v) for v in self.loop_vars)
+        _, visible_vars = self.enclosing_block._visible_vars_in_block()
+        name_count = {v.name: 1 for v in visible_vars}
+        seen = set() # Avoid using same name among block inputs
         for v in block_inputs:
             v._op = None
             v.op_output_idx = None
             v._child_ops = list()
-            v.name = v.name + ".x"
+
+            # Get unique name
+            old_v_name = v.name
+            if v.name in name_count:
+                v.name = v.name + "_x" + str(name_count[v.name])
+                name_count[old_v_name] += 1
+            else:
+                v.name = v.name + "_x0"
+                name_count[old_v_name] = 0
+
             v._sym_val = v._sym_val
             v.consuming_blocks = list()
+            seen.add(v.name)
 
         cond_block, body_block, exit_vars = self._build_block(block_inputs)
 
@@ -466,39 +479,46 @@ class make_list(Operation):
     """
     Create a list of tensor elements. The elements should have the same shape.
     The list is similar to an auto-resizing array.
-    
+
     Parameters
     ----------
     init_length: <i32> (Optional)
         * Initial length for the list. If ``dynamic_length`` is ``False``,
           ``init_length`` is the fixed length of the list throughout runtime.
         * Default is ``1``.
-    
+
     dynamic_length: <bool> (Optional)
         * Initial length for the list. If ``dynamic_length`` is ``False``,
           ``init_length`` is the fixed length of the list throughout runtime.
         * Default is ``True``.
-    
+
     elem_shape: <K,i32> (Required)
         * Non-symbolic 1-D tensor denoting the shape of elements.
         * If not provided, the resulting ``List`` won’t have the elementary shape
           info, which may cause backend errors. Remedy this with SSA passes.
-    
+
     dtype: const<str>  (Optional)
         * Element tensor’s ``dtype``.
         * Default is ``fp32``.
-    
+
     Returns
     -------
     List[*]
     """
 
     input_spec = InputSpec(
-        init_length=IntInputType(optional=True, default=1),
-        dynamic_length=BoolInputType(const=True, optional=True, default=True),
-        elem_shape=IntTensorInputType(),
-        dtype=StringInputType(const=True, optional=True, default="fp32"),
+        init_length=IntInputType(optional=True),
+        dynamic_length=BoolInputType(const=True, optional=True),
+        elem_shape=TupleInputType(),
+        dtype=StringInputType(const=True, optional=True),
     )
+
+    def default_inputs(self):
+        return DefaultInputs(
+            init_length=1,
+            dynamic_length=True,
+            dtype="fp32",
+            )
 
     def __init__(self, **kwargs):
         super(make_list, self).__init__(**kwargs)
@@ -507,7 +527,26 @@ class make_list(Operation):
         builtin_dtype = types.string_to_builtin(self.dtype.val)
         if builtin_dtype is None:
             raise ValueError("Unsupported dtype {}".format(self.dtype.val))
-        elem_type = types.tensor(builtin_dtype, self.elem_shape.sym_val)
+        # Replace string with symbol
+        elem_shape_sym = []
+        for s_var in self.elem_shape:
+            # s is str or int
+            s = s_var.val
+            if s is None:
+                msg = 'make_list elem_shape must be tuple of const. ' +\
+                    'Tuple elem {} is not'
+                raise ValueError(msg.format(s_var.name))
+
+            if isinstance(s, str):
+                try:
+                    symbol = get_existing_symbol(s)
+                except ValueError:
+                    # Must be a new symbol
+                    symbol = get_new_symbol(s)
+                elem_shape_sym.append(symbol)
+            else:
+              elem_shape_sym.append(s)
+        elem_type = types.tensor(builtin_dtype, elem_shape_sym)
         return types.list(
             elem_type,
             init_length=self.init_length.val,
@@ -519,11 +558,11 @@ class make_list(Operation):
 class list_length(Operation):
     """
     Return the length of ``ls``.
-    
+
     Parameters
     ----------
     ls: List[*] (Required)
-    
+
     Returns
     -------
     <i32>
@@ -549,29 +588,31 @@ class list_length(Operation):
 class list_write(Operation):
     """
     Write a value into index ``index`` of ``ls``.
-    
+
     Parameters
     ----------
     ls: List (Required)
-    
+
     index: <i32> (Required)
         * Size of the list.
-    
+
     value: <*,T> (Optional)
         * Element value to write, which must match the element shape of ``ls``.
         * Default is ``None``.
-    
+
     Returns
     -------
     List[*]
-    
+
     Attributes
     ----------
     T: fp32, i32, bool
     """
 
     input_spec = InputSpec(
-        ls=ListInputType(), index=IntInputType(), value=TensorInputType(),
+        ls=ListInputType(),
+        index=IntInputType(),
+        value=TensorInputType(),
     )
 
     def __init__(self, **kwargs):
@@ -596,7 +637,8 @@ class list_write(Operation):
             )
         if not types.is_subtype(value_type, list_elem_type):
             msg = "Elem type mismatch: ls elem type {} vs " + "value type {}"
-            raise ValueError(msg.format(list_elem_type, value_type))
+            raise ValueError(msg.format(list_elem_type.__type_info__(),
+              value_type.__type_info__()))
         return self.ls.sym_type
 
 
@@ -604,25 +646,28 @@ class list_write(Operation):
 class list_read(Operation):
     """
     Read the value at location ``index`` of ``ls``.
-    
+
     Parameters
     ----------
-    ls: List[*] (Required)
-    
+    ls: List[\*] (Required)
+
     index: <i32> (Required)
         * Size of the list.
-    
+
     Returns
     -------
-    <*,T>
+    <\*,T>
         * The element's value.
-    
+
     Attributes
     ----------
     T: fp32, i32, bool
     """
 
-    input_spec = InputSpec(ls=ListInputType(), index=IntInputType(),)
+    input_spec = InputSpec(
+        ls=ListInputType(),
+        index=IntInputType(),
+        )
 
     def __init__(self, **kwargs):
         super(list_read, self).__init__(**kwargs)
@@ -638,30 +683,34 @@ class list_read(Operation):
         return list_elem_type
 
 
+
 @register_op(doc_str="")
 class list_gather(Operation):
     """
     Return selected values in ``ls`` as a packed ``Tensor``.
-    
+
     Parameters
     ----------
-    ls: List[*] (Required)
-    
+    ls: List[\*] (Required)
+
     indices: <K,i32> (Required)
         * Gather from indices, whose element must be in ``[0, ls.length)`` at runtime.
-    
+
     Returns
     -------
-    <*K,T>
+    <\*K,T>
         * Selected tensors packed into a ``len(ls.elem_shape)+1`` rank tensor.
         * ``K[0] == len(indices)``.
-    
+
     Attributes
     ----------
     T: fp32, i32, bool
     """
 
-    input_spec = InputSpec(ls=ListInputType(), indices=IntTensorInputType(),)
+    input_spec = InputSpec(
+        ls=ListInputType(),
+        indices=IntTensorInputType(),
+        )
 
     def __init__(self, **kwargs):
         super(list_gather, self).__init__(**kwargs)
@@ -684,33 +733,35 @@ class list_gather(Operation):
 class list_scatter(Operation):
     """
     Scatter ``values`` to ``ls`` at locations ``indices``.
-    
+
     Parameters
     ----------
     ls: List[*] (Required)
-    
+
     indices: tensor<num_updates, i32> (Required)
         * Indices of ``ls`` to scatter to.
         * Elements of ``indices`` must be in ``[0, ls.length)`` at runtime.
         * If indices are greater than or equal to the list length, the list is
           dynamically resized.
-    
+
     value: <*,T> (Optional)
         * Element value to write, which must match the element shape of ``ls``.
         * Default is ``None``.
-    
+
     Returns
     -------
     List[*]
         * Updated list.
-    
+
     Attributes
     ----------
     T: fp32, i32, bool
     """
 
     input_spec = InputSpec(
-        ls=ListInputType(), indices=IntTensorInputType(), value=TensorInputType(),
+        ls=ListInputType(),
+        indices=IntTensorInputType(),
+        value=TensorInputType(),
     )
 
     def __init__(self, **kwargs):

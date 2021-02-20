@@ -28,7 +28,6 @@ from .type_str import str as types_str
 from .type_unknown import unknown
 import numpy as np
 import sympy as sm
-import six
 from .get_type_info import get_type_info
 
 _types_TO_NPTYPES = {
@@ -190,21 +189,24 @@ def numpy_type_to_builtin_type(nptype):
     if np.issubclass_(nptype, np.bool) or np.issubclass_(nptype, np.bool_):
         # numpy as 2 bool types it looks like. what is the difference?
         return types_bool
+    # Because np.uint is a subclass of np.int,
+    # we need to first check for np.uint before
+    # checking for np.int
+    elif np.issubclass_(nptype, np.uint8):
+        return types_uint8
     elif np.issubclass_(nptype, np.int8):
         return types_int8
+    elif np.issubclass_(nptype, np.uint16):
+        return types_uint16
     elif np.issubclass_(nptype, np.int16):
         return types_int16
+    elif np.issubclass_(nptype, np.uint32):
+        return types_uint32
     elif np.issubclass_(nptype, np.int32):
         return types_int32
-    elif np.issubclass_(nptype, np.int64):
-        return types_int64
-    elif np.issubclass_(nptype, np.uint8):
-        return types_int8
-    elif np.issubclass_(nptype, np.uint16):
-        return types_int16
-    elif np.issubclass_(nptype, np.uint32):
-        return types_int32
     elif np.issubclass_(nptype, np.uint64):
+        return types_uint64
+    elif np.issubclass_(nptype, np.int64):
         return types_int64
     # np.int == int (python native)
     elif np.issubclass_(nptype, np.int) or nptype == int:
@@ -221,7 +223,7 @@ def numpy_type_to_builtin_type(nptype):
     elif np.issubclass_(nptype, np.float64) or np.issubclass_(nptype, np.double):
         return types_fp64
     elif (
-        np.issubclass_(nptype, six.string_types)
+        np.issubclass_(nptype, str)
         or np.issubclass_(nptype, np.string_)
         or np.issubclass_(nptype, np.str_)
     ):
@@ -240,9 +242,9 @@ def type_to_builtin_type(type):
     # Otherwise, try to infer from a few generic python types
     if np.issubclass_(type, bool):
         return types_bool
-    elif np.issubclass_(type, six.integer_types):
+    elif np.issubclass_(type, int):
         return types_int32
-    elif np.issubclass_(type, six.string_types):
+    elif np.issubclass_(type, str):
         return types_str
     elif np.issubclass_(type, float):
         return types_fp32

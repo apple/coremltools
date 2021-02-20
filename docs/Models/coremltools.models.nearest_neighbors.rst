@@ -1,6 +1,6 @@
-**********
+*****************
 Nearest Neighbors
-**********
+*****************
 
 .. automodule:: coremltools.models.nearest_neighbors
 

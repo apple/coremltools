@@ -963,7 +963,8 @@ class TestConcat:
             [False, True],
         )
     )
-    @pytest.mark.skip(reason="rdar://65198011 (Re-enable Conv3dTranspose, concat interleave and DynamicTile unit tests)")
+    @pytest.mark.skip(
+        reason="rdar://65198011 (Re-enable Conv3dTranspose, concat interleave and DynamicTile unit tests)")
     def test_builder_to_backend_stress_interleave(self, use_cpu_only, backend,
                                                   rank, n_inputs, negative_index):
 

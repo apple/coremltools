@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 set -e
 set -x
@@ -24,7 +24,7 @@ unknown_option() {
 print_help() {
   echo "Builds coremltools and dependent libraries."
   echo
-  echo "Usage: zsh -i build.sh"
+  echo "Usage: build.sh"
   echo
   echo "  --num_procs=n (default 1)       Specify the number of proceses to run in parallel."
   echo "  --python=*                      Python to use for configuration."
@@ -33,7 +33,8 @@ print_help() {
   echo "  --dist                          Build the distribution (wheel)."
   echo "  --no-check-env                  Don't check the environment to verify it's up to date."
   echo
-  exit 1
+  echo ""
+  exit 0
 } # end of print help
 
 # command flag options

@@ -5,12 +5,12 @@
 
 import logging
 import numpy as np
-import six
 from coremltools.converters.mil.mil import types
+from coremltools.converters.mil.mil.types import is_compatible_type
 from coremltools.converters.mil.mil.types.symbolic import is_symbolic, any_symbolic
 from . import SPACES
-from .block import curr_block, _check_is_compatible_type
-from .input_type import TupleInputType, InputTypeError
+from .block import curr_block
+from .input_type import TupleInputType, DefaultInputs
 from .var import Var, InternalVar, ListVar
 
 VALUE = 1
@@ -156,12 +156,63 @@ class Operation(object):
         self._input_vars = {}
         self.blocks = []
         self.enclosing_block = curr_block()
-        self._validate_and_set_inputs(**kwargs)
 
-    def set_inputs(self, **kwargs):
-        self._validate_and_set_inputs(**kwargs)
-        if not kwargs.get("no_check_var_types", False):
+        # Initialize inputs as object attributes (all None)
+        for k in self._input_types.keys():
+            setattr(self, k, None)
+            self._input_vars[k] = None
+
+        self._check_expected_inputs(kwargs)
+
+        # Set inputs from kwargs
+        input_kv = {k: v for k, v in kwargs.items() \
+            if k in self._input_types and v is not None}
+        self._validate_and_set_inputs(input_kv)
+        self._ensure_required_inputs()
+
+    def _check_expected_inputs(self, kwargs):
+        """
+        Check that all kwargs inputs are one of the followings:
+
+        - system inputs (non-attributes)
+        - op inputs (self._input_types.keys())
+        """
+        non_attributes = [
+            "name",
+            "symbolic_datatype",
+            "datatype",
+            "symbolic_value",
+            "value",
+            "version",
+            "before_op",
+            "no_check_var_visibility",  # no_check_var_visibility==True to deviate from SSA
+            "no_check_var_types",  # no_check_var_types==True to force set inputs, even if type does not match with earlier ones
+        ]
+        for k in kwargs.keys():
+            if k not in non_attributes and k not in self._input_types:
+                raise ValueError(
+                    "Unknown input '{}' for op '{}'".format(
+                      k, self.op_type)
+                    )
+
+    def set_inputs(self,
+        no_check_var_types=False,
+        type_inference=False,
+        **input_kvs):
+        """
+        Parameters
+        ----------
+        - input_kvs: Dict[str, Var]
+          Value cannot be None
+
+        - type_inference: bool
+          True to perform type inference and recreate output Var.
+        """
+        self._validate_and_set_inputs(input_kvs,
+            no_check_var_types=no_check_var_types)
+        if type_inference and not no_check_var_types:
             self.type_value_inference()
+        self._ensure_required_inputs()
 
     def get_flattened_inputs(self):
         """
@@ -230,7 +281,7 @@ class Operation(object):
                 # Check type inference
                 if overwrite_output:
                     out_var._sym_type = sym_type
-                elif not _check_is_compatible_type(sym_type, out_var.sym_type):
+                elif not is_compatible_type(sym_type, out_var.sym_type):
                     msg = "Output Var {} in op {} type changes with new input Vars"
                     raise ValueError(msg.format(out_var.name, self.name))
 
@@ -313,6 +364,18 @@ class Operation(object):
         msg = "value_inference() is not implemented by op {}"
         raise NotImplementedError(msg.format(self.op_type))
 
+    def default_inputs(self):
+        """
+        Optional. Returns default values for optional inputs. The
+        function is guaranteed to have access to all required inputs and
+        possibly some optional inputs should the user supply them.
+        They may be used to construct default values, such as
+        `strides=[1]*num_spatial_dims` in conv, where
+        `num_spatial_dims` may be inferred from the rank of
+        required inputs
+        """
+        return DefaultInputs()
+
     def output_names(self):
         """
         Optional. If implemented, we set the output var i name as
@@ -338,25 +401,42 @@ class Operation(object):
         """
         pass
 
-    def _validate_and_set_inputs(self, **kwargs):
-        non_attributes = [
-            "name",
-            "symbolic_datatype",
-            "datatype",
-            "symbolic_value",
-            "value",
-            "version",
-            "before_op",
-            "no_check_var_visibility",  # no_check_var_visibility==True to deviate from SSA
-            "no_check_var_types",  # no_check_var_types==True to force set inputs, even if type does not match with earlier ones
-        ]
-        op_inputs = list(self._input_types.keys())
-        legal_args = op_inputs + non_attributes
-        no_check_var_visibility = kwargs.get("no_check_var_visibility", False)
-        no_check_var_types = kwargs.get("no_check_var_types", False)
+    def _ensure_required_inputs(self):
+        """
+        Raise value error if required inputs aren't present
+        """
+        for name, input_type in self._input_types.items():
+            if not input_type.optional and \
+                self._input_vars[name] is None:
+                msg_prefix = 'Op \"{}\" (op_type: {}) '.format(self.name,
+                self.op_type)
+                raise ValueError(msg_prefix + \
+                    "Required input {} is missing".format(name))
 
-        for key in kwargs.keys():
-            if key not in legal_args:
+    def _validate_and_set_inputs(self, input_kvs,
+        no_check_var_types=False):
+        """
+        For each k, v in `input_kvs`, perform the followings:
+
+        - Check k exists in `self.input_specs`
+        - Check that v satisfies the correspodning `InputType`
+        - Set input, possibly replacing existing input.
+
+        Note that it does not ensure all required inputs are satisfied.
+        Use _ensure_required_inputs() for that.
+
+        Parameters
+        ----------
+        - input_kvs: Dict[str, Var]
+          Each key in input_kvs must exist in `self.input_specs`. Its values
+          must be a Var.
+
+        - no_check_var_types: bool
+          True to check var types against input_specs only, but not
+          enforcing new input vars to be a subtype of existing input vars
+        """
+        for key in input_kvs.keys():
+            if key not in self._input_types:
                 raise RuntimeError(
                     "Unknown input '{}' for op '{}'".format(key, self.op_type)
                 )
@@ -365,48 +445,52 @@ class Operation(object):
             # Check new var's sym_type is compatible with the
             # existing's sym_type.
             if (
-                not _check_is_compatible_type(v_new.sym_type, v_old.sym_type)
+                not is_compatible_type(v_new.sym_type, v_old.sym_type)
                 and not no_check_var_types
             ):
                 msg = "New var type {} not a subtype of " + "existing var type {}"
                 raise ValueError(msg.format(v_new.sym_type, v_old.sym_type))
             v_old.remove_child_op(op, no_check_var_types)
 
-        try:
-            parsed_inputs = self.input_spec.parse_inputs(kwargs)
-        except InputTypeError as e:
-            # Add op name and op_type to the error msg
-            msg = "Op \"{}\" (op_type: {}) input {}=\"{}\" expects {} but got {}"
-            raise InputTypeError(msg.format(self.name, self.op_type,
-                e.input_arg_name, e.input_param_name,
-                e.input_type.type_str,
-                e.actual_type.__type_info__()))
-        for (name, var) in parsed_inputs:
-            setattr(self, name, var)
-            if var is not None and not isinstance(var, InternalVar):
-                # Remove this operation itself from existing input Var's child_ops
-                existing_input_var = self._input_vars.get(name, None)
-                if existing_input_var is not None:
-                    if isinstance(existing_input_var, (list, tuple)):
-                        for v_old, v_new in zip(existing_input_var, var):
-                            check_and_detach(v_new, v_old, self, no_check_var_types)
-                    else:
-                        check_and_detach(
-                            var, existing_input_var, self, no_check_var_types
-                        )
+        self.input_spec.validate_inputs(self.name, self.op_type, input_kvs)
 
-                # Set var as input_var
-                if isinstance(var, Var):
-                    var.add_child_op(self)
-                elif isinstance(var, (tuple, list)):
-                    for v in var:
-                        v.add_child_op(self)
-                # ignore function inputs
-                self._input_vars[name] = var
+        for name, var in input_kvs.items():
+            # TODO: remove InternalVar check
+            #if not isinstance(var, InternalVar):
+
+            # Remove this operation itself from existing input
+            # Var's child_ops
+            existing_input_var = self._input_vars[name]
+            if existing_input_var is not None:
+                if isinstance(existing_input_var, (list, tuple)):
+                    for v_old, v_new in zip(existing_input_var, var):
+                        check_and_detach(v_new, v_old, self, no_check_var_types)
+                else:
+                    check_and_detach(
+                        var, existing_input_var, self, no_check_var_types
+                    )
+
+            # Set var as input_var
+            if isinstance(var, Var):
+                var.add_child_op(self)
+            elif isinstance(var, (tuple, list)):
+                for v in var:
+                    v.add_child_op(self)
+            # ignore function inputs
+            self._input_vars[name] = var
+            setattr(self, name, var)
+
 
     @property
     def inputs(self):
-        return self._input_vars
+        """
+        Returns
+        -------
+        - inputs: Dict[str, Union[Var, Tuple[Var]]]
+        """
+        # Filter out InternalVar
+        return {k: v for k, v in self._input_vars.items() if not
+            isinstance(v, InternalVar) and v is not None}
 
     @property
     def outputs(self):
@@ -442,7 +526,7 @@ class Operation(object):
                 else:
                     val_str = (
                         '"' + self.val.sym_val + '"'
-                        if isinstance(self.val.sym_val, six.string_types)
+                        if isinstance(self.val.sym_val, str)
                         else str(self.val.sym_val)
                     )
                 s += "val=" + val_str

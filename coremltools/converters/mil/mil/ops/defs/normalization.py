@@ -54,8 +54,15 @@ class batch_norm(Operation):
         variance=TensorInputType(const=True),
         gamma=TensorInputType(const=True, optional=True),
         beta=TensorInputType(const=True, optional=True),
-        epsilon=FloatInputType(const=True, default=1e-5),
+        epsilon=FloatInputType(const=True, optional=True),
     )
+
+    def default_inputs(self):
+        return DefaultInputs(
+            gamma=None,
+            beta=None,
+            epsilon=1e-5,
+            )
 
     def __init__(self, **kwargs):
         super(batch_norm, self).__init__(**kwargs)
@@ -95,8 +102,15 @@ class instance_norm(Operation):
         x=TensorInputType(),
         gamma=TensorInputType(const=True, optional=True),
         beta=TensorInputType(const=True, optional=True),
-        epsilon=FloatInputType(const=True, default=1e-5),
+        epsilon=FloatInputType(const=True, optional=True),
     )
+
+    def default_inputs(self):
+        return DefaultInputs(
+            gamma=None,
+            beta=None,
+            epsilon=1e-5,
+            )
 
     def __init__(self, **kwargs):
         super(instance_norm, self).__init__(**kwargs)
@@ -130,7 +144,7 @@ class l2_norm(Operation):
 
     Returns
     -------
-    tensor<[*D,C,H,W], T>
+    tensor<[\*D,C,H,W], T>
         * Same type and shape as the input tensor ``x``.
     
     Attributes
@@ -140,8 +154,13 @@ class l2_norm(Operation):
     
     input_spec = InputSpec(
         x=TensorInputType(),
-        epsilon=FloatInputType(const=True, default=1e-6),
+        epsilon=FloatInputType(const=True, optional=True),
     )
+
+    def default_inputs(self):
+        return DefaultInputs(
+            epsilon=1e-6,
+            )
 
     def __init__(self, **kwargs):
         super(l2_norm, self).__init__(**kwargs)
@@ -155,33 +174,38 @@ class l2_norm(Operation):
 class layer_norm(Operation):
     """
     Apply layer normalization to the n-dimensional input tensor:
-    
+
     .. math::
        out = gamma * (input - E[x]) / sqrt(Var[x] + epsilon) + beta
-    
-    
+
+
     Parameters
     ----------
-    x: tensor<*?, T> (Required)
+    x: tensor<\*?, T> (Required)
         * Input tensor.
+
     axes: const<[K], i32> (Optional)
         * Dimensions to perform layer normalization.
         * Default is ``None`` (all dimensions).
+
     gamma: const tensor<[K], T> (Optional)
-        * if provided, the shape must be be ``x.shape[axes]``,
-        *  for instance, if with input ``x`` with shape ``(3,4,5,6)`` and ``axes = [2,3]``,
-          gamma must have shape ``(5,6)``.
+        * if provided, the shape must be be ``x.shape[axes]``. For instance, if
+          input ``x`` with shape ``(3,4,5,6)`` and ``axes = [2,3]``, gamma must have
+          shape ``(5,6)``.
         * Default is all ones.
+
     beta: const tensor<[K], T> (Optional)
         * Same shape as gamma.
         * Default is all zeros.
+
     epsilon: const fp32 (Optional)
         * Small constant to avoid division by ``0``.
         * Default is ``1e-5``.
-    
+
+
     Returns
     -------
-    tensor<*?, T>:
+    tensor<\*?, T>:
      * Tensor with same shape and type as the input tensor ``x``.
 
     Attributes
@@ -194,8 +218,16 @@ class layer_norm(Operation):
         axes=IntTensorInputType(const=True, optional=True),
         gamma=TensorInputType(const=True, optional=True),
         beta=TensorInputType(const=True, optional=True),
-        epsilon=FloatInputType(const=True, default=1e-5),
+        epsilon=FloatInputType(const=True, optional=True),
     )
+
+    def default_inputs(self):
+        return DefaultInputs(
+            axes=range(self.x.rank),
+            gamma=None,
+            beta=None,
+            epsilon=1e-5,
+            )
 
     def __init__(self, **kwargs):
         super(layer_norm, self).__init__(**kwargs)
@@ -259,7 +291,7 @@ class local_response_norm(Operation):
     Apply local response normalization to the n-dimensional input tensor:
     
     .. math::
-       x_i \\leftarrow \\dfrac{x_i}{\\left ( k + \\dfrac{\\alpha}{C} \\sum_j x_j^2 \\right )^\\beta}
+       x_i \\leftarrow \\dfrac{x_i}{\\left ( k + \\dfrac{\\alpha}{\text{size}} \\sum_j x_j^2 \\right )^\\beta}
     
     
     Parameters
@@ -293,10 +325,17 @@ class local_response_norm(Operation):
     input_spec = InputSpec(
         x=TensorInputType(),
         size=IntInputType(const=True),
-        alpha=FloatInputType(const=True, default=1e-4),
-        beta=FloatInputType(const=True, default=0.75),
-        k=FloatInputType(const=True, default=1.0),
+        alpha=FloatInputType(const=True, optional=True),
+        beta=FloatInputType(const=True, optional=True),
+        k=FloatInputType(const=True, optional=True),
     )
+
+    def default_inputs(self):
+        return DefaultInputs(
+            alpha=1e-4,
+            beta=0.75,
+            k=1.,
+            )
 
     def __init__(self, **kwargs):
         super(local_response_norm, self).__init__(**kwargs)

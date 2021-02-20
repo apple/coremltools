@@ -57,7 +57,10 @@ def convert(model, input_features, output_features):
 
     _sklearn_util.check_fitted(model, is_gbr_model)
 
-    base_prediction = model.init_.mean
+    if model.loss == "huber":
+        base_prediction = model.init_.quantile
+    else:
+        base_prediction = model.init_.mean
 
     return _MLModel(
         _convert_tree_ensemble(

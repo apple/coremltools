@@ -7,15 +7,40 @@ from coremltools.converters.mil.mil import types
 from .var import InternalVar
 from collections import OrderedDict
 
-class InputTypeError(Exception):
-    def __init__(self, message, input_arg_name=None, input_param_name=None,
-        input_type=None,
-            actual_type=None):
-        super(InputTypeError, self).__init__(message)
-        self.input_arg_name = input_arg_name
-        self.input_param_name = input_param_name
-        self.input_type = input_type
-        self.actual_type = actual_type
+SUPPORT_INT_TYPES = [
+                        types.uint8,
+                        types.int8,
+                        types.uint16,
+                        types.int16,
+                        types.uint32,
+                        types.int32,
+                        types.uint64,
+                        types.int64,
+                    ]
+
+SUPPORT_FLOAT_TYPES = [
+                        types.fp16,
+                        types.fp32,
+                        types.fp64,
+                    ]
+
+class DefaultInputs(object):
+    def __init__(self, **kwargs):
+        # Since python 3.6, kwargs preserves the input order. See
+        # https://docs.python.org/3/whatsnew/3.6.html#whatsnew36-pep468
+        self._default_inputs = [(k, v) for k, v in kwargs.items()]
+        self._ordered_dict = OrderedDict()
+        for k, v in self._default_inputs:
+            self._ordered_dict[k] = v
+
+    def items(self):
+        return self._ordered_dict.items()
+
+    def __add__(self, default_inputs):
+        self._default_inputs.extend(default_inputs._default_inputs)
+        for k, v in default_inputs._default_inputs:
+            self._ordered_dict[k] = v
+        return self
 
 class InputSpec(object):
     def __init__(self, **kwargs):
@@ -39,58 +64,62 @@ class InputSpec(object):
         """
         return self._ordered_dict
 
-    def parse_inputs(self, kwargs):
-        """ Parse and extract (name, value) pairs from kwargs according to the spec.
+    def validate_inputs(self, op_name, op_type, candidate_kvs):
+        """
+        For each key K in `candidate_kvs`, if K is found in
+        self.input_types, perform the followings:
 
-        Args:
-            kwargs: must contain a Var compatible with
-                    compatible type for each
-                    1) required _InputType
-                    2) optional _InputType with default value
+        - check that candidate_kvs[K] is a Var and satisfies
+        requirements in InputType (const, types)
+        - Place K, candidate_kvs[K] in output (list of (name, var) pairs).
 
-        Return:
-            out: List[(name, Var or None)]
-                The list has the same length as the `input_types`.
-                `(k, None)` is in the list iff input_type of `k`
-                is optional, has no default value, and
-                `k` is not specified in the input.
+        Note that this does not ensure the presence of all required
+        input_spec (optional == False).
+
+        Parameters
+        ----------
+        - op_name: str
+
+        - op_type: str
+
+        - candidate_kvs: Dict[str, Var]
+          Values cannot be None
+
+        Return
+        ------
+        None
 
         Raise:
-            TypeError if value type is incompatible
-            ValueError if a require input is missing
+            ValueErrr if value type is incompatible
         """
-        ret = []
-        no_check_var_visibility = kwargs.get("no_check_var_visibility", False)
-        for name, input_type in self.input_types.items():
-            if name in kwargs:
-                var = kwargs[name]
-                # TODO (jay): we should remove this internal var later as we
-                # further cleanup the interface
-                if isinstance(var, InternalVar) or input_type.is_compatible(var):
-                    ret.append((name, var))
-                else:
-                    msg = (
-                        "Input {} has type {} not compatible with "
-                        "expected type {}".format(name, var.sym_type, input_type)
-                    )
-                    raise InputTypeError(msg, name, var.name,
-                            input_type=input_type,
-                            actual_type=var.sym_type)
-            else:
-                # if input is not found in kwargs, it must be optional has no
-                # default value
-                if not input_type.optional or input_type.default:
-                    # Skip check on PyFunctionInput since created while_loop /
-                    # cond ops don't need to rebuild the nested blocks
-                    if no_check_var_visibility or isinstance(
-                        input_type, PyFunctionInputType
-                    ):
-                        continue
-                    raise ValueError("Input {} is required".format(name))
-                else:
-                    assert input_type.default is None
-                    ret.append((name, None))
-        return ret
+        msg_prefix = 'Op \"{}\" (op_type: {}) '.format(op_name, op_type)
+
+        # Ensure candidate_kvs doesn't contain None
+        for name, var in candidate_kvs.items():
+            if var is None:
+                raise ValueError(msg_prefix + 'Input {} is None'.format(name))
+
+            if name not in self.input_types:
+                raise ValueError(msg_prefix + \
+                    'Unrecognized input {}'.format(name))
+
+            input_type = self.input_types[name]
+            # Check constness
+            # Don't check InternalInputType (so _const_symbolic can work)
+            if input_type.const and \
+                not isinstance(input_type, InternalInputType) \
+                and var.val is None:
+                msg = msg_prefix + \
+                    'Input {} must be const at compile time'
+                raise ValueError(msg.format(name), name, var.name)
+
+            if not isinstance(var, InternalVar) and \
+                not input_type.is_compatible(var):
+                msg = msg_prefix + "Input {}=\"{}\" expects " +\
+                        "{} but got {}"
+                raise ValueError(msg.format(name, var.name, input_type.type_str,
+                            var.sym_type.__type_info__()))
+
 
 
 class _InputType(object):
@@ -99,7 +128,7 @@ class _InputType(object):
     Operation:
     """
 
-    def __init__(self, const=False, default=None, optional=False):
+    def __init__(self, const=False, optional=False):
         """
         const (bool):
             True if the InputType has to be constant / materialized at compile time.
@@ -107,19 +136,14 @@ class _InputType(object):
             default False. Read-only.
 
         optional (bool):
-            If default is not None, optional will be set to True
-
-        default:
-            Default value of optional input. InputType is optional if a default
-            is provided or optional == True.  default can be int, float,
-            string, np.ndarray etc depending on subclass.
+            True to allow user not to specify this input and rely on default
+            values (defined in default_inputs).
 
         Note: _InputType should not be directly instantiated. Only its subclasses may
         be instantiated.
         """
-        self.default = default
         self.const = const
-        self.optional = True if default is not None else optional
+        self.optional = optional
 
     def is_compatible(self, v):
         """
@@ -173,7 +197,7 @@ class ScalarOrTensorInputType(_InputType):
 
     @property
     def type_str(self):
-        return 'tensor'
+        return 'tensor or scalar'
 
 
 class ListOrScalarOrTensorInputType(_InputType):
@@ -189,12 +213,13 @@ class ListOrScalarOrTensorInputType(_InputType):
 
     @property
     def type_str(self):
-        return 'list or tensor'
+        return 'list, tensor, or scalar'
 
 
 class IntInputType(ScalarOrTensorInputType):
     """
-    Int input with _sym_type == types.int32 or _sym_type == types.int64
+    Int input with _sym_type in [types.uint8, types.int8, types.uint16, types.int16,
+                                 types.uint32, types.int32, types.uint64, types.int64]
     predefined to be types.int32 by default.
 
     Set with IntAttribute.val
@@ -205,14 +230,14 @@ class IntInputType(ScalarOrTensorInputType):
         super(IntInputType, self).__init__(**kwargs)
 
     def _is_compatible(self, v):
-        return v.dtype in {types.int32, types.int64}
+        return v.dtype in SUPPORT_INT_TYPES
 
     def _get_predefined_datatype(self):
         return types.int32
 
     @property
     def type_str(self):
-        return 'int32 or int64 tensor'
+        return 'integer tensor or scalar'
 
 class BoolInputType(ScalarOrTensorInputType):
     """
@@ -233,7 +258,7 @@ class BoolInputType(ScalarOrTensorInputType):
 
     @property
     def type_str(self):
-        return 'bool tensor'
+        return 'bool tensor or scalar'
 
 class FloatInputType(ScalarOrTensorInputType):
     """
@@ -247,18 +272,20 @@ class FloatInputType(ScalarOrTensorInputType):
         super(FloatInputType, self).__init__(**kwargs)
 
     def _is_compatible(self, v):
-        return v.dtype == types.fp32
+        return v.dtype in SUPPORT_FLOAT_TYPES
 
     def _get_predefined_datatype(self):
         return types.fp32
 
     @property
     def type_str(self):
-        return 'fp32 tensor'
+        return 'float tensor or scalar'
 
 class IntOrFloatInputType(ScalarOrTensorInputType):
     """
-    input with _sym_type == types.int32 or _sym_type == types.int64 or _sym_type == types.fp32
+    input with _sym_type in [types.uint8, types.int8, types.uint16, types.int16,
+                             types.uint32, types.int32, types.uint64, types.int64,
+                             types.fp32]
     predefined to be types.fp32 by default.
     """
 
@@ -266,19 +293,21 @@ class IntOrFloatInputType(ScalarOrTensorInputType):
         super(IntOrFloatInputType, self).__init__(**kwargs)
 
     def _is_compatible(self, v):
-        return v.dtype in {types.int32, types.int64, types.fp32}
+        return v.dtype in SUPPORT_INT_TYPES + SUPPORT_FLOAT_TYPES
+
 
     def _get_predefined_datatype(self):
         return types.fp32
 
     @property
     def type_str(self):
-        return 'int32, int64, or fp32 tensor'
+        return 'integer, float tensor or scalar'
 
 class IntOrFloatOrBoolInputType(ScalarOrTensorInputType):
     """
-    input with _sym_type == types.int32 or _sym_type == types.int64 or _sym_type == types.fp32
-    or _sym_type == types.bool
+    input with _sym_type in [types.uint8, types.int8, types.uint16, types.int16,
+                             types.uint32, types.int32, types.uint64, types.int64,
+                             types.fp32, types.bool]
     predefined to be types.fp32 by default.
     """
 
@@ -286,14 +315,14 @@ class IntOrFloatOrBoolInputType(ScalarOrTensorInputType):
         super(IntOrFloatOrBoolInputType, self).__init__(**kwargs)
 
     def _is_compatible(self, v):
-        return v.dtype in {types.int32, types.int64, types.fp32, types.bool}
+        return v.dtype in SUPPORT_INT_TYPES + SUPPORT_FLOAT_TYPES + [types.bool]
 
     def _get_predefined_datatype(self):
         return types.fp32
 
     @property
     def type_str(self):
-        return 'int32, int64, fp32 or bool tensor'
+        return 'integer, float, bool tensor or scalar'
 
 class TensorInputType(ScalarOrTensorInputType):
     """
@@ -315,8 +344,9 @@ class TensorInputType(ScalarOrTensorInputType):
 
 class IntTensorInputType(ScalarOrTensorInputType):
     """
-    Tensor input with int values, _sym_type == types.int32 or
-    _sym_type == types.int64
+    Tensor input with int values
+    with _sym_type in [types.uint8, types.int8, types.uint16, types.int16,
+                       types.uint32, types.int32, types.uint64, types.int64]
 
     Raise error when value set is not integer.
     """
@@ -325,29 +355,10 @@ class IntTensorInputType(ScalarOrTensorInputType):
         super(IntTensorInputType, self).__init__(**kwargs)
 
     def _is_compatible(self, v):
-        return types.is_tensor(v.sym_type) and v.dtype in {types.int32, types.int64}
-
+        return types.is_tensor(v.sym_type) and v.dtype in SUPPORT_INT_TYPES
     @property
     def type_str(self):
-        return 'int32 or int64 tensor'
-
-class IntOrIntTensorInputType(ScalarOrTensorInputType):
-    """
-    builtins.in32 or Tensor with int values, _sym_type == builtins.int32 or
-    _sym_type == builtins.int64
-
-    Raise error when value set is not integer.
-    """
-
-    def __init__(self, **kwargs):
-        super(IntOrIntTensorInputType, self).__init__(**kwargs)
-
-    def _is_compatible(self, v):
-        return v.dtype in {types.int32, types.int64}
-
-    @property
-    def type_str(self):
-        return 'int32 or int64 tensor'
+        return 'integer tensor'
 
 class BoolTensorInputType(ScalarOrTensorInputType):
     def __init__(self, **kwargs):

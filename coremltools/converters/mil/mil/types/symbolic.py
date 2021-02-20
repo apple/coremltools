@@ -5,9 +5,8 @@
 
 import sympy as sm
 import numpy as np
-import six
 
-k_used_symbols = set()
+k_used_symbols = {}
 k_num_internal_syms = 0
 
 
@@ -59,7 +58,7 @@ def any_symbolic(val):
         return is_symbolic(val[()])
     elif isinstance(val, np.ndarray) and np.issctype(val.dtype):
         return False
-    elif isinstance(val, six.string_types):  # string is iterable
+    elif isinstance(val, str):  # string is iterable
         return False
     elif hasattr(val, "__iter__"):
         return any(any_symbolic(i) for i in val)
@@ -71,7 +70,7 @@ def any_variadic(val):
         return True
     elif isinstance(val, np.ndarray) and np.issctype(val.dtype):
         return False
-    elif isinstance(val, six.string_types):  # string is iterable
+    elif isinstance(val, str):  # string is iterable
         return False
     elif hasattr(val, "__iter__"):
         return any(any_variadic(i) for i in val)

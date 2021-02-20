@@ -14,9 +14,15 @@ Reduction Op Superclasses
 class ReductionAxes(Operation):
     input_spec = InputSpec(
         x=TensorInputType(),
-        axes=IntTensorInputType(const=True, optional=True, default=None),
-        keep_dims=BoolInputType(const=True, optional=True, default=False),
+        axes=IntTensorInputType(const=True, optional=True),
+        keep_dims=BoolInputType(const=True, optional=True),
     )
+
+    def default_inputs(self):
+        return DefaultInputs(
+            axes=None,
+            keep_dims=False,
+            )
 
     def __init__(self, **kwargs):
         super(ReductionAxes, self).__init__(**kwargs)
@@ -55,9 +61,15 @@ class ReductionAxes(Operation):
 class ReductionAxis(Operation):
     input_spec = InputSpec(
         x=TensorInputType(),
-        axis=IntInputType(const=True, optional=True, default=-1),
-        keep_dims=BoolInputType(const=True, optional=True, default=False),
+        axis=IntInputType(const=True, optional=True),
+        keep_dims=BoolInputType(const=True, optional=True),
     )
+
+    def default_inputs(self):
+        return DefaultInputs(
+            axis=-1,
+            keep_dims=False,
+            )
 
     def __init__(self, **kwargs):
         super(ReductionAxis, self).__init__(**kwargs)
@@ -115,8 +127,38 @@ class reduce_arg(ReductionAxis):
         return types.tensor(types.int32, tuple(reduced_shape))
 
 
-@register_op(doc_str="TODO")
+@register_op(doc_str="")
 class reduce_argmax(reduce_arg):
+    """
+    Computes the indices of the maximum value across dimensions of a tensor.
+    In case of ties, the identity of the return value is not guaranteed.
+    
+    Parameters
+    ----------
+    x: <\*,T> (Required)
+        * Must be 1-dimensional or higher.
+    
+    axis: const<i32> (Optional)
+        * The dimension to reduce. Default is ``-1``.
+    
+    keep_dims: const<bool> (Optional, default=False)
+        * If ``False``, the rank is reduced by ``1`` by removing the dimension
+          specified in ``axis``. If ``True``, retain reduced axis with length ``1``.
+    
+    Returns
+    -------
+    <\*, int32>
+    
+    Attributes
+    ----------
+    T: f32, int32
+    
+    References
+    ----------
+    See `tf.math.argmax <https://www.tensorflow.org/api_docs/python/tf/math/argmax>`_.
+    
+    """
+    
     def __init__(self, **kwargs):
         super(reduce_argmax, self).__init__(**kwargs)
 
@@ -124,8 +166,38 @@ class reduce_argmax(reduce_arg):
         return np.argmax
 
 
-@register_op(doc_str="TODO")
+@register_op(doc_str="")
 class reduce_argmin(reduce_arg):
+    """
+    Computes the indices of the minimum value across dimensions of a tensor.
+    In case of ties, the identity of the return value is not guaranteed.
+    
+    Parameters
+    ----------
+    x: <\*,T> (Required)
+        * Must be 1-dimensional or higher.
+    
+    axis: const<i32> (Optional)
+        * The dimension to reduce. Default is ``-1``.
+    
+    keep_dims: const<bool> (Optional, default=False)
+        * If ``False``, the rank is reduced by ``1`` by removing the dimension specified
+          in ``axis``, otherwise retain reduced axis with length ``1``.
+    
+    Returns
+    -------
+    <\*, int32>
+    
+    Attributes
+    ----------
+    T: f32, int32
+    
+    References
+    ----------
+    See `tf.math.argmin <https://www.tensorflow.org/api_docs/python/tf/math/argmin>`_.
+    
+    """
+    
     def __init__(self, **kwargs):
         super(reduce_argmin, self).__init__(**kwargs)
 
@@ -133,8 +205,38 @@ class reduce_argmin(reduce_arg):
         return np.argmin
 
 
-@register_op(doc_str="TODO")
+@register_op(doc_str="")
 class reduce_l1_norm(ReductionAxes):
+    """
+    Computes the L1 normalization of elements across given dimensions of the input tensor.
+    
+    Parameters
+    ----------
+    x: <\*,T> (Required)
+        * Must be 1-dimensional or higher.
+    
+    axes: const<K,i32> (Optional, default="None", reduce on all axes.)
+        * The dimensions to reduce.
+    
+    keep_dims: const<bool> (Optional, default=False)
+        * If ``False``, the rank is reduced by ``1`` for each entry in ``axes``,
+          otherwise retain reduced axes with length ``1``.
+    
+    Returns
+    -------
+    <\*,T>
+        * Scalar or tensor: The reduced tensor.
+    
+    Attributes
+    ----------
+    T: f32, int32
+    
+    References
+    ----------
+    See `reduce_mean <https://www.tensorflow.org/api_docs/python/tf/math/reduce_mean?version=stable>`_.
+    
+    """
+    
     def __init__(self, **kwargs):
         super(reduce_l1_norm, self).__init__(**kwargs)
 
@@ -145,8 +247,34 @@ class reduce_l1_norm(ReductionAxes):
         return l1_norm
 
 
-@register_op(doc_str="TODO")
+@register_op(doc_str="")
 class reduce_l2_norm(ReductionAxes):
+    """
+    Computes the L2 normalization of elements across given dimensions of the input tensor.
+    
+    Parameters
+    ----------
+    x: <\*,T> (Required)
+        * Must be 1-dimensional or higher.
+    
+    axes: const<K,i32> (Optional, default="None", reduce on all axes.)
+        * The dimensions to reduce.
+    
+    keep_dims: const<bool> (Optional, default=False)
+        * If ``False``, the rank is reduced by ``1`` for each entry in ``axes``,
+          otherwise retain reduced axes with length ``1``.
+    
+    Returns
+    -------
+    <\*,T>
+        * Scalar or tensor: The reduced tensor.
+    
+    Attributes
+    ----------
+    T: f32, int32
+    
+    """
+    
     def __init__(self, **kwargs):
         super(reduce_l2_norm, self).__init__(**kwargs)
 
@@ -157,8 +285,35 @@ class reduce_l2_norm(ReductionAxes):
         return l2_norm
 
 
-@register_op(doc_str="TODO")
+@register_op(doc_str="")
 class reduce_log_sum(ReductionAxes):
+    """
+    Computes the natural logarithm of the sum of all the elements across given dimensions
+    of the input tensor.
+    
+    Parameters
+    ----------
+    x: <\*,T> (Required)
+        * Must be 1-dimensional or higher.
+    
+    axes: const<K,i32> (Optional, default="None", reduce on all axes.)
+        * The dimensions to reduce.
+    
+    keep_dims: const<bool> (Optional, default=False)
+        * If ``False``, the rank is reduced by ``1`` for each entry in ``axes``,
+          otherwise retain reduced axes with length ``1``.
+    
+    Returns
+    -------
+    <\*,T>
+        * Scalar or tensor: The reduced tensor.
+    
+    Attributes
+    ----------
+    T: f32, int32
+    
+    """
+    
     def __init__(self, **kwargs):
         super(reduce_log_sum, self).__init__(**kwargs)
 
@@ -169,8 +324,42 @@ class reduce_log_sum(ReductionAxes):
         return log_sum
 
 
-@register_op(doc_str="TODO")
+@register_op(doc_str="")
 class reduce_log_sum_exp(ReductionAxes):
+    """
+    Computes the natural logarithm of the sum of the exponentials of the elements across
+    given dimensions of the input tensor. It is a smooth approximation of the maximum
+    function, more numerically stable than ``log(sum(exp(input)))``. It avoids
+    overflows caused by taking the ``exp`` of large inputs and underflows caused by
+    taking the ``log`` of small inputs.
+    
+    Parameters
+    ----------
+    x: <\*,T> (Required)
+        * Must be 1-dimensional or higher.
+    
+    axes: const<K,i32> (Optional, default="None", reduce on all axes.)
+        * The dimensions to reduce.
+    
+    keep_dims: const<bool> (Optional, default=False)
+        * If ``False``, the rank is reduced by ``1`` for each entry in ``axes``,
+          otherwise retain reduced axes with length ``1``.
+    
+    Returns
+    -------
+    <\*,T>
+        * Scalar or tensor: The reduced tensor.
+    
+    Attributes
+    ----------
+    T: f32, int32
+    
+    References
+    ----------
+    See `tf.math.reduce_logsumexp <https://www.tensorflow.org/api_docs/python/tf/math/reduce_logsumexp>`_.
+    
+    """
+    
     def __init__(self, **kwargs):
         super(reduce_log_sum_exp, self).__init__(**kwargs)
 
@@ -178,8 +367,34 @@ class reduce_log_sum_exp(ReductionAxes):
         return scipy.special.logsumexp
 
 
-@register_op(doc_str="TODO")
+@register_op(doc_str="")
 class reduce_max(ReductionAxes):
+    """
+    Computes the maximum of elements across given dimensions of the input tensor.
+    
+    Parameters
+    ----------
+    x: <\*,T> (Required)
+        * Must be 1-dimensional or higher.
+    
+    axes: const<K,i32> (Optional, default="None", reduce on all axes.)
+        * The dimensions to reduce.
+    
+    keep_dims: const<bool> (Optional, default=False)
+        * If ``False``, the rank is reduced by ``1`` for each entry in ``axes``,
+          otherwise retain reduced axes with length ``1``.
+    
+    Returns
+    -------
+    <\*,T>
+        * Scalar or tensor: The reduced tensor.
+    
+    Attributes
+    ----------
+    T: f32, int32
+    
+    """
+    
     def __init__(self, **kwargs):
         super(reduce_max, self).__init__(**kwargs)
 
@@ -187,8 +402,37 @@ class reduce_max(ReductionAxes):
         return np.max
 
 
-@register_op(doc_str="TODO")
+@register_op(doc_str="")
 class reduce_mean(ReductionAxes):
+    """
+    Computes the mean of elements across given dimensions of the input tensor.
+    
+    Parameters
+    ----------
+    x: <\*,T> (Required)
+        * Must be 1-dimensional or higher.
+    
+    axes: const<K,i32> (Optional, default="None", reduce on all axes.)
+        * The dimensions to reduce.
+    
+    keep_dims: const<bool> (Optional, default=False)
+        * If ``False``, the rank is reduced by ``1`` for each entry in ``axes``,
+          otherwise retain reduced axes with length ``1``.
+    
+    Returns
+    -------
+    <\*,T>
+        * Scalar or tensor: The reduced tensor.
+    
+    Attributes
+    ----------
+    T: f32, int32
+    
+    References
+    ----------
+    For an example, see `tf.math.reduce_mean <https://www.tensorflow.org/api_docs/python/tf/math/reduce_mean?version=stable>`_.
+    """
+    
     def __init__(self, **kwargs):
         super(reduce_mean, self).__init__(**kwargs)
 
@@ -196,8 +440,34 @@ class reduce_mean(ReductionAxes):
         return np.mean
 
 
-@register_op(doc_str="TODO")
+@register_op(doc_str="")
 class reduce_min(ReductionAxes):
+    """
+    Computes the minimum of elements across given dimensions of the input tensor.
+    
+    Parameters
+    ----------
+    x: <\*,T> (Required)
+        * Must be 1-dimensional or higher.
+    
+    axes: const<K,i32> (Optional, default="None", reduce on all axes.)
+        * The dimensions to reduce.
+    
+    keep_dims: const<bool> (Optional, default=False)
+        * If ``False``, the rank is reduced by ``1`` for each entry in ``axes``,
+          otherwise retain reduced axes with length ``1``.
+    
+    Returns
+    -------
+    <\*,T>
+        * Scalar or tensor: The reduced tensor.
+    
+    Attributes
+    ----------
+    T: f32, int32
+    
+    """
+    
     def __init__(self, **kwargs):
         super(reduce_min, self).__init__(**kwargs)
 
@@ -205,8 +475,34 @@ class reduce_min(ReductionAxes):
         return np.min
 
 
-@register_op(doc_str="TODO")
+@register_op(doc_str="")
 class reduce_prod(ReductionAxes):
+    """
+    Computes the product of elements across given dimensions of the input tensor.
+    
+    Parameters
+    ----------
+    x: <\*,T> (Required)
+        * Must be 1-dimensional or higher.
+    
+    axes: const<K,i32> (Optional, default="None", reduce on all axes.)
+        * The dimensions to reduce.
+    
+    keep_dims: const<bool> (Optional, default=False)
+        * If ``False``, the rank is reduced by ``1`` for each entry in ``axes``,
+          otherwise retain reduced axes with length ``1``.
+    
+    Returns
+    -------
+    <\*,T>
+        * Scalar or tensor: The reduced tensor.
+    
+    Attributes
+    ----------
+    T: f32, int32
+    
+    """
+    
     def __init__(self, **kwargs):
         super(reduce_prod, self).__init__(**kwargs)
 
@@ -214,8 +510,34 @@ class reduce_prod(ReductionAxes):
         return np.prod
 
 
-@register_op(doc_str="TODO")
+@register_op(doc_str="")
 class reduce_sum(ReductionAxes):
+    """
+    Computes the sum of elements across given dimensions of the input tensor.
+    
+    Parameters
+    ----------
+    x: <\*,T> (Required)
+        * Must be 1-dimensional or higher.
+    
+    axes: const<K,i32> (Optional, default="None", reduce on all axes.)
+        * The dimensions to reduce.
+    
+    keep_dims: const<bool> (Optional, default=False)
+        * If ``False``, the rank is reduced by ``1`` for each entry in ``axes``,
+          otherwise retain reduced axes with length ``1``.
+    
+    Returns
+    -------
+    <\*,T>
+        * Scalar or tensor: The reduced tensor.
+    
+    Attributes
+    ----------
+    T: f32, int32
+    
+    """
+    
     def __init__(self, **kwargs):
         super(reduce_sum, self).__init__(**kwargs)
 
@@ -223,8 +545,34 @@ class reduce_sum(ReductionAxes):
         return np.sum
 
 
-@register_op(doc_str="TODO")
+@register_op(doc_str="")
 class reduce_sum_square(ReductionAxes):
+    """
+    Computes the sum of squares of elements across given dimensions of the input tensor.
+    
+    Parameters
+    ----------
+    x: <\*,T> (Required)
+        * Must be 1-dimensional or higher.
+    
+    axes: const<K,i32> (Optional, default="None", reduce on all axes.)
+        * The dimensions to reduce.
+    
+    keep_dims: const<bool> (Optional, default=False)
+        * If ``False``, the rank is reduced by ``1`` for each entry in ``axes``,
+          otherwise retain reduced axes with length ``1``.
+    
+    Returns
+    -------
+    <\*,T>
+        * Scalar or tensor: The reduced tensor.
+    
+    Attributes
+    ----------
+    T: f32, int32
+    
+    """
+    
     def __init__(self, **kwargs):
         super(reduce_sum_square, self).__init__(**kwargs)
 

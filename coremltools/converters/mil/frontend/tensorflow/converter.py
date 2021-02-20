@@ -3,7 +3,6 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import six
 import logging
 from coremltools.converters.mil.input_types import (
     InputType,
@@ -174,19 +173,7 @@ class TFConverter:
                         )
                     )
                 if inp.shape is None:
-                    if graph[inp.name].attr.get("_output_shapes", None) is not None:
-                        shape = graph[inp.name].attr["_output_shapes"][0]
-                        if shape is None:
-                            # Scalar is given as None
-                            shape = []
-                    elif graph[inp.name].attr.get("shape", None) is not None:
-                        shape = graph[inp.name].attr["shape"]
-                    else:
-                        raise ValueError(
-                            "Can't extract shape from attribute of ({})".format(
-                                inp.name
-                            )
-                        )
+                    shape = self._get_placeholder_shape_from_tf_graph(tfgraph=graph, name=inp.name)
                     # _get_shaping_class does not accept -1 or None dimension.
                     shape = [get_new_symbol() if s is None or s == -1 else s \
                             for s in shape]
@@ -207,12 +194,8 @@ class TFConverter:
             if inp not in placeholder_names:
                 continue
             node = graph[inp]
-            node.parse_from_attr()
             dtype = node.attr['dtype']
-            if is_tensor(node.datatype):
-                shape = node.datatype.get_shape()
-            else:
-                shape = []
+            shape = self._get_placeholder_shape_from_tf_graph(tfgraph=graph, name=inp)
             shape = [get_new_symbol() if s is None or s == -1 else s \
                     for s in shape]
             inputs.append(TensorType(name=inp, shape=shape, dtype=dtype))
@@ -244,13 +227,31 @@ class TFConverter:
         self._validate_outputs(tfssa, outputs)
         outputs = main_func.outputs if outputs is None else outputs
         outputs = outputs if isinstance(outputs, (tuple, list)) else [outputs]
-        outputs = [x if isinstance(x, six.string_types) else x.name for x in outputs]
+        outputs = [x if isinstance(x, str) else x.name for x in outputs]
         self.outputs = outputs
 
         # We would like a stack so that we run conversion sequentially.
         self.graph_stack = self._get_stack(tfssa, root="main")
         self.context = TranscriptionContext()
         self.tensorflow_passes = tensorflow_passes
+
+    def _get_placeholder_shape_from_tf_graph(self, tfgraph, name):
+
+        error_message = "Unable to determine the shape of input: {}." \
+                        " Please provide its shape during conversion, using \n" \
+                        "'ct.convert(..., inputs=[ct.TensorType(name='{}', shape=(_FILL_ME_) ),])".format(name, name)
+
+        if tfgraph[name].attr.get("shape", None) is not None:
+            shape = tfgraph[name].attr["shape"]
+
+        elif tfgraph[name].attr.get("_output_shapes", None) is not None:
+            shape = tfgraph[name].attr["_output_shapes"][0]
+            if shape is None:
+                raise ValueError(error_message)
+        else:
+            raise ValueError(error_message)
+
+        return shape
 
     def _get_stack(self, tfssa, root="main"):
         # We're trying to get a order of how to loop through the graphs.
@@ -277,7 +278,7 @@ class TFConverter:
     @staticmethod
     def _get_tensor_name(tensor):
         ret = None
-        if isinstance(tensor, six.string_types):
+        if isinstance(tensor, str):
             ret = tensor
         else:
             ret = tensor.name

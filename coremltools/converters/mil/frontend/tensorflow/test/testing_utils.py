@@ -3,14 +3,15 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import six
 from coremltools import TensorType
+import coremltools.models.utils as coremltoolsutils
 import pytest
 import numpy as np
-
+from six import string_types as _string_types
 tf = pytest.importorskip("tensorflow", minversion="1.14.0")
-from coremltools.converters.mil.testing_utils import compare_shapes, compare_backend
-from coremltools.converters.mil.testing_reqs import converter
+from coremltools.converters.mil.testing_utils import compare_shapes, \
+    compare_backend, run_core_ml_predict
+from coremltools.converters.mil.testing_reqs import ct
 from tensorflow.python.framework import dtypes
 import tempfile
 import os
@@ -41,8 +42,8 @@ def make_tf_graph(input_types):
         with tf.Graph().as_default() as model:
             inputs = []
             for input_type in input_types:
-                input_type = tuple(input_type)
-                if len(input_type) > 0 and isinstance(input_type[-1], dtypes.DType):
+                input_type = tuple(input_type) if input_type is not None else None
+                if input_type is not None and len(input_type) > 0 and isinstance(input_type[-1], dtypes.DType):
                     shape, dtype = input_type[:-1], input_type[-1]
                 else:
                     shape, dtype = input_type, tf.float32
@@ -96,7 +97,7 @@ def get_tf_node_names(tf_nodes, mode="inputs"):
         tf_nodes = [tf_nodes]
     names = list()
     for n in tf_nodes:
-        tensor_name = n if isinstance(n, six.string_types) else n.name
+        tensor_name = n if isinstance(n, str) else n.name
         if mode == "outputs":
             names.append(tensor_name)
             continue
@@ -110,7 +111,7 @@ def get_tf_node_names(tf_nodes, mode="inputs"):
     return names
 
 
-def tf_graph_to_proto(
+def tf_graph_to_mlmodel(
     graph, feed_dict, output_nodes, frontend="tensorflow", backend="nn_proto"
 ):
     """
@@ -127,7 +128,7 @@ def tf_graph_to_proto(
     backend: str
         Backend to convert to.
     -----------
-    Returns Proto, Input Values, Output Names
+    Returns MLModel, Input Values, Output Names
     """
     if isinstance(output_nodes, tuple):
         output_nodes = list(output_nodes)
@@ -139,12 +140,11 @@ def tf_graph_to_proto(
     output_names = get_tf_node_names(output_nodes, mode="outputs")
     input_values = {name: val for name, val in zip(input_names, feed_dict.values())}
 
-    mlmodel = converter.convert(
+    mlmodel = ct.convert(
         graph, inputs=None, outputs=output_names, source=frontend, convert_to=backend
     )
 
-    proto = mlmodel.get_spec()
-    return proto, input_values, output_names, output_nodes
+    return mlmodel, input_values, output_names, output_nodes
 
 
 def load_tf_pb(pb_file):
@@ -206,8 +206,11 @@ def run_compare_tf(
         If true, skip element-wise value comparision.
     tf_outputs: float or list[float]
         If present, use it as TensorFlow predictions
+
+    Return:
+        Proto, mlmodel, input dictionay, prediction(if possible)
     """
-    proto, input_key_values, output_names, output_nodes = tf_graph_to_proto(
+    mlmodel, input_key_values, output_names, output_nodes = tf_graph_to_mlmodel(
         graph, feed_dict, output_nodes, frontend, backend
     )
 
@@ -246,7 +249,7 @@ def run_compare_tf(
         graph = load_tf_pb(static_model_file)
 
         # Need to convert again using frozen graph
-        proto, input_key_values, output_names, output_nodes = tf_graph_to_proto(
+        mlmodel, input_key_values, output_names, output_nodes = tf_graph_to_mlmodel(
             graph, feed_dict, output_nodes, frontend, backend
         )
     else:
@@ -261,10 +264,10 @@ def run_compare_tf(
             input_key_values[k] = v.astype(np.float) # Core ML only accepts floats
 
     if validate_shapes_only:
-        compare_shapes(proto, input_key_values, expected_outputs, use_cpu_only)
+        compare_shapes(mlmodel, input_key_values, expected_outputs, use_cpu_only)
     else:
         compare_backend(
-            proto,
+            mlmodel,
             input_key_values,
             expected_outputs,
             use_cpu_only,
@@ -272,8 +275,12 @@ def run_compare_tf(
             rtol=rtol,
             also_compare_shapes=True,
         )
-
-    return proto
+    pred=None
+    if not coremltoolsutils._has_custom_layer(mlmodel.get_spec()):
+        pred = run_core_ml_predict(mlmodel, input_key_values, use_cpu_only)
+    else:
+        print('Skipping model prediction as it has a custom nn layer!')
+    return mlmodel._spec, mlmodel, input_key_values, pred
 
 
 def layer_counts(spec, layer_type):
@@ -291,3 +298,33 @@ def layer_counts(spec, layer_type):
         if layer.WhichOneof("layer") == layer_type:
             n += 1
     return n
+
+
+class TensorFlowBaseTest(object):
+    testclassname=''
+    testmodelname=''
+    @pytest.fixture(autouse=True)
+    def store_testname_with_args(self, request):
+        TensorFlowBaseTest.testclassname = type(self).__name__
+        TensorFlowBaseTest.testmodelname = request.node.name
+
+    def teardown_method(self, method):
+        pass
+
+    @staticmethod
+    def run_compare_tf(graph, feed_dict, output_nodes, use_cpu_only=False,
+                       frontend_only=False, frontend="tensorflow",
+                       backend="nn_proto", atol=1e-04, rtol=1e-05,
+                       validate_shapes_only=False, freeze_graph=False,
+                       tf_outputs=None):
+        res = run_compare_tf(graph, feed_dict, output_nodes,
+                        use_cpu_only=use_cpu_only,
+                       frontend_only=frontend_only, frontend=frontend,
+                       backend=backend, atol=atol,
+                       rtol=rtol,
+                       validate_shapes_only=validate_shapes_only,
+                       freeze_graph=freeze_graph, tf_outputs=tf_outputs)
+        alist = list(res)
+        alist.append(TensorFlowBaseTest.testclassname)
+        alist.append(TensorFlowBaseTest.testmodelname)
+        return tuple(alist)

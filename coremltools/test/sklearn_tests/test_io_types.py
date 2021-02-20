@@ -370,6 +370,7 @@ class TestIODataTypes(unittest.TestCase):
             np.uint8(input_data), np.array(coreml_out).transpose(2, 0, 1)[:3, :]
         )
 
+    @unittest.skip("rdar://71638164")
     def test_image_output_bgr(self):
         input_shape = (3, 15, 25)
         input_features = [("data", coremltools.models.datatypes.Array(*input_shape))]

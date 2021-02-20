@@ -20,7 +20,8 @@ from coremltools._deps import (
     MSG_TF1_NOT_FOUND,
     MSG_TF2_NOT_FOUND,
 )
-from .testing_utils import ssa_fn, is_close, random_gen, converter, _converter
+from .testing_utils import ssa_fn, is_close, random_gen
+import coremltools as ct
 
 backends = ['nn_proto']
 

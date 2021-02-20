@@ -17,6 +17,7 @@ from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.types.type_mapping import numpy_val_to_builtin_val
 from coremltools.converters._profile_utils import _profile
 from distutils.version import StrictVersion as _StrictVersion
+from coremltools._deps import __get_version as _get_version
 
 
 def _get_const_nodes(fn):
@@ -76,7 +77,7 @@ def _constant_propagation(fn, new_graph, constant_nodes, constant_node_num_outpu
                 # We're only making one call to `sess.run()` in order to compute constant values.
                 # In this context, the default optimization settings make everything dramatically
                 # slower and more memory-intensive.
-                if tf.__version__ < _StrictVersion("1.13.1"):
+                if _get_version(tf.__version__) < _StrictVersion("1.13.1"):
                     session_config = tf.ConfigProto()
                     session_config.graph_options.optimizer_options.opt_level = (
                         tf.OptimizerOptions.L0

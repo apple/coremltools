@@ -22,6 +22,11 @@ format. In particular, it can be used to:
 For more information: http://developer.apple.com/documentation/coreml
 """
 
+# Backup root logger handlers
+from logging import getLogger as _getLogger
+_root_logger = _getLogger()
+_root_logger_handlers_backup = _root_logger.handlers.copy()
+
 from .version import __version__
 
 # This is the basic Core ML specification format understood by iOS 11.0
@@ -79,3 +84,9 @@ _ENABLE_PROFILING = _os.environ.get("ENABLE_PROFILING", False)
 
 if _ENABLE_PROFILING:
     _sys.setprofile(_profiler)
+
+# Restore root logger handlers
+_root_logger = _getLogger()
+_coreml_logger = _getLogger(__name__)
+_coreml_logger.handlers = _root_logger.handlers.copy()
+_root_logger.handlers = _root_logger_handlers_backup

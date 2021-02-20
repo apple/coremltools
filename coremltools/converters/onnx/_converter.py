@@ -2,7 +2,6 @@ from __future__ import absolute_import as _
 from __future__ import division as _
 from __future__ import print_function as _
 from __future__ import unicode_literals as _
-from typing import Text, Union, Optional, Dict, Any, Iterable, Sequence, Callable, List
 
 import numpy as np
 
@@ -33,6 +32,7 @@ if _HAS_ONNX:
     from onnx import TensorProto
 
     from typing import Tuple
+    from typing import Text, Union, Optional, Dict, Any, Iterable, Sequence, Callable, List
 
     from ._operators import (
         _convert_node,
@@ -88,9 +88,10 @@ class SupportedVersion:
     def is_nd_array_supported(minimum_ios_deployment_target):
         if not SupportedVersion.ios_support_check(minimum_ios_deployment_target):
             raise TypeError(
-                "{} not supported. Please provide one of target iOS: {}",
+                "{} not supported. Please provide one of target iOS: {}".format(
                 minimum_ios_deployment_target,
-                SupportedVersion.supported_ios_version,
+                SupportedVersion.supported_ios_version
+                )
             )
 
         minimum_ios_deployment_target_index = SupportedVersion.supported_ios_version.index(
@@ -484,57 +485,74 @@ def convert(
     # type: (...) -> MLModel
     """
     Convert ONNX model to CoreML.
+    
     Parameters
     ----------
     model:
-        An ONNX model with parameters loaded in onnx package or path to file
+        An ONNX model with parameters loaded in the ONNX package, or path to file
         with models.
+        
     mode: 'classifier', 'regressor' or None
+    
         Mode of the converted coreml model:
-        'classifier', a NeuralNetworkClassifier spec will be constructed.
-        'regressor', a NeuralNetworkRegressor spec will be constructed.
+        
+        * ``'classifier'``: a NeuralNetworkClassifier spec will be constructed.
+        * ``'regressor'``: a NeuralNetworkRegressor spec will be constructed.
+        
     preprocessing_args:
-        'is_bgr', 'red_bias', 'green_bias', 'blue_bias', 'gray_bias',
-        'image_scale' keys with the same meaning as
-        https://apple.github.io/coremltools/generated/coremltools.models.neural_network.html#coremltools.models.neural_network.NeuralNetworkBuilder.set_pre_processing_parameters
+        The ``'is_bgr'``, ``'red_bias'``, ``'green_bias'``, ``'blue_bias'``, ``'gray_bias'``,
+        and ``'image_scale'`` keys have the same meaning as the pre-processing arguments for
+        `NeuralNetworkBuilder <https://coremltools.readme.io/reference/modelsneural_network>`_.
+    
     deprocessing_args:
-        Same as 'preprocessing_args' but for deprocessing.
+        Same as ``'preprocessing_args'`` but for de-processing.
+    
     class_labels:
-        As a string it represents the name of the file which contains
-        the classification labels (one per line).
-        As a list of strings it represents a list of categories that map
-        the index of the output of a neural network to labels in a classifier.
+        * As a string, it represents the name of the file which contains
+          the classification labels (one per line).
+        * As a list of strings, it represents a list of categories that map
+          the index of the output of a neural network to labels in a classifier.
+    
     predicted_feature_name:
         Name of the output feature for the class labels exposed in the Core ML
-        model (applies to classifiers only). Defaults to 'classLabel'
+        model (applies to classifiers only). Defaults to ``'classLabel'``.
+    
     add_custom_layers: bool
-        Flag to turn on addition of custom CoreML layers for unsupported ONNX ops or attributes within
-        a supported op.
+        Flag to turn on additional custom CoreML layers for unsupported ONNX ops or
+    	attributes within a supported op.
+    
     custom_conversion_functions: dict()
-        A dictionary with keys corresponding to the names/types of onnx ops and values as functions taking
-        an object of class coreml-tools's 'NeuralNetworkBuilder', Graph' (see onnx-coreml/_graph.Graph),
-        'Node' (see onnx-coreml/_graph.Node), ErrorHandling (see onnx-coreml/_error_utils.ErrorHandling).
-        This custom conversion function gets full control and responsibility for converting given onnx op.
-        This function returns nothing and is responsible for adding a equivalent CoreML layer via 'NeuralNetworkBuilder'
-    onnx_coreml_input_shape_map: dict()
-        (Optional) A dictionary with keys corresponding to the model input names. Values are a list of integers that specify
-        how the shape of the input is mapped to CoreML. Convention used for CoreML shapes is
-        0: Sequence, 1: Batch, 2: channel, 3: height, 4: width.
-        For example, an input of rank 2 could be mapped as [3,4] (i.e. H,W) or [1,2] (i.e. B,C) etc.
-        This is ignored if "minimum_ios_deployment_target" is set to 13.
+        * A dictionary with keys corresponding to the names/types of ONNX ops and values as 
+          functions taking an object of the ``coreml-tools`` class:
+          ``'NeuralNetworkBuilder'``, ``'Graph'`` (see ``onnx-coreml/_graph.Graph``),
+          ``'Node'`` (see ``onnx-coreml/_graph.Node``), and 
+          ``'ErrorHandling'`` (see ``onnx-coreml/_error_utils.ErrorHandling``).
+        * This custom conversion function gets full control and responsibility for 
+          converting a given ONNX op.
+        * The function returns nothing and is responsible for adding an equivalent CoreML
+          layer via ``'NeuralNetworkBuilder'``.
+    
+    onnx_coreml_input_shape_map: dict() (Optional) 
+        * A dictionary with keys corresponding to the model input names.
+        * Values are a list of integers that specify how the shape of the input is mapped
+          to CoreML.
+        * Convention used for CoreML shapes is ``0: Sequence``, ``1: Batch``,
+          ``2: channel``, ``3: height``, ``4: width``. For example, an input of rank 2
+          could be mapped as ``[3,4]`` (H,W) or ``[1,2]`` (B,C), and so on. This is
+          ignored if ``minimum_ios_deployment_target`` is set to ``13``.
+    
     minimum_ios_deployment_target: str
-        Target Deployment iOS Version (default: '12')
-        Supported iOS version options: '11.2', '12', '13'
-        CoreML model produced by the converter will be compatible with the iOS version specified in this argument.
-        e.g. if minimum_ios_deployment_target = '12', the converter would only utilize CoreML features released till iOS12 (equivalently macOS 10.14, watchOS 5 etc).
-
-        iOS 11.2 (CoreML 0.8) does not support resize_bilinear, crop_resize layers
-         - (Supported features: https://github.com/apple/coremltools/releases/tag/v0.8)
-        iOS 12 (CoreML 2.0)
-         - (Supported features: https://github.com/apple/coremltools/releases/tag/v2.0)
-        iSO 13 (CoreML 3.0)
-         - (Supported features: https://github.com/apple/coremltools/releases/tag/3.0-beta6)
-
+        Target Deployment iOS Version (default: ``'12'``). Supported iOS version options:
+        ``'11.2'``, ``'12'``, ``'13'``. CoreML model produced by the converter will be
+        compatible with the iOS version specified in this argument. For example, if
+        ``minimum_ios_deployment_target = '12'``, the converter would utilize only CoreML
+        features released up to version iOS12 (equivalent to macOS 10.14, watchOS 5, and
+        so on). iOS 11.2 (CoreML 0.8) does not support ``resize_bilinear`` and
+        ``crop_resize`` layers. See `supported v0.8 features <https://github.com/apple/coremltools/releases/tag/v0.8>`_.
+        iOS 12 (CoreML 2.0), see `supported v2.0 features <https://github.com/apple/coremltools/releases/tag/v2.0>`_.
+        iSO 13 (CoreML 3.0), see `supported v3.0 features <https://github.com/apple/coremltools/releases/tag/3.0-beta6>`_.
+    
+    
     Returns
     -------
     model: A coreml model.

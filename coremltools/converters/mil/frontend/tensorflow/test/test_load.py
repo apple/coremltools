@@ -5,7 +5,6 @@
 
 import numpy as np
 import os
-import six
 import pytest
 import shutil
 import tempfile
@@ -19,14 +18,14 @@ from coremltools.converters.mil.frontend.tensorflow.converter import TFConverter
 from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import (
     frontend,
     make_tf_graph,
-    run_compare_tf,
     get_tf_keras_io_names,
+    TensorFlowBaseTest
 )
 
 tf = pytest.importorskip("tensorflow")
 
 
-class TestTf1ModelInputsOutputs:
+class TestTf1ModelInputsOutputs(TensorFlowBaseTest):
     def setup(self):
         self.saved_model_dir = tempfile.mkdtemp()
         _, self.model_path_h5 = tempfile.mkstemp(
@@ -52,14 +51,14 @@ class TestTf1ModelInputsOutputs:
             outputs = [outputs]
 
         output_names = [
-            j if isinstance(j, six.string_types) else j.op.name for j in outputs
+            j if isinstance(j, str) else j.op.name for j in outputs
         ]
         mlmodel = converter.convert(model, outputs=output_names)
         assert mlmodel is not None
 
         input_values = [random_gen(x_shape, -10.0, 10.0)]
         input_dict = dict(zip(inputs, input_values))
-        run_compare_tf(model, input_dict, outputs)
+        TensorFlowBaseTest.run_compare_tf(model, input_dict, outputs)
 
     def test_infer_outputs(self):
         x_shape = (3, 4, 5)
@@ -70,14 +69,14 @@ class TestTf1ModelInputsOutputs:
 
         model, inputs, outputs = build_model
         input_name = (
-            inputs[0] if isinstance(inputs[0], six.string_types) else inputs[0].op.name
+            inputs[0] if isinstance(inputs[0], str) else inputs[0].op.name
         )
         mlmodel = converter.convert(model, inputs=[TensorType(input_name, (3, 4, 5))])
         assert mlmodel is not None
 
         input_values = [random_gen(x_shape, -10.0, 10.0)]
         input_dict = dict(zip(inputs, input_values))
-        run_compare_tf(model, input_dict, outputs)
+        TensorFlowBaseTest.run_compare_tf(model, input_dict, outputs)
 
     def test_infer_inputs_and_outputs(self):
         x_shape = (3, 4, 5)
@@ -92,7 +91,7 @@ class TestTf1ModelInputsOutputs:
 
         input_values = [random_gen(x_shape, -10.0, 10.0)]
         input_dict = dict(zip(inputs, input_values))
-        run_compare_tf(model, input_dict, outputs)
+        TensorFlowBaseTest.run_compare_tf(model, input_dict, outputs)
 
     def test_extract_sub_model(self):
         x_shape = (3, 4, 5)
@@ -103,7 +102,7 @@ class TestTf1ModelInputsOutputs:
             return tf.nn.relu(x), tf.math.add(x, y)
 
         model, inputs, outputs = build_model
-        if isinstance(outputs[0], six.string_types):
+        if isinstance(outputs[0], str):
             first_output_name = outputs[0]
         else:
             first_output_name = outputs[0].name.split(":")[0]
@@ -181,6 +180,37 @@ class TestTf1ModelInputsOutputs:
         with pytest.raises(AssertionError) as e:
             converter.convert(model, source=frontend, outputs=["invalid_name"])
         e.match(r".* is not in graph")
+
+    def test_missing_placeholder_shape(self):
+        x_shape = None  # Missing Placeholder shape
+
+        @make_tf_graph([x_shape])
+        def build_model(x):
+            return tf.nn.relu(x)
+
+        model, inputs, outputs = build_model
+        with pytest.raises(ValueError) as e:
+            converter.convert(model, source=frontend)
+            e.match(r"Unable to determine the shape of input .*")
+
+        # Test must pass if a user provides shape during conversion,
+        mlmodel = converter.convert(model, source=frontend, inputs=[ct.TensorType(shape=())])
+        assert mlmodel is not None
+
+    def test_scalar_placeholder_shape(self):
+        x_shape = ()  # Scalar Placeholder Shape
+
+        @make_tf_graph([x_shape])
+        def build_model(x):
+            return tf.nn.relu(x)
+
+        model, inputs, outputs = build_model
+        mlmodel = converter.convert(model, source=frontend)
+        assert mlmodel is not None
+
+        input_values = [random_gen(x_shape, -10.0, 10.0)]
+        input_dict = dict(zip(inputs, input_values))
+        TensorFlowBaseTest.run_compare_tf(model, input_dict, outputs)
 
     def test_shaping_utils(self):
         @make_tf_graph([(None, 4, 5)])

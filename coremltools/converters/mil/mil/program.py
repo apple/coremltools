@@ -16,7 +16,6 @@ from .block import Function
 from .var import Var
 from .types.symbolic import k_used_symbols, k_num_internal_syms
 from coremltools.converters.mil.input_types import InputType
-import six
 
 
 class Program(object):
@@ -94,7 +93,7 @@ class Placeholder(object):
         if not isinstance(sym_shape, (list, tuple, _np.ndarray)):
             raise ValueError("Illegal shape for Placeholder: {}".format(sym_shape))
         for i, d in enumerate(sym_shape):
-            if not isinstance(d, (_np.generic, six.integer_types, Symbol)):
+            if not isinstance(d, (_np.generic, int, Symbol)):
                 msg = 'Placeholder dim {} in {} is not integer or symbol'
                 raise ValueError(msg.format(i, sym_shape))
         self.sym_shape = sym_shape
@@ -154,6 +153,12 @@ def get_new_symbol(name=None):
     k_num_internal_syms += 1
     return s
 
+def get_existing_symbol(name):
+    global k_used_symbols
+    if name not in k_used_symbols:
+      msg = 'Symbol name {} does not exist'
+      raise ValueError(msg.format(name))
+    return k_used_symbols[name]
 
 class Symbol(_sm.Symbol):
     def __init__(self, sym_name):
@@ -173,5 +178,5 @@ class Symbol(_sm.Symbol):
         if sym_name in k_used_symbols:
             msg = "Symbol `{}` is used already."
             raise ValueError(msg.format(sym_name))
-        k_used_symbols.add(sym_name)
+        k_used_symbols[sym_name] = self
         self.name = sym_name
