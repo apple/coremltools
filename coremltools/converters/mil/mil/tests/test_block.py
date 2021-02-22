@@ -61,8 +61,8 @@ def test_add_op():
     block.set_outputs([x1])
     print("after:\n{}".format(prog))
     assert block.inputs["x0"] == block.find_ops(op_type="log")[0].inputs["x"]
-    assert len(block.operations) == 1
-    assert block.operations[0].op_type == "log"
+    assert len(block.operations) == 2 # const op for epsilon + log
+    assert block.operations[1].op_type == "log"
     assert block.outputs[0] == x1
 
 
@@ -77,12 +77,13 @@ def test_remove_op():
 
     print("before:\n{}".format(prog))
     block = prog.functions["main"]
+    assert len(block.operations) == 2
     x0 = block.inputs["x0"]
     ops = block.find_ops(op_type="log")
     block.set_outputs([x0])
     block.remove_ops(ops)
     print("after:\n{}".format(prog))
-    assert len(block.operations) == 0
+    assert len(block.operations) == 1
     assert len(block.inputs) == 1
     assert len(block.outputs) == 1
     assert block.inputs["x0"] == block.outputs[0]

@@ -1337,16 +1337,11 @@ class TestTorchOps:
             [(1, 3, 15), (1, 1, 7), (1, 3, 10)], [1, 3], [1, 2], [0, 1], [False, True]
         ),
     )
-    @pytest.mark.xfail(reason="torch converter for max_pool1d not implemented")
     def test_max_pool1d(
         self, context, input_shape, kernel_size, stride, pad, ceil_mode
     ):
         if pad > kernel_size / 2:
-            # Because this test is xfail, we have to fail rather than
-            # just return here, otherwise these test cases unexpectedly pass.
-            # This can be changed to `return` once the above radar
-            # is fixed and the test is no longer xfail.
-            raise ValueError("pad must be less than half the kernel size")
+            return
         test_input = torch.rand(input_shape)
         expected_result = F.max_pool1d(
             test_input,

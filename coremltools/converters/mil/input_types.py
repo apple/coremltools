@@ -251,10 +251,11 @@ class RangeDim(object):
         
         default: (int) or None
             The default value that is used for initiating the model, and set in
+
             input shape field of the model file.
             
             If set to ``None``, ``lower_bound`` would be used as default.
-        
+
         symbol: (str)
             Optional symbol name for the dim. Autogenerate a symbol name if
             not specified.

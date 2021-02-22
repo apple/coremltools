@@ -4,18 +4,25 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import random
+import itertools
+import pytest
+import numpy as np
 from coremltools.converters.mil import testing_reqs
-from coremltools.converters.mil.frontend.tensorflow2.test.testing_utils import (
-    run_compare_tf_keras,
-)
 from coremltools.converters.mil.testing_reqs import *
-
+from coremltools.converters.mil.frontend.tensorflow2.test.testing_utils import (
+    TensorFlow2BaseTest
+)
+from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import (
+    TensorFlowBaseTest
+)
+TensorFlowBaseTest.run_compare_tf_keras = \
+    TensorFlow2BaseTest.run_compare_tf_keras
 backends = testing_reqs.backends
 
 tf = pytest.importorskip("tensorflow", minversion="2.1.0")
 
 
-class TestActivation:
+class TestActivation(TensorFlowBaseTest):
     @pytest.mark.parametrize(
         "use_cpu_only, backend, rank, op",
         itertools.product(
@@ -35,7 +42,7 @@ class TestActivation:
     def test_layer(self, use_cpu_only, backend, rank, op):
         shape = np.random.randint(low=2, high=4, size=rank)
         model = tf.keras.Sequential([op(batch_input_shape=shape)])
-        run_compare_tf_keras(
+        TensorFlowBaseTest.run_compare_tf_keras(
             model,
             [random_gen(shape, -10, 10)],
             use_cpu_only=use_cpu_only,
@@ -75,7 +82,7 @@ class TestActivation:
         model = tf.keras.Sequential(
             [tf.keras.layers.Activation(op, batch_input_shape=shape)]
         )
-        run_compare_tf_keras(
+        TensorFlowBaseTest.run_compare_tf_keras(
             model,
             [random_gen(shape, -10, 10)],
             use_cpu_only=use_cpu_only,
@@ -84,7 +91,7 @@ class TestActivation:
         )
 
 
-class TestBinary:
+class TestBinary(TensorFlowBaseTest):
     @pytest.mark.parametrize(
         "use_cpu_only, backend, rank, op",
         itertools.product(
@@ -106,7 +113,7 @@ class TestBinary:
         input_y = tf.keras.layers.Input(batch_input_shape=tuple(shape))
         out = op()([input_x, input_y])
         model = tf.keras.Model(inputs=[input_x, input_y], outputs=out)
-        run_compare_tf_keras(
+        TensorFlowBaseTest.run_compare_tf_keras(
             model,
             [random_gen(shape, -10, 10), random_gen(shape, -10, 10)],
             use_cpu_only=use_cpu_only,
@@ -129,7 +136,7 @@ class TestBinary:
         input_y = tf.keras.layers.Input(batch_input_shape=tuple(shape))
         out = tf.keras.layers.Dot(axes=axes, normalize=normalize)([input_x, input_y])
         model = tf.keras.Model(inputs=[input_x, input_y], outputs=out)
-        run_compare_tf_keras(
+        TensorFlowBaseTest.run_compare_tf_keras(
             model,
             [random_gen(shape, -10, 10), random_gen(shape, -10, 10)],
             use_cpu_only=use_cpu_only,
@@ -137,7 +144,7 @@ class TestBinary:
         )
 
 
-class TestConcatenate:
+class TestConcatenate(TensorFlowBaseTest):
     @pytest.mark.parametrize(
         "use_cpu_only, backend, rank, axis",
         itertools.product(
@@ -151,7 +158,7 @@ class TestConcatenate:
             inputs.append(tf.keras.layers.Input(batch_input_shape=tuple(shape)))
         out = tf.keras.layers.Concatenate(axis=axis)(inputs)
         model = tf.keras.Model(inputs=inputs, outputs=out)
-        run_compare_tf_keras(
+        TensorFlowBaseTest.run_compare_tf_keras(
             model,
             [random_gen(shape), random_gen(shape)],
             use_cpu_only=use_cpu_only,
@@ -159,7 +166,7 @@ class TestConcatenate:
         )
 
 
-class TestConvolution:
+class TestConvolution(TensorFlowBaseTest):
     @pytest.mark.parametrize(
         ",".join(
             [
@@ -255,7 +262,7 @@ class TestConvolution:
                 ]
             )
 
-        run_compare_tf_keras(
+        TensorFlowBaseTest.run_compare_tf_keras(
             model,
             [random_gen(input_shape, rand_min=-10, rand_max=10)],
             use_cpu_only=use_cpu_only,
@@ -356,7 +363,7 @@ class TestConvolution:
                 ]
             )
 
-        run_compare_tf_keras(
+        TensorFlowBaseTest.run_compare_tf_keras(
             model,
             [random_gen(input_shape, rand_min=-10, rand_max=10)],
             use_cpu_only=use_cpu_only,
@@ -422,7 +429,7 @@ class TestConvolution:
             ]
         )
 
-        run_compare_tf_keras(
+        TensorFlowBaseTest.run_compare_tf_keras(
             model,
             [random_gen(input_shape, rand_min=-10, rand_max=10)],
             use_cpu_only=use_cpu_only,
@@ -464,7 +471,7 @@ class TestConvolution:
         )(input_layer)
         output_layer = GlobalMaxPooling2D()(layer)
         model = Model(inputs=[input_layer], outputs=[output_layer])
-        run_compare_tf_keras(
+        TensorFlowBaseTest.run_compare_tf_keras(
             model,
             [random_gen((1, 80, 40 ,1), rand_min=-10, rand_max=10)],
             use_cpu_only=use_cpu_only,
@@ -537,7 +544,7 @@ class TestConvolution:
             ]
         )
 
-        run_compare_tf_keras(
+        TensorFlowBaseTest.run_compare_tf_keras(
             model,
             [random_gen(input_shape, rand_min=-10, rand_max=10)],
             use_cpu_only=use_cpu_only,
@@ -545,7 +552,7 @@ class TestConvolution:
         )
 
 @pytest.mark.skip(reason="rdar://65198011 (Re-enable Conv3dTranspose and DynamicTile unit tests)")
-class TestConvTranspose:
+class TestConvTranspose(TensorFlowBaseTest):
     @pytest.mark.parametrize(
         ",".join(
             [
@@ -616,14 +623,14 @@ class TestConvTranspose:
             ]
         )
 
-        run_compare_tf_keras(
+        TensorFlowBaseTest.run_compare_tf_keras(
             model,
             [random_gen(input_shape, rand_min=-10, rand_max=10)],
             use_cpu_only=use_cpu_only,
             backend=backend,
         )
 
-class TestCropping:
+class TestCropping(TensorFlowBaseTest):
     @pytest.mark.parametrize(
         "use_cpu_only, backend, begin_end",
         itertools.product(
@@ -635,7 +642,7 @@ class TestCropping:
         model = tf.keras.Sequential(
             [tf.keras.layers.Cropping1D(batch_input_shape=shape, cropping=begin_end)]
         )
-        run_compare_tf_keras(
+        TensorFlowBaseTest.run_compare_tf_keras(
             model,
             [random_gen(shape, rand_min=-1, rand_max=1)],
             use_cpu_only=use_cpu_only,
@@ -660,7 +667,7 @@ class TestCropping:
                 )
             ]
         )
-        run_compare_tf_keras(
+        TensorFlowBaseTest.run_compare_tf_keras(
             model,
             [random_gen(shape, rand_min=-1, rand_max=1)],
             use_cpu_only=use_cpu_only,
@@ -689,7 +696,7 @@ class TestCropping:
                 )
             ]
         )
-        run_compare_tf_keras(
+        TensorFlowBaseTest.run_compare_tf_keras(
             model,
             [random_gen(shape, rand_min=-1, rand_max=1)],
             use_cpu_only=use_cpu_only,
@@ -697,7 +704,7 @@ class TestCropping:
         )
 
 
-class TestDense:
+class TestDense(TensorFlowBaseTest):
     @pytest.mark.parametrize(
         "use_cpu_only, backend, rank, units, activation, use_bias",
         itertools.product(
@@ -721,7 +728,7 @@ class TestDense:
                 )
             ]
         )
-        run_compare_tf_keras(
+        TensorFlowBaseTest.run_compare_tf_keras(
             model,
             [random_gen(shape, rand_min=-10, rand_max=10)],
             use_cpu_only=use_cpu_only,
@@ -729,7 +736,7 @@ class TestDense:
         )
 
 
-class TestEmbedding:
+class TestEmbedding(TensorFlowBaseTest):
     @pytest.mark.xfail(reason="rdar://63414784")
     @pytest.mark.parametrize(
         "use_cpu_only, backend, dims, batch_size, input_length",
@@ -755,7 +762,7 @@ class TestEmbedding:
                 )
             ]
         )
-        run_compare_tf_keras(
+        TensorFlowBaseTest.run_compare_tf_keras(
             model,
             [random_gen(shape, rand_min=0, rand_max=dims[0])],
             use_cpu_only=use_cpu_only,
@@ -765,7 +772,7 @@ class TestEmbedding:
         )
 
 
-class TestFlatten:
+class TestFlatten(TensorFlowBaseTest):
     @pytest.mark.parametrize(
         "use_cpu_only, backend, rank, data_format",
         itertools.product(
@@ -780,7 +787,7 @@ class TestFlatten:
         model = tf.keras.Sequential(
             [tf.keras.layers.Flatten(batch_input_shape=shape, data_format=data_format,)]
         )
-        run_compare_tf_keras(
+        TensorFlowBaseTest.run_compare_tf_keras(
             model,
             [random_gen(shape, rand_min=-10, rand_max=10)],
             use_cpu_only=use_cpu_only,
@@ -788,7 +795,7 @@ class TestFlatten:
         )
 
 
-class TestLambda:
+class TestLambda(TensorFlowBaseTest):
     @pytest.mark.parametrize(
         "use_cpu_only, backend, rank, function",
         itertools.product(
@@ -808,14 +815,14 @@ class TestLambda:
         model = tf.keras.Sequential(
             [tf.keras.layers.Lambda(batch_input_shape=shape, function=function,)]
         )
-        run_compare_tf_keras(
+        TensorFlowBaseTest.run_compare_tf_keras(
             model,
             [random_gen(shape, rand_min=-5, rand_max=5)],
             use_cpu_only=use_cpu_only,
             backend=backend,
         )
 
-class TestBatchNormalization:
+class TestBatchNormalization(TensorFlowBaseTest):
     @pytest.mark.parametrize(
         "use_cpu_only, backend, rank, axis, momentum, epsilon",
         itertools.product(
@@ -841,7 +848,7 @@ class TestBatchNormalization:
                 )
             ]
         )
-        run_compare_tf_keras(
+        TensorFlowBaseTest.run_compare_tf_keras(
             model,
             [random_gen(shape, rand_min=-10, rand_max=10)],
             use_cpu_only=use_cpu_only,
@@ -869,14 +876,15 @@ class TestBatchNormalization:
                 )
             ]
         )
-        run_compare_tf_keras(
+        TensorFlowBaseTest.run_compare_tf_keras(
             model,
             [random_gen(shape, rand_min=-10, rand_max=10)],
             use_cpu_only=use_cpu_only,
             backend=backend,
         )
 
-class TestInstanceNormalization:
+
+class TestInstanceNormalization(TensorFlowBaseTest):
     @pytest.mark.parametrize(
         "use_cpu_only, backend, rank, axis, epsilon, center, scale",
         itertools.product(
@@ -907,7 +915,7 @@ class TestInstanceNormalization:
                 )
             ]
         )
-        run_compare_tf_keras(
+        TensorFlowBaseTest.run_compare_tf_keras(
             model,
             [random_gen(shape, rand_min=-1, rand_max=1)],
             use_cpu_only=use_cpu_only,
@@ -917,7 +925,7 @@ class TestInstanceNormalization:
         )
 
 
-class TestNormalization:
+class TestNormalization(TensorFlowBaseTest):
     @pytest.mark.parametrize(
         "use_cpu_only, backend, rank, axis, epsilon",
         itertools.product(
@@ -933,7 +941,7 @@ class TestNormalization:
                 )
             ]
         )
-        run_compare_tf_keras(
+        TensorFlowBaseTest.run_compare_tf_keras(
             model,
             [random_gen(shape, rand_min=-100, rand_max=100)],
             use_cpu_only=use_cpu_only,
@@ -974,7 +982,7 @@ class TestNormalization:
                 )
             ]
         )
-        run_compare_tf_keras(
+        TensorFlowBaseTest.run_compare_tf_keras(
             model,
             [random_gen(shape, rand_min=-1, rand_max=1)],
             use_cpu_only=use_cpu_only,
@@ -984,7 +992,7 @@ class TestNormalization:
         )
 
 
-class TestPadding:
+class TestPadding(TensorFlowBaseTest):
     @pytest.mark.parametrize(
         "use_cpu_only, backend, op, data_format, padding",
         itertools.product(
@@ -1015,7 +1023,7 @@ class TestPadding:
         model = tf.keras.Sequential(
             [op(batch_input_shape=shape, padding=padding, **kwargs)]
         )
-        run_compare_tf_keras(
+        TensorFlowBaseTest.run_compare_tf_keras(
             model,
             [random_gen(shape, rand_min=-10, rand_max=10)],
             use_cpu_only=use_cpu_only,
@@ -1023,7 +1031,7 @@ class TestPadding:
         )
 
 
-class TestPermute:
+class TestPermute(TensorFlowBaseTest):
     @pytest.mark.parametrize(
         "use_cpu_only, backend, rank_and_perm",
         itertools.product(
@@ -1042,7 +1050,7 @@ class TestPermute:
         model = tf.keras.Sequential(
             [tf.keras.layers.Permute(batch_input_shape=shape, dims=perm)]
         )
-        run_compare_tf_keras(
+        TensorFlowBaseTest.run_compare_tf_keras(
             model,
             [random_gen(shape, rand_min=-10, rand_max=10)],
             use_cpu_only=use_cpu_only,
@@ -1050,7 +1058,7 @@ class TestPermute:
         )
 
 
-class TestGlobalPooling:
+class TestGlobalPooling(TensorFlowBaseTest):
     @pytest.mark.parametrize(
         "use_cpu_only, backend, op, data_format",
         itertools.product(
@@ -1087,7 +1095,7 @@ class TestGlobalPooling:
         model = tf.keras.Sequential(
             [op(batch_input_shape=shape, data_format=data_format)]
         )
-        run_compare_tf_keras(
+        TensorFlowBaseTest.run_compare_tf_keras(
             model,
             [random_gen(shape, rand_min=-10, rand_max=10)],
             use_cpu_only=use_cpu_only,
@@ -1095,7 +1103,7 @@ class TestGlobalPooling:
         )
 
 
-class TestPooling:
+class TestPooling(TensorFlowBaseTest):
     @pytest.mark.parametrize(
         "use_cpu_only, backend, op, data_format, pool_size",
         itertools.product(
@@ -1128,7 +1136,7 @@ class TestPooling:
         model = tf.keras.Sequential(
             [op(batch_input_shape=shape, pool_size=pool_size, data_format=data_format)]
         )
-        run_compare_tf_keras(
+        TensorFlowBaseTest.run_compare_tf_keras(
             model,
             [random_gen(shape, rand_min=-10, rand_max=10)],
             use_cpu_only=use_cpu_only,
@@ -1136,7 +1144,7 @@ class TestPooling:
         )
 
 
-class TestRecurrent:
+class TestRecurrent(TensorFlowBaseTest):
     @pytest.mark.parametrize(
         "use_cpu_only, backend, rank, units, activation, "
         "recurrent_activation, use_bias, return_sequences",
@@ -1175,7 +1183,7 @@ class TestRecurrent:
                 ),
             ]
         )
-        run_compare_tf_keras(
+        TensorFlowBaseTest.run_compare_tf_keras(
             model,
             [random_gen(shape, rand_min=-1, rand_max=1)],
             use_cpu_only=use_cpu_only,
@@ -1194,7 +1202,7 @@ class TestRecurrent:
                 )
             ]
         )
-        run_compare_tf_keras(
+        TensorFlowBaseTest.run_compare_tf_keras(
             model,
             [random_gen(shape, rand_min=-1, rand_max=1)],
             use_cpu_only=use_cpu_only,
@@ -1211,7 +1219,7 @@ class TestRecurrent:
         k_out = tf.keras.layers.TimeDistributed(tf.keras.layers.Dense(1))(lstm)
         model = tf.keras.Model(inputs=k_in, outputs=k_out)
 
-        run_compare_tf_keras(
+        TensorFlowBaseTest.run_compare_tf_keras(
             model,
             [random_gen(shape, rand_min=-1, rand_max=1)],
             use_cpu_only=use_cpu_only,
@@ -1236,7 +1244,7 @@ class TestRecurrent:
                                         recurrent_activation='sigmoid')(inp)
         model = tf.keras.models.Model(inputs=[inp, h0, c0], outputs=[out, hn, cn])
         batch_size = 2
-        run_compare_tf_keras(
+        TensorFlowBaseTest.run_compare_tf_keras(
             model,
             [
                 random_gen((batch_size, 1, 1280), -1, 1),
@@ -1247,7 +1255,7 @@ class TestRecurrent:
             backend=backend,
         )
 
-class TestRepeatVector:
+class TestRepeatVector(TensorFlowBaseTest):
     @pytest.mark.parametrize(
         "use_cpu_only, backend, n",
         itertools.product([True, False], backends, [2, 3, 5, 7],),
@@ -1259,7 +1267,7 @@ class TestRepeatVector:
         model = tf.keras.Sequential(
             [tf.keras.layers.RepeatVector(batch_input_shape=shape, n=n)]
         )
-        run_compare_tf_keras(
+        TensorFlowBaseTest.run_compare_tf_keras(
             model,
             [random_gen(shape, rand_min=-10, rand_max=10)],
             use_cpu_only=use_cpu_only,
@@ -1267,7 +1275,7 @@ class TestRepeatVector:
         )
 
 
-class TestReshape:
+class TestReshape(TensorFlowBaseTest):
     @pytest.mark.parametrize(
         "use_cpu_only, backend, rank, infer_shape",
         itertools.product(
@@ -1287,7 +1295,7 @@ class TestReshape:
                 )
             ]
         )
-        run_compare_tf_keras(
+        TensorFlowBaseTest.run_compare_tf_keras(
             model,
             [random_gen(shape, rand_min=-10, rand_max=10)],
             use_cpu_only=use_cpu_only,
@@ -1295,7 +1303,7 @@ class TestReshape:
         )
 
 
-class TestSkips:
+class TestSkips(TensorFlowBaseTest):
     # ops in this class should be ignored / pass-through during conversion
 
     @pytest.mark.parametrize(
@@ -1320,7 +1328,7 @@ class TestSkips:
         elif skip_op == tf.keras.layers.SpatialDropout2D:
             shape = shape[:4]
         model = tf.keras.Sequential([skip_op(batch_input_shape=shape, rate=0.5)])
-        run_compare_tf_keras(
+        TensorFlowBaseTest.run_compare_tf_keras(
             model,
             [random_gen(shape, rand_min=-10, rand_max=10)],
             use_cpu_only=use_cpu_only,
@@ -1338,7 +1346,7 @@ class TestSkips:
                 tf.keras.layers.GaussianNoise(batch_input_shape=shape, stddev=0.5)
             ]
         )
-        run_compare_tf_keras(
+        TensorFlowBaseTest.run_compare_tf_keras(
             model,
             [random_gen(shape, rand_min=-10, rand_max=10)],
             use_cpu_only=use_cpu_only,
@@ -1364,7 +1372,7 @@ class TestSkips:
                 )
             ]
         )
-        run_compare_tf_keras(
+        TensorFlowBaseTest.run_compare_tf_keras(
             model,
             [random_gen(shape, rand_min=-10, rand_max=10)],
             use_cpu_only=use_cpu_only,
@@ -1372,7 +1380,7 @@ class TestSkips:
         )
 
 
-class TestUpSampling:
+class TestUpSampling(TensorFlowBaseTest):
     @pytest.mark.parametrize(
         "use_cpu_only, backend, op, upsample_factor, data_format, interpolation",
         itertools.product(
@@ -1407,7 +1415,7 @@ class TestUpSampling:
         model = tf.keras.Sequential(
             [op(batch_input_shape=shape, size=upsample_factor, **kwargs)]
         )
-        run_compare_tf_keras(
+        TensorFlowBaseTest.run_compare_tf_keras(
             model,
             [random_gen(shape, rand_min=-10, rand_max=10)],
             use_cpu_only=use_cpu_only,

@@ -72,6 +72,10 @@ class TranscriptionContext:
             "Torch var {} not found in context {}".format(torch_name, self.name)
         )
 
+    def __contains__(self, torch_name):
+        """Returns whether or not the torch var exist in context."""
+        return torch_name in self._current_graph[-1]
+
     def push(self, inputs=None):
         """
         Add another frame to the context. Optionally provide a tuple of
@@ -223,6 +227,15 @@ class TorchConverter:
             convert_nodes(self.context, self.graph)
 
             graph_outputs = [self.context[name] for name in self.graph.outputs]
+
+            # An output can be None when it's a None constant, which happens
+            # in Fairseq MT.
+            for g in graph_outputs:
+                if g is None:
+                    msg = "Droping output {} which is None"
+                    _logging.warning(msg.format(g))
+            graph_outputs = [g for g in graph_outputs if g is not None]
+
             # Output renaming occurs
             if self.output_names:
                 for index, var in enumerate(graph_outputs):

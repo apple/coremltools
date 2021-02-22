@@ -133,9 +133,16 @@ class matmul(Operation):
     input_spec = InputSpec(
         x=TensorInputType(),
         y=TensorInputType(),
-        transpose_x=BoolInputType(const=True, default=False),
-        transpose_y=BoolInputType(const=True, default=False),
+        transpose_x=BoolInputType(const=True, optional=True),
+        transpose_y=BoolInputType(const=True, optional=True),
     )
+
+
+    def default_inputs(self):
+        return DefaultInputs(
+            transpose_x=False,
+            transpose_y=False,
+            )
 
     def __init__(self, **kwargs):
         super(matmul, self).__init__(**kwargs)
@@ -144,6 +151,11 @@ class matmul(Operation):
         x_type = self.x.dtype
         x_shape = list(self.x.shape)
         y_shape = list(self.y.shape)
+        x_rank = len(x_shape)
+
+        if x_rank == 1 and self.transpose_x.val:
+            msg = "Op {} (matmul): x is rank 1, but transpose_x is True, which is not allowed."
+            raise ValueError(msg.format(self.name))
 
         if self.transpose_x.val:
             x_shape = list(x_shape)
@@ -161,9 +173,16 @@ class matmul(Operation):
             msg = "Op {} (matmul): x {}, y {} are not broadcastable"
             raise ValueError(msg.format(self.name, self.x.shape, self.y.shape))
 
+        if x_rank == 1:
+            # promote shape of x to rank 2
+            x_shape = list((1,) + tuple(x_shape))
         ret_shape = list(broadcast_shapes(x_shape[:-2], y_shape[:-2]))
         ret_shape += [x_shape[-2], y_shape[-1]]
-        return types.tensor(x_type, tuple(ret_shape))
+        if x_rank == 1:
+            # remove the first dimension of the returned shape
+            return types.tensor(x_type, tuple(ret_shape[1:]))
+        else:
+            return types.tensor(x_type, tuple(ret_shape))
 
     @precondition(allow=VALUE)
     def value_inference(self):

@@ -14,6 +14,7 @@ def common_pass(prog):
     passes = [
         "common::const_elimination",
         "common::divide_to_multiply",
+        "common::add_conv_transpose_output_shape",
         "common::const_elimination",
         "common::loop_invariant_elimination",
         "common::remove_symbolic_reshape",

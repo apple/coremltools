@@ -21,6 +21,7 @@ from .type_mapping import (
     nptype_from_builtin,
     builtin_to_string,
     numpy_type_to_builtin_type,
+    is_subtype,
 )
 
 
@@ -124,6 +125,17 @@ def tensor(primitive, shape):
     return tensor
 
 
+def tensor_has_complete_shape(tensor_type):
+    if not is_tensor(tensor_type):
+        return True
+    s = tensor_type.get_shape()
+    if -1 in s:
+        return False
+    elif len(s) == 0:
+        return False
+    else:
+        return True
+
 def is_tensor_and_is_compatible(tensor_type1, tensor_type2, allow_promotion=False):
     """
     Try to find a tensor type compatible with both input types.
@@ -183,7 +195,6 @@ def is_tensor_and_is_compatible(tensor_type1, tensor_type2, allow_promotion=Fals
 
     return True, tensor(primitive_type, most_specific_shape)
 
-
 def is_tensor_and_is_compatible_general_shape(tensor_type1, tensor_type2):
     # returns a pair of (bool, type)
     # If Both are tensors, and have compatible shape, the first return is true
@@ -222,14 +233,11 @@ def is_tensor_and_is_compatible_general_shape(tensor_type1, tensor_type2):
 
     return True, tensor(tensor_type1.get_primitive(), most_general_shape)
 
-
-def tensor_has_complete_shape(tensor_type):
-    if not is_tensor(tensor_type):
-        return True
-    s = tensor_type.get_shape()
-    if -1 in s:
-        return False
-    elif len(s) == 0:
-        return False
-    else:
-        return True
+def is_compatible_type(type1, type2):
+    """
+    Return if type1 and type2 are compatible.
+    """
+    if not is_subtype(type1, type2):
+        is_comp, _ = is_tensor_and_is_compatible(type1, type2)
+        return is_comp
+    return True

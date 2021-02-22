@@ -29,6 +29,7 @@ class PipeLineRenameTests(unittest.TestCase):
         self.scikit_data = scikit_data
         self.scikit_model = scikit_model
 
+    @unittest.skip("rdar://71638164")
     def test_pipeline_rename(self):
         # Convert
         scikit_spec = converter.convert(self.scikit_model).get_spec()

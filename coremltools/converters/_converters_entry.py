@@ -131,11 +131,11 @@ def convert(
         >>> with tf.Graph().as_default() as graph:
         >>>     x = tf.placeholder(tf.float32, shape=(1, 2, 3), name="input")
         >>>     y = tf.nn.relu(x, name="output")
-        
+
         # Automatically infer inputs and outputs
-        
+
         >>> mlmodel = ct.convert(graph)
-	    >>> test_input = np.random.rand(1, 2, 3) - 0.5
+        >>> test_input = np.random.rand(1, 2, 3) - 0.5
         >>> results = mlmodel.predict({"input": test_input})
         >>> print(results['output'])
 

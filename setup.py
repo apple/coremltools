@@ -69,7 +69,7 @@ setup(
         "": ["LICENSE.txt", "README.md", "libcaffeconverter.so", "libcoremlpython.so"]
     },
     install_requires=[
-        "numpy >= 1.14.5",
+        "numpy >= 1.14.5, < 1.20",
         "protobuf >= 3.1.0",
         "attr",
         "attrs",
@@ -80,7 +80,7 @@ setup(
     ],
     entry_points={"console_scripts": ["coremlconverter = coremltools:_main"]},
     classifiers=[
-        "Development Status :: 4 - Beta",
+        "Development Status :: 5 - Production/Stable",
         "Intended Audience :: End Users/Desktop",
         "Intended Audience :: Developers",
         "Operating System :: MacOS :: MacOS X",
