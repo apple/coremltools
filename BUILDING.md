@@ -26,7 +26,7 @@ install them automatically.
 * `test_slow` | Run all non-fast tests.
 * `wheel` | Build wheels in *release* mode.
 
-By default, we use python 3.7 but you can can pass `python=2.7` (or 3.6, 3.8
+By default, we use python 3.7 but you can can pass `python=3.5` (or 3.6, 3.8
 etc.)  as a argument to change the env / build / wheel python version.
 
 *Using an unmanaged developer environment*

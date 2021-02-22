@@ -1210,8 +1210,6 @@ class TestMILConverterExamples:
 
     @staticmethod
     @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
-    @pytest.mark.skipif(ct.utils._python_version() < (3, 0, 0),
-                         reason="PyTorch no longer supports Python 2.7")
     def test_convert_torch_traced_model(tmpdir):
         import torch
         from torch import nn
