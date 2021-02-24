@@ -818,7 +818,7 @@ class squeeze(Operation):
                     )
                 squeezed_shape.pop(i)
 
-        return types.tensor(x_type, tuple(squeezed_shape))
+        return types.tensor(x_type, tuple(squeezed_shape)) if len(squeezed_shape) != 0 else x_type
 
     @precondition(allow=VALUE)
     def value_inference(self):
