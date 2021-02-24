@@ -38,9 +38,7 @@ test:
   imports:
     - coremltools
   commands:
-    # TODO: change to running `coremlconverter --help`
-    # when the upstream bug is fixed.
-    - test -f ${PREFIX}/bin/coremlconverter
+    - coremlconverter --help
 
 about:
   home: https://github.com/apple/coremltools
