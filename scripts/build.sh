@@ -13,6 +13,7 @@ BUILD_MODE="Release"
 NUM_PROCS=1
 BUILD_PROTO=0
 BUILD_DIST=0
+BUILD_DIST_DEV=0
 PYTHON="3.7"
 CHECK_ENV=1
 
@@ -31,6 +32,7 @@ print_help() {
   echo "  --protobuf                      Rebuild & overwrite the protocol buffers in MLModel."
   echo "  --debug                         Build without optimizations and stripping symbols."
   echo "  --dist                          Build the distribution (wheel)."
+  echo "  --dist-dev                      Build the distribution (wheel) and tag it as a dev release."
   echo "  --no-check-env                  Don't check the environment to verify it's up to date."
   echo
   echo ""
@@ -46,6 +48,7 @@ while [ $# -gt 0 ]
     --protobuf)          BUILD_PROTO=1 ;;
     --debug)             BUILD_MODE="Debug" ;;
     --dist)              BUILD_DIST=1 ;;
+    --dist-dev)              BUILD_DIST_DEV=1 ;;
     --no-check-env)      CHECK_ENV=0 ;;
     --help)              print_help ;;
     *) unknown_option $1 ;;
@@ -85,6 +88,12 @@ else
     NUM_PROCS=$(nproc)
 fi
 
+# if BUILD_TAG has not been set for dev wheel, set it with git describe
+if [ $BUILD_DIST_DEV -eq 1 ] && [ -z ${BUILD_TAG+x} ]
+then
+  BUILD_TAG=$(${COREMLTOOLS_HOME}/scripts/build_tag.py)
+fi
+
 # Call CMake
 cmake $ADDITIONAL_CMAKE_OPTIONS \
   -DCMAKE_BUILD_TYPE=$BUILD_MODE \
@@ -92,12 +101,14 @@ cmake $ADDITIONAL_CMAKE_OPTIONS \
   -DPYTHON_INCLUDE_DIR=$PYTHON_INCLUDE_DIR \
   -DPYTHON_LIBRARY=$PYTHON_LIBRARY \
   -DOVERWRITE_PB_SOURCE=$BUILD_PROTO \
+  -DBUILD_TAG=$BUILD_TAG \
   ${COREMLTOOLS_HOME}
 
 # Make the python wheel
 make -j${NUM_PROCS}
 
-if [ $BUILD_DIST -eq 1 ]
+if [ $BUILD_DIST -eq 1 ] || [ $BUILD_DIST_DEV -eq 1 ]
 then
+
   make dist
 fi

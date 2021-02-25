@@ -213,6 +213,14 @@ else()
   message(FATAL_ERROR "Unsupported build platform. Supported platforms are Linux and macOS.")
 endif()
 
+
+if(BUILD_TAG)
+  set(BUILD_TAG_OPTION "--build-number=${BUILD_TAG}")
+  message(STATUS "Using ${BUILD_TAG} as build tag for wheels.")
+else()
+  set(BUILD_TAG_OPTION "")
+endif()
+
 # Add a target for each platform, and then a 'dist' that will build all of them.
 # Parallel invocations of setup.py is not safe, so we serialize them.
 set(plat_targets "")
@@ -224,6 +232,7 @@ foreach(platform IN ITEMS ${PLAT_NAME})
       bdist_wheel
       --plat-name=${platform}
       --python-tag=${PYTHON_TAG}
+      ${BUILD_TAG_OPTION}
       --dist-dir=${PROJECT_BINARY_DIR}/dist
     DEPENDS "caffeconverter;coremlpython;${plat_targets}"
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
