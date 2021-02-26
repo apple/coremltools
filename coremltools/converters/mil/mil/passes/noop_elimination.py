@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function as _
-from __future__ import division as _
-from __future__ import absolute_import as _
 
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 from coremltools.converters.mil.mil import Builder as mb

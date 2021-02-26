@@ -1,4 +1,3 @@
-from __future__ import print_function as _
 from ...proto import NeuralNetwork_pb2 as _NeuralNetwork_pb2
 
 
