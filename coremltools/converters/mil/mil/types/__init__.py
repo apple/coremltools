@@ -6,9 +6,6 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 # pylint: disable=wildcard-import
-from __future__ import print_function as _
-from __future__ import division as _
-from __future__ import absolute_import as _
 
 from .type_double import fp16, fp32, fp64, float, double, is_float
 from .type_int import (

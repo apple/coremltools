@@ -1,4 +1,3 @@
-from __future__ import print_function as _
 import unittest
 import numpy as np
 import coremltools.models.datatypes as datatypes

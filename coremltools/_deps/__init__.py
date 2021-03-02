@@ -234,13 +234,6 @@ try:
     import onnx
 except:
     _HAS_ONNX = False
-
-# ---------------------------------------------------------------------------------------
-_HAS_GRAPHVIZ = True
-try:
-    import graphviz
-except:
-    _HAS_GRAPHVIZ = False
 MSG_ONNX_NOT_FOUND = "ONNX not found."
 
 # General utils

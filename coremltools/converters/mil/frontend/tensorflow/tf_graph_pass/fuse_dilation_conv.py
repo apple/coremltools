@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function as _
-from __future__ import division as _
-from __future__ import absolute_import as _
 
 import numpy as np
 
