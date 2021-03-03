@@ -230,45 +230,6 @@ class TestConvTranspose(TorchBaseTest):
                            backend=backend)
 
 
-    @pytest.mark.parametrize(
-        "dynamic_input, backend",
-        itertools.product(
-            [True, False], backends
-        ),
-    )
-    def test_convolution_transpose2d_dynamic_input(
-        self,
-        dynamic_input,
-        backend,
-    ):
-        in_channels = 5
-        model = nn.ConvTranspose2d(
-            in_channels=in_channels,
-            out_channels=10,
-            kernel_size=3,
-            stride=2,
-            padding=1,
-            dilation=3,
-        )
-        in_height = 256
-        in_width = 512
-        input_shape = (1, in_channels, in_height, in_width)
-
-        if dynamic_input:
-            converter_input_type = [TensorType(shape=(1, in_channels, RangeDim(256, -1), RangeDim(256, -1)), dtype=np.float32)]
-            self.run_compare_torch(
-                input_shape,
-                model,
-                backend=backend,
-                converter_input_type=converter_input_type
-            )
-        else:
-            self.run_compare_torch(
-                input_shape,
-                model,
-                backend=backend
-            )
-
     # TODO: rdar://65588783 ([PyTorch] Define and error out on unsupported configuration for output_padding)
     # TODO: rdar://65550420 (Add Image Resizing (crop, upsample, resize_bilinear) layers to the MIL backend)
     @pytest.mark.parametrize(
