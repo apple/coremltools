@@ -2549,6 +2549,9 @@ def conv_transpose(const_context, builder, op):
         # Must be at least 2D
         output_spatial_dims += [1]
 
+    if any_symbolic(output_spatial_dims):
+        output_spatial_dims = None
+
     # padding
     padding_mode = op.pad_type.val
     pad = {}
