@@ -183,7 +183,8 @@ def is_builtin(t):
 # Converts a numpy type to its types equivalent.
 # Supports both dtypes and numpy primitive types.
 def numpy_type_to_builtin_type(nptype):
-    if type(nptype) == np.dtype:
+    # If this is a data type object, use the corresponding scalar data type.
+    if np.issubclass_(type(nptype), np.dtype):
         nptype = nptype.type
 
     if np.issubclass_(nptype, np.bool) or np.issubclass_(nptype, np.bool_):
