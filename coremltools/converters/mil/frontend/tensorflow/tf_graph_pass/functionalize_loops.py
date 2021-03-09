@@ -5,9 +5,6 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from __future__ import print_function as _
-from __future__ import division as _
-from __future__ import absolute_import as _
 from ..parsed_tf_node import ParsedTFNode
 from ..basic_graph_ops import *  # pylint: disable=unused-wildcard-import,wildcard-import
 from ..tfssa import SSAFunction

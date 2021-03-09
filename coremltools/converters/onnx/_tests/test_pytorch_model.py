@@ -1,7 +1,3 @@
-from __future__ import absolute_import as _
-from __future__ import division as _
-from __future__ import print_function as _
-from __future__ import unicode_literals as _
 
 import unittest
 from coremltools._deps import _HAS_ONNX, MSG_ONNX_NOT_FOUND, _IS_MACOS

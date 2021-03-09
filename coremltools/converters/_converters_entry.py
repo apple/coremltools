@@ -1,4 +1,3 @@
-from __future__ import absolute_import as _
 
 import gc
 import coremltools

@@ -7,9 +7,6 @@
 Utilities to compress Neural Network Models.
 Only available in coremltools 2.0b1 and onwards
 """
-from __future__ import print_function as _
-from __future__ import division as _
-from __future__ import absolute_import as _
 
 import numpy as _np
 from sys import stdout as _stdout
