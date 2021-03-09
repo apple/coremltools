@@ -71,7 +71,6 @@ setup(
     install_requires=[
         "numpy >= 1.14.5, < 1.20",
         "protobuf >= 3.1.0",
-        "attr",
         "attrs",
         "sympy",
         "scipy",
