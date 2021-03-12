@@ -2063,6 +2063,11 @@ def _convert_resize(builder, node, graph, err):
     mode = "NN" if mode == "nearest" else "BILINEAR"
     scale = node.input_tensors[node.inputs[1]]
 
+    if scale.size == 0:
+        input_shape = graph.shape_dict[node.inputs[0]]
+        output_shape = graph.shape_dict[node.outputs[0]]
+        scale = (output_shape[2] // input_shape[2], output_shape[3] // input_shape[3])
+
     builder.add_upsample(
         name=node.name,
         scaling_factor_h=scale[-2],
