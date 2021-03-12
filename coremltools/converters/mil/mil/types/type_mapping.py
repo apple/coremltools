@@ -5,7 +5,7 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from .type_bool import bool as types_bool
+from .type_bool import bool as types_bool, is_bool
 from .type_double import (
     is_float,
     fp16 as types_fp16,
@@ -134,7 +134,7 @@ def is_scalar(btype):
     """
     Is the given builtin type a scalar integer, float, or boolean?
     """
-    return btype is types_bool or is_int(btype) or is_float(btype)
+    return is_bool(types_bool) or is_int(btype) or is_float(btype)
 
 
 def is_tensor(tensor_type):
