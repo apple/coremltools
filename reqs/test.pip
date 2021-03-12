@@ -1,7 +1,6 @@
 boto3==1.14.8
 configparser
 Keras==2.1.6; python_version < "3.8"
-Pillow
 h5py==2.10.0
 future
 numpy>1.18.5
