@@ -4,19 +4,14 @@
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
-
-
 import pytest
 import coremltools as ct
-from coremltools import models
 import numpy as np
 from coremltools.converters.mil.mil import Builder as mb
-from coremltools.converters.mil import converter
 import coremltools as ct
 import logging
 
 np.random.seed(0)
-
 
 def test_single_layer_example():
     batch_size, input_dim, output_dim = 2, 4, 2

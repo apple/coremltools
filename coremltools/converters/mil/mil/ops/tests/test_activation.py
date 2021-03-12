@@ -4,7 +4,6 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import scipy
-from scipy import special
 from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.testing_reqs import *
 
