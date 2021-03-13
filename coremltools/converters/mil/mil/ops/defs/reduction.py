@@ -2,16 +2,15 @@
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
-
+import numpy as np
 import scipy
 from ._op_reqs import *
 
-"""
-Reduction Op Superclasses
-"""
-
 
 class ReductionAxes(Operation):
+    """
+    Reduction Op Superclasses
+    """
     input_spec = InputSpec(
         x=TensorInputType(),
         axes=IntTensorInputType(const=True, optional=True),

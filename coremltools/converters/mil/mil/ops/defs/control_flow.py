@@ -4,10 +4,12 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 import copy
+import numpy as np
 import logging
 
 from coremltools.converters.mil.mil import (
     Block,
+    DefaultInputs,
     get_new_symbol,
     get_existing_symbol,
     SYMBOL,
@@ -19,6 +21,7 @@ from coremltools.converters.mil.mil import (
 )
 from coremltools.converters.mil.mil.input_type import (
     BoolInputType,
+    DefaultInputs,
     InputSpec,
     InternalScalarOrTensorInputType,
     InternalStringInputType,

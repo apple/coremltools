@@ -2,13 +2,18 @@
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
+import numpy as np
 import scipy
 
-from coremltools.converters.mil.mil import Operation, VALUE
+from coremltools.converters.mil.mil import Operation, types, VALUE
 from coremltools.converters.mil.mil.operation import precondition
 from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
 from coremltools.converters.mil.mil.input_type import (
-    FloatInputType, InputSpec, ScalarOrTensorInputType, StringInputType
+    DefaultInputs,
+    FloatInputType,
+    InputSpec,
+    ScalarOrTensorInputType,
+    StringInputType
 )
 
 class elementwise_unary(Operation):
