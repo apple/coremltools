@@ -3,12 +3,10 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from coremltools.converters.mil.testing_reqs import ct
 import coremltools.models.utils as coremltoolsutils
 import pytest
 import numpy as np
 
-tf = pytest.importorskip("tensorflow", minversion="2.1.0")
 from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import (
     get_tf_node_names,
     TensorFlowBaseTest
@@ -18,6 +16,8 @@ from coremltools.converters.mil.input_types import TensorType, RangeDim
 from coremltools.converters.mil.testing_utils import compare_shapes, \
     compare_backend, run_core_ml_predict
 from tensorflow.python.framework import dtypes
+
+tf = pytest.importorskip("tensorflow", minversion="2.1.0")
 
 
 def make_tf2_graph(input_types):
@@ -184,7 +184,10 @@ def run_compare_tf_keras(
     rtol: float
         The relative tolerance parameter.
     """
-    mlmodel = ct.convert(model, source=frontend, convert_to=backend)
+    # Avoid circular dependency
+    from coremltools.converters._converters_entry import convert
+
+    mlmodel = convert(model, source=frontend, convert_to=backend)
 
     # assumes conversion preserve the i/o names
     proto = mlmodel.get_spec()

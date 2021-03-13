@@ -12,7 +12,6 @@ from ..converter import torch_to_mil_types
 from coremltools.models import MLModel
 from coremltools._deps import _IS_MACOS, _HAS_TORCH
 from coremltools.converters.mil.mil.types.type_mapping import nptype_from_builtin
-from coremltools.converters.mil.testing_reqs import ct
 import pytest
 
 
@@ -67,6 +66,9 @@ def convert_to_coreml_inputs(input_description, inputs):
 
 
 def convert_to_mlmodel(model_spec, tensor_inputs, backend="nn_proto"):
+    # Avoid circular dependency
+    from coremltools.converters._converters_entry import convert
+
     def _convert_to_inputtype(inputs):
         if isinstance(inputs, list):
             return [_convert_to_inputtype(x) for x in inputs]
@@ -82,7 +84,7 @@ def convert_to_mlmodel(model_spec, tensor_inputs, backend="nn_proto"):
             )
 
     inputs = list(_convert_to_inputtype(tensor_inputs))
-    return ct.convert(model_spec, inputs=inputs, convert_to=backend,
+    return convert(model_spec, inputs=inputs, convert_to=backend,
         source="pytorch")
 
 
