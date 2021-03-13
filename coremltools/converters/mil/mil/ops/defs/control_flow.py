@@ -3,20 +3,42 @@
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
+import copy
+import logging
 
-from coremltools.converters.mil.mil import types
+from coremltools.converters.mil.mil import (
+    Block,
+    get_new_symbol,
+    get_existing_symbol,
+    SYMBOL,
+    NONE,
+    types,
+    mil_list,
+    Operation,
+    VALUE
+)
+from coremltools.converters.mil.mil.input_type import (
+    BoolInputType,
+    InputSpec,
+    InternalScalarOrTensorInputType,
+    InternalStringInputType,
+    IntTensorInputType,
+    IntInputType,
+    ListInputType,
+    PyFunctionInputType,
+    TensorInputType,
+    TupleInputType,
+    StringInputType,
+)
+from coremltools.converters.mil.mil.operation import precondition
 from coremltools.converters.mil.mil.types import is_compatible_type
 from coremltools.converters.mil.mil.types.type_mapping import (
     numpy_val_to_builtin_val,
     is_subtype,
 )
-import copy
-from coremltools.converters.mil.mil import Block, SYMBOL, NONE
+
 from coremltools.converters.mil.mil.var import Var
-from coremltools.converters.mil.mil import get_new_symbol, get_existing_symbol
-from ._op_reqs import *
-import logging
-from coremltools.converters.mil.mil import mil_list
+from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
 
 @register_op(doc_str="")
 class cond(Operation):

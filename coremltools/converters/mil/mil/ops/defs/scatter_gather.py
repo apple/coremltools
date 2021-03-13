@@ -2,11 +2,20 @@
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
-
-from coremltools.converters.mil.mil import SYMBOL, VALUE
-from coremltools.converters.mil.mil.types.symbolic import is_compatible_symbolic_vector
-from ._op_reqs import *
 import numbers
+
+from coremltools.converters.mil.mil import Operation, SYMBOL, VALUE
+from coremltools.converters.mil.mil.input_type import (
+    DefaultInputs,
+    InputSpec,
+    IntInputType,
+    IntTensorInputType,
+    TensorInputType,
+    StringInputType,
+)
+from coremltools.converters.mil.mil.operation import precondition
+from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
+from coremltools.converters.mil.mil.types.symbolic import is_compatible_symbolic_vector
 
 
 @register_op(doc_str="")

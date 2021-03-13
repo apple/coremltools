@@ -4,13 +4,12 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import coremltools
-import pytest
 import unittest
 import tempfile
 import numpy as np
-from coremltools.proto import Model_pb2
 import PIL.Image
 
+from coremltools.proto import Model_pb2
 from coremltools.models.utils import (
     rename_feature,
     save_spec,

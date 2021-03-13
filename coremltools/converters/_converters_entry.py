@@ -1,6 +1,8 @@
-
+# Copyright (c) 2021, Apple Inc. All rights reserved.
+#
+# Use of this source code is governed by a BSD-3-clause license that can be
+# found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 import gc
-import coremltools
 import collections
 
 from coremltools.converters.mil.input_types import InputType, ClassifierConfig
@@ -8,7 +10,7 @@ from coremltools.converters.mil.converter import mil_convert
 from coremltools.converters.mil.mil import Program
 from coremltools._deps import _HAS_TORCH, _HAS_TF_1, _HAS_TF_2
 from coremltools.converters._profile_utils import _profile
-from coremltools import __version__ as ct_version
+
 from coremltools.models import _METADATA_VERSION, _METADATA_SOURCE
 from coremltools.converters.mil._deployment_compatibility import (
     AvailableTarget,
@@ -27,7 +29,6 @@ if _HAS_TORCH:
     from coremltools.converters.mil.frontend.torch.load import (
         _torchscript_from_model as pytorch_load,
     )
-
 
 @_profile
 def convert(
@@ -166,6 +167,8 @@ def convert(
     See `neural-network-conversion <https://coremltools.readme.io/docs/neural-network-conversion>`_ for
     more advanced options.
     """
+    from coremltools import __version__ as ct_version
+
     _check_deployment_target(minimum_deployment_target)
     exact_source = _determine_source(model, source, outputs)
     _validate_inputs(model, exact_source, inputs, outputs, classifier_config,
