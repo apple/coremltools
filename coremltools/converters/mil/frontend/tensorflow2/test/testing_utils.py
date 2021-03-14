@@ -98,6 +98,9 @@ def run_compare_tf2(
     rtol: float
         The relative tolerance parameter.
     """
+    # Avoid circular dependency
+    import coremltools as ct
+
     inputs = []
     cf_inputs = [t for t in model[0].inputs if t.dtype != dtypes.resource]
     for t in cf_inputs:
