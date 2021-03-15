@@ -134,7 +134,7 @@ def is_scalar(btype):
     """
     Is the given builtin type a scalar integer, float, or boolean?
     """
-    return is_bool(types_bool) or is_int(btype) or is_float(btype)
+    return is_bool(btype) or is_int(btype) or is_float(btype)
 
 
 def is_tensor(tensor_type):
