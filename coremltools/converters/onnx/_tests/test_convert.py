@@ -9,6 +9,7 @@ from PIL import Image  # type: ignore
 
 if _HAS_ONNX:
     import onnx
+    from onnx.numpy_helper import from_array
     from coremltools.converters.onnx import convert
     from ._test_utils import _onnx_create_single_node_model
 
@@ -76,3 +77,39 @@ class ConvertTest(unittest.TestCase):
             output = np.array(output)[:, :, :3].transpose((2, 0, 1))
             expected_output = self.img_arr[:, :, ::-1].transpose((2, 0, 1))
             npt.assert_equal(output, expected_output)
+
+
+@unittest.skipUnless(_HAS_ONNX, MSG_ONNX_NOT_FOUND)
+class NodeConversionTest(unittest.TestCase):
+    def test_resize_node_without_scales(self):
+        input_shape = (1, 3, 192, 78)
+        output_shape = (1, 3, 384, 234)
+        roi = from_array(np.array([], dtype=int), name="roi")
+        scales = from_array(np.empty([], dtype=int), name="scales")
+        sizes = from_array(np.empty([], dtype=int), name="sizes")
+        onnx_model_to_test = _onnx_create_single_node_model(
+            "Resize",
+            [input_shape],
+            [output_shape],
+            initializer=[roi, scales, sizes],
+            coordinate_transformation_mode="pytorch_half_pixel",
+            cubic_coeff_a=-0.5,
+            mode="linear",
+            nearest_mode="floor"
+        )
+
+        coreml_model = convert(onnx_model_to_test,
+                               minimum_ios_deployment_target="13")
+
+        self.assertEqual(len(coreml_model.get_spec().neuralNetwork.layers), 1,
+                         msg="Wrong number of layers in converted network")
+
+        layer = coreml_model.get_spec().neuralNetwork.layers[0]
+        self.assertTrue(hasattr(layer, "upsample"),
+                        msg="Wrong resize conversion")
+        self.assertEqual(len(layer.upsample.scalingFactor), 2,
+                         msg="Wrong number of scaling factors")
+        self.assertSequenceEqual(layer.upsample.scalingFactor,
+                                 (output_shape[2] // input_shape[2],
+                                  output_shape[3] // input_shape[3]),
+                                  msg="Conversion produces wrong scaling factor")
