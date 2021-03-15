@@ -5,8 +5,6 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-# pylint: disable=wildcard-import
-
 from .type_double import fp16, fp32, fp64, float, double, is_float
 from .type_int import (
     int8,
@@ -58,9 +56,7 @@ from .annotate import annotate
 from .annotate import class_annotate
 from .annotate import apply_delayed_types
 from .annotate import delay_type
-from .type_spec import *
-from .get_type_info import *
-from .operator_names import *
+from .get_type_info import get_type_info
 from .global_methods import global_remap
 from math import log, exp
 

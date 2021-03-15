@@ -5,7 +5,7 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from .type_bool import bool as types_bool
+from .type_bool import bool as types_bool, is_bool
 from .type_double import (
     is_float,
     fp16 as types_fp16,
@@ -134,7 +134,7 @@ def is_scalar(btype):
     """
     Is the given builtin type a scalar integer, float, or boolean?
     """
-    return btype is types_bool or is_int(btype) or is_float(btype)
+    return is_bool(btype) or is_int(btype) or is_float(btype)
 
 
 def is_tensor(tensor_type):
@@ -183,7 +183,8 @@ def is_builtin(t):
 # Converts a numpy type to its types equivalent.
 # Supports both dtypes and numpy primitive types.
 def numpy_type_to_builtin_type(nptype):
-    if type(nptype) == np.dtype:
+    # If this is a data type object, use the corresponding scalar data type.
+    if np.issubclass_(type(nptype), np.dtype):
         nptype = nptype.type
 
     if np.issubclass_(nptype, np.bool) or np.issubclass_(nptype, np.bool_):

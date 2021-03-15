@@ -48,8 +48,8 @@ def assert_model_is_valid(
         input_dict[name] = np.random.rand(*shape)
 
     # Avoid circular import
-    from coremltools.converters.mil.testing_reqs import ct
-    mlmodel = ct.convert(program, source="mil", convert_to=backend)
+    from coremltools.converters._converters_entry import convert
+    mlmodel = convert(program, source="mil", convert_to=backend)
     assert mlmodel is not None
 
     if verbose:
@@ -274,8 +274,8 @@ def get_core_ml_prediction(
         program.add_function("main", ssa_func)
 
     # Avoid circular import
-    from coremltools.converters.mil.testing_reqs import ct
-    mlmodel = ct.convert(program, source="mil",
+    from coremltools.converters._converters_entry import convert
+    mlmodel = convert(program, source="mil",
         convert_to=backend, useCPUOnly=use_cpu_only)
     return mlmodel.predict(input_values, useCPUOnly=use_cpu_only)
 

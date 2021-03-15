@@ -10,7 +10,6 @@ import pytest
 import torch
 import torch.nn as nn
 
-import coremltools
 from .testing_utils import *
 
 # Custom layer imports

@@ -5,6 +5,8 @@
 
 import functools
 import sympy as sm
+import numpy as np
+
 from coremltools.converters.mil.mil.types.symbolic import (
     is_symbolic,
     isscalar,

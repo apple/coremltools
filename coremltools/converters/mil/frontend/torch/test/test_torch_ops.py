@@ -6,12 +6,13 @@
 import sys
 import itertools
 import numpy as np
+
 from coremltools.models.utils import _python_version
 from coremltools.models.utils import _macos_version
 from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.testing_reqs import *
 from .testing_utils import *
-from coremltools import TensorType, ImageType, RangeDim
+from coremltools import TensorType
 
 backends = testing_reqs.backends
 
