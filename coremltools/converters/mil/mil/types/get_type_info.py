@@ -5,7 +5,7 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from .type_spec import *  # pylint: disable=wildcard-import
+from .type_spec import FunctionType, Type
 from .type_void import void
 
 
@@ -59,32 +59,3 @@ def get_type_info(t):
     elif hasattr(t, "__call__"):
         return get_python_method_type(t)
     raise TypeError("Unsupported type %s" % t)
-
-
-def get_python_class_methods(cls):
-    ret = {}
-    for key, value in cls.__dict__.items():
-        if hasattr(value, "__call__"):
-            ret[key] = value
-    return ret
-
-
-def get_python_class_slots(class_type):
-    if hasattr(class_type, "__slots__"):
-        if len(class_type.__slots__) != len(class_type.__slot_types__):
-            raise RuntimeError(
-                "__slots__ and __slot_types__ length mismatch in class %s"
-                % (str(class_type))
-            )
-        return class_type.__slots__
-    else:
-        return []
-
-
-def get_python_class_slot_types(class_type):
-    if hasattr(class_type, "__slots__"):
-        if len(class_type.__slots__) != len(class_type.__slot_types__):
-            raise RuntimeError("__slots__ and __slot_types__ length mismatch")
-        return [get_type_info(x) for x in class_type.__slot_types__]
-    else:
-        return []

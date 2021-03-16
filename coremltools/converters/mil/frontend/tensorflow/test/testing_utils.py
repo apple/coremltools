@@ -2,23 +2,22 @@
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
+import numpy as np
+import os
+import pytest
+import tempfile
+from six import string_types as _string_types
 
 from coremltools import TensorType
 import coremltools.models.utils as coremltoolsutils
-import pytest
-import numpy as np
-from six import string_types as _string_types
-tf = pytest.importorskip("tensorflow", minversion="1.14.0")
 from coremltools.converters.mil.testing_utils import compare_shapes, \
     compare_backend, run_core_ml_predict
-from coremltools.converters.mil.testing_reqs import ct
+
 from tensorflow.python.framework import dtypes
-import tempfile
-import os
 from tensorflow.python.tools.freeze_graph import freeze_graph as freeze_g
 from tensorflow.python.keras.saving import saving_utils as _saving_utils
-import numpy as np
 
+tf = pytest.importorskip("tensorflow", minversion="1.14.0")
 frontend = "tensorflow"
 
 
@@ -130,6 +129,9 @@ def tf_graph_to_mlmodel(
     -----------
     Returns MLModel, Input Values, Output Names
     """
+    # Avoid circular dependency
+    from coremltools.converters._converters_entry import convert
+
     if isinstance(output_nodes, tuple):
         output_nodes = list(output_nodes)
     if not isinstance(output_nodes, list):
@@ -140,7 +142,7 @@ def tf_graph_to_mlmodel(
     output_names = get_tf_node_names(output_nodes, mode="outputs")
     input_values = {name: val for name, val in zip(input_names, feed_dict.values())}
 
-    mlmodel = ct.convert(
+    mlmodel = convert(
         graph, inputs=None, outputs=output_names, source=frontend, convert_to=backend
     )
 

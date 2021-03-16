@@ -8,7 +8,6 @@ import logging
 from coremltools.converters.mil.mil.types.symbolic import is_symbolic
 from coremltools.converters.mil.mil import Program, Function
 from coremltools.converters.mil.testing_utils import compare_backend
-from coremltools.converters.mil.testing_reqs import ct
 
 UNK_VARIADIC = "*s_unk"
 UNK_SYM = "s_unk"
@@ -51,6 +50,8 @@ def run_compare_builder(
 
         - inputs: type of inputs (either None (defaults to tensor) or [ct.ImageType])
     """
+    from coremltools.converters._converters_entry import convert
+
     if not isinstance(expected_output_types, list):
         expected_output_types = [expected_output_types]
 
@@ -108,7 +109,7 @@ def run_compare_builder(
         if output_shape != expected_shape:
             raise ValueError(msg)
 
-    mlmodel = ct.convert(prog, source="mil", convert_to=backend, inputs=inputs)
+    mlmodel = convert(prog, source="mil", convert_to=backend, inputs=inputs)
 
     if frontend_only:
         return

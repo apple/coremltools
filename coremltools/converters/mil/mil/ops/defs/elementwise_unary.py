@@ -2,16 +2,24 @@
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
-
+import numpy as np
 import scipy
-from ._op_reqs import *
 
-"""
-Elementwise Unary Op Superclass
-"""
-
+from coremltools.converters.mil.mil import Operation, types, VALUE
+from coremltools.converters.mil.mil.operation import precondition
+from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
+from coremltools.converters.mil.mil.input_type import (
+    DefaultInputs,
+    FloatInputType,
+    InputSpec,
+    ScalarOrTensorInputType,
+    StringInputType
+)
 
 class elementwise_unary(Operation):
+    """
+    Elementwise Unary Op Superclass
+    """
     input_spec = InputSpec(x=ScalarOrTensorInputType(),)
 
     def __init__(self, **kwargs):
@@ -20,11 +28,9 @@ class elementwise_unary(Operation):
     def type_inference(self):
         return self.x.sym_type
 
-
 """
 Elementwise unary op implementation(s)
 """
-
 
 @register_op(doc_str="")
 class abs(elementwise_unary):
