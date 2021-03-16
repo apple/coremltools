@@ -7,12 +7,17 @@
 
 Use *coremltools* to convert machine learning models from third-party libraries to the Core ML format. The Python package contains the supporting tools for converting models from training libraries such as the following:
 
-* [TensorFlow 1](https://www.tensorflow.org/versions/r1.15/api_docs/python/tf) and [TensorFlow 2](https://www.tensorflow.org/api_docs)
+* [TensorFlow 1.x](https://www.tensorflow.org/versions/r1.15/api_docs/python/tf)
+* [TensorFlow 2.x](https://www.tensorflow.org/api_docs)
 * [PyTorch](https://pytorch.org/)
 * [TensorFlow's Keras APIs](https://keras.io/)
 * [Multi-backend Keras](https://github.com/keras-team/keras) 
 * [Open Neural Network eXchange](http://onnx.ai/) (ONNX)
-* Classical frameworks such as [Caffe](https://caffe.berkeleyvision.org/model_zoo.html), [LibSVM](https://www.csie.ntu.edu.tw/~cjlin/libsvm/), [scikit-learn](https://scikit-learn.org/stable/), and [XGBoost](https://xgboost.readthedocs.io/en/latest/)
+* [Caffe](https://caffe.berkeleyvision.org/model_zoo.html)
+* Non-neural network frameworks:
+	* [scikit-learn](https://scikit-learn.org/stable/)
+	* [XGBoost](https://xgboost.readthedocs.io/en/latest/)
+	* [LibSVM](https://www.csie.ntu.edu.tw/~cjlin/libsvm/)
 
 With coremltools, you can do the following:
 

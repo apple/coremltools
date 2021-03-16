@@ -2,7 +2,7 @@
 Contribution Guidelines
 =======================
 
-The Core ML `.mlmodel` file format is a publicly documented specification. The Core ML Tools source code is 100% open source under the [BSD license](https://en.wikipedia.org/wiki/BSD_licenses). We welcome all contributions and ideas to grow the product. We ask that you follow the [contributing guidelines and code of conduct](#guidelines-and-code-of-conduct)  in this document, which are typical of open source communities.
+The Core ML `.mlmodel` file format is a publicly documented specification. The Core ML Tools source code is 100% open source under the [BSD license](https://github.com/apple/coremltools/blob/master/LICENSE.txt). We welcome all contributions and ideas to grow the product. We ask that you follow the [contributing guidelines and code of conduct](#guidelines-and-code-of-conduct)  in this document, which are typical of open source communities.
 
 There are many ways to contribute to coremltools. [**Use these templates**](https://github.com/apple/coremltools/issues/new/choose) to report issues, make feature requests, or ask questions. We welcome even minor improvements to code, testing, and documentation, as well as requests for new features and enhancements. Don’t hesitate to do the following:
 

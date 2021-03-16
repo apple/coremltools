@@ -15,13 +15,15 @@ To build coremltools from source, you need the following:
 Follow these steps:
 
 1. Fork and clone the GitHub [coremltools repository](https://github.com/apple/coremltools).
-2. Run the [build.sh](scripts/build.sh) script to activate the appropriate release environment and build `coremltools`. The build.sh script uses Python 3.7, but you can include `--python=3.5` (or `3.6`, `3.8`, and so on) as a argument to change the Python version. The script creates a new `build` folder with the coremltools distribution, and a `dist` folder with Python wheel files.
+
+2. Run the [build.sh](scripts/build.sh) script to build `coremltools`. 
+	* By default this script uses Python 3.7, but you can include `--python=3.5` (or `3.6`, `3.8`, and so on) as a argument to change the Python version. 
+	* The script creates a new `build` folder with the coremltools distribution, and a `dist` folder with Python wheel files.
+	
 3. Run the [test.sh](scripts/test.sh) script to test the build.
 
-Both scripts automatically run the `env_create` and `env_activate` scripts. To examine them, see the following:
+**Under the hood**: If an Anaconda or Miniconda environment doesn't already exists or is not up-to-date, the `build.sh` script automatically runs the [`env_create.sh`](scripts/env_create.sh) script to create the environment. It then uses [`env_activate.sh`](scripts/env_activate.sh) to activate the environment and set up the appropriate version of Python. The new environment is located at `<repo root>/coremltoos/envs` and is named after the `py` parameter. For example, a development environment with py 3.7 is named `coremltools-dev-py37`.
 
-* [`env_create.sh`](scripts/env_create.sh): Reads the required packages in `coremltools/reqs` and installs them into a new environment. This new environment is located at `<repo root>/coremltoos/envs`. The environment is named after the `py` parameter. For example, a development environment with py 3.7 is named `coremltools-dev-py37`.
-* [`env_activate.sh`](scripts/env_activate.sh): Activates the new environment with `conda activate`.
 
 ## Build targets
 
@@ -34,7 +36,7 @@ The following build targets help you configure the development environment. If y
 * `clean_envs` | Delete all `envs` created by the scripts.
 * `lint` | Linter.
 * `proto` | Build coremltools and rebuild MLModel protobuf sources.
-* `release` | Set up the package for release, but don’t upload to pypi. Include all wheels from `build/dist` in the built package.
+* `release` | Set up the package for release, but don't upload to pypi. Include all wheels from `build/dist` in the built package.
 * `style` | Style checking.
 * `test` | Run all tests. Pass `TEST_PACKAGES="..."` to set which packages to test.
 * `test_fast` | Run all fast tests.
