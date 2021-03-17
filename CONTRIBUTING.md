@@ -38,8 +38,4 @@ For more information, see the following:
 * [API Reference](https://coremltools.readme.io/reference/convertersconvert)
 * [Core ML Specification](https://mlmodel.readme.io/)
 * [Building from Source](BUILDING.md)
-* Third-party repositories: 
-    * [onnx-coreml](https://github.com/onnx/onnx-coreml): Convert ONNX models into the Core ML format.
-    * [tf-coreml](https://github.com/tf-coreml/tf-coreml): Convert from TensorFlow to CoreML.
-
 

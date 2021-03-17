@@ -1,4 +1,5 @@
-### Building
+Building from Source
+====================
 
 This page describes building Core ML Tools (coremltools) from the source repository.
 
@@ -55,7 +56,4 @@ For more information, see the following:
 * [API Reference](https://coremltools.readme.io/reference/convertersconvert)
 * [Core ML Specification](https://mlmodel.readme.io/)
 * [Contribution Guidelines](CONTRIBUTING.md) for reporting issues and making requests
-* Third-party repositories: 
-    * [onnx-coreml](https://github.com/onnx/onnx-coreml): Convert ONNX models into the Core ML format.
-    * [tf-coreml](https://github.com/tf-coreml/tf-coreml): Convert from TensorFlow to CoreML.
 
