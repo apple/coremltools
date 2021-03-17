@@ -2,74 +2,44 @@
 Contribution Guidelines
 =======================
 
-**Core ML Open Source Community**
+The Core ML `.mlmodel` file format is a publicly documented specification. The Core ML Tools source code is 100% open source under the [BSD license](https://github.com/apple/coremltools/blob/master/LICENSE.txt). We welcome all contributions and ideas to grow the product. We ask that you follow the [contributing guidelines and code of conduct](#guidelines-and-code-of-conduct)  in this document, which are typical of open source communities.
 
-The Core ML open source community welcomes all contributions and ideas to grow the product.
+There are many ways to contribute to coremltools. [**Use these templates**](https://github.com/apple/coremltools/issues/new/choose) to report issues, make feature requests, or ask questions. We welcome even minor improvements to code, testing, and documentation, as well as requests for new features and enhancements. Don’t hesitate to do the following:
 
- This could be provided in a couple of ways:
+* Report issues you are facing. Check [open issues](https://github.com/apple/coremltools/issues) to see if the issue has already been reported, and [current pull requests](https://github.com/apple/coremltools/pulls) to see if the issue has already been addressed. Comment on or thumbs-up issues that have already been reported by others. We encourage you to resolve or add comments.
+* Request new features or enhancements, or ask questions, using [these templates](https://github.com/apple/coremltools/issues/new/choose).
+* Add new code to improve a feature or add functionality by submitting a GitHub [pull request](https://docs.github.com/en/github/collaborating-with-issues-and-pull-requests/creating-a-pull-request). For examples, see the [list of current pull requests](https://github.com/apple/coremltools/pulls). 
+* Improve the documentation. Even if you find only a typo, don’t hesitate to send us a pull request with your corrections. 
 
- * Discovering and logging a **bug**, submitting an idea for a **feature request** (or **enhancement** to an existing feature) or asking a **question** through the use of the templates: [coremltools issue](https://github.com/apple/coremltools/issues/new/choose)
+For instructions, see [**Contributing**](https://coremltools.readme.io/docs/how-to-contribute).
 
- * Submit a **pull request** for additional functionality that you have completed: [coremltools PR](https://github.com/apple/coremltools/pulls)
+## Guidelines and code of conduct 
 
- * Resolve an existing **issue** found in any of the repositories: [coremltools open issues](https://github.com/apple/coremltools/issues)
+The contributing guidelines and code of conduct are similar to those of most open source communities. They include participating in the community through developing, receiving help, and answering questions as well as engaging in a highly motivated and positive environment. For example:
 
-Expectations of the Community
----
+* Providing comments that are helpful, motivating and constructive.
+* Treating with respect others within the community.
+* Collaborating with others to produce new and useful contributions to the community.
 
-The contributing guidelines and code of conduct are similar to most open source communities. This includes participating in the community through developing, receiving help and answering questions as well as engaging in a highly motivate, positive environment. 
+To ensure that issues and pull requests can be addressed quickly, please do the following before submitting issues, questions, or pull requests:
 
-Additionally, this includes but is not limited to:
+* Check [open issues](https://github.com/apple/coremltools/issues) and [current pull requests](https://github.com/apple/coremltools/pulls) in the repository to see if your issue, feature request, or question already exists or has already been addressed.
+* Fill in the appropriate [template](https://github.com/apple/coremltools/issues/new/choose) with as much detail as possible as well as code snippets, so that we are able to reproduce the issue.
+* Promptly reply to any requests or questions posed by others within the community on your issue or pull request.
 
-* Providing comments that are helpful, motivating and constructive
-* Being respectful of others within the community
-* Collaborate with others to produce new, useful contributions to the community
+## Resources
 
-## Github Best Practices for Core ML Community
+For more information, see the following:
 
-While participating in the Core ML community, to ensure that issues and pull requests are able to be addressed quickly, please ensure that the following is being done:
+* [Contributing](https://coremltools.readme.io/docs/how-to-contribute) for instructions on contributing to the repository.
+* Core ML Tools [README](README.md) file for this repository
+* [Release Notes](https://github.com/apple/coremltools/releases/) for the current release and previous releases
+* [Guides and examples](https://coremltools.readme.io/) with installation and troubleshooting
+* [API Reference](https://coremltools.readme.io/reference/convertersconvert)
+* [Core ML Specification](https://mlmodel.readme.io/)
+* [Building from Source](BUILDING.md)
+* Third-party repositories: 
+    * [onnx-coreml](https://github.com/onnx/onnx-coreml): Convert ONNX models into the Core ML format.
+    * [tf-coreml](https://github.com/tf-coreml/tf-coreml): Convert from TensorFlow to CoreML.
 
-* Checking to see if your issue already exists
-* Following pre-existing templates 
-* Promptly replying to any requests or questions posed by others within the community on your issue / PR
 
-## What to expect as a Contributor to Core ML
-
-### Lifecycle of Issues
-
-Once an issue has been submitted it will be triaged and appropriate labels will be added. The issue will then either be slotted in to an upcoming release, commented on for additional information or placed in the backlog for a future release. 
-
-#### Use of templates
-There will be a provided template when submitting your issue. Please ensure that this is used and filled in as much as possible to help others in the community in understanding the issue so that they are able to provide a response easily. 
-
-If applicable, please provide the model that was being used when logging the issue, so that the issue is able to be reproduced.
-
-#### Labels
-Please check the labels page under each repository for a further description of each label. These labels will be added by Core ML team members depending on need. Typically an issue can be given any of the following labels:
-
-Status → What stage of the process the issue is in (turquoise) 
-
-* Triaged, awaiting response, duplicate, repro needed, investigation or needs discussion
-
-Type  → Issue is classified based on the category it belongs to (red) 
-
-* bug, clarification, docs, enhancement, feature request, perf, question
-
-Release → If the issue is scheduled to be resolved in a specific release, it will be added (yellow)
-
-Other → this may vary depending on the repository
-
-* good first issue, help wanted, CreateML
-
-### Lifecycle of Pull Requests
-
-Any pull request submitted to the repositories will be reviewed by a member of the community and upon approval by a Core ML team member can be merged to the master branch. If you are new to GitHub, please find more information regarding creating pull requests [here](https://help.github.com/en/articles/creating-a-pull-request).
-
-Developing in Core ML
----
-
-Additional information regarding APIs, installation and dependencies and more can be found in each respective repository, in the readme.md file.
-
-* [coremltools](https://github.com/apple/coremltools)
-* [onnx-coreml](https://github.com/onnx/onnx-coreml)
-* [tf-coreml](https://github.com/tf-coreml/tf-coreml)
