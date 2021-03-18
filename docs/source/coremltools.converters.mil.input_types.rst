@@ -1,9 +1,7 @@
-***********
-Input Types
-***********
+MIL Input Types
+===============
 
 Input types supported by MIL.
-
 
 .. automodule:: coremltools.converters.mil.input_types
 
