@@ -11,9 +11,6 @@ Use *coremltools* to convert machine learning models from third-party libraries 
 * [TensorFlow 2.x](https://www.tensorflow.org/api_docs)
 * [PyTorch](https://pytorch.org/)
 * [TensorFlow's Keras APIs](https://keras.io/)
-* [Multi-backend Keras](https://github.com/keras-team/keras) 
-* [Open Neural Network eXchange](http://onnx.ai/) (ONNX)
-* [Caffe](https://caffe.berkeleyvision.org/model_zoo.html)
 * Non-neural network frameworks:
 	* [scikit-learn](https://scikit-learn.org/stable/)
 	* [XGBoost](https://xgboost.readthedocs.io/en/latest/)
@@ -41,8 +38,5 @@ To install coremltools, see the [“Installation“ page](https://coremltools.re
 * [Core ML Specification](https://mlmodel.readme.io/)
 * [Building from Source](BUILDING.md)
 * [Contribution Guidelines](CONTRIBUTING.md) 
-* Third-party repositories: 
-    * [onnx-coreml](https://github.com/onnx/onnx-coreml): Convert ONNX models.
-    * [tf-coreml](https://github.com/tf-coreml/tf-coreml): Convert from TensorFlow.
 
 
