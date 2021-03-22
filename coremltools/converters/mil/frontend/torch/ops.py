@@ -1833,7 +1833,7 @@ def select(context, node):
 
     assert dim.shape == ()
     assert index.shape == ()
-    assert _input.val is None
+    # assert _input.val is None
 
     # NOTE:
     # Each index in @begin_array/@end_array corresponds to a dimension of @_input
@@ -2264,7 +2264,7 @@ def meshgrid(context, node):
     N, N-dimenional grids, where the ith grid is defined as expanding the ith input over
     dimensions defined by the other inputs.
     """
-    inputs = _get_inputs(context, node)
+    inputs = _get_inputs(context, node)[0]
     if len(inputs) < 2:
         raise ValueError("Requires > 2 tensor inputs.")
 
