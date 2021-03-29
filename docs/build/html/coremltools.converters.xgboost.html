@@ -1,0 +1,268 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>XGBoost &mdash; Core ML Tools API Reference  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Models" href="coremltools.models.html" />
+    <link rel="prev" title="SKLearn" href="coremltools.converters.sklearn.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Core ML Tools API Reference
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="coremltools.converters.html">Converters</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.mil.html">Convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.caffe.html">Caffe</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.keras.html">Keras</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.libsvm.html">LibSVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.onnx.html">ONNX</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.sklearn.html">SKLearn</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">XGBoost</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.models.html">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Core ML Tools API Reference</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="coremltools.converters.html">Converters</a> &raquo;</li>
+        
+      <li>XGBoost</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/coremltools.converters.xgboost.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-coremltools.converters.xgboost._tree">
+<span id="xgboost"></span><h1>XGBoost<a class="headerlink" href="#module-coremltools.converters.xgboost._tree" title="Permalink to this headline">¶</a></h1>
+<dl class="py function">
+<dt id="coremltools.converters.xgboost._tree.convert">
+<code class="sig-prename descclassname"><span class="pre">coremltools.converters.xgboost._tree.</span></code><code class="sig-name descname"><span class="pre">convert</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'target'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_32bit_float</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'regressor'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_classes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.converters.xgboost._tree.convert" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a trained XGBoost model to Core ML format.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>decision_tree</strong><span class="classifier">Booster</span></dt><dd><p>A trained XGboost tree model.</p>
+</dd>
+<dt><strong>feature_names: [str] | str</strong></dt><dd><p>Names of input features that will be exposed in the Core ML model
+interface.</p>
+<p>Can be set to one of the following:</p>
+<ul class="simple">
+<li><p>None for using the feature names from the model.</p></li>
+<li><p>List of names of the input features that should be exposed in the
+interface to the Core ML model. These input features are in the same
+order as the XGboost model.</p></li>
+</ul>
+</dd>
+<dt><strong>target: str</strong></dt><dd><p>Name of the output feature name exposed to the Core ML model.</p>
+</dd>
+<dt><strong>force_32bit_float: bool</strong></dt><dd><p>If True, then the resulting CoreML model will use 32 bit floats internally.</p>
+</dd>
+<dt><strong>mode: str in [‘regressor’, ‘classifier’]</strong></dt><dd><p>Mode of the tree model.</p>
+</dd>
+<dt><strong>class_labels: list[int] or None</strong></dt><dd><p>List of classes. When set to None, the class labels are just the range from
+0 to n_classes - 1.</p>
+</dd>
+<dt><strong>n_classes: int or None</strong></dt><dd><p>Number of classes in classification. When set to None, the number of
+classes is expected from the model or class_labels should be provided.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>model:MLModel</dt><dd><p>Returns an MLModel instance representing a Core ML model.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Convert it with default input and output names</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">coremltools</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">coreml_model</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">xgboost</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+
+<span class="c1"># Saving the Core ML model to a file.</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s1">&#39;my_model.mlmodel&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="coremltools.models.html" class="btn btn-neutral float-right" title="Models" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="coremltools.converters.sklearn.html" class="btn btn-neutral float-left" title="SKLearn" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2021, Apple
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
