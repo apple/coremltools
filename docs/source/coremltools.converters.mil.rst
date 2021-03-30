@@ -1,5 +1,5 @@
 Convert
 -------------------------------------------
 
-.. automodule:: coremltools.converters.mil.converter
+.. automodule:: coremltools.converters._converters_entry
    :members:
