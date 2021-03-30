@@ -1,1 +1,2 @@
-pip install numpydoc
+numpy==1.19.2
+numpydoc==1.1.0
