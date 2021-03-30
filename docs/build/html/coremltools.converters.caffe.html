@@ -1,0 +1,382 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Caffe &mdash; Core ML Tools API Reference  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Keras" href="coremltools.converters.keras.html" />
+    <link rel="prev" title="Convert TensorFlow or Pytorch" href="coremltools.converters.mil.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Core ML Tools API Reference
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="coremltools.converters.html">Converters</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.mil.html">Convert TensorFlow or Pytorch</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Caffe</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.keras.html">Keras</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.libsvm.html">LibSVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.onnx.html">ONNX</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.sklearn.html">SKLearn</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.xgboost.html">XGBoost</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.models.html">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://coremltools.readme.io/docs">Overview and Guides</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://coremltools.readme.io/page/examples">Examples</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://mlmodel.readme.io/reference">Core ML Format</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Core ML Tools API Reference</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="coremltools.converters.html">Converters</a> &raquo;</li>
+        
+      <li>Caffe</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/coremltools.converters.caffe.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-coremltools.converters.caffe._caffe_converter">
+<span id="caffe"></span><h1>Caffe<a class="headerlink" href="#module-coremltools.converters.caffe._caffe_converter" title="Permalink to this headline">¶</a></h1>
+<dl class="py function">
+<dt id="coremltools.converters.caffe._caffe_converter.convert">
+<code class="sig-prename descclassname"><span class="pre">coremltools.converters.caffe._caffe_converter.</span></code><code class="sig-name descname"><span class="pre">convert</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_input_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_bgr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">red_bias</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">blue_bias</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">green_bias</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gray_bias</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">predicted_feature_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_precision</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'float32'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.converters.caffe._caffe_converter.convert" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a Caffe model to the Core ML format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>model: str | (str, str) | (str, str, str) | (str, str, dict)</strong></dt><dd><p>A trained Caffe neural network model which can be represented as:</p>
+<ul class="simple">
+<li><p>Path on disk to a trained Caffe model (<code class="docutils literal notranslate"><span class="pre">.caffemodel</span></code>).</p></li>
+<li><p>A tuple of two paths. The first path is the path to the <code class="docutils literal notranslate"><span class="pre">.caffemodel</span></code>
+file. The second is the path to the <code class="docutils literal notranslate"><span class="pre">deploy.prototxt</span></code>.</p></li>
+<li><p>A tuple of three paths. The first path is the path to the
+trained <code class="docutils literal notranslate"><span class="pre">.caffemodel</span></code> file. The second is the path to the
+<code class="docutils literal notranslate"><span class="pre">deploy.prototxt</span></code>. The third is a path to the mean image binary, data
+which is subtracted from the input image as a preprocessing step.</p></li>
+<li><p>A tuple of two paths to <code class="docutils literal notranslate"><span class="pre">.caffemodel</span></code> and <code class="docutils literal notranslate"><span class="pre">.prototxt</span></code> and a <code class="docutils literal notranslate"><span class="pre">dict</span></code> with
+image input names as keys and paths to mean image <code class="docutils literal notranslate"><span class="pre">binaryprotos</span></code> as values.
+The keys should be the same as the input names provided via the argument
+<code class="docutils literal notranslate"><span class="pre">image_input_name</span></code>.</p></li>
+</ul>
+</dd>
+<dt><strong>image_input_names: [str] | str</strong></dt><dd><p>The name(s) of the input blob(s) in the Caffe model that can be treated
+as images by Core ML. All other inputs are treated as MultiArrays (N-D
+Arrays) by Core ML.</p>
+</dd>
+<dt><strong>is_bgr: bool | dict()</strong></dt><dd><p>Flag indicating the channel order the model internally uses to represent
+color images. Set to True if the internal channel order is BGR,
+otherwise it will be assumed RGB. This flag is applicable only if
+<code class="docutils literal notranslate"><span class="pre">image_input_names</span></code> is specified. To specify a different value for each
+image input, provide a dictionary with input names as keys.
+Note that this flag is about the models internal channel order.
+An input image can be passed to the model in any color pixel layout
+containing red, green and blue values (e.g. <code class="docutils literal notranslate"><span class="pre">32BGRA</span></code> or <code class="docutils literal notranslate"><span class="pre">32ARGB</span></code>). This flag
+determines how those pixel values get mapped to the internal multiarray
+representation.</p>
+</dd>
+<dt><strong>red_bias: float | dict()</strong></dt><dd><p>Bias value to be added to the red channel of the input image. Defaults to <code class="docutils literal notranslate"><span class="pre">0.0</span></code>.
+Applicable only if <code class="docutils literal notranslate"><span class="pre">image_input_names</span></code> is specified. To specify different
+values for each image input, provide a dictionary with input names as keys.</p>
+</dd>
+<dt><strong>blue_bias: float | dict()</strong></dt><dd><p>Bias value to be added to the the blue channel of the input image.
+Defaults to <code class="docutils literal notranslate"><span class="pre">0.0</span></code>.
+Applicable only if <code class="docutils literal notranslate"><span class="pre">image_input_names</span></code> is specified.
+To specify different values for each image input, provide a dictionary
+with input names as keys.</p>
+</dd>
+<dt><strong>green_bias: float | dict()</strong></dt><dd><p>Bias value to be added to the green channel of the input image.
+Defaults to <code class="docutils literal notranslate"><span class="pre">0.0</span></code>.
+Applicable only if <code class="docutils literal notranslate"><span class="pre">image_input_names</span></code> is specified.
+To specify different values for each image input provide a dictionary
+with input names as keys.</p>
+</dd>
+<dt><strong>gray_bias: float | dict()</strong></dt><dd><p>Bias value to be added to the input image (in grayscale). Defaults to <code class="docutils literal notranslate"><span class="pre">0.0</span></code>.
+Applicable only if <code class="docutils literal notranslate"><span class="pre">image_input_names</span></code> is specified.
+To specify different values for each image input provide a dictionary
+with input names as keys.</p>
+</dd>
+<dt><strong>image_scale: float | dict()</strong></dt><dd><p>Value by which the input images will be scaled before bias is added and
+Core ML model makes a prediction. Defaults to <code class="docutils literal notranslate"><span class="pre">1.0</span></code>.
+Applicable only if <code class="docutils literal notranslate"><span class="pre">image_input_names</span></code> is specified.
+To specify different values for each image input provide a dictionary
+with input names as keys.</p>
+</dd>
+<dt><strong>class_labels: str</strong></dt><dd><p>Filepath where classes are parsed as a list of newline separated
+strings. Class labels map the index of the output of a neural network
+to labels in a classifier. Provide this argument to get a model of
+type classifier.</p>
+</dd>
+<dt><strong>predicted_feature_name: str</strong></dt><dd><p>Name of the output feature for the class labels exposed in the Core ML
+model (applies to classifiers only). Defaults to <code class="docutils literal notranslate"><span class="pre">classLabel</span></code>.</p>
+</dd>
+<dt><strong>model_precision: str</strong></dt><dd><p>Precision at which model will be saved. Currently full precision
+(float) and half precision (float16) models are supported. Defaults to
+<code class="docutils literal notranslate"><span class="pre">_MLMODEL_FULL_PRECISION</span></code> (full precision).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>model: MLModel</dt><dd><p>Model in the Core ML format.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Convert it with default input and output names</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">coremltools</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">coreml_model</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">caffe</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="s1">&#39;my_caffe_model.caffemodel&#39;</span><span class="p">)</span>
+
+<span class="c1"># Saving the Core ML model to a file.</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">coreml_model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s1">&#39;my_model.mlmodel&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Sometimes, critical information in the Caffe converter is missing from the
+<code class="docutils literal notranslate"><span class="pre">.caffemodel</span></code> file. This information is present in the <code class="docutils literal notranslate"><span class="pre">deploy.prototxt</span></code> file.
+You can provide us with both files in the conversion process.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">coreml_model</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">caffe</span><span class="o">.</span><span class="n">convert</span><span class="p">((</span><span class="s1">&#39;my_caffe_model.caffemodel&#39;</span><span class="p">,</span> <span class="s1">&#39;my_deploy.prototxt&#39;</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Some models (such as Resnet-50) also require a mean image file, which is
+subtracted from the input image before passing through the network. This
+file can also be provided during conversion:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">coreml_model</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">caffe</span><span class="o">.</span><span class="n">convert</span><span class="p">((</span><span class="s1">&#39;my_caffe_model.caffemodel&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                <span class="s1">&#39;my_deploy.prototxt&#39;</span><span class="p">,</span> <span class="s1">&#39;mean_image.binaryproto&#39;</span><span class="p">),</span> <span class="n">image_input_names</span> <span class="o">=</span> <span class="s1">&#39;image_input&#39;</span><span class="p">)</span>
+
+<span class="go"># Multiple mean images for preprocessing</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">coreml_model</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">caffe</span><span class="o">.</span><span class="n">convert</span><span class="p">((</span><span class="s1">&#39;my_caffe_model.caffemodel&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                <span class="s1">&#39;my_deploy.prototxt&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;image1&#39;</span><span class="p">:</span> <span class="s1">&#39;mean_image1.binaryproto&#39;</span><span class="p">,</span> <span class="s1">&#39;image2&#39;</span><span class="p">:</span> <span class="s1">&#39;mean_image2.binaryproto&#39;</span><span class="p">}),</span>
+<span class="gp">... </span>                    <span class="n">image_input_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;image1&#39;</span><span class="p">,</span> <span class="s1">&#39;image2&#39;</span><span class="p">])</span>
+
+<span class="go"># Multiple image inputs and bias/scale values</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">coreml_model</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">caffe</span><span class="o">.</span><span class="n">convert</span><span class="p">((</span><span class="s1">&#39;my_caffe_model.caffemodel&#39;</span><span class="p">,</span> <span class="s1">&#39;my_deploy.prototxt&#39;</span><span class="p">),</span>
+<span class="gp">... </span>                    <span class="n">red_bias</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;image1&#39;</span><span class="p">:</span> <span class="o">-</span><span class="mi">100</span><span class="p">,</span> <span class="s1">&#39;image2&#39;</span><span class="p">:</span> <span class="o">-</span><span class="mi">110</span><span class="p">},</span>
+<span class="gp">... </span>                    <span class="n">green_bias</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;image1&#39;</span><span class="p">:</span> <span class="o">-</span><span class="mi">90</span><span class="p">,</span> <span class="s1">&#39;image2&#39;</span><span class="p">:</span> <span class="o">-</span><span class="mi">125</span><span class="p">},</span>
+<span class="gp">... </span>                    <span class="n">blue_bias</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;image1&#39;</span><span class="p">:</span> <span class="o">-</span><span class="mi">105</span><span class="p">,</span> <span class="s1">&#39;image2&#39;</span><span class="p">:</span> <span class="o">-</span><span class="mi">120</span><span class="p">},</span>
+<span class="gp">... </span>                    <span class="n">image_input_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;image1&#39;</span><span class="p">,</span> <span class="s1">&#39;image2&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Input and output names used in the interface of the converted Core ML
+model are inferred from the <code class="docutils literal notranslate"><span class="pre">.prototxt</span></code> file, which contains a
+description of the network architecture. Input names are read from the
+input layer definition in the <code class="docutils literal notranslate"><span class="pre">.prototxt</span></code>. By default, they are of type
+MultiArray. Argument <code class="docutils literal notranslate"><span class="pre">&quot;image_input_names&quot;</span></code> can be used to assign image
+type to specific inputs. All the blobs that are “dangling” – which do not
+feed as input to any other layer – are taken as outputs. The
+<code class="docutils literal notranslate"><span class="pre">.prototxt</span></code> file can be modified to specify custom input and output
+names.</p>
+<p>The converted Core ML model is of type classifier when the argument
+<code class="docutils literal notranslate"><span class="pre">&quot;class_labels&quot;</span></code> is specified.</p>
+<p>Advanced usage with custom classifiers, and images:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Mark some inputs as Images</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">coreml_model</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">caffe</span><span class="o">.</span><span class="n">convert</span><span class="p">((</span><span class="s1">&#39;my_caffe_model.caffemodel&#39;</span><span class="p">,</span> <span class="s1">&#39;my_caffe_model.prototxt&#39;</span><span class="p">),</span>
+<span class="o">...</span>                   <span class="n">image_input_names</span> <span class="o">=</span> <span class="s1">&#39;my_image_input&#39;</span><span class="p">)</span>
+
+<span class="c1"># Export as a classifier with classes from a file</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">coreml_model</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">caffe</span><span class="o">.</span><span class="n">convert</span><span class="p">((</span><span class="s1">&#39;my_caffe_model.caffemodel&#39;</span><span class="p">,</span> <span class="s1">&#39;my_caffe_model.prototxt&#39;</span><span class="p">),</span>
+<span class="o">...</span>         <span class="n">image_input_names</span> <span class="o">=</span> <span class="s1">&#39;my_image_input&#39;</span><span class="p">,</span> <span class="n">class_labels</span> <span class="o">=</span> <span class="s1">&#39;labels.txt&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Sometimes the converter might return a message about not able to infer
+input data dimensions. This happens when the input size information is
+absent from the <code class="docutils literal notranslate"><span class="pre">deploy.prototxt</span></code> file. This can be easily provided by
+editing the <code class="docutils literal notranslate"><span class="pre">.prototxt</span></code> in a text editor. Simply add a snippet in the
+beginning, similar to the following, for each of the inputs to the model:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>input: <span class="s2">&quot;my_image_input&quot;</span>
+input_dim: <span class="m">1</span>
+input_dim: <span class="m">3</span>
+input_dim: <span class="m">227</span>
+input_dim: <span class="m">227</span>
+</pre></div>
+</div>
+<p>In this example we have specified an input with dimensions <code class="docutils literal notranslate"><span class="pre">(1,3,227,227)</span></code>, using
+Caffe’s convention, in the order (batch, channel, height, width). Input
+name string (<code class="docutils literal notranslate"><span class="pre">&quot;my_image_input&quot;</span></code>) must also match the name of the input (or
+“bottom”, as inputs are known in Caffe) of the first layer in the
+<code class="docutils literal notranslate"><span class="pre">.prototxt</span></code>.</p>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="coremltools.converters.keras.html" class="btn btn-neutral float-right" title="Keras" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="coremltools.converters.mil.html" class="btn btn-neutral float-left" title="Convert TensorFlow or Pytorch" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2021, Apple
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

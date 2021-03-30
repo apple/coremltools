@@ -1,0 +1,601 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Keras &mdash; Core ML Tools API Reference  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/graphviz.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="LibSVM" href="coremltools.converters.libsvm.html" />
+    <link rel="prev" title="Caffe" href="coremltools.converters.caffe.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> Core ML Tools API Reference
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Contents</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="coremltools.converters.html">Converters</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.mil.html">Convert TensorFlow or Pytorch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.caffe.html">Caffe</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Keras</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.libsvm.html">LibSVM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.onnx.html">ONNX</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.sklearn.html">SKLearn</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.xgboost.html">XGBoost</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.models.html">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://coremltools.readme.io/docs">Overview and Guides</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://coremltools.readme.io/page/examples">Examples</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://mlmodel.readme.io/reference">Core ML Format</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Core ML Tools API Reference</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="coremltools.converters.html">Converters</a> &raquo;</li>
+        
+      <li>Keras</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/coremltools.converters.keras.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-coremltools.converters.keras._keras_converter">
+<span id="keras"></span><h1>Keras<a class="headerlink" href="#module-coremltools.converters.keras._keras_converter" title="Permalink to this headline">¶</a></h1>
+<dl class="py function">
+<dt id="coremltools.converters.keras._keras_converter._convert_to_spec">
+<code class="sig-prename descclassname"><span class="pre">coremltools.converters.keras._keras_converter.</span></code><code class="sig-name descname"><span class="pre">_convert_to_spec</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_input_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_name_shape_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_bgr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">red_bias</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">green_bias</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">blue_bias</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gray_bias</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">predicted_feature_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_precision</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'float32'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">predicted_probabilities_output</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_custom_layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_conversion_functions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_objects</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_shapes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">respect_trainable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_float_arraytype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.converters.keras._keras_converter._convert_to_spec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a Keras model to Core ML protobuf specification (.mlmodel).</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>model: Keras model object | str | (str, str)</strong></dt><dd><p>A trained Keras neural network model which can be one of the following:</p>
+<ul>
+<li><p>a Keras model object</p></li>
+<li><p>a string with the path to a Keras model file (h5)</p></li>
+<li><p>a tuple of strings, where the first is the path to a Keras model</p>
+<p>architecture (.json file), the second is the path to its weights
+stored in h5 file.</p>
+</li>
+</ul>
+</dd>
+<dt><strong>input_names: [str] | str</strong></dt><dd><p>Optional name(s) that can be given to the inputs of the Keras model.
+These names will be used in the interface of the Core ML models to refer
+to the inputs of the Keras model. If not provided, the Keras inputs
+are named to [input1, input2, …, inputN] in the Core ML model.  When
+multiple inputs are present, the input feature names are in the same
+order as the Keras inputs.</p>
+</dd>
+<dt><strong>output_names: [str] | str</strong></dt><dd><p>Optional name(s) that can be given to the outputs of the Keras model.
+These names will be used in the interface of the Core ML models to refer
+to the outputs of the Keras model. If not provided, the Keras outputs
+are named to [output1, output2, …, outputN] in the Core ML model.
+When multiple outputs are present, output feature names are in the same
+order as the Keras inputs.</p>
+</dd>
+<dt><strong>image_input_names: [str] | str</strong></dt><dd><p>Input names to the Keras model (a subset of the input_names
+parameter) that can be treated as images by Core ML. All other inputs
+are treated as MultiArrays (N-D Arrays).</p>
+</dd>
+<dt><strong>input_name_shape_dict: {str: [int]}</strong></dt><dd><p>Optional Dictionary of input tensor names and their corresponding shapes expressed
+as a list of ints</p>
+</dd>
+<dt><strong>is_bgr: bool | dict()</strong></dt><dd><p>Flag indicating the channel order the model internally uses to represent
+color images. Set to True if the internal channel order is BGR,
+otherwise it will be assumed RGB. This flag is applicable only if
+image_input_names is specified. To specify a different value for each
+image input, provide a dictionary with input names as keys.
+Note that this flag is about the models internal channel order.
+An input image can be passed to the model in any color pixel layout
+containing red, green and blue values (e.g. 32BGRA or 32ARGB). This flag
+determines how those pixel values get mapped to the internal multiarray
+representation.</p>
+</dd>
+<dt><strong>red_bias: float | dict()</strong></dt><dd><p>Bias value to be added to the red channel of the input image.
+Defaults to 0.0
+Applicable only if image_input_names is specified.
+To specify different values for each image input provide a dictionary with input names as keys.</p>
+</dd>
+<dt><strong>blue_bias: float | dict()</strong></dt><dd><p>Bias value to be added to the blue channel of the input image.
+Defaults to 0.0
+Applicable only if image_input_names is specified.
+To specify different values for each image input provide a dictionary with input names as keys.</p>
+</dd>
+<dt><strong>green_bias: float | dict()</strong></dt><dd><p>Bias value to be added to the green channel of the input image.
+Defaults to 0.0
+Applicable only if image_input_names is specified.
+To specify different values for each image input provide a dictionary with input names as keys.</p>
+</dd>
+<dt><strong>gray_bias: float | dict()</strong></dt><dd><p>Bias value to be added to the input image (in grayscale). Defaults
+to 0.0
+Applicable only if image_input_names is specified.
+To specify different values for each image input provide a dictionary with input names as keys.</p>
+</dd>
+<dt><strong>image_scale: float | dict()</strong></dt><dd><p>Value by which input images will be scaled before bias is added and
+Core ML model makes a prediction. Defaults to 1.0.
+Applicable only if image_input_names is specified.
+To specify different values for each image input provide a dictionary with input names as keys.</p>
+</dd>
+<dt><strong>class_labels: list[int or str] | str</strong></dt><dd><p>Class labels (applies to classifiers only) that map the index of the
+output of a neural network to labels in a classifier.</p>
+<p>If the provided class_labels is a string, it is assumed to be a
+filepath where classes are parsed as a list of newline separated
+strings.</p>
+</dd>
+<dt><strong>predicted_feature_name: str</strong></dt><dd><p>Name of the output feature for the class labels exposed in the Core ML
+model (applies to classifiers only). Defaults to ‘classLabel’</p>
+</dd>
+<dt><strong>model_precision: str</strong></dt><dd><p>Precision at which model will be saved. Currently full precision (float) and half precision
+(float16) models are supported. Defaults to ‘_MLMODEL_FULL_PRECISION’ (full precision).</p>
+</dd>
+<dt><strong>predicted_probabilities_output: str</strong></dt><dd><p>Name of the neural network output to be interpreted as the predicted
+probabilities of the resulting classes. Typically the output of a
+softmax function. Defaults to the first output blob.</p>
+</dd>
+<dt><strong>add_custom_layers: bool</strong></dt><dd><p>If True, then unknown Keras layer types will be added to the model as
+‘custom’ layers, which must then be filled in as postprocessing.</p>
+</dd>
+<dt><strong>custom_conversion_functions: {‘str’: (Layer -&gt; CustomLayerParams)}</strong></dt><dd><p>A dictionary with keys corresponding to names of custom layers and values
+as functions taking a Keras custom layer and returning a parameter dictionary
+and list of weights.</p>
+</dd>
+<dt><strong>custom_objects: {‘str’: (function)}</strong></dt><dd><p>Dictionary that includes a key, value pair of {‘&lt;function name&gt;’: &lt;function&gt;}
+for custom objects such as custom loss in the Keras model.
+Provide a string of the name of the custom function as a key.
+Provide a function as a value.</p>
+</dd>
+<dt><strong>respect_trainable: bool</strong></dt><dd><p>If True, then Keras layers that are marked ‘trainable’ will
+automatically be marked updatable in the Core ML model.</p>
+</dd>
+<dt><strong>use_float_arraytype: bool</strong></dt><dd><p>If true, the datatype of input/output multiarrays is set to Float32 instead
+of double.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>model: MLModel</dt><dd><p>Model in Core ML format.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Make a Keras model</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">model</span> <span class="o">=</span> <span class="n">Sequential</span><span class="p">()</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dense</span><span class="p">(</span><span class="n">num_channels</span><span class="p">,</span> <span class="n">input_dim</span> <span class="o">=</span> <span class="n">input_dim</span><span class="p">))</span>
+
+<span class="c1"># Convert it with default input and output names</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">coremltools</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">coreml_model</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+
+<span class="c1"># Saving the Core ML model to a file.</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">coreml_model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s1">&#39;my_model.mlmodel&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Converting a model with a single image input.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">coreml_model</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">input_names</span> <span class="o">=</span>
+<span class="gp">... </span><span class="s1">&#39;image&#39;</span><span class="p">,</span> <span class="n">image_input_names</span> <span class="o">=</span> <span class="s1">&#39;image&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Core ML also lets you add class labels to models to expose them as
+classifiers.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">coreml_model</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">input_names</span> <span class="o">=</span> <span class="s1">&#39;image&#39;</span><span class="p">,</span>
+<span class="gp">... </span><span class="n">image_input_names</span> <span class="o">=</span> <span class="s1">&#39;image&#39;</span><span class="p">,</span> <span class="n">class_labels</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;cat&#39;</span><span class="p">,</span> <span class="s1">&#39;dog&#39;</span><span class="p">,</span> <span class="s1">&#39;rat&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Class labels for classifiers can also come from a file on disk.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">coreml_model</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">input_names</span> <span class="o">=</span>
+<span class="gp">... </span><span class="s1">&#39;image&#39;</span><span class="p">,</span> <span class="n">image_input_names</span> <span class="o">=</span> <span class="s1">&#39;image&#39;</span><span class="p">,</span> <span class="n">class_labels</span> <span class="o">=</span> <span class="s1">&#39;labels.txt&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Provide customized input and output names to the Keras inputs and outputs
+while exposing them to Core ML.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">coreml_model</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">input_names</span> <span class="o">=</span>
+<span class="gp">... </span>  <span class="p">[</span><span class="s1">&#39;my_input_1&#39;</span><span class="p">,</span> <span class="s1">&#39;my_input_2&#39;</span><span class="p">],</span> <span class="n">output_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;my_output&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt id="coremltools.converters.keras._keras_converter._get_layer_converter_fn">
+<code class="sig-prename descclassname"><span class="pre">coremltools.converters.keras._keras_converter.</span></code><code class="sig-name descname"><span class="pre">_get_layer_converter_fn</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.converters.keras._keras_converter._get_layer_converter_fn" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the right converter function for Keras</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="coremltools.converters.keras._keras_converter._load_keras_model">
+<code class="sig-prename descclassname"><span class="pre">coremltools.converters.keras._keras_converter.</span></code><code class="sig-name descname"><span class="pre">_load_keras_model</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_network_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_weight_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_objects</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.converters.keras._keras_converter._load_keras_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load a keras model from disk</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>model_network_path: str</strong></dt><dd><p>Path where the model network path is (json file)</p>
+</dd>
+<dt><strong>model_weight_path: str</strong></dt><dd><p>Path where the model network weights are (hd5 file)</p>
+</dd>
+<dt><strong>custom_objects:</strong></dt><dd><p>A dictionary of layers or other custom classes
+or functions used by the model</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>model: A keras model</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="coremltools.converters.keras._keras_converter.convert">
+<code class="sig-prename descclassname"><span class="pre">coremltools.converters.keras._keras_converter.</span></code><code class="sig-name descname"><span class="pre">convert</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_input_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_name_shape_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_bgr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">red_bias</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">green_bias</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">blue_bias</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gray_bias</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">predicted_feature_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_precision</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'float32'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">predicted_probabilities_output</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_custom_layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_conversion_functions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_shapes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_shapes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">respect_trainable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_float_arraytype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.converters.keras._keras_converter.convert" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert a Keras model to Core ML protobuf specification (.mlmodel).</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>model: Keras model object | str | (str, str)</strong></dt><dd><p>A trained Keras neural network model which can be one of the following:</p>
+<ul class="simple">
+<li><p>a Keras model object</p></li>
+<li><p>a string with the path to a Keras model file (h5)</p></li>
+<li><p>a tuple of strings, where the first is the path to a Keras model</p></li>
+</ul>
+</dd>
+<dt><strong>architecture (.json file), the second is the path to its weights stored in h5 file.</strong></dt><dd></dd>
+<dt><strong>input_names: [str] | str</strong></dt><dd><p>Optional name(s) that can be given to the inputs of the Keras model.
+These names will be used in the interface of the Core ML models to refer
+to the inputs of the Keras model. If not provided, the Keras inputs
+are named to [input1, input2, …, inputN] in the Core ML model.  When
+multiple inputs are present, the input feature names are in the same
+order as the Keras inputs.</p>
+</dd>
+<dt><strong>output_names: [str] | str</strong></dt><dd><p>Optional name(s) that can be given to the outputs of the Keras model.
+These names will be used in the interface of the Core ML models to refer
+to the outputs of the Keras model. If not provided, the Keras outputs
+are named to [output1, output2, …, outputN] in the Core ML model.
+When multiple outputs are present, output feature names are in the same
+order as the Keras inputs.</p>
+</dd>
+<dt><strong>image_input_names: [str] | str</strong></dt><dd><p>Input names to the Keras model (a subset of the input_names
+parameter) that can be treated as images by Core ML. All other inputs
+are treated as MultiArrays (N-D Arrays).</p>
+</dd>
+<dt><strong>is_bgr: bool | dict()</strong></dt><dd><p>Flag indicating the channel order the model internally uses to represent
+color images. Set to True if the internal channel order is BGR,
+otherwise it will be assumed RGB. This flag is applicable only if
+image_input_names is specified. To specify a different value for each
+image input, provide a dictionary with input names as keys.
+Note that this flag is about the models internal channel order.
+An input image can be passed to the model in any color pixel layout
+containing red, green and blue values (e.g. 32BGRA or 32ARGB). This flag
+determines how those pixel values get mapped to the internal multiarray
+representation.</p>
+</dd>
+<dt><strong>red_bias: float | dict()</strong></dt><dd><p>Bias value to be added to the red channel of the input image.
+Defaults to 0.0
+Applicable only if image_input_names is specified.
+To specify different values for each image input provide a dictionary with input names as keys.</p>
+</dd>
+<dt><strong>blue_bias: float | dict()</strong></dt><dd><p>Bias value to be added to the blue channel of the input image.
+Defaults to 0.0
+Applicable only if image_input_names is specified.
+To specify different values for each image input provide a dictionary with input names as keys.</p>
+</dd>
+<dt><strong>green_bias: float | dict()</strong></dt><dd><p>Bias value to be added to the green channel of the input image.
+Defaults to 0.0
+Applicable only if image_input_names is specified.
+To specify different values for each image input provide a dictionary with input names as keys.</p>
+</dd>
+<dt><strong>gray_bias: float | dict()</strong></dt><dd><p>Bias value to be added to the input image (in grayscale). Defaults
+to 0.0
+Applicable only if image_input_names is specified.
+To specify different values for each image input provide a dictionary with input names as keys.</p>
+</dd>
+<dt><strong>image_scale: float | dict()</strong></dt><dd><p>Value by which input images will be scaled before bias is added and
+Core ML model makes a prediction. Defaults to 1.0.
+Applicable only if image_input_names is specified.
+To specify different values for each image input provide a dictionary with input names as keys.</p>
+</dd>
+<dt><strong>class_labels: list[int or str] | str</strong></dt><dd><p>Class labels (applies to classifiers only) that map the index of the
+output of a neural network to labels in a classifier.</p>
+<p>If the provided class_labels is a string, it is assumed to be a
+filepath where classes are parsed as a list of newline separated
+strings.</p>
+</dd>
+<dt><strong>predicted_feature_name: str</strong></dt><dd><p>Name of the output feature for the class labels exposed in the Core ML
+model (applies to classifiers only). Defaults to ‘classLabel’</p>
+</dd>
+<dt><strong>model_precision: str</strong></dt><dd><p>Precision at which model will be saved. Currently full precision (float) and half precision
+(float16) models are supported. Defaults to ‘_MLMODEL_FULL_PRECISION’ (full precision).</p>
+</dd>
+<dt><strong>predicted_probabilities_output: str</strong></dt><dd><p>Name of the neural network output to be interpreted as the predicted
+probabilities of the resulting classes. Typically the output of a
+softmax function. Defaults to the first output blob.</p>
+</dd>
+<dt><strong>add_custom_layers: bool</strong></dt><dd><p>If yes, then unknown Keras layer types will be added to the model as
+‘custom’ layers, which must then be filled in as postprocessing.</p>
+</dd>
+<dt><strong>custom_conversion_functions: {str:(Layer -&gt; (dict, [weights])) }</strong></dt><dd><p>A dictionary with keys corresponding to names of custom layers and values
+as functions taking a Keras custom layer and returning a parameter dictionary
+and list of weights.</p>
+</dd>
+<dt><strong>respect_trainable: bool</strong></dt><dd><p>If yes, then Keras layers marked ‘trainable’ will automatically be
+marked updatable in the Core ML model.</p>
+</dd>
+<dt><strong>use_float_arraytype: bool</strong></dt><dd><p>If true, the datatype of input/output multiarrays is set to Float32 instead
+of double.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>model: MLModel</dt><dd></dd>
+<dt>Model in Core ML format.</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Make a Keras model</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">model</span> <span class="o">=</span> <span class="n">Sequential</span><span class="p">()</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">model</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">Dense</span><span class="p">(</span><span class="n">num_channels</span><span class="p">,</span> <span class="n">input_dim</span> <span class="o">=</span> <span class="n">input_dim</span><span class="p">))</span>
+
+<span class="c1"># Convert it with default input and output names</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="kn">import</span> <span class="nn">coremltools</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">coreml_model</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+
+<span class="c1"># Saving the Core ML model to a file.</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">coreml_model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s1">&#39;my_model.mlmodel&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Converting a model with a single image input.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">coreml_model</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">input_names</span> <span class="o">=</span>
+<span class="gp">... </span><span class="s1">&#39;image&#39;</span><span class="p">,</span> <span class="n">image_input_names</span> <span class="o">=</span> <span class="s1">&#39;image&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Core ML also lets you add class labels to models to expose them as
+classifiers.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">coreml_model</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">input_names</span> <span class="o">=</span> <span class="s1">&#39;image&#39;</span><span class="p">,</span>
+<span class="gp">... </span><span class="n">image_input_names</span> <span class="o">=</span> <span class="s1">&#39;image&#39;</span><span class="p">,</span> <span class="n">class_labels</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;cat&#39;</span><span class="p">,</span> <span class="s1">&#39;dog&#39;</span><span class="p">,</span> <span class="s1">&#39;rat&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Class labels for classifiers can also come from a file on disk.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">coreml_model</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">input_names</span> <span class="o">=</span>
+<span class="gp">... </span><span class="s1">&#39;image&#39;</span><span class="p">,</span> <span class="n">image_input_names</span> <span class="o">=</span> <span class="s1">&#39;image&#39;</span><span class="p">,</span> <span class="n">class_labels</span> <span class="o">=</span> <span class="s1">&#39;labels.txt&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Provide customized input and output names to the Keras inputs and outputs
+while exposing them to Core ML.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">coreml_model</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">input_names</span> <span class="o">=</span>
+<span class="gp">... </span>  <span class="p">[</span><span class="s1">&#39;my_input_1&#39;</span><span class="p">,</span> <span class="s1">&#39;my_input_2&#39;</span><span class="p">],</span> <span class="n">output_names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;my_output&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<span class="target" id="module-coremltools.converters.keras._keras2_converter"></span><dl class="py function">
+<dt id="coremltools.converters.keras._keras2_converter._convert_training_info">
+<code class="sig-prename descclassname"><span class="pre">coremltools.converters.keras._keras2_converter.</span></code><code class="sig-name descname"><span class="pre">_convert_training_info</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">builder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_features</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.converters.keras._keras2_converter._convert_training_info" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert the training information from the given Keras ‘model’ into the Core
+ML in ‘builder’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> – keras.model.Sequential
+The source Keras model.</p></li>
+<li><p><strong>builder</strong> – NeutralNetworkBuilder
+The target model that will gain the loss and optimizer.</p></li>
+<li><p><strong>output_features</strong> – list of tuples, (str, datatype)
+The set of tensor names that are output from the layers in the Keras
+model.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="coremltools.converters.keras._keras2_converter._get_layer_converter_fn">
+<code class="sig-prename descclassname"><span class="pre">coremltools.converters.keras._keras2_converter.</span></code><code class="sig-name descname"><span class="pre">_get_layer_converter_fn</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">layer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_custom_layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.converters.keras._keras2_converter._get_layer_converter_fn" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the right converter function for Keras</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="coremltools.converters.keras._keras2_converter._load_keras_model">
+<code class="sig-prename descclassname"><span class="pre">coremltools.converters.keras._keras2_converter.</span></code><code class="sig-name descname"><span class="pre">_load_keras_model</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_network_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_weight_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_objects</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.converters.keras._keras2_converter._load_keras_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load a keras model from disk</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>model_network_path: str</strong></dt><dd><p>Path where the model network path is (json file)</p>
+</dd>
+<dt><strong>model_weight_path: str</strong></dt><dd><p>Path where the model network weights are (hd5 file)</p>
+</dd>
+<dt><strong>custom_objects:</strong></dt><dd><p>A dictionary of layers or other custom classes
+or functions used by the model</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>model: A keras model</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="coremltools.converters.libsvm.html" class="btn btn-neutral float-right" title="LibSVM" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="coremltools.converters.caffe.html" class="btn btn-neutral float-left" title="Caffe" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2021, Apple
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
