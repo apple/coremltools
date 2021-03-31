@@ -1,4 +1,4 @@
-Convert TensorFlow or Pytorch
+Unified (TensorFlow and Pytorch)
 -------------------------------------------
 
 .. automodule:: coremltools.converters._converters_entry
