@@ -485,8 +485,7 @@ def convert(
     Parameters
     ----------
     model:
-        An ONNX model with parameters loaded in the ONNX package, or path to file
-        with models.
+        An ONNX model with parameters loaded in the ONNX package, or a path to a model file.
         
     mode: 'classifier', 'regressor' or None
     
