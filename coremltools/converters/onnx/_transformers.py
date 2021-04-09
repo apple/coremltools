@@ -712,7 +712,7 @@ class CastOpRemover(object):
         for node in graph.nodes:
             if (
                 node.op_type == "Cast"
-                and (node.name not in output_names)
+                and all(output not in output_names for output in node.outputs)
                 and node.inputs[0] in graph.shape_dict
             ):
                 nodes_to_be_removed.append(node)
