@@ -43,11 +43,17 @@ def _onnx_create_model(
     inputs,  # type: Sequence[Tuple[Text,Tuple[int, ...]]]
     outputs,  # type: Sequence[Tuple[Text,Tuple[int, ...], int]]
     initializer=[],  # type: Sequence[TensorProto]
+    value_info=[],  # type: Sequence[Tuple[Text,Tuple[int, ...], int]]
 ):
     # type: (...) -> ModelProto
     initializer_inputs = [
         helper.make_tensor_value_info(t.name, TensorProto.FLOAT, t.dims)
         for t in initializer
+    ]
+
+    value_infos = [
+        helper.make_tensor_value_info(v_[0], v_[2], v_[1])
+        for v_ in value_info
     ]
 
     graph = helper.make_graph(
@@ -63,6 +69,7 @@ def _onnx_create_model(
             for output_ in outputs
         ],
         initializer=initializer,
+        value_info=value_infos,
     )
     onnx_model = helper.make_model(graph)
     return onnx_model

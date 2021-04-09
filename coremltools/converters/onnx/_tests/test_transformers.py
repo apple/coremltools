@@ -16,6 +16,7 @@ if _HAS_ONNX:
     from coremltools.converters.onnx import convert
     from coremltools.converters.onnx._graph import Graph
     from coremltools.converters.onnx._transformers import (
+        CastOpRemover,
         ConvAddFuser,
         DropoutRemover,
         ImageScalerRemover,
@@ -226,6 +227,56 @@ class NodeRemoverTests(unittest.TestCase):
         self.assertEqual(spec.neuralNetwork.preprocessing[0].scaler.redBias, 10.0)
         self.assertEqual(spec.neuralNetwork.preprocessing[1].scaler.channelScale, 5.0)
         self.assertEqual(spec.neuralNetwork.preprocessing[1].scaler.grayBias, -13.0)
+
+    def test_cast_op_remover(self):
+        inputs = [("input", (1, 16, 224, 224))]
+        outputs = [("output", (1, 1, 224, 224), TensorProto.FLOAT)]
+
+        conv = helper.make_node(
+            "Conv",
+            name="Conv_1",
+            inputs=["input", "weight"],
+            outputs=["conv_output"],
+            kernel_shape=(3, 3),
+            strides=(1, 1),
+        )
+        cast_1 = helper.make_node(
+            "Cast",
+            name="Cast_1",
+            inputs=["conv_output"],
+            outputs=["cast_1_output"],
+            to=1
+        )
+        sigmoid = helper.make_node(
+            "Sigmoid",
+            name="Sigmoid_1",
+            inputs=["cast_1_output"],
+            outputs=["sigmoid_output"],
+        )
+        cast_2 = helper.make_node(
+            "Cast",
+            name="Cast_2",
+            inputs=["sigmoid_output"],
+            outputs=["output"],
+            to=1
+        )
+        value_info = [
+            ("input", (1, 16, 224, 224), TensorProto.FLOAT),
+            ("conv_output", (1, 1, 224, 224), TensorProto.FLOAT),
+            ("cast_1_output", (1, 1, 224, 224), TensorProto.FLOAT),
+            ("sigmoid_output", (1, 1, 224, 224), TensorProto.FLOAT),
+        ]
+        onnx_model = _onnx_create_model([conv, cast_1, sigmoid, cast_2], inputs, outputs, value_info=value_info)
+
+        graph = Graph.from_onnx(onnx_model.graph, onnx_ir_version=5)
+        new_graph = graph.transformed([CastOpRemover()])
+
+        # The last Cast operation should not be removed
+        self.assertEqual(len(graph.nodes), 4)
+        self.assertEqual(len(new_graph.nodes), 3)
+        self.assertEqual(new_graph.nodes[0].inputs[0], "input")
+        self.assertEqual(new_graph.nodes[1].inputs[0], new_graph.nodes[0].outputs[0])
+        self.assertEqual(new_graph.nodes[2].outputs[0], "output")
 
 
 @unittest.skipUnless(_HAS_ONNX, MSG_ONNX_NOT_FOUND)
