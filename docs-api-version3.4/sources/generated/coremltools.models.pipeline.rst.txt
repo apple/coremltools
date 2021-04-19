@@ -1,0 +1,24 @@
+coremltools.models.pipeline
+===========================
+
+.. automodule:: coremltools.models.pipeline
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      Pipeline
+      PipelineClassifier
+      PipelineRegressor
+   
+   
+
+   
+   
+   

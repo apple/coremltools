@@ -1,0 +1,6 @@
+coremltools.converters.keras.convert
+====================================
+
+.. currentmodule:: coremltools.converters.keras
+
+.. autofunction:: convert

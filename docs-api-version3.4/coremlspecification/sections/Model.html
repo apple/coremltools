@@ -1,0 +1,653 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Models &mdash; mlmodel 3.4 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script type="text/javascript" src="../_static/jquery.js"></script>
+        <script type="text/javascript" src="../_static/underscore.js"></script>
+        <script type="text/javascript" src="../_static/doctools.js"></script>
+        <script type="text/javascript" src="../_static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Neural Networks" href="NeuralNetwork.html" />
+    <link rel="prev" title="Core ML Model Format Specification" href="../index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> mlmodel
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                3.4
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Models</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#pipeline">Pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pipelineclassifier">PipelineClassifier</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pipelineregressor">PipelineRegressor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#featuredescription">FeatureDescription</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#metadata">Metadata</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#modeldescription">ModelDescription</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#model">Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#identity">Identity</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="NeuralNetwork.html">Neural Networks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="TextClassifier.html">Text Classifier</a></li>
+<li class="toctree-l1"><a class="reference internal" href="WordTagger.html">Word Tagger</a></li>
+<li class="toctree-l1"><a class="reference internal" href="VisionFeaturePrint.html">Vision Feature Print</a></li>
+<li class="toctree-l1"><a class="reference internal" href="TreeEnsembles.html">Tree Ensembles</a></li>
+<li class="toctree-l1"><a class="reference internal" href="GLM.html">Generalized Linear Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="SVM.html">Support Vector Machines</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FeatureEngineering.html">Feature Engineering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="CustomModel.html">Custom Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="NearestNeighbors.html">Nearest Neighbors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="LinkedModel.html">Linked Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="SoundAnalysisPreprocessing.html">Sound Analysis Preprocessing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ItemSimilarityRecommender.html">Item Similarity Recommender</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DataStructuresAndFeatureTypes.html">Data Structures &amp; Feature Types</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">mlmodel</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>Models</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/sections/Model.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="models">
+<h1>Models<a class="headerlink" href="#models" title="Permalink to this headline">¶</a></h1>
+<p>A Core ML model consists of a specification version
+and a model description,
+and can be any one of the following types:</p>
+<dl class="docutils">
+<dt>Neural Networks</dt>
+<dd><ul class="first last simple">
+<li><a class="reference internal" href="NeuralNetwork.html#neuralnetwork"><span class="std std-ref">NeuralNetwork</span></a></li>
+</ul>
+</dd>
+<dt>Regressors</dt>
+<dd><ul class="first last simple">
+<li><code class="docutils literal notranslate"><span class="pre">GLMRegressor</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">SupportVectorRegressor</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">TreeEnsembleRegressor</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">NeuralNetworkRegressor</span></code></li>
+<li><code class="docutils literal notranslate"><span class="pre">BayesianProbitRegressor</span></code></li>
+</ul>
+</dd>
+<dt>Classifiers</dt>
+<dd><ul class="first last simple">
+<li><a class="reference internal" href="NeuralNetwork.html#neuralnetworkclassifier"><span class="std std-ref">NeuralNetworkClassifier</span></a></li>
+<li><a class="reference internal" href="TreeEnsembles.html#treeensembleclassifier"><span class="std std-ref">TreeEnsembleClassifier</span></a></li>
+<li><a class="reference internal" href="GLM.html#glmclassifier"><span class="std std-ref">GLMClassifier</span></a></li>
+<li><a class="reference internal" href="SVM.html#supportvectorclassifier"><span class="std std-ref">SupportVectorClassifier</span></a></li>
+<li><a class="reference internal" href="NearestNeighbors.html#knearestneighborsclassifier"><span class="std std-ref">KNearestNeighborsClassifier</span></a></li>
+</ul>
+</dd>
+<dt>Other models</dt>
+<dd><ul class="first last simple">
+<li><a class="reference internal" href="CustomModel.html#custommodel"><span class="std std-ref">CustomModel</span></a></li>
+<li><a class="reference internal" href="TextClassifier.html#textclassifier"><span class="std std-ref">TextClassifier</span></a></li>
+<li><a class="reference internal" href="WordTagger.html#wordtagger"><span class="std std-ref">WordTagger</span></a></li>
+<li><span class="xref std std-ref">Gazetteer</span></li>
+<li><span class="xref std std-ref">WordEmbedding</span></li>
+<li><a class="reference internal" href="VisionFeaturePrint.html#visionfeatureprint"><span class="std std-ref">VisionFeaturePrint</span></a></li>
+<li><a class="reference internal" href="LinkedModel.html#linkedmodel"><span class="std std-ref">LinkedModel</span></a></li>
+<li><a class="reference internal" href="SoundAnalysisPreprocessing.html#soundanalysispreprocessing"><span class="std std-ref">SoundAnalysisPreprocessing</span></a></li>
+<li><a class="reference internal" href="ItemSimilarityRecommender.html#itemsimilarityrecommender"><span class="std std-ref">ItemSimilarityRecommender</span></a></li>
+</ul>
+</dd>
+<dt>Feature Engineering</dt>
+<dd><ul class="first last simple">
+<li><a class="reference internal" href="FeatureEngineering.html#imputer"><span class="std std-ref">Imputer</span></a></li>
+<li><a class="reference internal" href="FeatureEngineering.html#scaler"><span class="std std-ref">Scaler</span></a></li>
+<li><a class="reference internal" href="FeatureEngineering.html#normalizer"><span class="std std-ref">Normalizer</span></a></li>
+<li><a class="reference internal" href="FeatureEngineering.html#onehotencoder"><span class="std std-ref">OneHotEncoder</span></a></li>
+<li><a class="reference internal" href="FeatureEngineering.html#categoricalmapping"><span class="std std-ref">CategoricalMapping</span></a></li>
+<li><a class="reference internal" href="FeatureEngineering.html#featurevectorizer"><span class="std std-ref">FeatureVectorizer</span></a></li>
+<li><a class="reference internal" href="FeatureEngineering.html#dictvectorizer"><span class="std std-ref">DictVectorizer</span></a></li>
+<li><a class="reference internal" href="FeatureEngineering.html#arrayfeatureextractor"><span class="std std-ref">ArrayFeatureExtractor</span></a></li>
+<li><a class="reference internal" href="FeatureEngineering.html#nonmaximumsuppression"><span class="std std-ref">NonMaximumSuppression</span></a></li>
+</ul>
+</dd>
+<dt>Pipelines</dt>
+<dd><ul class="first last simple">
+<li><a class="reference internal" href="#pipelineclassifier"><span class="std std-ref">PipelineClassifier</span></a></li>
+<li><a class="reference internal" href="#pipelineregressor"><span class="std std-ref">PipelineRegressor</span></a></li>
+<li><a class="reference internal" href="#pipeline"><span class="std std-ref">Pipeline</span></a></li>
+</ul>
+</dd>
+<dt>Simple Mathematical Functions</dt>
+<dd><ul class="first last simple">
+<li><a class="reference internal" href="#identity"><span class="std std-ref">Identity</span></a></li>
+</ul>
+</dd>
+</dl>
+<div class="section" id="pipeline">
+<h2>Pipeline<a class="headerlink" href="#pipeline" title="Permalink to this headline">¶</a></h2>
+<p>A pipeline consisting of one or more models.</p>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Pipeline</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="n">Model</span> <span class="na">models</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+
+    <span class="c1">// Optional names given for each model</span>
+    <span class="c1">// If not supplied it defaults to [&quot;model0&quot;,..., &quot;model&quot;(models.size()-1)]</span>
+    <span class="c1">// These names can be used to disambiguate the scope / domain of a parameter</span>
+    <span class="k">repeated</span> <span class="kt">string</span> <span class="na">names</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="pipelineclassifier">
+<h2>PipelineClassifier<a class="headerlink" href="#pipelineclassifier" title="Permalink to this headline">¶</a></h2>
+<p>A classifier pipeline.</p>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">PipelineClassifier</span> <span class="p">{</span>
+    <span class="n">Pipeline</span> <span class="na">pipeline</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="pipelineregressor">
+<h2>PipelineRegressor<a class="headerlink" href="#pipelineregressor" title="Permalink to this headline">¶</a></h2>
+<p>A regressor pipeline.</p>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">PipelineRegressor</span> <span class="p">{</span>
+    <span class="n">Pipeline</span> <span class="na">pipeline</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="featuredescription">
+<h2>FeatureDescription<a class="headerlink" href="#featuredescription" title="Permalink to this headline">¶</a></h2>
+<p>A feature description,
+consisting of a name, short description, and type.</p>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">FeatureDescription</span> <span class="p">{</span>
+    <span class="kt">string</span> <span class="na">name</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="kt">string</span> <span class="na">shortDescription</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+    <span class="n">FeatureType</span> <span class="na">type</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="metadata">
+<h2>Metadata<a class="headerlink" href="#metadata" title="Permalink to this headline">¶</a></h2>
+<p>Model metadata,
+consisting of a short description, a version string,
+an author, a license, and any other user defined
+key/value meta data.</p>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Metadata</span> <span class="p">{</span>
+    <span class="kt">string</span> <span class="na">shortDescription</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="kt">string</span> <span class="na">versionString</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+    <span class="kt">string</span> <span class="na">author</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+    <span class="kt">string</span> <span class="na">license</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
+    <span class="n">map</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;</span> <span class="na">userDefined</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="section" id="metadata-userdefinedentry">
+<h3>Metadata.UserDefinedEntry<a class="headerlink" href="#metadata-userdefinedentry" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="c1">// Copyright (c) 2017, Apple Inc. All rights reserved.</span>
+<span class="c1">//</span>
+<span class="c1">// Use of this source code is governed by a BSD-3-clause license that can be</span>
+<span class="c1">// found in LICENSE.txt or at https://opensource.org/licenses/BSD-3-Clause</span>
+
+
+<span class="na">syntax</span> <span class="o">=</span> <span class="s">&quot;proto3&quot;</span><span class="p">;</span>
+<span class="k">option</span> <span class="na">optimize_for</span> <span class="o">=</span> <span class="n">LITE_RUNTIME</span><span class="p">;</span>
+
+<span class="k">import</span> <span class="n">public</span> <span class="s">&quot;VisionFeaturePrint.proto&quot;</span><span class="p">;</span>
+<span class="k">import</span> <span class="n">public</span> <span class="s">&quot;TextClassifier.proto&quot;</span><span class="p">;</span>
+<span class="k">import</span> <span class="n">public</span> <span class="s">&quot;WordTagger.proto&quot;</span><span class="p">;</span>
+<span class="k">import</span> <span class="n">public</span> <span class="s">&quot;Gazetteer.proto&quot;</span><span class="p">;</span>
+<span class="k">import</span> <span class="n">public</span> <span class="s">&quot;WordEmbedding.proto&quot;</span><span class="p">;</span>
+<span class="k">import</span> <span class="n">public</span> <span class="s">&quot;ArrayFeatureExtractor.proto&quot;</span><span class="p">;</span>
+<span class="k">import</span> <span class="n">public</span> <span class="s">&quot;BayesianProbitRegressor.proto&quot;</span><span class="p">;</span>
+<span class="k">import</span> <span class="n">public</span> <span class="s">&quot;CategoricalMapping.proto&quot;</span><span class="p">;</span>
+<span class="k">import</span> <span class="n">public</span> <span class="s">&quot;CustomModel.proto&quot;</span><span class="p">;</span>
+<span class="k">import</span> <span class="n">public</span> <span class="s">&quot;DictVectorizer.proto&quot;</span><span class="p">;</span>
+<span class="k">import</span> <span class="n">public</span> <span class="s">&quot;FeatureTypes.proto&quot;</span><span class="p">;</span>
+<span class="k">import</span> <span class="n">public</span> <span class="s">&quot;FeatureVectorizer.proto&quot;</span><span class="p">;</span>
+<span class="k">import</span> <span class="n">public</span> <span class="s">&quot;GLMRegressor.proto&quot;</span><span class="p">;</span>
+<span class="k">import</span> <span class="n">public</span> <span class="s">&quot;GLMClassifier.proto&quot;</span><span class="p">;</span>
+<span class="k">import</span> <span class="n">public</span> <span class="s">&quot;NearestNeighbors.proto&quot;</span><span class="p">;</span>
+<span class="k">import</span> <span class="n">public</span> <span class="s">&quot;Identity.proto&quot;</span><span class="p">;</span>
+<span class="k">import</span> <span class="n">public</span> <span class="s">&quot;Imputer.proto&quot;</span><span class="p">;</span>
+<span class="k">import</span> <span class="n">public</span> <span class="s">&quot;NeuralNetwork.proto&quot;</span><span class="p">;</span>
+<span class="k">import</span> <span class="n">public</span> <span class="s">&quot;Normalizer.proto&quot;</span><span class="p">;</span>
+<span class="k">import</span> <span class="n">public</span> <span class="s">&quot;OneHotEncoder.proto&quot;</span><span class="p">;</span>
+<span class="k">import</span> <span class="n">public</span> <span class="s">&quot;Scaler.proto&quot;</span><span class="p">;</span>
+<span class="k">import</span> <span class="n">public</span> <span class="s">&quot;NonMaximumSuppression.proto&quot;</span><span class="p">;</span>
+<span class="k">import</span> <span class="n">public</span> <span class="s">&quot;SVM.proto&quot;</span><span class="p">;</span>
+<span class="k">import</span> <span class="n">public</span> <span class="s">&quot;TreeEnsemble.proto&quot;</span><span class="p">;</span>
+<span class="k">import</span> <span class="n">public</span> <span class="s">&quot;Parameters.proto&quot;</span><span class="p">;</span>
+<span class="k">import</span> <span class="n">public</span> <span class="s">&quot;ItemSimilarityRecommender.proto&quot;</span><span class="p">;</span>
+<span class="k">import</span> <span class="n">public</span> <span class="s">&quot;SoundAnalysisPreprocessing.proto&quot;</span><span class="p">;</span>
+<span class="k">import</span> <span class="n">public</span> <span class="s">&quot;LinkedModel.proto&quot;</span><span class="p">;</span>
+
+<span class="kn">package</span> <span class="nn">CoreML</span><span class="o">.</span><span class="n">Specification</span><span class="p">;</span>
+
+<span class="kd">message</span> <span class="nc">Pipeline</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="n">Model</span> <span class="na">models</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+
+    <span class="c1">// Optional names given for each model</span>
+    <span class="c1">// If not supplied it defaults to [&quot;model0&quot;,..., &quot;model&quot;(models.size()-1)]</span>
+    <span class="c1">// These names can be used to disambiguate the scope / domain of a parameter</span>
+    <span class="k">repeated</span> <span class="kt">string</span> <span class="na">names</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">message</span> <span class="nc">PipelineClassifier</span> <span class="p">{</span>
+    <span class="n">Pipeline</span> <span class="na">pipeline</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">message</span> <span class="nc">PipelineRegressor</span> <span class="p">{</span>
+    <span class="n">Pipeline</span> <span class="na">pipeline</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">message</span> <span class="nc">FeatureDescription</span> <span class="p">{</span>
+    <span class="kt">string</span> <span class="na">name</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="kt">string</span> <span class="na">shortDescription</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+    <span class="n">FeatureType</span> <span class="na">type</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">message</span> <span class="nc">Metadata</span> <span class="p">{</span>
+    <span class="kt">string</span> <span class="na">shortDescription</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="kt">string</span> <span class="na">versionString</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+    <span class="kt">string</span> <span class="na">author</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+    <span class="kt">string</span> <span class="na">license</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
+    <span class="n">map</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;</span> <span class="na">userDefined</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">message</span> <span class="nc">ModelDescription</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="n">FeatureDescription</span> <span class="na">input</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="k">repeated</span> <span class="n">FeatureDescription</span> <span class="na">output</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+
+    <span class="kt">string</span> <span class="na">predictedFeatureName</span> <span class="o">=</span> <span class="mi">11</span><span class="p">;</span>
+    <span class="kt">string</span> <span class="na">predictedProbabilitiesName</span> <span class="o">=</span> <span class="mi">12</span><span class="p">;</span>
+
+    <span class="k">repeated</span> <span class="n">FeatureDescription</span> <span class="na">trainingInput</span> <span class="o">=</span> <span class="mi">50</span><span class="p">;</span>
+
+    <span class="n">Metadata</span> <span class="na">metadata</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">message</span> <span class="nc">Model</span> <span class="p">{</span>
+    <span class="kt">int32</span> <span class="na">specificationVersion</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="n">ModelDescription</span> <span class="na">description</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+
+    <span class="kt">bool</span> <span class="na">isUpdatable</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+
+    <span class="c1">// start at 200 here</span>
+    <span class="c1">// model specific parameters:</span>
+    <span class="k">oneof</span> <span class="n">Type</span> <span class="p">{</span>
+        <span class="c1">// pipeline starts at 200</span>
+        <span class="n">PipelineClassifier</span> <span class="na">pipelineClassifier</span> <span class="o">=</span> <span class="mi">200</span><span class="p">;</span>
+        <span class="n">PipelineRegressor</span> <span class="na">pipelineRegressor</span> <span class="o">=</span> <span class="mi">201</span><span class="p">;</span>
+        <span class="n">Pipeline</span> <span class="na">pipeline</span> <span class="o">=</span> <span class="mi">202</span><span class="p">;</span>
+
+        <span class="c1">// regressors start at 300</span>
+        <span class="n">GLMRegressor</span> <span class="na">glmRegressor</span> <span class="o">=</span> <span class="mi">300</span><span class="p">;</span>
+        <span class="n">SupportVectorRegressor</span> <span class="na">supportVectorRegressor</span> <span class="o">=</span> <span class="mi">301</span><span class="p">;</span>
+        <span class="n">TreeEnsembleRegressor</span> <span class="na">treeEnsembleRegressor</span> <span class="o">=</span> <span class="mi">302</span><span class="p">;</span>
+        <span class="n">NeuralNetworkRegressor</span> <span class="na">neuralNetworkRegressor</span> <span class="o">=</span> <span class="mi">303</span><span class="p">;</span>
+        <span class="n">BayesianProbitRegressor</span> <span class="na">bayesianProbitRegressor</span> <span class="o">=</span> <span class="mi">304</span><span class="p">;</span>
+
+        <span class="c1">// classifiers start at 400</span>
+        <span class="n">GLMClassifier</span> <span class="na">glmClassifier</span> <span class="o">=</span> <span class="mi">400</span><span class="p">;</span>
+        <span class="n">SupportVectorClassifier</span> <span class="na">supportVectorClassifier</span> <span class="o">=</span> <span class="mi">401</span><span class="p">;</span>
+        <span class="n">TreeEnsembleClassifier</span> <span class="na">treeEnsembleClassifier</span> <span class="o">=</span> <span class="mi">402</span><span class="p">;</span>
+        <span class="n">NeuralNetworkClassifier</span> <span class="na">neuralNetworkClassifier</span> <span class="o">=</span> <span class="mi">403</span><span class="p">;</span>
+        <span class="n">KNearestNeighborsClassifier</span> <span class="na">kNearestNeighborsClassifier</span> <span class="o">=</span> <span class="mi">404</span><span class="p">;</span>
+
+        <span class="c1">// generic models start at 500</span>
+        <span class="n">NeuralNetwork</span> <span class="na">neuralNetwork</span> <span class="o">=</span> <span class="mi">500</span><span class="p">;</span>
+        <span class="n">ItemSimilarityRecommender</span> <span class="na">itemSimilarityRecommender</span> <span class="o">=</span> <span class="mi">501</span><span class="p">;</span>
+
+        <span class="c1">// Custom and linked models</span>
+        <span class="n">CustomModel</span> <span class="na">customModel</span> <span class="o">=</span> <span class="mi">555</span><span class="p">;</span>
+        <span class="n">LinkedModel</span> <span class="na">linkedModel</span> <span class="o">=</span> <span class="mi">556</span><span class="p">;</span>
+
+        <span class="c1">// feature engineering starts at 600</span>
+        <span class="n">OneHotEncoder</span> <span class="na">oneHotEncoder</span> <span class="o">=</span> <span class="mi">600</span><span class="p">;</span>
+        <span class="n">Imputer</span> <span class="na">imputer</span> <span class="o">=</span> <span class="mi">601</span><span class="p">;</span>
+        <span class="n">FeatureVectorizer</span> <span class="na">featureVectorizer</span> <span class="o">=</span> <span class="mi">602</span><span class="p">;</span>
+        <span class="n">DictVectorizer</span> <span class="na">dictVectorizer</span> <span class="o">=</span> <span class="mi">603</span><span class="p">;</span>
+        <span class="n">Scaler</span> <span class="na">scaler</span> <span class="o">=</span> <span class="mi">604</span><span class="p">;</span>
+        <span class="n">CategoricalMapping</span> <span class="na">categoricalMapping</span> <span class="o">=</span> <span class="mi">606</span><span class="p">;</span>
+        <span class="n">Normalizer</span> <span class="na">normalizer</span> <span class="o">=</span> <span class="mi">607</span><span class="p">;</span>
+        <span class="n">ArrayFeatureExtractor</span> <span class="na">arrayFeatureExtractor</span> <span class="o">=</span> <span class="mi">609</span><span class="p">;</span>
+        <span class="n">NonMaximumSuppression</span> <span class="na">nonMaximumSuppression</span> <span class="o">=</span> <span class="mi">610</span><span class="p">;</span>
+
+
+        <span class="c1">// simple mathematical functions used for testing start at 900</span>
+        <span class="n">Identity</span> <span class="na">identity</span> <span class="o">=</span> <span class="mi">900</span><span class="p">;</span>
+
+        <span class="c1">// reserved until 1000</span>
+
+        <span class="c1">// CoreML provided models</span>
+        <span class="n">CoreMLModels.TextClassifier</span> <span class="na">textClassifier</span> <span class="o">=</span> <span class="mi">2000</span><span class="p">;</span>
+        <span class="n">CoreMLModels.WordTagger</span> <span class="na">wordTagger</span> <span class="o">=</span> <span class="mi">2001</span><span class="p">;</span>
+        <span class="n">CoreMLModels.VisionFeaturePrint</span> <span class="na">visionFeaturePrint</span> <span class="o">=</span> <span class="mi">2002</span><span class="p">;</span>
+        <span class="n">CoreMLModels.SoundAnalysisPreprocessing</span> <span class="na">soundAnalysisPreprocessing</span> <span class="o">=</span> <span class="mi">2003</span><span class="p">;</span>
+        <span class="n">CoreMLModels.Gazetteer</span> <span class="na">gazetteer</span> <span class="o">=</span> <span class="mi">2004</span><span class="p">;</span>
+        <span class="n">CoreMLModels.WordEmbedding</span> <span class="na">wordEmbedding</span> <span class="o">=</span> <span class="mi">2005</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="modeldescription">
+<h2>ModelDescription<a class="headerlink" href="#modeldescription" title="Permalink to this headline">¶</a></h2>
+<p>A description of a model,
+consisting of descriptions of its input and output features.
+Both regressor and classifier models require the name of the
+primary predicted output feature (<code class="docutils literal notranslate"><span class="pre">predictedFeatureName</span></code>).
+Classifier models can specify the output feature containing
+probabilities for the predicted classes
+(<code class="docutils literal notranslate"><span class="pre">predictedProbabilitiesName</span></code>).</p>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ModelDescription</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="n">FeatureDescription</span> <span class="na">input</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="k">repeated</span> <span class="n">FeatureDescription</span> <span class="na">output</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+
+    <span class="kt">string</span> <span class="na">predictedFeatureName</span> <span class="o">=</span> <span class="mi">11</span><span class="p">;</span>
+    <span class="kt">string</span> <span class="na">predictedProbabilitiesName</span> <span class="o">=</span> <span class="mi">12</span><span class="p">;</span>
+
+    <span class="k">repeated</span> <span class="n">FeatureDescription</span> <span class="na">trainingInput</span> <span class="o">=</span> <span class="mi">50</span><span class="p">;</span>
+
+    <span class="n">Metadata</span> <span class="na">metadata</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="model">
+<h2>Model<a class="headerlink" href="#model" title="Permalink to this headline">¶</a></h2>
+<p>A Core ML model,
+consisting of a specification version,
+a model description, and a model type.</p>
+<p>Core ML model compatibility is indicated by
+a monotonically increasing specification version number,
+which is incremented anytime a backward-incompatible change is made
+(this is functionally equivalent to the MAJOR version number
+described by <a class="reference external" href="http://semver.org/">Semantic Versioning 2.0.0</a>).</p>
+<p>Specification Versions : OS Availability (Core ML Version)</p>
+<p>1 : iOS 11, macOS 10.13, tvOS 11, watchOS 4 (Core ML 1)
+- Feedforward &amp; Recurrent Neural Networks
+- General Linear Models
+- Tree Ensembles
+- Support Vector Machines
+- Pipelines
+- Feature Engineering</p>
+<p>2 : iOS 11.2, macOS 10.13.2, tvOS 11.2, watchOS 4.2 (Core ML 1.2)
+- Custom Layers for Neural Networks
+- Float 16 support for Neural Network layers</p>
+<p>3 : iOS 12, macOS 10.14, tvOS 12, watchOS 5 (Core ML 2)
+- Flexible shapes and image sizes
+- Categorical sequences
+- Core ML Vision Feature Print, Text Classifier, Word Tagger
+- Non Max Suppression
+- Crop and Resize Bilinear NN layers
+- Custom Models</p>
+<p>4 : iOS 13, macOS 10.15, tvOS 13, watchOS 6 (Core ML 3)
+- Updatable models
+- Exact shape / general rank mapping for neural networks
+- Large expansion of supported neural network layers</p>
+<blockquote>
+<div><ul class="simple">
+<li>Generalized operations</li>
+<li>Control flow</li>
+<li>Dynamic layers</li>
+<li>See NeuralNetwork.proto</li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li>Nearest Neighbor Classifier</li>
+<li>Sound Analysis Prepreocessing</li>
+<li>Recommender</li>
+<li>Linked Model</li>
+<li>NLP Gazeteer</li>
+<li>NLP WordEmbedding</li>
+</ul>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Model</span> <span class="p">{</span>
+    <span class="kt">int32</span> <span class="na">specificationVersion</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="n">ModelDescription</span> <span class="na">description</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+
+    <span class="kt">bool</span> <span class="na">isUpdatable</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+
+    <span class="c1">// start at 200 here</span>
+    <span class="c1">// model specific parameters:</span>
+    <span class="k">oneof</span> <span class="n">Type</span> <span class="p">{</span>
+        <span class="c1">// pipeline starts at 200</span>
+        <span class="n">PipelineClassifier</span> <span class="na">pipelineClassifier</span> <span class="o">=</span> <span class="mi">200</span><span class="p">;</span>
+        <span class="n">PipelineRegressor</span> <span class="na">pipelineRegressor</span> <span class="o">=</span> <span class="mi">201</span><span class="p">;</span>
+        <span class="n">Pipeline</span> <span class="na">pipeline</span> <span class="o">=</span> <span class="mi">202</span><span class="p">;</span>
+
+        <span class="c1">// regressors start at 300</span>
+        <span class="n">GLMRegressor</span> <span class="na">glmRegressor</span> <span class="o">=</span> <span class="mi">300</span><span class="p">;</span>
+        <span class="n">SupportVectorRegressor</span> <span class="na">supportVectorRegressor</span> <span class="o">=</span> <span class="mi">301</span><span class="p">;</span>
+        <span class="n">TreeEnsembleRegressor</span> <span class="na">treeEnsembleRegressor</span> <span class="o">=</span> <span class="mi">302</span><span class="p">;</span>
+        <span class="n">NeuralNetworkRegressor</span> <span class="na">neuralNetworkRegressor</span> <span class="o">=</span> <span class="mi">303</span><span class="p">;</span>
+        <span class="n">BayesianProbitRegressor</span> <span class="na">bayesianProbitRegressor</span> <span class="o">=</span> <span class="mi">304</span><span class="p">;</span>
+
+        <span class="c1">// classifiers start at 400</span>
+        <span class="n">GLMClassifier</span> <span class="na">glmClassifier</span> <span class="o">=</span> <span class="mi">400</span><span class="p">;</span>
+        <span class="n">SupportVectorClassifier</span> <span class="na">supportVectorClassifier</span> <span class="o">=</span> <span class="mi">401</span><span class="p">;</span>
+        <span class="n">TreeEnsembleClassifier</span> <span class="na">treeEnsembleClassifier</span> <span class="o">=</span> <span class="mi">402</span><span class="p">;</span>
+        <span class="n">NeuralNetworkClassifier</span> <span class="na">neuralNetworkClassifier</span> <span class="o">=</span> <span class="mi">403</span><span class="p">;</span>
+        <span class="n">KNearestNeighborsClassifier</span> <span class="na">kNearestNeighborsClassifier</span> <span class="o">=</span> <span class="mi">404</span><span class="p">;</span>
+
+        <span class="c1">// generic models start at 500</span>
+        <span class="n">NeuralNetwork</span> <span class="na">neuralNetwork</span> <span class="o">=</span> <span class="mi">500</span><span class="p">;</span>
+        <span class="n">ItemSimilarityRecommender</span> <span class="na">itemSimilarityRecommender</span> <span class="o">=</span> <span class="mi">501</span><span class="p">;</span>
+
+        <span class="c1">// Custom and linked models</span>
+        <span class="n">CustomModel</span> <span class="na">customModel</span> <span class="o">=</span> <span class="mi">555</span><span class="p">;</span>
+        <span class="n">LinkedModel</span> <span class="na">linkedModel</span> <span class="o">=</span> <span class="mi">556</span><span class="p">;</span>
+
+        <span class="c1">// feature engineering starts at 600</span>
+        <span class="n">OneHotEncoder</span> <span class="na">oneHotEncoder</span> <span class="o">=</span> <span class="mi">600</span><span class="p">;</span>
+        <span class="n">Imputer</span> <span class="na">imputer</span> <span class="o">=</span> <span class="mi">601</span><span class="p">;</span>
+        <span class="n">FeatureVectorizer</span> <span class="na">featureVectorizer</span> <span class="o">=</span> <span class="mi">602</span><span class="p">;</span>
+        <span class="n">DictVectorizer</span> <span class="na">dictVectorizer</span> <span class="o">=</span> <span class="mi">603</span><span class="p">;</span>
+        <span class="n">Scaler</span> <span class="na">scaler</span> <span class="o">=</span> <span class="mi">604</span><span class="p">;</span>
+        <span class="n">CategoricalMapping</span> <span class="na">categoricalMapping</span> <span class="o">=</span> <span class="mi">606</span><span class="p">;</span>
+        <span class="n">Normalizer</span> <span class="na">normalizer</span> <span class="o">=</span> <span class="mi">607</span><span class="p">;</span>
+        <span class="n">ArrayFeatureExtractor</span> <span class="na">arrayFeatureExtractor</span> <span class="o">=</span> <span class="mi">609</span><span class="p">;</span>
+        <span class="n">NonMaximumSuppression</span> <span class="na">nonMaximumSuppression</span> <span class="o">=</span> <span class="mi">610</span><span class="p">;</span>
+
+
+        <span class="c1">// simple mathematical functions used for testing start at 900</span>
+        <span class="n">Identity</span> <span class="na">identity</span> <span class="o">=</span> <span class="mi">900</span><span class="p">;</span>
+
+        <span class="c1">// reserved until 1000</span>
+
+        <span class="c1">// CoreML provided models</span>
+        <span class="n">CoreMLModels.TextClassifier</span> <span class="na">textClassifier</span> <span class="o">=</span> <span class="mi">2000</span><span class="p">;</span>
+        <span class="n">CoreMLModels.WordTagger</span> <span class="na">wordTagger</span> <span class="o">=</span> <span class="mi">2001</span><span class="p">;</span>
+        <span class="n">CoreMLModels.VisionFeaturePrint</span> <span class="na">visionFeaturePrint</span> <span class="o">=</span> <span class="mi">2002</span><span class="p">;</span>
+        <span class="n">CoreMLModels.SoundAnalysisPreprocessing</span> <span class="na">soundAnalysisPreprocessing</span> <span class="o">=</span> <span class="mi">2003</span><span class="p">;</span>
+        <span class="n">CoreMLModels.Gazetteer</span> <span class="na">gazetteer</span> <span class="o">=</span> <span class="mi">2004</span><span class="p">;</span>
+        <span class="n">CoreMLModels.WordEmbedding</span> <span class="na">wordEmbedding</span> <span class="o">=</span> <span class="mi">2005</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="identity">
+<h2>Identity<a class="headerlink" href="#identity" title="Permalink to this headline">¶</a></h2>
+<p>An identity model.</p>
+<p>This model returns given inputs as outputs, unchanged.
+Intended to be used for testing purposes.</p>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Identity</span> <span class="p">{</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="NeuralNetwork.html" class="btn btn-neutral float-right" title="Neural Networks" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../index.html" class="btn btn-neutral float-left" title="Core ML Model Format Specification" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017 - 2019, Apple Inc
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

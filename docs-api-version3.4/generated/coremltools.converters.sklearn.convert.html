@@ -1,0 +1,368 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>coremltools.converters.sklearn.convert &mdash; coremltools 3.4 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../static/documentation_options.js"></script>
+        <script type="text/javascript" src="../static/jquery.js"></script>
+        <script type="text/javascript" src="../static/underscore.js"></script>
+        <script type="text/javascript" src="../static/doctools.js"></script>
+        <script type="text/javascript" src="../static/language_data.js"></script>
+        <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../static/graphviz.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="coremltools.converters.xgboost.convert" href="coremltools.converters.xgboost.convert.html" />
+    <link rel="prev" title="coremltools.converters.libsvm.convert" href="coremltools.converters.libsvm.convert.html" />
+    <link href="../static/style.css" rel="stylesheet" type="text/css">
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> coremltools
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                3.4
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../coremltools.converters.html">Converters</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.caffe.convert.html">coremltools.converters.caffe.convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.libsvm.convert.html">coremltools.converters.libsvm.convert</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">coremltools.converters.sklearn.convert</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.xgboost.convert.html">coremltools.converters.xgboost.convert</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../coremltools.models.html">Models</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.MLModel.html">coremltools.models.MLModel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.pipeline.html">coremltools.models.pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.tree_ensemble.html">coremltools.models.tree_ensemble</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.nearest_neighbors.builder.html">coremltools.models.nearest_neighbors.builder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.neural_network.builder.html">coremltools.models.neural_network.builder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.neural_network.flexible_shape_utils.html">coremltools.models.neural_network.flexible_shape_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.neural_network.quantization_utils.html">coremltools.models.neural_network.quantization_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.neural_network.update_optimizer_utils.html">coremltools.models.neural_network.update_optimizer_utils</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../coremltools.utils.html">Utilities</a><ul class="simple">
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">coremltools</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="../coremltools.converters.html">Converters</a> &raquo;</li>
+        
+      <li>coremltools.converters.sklearn.convert</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../sources/generated/coremltools.converters.sklearn.convert.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="coremltools-converters-sklearn-convert">
+<h1>coremltools.converters.sklearn.convert<a class="headerlink" href="#coremltools-converters-sklearn-convert" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="coremltools.converters.sklearn.convert">
+<code class="descclassname">coremltools.converters.sklearn.</code><code class="descname">convert</code><span class="sig-paren">(</span><em>sk_obj</em>, <em>input_features=None</em>, <em>output_feature_names=None</em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.converters.sklearn.convert" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert scikit-learn pipeline, classifier, or regressor to Core ML format.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>sk_obj: model | [model] of scikit-learn format.</strong></dt>
+<dd><p class="first">Scikit learn model(s) to convert to a Core ML format.</p>
+<p>The input model may be a single scikit learn model, a scikit learn
+pipeline model, or a list of scikit learn models.</p>
+<p>Currently supported scikit learn models are:</p>
+<ul class="simple">
+<li>Linear and Logistic Regression</li>
+<li>LinearSVC and LinearSVR</li>
+<li>SVC and SVR</li>
+<li>NuSVC and NuSVR</li>
+<li>Gradient Boosting Classifier and Regressor</li>
+<li>Decision Tree Classifier and Regressor</li>
+<li>Random Forest Classifier and Regressor</li>
+<li>Normalizer</li>
+<li>Imputer</li>
+<li>Standard Scaler</li>
+<li>DictVectorizer</li>
+<li>One Hot Encoder</li>
+<li>KNeighborsClassifier</li>
+</ul>
+<p>The input model, or the last model in a pipeline or list of models,
+determines whether this is exposed as a Transformer, Regressor,
+or Classifier.</p>
+<p class="last">Note that there may not be a one-to-one correspondence between scikit
+learn models and which Core ML models are used to represent them.  For
+example, many scikit learn models are embedded in a pipeline to handle
+processing of input features.</p>
+</dd>
+<dt><strong>input_features: str | dict | list</strong></dt>
+<dd><p class="first">Optional name(s) that can be given to the inputs of the scikit-learn
+model. Defaults to ‘input’.</p>
+<p>Input features can be specified in a number of forms.</p>
+<ul class="last">
+<li><p class="first">Single string: In this case, the input is assumed to be a single
+array, with the number of dimensions set using num_dimensions.</p>
+</li>
+<li><p class="first">List of strings: In this case, the overall input dimensions to the
+scikit-learn model is assumed to be the length of the list.  If
+neighboring names are identical, they are assumed to be an input
+array of that length.  For example:</p>
+<blockquote>
+<div><p>[“a”, “b”, “c”]</p>
+</div></blockquote>
+<p>resolves to</p>
+<blockquote>
+<div><p>[(“a”, Double), (“b”, Double), (“c”, Double)].</p>
+</div></blockquote>
+<p>And:</p>
+<blockquote>
+<div><p>[“a”, “a”, “b”]</p>
+</div></blockquote>
+<p>resolves to</p>
+<blockquote>
+<div><p>[(“a”, Array(2)), (“b”, Double)].</p>
+</div></blockquote>
+</li>
+<li><p class="first">Dictionary: Where the keys are the names and the indices or ranges of
+feature indices.</p>
+<blockquote>
+<div><p>In this case, it’s presented as a mapping from keys to indices or
+ranges of contiguous indices.  For example,</p>
+<blockquote>
+<div><p>{“a” : 0, “b” : [2,3], “c” : 1}</p>
+</div></blockquote>
+<p>Resolves to</p>
+<blockquote>
+<div><p>[(“a”, Double), (“c”, Double), (“b”, Array(2))].</p>
+</div></blockquote>
+<p>Note that the ordering is determined by the indices.</p>
+</div></blockquote>
+</li>
+<li><p class="first">List of tuples of the form <cite>(name, datatype)</cite>.  Here, <cite>name</cite> is the
+name of the exposed feature, and <cite>datatype</cite> is an instance of
+<cite>String</cite>, <cite>Double</cite>, <cite>Int64</cite>, <cite>Array</cite>, or <cite>Dictionary</cite>.</p>
+</li>
+</ul>
+</dd>
+<dt><strong>output_feature_names: string or list of strings</strong></dt>
+<dd><blockquote class="first">
+<div><p>Optional name(s) that can be given to the inputs of the scikit-learn
+model.</p>
+</div></blockquote>
+<p>The output_feature_names is interpreted according to the model type:</p>
+<ul class="last simple">
+<li>If the scikit-learn model is a transformer, it is the name of the
+array feature output by the final sequence of the transformer
+(defaults to “output”).</li>
+<li>If it is a classifier, it should be a 2-tuple of names giving the top
+class prediction and the array of scores for each class (defaults to
+“classLabel” and “classScores”).</li>
+<li>If it is a regressor, it should give the name of the prediction value
+(defaults to “prediction”).</li>
+</ul>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt>model:MLModel</dt>
+<dd><p class="first last">Returns an MLModel instance representing a Core ML model.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">sklearn.linear_model</span> <span class="kn">import</span> <span class="n">LinearRegression</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+
+<span class="go"># Load data</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_csv</span><span class="p">(</span><span class="s1">&#39;houses.csv&#39;</span><span class="p">)</span>
+
+<span class="go"># Train a model</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">LinearRegression</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">data</span><span class="p">[[</span><span class="s2">&quot;bedroom&quot;</span><span class="p">,</span> <span class="s2">&quot;bath&quot;</span><span class="p">,</span> <span class="s2">&quot;size&quot;</span><span class="p">]],</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;price&quot;</span><span class="p">])</span>
+
+<span class="go"> # Convert and save the scikit-learn model</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">coremltools</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">coreml_model</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">converters</span><span class="o">.</span><span class="n">sklearn</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">model</span><span class="p">,</span>
+<span class="go">                                                         [&quot;bedroom&quot;, &quot;bath&quot;, &quot;size&quot;],</span>
+<span class="go">                                                         &quot;price&quot;)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">coreml_model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s1">&#39;HousePricer.mlmodel&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="coremltools.converters.xgboost.convert.html" class="btn btn-neutral float-right" title="coremltools.converters.xgboost.convert" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="coremltools.converters.libsvm.convert.html" class="btn btn-neutral float-left" title="coremltools.converters.libsvm.convert" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2017-2019, Apple Inc
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

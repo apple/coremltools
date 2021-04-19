@@ -1,0 +1,6 @@
+coremltools.converters.libsvm.convert
+=====================================
+
+.. currentmodule:: coremltools.converters.libsvm
+
+.. autofunction:: convert

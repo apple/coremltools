@@ -1,0 +1,24 @@
+coremltools.models.tree\_ensemble
+=================================
+
+.. automodule:: coremltools.models.tree_ensemble
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      TreeEnsembleBase
+      TreeEnsembleClassifier
+      TreeEnsembleRegressor
+   
+   
+
+   
+   
+   

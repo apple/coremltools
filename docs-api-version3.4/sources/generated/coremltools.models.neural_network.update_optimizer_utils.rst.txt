@@ -1,0 +1,25 @@
+coremltools.models.neural\_network.update\_optimizer\_utils
+===========================================================
+
+.. automodule:: coremltools.models.neural_network.update_optimizer_utils
+
+   
+   
+   
+
+   
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+   
+      AdamParams
+      Batch
+      RangeParam
+      SgdParams
+   
+   
+
+   
+   
+   
