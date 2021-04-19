@@ -1,0 +1,328 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>ONNX &mdash; coremltools API Reference 4.1 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="SKLearn" href="coremltools.converters.sklearn.html" />
+    <link rel="prev" title="LibSVM" href="coremltools.converters.libsvm.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> coremltools API Reference
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">API Contents</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="coremltools.converters.html">Converters</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.mil.html">Unified (TensorFlow and Pytorch)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.caffe.html">Caffe</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.keras.html">Keras</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.libsvm.html">LibSVM</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">ONNX</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.sklearn.html">SKLearn</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.xgboost.html">XGBoost</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.models.html">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Resources</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://coremltools.readme.io/docs">Guides</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://coremltools.readme.io/page/examples">Examples</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://mlmodel.readme.io/reference">Core ML Format</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/docs-api-version3.4/index.html">coremltools API v3.4</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">coremltools API Reference</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="coremltools.converters.html">Converters</a> &raquo;</li>
+        
+      <li>ONNX</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/source/coremltools.converters.onnx.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-coremltools.converters.onnx._converter">
+<span id="onnx"></span><h1>ONNX<a class="headerlink" href="#module-coremltools.converters.onnx._converter" title="Permalink to this headline">¶</a></h1>
+<dl class="py function">
+<dt id="coremltools.converters.onnx._converter._make_coreml_input_features">
+<code class="sig-prename descclassname"><span class="pre">coremltools.converters.onnx._converter.</span></code><code class="sig-name descname"><span class="pre">_make_coreml_input_features</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">onnx_coreml_input_shape_map</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">disable_coreml_rank5_mapping</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.converters.onnx._converter._make_coreml_input_features" title="Permalink to this definition">¶</a></dt>
+<dd><p>If “disable_coreml_rank5_mapping” is False, then:</p>
+<p>ONNX shapes to CoreML static shapes mapping
+length==1: [C]
+length==2: [B,C]
+length==3: [C,H,W] or [Seq,B,C]
+length==4: [B,C,H,W]</p>
+<p>If “disable_coreml_rank5_mapping” is True, then
+onnx shapes are mapped “as is” to CoreML.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="coremltools.converters.onnx._converter._transform_coreml_dtypes">
+<code class="sig-prename descclassname"><span class="pre">coremltools.converters.onnx._converter.</span></code><code class="sig-name descname"><span class="pre">_transform_coreml_dtypes</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">builder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.converters.onnx._converter._transform_coreml_dtypes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make sure ONNX input/output data types are mapped to the equivalent CoreML types</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="coremltools.converters.onnx._converter.convert">
+<code class="sig-prename descclassname"><span class="pre">coremltools.converters.onnx._converter.</span></code><code class="sig-name descname"><span class="pre">convert</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_input_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preprocessing_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_output_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deprocessing_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">predicted_feature_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'classLabel'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_custom_layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_conversion_functions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">onnx_coreml_input_shape_map</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minimum_ios_deployment_target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'12'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.converters.onnx._converter.convert" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert ONNX model to CoreML.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>model:</strong></dt><dd><p>An ONNX model with parameters loaded in the ONNX package, or path to file
+with models.</p>
+</dd>
+<dt><strong>mode: ‘classifier’, ‘regressor’ or None</strong></dt><dd><p>Mode of the converted coreml model:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">'classifier'</span></code>: a NeuralNetworkClassifier spec will be constructed.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'regressor'</span></code>: a NeuralNetworkRegressor spec will be constructed.</p></li>
+</ul>
+</dd>
+<dt><strong>preprocessing_args:</strong></dt><dd><p>The <code class="docutils literal notranslate"><span class="pre">'is_bgr'</span></code>, <code class="docutils literal notranslate"><span class="pre">'red_bias'</span></code>, <code class="docutils literal notranslate"><span class="pre">'green_bias'</span></code>, <code class="docutils literal notranslate"><span class="pre">'blue_bias'</span></code>, <code class="docutils literal notranslate"><span class="pre">'gray_bias'</span></code>,
+and <code class="docutils literal notranslate"><span class="pre">'image_scale'</span></code> keys have the same meaning as the pre-processing arguments for
+<a class="reference external" href="https://coremltools.readme.io/reference/modelsneural_network">NeuralNetworkBuilder</a>.</p>
+</dd>
+<dt><strong>deprocessing_args:</strong></dt><dd><p>Same as <code class="docutils literal notranslate"><span class="pre">'preprocessing_args'</span></code> but for de-processing.</p>
+</dd>
+<dt><strong>class_labels:</strong></dt><dd><ul class="simple">
+<li><p>As a string, it represents the name of the file which contains
+the classification labels (one per line).</p></li>
+<li><p>As a list of strings, it represents a list of categories that map
+the index of the output of a neural network to labels in a classifier.</p></li>
+</ul>
+</dd>
+<dt><strong>predicted_feature_name:</strong></dt><dd><p>Name of the output feature for the class labels exposed in the Core ML
+model (applies to classifiers only). Defaults to <code class="docutils literal notranslate"><span class="pre">'classLabel'</span></code>.</p>
+</dd>
+<dt><strong>add_custom_layers: bool</strong></dt><dd><p>Flag to turn on additional custom CoreML layers for unsupported ONNX ops or
+attributes within a supported op.</p>
+</dd>
+<dt><strong>custom_conversion_functions: dict()</strong></dt><dd><ul class="simple">
+<li><p>A dictionary with keys corresponding to the names/types of ONNX ops and values as
+functions taking an object of the <code class="docutils literal notranslate"><span class="pre">coreml-tools</span></code> class:
+<code class="docutils literal notranslate"><span class="pre">'NeuralNetworkBuilder'</span></code>, <code class="docutils literal notranslate"><span class="pre">'Graph'</span></code> (see <code class="docutils literal notranslate"><span class="pre">onnx-coreml/_graph.Graph</span></code>),
+<code class="docutils literal notranslate"><span class="pre">'Node'</span></code> (see <code class="docutils literal notranslate"><span class="pre">onnx-coreml/_graph.Node</span></code>), and
+<code class="docutils literal notranslate"><span class="pre">'ErrorHandling'</span></code> (see <code class="docutils literal notranslate"><span class="pre">onnx-coreml/_error_utils.ErrorHandling</span></code>).</p></li>
+<li><p>This custom conversion function gets full control and responsibility for
+converting a given ONNX op.</p></li>
+<li><p>The function returns nothing and is responsible for adding an equivalent CoreML
+layer via <code class="docutils literal notranslate"><span class="pre">'NeuralNetworkBuilder'</span></code>.</p></li>
+</ul>
+</dd>
+<dt><strong>onnx_coreml_input_shape_map: dict() (Optional)</strong></dt><dd><ul class="simple">
+<li><p>A dictionary with keys corresponding to the model input names.</p></li>
+<li><p>Values are a list of integers that specify how the shape of the input is mapped
+to CoreML.</p></li>
+<li><p>Convention used for CoreML shapes is <code class="docutils literal notranslate"><span class="pre">0:</span> <span class="pre">Sequence</span></code>, <code class="docutils literal notranslate"><span class="pre">1:</span> <span class="pre">Batch</span></code>,
+<code class="docutils literal notranslate"><span class="pre">2:</span> <span class="pre">channel</span></code>, <code class="docutils literal notranslate"><span class="pre">3:</span> <span class="pre">height</span></code>, <code class="docutils literal notranslate"><span class="pre">4:</span> <span class="pre">width</span></code>. For example, an input of rank 2
+could be mapped as <code class="docutils literal notranslate"><span class="pre">[3,4]</span></code> (H,W) or <code class="docutils literal notranslate"><span class="pre">[1,2]</span></code> (B,C), and so on. This is
+ignored if <code class="docutils literal notranslate"><span class="pre">minimum_ios_deployment_target</span></code> is set to <code class="docutils literal notranslate"><span class="pre">13</span></code>.</p></li>
+</ul>
+</dd>
+<dt><strong>minimum_ios_deployment_target: str</strong></dt><dd><p>Target Deployment iOS Version (default: <code class="docutils literal notranslate"><span class="pre">'12'</span></code>). Supported iOS version options:
+<code class="docutils literal notranslate"><span class="pre">'11.2'</span></code>, <code class="docutils literal notranslate"><span class="pre">'12'</span></code>, <code class="docutils literal notranslate"><span class="pre">'13'</span></code>. CoreML model produced by the converter will be
+compatible with the iOS version specified in this argument. For example, if
+<code class="docutils literal notranslate"><span class="pre">minimum_ios_deployment_target</span> <span class="pre">=</span> <span class="pre">'12'</span></code>, the converter would utilize only CoreML
+features released up to version iOS12 (equivalent to macOS 10.14, watchOS 5, and
+so on). iOS 11.2 (CoreML 0.8) does not support <code class="docutils literal notranslate"><span class="pre">resize_bilinear</span></code> and
+<code class="docutils literal notranslate"><span class="pre">crop_resize</span></code> layers. See <a class="reference external" href="https://github.com/apple/coremltools/releases/tag/v0.8">supported v0.8 features</a>.
+iOS 12 (CoreML 2.0), see <a class="reference external" href="https://github.com/apple/coremltools/releases/tag/v2.0">supported v2.0 features</a>.
+iSO 13 (CoreML 3.0), see <a class="reference external" href="https://github.com/apple/coremltools/releases/tag/3.0-beta6">supported v3.0 features</a>.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>model: A coreml model.</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="coremltools.converters.sklearn.html" class="btn btn-neutral float-right" title="SKLearn" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="coremltools.converters.libsvm.html" class="btn btn-neutral float-left" title="LibSVM" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Apple Inc.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

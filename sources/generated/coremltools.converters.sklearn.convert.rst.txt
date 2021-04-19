@@ -1,6 +1,0 @@
-coremltools.converters.sklearn.convert
-======================================
-
-.. currentmodule:: coremltools.converters.sklearn
-
-.. autofunction:: convert

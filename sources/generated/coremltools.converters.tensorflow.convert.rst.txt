@@ -1,6 +1,0 @@
-coremltools.converters.tensorflow.convert
-=========================================
-
-.. currentmodule:: coremltools.converters.tensorflow
-
-.. autofunction:: convert

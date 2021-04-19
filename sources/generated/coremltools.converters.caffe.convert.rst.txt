@@ -1,6 +1,0 @@
-coremltools.converters.caffe.convert
-====================================
-
-.. currentmodule:: coremltools.converters.caffe
-
-.. autofunction:: convert
