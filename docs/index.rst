@@ -24,5 +24,5 @@ coremltools API
    
    Guides <https://coremltools.readme.io/docs>
    Examples <https://coremltools.readme.io/page/examples>
-   Core ML Format Reference <https://mlmodel.readme.io/reference>
+   Core ML Format Specification <https://mlmodel.readme.io/reference>
    GitHub <https://github.com/apple/coremltools>
