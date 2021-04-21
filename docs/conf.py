@@ -22,7 +22,8 @@ copyright = '2021, Apple Inc'
 author = 'Apple Inc'
 
 # The full version, including alpha/beta/rc tags
-release = coremltools.__version__
+# release version is not necessary, so commented out.
+# release = coremltools.__version__
 
 
 # -- General configuration ---------------------------------------------------
