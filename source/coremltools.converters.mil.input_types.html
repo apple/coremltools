@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>MIL Input Types &mdash; coremltools API Reference 4.1 documentation</title>
+  <title>MIL Input Types &mdash; coremltools API Reference  documentation</title>
   
 
   
@@ -91,11 +91,11 @@
 <li class="toctree-l1"><a class="reference internal" href="coremltools.models.html">Models</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">MIL Input Types</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#classifierconfig">ClassifierConfig</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#tensortype">TensorType</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#enumeratedshapes">EnumeratedShapes</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#imagetype">ImageType</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#rangedim">RangeDim</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#shape">Shape</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#enumeratedshapes">EnumeratedShapes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tensortype">TensorType</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
@@ -104,7 +104,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference external" href="https://coremltools.readme.io/docs">Guides</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://coremltools.readme.io/page/examples">Examples</a></li>
-<li class="toctree-l1"><a class="reference external" href="https://mlmodel.readme.io/reference">Core ML Format</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://mlmodel.readme.io/reference">Core ML Format Reference</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
 </ul>
 
@@ -209,61 +209,29 @@ of a softmax layer).</p>
 </dd></dl>
 
 </div>
-<div class="section" id="tensortype">
-<h2>TensorType<a class="headerlink" href="#tensortype" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="enumeratedshapes">
+<h2>EnumeratedShapes<a class="headerlink" href="#enumeratedshapes" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
-<dt id="coremltools.converters.mil.input_types.TensorType">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.input_types.</span></code><code class="sig-name descname"><span class="pre">TensorType</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.converters.mil.input_types.TensorType" title="Permalink to this definition">¶</a></dt>
+<dt id="coremltools.converters.mil.input_types.EnumeratedShapes">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.input_types.</span></code><code class="sig-name descname"><span class="pre">EnumeratedShapes</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shapes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.converters.mil.input_types.EnumeratedShapes" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="py method">
-<dt id="coremltools.converters.mil.input_types.TensorType.__init__">
-<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.converters.mil.input_types.TensorType.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Specify a (dense) tensor input.</p>
+<dt id="coremltools.converters.mil.input_types.EnumeratedShapes.__init__">
+<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shapes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.converters.mil.input_types.EnumeratedShapes.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>A shape class that is used for setting multiple valid shape in InputType.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl>
-<dt><strong>name: str</strong></dt><dd><p>Input name. Must match an input name in the model (usually the
-Placeholder name for TensorFlow or the input name for PyTorch).</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">name</span></code> is required except for a TensorFlow model in which there is
-exactly one input Placeholder.</p>
+<dt><strong>shapes: list of Shape objects, or Shape-compatible lists.</strong></dt><dd><p>The valid shapes of the inputs.</p>
+<p>If input provided is not Shape object, but can be converted to Shape,
+the Shape object would be stored in <code class="docutils literal notranslate"><span class="pre">shapes</span></code> instead.</p>
 </dd>
-<dt><strong>shape: (1) list of positive int or RangeDim, or (2) EnumeratedShapes</strong></dt><dd><p>The shape of the input.</p>
-<dl class="simple">
-<dt>For TensorFlow:</dt><dd><ul class="simple">
-<li><p>The <code class="docutils literal notranslate"><span class="pre">shape</span></code> is optional. If omitted, the shape is inferred from
-TensorFlow graph’s Placeholder shape.</p></li>
-</ul>
-</dd>
-<dt>For PyTorch:</dt><dd><ul class="simple">
-<li><p>The <code class="docutils literal notranslate"><span class="pre">shape</span></code> is required.</p></li>
-</ul>
-</dd>
-</dl>
-</dd>
-<dt><strong>dtype: np.generic or mil.type type</strong></dt><dd><p>Numpy <code class="docutils literal notranslate"><span class="pre">dtype</span></code> (for example, <code class="docutils literal notranslate"><span class="pre">np.int32</span></code>). Default is <code class="docutils literal notranslate"><span class="pre">np.float32</span></code>.</p>
-</dd>
-<dt><strong>default_value: np.ndarray</strong></dt><dd><p>If provided, the input is considered optional. At runtime, if the
-input is not provided, <code class="docutils literal notranslate"><span class="pre">default_value</span></code> is used.</p>
-<dl class="simple">
-<dt>Limitations:</dt><dd><ul class="simple">
-<li><p>If <code class="docutils literal notranslate"><span class="pre">default_value</span></code> is <code class="docutils literal notranslate"><span class="pre">np.ndarray</span></code>, all
-elements are required to have the same value.</p></li>
-<li><p>The <code class="docutils literal notranslate"><span class="pre">default_value</span></code> may not be specified if <code class="docutils literal notranslate"><span class="pre">shape</span></code> is
-<code class="docutils literal notranslate"><span class="pre">EnumeratedShapes</span></code>.</p></li>
-</ul>
+<dt><strong>default: tuple of int or None</strong></dt><dd><p>The default shape that is used for initiating the model, and set in
+the metadata of the model file.</p>
+<p>If None, then the first element in <code class="docutils literal notranslate"><span class="pre">shapes</span></code> is used.</p>
 </dd>
 </dl>
 </dd>
 </dl>
-</dd>
-</dl>
-<p class="rubric">Examples</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">ct.TensorType(name=&quot;input&quot;,</span> <span class="pre">shape=(1,</span> <span class="pre">2,</span> <span class="pre">3))`</span> <span class="pre">implies</span> <span class="pre">`dtype</span> <span class="pre">==</span>
-<span class="pre">np.float32</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">ct.TensorType(name=&quot;input&quot;,</span> <span class="pre">shape=(1,</span> <span class="pre">2,</span> <span class="pre">3),</span> <span class="pre">dtype=np.int32)</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">ct.TensorType(name=&quot;input&quot;,</span> <span class="pre">shape=(1,</span> <span class="pre">2,</span> <span class="pre">3),</span>
-<span class="pre">dtype=ct.converters.mil.types.fp32)</span></code></p></li>
-</ul>
 </dd></dl>
 
 </dd></dl>
@@ -369,29 +337,61 @@ the metadata of the model file.</p>
 </dd></dl>
 
 </div>
-<div class="section" id="enumeratedshapes">
-<h2>EnumeratedShapes<a class="headerlink" href="#enumeratedshapes" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="tensortype">
+<h2>TensorType<a class="headerlink" href="#tensortype" title="Permalink to this headline">¶</a></h2>
 <dl class="py class">
-<dt id="coremltools.converters.mil.input_types.EnumeratedShapes">
-<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.input_types.</span></code><code class="sig-name descname"><span class="pre">EnumeratedShapes</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shapes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.converters.mil.input_types.EnumeratedShapes" title="Permalink to this definition">¶</a></dt>
+<dt id="coremltools.converters.mil.input_types.TensorType">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.input_types.</span></code><code class="sig-name descname"><span class="pre">TensorType</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.converters.mil.input_types.TensorType" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="py method">
-<dt id="coremltools.converters.mil.input_types.EnumeratedShapes.__init__">
-<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shapes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.converters.mil.input_types.EnumeratedShapes.__init__" title="Permalink to this definition">¶</a></dt>
-<dd><p>A shape class that is used for setting multiple valid shape in InputType.</p>
+<dt id="coremltools.converters.mil.input_types.TensorType.__init__">
+<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.converters.mil.input_types.TensorType.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specify a (dense) tensor input.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl>
-<dt><strong>shapes: list of Shape objects, or Shape-compatible lists.</strong></dt><dd><p>The valid shapes of the inputs.</p>
-<p>If input provided is not Shape object, but can be converted to Shape,
-the Shape object would be stored in <code class="docutils literal notranslate"><span class="pre">shapes</span></code> instead.</p>
+<dt><strong>name: str</strong></dt><dd><p>Input name. Must match an input name in the model (usually the
+Placeholder name for TensorFlow or the input name for PyTorch).</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">name</span></code> is required except for a TensorFlow model in which there is
+exactly one input Placeholder.</p>
 </dd>
-<dt><strong>default: tuple of int or None</strong></dt><dd><p>The default shape that is used for initiating the model, and set in
-the metadata of the model file.</p>
-<p>If None, then the first element in <code class="docutils literal notranslate"><span class="pre">shapes</span></code> is used.</p>
+<dt><strong>shape: (1) list of positive int or RangeDim, or (2) EnumeratedShapes</strong></dt><dd><p>The shape of the input.</p>
+<dl class="simple">
+<dt>For TensorFlow:</dt><dd><ul class="simple">
+<li><p>The <code class="docutils literal notranslate"><span class="pre">shape</span></code> is optional. If omitted, the shape is inferred from
+TensorFlow graph’s Placeholder shape.</p></li>
+</ul>
+</dd>
+<dt>For PyTorch:</dt><dd><ul class="simple">
+<li><p>The <code class="docutils literal notranslate"><span class="pre">shape</span></code> is required.</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt><strong>dtype: np.generic or mil.type type</strong></dt><dd><p>Numpy <code class="docutils literal notranslate"><span class="pre">dtype</span></code> (for example, <code class="docutils literal notranslate"><span class="pre">np.int32</span></code>). Default is <code class="docutils literal notranslate"><span class="pre">np.float32</span></code>.</p>
+</dd>
+<dt><strong>default_value: np.ndarray</strong></dt><dd><p>If provided, the input is considered optional. At runtime, if the
+input is not provided, <code class="docutils literal notranslate"><span class="pre">default_value</span></code> is used.</p>
+<dl class="simple">
+<dt>Limitations:</dt><dd><ul class="simple">
+<li><p>If <code class="docutils literal notranslate"><span class="pre">default_value</span></code> is <code class="docutils literal notranslate"><span class="pre">np.ndarray</span></code>, all
+elements are required to have the same value.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">default_value</span></code> may not be specified if <code class="docutils literal notranslate"><span class="pre">shape</span></code> is
+<code class="docutils literal notranslate"><span class="pre">EnumeratedShapes</span></code>.</p></li>
+</ul>
 </dd>
 </dl>
 </dd>
 </dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ct.TensorType(name=&quot;input&quot;,</span> <span class="pre">shape=(1,</span> <span class="pre">2,</span> <span class="pre">3))`</span> <span class="pre">implies</span> <span class="pre">`dtype</span> <span class="pre">==</span>
+<span class="pre">np.float32</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ct.TensorType(name=&quot;input&quot;,</span> <span class="pre">shape=(1,</span> <span class="pre">2,</span> <span class="pre">3),</span> <span class="pre">dtype=np.int32)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ct.TensorType(name=&quot;input&quot;,</span> <span class="pre">shape=(1,</span> <span class="pre">2,</span> <span class="pre">3),</span>
+<span class="pre">dtype=ct.converters.mil.types.fp32)</span></code></p></li>
+</ul>
 </dd></dl>
 
 </dd></dl>

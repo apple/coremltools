@@ -8,6 +8,13 @@ MLModel
    :members:
 
 
+array\_feature\_extractor 
+---------------------------------------------------
+
+.. automodule:: coremltools.models.array_feature_extractor
+   :members:
+
+
 feature\_vectorizer
 ---------------------------------------------
 
@@ -29,13 +36,6 @@ neural\_network
    :maxdepth: 1
    
    coremltools.models.neural_network
-
-
-array\_feature\_extractor 
----------------------------------------------------
-
-.. automodule:: coremltools.models.array_feature_extractor
-   :members:
 
 
 pipeline

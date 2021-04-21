@@ -13,10 +13,10 @@ Input types supported by the Model Intermediate Language (MIL):
       :members:
 
 
-   TensorType
-   ----------
+   EnumeratedShapes
+   ----------------
    
-   .. autoclass:: TensorType
+   .. autoclass:: EnumeratedShapes
       :members:
 
 
@@ -40,10 +40,12 @@ Input types supported by the Model Intermediate Language (MIL):
       :members:
 
 
-   EnumeratedShapes
-   ----------------
+   TensorType
+   ----------
    
-   .. autoclass:: EnumeratedShapes
+   .. autoclass:: TensorType
       :members:
+
+
 
 

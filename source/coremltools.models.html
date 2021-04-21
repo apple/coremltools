@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Models &mdash; coremltools API Reference 4.1 documentation</title>
+  <title>Models &mdash; coremltools API Reference  documentation</title>
   
 
   
@@ -91,6 +91,7 @@
 <li class="toctree-l1"><a class="reference internal" href="coremltools.converters.html">Converters</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Models</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#module-coremltools.models.model">MLModel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.models.array_feature_extractor">array_feature_extractor</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-coremltools.models.feature_vectorizer">feature_vectorizer</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-coremltools.models.nearest_neighbors.builder">nearest_neighbors</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#neural-network">neural_network</a><ul>
@@ -100,7 +101,6 @@
 <li class="toctree-l3"><a class="reference internal" href="coremltools.models.neural_network.html#module-coremltools.models.neural_network.update_optimizer_utils">neural_network.update_optimizer_utils</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.models.array_feature_extractor">array_feature_extractor</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-coremltools.models.pipeline">pipeline</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-coremltools.models.tree_ensemble">tree_ensemble</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-coremltools.models.utils">utils</a></li>
@@ -113,7 +113,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference external" href="https://coremltools.readme.io/docs">Guides</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://coremltools.readme.io/page/examples">Examples</a></li>
-<li class="toctree-l1"><a class="reference external" href="https://mlmodel.readme.io/reference">Core ML Format</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://mlmodel.readme.io/reference">Core ML Format Reference</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
 </ul>
 
@@ -328,6 +328,19 @@ name.</p>
 </div>
 </dd></dl>
 
+</dd></dl>
+
+</div>
+<div class="section" id="module-coremltools.models.array_feature_extractor">
+<span id="array-feature-extractor"></span><h2>array_feature_extractor<a class="headerlink" href="#module-coremltools.models.array_feature_extractor" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="coremltools.models.array_feature_extractor.create_array_feature_extractor">
+<code class="sig-prename descclassname"><span class="pre">coremltools.models.array_feature_extractor.</span></code><code class="sig-name descname"><span class="pre">create_array_feature_extractor</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extract_indices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.array_feature_extractor.create_array_feature_extractor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a feature extractor from an input array feature, return</p>
+<p>input_features is a list of one (name, array) tuple.</p>
+<p>extract_indices is either an integer or a list.  If it’s an integer,
+the output type is by default a double (but may also be an integer).
+If a list, the output type is an array.</p>
 </dd></dl>
 
 </div>
@@ -699,19 +712,6 @@ KNearestNeighborsClassifier model.</p>
 <li class="toctree-l1"><a class="reference internal" href="coremltools.models.neural_network.html#module-coremltools.models.neural_network.update_optimizer_utils">neural_network.update_optimizer_utils</a></li>
 </ul>
 </div>
-</div>
-<div class="section" id="module-coremltools.models.array_feature_extractor">
-<span id="array-feature-extractor"></span><h2>array_feature_extractor<a class="headerlink" href="#module-coremltools.models.array_feature_extractor" title="Permalink to this headline">¶</a></h2>
-<dl class="py function">
-<dt id="coremltools.models.array_feature_extractor.create_array_feature_extractor">
-<code class="sig-prename descclassname"><span class="pre">coremltools.models.array_feature_extractor.</span></code><code class="sig-name descname"><span class="pre">create_array_feature_extractor</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extract_indices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.array_feature_extractor.create_array_feature_extractor" title="Permalink to this definition">¶</a></dt>
-<dd><p>Creates a feature extractor from an input array feature, return</p>
-<p>input_features is a list of one (name, array) tuple.</p>
-<p>extract_indices is either an integer or a list.  If it’s an integer,
-the output type is by default a double (but may also be an integer).
-If a list, the output type is an array.</p>
-</dd></dl>
-
 </div>
 <div class="section" id="module-coremltools.models.pipeline">
 <span id="pipeline"></span><h2>pipeline<a class="headerlink" href="#module-coremltools.models.pipeline" title="Permalink to this headline">¶</a></h2>
