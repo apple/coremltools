@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-coremltools API v4.1
+coremltools API
 =====================
 
 .. toctree::
@@ -24,5 +24,5 @@ coremltools API v4.1
    
    Guides <https://coremltools.readme.io/docs>
    Examples <https://coremltools.readme.io/page/examples>
-   Core ML Format <https://mlmodel.readme.io/reference>
+   Core ML Format Reference <https://mlmodel.readme.io/reference>
    GitHub <https://github.com/apple/coremltools>
