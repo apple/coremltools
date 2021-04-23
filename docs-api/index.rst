@@ -6,7 +6,7 @@
 coremltools API
 =====================
 
-This the API Reference for coremltools. For guides, installation instructions, and examples, see `Guides <https://coremltools.readme.io/docs>`.
+This the API Reference for coremltools. For guides, installation instructions, and examples, see `Guides <https://coremltools.readme.io/docs>`_.
 
 .. toctree::
    :maxdepth: 1
