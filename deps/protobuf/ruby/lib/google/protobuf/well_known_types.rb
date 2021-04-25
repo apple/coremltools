@@ -37,37 +37,32 @@ require 'google/protobuf/timestamp_pb'
 
 module Google
   module Protobuf
-
     Any.class_eval do
-      def pack(msg, type_url_prefix='type.googleapis.com/')
-        if type_url_prefix.empty? or type_url_prefix[-1] != '/' then
-          self.type_url = "#{type_url_prefix}/#{msg.class.descriptor.name}"
-        else
-          self.type_url = "#{type_url_prefix}#{msg.class.descriptor.name}"
-        end
+      def pack(msg, type_url_prefix = 'type.googleapis.com/')
+        self.type_url = if type_url_prefix.empty? || (type_url_prefix[-1] != '/')
+                          "#{type_url_prefix}/#{msg.class.descriptor.name}"
+                        else
+                          "#{type_url_prefix}#{msg.class.descriptor.name}"
+                        end
         self.value = msg.to_proto
       end
 
       def unpack(klass)
-        if self.is(klass) then
-          klass.decode(self.value)
-        else
-          nil
-        end
+        klass.decode(value) if is(klass)
       end
 
       def type_name
-        return self.type_url.split("/")[-1]
+        type_url.split('/')[-1]
       end
 
       def is(klass)
-        return self.type_name == klass.descriptor.name
+        type_name == klass.descriptor.name
       end
     end
 
     Timestamp.class_eval do
       def to_time
-        Time.at(self.to_f)
+        Time.at(to_f)
       end
 
       def from_time(time)
@@ -76,17 +71,17 @@ module Google
       end
 
       def to_i
-        self.seconds
+        seconds
       end
 
       def to_f
-        self.seconds + (self.nanos.to_f / 1_000_000_000)
+        seconds + (nanos.to_f / 1_000_000_000)
       end
     end
 
     Duration.class_eval do
       def to_f
-        self.seconds + (self.nanos.to_f / 1_000_000_000)
+        seconds + (nanos.to_f / 1_000_000_000)
       end
     end
 
@@ -94,27 +89,27 @@ module Google
 
     Value.class_eval do
       def to_ruby(recursive = false)
-        case self.kind
+        case kind
         when :struct_value
           if recursive
-            self.struct_value.to_h
+            struct_value.to_h
           else
-            self.struct_value
+            struct_value
           end
         when :list_value
           if recursive
-            self.list_value.to_a
+            list_value.to_a
           else
-            self.list_value
+            list_value
           end
         when :null_value
           nil
         when :number_value
-          self.number_value
+          number_value
         when :string_value
-          self.string_value
+          string_value
         when :bool_value
-          self.bool_value
+          bool_value
         else
           raise UnexpectedStructType
         end
@@ -148,20 +143,19 @@ module Google
 
     Struct.class_eval do
       def [](key)
-        self.fields[key].to_ruby
+        fields[key].to_ruby
       end
 
       def []=(key, value)
-        unless key.is_a?(String)
-          raise UnexpectedStructType, "Struct keys must be strings."
-        end
-        self.fields[key] ||= Google::Protobuf::Value.new
-        self.fields[key].from_ruby(value)
+        raise UnexpectedStructType, 'Struct keys must be strings.' unless key.is_a?(String)
+
+        fields[key] ||= Google::Protobuf::Value.new
+        fields[key].from_ruby(value)
       end
 
       def to_h
         ret = {}
-        self.fields.each { |key, val| ret[key] = val.to_ruby(true) }
+        fields.each { |key, val| ret[key] = val.to_ruby(true) }
         ret
       end
 
@@ -176,29 +170,29 @@ module Google
       include Enumerable
 
       def length
-        self.values.length
+        values.length
       end
 
       def [](index)
-        self.values[index].to_ruby
+        values[index].to_ruby
       end
 
       def []=(index, value)
-        self.values[index].from_ruby(value)
+        values[index].from_ruby(value)
       end
 
       def <<(value)
         wrapper = Google::Protobuf::Value.new
         wrapper.from_ruby(value)
-        self.values << wrapper
+        values << wrapper
       end
 
       def each
-        self.values.each { |x| yield(x.to_ruby) }
+        values.each { |x| yield(x.to_ruby) }
       end
 
       def to_a
-        self.values.map { |x| x.to_ruby(true) }
+        values.map { |x| x.to_ruby(true) }
       end
 
       def self.from_a(arr)
@@ -207,6 +201,5 @@ module Google
         ret
       end
     end
-
   end
 end

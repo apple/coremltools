@@ -31,8 +31,7 @@
 module Google
   module Protobuf
     module MessageExts
-
-      #this is only called in jruby; mri loades the ClassMethods differently
+      # this is only called in jruby; mri loades the ClassMethods differently
       def self.included(klass)
         klass.extend(ClassMethods)
       end
@@ -40,14 +39,13 @@ module Google
       module ClassMethods
       end
 
-      def to_json
+      def to_json(*_args)
         self.class.encode_json(self)
       end
 
       def to_proto
         self.class.encode(self)
       end
-
     end
   end
 end

@@ -36,11 +36,12 @@ require 'google/protobuf/message_exts'
 module Google
   module Protobuf
     class Error < StandardError; end
+
     class ParseError < Error; end
   end
 end
 
-if RUBY_PLATFORM == "java"
+if RUBY_PLATFORM == 'java'
   require 'json'
   require 'google/protobuf_java'
 else
@@ -55,7 +56,6 @@ require 'google/protobuf/repeated_field'
 
 module Google
   module Protobuf
-
     def self.encode(msg)
       msg.to_proto
     end
@@ -71,6 +71,5 @@ module Google
     def self.decode_json(klass, json)
       klass.decode_json(json)
     end
-
   end
 end

@@ -45,28 +45,30 @@ def do_test(request)
     when :protobuf_payload
       begin
         test_message = ProtobufTestMessages::Proto3::TestAllTypes.decode(
-            request.protobuf_payload)
-      rescue Google::Protobuf::ParseError => err
-        response.parse_error = err.message.encode('utf-8')
+          request.protobuf_payload
+        )
+      rescue Google::Protobuf::ParseError => e
+        response.parse_error = e.message.encode('utf-8')
         return response
       end
 
     when :json_payload
       begin
         test_message = ProtobufTestMessages::Proto3::TestAllTypes.decode_json(
-            request.json_payload)
-      rescue Google::Protobuf::ParseError => err
-        response.parse_error = err.message.encode('utf-8')
+          request.json_payload
+        )
+      rescue Google::Protobuf::ParseError => e
+        response.parse_error = e.message.encode('utf-8')
         return response
       end
 
     when nil
-      fail "Request didn't have payload"
+      raise "Request didn't have payload"
     end
 
     case request.requested_output_format
     when :UNSPECIFIED
-      fail 'Unspecified output format'
+      raise 'Unspecified output format'
 
     when :PROTOBUF
       response.protobuf_payload = test_message.to_proto
@@ -75,10 +77,10 @@ def do_test(request)
       response.json_payload = test_message.to_json
 
     when nil
-      fail "Request didn't have requested output format"
+      raise "Request didn't have requested output format"
     end
-  rescue StandardError => err
-    response.runtime_error = err.message.encode('utf-8')
+  rescue StandardError => e
+    response.runtime_error = e.message.encode('utf-8')
   end
 
   response
@@ -90,11 +92,9 @@ def do_test_io
   length_bytes = STDIN.read(4)
   return false if length_bytes.nil?
 
-  length = length_bytes.unpack('V').first
+  length = length_bytes.unpack1('V')
   serialized_request = STDIN.read(length)
-  if serialized_request.nil? || serialized_request.length != length
-    fail IOError
-  end
+  raise IOError if serialized_request.nil? || serialized_request.length != length
 
   request = Conformance::ConformanceRequest.decode(serialized_request)
 
@@ -106,7 +106,7 @@ def do_test_io
   STDOUT.flush
 
   if $verbose
-    STDERR.puts("conformance_ruby: request=#{request.to_json}, " \
+    warn("conformance_ruby: request=#{request.to_json}, " \
                                  "response=#{response.to_json}\n")
   end
 
@@ -116,9 +116,9 @@ def do_test_io
 end
 
 loop do
-  unless do_test_io
-    STDERR.puts('conformance_ruby: received EOF from test runner ' \
-                "after #{$test_count} tests, exiting")
-    break
-  end
+  next if do_test_io
+
+  warn('conformance_ruby: received EOF from test runner ' \
+              "after #{$test_count} tests, exiting")
+  break
 end
