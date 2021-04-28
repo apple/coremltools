@@ -1172,6 +1172,13 @@ def _bool(context, node):
 def _int(context, node):
     _cast(context, node, int, "int32")
 
+@register_torch_op
+def type_as(context, node):
+    inputs = _get_inputs(context, node, expected=2)
+    nptype = types.nptype_from_builtin(inputs[1].sym_type.get_primitive())
+    dtype = NUM_TO_DTYPE_STRING[NUMPY_DTYPE_TO_TORCH_NUM[nptype]]
+    res = mb.cast(x=inputs[0], dtype=dtype, name=node.name)
+    context.add(res, node.name)
 
 @register_torch_op
 def layer_norm(context, node):
