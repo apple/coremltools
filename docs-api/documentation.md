@@ -1,5 +1,5 @@
-coremltools API v4.1 Documentation
-==================================
+coremltools API Documentation
+==============================
 
 This document describes the following:
 
@@ -8,7 +8,7 @@ This document describes the following:
 * [Generating a new API reference](#generating-a-new-api-reference)
 
 
-## Viewing documentation {#viewing-documentation}
+## Viewing documentation
 
 For coremltools documentation, see the following:
 
@@ -17,10 +17,9 @@ For coremltools documentation, see the following:
 * [API Reference](https://apple.github.io/coremltools/index.html)
 * [Building from Source](https://github.com/apple/coremltools/blob/master/BUILDING.md)
 * [Release Notes](https://github.com/apple/coremltools/releases/) for the current release and previous releases
-* [Previous coremltools API (v3.4)](https://apple.github.io/coremltools/docs-api-version3/index.html)
 
 
-## Updating the documentation {#updating-the-documentation}
+## Updating the documentation
 
 You can update the following:
 
@@ -36,14 +35,14 @@ To create a new version or update the HTML files for the API reference, follow t
 2. Generate the HTML files by running this script from the root folder: `zsh -i scripts/build_docs.sh`. The HTML files appear in the `docs/_build/html` folder.
 3. Copy the `html` folder to a temporary location, and use it to preview your changes. Repeat 1-3 until finished.
 4. Push the changes to your fork, and create a pull request (PR) to merge them with the `main` branch of Apple's repo.
-5. Create and checkout the `gh-pages` branch from upstream.
+5. Checkout the `gh-pages` branch from upstream.
 6. Copy the contents of the `html` folder to the root folder, overwriting the existing contents.
 7. Commit and push your changes to *your* fork, and submit a PR to merge them with the remote `gh-pages` branch.
 
 At this point you can share the following URL to preview the new version: `https://tonybove-apple.github.io/coremltools/`.
 
 
-#### Fork and clone {#fork-and-clone}
+#### Fork and clone
 
 The following are the specific steps in git corresponding to the first part of general step 1:
 
@@ -61,15 +60,16 @@ The following are the specific steps in git corresponding to the first part of g
 	
     You should see the following, with your GitHub ID for `sample-user`:
     
-    ```
-    origin	git@github.com:sample-user/coremltools.git (fetch)
-	origin	git@github.com:sample-user/coremltools.git (push)
-	upstream	https://github.com/apple/coremltools.git (fetch)
-	upstream	https://github.com/apple/coremltools.git (push)
+    ```shell
+    origin   git@github.com:sample-user/coremltools.git (fetch)
+	origin   git@github.com:sample-user/coremltools.git (push)
+	upstream      https://github.com/apple/coremltools.git (fetch)
+	upstream      https://github.com/apple/coremltools.git (push)
 	```
 
 2. Update your fork and create a new branch (`newfeature`) for changes:
-    ```
+
+    ```shell
 	# Fetch from upstream remote.
 	git fetch upstream
 	# Checkout your master branch and merge upstream.
@@ -81,7 +81,7 @@ The following are the specific steps in git corresponding to the first part of g
 	git checkout newfeature
 	```
 
-#### Edit the content as usual {#edit-the-content-as-usual}
+#### Edit the content as usual
 
 The following are the specific steps in git corresponding to the last part of general step 1:
 
@@ -99,7 +99,7 @@ The following are the specific steps in git corresponding to the last part of ge
     git commit -m "Commit message"
     ```
 
-#### Generate and preview the HTML files {#generate-and-preview-the-HTML-files}
+#### Generate and preview the HTML files
 
 The following are the specific steps in git corresponding to general steps 2-4:
 
@@ -120,11 +120,11 @@ The following are the specific steps in git corresponding to general steps 2-4:
 5. Push your changes to your fork, and on your fork, request a Pull Request (PR) for your changes. Once approved, these changes will eventually be merged from your `newfeature` branch to the `main` branch. Do not delete your local branch yet.
 
 
-#### Copy the HTML to gh-pages {#copy-the-html-to-gh-pages}
+#### Copy the HTML to gh-pages
 
 The following are the specific steps in git corresponding to general steps 5-7:
 
-1. Switch to the root folder (`coremltools/`), check out the `master` branch, and then check out the `gh-pages` branch from upstream:
+1. Switch to the root folder (`coremltools/`), check out the `master` branch, and then checkout the `gh-pages` branch from upstream:
 
 	```shell
 	git checkout master
@@ -155,12 +155,14 @@ The following are the specific steps in git corresponding to general steps 5-7:
 5. On your fork, request a Pull Request (PR) for your changes to merge them with the `gh-pages` branch on the Apple repo. Once approved, these changes will eventually be merged from your `gh-pages` branch to the Apple repo's `gh-pages` branch. 
 
 
-## Generating a new API reference {#generating-a-new-api-reference}
+## Generating a new API reference
 
 This section is for generating a new version of the API Reference from scratch, and also shows how to edit the Sphinx navigation and content selection elements.
 
 
-### Set up the environment (do only once)
+### Set up the environment
+
+You need to do this only once.
 
 1. Start by creating a Conda environment and installing Sphinx and the theme:
 
@@ -174,7 +176,7 @@ This section is for generating a new version of the API Reference from scratch, 
 
 3. Install the following in the root (`coremltools/`) folder:
 
-	```
+	```shell
 	conda install sphinx
 	conda install numpydoc
 	conda install sphinx_rtd_theme
@@ -182,7 +184,7 @@ This section is for generating a new version of the API Reference from scratch, 
 
 4. Create a new `docs-api/` folder in the root folder:
 
-	```	
+	```shell
 	mkdir docs-api
 	```
 
