@@ -1965,7 +1965,7 @@ def sigmoid(context, node):
     res = mb.sigmoid(x=inputs[0], name=node.name)
     context.add(res)
 
-@register_torch_op
+@register_torch_op(torch_alias=["hardsigmoid_"])
 def hardsigmoid(context, node):
     inputs = _get_inputs(context, node, expected=1)
 
