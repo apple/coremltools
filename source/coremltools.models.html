@@ -1,0 +1,1683 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Models &mdash; coremltools API Reference  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="neural_network.builder" href="coremltools.models.neural_network.html" />
+    <link rel="prev" title="XGBoost" href="coremltools.converters.xgboost.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> coremltools API Reference
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">API Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="coremltools.converters.html">Converters</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Models</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.models.model">MLModel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.models.array_feature_extractor">array_feature_extractor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.models.feature_vectorizer">feature_vectorizer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.models.nearest_neighbors.builder">nearest_neighbors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#neural-network">neural_network</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="coremltools.models.neural_network.html">neural_network.builder</a></li>
+<li class="toctree-l3"><a class="reference internal" href="coremltools.models.neural_network.html#module-coremltools.models.neural_network.flexible_shape_utils">neural_network.flexible_shape_utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="coremltools.models.neural_network.html#module-coremltools.models.neural_network.quantization_utils">neural_network.quantization_utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="coremltools.models.neural_network.html#module-coremltools.models.neural_network.update_optimizer_utils">neural_network.update_optimizer_utils</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.models.pipeline">pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.models.tree_ensemble">tree_ensemble</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.models.utils">utils</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Resources</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://coremltools.readme.io/docs">Guides and examples</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://mlmodel.readme.io/reference">Core ML Format Specification</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">coremltools API Reference</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Models</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/source/coremltools.models.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="models">
+<h1>Models<a class="headerlink" href="#models" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-coremltools.models.model">
+<span id="mlmodel"></span><h2>MLModel<a class="headerlink" href="#module-coremltools.models.model" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="coremltools.models.model.MLModel">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">coremltools.models.model.</span></code><code class="sig-name descname"><span class="pre">MLModel</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">useCPUOnly</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.model.MLModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>This class defines the minimal interface to a CoreML object in Python.</p>
+<p>At a high level, the protobuf specification consists of:</p>
+<ul class="simple">
+<li><p>Model description: Encodes names and type information of the inputs and outputs to the model.</p></li>
+<li><p>Model parameters: The set of parameters required to represent a specific instance of the model.</p></li>
+<li><p>Metadata: Information about the origin, license, and author of the model.</p></li>
+</ul>
+<p>With this class, you can inspect a CoreML model, modify metadata, and make
+predictions for the purposes of testing (on select platforms).</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#coremltools.models.model.MLModel.predict" title="coremltools.models.model.MLModel.predict"><code class="xref py py-obj docutils literal notranslate"><span class="pre">predict</span></code></a></dt><dd></dd>
+</dl>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load the model</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">model</span> <span class="o">=</span>  <span class="n">MLModel</span><span class="p">(</span><span class="s1">&#39;HousePricer.mlmodel&#39;</span><span class="p">)</span>
+
+<span class="c1"># Set the model metadata</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">model</span><span class="o">.</span><span class="n">author</span> <span class="o">=</span> <span class="s1">&#39;Author&#39;</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">model</span><span class="o">.</span><span class="n">license</span> <span class="o">=</span> <span class="s1">&#39;BSD&#39;</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">model</span><span class="o">.</span><span class="n">short_description</span> <span class="o">=</span> <span class="s1">&#39;Predicts the price of a house in the Seattle area.&#39;</span>
+
+<span class="c1"># Get the interface to the model</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">model</span><span class="o">.</span><span class="n">input_description</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">model</span><span class="o">.</span><span class="n">output_description</span>
+
+<span class="c1"># Set feature descriptions manually</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">model</span><span class="o">.</span><span class="n">input_description</span><span class="p">[</span><span class="s1">&#39;bedroom&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Number of bedrooms&#39;</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">model</span><span class="o">.</span><span class="n">input_description</span><span class="p">[</span><span class="s1">&#39;bathrooms&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Number of bathrooms&#39;</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">model</span><span class="o">.</span><span class="n">input_description</span><span class="p">[</span><span class="s1">&#39;size&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Size (in square feet)&#39;</span>
+
+<span class="c1"># Set</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">model</span><span class="o">.</span><span class="n">output_description</span><span class="p">[</span><span class="s1">&#39;price&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Price of the house&#39;</span>
+
+<span class="c1"># Make predictions</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">predictions</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">({</span><span class="s1">&#39;bedroom&#39;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s1">&#39;bath&#39;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s1">&#39;size&#39;</span><span class="p">:</span> <span class="mi">1240</span><span class="p">})</span>
+
+<span class="c1"># Get the spec of the model</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">model</span><span class="o">.</span><span class="n">spec</span>
+
+<span class="c1"># Save the model</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s1">&#39;HousePricer.mlmodel&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt id="coremltools.models.model.MLModel.__init__">
+<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">useCPUOnly</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.model.MLModel.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Construct an MLModel from a .mlmodel</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>model: str or Model_pb2</strong></dt><dd><p>If a string is given it should be the location of the .mlmodel to load.</p>
+</dd>
+<dt><strong>useCPUOnly: bool</strong></dt><dd><p>Set to true to restrict loading of model on CPU Only. Defaults to False.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">loaded_model</span> <span class="o">=</span> <span class="n">MLModel</span><span class="p">(</span><span class="s1">&#39;my_model_file.mlmodel&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt id="coremltools.models.model.MLModel.get_spec">
+<code class="sig-name descname"><span class="pre">get_spec</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.model.MLModel.get_spec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a deep copy of the protobuf specification of the model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>model: Model_pb2</dt><dd><p>Protobuf specification of the model.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">spec</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">get_spec</span><span class="p">()</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt id="coremltools.models.model.MLModel.predict">
+<code class="sig-name descname"><span class="pre">predict</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">useCPUOnly</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.model.MLModel.predict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return predictions for the model. The kwargs gets passed into the
+model as a dictionary.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>data: dict[str, value]</strong></dt><dd><p>Dictionary of data to make predictions from where the keys are
+the names of the input features.</p>
+</dd>
+<dt><strong>useCPUOnly: bool</strong></dt><dd><p>Set to true to restrict computation to use only the CPU. Defaults to False.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>out: dict[str, value]</dt><dd><p>Predictions as a dictionary where each key is the output feature
+name.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;bedroom&#39;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s1">&#39;bath&#39;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s1">&#39;size&#39;</span><span class="p">:</span> <span class="mi">1240</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">predictions</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt id="coremltools.models.model.MLModel.save">
+<code class="sig-name descname"><span class="pre">save</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.model.MLModel.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save the model to a .mlmodel format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>filename: str</strong></dt><dd><p>Target filename for the model.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">coremltools.utils.load_model</span></code></dt><dd></dd>
+</dl>
+</div>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s1">&#39;my_model_file.mlmodel&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">loaded_model</span> <span class="o">=</span> <span class="n">MLModel</span><span class="p">(</span><span class="s1">&#39;my_model_file.mlmodel&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-coremltools.models.array_feature_extractor">
+<span id="array-feature-extractor"></span><h2>array_feature_extractor<a class="headerlink" href="#module-coremltools.models.array_feature_extractor" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="coremltools.models.array_feature_extractor.create_array_feature_extractor">
+<code class="sig-prename descclassname"><span class="pre">coremltools.models.array_feature_extractor.</span></code><code class="sig-name descname"><span class="pre">create_array_feature_extractor</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extract_indices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.array_feature_extractor.create_array_feature_extractor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a feature extractor from an input array feature, return</p>
+<p>input_features is a list of one (name, array) tuple.</p>
+<p>extract_indices is either an integer or a list.  If it’s an integer,
+the output type is by default a double (but may also be an integer).
+If a list, the output type is an array.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-coremltools.models.feature_vectorizer">
+<span id="feature-vectorizer"></span><h2>feature_vectorizer<a class="headerlink" href="#module-coremltools.models.feature_vectorizer" title="Permalink to this headline">¶</a></h2>
+<dl class="py function">
+<dt id="coremltools.models.feature_vectorizer.create_feature_vectorizer">
+<code class="sig-prename descclassname"><span class="pre">coremltools.models.feature_vectorizer.</span></code><code class="sig-name descname"><span class="pre">create_feature_vectorizer</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_feature_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">known_size_map</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.feature_vectorizer.create_feature_vectorizer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a feature vectorizer from input features. This returns a 2-tuple
+<code class="docutils literal notranslate"><span class="pre">(spec,</span> <span class="pre">num_dimension)</span></code> for a feature vectorizer that puts everything into a
+single array with a length equal to the total size of all the input features.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>input_features: [list of 2-tuples]</strong></dt><dd><p>Name(s) of the input features, given as a list of <code class="docutils literal notranslate"><span class="pre">('name',</span> <span class="pre">datatype)</span></code>
+tuples.  The datatypes entry is one of the data types defined in the
+<code class="docutils literal notranslate"><span class="pre">datatypes</span></code> module.  Allowed <code class="docutils literal notranslate"><span class="pre">datatypes</span></code> are <code class="docutils literal notranslate"><span class="pre">datatype.Int64</span></code>,
+<code class="docutils literal notranslate"><span class="pre">datatype.Double</span></code>, <code class="docutils literal notranslate"><span class="pre">datatypes.Dictionary</span></code>, and <code class="docutils literal notranslate"><span class="pre">datatype.Array</span></code>.</p>
+<p>If the feature is a dictionary type, then the dictionary must have integer
+keys, and the number of dimensions to expand it into must be provided by
+<code class="docutils literal notranslate"><span class="pre">known_size_map</span></code>.</p>
+<p>Feature indices in the final array are counted sequentially from the
+from 0 through the total number of features.</p>
+</dd>
+<dt><strong>output_feature_name: str</strong></dt><dd><p>The name of the output feature.  The type is an Array
+List of the output features of the network.</p>
+</dd>
+<dt><strong>known_size_map:</strong></dt><dd><p>A dictionary mapping the feature name to the expanded size in the final
+array.  This is most useful for specifying the size of sparse vectors
+given as dictionaries of index to value.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-coremltools.models.nearest_neighbors.builder">
+<span id="nearest-neighbors"></span><h2>nearest_neighbors<a class="headerlink" href="#module-coremltools.models.nearest_neighbors.builder" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">coremltools.models.nearest_neighbors.builder.</span></code><code class="sig-name descname"><span class="pre">KNearestNeighborsClassifierBuilder</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">number_of_dimensions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_class_label</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Construct a CoreML KNearestNeighborsClassifier specification.</p>
+<p>Please see the Core ML Nearest Neighbors protobuf message for more information
+on KNearestNeighborsClassifier parameters.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">coremltools.models.nearest_neighbors</span> <span class="kn">import</span> <span class="n">KNearestNeighborsClassifierBuilder</span>
+<span class="kn">from</span> <span class="nn">coremltools.models.utils</span> <span class="kn">import</span> <span class="n">save_spec</span>
+
+<span class="c1"># Create a KNearestNeighborsClassifier model that takes 4-dimensional input data and outputs a string label.</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">builder</span> <span class="o">=</span> <span class="n">KNearestNeighborsClassifierBuilder</span><span class="p">(</span><span class="n">input_name</span><span class="o">=</span><span class="s1">&#39;input&#39;</span><span class="p">,</span>
+<span class="o">...</span>                                              <span class="n">output_name</span><span class="o">=</span><span class="s1">&#39;output&#39;</span><span class="p">,</span>
+<span class="o">...</span>                                              <span class="n">number_of_dimensions</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+<span class="o">...</span>                                              <span class="n">default_class_label</span><span class="o">=</span><span class="s1">&#39;default_label&#39;</span><span class="p">)</span>
+
+<span class="c1"># save the spec by the builder</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">save_spec</span><span class="p">(</span><span class="n">builder</span><span class="o">.</span><span class="n">spec</span><span class="p">,</span> <span class="s1">&#39;knnclassifier.mlmodel&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt id="coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.__init__">
+<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">number_of_dimensions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_class_label</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a KNearestNeighborsClassifierBuilder object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>input_name</strong></dt><dd><p>Name of the model input.</p>
+</dd>
+<dt><strong>output_name</strong></dt><dd><p>Name of the output.</p>
+</dd>
+<dt><strong>number_of_dimensions</strong></dt><dd><p>Number of dimensions of the input data.</p>
+</dd>
+<dt><strong>default_class_label</strong></dt><dd><p>The default class label to use for predictions. Must be either an
+int64 or a string.</p>
+</dd>
+<dt><strong>number_of_neighbors</strong></dt><dd><p>Number of neighbors to use for predictions. Default = 5 with allowed values
+between 1-1000.</p>
+</dd>
+<dt><strong>weighting_scheme</strong></dt><dd><p>Weight function used in prediction. One of <code class="docutils literal notranslate"><span class="pre">'uniform'</span></code> (default) or
+<code class="docutils literal notranslate"><span class="pre">'inverse_distance'</span></code>.</p>
+</dd>
+<dt><strong>index_type</strong></dt><dd><p>Algorithm to compute nearest neighbors. One of <code class="docutils literal notranslate"><span class="pre">'linear'</span></code> (default), or
+<code class="docutils literal notranslate"><span class="pre">'kd_tree'</span></code>.</p>
+</dd>
+<dt><strong>leaf_size</strong></dt><dd><p>Leaf size for the kd-tree. Ignored if index type is <code class="docutils literal notranslate"><span class="pre">'linear'</span></code>. Default = 30.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder._is_valid_number_type">
+<em class="property"><span class="pre">static</span> </em><code class="sig-name descname"><span class="pre">_is_valid_number_type</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder._is_valid_number_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if the object is a valid number type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>obj</strong></dt><dd><p>The object to check.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>True if a valid number type, False otherwise.</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder._is_valid_text_type">
+<em class="property"><span class="pre">static</span> </em><code class="sig-name descname"><span class="pre">_is_valid_text_type</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder._is_valid_text_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checks if the object is a valid text type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>obj</strong></dt><dd><p>The object to check.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>True if a valid text type, False otherwise.</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder._validate_label_types">
+<code class="sig-name descname"><span class="pre">_validate_label_types</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">labels</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder._validate_label_types" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ensure the label types matched the expected types.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>spec</strong></dt><dd><p>The spec.</p>
+</dd>
+<dt><strong>labels</strong></dt><dd><p>The list of labels.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>None, throws a TypeError if not expected.</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.add_samples">
+<code class="sig-name descname"><span class="pre">add_samples</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data_points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.add_samples" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add some samples to the KNearestNeighborsClassifier model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>data_points</strong></dt><dd><p>List of input data points.</p>
+</dd>
+<dt><strong>labels</strong></dt><dd><p>List of corresponding labels.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>None</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.author">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">author</span></code><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.author" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the author for the KNearestNeighborsClassifier model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>The author</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.description">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">description</span></code><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.description" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the description for the KNearestNeighborsClassifier model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>The description.</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.index_type">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">index_type</span></code><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.index_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the index type for the KNearestNeighborsClassifier model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>The index type.</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.is_updatable">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">is_updatable</span></code><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.is_updatable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check if the KNearestNeighborsClassifier is updatable.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>Is updatable.</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.leaf_size">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">leaf_size</span></code><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.leaf_size" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the leaf size for the KNearestNeighborsClassifier.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>The leaf size.</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.license">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">license</span></code><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.license" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the author for the KNearestNeighborsClassifier model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>The author</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.number_of_dimensions">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">number_of_dimensions</span></code><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.number_of_dimensions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the number of dimensions of the input data for the
+KNearestNeighborsClassifier model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>Number of dimensions.</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.number_of_neighbors">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">number_of_neighbors</span></code><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.number_of_neighbors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the number of neighbors value for the KNearestNeighborsClassifier model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>The number of neighbors default value.</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.number_of_neighbors_allowed_range">
+<code class="sig-name descname"><span class="pre">number_of_neighbors_allowed_range</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.number_of_neighbors_allowed_range" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the range of allowed values for the numberOfNeighbors parameter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>Tuple of (<code class="docutils literal notranslate"><span class="pre">min_value</span></code>, <code class="docutils literal notranslate"><span class="pre">max_value</span></code>) or <code class="docutils literal notranslate"><span class="pre">None</span></code> if the range hasn’t been set.</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.number_of_neighbors_allowed_set">
+<code class="sig-name descname"><span class="pre">number_of_neighbors_allowed_set</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.number_of_neighbors_allowed_set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the set of allowed values for the numberOfNeighbors parameter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>Set of allowed values or <code class="docutils literal notranslate"><span class="pre">None</span></code> if the set of allowed values hasn’t been</dt><dd></dd>
+<dt>populated.</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.set_index_type">
+<code class="sig-name descname"><span class="pre">set_index_type</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">leaf_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.set_index_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the index type for the KNearestNeighborsClassifier model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>index_type</strong></dt><dd><p>One of [ <code class="docutils literal notranslate"><span class="pre">'linear'</span></code>, <code class="docutils literal notranslate"><span class="pre">'kd_tree'</span></code> ].</p>
+</dd>
+<dt><strong>leaf_size</strong></dt><dd><p>For kd_tree indexes, the leaf size to use (default = 30).</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>None</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.set_number_of_neighbors_with_bounds">
+<code class="sig-name descname"><span class="pre">set_number_of_neighbors_with_bounds</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">number_of_neighbors</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allowed_range</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allowed_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.set_number_of_neighbors_with_bounds" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the numberOfNeighbors parameter for the KNearestNeighborsClassifier model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>allowed_range</strong></dt><dd><p>Tuple of (<code class="docutils literal notranslate"><span class="pre">min_value</span></code>, <code class="docutils literal notranslate"><span class="pre">max_value</span></code>) defining the range of allowed values.</p>
+</dd>
+<dt><strong>allowed_values</strong></dt><dd><p>Set of allowed values for the number of neighbors.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>None</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.weighting_scheme">
+<em class="property"><span class="pre">property</span> </em><code class="sig-name descname"><span class="pre">weighting_scheme</span></code><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.weighting_scheme" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the weighting scheme for the KNearestNeighborsClassifier model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt>The weighting scheme.</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="neural-network">
+<h2>neural_network<a class="headerlink" href="#neural-network" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.models.neural_network.html">neural_network.builder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.models.neural_network.html#module-coremltools.models.neural_network.flexible_shape_utils">neural_network.flexible_shape_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.models.neural_network.html#module-coremltools.models.neural_network.quantization_utils">neural_network.quantization_utils</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.models.neural_network.html#module-coremltools.models.neural_network.update_optimizer_utils">neural_network.update_optimizer_utils</a></li>
+</ul>
+</div>
+</div>
+<div class="section" id="module-coremltools.models.pipeline">
+<span id="pipeline"></span><h2>pipeline<a class="headerlink" href="#module-coremltools.models.pipeline" title="Permalink to this headline">¶</a></h2>
+<p>Pipeline utils for this package.</p>
+<dl class="py class">
+<dt id="coremltools.models.pipeline.Pipeline">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">coremltools.models.pipeline.</span></code><code class="sig-name descname"><span class="pre">Pipeline</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.pipeline.Pipeline" title="Permalink to this definition">¶</a></dt>
+<dd><p>A pipeline model that exposes a sequence of models as a single model,
+It requires a set of inputs, a sequence of other models and a set of outputs.</p>
+<p>This class is the base class for <a class="reference internal" href="#coremltools.models.pipeline.PipelineClassifier" title="coremltools.models.pipeline.PipelineClassifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">PipelineClassifier</span></code></a> and
+<a class="reference internal" href="#coremltools.models.pipeline.PipelineRegressor" title="coremltools.models.pipeline.PipelineRegressor"><code class="xref py py-class docutils literal notranslate"><span class="pre">PipelineRegressor</span></code></a>, which contain a sequence ending in a classifier
+or regressor and themselves behave like a classifier or regressor.  This class
+may be used directly for a sequence of feature transformer objects.</p>
+<dl class="py method">
+<dt id="coremltools.models.pipeline.Pipeline.__init__">
+<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.pipeline.Pipeline.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a pipeline of models to be executed sequentially.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>input_features: [list of 2-tuples]</strong></dt><dd><p>Name(s) of the input features, given as a list of <cite>(‘name’, datatype)</cite>
+tuples.  The datatypes entry can be any of the data types defined in the
+<code class="xref py py-mod docutils literal notranslate"><span class="pre">models.datatypes</span></code> module.</p>
+</dd>
+<dt><strong>output_features: [list of features]</strong></dt><dd><p>Name(s) of the output features, given as a list of
+<cite>(‘name’,datatype)</cite> tuples.  The datatypes entry can be any of the
+data types defined in the <code class="xref py py-mod docutils literal notranslate"><span class="pre">models.datatypes</span></code> module.  All features
+must be either defined in the inputs or be produced by one of the
+contained models.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="coremltools.models.pipeline.Pipeline.add_model">
+<code class="sig-name descname"><span class="pre">add_model</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.pipeline.Pipeline.add_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a protobuf spec or <code class="xref py py-class docutils literal notranslate"><span class="pre">models.MLModel</span></code> instance to the pipeline.</p>
+<p>All input features of this model must either match the input_features
+of the pipeline, or match the outputs of a previous model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>spec: [MLModel, Model_pb2]</strong></dt><dd><p>A protobuf spec or MLModel instance containing a model.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="coremltools.models.pipeline.Pipeline.set_training_input">
+<code class="sig-name descname"><span class="pre">set_training_input</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">training_input</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.pipeline.Pipeline.set_training_input" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the training inputs of the network spec.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>training_input: [tuple]</strong></dt><dd><p>List of training input names and type of the network.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="coremltools.models.pipeline.PipelineClassifier">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">coremltools.models.pipeline.</span></code><code class="sig-name descname"><span class="pre">PipelineClassifier</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.pipeline.PipelineClassifier" title="Permalink to this definition">¶</a></dt>
+<dd><p>A pipeline model that exposes a sequence of models as a single model,
+It requires a set of inputs, a sequence of other models and a set of outputs.
+In this case the pipeline itself behaves as a classification model by designating
+a discrete categorical output feature as its ‘predicted feature’.</p>
+<dl class="py method">
+<dt id="coremltools.models.pipeline.PipelineClassifier.__init__">
+<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.pipeline.PipelineClassifier.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a set of pipeline models given a set of model specs.  The last
+model in this list must be a classifier model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>input_features: [list of 2-tuples]</strong></dt><dd><p>Name(s) of the input features, given as a list of <cite>(‘name’, datatype)</cite>
+tuples.  The datatypes entry can be any of the data types defined in the
+<code class="xref py py-mod docutils literal notranslate"><span class="pre">models.datatypes</span></code> module.</p>
+</dd>
+<dt><strong>class_labels: [list]</strong></dt><dd><p>A list of string or integer class labels to use in making predictions.
+This list must match the class labels in the model outputting the categorical
+predictedFeatureName</p>
+</dd>
+<dt><strong>output_features: [list]</strong></dt><dd><p>A string or a list of two strings specifying the names of the two
+output features, the first being a class label corresponding
+to the class with the highest predicted score, and the second being
+a dictionary mapping each class to its score. If <cite>output_features</cite>
+is a string, it specifies the predicted class label and the class
+scores is set to the default value of <cite>“classProbability.”</cite></p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="coremltools.models.pipeline.PipelineClassifier.add_model">
+<code class="sig-name descname"><span class="pre">add_model</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.pipeline.PipelineClassifier.add_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a protobuf spec or <code class="xref py py-class docutils literal notranslate"><span class="pre">models.MLModel</span></code> instance to the pipeline.</p>
+<p>All input features of this model must either match the input_features
+of the pipeline, or match the outputs of a previous model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>spec: [MLModel, Model_pb2]</strong></dt><dd><p>A protobuf spec or MLModel instance containing a model.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="coremltools.models.pipeline.PipelineClassifier.set_training_input">
+<code class="sig-name descname"><span class="pre">set_training_input</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">training_input</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.pipeline.PipelineClassifier.set_training_input" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the training inputs of the network spec.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>training_input: [tuple]</strong></dt><dd><p>List of training input names and type of the network.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="coremltools.models.pipeline.PipelineRegressor">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">coremltools.models.pipeline.</span></code><code class="sig-name descname"><span class="pre">PipelineRegressor</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.pipeline.PipelineRegressor" title="Permalink to this definition">¶</a></dt>
+<dd><p>A pipeline model that exposes a sequence of models as a single model,
+It requires a set of inputs, a sequence of other models and a set of outputs.
+In this case the pipeline itself behaves as a regression model by designating
+a real valued output feature as its ‘predicted feature’.</p>
+<dl class="py method">
+<dt id="coremltools.models.pipeline.PipelineRegressor.__init__">
+<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">training_features</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.pipeline.PipelineRegressor.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a set of pipeline models given a set of model specs.  The final
+output model must be a regression model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>input_features: [list of 2-tuples]</strong></dt><dd><p>Name(s) of the input features, given as a list of <cite>(‘name’, datatype)</cite>
+tuples.  The datatypes entry can be any of the data types defined in the
+<code class="xref py py-mod docutils literal notranslate"><span class="pre">models.datatypes</span></code> module.</p>
+</dd>
+<dt><strong>output_features: [list of features]</strong></dt><dd><p>Name(s) of the output features, given as a list of
+<cite>(‘name’,datatype)</cite> tuples.  The datatypes entry can be any of the
+data types defined in the <code class="xref py py-mod docutils literal notranslate"><span class="pre">models.datatypes</span></code> module.  All features
+must be either defined in the inputs or be produced by one of the
+contained models.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="coremltools.models.pipeline.PipelineRegressor.add_model">
+<code class="sig-name descname"><span class="pre">add_model</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.pipeline.PipelineRegressor.add_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a protobuf spec or <code class="xref py py-class docutils literal notranslate"><span class="pre">models.MLModel</span></code> instance to the pipeline.</p>
+<p>All input features of this model must either match the input_features
+of the pipeline, or match the outputs of a previous model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>spec: [MLModel, Model_pb2]</strong></dt><dd><p>A protobuf spec or MLModel instance containing a model.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="coremltools.models.pipeline.PipelineRegressor.set_training_input">
+<code class="sig-name descname"><span class="pre">set_training_input</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">training_input</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.pipeline.PipelineRegressor.set_training_input" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the training inputs of the network spec.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>training_input: [tuple]</strong></dt><dd><p>List of training input names and type of the network.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-coremltools.models.tree_ensemble">
+<span id="tree-ensemble"></span><h2>tree_ensemble<a class="headerlink" href="#module-coremltools.models.tree_ensemble" title="Permalink to this headline">¶</a></h2>
+<p>Tree ensemble builder class to construct CoreML models.</p>
+<dl class="py class">
+<dt id="coremltools.models.tree_ensemble.TreeEnsembleBase">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">coremltools.models.tree_ensemble.</span></code><code class="sig-name descname"><span class="pre">TreeEnsembleBase</span></code><a class="headerlink" href="#coremltools.models.tree_ensemble.TreeEnsembleBase" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for the tree ensemble builder class.  This should be instantiated
+either through the <a class="reference internal" href="#coremltools.models.tree_ensemble.TreeEnsembleRegressor" title="coremltools.models.tree_ensemble.TreeEnsembleRegressor"><code class="xref py py-class docutils literal notranslate"><span class="pre">TreeEnsembleRegressor</span></code></a> or
+<a class="reference internal" href="#coremltools.models.tree_ensemble.TreeEnsembleClassifier" title="coremltools.models.tree_ensemble.TreeEnsembleClassifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">TreeEnsembleClassifier</span></code></a> classes.</p>
+<dl class="py method">
+<dt id="coremltools.models.tree_ensemble.TreeEnsembleBase.__init__">
+<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.tree_ensemble.TreeEnsembleBase.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>High level Python API to build a tree ensemble model for Core ML.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt id="coremltools.models.tree_ensemble.TreeEnsembleBase.add_branch_node">
+<code class="sig-name descname"><span class="pre">add_branch_node</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tree_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_index</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">branch_mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">true_child_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">false_child_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relative_hit_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">missing_value_tracks_true_child</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.tree_ensemble.TreeEnsembleBase.add_branch_node" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a branch node to the tree ensemble.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>tree_id: int</strong></dt><dd><p>ID of the tree to add the node to.</p>
+</dd>
+<dt><strong>node_id: int</strong></dt><dd><p>ID of the node within the tree.</p>
+</dd>
+<dt><strong>feature_index: int</strong></dt><dd><p>Index of the feature in the input being split on.</p>
+</dd>
+<dt><strong>feature_value: double or int</strong></dt><dd><p>The value used in the feature comparison determining the traversal
+direction from this node.</p>
+</dd>
+<dt><strong>branch_mode: str</strong></dt><dd><p>Branch mode of the node, specifying the condition under which the node
+referenced by <code class="docutils literal notranslate"><span class="pre">true_child_id</span></code> is called next.</p>
+<p>Must be one of the following:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;BranchOnValueLessThanEqual&quot;</span></code>. Traverse to node <code class="docutils literal notranslate"><span class="pre">true_child_id</span></code>
+if <code class="docutils literal notranslate"><span class="pre">input[feature_index]</span> <span class="pre">&lt;=</span> <span class="pre">feature_value</span></code>, and <code class="docutils literal notranslate"><span class="pre">false_child_id</span></code>
+otherwise.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;BranchOnValueLessThan&quot;</span></code>. Traverse to node <code class="docutils literal notranslate"><span class="pre">true_child_id</span></code>
+if <code class="docutils literal notranslate"><span class="pre">input[feature_index]</span> <span class="pre">&lt;</span> <span class="pre">feature_value</span></code>, and <code class="docutils literal notranslate"><span class="pre">false_child_id</span></code>
+otherwise.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;BranchOnValueGreaterThanEqual&quot;</span></code>. Traverse to node <code class="docutils literal notranslate"><span class="pre">true_child_id</span></code>
+if <code class="docutils literal notranslate"><span class="pre">input[feature_index]</span> <span class="pre">&gt;=</span> <span class="pre">feature_value</span></code>, and <code class="docutils literal notranslate"><span class="pre">false_child_id</span></code>
+otherwise.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;BranchOnValueGreaterThan&quot;</span></code>. Traverse to node <code class="docutils literal notranslate"><span class="pre">true_child_id</span></code>
+if <code class="docutils literal notranslate"><span class="pre">input[feature_index]</span> <span class="pre">&gt;</span> <span class="pre">feature_value</span></code>, and <code class="docutils literal notranslate"><span class="pre">false_child_id</span></code>
+otherwise.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;BranchOnValueEqual&quot;</span></code>. Traverse to node <code class="docutils literal notranslate"><span class="pre">true_child_id</span></code>
+if <code class="docutils literal notranslate"><span class="pre">input[feature_index]</span> <span class="pre">==</span> <span class="pre">feature_value</span></code>, and <code class="docutils literal notranslate"><span class="pre">false_child_id</span></code>
+otherwise.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;BranchOnValueNotEqual&quot;</span></code>. Traverse to node <code class="docutils literal notranslate"><span class="pre">true_child_id</span></code>
+if <code class="docutils literal notranslate"><span class="pre">input[feature_index]</span> <span class="pre">!=</span> <span class="pre">feature_value</span></code>, and <code class="docutils literal notranslate"><span class="pre">false_child_id</span></code>
+otherwise.</p></li>
+</ul>
+</div></blockquote>
+</dd>
+<dt><strong>true_child_id: int</strong></dt><dd><p>ID of the child under the true condition of the split.  An error will
+be raised at model validation if this does not match the <code class="docutils literal notranslate"><span class="pre">node_id</span></code>
+of a node instantiated by <code class="docutils literal notranslate"><span class="pre">add_branch_node</span></code> or <code class="docutils literal notranslate"><span class="pre">add_leaf_node</span></code> within
+this <code class="docutils literal notranslate"><span class="pre">tree_id</span></code>.</p>
+</dd>
+<dt><strong>false_child_id: int</strong></dt><dd><p>ID of the child under the false condition of the split.  An error will
+be raised at model validation if this does not match the <code class="docutils literal notranslate"><span class="pre">node_id</span></code>
+of a node instantiated by <code class="docutils literal notranslate"><span class="pre">add_branch_node</span></code> or <code class="docutils literal notranslate"><span class="pre">add_leaf_node</span></code> within
+this <code class="docutils literal notranslate"><span class="pre">tree_id</span></code>.</p>
+</dd>
+<dt><strong>relative_hit_rate: float [optional]</strong></dt><dd><p>When the model is converted compiled by CoreML, this gives hints to
+Core ML about which node is more likely to be hit on evaluation,
+allowing for additional optimizations. The values can be on any scale,
+with the values between child nodes being compared relative to each
+other.</p>
+</dd>
+<dt><strong>missing_value_tracks_true_child: bool [optional]</strong></dt><dd><p>If the training data contains NaN values or missing values, then this
+flag determines which direction a NaN value traverses.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="coremltools.models.tree_ensemble.TreeEnsembleBase.add_leaf_node">
+<code class="sig-name descname"><span class="pre">add_leaf_node</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tree_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">values</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relative_hit_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.tree_ensemble.TreeEnsembleBase.add_leaf_node" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a leaf node to the tree ensemble.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>tree_id: int</strong></dt><dd><p>ID of the tree to add the node to.</p>
+</dd>
+<dt><strong>node_id: int</strong></dt><dd><p>ID of the node within the tree.</p>
+</dd>
+<dt><strong>values: [float | int | list | dict]</strong></dt><dd><p>Value(s) at the leaf node to add to the prediction when this node is
+activated.  If the prediction dimension of the tree is 1, then the
+value is specified as a float or integer value.</p>
+<p>For multidimensional predictions, the values can be a list of numbers
+with length matching the dimension of the predictions or a dictionary
+mapping index to value added to that dimension.</p>
+<p>Note that the dimension of any tree must match the dimension given
+when <a class="reference internal" href="#coremltools.models.tree_ensemble.TreeEnsembleBase.set_default_prediction_value" title="coremltools.models.tree_ensemble.TreeEnsembleBase.set_default_prediction_value"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set_default_prediction_value()</span></code></a> is called.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="coremltools.models.tree_ensemble.TreeEnsembleBase.set_default_prediction_value">
+<code class="sig-name descname"><span class="pre">set_default_prediction_value</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">values</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.tree_ensemble.TreeEnsembleBase.set_default_prediction_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the default prediction value(s).</p>
+<p>The values given here form the base prediction value that the values
+at activated leaves are added to.  If values is a scalar, then
+the output of the tree must also be 1 dimensional; otherwise, values
+must be a list with length matching the dimension of values in the tree.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>values: [int | double | list[double]]</strong></dt><dd><p>Default values for predictions.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt id="coremltools.models.tree_ensemble.TreeEnsembleBase.set_post_evaluation_transform">
+<code class="sig-name descname"><span class="pre">set_post_evaluation_transform</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.tree_ensemble.TreeEnsembleBase.set_post_evaluation_transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the post processing transform applied after the prediction value
+from the tree ensemble.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>value: str</strong></dt><dd><p>A value denoting the transform applied.  Possible values are:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;NoTransform&quot;</span></code> (default).  Do not apply a transform.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;Classification_SoftMax&quot;</span></code>.</p>
+<p>Apply a softmax function to the outcome to produce normalized,
+non-negative scores that sum to 1.  The transformation applied to
+dimension <cite>i</cite> is equivalent to:</p>
+<blockquote>
+<div><div class="math notranslate nohighlight">
+\[\frac{e^{x_i}}{\sum_j e^{x_j}}\]</div>
+</div></blockquote>
+<p>Note: This is the output transformation applied by the XGBoost package
+with multiclass classification.</p>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;Regression_Logistic&quot;</span></code>.</p>
+<p>Applies a logistic transform the predicted value, specifically:</p>
+<blockquote>
+<div><div class="math notranslate nohighlight">
+\[(1 + e^{-v})^{-1}\]</div>
+</div></blockquote>
+<p>This is the transformation used in binary classification.</p>
+</li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="coremltools.models.tree_ensemble.TreeEnsembleClassifier">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">coremltools.models.tree_ensemble.</span></code><code class="sig-name descname"><span class="pre">TreeEnsembleClassifier</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_features</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.tree_ensemble.TreeEnsembleClassifier" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tree Ensemble builder class to construct a Tree Ensemble classification model.</p>
+<p>The TreeEnsembleClassifier class constructs a Tree Ensemble model incrementally
+using methods to add branch and leaf nodes specifying the behavior of the model.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">input_features</span> <span class="o">=</span> <span class="p">[(</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="n">datatypes</span><span class="o">.</span><span class="n">Array</span><span class="p">(</span><span class="mi">3</span><span class="p">)),</span> <span class="p">(</span><span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="n">datatypes</span><span class="o">.</span><span class="n">Double</span><span class="p">())]</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tm</span> <span class="o">=</span> <span class="n">TreeEnsembleClassifier</span><span class="p">(</span><span class="n">features</span> <span class="o">=</span> <span class="n">input_features</span><span class="p">,</span> <span class="n">class_labels</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+<span class="go">                                output_features = &quot;predicted_class&quot;)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Split on a[2] &lt;= 3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tm</span><span class="o">.</span><span class="n">add_branch_node</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;BranchOnValueLessThanEqual&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Add leaf to the true branch of node 0 that subtracts 1.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tm</span><span class="o">.</span><span class="n">add_leaf_node</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Add split on b == 0 to the false branch of node 0.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tm</span><span class="o">.</span><span class="n">add_branch_node</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;BranchOnValueEqual&quot;</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Add leaf to the true branch of node 2 that adds 1 to the result.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tm</span><span class="o">.</span><span class="n">add_leaf_node</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Add leaf to the false branch of node 2 that subtracts 1 from the result.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tm</span><span class="o">.</span><span class="n">add_leaf_node</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Put in a softmax transform to translate these into probabilities.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tm</span><span class="o">.</span><span class="n">set_post_evaluation_transform</span><span class="p">(</span><span class="s2">&quot;Classification_SoftMax&quot;</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tm</span><span class="o">.</span><span class="n">set_default_prediction_value</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># save the model to a .mlmodel file</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">model_path</span> <span class="o">=</span> <span class="s1">&#39;./tree.mlmodel&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">coremltools</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">save_spec</span><span class="p">(</span><span class="n">tm</span><span class="o">.</span><span class="n">spec</span><span class="p">,</span> <span class="n">model_path</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># load the .mlmodel</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mlmodel</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="n">model_path</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># make predictions</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">test_input</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;a&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s2">&quot;b&quot;</span><span class="p">:</span> <span class="mf">3.0</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">predictions</span> <span class="o">=</span> <span class="n">mlmodel</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">test_input</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt id="coremltools.models.tree_ensemble.TreeEnsembleClassifier.__init__">
+<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_features</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.tree_ensemble.TreeEnsembleClassifier.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a tree ensemble classifier model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>features: [list of features]</strong></dt><dd><p>Name(s) of the input features, given as a list of <code class="docutils literal notranslate"><span class="pre">('name',</span> <span class="pre">datatype)</span></code>
+tuples.  The features are one of <code class="docutils literal notranslate"><span class="pre">models.datatypes.Int64</span></code>,
+<code class="docutils literal notranslate"><span class="pre">datatypes.Double</span></code>, or <code class="docutils literal notranslate"><span class="pre">models.datatypes.Array</span></code>.
+Feature indices in the nodes are counted sequentially from 0 through
+the features.</p>
+</dd>
+<dt><strong>class_labels: [list]</strong></dt><dd><p>A list of string or integer class labels to use in making predictions.
+The length of this must match the dimension of the tree model.</p>
+</dd>
+<dt><strong>output_features: [list]</strong></dt><dd><p>A string or a list of two strings specifying the names of the two
+output features, the first being a class label corresponding
+to the class with the highest predicted score, and the second being
+a dictionary mapping each class to its score. If <code class="docutils literal notranslate"><span class="pre">output_features</span></code>
+is a string, it specifies the predicted class label and the class
+scores is set to the default value of <code class="docutils literal notranslate"><span class="pre">&quot;classProbability&quot;</span></code>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt id="coremltools.models.tree_ensemble.TreeEnsembleRegressor">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">coremltools.models.tree_ensemble.</span></code><code class="sig-name descname"><span class="pre">TreeEnsembleRegressor</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.tree_ensemble.TreeEnsembleRegressor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tree Ensemble builder class to construct a Tree Ensemble regression model.</p>
+<p>The TreeEnsembleRegressor class constructs a Tree Ensemble model incrementally
+using methods to add branch and leaf nodes specifying the behavior of the model.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Required inputs</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">coremltools</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">coremltools.models</span> <span class="kn">import</span> <span class="n">datatypes</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">coremltools.models.tree_ensemble</span> <span class="kn">import</span> <span class="n">TreeEnsembleRegressor</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Define input features</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">input_features</span> <span class="o">=</span> <span class="p">[(</span><span class="s2">&quot;a&quot;</span><span class="p">,</span> <span class="n">datatypes</span><span class="o">.</span><span class="n">Array</span><span class="p">(</span><span class="mi">3</span><span class="p">)),</span> <span class="p">(</span><span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="p">(</span><span class="n">datatypes</span><span class="o">.</span><span class="n">Double</span><span class="p">()))]</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Define output_features</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">output_features</span> <span class="o">=</span> <span class="p">[(</span><span class="s2">&quot;predicted_values&quot;</span><span class="p">,</span> <span class="n">datatypes</span><span class="o">.</span><span class="n">Double</span><span class="p">())]</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tm</span> <span class="o">=</span> <span class="n">TreeEnsembleRegressor</span><span class="p">(</span><span class="n">features</span> <span class="o">=</span> <span class="n">input_features</span><span class="p">,</span> <span class="n">target</span> <span class="o">=</span> <span class="n">output_features</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Split on a[2] &lt;= 3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tm</span><span class="o">.</span><span class="n">add_branch_node</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;BranchOnValueLessThanEqual&quot;</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Add leaf to the true branch of node 0 that subtracts 1.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tm</span><span class="o">.</span><span class="n">add_leaf_node</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Add split on b == 0 to the false branch of node 0, which is index 3</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tm</span><span class="o">.</span><span class="n">add_branch_node</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;BranchOnValueEqual&quot;</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Add leaf to the true branch of node 2 that adds 1 to the result.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tm</span><span class="o">.</span><span class="n">add_leaf_node</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Add leaf to the false branch of node 2 that subtracts 1 from the result.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tm</span><span class="o">.</span><span class="n">add_leaf_node</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tm</span><span class="o">.</span><span class="n">set_default_prediction_value</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># save the model to a .mlmodel file</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">model_path</span> <span class="o">=</span> <span class="s1">&#39;./tree.mlmodel&#39;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">coremltools</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">save_spec</span><span class="p">(</span><span class="n">tm</span><span class="o">.</span><span class="n">spec</span><span class="p">,</span> <span class="n">model_path</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># load the .mlmodel</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">mlmodel</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="n">model_path</span><span class="p">)</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># make predictions</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">test_input</span> <span class="o">=</span> <span class="p">{</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s1">&#39;a&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="s2">&quot;b&quot;</span><span class="p">:</span> <span class="mf">3.0</span><span class="p">,</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">predictions</span> <span class="o">=</span> <span class="n">mlmodel</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">test_input</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt id="coremltools.models.tree_ensemble.TreeEnsembleRegressor.__init__">
+<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.tree_ensemble.TreeEnsembleRegressor.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a Tree Ensemble regression model that takes one or more input
+features and maps them to an output feature.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>features: [list of features]</strong></dt><dd><p>Name(s) of the input features, given as a list of <code class="docutils literal notranslate"><span class="pre">('name',</span> <span class="pre">datatype)</span></code>
+tuples.  The features are one of <code class="docutils literal notranslate"><span class="pre">models.datatypes.Int64</span></code>,
+<code class="docutils literal notranslate"><span class="pre">datatypes.Double</span></code>, or <code class="docutils literal notranslate"><span class="pre">models.datatypes.Array</span></code>.
+Feature indices in the nodes are counted sequentially from 0 through
+the features.</p>
+</dd>
+<dt><strong>target:  (default = None)</strong></dt><dd><p>Name of the target feature predicted.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-coremltools.models.utils">
+<span id="utils"></span><h2>utils<a class="headerlink" href="#module-coremltools.models.utils" title="Permalink to this headline">¶</a></h2>
+<p>Utilities for the entire package.</p>
+<dl class="py function">
+<dt id="coremltools.models.utils._convert_neural_network_weights_to_fp16">
+<code class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></code><code class="sig-name descname"><span class="pre">_convert_neural_network_weights_to_fp16</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">full_precision_model</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.utils._convert_neural_network_weights_to_fp16" title="Permalink to this definition">¶</a></dt>
+<dd><p>Utility function to convert a full precision (float) MLModel to a
+half precision MLModel (float16).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>full_precision_model: MLModel</strong></dt><dd><p>Model which will be converted to half precision. Currently conversion
+for only neural network models is supported. If a pipeline model is
+passed in then all embedded neural network models embedded within
+will be converted.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>model: MLModel</dt><dd><p>The converted half precision MLModel</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="coremltools.models.utils._element_equal">
+<code class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></code><code class="sig-name descname"><span class="pre">_element_equal</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.utils._element_equal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs a robust equality test between elements.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="coremltools.models.utils._get_custom_layer_names">
+<code class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></code><code class="sig-name descname"><span class="pre">_get_custom_layer_names</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.utils._get_custom_layer_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of className fields which appear in the given protobuf spec</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>spec: mlmodel spec</strong></dt><dd></dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>set(str) A set of unique className fields of custom layers that appear in the model.</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="coremltools.models.utils._get_custom_layers">
+<code class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></code><code class="sig-name descname"><span class="pre">_get_custom_layers</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.utils._get_custom_layers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of all neural network custom layers in the spec.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>spec: mlmodel spec</strong></dt><dd></dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>[NN layer] A list of custom layer implementations</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="coremltools.models.utils._get_input_names">
+<code class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></code><code class="sig-name descname"><span class="pre">_get_input_names</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.utils._get_input_names" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of the names of the inputs to this model.
+:param spec: The model protobuf specification
+:return: list of str A list of input feature names</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="coremltools.models.utils._get_model">
+<code class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></code><code class="sig-name descname"><span class="pre">_get_model</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.utils._get_model" title="Permalink to this definition">¶</a></dt>
+<dd><p>Utility to get the model and the data.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="coremltools.models.utils._get_nn_layers">
+<code class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></code><code class="sig-name descname"><span class="pre">_get_nn_layers</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.utils._get_nn_layers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of neural network layers if the model contains any.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>spec: Model_pb</strong></dt><dd><p>A model protobuf specification.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>[NN layer]</dt><dd><p>list of all layers (including layers from elements of a pipeline</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="coremltools.models.utils._has_custom_layer">
+<code class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></code><code class="sig-name descname"><span class="pre">_has_custom_layer</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.utils._has_custom_layer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns true if the given protobuf specification has a custom layer, and false otherwise.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>spec: mlmodel spec</strong></dt><dd></dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>True if the protobuf specification contains a neural network with a custom layer, False otherwise.</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="coremltools.models.utils._is_macos">
+<code class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></code><code class="sig-name descname"><span class="pre">_is_macos</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.utils._is_macos" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if current platform is MacOS, False otherwise.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="coremltools.models.utils._macos_version">
+<code class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></code><code class="sig-name descname"><span class="pre">_macos_version</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.utils._macos_version" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns macOS version as a tuple of integers, making it easy to do proper
+version comparisons. On non-Macs, it returns an empty tuple.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="coremltools.models.utils._python_version">
+<code class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></code><code class="sig-name descname"><span class="pre">_python_version</span></code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.utils._python_version" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return python version as a tuple of integers</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="coremltools.models.utils._replace_custom_layer_name">
+<code class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></code><code class="sig-name descname"><span class="pre">_replace_custom_layer_name</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oldname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">newname</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.utils._replace_custom_layer_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Substitutes newname for oldname in the className field of custom layers. If there are no custom layers, or no
+layers with className=oldname, then the spec is unchanged.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>spec: mlmodel spec</strong></dt><dd></dd>
+<dt><strong>oldname: str The custom layer className to be replaced.</strong></dt><dd></dd>
+<dt><strong>newname: str The new className value to replace oldname</strong></dt><dd></dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>An mlmodel spec.</dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="coremltools.models.utils._sanitize_value">
+<code class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></code><code class="sig-name descname"><span class="pre">_sanitize_value</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.utils._sanitize_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs cleaning steps on the data so various type comparisons can
+be performed correctly.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="coremltools.models.utils.convert_double_to_float_multiarray_type">
+<code class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></code><code class="sig-name descname"><span class="pre">convert_double_to_float_multiarray_type</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.utils.convert_double_to_float_multiarray_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert all double multiarrays feature descriptions (input, output, training input)
+to float multiarrays</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>spec: Model_pb</strong></dt><dd><p>The specification containing the multiarrays types to convert</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># In-place convert multiarray type of spec</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">spec</span> <span class="o">=</span> <span class="n">mlmodel</span><span class="o">.</span><span class="n">get_spec</span><span class="p">()</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">convert_double_to_float_multiarray_type</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">model</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">MLModel</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt id="coremltools.models.utils.evaluate_classifier">
+<code class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></code><code class="sig-name descname"><span class="pre">evaluate_classifier</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'target'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.utils.evaluate_classifier" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate a Core ML classifier model and compare against predictions
+from the original framework (for testing correctness of conversion).
+Use this evaluation for models that don’t deal with probabilities.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>filename: list of str or list of MLModel</strong></dt><dd><p>File from where to load the model from (OR) a loaded
+version of the MLModel.</p>
+</dd>
+<dt><strong>data: list of str or list of Dataframe</strong></dt><dd><p>Test data on which to evaluate the models (dataframe,
+or path to a csv file).</p>
+</dd>
+<dt><strong>target: str</strong></dt><dd><p>Column to interpret as the target column</p>
+</dd>
+<dt><strong>verbose: bool</strong></dt><dd><p>Set to true for a more verbose output.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#coremltools.models.utils.evaluate_regressor" title="coremltools.models.utils.evaluate_regressor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">evaluate_regressor</span></code></a>, <a class="reference internal" href="#coremltools.models.utils.evaluate_classifier_with_probabilities" title="coremltools.models.utils.evaluate_classifier_with_probabilities"><code class="xref py py-obj docutils literal notranslate"><span class="pre">evaluate_classifier_with_probabilities</span></code></a></dt><dd></dd>
+</dl>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">metrics</span> <span class="o">=</span>  <span class="n">coremltools</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">evaluate_classifier</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="s1">&#39;data_and_predictions.csv&#39;</span><span class="p">,</span> <span class="s1">&#39;target&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">metrics</span><span class="p">)</span>
+<span class="go">{&quot;samples&quot;: 10, num_errors: 0}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt id="coremltools.models.utils.evaluate_classifier_with_probabilities">
+<code class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></code><code class="sig-name descname"><span class="pre">evaluate_classifier_with_probabilities</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">probabilities</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'probabilities'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.utils.evaluate_classifier_with_probabilities" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate a classifier specification for testing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>filename: [str | Model]</strong></dt><dd><p>File from where to load the model from (OR) a loaded
+version of the MLModel.</p>
+</dd>
+<dt><strong>data: [str | Dataframe]</strong></dt><dd><p>Test data on which to evaluate the models (dataframe,
+or path to a csv file).</p>
+</dd>
+<dt><strong>probabilities: str</strong></dt><dd><p>Column to interpret as the probabilities column</p>
+</dd>
+<dt><strong>verbose: bool</strong></dt><dd><p>Verbosity levels of the predictions.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt id="coremltools.models.utils.evaluate_regressor">
+<code class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></code><code class="sig-name descname"><span class="pre">evaluate_regressor</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'target'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.utils.evaluate_regressor" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate a CoreML regression model and compare against predictions
+from the original framework (for testing correctness of conversion).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>model: MLModel or str</strong></dt><dd><p>A loaded MLModel or a path to a saved MLModel</p>
+</dd>
+<dt><strong>data: Dataframe</strong></dt><dd><p>Test data on which to evaluate the models</p>
+</dd>
+<dt><strong>target: str</strong></dt><dd><p>Name of the column in the dataframe that must be interpreted
+as the target column.</p>
+</dd>
+<dt><strong>verbose: bool</strong></dt><dd><p>Set to true for a more verbose output.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#coremltools.models.utils.evaluate_classifier" title="coremltools.models.utils.evaluate_classifier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">evaluate_classifier</span></code></a></dt><dd></dd>
+</dl>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">metrics</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">evaluate_regressor</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="s1">&#39;data_and_predictions.csv&#39;</span><span class="p">,</span> <span class="s1">&#39;target&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">metrics</span><span class="p">)</span>
+<span class="go">{&quot;samples&quot;: 10, &quot;rmse&quot;: 0.0, max_error: 0.0}</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt id="coremltools.models.utils.evaluate_transformer">
+<code class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></code><code class="sig-name descname"><span class="pre">evaluate_transformer</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_output</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.utils.evaluate_transformer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate a transformer specification for testing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>spec: list of str or list of MLModel</strong></dt><dd><p>File from where to load the Model from (OR) a loaded
+version of MLModel.</p>
+</dd>
+<dt><strong>input_data: list of dict</strong></dt><dd><p>Test data on which to evaluate the models.</p>
+</dd>
+<dt><strong>reference_output: list of dict</strong></dt><dd><p>Expected results for the model.</p>
+</dd>
+<dt><strong>verbose: bool</strong></dt><dd><p>Verbosity levels of the predictions.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#coremltools.models.utils.evaluate_regressor" title="coremltools.models.utils.evaluate_regressor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">evaluate_regressor</span></code></a>, <a class="reference internal" href="#coremltools.models.utils.evaluate_classifier" title="coremltools.models.utils.evaluate_classifier"><code class="xref py py-obj docutils literal notranslate"><span class="pre">evaluate_classifier</span></code></a></dt><dd></dd>
+</dl>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">input_data</span> <span class="o">=</span> <span class="p">[{</span><span class="s1">&#39;input_1&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;input_2&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">},</span> <span class="p">{</span><span class="s1">&#39;input_1&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;input_2&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">}]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">expected_output</span> <span class="o">=</span> <span class="p">[{</span><span class="s1">&#39;input_1&#39;</span><span class="p">:</span> <span class="mf">2.5</span><span class="p">,</span> <span class="s1">&#39;input_2&#39;</span><span class="p">:</span> <span class="mf">2.0</span><span class="p">},</span> <span class="p">{</span><span class="s1">&#39;input_1&#39;</span><span class="p">:</span> <span class="mf">1.3</span><span class="p">,</span> <span class="s1">&#39;input_2&#39;</span><span class="p">:</span> <span class="mf">2.3</span><span class="p">}]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">metrics</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">evaluate_transformer</span><span class="p">(</span><span class="n">scaler_spec</span><span class="p">,</span> <span class="n">input_data</span><span class="p">,</span> <span class="n">expected_output</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt id="coremltools.models.utils.load_spec">
+<code class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></code><code class="sig-name descname"><span class="pre">load_spec</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.utils.load_spec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load a protobuf model specification from file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>filename: str</strong></dt><dd><p>Location on disk (a valid file path) from which the file is loaded
+as a protobuf spec.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>model_spec: Model_pb</dt><dd><p>Protobuf representation of the model</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#coremltools.models.utils.save_spec" title="coremltools.models.utils.save_spec"><code class="xref py py-obj docutils literal notranslate"><span class="pre">save_spec</span></code></a></dt><dd></dd>
+</dl>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">spec</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">load_spec</span><span class="p">(</span><span class="s1">&#39;HousePricer.mlmodel&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt id="coremltools.models.utils.rename_feature">
+<code class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></code><code class="sig-name descname"><span class="pre">rename_feature</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">current_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rename_inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rename_outputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.utils.rename_feature" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rename a feature in the specification.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>spec: Model_pb</strong></dt><dd><p>The specification containing the feature to rename.</p>
+</dd>
+<dt><strong>current_name: str</strong></dt><dd><p>Current name of the feature. If this feature doesn’t exist, the rename
+is a no-op.</p>
+</dd>
+<dt><strong>new_name: str</strong></dt><dd><p>New name of the feature.</p>
+</dd>
+<dt><strong>rename_inputs: bool</strong></dt><dd><p>Search for <cite>current_name</cite> only in the input features (i.e ignore output
+features)</p>
+</dd>
+<dt><strong>rename_outputs: bool</strong></dt><dd><p>Search for <cite>current_name</cite> only in the output features (i.e ignore input
+features)</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># In-place rename of spec</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">rename_feature</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="s1">&#39;old_feature&#39;</span><span class="p">,</span> <span class="s1">&#39;new_feature_name&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt id="coremltools.models.utils.save_spec">
+<code class="sig-prename descclassname"><span class="pre">coremltools.models.utils.</span></code><code class="sig-name descname"><span class="pre">save_spec</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">auto_set_specification_version</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.models.utils.save_spec" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save a protobuf model specification to file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>spec: Model_pb</strong></dt><dd><p>Protobuf representation of the model</p>
+</dd>
+<dt><strong>filename: str</strong></dt><dd><p>File path  where the spec gets saved.</p>
+</dd>
+<dt><strong>auto_set_specification_version: bool</strong></dt><dd><p>If true, will always try to set specification version automatically.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#coremltools.models.utils.load_spec" title="coremltools.models.utils.load_spec"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_spec</span></code></a></dt><dd></dd>
+</dl>
+</div>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">coremltools</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">save_spec</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="s1">&#39;HousePricer.mlmodel&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="coremltools.models.neural_network.html" class="btn btn-neutral float-right" title="neural_network.builder" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="coremltools.converters.xgboost.html" class="btn btn-neutral float-left" title="XGBoost" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Apple Inc.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

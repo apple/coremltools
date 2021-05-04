@@ -1,0 +1,449 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>MIL Input Types &mdash; coremltools API Reference  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="MIL Ops" href="coremltools.converters.mil.mil.ops.defs.html" />
+    <link rel="prev" title="neural_network.builder" href="coremltools.models.neural_network.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> coremltools API Reference
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">API Contents</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="coremltools.converters.html">Converters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.models.html">Models</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">MIL Input Types</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#classifierconfig">ClassifierConfig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#enumeratedshapes">EnumeratedShapes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#imagetype">ImageType</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#rangedim">RangeDim</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#shape">Shape</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#tensortype">TensorType</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Resources</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://coremltools.readme.io/docs">Guides and examples</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://mlmodel.readme.io/reference">Core ML Format Specification</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">coremltools API Reference</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>MIL Input Types</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/source/coremltools.converters.mil.input_types.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="mil-input-types">
+<h1>MIL Input Types<a class="headerlink" href="#mil-input-types" title="Permalink to this headline">¶</a></h1>
+<p>Input types supported by the Model Intermediate Language (MIL):</p>
+<span class="target" id="module-coremltools.converters.mil.input_types"></span><div class="section" id="classifierconfig">
+<h2>ClassifierConfig<a class="headerlink" href="#classifierconfig" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="coremltools.converters.mil.input_types.ClassifierConfig">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.input_types.</span></code><code class="sig-name descname"><span class="pre">ClassifierConfig</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">class_labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">predicted_feature_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'classLabel'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">predicted_probabilities_output</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.converters.mil.input_types.ClassifierConfig" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="coremltools.converters.mil.input_types.ClassifierConfig.__init__">
+<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">class_labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">predicted_feature_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'classLabel'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">predicted_probabilities_output</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.converters.mil.input_types.ClassifierConfig.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configuration for classifier models.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>class_labels: str / list of int / list of str</strong></dt><dd><p>If a <code class="docutils literal notranslate"><span class="pre">list</span></code> if given, the <code class="docutils literal notranslate"><span class="pre">list</span></code> maps the index of the output of a
+neural network to labels in a classifier.</p>
+<p>If a <code class="docutils literal notranslate"><span class="pre">str</span></code> is given, the <code class="docutils literal notranslate"><span class="pre">str</span></code> points to a file which maps the index
+to labels in a classifier.</p>
+</dd>
+<dt><strong>predicted_feature_name: str</strong></dt><dd><p>Name of the output feature for the class labels exposed in the
+Core ML neural network classifier. Default: <code class="docutils literal notranslate"><span class="pre">'classLabel'</span></code>.</p>
+</dd>
+<dt><strong>predicted_probabilities_output: str</strong></dt><dd><p>If provided, then this is the name of the neural network blob which
+generates the probabilities for each class label (typically the output
+of a softmax layer).</p>
+<p>If not provided, then the last output layer is assumed.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="enumeratedshapes">
+<h2>EnumeratedShapes<a class="headerlink" href="#enumeratedshapes" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="coremltools.converters.mil.input_types.EnumeratedShapes">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.input_types.</span></code><code class="sig-name descname"><span class="pre">EnumeratedShapes</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shapes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.converters.mil.input_types.EnumeratedShapes" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="coremltools.converters.mil.input_types.EnumeratedShapes.__init__">
+<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shapes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.converters.mil.input_types.EnumeratedShapes.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>A shape class that is used for setting multiple valid shape in InputType.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>shapes: list of Shape objects, or Shape-compatible lists.</strong></dt><dd><p>The valid shapes of the inputs.</p>
+<p>If input provided is not Shape object, but can be converted to Shape,
+the Shape object would be stored in <code class="docutils literal notranslate"><span class="pre">shapes</span></code> instead.</p>
+</dd>
+<dt><strong>default: tuple of int or None</strong></dt><dd><p>The default shape that is used for initiating the model, and set in
+the metadata of the model file.</p>
+<p>If None, then the first element in <code class="docutils literal notranslate"><span class="pre">shapes</span></code> is used.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="imagetype">
+<h2>ImageType<a class="headerlink" href="#imagetype" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="coremltools.converters.mil.input_types.ImageType">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.input_types.</span></code><code class="sig-name descname"><span class="pre">ImageType</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bias</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color_layout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'RGB'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channel_first</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.converters.mil.input_types.ImageType" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="coremltools.converters.mil.input_types.ImageType.__init__">
+<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bias</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color_layout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'RGB'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channel_first</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.converters.mil.input_types.ImageType.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Configuration class used for image inputs in CoreML.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>scale: (float)</strong></dt><dd><p>The scaling factor for all values in the image channels.</p>
+</dd>
+<dt><strong>bias: float or list of float</strong></dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">color_layout</span></code> is <code class="docutils literal notranslate"><span class="pre">'G'</span></code>, bias would be a <code class="docutils literal notranslate"><span class="pre">float</span></code>.</p>
+<p>If <cite>color_layout</cite> is <code class="docutils literal notranslate"><span class="pre">'RGB'</span></code> or <code class="docutils literal notranslate"><span class="pre">'BGR'</span></code>, bias would be a list of <code class="docutils literal notranslate"><span class="pre">float</span></code>.</p>
+</dd>
+<dt><strong>color_layout: string</strong></dt><dd><p>Color layout of the image.</p>
+<dl class="simple">
+<dt>Valid values:</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">'G'</span></code>: Grayscale</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'RGB'</span></code>: [Red, Green, Blue]</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'BGR'</span></code>: [Blue, Green, Red]</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt><strong>channel_first: (bool) or None</strong></dt><dd><p>Set to <code class="docutils literal notranslate"><span class="pre">True</span></code> if input format is channel first.</p>
+<dl>
+<dt>Default format:</dt><dd><p>For TensorFlow: channel last (<code class="docutils literal notranslate"><span class="pre">channel_first=False</span></code>).</p>
+<p>For PyTorch: channel first (<code class="docutils literal notranslate"><span class="pre">channel_first=True</span></code>).</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="rangedim">
+<h2>RangeDim<a class="headerlink" href="#rangedim" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="coremltools.converters.mil.input_types.RangeDim">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.input_types.</span></code><code class="sig-name descname"><span class="pre">RangeDim</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lower_bound</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">upper_bound</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symbol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.converters.mil.input_types.RangeDim" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="coremltools.converters.mil.input_types.RangeDim.__init__">
+<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lower_bound</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">upper_bound</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symbol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.converters.mil.input_types.RangeDim.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>A class that can be used to give a range of accepted shapes.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>lower_bound: (int)</strong></dt><dd><p>The minimum valid value for the shape.</p>
+</dd>
+<dt><strong>upper_bound: (int)</strong></dt><dd><p>The maximum valid value for the shape.</p>
+<p>Set to <code class="docutils literal notranslate"><span class="pre">-1</span></code> if there’s no upper limit.</p>
+</dd>
+<dt><strong>default: (int) or None</strong></dt><dd><p>The default value that is used for initiating the model, and set in</p>
+<p>input shape field of the model file.</p>
+<p>If set to <code class="docutils literal notranslate"><span class="pre">None</span></code>, <code class="docutils literal notranslate"><span class="pre">lower_bound</span></code> would be used as default.</p>
+</dd>
+<dt><strong>symbol: (str)</strong></dt><dd><p>Optional symbol name for the dim. Autogenerate a symbol name if
+not specified.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="shape">
+<h2>Shape<a class="headerlink" href="#shape" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="coremltools.converters.mil.input_types.Shape">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.input_types.</span></code><code class="sig-name descname"><span class="pre">Shape</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.converters.mil.input_types.Shape" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="coremltools.converters.mil.input_types.Shape.__init__">
+<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.converters.mil.input_types.Shape.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>The basic shape class to be set in InputType.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>shape: list of (int), symbolic values, RangeDim object</strong></dt><dd><p>The valid shape of the input.</p>
+</dd>
+<dt><strong>default: tuple of int or None</strong></dt><dd><p>The default shape that is used for initiating the model, and set in
+the metadata of the model file.</p>
+<p>If None, then <code class="docutils literal notranslate"><span class="pre">shape</span></code> is used.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="tensortype">
+<h2>TensorType<a class="headerlink" href="#tensortype" title="Permalink to this headline">¶</a></h2>
+<dl class="py class">
+<dt id="coremltools.converters.mil.input_types.TensorType">
+<em class="property"><span class="pre">class</span> </em><code class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.input_types.</span></code><code class="sig-name descname"><span class="pre">TensorType</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.converters.mil.input_types.TensorType" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="py method">
+<dt id="coremltools.converters.mil.input_types.TensorType.__init__">
+<code class="sig-name descname"><span class="pre">__init__</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.converters.mil.input_types.TensorType.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Specify a (dense) tensor input.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>name: str</strong></dt><dd><p>Input name. Must match an input name in the model (usually the
+Placeholder name for TensorFlow or the input name for PyTorch).</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">name</span></code> is required except for a TensorFlow model in which there is
+exactly one input Placeholder.</p>
+</dd>
+<dt><strong>shape: (1) list of positive int or RangeDim, or (2) EnumeratedShapes</strong></dt><dd><p>The shape of the input.</p>
+<dl class="simple">
+<dt>For TensorFlow:</dt><dd><ul class="simple">
+<li><p>The <code class="docutils literal notranslate"><span class="pre">shape</span></code> is optional. If omitted, the shape is inferred from
+TensorFlow graph’s Placeholder shape.</p></li>
+</ul>
+</dd>
+<dt>For PyTorch:</dt><dd><ul class="simple">
+<li><p>The <code class="docutils literal notranslate"><span class="pre">shape</span></code> is required.</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt><strong>dtype: np.generic or mil.type type</strong></dt><dd><p>Numpy <code class="docutils literal notranslate"><span class="pre">dtype</span></code> (for example, <code class="docutils literal notranslate"><span class="pre">np.int32</span></code>). Default is <code class="docutils literal notranslate"><span class="pre">np.float32</span></code>.</p>
+</dd>
+<dt><strong>default_value: np.ndarray</strong></dt><dd><p>If provided, the input is considered optional. At runtime, if the
+input is not provided, <code class="docutils literal notranslate"><span class="pre">default_value</span></code> is used.</p>
+<dl class="simple">
+<dt>Limitations:</dt><dd><ul class="simple">
+<li><p>If <code class="docutils literal notranslate"><span class="pre">default_value</span></code> is <code class="docutils literal notranslate"><span class="pre">np.ndarray</span></code>, all
+elements are required to have the same value.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">default_value</span></code> may not be specified if <code class="docutils literal notranslate"><span class="pre">shape</span></code> is
+<code class="docutils literal notranslate"><span class="pre">EnumeratedShapes</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ct.TensorType(name=&quot;input&quot;,</span> <span class="pre">shape=(1,</span> <span class="pre">2,</span> <span class="pre">3))`</span> <span class="pre">implies</span> <span class="pre">`dtype</span> <span class="pre">==</span>
+<span class="pre">np.float32</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ct.TensorType(name=&quot;input&quot;,</span> <span class="pre">shape=(1,</span> <span class="pre">2,</span> <span class="pre">3),</span> <span class="pre">dtype=np.int32)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ct.TensorType(name=&quot;input&quot;,</span> <span class="pre">shape=(1,</span> <span class="pre">2,</span> <span class="pre">3),</span>
+<span class="pre">dtype=ct.converters.mil.types.fp32)</span></code></p></li>
+</ul>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="coremltools.converters.mil.mil.ops.defs.html" class="btn btn-neutral float-right" title="MIL Ops" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="coremltools.models.neural_network.html" class="btn btn-neutral float-left" title="neural_network.builder" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Apple Inc.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
