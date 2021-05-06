@@ -81,6 +81,17 @@ The following are the specific steps in git corresponding to the first part of g
 	git checkout newfeature
 	```
 
+#### Install Sphinx and theme
+
+In the `coremltools` clone root directory, install or upgrade Sphinx, the theme, and numpydoc for this environment if you haven’t already done so:
+
+```shell
+conda install sphinx
+conda install numpydoc
+conda install sphinx_rtd_theme
+```
+
+
 #### Edit the content as usual
 
 The following are the specific steps in git corresponding to the last part of general step 1:
@@ -106,10 +117,10 @@ The following are the specific steps in git corresponding to general steps 2-4:
 1. From the root folder (`coremltools/`), run the following script:
 
 	```shell
-	zsh -i scripts/build_docs-api.sh
+	zsh -i scripts/build_docs.sh
 	```
 
-	The HTML files appear in the `docs-api/_build/html/` folder.
+	The HTML files appear in the `docs/_build/html/` folder.
 
 2. Copy the `html/` folder to a temporarily location on your computer (outside of the `coremltools` clone controlled by git).
 
@@ -182,19 +193,19 @@ You need to do this only once.
 	conda install sphinx_rtd_theme
 	```
 
-4. Create a new `docs-api/` folder in the root folder:
+4. Create a new `docs/` folder in the root folder:
 
 	```shell
-	mkdir docs-api
+	mkdir docs
 	```
 
 
 ### Set the Sphinx options
 
-1. Change to the `docs-api/` folder and start `sphinx-quickstart`:
+1. Change to the `docs/` folder and start `sphinx-quickstart`:
 
 	```shell
-	cd docs-api
+	cd docs
 	sphinx-quickstart
 	```
 
@@ -205,7 +216,7 @@ You need to do this only once.
 	> Author name(s): Apple Inc
 	```
 
-	This finishes by adding the following to the `docs-api/` folder (including the hidden `.gitignore`, still there from before):
+	This finishes by adding the following to the `docs/` folder (including the hidden `.gitignore`, still there from before):
 
 	```
 	_build
@@ -217,7 +228,7 @@ You need to do this only once.
 	Makefile
 	```
 
-3. Set the Sphinx configuration by editing the `docs-api/conf.py` file:
+3. Set the Sphinx configuration by editing the `docs/conf.py` file:
 
 	```python
 	...
@@ -239,13 +250,13 @@ You need to do this only once.
 	numpydoc_show_class_members = False
 	napoleon_use_param = False
 	napoleon_numpy_docstring = True
-	napoleon_include_private_with_doc = True
+	napoleon_include_private_with_doc = False
 	napoleon_include_init_with_doc = True
 	...
 	html_theme = 'sphinx_rtd_theme'
 	```
 
-4. From the `docs-api/` folder, run `sphinx-apidoc` to create the `source/` folder with the `.rst` files for Sphinx doc generation:
+4. From the `docs/` folder, run `sphinx-apidoc` to create the `source/` folder with the `.rst` files for Sphinx doc generation:
 
 	```shell
 	sphinx-apidoc -o source/ ../coremltools
@@ -271,7 +282,7 @@ You need to do this only once.
     
     Make editing changes to the above files as needed to change navigation and content.
     
-2. Create `coremltools.converters.mil.input_types.rst` in the `source/` folder with the [existing version in the repo](https://github.com/apple/coremltools/tree/master/docs-api/source/coremltools.converters.mil.input_types_newest_.rst).
+2. Create `coremltools.converters.mil.input_types.rst` in the `source/` folder with the [existing version in the repo](https://github.com/apple/coremltools/tree/master/docs-api/source/coremltools.converters.mil.input_types.rst).
 
 3. Delete all other `.rst` files in your local `source/` folder. You should now have the following files in your local `source/` folder:
 
@@ -291,7 +302,7 @@ You need to do this only once.
 	modules.rst
 	```
 
-4. Switch back to the `docs-api/` folder, and edit the `index.rst` file as follows (or make changes as needed):
+4. Switch back to the `docs/` folder, and edit the `index.rst` file as follows (or make changes as needed):
 
 	```
 	coremltools API
@@ -326,10 +337,10 @@ You need to do this only once.
 1. From the root folder (`coremltools/`), run the following script:
 
 	```shell
-	zsh -i scripts/build_docs-api.sh
+	zsh -i scripts/build_docs.sh
 	```
 
-	The HTML files appear in the `docs-api/_build/html/` folder.
+	The HTML files appear in the `docs/_build/html/` folder.
 
 2. Copy the `html/` folder to a temporarily location on your computer (outside of the `coremltools` clone controlled by git).
 
@@ -338,10 +349,10 @@ You need to do this only once.
 
 ### Iterate on this process
 
-To iterate on this process, switch to the `docs-api/` folder, run `make clean` to delete the old HTML files, and change back to the `coremltools/` root folder:
+To iterate on this process, switch to the `docs/` folder, run `make clean` to delete the old HTML files, and change back to the `coremltools/` root folder:
 
 	```shell
-	cd docs-api
+	cd docs
 	make clean
 	cd ..
 	```
