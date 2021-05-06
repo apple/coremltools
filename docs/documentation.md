@@ -264,7 +264,7 @@ You need to do this only once.
 
 ### Edit the RST files {#edit-the-rst-files}
 
-1. Edit the `.rst` files in your local `source/` folder, replacing them with the contents of the [existing versions in the repo](https://github.com/apple/coremltools/tree/master/docs-api/source):
+1. Edit the `.rst` files in your local `source/` folder, replacing them with the contents of the [existing versions in the repo](https://github.com/apple/coremltools/tree/master/docs/source):
 
 	```
 	coremltools.converters.rst
@@ -282,7 +282,7 @@ You need to do this only once.
     
     Make editing changes to the above files as needed to change navigation and content.
     
-2. Create `coremltools.converters.mil.input_types.rst` in the `source/` folder with the [existing version in the repo](https://github.com/apple/coremltools/tree/master/docs-api/source/coremltools.converters.mil.input_types.rst).
+2. Create `coremltools.converters.mil.input_types.rst` in the `source/` folder with the [existing version in the repo](https://github.com/apple/coremltools/tree/master/docs/source/coremltools.converters.mil.input_types.rst).
 
 3. Delete all other `.rst` files in your local `source/` folder. You should now have the following files in your local `source/` folder:
 
