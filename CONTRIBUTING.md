@@ -35,7 +35,7 @@ For more information, see the following:
 * Core ML Tools [README](README.md) file for this repository
 * [Release Notes](https://github.com/apple/coremltools/releases/) for the current release and previous releases
 * [Guides and examples](https://coremltools.readme.io/) with installation and troubleshooting
-* [API Reference](https://coremltools.readme.io/reference/convertersconvert)
+* [API Reference](https://apple.github.io/coremltools/index.html)
 * [Core ML Specification](https://mlmodel.readme.io/)
 * [Building from Source](BUILDING.md)
 

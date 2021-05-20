@@ -34,7 +34,7 @@ To install coremltools, see the [“Installation“ page](https://coremltools.re
 
 * [Release Notes](https://github.com/apple/coremltools/releases/) 
 * [Guides and examples](https://coremltools.readme.io/) 
-* [API Reference](https://coremltools.readme.io/reference/convertersconvert)
+* [API Reference](https://apple.github.io/coremltools/index.html)
 * [Core ML Specification](https://mlmodel.readme.io/)
 * [Building from Source](BUILDING.md)
 * [Contribution Guidelines](CONTRIBUTING.md) 
