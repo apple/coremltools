@@ -66,7 +66,8 @@ setup(
     url="https://github.com/apple/coremltools",
     packages=find_packages(),
     package_data={
-        "": ["LICENSE.txt", "README.md", "libcaffeconverter.so", "libcoremlpython.so"]
+        "": ["LICENSE.txt", "README.md", "libcaffeconverter.so", "libcoremlpython.so"],
+        "coremltools": ["py.typed"]
     },
     install_requires=[
         "numpy >= 1.14.5",
