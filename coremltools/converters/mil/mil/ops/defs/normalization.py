@@ -70,7 +70,7 @@ class batch_norm(Operation):
 
     def type_inference(self):
         x_shape = self.x.shape
-        return types.tensor(types.fp32, tuple(x_shape))
+        return types.tensor(self.x.dtype, tuple(x_shape))
 
 
 @register_op(doc_str="")
@@ -118,7 +118,7 @@ class instance_norm(Operation):
 
     def type_inference(self):
         x_shape = self.x.shape
-        return types.tensor(types.fp32, tuple(x_shape))
+        return types.tensor(self.x.dtype, tuple(x_shape))
 
 
 @register_op(doc_str="")
@@ -168,7 +168,7 @@ class l2_norm(Operation):
 
     def type_inference(self):
         x_shape = self.x.shape
-        return types.tensor(types.fp32, tuple(x_shape))
+        return types.tensor(self.x.dtype, tuple(x_shape))
 
 
 @register_op(doc_str="")
@@ -261,7 +261,7 @@ class layer_norm(Operation):
             raise ValueError("Expect shape {} for beta, but get shape {} instead".format(normalized_shape, self.beta.shape))
 
         x_shape = self.x.shape
-        return types.tensor(types.fp32, tuple(x_shape))
+        return types.tensor(self.x.dtype, tuple(x_shape))
 
 
     @precondition(allow=VALUE)
@@ -343,4 +343,4 @@ class local_response_norm(Operation):
 
     def type_inference(self):
         x_shape = self.x.shape
-        return types.tensor(types.fp32, tuple(x_shape))
+        return types.tensor(self.x.dtype, tuple(x_shape))

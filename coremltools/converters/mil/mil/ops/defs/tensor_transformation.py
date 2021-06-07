@@ -4,8 +4,8 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import functools
-import sympy as sm
 import numpy as np
+import sympy as sm
 
 from coremltools.converters.mil.mil.types.symbolic import (
     is_symbolic,
@@ -606,42 +606,18 @@ class slice_by_index(Operation):
 @register_op(doc_str="")
 class slice_by_size(Operation):
     """
-    Perform numpy-style indexing and slicing. For example, if you have a
-    tensor ``x``, this method produces:
-
-    ``result = x[begin[0]: end[0]: stride[0], begin[1]: end[1]: stride[1], ...]``
-
-    Note: This method does not support pure indexing. You would need to do a squeeze if
-    indexing is intended.
+    Slice input tensor starting from the given ``begin`` index and by
+    the amount specified by the ``size`` input, for each dimension.
 
     Parameters
     ----------
-    x: tensor<\*?, T> (Required)
+    x: tensor<*?, T> (Required)
         * Input tensor.
-
-    begin: tensor<[rank<x>], i32> (Required)
-        * Starting index for the dimension of slicing.
-
-    end: tensor<[rank(x)], i32> (Required)
-        * Ending index for the dimension of slicing.
-
-    stride: tensor<[rank(x)], i32> (Optional)
-        * Default to all ones (``1``).
-        * Stride for the dimension of slicing.
-
-    begin_mask: tensor<[rank(x)], bool> (Optional)
-        * Default to all ``False``.
-        * If ``begin_mask[i]==True``, neglect ``begin[i]``, and set ``begin[i]`` to ``0``.
-
-    end_mask: tensor<[rank(x)], bool> (Optional)
-        * Default to all ``False``.
-        * If ``end_mask[i]==True``, neglect ``end[i]``, and set ``end[i]``
-          to ``x.shape[i]``.
-
-    squeeze_mask: tensor<[rank(x)], bool> (Optional)
-        * Default to all ``False``.
-        * If ``squeeze_mask[i]==true``, neglect ``end[i]``, and do the pure index at
-          ``begin[i]``.
+    begin: tensor<[rank(x)], i32> Required
+        * The begin index for slice.
+    size: tensor<[rank(x)], i32> Required
+        * The size that is to be sliced. If ``size`` is ``-1``,
+          all the remaining elements starting with "begin" are sliced.
 
     Returns
     -------

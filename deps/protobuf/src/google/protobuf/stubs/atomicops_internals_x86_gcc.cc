@@ -72,7 +72,9 @@ struct AtomicOps_x86CPUFeatureStruct AtomicOps_Internalx86CPUFeatures = {
   false,          // no SSE2
 };
 
+#if !defined(__APPLE__) // On Darwin make AtomicOps_Internalx86CPUFeaturesInit() visible to atomicops_internals_x86_gcc.h
 namespace {
+#endif
 
 // Initialize the AtomicOps_Internalx86CPUFeatures struct.
 void AtomicOps_Internalx86CPUFeaturesInit() {
@@ -116,6 +118,7 @@ void AtomicOps_Internalx86CPUFeaturesInit() {
   AtomicOps_Internalx86CPUFeatures.has_sse2 = ((edx >> 26) & 1);
 }
 
+#if !defined(__APPLE__) // Avoid static initializer on Darwin :)
 class AtomicOpsx86Initializer {
  public:
   AtomicOpsx86Initializer() {
@@ -127,6 +130,7 @@ class AtomicOpsx86Initializer {
 AtomicOpsx86Initializer g_initer;
 
 }  // namespace
+#endif
 
 }  // namespace internal
 }  // namespace protobuf

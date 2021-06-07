@@ -56,6 +56,14 @@ def try_to_transform(matmul_op, add_op, block):
         # We don't support these cases yet.
         return False
 
+    # For those weights which are the input for more than one op,
+    # we don't do the fusion.
+    # The reason is that it might cause memory explosion by adding
+    # those weight as a numpy array in the inner product or
+    # the batch_mat_mul kernel.
+    if len(weight.child_ops) > 1:
+        return False
+
     d_out = weight.shape[1] if not transpose_weight else weight.shape[0]
     bias = add_op.x.val if add_op.x.val is not None else add_op.y.val
     if len(bias.shape) > 1:
@@ -150,7 +158,7 @@ def fuse_matmul_weight_bias(prog):
 
         prog: Program
     """
-    for f_name, f in prog.functions.items():
+    for f in prog.functions.values():
         block_changed = True
         while block_changed:
             block_changed = fuse_matmul_weight_bias_block(f)

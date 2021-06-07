@@ -829,7 +829,7 @@ class cast(Operation):
     
     Attributes
     ----------
-    T: i32, i64, fp32, fp64, bool.
+    T: i32, i64, fp16, fp32, fp64, bool.
     """
     
     input_spec = InputSpec(
@@ -843,6 +843,7 @@ class cast(Operation):
         type_map = {
             "int32": types.int32,
             "int64": types.int64,
+            "fp16": types.fp16,
             "fp32": types.fp32,
             "fp64": types.fp64,
             "bool": types.bool,
@@ -865,6 +866,7 @@ class cast(Operation):
         type_map = {
             "int32": np.int32,
             "int64": np.int64,
+            "fp16": np.float16,
             "fp32": np.float32,
             "fp64": np.float64,
             "bool": np.bool,

@@ -187,7 +187,7 @@ struct StatusOrHelper::Specialize<T*> {
 
 template<typename T>
 inline StatusOr<T>::StatusOr()
-    : status_(util::Status::UNKNOWN) {
+    : status_(util::Status::UNKNOWN()) {
 }
 
 template<typename T>
@@ -204,7 +204,7 @@ inline StatusOr<T>::StatusOr(const T& value) {
   if (internal::StatusOrHelper::Specialize<T>::IsValueNull(value)) {
     status_ = Status(error::INTERNAL, "NULL is not a vaild argument.");
   } else {
-    status_ = Status::OK;
+    status_ = Status::OK();
     value_ = value;
   }
 }

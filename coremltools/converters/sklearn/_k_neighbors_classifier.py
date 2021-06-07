@@ -7,7 +7,6 @@ from ..._deps import _HAS_SKLEARN
 from ...models import MLModel as _MLModel
 import coremltools
 
-# from coremltools.proto import Model_pb2
 from coremltools.proto import FeatureTypes_pb2
 
 if _HAS_SKLEARN:

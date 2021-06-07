@@ -3,8 +3,10 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import os
 import logging
 
+import pytest
 from coremltools.converters.mil.mil.types.symbolic import is_symbolic
 from coremltools.converters.mil.mil import Program, Function
 from coremltools.converters.mil.testing_utils import compare_backend
@@ -21,11 +23,13 @@ def run_compare_builder(
     expected_outputs=None,
     use_cpu_only=False,
     frontend_only=False,
-    backend="nn_proto",
+    backend="neuralnetwork",
+    quantize_fp16 = False,
     atol=1e-04,
     rtol=1e-05,
     inputs=None,
     also_compare_shapes=False,
+    use_cpu_for_conversion=False,
 ):
     """
     Inputs:
@@ -49,8 +53,16 @@ def run_compare_builder(
         - frontend_only: True to test up to proto generation.
 
         - inputs: type of inputs (either None (defaults to tensor) or [ct.ImageType])
+
+        - use_cpu_for_conversion: bool
+            Argument which is passed as is to the unified converter API.
+            That is, "ct.convert(...., useCPUOnly=use_cpu_for_conversion)"
+            It forces the model to be loaded on the CPU context, post conversion.
     """
-    from coremltools.converters._converters_entry import convert
+    from coremltools.converters.mil.testing_reqs import ct
+
+    if backend == "neuralnetwork" and quantize_fp16:
+        return
 
     if not isinstance(expected_output_types, list):
         expected_output_types = [expected_output_types]
@@ -109,7 +121,9 @@ def run_compare_builder(
         if output_shape != expected_shape:
             raise ValueError(msg)
 
-    mlmodel = convert(prog, source="mil", convert_to=backend, inputs=inputs)
+    compute_precision = ct.precision.FLOAT16 if quantize_fp16 else ct.precision.FLOAT32
+    mlmodel = ct.convert(prog, source="milinternal", convert_to=backend, inputs=inputs, compute_precision=compute_precision,
+                         useCPUOnly=use_cpu_for_conversion)
 
     if frontend_only:
         return
@@ -130,6 +144,7 @@ def run_compare_builder(
         input_key_values=input_values,
         expected_outputs=expected_outputs,
         use_cpu_only=use_cpu_only,
+        quantize_fp16=quantize_fp16,
         atol=atol,
         rtol=rtol,
         also_compare_shapes=also_compare_shapes,

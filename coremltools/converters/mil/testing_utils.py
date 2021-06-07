@@ -9,9 +9,12 @@ import copy
 import re
 
 from coremltools.converters.mil.mil import Program, Function
+from coremltools.converters.mil.mil.passes.quantization_passes import AbstractQuantizationPass
 from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
 from coremltools._deps import _IS_MACOS
 import PIL.Image
+
+np.random.seed(10)
 
 
 def assert_op_count_match(program, expect, op=None, verbose=False):
@@ -33,7 +36,7 @@ def assert_op_count_match(program, expect, op=None, verbose=False):
 
 
 def assert_model_is_valid(
-    program, inputs, backend="nn_proto", verbose=True, expected_output_shapes=None
+    program, inputs, backend="neuralnetwork", verbose=True, expected_output_shapes=None
 ):
     """
     Assert Core ML model is valid.
@@ -43,13 +46,14 @@ def assert_model_is_valid(
     - input: str -> shape tuple. All program input names need to appear in str.
       shape tuple can only contain positive integers.
     """
+    # Avoid circular import
+    from coremltools.converters.mil.testing_reqs import ct
+
     input_dict = dict()
     for name, shape in inputs.items():
         input_dict[name] = np.random.rand(*shape)
 
-    # Avoid circular import
-    from coremltools.converters._converters_entry import convert
-    mlmodel = convert(program, source="mil", convert_to=backend)
+    mlmodel = ct.convert(program, source="milinternal", convert_to=backend, useCPUOnly=True)
     assert mlmodel is not None
 
     if verbose:
@@ -76,6 +80,18 @@ def assert_same_output_shapes(prog1, prog2, func_name="main"):
     prog2_output_shapes = [o.shape for o in prog2[func_name].outputs]
     assert prog1_output_shapes == prog2_output_shapes
 
+def get_op_names_in_program(prog, func_name="main", skip_const_ops=True):
+    """
+    Return the operations names in prog[func_name],
+    in the same order as they are stored (topological)
+    """
+    op_names_in_program = []
+    for op in prog[func_name].operations:
+        if skip_const_ops:
+            if op.op_type == "const":
+                continue
+        op_names_in_program.append(op.name)
+    return op_names_in_program
 
 def get_op_types_in_program(prog, func_name="main", skip_const_ops=True):
     """
@@ -160,7 +176,7 @@ def is_close(expected, actual, atol=1e-04, rtol=1e-05):
     return True
 
 
-def run_core_ml_predict(mlmodel, input_key_values, use_cpu_only=False):
+def run_core_ml_predict(mlmodel, input_key_values, use_cpu_only=True):
     for k, v in input_key_values.items():
         if isinstance(v, PIL.Image.Image):
             continue
@@ -182,7 +198,8 @@ def compare_backend(
     mlmodel,
     input_key_values,
     expected_outputs,
-    use_cpu_only=False,
+    use_cpu_only=True,
+    quantize_fp16 = False,
     atol=1e-04,
     rtol=1e-05,
     also_compare_shapes=True,
@@ -210,7 +227,7 @@ def compare_backend(
                 use_cpu_only=use_cpu_only,
                 pred=pred,
             )
-        if not use_cpu_only:
+        if not use_cpu_only or quantize_fp16:
             atol = max(atol * 100.0, 5e-1)
             rtol = max(rtol * 100.0, 5e-2)
         for o, expected in expected_outputs.items():
@@ -225,7 +242,7 @@ def compare_backend(
 
 
 def compare_shapes(
-    mlmodel, input_key_values, expected_outputs, use_cpu_only=False, pred=None
+    mlmodel, input_key_values, expected_outputs, use_cpu_only=True, pred=None
 ):
     """
     Inputs:
@@ -258,11 +275,14 @@ def compare_shapes(
 
 
 def get_core_ml_prediction(
-    build, input_placeholders, input_values, use_cpu_only=False, 
-    backend="nn_proto"):
+    build, input_placeholders, input_values, use_cpu_only=True,
+    backend="neuralnetwork"):
     """
     Return predictions of the given model.
     """
+    # Avoid circular import
+    from coremltools.converters.mil.testing_reqs import ct
+
     program = Program()
     with Function(input_placeholders) as ssa_func:
         output_vars = build(**ssa_func.inputs)
@@ -273,10 +293,8 @@ def get_core_ml_prediction(
         ssa_func.set_outputs(output_vars)
         program.add_function("main", ssa_func)
 
-    # Avoid circular import
-    from coremltools.converters._converters_entry import convert
-    mlmodel = convert(program, source="mil",
-        convert_to=backend, useCPUOnly=use_cpu_only)
+    mlmodel = ct.convert(program, source="milinternal",
+                         convert_to=backend, useCPUOnly=use_cpu_only)
     return mlmodel.predict(input_values, useCPUOnly=use_cpu_only)
 
 
@@ -285,7 +303,7 @@ def apply_pass_and_basic_check(prog, pass_name):
     Apply pass to the program
     """
     prev_prog = copy.deepcopy(prog)
-    PASS_REGISTRY[pass_name](prog)
+    pass_name.apply(prog) if isinstance(pass_name, AbstractQuantizationPass) else PASS_REGISTRY[pass_name](prog)
     block = prog.functions["main"]
     prev_block = prev_prog.functions["main"]
     assert_same_output_names(prev_prog, prog)

@@ -100,20 +100,21 @@ def try_replace_with_core_lstm(op):
             [op.weight_peep_i.val, op.weight_peep_f.val, op.weight_peep_o.val]
         )
 
-    # weights. TF1 W is icfo. Need to convert to ifco
-    tf_w = op.weight.val  # [input_dim+outut_dim, 4*hidden_dim] in icfo layout
+    # weights. TF1 W is icfo. Need to convert to ifoc
+    tf_w = op.weight.val  # [input_dim+hidden_dim, 4*hidden_dim] in icfo layout
     tf_w_i, tf_w_c, tf_w_f, tf_w_o = np.split(tf_w, 4, axis=1)
     w = np.concatenate([tf_w_i, tf_w_f, tf_w_o, tf_w_c], axis=1)
+    w = np.transpose(w, [1, 0])
+    hidden_dim = w.shape[0] // 4
+    input_dim = w.shape[1] - hidden_dim
+    # Split input and hidden weights
+    w_ih, w_hh = np.split(w, [input_dim], axis=1)
 
     # Bias is icfo. Convert to ssa LSTM's ifoc layout
     tf_b = op.bias.val
     tf_b_i, tf_b_c, tf_b_f, tf_b_o = np.split(tf_b, 4, axis=0)
     tf_b_f += op.forget_bias.val  # add forget bias to bias
     bias = np.concatenate([tf_b_i, tf_b_f, tf_b_o, tf_b_c], axis=0)
-
-    # TF's bias = input_bias + recurrence_bias [4*hidden_dims]. Use all zeros
-    # for recurrence bias. mil lstm expects bias shape [2, 4*hidden_dims]
-    bias = np.stack([np.zeros_like(bias), bias])
 
     cell_clip = None if op.cell_clip is None else op.cell_clip.val
 
@@ -130,7 +131,8 @@ def try_replace_with_core_lstm(op):
             x=x,
             initial_c=op.c_prev,
             initial_h=op.h_prev,
-            weight=w,
+            weight_ih=w_ih,
+            weight_hh=w_hh,
             bias=bias,
             recurrent_activation="sigmoid",
             cell_activation="tanh",

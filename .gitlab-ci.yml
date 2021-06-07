@@ -62,6 +62,30 @@ build_wheel_linux_py38:
   variables:
     PYTHON: "3.8"
 
+build_wheel_linux_py35:
+  <<: *build_linux
+  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-14.04:1.0.3
+  variables:
+    PYTHON: "3.5"
+
+build_wheel_linux_py36:
+  <<: *build_linux
+  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-14.04:1.0.3
+  variables:
+    PYTHON: "3.6"
+
+build_wheel_linux_py37:
+  <<: *build_linux
+  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-14.04:1.0.3
+  variables:
+    PYTHON: "3.7"
+
+build_wheel_linux_py38:
+  <<: *build_linux
+  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-14.04:1.0.3
+  variables:
+    PYTHON: "3.8"
+
 #########################################################################
 ##
 ##                         macOS - Build
@@ -135,7 +159,6 @@ test_macos11_py37_coremltools_test:
     changes:
       - coremltools/test/**/*.{py}
       - coremltools/models/**/*.{py}
-      - coremltools/converters/caffe/**/*.{py}
       - coremltools/converters/keras/**/*.{py}
       - coremltools/converters/libsvm/**/*.{py}
       - coremltools/converters/sklearn/**/*.{py}
@@ -204,6 +227,45 @@ test_macos11_py37_mil:
     changes:
       - coremltools/converters/mil/mil/**/*.{py}
       - coremltools/converters/mil/backend/**/*.{py}
+
+#########################################################################
+##
+##                macOS - Smoke Test on older versions
+##
+#########################################################################
+
+test_macos11_py38_coremltools_smoke_test:
+  <<: *test_macos_pkg
+  tags:
+    - macos11
+  dependencies:
+    - build_wheel_macos_py38
+  variables:
+    WHEEL_PATH: build/dist/*cp38*10_16*
+    TEST_PACKAGE: coremltools.test.neural_network.test_simple_nn_inference
+    PYTHON: "3.8"
+
+test_macos10_15_py38_coremltools_smoke_test:
+  <<: *test_macos_pkg
+  tags:
+    - macos10.15
+  dependencies:
+    - build_wheel_macos_py38
+  variables:
+    WHEEL_PATH: build/dist/*cp38*10_15*
+    TEST_PACKAGE: coremltools.test.neural_network.test_simple_nn_inference
+    PYTHON: "3.8"
+
+test_macos10_14_py38_coremltools_smoke_test:
+  <<: *test_macos_pkg
+  tags:
+    - macos10.14
+  dependencies:
+    - build_wheel_macos_py38
+  variables:
+    WHEEL_PATH: build/dist/*cp38*10_14*
+    TEST_PACKAGE: coremltools.test.neural_network.test_simple_nn_inference
+    PYTHON: "3.8"
 
 #########################################################################
 ##

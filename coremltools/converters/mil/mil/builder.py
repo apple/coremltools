@@ -26,14 +26,6 @@ from .input_type import (
 )
 from .var import InternalVar, Var
 
-
-def get_const_mode(val):
-    # Heuristics to decide between file_value and immediate_value
-    if isinstance(val, (np.ndarray, np.generic)) and val.size > 10:
-        return "file_value"
-    return "immediate_value"
-
-
 def is_python_value(val):
     return (
         isinstance(val, (np.generic, np.ndarray))
@@ -90,9 +82,8 @@ class Builder:
             )
             raise ValueError(msg.format(name, val))
         const_name = cls._get_free_name(name)
-        mode = get_const_mode(val)
         logging.debug("Adding const op '{}'".format(const_name))
-        output_var = cls.const(mode=mode, val=val, name=const_name,
+        output_var = cls.const(val=val, name=const_name,
             before_op=before_op)
         return output_var
 
@@ -166,7 +157,8 @@ class Builder:
             "Adding op '{}' of type {}".format(kwargs["name"], op_cls.__name__)
         )
         before_op = kwargs.get("before_op", None)
-        kwargs = {k: v for k, v in kwargs.items() if v is not None}
+        # Shallow copy list inputs to ensure op inputs are immutable
+        kwargs = {k: v if not isinstance(v, (list, tuple)) else v[:] for k, v in kwargs.items() if v is not None}
         kwargs.update(cls._create_vars(
             input_spec=op_cls.input_spec,
             op_name=kwargs["name"], before_op=before_op,
@@ -175,7 +167,8 @@ class Builder:
 
         # Initialize optional input Vars if it wasn't in kwargs
         default_inputs = new_op.default_inputs()
-        missing_optional_vals = {k: v for k, v in default_inputs.items()
+        # Shallow copy list inputs to ensure op inputs are immutable
+        missing_optional_vals = {k: v if not isinstance(v, (list, tuple)) else v[:] for k, v in default_inputs.items()
             if k not in kwargs and v is not None}
         missing_optional_vars = cls._create_vars(
             input_spec=op_cls.input_spec,

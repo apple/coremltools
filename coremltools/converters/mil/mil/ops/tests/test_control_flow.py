@@ -98,9 +98,12 @@ class TestSelect:
 
 class TestCond:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "use_cpu_for_conversion, backend", itertools.product([True, False], backends,)
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+    def test_builder_to_backend_smoke(self, use_cpu_for_conversion, backend):
+        if backend == "mlprogram" and not use_cpu_for_conversion:
+            pytest.xfail("rdar://78343191 ((MIL GPU) Core ML Tools Unit Test failures [failure to load or Seg fault])")
+
         input_placeholders = {
             "a": mb.placeholder(shape=(1,), dtype=types.bool),
             "b": mb.placeholder(shape=(1,)),
@@ -136,9 +139,10 @@ class TestCond:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_only=use_cpu_for_conversion,
             frontend_only=False,
             backend=backend,
+            use_cpu_for_conversion=use_cpu_for_conversion,
         )
 
 
@@ -235,8 +239,8 @@ class TestWhileLoop:
         "use_cpu_only, backend", itertools.product([True, False], backends,)
     )
     def test_builder_to_backend_nested(self, use_cpu_only, backend):
-        if backend == 'nn_proto':
-            pytest.xfail("nn_proto backend add const has issue")
+        if backend == 'neuralnetwork':
+            pytest.xfail("neuralnetwork backend add const has issue")
 
         input_placeholders = {
             "x": mb.placeholder(shape=(1,)),

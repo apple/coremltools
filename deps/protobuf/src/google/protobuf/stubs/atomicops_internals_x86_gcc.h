@@ -33,6 +33,10 @@
 #ifndef GOOGLE_PROTOBUF_ATOMICOPS_INTERNALS_X86_GCC_H_
 #define GOOGLE_PROTOBUF_ATOMICOPS_INTERNALS_X86_GCC_H_
 
+#if defined(__APPLE__)
+#include <mutex>
+#endif
+
 namespace google {
 namespace protobuf {
 namespace internal {
@@ -47,6 +51,18 @@ struct AtomicOps_x86CPUFeatureStruct {
   bool has_sse2;             // Processor has SSE2.
 };
 extern struct AtomicOps_x86CPUFeatureStruct AtomicOps_Internalx86CPUFeatures;
+
+#if defined(__APPLE__)
+extern void AtomicOps_Internalx86CPUFeaturesInit();
+inline const struct AtomicOps_x86CPUFeatureStruct& AtomicOps_Internalx86CPUFeaturesGet() {
+    static std::once_flag onceInit;
+    std::call_once(onceInit, [](){ AtomicOps_Internalx86CPUFeaturesInit(); });
+    return AtomicOps_Internalx86CPUFeatures;
+}
+
+#define AtomicOps_Internalx86CPUFeatures AtomicOps_Internalx86CPUFeaturesGet()
+#endif
+
 
 #define ATOMICOPS_COMPILER_BARRIER() __asm__ __volatile__("" : : : "memory")
 
@@ -284,6 +300,9 @@ inline Atomic64 Release_CompareAndSwap(volatile Atomic64* ptr,
 
 #endif  // defined(__x86_64__)
 
+#if defined(__APPLE__)
+#undef AtomicOps_Internalx86CPUFeatures
+#endif
 }  // namespace internal
 }  // namespace protobuf
 }  // namespace google

@@ -59,7 +59,6 @@ def _set_torch_reg_op(op_type, op_func):
 
 class TestCompositeOp(TorchBaseTest):
 
-    @pytest.mark.xfail(reason="rdar://65230439 fails with stochastic numeric mismatch", run=False)
     @pytest.mark.parametrize("input_shape", [(100, 180), (56, 123)])
     def test_composite_op(self, input_shape):
         _set_torch_reg_op("cosine_similarity", custom_cosine_similarity)

@@ -20,7 +20,7 @@ def match_pattern(op):
             continue
         skip_ops = child_op.outputs[0].child_ops
         for skip_op in skip_ops:
-            if "conv" not in skip_op.op_type: 
+            if "conv" not in skip_op.op_type:
                 continue
             ret.update([child_op])
 
@@ -73,7 +73,7 @@ def try_to_transform(pad_op, transpose_ops, block):
             for k, v in pad_op.inputs.items():
                 if k not in new_pad_inputs:
                     new_pad_inputs[k] = v
-            new_pad_var = mb.pad(before_op=transpose_op, **new_pad_inputs) 
+            new_pad_var = mb.pad(before_op=transpose_op, **new_pad_inputs)
         pad_op.enclosing_block.replace_uses_of_var_after_op(
             anchor_op=transpose_op, old_var=transpose_op.outputs[0], new_var=new_pad_var
         )
@@ -122,7 +122,7 @@ def pad_conv_connect(prog):
         ...
 
     """
-    for f_name, f in prog.functions.items():
+    for f in prog.functions.values():
         block_changed = True
         while block_changed:
             block_changed = pad_conv_connect_block(f)

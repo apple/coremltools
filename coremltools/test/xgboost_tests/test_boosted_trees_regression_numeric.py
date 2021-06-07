@@ -88,6 +88,7 @@ class GradientBoostingRegressorBostonHousingScikitNumericTest(unittest.TestCase)
             self._train_convert_evaluate_assert(**arg)
 
 
+@unittest.skipIf(_macos_version() >= (10, 16), "rdar://problem/75172473")
 @unittest.skipIf(not _HAS_XGBOOST, "Missing xgboost. Skipping")
 @unittest.skipIf(not _HAS_SKLEARN, "Missing scikit-learn. Skipping tests.")
 class XgboostBoosterBostonHousingNumericTest(unittest.TestCase):
@@ -198,6 +199,7 @@ class XgboostBoosterBostonHousingNumericTest(unittest.TestCase):
             self._train_convert_evaluate_assert(arg)
 
 
+@unittest.skipIf(_macos_version() >= (10, 16), "rdar://problem/75172473")
 @unittest.skipIf(not _HAS_XGBOOST, "Missing xgboost. Skipping")
 @unittest.skipIf(not _HAS_SKLEARN, "Missing sklearn. Skipping tests.")
 class XGboostRegressorBostonHousingNumericTest(unittest.TestCase):

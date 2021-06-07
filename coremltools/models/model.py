@@ -4,6 +4,8 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 import json as _json
 import os as _os
+import six as _six
+import shutil as _shutil
 import tempfile as _tempfile
 import warnings as _warnings
 from copy import deepcopy as _deepcopy
@@ -13,6 +15,8 @@ from .utils import load_spec as _load_spec
 from .utils import _macos_version as _macos_version
 from .utils import save_spec as _save_spec
 from ..proto import Model_pb2 as _Model_pb2
+
+from .utils import _MLMODEL_EXTENSION, _MLPACKAGE_EXTENSION
 
 _MLMODEL_FULL_PRECISION = "float32"
 _MLMODEL_HALF_PRECISION = "float16"
@@ -55,6 +59,9 @@ _LUT_BASED_QUANTIZATION = [
 _METADATA_VERSION = "com.github.apple.coremltools.version"
 _METADATA_SOURCE = "com.github.apple.coremltools.source"
 
+_MODEL_FILE_NAME = 'model.mlmodel'
+_WEIGHTS_FILE_NAME = 'weight.bin'
+_WEIGHTS_DIR_NAME = 'weights'
 
 class _FeatureDescription(object):
     def __init__(self, fd_spec):
@@ -173,29 +180,63 @@ class MLModel(object):
     predict
     """
 
-    def __init__(self, model, useCPUOnly=False):
+    def __init__(self, model, useCPUOnly=False, is_temp_package=False, mil_program=None):
         """
         Construct an MLModel from a .mlmodel
 
         Parameters
         ----------
         model: str or Model_pb2
-            If a string is given it should be the location of the .mlmodel to load.
+
+            For MIL, model must be path string to directory containing bundle
+            artifacts (e.g. weights.bin).
+
+            For NeuralNetwork, model can be path string (.mlmodel) or Model_pb2.
 
         useCPUOnly: bool
             Set to true to restrict loading of model on CPU Only. Defaults to False.
+
+        is_temp_package: bool
+            Set to true if the input model package dir is temporary and can be
+            deleted upon destruction of this class.
+
+        mil_program : coremltools.converters.mil.Program
+            Set to the mil program object, if available.
+            It is avaiable whenever an MLModel object is constructed using
+            the unified converter API coremltools.convert() 
+
+        Notes
+        -----
+        Internally this maintains the following:
+
+        - `_MLModelProxy`: a pybind wrapper around
+          CoreML::Python::Model (see
+          `coremltools/coremlpython/CoreMLPython.mm`)
+
+        - `bundle_path` (MIL only): directory containing all artifacts (.mlmodel,
+          weights etc).
 
         Examples
         --------
         >>> loaded_model = MLModel('my_model_file.mlmodel')
         """
-
-        if isinstance(model, str):
+        self.is_package = False
+        self.package_path = None
+        if mil_program is not None:
+            from coremltools.converters.mil.mil.program import Program
+            if not isinstance(mil_program, Program):
+                raise ValueError("mil_program must be of type 'coremltools.converters.mil.Program'")
+        self._mil_program = mil_program
+        if isinstance(model, _six.string_types):
+            if _os.path.isdir(model):
+                self.is_package = True
+                self.package_path = model
+                self.is_temp_package = is_temp_package
             self.__proxy__, self._spec, self._framework_error = _get_proxy_and_spec(
                 model, useCPUOnly
             )
         elif isinstance(model, _Model_pb2.Model):
-            filename = _tempfile.mktemp(suffix=".mlmodel")
+            filename = _tempfile.mktemp(suffix=_MLMODEL_EXTENSION)
             _save_spec(model, filename)
             self.__proxy__, self._spec, self._framework_error = _get_proxy_and_spec(
                 filename, useCPUOnly
@@ -206,11 +247,16 @@ class MLModel(object):
                 pass
         else:
             raise TypeError(
-                "Expected model to be a .mlmodel file or a Model_pb2 object"
+                "Expected model to be a .mlmodel file, .mlpackage file or a Model_pb2 object"
             )
 
         self._input_description = _FeatureDescription(self._spec.description.input)
         self._output_description = _FeatureDescription(self._spec.description.output)
+
+    def __del__(self):
+        # Cleanup temporary package upon destruction
+        if self.is_package and self.is_temp_package:
+            _shutil.rmtree(self.package_path)
 
     @property
     def short_description(self):
@@ -264,12 +310,14 @@ class MLModel(object):
 
     def save(self, filename):
         """
-        Save the model to a .mlmodel format.
+        Save the model to a .mlmodel format. For MIL program filename is
+        package directory containing the mlmodel and weights
 
         Parameters
         ----------
         filename: str
-            Target filename for the model.
+            Target filename / bundle directory for the model. Must have
+            `.mlmodel` extension
 
         See Also
         --------
@@ -281,7 +329,17 @@ class MLModel(object):
         >>> loaded_model = MLModel('my_model_file.mlmodel')
         """
         filename = _os.path.expanduser(filename)
-        _save_spec(self._spec, filename)
+        if self.is_package:
+            name, ext = _os.path.splitext(filename)
+            if not ext:
+                filename = "{}{}".format(filename, _MLPACKAGE_EXTENSION)
+            elif ext != _MLPACKAGE_EXTENSION:
+                raise Exception("For an ML Program, extension must be {} (not {})".format(_MLPACKAGE_EXTENSION, ext))
+            if _os.path.exists(filename):
+                _shutil.rmtree(filename)
+            _shutil.copytree(self.package_path, filename)
+        else:
+            _save_spec(self._spec, filename)
 
     def get_spec(self):
         """
@@ -368,3 +426,19 @@ class MLModel(object):
                     raise Exception(
                         "Unable to load CoreML.framework. Cannot make predictions."
                     )
+
+    def _get_mil_internal(self):
+        """
+        Get a deep copy of the mil program object, if avaiable.
+        Its avaiable whenever an MLModel object is constructed using
+        the unified converter API coremltools.convert()
+
+        Returns
+        -------
+        program: coremltools.converters.mil.Program
+
+        Examples
+        ----------
+        >>> mil_prog = model._get_mil_internal()
+        """
+        return _deepcopy(self._mil_program)

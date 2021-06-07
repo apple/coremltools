@@ -4,6 +4,7 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import scipy
+from scipy import special
 from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.testing_reqs import *
 
@@ -15,7 +16,7 @@ backends = testing_reqs.backends
 class TestElementwiseUnary:
     # All ops in this test share the same backends
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, mode",
+        "use_cpu_for_conversion, backend, mode",
         itertools.product(
             [True, False],
             backends,
@@ -49,7 +50,10 @@ class TestElementwiseUnary:
             ],
         ),
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend, mode):
+    def test_builder_to_backend_smoke(self, use_cpu_for_conversion, backend, mode):
+        if backend == "mlprogram" and not use_cpu_for_conversion and mode == "cast":
+            pytest.xfail("rdar://78343191 ((MIL GPU) Core ML Tools Unit Test failures [failure to load or Seg fault])")
+
         if mode == "abs":
             val = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.float32)
             expected_outputs = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
@@ -267,9 +271,10 @@ class TestElementwiseUnary:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_only=use_cpu_for_conversion,
             frontend_only=False,
             backend=backend,
+            use_cpu_for_conversion=use_cpu_for_conversion,
         )
 
     @ssa_fn
@@ -593,6 +598,9 @@ class TestElementwiseUnary:
     def test_builder_to_backend_stress_log(
             self, use_cpu_only, backend, epsilon
     ):
+        if backend == "mlprogram" and not use_cpu_only:
+            pytest.xfail("rdar://78343225 ((MIL GPU) Core ML Tools Unit Test failures [numerical error])")
+
         x = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
         numpy_pred = np.log(x + epsilon)
 
@@ -612,4 +620,56 @@ class TestElementwiseUnary:
             use_cpu_only=use_cpu_only,
             frontend_only=False,
             backend=backend,
+        )
+
+    @pytest.mark.parametrize(
+        "use_cpu_for_conversion, backend, src_dst",
+        itertools.product(
+            [True, False],
+            backends,
+            [("fp32", "int32"), ("fp16", "fp32"), ("fp32", "fp16"), ("fp16", "int32")],
+        ),
+    )
+    def test_builder_to_backend_stress_cast(
+            self, use_cpu_for_conversion, backend, src_dst
+    ):
+        if backend == "mlprogram" and not use_cpu_for_conversion:
+            pytest.xfail("rdar://78343191 ((MIL GPU) Core ML Tools Unit Test failures [failure to load or Seg fault])")
+
+        src_dtype, dst_dtype = src_dst
+
+        type_map = {
+            "int32": np.int32,
+            "int64": np.int64,
+            "fp16": np.float16,
+            "fp32": np.float32,
+            "fp64": np.float64,
+            "bool": np.bool,
+        }
+
+        x = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
+        numpy_pred = x.astype(dtype=np.float16)
+
+        input_placeholder_dict = {"x": mb.placeholder(shape=x.shape)}
+        input_value_dict = {"x": x}
+
+        def build(x):
+            x = mb.cast(x=x, dtype=src_dtype)
+            x = mb.square(x=x)
+            x = mb.cast(x=x, dtype=dst_dtype)
+            x = mb.sqrt(x=x)
+            x = mb.cast(x=x, dtype="fp32")
+            return x
+
+        expected_output_type = x.shape + (types.fp32,)
+        run_compare_builder(
+            build,
+            input_placeholder_dict,
+            input_value_dict,
+            expected_output_type,
+            numpy_pred,
+            use_cpu_only=use_cpu_for_conversion,
+            frontend_only=False,
+            backend=backend,
+            use_cpu_for_conversion=use_cpu_for_conversion,
         )

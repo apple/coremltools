@@ -221,7 +221,6 @@ def load(prog, **kwargs):
         if types.is_tensor(var.sym_type):
             sym_shape = var.sym_type.get_shape()
             if any_variadic(sym_shape):
-                # TODO: rdar://59559656
                 raise NotImplementedError("Variadic rank is not supported")
             if any_symbolic(sym_shape):
                 user_specified = False

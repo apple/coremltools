@@ -1,7 +1,7 @@
 import unittest
 
 import numpy as np
-
+import pytest
 import coremltools
 from coremltools.models import datatypes, MLModel
 from coremltools.models.neural_network import NeuralNetworkBuilder
@@ -362,6 +362,10 @@ class BasicNumericCorrectnessTest_1015NewLayers(unittest.TestCase):
         self.assertTrue(out.shape == expected_out.shape)
         self.assertTrue(np.allclose(out.flatten(), expected_out.flatten(), atol=0.1))
 
+    @pytest.mark.xfail(
+        reason="rdar://78057487 (Re-enable tests after fixing regression in embedding layer)",
+        run=False
+    )
     def test_lut_quant_embedding_nd_2bit(self):
         embed_size = 2
         vocab_size = 3
@@ -403,6 +407,11 @@ class BasicNumericCorrectnessTest_1015NewLayers(unittest.TestCase):
         self.assertTrue(out.shape == expected_out.shape)
         self.assertTrue(np.allclose(out.flatten(), expected_out.flatten()))
 
+
+    @pytest.mark.xfail(
+        reason="rdar://78057487 (Re-enable tests after fixing regression in embedding layer)",
+        run=False
+    )
     def test_linear_quant_embedding_7bit(self):
         embed_size = 2
         vocab_size = 3

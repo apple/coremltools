@@ -510,35 +510,36 @@ class Operation(object):
     def var_to_str(v):
         if isinstance(v, (tuple, list)):
             return "(" + ", ".join(["%" + s.name for s in v]) + ")"
-        else:
-            return "%" + v.name
+        elif v.op and v.op.op_type == "const":
+            val = v.op.val.sym_val
+            if isinstance(val, (np.generic, np.ndarray)):
+                # for small tensors, serialize as string; skip large tensors.
+                if val.size <= 10:
+                    return str(val.tolist())
+            else:
+                # other types are small enough they can be serialized
+                return (
+                    '"' + val + '"'
+                    if isinstance(val, str)
+                    else str(val)
+                )
+
+        return "%" + v.name
 
     def indented_str(self, indent=""):
+        if self.op_type == "const":
+            return ""
         s = indent
         if self.outputs is not None:
             s += ", ".join([str(o) for o in self.outputs])
         s += " = " + self.op_type + "("
-        if self.op_type == "const":
-            if self.mode.val == "immediate_value":
-                if isinstance(self.val.sym_val, (np.generic, np.ndarray)):
-                    val_str = str(self.val.sym_val.tolist())
-                else:
-                    val_str = (
-                        '"' + self.val.sym_val + '"'
-                        if isinstance(self.val.sym_val, str)
-                        else str(self.val.sym_val)
-                    )
-                s += "val=" + val_str
-            else:
-                s += "val=(file_value)"
-        else:
-            s += ", ".join(
-                [
-                    k + "=" + Operation.var_to_str(self.inputs[k])
-                    for k in self._input_types.keys()
-                    if k in self.inputs and not is_internal_input(k)
-                ]
-            )
+        s += ", ".join(
+            [
+                k + "=" + Operation.var_to_str(self.inputs[k])
+                for k in self._input_types.keys()
+                if k in self.inputs and not is_internal_input(k)
+            ]
+        )
         s += ', name="{}")\n'.format(self.name)
         for b in self.blocks:
             s += b.indented_str(indent=indent + SPACES)

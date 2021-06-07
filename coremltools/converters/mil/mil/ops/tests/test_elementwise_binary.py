@@ -469,9 +469,12 @@ class TestLessEqual:
 
 class TestNotEqual:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "use_cpu_for_conversion, backend", itertools.product([True, False], backends,)
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+    def test_builder_to_backend_smoke(self, use_cpu_for_conversion, backend):
+        if backend == "mlprogram" and not use_cpu_for_conversion:
+            pytest.xfail("rdar://78343191 ((MIL GPU) Core ML Tools Unit Test failures [failure to load or Seg fault])")
+
         x = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
         y = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.float32)
         input_placeholders = {
@@ -492,9 +495,10 @@ class TestNotEqual:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_only=use_cpu_for_conversion,
             frontend_only=False,
             backend=backend,
+            use_cpu_for_conversion=use_cpu_for_conversion,
         )
 
     @ssa_fn

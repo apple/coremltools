@@ -16,7 +16,7 @@ if("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_BINARY_DIR}")
   ")
 endif()
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -44,10 +44,9 @@ message("Found python includes ${PYTHON_INCLUDE_DIRS}")
 
 include_directories(
   .
-  deps/caffe/include
-  deps/caffe/include/caffe/proto
   deps/protobuf/src
   deps/pybind11/include
+  deps/nlohmann
   mlmodel/src
   ${PYTHON_INCLUDE_DIRS}
   )
@@ -56,49 +55,29 @@ if(APPLE)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fobjc-arc")
 endif()
 
-add_library(caffeconverter
+add_library(milstoragepython
   SHARED
-  caffeconverter/CaffeConverterLib.cpp
-  caffeconverter/CaffeConverterPython.cpp
-  caffeconverter/Caffe/Pooling.cpp
-  caffeconverter/Caffe/Embed.cpp
-  caffeconverter/Caffe/Parameter.cpp
-  caffeconverter/Caffe/Split.cpp
-  caffeconverter/Caffe/Bias.cpp
-  caffeconverter/Caffe/Reduction.cpp
-  caffeconverter/Caffe/Batchnorm.cpp
-  caffeconverter/Caffe/Slice.cpp
-  caffeconverter/Caffe/Crop.cpp
-  caffeconverter/Caffe/Concat.cpp
-  caffeconverter/Caffe/InnerProduct.cpp
-  caffeconverter/Caffe/LRN.cpp
-  caffeconverter/Caffe/Power.cpp
-  caffeconverter/Caffe/Scale.cpp
-  caffeconverter/Caffe/MVN.cpp
-  caffeconverter/Caffe/LSTM.cpp
-  caffeconverter/Caffe/Abs.cpp
-  caffeconverter/Caffe/Eltwise.cpp
-  caffeconverter/Caffe/Exp.cpp
-  caffeconverter/Caffe/InputLayers.cpp
-  caffeconverter/Caffe/Softmax.cpp
-  caffeconverter/Caffe/TrainingLayers.cpp
-  caffeconverter/Caffe/CaffeConverter.cpp
-  caffeconverter/Caffe/UpgradeProto.cpp
-  caffeconverter/Caffe/Flatten.cpp
-  caffeconverter/Caffe/Log.cpp
-  caffeconverter/Caffe/Activation.cpp
-  caffeconverter/Caffe/Convolution.cpp
-  caffeconverter/Caffe/Reshape.cpp
-  deps/caffe/src/caffe/proto/caffe.pb.cc
-  deps/caffe/src/caffe/util/upgrade_proto.cpp
+  milstoragepython/MilStorage.cpp
+  milstoragepython/MilStoragePython.cpp
   )
 
-target_compile_definitions(caffeconverter
+target_link_libraries(milstoragepython
+  mlmodel
+  )
+
+add_library(modelpackage
+  SHARED
+  modelpackage/src/ModelPackage.cpp
+  modelpackage/src/utils/JsonMap.mm
+  modelpackage/src/ModelPackagePython.cpp
+  )
+  
+target_compile_definitions(modelpackage
   PRIVATE
   CPU_ONLY=1
   )
 
-target_link_libraries(caffeconverter
+target_link_libraries(modelpackage
   mlmodel
   libprotobuf
   )
@@ -106,34 +85,43 @@ target_link_libraries(caffeconverter
 if (APPLE)
   # Allow Python to be found at runtime instead of compile/link time
   # This is apparently the default on Linux
-  set_target_properties(caffeconverter PROPERTIES LINK_FLAGS "-undefined dynamic_lookup")
+  set_target_properties(milstoragepython PROPERTIES LINK_FLAGS "-undefined dynamic_lookup")
+  set_target_properties(modelpackage PROPERTIES LINK_FLAGS "-undefined dynamic_lookup")
 endif()
 
 file(COPY ${CMAKE_SOURCE_DIR}/README.md DESTINATION ${CMAKE_BINARY_DIR})
 file(COPY ${CMAKE_SOURCE_DIR}/coremltools/__init__.py
   DESTINATION ${CMAKE_BINARY_DIR}/coremltools)
-file(COPY ${CMAKE_SOURCE_DIR}/coremltools/__main__.py
-  DESTINATION ${CMAKE_BINARY_DIR}/coremltools)
 file(COPY ${CMAKE_SOURCE_DIR}/coremltools/version.py
   DESTINATION ${CMAKE_BINARY_DIR}/coremltools)
 
-set(copy_dirs _deps _scripts converters models proto)
+set(copy_dirs _deps converters models proto)
 foreach(cdir IN ITEMS ${copy_dirs})
   file(COPY ${CMAKE_SOURCE_DIR}/coremltools/${cdir}
     DESTINATION ${CMAKE_BINARY_DIR}/coremltools)
 endforeach()
 
 if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
-  set(_additional_caffeconverter_command COMMAND strip -x ${PROJECT_SOURCE_DIR}/coremltools/libcaffeconverter.so)
+  set(_additional_milstoragepython_command COMMAND strip -x ${PROJECT_SOURCE_DIR}/coremltools/libmilstoragepython.so)
+  set(_additional_modelpackage_command COMMAND strip -x ${PROJECT_SOURCE_DIR}/coremltools/libmodelpackage.so)
 endif()
 
 add_custom_command(
-  TARGET caffeconverter
+  TARGET modelpackage
   POST_BUILD
-  COMMAND cp $<TARGET_FILE:caffeconverter> ${PROJECT_SOURCE_DIR}/coremltools/libcaffeconverter.so
-  ${_additional_caffeconverter_command}
+  COMMAND cp $<TARGET_FILE:modelpackage> ${PROJECT_SOURCE_DIR}/coremltools/libmodelpackage.so
+  ${_additional_modelpackage_command}
 )
+if (NOT APPLE)
+  target_link_libraries(modelpackage uuid)
+endif()
 
+add_custom_command(
+  TARGET milstoragepython
+  POST_BUILD
+  COMMAND cp $<TARGET_FILE:milstoragepython> ${PROJECT_SOURCE_DIR}/coremltools/libmilstoragepython.so
+  ${_additional_milstoragepython_command}
+)
 
 find_library(CORE_VIDEO CoreVideo)
 find_library(CORE_ML CoreML)
@@ -171,7 +159,6 @@ if (APPLE AND CORE_VIDEO AND CORE_ML AND FOUNDATION)
     ${FOUNDATION}
   )
 
-if(APPLE)
   set(osx_export_file ${CMAKE_SOURCE_DIR}/coremlpython/exported_symbols_osx.ver)
   set_property(TARGET coremlpython APPEND PROPERTY LINK_DEPENDS "${osx_export_file}")
   set_property(TARGET coremlpython APPEND_STRING PROPERTY LINK_FLAGS " -Wl,-exported_symbols_list,${osx_export_file} ")
@@ -179,11 +166,6 @@ if(APPLE)
   # Allow Python to be found at runtime instead of compile/link time
   # This is apparently the default on Linux
   set_property(TARGET coremlpython APPEND_STRING PROPERTY LINK_FLAGS "-undefined dynamic_lookup")
-
-else()
-  set(linux_export_file coremlpython/exported_symbols_linux.ver)
-  set_property(TARGET coremlpython APPEND_STRING PROPERTY LINK_FLAGS " -Wl,--version-script=${linux_export_file} ")
-endif()
 
   set_property(TARGET coremlpython APPEND_STRING PROPERTY LINK_FLAGS " -Wl,-dead_strip")
 
@@ -234,7 +216,7 @@ foreach(platform IN ITEMS ${PLAT_NAME})
       --python-tag=${PYTHON_TAG}
       ${BUILD_TAG_OPTION}
       --dist-dir=${PROJECT_BINARY_DIR}/dist
-    DEPENDS "caffeconverter;coremlpython;${plat_targets}"
+    DEPENDS "milstoragepython;modelpackage;coremlpython;${plat_targets}"
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
   )
   set(plat_targets "${plat_targets};dist_${platform}")
@@ -244,7 +226,7 @@ add_custom_target(dist DEPENDS ${plat_targets})
 
 add_custom_target(pip_install_dev
   COMMAND pip install -e ${PROJECT_SOURCE_DIR}
-  DEPENDS "caffeconverter;coremlpython"
+  DEPENDS "coremlpython"
 )
 
 add_custom_target(pytest

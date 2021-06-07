@@ -1,6 +1,10 @@
-
+# Copyright (c) 2021, Apple Inc. All rights reserved.
+#
+# Use of this source code is governed by a BSD-3-clause license that can be
+# found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 import numpy as np
 
+from ...models._deprecation import deprecated as _deprecated
 from coremltools.models.neural_network import NeuralNetworkBuilder  # type: ignore
 from coremltools.models import datatypes, MLModel  # type: ignore
 from coremltools.proto import FeatureTypes_pb2 as ft  # type: ignore
@@ -464,6 +468,7 @@ def _prepare_onnx_graph(
     return graph_
 
 
+@_deprecated()
 def convert(
     model,  # type: Union[onnx.ModelProto, Text]
     mode=None,  # type: Optional[Text]
@@ -480,6 +485,8 @@ def convert(
 ):
     # type: (...) -> MLModel
     """
+    WARNING: This function is deprecated. It will be removed in the 6.0.
+
     Convert ONNX model to CoreML.
     
     Parameters

@@ -77,9 +77,9 @@ class LIBPROTOBUF_EXPORT Status {
   ~Status() {}
 
   // Some pre-defined Status objects
-  static const Status OK;             // Identical to 0-arg constructor
-  static const Status CANCELLED;
-  static const Status UNKNOWN;
+  static const Status& OK();             // Identical to 0-arg constructor
+  static const Status& CANCELLED();
+  static const Status& UNKNOWN();
 
   // Accessor
   bool ok() const {

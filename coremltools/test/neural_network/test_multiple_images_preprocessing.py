@@ -1,4 +1,7 @@
-
+# Copyright (c) 2021, Apple Inc. All rights reserved.
+#
+# Use of this source code is governed by a BSD-3-clause license that can be
+# found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 import json
 import os
 import shutil
@@ -48,11 +51,11 @@ def load_mlmodel(model_path):
         return False
 
 
-def compare_models(caffe_preds, coreml_preds):
+def compare_models(keras_preds, coreml_preds):
     max_relative_error = 0
     for i in range(len(coreml_preds)):
-        max_den = max(1.0, np.abs(caffe_preds[i]), np.abs(coreml_preds[i]))
-        relative_error = np.abs(caffe_preds[i] / max_den - coreml_preds[i] / max_den)
+        max_den = max(1.0, np.abs(keras_preds[i]), np.abs(coreml_preds[i]))
+        relative_error = np.abs(keras_preds[i] / max_den - coreml_preds[i] / max_den)
         if relative_error > max_relative_error:
             max_relative_error = relative_error
 

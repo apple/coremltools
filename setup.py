@@ -66,7 +66,7 @@ setup(
     url="https://github.com/apple/coremltools",
     packages=find_packages(),
     package_data={
-        "": ["LICENSE.txt", "README.md", "libcaffeconverter.so", "libcoremlpython.so"]
+        "": ["LICENSE.txt", "README.md", "libmilstoragepython.so", "libcoremlpython.so", "libmodelpackage.so"]
     },
     install_requires=[
         "numpy >= 1.14.5",
@@ -76,10 +76,8 @@ setup(
         "tqdm",
         "packaging",
     ],
-    entry_points={"console_scripts": ["coremlconverter = coremltools:_main"]},
     classifiers=[
         "Development Status :: 5 - Production/Stable",
-        "Intended Audience :: End Users/Desktop",
         "Intended Audience :: Developers",
         "Operating System :: MacOS :: MacOS X",
         "Operating System :: POSIX :: Linux",

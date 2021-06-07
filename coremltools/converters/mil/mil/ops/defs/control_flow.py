@@ -7,6 +7,7 @@ import copy
 import numpy as np
 import logging
 
+
 from coremltools.converters.mil.mil import (
     Block,
     DefaultInputs,
@@ -149,14 +150,8 @@ class const(Operation):
     """
 
     input_spec = InputSpec(
-        mode=InternalStringInputType(const=True, optional=True),
         val=InternalScalarOrTensorInputType(const=True),
     )
-
-    def default_inputs(self):
-        return DefaultInputs(
-            mode="immediate_value",
-            )
 
     def __init__(self, **kwargs):
         super(const, self).__init__(**kwargs)

@@ -1,23 +1,31 @@
 from enum import Enum
-from coremltools import _SPECIFICATION_VERSION_IOS_13, _SPECIFICATION_VERSION_IOS_14
+from coremltools import _SPECIFICATION_VERSION_IOS_13, _SPECIFICATION_VERSION_IOS_14, \
+                        _SPECIFICATION_VERSION_IOS_15
 
 
 class AvailableTarget(Enum):
     # iOS versions
     iOS13 = _SPECIFICATION_VERSION_IOS_13
     iOS14 = _SPECIFICATION_VERSION_IOS_14
+    iOS15 = _SPECIFICATION_VERSION_IOS_15
 
     # macOS versions (aliases of iOS versions)
     macOS15 = _SPECIFICATION_VERSION_IOS_13
     macOS16 = _SPECIFICATION_VERSION_IOS_14
+    macOS10_15 = _SPECIFICATION_VERSION_IOS_13
+    macOS10_16 = _SPECIFICATION_VERSION_IOS_14
+    macOS11 = _SPECIFICATION_VERSION_IOS_14
+    macOS12 = _SPECIFICATION_VERSION_IOS_14
 
     # watchOS versions (aliases of iOS versions)
     watchOS6 = _SPECIFICATION_VERSION_IOS_13
     watchOS7 = _SPECIFICATION_VERSION_IOS_14
+    watchOS8 = _SPECIFICATION_VERSION_IOS_15
 
     # tvOS versions (aliases of iOS versions)
     tvOS13 = _SPECIFICATION_VERSION_IOS_13
     tvOS14 = _SPECIFICATION_VERSION_IOS_14
+    tvOS15 = _SPECIFICATION_VERSION_IOS_15
 
 
 _get_features_associated_with = {}
@@ -102,19 +110,7 @@ def iOS14Features(spec):
     return features_list
 
 
-def check_deployment_compatibility(spec, representation=None, deployment_target=None):
-    if representation is None:
-        representation = "nn_proto"
-
-    if deployment_target is None:
-        deployment_target = AvailableTarget.iOS13
-
-    if representation != "nn_proto":
-        raise ValueError(
-            "Deployment is supported only for mlmodel in nn_proto representation. Provided: {}".format(
-                representation
-            )
-        )
+def check_deployment_compatibility(spec, representation, deployment_target):
 
     if not isinstance(deployment_target, AvailableTarget):
         raise TypeError(
@@ -123,13 +119,14 @@ def check_deployment_compatibility(spec, representation=None, deployment_target=
 
     for any_target in AvailableTarget:
 
-        if any_target.value > deployment_target.value:
+        if any_target.value > deployment_target.value and any_target in _get_features_associated_with:
             missing_features = _get_features_associated_with[any_target](spec)
 
             if missing_features:
                 msg = (
                     "Provided minimum deployment target requires model to be of version {} but converted model "
-                    "uses following features which are available from version {} onwards.\n ".format(
+                    "uses following features which are available from version {} onwards. Please use a higher "
+                    "minimum deployment target to convert. \n ".format(
                         deployment_target.value, any_target.value
                     )
                 )

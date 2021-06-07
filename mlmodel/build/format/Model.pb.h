@@ -31,6 +31,7 @@
 #include <google/protobuf/map.h>  // IWYU pragma: export
 #include <google/protobuf/map_field_lite.h>
 #include "VisionFeaturePrint.pb.h"  // IWYU pragma: export
+#include "AudioFeaturePrint.pb.h"  // IWYU pragma: export
 #include "TextClassifier.pb.h"  // IWYU pragma: export
 #include "WordTagger.pb.h"  // IWYU pragma: export
 #include "Gazetteer.pb.h"  // IWYU pragma: export
@@ -47,6 +48,7 @@
 #include "NearestNeighbors.pb.h"  // IWYU pragma: export
 #include "Identity.pb.h"  // IWYU pragma: export
 #include "Imputer.pb.h"  // IWYU pragma: export
+#include "MIL.pb.h"  // IWYU pragma: export
 #include "NeuralNetwork.pb.h"  // IWYU pragma: export
 #include "Normalizer.pb.h"  // IWYU pragma: export
 #include "OneHotEncoder.pb.h"  // IWYU pragma: export
@@ -962,6 +964,12 @@ class WhereNonZeroLayerParams;
 class WhereNonZeroLayerParamsDefaultTypeInternal;
 extern WhereNonZeroLayerParamsDefaultTypeInternal _WhereNonZeroLayerParams_default_instance_;
 namespace CoreMLModels {
+class AudioFeaturePrint;
+class AudioFeaturePrintDefaultTypeInternal;
+extern AudioFeaturePrintDefaultTypeInternal _AudioFeaturePrint_default_instance_;
+class AudioFeaturePrint_Sound;
+class AudioFeaturePrint_SoundDefaultTypeInternal;
+extern AudioFeaturePrint_SoundDefaultTypeInternal _AudioFeaturePrint_Sound_default_instance_;
 class Gazetteer;
 class GazetteerDefaultTypeInternal;
 extern GazetteerDefaultTypeInternal _Gazetteer_default_instance_;
@@ -990,6 +998,122 @@ class WordTagger;
 class WordTaggerDefaultTypeInternal;
 extern WordTaggerDefaultTypeInternal _WordTagger_default_instance_;
 }  // namespace CoreMLModels
+namespace MILSpec {
+class Argument;
+class ArgumentDefaultTypeInternal;
+extern ArgumentDefaultTypeInternal _Argument_default_instance_;
+class Argument_Binding;
+class Argument_BindingDefaultTypeInternal;
+extern Argument_BindingDefaultTypeInternal _Argument_Binding_default_instance_;
+class Block;
+class BlockDefaultTypeInternal;
+extern BlockDefaultTypeInternal _Block_default_instance_;
+class Block_AttributesEntry;
+class Block_AttributesEntryDefaultTypeInternal;
+extern Block_AttributesEntryDefaultTypeInternal _Block_AttributesEntry_default_instance_;
+class DictionaryType;
+class DictionaryTypeDefaultTypeInternal;
+extern DictionaryTypeDefaultTypeInternal _DictionaryType_default_instance_;
+class DictionaryValue;
+class DictionaryValueDefaultTypeInternal;
+extern DictionaryValueDefaultTypeInternal _DictionaryValue_default_instance_;
+class DictionaryValue_KeyValuePair;
+class DictionaryValue_KeyValuePairDefaultTypeInternal;
+extern DictionaryValue_KeyValuePairDefaultTypeInternal _DictionaryValue_KeyValuePair_default_instance_;
+class Dimension;
+class DimensionDefaultTypeInternal;
+extern DimensionDefaultTypeInternal _Dimension_default_instance_;
+class Dimension_ConstantDimension;
+class Dimension_ConstantDimensionDefaultTypeInternal;
+extern Dimension_ConstantDimensionDefaultTypeInternal _Dimension_ConstantDimension_default_instance_;
+class Dimension_UnknownDimension;
+class Dimension_UnknownDimensionDefaultTypeInternal;
+extern Dimension_UnknownDimensionDefaultTypeInternal _Dimension_UnknownDimension_default_instance_;
+class Function;
+class FunctionDefaultTypeInternal;
+extern FunctionDefaultTypeInternal _Function_default_instance_;
+class Function_AttributesEntry;
+class Function_AttributesEntryDefaultTypeInternal;
+extern Function_AttributesEntryDefaultTypeInternal _Function_AttributesEntry_default_instance_;
+class Function_BlockSpecializationsEntry;
+class Function_BlockSpecializationsEntryDefaultTypeInternal;
+extern Function_BlockSpecializationsEntryDefaultTypeInternal _Function_BlockSpecializationsEntry_default_instance_;
+class ListType;
+class ListTypeDefaultTypeInternal;
+extern ListTypeDefaultTypeInternal _ListType_default_instance_;
+class ListValue;
+class ListValueDefaultTypeInternal;
+extern ListValueDefaultTypeInternal _ListValue_default_instance_;
+class NamedValueType;
+class NamedValueTypeDefaultTypeInternal;
+extern NamedValueTypeDefaultTypeInternal _NamedValueType_default_instance_;
+class Operation;
+class OperationDefaultTypeInternal;
+extern OperationDefaultTypeInternal _Operation_default_instance_;
+class Operation_AttributesEntry;
+class Operation_AttributesEntryDefaultTypeInternal;
+extern Operation_AttributesEntryDefaultTypeInternal _Operation_AttributesEntry_default_instance_;
+class Operation_InputsEntry;
+class Operation_InputsEntryDefaultTypeInternal;
+extern Operation_InputsEntryDefaultTypeInternal _Operation_InputsEntry_default_instance_;
+class Program;
+class ProgramDefaultTypeInternal;
+extern ProgramDefaultTypeInternal _Program_default_instance_;
+class Program_AttributesEntry;
+class Program_AttributesEntryDefaultTypeInternal;
+extern Program_AttributesEntryDefaultTypeInternal _Program_AttributesEntry_default_instance_;
+class Program_FunctionsEntry;
+class Program_FunctionsEntryDefaultTypeInternal;
+extern Program_FunctionsEntryDefaultTypeInternal _Program_FunctionsEntry_default_instance_;
+class TensorType;
+class TensorTypeDefaultTypeInternal;
+extern TensorTypeDefaultTypeInternal _TensorType_default_instance_;
+class TensorType_AttributesEntry;
+class TensorType_AttributesEntryDefaultTypeInternal;
+extern TensorType_AttributesEntryDefaultTypeInternal _TensorType_AttributesEntry_default_instance_;
+class TensorValue;
+class TensorValueDefaultTypeInternal;
+extern TensorValueDefaultTypeInternal _TensorValue_default_instance_;
+class TensorValue_RepeatedBools;
+class TensorValue_RepeatedBoolsDefaultTypeInternal;
+extern TensorValue_RepeatedBoolsDefaultTypeInternal _TensorValue_RepeatedBools_default_instance_;
+class TensorValue_RepeatedBytes;
+class TensorValue_RepeatedBytesDefaultTypeInternal;
+extern TensorValue_RepeatedBytesDefaultTypeInternal _TensorValue_RepeatedBytes_default_instance_;
+class TensorValue_RepeatedDoubles;
+class TensorValue_RepeatedDoublesDefaultTypeInternal;
+extern TensorValue_RepeatedDoublesDefaultTypeInternal _TensorValue_RepeatedDoubles_default_instance_;
+class TensorValue_RepeatedFloats;
+class TensorValue_RepeatedFloatsDefaultTypeInternal;
+extern TensorValue_RepeatedFloatsDefaultTypeInternal _TensorValue_RepeatedFloats_default_instance_;
+class TensorValue_RepeatedInts;
+class TensorValue_RepeatedIntsDefaultTypeInternal;
+extern TensorValue_RepeatedIntsDefaultTypeInternal _TensorValue_RepeatedInts_default_instance_;
+class TensorValue_RepeatedLongInts;
+class TensorValue_RepeatedLongIntsDefaultTypeInternal;
+extern TensorValue_RepeatedLongIntsDefaultTypeInternal _TensorValue_RepeatedLongInts_default_instance_;
+class TensorValue_RepeatedStrings;
+class TensorValue_RepeatedStringsDefaultTypeInternal;
+extern TensorValue_RepeatedStringsDefaultTypeInternal _TensorValue_RepeatedStrings_default_instance_;
+class TupleType;
+class TupleTypeDefaultTypeInternal;
+extern TupleTypeDefaultTypeInternal _TupleType_default_instance_;
+class TupleValue;
+class TupleValueDefaultTypeInternal;
+extern TupleValueDefaultTypeInternal _TupleValue_default_instance_;
+class Value;
+class ValueDefaultTypeInternal;
+extern ValueDefaultTypeInternal _Value_default_instance_;
+class ValueType;
+class ValueTypeDefaultTypeInternal;
+extern ValueTypeDefaultTypeInternal _ValueType_default_instance_;
+class Value_BlobFileValue;
+class Value_BlobFileValueDefaultTypeInternal;
+extern Value_BlobFileValueDefaultTypeInternal _Value_BlobFileValue_default_instance_;
+class Value_ImmediateValue;
+class Value_ImmediateValueDefaultTypeInternal;
+extern Value_ImmediateValueDefaultTypeInternal _Value_ImmediateValue_default_instance_;
+}  // namespace MILSpec
 }  // namespace Specification
 }  // namespace CoreML
 
@@ -1831,6 +1955,7 @@ class Model : public ::google::protobuf::MessageLite /* @@protoc_insertion_point
     kKNearestNeighborsClassifier = 404,
     kNeuralNetwork = 500,
     kItemSimilarityRecommender = 501,
+    kMlProgram = 502,
     kCustomModel = 555,
     kLinkedModel = 556,
     kOneHotEncoder = 600,
@@ -1849,6 +1974,7 @@ class Model : public ::google::protobuf::MessageLite /* @@protoc_insertion_point
     kSoundAnalysisPreprocessing = 2003,
     kGazetteer = 2004,
     kWordEmbedding = 2005,
+    kAudioFeaturePrint = 2006,
     kSerializedModel = 3000,
     TYPE_NOT_SET = 0,
   };
@@ -2057,6 +2183,15 @@ class Model : public ::google::protobuf::MessageLite /* @@protoc_insertion_point
   ::CoreML::Specification::ItemSimilarityRecommender* release_itemsimilarityrecommender();
   void set_allocated_itemsimilarityrecommender(::CoreML::Specification::ItemSimilarityRecommender* itemsimilarityrecommender);
 
+  // .CoreML.Specification.MILSpec.Program mlProgram = 502;
+  bool has_mlprogram() const;
+  void clear_mlprogram();
+  static const int kMlProgramFieldNumber = 502;
+  const ::CoreML::Specification::MILSpec::Program& mlprogram() const;
+  ::CoreML::Specification::MILSpec::Program* mutable_mlprogram();
+  ::CoreML::Specification::MILSpec::Program* release_mlprogram();
+  void set_allocated_mlprogram(::CoreML::Specification::MILSpec::Program* mlprogram);
+
   // .CoreML.Specification.CustomModel customModel = 555;
   bool has_custommodel() const;
   void clear_custommodel();
@@ -2219,6 +2354,15 @@ class Model : public ::google::protobuf::MessageLite /* @@protoc_insertion_point
   ::CoreML::Specification::CoreMLModels::WordEmbedding* release_wordembedding();
   void set_allocated_wordembedding(::CoreML::Specification::CoreMLModels::WordEmbedding* wordembedding);
 
+  // .CoreML.Specification.CoreMLModels.AudioFeaturePrint audioFeaturePrint = 2006;
+  bool has_audiofeatureprint() const;
+  void clear_audiofeatureprint();
+  static const int kAudioFeaturePrintFieldNumber = 2006;
+  const ::CoreML::Specification::CoreMLModels::AudioFeaturePrint& audiofeatureprint() const;
+  ::CoreML::Specification::CoreMLModels::AudioFeaturePrint* mutable_audiofeatureprint();
+  ::CoreML::Specification::CoreMLModels::AudioFeaturePrint* release_audiofeatureprint();
+  void set_allocated_audiofeatureprint(::CoreML::Specification::CoreMLModels::AudioFeaturePrint* audiofeatureprint);
+
   // .CoreML.Specification.SerializedModel serializedModel = 3000;
   bool has_serializedmodel() const;
   void clear_serializedmodel();
@@ -2246,6 +2390,7 @@ class Model : public ::google::protobuf::MessageLite /* @@protoc_insertion_point
   void set_has_knearestneighborsclassifier();
   void set_has_neuralnetwork();
   void set_has_itemsimilarityrecommender();
+  void set_has_mlprogram();
   void set_has_custommodel();
   void set_has_linkedmodel();
   void set_has_onehotencoder();
@@ -2264,6 +2409,7 @@ class Model : public ::google::protobuf::MessageLite /* @@protoc_insertion_point
   void set_has_soundanalysispreprocessing();
   void set_has_gazetteer();
   void set_has_wordembedding();
+  void set_has_audiofeatureprint();
   void set_has_serializedmodel();
 
   inline bool has_Type() const;
@@ -2291,6 +2437,7 @@ class Model : public ::google::protobuf::MessageLite /* @@protoc_insertion_point
     ::CoreML::Specification::KNearestNeighborsClassifier* knearestneighborsclassifier_;
     ::CoreML::Specification::NeuralNetwork* neuralnetwork_;
     ::CoreML::Specification::ItemSimilarityRecommender* itemsimilarityrecommender_;
+    ::CoreML::Specification::MILSpec::Program* mlprogram_;
     ::CoreML::Specification::CustomModel* custommodel_;
     ::CoreML::Specification::LinkedModel* linkedmodel_;
     ::CoreML::Specification::OneHotEncoder* onehotencoder_;
@@ -2309,6 +2456,7 @@ class Model : public ::google::protobuf::MessageLite /* @@protoc_insertion_point
     ::CoreML::Specification::CoreMLModels::SoundAnalysisPreprocessing* soundanalysispreprocessing_;
     ::CoreML::Specification::CoreMLModels::Gazetteer* gazetteer_;
     ::CoreML::Specification::CoreMLModels::WordEmbedding* wordembedding_;
+    ::CoreML::Specification::CoreMLModels::AudioFeaturePrint* audiofeatureprint_;
     ::CoreML::Specification::SerializedModel* serializedmodel_;
   } Type_;
   mutable int _cached_size_;
@@ -4034,6 +4182,54 @@ inline void Model::set_allocated_itemsimilarityrecommender(::CoreML::Specificati
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.Model.itemSimilarityRecommender)
 }
 
+// .CoreML.Specification.MILSpec.Program mlProgram = 502;
+inline bool Model::has_mlprogram() const {
+  return Type_case() == kMlProgram;
+}
+inline void Model::set_has_mlprogram() {
+  _oneof_case_[0] = kMlProgram;
+}
+inline void Model::clear_mlprogram() {
+  if (has_mlprogram()) {
+    delete Type_.mlprogram_;
+    clear_has_Type();
+  }
+}
+inline  const ::CoreML::Specification::MILSpec::Program& Model::mlprogram() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Model.mlProgram)
+  return has_mlprogram()
+      ? *Type_.mlprogram_
+      : ::CoreML::Specification::MILSpec::Program::default_instance();
+}
+inline ::CoreML::Specification::MILSpec::Program* Model::mutable_mlprogram() {
+  if (!has_mlprogram()) {
+    clear_Type();
+    set_has_mlprogram();
+    Type_.mlprogram_ = new ::CoreML::Specification::MILSpec::Program;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.Model.mlProgram)
+  return Type_.mlprogram_;
+}
+inline ::CoreML::Specification::MILSpec::Program* Model::release_mlprogram() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.Model.mlProgram)
+  if (has_mlprogram()) {
+    clear_has_Type();
+    ::CoreML::Specification::MILSpec::Program* temp = Type_.mlprogram_;
+    Type_.mlprogram_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+inline void Model::set_allocated_mlprogram(::CoreML::Specification::MILSpec::Program* mlprogram) {
+  clear_Type();
+  if (mlprogram) {
+    set_has_mlprogram();
+    Type_.mlprogram_ = mlprogram;
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.Model.mlProgram)
+}
+
 // .CoreML.Specification.CustomModel customModel = 555;
 inline bool Model::has_custommodel() const {
   return Type_case() == kCustomModel;
@@ -4896,6 +5092,54 @@ inline void Model::set_allocated_wordembedding(::CoreML::Specification::CoreMLMo
     Type_.wordembedding_ = wordembedding;
   }
   // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.Model.wordEmbedding)
+}
+
+// .CoreML.Specification.CoreMLModels.AudioFeaturePrint audioFeaturePrint = 2006;
+inline bool Model::has_audiofeatureprint() const {
+  return Type_case() == kAudioFeaturePrint;
+}
+inline void Model::set_has_audiofeatureprint() {
+  _oneof_case_[0] = kAudioFeaturePrint;
+}
+inline void Model::clear_audiofeatureprint() {
+  if (has_audiofeatureprint()) {
+    delete Type_.audiofeatureprint_;
+    clear_has_Type();
+  }
+}
+inline  const ::CoreML::Specification::CoreMLModels::AudioFeaturePrint& Model::audiofeatureprint() const {
+  // @@protoc_insertion_point(field_get:CoreML.Specification.Model.audioFeaturePrint)
+  return has_audiofeatureprint()
+      ? *Type_.audiofeatureprint_
+      : ::CoreML::Specification::CoreMLModels::AudioFeaturePrint::default_instance();
+}
+inline ::CoreML::Specification::CoreMLModels::AudioFeaturePrint* Model::mutable_audiofeatureprint() {
+  if (!has_audiofeatureprint()) {
+    clear_Type();
+    set_has_audiofeatureprint();
+    Type_.audiofeatureprint_ = new ::CoreML::Specification::CoreMLModels::AudioFeaturePrint;
+  }
+  // @@protoc_insertion_point(field_mutable:CoreML.Specification.Model.audioFeaturePrint)
+  return Type_.audiofeatureprint_;
+}
+inline ::CoreML::Specification::CoreMLModels::AudioFeaturePrint* Model::release_audiofeatureprint() {
+  // @@protoc_insertion_point(field_release:CoreML.Specification.Model.audioFeaturePrint)
+  if (has_audiofeatureprint()) {
+    clear_has_Type();
+    ::CoreML::Specification::CoreMLModels::AudioFeaturePrint* temp = Type_.audiofeatureprint_;
+    Type_.audiofeatureprint_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+inline void Model::set_allocated_audiofeatureprint(::CoreML::Specification::CoreMLModels::AudioFeaturePrint* audiofeatureprint) {
+  clear_Type();
+  if (audiofeatureprint) {
+    set_has_audiofeatureprint();
+    Type_.audiofeatureprint_ = audiofeatureprint;
+  }
+  // @@protoc_insertion_point(field_set_allocated:CoreML.Specification.Model.audioFeaturePrint)
 }
 
 // .CoreML.Specification.SerializedModel serializedModel = 3000;

@@ -23,8 +23,11 @@ from .internal_graph import *
 from .ops import *
 from .torch_op_registry import _TORCH_OPS_REGISTRY
 from .torchir_passes import *
+from .ssa_passes.torch_passes import torch_passes
 
 torch_to_mil_types = {
+    _torch.bool: types.bool,
+    _torch.float16: types.fp16,
     _torch.float32: types.fp32,
     _torch.float64: types.fp64,
     _torch.int32: types.int32,
@@ -153,6 +156,7 @@ class TorchConverter:
         for p in passes:
             p(self.graph)
         self.inputs = [v for v in self.graph.inputs.values()]
+        self.torch_passes = torch_passes
 
     @staticmethod
     def _check_ops(graph):
@@ -218,8 +222,7 @@ class TorchConverter:
             ):
                 self.context.add(ssa_func.inputs[users_name], torch_name=internal_name)
             for name, val in self.graph.params.items():
-                mode = decide_immediate_or_file(val)
-                const = mb.const(val=val, mode=mode, name=name)
+                const = mb.const(val=val, name=name)
                 self.context.add(const)
 
             # Add the rest of the operations
@@ -243,9 +246,7 @@ class TorchConverter:
 
             ssa_func.set_outputs(graph_outputs)
             prog.add_function("main", ssa_func)
-
-        # TODO (sberardi): graph cleanup passes
-        # rdar://60177439
+        self.torch_passes(prog)
         return prog
 
     @staticmethod

@@ -149,8 +149,9 @@ class TestTf1ModelInputsOutputs(TensorFlowBaseTest):
         with pytest.raises(ValueError) as e:
             converter.convert(model, minimum_deployment_target=target)
         e.match(
-            r"Provided minimum deployment target .* version 4 but converted model "
-            r"uses .* available from version 5 onwards.\n    1. Cumsum operation\n"
+            r"Provided minimum deployment target requires model to be of version 4 but converted model "
+            r"uses following features which are available from version 5 onwards. "
+            r"Please use a higher minimum deployment target to convert. \n    1. Cumsum operation\n"
         )
 
     @pytest.mark.parametrize(
@@ -193,10 +194,11 @@ class TestTf1ModelInputsOutputs(TensorFlowBaseTest):
             converter.convert(model, source=frontend)
             e.match(r"Unable to determine the shape of input .*")
 
-        # Test must pass if a user provides shape during conversion,
-        mlmodel = converter.convert(model, source=frontend, inputs=[ct.TensorType(shape=())])
+        mlmodel = converter.convert(model, source=frontend,
+                inputs=[ct.TensorType(shape=(1,))])
         assert mlmodel is not None
 
+    @pytest.mark.xfail(reason="Rank-0 input is not supported", run=True)
     def test_scalar_placeholder_shape(self):
         x_shape = ()  # Scalar Placeholder Shape
 

@@ -32,7 +32,7 @@ def convert_ops(const_context, builder, ops, outputs):
 
     const_context.append(set())
     custom_ops = SSAOpRegistry.custom_ops
-    for op in _tqdm(ops, desc="Translating MIL ==> MLModel Ops", unit=" ops"):
+    for op in _tqdm(ops, desc="Translating MIL ==> NeuralNetwork Ops", unit=" ops"):
         if op.op_type in custom_ops:
             mapper = MIL_TO_NN_MAPPING_REGISTRY["custom_op"]
         elif op.op_type in MIL_TO_NN_MAPPING_REGISTRY:
@@ -82,6 +82,7 @@ def to_py_type(val):
     """
     if not isinstance(val, (_np.ndarray, _np.generic)):
         return val
+
     # val is np.ndarray or np.generic
     is_np_scalar = isinstance(val, _np.generic) or val.shape == ()
     py_type = np_dtype_to_py_type(val.dtype)
@@ -100,7 +101,7 @@ def _convert_pool(const_context, builder, op, mode, exclude_padding_from_average
             name=op.name + "_expanded",
             input_name=op.x.name,
             output_name=op.name + "_expanded",
-            axes=[3],
+            axes=[-2],
         )
         padding_type = op.pad_type.val.upper()
         # nn's add_pool function does not support CUSTOM padding,
@@ -109,26 +110,26 @@ def _convert_pool(const_context, builder, op, mode, exclude_padding_from_average
         padding_type = "VALID" if padding_type == "CUSTOM" else padding_type
         builder.add_pooling(
             name=op.name,
-            height=op.kernel_sizes.val[-1],
-            width=1,
-            stride_height=op.strides.val[-1],
-            stride_width=1,
+            height=1,
+            width=op.kernel_sizes.val[-1],
+            stride_height=1,
+            stride_width=op.strides.val[-1],
             layer_type=mode.upper(),
-            padding_type=padding_type,
+            padding_type="INCLUDE_LAST_PIXEL" if op.ceil_mode.val else padding_type,
             input_name=make_input(const_context, builder, op.name + "_expanded"),
             output_name=op.name + "_pool",
             exclude_pad_area=exclude_padding_from_average,
-            padding_top=op_pad[0],
-            padding_bottom=op_pad[1],
-            padding_left=0,
-            padding_right=0,
+            padding_top=0,
+            padding_bottom=0,
+            padding_left=op_pad[0],
+            padding_right=op_pad[1],
             is_global=False,
         )
         builder.add_squeeze(
             name=op.name + "_squeeze",
             input_name=op.name + "_pool",
             output_name=op.outputs[0].name,
-            axes=[3],
+            axes=[-2],
         )
     elif num_spatial_dimensions == 2:
         padding_type = op.pad_type.val.upper()
@@ -143,7 +144,7 @@ def _convert_pool(const_context, builder, op, mode, exclude_padding_from_average
             stride_height=op.strides.val[-2],
             stride_width=op.strides.val[-1],
             layer_type=mode.upper(),
-            padding_type=padding_type,
+            padding_type="INCLUDE_LAST_PIXEL" if op.ceil_mode.val else padding_type,
             input_name=make_input(const_context, builder, op.x),
             output_name=op.name,
             exclude_pad_area=exclude_padding_from_average,
@@ -269,7 +270,7 @@ def _squeeze(builder, node_name, input_name, axes):
     )
 
 
-def _split(x, sections, axis):
+def _split(x, sections, axis=0):
     if x is None:
         return None
     if x.shape[axis] % sections != 0:
@@ -279,32 +280,6 @@ def _split(x, sections, axis):
             )
         )
     return _np.split(x, sections, axis=axis)
-
-
-# Split weights into given number of sections
-# This method should be used when weights are combined into
-# one matrix for several nodes e.g. Input, forget, output and cell gate
-# of LSTM
-def _split_weights(w, sections):
-    hidden_size = w.shape[-1] // sections
-    input_size = w.shape[0] - hidden_size
-    w = _np.transpose(w, (1, 0))
-    w_x = _split(w[:, :input_size], sections=sections, axis=0)
-    w_h = _split(w[:, input_size:], sections=sections, axis=0)
-    return w_x, w_h
-
-
-# Split bias into given number of sections
-# This method should be used when biases are combined into
-# one matrix for several nodes e.g. Input, forget, output and cell gate
-# of LSTM
-def _split_bias(b, sections):
-    if b is None:
-        return None
-    # Combine input-hidden and hidden-hidden bias
-    b = b[0] + b[1]
-    b = _split(b, sections=sections, axis=0)
-    return b
 
 
 @register_mil_to_nn_mapping
@@ -341,7 +316,7 @@ def batch_norm(const_context, builder, op):
     if op.x.rank == 3:
         x_name = op.name + "_expanded"
         builder.add_expand_dims(
-            name=x_name, input_name=op.x.name, output_name=x_name, axes=[-1],
+            name=x_name, input_name=op.x.name, output_name=x_name, axes=[-2],
         )
         out_name += "_batch_norm"
 
@@ -366,7 +341,7 @@ def batch_norm(const_context, builder, op):
             name=x_name,
             input_name=out_name,
             output_name=op.outputs[0].name,
-            axes=[-1],
+            axes=[-2],
         )
 
 @register_mil_to_nn_mapping
@@ -391,7 +366,7 @@ def conv_helper(const_context, builder, op):
         x_name = op.name + "_expand_dim"
         out_name += "_expanded"
         builder.add_expand_dims(
-            name=x_name, input_name=op.x.name, output_name=x_name, axes=[3],
+            name=x_name, input_name=op.x.name, output_name=x_name, axes=[-2],
         )
     # `x_name` is guaranteed to be (n, C_in/groups, spatial_dims) for 1D and 2D convolution
     # W_v1 wil be np.ndarray (if W is const at compile time) or None
@@ -403,7 +378,7 @@ def conv_helper(const_context, builder, op):
         # v1 convolution expects (H, W, C_in/groups, C_out) or (D, H, W, C_in/groups, C_out)
         weights = op.weight.val
         if is_conv1d:
-            weights = _np.expand_dims(op.weight.val, 3)
+            weights = _np.expand_dims(op.weight.val, -2)
         if is_conv1d or is_conv2d:
             weights = _np.transpose(weights, [2, 3, 1, 0])
     else:
@@ -420,7 +395,7 @@ def conv_helper(const_context, builder, op):
                 name=weights_name,
                 input_name=op.weight.name,
                 output_name=weights_name,
-                axes=[3],
+                axes=[-2],
             )
         input_names.append(weights_name)
 
@@ -428,13 +403,18 @@ def conv_helper(const_context, builder, op):
     padding_mode = op.pad_type.val
     pad = {}
     if padding_mode == "custom":
-        if not is_conv3d:
+        if is_conv1d:
+            padding_mode = "valid"
+            pad["padding_top"] = 0
+            pad["padding_bottom"] = 0
+            pad["padding_left"] = op.pad.val[0]
+            pad["padding_right"] = op.pad.val[1]
+        elif is_conv2d:
             padding_mode = "valid"
             pad["padding_top"] = op.pad.val[0]
             pad["padding_bottom"] = op.pad.val[1]
-            if is_conv2d or is_conv3d:
-                pad["padding_left"] = op.pad.val[2]
-                pad["padding_right"] = op.pad.val[3]
+            pad["padding_left"] = op.pad.val[2]
+            pad["padding_right"] = op.pad.val[3]
         else:
             pad["padding_front"] = op.pad.val[0]
             pad["padding_back"] = op.pad.val[1]
@@ -457,8 +437,8 @@ def conv_helper(const_context, builder, op):
     strides = op.strides.val.tolist()
     dilations = op.dilations.val.tolist()
     if is_conv1d:
-        dilations = dilations + [1]
-        strides = strides + [1]
+        dilations = dilations[:-1] + [1] + dilations[-1:]
+        strides = strides[:-1] + [1] + strides[-1:]
 
     if weights is not None and weights.dtype == 'uint8':
         nbits = op.nbits.val
@@ -477,8 +457,8 @@ def conv_helper(const_context, builder, op):
             name=out_name,
             kernel_channels=op.weight.shape[1],
             output_channels=op.weight.shape[0],
-            height=op.weight.shape[2],
-            width=1 if is_conv1d else op.weight.shape[3],
+            height= 1 if is_conv1d else op.weight.shape[2],
+            width= op.weight.shape[2] if is_conv1d else op.weight.shape[3],
             stride_height=strides[0],
             stride_width=strides[1],
             border_mode=padding_mode,
@@ -504,7 +484,7 @@ def conv_helper(const_context, builder, op):
                 name=op.name,
                 input_name=out_name,
                 output_name=op.outputs[0].name,
-                axes=[3],
+                axes=[-2],
             )
 
     if is_conv3d:
@@ -592,12 +572,14 @@ def _add_elementwise_binary(
         params = {"name": name, "output_name": output_name, "mode": mode.upper()}
         if op.x.val is not None and op.x.rank == 0 and _np.isfinite(op.x.val):
             params["input_names"] = make_input(const_context, builder, [op.y])
-            params["alpha"] = to_py_type(op.x.val)
+            val = op.x.val if not isinstance(op.x.val, _np.float16) else op.x.val.astype(_np.float32)
+            params["alpha"] = to_py_type(val)
             builder.add_elementwise(**params)
             return
         elif op.y.val is not None and op.y.rank == 0 and _np.isfinite(op.y.val):
             params["input_names"] = make_input(const_context, builder, [op.x])
-            params["alpha"] = to_py_type(op.y.val)
+            val = op.y.val if not isinstance(op.y.val, _np.float16) else op.y.val.astype(_np.float32)
+            params["alpha"] = to_py_type(val)
             builder.add_elementwise(**params)
             return
     elif mode in ["equal", "not_equal"]:
@@ -605,19 +587,22 @@ def _add_elementwise_binary(
         params = {"name": name, "output_name": output_name}
         if op.x.val is not None and op.x.rank == 0 and _np.isfinite(op.x.val):
             params["input_names"] = make_input(const_context, builder, [op.y])
-            params["alpha"] = to_py_type(op.x.val)
+            val = op.x.val if not isinstance(op.x.val, _np.float16) else op.x.val.astype(_np.float32)
+            params["alpha"] = to_py_type(val)
             add_func(**params)
             return
         elif op.y.val is not None and op.y.rank == 0 and _np.isfinite(op.y.val):
             params["input_names"] = make_input(const_context, builder, [op.x])
-            params["alpha"] = to_py_type(op.y.val)
+            val = op.y.val if not isinstance(op.y.val, _np.float16) else op.y.val.astype(_np.float32)
+            params["alpha"] = to_py_type(val)
             add_func(**params)
             return
     elif mode in ["greater_than", "greater_equal", "less_than", "less_equal"]:
         params = {"name": name, "output_name": output_name}
         if op.x.val is not None and op.x.rank == 0 and _np.isfinite(op.x.val):
             params["input_names"] = make_input(const_context, builder, [op.y])
-            params["alpha"] = to_py_type(op.x.val)
+            val = op.x.val if not isinstance(op.x.val, _np.float16) else op.x.val.astype(_np.float32)
+            params["alpha"] = to_py_type(val)
             if "less" in mode:
                 params["use_greater_than_equal"] = mode.endswith("_equal")
                 builder.add_greater_than(**params)
@@ -627,7 +612,8 @@ def _add_elementwise_binary(
             return
         elif op.y.val is not None and op.y.rank == 0 and _np.isfinite(op.y.val):
             params["input_names"] = make_input(const_context, builder, [op.x])
-            params["alpha"] = to_py_type(op.y.val)
+            val = op.y.val if not isinstance(op.y.val, _np.float16) else op.y.val.astype(_np.float32)
+            params["alpha"] = to_py_type(val)
             if "greater" in mode:
                 params["use_greater_than_equal"] = mode.endswith("_equal")
                 builder.add_greater_than(**params)
@@ -651,7 +637,9 @@ def _add_elementwise_binary(
             return
         add_const(const_context, builder, op.y.name, op.y.val)
 
-    if mode in {"add", "multiply", "subtract"} and op.x.rank <= 5 and op.y.rank <= 5:
+    # the broadcast feature in the elementwise layer is hardcoded to 4D or less
+    # The issue is tracked by rdar://74997492 (Espresso element wise layer should support 5D tensor broadcast)
+    if mode in {"add", "multiply", "subtract"} and op.x.rank < 5 and op.y.rank < 5:
         shape_x = _np.array([1] * (5 - op.x.rank) + list(op.x.shape))
         shape_y = _np.array([1] * (5 - op.y.rank) + list(op.y.shape))
 
@@ -812,7 +800,7 @@ def cast(const_context, builder, op):
             input_names=[op.name + i for i in ["_cond", "_floor", "_ceil"]],
             output_name=op.outputs[0].name,
         )
-    elif op.dtype.val in ["fp32", "fp64"]:
+    elif op.dtype.val in ["fp16", "fp32", "fp64"]:
         builder.add_activation(
             name=op.name,
             non_linearity="LINEAR",
@@ -830,7 +818,7 @@ def cast(const_context, builder, op):
     else:
         raise NotImplementedError(
             "Parameter dtype of the cast operation can be one of the {}. "
-            "Provided {}".format(["int32", "int64", "fp32", "fp64"], op.dtype.val)
+            "Provided {}".format(["int32", "int64", "fp16", "fp32", "fp64"], op.dtype.val)
         )
 
 
@@ -859,6 +847,43 @@ def cos(const_context, builder, op):
 @register_mil_to_nn_mapping
 def cosh(const_context, builder, op):
     _add_elementwise_unary(const_context, builder, op, "cosh")
+
+@register_mil_to_nn_mapping
+def einsum(const_context, builder, op):
+    '''
+    MIL einsum is either
+    - (B,C,H,W1) * (B,W1,H,W2) = (B,C,H,W2)
+    or
+    - (C,H,W1) * (W1,H,W2) = (C,H,W2)
+
+    Hence to support it, first transpose the 2 inputs, so that the matrices
+    to be multiplied are on the last 2 axes,
+    then call bmm, and finally transpose the result again
+    '''
+    rank = op.values[0].rank
+    perm = [0, 2, 1, 3] if rank == 4 else [1, 0, 2]
+    input_names = make_input(const_context, builder, op.values)
+
+    builder.add_transpose(name=op.name + "_transpose_x",
+                          axes=perm,
+                          input_name=input_names[0],
+                          output_name=input_names[0] + "_transposed"
+    )
+    builder.add_transpose(name=op.name + "_transpose_y",
+                          axes=perm,
+                          input_name=input_names[1],
+                          output_name=input_names[1] + "_transposed"
+    )
+    builder.add_batched_mat_mul(
+        name=op.name + "_batch_matmul",
+        input_names=[input_names[0] + "_transposed", input_names[1] + "_transposed"],
+        output_name=op.outputs[0].name + "_pre_transpose"
+    )
+    builder.add_transpose(name=op.name,
+                          axes=perm,
+                          input_name=op.outputs[0].name + "_pre_transpose",
+                          output_name=op.outputs[0].name
+    )
 
 
 @register_mil_to_nn_mapping
@@ -1005,6 +1030,52 @@ def slice_by_index(const_context, builder, op):
     squeeze_mask = [False] * rank if op.squeeze_mask is None else op.squeeze_mask.val
 
     if op.begin.val is not None and op.end.val is not None:
+
+        # If only one dimension is sliced, we should use the slice layer instead of static_slice or dynamic_slice
+        # In general, slice has a better performance.
+        begin = op.begin.val
+        end = op.end.val
+        slice_dim = []
+
+        for i in range(rank):
+            if (not begin_mask[i] and begin[i] != 0) or \
+               (not end_mask[i] and end[i] != op.x.shape[i]):
+               slice_dim.append(i)
+
+
+        if len(slice_dim) == 1 and not squeeze_mask[slice_dim[0]]:
+            dim = slice_dim[0] - rank
+            if dim in [-3, -2, -1]:
+                # get the axis, only channel, width, and depth dimension are supported
+                axis = None
+                if dim == -1:
+                    axis = "width"
+                elif dim == -2:
+                    axis = "height"
+                elif dim == -3:
+                    axis = "channel"
+
+                start_index = 0 if begin_mask[dim] else begin[dim]
+                end_index = op.x.shape[dim] if end_mask[dim] else end[dim]
+                shape = op.x.shape
+
+                if not is_symbolic(shape[dim]):
+                    if start_index < 0:
+                        start_index += shape[dim]
+
+                if not is_symbolic(end_index) and start_index >= 0 and stride[dim] >= 1:
+                    builder.add_slice(
+                        name=op.name,
+                        input_name=make_input(const_context, builder, op.x),
+                        output_name=op.outputs[0].name,
+                        axis=axis,
+                        start_index=start_index,
+                        end_index=end_index,
+                        stride=stride[dim],
+                    )
+                    return
+
+        # use add_slice_static
         builder.add_slice_static(
             name=op.name,
             input_name=make_input(const_context, builder, op.x),
@@ -1275,7 +1346,8 @@ def gru(const_context, builder, op):
     # Shape: [b, H]
     initial_h = op.initial_h.name
 
-    w = op.weight.val
+    weight_ih = op.weight_ih.val
+    weight_hh = op.weight_hh.val
     b = op.bias.val if op.bias is not None else None
     direction = op.direction.val
     output_sequence = op.output_sequence.val
@@ -1292,22 +1364,23 @@ def gru(const_context, builder, op):
         )
 
     # Expand initial_h
-    _expand_dim(builder, initial_h + "_expanded", initial_h, [2, 3, 4])
+    _expand_dim(builder, initial_h + "_expanded", initial_h, [0, 3, 4])
     initial_h += "_expanded"
 
-    # Get weights here
-    # weight format: [I+H, 3*H]
-    # Split into Input and hidden weights
-    # w_x: [I*H, I*H, I*H]
+    def roz_to_zro(x):
+        if x is None:
+            return None
+        r, o, z = _split(x, sections=3, axis=0)
+        return [z, r, o]
+
+    # w_x: [H*I, H*I, H*I]
     # w_h: [H*H, H*H, H*H]
     # where, format is [Z, R, O]
     # Z: Update gate, R: Reset gate, O: Output gate
-    w_x, w_h = _split_weights(w, sections=3)
-    # bias format: [2, 3*H]
-    # bias[0]: Input-Hidden bias
-    # bias[1]: Hidden-Hidden bias
-    # Combine bias into one and split into ifoz layout
-    b = _split_bias(b, sections=3)
+    w_x = roz_to_zro(weight_ih)
+    w_h = roz_to_zro(weight_hh)
+    # bias format: [3*H]
+    b = roz_to_zro(b)
 
     input_size = w_x[0].shape[1]
     hidden_size = w_x[0].shape[0]
@@ -1460,7 +1533,8 @@ def lstm(const_context, builder, op):
     initial_h = op.initial_h.name
     initial_c = op.initial_c.name
 
-    w = op.weight.val
+    wt_ih = op.weight_ih.val
+    wt_hh = op.weight_hh.val
     b = op.bias.val if op.bias is not None else None
     direction = op.direction.val
     output_sequence = op.output_sequence.val
@@ -1482,22 +1556,19 @@ def lstm(const_context, builder, op):
         _expand_dim(builder, initial_c + "_expanded2", initial_c, [0, 3, 4])
         initial_c += "_expanded2"
 
-        # Get weights here
-        # weight format: [I+H, 4*H]
-        # Split into Input and hidden weights
-        # w_x: [I*H, I*H, I*H, I*H]
+        # w_x: [H*I, H*I, H*I, H*I]
         # w_h: [H*H, H*H, H*H, H*H]
-        w_x, w_h = _split_weights(w, sections=4)  # ifoz layout
-        # bias format: [2, 4*H]
-        # bias[0]: Input-Hidden bias
-        # bias[1]: Hidden-Hidden bias
-        b = _split_bias(b, sections=4)  # ifoz layout
+        # where format is, [input gate, forget gate, output gate, cell gate]
+        w_x = _split(wt_ih, sections=4)
+        w_h = _split(wt_hh, sections=4)
+        # bias format: [4*H]
+        b = _split(b, sections=4)  # ifoz layout
         # peephole format: [3*H]
         # where format is, [input gate, forget gate, output gate]
-        peephole = _split(peephole, sections=3, axis=0)
+        peephole = _split(peephole, sections=3)
 
         input_size = w_x[0].shape[1]
-        hidden_size = w_x[0].shape[0]
+        hidden_size = w_h[0].shape[1]
 
         # 3 outputs
         # Y  : [s/1, b, h, 1, 1]
@@ -1565,31 +1636,36 @@ def lstm(const_context, builder, op):
             axis=2,
         )
 
+        wt_ih_back = op.weight_ih_back.val
+        wt_hh_back = op.weight_hh_back.val
         # Get weights here
         # weight format: [I+H, 2*4*H] -> [I+H, 4*H (forward):4*H (backward)]
-        hidden_size = w.shape[-1] // 8
-        input_size = w.shape[0] - hidden_size
-        forward_wts_index = 4 * hidden_size
-        # f_w_x and r_w_x: [I*H, I*H, I*H, I*H]
-        # f_w_h and r_w_h: [H*H, H*H, H*H, H*H]
-        # where format is, [input gate, forget gate, cell gate, output gate]
-        f_w_x, f_w_h = _split_weights(w[:, :forward_wts_index], sections=4)
-        r_w_x, r_w_h = _split_weights(w[:, forward_wts_index:], sections=4)
+        hidden_size = wt_hh.shape[1]
+        input_size = wt_ih.shape[1]
 
-        # bias format: [2, 2*4*H]
-        # bias[0]: Input-Hidden bias
-        # bias[1]: Hidden-Hidden bias
+        # f_w_x and r_w_x: [H*I, H*I, H*I, H*I]
+        # f_w_h and r_w_h: [H*H, H*H, H*H, H*H]
+        # where format is, [input gate, forget gate, output gate, cell gate]
+        w_x = _split(wt_ih, sections=4)
+        w_h = _split(wt_hh, sections=4)
+        r_w_x = _split(wt_ih_back, sections=4)
+        r_w_h = _split(wt_hh_back, sections=4)
+
+        # f_b and r_b format: [4*H]
+        b_back = op.bias_back.val if op.bias_back is not None else None
         f_b, r_b = None, None
         if b is not None:
-            f_b = _split_bias(b[:, :forward_wts_index], sections=4)
-            r_b = _split_bias(b[:, forward_wts_index:], sections=4)
+            f_b = _split(b, sections=4)
+        if b_back is not None:
+            r_b = _split(b_back, sections=4)
 
         # peephole format: [2*3*H] -> [3*H (forward) : 3*H (backward)]
-        if peephole is None:
-            f_peephole, r_peephole = None, None
-        else:
-            f_peephole = _split(peephole[: 3 * hidden_size], sections=3, axis=0)
-            r_peephole = _split(peephole[3 * hidden_size :], sections=3, axis=0)
+        peephole_back = op.peephole_back.val if op.peephole_back is not None else None
+        f_peephole, r_peephole = None, None
+        if peephole is not None:
+            f_peephole = _split(peephole, sections=3)
+        if peephole_back is not None:
+            r_peephole = _split(peephole_back, sections=3)
 
         output_names = [
             op.outputs[0].name + "_5d",  # Output Y           [s/1, b, 2*h, 1, 1]
@@ -1603,8 +1679,8 @@ def lstm(const_context, builder, op):
 
         builder.add_bidirlstm(
             name=op.name,
-            W_h=f_w_h,
-            W_x=f_w_x,
+            W_h=w_h,
+            W_x=w_x,
             b=f_b,
             W_h_back=r_w_h,
             W_x_back=r_w_x,
@@ -1815,7 +1891,8 @@ def rnn(const_context, builder, op):
     input_name = make_input(const_context, builder, op.x)  # [b, s, I]
     initial_h = make_input(const_context, builder, op.initial_h)  # [b, H]
 
-    w = op.weight.val
+    w_ih = op.weight_ih.val
+    w_hh = op.weight_hh.val
     b = op.bias.val if op.bias is not None else None
     direction = op.direction.val
     output_sequence = op.output_sequence.val
@@ -1836,20 +1913,10 @@ def rnn(const_context, builder, op):
     _expand_dim(builder, initial_h + "_expanded", initial_h, [2, 3, 4])
     initial_h += "_expanded"
 
-    # Get weights here
-    # weight format: [I+H, H]
-    # Split into Input and hidden weights
     # w_x: (H, I)
     # w_h: (H, H)
-    w = w.transpose()
-    hidden_size = w.shape[0]
-    input_size = w.shape[-1] - hidden_size
-    w_x, w_h = w[:, :input_size], w[:, input_size:]
-    # bias format: [2, H]
-    # bias[0]: Input-Hidden bias
-    # bias[1]: Hidden-Hidden bias
-    if b is not None:
-        b = b[0] + b[1]
+    hidden_size = w_hh.shape[0]
+    input_size = w_ih.shape[-1]
 
     # 3 outputs
     # Y  : [s/1, b, h, 1, 1]
@@ -1857,8 +1924,8 @@ def rnn(const_context, builder, op):
     output_names = [_output.name + "_5d" for _output in op.outputs]
     builder.add_simple_rnn(
         name=op.name,
-        W_h=w_h,
-        W_x=w_x,
+        W_h=w_hh,
+        W_x=w_ih,
         b=b,
         hidden_size=hidden_size,
         input_size=input_size,
@@ -1992,7 +2059,9 @@ def scatter_along_axis(const_context, builder, op):
 def gather_nd(const_context, builder, op):
     builder.add_gather_nd(
         name=op.name,
-        input_names=[op.x.name, op.indices.name],
+        input_names=make_input(
+            const_context, builder, [op.x, op.indices]
+        ),
         output_name=op.outputs[0].name,
     )
 
@@ -2001,7 +2070,9 @@ def gather_nd(const_context, builder, op):
 def scatter_nd(const_context, builder, op):
     builder.add_scatter_nd(
         name=op.name,
-        input_names=[op.data.name, op.indices.name, op.updates.name],
+        input_names=make_input(
+            const_context, builder, [op.data, op.indices, op.updates],
+        ),
         output_name=op.outputs[0].name,
         mode=op.mode.val.upper(),
     )
@@ -2303,7 +2374,7 @@ def instance_norm(const_context, builder, op):
     if op.x.rank == 3:
         x_name = op.name + "_expanded"
         builder.add_expand_dims(
-            name=x_name, input_name=op.x.name, output_name=x_name, axes=[-1],
+            name=x_name, input_name=op.x.name, output_name=x_name, axes=[-2],
         )
         out_name += "_instance_norm"
 
@@ -2319,14 +2390,14 @@ def instance_norm(const_context, builder, op):
         epsilon=op.epsilon.val,
     )
 
-    # Squeeze added `Width` dimension for 1d case
+    # Squeeze added `Height` dimension for 1d case
     if op.x.rank == 3:
         x_name = op.name + "_squeeze"
         builder.add_squeeze(
             name=x_name,
             input_name=out_name,
             output_name=op.outputs[0].name,
-            axes=[-1],
+            axes=[-2],
         )
 
 
@@ -2515,24 +2586,27 @@ def conv_transpose(const_context, builder, op):
         x_name = op.name + "_expand_dim"
         out_name = op.name + "_expanded"
         builder.add_expand_dims(
-            name=x_name, input_name=op.x.name, output_name=x_name, axes=[3]
+            name=x_name, input_name=op.x.name, output_name=x_name, axes=[-2]
         )
 
     # Input names to be used
     input_names = [x_name]
 
-    # Kernel shape: [C_out, C_in, D, H, W]
+    # Kernel shape: [C_in, C_out, D, H, W]
     weight = op.weight.val
-    kernel_channels = weight.shape[1]
-    output_channels = weight.shape[0] * op.groups.val
+    kernel_channels = weight.shape[0]
+    output_channels = weight.shape[1] * op.groups.val
 
     if is_conv_transpose_1d:
-        weight = _np.expand_dims(weight, 3)
+        weight = _np.expand_dims(weight, -2)
 
-    # DeConvolution3D expects weights to have shape (C_out / groups, C_in, spatial_dims)
-    # DeConvolution2D/1D expects (spatial_dims, C_out/groups, C_in)
-    if not is_conv_transpose_3d:
-        weight = _np.transpose(weight, [2, 3, 1, 0])
+    # pyMIL Deconvolution format: [C_in, C_out / groups, spatial_dims]
+    # NN DeConvolution3D expects weights to have shape (C_out / groups, C_in, spatial_dims)
+    # NN DeConvolution2D/1D expects (spatial_dims, C_in, C_out/groups)
+    if is_conv_transpose_3d:
+        weight = _np.transpose(weight, [1, 0, 2, 3, 4])
+    else:
+        weight = _np.transpose(weight, [2, 3, 0, 1])
 
     # Adjust for Deconv1D case
     # CoreML maps Deconv1D into Deconv2D
@@ -2544,10 +2618,10 @@ def conv_transpose(const_context, builder, op):
 
     output_spatial_dims = list(op.outputs[0].shape[2:])
     if is_conv_transpose_1d:
-        dilations = dilations + [1]
-        strides = strides + [1]
+        dilations = dilations[:-1] + [1] + dilations[-1:]
+        strides = strides[:-1] + [1] + strides[-1:]
         # Must be at least 2D
-        output_spatial_dims += [1]
+        output_spatial_dims = output_spatial_dims[:-1] + [1] + output_spatial_dims[-1:]
 
     if any_symbolic(output_spatial_dims):
         output_spatial_dims = None
@@ -2556,13 +2630,18 @@ def conv_transpose(const_context, builder, op):
     padding_mode = op.pad_type.val
     pad = {}
     if padding_mode == "custom" or op.pad is not None:
-        if not is_conv_transpose_3d:
+        if is_conv_transpose_1d:
+            padding_mode = "valid"
+            pad["padding_top"] = 0
+            pad["padding_bottom"] = 0
+            pad["padding_left"] = op.pad.val[0]  # Left
+            pad["padding_right"] = op.pad.val[1]  # Right
+        elif is_conv_transpose_2d:
             padding_mode = "valid"
             pad["padding_top"] = op.pad.val[0]  # Top
             pad["padding_bottom"] = op.pad.val[1]  # Bottom
-            if not is_conv_transpose_1d:
-                pad["padding_left"] = op.pad.val[2]  # Left
-                pad["padding_right"] = op.pad.val[3]  # Right
+            pad["padding_left"] = op.pad.val[2]  # Left
+            pad["padding_right"] = op.pad.val[3]  # Right
         else:
             pad["padding_front"] = op.pad.val[0]  # Front
             pad["padding_back"] = op.pad.val[1]  # Back
@@ -2621,13 +2700,13 @@ def conv_transpose(const_context, builder, op):
             **pad
         )
 
-        # Squeeze added `Width` dimension for 1d case
+        # Squeeze added `Height` dimension for 1d case
         if is_conv_transpose_1d:
             builder.add_squeeze(
                 name=op.name,
                 input_name=out_name,
                 output_name=op.outputs[0].name,
-                axes=[3],
+                axes=[-2],
             )
 
 
@@ -2710,13 +2789,13 @@ def upsample_nearest_neighbor(const_context, builder, op):
         scale_factor_h = int(scale_factor_h)
     else:
         raise NotImplementedError(
-            f"Unsupported float type 'scale_factor_height' ({scale_factor_h}) for nn_proto."
+            "Unsupported float type 'scale_factor_height' ({scale_factor_h}) for neuralnetwork."
         )
     if _np.abs(_np.round(scale_factor_w) - scale_factor_w) < 1e-4 and scale_factor_w >= 1 - 1e-4:
         scale_factor_w = int(scale_factor_w)
     else:
         raise NotImplementedError(
-            f"Unsupported float type 'scale_factor_width' ({scale_factor_w}) for nn_proto."
+            "Unsupported float type 'scale_factor_width' ({scale_factor_w}) for neuralnetwork."
         )
 
     builder.add_upsample(
@@ -2753,7 +2832,7 @@ def resize_bilinear(const_context, builder, op):
 
     if op.sampling_mode.val not in grid_sampling_mode_map:
         raise NotImplementedError(
-            f"Unsupported 'sampling_mode' ('{op.sampling_mode.val}') in nn_proto backend"
+            "Unsupported 'sampling_mode' ('{op.sampling_mode.val}') in neuralnetwork backend"
         )
 
     builder.add_resize_bilinear(
@@ -3024,7 +3103,9 @@ def crop_resize(const_context, builder, op):
 
     if op.sampling_mode.val not in grid_sampling_mode_map:
         raise NotImplementedError(
-            f"Unsupported 'sampling_mode' ('{op.sampling_mode.val}') in nn_proto backend"
+            "Unsupported 'sampling_mode' ('{}') in neuralnetwork backend".format(
+                op.sampling_mode.val
+            )
         )
 
     mode = grid_sampling_mode_map[op.sampling_mode.val]

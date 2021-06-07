@@ -5095,8 +5095,10 @@ int testInvalidConcatNdWrongAxis() {
     nn->set_arrayinputshapemapping(Specification::NeuralNetworkMultiArrayShapeMapping::EXACT_ARRAY_MAPPING);
 
     auto *layers = nn->add_layers();
-    layers->add_input("input");
+    layers->add_input("input1");
+    layers->add_input("input2");
     layers->add_output("output");
+    layers->add_inputtensor()->set_rank(3);
     layers->add_inputtensor()->set_rank(3);
 
     auto *params = layers->mutable_concatnd();
@@ -5368,7 +5370,8 @@ int testInvalidSplitNdNoSplitSizesAndNumSplits() {
 
     auto *layers = nn->add_layers();
     layers->add_input("input");
-    layers->add_output("output");
+    layers->add_output("output1");
+    layers->add_output("output2");
     layers->add_inputtensor()->set_rank(3);
 
     // missing required parameters
@@ -5405,7 +5408,8 @@ int testInvalidSplitNdWrongNumSplits() {
 
     auto *layers = nn->add_layers();
     layers->add_input("input");
-    layers->add_output("output");
+    layers->add_output("output1");
+    layers->add_output("output2");
     layers->add_inputtensor()->set_rank(3);
 
     // missing required parameters
@@ -5443,7 +5447,8 @@ int testInvalidSplitNdWrongAxis() {
 
     auto *layers = nn->add_layers();
     layers->add_input("input");
-    layers->add_output("output");
+    layers->add_output("output1");
+    layers->add_output("output2");
     layers->add_inputtensor()->set_rank(3);
 
     auto *params = layers->mutable_splitnd();

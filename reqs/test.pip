@@ -8,6 +8,7 @@ libsvm; python_version >= "3.6"
 olefile==0.44
 onnx==1.6.0; python_version <= "3.7"
 pandas
+parameterized==0.8.1
 pillow
 pytest; python_version < '3.7'
 pytest==5.3.4; python_version >= '3.7'
@@ -19,8 +20,10 @@ scipy > 1.4
 six
 sympy > 1.6
 tensorflow==1.14.0; python_version < '3.8'
-torch==1.7.1
-torchvision==0.8.2
+torch==1.5.0; python_version == '3.5'
+torch==1.7.1; python_version > '3.5'
+torchvision==0.6.1; python_version == '3.5'
+torchvision==0.8.2; python_version > '3.5'
 xgboost
 mock
 wrapt

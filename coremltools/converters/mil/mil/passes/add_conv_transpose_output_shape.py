@@ -26,7 +26,7 @@ def add_conv_transpose_output_shape(prog):
       %2: (3, i32) = const(val=[1,5,39])
       %3: (1, 5, 39, fp32) = conv_transpose(..., output_shape=%2)
     """
-    for f_name, f in prog.functions.items():
+    for f in prog.functions.values():
         handle_block(f)
 
 def match_pattern(op):
