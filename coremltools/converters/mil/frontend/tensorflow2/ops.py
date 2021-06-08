@@ -10,6 +10,8 @@ from coremltools.converters.mil.frontend.tensorflow.ops import (
     _transpose_NCHW_to_NHWC,
 )
 
+from coremltools.converters.mil.mil.types.symbolic import any_symbolic
+
 # TF 2.x now imports and registers all TF 1.x op against the new registry
 # (separated from TF 1.x registry). Overwrite might needed in case the op
 # semantics are different between TF 1.x and TF 2.x.<
@@ -17,8 +19,38 @@ from coremltools.converters.mil.frontend.tensorflow.ops import *
 from coremltools.converters.mil.frontend.tensorflow.dialect_ops import *
 
 
-@register_tf_op(override=True)
+@register_tf_op(override=True, tf_alias=["FusedBatchNorm"])
 def FusedBatchNormV3(context, node):
+
+    # helper function that add the batch norm layer
+    def _add_batch_norm(x, mean, variance, scale, offset, epsilon, name):
+
+        if mean.shape[0] != 0 and variance.shape[0] != 0:
+            # In this case, we can use the mb.batch_norm directly
+            x = mb.batch_norm(
+                x=x, mean=mean, variance=variance, gamma=scale, beta=offset, epsilon=epsilon, name=name
+            )
+        else:
+            # In this case, we need to manually compute the batch_norm
+            axes = [axis for axis in range(x.rank) if axis != 1]
+            mean = mb.reduce_mean(x=x, axes=axes, keep_dims=True)
+            num = mb.sub(x=x, y=mean)
+            square = mb.mul(x=num, y=num)
+            variance = mb.reduce_mean(x=square, axes=axes, keep_dims=True)
+            variance_add_epsilon = mb.add(x=variance, y=epsilon)
+            sqrt = mb.sqrt(x=variance_add_epsilon)
+            x = mb.real_div(x=num, y=sqrt)
+
+            shape = [1] * x.rank
+            shape[1] = -1 if any_symbolic(scale.shape) else scale.shape[0]
+            scale_reshape = mb.reshape(x=scale, shape=shape)
+            offset_reshape = mb.reshape(x=offset, shape=shape)
+
+            x = mb.mul(x=x, y=scale_reshape)
+            x = mb.add(x=x, y=offset_reshape, name=name)
+
+        return x
+
     # Get attributes
     data_format = node.attr.get("data_format", "NHWC")
     epsilon = node.attr.get("epsilon", None)
@@ -29,23 +61,17 @@ def FusedBatchNormV3(context, node):
     offset = context[node.inputs[2]]
     mean = context[node.inputs[3]]
     variance = context[node.inputs[4]]
+
+    batch_norm_name = node.name + "_nchw" if data_format == "NHWC" else node.name
+
     if data_format == "NHWC":
-        # TF's FusedBatchNorm is only for 4D inputs
         x = _transpose_NHWC_to_NCHW(x)
-        x = mb.batch_norm(
-            x=x, mean=mean, variance=variance, gamma=scale, beta=offset, epsilon=epsilon
-        )
+
+    x = _add_batch_norm(x, mean, variance, scale, offset, epsilon, batch_norm_name)
+
+    if data_format == "NHWC":
         x = _transpose_NCHW_to_NHWC(x, node.name)
-    else:
-        x = mb.batch_norm(
-            x=x,
-            mean=mean,
-            variance=variance,
-            gamma=scale,
-            beta=offset,
-            epsilon=epsilon,
-            name=node.name,
-        )
+
     # Inference only batch norm does not have meaningful outputs for
     # batch_mean, batch_variance etc.
     context.add(node.name, x)

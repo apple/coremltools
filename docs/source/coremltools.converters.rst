@@ -5,7 +5,6 @@ Converters
    :maxdepth: 1
 
    coremltools.converters.mil
-   coremltools.converters.caffe
    coremltools.converters.keras
    coremltools.converters.libsvm
    coremltools.converters.onnx

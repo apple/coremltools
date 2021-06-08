@@ -453,11 +453,11 @@ py::object Utils::convertArrayValueToPython(MLMultiArray *value) {
     
     switch (type) {
         case MLMultiArrayDataTypeInt32:
-            return py::array(shape, strides, static_cast<int32_t*>(value.dataPointer));
+            return py::array(shape, strides, static_cast<const int32_t*>(value.dataPointer));
         case MLMultiArrayDataTypeFloat32:
-            return py::array(shape, strides, static_cast<float*>(value.dataPointer));
+            return py::array(shape, strides, static_cast<const float*>(value.dataPointer));
         case MLMultiArrayDataTypeDouble:
-            return py::array(shape, strides, static_cast<double*>(value.dataPointer));
+            return py::array(shape, strides, static_cast<const double*>(value.dataPointer));
         default:
             assert(false);
             return py::object();

@@ -1645,11 +1645,9 @@ class TestTorchOps:
         expected_result = torch.tanh(test_input)
         assert np.allclose(expected_result.numpy(), ssa.val)
 
-    # TODO: test for @keepdim==True when the backend bug is fixed.
-    # rdar://62566799
     @pytest.mark.parametrize(
         "input_shape, dim, keepdim",
-        itertools.product([(3, 20, 20), (1, 50, 50)], [0, 1, 2], [False]),
+        itertools.product([(3, 20, 20), (1, 50, 50)], [0, 1, 2], [True, False]),
     )
     def test_argmax(self, context, input_shape, dim, keepdim):
         test_input = torch.rand(*input_shape)
@@ -1685,8 +1683,6 @@ class TestTorchOps:
         expected_result = torch.zeros(size, dtype=ops.NUM_TO_TORCH_DTYPE[dtype])
         np.testing.assert_allclose(expected_result, ssa.val)
 
-    # TODO: Reduce rtol
-    # rdar://62868763 (Numerical discrepancy between torch.exp and coreml MIL exp operation)
     @pytest.mark.parametrize("input_size", [(1, 2, 3, 4), (1,)])
     def test_exp(self, context, input_size):
         test_input = torch.rand(input_size)

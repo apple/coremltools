@@ -142,6 +142,10 @@ class TestRandomCategorical:
             backend=backend,
         )
 
+
+    @pytest.mark.xfail(
+        reason="rdar://78080118 re-enable test once rdar://78079222 (one-hot) is resolved.",
+    )
     @pytest.mark.parametrize(
         "use_cpu_only, backend, n_sample, n_class",
         itertools.product([True, False], backends, [50000], [2, 10, 20]),

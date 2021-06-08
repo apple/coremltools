@@ -46,13 +46,13 @@ class band_part(Operation):
         * Number of upper / above sub-diagonals to keep. If negative, keep entire
           lower triangle.
         * Defaults to ``-1`` (keep the entire upper triangle).
-    
+
     Returns
     -------
     tensor<\*?, T>
         * Same type and shape as the input tensor.
     """
-    
+
     input_spec = InputSpec(
         x=TensorInputType(),
         lower=IntInputType(const=True, optional=True),
@@ -204,15 +204,15 @@ class non_maximum_suppression(Operation):
     """
     Applies non-maximum suppression (NMS) on the input box coordinates according
     to their intersection-over-union (IoU).
-    
+
     NMS selects a subset of bounding boxes in descending order of score, and removes
     boxes that have high intersection-over-union (IOU) overlap with previously-selected
     boxes.
-    
-    
+
+
     Parameters
     ----------
-    
+
     boxes: tensor<[n, B, 4], T> (Required)
         * Box coordinates on which to perform NMS.
     scores: tensor<[n, B, K], T> (Required)
@@ -229,7 +229,7 @@ class non_maximum_suppression(Operation):
     per_class_suppression: const<bool> (Optional)
         * Default to ``False``.
         * If ``True``, suppression is performed independently within boxes of each class.
-    
+
     Returns
     -------
     tensor<[n, max_boxes, 4], T>
@@ -292,7 +292,7 @@ class non_zero(Operation):
         * 2-dimensional tensor contains indices of elements that are non-zero.
           Each row is the index for a non-zero value.
         * ``N`` is the number of non-zero elements, ``R`` is the rank of the input.
-    
+
     Attributes
     ----------
     T: fp32, int32
@@ -305,7 +305,7 @@ class non_zero(Operation):
 
     def type_inference(self):
         shape = tuple([get_new_symbol(), self.x.rank])
-        return types.tensor(types.int, shape)
+        return types.tensor(types.int32, shape)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -401,11 +401,11 @@ class one_hot(Operation):
 class pad(Operation):
     """
     Pad a tensor.
-    
+
     Parameters
     ----------
     x: tensor<[\*D_in],T>  (Required)
-    
+
     pad: tensor<[2\*N],i32> (Required)
         * ``N <= D_in``: Last ``N`` dimensions of ``x`` are padded as follows: For
           each dimension ``i`` of ``x`` if ``i >= D_in - N``:
@@ -415,21 +415,21 @@ class pad(Operation):
         most ``D[i]-1``.
         * If mode is "replicate" then ``pad[2*i]`` and ``pad[2*i+1]`` can be
         at most ``D[i]``.
-    
+
     mode: const<str> (Optional)
         * Default to ``constant``.
         * Must be one of the following values:
           ``constant``, ``reflect``, or ``replicate``.
-    
+
     constant_val: const<T> (Optional)
         * Default to ``0``.
         * Constant value to pad. Ignored if ``mode != constant``.
-    
+
     Returns
     -------
     tensor<[\*D_out],T>
         * Tensor with same type as the input.
-    
+
     Attributes
     ----------
     T: fp32
@@ -604,16 +604,13 @@ class tile(Operation):
             out_shape = tuple([get_new_symbol() for _ in range(self.x.rank)])
             return types.tensor(x_type, out_shape)
 
-        if len(reps) == 0 or len(reps) > self.x.rank:
+        if len(reps) == 0 or len(reps) != self.x.rank:
             msg = (
                 "Length of the reps ({}) must be at least 1, and "
-                "not greater than the rank of the input x ({})"
+                "equal to the rank of the input x ({})"
             )
             raise ValueError(msg.format(len(reps), self.x.rank))
 
-
-        if len(reps) < self.x.rank:
-            reps = [1] * (self.x.rank - len(reps)) + list(reps)
 
         out_shape = []
         for i, rep in enumerate(reps):
@@ -654,7 +651,7 @@ class argsort(Operation):
     * ascending: const<bool> (Optional)
         * Default to ``False``, sort in descending order. ``True`` to sort in
           ascending order.
-    
+
     Returns
     -------
     tensor<\*?, int32>
@@ -709,7 +706,7 @@ class topk(Operation):
     * ascending: const<bool> (Optional)
         * Default to ``False``, sort in descending order. ``True`` to sort in
           ascending order.
-    
+
     Returns
     -------
     tensor<\*?, T>
@@ -721,7 +718,7 @@ class topk(Operation):
     ----------
     T: fp32, int32
     """
-    
+
     input_spec = InputSpec(
         x=TensorInputType(),
         k=IntInputType(const=True, optional=True),
@@ -770,7 +767,7 @@ class flatten2d(Operation):
     """
     Flattens input tensor into 2d tensor by flattening dimensions before and
     after the provided axis.
-    
+
     Parameters
     ----------
     x: tensor<[*d], T> (Required)
@@ -1035,41 +1032,41 @@ class concat(Operation):
 class split(Operation):
     """
     Split tensors into a tuple
-    
+
     Parameters
     ----------
     x: <\*?,T>  (Required)
         * The tensor to split.
         * The tensors may be variadic, but the number of tensors must be determined
           at compile time (i.e. a tuple).
-    
+
     num_splits: <i32> (Optional)
         If specified, divide ``x`` into ``num_splits`` tensors along ``axis``.
         Its behavior depends on ``split_sizes``:
-        
+
             * If ``split_sizes`` is defined, ``num_splits == S``, and the output
               sizes may be uneven.
             * If ``split_sizes`` is not defined, ``value.shape[axis]`` must be
               divisible by ``num_splits``, and the output sizes must be even.
-        
+
         At least one of ``num_splits`` or ``split_sizes`` must be provided.
         If ``split_sizes`` length ``S`` cannot be determined at compile time,
         ``num_splits`` must be supplied to determine the number of outputs.
-    
+
     split_sizes: const<S,i32> (Optional)
         * Sizes to split to. The sum of ``split_sizes`` must equal to
           ``value.shape[axis]``.
-    
+
     axis: const<i32> (Required)
         * The dimension along which to concatenate. Must be in the
           range ``[-rank(x), rank(x))``.
-    
+
     Returns
     -------
     Tuple[tensor<\*?,T>]
         * Where the length of the tuple is the number of splits (determined
           from ``num_splits`` or ``split_sizes``).
-    
+
     Attributes
     ----------
     T: fp32
@@ -1176,7 +1173,7 @@ class stack(Operation):
     -------
     tenor<[d0, d1,...d_axis_out, ..., d_n],T>
         * Where ``d_axis_out = sum(d_axis_i)``.
-    
+
     Attributes
     ----------
     T: fp32

@@ -171,7 +171,7 @@ def noop_elimination(prog):
         ...
 
     """
-    for f_name, f in prog.functions.items():
+    for f in prog.functions.values():
         block_changed = True
         while block_changed:
             block_changed = noop_elimination_block(f)

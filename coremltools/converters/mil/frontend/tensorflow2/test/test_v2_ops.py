@@ -60,6 +60,7 @@ from coremltools.converters.mil.frontend.tensorflow.test.test_ops import (
     TestDebugging,
     TestDepthToSpace,
     TestDepthwiseConv,
+    TestEinsum,
     TestElementWiseBinary,
     TestElementWiseUnary,
     TestExpandDims,
@@ -101,7 +102,7 @@ from coremltools.converters.mil.frontend.tensorflow.test.test_ops import (
     TestSplit,
     TestSqueeze,
     TestStack,
-    TestTensorArray,
+    # TestTensorArray, // FIX and Renable this test: rdar://76293949 (TF2 unit test InvalidArgumentError)
     TestTile,
     TestTopK,
     TestTranspose,
@@ -115,10 +116,15 @@ del TestWhileLoop.test_nested_while_body  # tf.function() error in TF2
 
 class TestNormalizationTF2(TensorFlowBaseTest):
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, epsilon",
-        itertools.product([True, False], backends, [1e-1, 1e-10]),
+        "use_cpu_only, func, backend, epsilon",
+        itertools.product(
+            [True, False],
+            [tf.raw_ops.FusedBatchNorm, tf.raw_ops.FusedBatchNormV3],
+            backends,
+            [1e-1, 1e-10]
+        ),
     )
-    def test_fused_batch_norm_v3(self, use_cpu_only, backend, epsilon):
+    def test_fused_batch_norm(self, use_cpu_only, func, backend, epsilon):
         input_shape = np.random.randint(low=1, high=4, size=4)
         attr_shape = [list(input_shape)[-1]]
 
@@ -129,7 +135,7 @@ class TestNormalizationTF2(TensorFlowBaseTest):
 
         @make_tf_graph([input_shape])
         def build_model(x):
-            return tf.raw_ops.FusedBatchNormV3(
+            return func(
                 x=x,
                 scale=s,
                 offset=o,
@@ -312,7 +318,7 @@ class TestControlFlowFromAutoGraph(TensorFlowBaseTest):
             model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend
         )
 
-
+@pytest.mark.xfail(reason="rdar://76293949 (TF2 unit test InvalidArgumentError)", run=False)
 class TestTensorList(TensorFlowBaseTest):
     @pytest.mark.parametrize(
         "use_cpu_only, backend, size_dynamic_shape",

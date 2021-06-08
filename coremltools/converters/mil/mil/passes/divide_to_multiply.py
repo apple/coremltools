@@ -34,5 +34,5 @@ def divide_to_multiply(prog):
     """
     Convert divide into multiply if divisor is const.
     """
-    for f_name, f in prog.functions.items():
+    for f in prog.functions.values():
         divide_to_multiply_block(f)

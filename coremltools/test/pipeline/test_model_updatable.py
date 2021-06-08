@@ -2,13 +2,15 @@
 #
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
-import os, shutil
+import os
 import numpy as _np
 import coremltools.models.datatypes as datatypes
 import unittest
 import pytest
 import tempfile
-from coremltools.models.utils import save_spec
+import shutil
+
+from coremltools.models.utils import _macos_version, save_spec
 from coremltools.models import MLModel
 from coremltools.models.neural_network import (
     NeuralNetworkBuilder,
@@ -17,6 +19,7 @@ from coremltools.models.neural_network import (
     quantization_utils,
 )
 from coremltools.models.pipeline import PipelineRegressor, PipelineClassifier
+import coremltools
 
 
 class LayerSelector(quantization_utils.QuantizedLayerSelector):
@@ -614,9 +617,13 @@ class MLModelUpdatableTest(unittest.TestCase):
         save_spec(nn_builder.spec, model_path)
         mlmodel = MLModel(model_path)
 
-        quantized_model = quantization_utils.quantize_weights(mlmodel, 16, "linear")
+        quantized_result = quantization_utils.quantize_weights(mlmodel, 16, "linear")
 
-        q_nn_builder = NeuralNetworkBuilder(spec=quantized_model._spec)
+        if _macos_version() < (10, 14):
+            quantized_spec = quantized_result
+        else:
+            quantized_spec = quantized_result._spec
+        q_nn_builder = NeuralNetworkBuilder(spec=quantized_spec)
 
         # fails since an FP16 model cannot be marked updatable
         with self.assertRaises(ValueError):
@@ -646,9 +653,13 @@ class MLModelUpdatableTest(unittest.TestCase):
         mlmodel = MLModel(model_path)
 
         selector = LayerSelector(layer_name='ip2')
-        quantized_model = quantization_utils.quantize_weights(mlmodel, 16, "linear", selector=selector)
+        quantized_result = quantization_utils.quantize_weights(mlmodel, 16, "linear", selector=selector)
 
-        q_nn_builder = NeuralNetworkBuilder(spec=quantized_model._spec)
+        if _macos_version() < (10, 14):
+            quantized_spec = quantized_result
+        else:
+            quantized_spec = quantized_result._spec
+        q_nn_builder = NeuralNetworkBuilder(spec=quantized_spec)
 
         # fails since model has a layer with FP16 bias
         with self.assertRaises(ValueError):
@@ -796,3 +807,81 @@ class MLModelUpdatableTest(unittest.TestCase):
             builder.nn_spec.updateParams.shuffle.defaultValue,
             "Shuffle not turned on by default for updatable models",
         )
+
+    @pytest.mark.skipif(
+        coremltools.utils._python_version() >= (3, 8, 0),
+        reason="Keras isn't compatible with Python 3.8+.",
+    )
+    def test_make_updatable_with_unilstm(self):
+        from keras.models import Sequential
+        from keras.layers import Dense, LSTM
+        from coremltools.converters import keras as keras_converter
+        import numpy as np
+
+        input_dim = 5
+        num_hidden = 12
+        num_classes = 6
+        input_length = 3
+
+        model = Sequential()
+        model.add(
+            LSTM(
+                num_hidden,
+                input_dim=input_dim,
+                input_length=input_length,
+                return_sequences=False,
+            )
+        )
+        model.add(Dense(num_classes, activation="softmax"))
+        model.set_weights([np.random.rand(*w.shape) for w in model.get_weights()])
+
+        input_names = ["input"]
+        output_names = ["zzzz"]
+        class_labels = ["a", "b", "c", "d", "e", "f"]
+        predicted_feature_name = "pf"
+        coremlmodel = keras_converter.convert(
+            model,
+            input_names,
+            output_names,
+            class_labels=class_labels,
+            predicted_feature_name=predicted_feature_name,
+            predicted_probabilities_output=output_names[0],
+        )
+        spec = coremlmodel.get_spec()
+        builder = NeuralNetworkBuilder(spec=spec)
+        # we could be able to make "dense_1" updatable without any issue
+        builder.make_updatable([spec.neuralNetworkClassifier.layers[1].name])
+
+    @pytest.mark.skipif(
+        coremltools.utils._python_version() >= (3, 8, 0),
+        reason="Keras isn't compatible with Python 3.8+.",
+    )
+    def test_make_updatable_with_bilstm(self):
+        from keras.models import Sequential
+        from keras.layers import Dense, LSTM
+        from coremltools.converters import keras as keras_converter
+        from keras.layers.wrappers import Bidirectional
+        import numpy as np
+
+        num_classes = 6
+        model = Sequential()
+        model.add(Bidirectional(LSTM(32, input_shape=(10, 32)), input_shape=(10, 32)))
+        model.add(Dense(num_classes, activation="softmax"))
+        model.set_weights([np.random.rand(*w.shape) for w in model.get_weights()])
+
+        input_names = ["input"]
+        output_names = ["zzzz"]
+        class_labels = ["a", "b", "c", "d", "e", "f"]
+        predicted_feature_name = "pf"
+        coremlmodel = keras_converter.convert(
+            model,
+            input_names,
+            output_names,
+            class_labels=class_labels,
+            predicted_feature_name=predicted_feature_name,
+            predicted_probabilities_output=output_names[0],
+        )
+        spec = coremlmodel.get_spec()
+        builder = NeuralNetworkBuilder(spec=spec)
+        # we could be able to make "dense_1" updatable without any issue
+        builder.make_updatable([spec.neuralNetworkClassifier.layers[1].name])

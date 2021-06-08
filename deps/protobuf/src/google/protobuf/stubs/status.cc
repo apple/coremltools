@@ -30,6 +30,7 @@
 #include <google/protobuf/stubs/status.h>
 
 #include <ostream>
+#include <mutex>
 #include <stdio.h>
 #include <string>
 #include <utility>
@@ -82,9 +83,26 @@ inline string CodeEnumToString(error::Code code) {
 }
 }  // namespace error.
 
-const Status Status::OK = Status();
-const Status Status::CANCELLED = Status(error::CANCELLED, "");
-const Status Status::UNKNOWN = Status(error::UNKNOWN, "");
+const Status& Status::OK() {
+    static std::once_flag onceInitOK;
+    static Status singletonOK;
+    std::call_once(onceInitOK, [](){ singletonOK = Status(error::OK, ""); });
+    return singletonOK;
+}
+
+const Status& Status::CANCELLED() {
+    static std::once_flag onceInitCANCELLED;
+    static Status singletonCANCELLED;
+    std::call_once(onceInitCANCELLED, [](){ singletonCANCELLED = Status(error::CANCELLED, ""); });
+    return singletonCANCELLED;
+}
+
+const Status& Status::UNKNOWN() {
+    static std::once_flag onceInitUNKNOWN;
+    static Status singletonUNKNOWN;
+    std::call_once(onceInitUNKNOWN, [](){ singletonUNKNOWN = Status(error::UNKNOWN, ""); });
+    return singletonUNKNOWN;
+}
 
 Status::Status() : error_code_(error::OK) {
 }

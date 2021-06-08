@@ -10,13 +10,14 @@ cmake_install.cmake
 /deps/protobuf/cmake/coremltools.build/
 /mlmodel/coremltools.build/
 /build/
+/envs/
 /docs/_build/
 /docs/generated/
-/coremltools.egg-info/
+/*.egg-info/
 /dist/
 /envs/
 .DS_Store
-*.xcodeproj/
-mlmodel_test_runner
+.vscode/
+.cache/
 .idea/
 *.log

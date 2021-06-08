@@ -13,9 +13,10 @@ backends = testing_reqs.backends
 
 class TestLinear:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "use_cpu_only, backend, quantize_fp16",
+        itertools.product([True], backends, [True, False]),
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+    def test_builder_to_backend_smoke(self, use_cpu_only, backend, quantize_fp16):
         x_val = np.array([[-4.7182, 11.94], [-3.3939, 9.2166]], dtype=np.float32)
         weight_val = np.array([[1.2313, -0.095], [-1.4075, -0.8816]], dtype=np.float32)
         bias_val = np.array([1.0, 2.0], dtype=np.float32)
@@ -40,6 +41,7 @@ class TestLinear:
             expected_outputs,
             use_cpu_only=use_cpu_only,
             backend=backend,
+            quantize_fp16=quantize_fp16,
         )
 
     @ssa_fn
@@ -51,10 +53,10 @@ class TestLinear:
         assert is_close(np.matmul(x_val, weight_val.T) + bias_val, v.val)
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, rank",
-        itertools.product([True, False], backends, [2, 3, 5]),
+        "use_cpu_only, backend, rank, quantize_fp16",
+        itertools.product([True, False], backends, [2, 3, 5], [True, False]),
     )
-    def test_builder_to_backend_stress(self, use_cpu_only, backend, rank):
+    def test_builder_to_backend_stress(self, use_cpu_only, backend, rank, quantize_fp16):
         x_shape = np.random.randint(low=1, high=3, size=(rank,))
         x_val = np.random.rand(*x_shape)
         out_channels = 3
@@ -81,6 +83,7 @@ class TestLinear:
             expected_outputs=expected_outputs,
             use_cpu_only=use_cpu_only,
             backend=backend,
+            quantize_fp16=quantize_fp16,
         )
 
 
@@ -223,3 +226,98 @@ class TestMatMul:
             use_cpu_only=True,
             backend=backend,
         )
+
+
+class TestEinsum:
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend", itertools.product([True, False], backends,)
+    )
+    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+        equation = "abcd,adce->abce"
+
+        x_val = np.arange(12).astype(np.float32).reshape((2, 1, 3, 2))
+        y_val = np.arange(48).astype(np.float32).reshape((2, 2, 3, 4))
+        input_placeholder_dict = {
+            "x": mb.placeholder(shape=x_val.shape),
+            "y": mb.placeholder(shape=y_val.shape),
+        }
+        input_value_dict = {"x": x_val, "y": y_val}
+        out_shape = list(x_val.shape)
+        out_shape[-1] = y_val.shape[-1]
+        expected_output_type = tuple(out_shape) + (types.fp32,)
+
+        def build(x, y):
+            return mb.einsum(values=(x, y), equation=equation)
+
+        expected_output = np.einsum(equation, x_val, y_val)
+
+        run_compare_builder(
+            build,
+            input_placeholder_dict,
+            input_value_dict,
+            expected_output_type,
+            expected_output,
+            use_cpu_only=use_cpu_only,
+            backend=backend,
+        )
+
+    @pytest.mark.parametrize(
+        "use_cpu_only, rank, broadcast, backend",
+        itertools.product(
+            [True, False],
+            [3, 4],
+            [False, True],
+            backends,)
+    )
+    def test_builder_to_backend_stress(self, use_cpu_only, rank, broadcast, backend):
+        equation = "abcd,adce->abce" if rank == 4 else "vnm,mno->vno"
+        shape_x = np.random.randint(low=2, high=16, size=rank).astype(np.int32)
+        shape_y = np.random.randint(low=2, high=12, size=rank).astype(np.int32)
+        shape_y[-3] = shape_x[-1]
+        shape_y[-2] = 1 if broadcast else shape_x[-2]
+        if rank == 4:
+            shape_x[-4] = 1 if broadcast else shape_y[-4]
+
+        x_val = np.random.rand(*shape_x)
+        y_val = np.random.rand(*shape_y)
+        input_placeholder_dict = {
+            "x": mb.placeholder(shape=x_val.shape),
+            "y": mb.placeholder(shape=y_val.shape),
+        }
+
+        input_value_dict = {"x": x_val, "y": y_val}
+        out_shape = [shape_y[-4], shape_x[-3], shape_x[-2], shape_y[-1]] if rank == 4 else \
+                    [shape_x[-3], shape_x[-2], shape_y[-1]]
+        expected_output_type = tuple(out_shape) + (types.fp32,)
+
+        def build(x, y):
+            return mb.einsum(values=(x, y), equation=equation)
+
+        if rank == 3:
+            expected_output = np.einsum(equation,
+                                        np.broadcast_to(x_val, [shape_x[-3], shape_x[-2], shape_x[-1]]),
+                                        np.broadcast_to(y_val, [shape_y[-3], shape_x[-2], shape_y[-1]]))
+        else:
+            expected_output = np.einsum(equation,
+                                        np.broadcast_to(x_val, [shape_y[-4], shape_x[-3], shape_x[-2], shape_x[-1]]),
+                                        np.broadcast_to(y_val, [shape_y[-4], shape_y[-3], shape_x[-2], shape_y[-1]]))
+
+        run_compare_builder(
+            build,
+            input_placeholder_dict,
+            input_value_dict,
+            expected_output_type,
+            expected_output,
+            use_cpu_only=use_cpu_only,
+            backend=backend,
+        )
+
+
+
+    @ssa_fn
+    def test_builder_eval(self):
+        x_val = np.arange(6).astype(np.float32).reshape((1, 3, 2))
+        y_val = np.arange(24).astype(np.float32).reshape((2, 3, 4))
+        equation = "bcd,dce->bce"
+        v = mb.einsum(values=(x_val, y_val), equation=equation)
+        assert is_close(np.einsum(equation, x_val, y_val), v.val)

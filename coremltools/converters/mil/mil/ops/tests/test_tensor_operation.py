@@ -268,8 +268,6 @@ class TestFill:
         "use_cpu_only, backend", itertools.product([True, False], backends,)
     )
     def test_builder_to_backend_symbolic(self, use_cpu_only, backend):
-        # Test variadic (rdar://59559656)
-
         s_len = get_new_symbol()
         input_placeholders = {
             "shape": mb.placeholder(shape=(s_len,), dtype=types.int32),
@@ -294,6 +292,10 @@ class TestFill:
 
 
 class TestNonMaximumSuppression:
+    @pytest.mark.xfail(
+        condition=backends[0] == "mlprogram",
+        reason="Investigate failure rdar://78630549",
+    )
     @pytest.mark.parametrize(
         "use_cpu_only, backend", itertools.product([True, False], backends,)
     )
@@ -599,7 +601,7 @@ class TestNonMaximumSuppression:
 
 class TestNonZero:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], ["nn_proto"])
+        "use_cpu_only, backend", itertools.product([True, False], ["neuralnetwork"])
     )
     def test_builder_to_backend_smoke(self, use_cpu_only, backend):
         x_val = np.array([[3, 0, 0], [0, 4, 0], [5, 6, 0]], dtype=np.float32)
@@ -609,7 +611,7 @@ class TestNonZero:
         def build(x):
             return [mb.non_zero(x=x)]
 
-        expected_output_types = [(UNK_SYM, 2, types.int)]
+        expected_output_types = [(UNK_SYM, 2, types.int32)]
         expected_outputs = [np.array(np.transpose(np.nonzero(x_val)))]
 
         run_compare_builder(
@@ -639,7 +641,7 @@ class TestOneHot:
 
         input_placeholders = {
             "x": mb.placeholder(shape=x.shape, dtype=types.int32),
-            "y": mb.placeholder(shape=(), dtype=types.int32),
+            "y": mb.placeholder(shape=(1,), dtype=types.int32),
         }
 
         input_values = {"x": x, "y": depth}
@@ -652,7 +654,7 @@ class TestOneHot:
                     indices=x, one_hot_vector_size=4, on_value=1.0, off_value=0.1
                 ),
                 mb.one_hot(
-                    indices=x, one_hot_vector_size=y, on_value=1, off_value=9
+                    indices=x, one_hot_vector_size=mb.squeeze(x=y), on_value=1, off_value=9
                 ),
             ]
 
@@ -917,22 +919,23 @@ class TestRange1d:
         x = 15.0
         y = 5.0
         z = 2.0
+        # Model inputs must have rank at least 1
         input_placeholders = {
-            "x": mb.placeholder(shape=()),
-            "y": mb.placeholder(shape=()),
-            "z": mb.placeholder(shape=()),
+            "x": mb.placeholder(shape=(1,)),
+            "y": mb.placeholder(shape=(1,)),
+            "z": mb.placeholder(shape=(1,)),
         }
         input_values = {"x": x, "y": y, "z": z}
 
         def build(x, y, z):
             return [
-                mb.range_1d(start=y, end=15.0, step=2.0),
-                mb.range_1d(start=y, end=15.0, step=z),
-                mb.range_1d(start=y, end=x, step=2.0),
-                mb.range_1d(start=y, end=x, step=z),
-                mb.range_1d(start=5.0, end=15.0, step=z),
-                mb.range_1d(start=5.0, end=x, step=2.0),
-                mb.range_1d(start=5.0, end=x, step=z),
+                mb.range_1d(start=mb.squeeze(x=y), end=15.0, step=2.0),
+                mb.range_1d(start=mb.squeeze(x=y), end=15.0, step=mb.squeeze(x=z)),
+                mb.range_1d(start=mb.squeeze(x=y), end=mb.squeeze(x=x), step=2.0),
+                mb.range_1d(start=mb.squeeze(x=y), end=mb.squeeze(x=x), step=mb.squeeze(x=z)),
+                mb.range_1d(start=5.0, end=15.0, step=mb.squeeze(x=z)),
+                mb.range_1d(start=5.0, end=mb.squeeze(x=x), step=2.0),
+                mb.range_1d(start=5.0, end=mb.squeeze(x=x), step=mb.squeeze(x=z)),
             ]
 
         expected_output_types = [
@@ -984,19 +987,16 @@ class TestTile:
         def build(x):
             return [
                 mb.tile(x=x, reps=(1, 1)),
-                mb.tile(x=x, reps=(2,)),
                 mb.tile(x=x, reps=(2, 1)),
             ]
 
         expected_output_types = [
             (2, 3, types.fp32),
-            (2, 6, types.fp32),
             (4, 3, types.fp32),
         ]
 
         expected_outputs = [
             x,
-            np.array([[1, 2, 3, 1, 2, 3], [4, 5, 6, 4, 5, 6]], dtype=np.float32),
             np.array([[1, 2, 3], [4, 5, 6], [1, 2, 3], [4, 5, 6]], dtype=np.float32),
         ]
 
@@ -1014,10 +1014,9 @@ class TestTile:
     @ssa_fn
     def test_builder_eval(self):
         x = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
-        v = mb.tile(x=x, reps=(2,))
-        assert is_close(np.tile(x, reps=(2,)), v.val)
+        v = mb.tile(x=x, reps=(1, 2))
+        assert is_close(np.tile(x, reps=(1, 2)), v.val)
 
-@pytest.mark.skip(reason="rdar://65198011 (Re-enable Conv3dTranspose and DynamicTile unit tests)")
 class TestDynamicTile:
     @pytest.mark.parametrize(
         "use_cpu_only, backend", itertools.product([True, False], backends,)
@@ -1248,7 +1247,6 @@ class TestFlatten2d:
     def test_builder_to_backend_symbolic(self, use_cpu_only, backend):
         s0 = get_new_symbol()
 
-        # Test variadic (rdar://59559656)
         input_placeholders = {
             "x": mb.placeholder(shape=(s0, 4, 5, 6)),
         }
@@ -1322,7 +1320,6 @@ class TestShape:
 
         s0 = get_new_symbol()
 
-        # Test variadic (rdar://59559656)
         input_placeholders = {
             "x": mb.placeholder(shape=(s0, 4, 5, 6), dtype=mb_type),
         }

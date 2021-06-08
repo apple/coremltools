@@ -288,11 +288,8 @@ class TestReshape:
         s_len = get_new_symbol()
         s1 = get_new_variadic_symbol()
 
-        # Test variadic (rdar://59559656)
         input_placeholders = {
             "x": mb.placeholder(shape=(2, s0)),
-            # TODO: variadic (rdar://59559656)
-            # "x2": mb.placeholder(shape=(s1, 2)),
             "shape": mb.placeholder(shape=(3,), dtype=types.int32),
             "shape2": mb.placeholder(shape=(s_len,), dtype=types.int32),
         }
@@ -302,8 +299,6 @@ class TestReshape:
                 mb.reshape(x=x, shape=[2, -1]),
                 mb.reshape(x=x, shape=[1, -1]),
                 mb.reshape(x=x, shape=[2, 1, 1, -1]),
-                # TODO: variadic (rdar://59559656)
-                # mb.reshape(x=x2, shape=[2, 1, 1]),
                 mb.reshape(x=x, shape=shape),
                 mb.reshape(x=x, shape=shape2),
             ]
@@ -312,8 +307,6 @@ class TestReshape:
             (2, s0, types.fp32),
             (1, 2 * s0, types.fp32),
             (2, 1, 1, s0, types.fp32),
-            # TODO: variadic (rdar://59559656)
-            # (2, 1, 1, types.fp32),
             (UNK_SYM, UNK_SYM, UNK_SYM, types.fp32),
             (UNK_VARIADIC, types.fp32),
         ]
@@ -321,17 +314,12 @@ class TestReshape:
             np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32),
             np.array([[1, 2, 3, 4, 5, 6]], dtype=np.float32),
             np.array([[[[1.0, 2.0, 3.0]]], [[[4.0, 5.0, 6.0]]]], dtype=np.float32),
-            # TODO: variadic (rdar://59559656)
-            # np.array([[1, 2, 3],
-            #          [4, 5, 6]], dtype=np.float32),
             np.array([[[1, 2, 3]], [[4, 5, 6]]], dtype=np.float32),
             np.array([[[1, 2, 3]], [[4, 5, 6]]], dtype=np.float32),
         ]
 
         input_values = {
             "x": np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32),
-            # TODO: variadic (rdar://59559656)
-            # "x2": np.array([[[1, 2, 3],[4, 5, 6]]], dtype=np.float32),
             "shape": np.array([2, 1, 3], dtype=np.float32),
             "shape2": np.array([2, 1, 3], dtype=np.float32),
         }
@@ -522,6 +510,8 @@ class TestSliceBySize:
         "use_cpu_only, backend", itertools.product([True, False], backends,)
     )
     def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+        if backend != "nn_poto":
+            pytest.xfail("TODO: activate after rdar://75290346 is fixed and is in the build. Tracked by rdar://75823380")
         x_val = np.array(list(range(24))).reshape((2, 3, 4)).astype(np.float32)
         begin_val = np.array([1, 1, 1], dtype=np.int32)
         input_placeholders = {
@@ -608,9 +598,12 @@ class TestSpaceToDepth:
 
 class TestSqueeze:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "use_cpu_for_conversion, backend", itertools.product([True, False], backends,)
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+    def test_builder_to_backend_smoke(self, use_cpu_for_conversion, backend):
+        if backend == "mlprogram" and not use_cpu_for_conversion:
+            pytest.xfail("rdar://78343225 ((MIL GPU) Core ML Tools Unit Test failures [numerical error])")
+
         x = np.array([[[[1], [2], [3]]]], dtype=np.float32)
         input_placeholders = {"x": mb.placeholder(shape=x.shape)}
 
@@ -644,8 +637,9 @@ class TestSqueeze:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_only=use_cpu_for_conversion,
             backend=backend,
+            use_cpu_for_conversion=use_cpu_for_conversion,
         )
 
     @ssa_fn
@@ -713,7 +707,6 @@ class TestTranspose:
     def test_builder_to_backend_symbolic(self, use_cpu_only, backend):
         s0 = get_new_symbol()
 
-        # Test variadic (rdar://59559656)
         input_placeholders = {
             "x": mb.placeholder(shape=(2, s0)),
         }
@@ -963,8 +956,6 @@ class TestConcat:
             [False, True],
         )
     )
-    @pytest.mark.skip(
-        reason="rdar://65198011 (Re-enable Conv3dTranspose, concat interleave and DynamicTile unit tests)")
     def test_builder_to_backend_stress_interleave(self, use_cpu_only, backend,
                                                   rank, n_inputs, negative_index):
 

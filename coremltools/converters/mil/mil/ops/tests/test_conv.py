@@ -11,7 +11,7 @@ from .testing_utils import run_compare_builder
 
 backends = testing_reqs.backends
 
-@pytest.mark.skip(reason="rdar://65198011 (Re-enable Conv3dTranspose and DynamicTile unit tests)")
+
 class TestConvTranspose:
 
     @pytest.mark.skipif(not testing_reqs._HAS_TORCH, reason="PyTorch not installed.")
@@ -29,6 +29,7 @@ class TestConvTranspose:
                 "groups",
                 "test_symbolic",
                 "test_output_shape",
+                "quantize_fp16"
             ]
         ),
         itertools.product(
@@ -43,6 +44,7 @@ class TestConvTranspose:
             [1, 2],
             [True, False],
             [True, False],
+            [True, False]
         ),
     )
     def test_builder_to_backend_stress(
@@ -58,7 +60,11 @@ class TestConvTranspose:
         groups,
         test_symbolic,
         test_output_shape,
+        quantize_fp16,
     ):
+        if backend == "mlprogram" and not use_cpu_only:
+            pytest.xfail("rdar://78343191 ((MIL GPU) Core ML Tools Unit Test failures [failure to load or Seg fault])")
+
         if test_symbolic and test_output_shape:
             # conv_transpose output_shape can only be constant (non-symbolic)
             return
@@ -133,16 +139,6 @@ class TestConvTranspose:
         weight = wts["weight"].detach().numpy()
         bias = wts["bias"].detach().numpy() if has_bias else None
 
-        # Reshape to CoreML format
-        # PyTorch weight format: C_in, C_out, H, W
-        # MIL weight format: C_out, C_in, H, W
-        if isDeconv1d:
-            weight = np.transpose(weight, [1, 0, 2])
-        elif isDeconv2d:
-            weight = np.transpose(weight, [1, 0, 2, 3])
-        else:
-            weight = np.transpose(weight, [1, 0, 2, 3, 4])
-
         input = torch.randn(*input_shape)
         output = m(input)
         output = output.detach().numpy()
@@ -187,6 +183,7 @@ class TestConvTranspose:
             use_cpu_only=use_cpu_only,
             frontend_only=False,
             backend=backend,
+            quantize_fp16=quantize_fp16,
         )
 
 
@@ -205,6 +202,7 @@ class TestConv:
                 "has_bias",
                 "groups",
                 "symbolic",
+                "quantize_fp16",
             ]
         ),
         itertools.product(
@@ -218,6 +216,7 @@ class TestConv:
             [True, False],
             [1, 2],
             [True, False],
+            [True, False]
         ),
     )
     def test_builder_to_backend_stress(
@@ -232,6 +231,7 @@ class TestConv:
         has_bias,
         groups,
         symbolic,
+        quantize_fp16,
     ):
         D, H, W, Kd, Kh, Kw = DHWKdKhKw
         N, C_in, C_out = 1, 1 * groups, 2 * groups
@@ -348,6 +348,7 @@ class TestConv:
             use_cpu_only=use_cpu_only,
             frontend_only=False,
             backend=backend,
+            quantize_fp16=quantize_fp16
         )
 
     @pytest.mark.skip("<rdar://problem/53460668> Dynamic weights + bias not supported on GPU")
@@ -468,6 +469,50 @@ class TestConv:
             if has_bias:
                 arguments["bias"] = bias
             return mb.conv(**arguments)
+
+        run_compare_builder(
+            build,
+            input_placeholders,
+            input_values,
+            expected_output_types,
+            expected_outputs,
+            use_cpu_only=use_cpu_only,
+            frontend_only=False,
+            backend=backend,
+        )
+
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend", itertools.product([True], backends, )
+    )
+    def test_conv_int_bias_fusion(self, use_cpu_only, backend):
+        """
+        Test conv bias fusion when const input is of type int.
+        Expected behavior is that the bias const will be cast to the same dtype as the
+        weight during the fuse_conv_bias pass, otherwise mb.conv() will raise an error.
+
+
+        Input graph:
+                                        Const(int type)
+                                          |
+                                          V
+        input -----> convolution -----> add/sub  ---> out
+
+        Output graph:
+        input -----> convolution -----> out
+        """
+        weight = np.array([2.5], dtype=np.float32).reshape([1, 1, 1, 1])
+
+        def build(x):
+            x = mb.conv(x=x, weight=weight)
+            bias = mb.const(val=[10])
+            return mb.add(x=x, y=bias)
+
+        input = np.array([1, 2, 3, 4], dtype=np.float32).reshape((1, 1, 2, 2))
+        output = np.array([12.5, 15.0, 17.5, 20.0], dtype=np.float32).reshape((1, 1, 2, 2))
+        expected_output_types = output.shape + (types.fp32,)
+        expected_outputs = [output]
+        input_placeholders = {"x": mb.placeholder(shape=input.shape)}
+        input_values = {"x": input}
 
         run_compare_builder(
             build,

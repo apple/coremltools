@@ -25,7 +25,10 @@ def _check_var_scalar_value(x, val, tol=1e-3):
     if isinstance(x.val, np.ndarray):
         if x.val.size != 1:
             return False
-        x_val = x.val[:][0]
+        if len(x.val.shape) == 0:
+            x_val = x.val
+        else:
+            x_val = x.val[:][0]
     else:
         x_val = x.val
 
@@ -200,7 +203,7 @@ def fuse_gelu_tanh_approximation(prog):
 
 
     """
-    for f_name, f in prog.functions.items():
+    for f in prog.functions.values():
         block_changed = True
         while block_changed:
             block_changed = fuse_gelu_tanh_block(f)

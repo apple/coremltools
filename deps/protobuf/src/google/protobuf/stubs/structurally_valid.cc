@@ -512,7 +512,7 @@ int UTF8GenericScanFastAscii(const UTF8ScanObj* st,
 //   anyway, we simply always return success if initialization hasn't
 //   occurred yet.
 namespace {
-
+#if !defined(__APPLE__) // On Darwin these static tables are initialized by the linker. Avoid static initializer here.
 bool module_initialized_ = false;
 
 struct InitDetector {
@@ -521,7 +521,9 @@ struct InitDetector {
   }
 };
 InitDetector init_detector;
-
+#else
+bool module_initialized_ = true;
+#endif
 }  // namespace
 
 bool IsStructurallyValidUTF8(const char* buf, int len) {

@@ -2,11 +2,12 @@
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
-
+from coremltools.converters.mil.testing_reqs import ct
 import coremltools.models.utils as coremltoolsutils
 import pytest
 import numpy as np
 
+tf = pytest.importorskip("tensorflow", minversion="2.1.0")
 from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import (
     get_tf_node_names,
     TensorFlowBaseTest
@@ -16,9 +17,7 @@ from coremltools.converters.mil.input_types import TensorType, RangeDim
 from coremltools.converters.mil.testing_utils import compare_shapes, \
     compare_backend, run_core_ml_predict
 from tensorflow.python.framework import dtypes
-
-tf = pytest.importorskip("tensorflow", minversion="2.1.0")
-
+from coremltools.models.utils import _macos_version
 
 def make_tf2_graph(input_types):
     """
@@ -67,9 +66,10 @@ def run_compare_tf2(
     input_dict,
     output_names,
     use_cpu_only=False,
+    use_cpu_for_conversion=False,
     frontend_only=False,
     frontend="tensorflow",
-    backend="nn_proto",
+    backend="neuralnetwork",
     debug=False,
     atol=1e-04,
     rtol=1e-05,
@@ -85,6 +85,19 @@ def run_compare_tf2(
         List of output node names.
     use_cpu_only: bool
         If true, use CPU only for prediction, otherwise, use GPU also.
+    use_cpu_for_conversion: bool
+        If true, the converter is invoked using "ct.convert(...., useCPUOnly=True)",
+        which in turn forces the model to be loaded with the CPU context, which happens
+        when the converter loads the ML model object from the proto spec
+        using "ct.models.MLModel(proto_spec, useCPUOnly=True)".
+        The other argument, i.e., "use_cpu_only" on the other hand refers to only the compute engine
+        for prediction purposes. For a model that is loaded on a non-CPU context, it can still be forced
+        to execute on the CPU at the time of prediction. Hence,
+        "use_cpu_for_conversion = False && use_cpu_only = True" is valid and results in a case when a model is
+        loaded for GPU but executed on the CPU.
+        The scenario, "use_cpu_for_conversion = True && use_cpu_only = False" is invalid though,
+        since once a model is loaded on a CPU context its context cannot be changed to a non CPU device
+        at the time of prediction.
     frontend_only: bool
         If true, skip the prediction call, only validate conversion.
     frontend: str
@@ -98,8 +111,9 @@ def run_compare_tf2(
     rtol: float
         The relative tolerance parameter.
     """
-    # Avoid circular dependency
-    import coremltools as ct
+    if use_cpu_for_conversion and not use_cpu_only:
+        # use_cpu_for_conversion = True && use_cpu_only = False
+        raise ValueError("use_cpu_for_conversion = True && use_cpu_only = False is an invalid test case")
 
     inputs = []
     cf_inputs = [t for t in model[0].inputs if t.dtype != dtypes.resource]
@@ -130,14 +144,15 @@ def run_compare_tf2(
         outputs=outputs,
         convert_to=backend,
         debug=debug,
+        useCPUOnly=use_cpu_for_conversion,
     )
-
-    if frontend_only:
-        return
 
     for k,v in input_dict.items():
         if isinstance(v, np.ndarray) and issubclass(v.dtype.type, np.integer):
             input_dict[k] = v.astype(np.float) # Core ML only accepts floats
+
+    if frontend_only or _macos_version() < (10, 13):
+        return mlmodel._spec, mlmodel, input_dict, None
 
     compare_backend(
         mlmodel,
@@ -163,7 +178,7 @@ def run_compare_tf_keras(
     use_cpu_only=False,
     frontend_only=False,
     frontend="tensorflow",
-    backend="nn_proto",
+    backend="neuralnetwork",
     atol=1e-04,
     rtol=1e-05,
 ):
@@ -187,18 +202,12 @@ def run_compare_tf_keras(
     rtol: float
         The relative tolerance parameter.
     """
-    # Avoid circular dependency
-    from coremltools.converters._converters_entry import convert
-
-    mlmodel = convert(model, source=frontend, convert_to=backend)
+    mlmodel = ct.convert(model, source=frontend, convert_to=backend)
 
     # assumes conversion preserve the i/o names
     proto = mlmodel.get_spec()
     inputs = sorted([str(i.name) for i in proto.description.input])
     outputs = [str(o.name) for o in proto.description.output]
-
-    if frontend_only:
-        return
 
     # get tf.keras model output as reference and run comparison
     keras_outputs = model(input_values)
@@ -207,6 +216,10 @@ def run_compare_tf_keras(
     ref = [output.numpy() for output in keras_outputs]
     expected_outputs = {n: v for n, v in zip(outputs, ref)}
     input_key_values = {n: v for n, v in zip(inputs, input_values)}
+
+    if frontend_only or _macos_version() < (10, 13):
+        return proto, mlmodel, input_key_values, None
+
     compare_backend(
         mlmodel,
         input_key_values,
@@ -232,9 +245,10 @@ class TensorFlow2BaseTest(TensorFlowBaseTest):
             input_dict,
             output_names,
             use_cpu_only=False,
+            use_cpu_for_conversion=False,
             frontend_only=False,
             frontend="tensorflow",
-            backend="nn_proto",
+            backend="neuralnetwork",
             debug=False,
             atol=1e-04,
             rtol=1e-05):
@@ -242,6 +256,7 @@ class TensorFlow2BaseTest(TensorFlowBaseTest):
                               input_dict,
                               output_names,
                               use_cpu_only=use_cpu_only,
+                              use_cpu_for_conversion=use_cpu_for_conversion,
                               frontend_only=frontend_only,
                               frontend=frontend,
                               backend=backend,
@@ -256,7 +271,7 @@ class TensorFlow2BaseTest(TensorFlowBaseTest):
     @staticmethod
     def run_compare_tf_keras(model, input_values, use_cpu_only=False,
             frontend_only=False, frontend="tensorflow",
-            backend="nn_proto", atol=1e-04, rtol=1e-05):
+            backend="neuralnetwork", atol=1e-04, rtol=1e-05):
         res = run_compare_tf_keras(model, input_values, use_cpu_only=
         use_cpu_only,
                                    frontend_only=frontend_only,

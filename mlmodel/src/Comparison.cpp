@@ -57,6 +57,14 @@ namespace CoreML {
                 case Model::kSerializedModel:
                     return a.serializedmodel().identifier() == b.serializedmodel().identifier() &&
                            a.serializedmodel().model() == b.serializedmodel().model();
+                case Model::kMlProgram:
+                {
+                    std::string as;
+                    a.mlprogram().SerializeToString(&as);
+                    std::string bs;
+                    b.mlprogram().SerializeToString(&bs);
+                    return as == bs;
+                }
                 case Model::kBayesianProbitRegressor:
                     return a.bayesianprobitregressor() == b.bayesianprobitregressor();
                 case Model::kOneHotEncoder:
@@ -91,6 +99,8 @@ namespace CoreML {
                     return a.wordembedding() == b.wordembedding();
                 case Model::kVisionFeaturePrint:
                     return a.visionfeatureprint() == b.visionfeatureprint();
+                case Model::kAudioFeaturePrint:
+                    return a.audiofeatureprint() == b.audiofeatureprint();
                 case Model::kKNearestNeighborsClassifier:
                     return a.knearestneighborsclassifier() == b.knearestneighborsclassifier();
                 case Model::kItemSimilarityRecommender:
@@ -1005,7 +1015,27 @@ namespace CoreML {
             
             return true;
         }
-        
+
+        bool operator==(const CoreMLModels::AudioFeaturePrint& a,
+                        const CoreMLModels::AudioFeaturePrint& b) {
+
+            if (a.AudioFeaturePrintType_case() != b.AudioFeaturePrintType_case()) {
+                return false;
+            }
+            
+            switch (a.AudioFeaturePrintType_case()) {
+                case CoreMLModels::AudioFeaturePrint::kSound:
+                    if (a.sound().version() != b.sound().version()) {
+                        return false;
+                    }
+                    break;
+                case CoreMLModels::AudioFeaturePrint::AUDIOFEATUREPRINTTYPE_NOT_SET:
+                    break;
+            }
+            
+            return true;
+        }
+
         bool operator==(const CoreMLModels::SoundAnalysisPreprocessing& a,
                         const CoreMLModels::SoundAnalysisPreprocessing& b) {
 

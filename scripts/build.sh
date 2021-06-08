@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
 set -e
-set -x
 
 ##=============================================================================
 ## Main configuration processing
@@ -16,6 +15,13 @@ BUILD_DIST=0
 BUILD_DIST_DEV=0
 PYTHON="3.7"
 CHECK_ENV=1
+
+# Defaults, which may be overridden
+sdk=macosx
+
+# Grab any settings defined in this folder
+build_settings=$( cd "$( dirname "$0" )" && pwd )/build_settings.sh
+test -f "${build_settings}" && source "${build_settings}"
 
 unknown_option() {
   echo "Unknown option $1. Exiting."
@@ -48,13 +54,15 @@ while [ $# -gt 0 ]
     --protobuf)          BUILD_PROTO=1 ;;
     --debug)             BUILD_MODE="Debug" ;;
     --dist)              BUILD_DIST=1 ;;
-    --dist-dev)              BUILD_DIST_DEV=1 ;;
+    --dist-dev)          BUILD_DIST_DEV=1 ;;
     --no-check-env)      CHECK_ENV=0 ;;
     --help)              print_help ;;
     *) unknown_option $1 ;;
   esac
   shift
 done
+
+set -x
 
 # First configure
 echo
@@ -83,7 +91,7 @@ cd ${BUILD_DIR}
 ADDITIONAL_CMAKE_OPTIONS=""
 if [[ "$OSTYPE" == "darwin"* ]]; then
     NUM_PROCS=$(sysctl -n hw.ncpu)
-    ADDITIONAL_CMAKE_OPTIONS="-DCMAKE_OSX_DEPLOYMENT_TARGET=10.13"
+    ADDITIONAL_CMAKE_OPTIONS="-DCMAKE_OSX_DEPLOYMENT_TARGET=10.15"
 else
     NUM_PROCS=$(nproc)
 fi
@@ -95,20 +103,24 @@ then
 fi
 
 # Call CMake
-cmake $ADDITIONAL_CMAKE_OPTIONS \
+CMAKE_COMMAND=""
+if [[ $OSTYPE == darwin* ]]; then
+  CMAKE_COMMAND="xcrun --sdk ${sdk} "
+fi
+CMAKE_COMMAND+="cmake $ADDITIONAL_CMAKE_OPTIONS \
   -DCMAKE_BUILD_TYPE=$BUILD_MODE \
   -DPYTHON_EXECUTABLE:FILEPATH=$PYTHON_EXECUTABLE \
   -DPYTHON_INCLUDE_DIR=$PYTHON_INCLUDE_DIR \
   -DPYTHON_LIBRARY=$PYTHON_LIBRARY \
   -DOVERWRITE_PB_SOURCE=$BUILD_PROTO \
   -DBUILD_TAG=$BUILD_TAG \
-  ${COREMLTOOLS_HOME}
+  ${COREMLTOOLS_HOME}"
+eval ${CMAKE_COMMAND}
 
 # Make the python wheel
 make -j${NUM_PROCS}
 
 if [ $BUILD_DIST -eq 1 ] || [ $BUILD_DIST_DEV -eq 1 ]
 then
-
   make dist
 fi

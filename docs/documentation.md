@@ -268,7 +268,6 @@ You need to do this only once.
 
 	```
 	coremltools.converters.rst
-	coremltools.converters.caffe.rst
 	coremltools.converters.keras.rst
 	coremltools.converters.libsvm.rst
 	coremltools.converters.mil.rst
@@ -287,7 +286,6 @@ You need to do this only once.
 3. Delete all other `.rst` files in your local `source/` folder. You should now have the following files in your local `source/` folder:
 
 	```
-	coremltools.converters.caffe.rst
 	coremltools.converters.keras.rst
 	coremltools.converters.libsvm.rst
 	coremltools.converters.mil.input_types.rst

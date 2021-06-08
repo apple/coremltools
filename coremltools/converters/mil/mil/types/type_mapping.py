@@ -4,6 +4,8 @@
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
+import coremltools.proto.MIL_pb2 as _mil_pm
+from coremltools.converters.mil.mil import types as _mil_types
 
 from .type_bool import bool as types_bool, is_bool
 from .type_double import (
@@ -48,18 +50,18 @@ _types_TO_NPTYPES = {
 
 _types_TO_STRINGS = {
     types_bool: "bool",
-    types_int8: "i8",
-    types_int16: "i16",
-    types_int32: "i32",
-    types_int64: "i64",
-    types_uint8: "u8",
-    types_uint16: "u16",
-    types_uint32: "u32",
-    types_uint64: "u64",
+    types_int8: "int8",
+    types_int16: "int16",
+    types_int32: "int32",
+    types_int64: "int64",
+    types_uint8: "uint8",
+    types_uint16: "uint16",
+    types_uint32: "uint32",
+    types_uint64: "uint64",
     types_fp16: "fp16",
     types_fp32: "fp32",
     types_fp64: "fp64",
-    types_str: "str",
+    types_str: "string",
 }
 
 def np_dtype_to_py_type(np_dtype):
@@ -70,6 +72,8 @@ def np_dtype_to_py_type(np_dtype):
         return bool
     if np_dtype in [np.float32, np.float64]:
         return float
+    if np_dtype == np.float16:
+        return bytes
     raise NotImplementedError('{} is not supported'.format(np_dtype))
 
 _STRINGS_TO_types = {v: k for k, v in _types_TO_STRINGS.items()}
@@ -106,6 +110,16 @@ def promote_types(dtype1, dtype2):
 
     Returns:
         A builtin datatype or None.
+
+    Examples:
+        >>> promote_types(int32, int64)
+            builtin('int64')
+
+        >>> promote_types(fp16, fp32)
+            builtin('fp32')
+
+        >>> promote_types(fp16, int32)
+            builtin('fp16')
     """
     nptype1 = nptype_from_builtin(dtype1)
     nptype2 = nptype_from_builtin(dtype2)
@@ -122,6 +136,34 @@ def promote_types(dtype1, dtype2):
         nppromoted = np.promote_types(nptype1, nptype2)
     return numpy_type_to_builtin_type(nppromoted)
 
+
+def promote_dtypes(dtypes):
+    """
+    Get the smallest promoted dtype, to which all scalar dtypes (provided through dtypes list argument) can be casted.
+    Args:
+        List [dtype (builtin)]
+    Returns:
+        A builtin datatype or None.
+
+    Examples:
+        >>> promote_dtypes([int32, int64, int16])
+            builtin('int64')
+
+        >>> promote_dtypes([fp16, fp32, fp64])
+            builtin('fp64')
+
+        >>> promote_dtypes([fp16, int32, int64])
+            builtin('fp16')
+
+    """
+
+    if not isinstance(dtypes, (list, tuple)) or len(dtypes) < 1:
+        raise ValueError("dtypes needs to be a list/tuple of atleast 1 element")
+
+    if len(dtypes) == 1:
+        return dtypes[0]
+
+    return promote_types(dtypes[0], promote_dtypes(dtypes[1:]))
 
 def is_primitive(btype):
     """
@@ -308,3 +350,31 @@ def is_subtype(type1, type2):
     if is_tensor(type1) and is_tensor(type2):
         return is_subtype_tensor(type1, type2)
     return type1 == type2
+
+builtin_to_proto_types = {
+    # bool:
+    _mil_types.bool: _mil_pm.BOOL,
+
+    # fp
+    _mil_types.fp16: _mil_pm.FLOAT16,
+    _mil_types.float: _mil_pm.FLOAT32,
+    _mil_types.double: _mil_pm.FLOAT64,
+
+    # int
+    _mil_types.uint8: _mil_pm.UINT8,
+    _mil_types.int8: _mil_pm.INT8,
+
+    _mil_types.uint16: _mil_pm.UINT16,
+    _mil_types.int16: _mil_pm.INT16,
+
+    _mil_types.uint32: _mil_pm.UINT32,
+    _mil_types.int32: _mil_pm.INT32,
+
+    _mil_types.uint64: _mil_pm.UINT64,
+    _mil_types.int64: _mil_pm.INT64,
+
+    # str
+    _mil_types.str: _mil_pm.STRING,
+}
+
+proto_to_builtin_types = {v: k for k, v in builtin_to_proto_types.items()}

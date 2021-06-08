@@ -16,6 +16,7 @@ enum MLModelType: int {
     MLModelType_kNearestNeighborsClassifier = 404,
     MLModelType_neuralNetwork = 500,
     MLModelType_itemSimilarityRecommender = 501,
+    MLModelType_mlProgram = 502,
     MLModelType_customModel = 555,
     MLModelType_linkedModel = 556,
     MLModelType_oneHotEncoder = 600,
@@ -34,6 +35,7 @@ enum MLModelType: int {
     MLModelType_soundAnalysisPreprocessing = 2003,
     MLModelType_gazetteer = 2004,
     MLModelType_wordEmbedding = 2005,
+    MLModelType_audioFeaturePrint = 2006,
     MLModelType_serializedModel = 3000,
     MLModelType_NOT_SET = 0,
 };
@@ -71,6 +73,8 @@ static const char * MLModelType_Name(MLModelType x) {
             return "MLModelType_neuralNetwork";
         case MLModelType_itemSimilarityRecommender:
             return "MLModelType_itemSimilarityRecommender";
+        case MLModelType_mlProgram:
+            return "MLModelType_mlProgram";
         case MLModelType_customModel:
             return "MLModelType_customModel";
         case MLModelType_linkedModel:
@@ -107,6 +111,8 @@ static const char * MLModelType_Name(MLModelType x) {
             return "MLModelType_gazetteer";
         case MLModelType_wordEmbedding:
             return "MLModelType_wordEmbedding";
+        case MLModelType_audioFeaturePrint:
+            return "MLModelType_audioFeaturePrint";
         case MLModelType_serializedModel:
             return "MLModelType_serializedModel";
         case MLModelType_NOT_SET:

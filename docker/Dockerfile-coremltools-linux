@@ -7,7 +7,7 @@ RUN  apt-get -y update \
         python-setuptools curl git libssl-dev \
         make vim-common zlib1g-dev libffi-dev \
         libbz2-dev libopenblas-dev liblapack-dev \
-        zsh
+        zsh uuid-dev gobjc++
 RUN curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash
 RUN apt-get -y install git-lfs
 
@@ -25,7 +25,7 @@ ENV PATH=/opt/cmake-3.13.4-Linux-x86_64/bin:/usr/local/bin:/usr/local/sbin:/usr/
 # Install Anaconda and initialize it for use in ZSH
 WORKDIR /opt
 RUN curl https://repo.anaconda.com/archive/Anaconda3-2020.02-Linux-x86_64.sh -o anaconda.sh
-RUN zsh anaconda.sh -b -p /opt/anaconda && eval "$(/opt/anaconda/bin/conda shell.zsh hook)" && conda init zsh
+RUN zsh anaconda.sh -b -p /opt/anaconda && eval "$(/opt/anaconda/bin/conda shell.zsh hook)" && conda init zsh && conda init bash
 
 # Give Cmake hints about compilers to use.
 ENV CC="/usr/bin/gcc"

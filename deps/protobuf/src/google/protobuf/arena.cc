@@ -41,8 +41,12 @@
 namespace google {
 namespace protobuf {
 
-
+#if !defined(__APPLE__)
 google::protobuf::internal::SequenceNumber Arena::lifecycle_id_generator_;
+#else
+static google::protobuf::internal::SequenceNumber *lifecycle_id_generator_ptr = NULL;
+#endif
+
 #if defined(GOOGLE_PROTOBUF_NO_THREADLOCAL)
 Arena::ThreadCache& Arena::thread_cache() {
   static internal::ThreadLocalStorage<ThreadCache>* thread_cache_ =
@@ -59,7 +63,12 @@ GOOGLE_THREAD_LOCAL Arena::ThreadCache Arena::thread_cache_ = { -1, NULL };
 #endif
 
 void Arena::Init() {
+#if !defined(__APPLE__)
   lifecycle_id_ = lifecycle_id_generator_.GetNext();
+#else
+  lifecycle_id_generator_ptr = new google::protobuf::internal::SequenceNumber;
+  lifecycle_id_ = lifecycle_id_generator_ptr->GetNext();
+#endif
   blocks_ = 0;
   hint_ = 0;
   space_allocated_ = 0;
@@ -99,11 +108,18 @@ Arena::~Arena() {
   if (options_.on_arena_destruction != NULL) {
     options_.on_arena_destruction(this, hooks_cookie_, space_allocated);
   }
+#if defined(__APPLE__)
+    delete lifecycle_id_generator_ptr;
+#endif
 }
 
 uint64 Arena::Reset() {
   // Invalidate any ThreadCaches pointing to any blocks we just destroyed.
+#if !defined(__APPLE__)
   lifecycle_id_ = lifecycle_id_generator_.GetNext();
+#else
+  lifecycle_id_ = lifecycle_id_generator_ptr->GetNext();
+#endif
   return ResetInternal();
 }
 

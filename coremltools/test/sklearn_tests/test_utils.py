@@ -5,10 +5,8 @@ import unittest
 from coremltools.models.utils import rename_feature, _macos_version, _is_macos
 from coremltools.models import MLModel
 from coremltools._deps import _HAS_SKLEARN
-import pandas as pd
 
 if _HAS_SKLEARN:
-    from sklearn.preprocessing import OneHotEncoder
     from sklearn.datasets import load_boston
     from sklearn.linear_model import LinearRegression
     from sklearn.pipeline import Pipeline

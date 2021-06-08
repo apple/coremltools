@@ -9,10 +9,9 @@ import json
 
 from sklearn.ensemble import GradientBoostingClassifier
 from coremltools.converters import sklearn as skl_converter
-from coremltools.proto import Model_pb2
-from coremltools.proto import FeatureTypes_pb2
-from coremltools._deps import _HAS_XGBOOST
-from coremltools._deps import _HAS_SKLEARN
+from coremltools.models.utils import _macos_version
+from coremltools.proto import FeatureTypes_pb2, Model_pb2
+from coremltools._deps import _HAS_SKLEARN, _HAS_XGBOOST
 
 if _HAS_XGBOOST:
     import xgboost
@@ -159,6 +158,7 @@ class GradientBoostingMulticlassClassifierScikitTest(unittest.TestCase):
             spec = skl_converter.convert(model, "data", "out")
 
 
+@unittest.skipIf(_macos_version() >= (10, 16), "rdar://problem/75172473")
 @unittest.skipIf(not _HAS_SKLEARN, "Missing sklearn. Skipping tests.")
 @unittest.skipIf(not _HAS_XGBOOST, "Skipping, no xgboost")
 class GradientBoostingBinaryClassifierXGboostTest(unittest.TestCase):
@@ -224,6 +224,7 @@ class GradientBoostingBinaryClassifierXGboostTest(unittest.TestCase):
             spec = xgb_converter.convert(model, "data", "out", mode="classifier")
 
 
+@unittest.skipIf(_macos_version() >= (10, 16), "rdar://problem/75172473")
 @unittest.skipIf(not _HAS_SKLEARN, "Missing sklearn. Skipping tests.")
 @unittest.skipIf(not _HAS_XGBOOST, "Skipping, no xgboost")
 class GradientBoostingMulticlassClassifierXGboostTest(unittest.TestCase):

@@ -9,11 +9,20 @@ Utilities for the entire package.
 import math as _math
 import numpy as _np
 import os as _os
-import warnings as _warnings
+import pathlib as _pathlib
 import sys as _sys
+import tempfile as _tempfile
+import warnings as _warnings
+
 from coremltools.proto import Model_pb2 as _Model_pb2
-from coremltools.models._deprecation import deprecated as _deprecated
+
 from .._deps import _HAS_SKLEARN
+from ..libmodelpackage import ModelPackage
+
+
+_MLMODEL_EXTENSION = ".mlmodel"
+_MLPACKAGE_EXTENSION = ".mlpackage"
+
 
 if _HAS_SKLEARN:
     import scipy.sparse as _sp
@@ -24,7 +33,6 @@ def _to_unicode(x):
         return x.decode()
     else:
         return x
-
 
 def save_spec(spec, filename, auto_set_specification_version=False):
     """
@@ -52,11 +60,17 @@ def save_spec(spec, filename, auto_set_specification_version=False):
     load_spec
     """
     name, ext = _os.path.splitext(filename)
+
+    is_package = False
+
     if not ext:
-        filename = "{}.mlmodel".format(filename)
+        filename = "{}{}".format(filename, _MLMODEL_EXTENSION)
+    elif ext == _MLPACKAGE_EXTENSION:
+        is_package = True
+    elif ext == _MLMODEL_EXTENSION:
+        is_package = False
     else:
-        if ext != ".mlmodel":
-            raise Exception("Extension must be .mlmodel (not {})".format(ext))
+        raise Exception("Extension must be {} or {} (not {})".format(_MLMODEL_EXTENSION, _MLPACKAGE_EXTENSION, ext))
 
     spec = spec.SerializeToString()
     if auto_set_specification_version:
@@ -73,9 +87,20 @@ def save_spec(spec, filename, auto_set_specification_version=False):
                 RuntimeWarning,
             )
 
-    with open(filename, "wb") as f:
+    specfile = filename
+    if is_package:
+        tempfile = _tempfile.NamedTemporaryFile(suffix=_MLMODEL_EXTENSION)
+        specfile = tempfile.name
+
+    with open(specfile, "wb") as f:
         f.write(spec)
 
+    if is_package:
+        package = ModelPackage(filename)
+        model_name = _pathlib.Path(filename).with_suffix('.mlmodel').name
+        
+        # Root file is copied into the model package. Changes to in-memory JSON is commited to disk when package goes out of scope.
+        package.setRootModel(specfile, model_name, "com.apple.CoreML", "CoreML Model Specification");
 
 def load_spec(filename):
     """
@@ -106,7 +131,11 @@ def load_spec(filename):
 
     spec = Model_pb2.Model()
 
-    with open(filename, "rb") as f:
+    specfile = filename
+    if ModelPackage.isValid(filename):
+        specfile = ModelPackage(filename).getRootModel().path()
+
+    with open(specfile, "rb") as f:
         contents = f.read()
         spec.ParseFromString(contents)
         return spec
@@ -189,14 +218,6 @@ def _wp_to_fp16wp(wp):
     wp.float16Value = _fp32_to_fp16_byte_array(wp.floatValue)
     del wp.floatValue[:]
 
-
-@_deprecated(
-    suffix="instead use 'coremltools.models.neural_network.quantization_utils.quantize_weights'."
-)
-def convert_neural_network_spec_weights_to_fp16(fp_spec):
-    return _convert_neural_network_spec_weights_to_fp16(fp_spec)
-
-
 def _convert_neural_network_spec_weights_to_fp16(fp_spec):
     from .neural_network.quantization_utils import _quantize_spec_weights
     from .neural_network.quantization_utils import (
@@ -205,13 +226,6 @@ def _convert_neural_network_spec_weights_to_fp16(fp_spec):
 
     qspec = _quantize_spec_weights(fp_spec, 16, _QUANTIZATION_MODE_LINEAR_QUANTIZATION)
     return qspec
-
-
-@_deprecated(
-    suffix="instead use 'coremltools.models.neural_network.quantization_utils.quantize_weights'."
-)
-def convert_neural_network_weights_to_fp16(full_precision_model):
-    return _convert_neural_network_weights_to_fp16(full_precision_model)
 
 
 def _convert_neural_network_weights_to_fp16(full_precision_model):

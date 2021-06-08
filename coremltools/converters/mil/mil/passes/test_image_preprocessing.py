@@ -54,7 +54,8 @@ class ImagePreprocessingPass(unittest.TestCase):
         self.assertEqual(get_op_types_in_program(prog), ["transpose", "transpose", "relu", "transpose", "add", "relu"])
 
     def test_fusion_with_image_full(self):
-        from coremltools.converters._converters_entry import convert
+        # Avoid circular import
+        from coremltools import convert
 
         @mb.program(input_specs=[mb.TensorSpec(shape=(10, 20, 30, 3))])
         def prog(x):
@@ -67,6 +68,6 @@ class ImagePreprocessingPass(unittest.TestCase):
         mlmodel = convert(prog,
             inputs=[ImageType(name="x", shape=(10, 20, 30, 3),
               channel_first=False)],
-            source="mil", convert_to="nn_proto")
+            source="milinternal", convert_to="neuralnetwork")
         assert mlmodel is not None
         assert len(mlmodel.get_spec().neuralNetwork.layers) == 3

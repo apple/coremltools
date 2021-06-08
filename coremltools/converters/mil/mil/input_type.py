@@ -342,6 +342,23 @@ class TensorInputType(ScalarOrTensorInputType):
     def type_str(self):
         return 'tensor'
 
+class FloatTensorInputType(ScalarOrTensorInputType):
+    """
+    Tensor input with float values
+    with _sym_type in [types.fp16, types.fp32, types.fp64]
+
+    Raise error when value set is not float.
+    """
+
+    def __init__(self, **kwargs):
+        super(FloatTensorInputType, self).__init__(**kwargs)
+
+    def _is_compatible(self, v):
+        return types.is_tensor(v.sym_type) and v.dtype in SUPPORT_FLOAT_TYPES
+    @property
+    def type_str(self):
+        return 'float tensor'
+
 class IntTensorInputType(ScalarOrTensorInputType):
     """
     Tensor input with int values

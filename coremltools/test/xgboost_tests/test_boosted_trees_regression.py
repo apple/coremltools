@@ -8,6 +8,7 @@ import tempfile
 import json
 
 from coremltools._deps import _HAS_SKLEARN, _HAS_XGBOOST
+from coremltools.models.utils import _macos_version
 
 if _HAS_XGBOOST:
     import xgboost
@@ -86,6 +87,7 @@ class GradientBoostingRegressorScikitTest(unittest.TestCase):
             spec = skl_converter.convert(model, "data", "out")
 
 
+@unittest.skipIf(_macos_version() >= (10, 16), "rdar://problem/75172473")
 @unittest.skipIf(not _HAS_SKLEARN, "Missing scikit-learn. Skipping tests.")
 @unittest.skipIf(not _HAS_XGBOOST, "Skipping, no xgboost")
 class BoostedTreeRegressorXGboostTest(unittest.TestCase):

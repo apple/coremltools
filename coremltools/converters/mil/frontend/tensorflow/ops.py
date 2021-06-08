@@ -6,14 +6,13 @@
 import logging as _logging
 import numpy as _np
 
-from coremltools.converters.mil.mil.ops import get_const_mode
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil.ops.defs._utils import broadcast_shapes
 from .convert_utils import convert_graph
 from .tf_op_registry import register_tf_op
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.types.symbolic import is_symbolic, any_symbolic
-
+from .._utils import build_einsum_mil
 
 def _adjust_min_max(min, max, num_bits=8):
     if (min <= max) and (max <= 0):
@@ -428,8 +427,7 @@ def Ceil(context, node):
 def Const(context, node):
     if node.value is None:
         raise ValueError("Const node '{}' cannot have no value".format(node.name))
-    mode = get_const_mode(node.value.val)
-    x = mb.const(val=node.value.val, mode=mode, name=node.name)
+    x = mb.const(val=node.value.val, name=node.name)
     context.add(node.name, x)
 
 
@@ -492,54 +490,10 @@ def Cosh(context, node):
 @register_tf_op
 def Einsum(context, node):
     equation = node.attr["equation"]
-    if equation == "bnqd,bnkd->bnqk":
-        a = context[node.inputs[0]]
-        b = context[node.inputs[1]]
-        x = mb.matmul(x=a, y=b, transpose_x=False, transpose_y=True, name=node.name)
-        context.add(node.name, x)
-    elif equation == "abc,cd->abd":
-        a = context[node.inputs[0]]
-        b = context[node.inputs[1]]
-        x = mb.matmul(x=a, y=b, transpose_x=False, transpose_y=False, name=node.name)
-        context.add(node.name, x)
-    elif equation == "abc,cde->abde":
-        a = context[node.inputs[0]]
-        b = context[node.inputs[1]]
-        x_1 = mb.reshape(x=a, shape=[a.shape[0] * a.shape[1], a.shape[2]])
-        x_2 = mb.reshape(x=b, shape=[b.shape[0], b.shape[1] * b.shape[2]])
-        x = mb.matmul(x=x_1, y=x_2, transpose_x=False, transpose_y=False)
-        x = mb.reshape(
-            x=x, shape=[a.shape[0], a.shape[1], b.shape[1], b.shape[2]], name=node.name
-        )
-        context.add(node.name, x)
-    elif equation == "BTNH,BFNH->BNFT":
-        a = context[node.inputs[0]]
-        b = context[node.inputs[1]]
-        a = mb.transpose(x=a, perm=[0, 2, 1, 3])
-        b = mb.transpose(x=b, perm=[0, 2, 1, 3])
-        x = mb.matmul(x=b, y=a, transpose_x=False, transpose_y=True, name=node.name)
-        context.add(node.name, x)
-    elif equation == "BNFT,BTNH->BFNH":
-        a = context[node.inputs[0]]
-        b = context[node.inputs[1]]
-        b = mb.transpose(x=b, perm=[0, 2, 1, 3])
-        x = mb.matmul(x=a, y=b, transpose_x=False, transpose_y=False)
-        x = mb.transpose(x=x, perm=[0, 2, 1, 3], name=node.name)
-        context.add(node.name, x)
-    elif equation == "abcd,cde->abe":
-        a = context[node.inputs[0]]
-        b = context[node.inputs[1]]
-        x_1 = mb.reshape(x=a, shape=[a.shape[0], a.shape[1], a.shape[2] * a.shape[3]])
-        x_2 = mb.reshape(x=b, shape=[b.shape[0] * b.shape[1], b.shape[2]])
-        x = mb.matmul(
-            x=x_1, y=x_2, transpose_x=False, transpose_y=False, name=node.name
-        )
-        context.add(node.name, x)
-    else:
-        raise NotImplementedError(
-            "Einsum unsupported equation format: ", node.attr["equation"]
-        )
-
+    a = context[node.inputs[0]]
+    b = context[node.inputs[1]]
+    x = build_einsum_mil(a, b, equation, node.name)
+    context.add(node.name, x)
 
 @register_tf_op
 def Equal(context, node):
@@ -917,6 +871,13 @@ def Conv2D(context, node):
     # Only the last op should have the same name as node.name
     conv_name = node.name + "x" if data_format == "NHWC" else node.name
 
+    # get the groups from the weighs shape and the input shape
+    _, in_channel, _, _ = x.shape
+    _, weight_in_channel, _, _ = W_oihw.shape
+    if in_channel % weight_in_channel != 0:
+        raise ValueError("input channel should be divided by the weight channel.")
+    groups = int(in_channel / weight_in_channel)
+
     if quantization_type is not None:
         x = mb.conv_quantized(
             x=x,
@@ -929,6 +890,7 @@ def Conv2D(context, node):
             nbits=nbits,
             quant_scale=quant_scale,
             quant_bias=quant_bias,
+            groups=groups,
         )
     elif pad_type == "custom":
         x = mb.conv(
@@ -937,8 +899,9 @@ def Conv2D(context, node):
             pad_type=pad_type,
             strides=HW_strides,
             dilations=HW_dilations,
-            name=conv_name,
             pad=pad_val,
+            groups=groups,
+            name=conv_name,
         )
     else:
         x = mb.conv(
@@ -947,6 +910,7 @@ def Conv2D(context, node):
             pad_type=pad_type,
             strides=HW_strides,
             dilations=HW_dilations,
+            groups=groups,
             name=conv_name,
         )
     if data_format == "NHWC":
@@ -977,12 +941,19 @@ def Conv3D(context, node):
         x = _transpose_NDHWC_to_NCDHW(x)
     # Only the last op should have the same name as node.name
     conv_name = node.name + "x" if data_format == "NDHWC" else node.name
+    _, in_channel, _, _, _ = x.shape
+    _, weight_in_channel, _, _, _ = W_oidhw.shape
+    if in_channel % weight_in_channel != 0:
+        raise ValueError("input channel should be divided by the weight channel.")
+    groups = int(in_channel / weight_in_channel)
+
     x = mb.conv(
         x=x,
         weight=W_oidhw,
         pad_type=pad_type,
         strides=DHW_strides,
         dilations=DHW_dilations,
+        groups=groups,
         name=conv_name,
     )
     if data_format == "NDHWC":
@@ -997,7 +968,7 @@ def Conv3DBackpropInputV2(context, node):
     output_shape = context[node.inputs[0]].val
     # Weight shape: [D, H, W, C_out, C_in]
     W_dhwoi = context[node.inputs[1]]
-    W_oidhw = mb.transpose(x=W_dhwoi, perm=[3, 4, 0, 1, 2])
+    W_iodhw = mb.transpose(x=W_dhwoi, perm=[4, 3, 0, 1, 2])
     # Input shape: [N, D_in, H_in, W_in, C_in]
     x = context[node.inputs[2]]
 
@@ -1030,7 +1001,7 @@ def Conv3DBackpropInputV2(context, node):
     # Pass output shape provided above
     x = mb.conv_transpose(
         x=x,
-        weight=W_oidhw,
+        weight=W_iodhw,
         pad_type=pad_type,
         strides=DHW_strides,
         output_shape=output_shape,
@@ -1303,10 +1274,11 @@ def Prod(context, node):
 @register_tf_op
 def Cast(context, node):
     type_map = {
+        types.fp16: "fp16",
         types.float: "fp32",
-        types.double: "fp64",
+        types.double: "fp32",
         types.int32: "int32",
-        types.int64: "int64",
+        types.int64: "int32",
     }
     if node.attr["DstT"] not in type_map.keys():
         raise NotImplementedError(
@@ -2029,8 +2001,14 @@ def Tile(context, node):
 
 @register_tf_op
 def Where(context, node):
+    if len(node.inputs) > 1:
+        raise NotImplementedError('tf.where with x,y will be supported by '+\
+                'MIL::select in the future')
     x = context[node.inputs[0]]
-    x = mb.non_zero(x=x, name=node.name)
+    # rdar://78409794 (Remove cast in tf Where op lowering after rdar://77514629
+    # goes into MIL build)
+    x_fp32 = mb.cast(x=x, dtype="fp32")
+    x = mb.non_zero(x=x_fp32, name=node.name)
     context.add(node.name, x)
 
 
@@ -2049,7 +2027,7 @@ def Conv2DBackpropInput(context, node):
     output_shape = context[node.inputs[0]].val
     # Weight shape: [H, W, C_out, C_in]
     W_hwoi = context[node.inputs[1]]
-    W_oihw = mb.transpose(x=W_hwoi, perm=[2, 3, 0, 1])
+    W_iohw = mb.transpose(x=W_hwoi, perm=[3, 2, 0, 1])
     # Input shape: [N, H_in, W_in, C_in]
     x = context[node.inputs[2]]
 
@@ -2080,7 +2058,7 @@ def Conv2DBackpropInput(context, node):
     # Pass output shape provided above
     x = mb.conv_transpose(
         x=x,
-        weight=W_oihw,
+        weight=W_iohw,
         pad_type=pad_type,
         output_shape=output_shape,
         strides=HW_strides,
@@ -2182,34 +2160,29 @@ def ResizeNearestNeighbor(context, node):
     input_shape = x.shape  # (N,Hin,Win,C)
     if len(input_shape) != 4:
         raise ValueError('"ResizeNearestNeighbor" op: input rank is not 4')
-    Hin, Win = input_shape[1:3]
 
-    if context[node.inputs[1]].val is None:
-        raise ValueError(
-            '"ResizeNearestNeighbor" op: the second input, which is the output size, must be known statically'
-        )
+    if len(context[node.inputs[1]].shape) != 1:
+        raise ValueError('"ResizeNearestNeighbor" op: the second input, must have rank 1')
 
-    if len(context[node.inputs[1]].val) != 2:
+    if context[node.inputs[1]].shape[0] != 2:
         raise ValueError(
             '"ResizeNearestNeighbor" op: the second input, which is the output size, must have 2 elements'
         )
 
-    Hout, Wout = context[node.inputs[1]].val
+    if context[node.inputs[1]].val is None:
+        # for the dynamic input shape case,
+        # context[node.inputs[1]] is a mul(x=input_shape, y=scaling_factor) op.
+        scaling_factor_h = context[node.inputs[1]].op.y.val[0]
+        scaling_factor_w = context[node.inputs[1]].op.y.val[1]
+    else:
+        Hin, Win = input_shape[1], input_shape[2]
+        Hout, Wout = context[node.inputs[1]].val
+        scaling_factor_h = Hout / Hin if Hout % Hin == 0 else (Hout + 1e-4) / Hin
+        scaling_factor_w = Wout / Win if Wout % Win == 0 else (Wout + 1e-4) / Win
 
-    if not (
-        isinstance(Hout, (_np.int32, _np.int64))
-        and isinstance(Wout, (_np.int32, _np.int64))
-    ):
-        raise ValueError(
-            '"ResizeNearestNeighbor" op: the second input, which is the output size, must have elements of type int32 or int64'
-        )
-
-    if Hout < Hin and Wout < Win:
+    if scaling_factor_h < 1 and scaling_factor_w < 1:
         ResizeBilinear(context, node)
         return
-
-    scaling_factor_h = Hout / Hin
-    scaling_factor_w = Wout / Win
 
     # first transpose to from channel last to channel first format for coreml
     x = _transpose_NHWC_to_NCHW(x)
@@ -2235,27 +2208,38 @@ def ResizeBilinear(context, node):
     input_shape = x.shape  # (N,Hin,Win,C)
     if len(input_shape) != 4:
         raise ValueError('"ResizeBilinear" op: input rank is not 4')
-    Hin, Win = input_shape[1:3]
 
-    if context[node.inputs[1]].val is None:
-        raise ValueError(
-            '"ResizeBilinear" op: the second input, which is the output size, must be known statically'
-        )
+    if len(context[node.inputs[1]].shape) != 1:
+        raise ValueError('"ResizeBilinear" op: the second input, must have rank 1')
 
-    if len(context[node.inputs[1]].val) != 2:
+    if context[node.inputs[1]].shape[0] != 2:
         raise ValueError(
             '"ResizeBilinear" op: the second input, which is the output size, must have 2 elements'
         )
 
-    Hout, Wout = context[node.inputs[1]].val
-
-    if not (isinstance(Hout, (_np.int32, _np.int64)) and isinstance(Wout, (_np.int32, _np.int64))):
-        raise ValueError(
-            '"ResizeBilinear" op: the second input, which is the output size, must have elements of type int32 or int64'
-        )
-
     align_corners = node.attr.get("align_corners", False)
     half_pixel_centers = node.attr.get("half_pixel_centers", False)
+
+    if align_corners and half_pixel_centers:
+        # we should not come here since TF does not support align_corners=True and half_pixel_centers=True
+        raise ValueError(
+            '"ResizeBilinear" op: "align_corners" and "half_pixel_centers" are both True and this mode is not supported'
+        )
+
+    if (align_corners and not half_pixel_centers) or \
+       (not align_corners and not half_pixel_centers):
+        # output shape needed to be known at compile time
+        if context[node.inputs[1]].val is None:
+            raise ValueError(
+                '"ResizeBilinear" op: the second input, which is the output size, must be known statically'
+            )
+
+        Hout, Wout = context[node.inputs[1]].val
+
+        if not (isinstance(Hout, (_np.int32, _np.int64)) and isinstance(Wout, (_np.int32, _np.int64))):
+            raise ValueError(
+                '"ResizeBilinear" op: the second input, which is the output size, must have elements of type int32 or int64'
+            )
 
     # first transpose to from channel last to channel first format for coreml
     x = _transpose_NHWC_to_NCHW(x)
@@ -2284,18 +2268,25 @@ def ResizeBilinear(context, node):
 
     # [align_corners = False, half_pixel_centers = True]
     elif not align_corners and half_pixel_centers:
+        if context[node.inputs[1]].val is None:
+            # for the dynamic input shape case,
+            # context[node.inputs[1]] is a mul(x=input_shape, y=scaling_factor) op.
+            scale_factor_height = context[node.inputs[1]].op.y.val[0]
+            scale_factor_width = context[node.inputs[1]].op.y.val[1]
+        else:
+            Hin, Win = input_shape[1], input_shape[2]
+            Hout, Wout = context[node.inputs[1]].val
+            # check if the output size divide the input size,
+            # if not, then cast the scale factor to float type.
+            scale_factor_height = Hout / Hin if Hout % Hin == 0 else (Hout + 1e-4) / Hin
+            scale_factor_width = Wout / Win if Wout % Win == 0 else (Wout + 1e-4) / Win
+
         x = mb.upsample_bilinear(
             x=x,
-            scale_factor_height=(float(Hout) + 1e-2) / float(Hin),
-            scale_factor_width=(float(Wout) + 1e-2) / float(Win),
+            scale_factor_height=scale_factor_height,
+            scale_factor_width=scale_factor_width,
             align_corners=False,
             name=node.name + "_channel_first_upsample_bilinear",
-        )
-
-    else:
-        # we should not come here since TF does not support align_corners=True and half_pixel_centers=True
-        raise ValueError(
-            '"ResizeBilinear" op: "align_corners" and "half_pixel_centers" are both True and this mode is not supported'
         )
 
     # transpose again

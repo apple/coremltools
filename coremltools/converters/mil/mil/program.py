@@ -89,6 +89,8 @@ class Placeholder(object):
         """
         if not isinstance(sym_shape, (list, tuple, _np.ndarray)):
             raise ValueError("Illegal shape for Placeholder: {}".format(sym_shape))
+        if len(sym_shape) == 0:
+            raise ValueError('Rank-0 (input {}) is unsupported'.format(name))
         for i, d in enumerate(sym_shape):
             if not isinstance(d, (_np.generic, int, Symbol)):
                 msg = 'Placeholder dim {} in {} is not integer or symbol'

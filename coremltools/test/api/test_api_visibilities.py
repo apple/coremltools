@@ -1,3 +1,7 @@
+# Copyright (c) 2021, Apple Inc. All rights reserved.
+#
+# Use of this source code is governed by a BSD-3-clause license that can be
+# found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 import coremltools as ct
 import pytest
 
@@ -30,10 +34,14 @@ class TestApiVisibilities:
             "libcoremlpython",
             "models",
             "proto",
+            "precision",
             "target",
             "utils",
             "version",
             "test",
+            "transform",
+            "libmodelpackage",
+            "libmilstoragepython",
         ]
         if not ct.utils._is_macos():
              expected.remove("libcoremlpython")
@@ -42,8 +50,6 @@ class TestApiVisibilities:
     def test_utils(self):
         expected = [
             "convert_double_to_float_multiarray_type",
-            "convert_neural_network_spec_weights_to_fp16",
-            "convert_neural_network_weights_to_fp16",
             "evaluate_classifier",
             "evaluate_classifier_with_probabilities",
             "evaluate_regressor",
@@ -51,6 +57,7 @@ class TestApiVisibilities:
             "load_spec",
             "rename_feature",
             "save_spec",
+            "ModelPackage",
         ]
         _check_visible_modules(_get_visible_items(ct.utils), expected)
 
@@ -138,7 +145,6 @@ class TestApiVisibilities:
             "RangeDim",
             "Shape",
             "TensorType",
-            "caffe",
             "convert",
             "keras",
             "libsvm",
@@ -148,9 +154,6 @@ class TestApiVisibilities:
             "xgboost",
         ]
         _check_visible_modules(_get_visible_items(ct.converters), expected)
-
-    def test_converters_caffe(self):
-        _check_visible_modules(_get_visible_items(ct.converters.caffe), ["convert"])
 
     @pytest.mark.skipif(
         ct.utils._python_version() >= (3, 8, 0),

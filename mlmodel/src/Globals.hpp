@@ -49,7 +49,12 @@ namespace CoreML {
     // - Float32 input/output for NonmaximumSuppression model
     static const int32_t MLMODEL_SPECIFICATION_VERSION_IOS14 = 5;
 
-    static const int32_t MLMODEL_SPECIFICATION_VERSION_NEWEST = MLMODEL_SPECIFICATION_VERSION_IOS14;
+    // version 6:
+    // - New "mlProgram" model type
+    // - Sound Print of Audio Feature Print
+    static const int32_t MLMODEL_SPECIFICATION_VERSION_IOS15 = 6;
+
+    static const int32_t MLMODEL_SPECIFICATION_VERSION_NEWEST = MLMODEL_SPECIFICATION_VERSION_IOS15;
 
 }
 

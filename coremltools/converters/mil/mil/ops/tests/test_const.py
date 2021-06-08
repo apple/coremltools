@@ -13,13 +13,16 @@ backends = testing_reqs.backends
 
 class TestConst:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, dtype", itertools.product(
-            [True],
+        "use_cpu_for_conversion, backend, dtype", itertools.product(
+            [True, False],
             backends,
             [np.float32, np.int32]
         )
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend, dtype):
+    def test_builder_to_backend_smoke(self, use_cpu_for_conversion, backend, dtype):
+        if backend == "mlprogram" and not use_cpu_for_conversion:
+            pytest.xfail("rdar://78343191 ((MIL GPU) Core ML Tools Unit Test failures [failure to load or Seg fault])")
+
         t = np.random.randint(0, 100, (100, 2)).astype(np.float32)
         constant = np.random.randint(0, 100, (100, 2)).astype(dtype)
         input_placeholders = {
@@ -28,7 +31,7 @@ class TestConst:
         input_values = {"x": t}
 
         def build(x):
-            y = mb.const(val=constant, mode="file_value")
+            y = mb.const(val=constant)
             x = mb.cast(x=x, dtype='int32')
             z = mb.add(x=x, y=y)
             return mb.cast(x=z, dtype='fp32')
@@ -42,7 +45,8 @@ class TestConst:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_only=use_cpu_for_conversion,
             frontend_only=False,
             backend=backend,
+            use_cpu_for_conversion=use_cpu_for_conversion,
         )

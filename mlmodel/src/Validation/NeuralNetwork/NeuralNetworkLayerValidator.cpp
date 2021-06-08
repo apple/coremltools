@@ -16,19 +16,12 @@ using namespace CoreML;
 
 //    ConvolutionLayerParams convolution = 4;
 Result NeuralNetworkSpecValidator::validateConvolutionLayer(const Specification::NeuralNetworkLayer& layer) {
-
-    Result r;
-    r = validateInputCount(layer, 1, 2);
-    if (!r.good()) {return r;}
-
-    r = validateOutputCount(layer, 1, 1);
-    if (!r.good()) {return r;}
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 2));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
 
     if (ndArrayInterpretation) {
-        r = validateInputOutputRankEquality(layer, "Convolution", blobNameToRank);
-        if (!r.good()) {return r;}
-        r = validateRankCount(layer, "Convolution", 4, -1, blobNameToRank);
-        if (!r.good()) {return r;}
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputOutputRankEquality(layer, "Convolution", blobNameToRank));
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateRankCount(layer, "Convolution", 4, -1, blobNameToRank));
     } else {
         if (layer.input_size() != 1) {
             std::string err = "Convolution Layer '" + layer.name() +
@@ -40,8 +33,7 @@ Result NeuralNetworkSpecValidator::validateConvolutionLayer(const Specification:
     // We need to check if the ConvolutionPaddingType is set
     if (layer.convolution().ConvolutionPaddingType_case() == Specification::ConvolutionLayerParams::ConvolutionPaddingTypeCase::CONVOLUTIONPADDINGTYPE_NOT_SET) {
         std::string err = "Padding type for convolution layer '" + layer.name() + "' is not set.";
-        r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-        return r;
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
     }
 
     const auto& params = layer.convolution();
@@ -83,13 +75,13 @@ Result NeuralNetworkSpecValidator::validateConvolutionLayer(const Specification:
     }
 
     if (layer.input_size() > 1) {
-        return r;
+        return Result();
     }
 
     bool has_bias = params.hasbias();
     if (has_bias && layer.input_size() != 1) {
         std::string err = "Convolution layer: '" + layer.name() + "' with dynamic weight does not support static bias.";
-        r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
     }
 
     WeightParamType weightsValueType, biasValueType;
@@ -99,15 +91,13 @@ Result NeuralNetworkSpecValidator::validateConvolutionLayer(const Specification:
     // Check weight/bias value types. Only float32 or float16 parameters can be populated at any time
     if ( (weightsValueType == UNSPECIFIED) || (has_bias && biasValueType == UNSPECIFIED)) {
         std::string err = "Convolution layer '" + layer.name() + "'  has invalid weights/bias fields.";
-        r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-        return r;
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
     }
     if (has_bias){
         if ((weightsValueType == CoreML::FLOAT16 && biasValueType == CoreML::FLOAT32) ||
             (weightsValueType == CoreML::FLOAT32 && biasValueType == CoreML::FLOAT16)){
-            r = Result(ResultType::INVALID_MODEL_PARAMETERS, "Convolution layer " + layer.name() +
-                       "has unmatched precisions of weights/bias They should either be half or full precision.");
-            return r;
+            return Result(ResultType::INVALID_MODEL_PARAMETERS, "Convolution layer " + layer.name() +
+                          "has unmatched precisions of weights/bias They should either be half or full precision.");
         }
     }
 
@@ -132,22 +122,18 @@ Result NeuralNetworkSpecValidator::validateConvolutionLayer(const Specification:
         if (weight_size != expected_weight_size) {
             if (is_deconv) {
                 std::string err = "Deconvolution layer '" + layer.name() + "' has weight matrix of size " + std::to_string(weight_size) + " to encode a " + std::to_string(kernelChannels) + " × " + std::to_string(outputChannels/nGroups) + " × " + std::to_string(kernelHeight) + " × " + std::to_string(kernelWidth) + " convolution.";
-                r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-                return r;
+                return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
             }
             else {
                 std::string err = "Convolution layer '" + layer.name() + "' has weight matrix of size " + std::to_string(weight_size) + " to encode a " + std::to_string(outputChannels) + " × " + std::to_string(kernelChannels) + " × " + std::to_string(kernelHeight) + " × " + std::to_string(kernelWidth) + " convolution.";
-                r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-                return r;
+                return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
             }
         }
     } // if (weightsValueType == FLOAT32 || weightsValueType == FLOAT16)
     else if (weightsValueType == QUINT) {
-        r = validateGeneralWeightParams(params.weights(), expected_weight_size, outputChannels, "Convolution", layer.name(), "weight");
-        if (!r.good()) return r;
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(params.weights(), expected_weight_size, outputChannels, "Convolution", layer.name(), "weight"));
     } else { // EMPTY
-        r = Result(ResultType::INVALID_MODEL_PARAMETERS, "Layer " + layer.name() + "has not specified weights.");
-        return r;
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, "Layer " + layer.name() + "has not specified weights.");
     }
 
     // Check the bias
@@ -162,35 +148,25 @@ Result NeuralNetworkSpecValidator::validateConvolutionLayer(const Specification:
             if (bias_size != outputChannels) {
                 std::string err = "Convolution layer '" + layer.name() + "' has a bias vector of size " +
                 std::to_string(bias_size) + " but should be " + std::to_string(outputChannels) + ".";
-                r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-                return r;
+                return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
             }
         } else if (biasValueType == QUINT){
             // quantization of bias vector should be 1
-            r = validateGeneralWeightParams(params.bias(), outputChannels, 1, "Convolution", layer.name(), "bias");
-            if (!r.good()) return r;
+            HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(params.bias(), outputChannels, 1, "Convolution", layer.name(), "bias"));
         } else { // EMPTY
-            r = Result(ResultType::INVALID_MODEL_PARAMETERS, "Layer " + layer.name() + "has not specified bias.");
-            return r;
+            return Result(ResultType::INVALID_MODEL_PARAMETERS, "Layer " + layer.name() + "has not specified bias.");
         }
     }
-    return r;
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateConvolution3DLayer(const Specification::NeuralNetworkLayer& layer) {
-
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (!r.good()) { return r; }
-
-    r = validateOutputCount(layer, 1, 1);
-    if (!r.good()) { return r; }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
 
     if (ndArrayInterpretation) {
-        r = validateInputOutputRankEquality(layer, "Convolution3D", blobNameToRank);
-        if (!r.good()) { return r; }
-        r = validateRankCount(layer, "Convolution3D", 5, -1, blobNameToRank);
-        if (!r.good()) { return r; }
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputOutputRankEquality(layer, "Convolution3D", blobNameToRank));
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateRankCount(layer, "Convolution3D", 5, -1, blobNameToRank));
     }
 
     const auto& params = layer.convolution3d();
@@ -205,39 +181,27 @@ Result NeuralNetworkSpecValidator::validateConvolution3DLayer(const Specificatio
     int inputChannels = params.inputchannels();
     int outputChannels = params.outputchannels();
     int nGroups = params.ngroups();
-    r = validatePositive(inputChannels, "Input Channels");
-    if (!r.good()) { return r; }
-    r = validatePositive(outputChannels, "Output Channels");
-    if (!r.good()) { return r; }
-    r = validatePositive(nGroups, "Groups");
-    if (!r.good()) { return r; }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validatePositive(inputChannels, "Input Channels"));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validatePositive(outputChannels, "Output Channels"));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validatePositive(nGroups, "Groups"));
 
     // Validate kernel is positive
     int kernelDepth = params.kerneldepth();
     int kernelHeight = params.kernelheight();
     int kernelWidth = params.kernelwidth();
-    r = validatePositive(kernelDepth, "Kernel Depth");
-    if (!r.good()) { return r; }
-    r = validatePositive(kernelHeight, "Kernel Height");
-    if (!r.good()) { return r; }
-    r = validatePositive(kernelWidth, "Kernel Width");
-    if (!r.good()) { return r; }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validatePositive(kernelDepth, "Kernel Depth"));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validatePositive(kernelHeight, "Kernel Height"));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validatePositive(kernelWidth, "Kernel Width"));
 
     // Validate stride is positive
-    r = validatePositive(params.stridedepth(), "Stride Depth");
-    if (!r.good()) { return r; }
-    r = validatePositive(params.strideheight(), "Stride Height");
-    if (!r.good()) { return r; }
-    r = validatePositive(params.stridewidth(), "Stride Width");
-    if (!r.good()) { return r; }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validatePositive(params.stridedepth(), "Stride Depth"));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validatePositive(params.strideheight(), "Stride Height"));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validatePositive(params.stridewidth(), "Stride Width"));
 
     // Validate dilation is positive
-    r = validatePositive(params.dilationdepth(), "Dilation Depth");
-    if (!r.good()) { return r; }
-    r = validatePositive(params.dilationheight(), "Dilation Height");
-    if (!r.good()) { return r; }
-    r = validatePositive(params.dilationwidth(), "Dilation Width");
-    if (!r.good()) { return r; }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validatePositive(params.dilationdepth(), "Dilation Depth"));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validatePositive(params.dilationheight(), "Dilation Height"));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validatePositive(params.dilationwidth(), "Dilation Width"));
 
     // Validate padding
     int customPaddingFront = params.custompaddingfront();
@@ -286,15 +250,13 @@ Result NeuralNetworkSpecValidator::validateConvolution3DLayer(const Specificatio
     if ((weightsValueType == UNSPECIFIED) || (has_bias && biasValueType == UNSPECIFIED)) {
         std::string err = "Convolution3D layer '" + layer.name() +
             "'  has invalid weights/bias fields.";
-        r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-        return r;
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
     }
     if (has_bias){
         if ((weightsValueType == CoreML::FLOAT16 && biasValueType == CoreML::FLOAT32) ||
             (weightsValueType == CoreML::FLOAT32 && biasValueType == CoreML::FLOAT16)) {
-            r = Result(ResultType::INVALID_MODEL_PARAMETERS, "Convolution3D layer '" + layer.name() +
-                "' has unmatched precisions of weights/bias They should either be half or full precision.");
-            return r;
+            return Result(ResultType::INVALID_MODEL_PARAMETERS, "Convolution3D layer '" + layer.name() +
+                          "' has unmatched precisions of weights/bias They should either be half or full precision.");
         }
     }
 
@@ -314,8 +276,7 @@ Result NeuralNetworkSpecValidator::validateConvolution3DLayer(const Specificatio
     if (weightsValueType == QUINT) {
         std::string err = "Layer '" + layer.name() + "' has invalid weights field. Quantized " +
             "weights are not supported.";
-        r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-        return r;
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
     }
     uint64_t expected_weight_size = 0;
     if (is_deconv) {
@@ -323,9 +284,8 @@ Result NeuralNetworkSpecValidator::validateConvolution3DLayer(const Specificatio
     } else {
         expected_weight_size = static_cast<uint64_t>(outputChannels * (inputChannels / nGroups) * kernelDepth * kernelHeight * kernelWidth);
     }
-    r = validateGeneralWeightParams(params.weights(), expected_weight_size, uint64_t(outputChannels),
-                                    "Convolution3D ", layer.name(), "weights");
-    if (!r.good()) { return r; }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(params.weights(), expected_weight_size, uint64_t(outputChannels),
+                                                                  "Convolution3D ", layer.name(), "weights"));
 
     // Check the bias
     int bias_size = 0;
@@ -340,30 +300,24 @@ Result NeuralNetworkSpecValidator::validateConvolution3DLayer(const Specificatio
                 std::string err = "Convolution3D layer '" + layer.name() +
                     "' has a bias vector of size " + std::to_string(bias_size) + " but should be " +
                     std::to_string(outputChannels) + ".";
-                r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-                return r;
+                return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
             }
         } else if (biasValueType == QUINT){
             // We don't currently support quantized parameters.
             std::string err = "Layer '" + layer.name() + "' has invalid bias field. Quantized " +
                 "bias is not supported.";
-            r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-            return r;
+            return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
         } else { // EMPTY
-            r = Result(ResultType::INVALID_MODEL_PARAMETERS, "Layer " + layer.name() +
-                "has not specified bias.");
-            return r;
+            return Result(ResultType::INVALID_MODEL_PARAMETERS, "Layer " + layer.name() +
+                          "has not specified bias.");
         }
     }
-    return r;
+    return Result();
 }
 
 static Result validateInnerProductWeightsBias(const Specification::NeuralNetworkLayer& layer,
                                               const Specification::WeightParams& weights,
                                               const Specification::WeightParams& bias) {
-
-    Result r;
-
     bool has_bias;
     uint64_t num_inputs;
     uint64_t num_outputs;
@@ -387,7 +341,7 @@ static Result validateInnerProductWeightsBias(const Specification::NeuralNetwork
             break;
         }
         default:
-            return r;
+            return Result();
     }
 
     WeightParamType weightsValueType, biasValueType;
@@ -396,16 +350,14 @@ static Result validateInnerProductWeightsBias(const Specification::NeuralNetwork
 
     // Check for weight and bias value type
     if ((weightsValueType == UNSPECIFIED) || (has_bias && biasValueType == UNSPECIFIED)) {
-        r = Result(ResultType::INVALID_MODEL_PARAMETERS, layer_type + " layer '" + layer.name() + "' has invalid weights/bias fields.");
-        return r;
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, layer_type + " layer '" + layer.name() + "' has invalid weights/bias fields.");
     }
     // Check that weight and bias should both be FP16/32, or quantized
     if (has_bias){
         if ((weightsValueType == CoreML::FLOAT16 && biasValueType == CoreML::FLOAT32) ||
             (weightsValueType == CoreML::FLOAT32 && biasValueType == CoreML::FLOAT16)){
-            r = Result(ResultType::INVALID_MODEL_PARAMETERS, layer_type + " layer '" + layer.name() +
-                       "has unmatched precisions of weights/bias They should either be half or full precision.");
-            return r;
+            return Result(ResultType::INVALID_MODEL_PARAMETERS, layer_type + " layer '" + layer.name() +
+                          "has unmatched precisions of weights/bias They should either be half or full precision.");
         }
     }
 
@@ -418,16 +370,14 @@ static Result validateInnerProductWeightsBias(const Specification::NeuralNetwork
             weight_size = static_cast<uint64_t>(weights.float16value().size() / 2);
         }
         if (num_inputs * num_outputs != weight_size) {
-            r = Result(ResultType::INVALID_MODEL_PARAMETERS, "Layer '" + layer.name() +
-                       " has incorrect weight matrix size " + std::to_string(weight_size) +
-                       " to encode a " + std::to_string(num_inputs) + " × " +
-                       std::to_string(num_outputs) + " " + layer_type + ".");
-            return r;
+            return Result(ResultType::INVALID_MODEL_PARAMETERS, "Layer '" + layer.name() +
+                          " has incorrect weight matrix size " + std::to_string(weight_size) +
+                          " to encode a " + std::to_string(num_inputs) + " × " +
+                          std::to_string(num_outputs) + " " + layer_type + ".");
         }
     } else if (weightsValueType == QUINT){
-        r = validateGeneralWeightParams(weights, num_inputs * num_outputs, num_outputs,
-                                        layer_type, layer.name(), "weight");
-        if (!r.good()) return r;
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(weights, num_inputs * num_outputs, num_outputs,
+                                                                      layer_type, layer.name(), "weight"));
     }
 
     // Check the bias
@@ -442,67 +392,47 @@ static Result validateInnerProductWeightsBias(const Specification::NeuralNetwork
             if (bias_size != num_outputs) {
                 std::string err = "Layer '" + layer.name() + "' has incorrect bias vector size " +
                 std::to_string(bias_size) + " (expected " + std::to_string(num_outputs) + ").";
-                r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-                return r;
+                return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
             }
         } else if (biasValueType == QUINT){
-            r = validateGeneralWeightParams(bias, num_outputs, 1, layer_type,
-                                            layer.name(), "bias");
-            if (!r.good()) return r;
+            HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(bias, num_outputs, 1, layer_type,
+                                                                          layer.name(), "bias"));
         }
     } else if (!has_bias && bias_size > 0) {
         std::string err = "Bias vector being ignored since \"hasBias\" flag not set.";
-        r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-        return r;
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
     }
 
-    return r;
+    return Result();
 }
 
 //    InnerProductLayerParams innerProduct = 5;
 Result NeuralNetworkSpecValidator::validateInnerProductLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
-    if (!r.good()) {
-        return r;
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
 
     if (ndArrayInterpretation) {
-        r = validateInputOutputRankEquality(layer, "InnerProduct", blobNameToRank);
-        if (!r.good()) {return r;}
-        r = validateRankCount(layer, "InnerProduct", 1, 5, blobNameToRank);
-        if (!r.good()) {return r;}
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputOutputRankEquality(layer, "InnerProduct", blobNameToRank));
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateRankCount(layer, "InnerProduct", 1, 5, blobNameToRank));
     }
 
     const auto& params = layer.innerproduct();
     if (params.int8dynamicquantize()) {
-        r = validateInt8Requirements(params.weights(), "InnerProduct", layer.name());
-        if (!r.good()) {return r;}
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInt8Requirements(params.weights(), "InnerProduct", layer.name()));
     }
 
-    r = validateInnerProductWeightsBias(layer, params.weights(), params.bias());
-
-    return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInnerProductWeightsBias(layer, params.weights(), params.bias()));
+    return Result();
 }
 
 //    BatchnormLayerParams batchnorm = 6;
 Result NeuralNetworkSpecValidator::validateBatchnormLayer(const Specification::NeuralNetworkLayer& layer) {
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
 
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
-
-    if (!r.good()){ return r;}
     if (ndArrayInterpretation) {
-        r = validateInputOutputRankEquality(layer, "Batchnorm", blobNameToRank);
-        if (!r.good()) {return r;}
-        r = validateRankCount(layer, "Batchnorm", 3, -1, blobNameToRank);
-        if (!r.good()) {return r;}
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputOutputRankEquality(layer, "Batchnorm", blobNameToRank));
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateRankCount(layer, "Batchnorm", 3, -1, blobNameToRank));
     }
 
     // Check parameters types
@@ -520,45 +450,35 @@ Result NeuralNetworkSpecValidator::validateBatchnormLayer(const Specification::N
 
     // Check parameters length
     uint64_t num_channels = static_cast<uint64_t>(layer.batchnorm().channels());
-    r = validateGeneralWeightParams(layer.batchnorm().gamma(), num_channels, 1, "BatchNorm", layer.name(), "gamma");
-    if (!r.good()) return r;
-    r = validateGeneralWeightParams(layer.batchnorm().beta(), num_channels, 1, "BatchNorm", layer.name(), "beta");
-    if (!r.good()) return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(layer.batchnorm().gamma(), num_channels, 1, "BatchNorm", layer.name(), "gamma"));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(layer.batchnorm().beta(), num_channels, 1, "BatchNorm", layer.name(), "beta"));
+
     // Check existence of mean / variance
     if (!layer.batchnorm().computemeanvar()) {
         if (valueType(layer.batchnorm().mean()) == EMPTY || valueType(layer.batchnorm().mean()) == EMPTY){
             const std::string err = "Batchnorm layer '" + layer.name() + "' is missing mean and variance.";
             return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
         }
-        r = validateGeneralWeightParams(layer.batchnorm().mean(), num_channels, 1, "BatchNorm", layer.name(), "mean");
-        if (!r.good()) return r;
-        r = validateGeneralWeightParams(layer.batchnorm().variance(), num_channels, 1, "BatchNorm", layer.name(), "variance");
-        if (!r.good()) return r;
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(layer.batchnorm().mean(), num_channels, 1, "BatchNorm", layer.name(), "mean"));
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(layer.batchnorm().variance(), num_channels, 1, "BatchNorm", layer.name(), "variance"));
     }
-    return r;
+    return Result();
 }
 
 //    ActivationLayerParams activation = 6;
 Result NeuralNetworkSpecValidator::validateActivation(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
 
-    if (!r.good()) {return r;}
     if (ndArrayInterpretation) {
         if (layer.activation().NonlinearityType_case() == Specification::ActivationParams::NonlinearityTypeCase::kPReLU) {
-            r = validateInputOutputRankEquality(layer, "ActivationPReLU", blobNameToRank);
-            if (!r.good()) {return r;}
-            r = validateRankCount(layer, "ActivationPReLU", 3, -1, blobNameToRank);
-            if (!r.good()) {return r;}
+            HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputOutputRankEquality(layer, "ActivationPReLU", blobNameToRank));
+            HANDLE_RESULT_AND_RETURN_ON_ERROR(validateRankCount(layer, "ActivationPReLU", 3, -1, blobNameToRank));
         }
+
         if (layer.activation().NonlinearityType_case() == Specification::ActivationParams::NonlinearityTypeCase::kParametricSoftplus) {
-            r = validateInputOutputRankEquality(layer, "ActivationParametricSoftplus", blobNameToRank);
-            if (!r.good()) {return r;}
-            r = validateRankCount(layer, "ActivationParametricSoftplus", 3, -1, blobNameToRank);
-            if (!r.good()) {return r;}
+            HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputOutputRankEquality(layer, "ActivationParametricSoftplus", blobNameToRank));
+            HANDLE_RESULT_AND_RETURN_ON_ERROR(validateRankCount(layer, "ActivationParametricSoftplus", 3, -1, blobNameToRank));
         }
     }
 
@@ -567,190 +487,133 @@ Result NeuralNetworkSpecValidator::validateActivation(const Specification::Neura
 
 //    PoolingLayerParams pooling = 8;
 Result NeuralNetworkSpecValidator::validatePoolingLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (!r.good()) {return r;}
-
-    r = validateOutputCount(layer, 1, 1);
-    if (!r.good()) {return r;}
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
 
     if (ndArrayInterpretation) {
-        r = validateInputOutputRankEquality(layer, "Pooling", blobNameToRank);
-        if (!r.good()) {return r;}
-        r = validateRankCount(layer, "Pooling", 4, -1, blobNameToRank);
-        if (!r.good()) {return r;}
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputOutputRankEquality(layer, "Pooling", blobNameToRank));
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateRankCount(layer, "Pooling", 4, -1, blobNameToRank));
     }
 
     // We need to check if the PoolingPaddingType is set
     if (layer.pooling().PoolingPaddingType_case() == Specification::PoolingLayerParams::PoolingPaddingTypeCase::POOLINGPADDINGTYPE_NOT_SET) {
         std::string err = "Padding type for the pooling layer '" + layer.name() + "' is not set.";
-        r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
     }
 
-    return r;
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validatePooling3dLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (!r.good()) { return r; }
-    
-    r = validateOutputCount(layer, 1, 1);
-    if (!r.good()) { return r; }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1))
     
     if (ndArrayInterpretation) {
-        r = validateInputOutputRankEquality(layer, "Pooling3d", blobNameToRank);
-        if (!r.good()) { return r; }
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputOutputRankEquality(layer, "Pooling3d", blobNameToRank));
+
         // Rank 5 for 2 spacial dimensions, 1 temporal dimension, batch dimension, and 1+ channels.
-        r = validateRankCount(layer, "Pooling3d", 5, -1, blobNameToRank);
-        if (!r.good()) { return r; }
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateRankCount(layer, "Pooling3d", 5, -1, blobNameToRank));
     }
     
     // Kernel
     const auto pooling3d = layer.pooling3d();
    
-    r = validatePositive(pooling3d.kerneldepth(), "Kernel Depth");
-    if (!r.good()) { return r; }
-
-    r = validatePositive(pooling3d.kernelheight(), "Kernel Height");
-    if (!r.good()) { return r; }
-
-    r = validatePositive(pooling3d.kernelwidth(), "Kernel Width");
-    if (!r.good()) { return r; }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validatePositive(pooling3d.kerneldepth(), "Kernel Depth"));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validatePositive(pooling3d.kernelheight(), "Kernel Height"));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validatePositive(pooling3d.kernelwidth(), "Kernel Width"));
 
     // Stride
-    r = validatePositive(pooling3d.stridedepth(), "Stride Depth");
-    if (!r.good()) { return r; }
-    
-    r = validatePositive(pooling3d.strideheight(), "Stride Height");
-    if (!r.good()) { return r; }
-    
-    r = validatePositive(pooling3d.stridewidth(), "Stride Width");
-    if (!r.good()) { return r; }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validatePositive(pooling3d.stridedepth(), "Stride Depth"));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validatePositive(pooling3d.strideheight(), "Stride Height"));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validatePositive(pooling3d.stridewidth(), "Stride Width"));
     
     // Custom Padding
     auto paddingType = pooling3d.paddingtype();
-    r = validatePooling3dPadding(paddingType, pooling3d.custompaddingfront(), "Front");
-    if (!r.good()) { return r; }
-
-    r = validatePooling3dPadding(paddingType, pooling3d.custompaddingback(), "Back");
-    if (!r.good()) { return r; }
-
-    r = validatePooling3dPadding(paddingType, pooling3d.custompaddingtop(), "Top");
-    if (!r.good()) { return r; }
-
-    r = validatePooling3dPadding(paddingType, pooling3d.custompaddingbottom(), "Bottom");
-    if (!r.good()) { return r; }
-
-    r = validatePooling3dPadding(paddingType, pooling3d.custompaddingleft(), "Left");
-    if (!r.good()) { return r; }
-
-    r = validatePooling3dPadding(paddingType, pooling3d.custompaddingright(), "Right");
-    if (!r.good()) { return r; }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validatePooling3dPadding(paddingType, pooling3d.custompaddingfront(), "Front"));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validatePooling3dPadding(paddingType, pooling3d.custompaddingback(), "Back"));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validatePooling3dPadding(paddingType, pooling3d.custompaddingtop(), "Top"));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validatePooling3dPadding(paddingType, pooling3d.custompaddingbottom(), "Bottom"));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validatePooling3dPadding(paddingType, pooling3d.custompaddingleft(), "Left"));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validatePooling3dPadding(paddingType, pooling3d.custompaddingright(), "Right"));
     
-    return r;
+    return Result();
 }
 
 
 Result NeuralNetworkSpecValidator::validateGlobalPooling3dLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (!r.good()) {return r;}
-
-    r = validateOutputCount(layer, 1, 1);
-    if (!r.good()) {return r;}
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
 
     if (ndArrayInterpretation) {
-        r = validateInputOutputRankEquality(layer, "Pooling3d", blobNameToRank);
-        if (!r.good()) {return r;}
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputOutputRankEquality(layer, "Pooling3d", blobNameToRank));
+
         // Rank 5 for 2 spacial dimensions, 1 temporal dimension, batch dimension, and 1+ channels.
-        r = validateRankCount(layer, "Pooling3d", 5, -1, blobNameToRank);
-        if (!r.good()) {return r;}
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateRankCount(layer, "Pooling3d", 5, -1, blobNameToRank));
     }
 
-    return r;
+    return Result();
 }
 
 //    PaddingLayerParams padding = 9;
 Result NeuralNetworkSpecValidator::validatePaddingLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
 
-    if (!r.good()){ return r;}
     if (ndArrayInterpretation) {
-        r = validateInputOutputRankEquality(layer, "Padding", blobNameToRank);
-        if (!r.good()) {return r;}
-        r = validateRankCount(layer, "Padding", 2, -1, blobNameToRank);
-        if (!r.good()) {return r;}
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputOutputRankEquality(layer, "Padding", blobNameToRank));
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateRankCount(layer, "Padding", 2, -1, blobNameToRank));
     }
 
     const auto& params = layer.padding();
     if (!(params.paddingamounts().borderamounts_size() == 0
           || params.paddingamounts().borderamounts_size() == 2)) {
         std::string err = "Padding layer " + layer.name() + " specifies " + std::to_string(params.paddingamounts().borderamounts_size()) + " padding amounts but it must either specify 2 (for x and y axes), or 0 for the default values.";
-        r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-        return r;
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
     }
 
     if (params.PaddingType_case() == Specification::PaddingLayerParams::PaddingTypeCase::PADDINGTYPE_NOT_SET) {
         std::string err = "Padding layer " + layer.name() + " padding type is not set.";
-        r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-        return r;
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
     }
 
-    return r;
+    return Result();
 }
 
 //    LRNLayerParams lrn = 11;
 Result NeuralNetworkSpecValidator::validateLRNLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
 
-    if (!r.good()){ return r;}
     if (ndArrayInterpretation) {
-        r = validateInputOutputRankEquality(layer, "LRNLayer", blobNameToRank);
-        if (!r.good()) {return r;}
-        r = validateRankCount(layer, "LRNLayer", 3, -1, blobNameToRank);
-        if (!r.good()) {return r;}
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputOutputRankEquality(layer, "LRNLayer", blobNameToRank));
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateRankCount(layer, "LRNLayer", 3, -1, blobNameToRank));
     }
 
     if (layer.lrn().k() < 0.0) {
         std::string err = "Parameter 'K' for the LRN layer '" + layer.name() + "' must be positive.";
-        r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-        return r;
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
     }
 
-    return r;
+    return Result();
 }
 
 //    SplitLayerParams split = 13;
 Result NeuralNetworkSpecValidator::validateSplitLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        // between 2 and any number of outputs
-        r = validateOutputCount(layer, 2, -1);
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
 
-    if (!r.good()){ return r;}
+    // between 2 and any number of outputs
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 2, -1));
+
     if (ndArrayInterpretation) {
-        r = validateInputOutputRankEquality(layer, "Split", blobNameToRank);
-        if (!r.good()) {return r;}
-        r = validateRankCount(layer, "Split", 3, -1, blobNameToRank);
-        if (!r.good()) {return r;}
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputOutputRankEquality(layer, "Split", blobNameToRank));
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateRankCount(layer, "Split", 3, -1, blobNameToRank));
 
         // check that all outputs have same rank
         int rank = 0;
         if (blobNameToRank.find(layer.output(0)) != blobNameToRank.end()) {
             rank = blobNameToRank.at(layer.output(0));
         } else {
-            return r;
+            return Result();
         }
 
         for (const auto& output : layer.output()) {
@@ -764,62 +627,46 @@ Result NeuralNetworkSpecValidator::validateSplitLayer(const Specification::Neura
         }
     }
 
-    return r;
+    return Result();
 }
 
 //    AddLayerParams add = 14;
 Result NeuralNetworkSpecValidator::validateAddLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
     // 1 or more inputs
-    r = validateInputCount(layer, 1, -1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
-    return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, -1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+
+    return Result();
 }
 
 //    MultiplyLayerParams multiply = 15;
 Result NeuralNetworkSpecValidator::validateMultiplyLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
     // 1 or more inputs
-    r = validateInputCount(layer, 1, -1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
-    return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, -1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+    return Result();
 }
 
 //    UnaryFunctionLayerParams unary = 16;
 Result NeuralNetworkSpecValidator::validateUnaryFunctionLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
 
-    if (!r.good()){ return r;}
     if (ndArrayInterpretation) {
-        r = validateInputOutputRankEquality(layer, "Unary", blobNameToRank);
-        if (!r.good()) {return r;}
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputOutputRankEquality(layer, "Unary", blobNameToRank));
     }
 
-    return r;
+    return Result();
 }
 
 //    UpsampleLayerParams upsample = 17;
 Result NeuralNetworkSpecValidator::validateUpsampleLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
 
-    if (!r.good()){ return r;}
     if (ndArrayInterpretation) {
-        r = validateInputOutputRankEquality(layer, "Upsample", blobNameToRank);
-        if (!r.good()) {return r;}
-        r = validateRankCount(layer, "Upsample", 3, -1, blobNameToRank);
-        if (!r.good()) {return r;}
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputOutputRankEquality(layer, "Upsample", blobNameToRank));
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateRankCount(layer, "Upsample", 3, -1, blobNameToRank));
     }
 
     const auto& params = layer.upsample();
@@ -840,43 +687,32 @@ Result NeuralNetworkSpecValidator::validateUpsampleLayer(const Specification::Ne
         std::string err = "Invalid scaling factor in upsampling layer '" + layer.name()
             + "'. Only one of scalingFactor and fractionalScalingFactor can be set, and if set, must be of size 2. Found scalingFactor of size "
             + std::to_string(params.scalingfactor_size()) + " and fractionalScalingFactor of size " + std::to_string(params.fractionalscalingfactor_size());
-        r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-        return r;
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
     }
     if (params.fractionalscalingfactor_size() == 2
         && (params.mode() == Specification::UpsampleLayerParams_InterpolationMode_NN
             || params.linearupsamplemode() == Specification::UpsampleLayerParams_LinearUpsampleMode_DEFAULT)) {
         std::string err = "Invalid upsample layer '" + layer.name() + "'. Fractional upsample only compatible with align_corners=true or align_corners=false";
-        r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-        return r;
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
     }
 
     if(params.linearupsamplemode() != Specification::UpsampleLayerParams_LinearUpsampleMode_DEFAULT
        && params.mode() == Specification::UpsampleLayerParams_InterpolationMode_NN) {
         std::string err = "Layer '" + layer.name() + "' of type Upsample uses Nearest Neighbors but uses linear upsampling mode other than DEFAULT.";
-        r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
     }
 
-    return r;
+    return Result();
 }
 
 //    BiasLayerParams bias = 18;
 Result NeuralNetworkSpecValidator::validateBiasLayer(const Specification::NeuralNetworkLayer& layer) {
-
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
-    if (!r.good()) {
-        return r;
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
 
     if (ndArrayInterpretation) {
-        r = validateInputOutputRankEquality(layer, "Bias", blobNameToRank);
-        if (!r.good()) {return r;}
-        r = validateRankCount(layer, "Bias", 3, -1, blobNameToRank);
-        if (!r.good()) {return r;}
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputOutputRankEquality(layer, "Bias", blobNameToRank));
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateRankCount(layer, "Bias", 3, -1, blobNameToRank));
     }
 
     const auto& params = layer.bias();
@@ -885,8 +721,7 @@ Result NeuralNetworkSpecValidator::validateBiasLayer(const Specification::Neural
     // Only float32 or float16 parameters can be populated at any time
     if (paramType == UNSPECIFIED) {
         std::string err = "Bias product layer '" + layer.name() + "' has both full precision and half precision weights and/or bias fields populated";
-        r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-        return r;
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
     }
 
     if (params.shape_size() != 1 && params.shape_size() != 3) {
@@ -900,115 +735,86 @@ Result NeuralNetworkSpecValidator::validateBiasLayer(const Specification::Neural
         total_shape *= params.shape(i);
     }
     if (params.shape_size() == 3 && params.shape(0) > 1){
-        r = validateGeneralWeightParams(params.bias(), total_shape, params.shape(0), "Bias", layer.name(), "bias");
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(params.bias(), total_shape, params.shape(0), "Bias", layer.name(), "bias"));
     } else {
-        r = validateGeneralWeightParams(params.bias(), total_shape, 1, "Bias", layer.name(), "bias");
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(params.bias(), total_shape, 1, "Bias", layer.name(), "bias"));
     }
 
-    return r;
+    return Result();
 }
 
 //    L2NormLayerParams l2norm = 19;
 Result NeuralNetworkSpecValidator::validateL2NormLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
 
-    if (!r.good()){ return r;}
     if (ndArrayInterpretation) {
-        r = validateInputOutputRankEquality(layer, "L2Normalize", blobNameToRank);
-        if (!r.good()) {return r;}
-        r = validateRankCount(layer, "L2Normalize", 3, -1, blobNameToRank);
-        if (!r.good()) {return r;}
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputOutputRankEquality(layer, "L2Normalize", blobNameToRank));
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateRankCount(layer, "L2Normalize", 3, -1, blobNameToRank));
     }
 
-    return r;
+    return Result();
 }
 
 //    ReshapeLayerParams reshape = 20;
 Result NeuralNetworkSpecValidator::validateReshapeLayer(const Specification::NeuralNetworkLayer& layer) {
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
 
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
-
-    if (!r.good()){ return r;}
     if (ndArrayInterpretation) {
-        r = validateInputOutputRankEquality(layer, "Reshape", blobNameToRank);
-        if (!r.good()) {return r;}
-        r = validateRankCount(layer, "Reshape", 5, 5, blobNameToRank);
-        if (!r.good()) {return r;}
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputOutputRankEquality(layer, "Reshape", blobNameToRank));
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateRankCount(layer, "Reshape", 5, 5, blobNameToRank));
     }
 
     const auto& params = layer.reshape();
     if (params.targetshape_size() != 3 && params.targetshape_size() != 4) {
         std::string err = "Reshape layer '" + layer.name() + "' target shape must be 3D or 4D.";
-        r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
     }
 
-    return r;
+    return Result();
 }
 
 //    FlattenLayerParams flatten = 21;
 Result NeuralNetworkSpecValidator::validateFlattenLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
 
-    if (!r.good()){ return r;}
     if (ndArrayInterpretation) {
-        r = validateInputOutputRankEquality(layer, "Flatten", blobNameToRank);
-        if (!r.good()) {return r;}
-        r = validateRankCount(layer, "Flatten", 3, -1, blobNameToRank);
-        if (!r.good()) {return r;}
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputOutputRankEquality(layer, "Flatten", blobNameToRank));
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateRankCount(layer, "Flatten", 3, -1, blobNameToRank));
     }
 
-    return r;
+    return Result();
 }
 
 //    PermuteLayerParams permute = 22;
 Result NeuralNetworkSpecValidator::validatePermuteLayer(const Specification::NeuralNetworkLayer& layer) {
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
 
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
-
-    if (!r.good()){ return r;}
     if (ndArrayInterpretation) {
-        r = validateInputOutputRankEquality(layer, "Permute", blobNameToRank);
-        if (!r.good()) {return r;}
-        r = validateRankCount(layer, "Permute", 5, 5, blobNameToRank);
-        if (!r.good()) {return r;}
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputOutputRankEquality(layer, "Permute", blobNameToRank));
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateRankCount(layer, "Permute", 5, 5, blobNameToRank));
     }
 
     const auto& params = layer.permute();
     if (params.axis_size() != 4) {
         std::string err = "Permute layer '" + layer.name() + "' must have 4D axis parameters.";
-        r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
     }
 
-    return r;
+    return Result();
 }
 
 //    ReduceLayerParams reduce = 23;
 Result NeuralNetworkSpecValidator::validateReduceLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
 
     if (ndArrayInterpretation && layer.inputtensor_size() > 0) {
-        r = validateInputOutputRankEquality(layer, "Reduce", blobNameToRank);
-        if (!r.good()) {return r;}
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputOutputRankEquality(layer, "Reduce", blobNameToRank));
+
         int rank = static_cast<int>(layer.inputtensor(0).rank());
         bool sufficientInputRank = true;
         std::string err;
@@ -1039,43 +845,32 @@ Result NeuralNetworkSpecValidator::validateReduceLayer(const Specification::Neur
             return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
         }
     }
-    return r;
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateReorganizeDataLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
 
-    if (!r.good()){ return r;}
     if (ndArrayInterpretation) {
-        r = validateInputOutputRankEquality(layer, "ReorganizeData", blobNameToRank);
-        if (!r.good()) {return r;}
-        r = validateRankCount(layer, "ReorganizeData", 3, -1, blobNameToRank);
-        if (!r.good()) {return r;}
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputOutputRankEquality(layer, "ReorganizeData", blobNameToRank));
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateRankCount(layer, "ReorganizeData", 3, -1, blobNameToRank));
     }
 
     const auto& reorg = layer.reorganizedata();
     if (static_cast<int>(reorg.blocksize()) < 2) {
         std::string err = "Block size for layer '" + layer.name() + "' must be > 1.";
-        r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-        return r;
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
     }
-    return r;
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateSliceLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
 
     if (ndArrayInterpretation && layer.inputtensor_size() > 0) {
-        r = validateInputOutputRankEquality(layer, "Slice", blobNameToRank);
-        if (!r.good()) {return r;}
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputOutputRankEquality(layer, "Slice", blobNameToRank));
         int rank = static_cast<int>(layer.inputtensor(0).rank());
         bool sufficientInputRank = true;
         std::string err;
@@ -1104,8 +899,7 @@ Result NeuralNetworkSpecValidator::validateSliceLayer(const Specification::Neura
     int stride = static_cast<int>(slice.stride());
     if (stride < 1) {
         std::string err = "Stride length for the slice layer '" + layer.name() + "' must be > 1.";
-        r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-        return r;
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
     }
 
     int64_t start = (int64_t)slice.startindex();
@@ -1113,29 +907,21 @@ Result NeuralNetworkSpecValidator::validateSliceLayer(const Specification::Neura
     if ((end > 0 && end < start )
         || (end < 0 && start < 0 && start > end)) {
         std::string err = "Slice layer " + layer.name() + " has an end index before the start index.";
-        r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-        return r;
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
     }
 
-    return r;
+    return Result();
 }
 
 //    LoadConstantLayerParams loadConstant = 24;
 Result NeuralNetworkSpecValidator::validateLoadConstantLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 0, 0);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
-    if (!r.good()) {
-        return r;
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 0, 0));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
 
     if (ndArrayInterpretation) {
         if (blobNameToRank.find(layer.output(0)) != blobNameToRank.end()) {
             int rank = blobNameToRank.at(layer.output(0));
-            r = checkRank(layer, "LoadConstant", 5, 5, "output", rank);
-            if (!r.good()) {return r;}
+            HANDLE_RESULT_AND_RETURN_ON_ERROR(checkRank(layer, "LoadConstant", 5, 5, "output", rank));
         }
     }
 
@@ -1145,8 +931,7 @@ Result NeuralNetworkSpecValidator::validateLoadConstantLayer(const Specification
     // Only float32 or float16 parameters can be populated at any time
     if (paramType == UNSPECIFIED) {
         std::string err = "Load constant layer '" + layer.name() + "' has both full precision and half precision weight fields populated";
-        r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-        return r;
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
     }
     if (params.shape_size() != 3) {
         std::string err = "Load constant layer '" + layer.name() + "' must be a 3D constant.";
@@ -1157,32 +942,22 @@ Result NeuralNetworkSpecValidator::validateLoadConstantLayer(const Specification
         total_shape *= params.shape(i);
     }
     if (params.shape_size() == 3 && params.shape(0) > 1){
-        r = validateGeneralWeightParams(params.data(), total_shape, params.shape(0), "LoadConstant", layer.name(), "constants");
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(params.data(), total_shape, params.shape(0), "LoadConstant", layer.name(), "constants"));
     } else {
-        r = validateGeneralWeightParams(params.data(), total_shape, 1, "LoadConstant", layer.name(), "constants");
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(params.data(), total_shape, 1, "LoadConstant", layer.name(), "constants"));
     }
-
-    if (!r.good()) return r;
 
     return Result();
 }
 
 //    ScaleLayerParams scale = 25;
 Result NeuralNetworkSpecValidator::validateScaleLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
-    if (!r.good()) {
-        return r;
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
 
     if (ndArrayInterpretation) {
-        r = validateInputOutputRankEquality(layer, "Scale", blobNameToRank);
-        if (!r.good()) {return r;}
-        r = validateRankCount(layer, "Scale", 3, -1, blobNameToRank);
-        if (!r.good()) {return r;}
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputOutputRankEquality(layer, "Scale", blobNameToRank));
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateRankCount(layer, "Scale", 3, -1, blobNameToRank));
     }
 
     const auto& params = layer.scale();
@@ -1196,16 +971,14 @@ Result NeuralNetworkSpecValidator::validateScaleLayer(const Specification::Neura
     // Both bias and weights should have the same value types
     if ( (scaleValueType == UNSPECIFIED) || (has_bias && biasValueType == UNSPECIFIED)) {
         std::string err = "Scale layer '" + layer.name() + "' has invalid scale/bias fields.";
-        r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-        return r;
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
     }
     if (has_bias){
         if ((scaleValueType == CoreML::FLOAT16 && biasValueType == CoreML::FLOAT32) ||
             (scaleValueType == CoreML::FLOAT32 && biasValueType == CoreML::FLOAT16)){
             const std::string err = "Scale layer '" + layer.name() +
             "' has invalid scale/bias fields. Field value types should match and should either be half or full precision.";
-            r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-            return r;
+            return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
         }
     }
 
@@ -1221,11 +994,10 @@ Result NeuralNetworkSpecValidator::validateScaleLayer(const Specification::Neura
     }
 
     if (params.shapescale_size() == 3 && params.shapescale(0) > 1){
-        r = validateGeneralWeightParams(params.scale(), total_scale_shape, params.shapescale(0), "Scale", layer.name(), "scale");
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(params.scale(), total_scale_shape, params.shapescale(0), "Scale", layer.name(), "scale"));
     } else {
-        r = validateGeneralWeightParams(params.scale(), total_scale_shape, 1, "Scale", layer.name(), "scale");
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(params.scale(), total_scale_shape, 1, "Scale", layer.name(), "scale"));
     }
-    if (!r.good()) return r;
 
     // Checks bias shape and size
     if (has_bias) {
@@ -1239,34 +1011,23 @@ Result NeuralNetworkSpecValidator::validateScaleLayer(const Specification::Neura
             total_bias_shape *= params.shapebias(i);
         }
         if (params.shapebias_size() == 3 && params.shapebias(0) > 1){
-            r = validateGeneralWeightParams(params.bias(), total_bias_shape, params.shapebias(0), "Scale", layer.name(), "bias");
+            HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(params.bias(), total_bias_shape, params.shapebias(0), "Scale", layer.name(), "bias"));
         } else {
-            r = validateGeneralWeightParams(params.bias(), total_bias_shape, 1, "Scale", layer.name(), "bias");
+            HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(params.bias(), total_bias_shape, 1, "Scale", layer.name(), "bias"));
         }
-        if (!r.good()) return r;
     }
     return Result();
 }
 
 //    SimpleRecurrentLayerParams simpleRecurrent = 26;
 Result NeuralNetworkSpecValidator::validateSimpleRecurrentLayer(const Specification::NeuralNetworkLayer& layer) {
-
-    Result r;
     // Must specify hidden state
-    r = validateInputCount(layer, 2, 2);
-    if (r.good()) {
-        r = validateOutputCount(layer, 2, 2);
-    }
-    if (!r.good()) {
-        return r;
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 2, 2));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 2, 2));
 
-    if (!r.good()){ return r;}
     if (ndArrayInterpretation) {
-        r = validateInputOutputRankEquality(layer, "SimpleRecurrent", blobNameToRank);
-        if (!r.good()) {return r;}
-        r = validateRankCount(layer, "SimpleRecurrent", 5, 5, blobNameToRank);
-        if (!r.good()) {return r;}
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputOutputRankEquality(layer, "SimpleRecurrent", blobNameToRank));
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateRankCount(layer, "SimpleRecurrent", 5, 5, blobNameToRank));
     }
 
     const auto& params = layer.simplerecurrent();
@@ -1279,8 +1040,7 @@ Result NeuralNetworkSpecValidator::validateSimpleRecurrentLayer(const Specificat
     // Verify all weights are of valid type
     if((weightMatrixValueType == UNSPECIFIED) || recursionMatrixValueType == UNSPECIFIED || (hasBiasVector && biasVectorValueType == UNSPECIFIED)){
         std::string err = "Simple recurrent layer '" + layer.name() + "' has invalid weightMatrix/recusionMatrix/Bias fields.";
-        r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-        return r;
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
     }
     // Verify either weightMatrix, recursionMatrix, and biasVector are all FP32 or FP16, or one of them is quantized
     if (weightMatrixValueType != QUINT && recursionMatrixValueType != QUINT){
@@ -1288,29 +1048,27 @@ Result NeuralNetworkSpecValidator::validateSimpleRecurrentLayer(const Specificat
             (hasBiasVector && biasVectorValueType != QUINT && weightMatrixValueType != biasVectorValueType) ){
             std::string err = "Simple recurrent layer '" + layer.name() + "' has invalid weightMatrix/recusionMatrix/Bias fields. "
             "Field value types should match and should either be half or full precision.";
-            r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-            return r;
+            return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
         }
     }
 
     // Check weight matrix size
     // input matrix
     uint64_t input_matrix_size = params.inputvectorsize() * params.outputvectorsize();
-    r = validateGeneralWeightParams(params.weightmatrix(), input_matrix_size,
-                                    params.outputvectorsize(),
-                                    "SimpleRNN", layer.name(), "WeightMatrix");
-    if (!r.good()) return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(params.weightmatrix(), input_matrix_size,
+                                                                  params.outputvectorsize(),
+                                                                  "SimpleRNN", layer.name(), "WeightMatrix"));
+
     // recurrent matrix
     uint64_t recurrent_matrix_size = params.outputvectorsize() * params.outputvectorsize();
-    r = validateGeneralWeightParams(params.recursionmatrix(), recurrent_matrix_size,
-                                    params.outputvectorsize(), "SimpleRNN",
-                                    layer.name(), "RecursionMatrix");
-    if (!r.good()) return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(params.recursionmatrix(), recurrent_matrix_size,
+                                                                  params.outputvectorsize(), "SimpleRNN",
+                                                                  layer.name(), "RecursionMatrix"));
+
     // bias
     if (hasBiasVector){
-        r = validateGeneralWeightParams(params.biasvector(), params.outputvectorsize(), 1,
-                                        "SimpleRNN", layer.name(), "BiasVector");
-        if (!r.good()) return r;
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(params.biasvector(), params.outputvectorsize(), 1,
+                                                                      "SimpleRNN", layer.name(), "BiasVector"));
     }
     // Validate the activations as well
     return validateRecurrentActivationParams(layer.simplerecurrent().activation());
@@ -1319,23 +1077,13 @@ Result NeuralNetworkSpecValidator::validateSimpleRecurrentLayer(const Specificat
 
 //    GRULayerParams gru = 27;
 Result NeuralNetworkSpecValidator::validateGRULayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-
     // Must specify hidden states
-    r = validateInputCount(layer, 1, 2);
-    if (r.good()) {
-        r = validateOutputCount(layer, 2, 2);
-    }
-    if (!r.good()) {
-        return r;
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 2));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 2, 2));
 
-    if (!r.good()){ return r;}
     if (ndArrayInterpretation) {
-        r = validateInputOutputRankEquality(layer, "GRU", blobNameToRank);
-        if (!r.good()) {return r;}
-        r = validateRankCount(layer, "GRU", 5, 5, blobNameToRank);
-        if (!r.good()) {return r;}
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputOutputRankEquality(layer, "GRU", blobNameToRank));
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateRankCount(layer, "GRU", 5, 5, blobNameToRank));
     }
 
     const auto& params = layer.gru();
@@ -1364,83 +1112,62 @@ Result NeuralNetworkSpecValidator::validateGRULayer(const Specification::NeuralN
     // Check the size of the input matrices
     const uint64_t input_matrix_size = params.inputvectorsize() * params.outputvectorsize();
     const uint64_t outSize = params.outputvectorsize();
-    r = validateGeneralWeightParams(params.updategateweightmatrix(), input_matrix_size,
-                                    outSize, "GRU", layer.name(), "update gate weight matrix");
-    if (!r.good()) return r;
-    r = validateGeneralWeightParams(params.resetgateweightmatrix(), input_matrix_size,
-                                    outSize, "GRU", layer.name(), "reset gate weight matrix");
-    if (!r.good()) return r;
-    r = validateGeneralWeightParams(params.outputgateweightmatrix(), input_matrix_size,
-                                    outSize, "GRU", layer.name(), "output gate weight matrix");
-    if (!r.good()) return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(params.updategateweightmatrix(), input_matrix_size,
+                                                                  outSize, "GRU", layer.name(), "update gate weight matrix"));
+
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(params.resetgateweightmatrix(), input_matrix_size,
+                                                                  outSize, "GRU", layer.name(), "reset gate weight matrix"));
+
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(params.outputgateweightmatrix(), input_matrix_size,
+                                                                  outSize, "GRU", layer.name(), "output gate weight matrix"));
 
     // Check the size of the recurrent matrices
     const uint64_t recurrent_matrix_size = params.outputvectorsize() * params.outputvectorsize();
-    r = validateGeneralWeightParams(params.updategaterecursionmatrix(), recurrent_matrix_size,
-                                    outSize, "GRU", layer.name(), "update gate recursion matrix");
-    if (!r.good()) return r;
-    r = validateGeneralWeightParams(params.resetgaterecursionmatrix(), recurrent_matrix_size,
-                                    outSize, "GRU", layer.name(), "reset gate recursion matrix");
-    if (!r.good()) return r;
-    r = validateGeneralWeightParams(params.outputgaterecursionmatrix(), recurrent_matrix_size,
-                                    outSize, "GRU", layer.name(), "output gate recursion matrix");
-    if (!r.good()) return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(params.updategaterecursionmatrix(), recurrent_matrix_size,
+                                                                  outSize, "GRU", layer.name(), "update gate recursion matrix"));
+
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(params.resetgaterecursionmatrix(), recurrent_matrix_size,
+                                                                  outSize, "GRU", layer.name(), "reset gate recursion matrix"));
+
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(params.outputgaterecursionmatrix(), recurrent_matrix_size,
+                                                                  outSize, "GRU", layer.name(), "output gate recursion matrix"));
 
     if (hasBiasVectors){
         const uint64_t bias_size = params.outputvectorsize();
-        r = validateGeneralWeightParams(params.updategatebiasvector(), bias_size, 1,
-                                        "GRU", layer.name(), "update gate bias vector");
-        if (!r.good()) return r;
-        r = validateGeneralWeightParams(params.resetgatebiasvector(), bias_size, 1,
-                                        "GRU", layer.name(), "reset gate bias vector");
-        if (!r.good()) return r;
-        r = validateGeneralWeightParams(params.outputgatebiasvector(), bias_size, 1,
-                                        "GRU", layer.name(), "output gate bias vector");
-        if (!r.good()) return r;
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(params.updategatebiasvector(), bias_size, 1,
+                                                                      "GRU", layer.name(), "update gate bias vector"));
+
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(params.resetgatebiasvector(), bias_size, 1,
+                                                                      "GRU", layer.name(), "reset gate bias vector"));
+
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(params.outputgatebiasvector(), bias_size, 1,
+                                                                      "GRU", layer.name(), "output gate bias vector"));
     }
 
     // Now check the activations
     for (const auto& activation : params.activations()) {
-        r = validateRecurrentActivationParams(activation);
-        if (!r.good()) {
-            break;
-        }
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateRecurrentActivationParams(activation));
     }
-    return r;
+    return Result();
 }
 
 //    UniDirectionalLSTMLayerParams uniDirectionalLSTM = 28;
 Result NeuralNetworkSpecValidator::validateUniDirectionalLSTMLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
     // Must specify hidden states
-    r = validateInputCount(layer, 1, 3);
-    if (r.good()) {
-        r = validateOutputCount(layer, 3, 3);
-    }
-    if (!r.good()) {
-        return r;
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 3));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 3, 3));
 
-    if (!r.good()){ return r;}
     if (ndArrayInterpretation) {
-        r = validateInputOutputRankEquality(layer, "UniDirectionalLSTM", blobNameToRank);
-        if (!r.good()) {return r;}
-        r = validateRankCount(layer, "UniDirectionalLSTM", 5, 5, blobNameToRank);
-        if (!r.good()) {return r;}
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputOutputRankEquality(layer, "UniDirectionalLSTM", blobNameToRank));
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateRankCount(layer, "UniDirectionalLSTM", 5, 5, blobNameToRank));
     }
 
     for (const auto& activation : layer.unidirectionallstm().activations()) {
-        r = validateRecurrentActivationParams(activation);
-        if (!r.good()) {
-            break;
-        }
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateRecurrentActivationParams(activation));
     }
 
     // Validate common LSTM params and ensure that all weight field types are consistent
-    r = validateLSTMWeightParams(layer.unidirectionallstm().weightparams(), layer.unidirectionallstm().params());
-    if (!r.good()) {
-        return r;
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateLSTMWeightParams(layer.unidirectionallstm().weightparams(), layer.unidirectionallstm().params()));
 
     Specification::UniDirectionalLSTMLayerParams recurrent = layer.unidirectionallstm();
     uint64_t x = recurrent.inputvectorsize();
@@ -1452,100 +1179,80 @@ Result NeuralNetworkSpecValidator::validateUniDirectionalLSTMLayer(const Specifi
     }
 
     // Check weight matrices' sizes
-    r = validateGeneralWeightParams(recurrent.weightparams().inputgateweightmatrix(), h*x, h,
-                                    "Unidirectional LSTM", layer.name(), "input gate weight matrix");
-    if(!r.good()) return r;
-    r = validateGeneralWeightParams(recurrent.weightparams().forgetgateweightmatrix(), h*x, h,
-                                    "Unidirectional LSTM", layer.name(), "forget gate weight matrix");
-    if(!r.good()) return r;
-    r = validateGeneralWeightParams(recurrent.weightparams().blockinputweightmatrix(), h*x, h,
-                                    "Unidirectional LSTM", layer.name(), "block input gate weight matrix");
-    if(!r.good()) return r;
-    r = validateGeneralWeightParams(recurrent.weightparams().outputgateweightmatrix(), h*x, h,
-                                    "Unidirectional LSTM", layer.name(), "output gate weight matrix");
-    if(!r.good()) return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(recurrent.weightparams().inputgateweightmatrix(), h*x, h,
+                                                                  "Unidirectional LSTM", layer.name(), "input gate weight matrix"));
+
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(recurrent.weightparams().forgetgateweightmatrix(), h*x, h,
+                                                                  "Unidirectional LSTM", layer.name(), "forget gate weight matrix"));
+
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(recurrent.weightparams().blockinputweightmatrix(), h*x, h,
+                                                                  "Unidirectional LSTM", layer.name(), "block input gate weight matrix"));
+
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(recurrent.weightparams().outputgateweightmatrix(), h*x, h,
+                                                                  "Unidirectional LSTM", layer.name(), "output gate weight matrix"));
+
     // Check recursion matrices' sizes
-    r = validateGeneralWeightParams(recurrent.weightparams().inputgaterecursionmatrix(), h*h, h,
-                                    "Unidirectional LSTM", layer.name(), "input gate recursion matrix");
-    if(!r.good()) return r;
-    r = validateGeneralWeightParams(recurrent.weightparams().forgetgaterecursionmatrix(), h*h, h,
-                                    "Unidirectional LSTM", layer.name(), "forget gate recursion matrix");
-    if(!r.good()) return r;
-    r = validateGeneralWeightParams(recurrent.weightparams().blockinputrecursionmatrix(), h*h, h,
-                                    "Unidirectional LSTM", layer.name(), "block input gate recursion matrix");
-    if(!r.good()) return r;
-    r = validateGeneralWeightParams(recurrent.weightparams().outputgaterecursionmatrix(), h*h, h,
-                                    "Unidirectional LSTM", layer.name(), "output gate recursion matrix");
-    if(!r.good()) return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(recurrent.weightparams().inputgaterecursionmatrix(), h*h, h,
+                                                                  "Unidirectional LSTM", layer.name(), "input gate recursion matrix"));
+
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(recurrent.weightparams().forgetgaterecursionmatrix(), h*h, h,
+                                                                  "Unidirectional LSTM", layer.name(), "forget gate recursion matrix"));
+
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(recurrent.weightparams().blockinputrecursionmatrix(), h*h, h,
+                                                                  "Unidirectional LSTM", layer.name(), "block input gate recursion matrix"));
+
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(recurrent.weightparams().outputgaterecursionmatrix(), h*h, h,
+                                                                  "Unidirectional LSTM", layer.name(), "output gate recursion matrix"));
+
     // Check bias vectors
     if (recurrent.params().hasbiasvectors()) {
-        r = validateGeneralWeightParams(recurrent.weightparams().inputgatebiasvector(), h, 1,
-                                        "Unidirectional LSTM", layer.name(), "input gate bias vector");
-        if(!r.good()) return r;
-        r = validateGeneralWeightParams(recurrent.weightparams().forgetgatebiasvector(), h, 1,
-                                        "Unidirectional LSTM", layer.name(), "forget gate bias vector");
-        if(!r.good()) return r;
-        r = validateGeneralWeightParams(recurrent.weightparams().blockinputbiasvector(), h, 1,
-                                        "Unidirectional LSTM", layer.name(), "block input bias vector");
-        if(!r.good()) return r;
-        r = validateGeneralWeightParams(recurrent.weightparams().outputgatebiasvector(), h, 1,
-                                        "Unidirectional LSTM", layer.name(), "output gate bias vector");
-        if(!r.good()) return r;
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(recurrent.weightparams().inputgatebiasvector(), h, 1,
+                                                                      "Unidirectional LSTM", layer.name(), "input gate bias vector"));
+
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(recurrent.weightparams().forgetgatebiasvector(), h, 1,
+                                                                      "Unidirectional LSTM", layer.name(), "forget gate bias vector"));
+
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(recurrent.weightparams().blockinputbiasvector(), h, 1,
+                                                                      "Unidirectional LSTM", layer.name(), "block input bias vector"));
+
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(recurrent.weightparams().outputgatebiasvector(), h, 1,
+                                                                      "Unidirectional LSTM", layer.name(), "output gate bias vector"));
     }
     // Check peephole vectors
     if (recurrent.params().haspeepholevectors()){
-        r = validateGeneralWeightParams(recurrent.weightparams().inputgatepeepholevector(), h, 1,
-                                        "Unidirectional LSTM", layer.name(), "input gate peep hole vector");
-        if(!r.good()) return r;
-        r = validateGeneralWeightParams(recurrent.weightparams().forgetgatepeepholevector(), h, 1,
-                                        "Unidirectional LSTM", layer.name(), "forget gate peep hole vector");
-        if(!r.good()) return r;
-        r = validateGeneralWeightParams(recurrent.weightparams().outputgatepeepholevector(), h, 1,
-                                        "Unidirectional LSTM", layer.name(), "output gate peep hole vector");
-        if(!r.good()) return r;
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(recurrent.weightparams().inputgatepeepholevector(), h, 1,
+                                                                      "Unidirectional LSTM", layer.name(), "input gate peep hole vector"));
+
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(recurrent.weightparams().forgetgatepeepholevector(), h, 1,
+                                                                      "Unidirectional LSTM", layer.name(), "forget gate peep hole vector"));
+
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(recurrent.weightparams().outputgatepeepholevector(), h, 1,
+                                                                      "Unidirectional LSTM", layer.name(), "output gate peep hole vector"));
     }
 
-    return r;
+    return Result();
 }
 
 //    BiDirectionalLSTMLayerParams biDirectionalLSTM = 29;
 Result NeuralNetworkSpecValidator::validateBiDirectionalLSTMLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
     // Must specify hidden states
-    r = validateInputCount(layer, 1, 5);
-    if (r.good()) {
-        r = validateOutputCount(layer, 5, 5);
-    }
-    if (!r.good()) {
-        return r;
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 5));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 5, 5));
 
-    if (!r.good()){ return r;}
     if (ndArrayInterpretation) {
-        r = validateInputOutputRankEquality(layer, "BiDirectionalLSTM", blobNameToRank);
-        if (!r.good()) {return r;}
-        r = validateRankCount(layer, "BiDirectionalLSTM", 5, 5, blobNameToRank);
-        if (!r.good()) {return r;}
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputOutputRankEquality(layer, "BiDirectionalLSTM", blobNameToRank));
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateRankCount(layer, "BiDirectionalLSTM", 5, 5, blobNameToRank));
     }
 
     for (const auto& activation : layer.bidirectionallstm().activationsforwardlstm()) {
-        r = validateRecurrentActivationParams(activation);
-        if (!r.good()) {
-            break;
-        }
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateRecurrentActivationParams(activation));
     }
     for (const auto& activation : layer.bidirectionallstm().activationsbackwardlstm()) {
-        r = validateRecurrentActivationParams(activation);
-        if (!r.good()) {
-            break;
-        }
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateRecurrentActivationParams(activation));
     }
 
     // Validate common LSTM params and ensure that all weight field types are consistent
-    r = validateLSTMWeightParams(layer.unidirectionallstm().weightparams(), layer.unidirectionallstm().params());
-    if (!r.good()) {
-        return r;
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateLSTMWeightParams(layer.unidirectionallstm().weightparams(), layer.unidirectionallstm().params()));
 
     Specification::BiDirectionalLSTMLayerParams recurrent = layer.bidirectionallstm();
     Specification::LSTMParams lstmParams = recurrent.params();
@@ -1568,123 +1275,89 @@ Result NeuralNetworkSpecValidator::validateBiDirectionalLSTMLayer(const Specific
     const Specification::LSTMWeightParams& weightParamsB = recurrent.weightparams(1);
 
     // Check forward weight matrices' sizes
-    r = validateGeneralWeightParams(weightParamsF.inputgateweightmatrix(), h*x, h,
-                                    "Bidirectional LSTM", layer.name(), "forward input gate weight matrix");
-    if(!r.good()) return r;
-    r = validateGeneralWeightParams(weightParamsF.forgetgateweightmatrix(), h*x, h,
-                                    "Bidirectional LSTM", layer.name(), "forward forget gate weight matrix");
-    if(!r.good()) return r;
-    r = validateGeneralWeightParams(weightParamsF.blockinputweightmatrix(), h*x, h,
-                                    "Bidirectional LSTM", layer.name(), "forward block input gate weight matrix");
-    if(!r.good()) return r;
-    r = validateGeneralWeightParams(weightParamsF.outputgateweightmatrix(), h*x, h,
-                                    "Bidirectional LSTM", layer.name(), "forward output gate weight matrix");
-    if(!r.good()) return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(weightParamsF.inputgateweightmatrix(), h*x, h,
+                                                                  "Bidirectional LSTM", layer.name(), "forward input gate weight matrix"));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(weightParamsF.forgetgateweightmatrix(), h*x, h,
+                                                                  "Bidirectional LSTM", layer.name(), "forward forget gate weight matrix"));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(weightParamsF.blockinputweightmatrix(), h*x, h,
+                                                                  "Bidirectional LSTM", layer.name(), "forward block input gate weight matrix"));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(weightParamsF.outputgateweightmatrix(), h*x, h,
+                                                                  "Bidirectional LSTM", layer.name(), "forward output gate weight matrix"));
+
     // Check forward recursion matrices' sizes
-    r = validateGeneralWeightParams(weightParamsF.inputgaterecursionmatrix(), h*h, h,
-                                    "Bidirectional LSTM", layer.name(), "forward input gate recursion matrix");
-    if(!r.good()) return r;
-    r = validateGeneralWeightParams(weightParamsF.forgetgaterecursionmatrix(), h*h, h,
-                                    "Bidirectional LSTM", layer.name(), "forward forget gate recursion matrix");
-    if(!r.good()) return r;
-    r = validateGeneralWeightParams(weightParamsF.blockinputrecursionmatrix(), h*h, h,
-                                    "Bidirectional LSTM", layer.name(), "forward block input gate recursion matrix");
-    if(!r.good()) return r;
-    r = validateGeneralWeightParams(weightParamsF.outputgaterecursionmatrix(), h*h, h,
-                                    "Bidirectional LSTM", layer.name(), "forward output gate recursion matrix");
-    if(!r.good()) return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(weightParamsF.inputgaterecursionmatrix(), h*h, h,
+                                                                  "Bidirectional LSTM", layer.name(), "forward input gate recursion matrix"));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(weightParamsF.forgetgaterecursionmatrix(), h*h, h,
+                                                                  "Bidirectional LSTM", layer.name(), "forward forget gate recursion matrix"));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(weightParamsF.blockinputrecursionmatrix(), h*h, h,
+                                                                  "Bidirectional LSTM", layer.name(), "forward block input gate recursion matrix"));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(weightParamsF.outputgaterecursionmatrix(), h*h, h,
+                                                                  "Bidirectional LSTM", layer.name(), "forward output gate recursion matrix"));
     // Check backward weight matrices' sizes
-    r = validateGeneralWeightParams(weightParamsB.inputgateweightmatrix(), h*x, h,
-                                    "Bidirectional LSTM", layer.name(), "backward input gate weight matrix");
-    if(!r.good()) return r;
-    r = validateGeneralWeightParams(weightParamsB.forgetgateweightmatrix(), h*x, h,
-                                    "Bidirectional LSTM", layer.name(), "backward forget gate weight matrix");
-    if(!r.good()) return r;
-    r = validateGeneralWeightParams(weightParamsB.blockinputweightmatrix(), h*x, h,
-                                    "Bidirectional LSTM", layer.name(), "backward block input gate weight matrix");
-    if(!r.good()) return r;
-    r = validateGeneralWeightParams(weightParamsB.outputgateweightmatrix(), h*x, h,
-                                    "Bidirectional LSTM", layer.name(), "backward output gate weight matrix");
-    if(!r.good()) return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(weightParamsB.inputgateweightmatrix(), h*x, h,
+                                                                  "Bidirectional LSTM", layer.name(), "backward input gate weight matrix"));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(weightParamsB.forgetgateweightmatrix(), h*x, h,
+                                                                  "Bidirectional LSTM", layer.name(), "backward forget gate weight matrix"));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(weightParamsB.blockinputweightmatrix(), h*x, h,
+                                                                  "Bidirectional LSTM", layer.name(), "backward block input gate weight matrix"));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(weightParamsB.outputgateweightmatrix(), h*x, h,
+                                                                  "Bidirectional LSTM", layer.name(), "backward output gate weight matrix"));
+
     // Check backward recursion matrices' sizes
-    r = validateGeneralWeightParams(weightParamsB.inputgaterecursionmatrix(), h*h, h,
-                                    "Bidirectional LSTM", layer.name(), "backward input gate recursion matrix");
-    if(!r.good()) return r;
-    r = validateGeneralWeightParams(weightParamsB.forgetgaterecursionmatrix(), h*h, h,
-                                    "Bidirectional LSTM", layer.name(), "backward forget gate recursion matrix");
-    if(!r.good()) return r;
-    r = validateGeneralWeightParams(weightParamsB.blockinputrecursionmatrix(), h*h, h,
-                                    "Bidirectional LSTM", layer.name(), "backward block input gate recursion matrix");
-    if(!r.good()) return r;
-    r = validateGeneralWeightParams(weightParamsB.outputgaterecursionmatrix(), h*h, h,
-                                    "Bidirectional LSTM", layer.name(), "backward output gate recursion matrix");
-    if(!r.good()) return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(weightParamsB.inputgaterecursionmatrix(), h*h, h,
+                                                                  "Bidirectional LSTM", layer.name(), "backward input gate recursion matrix"));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(weightParamsB.forgetgaterecursionmatrix(), h*h, h,
+                                                                  "Bidirectional LSTM", layer.name(), "backward forget gate recursion matrix"));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(weightParamsB.blockinputrecursionmatrix(), h*h, h,
+                                                                  "Bidirectional LSTM", layer.name(), "backward block input gate recursion matrix"));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(weightParamsB.outputgaterecursionmatrix(), h*h, h,
+                                                                  "Bidirectional LSTM", layer.name(), "backward output gate recursion matrix"));
 
     // Check bias vectors
     if (recurrent.params().hasbiasvectors()) {
-        r = validateGeneralWeightParams(weightParamsF.inputgatebiasvector(), h, 1,
-                                        "Bidirectional LSTM", layer.name(), "forward input gate bias vector");
-        if(!r.good()) return r;
-        r = validateGeneralWeightParams(weightParamsF.forgetgatebiasvector(), h, 1,
-                                        "Bidirectional LSTM", layer.name(), "forward forget gate bias vector");
-        if(!r.good()) return r;
-        r = validateGeneralWeightParams(weightParamsF.blockinputbiasvector(), h, 1,
-                                        "Bidirectional LSTM", layer.name(), "forward block input bias vector");
-        if(!r.good()) return r;
-        r = validateGeneralWeightParams(weightParamsF.outputgatebiasvector(), h, 1,
-                                        "Bidirectional LSTM", layer.name(), "forward output gate bias vector");
-        if(!r.good()) return r;
-        r = validateGeneralWeightParams(weightParamsB.inputgatebiasvector(), h, 1,
-                                        "Bidirectional LSTM", layer.name(), "backward input gate bias vector");
-        if(!r.good()) return r;
-        r = validateGeneralWeightParams(weightParamsB.forgetgatebiasvector(), h, 1,
-                                        "Bidirectional LSTM", layer.name(), "backward forget gate bias vector");
-        if(!r.good()) return r;
-        r = validateGeneralWeightParams(weightParamsB.blockinputbiasvector(), h, 1,
-                                        "Bidirectional LSTM", layer.name(), "backward block input bias vector");
-        if(!r.good()) return r;
-        r = validateGeneralWeightParams(weightParamsB.outputgatebiasvector(), h, 1,
-                                        "Bidirectional LSTM", layer.name(), "backward output gate bias vector");
-        if(!r.good()) return r;
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(weightParamsF.inputgatebiasvector(), h, 1,
+                                                                      "Bidirectional LSTM", layer.name(), "forward input gate bias vector"));
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(weightParamsF.forgetgatebiasvector(), h, 1,
+                                                                      "Bidirectional LSTM", layer.name(), "forward forget gate bias vector"));
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(weightParamsF.blockinputbiasvector(), h, 1,
+                                                                      "Bidirectional LSTM", layer.name(), "forward block input bias vector"));
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(weightParamsF.outputgatebiasvector(), h, 1,
+                                                                      "Bidirectional LSTM", layer.name(), "forward output gate bias vector"));
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(weightParamsB.inputgatebiasvector(), h, 1,
+                                                                      "Bidirectional LSTM", layer.name(), "backward input gate bias vector"));
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(weightParamsB.forgetgatebiasvector(), h, 1,
+                                                                      "Bidirectional LSTM", layer.name(), "backward forget gate bias vector"));
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(weightParamsB.blockinputbiasvector(), h, 1,
+                                                                      "Bidirectional LSTM", layer.name(), "backward block input bias vector"));
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(weightParamsB.outputgatebiasvector(), h, 1,
+                                                                      "Bidirectional LSTM", layer.name(), "backward output gate bias vector"));
     }
     // Check peephole vectors
     if (recurrent.params().haspeepholevectors()){
-        r = validateGeneralWeightParams(weightParamsF.inputgatepeepholevector(), h, 1,
-                                        "Bidirectional LSTM", layer.name(), "forward input gate peephole vector");
-        if(!r.good()) return r;
-        r = validateGeneralWeightParams(weightParamsF.forgetgatepeepholevector(), h, 1,
-                                        "Bidirectional LSTM", layer.name(), "forward forget gate peephole vector");
-        if(!r.good()) return r;
-        r = validateGeneralWeightParams(weightParamsF.outputgatepeepholevector(), h, 1,
-                                        "Bidirectional LSTM", layer.name(), "forward output gate peephole vector");
-        if(!r.good()) return r;
-        r = validateGeneralWeightParams(weightParamsB.inputgatepeepholevector(), h, 1,
-                                        "Bidirectional LSTM", layer.name(), "backward input gate peephole vector");
-        if(!r.good()) return r;
-        r = validateGeneralWeightParams(weightParamsB.forgetgatepeepholevector(), h, 1,
-                                        "Bidirectional LSTM", layer.name(), "backward forget gate peephole vector");
-        if(!r.good()) return r;
-        r = validateGeneralWeightParams(weightParamsB.outputgatepeepholevector(), h, 1,
-                                        "Bidirectional LSTM", layer.name(), "backward output gate peephole vector");
-        if(!r.good()) return r;
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(weightParamsF.inputgatepeepholevector(), h, 1,
+                                                                      "Bidirectional LSTM", layer.name(), "forward input gate peephole vector"));
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(weightParamsF.forgetgatepeepholevector(), h, 1,
+                                                                      "Bidirectional LSTM", layer.name(), "forward forget gate peephole vector"));
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(weightParamsF.outputgatepeepholevector(), h, 1,
+                                                                      "Bidirectional LSTM", layer.name(), "forward output gate peephole vector"));
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(weightParamsB.inputgatepeepholevector(), h, 1,
+                                                                      "Bidirectional LSTM", layer.name(), "backward input gate peephole vector"));
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(weightParamsB.forgetgatepeepholevector(), h, 1,
+                                                                      "Bidirectional LSTM", layer.name(), "backward forget gate peephole vector"));
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(weightParamsB.outputgatepeepholevector(), h, 1,
+                                                                      "Bidirectional LSTM", layer.name(), "backward output gate peephole vector"));
     }
-    return r;
+    return Result();
 }
 
 //    CropLayerParams crop = 30;
 Result NeuralNetworkSpecValidator::validateCropLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 2);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 2));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
 
-    if (!r.good()){ return r;}
     if (ndArrayInterpretation) {
-        r = validateInputOutputRankEquality(layer, "Crop", blobNameToRank);
-        if (!r.good()) {return r;}
-        r = validateRankCount(layer, "Crop", 3, -1, blobNameToRank);
-        if (!r.good()) {return r;}
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputOutputRankEquality(layer, "Crop", blobNameToRank));
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateRankCount(layer, "Crop", 3, -1, blobNameToRank));
 
         if (layer.input_size() > 1) {
             if (blobNameToRank.find(layer.input(0)) != blobNameToRank.end() &&
@@ -1702,37 +1375,29 @@ Result NeuralNetworkSpecValidator::validateCropLayer(const Specification::Neural
         // check the border amounts
         if (layer.crop().cropamounts().borderamounts_size() != 2) {
             std::string err = "cropAmounts parameter for the crop layer '" + layer.name() + "' is of length " + std::to_string(layer.crop().cropamounts().borderamounts_size()) + " but requires exactly two crop constraints (for X,Y axes).";
-            r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-            return r;
+            return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
         }
     }
     else { // size == 2 checked above
         // offset must be size 2
         if (layer.crop().offset_size() != 2)  {
             std::string err = "Offset parameter for the crop layer '" + layer.name() + "' is of length " + std::to_string(layer.crop().offset_size()) + " but requires exactly two offsets (for X,Y axes).";
-            r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-            return r;
+            return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
         }
     }
 
-    return r;
+    return Result();
 }
 
 //    DotProductLayerParams dot = 34;
 Result NeuralNetworkSpecValidator::validateDotLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
     // 2 inputs, 1 output
-    r = validateInputCount(layer, 2, 2);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 2, 2));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
 
-    if (!r.good()){ return r;}
     if (ndArrayInterpretation) {
-        r = validateInputOutputRankEquality(layer, "DotProduct", blobNameToRank);
-        if (!r.good()) {return r;}
-        r = validateRankCount(layer, "DotProduct", 3, -1, blobNameToRank);
-        if (!r.good()) {return r;}
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputOutputRankEquality(layer, "DotProduct", blobNameToRank));
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateRankCount(layer, "DotProduct", 3, -1, blobNameToRank));
 
         if (blobNameToRank.find(layer.input(0)) != blobNameToRank.end() &&
             blobNameToRank.find(layer.input(1)) != blobNameToRank.end()) {
@@ -1744,35 +1409,26 @@ Result NeuralNetworkSpecValidator::validateDotLayer(const Specification::NeuralN
         }
     }
 
-    return r;
+    return Result();
 }
 
 //    MeanVarianceNormalizeLayerParams mvn = 35;
 Result NeuralNetworkSpecValidator::validateMvnLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
 
-    if (!r.good()){ return r;}
     if (ndArrayInterpretation) {
-        r = validateInputOutputRankEquality(layer, "MeanVarianceNormalize", blobNameToRank);
-        if (!r.good()) {return r;}
-        r = validateRankCount(layer, "MeanVarianceNormalize", 3, -1, blobNameToRank);
-        if (!r.good()) {return r;}
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputOutputRankEquality(layer, "MeanVarianceNormalize", blobNameToRank));
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateRankCount(layer, "MeanVarianceNormalize", 3, -1, blobNameToRank));
     }
 
-    return r;
+    return Result();
 }
 
 
 static Result validateEmbeddingWeightsBias(const Specification::NeuralNetworkLayer& layer,
                                               const Specification::WeightParams& weights,
                                               const Specification::WeightParams& bias) {
-
-    Result r;
-
     bool has_bias;
     uint64_t input_dim;
     uint64_t output_channels;
@@ -1796,7 +1452,7 @@ static Result validateEmbeddingWeightsBias(const Specification::NeuralNetworkLay
             break;
         }
         default:
-            return r;
+            return Result();
     }
 
     WeightParamType weightsValueType, biasValueType;
@@ -1806,157 +1462,111 @@ static Result validateEmbeddingWeightsBias(const Specification::NeuralNetworkLay
     // Only float32 or float16 parameters can be populated at any time
     if ((weightsValueType == UNSPECIFIED) || (has_bias && biasValueType == UNSPECIFIED)){
         std::string err = layer_type + " '" + layer.name() + "' has invalid weights/bias fields. Field value types should match and should either be half or full precision.";
-        r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-        return r;
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
     }
 
     if (has_bias){
         if ((weightsValueType == CoreML::FLOAT16 && biasValueType == CoreML::FLOAT32) ||
             (weightsValueType == CoreML::FLOAT32 && biasValueType == CoreML::FLOAT16)){
-            r = Result(ResultType::INVALID_MODEL_PARAMETERS, layer_type + " layer '" + layer.name() +
-                       "has unmatched precisions of weights/bias They should either be half or full precision.");
-            return r;
+            return Result(ResultType::INVALID_MODEL_PARAMETERS, layer_type + " layer '" + layer.name() +
+                          "has unmatched precisions of weights/bias They should either be half or full precision.");
         }
     }
     // Validate weight and bias sizes
-    r = validateGeneralWeightParams(weights, input_dim * output_channels, output_channels,
-                                    layer_type, layer.name(), "weight");
-    if (!r.good()) return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(weights, input_dim * output_channels, output_channels,
+                                                                  layer_type, layer.name(), "weight"));
     if (has_bias){
-        r = validateGeneralWeightParams(bias, output_channels, 1,
-                                        layer_type, layer.name(), "bias");
-        if (!r.good()) return r;
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(bias, output_channels, 1,
+                                                                      layer_type, layer.name(), "bias"));
     }
 
-    return r;
+    return Result();
 }
 
 //    EmbeddingLayerParams embedding = 36;
 Result NeuralNetworkSpecValidator::validateEmbeddingLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
-    if (!r.good()) {
-        return r;
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
 
     if (ndArrayInterpretation) {
-        r = validateInputOutputRankEquality(layer, "Embedding", blobNameToRank);
-        if (!r.good()) {return r;}
-        r = validateRankCount(layer, "Embedding", 4, -1, blobNameToRank);
-        if (!r.good()) {return r;}
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputOutputRankEquality(layer, "Embedding", blobNameToRank));
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateRankCount(layer, "Embedding", 4, -1, blobNameToRank));
     }
 
     const auto& params = layer.embedding();
-    r = validateEmbeddingWeightsBias(layer, params.weights(), params.bias());
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateEmbeddingWeightsBias(layer, params.weights(), params.bias()));
 
-    return r;
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateEmbeddingNDLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
-    if (!r.good()) {
-        return r;
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
 
     if (ndArrayInterpretation) {
-        r = validateInputOutputRankEquality(layer, "EmbeddingND", blobNameToRank);
-        if (!r.good()) {return r;}
-        r = validateRankCount(layer, "EmbeddingND", 2, 5, blobNameToRank);
-        if (!r.good()) {return r;}
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputOutputRankEquality(layer, "EmbeddingND", blobNameToRank));
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateRankCount(layer, "EmbeddingND", 2, 5, blobNameToRank));
     }
 
     const auto& params = layer.embeddingnd();
-    r = validateEmbeddingWeightsBias(layer, params.weights(), params.bias());
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateEmbeddingWeightsBias(layer, params.weights(), params.bias()));
 
-    return r;
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateAverageLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, -1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
-    return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, -1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateMaxLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, -1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
-    return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, -1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateMinLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, -1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
-    return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, -1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+    return Result();
 }
 
 //    SequenceRepeatLayerParams sequenceRepeat = 37;
 Result NeuralNetworkSpecValidator::validateSequenceRepeatLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
 
-    if (!r.good()){ return r;}
     if (ndArrayInterpretation) {
-        r = validateInputOutputRankEquality(layer, "SequenceRepeat", blobNameToRank);
-        if (!r.good()) {return r;}
-        r = validateRankCount(layer, "SequenceRepeat", 5, -1, blobNameToRank);
-        if (!r.good()) {return r;}
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputOutputRankEquality(layer, "SequenceRepeat", blobNameToRank));
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateRankCount(layer, "SequenceRepeat", 5, -1, blobNameToRank));
     }
 
-    return r;
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateSoftmaxLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (!r.good()) {return r;}
-
-    r = validateOutputCount(layer, 1, 1);
-    if (!r.good()) {return r;}
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
 
     if (ndArrayInterpretation) {
-        r = validateInputOutputRankEquality(layer, "Softmax", blobNameToRank);
-        if (!r.good()) {return r;}
-        r = validateRankCount(layer, "Softmax", 3, -1, blobNameToRank);
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputOutputRankEquality(layer, "Softmax", blobNameToRank));
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateRankCount(layer, "Softmax", 3, -1, blobNameToRank));
     }
-    return r;
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateConcatLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 2, -1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 2, -1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
 
-    if (!r.good()){ return r;}
     if (ndArrayInterpretation) {
-        r = validateInputOutputRankEquality(layer, "Concat", blobNameToRank);
-        if (!r.good()) {return r;}
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputOutputRankEquality(layer, "Concat", blobNameToRank));
+
         if (layer.concat().sequenceconcat()) {
-            r = validateRankCount(layer, "Concat", 5, -1, blobNameToRank);
-            if (!r.good()) {return r;}
+            HANDLE_RESULT_AND_RETURN_ON_ERROR(validateRankCount(layer, "Concat", 5, -1, blobNameToRank));
         } else {
-            r = validateRankCount(layer, "Concat", 3, -1, blobNameToRank);
-            if (!r.good()) {return r;}
+            HANDLE_RESULT_AND_RETURN_ON_ERROR(validateRankCount(layer, "Concat", 3, -1, blobNameToRank));
         }
 
         // check that all inputs have same rank
@@ -1964,7 +1574,7 @@ Result NeuralNetworkSpecValidator::validateConcatLayer(const Specification::Neur
         if (blobNameToRank.find(layer.input(0)) != blobNameToRank.end()) {
             rank = blobNameToRank.at(layer.input(0));
         } else {
-            return r;
+            return Result();
         }
 
         for (const auto& input : layer.input()) {
@@ -1978,15 +1588,12 @@ Result NeuralNetworkSpecValidator::validateConcatLayer(const Specification::Neur
         }
     }
 
-    return r;
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateCustomLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, -1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, -1);
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, -1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, -1));
 
     if (layer.custom().classname().size() == 0) {
         std::string err = "Custom layer " + layer.name() + " has an empty 'className' field. This field is required in order for Core ML to link to the implementation for this custom class.";
@@ -1996,54 +1603,41 @@ Result NeuralNetworkSpecValidator::validateCustomLayer(const Specification::Neur
     for (const auto& param: layer.custom().weights()) {
         if (!checkSingleWeightType(param)) {
             std::string err = "Custom layer " + layer.name() + " has a weights parameter with multiple types filled in.  The WeightParams message should be treated as a oneof.";
-            r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
+            return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
         }
     }
 
-    return r;
+    return Result();
 }
 
 //    ResizeBilinear Layer
 Result NeuralNetworkSpecValidator::validateResizeBilinearLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
 
-    if (!r.good()){ return r;}
     if (ndArrayInterpretation) {
-        r = validateInputOutputRankEquality(layer, "ResizeBilinear", blobNameToRank);
-        if (!r.good()) {return r;}
-        r = validateRankCount(layer, "ResizeBilinear", 3, -1, blobNameToRank);
-        if (!r.good()) {return r;}
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputOutputRankEquality(layer, "ResizeBilinear", blobNameToRank));
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateRankCount(layer, "ResizeBilinear", 3, -1, blobNameToRank));
     }
 
     const auto& params = layer.resizebilinear();
     // target Size must be 2D if provided
     if (!(params.targetsize_size() == 0 || params.targetsize_size() == 2)) {
         std::string err = "Target Size in the resize bilinear layer '" + layer.name() + "' must be a vector of size 2 (i.e height, width) but is a vector of size " + std::to_string(params.targetsize_size()) + ".";
-        r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-        return r;
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
     }
 
-    return r;
+    return Result();
 }
 
 //    CropResize Layer
 Result NeuralNetworkSpecValidator::validateCropResizeLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 2, 2);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 2, 2));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
 
-    if (!r.good()){ return r;}
     if (ndArrayInterpretation) {
-        r = validateInputOutputRankEquality(layer, "CropResize", blobNameToRank);
-        if (!r.good()) {return r;}
-        r = validateRankCount(layer, "CropResize", 5, -1, blobNameToRank);
-        if (!r.good()) {return r;}
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputOutputRankEquality(layer, "CropResize", blobNameToRank));
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateRankCount(layer, "CropResize", 5, -1, blobNameToRank));
 
         if (blobNameToRank.find(layer.input(0)) != blobNameToRank.end() &&
             blobNameToRank.find(layer.input(1)) != blobNameToRank.end()) {
@@ -2060,23 +1654,16 @@ Result NeuralNetworkSpecValidator::validateCropResizeLayer(const Specification::
     // target Size must be 2D if provided
     if (!(params.targetsize_size() == 0 || params.targetsize_size() == 2)) {
         std::string err = "Target Size in the crop resize layer '" + layer.name() + "' must be a vector of size 2 (i.e height, width) but is a vector of size " + std::to_string(params.targetsize_size()) + ".";
-        r = Result(ResultType::INVALID_MODEL_PARAMETERS, err);
-        return r;
+        return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
     }
 
-    return r;
+    return Result();
 }
 
 // Branch Layer
 Result NeuralNetworkSpecValidator::validateBranchLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 0, 0);
-    }
-    if (!r.good()) {
-        return r;
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 0, 0));
 
     if (layer.inputtensor_size()) {
         auto &in_tensor = layer.inputtensor(0);
@@ -2111,17 +1698,12 @@ Result NeuralNetworkSpecValidator::validateBranchLayer(const Specification::Neur
 
     // validate both If and Else branches
     NeuralNetworkSpecValidator ifNNValidator(blobs, ModelIOBlobNameToRank, ndArrayInterpretation, loopStackDepth, blobNameToRank);
-    r = ifNNValidator.validateNeuralNetwork(ifNNSpec);
-    if (!r.good()) {
-        return r;
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(ifNNValidator.validateNeuralNetwork(ifNNSpec));
 
     if (isElseBranch) {
         NeuralNetworkSpecValidator elseNNValidator(blobs, ModelIOBlobNameToRank, ndArrayInterpretation, loopStackDepth, blobNameToRank);
-        r = elseNNValidator.validateNeuralNetwork(elseNNSpec);
-        if (!r.good()) {
-            return r;
-        }
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(elseNNValidator.validateNeuralNetwork(elseNNSpec));
+
         // update set of "blobs" of the current Neural Network: the ones that are in both if and else branches
         for (auto& blob_map: ifNNValidator.blobs){
             std::string current_blob_name = blob_map.first;
@@ -2135,44 +1717,36 @@ Result NeuralNetworkSpecValidator::validateBranchLayer(const Specification::Neur
         }
     }
 
-    return r;
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateTransposeLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+
     // axes are required parameters
     const auto& params = layer.transpose();
     if (params.axes_size() == 0) {
         const std::string err = "Axes are required parameters for '" + layer.name() + "' layer.";
         return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
     }
-    return r;
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateCopyLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+
     if (layer.input(0) == layer.output(0)) {
         const std::string err = "Copy layer '" + layer.name() + "' has identical input and output names.";
         return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
     }
-    return r;
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateBatchedMatmulLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 2);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-        if (!r.good()) {return r;}
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 2));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
 
     // validate rank, if present
     if (layer.input_size() == 2 && layer.inputtensor_size() == 2 && layer.outputtensor_size() == 1) {
@@ -2206,24 +1780,21 @@ Result NeuralNetworkSpecValidator::validateBatchedMatmulLayer(const Specificatio
     }
 
     if (layer.batchedmatmul().int8dynamicquantize()) {
-        r = validateInt8Requirements(layer.batchedmatmul().weights(), "BatchedMatMul", layer.name());
-        if (!r.good()) {return r;}
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInt8Requirements(layer.batchedmatmul().weights(), "BatchedMatMul", layer.name()));
     }
 
     if (layer.input_size() == 1) {
         const auto& params = layer.batchedmatmul();
-        r = validateInnerProductWeightsBias(layer, params.weights(), params.bias());
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInnerProductWeightsBias(layer, params.weights(), params.bias()));
     }
 
-    return r;
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateConcatNDLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 2, -1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 2, -1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+
     const auto& params = layer.concatnd();
     if (layer.inputtensor_size() > 0) {
         const int rank = static_cast<int>(layer.inputtensor(0).rank());
@@ -2232,15 +1803,13 @@ Result NeuralNetworkSpecValidator::validateConcatNDLayer(const Specification::Ne
             return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
         }
     }
-    return r;
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateSoftmaxNDLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+
     const auto& params = layer.softmaxnd();
     if (layer.inputtensor_size() > 0) {
         const int rank = static_cast<int>(layer.inputtensor(0).rank());
@@ -2249,15 +1818,13 @@ Result NeuralNetworkSpecValidator::validateSoftmaxNDLayer(const Specification::N
             return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
         }
     }
-    return r;
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateReverseLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+
     const auto& params = layer.reverse();
     // requires len(reverseDim) == rank(inputTensor)
     if (layer.inputtensor_size() > 0) {
@@ -2266,297 +1833,196 @@ Result NeuralNetworkSpecValidator::validateReverseLayer(const Specification::Neu
             return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
         }
     }
-    return r;
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateBooleanElementwiseLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
     if (layer.layer_case() == CoreML::Specification::NeuralNetworkLayer::kLogicalNot) {
-        r = validateInputCount(layer, 1, 1);
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
     } else if (layer.layer_case() == CoreML::Specification::NeuralNetworkLayer::kLogicalAnd ||
                layer.layer_case() == CoreML::Specification::NeuralNetworkLayer::kLogicalOr ||
                layer.layer_case() == CoreML::Specification::NeuralNetworkLayer::kLogicalXor) {
-        r = validateInputCount(layer, 2, 2);
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 2, 2));
     } else {
-        r = validateInputCount(layer, 1, 2);
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 2));
     }
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
-    return r;
+
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateFillLikeLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
-    return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateFillStaticLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 0, 0);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 0, 0));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+
     const auto& params = layer.fillstatic();
     if (params.targetshape_size() == 0) {
         const std::string err = "Target shape is required parameter for '" + layer.name() + "' layer.";
         return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
     }
-    return r;
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateFillDynamicLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
-    return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateReshapeLikeLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 2, 2);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
-    return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 2, 2));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateReshapeStaticLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+
     const auto& params = layer.reshapestatic();
     if (params.targetshape_size() == 0) {
         const std::string err = "Target shape is required parameter for '" + layer.name() + "' layer.";
         return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
     }
-    return r;
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateReshapeDynamicLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 2, 2);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
-    return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 2, 2));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateWhereLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 3, 3);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
-    return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 3, 3));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateTrigonometryLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
-    return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validatePowBroadcastableLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 2, 2);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
-    return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 2, 2));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateExp2Layer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
-    return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateUpperTriangularLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
-    return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+    return Result();
 }
 
 
 Result NeuralNetworkSpecValidator::validateLowerTriangularLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
-    return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateMatrixBandPartLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
-    return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateBroadcastToLikeLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 2, 2);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
-    return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 2, 2));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateBroadcastToStaticLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+
     const auto& params = layer.broadcasttostatic();
     if (params.targetshape_size() == 0) {
         const std::string err = "Target shape is required parameter for '" + layer.name() + "' layer.";
         return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
     }
-    return r;
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateBroadcastToDynamicLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 2, 2);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
-    return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 2, 2));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateAddBroadcastableLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 2, 2);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-        if (!r.good()) {
-            return r;
-        }
-    }
-    return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 2, 2));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateSubtractBroadcastableLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 2, 2);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-        if (!r.good()) {
-            return r;
-        }
-    }
-    return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 2, 2));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateMultiplyBroadcastableLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 2, 2);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-        if (!r.good()) {
-            return r;
-        }
-    }
-    return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 2, 2));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateDivideBroadcastableLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 2, 2);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-        if (!r.good()) {
-            return r;
-        }
-    }
-    return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 2, 2));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateMaxBroadcastableLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 2, 2);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-        if (!r.good()) {
-            return r;
-        }
-    }
-    return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 2, 2));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateMinBroadcastableLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 2, 2);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-        if (!r.good()) {
-            return r;
-        }
-    }
-    return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 2, 2));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateFloorDivBroadcastableLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 2, 2);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-        if (!r.good()) {
-            return r;
-        }
-    }
-    return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 2, 2));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateModBroadcastableLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 2, 2);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-        if (!r.good()) {
-            return r;
-        }
-    }
-    return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 2, 2));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateGatherLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 2, 2);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
-    return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 2, 2));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateScatterLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 3, 3);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 3, 3));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
 
     if (ndArrayInterpretation) {
         std::string err;
@@ -2581,60 +2047,43 @@ Result NeuralNetworkSpecValidator::validateScatterLayer(const Specification::Neu
         }
     }
 
-    return r;
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateGatherNDLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 2, 2);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
-    return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 2, 2));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateScatterNDLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 3, 3);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
-    return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 3, 3));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateGatherAlongAxisLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 2, 2);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
-    return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 2, 2));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateScatterAlongAxisLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 3, 3);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
-    return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 3, 3));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateWhereNonZeroLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
-    return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateStackLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 2, -1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 2, -1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+
     const auto& params = layer.stack();
     if (layer.inputtensor_size() > 0) {
         const int rank0 = static_cast<int>(layer.inputtensor(0).rank());
@@ -2648,15 +2097,13 @@ Result NeuralNetworkSpecValidator::validateStackLayer(const Specification::Neura
             return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
         }
     }
-    return r;
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateSplitNDLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 2, -1);
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 2, -1));
+
     size_t numSplits = 0;
     const auto& params = layer.splitnd();
 
@@ -2681,65 +2128,49 @@ Result NeuralNetworkSpecValidator::validateSplitNDLayer(const Specification::Neu
         return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
     }
 
-    return r;
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateCeilLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
-    return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateFloorLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
-    return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateRoundLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
-    return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateSignLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
-    return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateClipLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+
     const auto& params = layer.clip();
     if (params.minval() > params.maxval()) {
         const std::string err = "Value of minval should be smaller than maxval for '" + layer.name() + "' layer.";
         return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
     }
-    return r;
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateSliceStaticLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+
     const auto& params = layer.slicestatic();
     // check for required parameters
     if (params.beginids_size() == 0) {
@@ -2762,33 +2193,25 @@ Result NeuralNetworkSpecValidator::validateSliceStaticLayer(const Specification:
         const std::string err = "End masks are required parameters for '" + layer.name() + "' layer.";
         return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
     }
-    return r;
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateSliceDynamicLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 2, 7);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
-    return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 2, 7));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateTileLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 2);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
-    return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 2));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateSlidingWindowsLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+
     const auto& params = layer.slidingwindows();
     // axis should be in range [-inputRank : inputRank)
     if (layer.inputtensor_size() > 0) {
@@ -2798,24 +2221,19 @@ Result NeuralNetworkSpecValidator::validateSlidingWindowsLayer(const Specificati
             return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
         }
     }
-    return r;
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateReverseSeqLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 2, 2);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
-    return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 2, 2));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateReductionTypeLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+
     // all given axes should be in range [-inputRank : inputRank)
     if (layer.inputtensor_size() > 0) {
         const int rank = static_cast<int>(layer.inputtensor(0).rank());
@@ -2897,18 +2315,12 @@ Result NeuralNetworkSpecValidator::validateReductionTypeLayer(const Specificatio
                 break;
         }
     }
-    return r;
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateLoopLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 0, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 0, 0);
-    }
-    if (!r.good()) {
-        return r;
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 0, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 0, 0));
 
     // check that if input exists, and if its shape exists, its scalar
     if (layer.inputtensor_size()) {
@@ -2948,10 +2360,7 @@ Result NeuralNetworkSpecValidator::validateLoopLayer(const Specification::Neural
 
     // validate the condition network if it exists
     if (isConditionNet) {
-        r = conditionNNValidator.validateNeuralNetwork(conditionNNSpec);
-        if (!r.good()) {
-            return r;
-        }
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(conditionNNValidator.validateNeuralNetwork(conditionNNSpec));
 
         // conditionVar must be produced by the condition network
         if (blobs.find(conditionVar) == blobs.end()) { // conditionVar not in the parent NN
@@ -2978,10 +2387,7 @@ Result NeuralNetworkSpecValidator::validateLoopLayer(const Specification::Neural
 
     // validate the body network
     NeuralNetworkSpecValidator bodyNNValidator(blobs, ModelIOBlobNameToRank, ndArrayInterpretation, loopStackDepth + 1, blobNameToRank);
-    r = bodyNNValidator.validateNeuralNetwork(bodyNNSpec);
-    if (!r.good()) {
-        return r;
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(bodyNNValidator.validateNeuralNetwork(bodyNNSpec));
 
     // update the set of "blobs" of the current Neural Network:
     // - if there is no condition network, all the blobs generated in the body network gets added to the scope of the parent network
@@ -3003,18 +2409,12 @@ Result NeuralNetworkSpecValidator::validateLoopLayer(const Specification::Neural
         }
     }
 
-    return r;
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateLoopContinueBreakLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 0, 0);
-    if (r.good()) {
-        r = validateOutputCount(layer, 0, 0);
-    }
-    if (!r.good()) {
-        return r;
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 0, 0));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 0, 0));
 
     if (loopStackDepth == 0) {
         std::string err;
@@ -3026,32 +2426,19 @@ Result NeuralNetworkSpecValidator::validateLoopContinueBreakLayer(const Specific
         return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
     }
 
-    return r;
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateActivationLayers(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
-    return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateRankPreservingReshapeLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-        if (!r.good()) {
-            return r;
-        }
-    }
-
-    r = validateRankExists(layer);
-    if (!r.good()) {
-        return r;
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateRankExists(layer));
 
     const auto& params = layer.rankpreservingreshape();
     if (params.targetshape_size() == 0) {
@@ -3070,15 +2457,13 @@ Result NeuralNetworkSpecValidator::validateRankPreservingReshapeLayer(const Spec
         std::string err = "RankPreservingReshape Layer '" + std::string(layer.name()) + "': input rank must be same as the length of the target shape property.";
         return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
     }
-    return r;
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateFlattenTo2DLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+
     const auto& params = layer.flattento2d();
     // axis should be in range [-inputRank : inputRank)
     if (layer.inputtensor_size() > 0) {
@@ -3088,15 +2473,12 @@ Result NeuralNetworkSpecValidator::validateFlattenTo2DLayer(const Specification:
             return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
         }
     }
-    return r;
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateExpandDimsLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
 
     if (layer.expanddims().axes_size() == 0) {
         std::string err = "ExpandDims Layer '" + std::string(layer.name()) + "': length of the 'axes' parameter cannot be 0.";
@@ -3146,15 +2528,12 @@ Result NeuralNetworkSpecValidator::validateExpandDimsLayer(const Specification::
         }
     }
 
-    return r;
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateSqueezeLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
 
     if (!layer.squeeze().squeezeall()) {
 
@@ -3209,47 +2588,41 @@ Result NeuralNetworkSpecValidator::validateSqueezeLayer(const Specification::Neu
         }
     }
 
-    return r;
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateRangeStaticLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 0, 0);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 0, 0));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
 
     if (layer.outputtensor_size() > 0) {
         int rank = static_cast<int>(layer.outputtensor(0).rank());
-        r =  checkRank(layer, "Range", 1, 1, "output", rank);
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(checkRank(layer, "Range", 1, 1, "output", rank));
     }
 
-    return r;
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateRangeDynamicLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
     if (layer.input_size() > 0) {
-        r = validateInputCount(layer, 1, 3);
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 3));
     } else {
-        r = validateInputCount(layer, 0, 0);
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 0, 0));
     }
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
+
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
 
     if (layer.outputtensor_size() > 0) {
         int rank = static_cast<int>(layer.outputtensor(0).rank());
-        r =  checkRank(layer, "Range", 1, 1, "output", rank);
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(checkRank(layer, "Range", 1, 1, "output", rank));
     }
 
-    return r;
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateLoadConstantNDLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    if (!(r = validateInputCount(layer, 0, 0)).good()) return r;
-    if (!(r = validateOutputCount(layer, 1, 1)).good()) return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 0, 0));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
 
     const auto& params = layer.loadconstantnd();
     WeightParamType paramType = valueType(params.data());
@@ -3273,71 +2646,57 @@ Result NeuralNetworkSpecValidator::validateLoadConstantNDLayer(const Specificati
         total_shape *= params.shape(i);
     }
 
-    r = validateGeneralWeightParams(params.data(), total_shape, 1, "LoadConstantND", layer.name(), "constants");
-    if (!r.good()) return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateGeneralWeightParams(params.data(), total_shape, 1, "LoadConstantND", layer.name(), "constants"));
 
     return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateGetShapeLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    if (!(r = validateInputCount(layer, 1, 1)).good()) return r;
-    if (!(r = validateOutputCount(layer, 1, 1)).good()) return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
     return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateRandomNormalLikeLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
-    return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateRandomNormalStaticLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 0, 0);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 0, 0));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+
     const auto& params = layer.randomnormalstatic();
     if (params.outputshape_size() == 0) {
         const std::string err = "Target shape is required parameter for '" + layer.name() + "' layer.";
         return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
     }
-    return r;
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateRandomNormalDynamicLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
-    return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateRandomUniformLikeLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+
     const auto& params = layer.randomuniformlike();
     if (params.minval() > params.maxval()) {
         const std::string err = "Value of minval should be smaller than maxval for '" + layer.name() + "' layer.";
         return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
     }
-    return r;
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateRandomUniformStaticLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 0, 0);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 0, 0));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+
     const auto& params = layer.randomuniformstatic();
     if (params.outputshape_size() == 0) {
         const std::string err = "Target shape is required parameter for '" + layer.name() + "' layer.";
@@ -3347,43 +2706,37 @@ Result NeuralNetworkSpecValidator::validateRandomUniformStaticLayer(const Specif
         const std::string err = "Value of minval should be smaller than maxval for '" + layer.name() + "' layer.";
         return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
     }
-    return r;
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateRandomUniformDynamicLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+
     const auto& params = layer.randomuniformdynamic();
     if (params.minval() > params.maxval()) {
         const std::string err = "Value of minval should be smaller than maxval for '" + layer.name() + "' layer.";
         return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
     }
-    return r;
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateRandomBernoulliLikeLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+
     const auto& params = layer.randombernoullilike();
     if (params.prob() < 0.0f || params.prob() > 1.0f) {
         const std::string err = "Value of prob should be in range [0: 1] for '" + layer.name() + "' layer.";
         return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
     }
-    return r;
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateRandomBernoulliStaticLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 0, 0);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 0, 0));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+
     const auto& params = layer.randombernoullistatic();
     if (params.outputshape_size() == 0) {
         const std::string err = "Target shape is required parameter for '" + layer.name() + "' layer.";
@@ -3393,28 +2746,25 @@ Result NeuralNetworkSpecValidator::validateRandomBernoulliStaticLayer(const Spec
         const std::string err = "Value of prob should be in range [0: 1] for '" + layer.name() + "' layer.";
         return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
     }
-    return r;
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateRandomBernoulliDynamicLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+
     const auto& params = layer.randombernoullidynamic();
     if (params.prob() < 0.0f || params.prob() > 1.0f) {
         const std::string err = "Value of prob should be in range [0: 1] for '" + layer.name() + "' layer.";
         return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
     }
-    return r;
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateTopKLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    if (!(r = validateInputCount(layer, 1, 2)).good()) return r;
-    if (!(r = validateOutputCount(layer, 2, 2)).good()) return r;
-    if (!(r = validateInputOutputRankEquality(layer, "TopK", blobNameToRank)).good()) return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 2));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 2, 2));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputOutputRankEquality(layer, "TopK", blobNameToRank));
 
     if (blobNameToRank.find(layer.input(0)) != blobNameToRank.end() &&
         blobNameToRank.find(layer.output(1)) != blobNameToRank.end()) {
@@ -3437,11 +2787,10 @@ Result NeuralNetworkSpecValidator::validateTopKLayer(const Specification::Neural
 }
 
 Result NeuralNetworkSpecValidator::validateArgMaxLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    if (!(r = validateInputCount(layer, 1, 1)).good()) return r;
-    if (!(r = validateOutputCount(layer, 1, 1)).good()) return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
     if (!layer.argmax().removedim()) {
-        if (!(r = validateInputOutputRankEquality(layer, "ArgMax", blobNameToRank)).good()) return r;
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputOutputRankEquality(layer, "ArgMax", blobNameToRank));
     }
     if (layer.inputtensor_size() > 0) {
         const auto& params = layer.argmax();
@@ -3455,11 +2804,10 @@ Result NeuralNetworkSpecValidator::validateArgMaxLayer(const Specification::Neur
 }
 
 Result NeuralNetworkSpecValidator::validateArgMinLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    if (!(r = validateInputCount(layer, 1, 1)).good()) return r;
-    if (!(r = validateOutputCount(layer, 1, 1)).good()) return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
     if (!layer.argmin().removedim()) {
-        if (!(r = validateInputOutputRankEquality(layer, "ArgMin", blobNameToRank)).good()) return r;
+        HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputOutputRankEquality(layer, "ArgMin", blobNameToRank));
     }
     if (layer.inputtensor_size() > 0) {
         const auto& params = layer.argmin();
@@ -3473,20 +2821,15 @@ Result NeuralNetworkSpecValidator::validateArgMinLayer(const Specification::Neur
 }
 
 Result NeuralNetworkSpecValidator::validateCategoricalDistributionLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
-    return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateLayerNormalizationLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 1);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+
     // check required parameters
     std::string err = "";
     const auto& params = layer.layernormalization();
@@ -3519,17 +2862,13 @@ Result NeuralNetworkSpecValidator::validateLayerNormalizationLayer(const Specifi
         err = "Shape of beta should match normalized_shape for '" + layer.name() + "' layer.";
         return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
     }
-    return r;
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateConstantPadLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 2);
-    if (!r.good()) {return r;}
-    r = validateOutputCount(layer, 1, 1);
-    if (!r.good()) {return r;}
-    r = validateInputOutputRankEquality(layer, "ConstantPad", blobNameToRank);
-    if (!r.good()) {return r;}
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 2));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputOutputRankEquality(layer, "ConstantPad", blobNameToRank));
 
     const auto& params = layer.constantpad();
 
@@ -3555,41 +2894,31 @@ Result NeuralNetworkSpecValidator::validateConstantPadLayer(const Specification:
         }
     }
 
-    return r;
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateNMSLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 2, 5);
-    if (!r.good()) {return r;}
-    r = validateOutputCount(layer, 4, 4);
-
-    return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 2, 5));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 4, 4));
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateOneHotLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 2);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
-    return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 2));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateCumSumLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 1, 2);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
-    return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 2));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateArgsortLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    if (!(r = validateInputCount(layer, 1, 1)).good()) return r;
-    if (!(r = validateOutputCount(layer, 1, 1)).good()) return r;
-    if (!(r = validateInputOutputRankEquality(layer, "Argsort", blobNameToRank)).good()) return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputOutputRankEquality(layer, "Argsort", blobNameToRank));
 
     const auto& params = layer.argsort();
 
@@ -3607,16 +2936,13 @@ Result NeuralNetworkSpecValidator::validateArgsortLayer(const Specification::Neu
             return Result(ResultType::INVALID_MODEL_PARAMETERS, err);
         }
     }
-    return r;
+    return Result();
 }
 
 Result NeuralNetworkSpecValidator::validateSliceBySizeLayer(const Specification::NeuralNetworkLayer& layer) {
-    Result r;
-    r = validateInputCount(layer, 2, 2);
-    if (r.good()) {
-        r = validateOutputCount(layer, 1, 1);
-    }
-    return r;
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateInputCount(layer, 2, 2));
+    HANDLE_RESULT_AND_RETURN_ON_ERROR(validateOutputCount(layer, 1, 1));
+    return Result();
 }
 
 

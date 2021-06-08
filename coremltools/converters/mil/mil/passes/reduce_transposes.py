@@ -49,7 +49,7 @@ its attributes, and the types of the hypothetical values of its input vars
 - Axis update ops: if a transpose can pass through them, they are treated like a unary op and the dictionary
    "transpose_op_to_axis_update_ops" is updated. If the op cannot be updated in any manner to
    allow a transpose to pass through, this op is then categorized as a materialize op and handled accordingly
-- Materialzie ops: All "LazyTransposeHypotheticalValue" input vars, if present, materialize here. Output of this op
+- Materialize ops: All "LazyTransposeHypotheticalValue" input vars, if present, materialize here. Output of this op
   is always of type "HypotheticalValue". If the input is a "LazyTransposeHypotheticalValue", update the dict
   "transpose_op_to_materialize_ops"
 - To treat an op like a unary op, add its type to "UNARY_LIKE_OP_TYPES". In future changes we want to make this process
@@ -133,6 +133,7 @@ UNARY_LIKE_OP_TYPES = set(
         "sinh",
         "sqrt",
         "square",
+        "pow",
         "tan",
         "tanh",
         "threshold",
@@ -298,35 +299,14 @@ class transform_concat(transform_axis_update_ops):
 
     def update(self):
         new_axis_val = self.transpose_axes[self.axis_var.val]
-        inputs = list(self.op.inputs["values"])
 
         # to be used, if there is a consant inputs to the concat op
-        transpose_perm_for_const = [0] * len(self.transpose_axes)
-        for i, axis in enumerate(self.transpose_axes):
-            transpose_perm_for_const[axis] = i
-
-        # if there is a constant input, transpose it
-        for input_var in inputs:
-            if input_var.op.op_type == "const":
-                const_val = input_var.val
-                new_const_val = np.transpose(const_val, transpose_perm_for_const)
-                # insert a new constant JUST before the op
-                with self.op.enclosing_block:
-                    new_const_input_var = mb.const(
-                        val=new_const_val, mode="immediate_value", before_op=self.op
-                    )
-                self.op.enclosing_block.replace_uses_of_var_after_op(
-                    anchor_op=new_const_input_var.op,
-                    end_op=self.op,
-                    old_var=input_var,
-                    new_var=new_const_input_var,
-                    no_check_var_types=True,
-                )
+        self._update_const_inputs()
 
         # insert a new constant for the new axis, JUST before the op
         with self.op.enclosing_block:
             new_axis_var = mb.const(
-                val=new_axis_val, mode="immediate_value", before_op=self.op
+                val=new_axis_val, before_op=self.op
             )
 
         self.op.enclosing_block.replace_uses_of_var_after_op(
@@ -336,6 +316,41 @@ class transform_concat(transform_axis_update_ops):
             new_var=new_axis_var,
             no_check_var_types=True,
         )
+
+    def _update_const_inputs(self):
+        transpose_perm_for_const = [0] * len(self.transpose_axes)
+        for i, axis in enumerate(self.transpose_axes):
+            transpose_perm_for_const[axis] = i
+
+        # if there is a constant input, transpose it
+        inputs = list(self.op.inputs["values"])
+        for input_var in inputs:
+            if input_var.op.op_type == "const":
+                const_val = input_var.val
+                new_const_val = np.transpose(const_val, transpose_perm_for_const)
+                # insert a new constant JUST before the op
+                with self.op.enclosing_block:
+                    new_const_input_var = mb.const(
+                        val=new_const_val, before_op=self.op
+                    )
+                self.op.enclosing_block.replace_uses_of_var_after_op(
+                    anchor_op=new_const_input_var.op,
+                    end_op=self.op,
+                    old_var=input_var,
+                    new_var=new_const_input_var,
+                    no_check_var_types=True,
+                )
+
+
+@register_axis_update_op()
+class transform_split(transform_concat):
+    def __init__(self, **kwargs):
+        super(transform_split, self).__init__(**kwargs)
+
+    # The split op is handled the same as the concat op, except it does not need
+    # to transform const inputs
+    def _update_const_inputs(self):
+        pass
 
 
 @register_axis_update_op()
@@ -392,7 +407,7 @@ class transform_pad(transform_axis_update_ops):
         # insert a new constant for pad val, JUST before the op
         with self.op.enclosing_block:
             new_pad_var = mb.const(
-                val=self.pad_amounts_new, mode="immediate_value", before_op=self.op
+                val=self.pad_amounts_new, before_op=self.op
             )
         self.op.enclosing_block.replace_uses_of_var_after_op(
             anchor_op=new_pad_var.op,
@@ -439,7 +454,7 @@ class transform_reduce_mean(transform_axis_update_ops):
         # insert a new constant for the axis, JUST before the op
         with self.op.enclosing_block:
             new_axis_var = mb.const(
-                val=new_axes_val, mode="immediate_value", before_op=self.op
+                val=new_axes_val, before_op=self.op
             )
 
         self.op.enclosing_block.replace_uses_of_var_after_op(
@@ -457,6 +472,14 @@ class transform_add(transform_axis_update_ops):
         super(transform_add, self).__init__(**kwargs)
 
     def can_transpose_pass(self):
+        def _can_broadcast_to(const_shape, other_shape):
+            """Returns true if const_shape can be broadcast to other_shape."""
+            if len(const_shape) != len(other_shape):
+                return False
+            return all(
+                (m == n) or (m == 1) for m, n in zip(const_shape[::-1], other_shape[::-1])
+            )
+
         const_input = None
         if self.op.inputs["x"].op and self.op.inputs["x"].op.op_type == "const":
             const_input = self.op.inputs["x"]
@@ -473,6 +496,8 @@ class transform_add(transform_axis_update_ops):
         rank_const_input = len(const_input.val.shape)
         rank_other_input = len(other_input.shape) if other_input.shape else 0
         if rank_const_input <= 1 and rank_other_input > 0:
+            return True
+        if _can_broadcast_to(const_input.shape, other_input.shape):
             return True
         return False
 
@@ -493,13 +518,13 @@ class transform_add(transform_axis_update_ops):
 
         rank = len(self.transpose_axes)
         new_shape = [1] * rank
-        new_shape[self.transpose_axes[-1]] = const_value.shape[0]
+        new_shape[self.transpose_axes[-1]] = int(np.prod(const_value.shape))
         new_const_val = np.reshape(const_value, new_shape)
 
         # insert a new constant JUST before the op
         with self.op.enclosing_block:
             new_const_var = mb.const(
-                val=new_const_val, mode=const_input_var.op.mode, before_op=self.op
+                val=new_const_val, before_op=self.op
             )
 
         self.op.enclosing_block.replace_uses_of_var_after_op(
@@ -689,11 +714,12 @@ class TransposeOptimization(object):
         for transpose_op in all_lazy_transpose_ops:
             self.transpose_op_to_axis_update_ops[transpose_op].append(op)
 
-        self.var_to_hypothetical_value[op.outputs[0]] = LazyTransposeHypotheticalValue(
-            input_hypothetical_value.wrapped_hypothetical_value,
-            all_lazy_transpose_ops,
-            perm,
-        )
+        for output in op.outputs:
+            self.var_to_hypothetical_value[output] = LazyTransposeHypotheticalValue(
+                input_hypothetical_value.wrapped_hypothetical_value,
+                all_lazy_transpose_ops,
+                perm,
+            )
 
     def _visit_transpose_op(self, op):
         input_var = op.inputs["x"]
@@ -1071,5 +1097,5 @@ def reduce_transposes_block(block):
 
 @register_pass(namespace="common")
 def reduce_transposes(prog):
-    for f_name, f in prog.functions.items():
+    for f in prog.functions.values():
         reduce_transposes_block(f)

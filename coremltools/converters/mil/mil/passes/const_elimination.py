@@ -4,24 +4,8 @@
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
-
-
-import numpy as np
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
-
-
-def get_const_mode(val):
-    # Heuristics to determine if a val should be file value or immediate
-    # value.
-    if isinstance(val, (str, bool, int)):
-        return "immediate_value"
-    if isinstance(val, (np.generic, np.ndarray)):
-        if val.size > 10:
-            return "file_value"
-        return "immediate_value"
-    raise ValueError("val {} not recognized.".format(val))
-
 
 def const_elimination_block(block):
     # shallow copy hides changes on f.operations during the loop
@@ -38,7 +22,6 @@ def const_elimination_block(block):
                 with block:
                     res = mb.const(
                         val=o.val,
-                        mode=get_const_mode(o.val),
                         before_op=op,
                         # same var name, but different python
                         # instance does not violate SSA property.
@@ -70,11 +53,9 @@ def const_elimination(prog):
     #
     # Result:
     #   _, %3 = non_const_op(...)  # _ is the ignored output
-    #   %2_const = const(mode=m)  # %2_const name is for illustration only
+    #   %2_const = const()         # %2_const name is for illustration only
     #   %4 = other_op(%2_const, %3)
     #
-    # where m is 'file_value' / 'immediate_value' depending on heuristics
-    # in get_const_mode.
     """
-    for f_name, f in prog.functions.items():
+    for f in prog.functions.values():
         const_elimination_block(f)

@@ -1,12 +1,11 @@
-from os import getcwd, chdir
-from shutil import rmtree
-from os.path import exists
-from tempfile import mkdtemp
-import pytest
-import numpy as np
+# Copyright (c) 2021, Apple Inc. All rights reserved.
+#
+# Use of this source code is governed by a BSD-3-clause license that can be
+# found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
+import copy
 import coremltools as ct
-import os
-
+from coremltools.converters.mil.testing_utils import get_op_types_in_program
+from coremltools.converters.mil.mil import Builder as mb
 from coremltools._deps import (
     _HAS_TF_1,
     _HAS_TF_2,
@@ -15,6 +14,14 @@ from coremltools._deps import (
     MSG_TF2_NOT_FOUND,
     MSG_TORCH_NOT_FOUND,
 )
+
+import numpy as np
+import os
+from os.path import exists
+from os import getcwd, chdir
+import pytest
+from shutil import rmtree
+from tempfile import mkdtemp
 
 
 ###############################################################################
@@ -632,6 +639,54 @@ class TestMILExamples:
             )
             assert len(prediction) == 1
 
+class TestInvalidInput:
+    @staticmethod
+    def test_rank0_inputs_mil():
+        from coremltools.converters.mil import Builder as mb
+
+        with pytest.raises(ValueError, match=r"Rank-0"):
+            @mb.program(
+                input_specs=[mb.TensorSpec(shape=()),]
+            )
+            def prog(x):
+                return x
+
+    @staticmethod
+    def test_rank0_inputs_torch():
+        """Similar to TestPyTorchConverterExamples::test_int64_inputs but
+        using rank-0 int input.
+        """
+        import torch
+
+        num_tokens = 3
+        embedding_size = 5
+
+        class TestModule(torch.nn.Module):
+            def __init__(self):
+                super(TestModule, self).__init__()
+                self.embedding = torch.nn.Embedding(num_tokens,
+                    embedding_size)
+
+            def forward(self, x):
+                return self.embedding(x)
+
+        model = TestModule()
+        model.eval()
+
+        example_input = torch.tensor(1)
+        traced_model = torch.jit.trace(model, example_input)
+        with pytest.raises(ValueError, match=r"Rank-0"):
+            mlmodel = ct.convert(
+                traced_model,
+                inputs=[
+                    ct.TensorType(
+                        name="input",
+                        shape=example_input.shape,
+                        dtype=example_input.numpy().dtype,
+                    )
+                ],
+            )
+
 class TestFlexibleShape:
     @staticmethod
     @pytest.mark.parametrize(
@@ -1178,7 +1233,7 @@ class TestOptionalInput:
             np.testing.assert_allclose(result[name], expected.detach().numpy())
 
 ###############################################################################
-# Note: all tests are examples provided to other teams for testing 
+# Note: all tests are examples of conversion to the Core ML format
 # Each test case is expected to be runnable and self-complete.
 ###############################################################################
 
@@ -1194,7 +1249,7 @@ class TestMILConverterExamples:
             x = tf.placeholder(tf.float32, shape=(1, 2, 3), name="input")
             y = tf.nn.relu(x, name="output")
 
-        model = ct.convert(graph, convert_to='mil')
+        model = ct.convert(graph, convert_to='milinternal')
         assert isinstance(model, ct.converters.mil.Program)
 
     @staticmethod
@@ -1205,7 +1260,7 @@ class TestMILConverterExamples:
         x = tf.keras.Input(shape=(32,), name="input")
         y = tf.keras.layers.Dense(16, activation="softmax")(x)
         keras_model = tf.keras.Model(x, y)
-        model = ct.convert(keras_model, convert_to='mil')
+        model = ct.convert(keras_model, convert_to='milinternal')
         assert isinstance(model, ct.converters.mil.Program)
 
     @staticmethod
@@ -1235,6 +1290,235 @@ class TestMILConverterExamples:
         model = ct.convert(
             traced_model,
             inputs=[ct.TensorType(name="input", shape=example_input.shape)],
-            convert_to='mil'
+            convert_to='milinternal'
         )
         assert isinstance(model, ct.converters.mil.Program)
+
+
+    @staticmethod
+    @pytest.mark.skipif(not _HAS_TF_1, reason=MSG_TF1_NOT_FOUND)
+    def test_mil_op_names_consistency(tmpdir):
+        '''
+        Test to make sure that when the same model is converted to MIL program,
+        in the same session, it gives the same program, with the same op names
+        '''
+        import tensorflow as tf
+
+        with tf.Graph().as_default() as graph:
+            x = tf.placeholder(tf.float32, shape=(1, 5, 5, 3), name="input")
+            conv = tf.nn.conv2d(
+                x,
+                filter = tf.constant(np.random.rand(1, 1, 3, 5), tf.float32),
+                padding = "VALID",
+            )
+            y = tf.nn.relu(conv, name="output")
+
+        mil_prog1 = ct.convert(graph, convert_to='milinternal')
+        # convert the same model again
+        mil_prog2 = ct.convert(graph, convert_to='milinternal')
+
+        # compare op names of the two programs
+        np.testing.assert_array_equal(get_op_types_in_program(mil_prog1), get_op_types_in_program(mil_prog2))
+
+
+@pytest.mark.skipif(ct.utils._macos_version() < (10, 16), reason='Model produces specification 6.')
+class TestMLProgramConverterExamples:
+    @staticmethod
+    @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
+    @pytest.mark.parametrize(
+        "convert_to", ['neuralnetwork', 'mlprogram'])
+    def test_convert_to_argument(tmpdir, convert_to):
+        import torch
+        from torch import nn
+        class Network(nn.Module):
+            def __init__(self):
+                super(Network, self).__init__()
+                self.hidden = nn.Linear(30, 5)
+                self.relu = nn.ReLU()
+
+            def forward(self, x):
+                x = self.hidden(x)
+                return self.relu(x)
+
+        torch_model = Network()
+        torch_model.eval()
+        example_input = torch.rand(1, 30)
+        traced_model = torch.jit.trace(torch_model, example_input)
+        model = ct.convert(
+            traced_model,
+            inputs=[ct.TensorType(name="input", shape=example_input.shape)],
+            convert_to=convert_to
+        )
+        assert isinstance(model, ct.models.MLModel)
+        spec = model.get_spec()
+        if convert_to == "mlprogram":
+            assert spec.WhichOneof('Type') == 'mlProgram'
+        else:
+            assert spec.WhichOneof('Type') == 'neuralNetwork'
+
+    @staticmethod
+    @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
+    def test_deployment_target_argument(tmpdir):
+        import torch
+        from torch import nn
+        class Network(nn.Module):
+            def __init__(self):
+                super(Network, self).__init__()
+                self.hidden = nn.Linear(30, 5)
+                self.relu = nn.ReLU()
+
+            def forward(self, x):
+                x = self.hidden(x)
+                return self.relu(x)
+
+        torch_model = Network()
+        torch_model.eval()
+        example_input = torch.rand(1, 30)
+        traced_model = torch.jit.trace(torch_model, example_input)
+
+        # convert to 'neuralnetwork' by specifying an iOS13 target
+        model = ct.convert(
+            traced_model,
+            inputs=[ct.TensorType(name="input", shape=example_input.shape)],
+            minimum_deployment_target=ct.target.iOS13,
+        )
+        assert isinstance(model, ct.models.MLModel)
+        assert model.get_spec().WhichOneof('Type') == 'neuralNetwork'
+
+        # convert to 'mlprogram' by specifying an iOS15 target
+        model = ct.convert(
+            traced_model,
+            inputs=[ct.TensorType(name="input", shape=example_input.shape)],
+            minimum_deployment_target=ct.target.iOS15,
+        )
+        assert isinstance(model, ct.models.MLModel)
+        assert model.get_spec().WhichOneof('Type') == 'mlProgram'
+
+        # verify an error is raised when convert_to="neuralnetwork" and target is iOS15
+        with pytest.raises(ValueError) as e:
+            model = ct.convert(
+                traced_model,
+                inputs=[ct.TensorType(name="input", shape=example_input.shape)],
+                convert_to="neuralnetwork",
+                minimum_deployment_target=ct.target.iOS15,
+            )
+        expected_error = "If minimum deployment target is iOS15/macOS12/watchOS8/tvOS15 or higher, " \
+                         "then 'convert_to' cannot be neuralnetwork. It must be 'mlprogram'"
+        assert expected_error == str(e.value)
+
+        # verify an error is raised when convert_to="mlprogram" and target is less than iOS15
+        with pytest.raises(ValueError) as e:
+            model = ct.convert(
+                traced_model,
+                inputs=[ct.TensorType(name="input", shape=example_input.shape)],
+                convert_to="mlprogram",
+                minimum_deployment_target=ct.target.iOS14,
+            )
+        expected_error = "When 'convert_to' is mlprogram, the minimum deployment target " \
+                         "must be at least iOS15/macOS12/watchOS8/tvOS15"
+        assert expected_error == str(e.value)
+
+    @staticmethod
+    def test_model_save(tmpdir):
+        save_path_dir = str(tmpdir)
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(10, 20))])
+        def prog(x):
+            x = mb.square(x=x)
+            return x
+
+        # save neuralnetwork model without extension and check that it is saved with
+        # mlmodel extension
+        mlmodel = ct.convert(prog)
+        mlmodel_path = os.path.join(save_path_dir, "model_nn")
+        mlmodel.save(mlmodel_path)
+        assert os.path.exists(mlmodel_path + ".mlmodel")
+
+        # save neuralnetwork model with mlpackage extension
+        mlmodel_path = os.path.join(save_path_dir, "model_nn2.mlpackage")
+        mlmodel.save(mlmodel_path)
+        assert os.path.exists(mlmodel_path)
+
+        # save mlprogram model without extension and check that it is saved with
+        # mlpackage extension
+        mlmodel = ct.convert(prog, convert_to="mlprogram")
+        mlmodel_path = os.path.join(save_path_dir, "model_mlprogram")
+        mlmodel.save(mlmodel_path)
+        assert os.path.exists(mlmodel_path + ".mlpackage")
+
+        # check error if mlprogram is saved with mlmodel extension
+        mlmodel_path = os.path.join(save_path_dir, "model_mlprogram.mlmodel")
+        with pytest.raises(Exception) as e:
+            mlmodel.save(mlmodel_path)
+        expected_error = "For an ML Program, extension must be .mlpackage (not .mlmodel)"
+        assert expected_error == str(e.value)
+
+    @staticmethod
+    @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
+    def test_get_milprogram_method(tmpdir):
+        import torch
+        from torch import nn
+        class Network(nn.Module):
+            def __init__(self):
+                super(Network, self).__init__()
+                self.hidden = nn.Linear(100, 10)
+                self.relu = nn.ReLU()
+
+            def forward(self, x):
+                x = self.hidden(x)
+                x = self.relu(x)
+                return x
+
+        torch_model = Network()
+        torch_model.eval()
+        example_input = torch.rand(1, 100)
+        traced_model = torch.jit.trace(torch_model, example_input)
+        model = ct.convert(
+            traced_model,
+            inputs=[ct.TensorType(shape=example_input.shape)],
+            convert_to='mlprogram'
+        )
+        assert isinstance(model._get_mil_internal(), ct.converters.mil.Program)
+
+@pytest.mark.skipif(ct.utils._macos_version() < (10, 16), reason='Model produces specification 6.')
+class TestMLProgramFP16Transform:
+    @staticmethod
+    def test_compute_precision_api():
+        @mb.program(input_specs=[mb.TensorSpec(shape=(10, 20))])
+        def prog(x):
+            x = mb.square(x=x)
+            return x
+
+        mlmodel = ct.convert(copy.deepcopy(prog),
+                             compute_precision=ct.precision.FLOAT16,
+                             convert_to='mlprogram')
+        mil_prog = mlmodel._get_mil_internal()
+        np.testing.assert_array_equal(["cast", "square", "cast"], get_op_types_in_program(mil_prog))
+
+        mlmodel = ct.convert(copy.deepcopy(prog),
+                             compute_precision=ct.precision.FLOAT32,
+                             convert_to='mlprogram')
+        mil_prog = mlmodel._get_mil_internal()
+        np.testing.assert_array_equal(["square"], get_op_types_in_program(mil_prog))
+
+        mlmodel = ct.convert(copy.deepcopy(prog),
+                             compute_precision=ct.transform.FP16ComputePrecision(
+                                                            op_selector=lambda op: op.op_type != 'square'),
+                             convert_to='mlprogram')
+        mil_prog = mlmodel._get_mil_internal()
+        np.testing.assert_array_equal(["square"], get_op_types_in_program(mil_prog))
+
+        with pytest.raises(ValueError) as e:
+            mlmodel = ct.convert(copy.deepcopy(prog),
+                                 compute_precision='fp64',
+                                 convert_to='mlprogram')
+        expected_error = "'compute_precision' must be either coremltools.precision.FLOAT32 or " \
+                         "coremltools.precision.FLOAT16 or of type coremltools.transform.FP16ComputePrecision()"
+        assert expected_error == str(e.value)
+
+        with pytest.raises(ValueError) as e:
+            mlmodel = ct.convert(copy.deepcopy(prog), compute_precision='fp16')
+        expected_error = "'compute_precision' must be coremltools.precision.FLOAT32 when the target is " \
+                         "'neuralnetwork' (i.e. deployment target is less than iOS15)"
+        assert expected_error == str(e.value)
+

@@ -119,6 +119,9 @@ namespace CoreML {
                         const CoreMLModels::WordEmbedding& b);
         bool operator==(const CoreMLModels::VisionFeaturePrint& a,
                         const CoreMLModels::VisionFeaturePrint& b);
+        bool operator==(const CoreMLModels::AudioFeaturePrint& a,
+                        const CoreMLModels::AudioFeaturePrint& b);
+
         bool operator==(const CoreMLModels::SoundAnalysisPreprocessing& a,
                         const CoreMLModels::SoundAnalysisPreprocessing& b);
         

@@ -39,14 +39,14 @@ namespace protobuf {
 namespace {
 TEST(Status, Empty) {
   util::Status status;
-  EXPECT_EQ(util::error::OK, util::Status::OK.error_code());
-  EXPECT_EQ("OK", util::Status::OK.ToString());
+  EXPECT_EQ(util::error::OK, util::Status::OK().error_code());
+  EXPECT_EQ("OK", util::Status::OK().ToString());
 }
 
 TEST(Status, GenericCodes) {
-  EXPECT_EQ(util::error::OK, util::Status::OK.error_code());
-  EXPECT_EQ(util::error::CANCELLED, util::Status::CANCELLED.error_code());
-  EXPECT_EQ(util::error::UNKNOWN, util::Status::UNKNOWN.error_code());
+  EXPECT_EQ(util::error::OK, util::Status::OK().error_code());
+  EXPECT_EQ(util::error::CANCELLED, util::Status::CANCELLED().error_code());
+  EXPECT_EQ(util::error::UNKNOWN, util::Status::UNKNOWN().error_code());
 }
 
 TEST(Status, ConstructorZero) {
@@ -100,7 +100,7 @@ TEST(Status, AssignEmpty) {
 }
 
 TEST(Status, EqualsOK) {
-  ASSERT_EQ(util::Status::OK, util::Status());
+  ASSERT_EQ(util::Status::OK(), util::Status());
 }
 
 TEST(Status, EqualsSame) {

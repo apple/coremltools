@@ -170,5 +170,5 @@ def loop_invariant_elimination(prog):
     # instead of 2 outputs. We also preserve the return var names with
     # identity.
     """
-    for f_name, f in prog.functions.items():
+    for f in prog.functions.values():
         loop_invariant_elimination_block(f)

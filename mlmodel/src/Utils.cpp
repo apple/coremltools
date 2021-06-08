@@ -116,13 +116,15 @@ void CoreML::downgradeSpecificationVersion(Specification::Model *pModel) {
 
     if (!pModel) { return; }
 
-
     if (pModel->specificationversion() == 0 || pModel->specificationversion() > MLMODEL_SPECIFICATION_VERSION_NEWEST) {
         // If mistakenly set specification verion or never set and left as default
         // lets start at the newest specification version and downgrade from there
         pModel->set_specificationversion(MLMODEL_SPECIFICATION_VERSION_NEWEST);
     }
 
+    if (pModel->specificationversion() == MLMODEL_SPECIFICATION_VERSION_IOS15 && !hasIOS15Features(*pModel)) {
+        pModel->set_specificationversion(MLMODEL_SPECIFICATION_VERSION_IOS14);
+    }
 
     if (pModel->specificationversion() == MLMODEL_SPECIFICATION_VERSION_IOS14 && !hasIOS14Features(*pModel)) {
         pModel->set_specificationversion(MLMODEL_SPECIFICATION_VERSION_IOS13);
@@ -516,6 +518,7 @@ bool CoreML::hasIOS14Features(const Specification::Model& model) {
             }
             break;
         case Specification::Model::kSerializedModel:
+            // SerializedModel proto message was added in ios14
             return true;
         case Specification::Model::kWordTagger:
             return model.wordtagger().revision() == 3;
@@ -525,6 +528,45 @@ bool CoreML::hasIOS14Features(const Specification::Model& model) {
     return false;
 }
 
+bool CoreML::hasIOS15Features(const Specification::Model& model) {
+    // New in IOS15 features: 
+    // - mlProgram proto message
+    // - new sound print
+    //
+    bool result = false;
+
+    switch (model.Type_case()) {
+        case Specification::Model::kPipeline:
+            for (auto &m : model.pipeline().models()) {
+                result = result || hasIOS15Features(m);
+                if (result) {
+                    return true;
+                }
+            }
+            break;
+        case Specification::Model::kPipelineRegressor:
+            for (auto &m : model.pipelineregressor().pipeline().models()) {
+                result = result || hasIOS15Features(m);
+                if (result) {
+                    return true;
+                }
+            }
+            break;
+        case Specification::Model::kPipelineClassifier:
+            for (auto &m : model.pipelineclassifier().pipeline().models()) {
+                result = result || hasIOS15Features(m);
+                if (result) {
+                    return true;
+                }
+            }
+            break;
+        case Specification::Model::kMlProgram:
+            return true;
+        default:
+            return (hasSoundPrint(model));
+    }
+    return false;
+}
 
 bool CoreML::hasCustomModel(const Specification::Model& model) {
     return (model.Type_case() == Specification::Model::kCustomModel);
@@ -556,6 +598,14 @@ bool CoreML::hasScenePrint(const Specification::Model& model) {
 
 bool CoreML::hasObjectPrint(const Specification::Model& model) {
     return (hasAppleImageFeatureExtractor(model) && model.visionfeatureprint().has_objects());
+}
+
+bool CoreML::hasAppleAudioFeatureExtractor(const Specification::Model& model) {
+    return (model.Type_case() == Specification::Model::kAudioFeaturePrint);
+}
+
+bool CoreML::hasSoundPrint(const Specification::Model& model) {
+    return (hasAppleAudioFeatureExtractor(model) && model.audiofeatureprint().has_sound());
 }
 
 bool CoreML::hasNonmaxSuppression(const Specification::Model& model) {
