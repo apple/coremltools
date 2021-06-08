@@ -31,7 +31,7 @@ check_python_flake8:
     - docker
   stage: build
   script:
-    - export PATH=$PATH:$HOME/miniconda3/condabin
+    - export PATH=$PATH:/opt/anaconda/bin/
     - zsh -e scripts/build.sh --num-procs=4 --python=$PYTHON --dist
   artifacts:
     expire_in: 2 weeks
