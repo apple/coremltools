@@ -69,7 +69,7 @@ build_wheel_linux_py38:
 #########################################################################
 
 .build_macos: &build_macos
-    tags:		
+    tags:
        - macos10.15
     stage: build
     script:
