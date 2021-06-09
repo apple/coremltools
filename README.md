@@ -24,6 +24,20 @@ With coremltools, you can do the following:
 
 After conversion, you can integrate the Core ML models with your app using Xcode.
 
+## Version 5
+
+The coremltools 5 package offers several performance improvements over previous versions, including the following new features: 
+
+* [Core ML model package](https://coremltools.readme.io/docs/new-in-coremltools#save-a-core-ml-model-package): A new model container format that separates the model into components and offers more flexible metadata editing and better source control.
+* [ML program](https://coremltools.readme.io/docs/ml-programs): A new model type that represents computation as programmatic instructions, offers more control over the precision of its intermediate tensors and better performance. 
+
+To install coremltools 5, use the following command:
+
+```shell
+pip install coremltools==5.0b1
+```
+
+
 ## Core ML
 
 [Core ML](https://developer.apple.com/documentation/coreml) is an Apple framework to integrate machine learning models into your app. Core ML provides a unified representation for all models. Your app uses Core ML APIs and user data to make predictions, and to fine-tune models, all on the user’s device. Core ML optimizes on-device performance by leveraging the CPU, GPU, and Neural Engine while minimizing its memory footprint and power consumption. Running a model strictly on the user’s device removes any need for a network connection, which helps keep the user’s data private and your app responsive.
