@@ -7,10 +7,14 @@ from .mil.passes.apply_common_pass_pipeline import apply_common_pass_pipeline
 from coremltools.converters._profile_utils import _profile
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil.passes.quantization_passes import AbstractQuantizationPass
-from coremltools.libmodelpackage import ModelPackage
 from coremltools.models import MLModel
 from coremltools.models.model import _MODEL_FILE_NAME, _WEIGHTS_DIR_NAME
 from coremltools.models.utils import _MLMODEL_EXTENSION, _MLPACKAGE_EXTENSION
+
+try:
+    from coremltools.libmodelpackage import ModelPackage
+except ModuleNotFoundError:
+    pass
 
 import os as _os
 import shutil as _shutil
