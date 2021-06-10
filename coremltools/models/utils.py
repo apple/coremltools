@@ -17,8 +17,11 @@ import warnings as _warnings
 from coremltools.proto import Model_pb2 as _Model_pb2
 
 from .._deps import _HAS_SKLEARN
-from ..libmodelpackage import ModelPackage
 
+try:
+    from ..libmodelpackage import ModelPackage
+except ModuleNotFoundError:
+    pass
 
 _MLMODEL_EXTENSION = ".mlmodel"
 _MLPACKAGE_EXTENSION = ".mlpackage"
