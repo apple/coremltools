@@ -13,6 +13,8 @@
   
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
 
   
@@ -30,6 +32,7 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
         <script src="../_static/doctools.js"></script>
@@ -39,7 +42,7 @@
     
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Caffe" href="coremltools.converters.caffe.html" />
+    <link rel="next" title="Keras" href="coremltools.converters.keras.html" />
     <link rel="prev" title="Converters" href="coremltools.converters.html" /> 
 </head>
 
@@ -89,7 +92,6 @@
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="coremltools.converters.html">Converters</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Unified (TensorFlow and Pytorch)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.caffe.html">Caffe</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coremltools.converters.keras.html">Keras</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coremltools.converters.libsvm.html">LibSVM</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coremltools.converters.onnx.html">ONNX</a></li>
@@ -178,8 +180,8 @@
   <div class="section" id="module-coremltools.converters._converters_entry">
 <span id="unified-tensorflow-and-pytorch"></span><h1>Unified (TensorFlow and Pytorch)<a class="headerlink" href="#module-coremltools.converters._converters_entry" title="Permalink to this headline">¶</a></h1>
 <dl class="py function">
-<dt id="coremltools.converters._converters_entry.convert">
-<code class="sig-prename descclassname"><span class="pre">coremltools.converters._converters_entry.</span></code><code class="sig-name descname"><span class="pre">convert</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">classifier_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minimum_deployment_target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">convert_to</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'nn_proto'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.converters._converters_entry.convert" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="coremltools.converters._converters_entry.convert">
+<span class="sig-prename descclassname"><span class="pre">coremltools.converters._converters_entry.</span></span><span class="sig-name descname"><span class="pre">convert</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">classifier_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minimum_deployment_target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">convert_to</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_precision</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#coremltools.converters._converters_entry.convert" title="Permalink to this definition">¶</a></dt>
 <dd><p>Convert TensorFlow or Pytorch models to the Core ML model format. Whether a
 parameter is required may differ between frameworks (see below). Note that
 this function is aliased as <cite>ct.convert</cite> in the tutorials.</p>
@@ -211,7 +213,7 @@ formats:</p>
 </dd>
 </dl>
 </dd>
-<dt><strong>source: str (optional)</strong></dt><dd><p>One of [<code class="docutils literal notranslate"><span class="pre">auto</span></code>, <code class="docutils literal notranslate"><span class="pre">tensorflow</span></code>, <code class="docutils literal notranslate"><span class="pre">pytorch</span></code>, <code class="docutils literal notranslate"><span class="pre">mil</span></code>]. <cite>auto</cite> determines the
+<dt><strong>source: str (optional)</strong></dt><dd><p>One of [<code class="docutils literal notranslate"><span class="pre">auto</span></code>, <code class="docutils literal notranslate"><span class="pre">tensorflow</span></code>, <code class="docutils literal notranslate"><span class="pre">pytorch</span></code>, <code class="docutils literal notranslate"><span class="pre">milinternal</span></code>]. <cite>auto</cite> determines the
 framework automatically for most cases. Raise ValueError if it fails
 to determine the source framework.</p>
 </dd>
@@ -253,19 +255,109 @@ terminal identity nodes.</p></li>
 </dd>
 <dt><strong>classifier_config: ClassifierConfig class (optional)</strong></dt><dd><p>The configuration if the mlmodel is intended to be a classifier.</p>
 </dd>
-<dt><strong>minimum_deployment_target: coremltools.target enumeration (optional)</strong></dt><dd><ul class="simple">
+<dt><strong>minimum_deployment_target: coremltools.target enumeration (optional)</strong></dt><dd><ul>
 <li><p>one of the members of enum <code class="docutils literal notranslate"><span class="pre">coremltools.target</span></code>.</p></li>
-<li><p>When not-specified or None, converter aims for as minimum of a
-deployment target as possible</p></li>
+<li><p>The value of this parameter determines the type of the model reperesentation
+produced by the converter. Alternatively, the <code class="docutils literal notranslate"><span class="pre">convert_to</span></code> argument can be used to
+specify the model type as well (see description of <code class="docutils literal notranslate"><span class="pre">convert_to</span></code> argument).</p></li>
+<li><dl>
+<dt>if minimum_deployment_target &lt;= coremltools.target.iOS14/</dt><dd><blockquote>
+<div><p>coremltools.target.macOS11/
+coremltools.target.watchOS7/
+coremltools.target.tvOS14:</p>
+</div></blockquote>
+<ul class="simple">
+<li><p>a model of type neural network is produced.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt>if minimum_deployment_target &gt;= coremltools.target.iOS15/</dt><dd><blockquote>
+<div><p>coremltools.target.macOS12/
+coremltools.target.watchOS8/
+coremltools.target.tvOS15:</p>
+</div></blockquote>
+<ul class="simple">
+<li><p>a model of type ML Program is produced.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>if this argument is specified and <code class="docutils literal notranslate"><span class="pre">convert_to</span></code> is also specified then they must be compatible.</dt><dd><p>Invalid values are (convert_to=”neuralnetwork”, minimum_deployment_target=coremltools.target.iOS15)
+or (convert_to=”mlprogram”, minimum_deployment_target=coremltools.target.iOS14) etc.</p>
+</dd>
+</dl>
+</li>
+<li><p>When both <code class="docutils literal notranslate"><span class="pre">minimum_deployment_target</span></code> and the <code class="docutils literal notranslate"><span class="pre">convert_to</span></code> arguments are unspecified,
+converter aims to produce the neural network model type with as minimum of a deployment target as possible.</p></li>
 </ul>
 </dd>
 <dt><strong>convert_to: str (optional)</strong></dt><dd><ul class="simple">
-<li><p>Must be one of [<code class="docutils literal notranslate"><span class="pre">'nn_proto'</span></code>, <code class="docutils literal notranslate"><span class="pre">'mil'</span></code>].</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">'nn_proto'</span></code>: Returns MLModel containing a NeuralNetwork
-proto</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">'mil'</span></code>: Returns MIL program object. MIL program is primarily used
-for debugging purpose and currently cannot be compiled to
-executable.</p></li>
+<li><p>Must be one of [<code class="docutils literal notranslate"><span class="pre">'neuralnetwork'</span></code>, <code class="docutils literal notranslate"><span class="pre">'mlprogram'</span></code>, <code class="docutils literal notranslate"><span class="pre">'milinternal'</span></code>].</p></li>
+<li><p>The value of this parameter determines the type of the model reperesentation
+produced by the converter. Alternatively, the <code class="docutils literal notranslate"><span class="pre">minimum_deployment_target</span></code> argument can be used to
+specify the model type as well (see description of the <code class="docutils literal notranslate"><span class="pre">minimum_deployment_target</span></code> argument).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'neuralnetwork'</span></code>: Returns MLModel (i.e. of type <cite>coremltools.models.MLModel</cite>) containing a NeuralNetwork
+proto. This is the older Core ML format and the model saved from this returned object is either, depending
+on the layers used in the model, executable on iOS13/macOS10.15/watchOS6/tvOS13 and above, or ececutable on
+iOS14/macOS11/watchOS7/tvOS14 and above.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'mlprogram'</span></code> : Returns MLModel (i.e. of type <cite>coremltools.models.MLModel</cite>) containing a MILSpec.Program
+proto. This is the newer Core ML format, and the Core ML model saved from this returned object
+is executable on iOS15, macOS12, watchOS8, tvOS15.</p></li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">'milinternal'</span></code>: Returns MIL program object (i.e. of type <cite>coremltools.converters.mil.Program</cite>).</dt><dd><p>MIL program is primarily used for debugging and inspection. It can be converted to MLModel for execution,
+by using <cite>ct.convert(mil_program, convert_to=”neuralnetwork”)</cite> or <cite>ct.convert(mil_program, convert_to=”mlprogram”)</cite></p>
+</dd>
+</dl>
+</li>
+<li><p>When both <code class="docutils literal notranslate"><span class="pre">minimum_deployment_target</span></code> and the <code class="docutils literal notranslate"><span class="pre">convert_to</span></code> arguments are unspecified,
+converter aims to produce the neural network model type with as minimum of a deployment target as possible.
+(see description of the <code class="docutils literal notranslate"><span class="pre">minimum_deployment_target</span></code> argument).</p></li>
+</ul>
+</dd>
+<dt><strong>compute_precision: coremltools.precision enumeration or of type ct.transform.FP16ComputePrecision() (optional)</strong></dt><dd><ul class="simple">
+<li><dl class="simple">
+<dt>Must be one of the following:</dt><dd><ul>
+<li><dl class="simple">
+<dt>coremltools.precision.FLOAT16</dt><dd><ul>
+<li><p>in this case the transform “coremltools.transform.FP16ComputePrecision(op_selector= lambda op:True)”
+will be applied, which injects “cast” ops to convert the float32 dtypes of intermediate tensors to float16</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>coremltools.precision.FLOAT32</dt><dd><ul>
+<li><p>in this case, no transform is applied and hence the original float32 tensor dtype in the source model is
+preserved</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>coremltools.transform.FP16ComputePrecision(op_selector=…)</dt><dd><ul>
+<li><p>this can be used to control which tensors get cast to float16.</p></li>
+<li><p>e.g.: coremltools.transform.FP16ComputePrecision(op_selector= lambda op: op.op_type != “linear”)
+will cast all the float32 tensors to be float16, except the input/output tensors to any “linear” op.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p>If None, defaults to coremltools.precision.FLOAT32</p></li>
+<li><dl class="simple">
+<dt>TODO: <a class="reference external" href="rdar://74140243">rdar://74140243</a>.</dt><dd><ul>
+<li><p>Before coremltools 5.0 release, change the default
+to coremltools.precision.FLOAT16 when convert_to=”mlprogram”</p></li>
+</ul>
+</dd>
+</dl>
+</li>
 </ul>
 </dd>
 </dl>
@@ -333,7 +425,7 @@ more advanced options.</p>
           </div>
           <footer>
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-        <a href="coremltools.converters.caffe.html" class="btn btn-neutral float-right" title="Caffe" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="coremltools.converters.keras.html" class="btn btn-neutral float-right" title="Keras" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
         <a href="coremltools.converters.html" class="btn btn-neutral float-left" title="Converters" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
     </div>
 
