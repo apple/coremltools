@@ -12,10 +12,10 @@ This document describes the following:
 
 For coremltools documentation, see the following:
 
-* Core ML Tools [README](README.md) file for this repository
+* Core ML Tools [README](https://github.com/apple/coremltools/blob/main/README.md) file for this repository
 * [Guides and examples](https://coremltools.readme.io/) with installation and troubleshooting
 * [API Reference](https://apple.github.io/coremltools/index.html)
-* [Building from Source](https://github.com/apple/coremltools/blob/master/BUILDING.md)
+* [Building from Source](https://github.com/apple/coremltools/blob/main/BUILDING.md)
 * [Release Notes](https://github.com/apple/coremltools/releases/) for the current release and previous releases
 
 
@@ -39,7 +39,7 @@ To create a new version or update the HTML files for the API reference, follow t
 6. Copy the contents of the `html` folder to the root folder, overwriting the existing contents.
 7. Commit and push your changes to *your* fork, and submit a PR to merge them with the remote `gh-pages` branch.
 
-At this point you can share the following URL to preview the new version: `https://tonybove-apple.github.io/coremltools/`.
+At this point you can share the following URL to preview the new version, with your GitHub ID for `sample-user`: `https://sample-user.github.io/coremltools/`.
 
 
 #### Fork and clone
@@ -72,9 +72,9 @@ The following are the specific steps in git corresponding to the first part of g
     ```shell
 	# Fetch from upstream remote.
 	git fetch upstream
-	# Checkout your master branch and merge upstream.
-	git checkout master
-	git merge upstream/master
+	# Checkout your main branch and merge upstream.
+	git checkout main
+	git merge upstream/main
 	# Create a new branch named newfeature.
 	git branch newfeature
 	# Switch to your new branch.
@@ -135,10 +135,10 @@ The following are the specific steps in git corresponding to general steps 2-4:
 
 The following are the specific steps in git corresponding to general steps 5-7:
 
-1. Switch to the root folder (`coremltools/`), check out the `master` branch, and then checkout the `gh-pages` branch from upstream:
+1. Switch to the root folder (`coremltools/`), check out the `main` branch, and then checkout the `gh-pages` branch from upstream:
 
 	```shell
-	git checkout master
+	git checkout main
 	git checkout -b gh-pages upstream/gh-pages
 	```
 
@@ -264,7 +264,7 @@ You need to do this only once.
 
 ### Edit the RST files {#edit-the-rst-files}
 
-1. Edit the `.rst` files in your local `source/` folder, replacing them with the contents of the [existing versions in the repo](https://github.com/apple/coremltools/tree/master/docs/source):
+1. Edit the `.rst` files in your local `source/` folder, replacing them with the contents of the [existing versions in the repo](https://github.com/apple/coremltools/tree/main/docs/source):
 
 	```
 	coremltools.converters.rst
@@ -281,7 +281,7 @@ You need to do this only once.
     
     Make editing changes to the above files as needed to change navigation and content.
     
-2. Create `coremltools.converters.mil.input_types.rst` in the `source/` folder with the [existing version in the repo](https://github.com/apple/coremltools/tree/master/docs/source/coremltools.converters.mil.input_types.rst).
+2. Create `coremltools.converters.mil.input_types.rst` in the `source/` folder with the [existing version in the repo](https://github.com/apple/coremltools/tree/main/docs/source/coremltools.converters.mil.input_types.rst).
 
 3. Delete all other `.rst` files in your local `source/` folder. You should now have the following files in your local `source/` folder:
 
