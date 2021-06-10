@@ -69,7 +69,7 @@ build_wheel_linux_py38:
 #########################################################################
 
 .build_macos: &build_macos
-    tags:		
+    tags:
        - macos10.15
     stage: build
     script:
@@ -271,6 +271,7 @@ build_documentation:
   stage: test
   image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-20.04:1.0.0
   script:
+    - export PATH=$PATH:/opt/anaconda/bin/
     - bash -e scripts/build_docs.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON}
   dependencies:
     - build_wheel_linux_py37
