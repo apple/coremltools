@@ -234,34 +234,6 @@ test_macos10_15_py38_coremltools_smoke_test:
 
 #########################################################################
 ##
-##                macOS - Smoke Test on older versions
-##
-#########################################################################
-
-test_macos11_py38_coremltools_smoke_test:
-  <<: *test_macos_pkg
-  tags:
-    - macos11
-  dependencies:
-    - build_wheel_macos_py38
-  variables:
-    WHEEL_PATH: build/dist/*cp38*10_16*
-    TEST_PACKAGE: coremltools.test.neural_network.test_simple_nn_inference
-    PYTHON: "3.8"
-
-test_macos10_15_py38_coremltools_smoke_test:
-  <<: *test_macos_pkg
-  tags:
-    - macos10.15
-  dependencies:
-    - build_wheel_macos_py38
-  variables:
-    WHEEL_PATH: build/dist/*cp38*10_15*
-    TEST_PACKAGE: coremltools.test.neural_network.test_simple_nn_inference
-    PYTHON: "3.8"
-
-#########################################################################
-##
 ##                        Make docs
 ##
 #########################################################################
