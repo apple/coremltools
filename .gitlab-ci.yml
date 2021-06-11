@@ -131,14 +131,6 @@ test_macos11_py37_coremltools_test:
     WHEEL_PATH: build/dist/*cp37*10_16*
     TEST_PACKAGE: coremltools.test
     PYTHON: "3.7"
-  only:
-    changes:
-      - coremltools/test/**/*.{py}
-      - coremltools/models/**/*.{py}
-      - coremltools/converters/keras/**/*.{py}
-      - coremltools/converters/libsvm/**/*.{py}
-      - coremltools/converters/sklearn/**/*.{py}
-      - coremltools/converters/xgboost/**/*.{py}
 
 test_macos11_py37_pytorch:
   <<: *test_macos_pkg
@@ -150,11 +142,6 @@ test_macos11_py37_pytorch:
     PYTHON: "3.7"
     TEST_PACKAGE: coremltools.converters.mil.frontend.torch
     WHEEL_PATH: build/dist/*cp37*10_16*
-  only:
-    changes:
-      - coremltools/converters/mil/frontend/torch/**/*.{py}
-      - coremltools/converters/mil/mil/**/*.{py}
-      - coremltools/converters/mil/backend/**/*.{py}
 
 test_macos11_py37_tf1:
   <<: *test_macos_pkg
@@ -166,11 +153,6 @@ test_macos11_py37_tf1:
     PYTHON: "3.7"
     TEST_PACKAGE: coremltools.converters.mil.frontend.tensorflow
     WHEEL_PATH: build/dist/*cp37*10_16*
-  only:
-    changes:
-      - coremltools/converters/mil/frontend/tensorflow/**/*.{py}
-      - coremltools/converters/mil/mil/**/*.{py}
-      - coremltools/converters/mil/backend/**/*.{py}
 
 test_macos11_py37_tf2:
   <<: *test_macos_pkg_with_reqs
@@ -183,11 +165,6 @@ test_macos11_py37_tf2:
     REQUIREMENTS: reqs/test_tf2.pip
     TEST_PACKAGE: coremltools.converters.mil.frontend.tensorflow2
     WHEEL_PATH: build/dist/*cp37*10_16*
-  only:
-    changes:
-      - coremltools/converters/mil/frontend/tensorflow2/**/*.{py}
-      - coremltools/converters/mil/mil/**/*.{py}
-      - coremltools/converters/mil/backend/**/*.{py}
 
 test_macos11_py37_mil:
   <<: *test_macos_pkg
@@ -199,10 +176,6 @@ test_macos11_py37_mil:
     PYTHON: "3.7"
     TEST_PACKAGE: coremltools.converters.mil.mil
     WHEEL_PATH: build/dist/*cp37*10_16*
-  only:
-    changes:
-      - coremltools/converters/mil/mil/**/*.{py}
-      - coremltools/converters/mil/backend/**/*.{py}
 
 #########################################################################
 ##
@@ -255,9 +228,6 @@ build_documentation:
   variables:
     WHEEL_PATH: build/dist/coremltools*cp37-none-manylinux1_x86_64.whl
     PYTHON: "3.7"
-  only:
-    changes:
-      - docs/**/*
 
 #########################################################################
 ##
