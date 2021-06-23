@@ -138,7 +138,7 @@ def fuse_onehot_matmul_to_gather(prog):
         %4 = gather(%3, %2, axis=0)
 
     """
-    for f_name, f in prog.functions.items():
+    for f in prog.functions.values():
         block_changed = True
         while block_changed:
             block_changed = fuse_onehot_matmul_to_gather_block(f)

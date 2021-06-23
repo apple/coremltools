@@ -17,6 +17,9 @@ class TestResizeBilinear:
         "use_cpu_only, backend", itertools.product([True, False], backends,)
     )
     def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+        if backend == "mlprogram":
+            pytest.xfail("Seg fault: rdar://78343191 ((MIL GPU) Core ML Tools Unit Test failures [failure to load or Seg fault])")
+
         x = np.array([0, 1], dtype=np.float32).reshape(1, 1, 2)
         input_placeholder_dict = {"x": mb.placeholder(shape=x.shape)}
         input_value_dict = {"x": x}
@@ -88,7 +91,7 @@ class TestResizeBilinear:
             backend=backend,
         )
 
-        if backend != "nn_proto":
+        if backend != "neuralnetwork":
             def build_mode_4(x):
                 return mb.resize_bilinear(
                     x=x,
@@ -118,6 +121,9 @@ class TestUpsampleBilinear:
         "use_cpu_only, backend", itertools.product([True, False], backends,)
     )
     def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+        if backend == "mlprogram" and not use_cpu_only:
+            pytest.xfail("test failing on gpu with nan output")
+
         x = np.array([0, 1], dtype=np.float32).reshape(1, 1, 2)
         input_placeholder_dict = {"x": mb.placeholder(shape=x.shape)}
         input_value_dict = {"x": x}
@@ -342,6 +348,11 @@ class TestCrop:
 
 
 class TestCropResize:
+    @pytest.mark.xfail(
+        backends == ["mlprogram"],
+        reason="rdar://78343191 ((MIL GPU) Core ML Tools Unit Test failures [failure to load or Seg fault])",
+        run=True,
+    )
     @pytest.mark.parametrize(
         "use_cpu_only, backend, is_symbolic",
         itertools.product([True, False], backends, [True, False]),
@@ -505,7 +516,7 @@ class TestCropResize:
         import functools
         for mode in range(6):
             ## nn-proto does not support UNALIGN_CORNERS
-            if not (backend == 'nn_proto' and mode == 5):
+            if not (backend == 'neuralnetwork' and mode == 5):
                 run_compare_builder(
                     functools.partial(build, mode=mode),
                     input_placeholder_dict,

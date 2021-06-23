@@ -5,6 +5,8 @@
 import gc
 import collections
 
+from coremltools.converters.mil.mil.passes.quantization_passes import AbstractQuantizationPass, FP16ComputePrecision
+from coremltools.converters.mil.mil.passes.quantization_passes import ComputePrecision as precision
 from coremltools.converters.mil.input_types import InputType, ClassifierConfig
 from coremltools.converters.mil.converter import mil_convert
 from coremltools.converters.mil.mil import Program
@@ -38,7 +40,8 @@ def convert(
     outputs=None,
     classifier_config=None,
     minimum_deployment_target=None,
-    convert_to='nn_proto',
+    convert_to=None,
+    compute_precision=None,
     **kwargs
 ):
     """
@@ -68,7 +71,7 @@ def convert(
             - Path to a ``.pt`` file
 
     source: str (optional)
-        One of [``auto``, ``tensorflow``, ``pytorch``, ``mil``]. `auto` determines the
+        One of [``auto``, ``tensorflow``, ``pytorch``, ``milinternal``]. `auto` determines the
         framework automatically for most cases. Raise ValueError if it fails
         to determine the source framework.
 
@@ -108,16 +111,61 @@ def convert(
 
     minimum_deployment_target: coremltools.target enumeration (optional)
         - one of the members of enum ``coremltools.target``.
-        - When not-specified or None, converter aims for as minimum of a
-          deployment target as possible
+        - The value of this parameter determines the type of the model reperesentation
+          produced by the converter. Alternatively, the ``convert_to`` argument can be used to
+          specify the model type as well (see description of ``convert_to`` argument).
+        - if minimum_deployment_target <= coremltools.target.iOS14/
+                                          coremltools.target.macOS11/
+                                          coremltools.target.watchOS7/
+                                          coremltools.target.tvOS14:
+            - a model of type neural network is produced.
+        -  if minimum_deployment_target >= coremltools.target.iOS15/
+                                           coremltools.target.macOS12/
+                                           coremltools.target.watchOS8/
+                                           coremltools.target.tvOS15:
+            - a model of type ML Program is produced.
+        - if this argument is specified and ``convert_to`` is also specified then they must be compatible.
+            Invalid values are (convert_to="neuralnetwork", minimum_deployment_target=coremltools.target.iOS15)
+            or (convert_to="mlprogram", minimum_deployment_target=coremltools.target.iOS14) etc.
+        - When both ``minimum_deployment_target`` and the ``convert_to`` arguments are unspecified,
+          converter aims to produce the neural network model type with as minimum of a deployment target as possible.
 
     convert_to: str (optional)
-        - Must be one of [``'nn_proto'``, ``'mil'``].
-        - ``'nn_proto'``: Returns MLModel containing a NeuralNetwork
-          proto
-        - ``'mil'``: Returns MIL program object. MIL program is primarily used
-          for debugging purpose and currently cannot be compiled to
-          executable.
+        - Must be one of [``'neuralnetwork'``, ``'mlprogram'``, ``'milinternal'``].
+        - The value of this parameter determines the type of the model reperesentation
+          produced by the converter. Alternatively, the ``minimum_deployment_target`` argument can be used to
+          specify the model type as well (see description of the ``minimum_deployment_target`` argument).
+        - ``'neuralnetwork'``: Returns MLModel (i.e. of type `coremltools.models.MLModel`) containing a NeuralNetwork
+          proto. This is the older Core ML format and the model saved from this returned object is either, depending
+          on the layers used in the model, executable on iOS13/macOS10.15/watchOS6/tvOS13 and above, or ececutable on
+          iOS14/macOS11/watchOS7/tvOS14 and above.
+        - ``'mlprogram'`` : Returns MLModel (i.e. of type `coremltools.models.MLModel`) containing a MILSpec.Program
+          proto. This is the newer Core ML format, and the Core ML model saved from this returned object
+          is executable on iOS15, macOS12, watchOS8, tvOS15.
+        - ``'milinternal'``: Returns MIL program object (i.e. of type `coremltools.converters.mil.Program`).
+            MIL program is primarily used for debugging and inspection. It can be converted to MLModel for execution,
+            by using `ct.convert(mil_program, convert_to="neuralnetwork")` or `ct.convert(mil_program, convert_to="mlprogram")`
+        - When both ``minimum_deployment_target`` and the ``convert_to`` arguments are unspecified,
+          converter aims to produce the neural network model type with as minimum of a deployment target as possible.
+          (see description of the ``minimum_deployment_target`` argument).
+
+
+    compute_precision: coremltools.precision enumeration or of type ct.transform.FP16ComputePrecision() (optional)
+        - Must be one of the following:
+            - coremltools.precision.FLOAT16
+                - in this case the transform "coremltools.transform.FP16ComputePrecision(op_selector= lambda op:True)"
+                  will be applied, which injects "cast" ops to convert the float32 dtypes of intermediate tensors to float16
+            - coremltools.precision.FLOAT32
+                - in this case, no transform is applied and hence the original float32 tensor dtype in the source model is
+                  preserved
+            - coremltools.transform.FP16ComputePrecision(op_selector=...)
+                - this can be used to control which tensors get cast to float16.
+                - e.g.: coremltools.transform.FP16ComputePrecision(op_selector= lambda op: op.op_type != "linear")
+                  will cast all the float32 tensors to be float16, except the input/output tensors to any "linear" op.
+        - If None, defaults to coremltools.precision.FLOAT32
+        - TODO: rdar://74140243.
+            - Before coremltools 5.0 release, change the default
+              to coremltools.precision.FLOAT16 when convert_to="mlprogram"
 
     Returns
     -------
@@ -171,26 +219,44 @@ def convert(
 
     _check_deployment_target(minimum_deployment_target)
     exact_source = _determine_source(model, source, outputs)
-    _validate_inputs(model, exact_source, inputs, outputs, classifier_config,
-        **kwargs)
+    exact_target = _determine_target(convert_to, minimum_deployment_target)
+    _validate_inputs(model, exact_source, inputs, outputs, classifier_config, compute_precision,
+                     exact_target, **kwargs)
+
+
+    if compute_precision is None:
+        # TODO: rdar://74140243
+        # Before 5.0 release,
+        # map "None" to "fp32" for "neuralnetwork"
+        # and to "fp16" for "mlprogram"
+        transforms = list()
+    elif compute_precision == precision.FLOAT32:
+        transforms = list()
+    elif compute_precision == precision.FLOAT16:
+        transforms = [FP16ComputePrecision(op_selector=lambda op: True)]
+    elif isinstance(compute_precision, FP16ComputePrecision):
+        transforms = [compute_precision]
+    else:
+        raise ValueError("Invalid value of the argument 'compute_precision'")
 
     mlmodel = mil_convert(
         model,
         convert_from=exact_source,
-        convert_to=convert_to,
+        convert_to=exact_target,
         inputs=inputs,
         outputs=outputs,
         classifier_config=classifier_config,
+        transforms=transforms,
         **kwargs
     )
 
-    if convert_to == 'mil':
+    if exact_target == 'milinternal':
         return mlmodel # Returns the MIL program
 
     if minimum_deployment_target is not None:
         check_deployment_compatibility(
             spec=mlmodel.get_spec(),
-            representation=convert_to,
+            representation=exact_target,
             deployment_target=minimum_deployment_target,
         )
 
@@ -212,8 +278,8 @@ def _check_deployment_target(minimum_deployment_target):
         )
         raise TypeError(msg.format(minimum_deployment_target))
 
-def _validate_inputs(model, exact_source, inputs, outputs, classifier_config,
-    **kwargs):
+def _validate_inputs(model, exact_source, inputs, outputs, classifier_config, compute_precision, convert_to,
+                     **kwargs):
     """
     Validate and process model, inputs, outputs, classifier_config based on
     `exact_source` (which cannot be `auto`)
@@ -238,6 +304,20 @@ def _validate_inputs(model, exact_source, inputs, outputs, classifier_config,
         if not isinstance(classifier_config, ClassifierConfig):
             msg = '"classifier_config" must be of type ClassifierConfig'
             raise ValueError(msg)
+
+    if convert_to.lower() == 'neuralnetwork':
+        if compute_precision is not None:
+            if compute_precision != precision.FLOAT32:
+                msg = "'compute_precision' must be coremltools.precision.FLOAT32 when " \
+                    "the target is 'neuralnetwork' (i.e. deployment target is less than iOS15)"
+                raise ValueError(msg)
+
+    if compute_precision is not None:
+        if compute_precision not in [precision.FLOAT32, precision.FLOAT16]:
+            if not isinstance(compute_precision, FP16ComputePrecision):
+                msg = "'compute_precision' must be either coremltools.precision.FLOAT32 or coremltools.precision.FLOAT16" \
+                      " or of type coremltools.transform.FP16ComputePrecision()"
+                raise ValueError(msg)
 
     if exact_source in {"tensorflow", "tensorflow2"}:
         if exact_source == "tensorflow" and not _HAS_TF_1:
@@ -288,7 +368,7 @@ def _validate_inputs(model, exact_source, inputs, outputs, classifier_config,
         if outputs is not None:
             raise ValueError("outputs must not be specified for PyTorch")
 
-    elif exact_source == "mil":
+    elif exact_source == "milinternal":
         if not isinstance(model, Program):
             msg = "Converter was asked to convert MIL input, but input is not a MIL program!"
             raise ValueError(msg)
@@ -299,7 +379,7 @@ def _determine_source(model, source, outputs):
     Infer source (which can be auto) to the precise framework.
     """
     source = source.lower()
-    if source not in {"auto", "tensorflow", "pytorch", "mil"}:
+    if source not in {"auto", "tensorflow", "pytorch", "milinternal"}:
         msg = (
             'Unrecognized value of argument "source": {}. '
             'It must be one of ["auto", "tensorflow", "pytorch"].'
@@ -339,12 +419,12 @@ def _determine_source(model, source, outputs):
             pass
 
     if source == "auto" and isinstance(model, Program):
-        return "mil"
+        return "milinternal"
 
     msg = (
         "Unable to determine the type of the model, i.e. the source framework. "
         'Please provide the value of argument "source", from one of '
-        '["tensorflow", "pytorch", "mil"]. Note that model conversion requires the '
+        '["tensorflow", "pytorch", "milinternal"]. Note that model conversion requires the '
         "source package that generates the model. Please make sure you have "
         "the appropriate version of source package installed. E.g., if you're "
         "converting model originally trained with TensorFlow 1.14, make sure "
@@ -352,6 +432,31 @@ def _determine_source(model, source, outputs):
     )
     raise ValueError(msg)
 
+def _determine_target(convert_to, minimum_deployment_target):
+    """
+    Infer the precise backend target, which could be one of ``milinternal``, ``neuralnetwork`` or ``mlprogram``
+    """
+    if minimum_deployment_target is not None:
+        if convert_to == "mlprogram" and \
+            minimum_deployment_target.value < AvailableTarget.iOS15.value:
+                msg = "When 'convert_to' is {}, the minimum deployment target must be at least iOS15/macOS12/watchOS8/tvOS15"
+                raise ValueError(msg.format(convert_to))
+
+        if convert_to == "neuralnetwork" and \
+            minimum_deployment_target.value >= AvailableTarget.iOS15.value:
+            msg = "If minimum deployment target is iOS15/macOS12/watchOS8/tvOS15 or higher, then " \
+                  "'convert_to' cannot be {}. It must be 'mlprogram'"
+            raise ValueError(msg.format(convert_to))
+
+    if convert_to is not None:
+        return convert_to
+    else:
+        if minimum_deployment_target is None:
+            return "neuralnetwork"
+        elif minimum_deployment_target.value <= AvailableTarget.iOS14.value:
+            return "neuralnetwork"
+        else:
+            return "mlprogram"
 
 def _record_src_version(mlmodel, exact_source):
     # recording metadata: coremltools version, source framework and version
@@ -359,8 +464,8 @@ def _record_src_version(mlmodel, exact_source):
         src_pkg_version = "tensorflow=={0}".format(tf.__version__)
     elif exact_source == "pytorch" and _HAS_TORCH:
         src_pkg_version = "torch=={0}".format(torch.__version__)
-    elif exact_source == 'mil':
-        src_pkg_version = "mil"
+    elif exact_source == 'milinternal':
+        src_pkg_version = "milinternal"
     else:
         raise ValueError('Unsupported source {}'.format(exact_source))
 

@@ -1,3 +1,7 @@
+# Copyright (c) 2021, Apple Inc. All rights reserved.
+#
+# Use of this source code is governed by a BSD-3-clause license that can be
+# found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 """Module containing unit tests for verifying various quantization."""
 import os
 import shutil
@@ -81,7 +85,6 @@ class QuantizationNumericalCorrectnessTests(unittest.TestCase):
         if model_dir is None:
             use_tmp_folder = True
             model_dir = tempfile.mkdtemp()
-        _ = os.path.join(model_dir, "keras.mlmodel")
 
         # Get converted coreml model and sample input
         (
@@ -171,6 +174,10 @@ class QuantizationNumericalCorrectnessTests(unittest.TestCase):
     def test_quantized_tiny_conv_crop_1d_random(self):
         self.keras_tester.test_tiny_conv_crop_1d_random()
 
+    @pytest.mark.xfail(
+        reason="rdar://78057487 (Re-enable tests after fixing regression in embedding layer)",
+        run=False
+    )
     def test_quantized_embedding(self):
         self.keras_tester.test_embedding()
 
@@ -996,6 +1003,10 @@ class DynamicQuantizedInt8Int8MatMul(unittest.TestCase):
     "Missing macOS 10.15+. Skipping tests.",
 )
 class QuantizeWeightsAPI(unittest.TestCase):
+    @pytest.mark.xfail(
+        reason="rdar://78057487 (Re-enable tests after fixing regression in embedding layer)",
+        run=False
+    )
     def test_embeddingND_quantize(self):
         input_features = [("data", datatypes.Array(10, 1))]
         output_features = [("output", None)]

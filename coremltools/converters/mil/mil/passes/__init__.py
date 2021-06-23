@@ -7,7 +7,7 @@
 from os.path import dirname, basename, isfile, join
 import glob
 
-excluded_files = ["pass_registry.py", "common_pass.py", "__init__.py"]
+excluded_files = ["pass_registry.py", "apply_common_pass_pipeline.py", "__init__.py"]
 modules = glob.glob(join(dirname(__file__), "*.py"))
 pass_modules = [
     basename(f)[:-3]

@@ -30,6 +30,8 @@ def remove_symbolic_reshape_block(block):
         if op.shape.sym_val is None:
             # shape is runtime determined.
             continue
+        if len(op.shape.child_ops) > 1:
+            continue
         # Use output shape as `shape`
         shape = op.outputs[0].shape
         if any_variadic(shape):
@@ -47,7 +49,6 @@ def remove_symbolic_reshape_block(block):
         with block:
             shape_const = mb.const(
                 val=integer_shape,
-                mode="immediate_value",
                 name=op.shape.name + "x",
                 before_op=op,
             )
@@ -95,7 +96,7 @@ def remove_symbolic_reshape(prog):
 
         prog: Program
     """
-    for f_name, f in prog.functions.items():
+    for f in prog.functions.values():
         num_changes = remove_symbolic_reshape_block(f)
         msg = "remove_symbolic_reshape: changed {} reshapes."
         logging.info(msg.format(num_changes))

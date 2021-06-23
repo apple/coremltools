@@ -80,5 +80,5 @@ def dead_code_elimination(program):
     this op and its input ops (%tx_0 and %ty_0) are eliminated in this pass.
     """
 
-    for name, f in program.functions.items():
+    for f in program.functions.values():
         dead_code_elimination_block(f)

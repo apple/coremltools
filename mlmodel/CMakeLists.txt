@@ -32,9 +32,20 @@ add_library(mlmodel_test
     tests/SaveLoadTests.cpp
     tests/SoundAnalysisPreprocessingValidatorTests.cpp
     tests/VisionFeaturePrintValidatorTests.cpp
+    tests/AudioFeaturePrintValidatorTests.cpp
     tests/TreeEnsembleTests.cpp
     tests/UpdatableModelValidatorTests.cpp
     tests/UtilsTests.cpp
+
+    tests/MILBlob/AutoDeleteTempFile.cpp
+    tests/MILBlob/BlobUtils.cpp
+    tests/MILBlob/FileWriterTests.cpp
+    tests/MILBlob/MMapFileReaderTests.cpp
+    tests/MILBlob/SpanCastTests.cpp
+    tests/MILBlob/SpanTests.cpp
+    tests/MILBlob/StorageIntegrationTests.cpp
+    tests/MILBlob/StorageReaderTests.cpp
+    tests/MILBlob/StorageWriterTests.cpp
 )
 
 set_property(TARGET mlmodel_test
@@ -63,6 +74,7 @@ add_library(mlmodel
     ../deps/protobuf/src/google/protobuf/io/zero_copy_stream_impl.cc
 
     ${CMAKE_CURRENT_BINARY_DIR}/format/ArrayFeatureExtractor.pb.cc
+    ${CMAKE_CURRENT_BINARY_DIR}/format/AudioFeaturePrint.pb.cc
     ${CMAKE_CURRENT_BINARY_DIR}/format/BayesianProbitRegressor.pb.cc
     ${CMAKE_CURRENT_BINARY_DIR}/format/CategoricalMapping.pb.cc
     ${CMAKE_CURRENT_BINARY_DIR}/format/CustomModel.pb.cc
@@ -77,6 +89,7 @@ add_library(mlmodel
     ${CMAKE_CURRENT_BINARY_DIR}/format/Imputer.pb.cc
     ${CMAKE_CURRENT_BINARY_DIR}/format/ItemSimilarityRecommender.pb.cc
     ${CMAKE_CURRENT_BINARY_DIR}/format/LinkedModel.pb.cc
+    ${CMAKE_CURRENT_BINARY_DIR}/format/MIL.pb.cc
     ${CMAKE_CURRENT_BINARY_DIR}/format/Model.pb.cc
     ${CMAKE_CURRENT_BINARY_DIR}/format/NearestNeighbors.pb.cc
     ${CMAKE_CURRENT_BINARY_DIR}/format/NeuralNetwork.pb.cc
@@ -98,10 +111,15 @@ add_library(mlmodel
     src/ItemSimilarityRecommenderCommon.cpp
     src/LayerShapeConstraints.cpp
     src/Model.cpp
-    src/NeuralNetworkBuffer.cpp
     src/Result.cpp
     src/TreeEnsembleCommon.cpp
     src/Utils.cpp
+
+    src/MILBlob/Blob/FileWriter.cpp
+    src/MILBlob/Blob/MMapFileReader.cpp
+    src/MILBlob/Blob/MMapFileReaderFactory.cpp
+    src/MILBlob/Blob/StorageReader.cpp
+    src/MILBlob/Blob/StorageWriter.cpp
 
     src/transforms/LinearModel.cpp
     src/transforms/Pipeline.cpp
@@ -113,6 +131,7 @@ add_library(mlmodel
     src/transforms/ItemSimilarityRecommender.cpp
 
     src/Validation/ArrayFeatureExtractorValidator.cpp
+    src/Validation/AudioFeaturePrintValidator.cpp
     src/Validation/BayesianProbitRegressionValidator.cpp
     src/Validation/CategoricalMappingValidator.cpp
     src/Validation/CustomModelValidator.cpp
@@ -162,6 +181,7 @@ add_executable(enumgen
 
 set(proto_files
     ArrayFeatureExtractor
+    AudioFeaturePrint
     BayesianProbitRegressor
     CategoricalMapping
     CustomModel
@@ -176,6 +196,7 @@ set(proto_files
     Imputer
     ItemSimilarityRecommender
     LinkedModel
+    MIL
     Model
     NearestNeighbors
     NeuralNetwork

@@ -4,6 +4,7 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from coremltools.converters.mil.mil import types
+from coremltools.converters.mil.mil.types import builtin_to_string
 from coremltools.converters.mil.mil.types.symbolic import (
     is_symbolic,
     any_symbolic,
@@ -182,6 +183,12 @@ class Var(object):
 
     def set_name(self, name):
         self.name = name
+
+    def is_tensor_of(self, dtype: str):
+        return types.is_tensor(self.sym_type) and builtin_to_string(self.dtype) == dtype
+
+    def is_scalar_of(self, dtype: str):
+        return types.is_scalar(self.sym_type) and builtin_to_string(self.dtype) == dtype
 
     def __str__(self):
         return "%" + self.name + ": " + self.shape_str() + self.type_str()

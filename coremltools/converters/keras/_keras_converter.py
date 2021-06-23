@@ -1,11 +1,10 @@
-# Copyright (c) 2017-2019, Apple Inc. All rights reserved.
+# Copyright (c) 2021, Apple Inc. All rights reserved.
 #
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from ...models.neural_network import NeuralNetworkBuilder as _NeuralNetworkBuilder
 from ...proto import FeatureTypes_pb2 as _FeatureTypes_pb2
-from collections import OrderedDict as _OrderedDict
 from ...models import datatypes, _METADATA_VERSION, _METADATA_SOURCE
 from ...models import MLModel as _MLModel
 from ...models import (
@@ -13,6 +12,7 @@ from ...models import (
     _MLMODEL_HALF_PRECISION,
     _VALID_MLMODEL_PRECISION_TYPES,
 )
+from ...models._deprecation import deprecated as _deprecated
 from ...models.utils import _convert_neural_network_spec_weights_to_fp16
 
 from ..._deps import _HAS_KERAS_TF
@@ -615,6 +615,7 @@ def _convert_to_spec(
     return spec
 
 
+@_deprecated()
 def convert(
     model,
     input_names=None,
@@ -639,6 +640,8 @@ def convert(
     use_float_arraytype=False,
 ):
     """
+    WARNING: This function is deprecated. It will be removed in the 6.0.
+
     Convert a Keras model to Core ML protobuf specification (.mlmodel).
 
     Parameters

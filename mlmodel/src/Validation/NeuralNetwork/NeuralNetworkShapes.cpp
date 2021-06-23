@@ -53,15 +53,15 @@ void NeuralNetworkShaper::shapeConvolutionLayer(const Specification::NeuralNetwo
     Kh = Kw = 3;
     hstride = wstride = hdilation = wdilation = 1;
 
-    if (conv.kernelsize_size() != 0){
+    if (conv.kernelsize_size() == 2){
         Kh = static_cast<int>(conv.kernelsize(0)); //height
         Kw = static_cast<int>(conv.kernelsize(1)); //width
     }
-    if (conv.stride_size() != 0){
+    if (conv.stride_size() == 2){
         hstride = static_cast<int>(conv.stride(0)); //height
         wstride = static_cast<int>(conv.stride(1)); //width
     }
-    if (conv.dilationfactor_size() != 0){
+    if (conv.dilationfactor_size() == 2){
         hdilation = static_cast<int>(conv.dilationfactor(0)); //height
         wdilation = static_cast<int>(conv.dilationfactor(1)); //width
     }
@@ -79,7 +79,7 @@ void NeuralNetworkShaper::shapeConvolutionLayer(const Specification::NeuralNetwo
     else {
         switch (conv.ConvolutionPaddingType_case()) {
             case Specification::ConvolutionLayerParams::kValid:
-                if (conv.valid().paddingamounts().borderamounts_size() != 0){
+                if (conv.valid().paddingamounts().borderamounts_size() == 2){
                     t = static_cast<int>(conv.valid().paddingamounts().borderamounts(0).startedgesize());
                     b = static_cast<int>(conv.valid().paddingamounts().borderamounts(0).endedgesize());
                     l = static_cast<int>(conv.valid().paddingamounts().borderamounts(1).startedgesize());
@@ -106,7 +106,7 @@ void NeuralNetworkShaper::shapeConvolutionLayer(const Specification::NeuralNetwo
                         
                         RangeValue inputUpperBound = (outputShape.heightRange().maximumValue() - 1) * static_cast<size_t>(hstride) + static_cast<size_t>(Kh_dilated - b - t);
                         // We need to account for the integer division here
-                        if (!inputShape.heightRange().maximumValue().isUnbound() && (inputShape.heightRange().maximumValue().value() + (t + b - Kh_dilated) % 2 != 0)) {
+                        if (!inputShape.heightRange().maximumValue().isUnbound() && (inputShape.heightRange().maximumValue().value() + static_cast<size_t>(t + b - Kh_dilated) % 2 != 0)) {
                             inputUpperBound = inputUpperBound + 1;
                         }
                         inputShape.upperBoundHeight(inputUpperBound);
@@ -118,7 +118,7 @@ void NeuralNetworkShaper::shapeConvolutionLayer(const Specification::NeuralNetwo
                         inputShape.lowerBoundWidth(inputLowerBound * static_cast<size_t>(wstride) + static_cast<size_t>(Kw_dilated - l - r));
                         
                         RangeValue inputUpperBound = (outputShape.widthRange().maximumValue() - 1) * static_cast<size_t>(wstride) + static_cast<size_t>(Kw_dilated - l - r);
-                        if (!inputShape.widthRange().maximumValue().isUnbound() && (inputShape.widthRange().maximumValue().value() + (l + r - Kw_dilated) % 2 != 0)) {
+                        if (!inputShape.widthRange().maximumValue().isUnbound() && (inputShape.widthRange().maximumValue().value() + static_cast<size_t>(l + r - Kw_dilated) % 2 != 0)) {
                             inputUpperBound = inputUpperBound + 1;
                         }
                         inputShape.upperBoundWidth(inputUpperBound);
@@ -181,11 +181,11 @@ void NeuralNetworkShaper::shapePoolingLayer(const Specification::NeuralNetworkLa
     int Kh, Kw, hstride, wstride;
     Kh = Kw = 3;
     hstride = wstride = 1;
-    if (pool.kernelsize_size() != 0){
+    if (pool.kernelsize_size() == 2){
         Kh = static_cast<int>(pool.kernelsize(0)); //height
         Kw = static_cast<int>(pool.kernelsize(1)); //width
     }
-    if (pool.stride_size() != 0){
+    if (pool.stride_size() == 2){
         hstride = static_cast<int>(pool.stride(0)); //height
         wstride = static_cast<int>(pool.stride(1)); //width
     }
@@ -199,7 +199,7 @@ void NeuralNetworkShaper::shapePoolingLayer(const Specification::NeuralNetworkLa
     } else {
         switch (pool.PoolingPaddingType_case()) {
             case Specification::PoolingLayerParams::kValid:
-                if (pool.valid().paddingamounts().borderamounts_size() != 0){
+                if (pool.valid().paddingamounts().borderamounts_size() == 2){
                     t = static_cast<int>(pool.valid().paddingamounts().borderamounts(0).startedgesize());
                     b = static_cast<int>(pool.valid().paddingamounts().borderamounts(0).endedgesize());
                     l = static_cast<int>(pool.valid().paddingamounts().borderamounts(1).startedgesize());
@@ -228,7 +228,7 @@ void NeuralNetworkShaper::shapePoolingLayer(const Specification::NeuralNetworkLa
                 outputShape.updateWidthRange((inputShape.widthRange() - 1) / static_cast<size_t>(wstride) + 1);
                 break;
             case Specification::PoolingLayerParams::kIncludeLastPixel: {
-                if (pool.includelastpixel().paddingamounts_size() != 0){
+                if (pool.includelastpixel().paddingamounts_size() == 2){
                     t = static_cast<int>(pool.includelastpixel().paddingamounts(0));
                     l = static_cast<int>(pool.includelastpixel().paddingamounts(1));
                 }
@@ -392,7 +392,7 @@ void NeuralNetworkShaper::shapeCropLayer(const Specification::NeuralNetworkLayer
     int l , r, t, b;
     l = r = t = b = 0;
     if (specLayer.input_size() == 1){
-        if (crop.cropamounts().borderamounts_size() != 0){
+        if (crop.cropamounts().borderamounts_size() == 2){
             t = static_cast<int>(crop.cropamounts().borderamounts(0).startedgesize());
             b = static_cast<int>(crop.cropamounts().borderamounts(0).endedgesize());
             l = static_cast<int>(crop.cropamounts().borderamounts(1).startedgesize());
@@ -442,7 +442,7 @@ void NeuralNetworkShaper::shapePaddingLayer(const Specification::NeuralNetworkLa
 
     size_t l, r, t, b;
     l = r = t = b = 0;
-    if (padding.paddingamounts().borderamounts_size() != 0){
+    if (padding.paddingamounts().borderamounts_size() == 2){
         t = (size_t)padding.paddingamounts().borderamounts(0).startedgesize();
         b = (size_t)padding.paddingamounts().borderamounts(0).endedgesize();
         l = (size_t)padding.paddingamounts().borderamounts(1).startedgesize();
@@ -491,7 +491,7 @@ void NeuralNetworkShaper::shapeUpsampleLayer(const Specification::NeuralNetworkL
     size_t scaling_factor_h = 1;
     size_t scaling_factor_w = 1;
 
-    if (upsample.scalingfactor_size() != 0) {
+    if (upsample.scalingfactor_size() == 2) {
         scaling_factor_h = (upsample.scalingfactor(0) == 0) ? 1 : (size_t)upsample.scalingfactor(0); //height
         scaling_factor_w = (upsample.scalingfactor(1) == 0) ? 1 : (size_t)upsample.scalingfactor(1); //width
     }

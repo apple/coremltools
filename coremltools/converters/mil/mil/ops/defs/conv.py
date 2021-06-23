@@ -5,9 +5,11 @@
 
 from coremltools.converters.mil.mil import (
     DefaultInputs,
+    FloatTensorInputType,
     IntInputType,
     IntTensorInputType,
     Operation,
+    OrderedDict,
     TensorInputType,
     types,
     ScalarOrTensorInputType,
@@ -125,9 +127,9 @@ class conv(Operation):
     """
 
     input_spec = InputSpec(
-        x=TensorInputType(),
-        weight=TensorInputType(),
-        bias=TensorInputType(const=True, optional=True),
+        x=FloatTensorInputType(),
+        weight=FloatTensorInputType(),
+        bias=FloatTensorInputType(const=True, optional=True),
         strides=IntTensorInputType(const=True, optional=True),
         pad_type=StringInputType(const=True, optional=True),
         pad=IntTensorInputType(const=True, optional=True),
@@ -224,13 +226,20 @@ class conv_quantized(conv):
     ----------
     T: fp32
     """
-
     input_spec = InputSpec(
+        x=TensorInputType(),
+        weight=TensorInputType(),
+        bias=TensorInputType(const=True, optional=True),
         quantization_type=StringInputType(const=True),
         nbits=IntInputType(const=True, optional=True),
         quant_scale=ScalarOrTensorInputType(const=True),
-        quant_bias=ScalarOrTensorInputType(const=True)) \
-            + conv.input_spec
+        quant_bias=ScalarOrTensorInputType(const=True),
+        strides=IntTensorInputType(const=True, optional=True),
+        pad_type=StringInputType(const=True, optional=True),
+        pad=IntTensorInputType(const=True, optional=True),
+        dilations=IntTensorInputType(const=True, optional=True),
+        groups=IntInputType(const=True, optional=True),
+        )
 
     def default_inputs(self):
         return super().default_inputs() + \
@@ -258,7 +267,7 @@ class conv_transpose(Operation):
         * ``1 <= len(D_in) <= 2``.
         * ``C_in`` is the number of input channels.
 
-    weight: const tensor<[C_out,C_in/groups,*D_in], T> (Required)
+    weight: const tensor<[C_in,C_out/groups,*D_in], T> (Required)
         * Filter weights. ``C_in, C_out`` are the number of input and output channels
           respectively.
         * ``D_in`` are spatial dimensions. ``1 <= len(D_in) <= 2``.
@@ -309,9 +318,9 @@ class conv_transpose(Operation):
     """
 
     input_spec = InputSpec(
-        x=TensorInputType(),  # [n, C_in, spatial_dims]
-        weight=TensorInputType(const=True),  # [C_out, C_in, spatial_dims]
-        bias=TensorInputType(const=True, optional=True),
+        x=FloatTensorInputType(),  # [n, C_in, spatial_dims]
+        weight=FloatTensorInputType(const=True),  # [C_out, C_in, spatial_dims]
+        bias=FloatTensorInputType(const=True, optional=True),
         pad=IntTensorInputType(const=True, optional=True),
         output_shape=IntTensorInputType(const=True, optional=True),
         pad_type=StringInputType(const=True, optional=True),
@@ -338,14 +347,14 @@ class conv_transpose(Operation):
     def type_inference(self):
         # Input shape is [n, C_in, spatial_dims]
         in_shape = self.x.shape
-        # Weight shape is [C_out, C_in, spatial_dims]
+        # Weight shape is [C_in, C_out/group, spatial_dims]
         f_shape = self.weight.shape
         kernel_shape = f_shape[2:]
         spatial_dim_rank = len(in_shape) - 2
         N = in_shape[0]
-        C_in = self.x.shape[1]
+        C_in = self.x.shape[0]
         groups = self.groups.val
-        C_out = f_shape[0] * groups
+        C_out = f_shape[1] * groups
 
         if self.bias is not None and self.bias.val.shape[0] != C_out:
             msg = "# of bias values {} not equal to # output channels {}"

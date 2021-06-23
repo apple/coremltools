@@ -495,7 +495,8 @@ namespace CoreML {
                         if (format.Type_case() != Specification::Model::kNeuralNetwork &&
                             format.Type_case() != Specification::Model::kNeuralNetworkRegressor &&
                             format.Type_case() != Specification::Model::kNeuralNetworkClassifier &&
-                            format.Type_case() != Specification::Model::kSerializedModel ) {
+                            format.Type_case() != Specification::Model::kSerializedModel &&
+                            format.Type_case() != Specification::Model::kMlProgram) {
                             return Result(ResultType::INVALID_MODEL_PARAMETERS,
                                           "Default optional values are only allowed for neural networks.");
                         }
@@ -544,6 +545,7 @@ namespace CoreML {
             case Specification::Model::kNeuralNetworkRegressor:
             case Specification::Model::kNeuralNetworkClassifier:
             case Specification::Model::kSerializedModel:
+            case Specification::Model::kMlProgram:
                 r = validateOptionalNN(format.description());
                 break;
             case Specification::Model::kTreeEnsembleRegressor:

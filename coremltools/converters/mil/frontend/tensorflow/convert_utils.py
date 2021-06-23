@@ -19,6 +19,11 @@ def compatible_shapes(tf_shape, inf_shape):
             return True
         elif dt == ds:
             return True
+        elif is_symbolic(ds):
+            if is_symbolic(dt) and dt != ds:
+                logging.warning("Symbolic dim {} and {}".format(ds, dt) +\
+                        " assumed to be equal")
+            return True
         else:
             return False
 

@@ -15,6 +15,7 @@ from coremltools.converters.mil.mil import Symbol, types
 from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
 import copy
 import pytest
+import itertools
 
 import numpy as np
 
@@ -46,10 +47,10 @@ def test_divide_to_multiply():
     @mb.program(input_specs=[mb.TensorSpec(shape=(2, 4))])
     def prog(x):
         div_val = np.random.rand(2, 4).astype(np.float32)
-        div_const = mb.const(val=div_val, mode="immediate_value")
+        div_const = mb.const(val=div_val)
 
         div_val_1 = np.random.rand(2, 4).astype(np.float32)
-        div_const_1 = mb.const(val=div_val_1, mode="immediate_value")
+        div_const_1 = mb.const(val=div_val_1)
 
         real_div = mb.real_div(x=x, y=div_const)
 
@@ -71,9 +72,9 @@ def test_fuse_matmul_weight_bias():
     @mb.program(input_specs=[mb.TensorSpec(shape=(2, 4))])
     def prog(x):
         weights_val = np.random.rand(2, 4).T.astype(np.float32)
-        weights = mb.const(val=weights_val, mode="immediate_value")
+        weights = mb.const(val=weights_val)
         bias_val = np.random.rand(2).astype(np.float32)
-        bias = mb.const(val=bias_val, mode="immediate_value")
+        bias = mb.const(val=bias_val)
 
         matmul = mb.matmul(x=x, y=weights)
         return mb.add(x=matmul, y=bias)
@@ -96,8 +97,8 @@ def test_dead_code_elimination():
     )
     def program0(x, y):
         # following three unused op should be eliminated
-        a = mb.const(val=np.zeros(shape=(1,)), mode="immediate_value")
-        b = mb.const(val=np.zeros(shape=(1,)), mode="immediate_value")
+        a = mb.const(val=np.zeros(shape=(1,)))
+        b = mb.const(val=np.zeros(shape=(1,)))
         _ = mb.add(x=a, y=b)
         return mb.add(x=x, y=y)
 
@@ -113,9 +114,9 @@ def test_dead_code_elimination():
     @mb.program(input_specs=[mb.TensorSpec(shape=(2, 4))])
     def program1(x):
         weights_val = np.random.rand(2, 4).T.astype(np.float32)
-        weights = mb.const(val=weights_val, mode="immediate_value")
+        weights = mb.const(val=weights_val)
         bias_val = np.random.rand(4).astype(np.float32)
-        bias = mb.const(val=bias_val, mode="immediate_value")
+        bias = mb.const(val=bias_val)
 
         # unused op and its inputs should be eliminated
         mb.matmul(x=x, y=weights)
@@ -291,104 +292,6 @@ def test_gelu_tanh_approximation():
         expected_output_shapes={block.outputs[0].name: (3, 5, 6)},
     )
 
-
-@pytest.mark.parametrize("axes_size", [1, 2, 3])
-def test_layernorm_fusion(axes_size):
-    """
-    Detect layer norm pattern, found in the TF bert model.
-    y = x * [gamma * rsqrt(variance + eps)] + (beta - mean * [gamma * rsqrt(variance + eps)])
-
-    where mean and variance are computed along axes [-1] or [-1,-2] and so on
-    and gamma and beta are constants with rank equal to the length of the axes parameter.
-    """
-    shape = (3, 5, 6)
-    rank = len(shape)
-    axes = list(range(rank - axes_size, rank))
-
-    @mb.program(input_specs=[mb.TensorSpec(shape=shape)])
-    def prog(x):
-        x1 = mb.reduce_mean(x=x, axes=axes, keep_dims=True)
-        x2 = mb.sub(x=x, y=x1)
-        x2 = mb.square(x=x2)
-        x2 = mb.reduce_mean(x=x2, axes=axes, keep_dims=True)
-        x2 = mb.add(x=x2, y=1e-5)
-        x2 = mb.rsqrt(x=x2)
-        x3 = mb.mul(x=np.random.rand(*shape[-len(axes) :]), y=x2)
-        x4 = mb.mul(x=x3, y=x1)
-        x5 = mb.mul(x=x, y=x3)
-        x4 = mb.sub(x=np.random.rand(*shape[-len(axes) :]), y=x4)
-        y = mb.add(x=x4, y=x5)
-        return y
-
-    prev_prog, prev_block, block = apply_pass_and_basic_check(
-        prog, "common::fuse_layernorm_or_instancenorm"
-    )
-    assert get_op_types_in_program(prev_prog) == [
-        "reduce_mean",
-        "sub",
-        "square",
-        "reduce_mean",
-        "add",
-        "rsqrt",
-        "mul",
-        "mul",
-        "mul",
-        "sub",
-        "add",
-    ]
-    assert get_op_types_in_program(prog) == ["layer_norm"]
-    assert_model_is_valid(
-        prog, {"x": shape}, expected_output_shapes={block.outputs[0].name: shape}
-    )
-
-
-def test_instancenorm_fusion():
-    """
-    Detect instance norm pattern
-    y = x * [gamma * rsqrt(variance + eps)] + (beta - mean * [gamma * rsqrt(variance + eps)])
-
-    where input is rank 4, (N,C,H,W), axis=[2, 3], along which reduction happens,
-    and gamma and beta are of shape (1,C,1,1)
-    """
-    shape = (3, 5, 6, 7)
-
-    @mb.program(input_specs=[mb.TensorSpec(shape=shape)])
-    def prog(x):
-        x1 = mb.reduce_mean(x=x, axes=[2, 3], keep_dims=True)
-        x2 = mb.sub(x=x, y=x1)
-        x2 = mb.square(x=x2)
-        x2 = mb.reduce_mean(x=x2, axes=[2, 3], keep_dims=True)
-        x2 = mb.add(x=x2, y=1e-5)
-        x2 = mb.rsqrt(x=x2)
-        x3 = mb.mul(x=np.random.rand(1, shape[1], 1, 1), y=x2)
-        x4 = mb.mul(x=x3, y=x1)
-        x5 = mb.mul(x=x, y=x3)
-        x4 = mb.sub(x=np.random.rand(1, shape[1], 1, 1), y=x4)
-        y = mb.add(x=x4, y=x5)
-        return y
-
-    prev_prog, prev_block, block = apply_pass_and_basic_check(
-        prog, "common::fuse_layernorm_or_instancenorm"
-    )
-    assert get_op_types_in_program(prev_prog) == [
-        "reduce_mean",
-        "sub",
-        "square",
-        "reduce_mean",
-        "add",
-        "rsqrt",
-        "mul",
-        "mul",
-        "mul",
-        "sub",
-        "add",
-    ]
-    assert get_op_types_in_program(prog) == ["instance_norm"]
-    assert_model_is_valid(
-        prog, {"x": shape}, expected_output_shapes={block.outputs[0].name: shape}
-    )
-
-
 @pytest.mark.parametrize("rank", [1, 2, 3, 4])
 def test_onehot_matmul_to_gather_fusion(rank):
     """
@@ -470,7 +373,7 @@ def test_add_conv_transpose_output_shape():
 
     @mb.program(input_specs=[mb.TensorSpec(shape=(N, C_in, D1))])
     def prog(x):
-        weight = np.random.rand(C_out, C_in, D1).astype(np.float32)
+        weight = np.random.rand(C_in, C_out, D1).astype(np.float32)
         return mb.conv_transpose(x=x, weight=weight)
 
     prev_prog, prev_block, block = apply_pass_and_basic_check(
@@ -484,3 +387,61 @@ def test_add_conv_transpose_output_shape():
         exactly_one=True)[0]
     assert np.all(conv_transpose_op.output_shape.val ==
         prev_conv_transpose_op.outputs[0].shape)
+
+@pytest.mark.parametrize(
+    "op_type, is_first_op1, is_first_op2, is_first_op3, is_first_op4, const_mul_first",
+    itertools.product(
+        ["real_div", "mul"],
+        [True, False],
+        [True, False],
+        [True ,False],
+        [True, False],
+        [True, False],
+        )
+    )
+def test_gelu_exact_approximation(op_type, is_first_op1, is_first_op2, is_first_op3, is_first_op4, const_mul_first):
+    """
+    Detect gelu exact pattern.
+    y = 0.5 * x * ( 1 + erf ( x / srqt(2)))
+    """
+
+    @mb.program(input_specs=[mb.TensorSpec(shape=(3, 5, 6))])
+    def prog(x):
+        if op_type == "real_div":
+            x1 = mb.real_div(x=x, y=2**0.5)
+        elif op_type == "mul":
+            x1 = mb.mul(x=x, y=2**-0.5) if is_first_op1 else mb.mul(x=2**-0.5, y=x)
+
+        x2 = mb.erf(x=x1)
+        x3 = mb.add(x=x2, y=1) if is_first_op2 else mb.add(x=1, y=x2)
+
+        if const_mul_first:
+            y1 = mb.const(val=0.5)
+            y2 = x
+        else:
+            y1 = x
+            y2 = mb.const(val=0.5)
+
+        x4 = mb.mul(x=x3, y=y1) if is_first_op3 else mb.mul(x=y1, y=x3)
+        x5 = mb.mul(x=x4, y=y2) if is_first_op4 else mb.mul(x=y2, y=x4)
+
+        return x5
+
+    prev_prog, prev_block, block = apply_pass_and_basic_check(
+        prog, "common::fuse_gelu_exact"
+    )
+
+    assert get_op_types_in_program(prev_prog) == [
+        op_type,
+        "erf",
+        "add",
+        "mul",
+        "mul",
+    ]
+    assert get_op_types_in_program(prog) == ["gelu"]
+    assert_model_is_valid(
+        prog,
+        {"x": (3, 5, 6)},
+        expected_output_shapes={block.outputs[0].name: (3, 5, 6)},
+    )
+

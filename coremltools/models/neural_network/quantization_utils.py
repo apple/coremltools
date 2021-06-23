@@ -1638,10 +1638,9 @@ def quantize_weights(
 
     if _macos_version() < (10, 14):
         print(
-            "WARNING! Unable to return a quantized MLModel instance since"
-            "OS != macOS 10.14 or later"
-        )
-        print("Returning quantized model specification instead")
+            "WARNING - Unable to return a quantized MLModel instance since "
+            "OS is not macOS 10.14 or later. Returning a quantized model "
+            "specification instead.")
         return qspec
 
     quantized_model = _get_model(qspec)

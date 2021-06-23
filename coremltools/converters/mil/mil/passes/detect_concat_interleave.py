@@ -153,7 +153,7 @@ def detect_concat_interleave(prog):
     Result:
         %6 = concat(%1.a, %1.b, ..., axis=-3, interleave=True)
     """
-    for f_name, f in prog.functions.items():
+    for f in prog.functions.values():
         block_changed = True
         while block_changed:
             block_changed = fuse_concat_interleave(f)

@@ -12,6 +12,7 @@ from coremltools import TensorType
 import coremltools.models.utils as coremltoolsutils
 from coremltools.converters.mil.testing_utils import compare_shapes, \
     compare_backend, run_core_ml_predict
+from coremltools.converters.mil.testing_reqs import ct
 
 from tensorflow.python.framework import dtypes
 from tensorflow.python.tools.freeze_graph import freeze_graph as freeze_g
@@ -76,8 +77,8 @@ def get_tf_keras_io_names(model):
     except:
         for o in model.outputs:
             output_names.append(o.name.split(":")[0].split("/")[-1])
-    for i in model.inputs:
-        input_names.append(i.name.split(":")[0])
+    for name in model.input_names:
+        input_names.append(name.split(":")[0])
     return input_names, output_names
 
 
@@ -111,7 +112,8 @@ def get_tf_node_names(tf_nodes, mode="inputs"):
 
 
 def tf_graph_to_mlmodel(
-    graph, feed_dict, output_nodes, frontend="tensorflow", backend="nn_proto"
+    graph, feed_dict, output_nodes, frontend="tensorflow", backend="neuralnetwork",
+    use_cpu_for_conversion=False,
 ):
     """
     Parameters
@@ -126,12 +128,13 @@ def tf_graph_to_mlmodel(
         Frontend to convert from.
     backend: str
         Backend to convert to.
+    use_cpu_for_conversion: bool
+        Argument which is passed as is to the unified converter API.
+        That is, "ct.convert(...., useCPUOnly=use_cpu_for_conversion)"
+        It forces the model to be loaded on the CPU context, post conversion.
     -----------
     Returns MLModel, Input Values, Output Names
     """
-    # Avoid circular dependency
-    from coremltools.converters._converters_entry import convert
-
     if isinstance(output_nodes, tuple):
         output_nodes = list(output_nodes)
     if not isinstance(output_nodes, list):
@@ -142,8 +145,9 @@ def tf_graph_to_mlmodel(
     output_names = get_tf_node_names(output_nodes, mode="outputs")
     input_values = {name: val for name, val in zip(input_names, feed_dict.values())}
 
-    mlmodel = convert(
-        graph, inputs=None, outputs=output_names, source=frontend, convert_to=backend
+    mlmodel = ct.convert(
+        graph, inputs=None, outputs=output_names, source=frontend, convert_to=backend,
+        useCPUOnly=use_cpu_for_conversion,
     )
 
     return mlmodel, input_values, output_names, output_nodes
@@ -172,9 +176,10 @@ def run_compare_tf(
     feed_dict,
     output_nodes,
     use_cpu_only=False,
+    use_cpu_for_conversion=False,
     frontend_only=False,
     frontend="tensorflow",
-    backend="nn_proto",
+    backend="neuralnetwork",
     atol=1e-04,
     rtol=1e-05,
     validate_shapes_only=False,
@@ -194,6 +199,19 @@ def run_compare_tf(
         List of names representing outputs.
     use_cpu_only: bool
         If true, use CPU only for prediction, otherwise, use GPU also.
+    use_cpu_for_conversion: bool
+        If true, the converter is invoked using "ct.convert(...., useCPUOnly=True)",
+        which in turn forces the model to be loaded with the CPU context, which happens
+        when the converter loads the ML model object from the proto spec
+        using "ct.models.MLModel(proto_spec, useCPUOnly=True)".
+        The other argument, i.e., "use_cpu_only" on the other hand refers to only the compute engine
+        for prediction purposes. For a model that is loaded on a non-CPU context, it can still be forced
+        to execute on the CPU at the time of prediction. Hence,
+        "use_cpu_for_conversion = False && use_cpu_only = True" is valid and results in a case when a model is
+        loaded for GPU but executed on the CPU.
+        The scenario, "use_cpu_for_conversion = True && use_cpu_only = False" is invalid though,
+        since once a model is loaded on a CPU context its context cannot be changed to a non CPU device
+        at the time of prediction.
     frontend_only: bool
         If true, skip the prediction call, only validate conversion.
     frontend: str
@@ -212,12 +230,16 @@ def run_compare_tf(
     Return:
         Proto, mlmodel, input dictionay, prediction(if possible)
     """
+    if use_cpu_for_conversion and not use_cpu_only:
+        # use_cpu_for_conversion = True && use_cpu_only = False
+        raise ValueError("use_cpu_for_conversion = True && use_cpu_only = False is an invalid test case")
+
     mlmodel, input_key_values, output_names, output_nodes = tf_graph_to_mlmodel(
-        graph, feed_dict, output_nodes, frontend, backend
+        graph, feed_dict, output_nodes, frontend, backend, use_cpu_for_conversion=use_cpu_for_conversion,
     )
 
-    if frontend_only:
-        return
+    if frontend_only or coremltoolsutils._macos_version() < (10, 13):
+        return mlmodel._spec, mlmodel, input_key_values, None
 
     if not isinstance(output_nodes, (tuple, list)):
         output_nodes = [output_nodes]
@@ -315,18 +337,22 @@ class TensorFlowBaseTest(object):
 
     @staticmethod
     def run_compare_tf(graph, feed_dict, output_nodes, use_cpu_only=False,
+                       use_cpu_for_conversion=False,
                        frontend_only=False, frontend="tensorflow",
-                       backend="nn_proto", atol=1e-04, rtol=1e-05,
+                       backend="neuralnetwork", atol=1e-04, rtol=1e-05,
                        validate_shapes_only=False, freeze_graph=False,
                        tf_outputs=None):
         res = run_compare_tf(graph, feed_dict, output_nodes,
                         use_cpu_only=use_cpu_only,
+                        use_cpu_for_conversion=use_cpu_for_conversion,
                        frontend_only=frontend_only, frontend=frontend,
                        backend=backend, atol=atol,
                        rtol=rtol,
                        validate_shapes_only=validate_shapes_only,
                        freeze_graph=freeze_graph, tf_outputs=tf_outputs)
-        alist = list(res)
+        alist = []
+        if res is not None:
+            alist = list(res)
         alist.append(TensorFlowBaseTest.testclassname)
         alist.append(TensorFlowBaseTest.testmodelname)
         return tuple(alist)

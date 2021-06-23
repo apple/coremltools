@@ -4,10 +4,11 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import coremltools
-import unittest
-import tempfile
 import numpy as np
 import PIL.Image
+import os
+import tempfile
+import unittest
 
 from coremltools.proto import Model_pb2
 from coremltools.models.utils import (
@@ -59,6 +60,21 @@ class MLModelTest(unittest.TestCase):
         save_spec(self.spec, filename)
         model = MLModel(filename)
         self.assertIsNotNone(model)
+
+    def test_model_save_no_extension(self):
+        model = MLModel(self.spec)
+        self.assertIsNotNone(model)
+
+        filename = tempfile.mktemp(suffix="")
+        save_spec(self.spec, filename) # appends .mlmodel extension when it is not provided
+        self.assertFalse(os.path.exists(filename))
+
+        filename = filename + ".mlmodel"
+        self.assertTrue(os.path.exists(filename))
+
+        model = MLModel(filename)
+        self.assertIsNotNone(model)
+        os.remove(filename)
 
     def test_model_api(self):
         model = MLModel(self.spec)

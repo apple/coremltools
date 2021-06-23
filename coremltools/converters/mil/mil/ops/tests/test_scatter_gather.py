@@ -537,14 +537,17 @@ class TestGatherAlongAxis:
         assert is_close(np.array([[4, 2, 6], [1, 2, 6]], dtype=np.float32), v.val)
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, rank_axis",
+        "use_cpu_for_conversion, backend, rank_axis",
         itertools.product(
             [True, False],
             backends,
             [(rank, axis) for rank in range(1, 5) for axis in range(-rank, rank)],
         ),
     )
-    def test_builder_to_backend_programmatic(self, use_cpu_only, backend, rank_axis):
+    def test_builder_to_backend_programmatic(self, use_cpu_for_conversion, backend, rank_axis):
+        if backend == "mlprogram" and not use_cpu_for_conversion:
+            pytest.xfail("rdar://78343225 ((MIL GPU) Core ML Tools Unit Test failures [numerical error])")
+
         rank, axis = rank_axis
         x_shape = np.random.randint(low=2, high=8, size=rank)
         indices_shape = np.copy(x_shape)
@@ -574,9 +577,10 @@ class TestGatherAlongAxis:
             input_values,
             expected_output_types,
             expected_output,
-            use_cpu_only=use_cpu_only,
+            use_cpu_only=use_cpu_for_conversion,
             frontend_only=False,
             backend=backend,
+            use_cpu_for_conversion=use_cpu_for_conversion,
         )
 
 

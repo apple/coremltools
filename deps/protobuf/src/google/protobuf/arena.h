@@ -571,7 +571,9 @@ class LIBPROTOBUF_EXPORT Arena {
   };
 
   static const size_t kHeaderSize = sizeof(Block);
+#if !defined(__APPLE__) // on Darwin this has been moved to arena.cc to avoid static initializer
   static google::protobuf::internal::SequenceNumber lifecycle_id_generator_;
+#endif
 #if defined(GOOGLE_PROTOBUF_NO_THREADLOCAL)
   // Android ndk does not support GOOGLE_THREAD_LOCAL keyword so we use a custom thread
   // local storage class we implemented.

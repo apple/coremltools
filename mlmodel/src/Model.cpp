@@ -39,7 +39,7 @@ namespace CoreML {
         // note: this one should always be backward compatible, so use > here
         if (model.specificationversion() > MLMODEL_SPECIFICATION_VERSION) {
             std::stringstream msg;
-            msg << "The .mlmodel supplied is of version "
+            msg << "The model supplied is of version "
                 << model.specificationversion()
                 << ", intended for a newer version of Xcode. This version of Xcode supports model version "
                 << MLMODEL_SPECIFICATION_VERSION
@@ -112,8 +112,10 @@ namespace CoreML {
                 VALIDATE_MODEL_TYPE(kNearestNeighborsClassifier);
                 VALIDATE_MODEL_TYPE(itemSimilarityRecommender);
                 VALIDATE_MODEL_TYPE(soundAnalysisPreprocessing);
+                VALIDATE_MODEL_TYPE(audioFeaturePrint);
                 VALIDATE_MODEL_TYPE(linkedModel);
             case MLModelType_serializedModel:
+            case MLModelType_mlProgram:
                 return {};
             case MLModelType_NOT_SET:
             default:

@@ -1,3 +1,5 @@
+#include <cstring>
+
 #define STR(s) #s
 #define ML_ASSERT(x) { if (!(x)) { \
     std::cout << __FILE__ << ":" << __LINE__ << ": error: " << STR(x) << " was false, expected true." << std::endl; \
@@ -16,6 +18,7 @@
 #define ML_ASSERT_GT(x, y) ML_ASSERT((x) > (y))
 #define ML_ASSERT_NULL(x) ML_ASSERT((x) == nullptr)
 #define ML_ASSERT_NOT_NULL(x) ML_ASSERT((x) != nullptr)
+#define ML_ASSERT_SPAN_EQ(x, y) ML_ASSERT(std::equal(x.begin(), x.end(), y.begin(), y.end()))
 
 #define ML_ASSERT_THROWS(expr, exType) { \
     bool caughtCorrectException = false; \
@@ -23,3 +26,25 @@
     catch (const exType&) { caughtCorrectException = true; } \
     catch (...) { std::clog << __FILE__ << ":" << __LINE__ << ": error: caught unexpected exeception type.\n"; return 1;} \
     if (!caughtCorrectException) { std::clog << __FILE__ << ":" << __LINE__ << ": expected exception, but none thrown.\n"; return 1; } }
+
+#define ML_ASSERT_THROWS_WITH_MESSAGE(expr, exType, message)                                             \
+    {                                                                                                    \
+        bool caughtCorrectException = false;                                                             \
+        try {                                                                                            \
+            expr;                                                                                        \
+        } catch (const exType& ex) {                                                                     \
+            caughtCorrectException = true;                                                               \
+            if (strstr(ex.what(), message) == nullptr) {                                                 \
+                std::clog << __FILE__ << ":" << __LINE__                                                 \
+                          << ": error: caught exception with unexpected reason: " << ex.what() << "\n";  \
+                return 1;                                                                                \
+            }                                                                                            \
+        } catch (...) {                                                                                  \
+            std::clog << __FILE__ << ":" << __LINE__ << ": error: caught unexpected exeception type.\n"; \
+            return 1;                                                                                    \
+        }                                                                                                \
+        if (!caughtCorrectException) {                                                                   \
+            std::clog << __FILE__ << ":" << __LINE__ << ": expected exception, but none thrown.\n";      \
+            return 1;                                                                                    \
+        }                                                                                                \
+    }

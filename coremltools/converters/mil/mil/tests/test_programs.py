@@ -26,17 +26,17 @@ def test_single_layer_example():
             .reshape(input_dim, output_dim)
             .T.astype(np.float32)
         )
-        W = mb.const(val=W_val, mode="file_value", name="const_W")
+        W = mb.const(val=W_val, name="const_W")
 
         # bias
         b_val = np.array([-0.5, 0.5]).astype(np.float32)
-        b = mb.const(val=b_val, mode="file_value", name="const_b")
+        b = mb.const(val=b_val, name="const_b")
 
         return mb.linear(x=x, weight=W, bias=b, name="lin")
 
     logging.info("prog:\n" + str(prog))
 
-    mlmodel = ct.convert(prog, source="mil", convert_to="nn_proto")
+    mlmodel = ct.convert(prog, source="milinternal", convert_to="neuralnetwork")
 
     feed_dict = {
         "x": np.random.rand(batch_size, input_dim).astype(np.float32),
@@ -60,7 +60,7 @@ def test_conv_example():
         ## 2D convolution
         # Weight
         W_2d = np.random.rand(C_out, C_in, kH, kW).astype(np.float32)
-        W_2d = mb.const(val=W_2d, mode="file_value", name="const_W")
+        W_2d = mb.const(val=W_2d, name="const_W")
 
         # Test 1: provide only required arguments.
         conv1 = mb.conv(x=img, weight=W_2d, pad_type="valid")
@@ -88,7 +88,7 @@ def test_conv_example():
 
         ## 1D convolution
         W_1d = np.random.rand(C_out, C_in, kH).astype(np.float32)
-        W_1d = mb.const(val=W_1d, mode="file_value", name="const_W_1d")
+        W_1d = mb.const(val=W_1d, name="const_W_1d")
         logging.info("W_1d val: {}".format(W_1d.val))
 
         # Test 4: provide only required arguments for 1D.
@@ -98,7 +98,7 @@ def test_conv_example():
 
         return conv1, conv2, conv3, pool1, pool2, conv4
 
-    mlmodel = ct.convert(prog, source="mil", convert_to="nn_proto")
+    mlmodel = ct.convert(prog, source="milinternal", convert_to="neuralnetwork")
 
     feed_dict = {
         "img": np.random.rand(*img_shape).astype(np.float32),
@@ -128,7 +128,7 @@ def test_while_example():
 
     logging.info("prog:\n" + str(prog))
 
-    mlmodel = ct.convert(prog, source="mil", convert_to="nn_proto")
+    mlmodel = ct.convert(prog, source="milinternal", convert_to="neuralnetwork")
 
     feed_dict = {
         "a": np.random.rand(1, 2).astype(np.float32),

@@ -1,9 +1,0 @@
-
-{
-  global:
-    _PyInit_*;
-    _init*;
-
-  local:
-    *;
-};

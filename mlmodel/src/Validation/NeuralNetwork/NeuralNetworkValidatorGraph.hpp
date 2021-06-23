@@ -12,6 +12,7 @@ static bool isLayerSupportedForBackprop(const Specification::NeuralNetworkLayer*
 
         case Specification::NeuralNetworkLayer::kConvolution:
         case Specification::NeuralNetworkLayer::kInnerProduct:
+        case Specification::NeuralNetworkLayer::kUniDirectionalLSTM:
         case Specification::NeuralNetworkLayer::kFlatten:
         case Specification::NeuralNetworkLayer::kPooling:
         case Specification::NeuralNetworkLayer::kBatchnorm:

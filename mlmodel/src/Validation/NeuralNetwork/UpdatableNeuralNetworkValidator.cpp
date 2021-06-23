@@ -481,12 +481,14 @@ template<typename T> static Result validateUpdatableLayerSupport(const T& nn) {
             switch (layer.layer_case()) {
                 case Specification::NeuralNetworkLayer::kConvolution:
                 case Specification::NeuralNetworkLayer::kInnerProduct:
+                case Specification::NeuralNetworkLayer::kUniDirectionalLSTM:
+
                     r = validateWeightParamsUpdatable(layer);
                     if (!r.good()) {return r;}
                     break;
                 default:
                     std::string err;
-                    err = "The layer named '" + layer.name() + "' is marked as updatable, however, it is not supported as the type of this layer is neither convolution nor inner-product.";
+                    err = "The layer named '" + layer.name() + "' is marked as updatable, however it is not supported as the type of this layer is neither convolution nor inner-product.";
                     return Result(ResultType::INVALID_UPDATABLE_MODEL_PARAMETERS, err);
             }
         }

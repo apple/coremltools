@@ -15,7 +15,7 @@ Core MLTools in a python package for creating, examining, and testing models in 
 format. In particular, it can be used to:
 
 * Convert existing models to .mlmodel format from popular machine learning tools including:
-     Keras, Caffe, scikit-learn, libsvm, and XGBoost.
+     Keras, scikit-learn, libsvm, and XGBoost.
 * Express models in .mlmodel format through a simple API.
 * Make predictions with an .mlmodel (on select platforms for testing purposes).
 
@@ -55,13 +55,14 @@ _SPECIFICATION_VERSION_IOS_13 = 4
 # New versions for iOS 14.0
 _SPECIFICATION_VERSION_IOS_14 = 5
 
+# New versions for iOS 15.0
+_SPECIFICATION_VERSION_IOS_15 = 6
+
 # expose sub packages as directories
 from . import converters
 from . import proto
 from . import models
 from .models import utils
-
-from ._scripts.converter import _main
 
 # expose unified converter in coremltools package level
 from .converters import convert
@@ -74,6 +75,9 @@ from .converters import (
     EnumeratedShapes,
 )
 from .converters.mil._deployment_compatibility import AvailableTarget as target
+from .converters.mil.mil.passes import quantization_passes as transform
+from .converters.mil.mil.passes.quantization_passes import ComputePrecision as precision
+
 
 # Time profiling for functions in coremltools package, decorated with @profile
 import os as _os

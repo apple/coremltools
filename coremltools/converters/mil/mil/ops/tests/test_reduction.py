@@ -4,6 +4,7 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import scipy
+from scipy import special
 from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.mil import get_new_symbol
 from coremltools.converters.mil.testing_reqs import *
@@ -250,8 +251,6 @@ class TestReduction:
         "use_cpu_only, backend", itertools.product([True, False], backends,)
     )
     def test_builder_to_backend_symbolic(self, use_cpu_only, backend):
-        # TODO: variadic (rdar://59559656)
-
         s0 = get_new_symbol()
 
         val = np.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]], dtype=np.float32)

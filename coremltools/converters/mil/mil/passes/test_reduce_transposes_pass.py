@@ -1318,6 +1318,139 @@ class TransposeOptimizationPass(unittest.TestCase):
 
     """
     Input graph:
+    input(shape=1,4,5,6)--->transpose(axis=[0,3,2,1])--->relu---->split(axis=1, num_splits=2)----->transpose(axis=[0,3,2,1])----->out1(shape=1,4,5,3)
+                                                                        |
+                                                                        v
+                                                                    transpose(axis[0,3,2,1])-------------------------->out2(shape=1,4,5,3)
+
+    Output graph:
+    input(shape=1,4,5,6)------> relu ---->split(axis=3)--->out1(shape=1,4,5,3)
+                                              |
+                                              v
+                                            out2(shape=1,4,5,3)
+    """
+
+    def test_split_nd_pattern_0(self):
+        @mb.program(input_specs=[mb.TensorSpec(shape=(1, 4, 5, 6))])
+        def prog(x):
+            x1 = mb.transpose(x=x, perm=[0, 3, 2, 1])
+            x1 = mb.relu(x=x1)
+            x2, x3 = mb.split(x=x1, axis=1, num_splits=2)
+            x4 = mb.transpose(x=x2, perm=[0, 3, 2, 1])
+            x5 = mb.transpose(x=x3, perm=[0, 3, 2, 1])
+            return x4, x5
+
+        prev_prog, prev_block, block = apply_pass_and_basic_check(
+            prog, "common::reduce_transposes"
+        )
+        self.assertEqual(
+            get_op_types_in_program(prev_prog),
+            ["transpose", "relu", "split", "transpose", "transpose"],
+        )
+        self.assertEqual(get_op_types_in_program(prog), ["relu", "split"])
+
+        assert_model_is_valid(
+            prog,
+            {"x": (1, 4, 5, 6)},
+            expected_output_shapes={block.outputs[0].name: (1, 4, 5, 3),
+                                    block.outputs[1].name: (1, 4, 5, 3)},
+        )
+
+        self.assertEqual(block.find_ops(op_type="split")[0].axis.val, 3)
+
+    """
+    Input graph:
+    input(shape=1,4,5,6)--->transpose(axis=[0,3,2,1])--->relu---->splitd(axis=1, num_splits=6)----->transpose(axis=[0,3,2,1])----->out1(shape=1,4,5,3)
+                                                                        |
+                                                                        v
+                                                                    transpose(axis[0,3,2,1])-------------------------------------->out2(shape=1,4,5,3)
+
+    Output graph:
+    input(shape=1,4,5,6)------>relu---->split(axis=3)--->out1(shape=1,4,5,3)
+                                              |
+                                              v
+                                            out2(shape=1,4,5,3)
+    """
+
+    def test_split_nd_pattern_1(self):
+        @mb.program(input_specs=[mb.TensorSpec(shape=(1, 4, 5, 6))])
+        def prog(x):
+            x1 = mb.transpose(x=x, perm=[0, 3, 2, 1])
+            x1 = mb.relu(x=x1)
+            x2, x3, x4, x5, x6, x7 = mb.split(x=x1, axis=1, num_splits=6)
+            x2 = mb.transpose(x=x2, perm=[0, 3, 2, 1])
+            x3 = mb.transpose(x=x3, perm=[0, 3, 2, 1])
+            x4 = mb.transpose(x=x4, perm=[0, 3, 2, 1])
+            x5 = mb.transpose(x=x5, perm=[0, 3, 2, 1])
+            x6 = mb.transpose(x=x6, perm=[0, 3, 2, 1])
+            x7 = mb.transpose(x=x7, perm=[0, 3, 2, 1])
+            return x2, x3, x4, x5, x6, x7
+
+        prev_prog, prev_block, block = apply_pass_and_basic_check(
+            prog, "common::reduce_transposes"
+        )
+        self.assertEqual(
+            get_op_types_in_program(prev_prog),
+            ["transpose", "relu", "split", "transpose", "transpose", "transpose", "transpose", "transpose", "transpose"],
+        )
+        self.assertEqual(get_op_types_in_program(prog), ["relu", "split"])
+
+        assert_model_is_valid(
+            prog,
+            {"x": (1, 4, 5, 6)},
+            expected_output_shapes={block.outputs[0].name: (1, 4, 5, 1),
+                                    block.outputs[1].name: (1, 4, 5, 1),
+                                    block.outputs[2].name: (1, 4, 5, 1),
+                                    block.outputs[3].name: (1, 4, 5, 1),
+                                    block.outputs[4].name: (1, 4, 5, 1),
+                                    block.outputs[5].name: (1, 4, 5, 1)},
+        )
+
+        self.assertEqual(block.find_ops(op_type="split")[0].axis.val, 3)
+
+    """
+    Input graph:
+    input(shape=1,4,5,6)--->transpose(axis=[0,3,2,1])---> split(axis=1, num_splits=2) ----> concat(axis=1) ----->transpose(axis=[0,3,2,1]) ----->out1(shape=1,4,5,6)
+                                                                        |                         ^
+                                                                        v                         | 
+                                                                      relu() ----------------------
+
+    Output graph:
+    input(shape=1,4,5,6)------>split(axis=3)--->concat(axis=3) -------> out1(shape=1,4,5,6)
+                                        |               ^
+                                        v               | 
+                                    relu() --------------
+    """
+
+    def test_split_nd_pattern_2(self):
+        @mb.program(input_specs=[mb.TensorSpec(shape=(1, 4, 5, 6))])
+        def prog(x):
+            x1 = mb.transpose(x=x, perm=[0, 3, 2, 1])
+            x2, x3 = mb.split(x=x1, axis=1, num_splits=2)
+            x4 = mb.relu(x=x2)
+            x5 = mb.concat(values=[x4, x3], axis=1)
+            x6 = mb.transpose(x=x5, perm=[0, 3, 2, 1])
+            return x6
+            
+        prev_prog, prev_block, block = apply_pass_and_basic_check(
+            prog, "common::reduce_transposes"
+        )
+        self.assertEqual(
+            get_op_types_in_program(prev_prog),
+            ["transpose", "split", "relu", "concat", "transpose"]
+        )
+        self.assertEqual(get_op_types_in_program(prog), ["split", "relu", "concat"])
+
+        assert_model_is_valid(
+            prog,
+            {"x": (1, 4, 5, 6)},
+            expected_output_shapes={block.outputs[0].name: (1, 4, 5, 6)},
+        )
+
+        self.assertEqual(block.find_ops(op_type="split")[0].axis.val, 3)
+
+    """
+    Input graph:
     input(shape=1,5,5,3)----->transpose(axis=[0,3,1,2])
                                 |
                                 ---->relu-------------->transpose(axis=[0,2,3,1])
@@ -1660,3 +1793,39 @@ class TransposeOptimizationPass(unittest.TestCase):
             expected_output_shapes={block.outputs[0].name: (1, 2, 5, 5)},
         )
 
+    def test_pass_through_broadcasted_binary_op(self):
+        """
+        Input graph:
+                               const
+                                 |
+        input --> transpose --> add --> transpose --> relu
+
+        Output graph:
+
+                 const
+                   |
+        input --> add --> relu
+
+        Note: the `const` op is of shape (1, 1, 1, 3) which is pre-broadcasted.
+        """
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(1, 4, 3, 2))])
+        def prog(x):
+            x = mb.transpose(x=x, perm=[0, 3, 1, 2])
+            x = mb.add(x=x, y=np.array(np.ones(shape=(1, 1, 1, 3))))
+            x = mb.transpose(x=x, perm=[0, 2, 3, 1])
+            x = mb.relu(x=x)
+            return x
+
+        prev_prog, prev_block, block = apply_pass_and_basic_check(
+            prog, "common::reduce_transposes"
+        )
+        self.assertEqual(
+            get_op_types_in_program(prev_prog), ["transpose", "add", "transpose", "relu"],
+        )
+        self.assertEqual(get_op_types_in_program(prog), ["add", "relu"])
+        assert_model_is_valid(
+            prog,
+            {"x": (1, 4, 3, 2)},
+            expected_output_shapes={block.outputs[0].name: (1, 4, 3, 2)},
+        )

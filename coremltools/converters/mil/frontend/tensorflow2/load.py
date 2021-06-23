@@ -29,6 +29,7 @@ from coremltools.converters.mil.frontend.tensorflow2.tf_graph_pass import (
     flatten_sub_graph_namespaces,
     rewrite_control_flow_functions,
 )
+from coremltools._deps import __get_version as _get_version
 from tensorflow.lite.python.util import get_grappler_config as _get_grappler_config
 from tensorflow.lite.python.util import (
     run_graph_optimizations as _run_graph_optimizations,
@@ -44,7 +45,7 @@ from tensorflow.python.keras.saving import saving_utils as _saving_utils
 from tqdm import tqdm as _tqdm
 
 from .converter import TF2Converter
-
+from distutils.version import StrictVersion as _StrictVersion
 
 class TF2Loader(TFLoader):
     def __init__(self, model, debug=False, **kwargs):
@@ -294,7 +295,10 @@ class TF2Loader(TFLoader):
         if len(cfs) != 1:
             raise NotImplementedError("Only a single concrete function is supported.")
 
-        frozen_fn = _convert_variables_to_constants_v2(cfs[0], lower_control_flow=False)
+        if _get_version(_tf.__version__) >= _StrictVersion("2.2.0"):
+            frozen_fn = _convert_variables_to_constants_v2(cfs[0], lower_control_flow=False, aggressive_inlining=True)
+        else:
+            frozen_fn = _convert_variables_to_constants_v2(cfs[0], lower_control_flow=False)
         graph_def = frozen_fn.graph.as_graph_def(add_shapes=True)
 
         # run a Grappler's constant folding pass.

@@ -410,4 +410,94 @@ void addCategoricalCrossEntropyLossWithSoftmaxAndSGDOptimizer(Specification::Mod
     addShuffleAndSeed(neuralNets, 2019, 0, 2019, std::set<int64_t>());
 }
 
+void createSimpleNeuralNetworkClassifierModel(Specification::Model *spec, const char *inputName, const char *outputName) {
+    
+    spec->set_specificationversion(MLMODEL_SPECIFICATION_VERSION);
+
+    auto *topIn = spec->mutable_description()->add_input();
+    topIn->set_name(inputName);
+    auto *shape = topIn->mutable_type()->mutable_multiarraytype();
+    shape->add_shape(3);
+    topIn->mutable_type()->mutable_multiarraytype()->set_datatype(::CoreML::Specification::ArrayFeatureType_ArrayDataType_INT32);
+
+    auto *out = spec->mutable_description()->add_output();
+    out->set_name(outputName);
+    auto *outshape = out->mutable_type()->mutable_multiarraytype();
+    outshape->add_shape(3);
+    out->mutable_type()->mutable_multiarraytype()->set_datatype(::CoreML::Specification::ArrayFeatureType_ArrayDataType_INT32);
+
+    auto *out2 = spec->mutable_description()->add_output();
+    out2->set_name("features");
+    out2->mutable_type()->mutable_stringtype();
+
+    auto *out3 = spec->mutable_description()->add_output();
+    out3->set_name("probs");
+    out3->mutable_type()->mutable_dictionarytype();
+    out3->mutable_type()->mutable_dictionarytype()->mutable_stringkeytype();
+
+    std::string featureName = "features";
+    spec->mutable_description()->set_predictedfeaturename(featureName);
+    std::string probsName = "probs";
+    spec->mutable_description()->set_predictedprobabilitiesname(probsName);
+
+    const auto nn = spec->mutable_neuralnetworkclassifier();
+    auto labels = nn->mutable_stringclasslabels();
+    labels->add_vector("label1");
+
+    Specification::NeuralNetworkLayer *innerProductLayer = nn->add_layers();
+    innerProductLayer->add_input(inputName);
+    innerProductLayer->add_output("middle");
+    Specification::InnerProductLayerParams *innerProductParams = innerProductLayer->mutable_innerproduct();
+    innerProductParams->set_hasbias(false);
+    innerProductParams->set_inputchannels(3);
+    innerProductParams->set_outputchannels(3);
+    for (int i = 0; i < 9; i++) {
+        innerProductParams->mutable_weights()->add_floatvalue(1.0);
+    }
+
+    Specification::NeuralNetworkLayer *innerProductLayer2 = nn->add_layers();
+    innerProductLayer2->add_input("middle");
+    innerProductLayer2->add_output(outputName);
+    Specification::InnerProductLayerParams *innerProductParams2 = innerProductLayer2->mutable_innerproduct();
+    innerProductParams2->set_hasbias(false);
+    innerProductParams2->set_inputchannels(3);
+    innerProductParams2->set_outputchannels(3);
+    for (int i = 0; i < 9; i++) {
+        innerProductParams2->mutable_weights()->add_floatvalue(1.0);
+    }
+}
+
+void createSimpleFeatureVectorizerModel(Specification::Model *spec, const char *outputName, Specification::ArrayFeatureType_ArrayDataType arrayType, int inputSize) {
+    
+    spec->set_specificationversion(MLMODEL_SPECIFICATION_VERSION);
+    
+    auto interface = spec->mutable_description();
+    auto metadata = interface->mutable_metadata();
+    metadata->set_shortdescription(std::string("Testing serialization"));
+    
+    for (int d = 0; d < inputSize; d++) {
+        auto input = interface->add_input();
+        auto inputType = new Specification::FeatureType;
+        inputType->mutable_doubletype();
+        input->set_name("input" + std::to_string(d));
+        input->set_allocated_type(inputType);
+    }
+    
+    auto output = interface->add_output();
+    auto outputType = new Specification::FeatureType;
+    outputType->mutable_multiarraytype()->mutable_shape()->Add(inputSize);
+    outputType->mutable_multiarraytype()->set_datatype(arrayType);
+    output->set_name(outputName);
+    output->set_allocated_type(outputType);
+    
+    auto featurVectorizerModel = spec->mutable_featurevectorizer();
+    
+    for (int d = 0; d < inputSize; d++) {
+        auto inputlist = featurVectorizerModel->add_inputlist();
+        inputlist->set_inputcolumn("input" + std::to_string(d));
+        inputlist->set_inputdimensions(1);
+    }
+    
+}
+
 

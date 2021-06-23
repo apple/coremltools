@@ -1,4 +1,7 @@
-
+# Copyright (c) 2021, Apple Inc. All rights reserved.
+#
+# Use of this source code is governed by a BSD-3-clause license that can be
+# found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 import itertools
 import math
 import os
@@ -5003,6 +5006,7 @@ class NewLayersSimpleTest(CorrectnessTest):
     def test_reverse_sequence_gpu(self):
         self.test_reverse_sequence_cpu(cpu_only=False)
 
+    @pytest.mark.skip("rdar://72018475 (Segfault in coremltools unit tests)")
     def test_where_nonzero_cpu(self, cpu_only=True):
 
         for rank in range(1, 6):
@@ -5024,6 +5028,7 @@ class NewLayersSimpleTest(CorrectnessTest):
                 expected = {"output": np.transpose(np.nonzero(x)).astype(np.float)}
                 self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
+    @pytest.mark.skip("rdar://72018475 (Segfault in coremltools unit tests)")
     def test_where_nonzero_gpu(self):
         self.test_where_nonzero_cpu(cpu_only=False)
 

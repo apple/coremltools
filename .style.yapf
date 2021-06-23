@@ -1,0 +1,7 @@
+[style]
+based_on_style = pep8
+split_before_first_argument = 1
+indent_dictionary_value = 1
+coalesce_brackets = 1
+split_complex_comprehension = 1
+column_limit = 100

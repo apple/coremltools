@@ -60,6 +60,7 @@ syntax = "proto3";
 option optimize_for = LITE_RUNTIME;
 
 import public "VisionFeaturePrint.proto";
+import public "AudioFeaturePrint.proto";
 import public "TextClassifier.proto";
 import public "WordTagger.proto";
 import public "Gazetteer.proto";
@@ -76,6 +77,7 @@ import public "GLMClassifier.proto";
 import public "NearestNeighbors.proto";
 import public "Identity.proto";
 import public "Imputer.proto";
+import public "MIL.proto";
 import public "NeuralNetwork.proto";
 import public "Normalizer.proto";
 import public "OneHotEncoder.proto";
@@ -245,6 +247,9 @@ message SerializedModel {
  * - Enhanced Xcode model view with interactive previews
  * - Enhanced Xcode Playground support for Core ML models
  *
+ * 6 : iOS 15, macOS 12, tvOS 15, watchOS 8 (Core ML 5)
+ * - Core ML Audio Feature Print
+ *
  */
 message Model {
     int32 specificationVersion = 1;
@@ -285,6 +290,7 @@ message Model {
         // generic models start at 500
         NeuralNetwork neuralNetwork = 500;
         ItemSimilarityRecommender itemSimilarityRecommender = 501;
+        MILSpec.Program mlProgram = 502;
 
         // Custom and linked models
         CustomModel customModel = 555;
@@ -314,6 +320,7 @@ message Model {
         CoreMLModels.SoundAnalysisPreprocessing soundAnalysisPreprocessing = 2003;
         CoreMLModels.Gazetteer gazetteer = 2004;
         CoreMLModels.WordEmbedding wordEmbedding = 2005;
+        CoreMLModels.AudioFeaturePrint audioFeaturePrint = 2006;
         
         // Reserved private messages start at 3000
         // These messages are subject to change with no notice or support.

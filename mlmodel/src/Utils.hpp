@@ -92,10 +92,24 @@ namespace CoreML {
     bool hasCustomLayer(const Specification::Model& model);
 
     bool hasFlexibleShapes(const Specification::Model& model);
+
+    /**
+     * The method "hasIOSXFeatures" will return false if the model does not express any "feature"
+     * that was added in iOS X or later. When it returns false, the
+     * "downgradeSpecificationVersion" function will downgrade the spec version from
+     * MLMODEL_SPECIFICATION_VERSION_IOS_X to MLMODEL_SPECIFICATION_VERSION_IOS_X-1.
+     * TODO: rdar://76017556
+     * Right now to determine whether a new "feature" is present or not in the model spec,
+     * presence of certain proto messages are checked. However, in future we might have a scenario where
+     * no proto message is changed, but the spec contains a new feature (e.g.: a new op in the milProgram opset).
+     * It is still to be determined (tracked by the radar above), what the course of action should be, whether the
+     * spec version just versions the proto messages or the runtime feasibility of the contents of the proto.
+     */
     bool hasIOS11_2Features(const Specification::Model& model);
     bool hasIOS12Features(const Specification::Model& model);
     bool hasIOS13Features(const Specification::Model& model);
     bool hasIOS14Features(const Specification::Model& model);
+    bool hasIOS15Features(const Specification::Model& model);
 
     typedef std::pair<std::string,std::string> StringPair;
     // Returns a vector of pairs of strings, one pair per custom layer instance
@@ -116,6 +130,8 @@ namespace CoreML {
     bool hasAppleImageFeatureExtractor(const Specification::Model& model);
     bool hasScenePrint(const Specification::Model& model);
     bool hasObjectPrint(const Specification::Model& model);
+    bool hasAppleAudioFeatureExtractor(const Specification::Model& model);
+    bool hasSoundPrint(const Specification::Model& model);
     bool hasCategoricalSequences(const Specification::Model& model);
     bool hasNonmaxSuppression(const Specification::Model& model);
     bool hasBayesianProbitRegressor(const Specification::Model& model);
