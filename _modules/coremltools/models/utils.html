@@ -1,0 +1,1086 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>coremltools.models.utils &mdash; coremltools API Reference  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> coremltools API Reference
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">API Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/coremltools.converters.html">Converters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/coremltools.models.html">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Resources</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://coremltools.readme.io/docs">Guides and examples</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://mlmodel.readme.io/reference">Core ML Format Specification</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">coremltools API Reference</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>coremltools.models.utils</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for coremltools.models.utils</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) 2017, Apple Inc. All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># Use of this source code is governed by a BSD-3-clause license that can be</span>
+<span class="c1"># found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Utilities for the entire package.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">math</span> <span class="k">as</span> <span class="nn">_math</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">_np</span>
+<span class="kn">import</span> <span class="nn">os</span> <span class="k">as</span> <span class="nn">_os</span>
+<span class="kn">import</span> <span class="nn">pathlib</span> <span class="k">as</span> <span class="nn">_pathlib</span>
+<span class="kn">import</span> <span class="nn">sys</span> <span class="k">as</span> <span class="nn">_sys</span>
+<span class="kn">import</span> <span class="nn">tempfile</span> <span class="k">as</span> <span class="nn">_tempfile</span>
+<span class="kn">import</span> <span class="nn">warnings</span> <span class="k">as</span> <span class="nn">_warnings</span>
+
+<span class="kn">from</span> <span class="nn">coremltools.proto</span> <span class="kn">import</span> <span class="n">Model_pb2</span> <span class="k">as</span> <span class="n">_Model_pb2</span>
+
+<span class="kn">from</span> <span class="nn">.._deps</span> <span class="kn">import</span> <span class="n">_HAS_SKLEARN</span>
+
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">..libmodelpackage</span> <span class="kn">import</span> <span class="n">ModelPackage</span>
+<span class="k">except</span> <span class="ne">ModuleNotFoundError</span><span class="p">:</span>
+    <span class="k">pass</span>
+
+<span class="n">_MLMODEL_EXTENSION</span> <span class="o">=</span> <span class="s2">&quot;.mlmodel&quot;</span>
+<span class="n">_MLPACKAGE_EXTENSION</span> <span class="o">=</span> <span class="s2">&quot;.mlpackage&quot;</span>
+
+
+<span class="k">if</span> <span class="n">_HAS_SKLEARN</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">scipy.sparse</span> <span class="k">as</span> <span class="nn">_sp</span>
+
+
+<span class="k">def</span> <span class="nf">_to_unicode</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">bytes</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">x</span><span class="o">.</span><span class="n">decode</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">x</span>
+
+<div class="viewcode-block" id="save_spec"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.utils.save_spec">[docs]</a><span class="k">def</span> <span class="nf">save_spec</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">auto_set_specification_version</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Save a protobuf model specification to file.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    spec: Model_pb</span>
+<span class="sd">        Protobuf representation of the model</span>
+
+<span class="sd">    filename: str</span>
+<span class="sd">        File path  where the spec gets saved.</span>
+
+<span class="sd">    auto_set_specification_version: bool</span>
+<span class="sd">        If true, will always try to set specification version automatically.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    .. sourcecode:: python</span>
+
+<span class="sd">        &gt;&gt;&gt; coremltools.utils.save_spec(spec, &#39;HousePricer.mlmodel&#39;)</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    load_spec</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">name</span><span class="p">,</span> <span class="n">ext</span> <span class="o">=</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+
+    <span class="n">is_package</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">ext</span><span class="p">:</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">_MLMODEL_EXTENSION</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">ext</span> <span class="o">==</span> <span class="n">_MLPACKAGE_EXTENSION</span><span class="p">:</span>
+        <span class="n">is_package</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">elif</span> <span class="n">ext</span> <span class="o">==</span> <span class="n">_MLMODEL_EXTENSION</span><span class="p">:</span>
+        <span class="n">is_package</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Extension must be </span><span class="si">{}</span><span class="s2"> or </span><span class="si">{}</span><span class="s2"> (not </span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">_MLMODEL_EXTENSION</span><span class="p">,</span> <span class="n">_MLPACKAGE_EXTENSION</span><span class="p">,</span> <span class="n">ext</span><span class="p">))</span>
+
+    <span class="n">spec</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">SerializeToString</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">auto_set_specification_version</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># always try to downgrade the specification version to the</span>
+            <span class="c1"># minimal version that supports everything in this mlmodel</span>
+            <span class="kn">from</span> <span class="nn">..libcoremlpython</span> <span class="kn">import</span> <span class="n">_MLModelProxy</span>
+
+            <span class="n">spec</span> <span class="o">=</span> <span class="n">_MLModelProxy</span><span class="o">.</span><span class="n">auto_set_specification_version</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="n">_warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                <span class="s2">&quot;Failed to automatic set specification version for this model.&quot;</span><span class="p">,</span>
+                <span class="ne">RuntimeWarning</span><span class="p">,</span>
+            <span class="p">)</span>
+
+    <span class="n">specfile</span> <span class="o">=</span> <span class="n">filename</span>
+    <span class="k">if</span> <span class="n">is_package</span><span class="p">:</span>
+        <span class="n">tempfile</span> <span class="o">=</span> <span class="n">_tempfile</span><span class="o">.</span><span class="n">NamedTemporaryFile</span><span class="p">(</span><span class="n">suffix</span><span class="o">=</span><span class="n">_MLMODEL_EXTENSION</span><span class="p">)</span>
+        <span class="n">specfile</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">name</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">specfile</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">is_package</span><span class="p">:</span>
+        <span class="n">package</span> <span class="o">=</span> <span class="n">ModelPackage</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+        <span class="n">model_name</span> <span class="o">=</span> <span class="n">_pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s1">&#39;.mlmodel&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">name</span>
+        
+        <span class="c1"># Root file is copied into the model package. Changes to in-memory JSON is commited to disk when package goes out of scope.</span>
+        <span class="n">package</span><span class="o">.</span><span class="n">setRootModel</span><span class="p">(</span><span class="n">specfile</span><span class="p">,</span> <span class="n">model_name</span><span class="p">,</span> <span class="s2">&quot;com.apple.CoreML&quot;</span><span class="p">,</span> <span class="s2">&quot;CoreML Model Specification&quot;</span><span class="p">);</span></div>
+
+<div class="viewcode-block" id="load_spec"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.utils.load_spec">[docs]</a><span class="k">def</span> <span class="nf">load_spec</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Load a protobuf model specification from file.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    filename: str</span>
+<span class="sd">        Location on disk (a valid file path) from which the file is loaded</span>
+<span class="sd">        as a protobuf spec.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    model_spec: Model_pb</span>
+<span class="sd">        Protobuf representation of the model</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    .. sourcecode:: python</span>
+
+<span class="sd">        &gt;&gt;&gt; spec = coremltools.utils.load_spec(&#39;HousePricer.mlmodel&#39;)</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    save_spec</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">..proto</span> <span class="kn">import</span> <span class="n">Model_pb2</span>
+
+    <span class="n">spec</span> <span class="o">=</span> <span class="n">Model_pb2</span><span class="o">.</span><span class="n">Model</span><span class="p">()</span>
+
+    <span class="n">specfile</span> <span class="o">=</span> <span class="n">filename</span>
+    <span class="k">if</span> <span class="n">ModelPackage</span><span class="o">.</span><span class="n">isValid</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+        <span class="n">specfile</span> <span class="o">=</span> <span class="n">ModelPackage</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span><span class="o">.</span><span class="n">getRootModel</span><span class="p">()</span><span class="o">.</span><span class="n">path</span><span class="p">()</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">specfile</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">contents</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="n">spec</span><span class="o">.</span><span class="n">ParseFromString</span><span class="p">(</span><span class="n">contents</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">spec</span></div>
+
+
+<span class="k">def</span> <span class="nf">_get_nn_layers</span><span class="p">(</span><span class="n">spec</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns a list of neural network layers if the model contains any.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    spec: Model_pb</span>
+<span class="sd">        A model protobuf specification.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    [NN layer]</span>
+<span class="sd">        list of all layers (including layers from elements of a pipeline</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">layers</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="n">spec</span><span class="o">.</span><span class="n">WhichOneof</span><span class="p">(</span><span class="s2">&quot;Type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;pipeline&quot;</span><span class="p">:</span>
+        <span class="n">layers</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">model_spec</span> <span class="ow">in</span> <span class="n">spec</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">models</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">layers</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">_get_nn_layers</span><span class="p">(</span><span class="n">model_spec</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">layers</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">_get_nn_layers</span><span class="p">(</span><span class="n">model_spec</span><span class="p">))</span>
+
+    <span class="k">elif</span> <span class="n">spec</span><span class="o">.</span><span class="n">WhichOneof</span><span class="p">(</span><span class="s2">&quot;Type&quot;</span><span class="p">)</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;pipelineClassifier&quot;</span><span class="p">,</span> <span class="s2">&quot;pipelineRegressor&quot;</span><span class="p">]:</span>
+        <span class="n">layers</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">model_spec</span> <span class="ow">in</span> <span class="n">spec</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">models</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">layers</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">_get_nn_layers</span><span class="p">(</span><span class="n">model_spec</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">layers</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">_get_nn_layers</span><span class="p">(</span><span class="n">model_spec</span><span class="p">))</span>
+
+    <span class="k">elif</span> <span class="n">spec</span><span class="o">.</span><span class="n">neuralNetwork</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
+        <span class="n">layers</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">neuralNetwork</span><span class="o">.</span><span class="n">layers</span>
+    <span class="k">elif</span> <span class="n">spec</span><span class="o">.</span><span class="n">neuralNetworkClassifier</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
+        <span class="n">layers</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">neuralNetworkClassifier</span><span class="o">.</span><span class="n">layers</span>
+    <span class="k">elif</span> <span class="n">spec</span><span class="o">.</span><span class="n">neuralNetworkRegressor</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
+        <span class="n">layers</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">neuralNetworkRegressor</span><span class="o">.</span><span class="n">layers</span>
+
+    <span class="k">return</span> <span class="n">layers</span>
+
+
+<span class="k">def</span> <span class="nf">_fp32_to_reversed_fp16_byte_array</span><span class="p">(</span><span class="n">fp32_arr</span><span class="p">):</span>
+    <span class="n">raw_fp16</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">float16</span><span class="p">(</span><span class="n">fp32_arr</span><span class="p">)</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">fp16</span> <span class="ow">in</span> <span class="n">raw_fp16</span><span class="p">:</span>
+        <span class="n">all_bytes</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">fromstring</span><span class="p">(</span><span class="n">fp16</span><span class="o">.</span><span class="n">tobytes</span><span class="p">(),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;int8&quot;</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">+=</span> <span class="n">all_bytes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">tobytes</span><span class="p">()</span>
+        <span class="n">x</span> <span class="o">+=</span> <span class="n">all_bytes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">tobytes</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">x</span>
+
+
+<span class="k">def</span> <span class="nf">_fp32_to_fp16_byte_array</span><span class="p">(</span><span class="n">fp32_arr</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">_np</span><span class="o">.</span><span class="n">amax</span><span class="p">(</span><span class="n">fp32_arr</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">65504</span> <span class="ow">or</span> <span class="n">_np</span><span class="o">.</span><span class="n">amin</span><span class="p">(</span><span class="n">fp32_arr</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="o">-</span><span class="mi">65504</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+            <span class="s2">&quot;Model cannot be converted as &quot;</span>
+            <span class="s2">&quot;it has weights that cannot be represented in &quot;</span>
+            <span class="s2">&quot;half precision.</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+    <span class="kn">import</span> <span class="nn">sys</span>
+
+    <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">byteorder</span> <span class="o">==</span> <span class="s2">&quot;little&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_np</span><span class="o">.</span><span class="n">float16</span><span class="p">(</span><span class="n">fp32_arr</span><span class="p">)</span><span class="o">.</span><span class="n">tobytes</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_fp32_to_reversed_fp16_byte_array</span><span class="p">(</span><span class="n">fp32_arr</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_wp_to_fp16wp</span><span class="p">(</span><span class="n">wp</span><span class="p">):</span>
+    <span class="k">assert</span> <span class="n">wp</span>
+    <span class="c1"># If the float32 field is empty do nothing.</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">wp</span><span class="o">.</span><span class="n">floatValue</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="n">wp</span><span class="o">.</span><span class="n">float16Value</span> <span class="o">=</span> <span class="n">_fp32_to_fp16_byte_array</span><span class="p">(</span><span class="n">wp</span><span class="o">.</span><span class="n">floatValue</span><span class="p">)</span>
+    <span class="k">del</span> <span class="n">wp</span><span class="o">.</span><span class="n">floatValue</span><span class="p">[:]</span>
+
+<span class="k">def</span> <span class="nf">_convert_neural_network_spec_weights_to_fp16</span><span class="p">(</span><span class="n">fp_spec</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">.neural_network.quantization_utils</span> <span class="kn">import</span> <span class="n">_quantize_spec_weights</span>
+    <span class="kn">from</span> <span class="nn">.neural_network.quantization_utils</span> <span class="kn">import</span> <span class="p">(</span>
+        <span class="n">_QUANTIZATION_MODE_LINEAR_QUANTIZATION</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">qspec</span> <span class="o">=</span> <span class="n">_quantize_spec_weights</span><span class="p">(</span><span class="n">fp_spec</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="n">_QUANTIZATION_MODE_LINEAR_QUANTIZATION</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">qspec</span>
+
+
+<span class="k">def</span> <span class="nf">_convert_neural_network_weights_to_fp16</span><span class="p">(</span><span class="n">full_precision_model</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Utility function to convert a full precision (float) MLModel to a</span>
+<span class="sd">    half precision MLModel (float16).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    full_precision_model: MLModel</span>
+<span class="sd">        Model which will be converted to half precision. Currently conversion</span>
+<span class="sd">        for only neural network models is supported. If a pipeline model is</span>
+<span class="sd">        passed in then all embedded neural network models embedded within</span>
+<span class="sd">        will be converted.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    model: MLModel</span>
+<span class="sd">        The converted half precision MLModel</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">spec</span> <span class="o">=</span> <span class="n">full_precision_model</span><span class="o">.</span><span class="n">get_spec</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">_get_model</span><span class="p">(</span><span class="n">_convert_neural_network_spec_weights_to_fp16</span><span class="p">(</span><span class="n">spec</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">_get_model</span><span class="p">(</span><span class="n">spec</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Utility to get the model and the data.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">MLModel</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">MLModel</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">spec</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">MLModel</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="evaluate_regressor"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.utils.evaluate_regressor">[docs]</a><span class="k">def</span> <span class="nf">evaluate_regressor</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">&quot;target&quot;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Evaluate a CoreML regression model and compare against predictions</span>
+<span class="sd">    from the original framework (for testing correctness of conversion).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    model: MLModel or str</span>
+<span class="sd">        A loaded MLModel or a path to a saved MLModel</span>
+
+<span class="sd">    data: Dataframe</span>
+<span class="sd">        Test data on which to evaluate the models</span>
+
+<span class="sd">    target: str</span>
+<span class="sd">       Name of the column in the dataframe that must be interpreted</span>
+<span class="sd">       as the target column.</span>
+
+<span class="sd">    verbose: bool</span>
+<span class="sd">       Set to true for a more verbose output.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    evaluate_classifier</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    .. sourcecode:: python</span>
+
+<span class="sd">        &gt;&gt;&gt; metrics = coremltools.utils.evaluate_regressor(spec, &#39;data_and_predictions.csv&#39;, &#39;target&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; print(metrics)</span>
+<span class="sd">        {&quot;samples&quot;: 10, &quot;rmse&quot;: 0.0, max_error: 0.0}</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">_get_model</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Other Framework</span><span class="se">\t\t</span><span class="s2">Predicted</span><span class="se">\t\t</span><span class="s2">Delta&quot;</span><span class="p">)</span>
+
+    <span class="n">max_error</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">error_squared</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+        <span class="n">predicted</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">row</span><span class="p">))[</span><span class="n">_to_unicode</span><span class="p">(</span><span class="n">target</span><span class="p">)]</span>
+        <span class="n">other_framework</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;prediction&quot;</span><span class="p">]</span>
+        <span class="n">delta</span> <span class="o">=</span> <span class="n">predicted</span> <span class="o">-</span> <span class="n">other_framework</span>
+
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="se">\t\t\t\t</span><span class="si">{}</span><span class="se">\t\t\t</span><span class="si">{:0.4f}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">other_framework</span><span class="p">,</span> <span class="n">predicted</span><span class="p">,</span> <span class="n">delta</span><span class="p">))</span>
+
+        <span class="n">max_error</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">delta</span><span class="p">),</span> <span class="n">max_error</span><span class="p">)</span>
+        <span class="n">error_squared</span> <span class="o">=</span> <span class="n">error_squared</span> <span class="o">+</span> <span class="p">(</span><span class="n">delta</span> <span class="o">*</span> <span class="n">delta</span><span class="p">)</span>
+
+    <span class="n">ret</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;samples&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">),</span>
+        <span class="s2">&quot;rmse&quot;</span><span class="p">:</span> <span class="n">_math</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">error_squared</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)),</span>
+        <span class="s2">&quot;max_error&quot;</span><span class="p">:</span> <span class="n">max_error</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;results: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ret</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">ret</span></div>
+
+
+<div class="viewcode-block" id="evaluate_classifier"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.utils.evaluate_classifier">[docs]</a><span class="k">def</span> <span class="nf">evaluate_classifier</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">&quot;target&quot;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Evaluate a Core ML classifier model and compare against predictions</span>
+<span class="sd">    from the original framework (for testing correctness of conversion).</span>
+<span class="sd">    Use this evaluation for models that don&#39;t deal with probabilities.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    filename: list of str or list of MLModel</span>
+<span class="sd">        File from where to load the model from (OR) a loaded</span>
+<span class="sd">        version of the MLModel.</span>
+
+<span class="sd">    data: list of str or list of Dataframe</span>
+<span class="sd">        Test data on which to evaluate the models (dataframe,</span>
+<span class="sd">        or path to a csv file).</span>
+
+<span class="sd">    target: str</span>
+<span class="sd">       Column to interpret as the target column</span>
+
+<span class="sd">    verbose: bool</span>
+<span class="sd">       Set to true for a more verbose output.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    evaluate_regressor, evaluate_classifier_with_probabilities</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    .. sourcecode:: python</span>
+
+<span class="sd">        &gt;&gt;&gt; metrics =  coremltools.utils.evaluate_classifier(spec, &#39;data_and_predictions.csv&#39;, &#39;target&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; print(metrics)</span>
+<span class="sd">        {&quot;samples&quot;: 10, num_errors: 0}</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">_get_model</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Other Framework</span><span class="se">\t\t</span><span class="s2">Predicted&quot;</span><span class="p">)</span>
+
+    <span class="n">num_errors</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+        <span class="n">predicted</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">row</span><span class="p">))[</span><span class="n">_to_unicode</span><span class="p">(</span><span class="n">target</span><span class="p">)]</span>
+        <span class="n">other_framework</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;prediction&quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">predicted</span> <span class="o">!=</span> <span class="n">other_framework</span><span class="p">:</span>
+            <span class="n">num_errors</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="se">\t\t\t\t</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">other_framework</span><span class="p">,</span> <span class="n">predicted</span><span class="p">))</span>
+
+    <span class="n">ret</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;num_samples&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">),</span> <span class="s2">&quot;num_errors&quot;</span><span class="p">:</span> <span class="n">num_errors</span><span class="p">}</span>
+
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;results: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ret</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">ret</span></div>
+
+
+<div class="viewcode-block" id="evaluate_classifier_with_probabilities"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.utils.evaluate_classifier_with_probabilities">[docs]</a><span class="k">def</span> <span class="nf">evaluate_classifier_with_probabilities</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">probabilities</span><span class="o">=</span><span class="s2">&quot;probabilities&quot;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Evaluate a classifier specification for testing.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    filename: [str | Model]</span>
+<span class="sd">        File from where to load the model from (OR) a loaded</span>
+<span class="sd">        version of the MLModel.</span>
+
+<span class="sd">    data: [str | Dataframe]</span>
+<span class="sd">        Test data on which to evaluate the models (dataframe,</span>
+<span class="sd">        or path to a csv file).</span>
+
+<span class="sd">    probabilities: str</span>
+<span class="sd">       Column to interpret as the probabilities column</span>
+
+<span class="sd">    verbose: bool</span>
+<span class="sd">       Verbosity levels of the predictions.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">model</span> <span class="o">=</span> <span class="n">_get_model</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Other Framework</span><span class="se">\t\t</span><span class="s2">Predicted&quot;</span><span class="p">)</span>
+
+    <span class="n">max_probability_error</span><span class="p">,</span> <span class="n">num_key_mismatch</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span>
+
+    <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+        <span class="n">input_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">dict</span><span class="p">(</span><span class="n">row</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="o">!=</span> <span class="n">probabilities</span><span class="p">}</span>
+        <span class="n">predicted_values</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">input_dict</span><span class="p">)[</span><span class="n">_to_unicode</span><span class="p">(</span><span class="n">probabilities</span><span class="p">)]</span>
+        <span class="n">other_values</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="n">probabilities</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">predicted_values</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">!=</span> <span class="nb">set</span><span class="p">(</span><span class="n">other_values</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span>
+                    <span class="s2">&quot;Different classes: &quot;</span><span class="p">,</span>
+                    <span class="nb">str</span><span class="p">(</span><span class="n">predicted_values</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span>
+                    <span class="nb">str</span><span class="p">(</span><span class="n">other_values</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span>
+                <span class="p">)</span>
+            <span class="n">num_key_mismatch</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">continue</span>
+
+        <span class="k">for</span> <span class="n">cur_class</span><span class="p">,</span> <span class="n">cur_predicted_class_values</span> <span class="ow">in</span> <span class="n">predicted_values</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">delta</span> <span class="o">=</span> <span class="n">cur_predicted_class_values</span> <span class="o">-</span> <span class="n">other_values</span><span class="p">[</span><span class="n">cur_class</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">delta</span><span class="p">,</span> <span class="n">cur_predicted_class_values</span><span class="p">,</span> <span class="n">other_values</span><span class="p">[</span><span class="n">cur_class</span><span class="p">])</span>
+
+            <span class="n">max_probability_error</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">delta</span><span class="p">),</span> <span class="n">max_probability_error</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+    <span class="n">ret</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;num_samples&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">),</span>
+        <span class="s2">&quot;max_probability_error&quot;</span><span class="p">:</span> <span class="n">max_probability_error</span><span class="p">,</span>
+        <span class="s2">&quot;num_key_mismatch&quot;</span><span class="p">:</span> <span class="n">num_key_mismatch</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;results: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ret</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">ret</span></div>
+
+
+<div class="viewcode-block" id="rename_feature"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.utils.rename_feature">[docs]</a><span class="k">def</span> <span class="nf">rename_feature</span><span class="p">(</span>
+    <span class="n">spec</span><span class="p">,</span> <span class="n">current_name</span><span class="p">,</span> <span class="n">new_name</span><span class="p">,</span> <span class="n">rename_inputs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">rename_outputs</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Rename a feature in the specification.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    spec: Model_pb</span>
+<span class="sd">        The specification containing the feature to rename.</span>
+
+<span class="sd">    current_name: str</span>
+<span class="sd">        Current name of the feature. If this feature doesn&#39;t exist, the rename</span>
+<span class="sd">        is a no-op.</span>
+
+<span class="sd">    new_name: str</span>
+<span class="sd">        New name of the feature.</span>
+
+<span class="sd">    rename_inputs: bool</span>
+<span class="sd">        Search for `current_name` only in the input features (i.e ignore output</span>
+<span class="sd">        features)</span>
+
+<span class="sd">    rename_outputs: bool</span>
+<span class="sd">        Search for `current_name` only in the output features (i.e ignore input</span>
+<span class="sd">        features)</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    .. sourcecode:: python</span>
+
+<span class="sd">        # In-place rename of spec</span>
+<span class="sd">        &gt;&gt;&gt; coremltools.utils.rename_feature(spec, &#39;old_feature&#39;, &#39;new_feature_name&#39;)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">coremltools.models</span> <span class="kn">import</span> <span class="n">MLModel</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">rename_inputs</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">rename_outputs</span><span class="p">:</span>
+        <span class="k">return</span>
+
+    <span class="n">changed_input</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">changed_output</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">if</span> <span class="n">rename_inputs</span><span class="p">:</span>
+        <span class="k">for</span> <span class="nb">input</span> <span class="ow">in</span> <span class="n">spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">input</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">input</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">current_name</span><span class="p">:</span>
+                <span class="nb">input</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">new_name</span>
+                <span class="n">changed_input</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">if</span> <span class="n">rename_outputs</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">output</span> <span class="ow">in</span> <span class="n">spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">output</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">output</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">current_name</span><span class="p">:</span>
+                <span class="n">output</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">new_name</span>
+                <span class="n">changed_output</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">if</span> <span class="n">spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">predictedFeatureName</span> <span class="o">==</span> <span class="n">current_name</span><span class="p">:</span>
+            <span class="n">spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">predictedFeatureName</span> <span class="o">=</span> <span class="n">new_name</span>
+
+        <span class="k">if</span> <span class="n">spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">predictedProbabilitiesName</span> <span class="o">==</span> <span class="n">current_name</span><span class="p">:</span>
+            <span class="n">spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">predictedProbabilitiesName</span> <span class="o">=</span> <span class="n">new_name</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">changed_input</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">changed_output</span><span class="p">:</span>
+        <span class="k">return</span>
+
+    <span class="c1"># Rename internally in NN model</span>
+    <span class="n">nn</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">for</span> <span class="n">nn_type</span> <span class="ow">in</span> <span class="p">[</span>
+        <span class="s2">&quot;neuralNetwork&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;neuralNetworkClassifier&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;neuralNetworkRegressor&quot;</span><span class="p">,</span>
+    <span class="p">]:</span>
+        <span class="k">if</span> <span class="n">spec</span><span class="o">.</span><span class="n">HasField</span><span class="p">(</span><span class="n">nn_type</span><span class="p">):</span>
+            <span class="n">nn</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">nn_type</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">nn</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">nn</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">rename_inputs</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">input</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="n">current_name</span><span class="p">:</span>
+                        <span class="n">layer</span><span class="o">.</span><span class="n">input</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_name</span>
+                <span class="k">if</span> <span class="n">rename_outputs</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">output</span><span class="p">):</span>
+                        <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="n">current_name</span><span class="p">:</span>
+                            <span class="n">layer</span><span class="o">.</span><span class="n">output</span><span class="p">[</span><span class="n">index</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_name</span>
+
+        <span class="k">if</span> <span class="n">rename_inputs</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">preprocess_params</span> <span class="ow">in</span> <span class="n">nn</span><span class="o">.</span><span class="n">preprocessing</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">preprocess_params</span><span class="o">.</span><span class="n">featureName</span> <span class="o">==</span> <span class="n">current_name</span><span class="p">:</span>
+                    <span class="n">preprocess_params</span><span class="o">.</span><span class="n">featureName</span> <span class="o">=</span> <span class="n">new_name</span>
+
+        <span class="k">if</span> <span class="n">spec</span><span class="o">.</span><span class="n">HasField</span><span class="p">(</span><span class="s2">&quot;neuralNetworkClassifier&quot;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">nn</span><span class="o">.</span><span class="n">labelProbabilityLayerName</span> <span class="o">==</span> <span class="n">current_name</span><span class="p">:</span>
+                <span class="n">nn</span><span class="o">.</span><span class="n">labelProbabilityLayerName</span> <span class="o">=</span> <span class="n">new_name</span>
+
+    <span class="c1"># Rename internally for feature vectorizer</span>
+    <span class="k">if</span> <span class="n">spec</span><span class="o">.</span><span class="n">HasField</span><span class="p">(</span><span class="s2">&quot;featureVectorizer&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">rename_inputs</span><span class="p">:</span>
+        <span class="k">for</span> <span class="nb">input</span> <span class="ow">in</span> <span class="n">spec</span><span class="o">.</span><span class="n">featureVectorizer</span><span class="o">.</span><span class="n">inputList</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">input</span><span class="o">.</span><span class="n">inputColumn</span> <span class="o">==</span> <span class="n">current_name</span><span class="p">:</span>
+                <span class="nb">input</span><span class="o">.</span><span class="n">inputColumn</span> <span class="o">=</span> <span class="n">new_name</span>
+                <span class="n">changed_input</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="c1"># Rename for pipeline models</span>
+    <span class="n">pipeline</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">spec</span><span class="o">.</span><span class="n">HasField</span><span class="p">(</span><span class="s2">&quot;pipeline&quot;</span><span class="p">):</span>
+        <span class="n">pipeline</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">pipeline</span>
+    <span class="k">elif</span> <span class="n">spec</span><span class="o">.</span><span class="n">HasField</span><span class="p">(</span><span class="s2">&quot;pipelineClassifier&quot;</span><span class="p">):</span>
+        <span class="n">pipeline</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">pipelineClassifier</span><span class="o">.</span><span class="n">pipeline</span>
+    <span class="k">elif</span> <span class="n">spec</span><span class="o">.</span><span class="n">HasField</span><span class="p">(</span><span class="s2">&quot;pipelineRegressor&quot;</span><span class="p">):</span>
+        <span class="n">pipeline</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">pipelineRegressor</span><span class="o">.</span><span class="n">pipeline</span>
+
+    <span class="k">if</span> <span class="n">pipeline</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">model</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">pipeline</span><span class="o">.</span><span class="n">models</span><span class="p">):</span>
+            <span class="n">rename_feature</span><span class="p">(</span>
+                <span class="n">model</span><span class="p">,</span>
+                <span class="n">current_name</span><span class="p">,</span>
+                <span class="n">new_name</span><span class="p">,</span>
+                <span class="n">rename_inputs</span> <span class="ow">or</span> <span class="p">(</span><span class="n">index</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">),</span>
+                <span class="n">rename_outputs</span> <span class="ow">or</span> <span class="p">(</span><span class="n">index</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">spec</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">models</span><span class="p">)),</span>
+            <span class="p">)</span></div>
+
+
+<span class="k">def</span> <span class="nf">_sanitize_value</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Performs cleaning steps on the data so various type comparisons can</span>
+<span class="sd">    be performed correctly.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,)):</span>
+        <span class="k">return</span> <span class="n">x</span>
+    <span class="k">elif</span> <span class="n">_HAS_SKLEARN</span> <span class="ow">and</span> <span class="n">_sp</span><span class="o">.</span><span class="n">issparse</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">x</span><span class="o">.</span><span class="n">todense</span><span class="p">()</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">_np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">x</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">_sanitize_value</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">x</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">_sanitize_value</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">x</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">((</span><span class="n">_sanitize_value</span><span class="p">(</span><span class="n">k</span><span class="p">),</span> <span class="n">_sanitize_value</span><span class="p">(</span><span class="n">v</span><span class="p">))</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">x</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="kc">False</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_element_equal</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Performs a robust equality test between elements.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">_np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">_np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">_np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="n">_np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">y</span><span class="p">))</span> <span class="o">&lt;</span> <span class="mf">1e-5</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="nb">isinstance</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
+            <span class="ow">and</span> <span class="n">_element_equal</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">y</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+            <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="n">_element_equal</span><span class="p">(</span><span class="n">x</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="n">y</span><span class="p">[</span><span class="n">k</span><span class="p">])</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">x</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">abs</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">y</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1e-5</span> <span class="o">*</span> <span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">+</span> <span class="nb">abs</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="n">x</span> <span class="o">==</span> <span class="n">y</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">x</span> <span class="o">==</span> <span class="n">y</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="evaluate_transformer"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.utils.evaluate_transformer">[docs]</a><span class="k">def</span> <span class="nf">evaluate_transformer</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">input_data</span><span class="p">,</span> <span class="n">reference_output</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Evaluate a transformer specification for testing.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    spec: list of str or list of MLModel</span>
+<span class="sd">        File from where to load the Model from (OR) a loaded</span>
+<span class="sd">        version of MLModel.</span>
+
+<span class="sd">    input_data: list of dict</span>
+<span class="sd">        Test data on which to evaluate the models.</span>
+
+<span class="sd">    reference_output: list of dict</span>
+<span class="sd">        Expected results for the model.</span>
+
+<span class="sd">    verbose: bool</span>
+<span class="sd">        Verbosity levels of the predictions.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    .. sourcecode:: python</span>
+
+<span class="sd">        &gt;&gt;&gt; input_data = [{&#39;input_1&#39;: 1, &#39;input_2&#39;: 2}, {&#39;input_1&#39;: 3, &#39;input_2&#39;: 3}]</span>
+<span class="sd">        &gt;&gt;&gt; expected_output = [{&#39;input_1&#39;: 2.5, &#39;input_2&#39;: 2.0}, {&#39;input_1&#39;: 1.3, &#39;input_2&#39;: 2.3}]</span>
+<span class="sd">        &gt;&gt;&gt; metrics = coremltools.utils.evaluate_transformer(scaler_spec, input_data, expected_output)</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    evaluate_regressor, evaluate_classifier</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">_get_model</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Other Framework</span><span class="se">\t\t</span><span class="s2">Predicted&quot;</span><span class="p">)</span>
+
+    <span class="n">num_errors</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">input_data</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
+        <span class="n">sanitized_row</span> <span class="o">=</span> <span class="n">_sanitize_value</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+        <span class="n">ref_data</span> <span class="o">=</span> <span class="n">_sanitize_value</span><span class="p">(</span><span class="n">reference_output</span><span class="p">[</span><span class="n">index</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Input:</span><span class="se">\n\t</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">row</span><span class="p">))</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Correct output:</span><span class="se">\n\t</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">ref_data</span><span class="p">))</span>
+
+        <span class="n">predicted</span> <span class="o">=</span> <span class="n">_sanitize_value</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">sanitized_row</span><span class="p">))</span>
+
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ref_data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">predicted</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
+
+        <span class="n">predicted_trimmed</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="n">predicted</span><span class="p">[</span><span class="n">k</span><span class="p">])</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">ref_data</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Predicted:</span><span class="se">\n\t</span><span class="s2">&quot;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">predicted_trimmed</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">_element_equal</span><span class="p">(</span><span class="n">predicted_trimmed</span><span class="p">,</span> <span class="n">ref_data</span><span class="p">):</span>
+            <span class="n">num_errors</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="n">ret</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;num_samples&quot;</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">input_data</span><span class="p">),</span> <span class="s2">&quot;num_errors&quot;</span><span class="p">:</span> <span class="n">num_errors</span><span class="p">}</span>
+
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;results: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ret</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">ret</span></div>
+
+
+<span class="k">def</span> <span class="nf">_has_custom_layer</span><span class="p">(</span><span class="n">spec</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Returns true if the given protobuf specification has a custom layer, and false otherwise.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    spec: mlmodel spec</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+
+<span class="sd">    True if the protobuf specification contains a neural network with a custom layer, False otherwise.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">layers</span> <span class="o">=</span> <span class="n">_get_nn_layers</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">layers</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">layer</span><span class="o">.</span><span class="n">WhichOneof</span><span class="p">(</span><span class="s2">&quot;layer&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;custom&quot;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="k">return</span> <span class="kc">False</span>
+
+
+<span class="k">def</span> <span class="nf">_get_custom_layer_names</span><span class="p">(</span><span class="n">spec</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Returns a list of className fields which appear in the given protobuf spec</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    spec: mlmodel spec</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+
+<span class="sd">    set(str) A set of unique className fields of custom layers that appear in the model.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">layers</span> <span class="o">=</span> <span class="n">_get_nn_layers</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
+    <span class="n">layers_out</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">layers</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">layer</span><span class="o">.</span><span class="n">WhichOneof</span><span class="p">(</span><span class="s2">&quot;layer&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;custom&quot;</span><span class="p">:</span>
+            <span class="n">layers_out</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">custom</span><span class="o">.</span><span class="n">className</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">layers_out</span>
+
+
+<span class="k">def</span> <span class="nf">_get_custom_layers</span><span class="p">(</span><span class="n">spec</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Returns a list of all neural network custom layers in the spec.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    spec: mlmodel spec</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+
+<span class="sd">    [NN layer] A list of custom layer implementations</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">layers</span> <span class="o">=</span> <span class="n">_get_nn_layers</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
+    <span class="n">layers_out</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">layers</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">layer</span><span class="o">.</span><span class="n">WhichOneof</span><span class="p">(</span><span class="s2">&quot;layer&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;custom&quot;</span><span class="p">:</span>
+            <span class="n">layers_out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">layers_out</span>
+
+
+<span class="k">def</span> <span class="nf">_replace_custom_layer_name</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">oldname</span><span class="p">,</span> <span class="n">newname</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+
+<span class="sd">    Substitutes newname for oldname in the className field of custom layers. If there are no custom layers, or no</span>
+<span class="sd">    layers with className=oldname, then the spec is unchanged.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    spec: mlmodel spec</span>
+
+<span class="sd">    oldname: str The custom layer className to be replaced.</span>
+
+<span class="sd">    newname: str The new className value to replace oldname</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+
+<span class="sd">    An mlmodel spec.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">layers</span> <span class="o">=</span> <span class="n">_get_custom_layers</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">layers</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">layer</span><span class="o">.</span><span class="n">custom</span><span class="o">.</span><span class="n">className</span> <span class="o">==</span> <span class="n">oldname</span><span class="p">:</span>
+            <span class="n">layer</span><span class="o">.</span><span class="n">custom</span><span class="o">.</span><span class="n">className</span> <span class="o">=</span> <span class="n">newname</span>
+
+
+<span class="k">def</span> <span class="nf">_is_macos</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Returns True if current platform is MacOS, False otherwise.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">_sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s2">&quot;darwin&quot;</span>
+
+
+<span class="k">def</span> <span class="nf">_macos_version</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns macOS version as a tuple of integers, making it easy to do proper</span>
+<span class="sd">    version comparisons. On non-Macs, it returns an empty tuple.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">_is_macos</span><span class="p">():</span>
+        <span class="kn">import</span> <span class="nn">platform</span>
+
+        <span class="n">ver_str</span> <span class="o">=</span> <span class="n">platform</span><span class="o">.</span><span class="n">mac_ver</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">([</span><span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">ver_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)])</span>
+
+    <span class="k">return</span> <span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">_python_version</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return python version as a tuple of integers</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">version</span> <span class="o">=</span> <span class="n">_sys</span><span class="o">.</span><span class="n">version</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">version</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">version</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">))))</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">version</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_get_feature</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">feature_name</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">input_feature</span> <span class="ow">in</span> <span class="n">spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">input</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">input_feature</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">feature_name</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">input_feature</span>
+
+    <span class="k">for</span> <span class="n">output_feature</span> <span class="ow">in</span> <span class="n">spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">output</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">output_feature</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">feature_name</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">output_feature</span>
+
+    <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Feature with name </span><span class="si">{}</span><span class="s2"> does not exist&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">feature_name</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">_get_input_names</span><span class="p">(</span><span class="n">spec</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns a list of the names of the inputs to this model.</span>
+<span class="sd">    :param spec: The model protobuf specification</span>
+<span class="sd">    :return: list of str A list of input feature names</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">retval</span> <span class="o">=</span> <span class="p">[</span><span class="n">feature</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">feature</span> <span class="ow">in</span> <span class="n">spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">input</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">retval</span>
+
+
+<div class="viewcode-block" id="convert_double_to_float_multiarray_type"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.utils.convert_double_to_float_multiarray_type">[docs]</a><span class="k">def</span> <span class="nf">convert_double_to_float_multiarray_type</span><span class="p">(</span><span class="n">spec</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert all double multiarrays feature descriptions (input, output, training input)</span>
+<span class="sd">    to float multiarrays</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    spec: Model_pb</span>
+<span class="sd">        The specification containing the multiarrays types to convert</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    .. sourcecode:: python</span>
+
+<span class="sd">        # In-place convert multiarray type of spec</span>
+<span class="sd">        &gt;&gt;&gt; spec = mlmodel.get_spec()</span>
+<span class="sd">        &gt;&gt;&gt; coremltools.utils.convert_double_to_float_multiarray_type(spec)</span>
+<span class="sd">        &gt;&gt;&gt; model = coremltools.models.MLModel(spec)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_convert_to_float</span><span class="p">(</span><span class="n">feature</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">feature</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">HasField</span><span class="p">(</span><span class="s2">&quot;multiArrayType&quot;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span>
+                <span class="n">feature</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">multiArrayType</span><span class="o">.</span><span class="n">dataType</span>
+                <span class="o">==</span> <span class="n">_Model_pb2</span><span class="o">.</span><span class="n">ArrayFeatureType</span><span class="o">.</span><span class="n">DOUBLE</span>
+            <span class="p">):</span>
+                <span class="n">feature</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">multiArrayType</span><span class="o">.</span><span class="n">dataType</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">_Model_pb2</span><span class="o">.</span><span class="n">ArrayFeatureType</span><span class="o">.</span><span class="n">FLOAT32</span>
+                <span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">feature</span> <span class="ow">in</span> <span class="n">spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">input</span><span class="p">:</span>
+        <span class="n">_convert_to_float</span><span class="p">(</span><span class="n">feature</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">feature</span> <span class="ow">in</span> <span class="n">spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">output</span><span class="p">:</span>
+        <span class="n">_convert_to_float</span><span class="p">(</span><span class="n">feature</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">feature</span> <span class="ow">in</span> <span class="n">spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">trainingInput</span><span class="p">:</span>
+        <span class="n">_convert_to_float</span><span class="p">(</span><span class="n">feature</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">spec</span><span class="o">.</span><span class="n">WhichOneof</span><span class="p">(</span><span class="s2">&quot;Type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;pipeline&quot;</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">model_spec</span> <span class="ow">in</span> <span class="n">spec</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">models</span><span class="p">:</span>
+            <span class="n">convert_double_to_float_multiarray_type</span><span class="p">(</span><span class="n">model_spec</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Apple Inc.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

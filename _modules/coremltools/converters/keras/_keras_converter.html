@@ -1,0 +1,1053 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>coremltools.converters.keras._keras_converter &mdash; coremltools API Reference  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/graphviz.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
+        <script src="../../../../_static/jquery.js"></script>
+        <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../index.html" class="icon icon-home"> coremltools API Reference
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">API Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.converters.html">Converters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.models.html">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Resources</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://coremltools.readme.io/docs">Guides and examples</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://mlmodel.readme.io/reference">Core ML Format Specification</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">coremltools API Reference</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>coremltools.converters.keras._keras_converter</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for coremltools.converters.keras._keras_converter</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) 2021, Apple Inc. All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># Use of this source code is governed by a BSD-3-clause license that can be</span>
+<span class="c1"># found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
+
+<span class="kn">from</span> <span class="nn">...models.neural_network</span> <span class="kn">import</span> <span class="n">NeuralNetworkBuilder</span> <span class="k">as</span> <span class="n">_NeuralNetworkBuilder</span>
+<span class="kn">from</span> <span class="nn">...proto</span> <span class="kn">import</span> <span class="n">FeatureTypes_pb2</span> <span class="k">as</span> <span class="n">_FeatureTypes_pb2</span>
+<span class="kn">from</span> <span class="nn">...models</span> <span class="kn">import</span> <span class="n">datatypes</span><span class="p">,</span> <span class="n">_METADATA_VERSION</span><span class="p">,</span> <span class="n">_METADATA_SOURCE</span>
+<span class="kn">from</span> <span class="nn">...models</span> <span class="kn">import</span> <span class="n">MLModel</span> <span class="k">as</span> <span class="n">_MLModel</span>
+<span class="kn">from</span> <span class="nn">...models</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_MLMODEL_FULL_PRECISION</span><span class="p">,</span>
+    <span class="n">_MLMODEL_HALF_PRECISION</span><span class="p">,</span>
+    <span class="n">_VALID_MLMODEL_PRECISION_TYPES</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">...models._deprecation</span> <span class="kn">import</span> <span class="n">deprecated</span> <span class="k">as</span> <span class="n">_deprecated</span>
+<span class="kn">from</span> <span class="nn">...models.utils</span> <span class="kn">import</span> <span class="n">_convert_neural_network_spec_weights_to_fp16</span>
+
+<span class="kn">from</span> <span class="nn">..._deps</span> <span class="kn">import</span> <span class="n">_HAS_KERAS_TF</span>
+<span class="kn">from</span> <span class="nn">..._deps</span> <span class="kn">import</span> <span class="n">_HAS_KERAS2_TF</span>
+<span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">__version__</span> <span class="k">as</span> <span class="n">ct_version</span>
+
+<span class="k">if</span> <span class="n">_HAS_KERAS_TF</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">keras</span> <span class="k">as</span> <span class="nn">_keras</span>
+    <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">_layers</span>
+    <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">_topology</span>
+
+    <span class="n">_KERAS_LAYER_REGISTRY</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">_keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">Dense</span><span class="p">:</span> <span class="n">_layers</span><span class="o">.</span><span class="n">convert_dense</span><span class="p">,</span>
+        <span class="n">_keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">Activation</span><span class="p">:</span> <span class="n">_layers</span><span class="o">.</span><span class="n">convert_activation</span><span class="p">,</span>
+        <span class="n">_keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">advanced_activations</span><span class="o">.</span><span class="n">LeakyReLU</span><span class="p">:</span> <span class="n">_layers</span><span class="o">.</span><span class="n">convert_activation</span><span class="p">,</span>
+        <span class="n">_keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">advanced_activations</span><span class="o">.</span><span class="n">PReLU</span><span class="p">:</span> <span class="n">_layers</span><span class="o">.</span><span class="n">convert_activation</span><span class="p">,</span>
+        <span class="n">_keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">advanced_activations</span><span class="o">.</span><span class="n">ELU</span><span class="p">:</span> <span class="n">_layers</span><span class="o">.</span><span class="n">convert_activation</span><span class="p">,</span>
+        <span class="n">_keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">advanced_activations</span><span class="o">.</span><span class="n">ParametricSoftplus</span><span class="p">:</span> <span class="n">_layers</span><span class="o">.</span><span class="n">convert_activation</span><span class="p">,</span>
+        <span class="n">_keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">advanced_activations</span><span class="o">.</span><span class="n">ThresholdedReLU</span><span class="p">:</span> <span class="n">_layers</span><span class="o">.</span><span class="n">convert_activation</span><span class="p">,</span>
+        <span class="n">_keras</span><span class="o">.</span><span class="n">activations</span><span class="o">.</span><span class="n">softmax</span><span class="p">:</span> <span class="n">_layers</span><span class="o">.</span><span class="n">convert_activation</span><span class="p">,</span>
+        <span class="n">_keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">convolutional</span><span class="o">.</span><span class="n">Convolution2D</span><span class="p">:</span> <span class="n">_layers</span><span class="o">.</span><span class="n">convert_convolution</span><span class="p">,</span>
+        <span class="n">_keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">convolutional</span><span class="o">.</span><span class="n">Deconvolution2D</span><span class="p">:</span> <span class="n">_layers</span><span class="o">.</span><span class="n">convert_convolution</span><span class="p">,</span>
+        <span class="n">_keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">convolutional</span><span class="o">.</span><span class="n">AtrousConvolution2D</span><span class="p">:</span> <span class="n">_layers</span><span class="o">.</span><span class="n">convert_convolution</span><span class="p">,</span>
+        <span class="n">_keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">convolutional</span><span class="o">.</span><span class="n">AveragePooling2D</span><span class="p">:</span> <span class="n">_layers</span><span class="o">.</span><span class="n">convert_pooling</span><span class="p">,</span>
+        <span class="n">_keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">convolutional</span><span class="o">.</span><span class="n">MaxPooling2D</span><span class="p">:</span> <span class="n">_layers</span><span class="o">.</span><span class="n">convert_pooling</span><span class="p">,</span>
+        <span class="n">_keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">pooling</span><span class="o">.</span><span class="n">GlobalAveragePooling2D</span><span class="p">:</span> <span class="n">_layers</span><span class="o">.</span><span class="n">convert_pooling</span><span class="p">,</span>
+        <span class="n">_keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">pooling</span><span class="o">.</span><span class="n">GlobalMaxPooling2D</span><span class="p">:</span> <span class="n">_layers</span><span class="o">.</span><span class="n">convert_pooling</span><span class="p">,</span>
+        <span class="n">_keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">convolutional</span><span class="o">.</span><span class="n">ZeroPadding2D</span><span class="p">:</span> <span class="n">_layers</span><span class="o">.</span><span class="n">convert_padding</span><span class="p">,</span>
+        <span class="n">_keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">convolutional</span><span class="o">.</span><span class="n">Cropping2D</span><span class="p">:</span> <span class="n">_layers</span><span class="o">.</span><span class="n">convert_cropping</span><span class="p">,</span>
+        <span class="n">_keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">convolutional</span><span class="o">.</span><span class="n">UpSampling2D</span><span class="p">:</span> <span class="n">_layers</span><span class="o">.</span><span class="n">convert_upsample</span><span class="p">,</span>
+        <span class="n">_keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">convolutional</span><span class="o">.</span><span class="n">Convolution1D</span><span class="p">:</span> <span class="n">_layers</span><span class="o">.</span><span class="n">convert_convolution1d</span><span class="p">,</span>
+        <span class="n">_keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">convolutional</span><span class="o">.</span><span class="n">AtrousConvolution1D</span><span class="p">:</span> <span class="n">_layers</span><span class="o">.</span><span class="n">convert_convolution1d</span><span class="p">,</span>
+        <span class="n">_keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">convolutional</span><span class="o">.</span><span class="n">AveragePooling1D</span><span class="p">:</span> <span class="n">_layers</span><span class="o">.</span><span class="n">convert_pooling</span><span class="p">,</span>
+        <span class="n">_keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">convolutional</span><span class="o">.</span><span class="n">MaxPooling1D</span><span class="p">:</span> <span class="n">_layers</span><span class="o">.</span><span class="n">convert_pooling</span><span class="p">,</span>
+        <span class="n">_keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">pooling</span><span class="o">.</span><span class="n">GlobalAveragePooling1D</span><span class="p">:</span> <span class="n">_layers</span><span class="o">.</span><span class="n">convert_pooling</span><span class="p">,</span>
+        <span class="n">_keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">pooling</span><span class="o">.</span><span class="n">GlobalMaxPooling1D</span><span class="p">:</span> <span class="n">_layers</span><span class="o">.</span><span class="n">convert_pooling</span><span class="p">,</span>
+        <span class="n">_keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">convolutional</span><span class="o">.</span><span class="n">ZeroPadding1D</span><span class="p">:</span> <span class="n">_layers</span><span class="o">.</span><span class="n">convert_padding</span><span class="p">,</span>
+        <span class="n">_keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">convolutional</span><span class="o">.</span><span class="n">Cropping1D</span><span class="p">:</span> <span class="n">_layers</span><span class="o">.</span><span class="n">convert_cropping</span><span class="p">,</span>
+        <span class="n">_keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">convolutional</span><span class="o">.</span><span class="n">UpSampling1D</span><span class="p">:</span> <span class="n">_layers</span><span class="o">.</span><span class="n">convert_upsample</span><span class="p">,</span>
+        <span class="n">_keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">recurrent</span><span class="o">.</span><span class="n">LSTM</span><span class="p">:</span> <span class="n">_layers</span><span class="o">.</span><span class="n">convert_lstm</span><span class="p">,</span>
+        <span class="n">_keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">recurrent</span><span class="o">.</span><span class="n">SimpleRNN</span><span class="p">:</span> <span class="n">_layers</span><span class="o">.</span><span class="n">convert_simple_rnn</span><span class="p">,</span>
+        <span class="n">_keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">recurrent</span><span class="o">.</span><span class="n">GRU</span><span class="p">:</span> <span class="n">_layers</span><span class="o">.</span><span class="n">convert_gru</span><span class="p">,</span>
+        <span class="n">_keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">wrappers</span><span class="o">.</span><span class="n">Bidirectional</span><span class="p">:</span> <span class="n">_layers</span><span class="o">.</span><span class="n">convert_bidirectional</span><span class="p">,</span>
+        <span class="n">_keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">normalization</span><span class="o">.</span><span class="n">BatchNormalization</span><span class="p">:</span> <span class="n">_layers</span><span class="o">.</span><span class="n">convert_batchnorm</span><span class="p">,</span>
+        <span class="n">_keras</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">topology</span><span class="o">.</span><span class="n">Merge</span><span class="p">:</span> <span class="n">_layers</span><span class="o">.</span><span class="n">convert_merge</span><span class="p">,</span>
+        <span class="n">_keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">Flatten</span><span class="p">:</span> <span class="n">_layers</span><span class="o">.</span><span class="n">convert_flatten</span><span class="p">,</span>
+        <span class="n">_keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">Permute</span><span class="p">:</span> <span class="n">_layers</span><span class="o">.</span><span class="n">convert_permute</span><span class="p">,</span>
+        <span class="n">_keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">Reshape</span><span class="p">:</span> <span class="n">_layers</span><span class="o">.</span><span class="n">convert_reshape</span><span class="p">,</span>
+        <span class="n">_keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">embeddings</span><span class="o">.</span><span class="n">Embedding</span><span class="p">:</span> <span class="n">_layers</span><span class="o">.</span><span class="n">convert_embedding</span><span class="p">,</span>
+        <span class="n">_keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">RepeatVector</span><span class="p">:</span> <span class="n">_layers</span><span class="o">.</span><span class="n">convert_repeat_vector</span><span class="p">,</span>
+        <span class="c1">## All the layers that can be skipped (merged with conv)</span>
+        <span class="n">_keras</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">topology</span><span class="o">.</span><span class="n">InputLayer</span><span class="p">:</span> <span class="n">_layers</span><span class="o">.</span><span class="n">default_skip</span><span class="p">,</span>
+        <span class="n">_keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">Dropout</span><span class="p">:</span> <span class="n">_layers</span><span class="o">.</span><span class="n">default_skip</span><span class="p">,</span>
+        <span class="n">_keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">wrappers</span><span class="o">.</span><span class="n">TimeDistributed</span><span class="p">:</span> <span class="n">_layers</span><span class="o">.</span><span class="n">default_skip</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="n">_KERAS_SKIP_LAYERS</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">_keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">Dropout</span><span class="p">,</span>
+    <span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">_check_unsupported_layers</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">layer</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">layers</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">_keras</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Sequential</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span>
+            <span class="n">layer</span><span class="p">,</span> <span class="n">_keras</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span>
+        <span class="p">):</span>
+            <span class="n">_check_unsupported_layers</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_KERAS_LAYER_REGISTRY</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Keras layer &#39;</span><span class="si">%s</span><span class="s2">&#39; not supported. &quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">layer</span><span class="p">)))</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">_keras</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">topology</span><span class="o">.</span><span class="n">Merge</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">layer</span><span class="o">.</span><span class="n">layers</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="k">for</span> <span class="n">merge_layer</span> <span class="ow">in</span> <span class="n">layer</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">merge_layer</span><span class="p">,</span> <span class="n">_keras</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Sequential</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span>
+                        <span class="n">merge_layer</span><span class="p">,</span> <span class="n">_keras</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Model</span>
+                    <span class="p">):</span>
+                        <span class="n">_check_unsupported_layers</span><span class="p">(</span><span class="n">merge_layer</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">_keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">wrappers</span><span class="o">.</span><span class="n">TimeDistributed</span><span class="p">):</span>
+                <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">layer</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_KERAS_LAYER_REGISTRY</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="s2">&quot;Keras layer &#39;</span><span class="si">%s</span><span class="s2">&#39; not supported. &quot;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">layer</span><span class="p">))</span>
+                    <span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">_keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">wrappers</span><span class="o">.</span><span class="n">Bidirectional</span><span class="p">):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">layer</span><span class="p">,</span> <span class="n">_keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">recurrent</span><span class="o">.</span><span class="n">LSTM</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                        <span class="s2">&quot;Keras bi-directional wrapper conversion supports only &quot;</span>
+                        <span class="s2">&quot;LSTM layer at this time. &quot;</span>
+                    <span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_get_layer_converter_fn</span><span class="p">(</span><span class="n">layer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Get the right converter function for Keras</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">layer_type</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">layer_type</span> <span class="ow">in</span> <span class="n">_KERAS_LAYER_REGISTRY</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_KERAS_LAYER_REGISTRY</span><span class="p">[</span><span class="n">layer_type</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Keras layer of type </span><span class="si">%s</span><span class="s2"> is not supported.&quot;</span> <span class="o">%</span> <span class="nb">type</span><span class="p">(</span><span class="n">layer</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">_load_keras_model</span><span class="p">(</span><span class="n">model_network_path</span><span class="p">,</span> <span class="n">model_weight_path</span><span class="p">,</span> <span class="n">custom_objects</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Load a keras model from disk</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    model_network_path: str</span>
+<span class="sd">        Path where the model network path is (json file)</span>
+
+<span class="sd">    model_weight_path: str</span>
+<span class="sd">        Path where the model network weights are (hd5 file)</span>
+
+<span class="sd">    custom_objects:</span>
+<span class="sd">        A dictionary of layers or other custom classes</span>
+<span class="sd">        or functions used by the model</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    model: A keras model</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">keras.models</span> <span class="kn">import</span> <span class="n">model_from_json</span>
+    <span class="kn">import</span> <span class="nn">json</span>
+
+    <span class="c1"># Load the model network</span>
+    <span class="n">json_file</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">model_network_path</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span>
+    <span class="n">json_string</span> <span class="o">=</span> <span class="n">json_file</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+    <span class="n">json_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="n">loaded_model_json</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">json_string</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">custom_objects</span><span class="p">:</span>
+        <span class="n">custom_objects</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="c1"># Load the model weights</span>
+    <span class="n">loaded_model</span> <span class="o">=</span> <span class="n">model_from_json</span><span class="p">(</span><span class="n">loaded_model_json</span><span class="p">,</span> <span class="n">custom_objects</span><span class="o">=</span><span class="n">custom_objects</span><span class="p">)</span>
+    <span class="n">loaded_model</span><span class="o">.</span><span class="n">load_weights</span><span class="p">(</span><span class="n">model_weight_path</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">loaded_model</span>
+
+
+<span class="k">def</span> <span class="nf">_convert</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">,</span>
+    <span class="n">input_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">output_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">image_input_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">is_bgr</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">red_bias</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+    <span class="n">green_bias</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+    <span class="n">blue_bias</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+    <span class="n">gray_bias</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+    <span class="n">image_scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">class_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">predicted_feature_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">predicted_probabilities_output</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+    <span class="n">custom_objects</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">respect_trainable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">_HAS_KERAS_TF</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+            <span class="s2">&quot;keras not found or unsupported version or backend &quot;</span>
+            <span class="s2">&quot;found. keras conversion API is disabled.&quot;</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">_keras</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">load_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">custom_objects</span><span class="o">=</span><span class="n">custom_objects</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+        <span class="n">model</span> <span class="o">=</span> <span class="n">_load_keras_model</span><span class="p">(</span><span class="n">model</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">model</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">custom_objects</span><span class="o">=</span><span class="n">custom_objects</span><span class="p">)</span>
+
+    <span class="c1"># Check valid versions</span>
+    <span class="n">_check_unsupported_layers</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+
+    <span class="c1"># Build network graph to represent Keras model</span>
+    <span class="n">graph</span> <span class="o">=</span> <span class="n">_topology</span><span class="o">.</span><span class="n">NetGraph</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
+    <span class="n">graph</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+    <span class="n">graph</span><span class="o">.</span><span class="n">remove_skip_layers</span><span class="p">(</span><span class="n">_KERAS_SKIP_LAYERS</span><span class="p">)</span>
+    <span class="n">graph</span><span class="o">.</span><span class="n">insert_1d_permute_layers</span><span class="p">()</span>
+    <span class="n">graph</span><span class="o">.</span><span class="n">insert_permute_for_spatial_bn</span><span class="p">()</span>
+    <span class="n">graph</span><span class="o">.</span><span class="n">defuse_activation</span><span class="p">()</span>
+    <span class="n">graph</span><span class="o">.</span><span class="n">remove_internal_input_layers</span><span class="p">()</span>
+    <span class="n">graph</span><span class="o">.</span><span class="n">make_output_layers</span><span class="p">()</span>
+
+    <span class="c1"># The graph should be finalized before executing this</span>
+    <span class="n">graph</span><span class="o">.</span><span class="n">generate_blob_names</span><span class="p">()</span>
+    <span class="n">graph</span><span class="o">.</span><span class="n">add_recurrent_optionals</span><span class="p">()</span>
+
+    <span class="n">inputs</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">get_input_layers</span><span class="p">()</span>
+    <span class="n">outputs</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">get_output_layers</span><span class="p">()</span>
+
+    <span class="c1"># check input / output names validity</span>
+    <span class="k">if</span> <span class="n">input_names</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">input_names</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">input_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">input_names</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">input_names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;input&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">))]</span>
+    <span class="k">if</span> <span class="n">output_names</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">output_names</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">output_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">output_names</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">output_names</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;output&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">outputs</span><span class="p">))]</span>
+
+    <span class="k">if</span> <span class="n">image_input_names</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">image_input_names</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">image_input_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">image_input_names</span><span class="p">]</span>
+
+    <span class="n">graph</span><span class="o">.</span><span class="n">reset_model_input_names</span><span class="p">(</span><span class="n">input_names</span><span class="p">)</span>
+    <span class="n">graph</span><span class="o">.</span><span class="n">reset_model_output_names</span><span class="p">(</span><span class="n">output_names</span><span class="p">)</span>
+
+    <span class="c1"># Keras -&gt; Core ML input dimension dictionary</span>
+    <span class="c1"># (None, None) -&gt; [1, 1, 1, 1, 1]</span>
+    <span class="c1"># (None, D) -&gt; [D] or [D, 1, 1, 1, 1]</span>
+    <span class="c1"># (None, Seq, D) -&gt; [Seq, 1, D, 1, 1]</span>
+    <span class="c1"># (None, H, W, C) -&gt; [C, H, W]</span>
+    <span class="c1"># (D) -&gt; [D]</span>
+    <span class="c1"># (Seq, D) -&gt; [Seq, 1, 1, D, 1]</span>
+    <span class="c1"># (Batch, Sequence, D) -&gt; [D]</span>
+
+    <span class="c1"># Retrieve input shapes from model</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">input_shape</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">list</span><span class="p">:</span>
+        <span class="n">input_dims</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">x</span><span class="p">))</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">input_shape</span><span class="p">]</span>
+        <span class="n">unfiltered_shapes</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">input_shape</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">input_dims</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">input_shape</span><span class="p">))]</span>
+        <span class="n">unfiltered_shapes</span> <span class="o">=</span> <span class="p">[</span><span class="n">model</span><span class="o">.</span><span class="n">input_shape</span><span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">dim</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">input_dims</span><span class="p">):</span>
+        <span class="n">unfiltered_shape</span> <span class="o">=</span> <span class="n">unfiltered_shapes</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># Used to be [None, None] before filtering; indicating unknown</span>
+            <span class="c1"># sequence length</span>
+            <span class="n">input_dims</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">([</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">get_successors</span><span class="p">(</span><span class="n">inputs</span><span class="p">[</span><span class="n">idx</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">get_keras_layer</span><span class="p">(</span><span class="n">s</span><span class="p">),</span> <span class="n">_keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">embeddings</span><span class="o">.</span><span class="n">Embedding</span><span class="p">):</span>
+                <span class="c1"># Embedding layer&#39;s special input (None, D) where D is actually</span>
+                <span class="c1"># sequence length</span>
+                <span class="n">input_dims</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">input_dims</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">dim</span>  <span class="c1"># dim is just a number</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>  <span class="c1"># [Seq, D]</span>
+            <span class="n">input_dims</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">dim</span><span class="p">[</span><span class="mi">1</span><span class="p">],)</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>  <span class="c1"># H,W,C</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">unfiltered_shape</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">3</span><span class="p">:</span>
+                <span class="c1"># keras uses the reverse notation from us</span>
+                <span class="n">input_dims</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">dim</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">dim</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dim</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>  <span class="c1"># keras provided fixed batch and sequence length, so the input</span>
+                <span class="c1"># was (batch, sequence, channel)</span>
+                <span class="n">input_dims</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">dim</span><span class="p">[</span><span class="mi">2</span><span class="p">],)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Input&quot;</span> <span class="o">+</span> <span class="n">input_names</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;has input shape of length&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">dim</span><span class="p">))</span>
+            <span class="p">)</span>
+
+    <span class="c1"># Retrieve output shapes from model</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">output_shape</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">list</span><span class="p">:</span>
+        <span class="n">output_dims</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">x</span><span class="p">))</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">model</span><span class="o">.</span><span class="n">output_shape</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">output_dims</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">model</span><span class="o">.</span><span class="n">output_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]))]</span>
+
+    <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">dim</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">output_dims</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">output_dims</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">dim</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>  <span class="c1"># [Seq, D]</span>
+            <span class="n">output_dims</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">dim</span><span class="p">[</span><span class="mi">1</span><span class="p">],)</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">output_dims</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">dim</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">dim</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">dim</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="n">input_types</span> <span class="o">=</span> <span class="p">[</span><span class="n">datatypes</span><span class="o">.</span><span class="n">Array</span><span class="p">(</span><span class="o">*</span><span class="n">dim</span><span class="p">)</span> <span class="k">for</span> <span class="n">dim</span> <span class="ow">in</span> <span class="n">input_dims</span><span class="p">]</span>
+    <span class="n">output_types</span> <span class="o">=</span> <span class="p">[</span><span class="n">datatypes</span><span class="o">.</span><span class="n">Array</span><span class="p">(</span><span class="o">*</span><span class="n">dim</span><span class="p">)</span> <span class="k">for</span> <span class="n">dim</span> <span class="ow">in</span> <span class="n">output_dims</span><span class="p">]</span>
+
+    <span class="c1"># Some of the feature handling is sensitive about string vs. unicode</span>
+    <span class="n">input_names</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">input_names</span><span class="p">)</span>
+    <span class="n">output_names</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="n">output_names</span><span class="p">)</span>
+    <span class="n">is_classifier</span> <span class="o">=</span> <span class="n">class_labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">is_classifier</span><span class="p">:</span>
+        <span class="n">mode</span> <span class="o">=</span> <span class="s2">&quot;classifier&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">mode</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># assuming these match</span>
+    <span class="n">input_features</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">input_names</span><span class="p">,</span> <span class="n">input_types</span><span class="p">))</span>
+    <span class="n">output_features</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">output_names</span><span class="p">,</span> <span class="n">output_types</span><span class="p">))</span>
+
+    <span class="n">builder</span> <span class="o">=</span> <span class="n">_NeuralNetworkBuilder</span><span class="p">(</span><span class="n">input_features</span><span class="p">,</span> <span class="n">output_features</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="nb">iter</span><span class="p">,</span> <span class="n">layer</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">layer_list</span><span class="p">):</span>
+        <span class="n">keras_layer</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">keras_layer_map</span><span class="p">[</span><span class="n">layer</span><span class="p">]</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">%d</span><span class="s2"> : </span><span class="si">%s</span><span class="s2">, </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">iter</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">keras_layer</span><span class="p">))</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">keras_layer</span><span class="p">,</span> <span class="n">_keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">wrappers</span><span class="o">.</span><span class="n">TimeDistributed</span><span class="p">):</span>
+            <span class="n">keras_layer</span> <span class="o">=</span> <span class="n">keras_layer</span><span class="o">.</span><span class="n">layer</span>
+        <span class="n">converter_func</span> <span class="o">=</span> <span class="n">_get_layer_converter_fn</span><span class="p">(</span><span class="n">keras_layer</span><span class="p">)</span>
+        <span class="n">input_names</span><span class="p">,</span> <span class="n">output_names</span> <span class="o">=</span> <span class="n">graph</span><span class="o">.</span><span class="n">get_layer_blobs</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
+        <span class="n">converter_func</span><span class="p">(</span><span class="n">builder</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">input_names</span><span class="p">,</span> <span class="n">output_names</span><span class="p">,</span> <span class="n">keras_layer</span><span class="p">)</span>
+
+    <span class="c1"># Set the right inputs and outputs on the model description (interface)</span>
+    <span class="n">builder</span><span class="o">.</span><span class="n">set_input</span><span class="p">(</span><span class="n">input_names</span><span class="p">,</span> <span class="n">input_dims</span><span class="p">)</span>
+    <span class="n">builder</span><span class="o">.</span><span class="n">set_output</span><span class="p">(</span><span class="n">output_names</span><span class="p">,</span> <span class="n">output_dims</span><span class="p">)</span>
+
+    <span class="c1"># Since we aren&#39;t mangling anything the user gave us, we only need to update</span>
+    <span class="c1"># the model interface here</span>
+    <span class="n">builder</span><span class="o">.</span><span class="n">add_optionals</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">optional_inputs</span><span class="p">,</span> <span class="n">graph</span><span class="o">.</span><span class="n">optional_outputs</span><span class="p">)</span>
+
+    <span class="c1"># Add classifier classes (if applicable)</span>
+    <span class="k">if</span> <span class="n">is_classifier</span><span class="p">:</span>
+        <span class="n">classes_in</span> <span class="o">=</span> <span class="n">class_labels</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">classes_in</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="kn">import</span> <span class="nn">os</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">classes_in</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;Path to class labels (</span><span class="si">%s</span><span class="s2">) does not exist.&quot;</span> <span class="o">%</span> <span class="n">classes_in</span>
+                <span class="p">)</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">classes_in</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">classes</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+            <span class="n">classes</span> <span class="o">=</span> <span class="n">classes</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">classes_in</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">list</span><span class="p">:</span>  <span class="c1"># list[int or str]</span>
+            <span class="n">classes</span> <span class="o">=</span> <span class="n">classes_in</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Class labels must be a list of integers / strings, or a file path&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">predicted_feature_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">builder</span><span class="o">.</span><span class="n">set_class_labels</span><span class="p">(</span>
+                <span class="n">classes</span><span class="p">,</span>
+                <span class="n">predicted_feature_name</span><span class="o">=</span><span class="n">predicted_feature_name</span><span class="p">,</span>
+                <span class="n">prediction_blob</span><span class="o">=</span><span class="n">predicted_probabilities_output</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">builder</span><span class="o">.</span><span class="n">set_class_labels</span><span class="p">(</span><span class="n">classes</span><span class="p">)</span>
+
+    <span class="c1"># Set pre-processing paramsters</span>
+    <span class="n">builder</span><span class="o">.</span><span class="n">set_pre_processing_parameters</span><span class="p">(</span>
+        <span class="n">image_input_names</span><span class="o">=</span><span class="n">image_input_names</span><span class="p">,</span>
+        <span class="n">is_bgr</span><span class="o">=</span><span class="n">is_bgr</span><span class="p">,</span>
+        <span class="n">red_bias</span><span class="o">=</span><span class="n">red_bias</span><span class="p">,</span>
+        <span class="n">green_bias</span><span class="o">=</span><span class="n">green_bias</span><span class="p">,</span>
+        <span class="n">blue_bias</span><span class="o">=</span><span class="n">blue_bias</span><span class="p">,</span>
+        <span class="n">gray_bias</span><span class="o">=</span><span class="n">gray_bias</span><span class="p">,</span>
+        <span class="n">image_scale</span><span class="o">=</span><span class="n">image_scale</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Return the protobuf spec</span>
+    <span class="n">spec</span> <span class="o">=</span> <span class="n">builder</span><span class="o">.</span><span class="n">spec</span>
+    <span class="k">return</span> <span class="n">spec</span>
+
+
+<span class="k">def</span> <span class="nf">_convert_to_spec</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">,</span>
+    <span class="n">input_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">output_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">image_input_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">input_name_shape_dict</span><span class="o">=</span><span class="p">{},</span>
+    <span class="n">is_bgr</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">red_bias</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+    <span class="n">green_bias</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+    <span class="n">blue_bias</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+    <span class="n">gray_bias</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+    <span class="n">image_scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">class_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">predicted_feature_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">model_precision</span><span class="o">=</span><span class="n">_MLMODEL_FULL_PRECISION</span><span class="p">,</span>
+    <span class="n">predicted_probabilities_output</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+    <span class="n">add_custom_layers</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">custom_conversion_functions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">custom_objects</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">input_shapes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">output_shapes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">respect_trainable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">use_float_arraytype</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convert a Keras model to Core ML protobuf specification (.mlmodel).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    model: Keras model object | str | (str, str)</span>
+<span class="sd">        A trained Keras neural network model which can be one of the following:</span>
+
+<span class="sd">        - a Keras model object</span>
+<span class="sd">        - a string with the path to a Keras model file (h5)</span>
+<span class="sd">        - a tuple of strings, where the first is the path to a Keras model</span>
+
+<span class="sd">          architecture (.json file), the second is the path to its weights</span>
+<span class="sd">          stored in h5 file.</span>
+
+<span class="sd">    input_names: [str] | str</span>
+<span class="sd">        Optional name(s) that can be given to the inputs of the Keras model.</span>
+<span class="sd">        These names will be used in the interface of the Core ML models to refer</span>
+<span class="sd">        to the inputs of the Keras model. If not provided, the Keras inputs</span>
+<span class="sd">        are named to [input1, input2, ..., inputN] in the Core ML model.  When</span>
+<span class="sd">        multiple inputs are present, the input feature names are in the same</span>
+<span class="sd">        order as the Keras inputs.</span>
+
+<span class="sd">    output_names: [str] | str</span>
+<span class="sd">        Optional name(s) that can be given to the outputs of the Keras model.</span>
+<span class="sd">        These names will be used in the interface of the Core ML models to refer</span>
+<span class="sd">        to the outputs of the Keras model. If not provided, the Keras outputs</span>
+<span class="sd">        are named to [output1, output2, ..., outputN] in the Core ML model.</span>
+<span class="sd">        When multiple outputs are present, output feature names are in the same</span>
+<span class="sd">        order as the Keras inputs.</span>
+
+<span class="sd">    image_input_names: [str] | str</span>
+<span class="sd">        Input names to the Keras model (a subset of the input_names</span>
+<span class="sd">        parameter) that can be treated as images by Core ML. All other inputs</span>
+<span class="sd">        are treated as MultiArrays (N-D Arrays).</span>
+
+<span class="sd">    input_name_shape_dict: {str: [int]}</span>
+<span class="sd">        Optional Dictionary of input tensor names and their corresponding shapes expressed</span>
+<span class="sd">        as a list of ints</span>
+
+<span class="sd">    is_bgr: bool | dict()</span>
+<span class="sd">        Flag indicating the channel order the model internally uses to represent</span>
+<span class="sd">        color images. Set to True if the internal channel order is BGR,</span>
+<span class="sd">        otherwise it will be assumed RGB. This flag is applicable only if</span>
+<span class="sd">        image_input_names is specified. To specify a different value for each</span>
+<span class="sd">        image input, provide a dictionary with input names as keys.</span>
+<span class="sd">        Note that this flag is about the models internal channel order.</span>
+<span class="sd">        An input image can be passed to the model in any color pixel layout</span>
+<span class="sd">        containing red, green and blue values (e.g. 32BGRA or 32ARGB). This flag</span>
+<span class="sd">        determines how those pixel values get mapped to the internal multiarray</span>
+<span class="sd">        representation.</span>
+
+<span class="sd">    red_bias: float | dict()</span>
+<span class="sd">        Bias value to be added to the red channel of the input image.</span>
+<span class="sd">        Defaults to 0.0</span>
+<span class="sd">        Applicable only if image_input_names is specified.</span>
+<span class="sd">        To specify different values for each image input provide a dictionary with input names as keys.</span>
+
+<span class="sd">    blue_bias: float | dict()</span>
+<span class="sd">        Bias value to be added to the blue channel of the input image.</span>
+<span class="sd">        Defaults to 0.0</span>
+<span class="sd">        Applicable only if image_input_names is specified.</span>
+<span class="sd">        To specify different values for each image input provide a dictionary with input names as keys.</span>
+
+<span class="sd">    green_bias: float | dict()</span>
+<span class="sd">        Bias value to be added to the green channel of the input image.</span>
+<span class="sd">        Defaults to 0.0</span>
+<span class="sd">        Applicable only if image_input_names is specified.</span>
+<span class="sd">        To specify different values for each image input provide a dictionary with input names as keys.</span>
+
+<span class="sd">    gray_bias: float | dict()</span>
+<span class="sd">        Bias value to be added to the input image (in grayscale). Defaults</span>
+<span class="sd">        to 0.0</span>
+<span class="sd">        Applicable only if image_input_names is specified.</span>
+<span class="sd">        To specify different values for each image input provide a dictionary with input names as keys.</span>
+
+<span class="sd">    image_scale: float | dict()</span>
+<span class="sd">        Value by which input images will be scaled before bias is added and</span>
+<span class="sd">        Core ML model makes a prediction. Defaults to 1.0.</span>
+<span class="sd">        Applicable only if image_input_names is specified.</span>
+<span class="sd">        To specify different values for each image input provide a dictionary with input names as keys.</span>
+
+<span class="sd">    class_labels: list[int or str] | str</span>
+<span class="sd">        Class labels (applies to classifiers only) that map the index of the</span>
+<span class="sd">        output of a neural network to labels in a classifier.</span>
+
+<span class="sd">        If the provided class_labels is a string, it is assumed to be a</span>
+<span class="sd">        filepath where classes are parsed as a list of newline separated</span>
+<span class="sd">        strings.</span>
+
+<span class="sd">    predicted_feature_name: str</span>
+<span class="sd">        Name of the output feature for the class labels exposed in the Core ML</span>
+<span class="sd">        model (applies to classifiers only). Defaults to &#39;classLabel&#39;</span>
+
+<span class="sd">    model_precision: str</span>
+<span class="sd">        Precision at which model will be saved. Currently full precision (float) and half precision</span>
+<span class="sd">        (float16) models are supported. Defaults to &#39;_MLMODEL_FULL_PRECISION&#39; (full precision).</span>
+
+<span class="sd">    predicted_probabilities_output: str</span>
+<span class="sd">        Name of the neural network output to be interpreted as the predicted</span>
+<span class="sd">        probabilities of the resulting classes. Typically the output of a</span>
+<span class="sd">        softmax function. Defaults to the first output blob.</span>
+
+<span class="sd">    add_custom_layers: bool</span>
+<span class="sd">        If True, then unknown Keras layer types will be added to the model as</span>
+<span class="sd">        &#39;custom&#39; layers, which must then be filled in as postprocessing.</span>
+
+<span class="sd">    custom_conversion_functions: {&#39;str&#39;: (Layer -&gt; CustomLayerParams)}</span>
+<span class="sd">        A dictionary with keys corresponding to names of custom layers and values</span>
+<span class="sd">        as functions taking a Keras custom layer and returning a parameter dictionary</span>
+<span class="sd">        and list of weights.</span>
+
+<span class="sd">    custom_objects: {&#39;str&#39;: (function)}</span>
+<span class="sd">        Dictionary that includes a key, value pair of {&#39;&lt;function name&gt;&#39;: &lt;function&gt;}</span>
+<span class="sd">        for custom objects such as custom loss in the Keras model.</span>
+<span class="sd">        Provide a string of the name of the custom function as a key.</span>
+<span class="sd">        Provide a function as a value.</span>
+
+<span class="sd">    respect_trainable: bool</span>
+<span class="sd">        If True, then Keras layers that are marked &#39;trainable&#39; will</span>
+<span class="sd">        automatically be marked updatable in the Core ML model.</span>
+
+<span class="sd">    use_float_arraytype: bool</span>
+<span class="sd">        If true, the datatype of input/output multiarrays is set to Float32 instead</span>
+<span class="sd">        of double.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    model: MLModel</span>
+<span class="sd">        Model in Core ML format.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    .. sourcecode:: python</span>
+
+<span class="sd">        # Make a Keras model</span>
+<span class="sd">        &gt;&gt;&gt; model = Sequential()</span>
+<span class="sd">        &gt;&gt;&gt; model.add(Dense(num_channels, input_dim = input_dim))</span>
+
+<span class="sd">        # Convert it with default input and output names</span>
+<span class="sd">        &gt;&gt;&gt; import coremltools</span>
+<span class="sd">        &gt;&gt;&gt; coreml_model = coremltools.converters.keras.convert(model)</span>
+
+<span class="sd">        # Saving the Core ML model to a file.</span>
+<span class="sd">        &gt;&gt;&gt; coreml_model.save(&#39;my_model.mlmodel&#39;)</span>
+
+<span class="sd">    Converting a model with a single image input.</span>
+
+<span class="sd">    .. sourcecode:: python</span>
+
+<span class="sd">        &gt;&gt;&gt; coreml_model = coremltools.converters.keras.convert(model, input_names =</span>
+<span class="sd">        ... &#39;image&#39;, image_input_names = &#39;image&#39;)</span>
+
+<span class="sd">    Core ML also lets you add class labels to models to expose them as</span>
+<span class="sd">    classifiers.</span>
+
+<span class="sd">    .. sourcecode:: python</span>
+
+<span class="sd">        &gt;&gt;&gt; coreml_model = coremltools.converters.keras.convert(model, input_names = &#39;image&#39;,</span>
+<span class="sd">        ... image_input_names = &#39;image&#39;, class_labels = [&#39;cat&#39;, &#39;dog&#39;, &#39;rat&#39;])</span>
+
+<span class="sd">    Class labels for classifiers can also come from a file on disk.</span>
+
+<span class="sd">    .. sourcecode:: python</span>
+
+<span class="sd">        &gt;&gt;&gt; coreml_model = coremltools.converters.keras.convert(model, input_names =</span>
+<span class="sd">        ... &#39;image&#39;, image_input_names = &#39;image&#39;, class_labels = &#39;labels.txt&#39;)</span>
+
+<span class="sd">    Provide customized input and output names to the Keras inputs and outputs</span>
+<span class="sd">    while exposing them to Core ML.</span>
+
+<span class="sd">    .. sourcecode:: python</span>
+
+<span class="sd">        &gt;&gt;&gt; coreml_model = coremltools.converters.keras.convert(model, input_names =</span>
+<span class="sd">        ...   [&#39;my_input_1&#39;, &#39;my_input_2&#39;], output_names = [&#39;my_output&#39;])</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">model_precision</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_VALID_MLMODEL_PRECISION_TYPES</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Model precision </span><span class="si">{}</span><span class="s2"> is not valid&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">model_precision</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">_HAS_KERAS_TF</span><span class="p">:</span>
+        <span class="n">spec</span> <span class="o">=</span> <span class="n">_convert</span><span class="p">(</span>
+            <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+            <span class="n">input_names</span><span class="o">=</span><span class="n">input_names</span><span class="p">,</span>
+            <span class="n">output_names</span><span class="o">=</span><span class="n">output_names</span><span class="p">,</span>
+            <span class="n">image_input_names</span><span class="o">=</span><span class="n">image_input_names</span><span class="p">,</span>
+            <span class="n">is_bgr</span><span class="o">=</span><span class="n">is_bgr</span><span class="p">,</span>
+            <span class="n">red_bias</span><span class="o">=</span><span class="n">red_bias</span><span class="p">,</span>
+            <span class="n">green_bias</span><span class="o">=</span><span class="n">green_bias</span><span class="p">,</span>
+            <span class="n">blue_bias</span><span class="o">=</span><span class="n">blue_bias</span><span class="p">,</span>
+            <span class="n">gray_bias</span><span class="o">=</span><span class="n">gray_bias</span><span class="p">,</span>
+            <span class="n">image_scale</span><span class="o">=</span><span class="n">image_scale</span><span class="p">,</span>
+            <span class="n">class_labels</span><span class="o">=</span><span class="n">class_labels</span><span class="p">,</span>
+            <span class="n">predicted_feature_name</span><span class="o">=</span><span class="n">predicted_feature_name</span><span class="p">,</span>
+            <span class="n">predicted_probabilities_output</span><span class="o">=</span><span class="n">predicted_probabilities_output</span><span class="p">,</span>
+            <span class="n">custom_objects</span><span class="o">=</span><span class="n">custom_objects</span><span class="p">,</span>
+            <span class="n">respect_trainable</span><span class="o">=</span><span class="n">respect_trainable</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">elif</span> <span class="n">_HAS_KERAS2_TF</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">_keras2_converter</span>
+
+        <span class="n">spec</span> <span class="o">=</span> <span class="n">_keras2_converter</span><span class="o">.</span><span class="n">_convert</span><span class="p">(</span>
+            <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+            <span class="n">input_names</span><span class="o">=</span><span class="n">input_names</span><span class="p">,</span>
+            <span class="n">output_names</span><span class="o">=</span><span class="n">output_names</span><span class="p">,</span>
+            <span class="n">image_input_names</span><span class="o">=</span><span class="n">image_input_names</span><span class="p">,</span>
+            <span class="n">input_name_shape_dict</span><span class="o">=</span><span class="n">input_name_shape_dict</span><span class="p">,</span>
+            <span class="n">is_bgr</span><span class="o">=</span><span class="n">is_bgr</span><span class="p">,</span>
+            <span class="n">red_bias</span><span class="o">=</span><span class="n">red_bias</span><span class="p">,</span>
+            <span class="n">green_bias</span><span class="o">=</span><span class="n">green_bias</span><span class="p">,</span>
+            <span class="n">blue_bias</span><span class="o">=</span><span class="n">blue_bias</span><span class="p">,</span>
+            <span class="n">gray_bias</span><span class="o">=</span><span class="n">gray_bias</span><span class="p">,</span>
+            <span class="n">image_scale</span><span class="o">=</span><span class="n">image_scale</span><span class="p">,</span>
+            <span class="n">class_labels</span><span class="o">=</span><span class="n">class_labels</span><span class="p">,</span>
+            <span class="n">predicted_feature_name</span><span class="o">=</span><span class="n">predicted_feature_name</span><span class="p">,</span>
+            <span class="n">predicted_probabilities_output</span><span class="o">=</span><span class="n">predicted_probabilities_output</span><span class="p">,</span>
+            <span class="n">add_custom_layers</span><span class="o">=</span><span class="n">add_custom_layers</span><span class="p">,</span>
+            <span class="n">custom_conversion_functions</span><span class="o">=</span><span class="n">custom_conversion_functions</span><span class="p">,</span>
+            <span class="n">custom_objects</span><span class="o">=</span><span class="n">custom_objects</span><span class="p">,</span>
+            <span class="n">input_shapes</span><span class="o">=</span><span class="n">input_shapes</span><span class="p">,</span>
+            <span class="n">output_shapes</span><span class="o">=</span><span class="n">output_shapes</span><span class="p">,</span>
+            <span class="n">respect_trainable</span><span class="o">=</span><span class="n">respect_trainable</span><span class="p">,</span>
+            <span class="n">use_float_arraytype</span><span class="o">=</span><span class="n">use_float_arraytype</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+            <span class="s2">&quot;Keras not found or unsupported version or backend found. keras conversion API is disabled.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">model_precision</span> <span class="o">==</span> <span class="n">_MLMODEL_HALF_PRECISION</span> <span class="ow">and</span> <span class="n">model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">spec</span> <span class="o">=</span> <span class="n">_convert_neural_network_spec_weights_to_fp16</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">spec</span>
+
+
+<div class="viewcode-block" id="convert"><a class="viewcode-back" href="../../../../source/coremltools.converters.keras.html#coremltools.converters.keras._keras_converter.convert">[docs]</a><span class="nd">@_deprecated</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">convert</span><span class="p">(</span>
+    <span class="n">model</span><span class="p">,</span>
+    <span class="n">input_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">output_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">image_input_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">input_name_shape_dict</span><span class="o">=</span><span class="p">{},</span>
+    <span class="n">is_bgr</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">red_bias</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+    <span class="n">green_bias</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+    <span class="n">blue_bias</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+    <span class="n">gray_bias</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span>
+    <span class="n">image_scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">class_labels</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">predicted_feature_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">model_precision</span><span class="o">=</span><span class="n">_MLMODEL_FULL_PRECISION</span><span class="p">,</span>
+    <span class="n">predicted_probabilities_output</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+    <span class="n">add_custom_layers</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">custom_conversion_functions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">input_shapes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">output_shapes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">respect_trainable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">use_float_arraytype</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    WARNING: This function is deprecated. It will be removed in the 6.0.</span>
+
+<span class="sd">    Convert a Keras model to Core ML protobuf specification (.mlmodel).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    model: Keras model object | str | (str, str)</span>
+
+<span class="sd">        A trained Keras neural network model which can be one of the following:</span>
+
+<span class="sd">        - a Keras model object</span>
+<span class="sd">        - a string with the path to a Keras model file (h5)</span>
+<span class="sd">        - a tuple of strings, where the first is the path to a Keras model</span>
+<span class="sd">    architecture (.json file), the second is the path to its weights stored in h5 file.</span>
+
+<span class="sd">    input_names: [str] | str</span>
+<span class="sd">        Optional name(s) that can be given to the inputs of the Keras model.</span>
+<span class="sd">        These names will be used in the interface of the Core ML models to refer</span>
+<span class="sd">        to the inputs of the Keras model. If not provided, the Keras inputs</span>
+<span class="sd">        are named to [input1, input2, ..., inputN] in the Core ML model.  When</span>
+<span class="sd">        multiple inputs are present, the input feature names are in the same</span>
+<span class="sd">        order as the Keras inputs.</span>
+
+<span class="sd">    output_names: [str] | str</span>
+<span class="sd">        Optional name(s) that can be given to the outputs of the Keras model.</span>
+<span class="sd">        These names will be used in the interface of the Core ML models to refer</span>
+<span class="sd">        to the outputs of the Keras model. If not provided, the Keras outputs</span>
+<span class="sd">        are named to [output1, output2, ..., outputN] in the Core ML model.</span>
+<span class="sd">        When multiple outputs are present, output feature names are in the same</span>
+<span class="sd">        order as the Keras inputs.</span>
+
+<span class="sd">    image_input_names: [str] | str</span>
+<span class="sd">        Input names to the Keras model (a subset of the input_names</span>
+<span class="sd">        parameter) that can be treated as images by Core ML. All other inputs</span>
+<span class="sd">        are treated as MultiArrays (N-D Arrays).</span>
+
+<span class="sd">    is_bgr: bool | dict()</span>
+<span class="sd">        Flag indicating the channel order the model internally uses to represent</span>
+<span class="sd">        color images. Set to True if the internal channel order is BGR,</span>
+<span class="sd">        otherwise it will be assumed RGB. This flag is applicable only if</span>
+<span class="sd">        image_input_names is specified. To specify a different value for each</span>
+<span class="sd">        image input, provide a dictionary with input names as keys.</span>
+<span class="sd">        Note that this flag is about the models internal channel order.</span>
+<span class="sd">        An input image can be passed to the model in any color pixel layout</span>
+<span class="sd">        containing red, green and blue values (e.g. 32BGRA or 32ARGB). This flag</span>
+<span class="sd">        determines how those pixel values get mapped to the internal multiarray</span>
+<span class="sd">        representation.</span>
+
+<span class="sd">    red_bias: float | dict()</span>
+<span class="sd">        Bias value to be added to the red channel of the input image.</span>
+<span class="sd">        Defaults to 0.0</span>
+<span class="sd">        Applicable only if image_input_names is specified.</span>
+<span class="sd">        To specify different values for each image input provide a dictionary with input names as keys.</span>
+
+<span class="sd">    blue_bias: float | dict()</span>
+<span class="sd">        Bias value to be added to the blue channel of the input image.</span>
+<span class="sd">        Defaults to 0.0</span>
+<span class="sd">        Applicable only if image_input_names is specified.</span>
+<span class="sd">        To specify different values for each image input provide a dictionary with input names as keys.</span>
+
+<span class="sd">    green_bias: float | dict()</span>
+<span class="sd">        Bias value to be added to the green channel of the input image.</span>
+<span class="sd">        Defaults to 0.0</span>
+<span class="sd">        Applicable only if image_input_names is specified.</span>
+<span class="sd">        To specify different values for each image input provide a dictionary with input names as keys.</span>
+
+<span class="sd">    gray_bias: float | dict()</span>
+<span class="sd">        Bias value to be added to the input image (in grayscale). Defaults</span>
+<span class="sd">        to 0.0</span>
+<span class="sd">        Applicable only if image_input_names is specified.</span>
+<span class="sd">        To specify different values for each image input provide a dictionary with input names as keys.</span>
+
+<span class="sd">    image_scale: float | dict()</span>
+<span class="sd">        Value by which input images will be scaled before bias is added and</span>
+<span class="sd">        Core ML model makes a prediction. Defaults to 1.0.</span>
+<span class="sd">        Applicable only if image_input_names is specified.</span>
+<span class="sd">        To specify different values for each image input provide a dictionary with input names as keys.</span>
+
+<span class="sd">    class_labels: list[int or str] | str</span>
+<span class="sd">        Class labels (applies to classifiers only) that map the index of the</span>
+<span class="sd">        output of a neural network to labels in a classifier.</span>
+
+<span class="sd">        If the provided class_labels is a string, it is assumed to be a</span>
+<span class="sd">        filepath where classes are parsed as a list of newline separated</span>
+<span class="sd">        strings.</span>
+
+<span class="sd">    predicted_feature_name: str</span>
+<span class="sd">        Name of the output feature for the class labels exposed in the Core ML</span>
+<span class="sd">        model (applies to classifiers only). Defaults to &#39;classLabel&#39;</span>
+
+<span class="sd">    model_precision: str</span>
+<span class="sd">        Precision at which model will be saved. Currently full precision (float) and half precision</span>
+<span class="sd">        (float16) models are supported. Defaults to &#39;_MLMODEL_FULL_PRECISION&#39; (full precision).</span>
+
+<span class="sd">    predicted_probabilities_output: str</span>
+<span class="sd">        Name of the neural network output to be interpreted as the predicted</span>
+<span class="sd">        probabilities of the resulting classes. Typically the output of a</span>
+<span class="sd">        softmax function. Defaults to the first output blob.</span>
+
+<span class="sd">    add_custom_layers: bool</span>
+<span class="sd">        If yes, then unknown Keras layer types will be added to the model as</span>
+<span class="sd">        &#39;custom&#39; layers, which must then be filled in as postprocessing.</span>
+
+<span class="sd">    custom_conversion_functions: {str:(Layer -&gt; (dict, [weights])) }</span>
+<span class="sd">        A dictionary with keys corresponding to names of custom layers and values</span>
+<span class="sd">        as functions taking a Keras custom layer and returning a parameter dictionary</span>
+<span class="sd">        and list of weights.</span>
+
+<span class="sd">    respect_trainable: bool</span>
+<span class="sd">        If yes, then Keras layers marked &#39;trainable&#39; will automatically be</span>
+<span class="sd">        marked updatable in the Core ML model.</span>
+
+<span class="sd">    use_float_arraytype: bool</span>
+<span class="sd">        If true, the datatype of input/output multiarrays is set to Float32 instead</span>
+<span class="sd">        of double.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    model: MLModel</span>
+<span class="sd">    Model in Core ML format.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    .. sourcecode:: python</span>
+
+<span class="sd">        # Make a Keras model</span>
+<span class="sd">        &gt;&gt;&gt; model = Sequential()</span>
+<span class="sd">        &gt;&gt;&gt; model.add(Dense(num_channels, input_dim = input_dim))</span>
+
+<span class="sd">        # Convert it with default input and output names</span>
+<span class="sd">        &gt;&gt;&gt; import coremltools</span>
+<span class="sd">        &gt;&gt;&gt; coreml_model = coremltools.converters.keras.convert(model)</span>
+
+<span class="sd">        # Saving the Core ML model to a file.</span>
+<span class="sd">        &gt;&gt;&gt; coreml_model.save(&#39;my_model.mlmodel&#39;)</span>
+
+<span class="sd">    Converting a model with a single image input.</span>
+
+<span class="sd">    .. sourcecode:: python</span>
+
+<span class="sd">        &gt;&gt;&gt; coreml_model = coremltools.converters.keras.convert(model, input_names =</span>
+<span class="sd">        ... &#39;image&#39;, image_input_names = &#39;image&#39;)</span>
+
+<span class="sd">    Core ML also lets you add class labels to models to expose them as</span>
+<span class="sd">    classifiers.</span>
+
+<span class="sd">    .. sourcecode:: python</span>
+
+<span class="sd">        &gt;&gt;&gt; coreml_model = coremltools.converters.keras.convert(model, input_names = &#39;image&#39;,</span>
+<span class="sd">        ... image_input_names = &#39;image&#39;, class_labels = [&#39;cat&#39;, &#39;dog&#39;, &#39;rat&#39;])</span>
+
+<span class="sd">    Class labels for classifiers can also come from a file on disk.</span>
+
+<span class="sd">    .. sourcecode:: python</span>
+
+<span class="sd">        &gt;&gt;&gt; coreml_model = coremltools.converters.keras.convert(model, input_names =</span>
+<span class="sd">        ... &#39;image&#39;, image_input_names = &#39;image&#39;, class_labels = &#39;labels.txt&#39;)</span>
+
+<span class="sd">    Provide customized input and output names to the Keras inputs and outputs</span>
+<span class="sd">    while exposing them to Core ML.</span>
+
+<span class="sd">    .. sourcecode:: python</span>
+
+<span class="sd">        &gt;&gt;&gt; coreml_model = coremltools.converters.keras.convert(model, input_names =</span>
+<span class="sd">        ...   [&#39;my_input_1&#39;, &#39;my_input_2&#39;], output_names = [&#39;my_output&#39;])</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">spec</span> <span class="o">=</span> <span class="n">_convert_to_spec</span><span class="p">(</span>
+        <span class="n">model</span><span class="p">,</span>
+        <span class="n">input_names</span><span class="o">=</span><span class="n">input_names</span><span class="p">,</span>
+        <span class="n">output_names</span><span class="o">=</span><span class="n">output_names</span><span class="p">,</span>
+        <span class="n">image_input_names</span><span class="o">=</span><span class="n">image_input_names</span><span class="p">,</span>
+        <span class="n">input_name_shape_dict</span><span class="o">=</span><span class="n">input_name_shape_dict</span><span class="p">,</span>
+        <span class="n">is_bgr</span><span class="o">=</span><span class="n">is_bgr</span><span class="p">,</span>
+        <span class="n">red_bias</span><span class="o">=</span><span class="n">red_bias</span><span class="p">,</span>
+        <span class="n">green_bias</span><span class="o">=</span><span class="n">green_bias</span><span class="p">,</span>
+        <span class="n">blue_bias</span><span class="o">=</span><span class="n">blue_bias</span><span class="p">,</span>
+        <span class="n">gray_bias</span><span class="o">=</span><span class="n">gray_bias</span><span class="p">,</span>
+        <span class="n">image_scale</span><span class="o">=</span><span class="n">image_scale</span><span class="p">,</span>
+        <span class="n">class_labels</span><span class="o">=</span><span class="n">class_labels</span><span class="p">,</span>
+        <span class="n">predicted_feature_name</span><span class="o">=</span><span class="n">predicted_feature_name</span><span class="p">,</span>
+        <span class="n">model_precision</span><span class="o">=</span><span class="n">model_precision</span><span class="p">,</span>
+        <span class="n">predicted_probabilities_output</span><span class="o">=</span><span class="n">predicted_probabilities_output</span><span class="p">,</span>
+        <span class="n">add_custom_layers</span><span class="o">=</span><span class="n">add_custom_layers</span><span class="p">,</span>
+        <span class="n">custom_conversion_functions</span><span class="o">=</span><span class="n">custom_conversion_functions</span><span class="p">,</span>
+        <span class="n">input_shapes</span><span class="o">=</span><span class="n">input_shapes</span><span class="p">,</span>
+        <span class="n">output_shapes</span><span class="o">=</span><span class="n">output_shapes</span><span class="p">,</span>
+        <span class="n">respect_trainable</span><span class="o">=</span><span class="n">respect_trainable</span><span class="p">,</span>
+        <span class="n">use_float_arraytype</span><span class="o">=</span><span class="n">use_float_arraytype</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">model</span> <span class="o">=</span> <span class="n">_MLModel</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
+
+    <span class="kn">from</span> <span class="nn">keras</span> <span class="kn">import</span> <span class="n">__version__</span> <span class="k">as</span> <span class="n">keras_version</span>
+
+    <span class="n">model</span><span class="o">.</span><span class="n">user_defined_metadata</span><span class="p">[</span><span class="n">_METADATA_VERSION</span><span class="p">]</span> <span class="o">=</span> <span class="n">ct_version</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">user_defined_metadata</span><span class="p">[</span><span class="n">_METADATA_SOURCE</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;keras==</span><span class="si">{0}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">keras_version</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">model</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Apple Inc.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
