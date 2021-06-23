@@ -35,6 +35,7 @@ extensions = [
     "sphinx.ext.mathjax",
     "sphinx.ext.inheritance_diagram",
     "sphinx.ext.autosummary",
+    "sphinx.ext.viewcode",
     "sphinx_rtd_theme"
 ]
 

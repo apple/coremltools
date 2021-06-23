@@ -54,7 +54,7 @@ def convert(
 
     Parameters
     ----------
-    model:
+    model :
         TensorFlow 1, TensorFlow 2, or PyTorch model in one of the following
         formats:
 
@@ -73,18 +73,17 @@ def convert(
             - A `TorchScript <https://pytorch.org/docs/stable/jit.html>`_ object
             - Path to a ``.pt`` file
 
-    source: str (optional)
+    source : str (optional)
         One of [``auto``, ``tensorflow``, ``pytorch``, ``milinternal``]. `auto`
         determines the framework automatically for most cases. Raises
         ``ValueError`` if it fails to determine the source framework.
 
-    inputs: list of `TensorType` or `ImageType`
+    inputs : list of `TensorType` or `ImageType`
 
         TensorFlow 1 and 2:
-
-            - The ``inputs`` parameter is optional. If not provided, the inputs are:
-               - Placeholder nodes in the model (if the model is frozen graph)
-               - Function inputs (if the model is a ``tf.function``)
+            - The ``inputs`` parameter is optional. If not provided, the inputs
+              are placeholder nodes in the model (if the model is frozen graph)
+              or function inputs (if the model is a ``tf.function``).
             - The inputs must correspond to all or some of the placeholder nodes
               in the TF model.
             - ``TensorType`` and ``ImageType`` in ``inputs`` must have the ``name``
@@ -92,13 +91,12 @@ def convert(
             - If ``inputs`` is provided, it must be a flat list.
 
         PyTorch:
-
             - The ``inputs`` parameter is required.
             - ``inputs`` may be a nested list or tuple.
             - ``TensorType`` and ``ImageType`` in ``inputs`` must have the ``name``
               and ``shape`` specified.
 
-    outputs: list[str] (optional)
+    outputs : list[str] (optional)
 
         TensorFlow 1 and 2:
             - The ``outputs`` parameter is optional.
@@ -112,10 +110,10 @@ def convert(
         PyTorch:
             - ``outputs`` must not be specified.
 
-    classifier_config: ClassifierConfig class (optional)
+    classifier_config : ClassifierConfig class (optional)
         The configuration if the MLModel is intended to be a classifier.
 
-    minimum_deployment_target: coremltools.target enumeration (optional)
+    minimum_deployment_target : coremltools.target enumeration (optional)
         - One of the members of enum ``coremltools.target``.
         - The value of this parameter determines the type of the model
           reperesentation produced by the converter. Alternatively, you can use
@@ -128,25 +126,26 @@ def convert(
                                           coremltools.target.macOS11/
                                           coremltools.target.watchOS7/
                                           coremltools.target.tvOS14:
+
         - The converter produces an ML program (``mlprogram``) if:
           ::
              minimum_deployment_target >= coremltools.target.iOS15/
                                            coremltools.target.macOS12/
                                            coremltools.target.watchOS8/
                                            coremltools.target.tvOS15:
-        - If this parameter is specified and ``convert_to`` is also specified,
-          they must be compatible. The following are examples of invalid values:
-          ::
-             convert_to="neuralnetwork",
-                          minimum_deployment_target=coremltools.target.iOS15
-             convert_to="mlprogram",
-                          minimum_deployment_target=coremltools.target.iOS14
 
         - If neither the ``minimum_deployment_target`` nor the ``convert_to``
           parameter is specified, the converter produces the neural network
           model type with as minimum of a deployment target as possible.
+        - If this parameter is specified and ``convert_to`` is also specified,
+          they must be compatible. The following are examples of invalid values:
+          ::
+            # Invalid:
+            convert_to="neuralnetwork", minimum_deployment_target=coremltools.target.iOS15
+            # Invalid:
+            convert_to="mlprogram", minimum_deployment_target=coremltools.target.iOS14
 
-    convert_to: str (optional)
+    convert_to : str (optional)
         - Must be one of [``'neuralnetwork'``, ``'mlprogram'``, ``'milinternal'``].
         - The value of this parameter determines the type of the model
           reperesentation produced by the converter. Alternatively, you can use
@@ -171,18 +170,20 @@ def convert(
           ::
              ct.convert(mil_program, convert_to="neuralnetwork")
              ct.convert(mil_program, convert_to="mlprogram")
+
         - If neither the ``minimum_deployment_target`` nor the ``convert_to``
           parameter is specified, the converter produces the neural network
           model type with as minimum of a deployment target as possible.
 
-    compute_precision: coremltools.precision enumeration
-    or ct.transform.FP16ComputePrecision() (optional)
+    compute_precision :
+    coremltools.precision enumeration or ct.transform.FP16ComputePrecision() (optional)
         - Must be one of the following:
             - ``coremltools.precision.FLOAT16``
                 - The following transform is applied:
                   ::
                       coremltools.transform.FP16ComputePrecision(op_selector=
                                                              lambda op:True)
+
                   The above transfomr injects ``cast`` ops to convert the
                   float32 dtypes of intermediate tensors to float16.
             - ``coremltools.precision.FLOAT32``
@@ -194,17 +195,18 @@ def convert(
                   ::
                       coremltools.transform.FP16ComputePrecision(op_selector=
                                           lambda op: op.op_type != "linear")
+
                   The above casts all the float32 tensors to be float16, except
                   the input/output tensors to any ``linear`` op.
-        - If ``None``, the parameter defaults to ``coremltools.precision.FLOAT32``.
+            - If ``None``, the parameter defaults to ``coremltools.precision.FLOAT32``.
         - TODO: rdar://74140243.
             - Before coremltools 5.0 release, change the default
               to coremltools.precision.FLOAT16 when convert_to="mlprogram"
 
     Returns
     -------
-        model: ``coremltools.models.MLModel`` or ``coremltools.converters.mil.Program``
-            A Core ML MLModel object or MIL Program object (see ``convert_to``).
+    model : ``coremltools.models.MLModel`` or ``coremltools.converters.mil.Program``
+        A Core ML MLModel object or MIL Program object (see ``convert_to``).
 
     Examples
     --------
@@ -213,7 +215,9 @@ def convert(
         >>> with tf.Graph().as_default() as graph:
         >>>     x = tf.placeholder(tf.float32, shape=(1, 2, 3), name="input")
         >>>     y = tf.nn.relu(x, name="output")
-        >>> # Automatically infer inputs and outputs
+
+    Automatically infer inputs and outputs:
+
         >>> mlmodel = ct.convert(graph)
         >>> test_input = np.random.rand(1, 2, 3) - 0.5
         >>> results = mlmodel.predict({"input": test_input})
