@@ -1,0 +1,521 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>coremltools.models.pipeline &mdash; coremltools API Reference  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home"> coremltools API Reference
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">API Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/coremltools.converters.html">Converters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/coremltools.models.html">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Resources</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://coremltools.readme.io/docs">Guides and examples</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://mlmodel.readme.io/reference">Core ML Format Specification</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">coremltools API Reference</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>coremltools.models.pipeline</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for coremltools.models.pipeline</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (c) 2017, Apple Inc. All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1"># Use of this source code is governed by a BSD-3-clause license that can be</span>
+<span class="c1"># found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Pipeline utils for this package.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">SPECIFICATION_VERSION</span> <span class="k">as</span> <span class="n">_SPECIFICATION_VERSION</span>
+<span class="kn">from</span> <span class="nn">..proto</span> <span class="kn">import</span> <span class="n">Model_pb2</span> <span class="k">as</span> <span class="n">_Model_pb2</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">_feature_management</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">model</span> <span class="k">as</span> <span class="n">_model</span>
+
+<span class="kn">from</span> <span class="nn">._interface_management</span> <span class="kn">import</span> <span class="n">set_regressor_interface_params</span>
+<span class="kn">from</span> <span class="nn">._interface_management</span> <span class="kn">import</span> <span class="n">set_classifier_interface_params</span>
+<span class="kn">from</span> <span class="nn">._interface_management</span> <span class="kn">import</span> <span class="n">set_transform_interface_params</span><span class="p">,</span> <span class="n">set_training_features</span>
+
+
+<div class="viewcode-block" id="Pipeline"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.pipeline.Pipeline">[docs]</a><span class="k">class</span> <span class="nc">Pipeline</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A pipeline model that exposes a sequence of models as a single model,</span>
+<span class="sd">    It requires a set of inputs, a sequence of other models and a set of outputs.</span>
+
+<span class="sd">    This class is the base class for :py:class:`PipelineClassifier` and</span>
+<span class="sd">    :py:class:`PipelineRegressor`, which contain a sequence ending in a classifier</span>
+<span class="sd">    or regressor and themselves behave like a classifier or regressor.  This class</span>
+<span class="sd">    may be used directly for a sequence of feature transformer objects.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Pipeline.__init__"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.pipeline.Pipeline.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_features</span><span class="p">,</span> <span class="n">output_features</span><span class="p">,</span> <span class="n">training_features</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a pipeline of models to be executed sequentially.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+
+<span class="sd">        input_features: [list of 2-tuples]</span>
+<span class="sd">            Name(s) of the input features, given as a list of `(&#39;name&#39;, datatype)`</span>
+<span class="sd">            tuples.  The datatypes entry can be any of the data types defined in the</span>
+<span class="sd">            :py:mod:`models.datatypes` module.</span>
+
+<span class="sd">        output_features: [list of features]</span>
+<span class="sd">            Name(s) of the output features, given as a list of</span>
+<span class="sd">            `(&#39;name&#39;,datatype)` tuples.  The datatypes entry can be any of the</span>
+<span class="sd">            data types defined in the :py:mod:`models.datatypes` module.  All features</span>
+<span class="sd">            must be either defined in the inputs or be produced by one of the</span>
+<span class="sd">            contained models.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">spec</span> <span class="o">=</span> <span class="n">_Model_pb2</span><span class="o">.</span><span class="n">Model</span><span class="p">()</span>
+        <span class="n">spec</span><span class="o">.</span><span class="n">specificationVersion</span> <span class="o">=</span> <span class="n">_SPECIFICATION_VERSION</span>
+
+        <span class="c1"># Access this to declare it as a pipeline</span>
+        <span class="n">spec</span><span class="o">.</span><span class="n">pipeline</span>
+
+        <span class="n">spec</span> <span class="o">=</span> <span class="n">set_transform_interface_params</span><span class="p">(</span>
+            <span class="n">spec</span><span class="p">,</span> <span class="n">input_features</span><span class="p">,</span> <span class="n">output_features</span><span class="p">,</span> <span class="n">training_features</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Save the spec as a member variable.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spec</span> <span class="o">=</span> <span class="n">spec</span></div>
+
+    <span class="k">def</span> <span class="nf">_validate_updatable_pipeline_on_add_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spec</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">spec</span><span class="o">.</span><span class="n">isUpdatable</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;New sub-models cannot be added after the pipeline has been marked as updatable&quot;</span>
+            <span class="p">)</span>
+
+<div class="viewcode-block" id="Pipeline.add_model"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.pipeline.Pipeline.add_model">[docs]</a>    <span class="k">def</span> <span class="nf">add_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spec</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add a protobuf spec or :py:class:`models.MLModel` instance to the pipeline.</span>
+
+<span class="sd">        All input features of this model must either match the input_features</span>
+<span class="sd">        of the pipeline, or match the outputs of a previous model.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        spec: [MLModel, Model_pb2]</span>
+<span class="sd">            A protobuf spec or MLModel instance containing a model.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_updatable_pipeline_on_add_model</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">_model</span><span class="o">.</span><span class="n">MLModel</span><span class="p">):</span>
+            <span class="n">spec</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">_spec</span>
+
+        <span class="n">pipeline</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">pipeline</span>
+        <span class="n">step_spec</span> <span class="o">=</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">add</span><span class="p">()</span>
+        <span class="n">step_spec</span><span class="o">.</span><span class="n">CopyFrom</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_validate_sub_models_and_make_updatable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pipeline</span><span class="p">,</span> <span class="n">spec</span><span class="p">):</span>
+
+        <span class="n">num_models</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">pipeline</span><span class="o">.</span><span class="n">models</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">num_models</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Pipeline does not seem to have any models. It should be marked as updatable only after adding all sub-models.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">models</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">model</span><span class="o">.</span><span class="n">isUpdatable</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;Only the last model can be updatable in an updatable pipeline.&quot;</span>
+                <span class="p">)</span>
+
+        <span class="n">last_model</span> <span class="o">=</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">models</span><span class="p">[</span><span class="n">num_models</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">last_model</span><span class="o">.</span><span class="n">isUpdatable</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;A pipeline can be made updatable only if the last model is updatable.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">spec</span><span class="o">.</span><span class="n">isUpdatable</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">def</span> <span class="nf">make_updatable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_sub_models_and_make_updatable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">pipeline</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Pipeline.set_training_input"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.pipeline.Pipeline.set_training_input">[docs]</a>    <span class="k">def</span> <span class="nf">set_training_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">training_input</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the training inputs of the network spec.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        training_input: [tuple]</span>
+<span class="sd">            List of training input names and type of the network.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">spec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span>
+        <span class="n">set_training_features</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">training_input</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="PipelineRegressor"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.pipeline.PipelineRegressor">[docs]</a><span class="k">class</span> <span class="nc">PipelineRegressor</span><span class="p">(</span><span class="n">Pipeline</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A pipeline model that exposes a sequence of models as a single model,</span>
+<span class="sd">    It requires a set of inputs, a sequence of other models and a set of outputs.</span>
+<span class="sd">    In this case the pipeline itself behaves as a regression model by designating</span>
+<span class="sd">    a real valued output feature as its &#39;predicted feature&#39;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="PipelineRegressor.__init__"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.pipeline.PipelineRegressor.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_features</span><span class="p">,</span> <span class="n">output_features</span><span class="p">,</span> <span class="n">training_features</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a set of pipeline models given a set of model specs.  The final</span>
+<span class="sd">        output model must be a regression model.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+
+<span class="sd">        input_features: [list of 2-tuples]</span>
+<span class="sd">            Name(s) of the input features, given as a list of `(&#39;name&#39;, datatype)`</span>
+<span class="sd">            tuples.  The datatypes entry can be any of the data types defined in the</span>
+<span class="sd">            :py:mod:`models.datatypes` module.</span>
+
+<span class="sd">        output_features: [list of features]</span>
+<span class="sd">            Name(s) of the output features, given as a list of</span>
+<span class="sd">            `(&#39;name&#39;,datatype)` tuples.  The datatypes entry can be any of the</span>
+<span class="sd">            data types defined in the :py:mod:`models.datatypes` module.  All features</span>
+<span class="sd">            must be either defined in the inputs or be produced by one of the</span>
+<span class="sd">            contained models.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">spec</span> <span class="o">=</span> <span class="n">_Model_pb2</span><span class="o">.</span><span class="n">Model</span><span class="p">()</span>
+        <span class="n">spec</span><span class="o">.</span><span class="n">specificationVersion</span> <span class="o">=</span> <span class="n">_SPECIFICATION_VERSION</span>
+
+        <span class="c1"># Access this to declare it as a pipeline</span>
+        <span class="n">spec</span><span class="o">.</span><span class="n">pipelineRegressor</span>
+        <span class="n">spec</span> <span class="o">=</span> <span class="n">set_regressor_interface_params</span><span class="p">(</span>
+            <span class="n">spec</span><span class="p">,</span> <span class="n">input_features</span><span class="p">,</span> <span class="n">output_features</span><span class="p">,</span> <span class="n">training_features</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Save as a member variable</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spec</span> <span class="o">=</span> <span class="n">spec</span></div>
+
+<div class="viewcode-block" id="PipelineRegressor.add_model"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.pipeline.PipelineRegressor.add_model">[docs]</a>    <span class="k">def</span> <span class="nf">add_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spec</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add a protobuf spec or :py:class:`models.MLModel` instance to the pipeline.</span>
+
+<span class="sd">        All input features of this model must either match the input_features</span>
+<span class="sd">        of the pipeline, or match the outputs of a previous model.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        spec: [MLModel, Model_pb2]</span>
+<span class="sd">            A protobuf spec or MLModel instance containing a model.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">PipelineRegressor</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_validate_updatable_pipeline_on_add_model</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">spec</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">_model</span><span class="o">.</span><span class="n">MLModel</span><span class="p">):</span>
+            <span class="n">spec</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">_spec</span>
+
+        <span class="n">pipeline</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">pipelineRegressor</span><span class="o">.</span><span class="n">pipeline</span>
+        <span class="n">step_spec</span> <span class="o">=</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">add</span><span class="p">()</span>
+        <span class="n">step_spec</span><span class="o">.</span><span class="n">CopyFrom</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">make_updatable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">PipelineRegressor</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_validate_sub_models_and_make_updatable</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">pipelineRegressor</span><span class="o">.</span><span class="n">pipeline</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="PipelineRegressor.set_training_input"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.pipeline.PipelineRegressor.set_training_input">[docs]</a>    <span class="k">def</span> <span class="nf">set_training_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">training_input</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the training inputs of the network spec.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        training_input: [tuple]</span>
+<span class="sd">            List of training input names and type of the network.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">spec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span>
+        <span class="n">set_training_features</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">training_input</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="PipelineClassifier"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.pipeline.PipelineClassifier">[docs]</a><span class="k">class</span> <span class="nc">PipelineClassifier</span><span class="p">(</span><span class="n">Pipeline</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A pipeline model that exposes a sequence of models as a single model,</span>
+<span class="sd">    It requires a set of inputs, a sequence of other models and a set of outputs.</span>
+<span class="sd">    In this case the pipeline itself behaves as a classification model by designating</span>
+<span class="sd">    a discrete categorical output feature as its &#39;predicted feature&#39;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="PipelineClassifier.__init__"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.pipeline.PipelineClassifier.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">input_features</span><span class="p">,</span> <span class="n">class_labels</span><span class="p">,</span> <span class="n">output_features</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">training_features</span><span class="o">=</span><span class="kc">None</span>
+    <span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a set of pipeline models given a set of model specs.  The last</span>
+<span class="sd">        model in this list must be a classifier model.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        input_features: [list of 2-tuples]</span>
+<span class="sd">            Name(s) of the input features, given as a list of `(&#39;name&#39;, datatype)`</span>
+<span class="sd">            tuples.  The datatypes entry can be any of the data types defined in the</span>
+<span class="sd">            :py:mod:`models.datatypes` module.</span>
+
+<span class="sd">        class_labels: [list]</span>
+<span class="sd">            A list of string or integer class labels to use in making predictions.</span>
+<span class="sd">            This list must match the class labels in the model outputting the categorical</span>
+<span class="sd">            predictedFeatureName</span>
+
+<span class="sd">        output_features: [list]</span>
+<span class="sd">            A string or a list of two strings specifying the names of the two</span>
+<span class="sd">            output features, the first being a class label corresponding</span>
+<span class="sd">            to the class with the highest predicted score, and the second being</span>
+<span class="sd">            a dictionary mapping each class to its score. If `output_features`</span>
+<span class="sd">            is a string, it specifies the predicted class label and the class</span>
+<span class="sd">            scores is set to the default value of `&quot;classProbability.&quot;`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">output_features</span> <span class="o">=</span> <span class="n">_feature_management</span><span class="o">.</span><span class="n">process_or_validate_classifier_output_features</span><span class="p">(</span>
+            <span class="n">output_features</span><span class="p">,</span> <span class="n">class_labels</span>
+        <span class="p">)</span>
+
+        <span class="n">spec</span> <span class="o">=</span> <span class="n">_Model_pb2</span><span class="o">.</span><span class="n">Model</span><span class="p">()</span>
+        <span class="n">spec</span><span class="o">.</span><span class="n">specificationVersion</span> <span class="o">=</span> <span class="n">_SPECIFICATION_VERSION</span>
+        <span class="n">spec</span> <span class="o">=</span> <span class="n">set_classifier_interface_params</span><span class="p">(</span>
+            <span class="n">spec</span><span class="p">,</span>
+            <span class="n">input_features</span><span class="p">,</span>
+            <span class="n">class_labels</span><span class="p">,</span>
+            <span class="s2">&quot;pipelineClassifier&quot;</span><span class="p">,</span>
+            <span class="n">output_features</span><span class="p">,</span>
+            <span class="n">training_features</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Access this to declare it as a pipeline</span>
+        <span class="n">spec</span><span class="o">.</span><span class="n">pipelineClassifier</span>
+
+        <span class="c1"># Save as a member variable</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spec</span> <span class="o">=</span> <span class="n">spec</span></div>
+
+<div class="viewcode-block" id="PipelineClassifier.add_model"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.pipeline.PipelineClassifier.add_model">[docs]</a>    <span class="k">def</span> <span class="nf">add_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spec</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add a protobuf spec or :py:class:`models.MLModel` instance to the pipeline.</span>
+
+<span class="sd">        All input features of this model must either match the input_features</span>
+<span class="sd">        of the pipeline, or match the outputs of a previous model.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        spec: [MLModel, Model_pb2]</span>
+<span class="sd">            A protobuf spec or MLModel instance containing a model.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">PipelineClassifier</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_validate_updatable_pipeline_on_add_model</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">spec</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">_model</span><span class="o">.</span><span class="n">MLModel</span><span class="p">):</span>
+            <span class="n">spec</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">_spec</span>
+        <span class="n">pipeline</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">pipelineClassifier</span><span class="o">.</span><span class="n">pipeline</span>
+        <span class="n">step_spec</span> <span class="o">=</span> <span class="n">pipeline</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">add</span><span class="p">()</span>
+        <span class="n">step_spec</span><span class="o">.</span><span class="n">CopyFrom</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">make_updatable</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">PipelineClassifier</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_validate_sub_models_and_make_updatable</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">pipelineClassifier</span><span class="o">.</span><span class="n">pipeline</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="PipelineClassifier.set_training_input"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.pipeline.PipelineClassifier.set_training_input">[docs]</a>    <span class="k">def</span> <span class="nf">set_training_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">training_input</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the training inputs of the network spec.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        training_input: [tuple]</span>
+<span class="sd">            List of training input names and type of the network.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">spec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span>
+        <span class="n">set_training_features</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">training_input</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Apple Inc.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

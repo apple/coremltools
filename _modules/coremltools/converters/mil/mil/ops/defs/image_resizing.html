@@ -1,0 +1,739 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>coremltools.converters.mil.mil.ops.defs.image_resizing &mdash; coremltools API Reference  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../../../../_static/graphviz.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../../../../" src="../../../../../../../_static/documentation_options.js"></script>
+        <script data-url_root="../../../../../../../" id="documentation_options" src="../../../../../../../_static/documentation_options.js"></script>
+        <script src="../../../../../../../_static/jquery.js"></script>
+        <script src="../../../../../../../_static/underscore.js"></script>
+        <script src="../../../../../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../../../../index.html" class="icon icon-home"> coremltools API Reference
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">API Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../source/coremltools.converters.html">Converters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../source/coremltools.models.html">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Resources</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://coremltools.readme.io/docs">Guides and examples</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://mlmodel.readme.io/reference">Core ML Format Specification</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../../../index.html">coremltools API Reference</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>coremltools.converters.mil.mil.ops.defs.image_resizing</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for coremltools.converters.mil.mil.ops.defs.image_resizing</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1">#  Copyright (c) 2020, Apple Inc. All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1">#  Use of this source code is governed by a BSD-3-clause license that can be</span>
+<span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">._op_reqs</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.types.symbolic</span> <span class="kn">import</span> <span class="n">is_symbolic</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">get_new_symbol</span>
+
+
+<div class="viewcode-block" id="upsample_nearest_neighbor"><a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.image_resizing.upsample_nearest_neighbor">[docs]</a><span class="nd">@register_op</span><span class="p">(</span><span class="n">doc_str</span><span class="o">=</span><span class="s2">&quot;TODO&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">upsample_nearest_neighbor</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Upsample the spatial dimensions (last two dimensions) of the input</span>
+<span class="sd">    by integer scale factors using nearest-neighbor interpolation.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x: tensor&lt;[\*D, H1, W1],T&gt;  (Required)</span>
+<span class="sd">        * Must be at least rank ``3``.</span>
+<span class="sd">    scale_factor_height: const&lt;i32&gt; or const&lt;fp32&gt; (Optional, default=1)</span>
+<span class="sd">        * Scale factor for the height dimension (``axis=-2``).</span>
+<span class="sd">        * Can be either an integer or fractional.</span>
+<span class="sd">    scale_factor_width: const&lt;i32&gt; or const&lt;fp32&gt; (Optional, default=1)</span>
+<span class="sd">        * Scale factor for the width dimension (``axis=-1``).</span>
+<span class="sd">        * Can be either an integer or fractional.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tensor&lt;[\*D, H2, W2],T&gt;</span>
+<span class="sd">        * Tensor with same type as the input.</span>
+<span class="sd">        * ``H2`` = floor(``H1`` * ``scale_factor_height``).</span>
+<span class="sd">        * ``W2`` = floor(``W1`` * ``scale_factor_width``).</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T: fp32</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(),</span>
+        <span class="n">scale_factor_height</span><span class="o">=</span><span class="n">IntOrFloatInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+        <span class="n">scale_factor_width</span><span class="o">=</span><span class="n">IntOrFloatInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">default_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">DefaultInputs</span><span class="p">(</span>
+            <span class="n">scale_factor_height</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">scale_factor_width</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">upsample_nearest_neighbor</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">rank</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s1">&#39;input to the &quot;upsample_nearest_neighbor&quot; op must have rank at least 3&#39;</span>
+            <span class="p">)</span>
+
+        <span class="n">ret_shape</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">ret_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scale_factor_width</span><span class="o">.</span><span class="n">val</span> <span class="o">*</span> <span class="n">ret_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">is_symbolic</span><span class="p">(</span><span class="n">ret_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="k">else</span> <span class="n">get_new_symbol</span><span class="p">()</span>
+        <span class="n">ret_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scale_factor_height</span><span class="o">.</span><span class="n">val</span> <span class="o">*</span> <span class="n">ret_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">is_symbolic</span><span class="p">(</span><span class="n">ret_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span> <span class="k">else</span> <span class="n">get_new_symbol</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">ret_shape</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="upsample_bilinear"><a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.image_resizing.upsample_bilinear">[docs]</a><span class="nd">@register_op</span><span class="p">(</span><span class="n">doc_str</span><span class="o">=</span><span class="s2">&quot;TODO&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">upsample_bilinear</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Upsample the spatial dimensions (last two dimensions) of the input</span>
+<span class="sd">    by scale factors using bilinear interpolation.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x: tensor&lt;[\*D, H1, W1],T&gt;  (Required)</span>
+<span class="sd">        * Must be at least rank ``3``.</span>
+<span class="sd">    scale_factor_height: const&lt;T2&gt; (Optional, default=1)</span>
+<span class="sd">        * Scale factor for the height dimension (``axis=-2``).</span>
+<span class="sd">    scale_factor_width: const&lt;T2&gt; (Optional, default=1)</span>
+<span class="sd">        * Scale factor for the width dimension (``axis=-1``).</span>
+<span class="sd">    align_corners: const&lt;bool&gt; (Optional, default=True)</span>
+<span class="sd">        * This parameter determines how samples are chosen for bilinear</span>
+<span class="sd">          interpolation. For details, see the Notes section.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    To understand the ``align_corners`` parameter, consider the 1-D case.</span>
+<span class="sd">    You need to sample a grid of pixels whose values are computed using linear</span>
+<span class="sd">    interpolation. This parameter controls how the grid is sampled. If the</span>
+<span class="sd">    input grid is ``[0, Xin-1]`` (corresponding to an input size of ``Xin``),</span>
+<span class="sd">    and if the output size is ``Xout``, then the grid points are sampled in</span>
+<span class="sd">    the following manner:</span>
+
+<span class="sd">    .. sourcecode:: python</span>
+
+<span class="sd">        # If align_corners == True:</span>
+<span class="sd">        spacing = (Xin - 1) / (Xout - 1)</span>
+<span class="sd">        grid_point[i] = min(Xin - 1, max(0, i*spacing)), for i=0,1,...,Xout-1</span>
+
+<span class="sd">        # If align_corners == False:</span>
+<span class="sd">        spacing = Xin / Xout</span>
+<span class="sd">        grid_point[i] = min(Xin - 1, max(0, i*spacing + 0.5*spacing - 0.5)),</span>
+<span class="sd">        ...   for i=0,1,...,Xout-1</span>
+
+<span class="sd">    For example:</span>
+
+<span class="sd">    .. sourcecode:: python</span>
+
+<span class="sd">        Xin = 2</span>
+<span class="sd">        input_interval = [0,1]</span>
+
+<span class="sd">    Grid points:</span>
+
+<span class="sd">    .. sourcecode:: python</span>
+
+<span class="sd">        [0., 0.1, 0.5, 0.9, 1.] (Xout = 5, align_corners=False)</span>
+<span class="sd">        [0., 0.25, 0.5, 0.75, 1.] (Xout = 5, align_corners=True)</span>
+<span class="sd">        [0., 0., 0.33, 0.67, 1., 1.] (Xout = 6, align_corners=False)</span>
+<span class="sd">        [0., 0.2, 0.4, 0.6, 0.8, 1.] (Xout = 6, align_corners=True)</span>
+
+<span class="sd">    Note the following similarities:</span>
+
+<span class="sd">    * ``align_corners=False`` is the same as</span>
+<span class="sd">      ``tf.raw_ops.ResizeBilinear(align_corners=False, half_pixel_centers=True)``.</span>
+
+<span class="sd">    * ``align_corners=True`` is the same as</span>
+<span class="sd">      ``tf.raw_ops.ResizeBilinear(align_corners=True, half_pixel_centers=False)``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tensor&lt;[\*D, H2, W2],T&gt;</span>
+<span class="sd">        * Tensor with same type as the input.</span>
+<span class="sd">        * ``H2`` = floor(``H1`` * ``scale_factor_height``).</span>
+<span class="sd">        * ``W2`` = floor(``W1`` * ``scale_factor_width``).</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T: fp32</span>
+<span class="sd">    T2 : fp32 or int32</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(),</span>
+        <span class="n">scale_factor_height</span><span class="o">=</span><span class="n">IntOrFloatInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+          <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+        <span class="n">scale_factor_width</span><span class="o">=</span><span class="n">IntOrFloatInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+          <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+        <span class="n">align_corners</span><span class="o">=</span><span class="n">BoolInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">default_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">DefaultInputs</span><span class="p">(</span>
+            <span class="n">scale_factor_height</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">scale_factor_width</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">align_corners</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">upsample_bilinear</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">rank</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s1">&#39;input to the &quot;upsample_bilinear&quot; op must have rank at least 3&#39;</span>
+            <span class="p">)</span>
+
+        <span class="n">ret_shape</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">ret_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scale_factor_width</span><span class="o">.</span><span class="n">val</span> <span class="o">*</span> <span class="n">ret_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">is_symbolic</span><span class="p">(</span><span class="n">ret_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="k">else</span> <span class="n">get_new_symbol</span><span class="p">()</span>
+        <span class="n">ret_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scale_factor_height</span><span class="o">.</span><span class="n">val</span> <span class="o">*</span> <span class="n">ret_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">is_symbolic</span><span class="p">(</span><span class="n">ret_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span> <span class="k">else</span> <span class="n">get_new_symbol</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">ret_shape</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="resize_bilinear"><a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.image_resizing.resize_bilinear">[docs]</a><span class="nd">@register_op</span><span class="p">(</span><span class="n">doc_str</span><span class="o">=</span><span class="s2">&quot;TODO&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">resize_bilinear</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Resize the spatial (last two) dimensions to the specified target size</span>
+<span class="sd">    using bilinear interpolation. Although this op is similar to</span>
+<span class="sd">    ``upsample_bilinear``, ``resize_bilinear`` works with a target size</span>
+<span class="sd">    rather than with scale factors.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x: tensor&lt;[\*D, H1, W1],T&gt; (Required)</span>
+<span class="sd">        * Must be at least rank ``3``.</span>
+<span class="sd">    target_size_height: const&lt;int32&gt; (Optional, default=1)</span>
+<span class="sd">        * Target spatial size for the height dimension (``axis=-2``).</span>
+<span class="sd">    target_size_width: const&lt;int32&gt; (Optional, default=1)</span>
+<span class="sd">        * Target spatial size for the width dimension (``axis=-1``).</span>
+<span class="sd">    sampling_mode: const&lt;str&gt; (Optional, default=&quot;DEFAULT&quot;)</span>
+<span class="sd">        * This parameter can take ``&quot;STRICT_ALIGN_CORNERS”``, ``&quot;ALIGN_CORNERS&quot;``,</span>
+<span class="sd">          ``&quot;DEFAULT&quot;``, ``&quot;OFFSET_CORNERS&quot;`` or ``UNALIGN_CORNERS`` as values.</span>
+<span class="sd">          For details, see the Notes section.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    To understand the ``sampling_mode`` parameter, consider the 1-D case.</span>
+<span class="sd">    You need to sample a grid of pixels whose values are computed using</span>
+<span class="sd">    linear interpolation. This parameter controls how the grid is sampled.</span>
+<span class="sd">    If the input grid is ``[0, Xin-1]`` (corresponding to an input size of</span>
+<span class="sd">    ``Xin``), and if the output size is ``Xout``, then the grid points are</span>
+<span class="sd">    sampled in the following manner:</span>
+
+<span class="sd">    .. sourcecode:: python</span>
+
+<span class="sd">        # &quot;STRICT_ALIGN_CORNERS&quot;:</span>
+<span class="sd">        spacing = (Xin - 1) / (Xout - 1)</span>
+<span class="sd">        grid_point[i] = min(Xin-1, max(0, i*spacing)), for i=0,1,...,Xout-1</span>
+
+<span class="sd">        # &quot;ALIGN_CORNERS&quot;: Same as &quot;STRICT_ALIGN_CORNERS&quot; unless Xout=1,</span>
+<span class="sd">        # in which case:</span>
+<span class="sd">        grid_point[0] = (Xin-1) / 2, if Xout==1</span>
+
+<span class="sd">        # &quot;DEFAULT&quot;:</span>
+<span class="sd">        spacing = (Xin - Xin/Xout) / (Xout - 1)</span>
+<span class="sd">        grid_point[i] = min(Xin-1, max(0, i*spacing)), for i=0,1,...,Xout-1</span>
+
+<span class="sd">        # &quot;OFFSET_CORNERS&quot;:</span>
+<span class="sd">        delta = max(1, Xin - 1) / Xout</span>
+<span class="sd">        spacing = ((Xout - 1) * delta) / (Xout - 1)</span>
+<span class="sd">        grid_point[i] = min(Xin-1, max(0, 0.5*delta + i*spacing)), for</span>
+<span class="sd">        ...   i=0,1,...,Xout-1</span>
+
+<span class="sd">        # &quot;UNALIGN_CORNERS&quot;:</span>
+<span class="sd">        spacing = Xin / Xout</span>
+<span class="sd">        grid_point[i] = min(Xin - 1, max(0, i*spacing + 0.5*spacing - 0.5)), for i=0,1,...,Xout-1</span>
+
+<span class="sd">    For example:</span>
+
+<span class="sd">    .. sourcecode:: python</span>
+
+<span class="sd">        Xin = 2</span>
+<span class="sd">        input_interval = [0,1]</span>
+
+<span class="sd">    Grid points:</span>
+
+<span class="sd">    .. sourcecode:: python</span>
+
+<span class="sd">        [0., 0.1, 0.5, 0.9, 1.] (Xout = 5, UNALIGN_CORNERS)</span>
+<span class="sd">        [0., 0.25, 0.5, 0.75, 1.] (Xout = 5, &quot;STRICT_ALIGN_CORNERS&quot; / &quot;ALIGN_CORNERS&quot;)</span>
+<span class="sd">        [0., 0.4, 0.8, 1., 1.] (Xout = 5, &quot;DEFAULT&quot;)</span>
+<span class="sd">        [0.1, 0.3, 0.5, 0.7, 0.9] (Xout = 5, &quot;OFFSET_CORNERS&quot;)</span>
+
+<span class="sd">        [0., 0., 0.33, 0.67, 1., 1.] (Xout = 6, UNALIGN_CORNERS)</span>
+<span class="sd">        [0., 0.2, 0.4, 0.6, 0.8, 1.] (Xout = 6, &quot;STRICT_ALIGN_CORNERS&quot; / &quot;ALIGN_CORNERS&quot;)</span>
+<span class="sd">        [0., 0.33, 0.67, 1., 1., 1.] (Xout = 6, &quot;DEFAULT&quot;)</span>
+<span class="sd">        [0.08, 0.25, 0.42, 0.58, 0.75, 0.92] (Xout = 6, &quot;OFFSET_CORNERS&quot;)</span>
+
+<span class="sd">    Note the following similarities:</span>
+
+<span class="sd">        * ``&quot;DEFAULT&quot;`` is same as</span>
+<span class="sd">          ``tf.raw_ops.ResizeBilinear(align_corners=False,</span>
+<span class="sd">          half_pixel_centers=False)``.</span>
+<span class="sd">        * ``&quot;STRICT_ALIGN_CORNERS&quot;`` is same as</span>
+<span class="sd">          ``tf.raw_ops.ResizeBilinear(align_corners=True,</span>
+<span class="sd">          half_pixel_centers=False)``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tensor&lt;[\*D, H2, W2],T&gt;</span>
+<span class="sd">        * Tensor with same type as the input.</span>
+<span class="sd">        * ``H2`` = ``target_size_height``.</span>
+<span class="sd">        * ``W2`` = ``target_size_width``.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T: fp32</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(),</span>
+        <span class="n">target_size_height</span><span class="o">=</span><span class="n">IntInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+        <span class="n">target_size_width</span><span class="o">=</span><span class="n">IntInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+        <span class="n">sampling_mode</span><span class="o">=</span><span class="n">StringInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">default_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">DefaultInputs</span><span class="p">(</span>
+            <span class="n">target_size_height</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">target_size_width</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">sampling_mode</span><span class="o">=</span><span class="s2">&quot;DEFAULT&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">resize_bilinear</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">rank</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s1">&#39;input to the &quot;resize_bilinear&quot; op must have rank at least 3&#39;</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sampling_mode</span><span class="o">.</span><span class="n">val</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span>
+            <span class="s2">&quot;STRICT_ALIGN_CORNERS&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ALIGN_CORNERS&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;UNALIGN_CORNERS&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;DEFAULT&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;OFFSET_CORNERS&quot;</span><span class="p">,</span>
+        <span class="p">}:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s1">&#39;&quot;resize_bilinear&quot; op: unrecognized sampling mode &quot;</span><span class="si">{}</span><span class="s1">&quot;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">sampling_mode</span><span class="o">.</span><span class="n">val</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="n">ret_shape</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">ret_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_size_width</span><span class="o">.</span><span class="n">val</span>
+        <span class="n">ret_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_size_height</span><span class="o">.</span><span class="n">val</span>
+        <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">ret_shape</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="crop_resize"><a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.image_resizing.crop_resize">[docs]</a><span class="nd">@register_op</span><span class="p">(</span><span class="n">doc_str</span><span class="o">=</span><span class="s2">&quot;TODO&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">crop_resize</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Resize the spatial dimensions (last two dimensions) of the first input</span>
+<span class="sd">    according to the bounding boxes specified in the second input, using</span>
+<span class="sd">    bilinear interpolation.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    x: tensor&lt;[B, C, H, W],T&gt; (Required)</span>
+<span class="sd">        * The input, from which patches (regions of interest) are extracted</span>
+<span class="sd">          and resized using bilinear interpolation.</span>
+<span class="sd">        * Rank ``4``.</span>
+
+<span class="sd">    roi: tensor&lt;[N,1,4,1,1], T&gt; or tensor&lt;[N,1,5,1,1], T&gt; (Required)</span>
+<span class="sd">        * Regions of interest, or coordinates of the boxes. The above input</span>
+<span class="sd">          represents coordinates of ``N`` boxes.</span>
+<span class="sd">        * The convention to express coordinates  depends on the value of the</span>
+<span class="sd">          input ``box_coordinate_mode``.</span>
+<span class="sd">        * Rank ``5``.</span>
+<span class="sd">        * If ``tensor&lt;[N,1,4,1,1], T&gt;``: Resized images are computed for all</span>
+<span class="sd">          ``B`` input images.</span>
+<span class="sd">        * If ``tensor&lt;[N,1,5,1,1], T&gt;``: The first element from ``axis=-3``</span>
+<span class="sd">          to be resized is an index. It must be within range ``[0, B)``.</span>
+
+<span class="sd">    target_height: const&lt;i32&gt; (Optional, Default=1)</span>
+<span class="sd">        * Target height for resizing each patch.</span>
+
+<span class="sd">    target_width: const&lt;i32&gt; (Optional, Default=1)</span>
+<span class="sd">        * Target width for resizing each patch.</span>
+
+<span class="sd">    normalized_coordinates : const&lt;bool&gt; (Optional, default=False)</span>
+<span class="sd">        * If true, the bounding box coordinates must be in the</span>
+<span class="sd">          interval ``[0, 1]``. Scaling is based on the input spatial</span>
+<span class="sd">          dimensions: ``(H_in - 1)`` for height and ``(W_in - 1)`` for width.</span>
+<span class="sd">        * If false, the bounding box coordinates must be in the interval</span>
+<span class="sd">          ``[0, H_in - 1]`` for height dimensions and ``[0, W_in - 1]`` for</span>
+<span class="sd">          width dimensions.</span>
+
+<span class="sd">    spatial_scale : const&lt;fp32&gt; (Optional, default=1.0)</span>
+<span class="sd">        * Additional spatial scale that multiplies the bounding box coordinates.</span>
+<span class="sd">          You would use this to implement the RoI Align layer, which typically</span>
+<span class="sd">          uses unnormalized RoI coordinates along with a spatial scale that is</span>
+<span class="sd">          less than or equal to 1.</span>
+
+<span class="sd">    box_coordinate_mode: const&lt;str&gt; (Optional, default=&quot;CORNERS_HEIGHT_FIRST&quot;)</span>
+<span class="sd">        * Specifies the convention for specifying the four bounding box</span>
+<span class="sd">          coordinates for an image of size ``(Height, Width)``. The ``(0,0)``</span>
+<span class="sd">          coordinate corresponds to the top-left corner of the image.</span>
+<span class="sd">        * This parameter can take one of four values:</span>
+
+<span class="sd">          &quot;CORNERS_HEIGHT_FIRST&quot;: ``[h_start, w_start, h_end, w_end]``</span>
+
+<span class="sd">          &quot;CORNERS_WIDTH_FIRST&quot;: ``[w_start, h_start, w_end, h_end]``</span>
+
+<span class="sd">          &quot;CENTER_SIZE_HEIGHT_FIRST&quot;: ``[h_center, w_center, box_height, box_width]``</span>
+
+<span class="sd">          &quot;CENTER_SIZE_WIDTH_FIRST&quot;: ``[w_center, h_center, box_width, box_height]``</span>
+
+<span class="sd">    sampling_mode : const&lt;str&gt; (Optional, default=&quot;DEFAULT&quot;)</span>
+<span class="sd">        * This parameter can take ``&quot;STRICT_ALIGN_CORNERS&quot;``,</span>
+<span class="sd">          ``&quot;ALIGN_CORNERS&quot;``, ``&quot;DEFAULT&quot;``, ``&quot;OFFSET_CORNERS&quot;`` or</span>
+<span class="sd">          ``UNALIGN_CORNERS`` as values.</span>
+<span class="sd">        * This same convention is used by the ``resize_bilinear`` op (see</span>
+<span class="sd">          that op for details).</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    resize_bilinear</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tensor&lt;[N, B, C, target_height, target_width],T&gt; or tensor&lt;[N, 1, C, target_height, target_width],T&gt;</span>
+<span class="sd">        * Tensor with same type as the input.</span>
+<span class="sd">        * If ``roi : tensor&lt;[N,1,4,1,1], T&gt;``, the output is</span>
+<span class="sd">          ``tensor&lt;[N, B, C, target_height, target_width],T&gt;``.</span>
+<span class="sd">          Total crops = ``N*B``; that is, ``N`` crops for each input in the batch.</span>
+<span class="sd">        * If ``roi : tensor&lt;[N,1,5,1,1], T&gt;``, the output is</span>
+<span class="sd">          ``tensor&lt;[N, 1, C, target_height, target_width],T&gt;``.</span>
+<span class="sd">          Total crops = ``N``; that is, 1 crop for given input image index</span>
+<span class="sd">          in the batch.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T: fp32</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(),</span>
+        <span class="n">roi</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(),</span>
+        <span class="n">target_height</span><span class="o">=</span><span class="n">IntInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+        <span class="n">target_width</span><span class="o">=</span><span class="n">IntInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+        <span class="n">normalized_coordinates</span><span class="o">=</span><span class="n">BoolInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+        <span class="n">spatial_scale</span><span class="o">=</span><span class="n">FloatInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+        <span class="n">box_coordinate_mode</span><span class="o">=</span><span class="n">StringInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+        <span class="n">sampling_mode</span><span class="o">=</span><span class="n">StringInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">default_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">DefaultInputs</span><span class="p">(</span>
+            <span class="n">target_height</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">target_width</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">normalized_coordinates</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">spatial_scale</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span>
+            <span class="n">box_coordinate_mode</span><span class="o">=</span><span class="s2">&quot;CONRNERS_HEIGHT_FIRST&quot;</span><span class="p">,</span>
+            <span class="n">sampling_mode</span><span class="o">=</span><span class="s2">&quot;DEFAULT&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">crop_resize</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">rank</span> <span class="o">!=</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s1">&#39;input to the &quot;crop_resize&quot; op must be of rank 4. Provided </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">rank</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">rank</span> <span class="o">!=</span> <span class="mi">5</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s1">&#39;ROI input to the &quot;crop_resize&quot; op must be of rank 5, provided </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">rank</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sampling_mode</span><span class="o">.</span><span class="n">val</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span>
+            <span class="s2">&quot;STRICT_ALIGN_CORNERS&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;ALIGN_CORNERS&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;UNALIGN_CORNERS&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;DEFAULT&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;OFFSET_CORNERS&quot;</span><span class="p">,</span>
+        <span class="p">}:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s1">&#39;&quot;crop_resize&quot; op: unrecognized sampling mode &quot;</span><span class="si">{}</span><span class="s1">&quot;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">sampling_mode</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="c1"># ret_shape: [N] + [B, C, h_out, w_out]</span>
+        <span class="n">N</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">C</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">roi</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">ret_shape</span> <span class="o">=</span> <span class="p">[</span><span class="n">N</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_height</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_width</span><span class="o">.</span><span class="n">val</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">ret_shape</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="crop"><a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.image_resizing.crop">[docs]</a><span class="nd">@register_op</span><span class="p">(</span><span class="n">doc_str</span><span class="o">=</span><span class="s2">&quot;TODO&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">crop</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Crop the spatial dimensions (last two dimensions) of the input by the</span>
+<span class="sd">    specified amounts.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    x: tensor&lt;[\*D, H1, W1],T&gt; (Required)</span>
+<span class="sd">        * Must be at least rank ``3``.</span>
+<span class="sd">    crop_height: const&lt;2, i32&gt; (Required)</span>
+<span class="sd">        * Amount to be cropped from the top and bottom of the height dimension</span>
+<span class="sd">          (``axis=-2``).</span>
+<span class="sd">    crop_width: const&lt;2, i32&gt; (Required)</span>
+<span class="sd">        * Amount to be cropped from the left and right sides of the width dimension (``axis=-1``).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tensor&lt;[\*D, H2, W2],T&gt;</span>
+<span class="sd">        * Tensor with same type as the input.</span>
+<span class="sd">        * ``H2`` = ``H1`` - crop_height[0] - crop_height[1].</span>
+<span class="sd">        * ``W2`` = ``W1`` - crop_width[0] - crop_width[1].</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T: fp32</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(),</span>
+        <span class="n">crop_height</span><span class="o">=</span><span class="n">IntTensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+        <span class="n">crop_width</span><span class="o">=</span><span class="n">IntTensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">crop</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">rank</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s1">&#39;input to the &quot;crop&quot; op must at least be of rank 3. Provided </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">rank</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="n">crop_height</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">crop_height</span><span class="o">.</span><span class="n">val</span>
+        <span class="n">crop_width</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">crop_width</span><span class="o">.</span><span class="n">val</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">crop_height</span><span class="o">.</span><span class="n">flatten</span><span class="p">())</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;crop_height must have 2 elements. Provided </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="nb">len</span><span class="p">(</span><span class="n">crop_height</span><span class="o">.</span><span class="n">flatten</span><span class="p">())</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">crop_width</span><span class="o">.</span><span class="n">flatten</span><span class="p">())</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;crop_width must have 2 elements. Provided </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="nb">len</span><span class="p">(</span><span class="n">crop_width</span><span class="o">.</span><span class="n">flatten</span><span class="p">())</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="n">input_shape</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">ret_shape</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">input_shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+            <span class="o">+</span> <span class="p">[</span><span class="n">input_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">crop_height</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">crop_height</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+            <span class="o">+</span> <span class="p">[</span><span class="n">input_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">crop_width</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">crop_width</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">ret_shape</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Apple Inc.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

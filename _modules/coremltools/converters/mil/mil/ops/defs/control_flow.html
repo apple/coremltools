@@ -1,0 +1,1023 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>coremltools.converters.mil.mil.ops.defs.control_flow &mdash; coremltools API Reference  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../../../../_static/graphviz.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../../../../" src="../../../../../../../_static/documentation_options.js"></script>
+        <script data-url_root="../../../../../../../" id="documentation_options" src="../../../../../../../_static/documentation_options.js"></script>
+        <script src="../../../../../../../_static/jquery.js"></script>
+        <script src="../../../../../../../_static/underscore.js"></script>
+        <script src="../../../../../../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../../../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../../../../index.html" class="icon icon-home"> coremltools API Reference
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">API Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../source/coremltools.converters.html">Converters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../source/coremltools.models.html">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Resources</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://coremltools.readme.io/docs">Guides and examples</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://mlmodel.readme.io/reference">Core ML Format Specification</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../../../index.html">coremltools API Reference</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../../../../index.html">Module code</a> &raquo;</li>
+        
+      <li>coremltools.converters.mil.mil.ops.defs.control_flow</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for coremltools.converters.mil.mil.ops.defs.control_flow</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="c1">#  Copyright (c) 2020, Apple Inc. All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1">#  Use of this source code is governed by a BSD-3-clause license that can be</span>
+<span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Block</span><span class="p">,</span>
+    <span class="n">DefaultInputs</span><span class="p">,</span>
+    <span class="n">get_new_symbol</span><span class="p">,</span>
+    <span class="n">get_existing_symbol</span><span class="p">,</span>
+    <span class="n">SYMBOL</span><span class="p">,</span>
+    <span class="n">NONE</span><span class="p">,</span>
+    <span class="n">types</span><span class="p">,</span>
+    <span class="n">mil_list</span><span class="p">,</span>
+    <span class="n">Operation</span><span class="p">,</span>
+    <span class="n">VALUE</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.input_type</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">BoolInputType</span><span class="p">,</span>
+    <span class="n">DefaultInputs</span><span class="p">,</span>
+    <span class="n">InputSpec</span><span class="p">,</span>
+    <span class="n">InternalScalarOrTensorInputType</span><span class="p">,</span>
+    <span class="n">InternalStringInputType</span><span class="p">,</span>
+    <span class="n">IntTensorInputType</span><span class="p">,</span>
+    <span class="n">IntInputType</span><span class="p">,</span>
+    <span class="n">ListInputType</span><span class="p">,</span>
+    <span class="n">PyFunctionInputType</span><span class="p">,</span>
+    <span class="n">TensorInputType</span><span class="p">,</span>
+    <span class="n">TupleInputType</span><span class="p">,</span>
+    <span class="n">StringInputType</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.operation</span> <span class="kn">import</span> <span class="n">precondition</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.types</span> <span class="kn">import</span> <span class="n">is_compatible_type</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.types.type_mapping</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">numpy_val_to_builtin_val</span><span class="p">,</span>
+    <span class="n">is_subtype</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.var</span> <span class="kn">import</span> <span class="n">Var</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs._op_reqs</span> <span class="kn">import</span> <span class="n">register_op</span>
+
+<div class="viewcode-block" id="cond"><a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.control_flow.cond">[docs]</a><span class="nd">@register_op</span><span class="p">(</span><span class="n">doc_str</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">cond</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Perform a conditional execution. The return types must be identical</span>
+<span class="sd">    between the true and false branches.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    pred: tensor&lt;[], bool&gt; (Required)</span>
+<span class="sd">        * 0-D tensor (scalar) predicate to switch between true and false branches.</span>
+
+<span class="sd">    _true_fn: function (Required)</span>
+<span class="sd">        * A Python function that executes if ``pred`` evaluates to ``True``.</span>
+<span class="sd">        * It must take zero input (i.e, no input), and return one or more values whose type becomes</span>
+<span class="sd">          the operation&#39;s return type.</span>
+
+<span class="sd">    _false_fn: function (Required)</span>
+<span class="sd">        * A Python function that executes if ``pred`` evaluates to ``False``.</span>
+<span class="sd">        * It must take zero input (i.e. no input), and have return types that match those of the</span>
+<span class="sd">          ``if`` branch.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple</span>
+<span class="sd">        * Python tuple of ``Variables`` from one of the branches.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
+        <span class="n">pred</span><span class="o">=</span><span class="n">BoolInputType</span><span class="p">(),</span>
+        <span class="n">_true_fn</span><span class="o">=</span><span class="n">PyFunctionInputType</span><span class="p">(),</span>
+        <span class="n">_false_fn</span><span class="o">=</span><span class="n">PyFunctionInputType</span><span class="p">(),</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">cond</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">build_nested_blocks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Cond block</span>
+        <span class="n">true_block_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_true&quot;</span>
+        <span class="k">with</span> <span class="n">Block</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">true_block_name</span><span class="p">,</span> <span class="n">outer_op</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span> <span class="k">as</span> <span class="n">true_block</span><span class="p">:</span>
+            <span class="n">true_func</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_true_fn</span><span class="o">.</span><span class="n">val</span>
+            <span class="n">true_ret_vars</span> <span class="o">=</span> <span class="n">true_func</span><span class="p">()</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">true_ret_vars</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+                <span class="n">true_ret_vars</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">true_ret_vars</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">true_ret_vars</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="n">true_ret_vars</span> <span class="o">=</span> <span class="p">[</span><span class="n">true_ret_vars</span><span class="p">]</span>
+            <span class="n">true_block</span><span class="o">.</span><span class="n">set_outputs</span><span class="p">(</span><span class="n">true_ret_vars</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">true_block</span><span class="p">)</span>
+
+        <span class="n">false_block_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_false&quot;</span>
+        <span class="k">with</span> <span class="n">Block</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">false_block_name</span><span class="p">,</span> <span class="n">outer_op</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span> <span class="k">as</span> <span class="n">false_block</span><span class="p">:</span>
+            <span class="n">false_func</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_false_fn</span><span class="o">.</span><span class="n">val</span>
+            <span class="n">false_ret_vars</span> <span class="o">=</span> <span class="n">false_func</span><span class="p">()</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">false_ret_vars</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+                <span class="n">false_ret_vars</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">false_ret_vars</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">false_ret_vars</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="n">false_ret_vars</span> <span class="o">=</span> <span class="p">[</span><span class="n">false_ret_vars</span><span class="p">]</span>
+            <span class="n">false_block</span><span class="o">.</span><span class="n">set_outputs</span><span class="p">(</span><span class="n">false_ret_vars</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">false_block</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">true_ret_vars</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">outputs</span>
+        <span class="n">false_ret_vars</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">outputs</span>
+        <span class="c1"># Verify true_ret_vars has the same types as false_ret_vars</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">vt</span><span class="p">,</span> <span class="n">vf</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">true_ret_vars</span><span class="p">,</span> <span class="n">false_ret_vars</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">is_compatible_type</span><span class="p">(</span><span class="n">vt</span><span class="o">.</span><span class="n">sym_type</span><span class="p">,</span> <span class="n">vf</span><span class="o">.</span><span class="n">sym_type</span><span class="p">):</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="s2">&quot;true branch output </span><span class="si">{}</span><span class="s2"> type </span><span class="si">{}</span><span class="s2"> mismatch false branch&quot;</span>
+                    <span class="o">+</span> <span class="s2">&quot; output type </span><span class="si">{}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">vt</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                    <span class="n">vt</span><span class="o">.</span><span class="n">sym_type</span><span class="o">.</span><span class="n">__type_info__</span><span class="p">(),</span> <span class="n">vf</span><span class="o">.</span><span class="n">sym_type</span><span class="o">.</span><span class="n">__type_info__</span><span class="p">()))</span>
+
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">sym_type</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">true_ret_vars</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pred</span><span class="o">.</span><span class="n">val</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pred</span><span class="o">.</span><span class="n">val</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">v</span><span class="o">.</span><span class="n">val</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">outputs</span><span class="p">]</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">v</span><span class="o">.</span><span class="n">val</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">outputs</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="const"><a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.control_flow.const">[docs]</a><span class="nd">@register_op</span><span class="p">(</span><span class="n">doc_str</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">const</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return constant values.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    mode: immediate_value, file_value (Optional)</span>
+<span class="sd">        * Determines how the constant value is stored in the internal MIL format.</span>
+<span class="sd">        * For  large constants such as convolution weights, use ``file_value``.</span>
+<span class="sd">        * For smaller-size constants such as values of a stride, use ``immediate_value``.</span>
+
+<span class="sd">    val: const&lt;\*,T&gt; (Required)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    const&lt;\*,T&gt;</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T: fp32, i32, str</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
+        <span class="n">val</span><span class="o">=</span><span class="n">InternalScalarOrTensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">const</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">builtin_type</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_type_val</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">val</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">builtin_type</span>
+
+    <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_type_val</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">val</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">val</span>
+
+    <span class="k">def</span> <span class="nf">_get_type_val</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)):</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">bool</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)):</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)):</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">:</span>
+                <span class="c1"># We use int32 by default.</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">value</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">:</span>
+                <span class="c1"># We use float32 by default.</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">mil_list</span><span class="p">):</span>
+            <span class="c1"># if val that was passed in is of type mil_list, which is just a wrapper on top of python list</span>
+            <span class="c1"># then construct the list type</span>
+            <span class="n">list_value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">ls</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">list_value</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;mil_list&#39; points to an empty list&quot;</span><span class="p">)</span>
+            <span class="n">builtin_elem_type</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_type_val</span><span class="p">(</span><span class="n">list_value</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.types.type_list</span> <span class="kn">import</span> <span class="nb">list</span> <span class="k">as</span> <span class="n">types_list</span>
+            <span class="n">builtin_type</span> <span class="o">=</span> <span class="n">types_list</span><span class="p">(</span><span class="n">builtin_elem_type</span><span class="p">,</span> <span class="n">init_length</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">list_value</span><span class="p">),</span> <span class="n">dynamic_length</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">builtin_type</span><span class="p">,</span> <span class="n">value</span>
+
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">generic</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">mil_list</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unknown value for constant: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+
+        <span class="n">_</span><span class="p">,</span> <span class="n">builtin_type</span> <span class="o">=</span> <span class="n">numpy_val_to_builtin_val</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">builtin_type</span><span class="p">,</span> <span class="n">value</span></div>
+
+
+<span class="c1"># Internal const can have symbolic value (for testing purpose)</span>
+<span class="nd">@register_op</span><span class="p">(</span><span class="n">doc_str</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">_const_symbolic</span><span class="p">(</span><span class="n">const</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">_const_symbolic</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">builtin_type</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_type_val</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">sym_val</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">builtin_type</span>
+
+    <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># We allow symbolic values in _const_symbolic</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_type_val</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">sym_val</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">val</span>
+
+
+<div class="viewcode-block" id="select"><a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.control_flow.select">[docs]</a><span class="nd">@register_op</span><span class="p">(</span><span class="n">doc_str</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">select</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the elements selected from either ``a`` or ``b`` depending on the ``cond``.</span>
+
+<span class="sd">    The shape of ``cond``, ``a``, and ``b`` must be broadcastable.</span>
+<span class="sd">    You must provide ``a`` and ``b`` together, or provide neither.</span>
+<span class="sd">    If you provide neither, the operation returns the indices</span>
+<span class="sd">    of ``cond`` that are ``True``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    cond: tensor&lt;[\*D1], T&gt; (Required)</span>
+<span class="sd">        * Tensor. When ``True`` (non-zero), select element from ``x``, otherwise, ``y``.</span>
+
+<span class="sd">    a: tensor&lt;[\*D2], T&gt; (Optional)</span>
+<span class="sd">        * Values selected at indices where ``cond`` is ``True``.</span>
+<span class="sd">        * Default is ``None``.</span>
+
+<span class="sd">    b: tensor&lt;[\*D3], T&gt; (Optional)</span>
+<span class="sd">        * Values selected at indices where ``cond`` is ``False``.</span>
+<span class="sd">        * Default is ``None``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tensor&lt;[\*D_out], T&gt; or tensor&lt;[n, len(D1)], int32&gt;</span>
+<span class="sd">        *  If ``a, b`` are both provided, the return shape is based on broadcast rules</span>
+<span class="sd">           from ``cond, a, b``.</span>
+<span class="sd">        *  If ``a, b`` are ``None``, the return shape is 2-D, where the first dimension</span>
+<span class="sd">           ``n`` is the number of matching indices in ``cond``, and ``len(D1)`` is the</span>
+<span class="sd">           rank of ``cond``.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T: fp32</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
+    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
+        <span class="n">cond</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(),</span> <span class="n">a</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(),</span> <span class="n">b</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">()</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">select</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">a_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">sym_type</span>
+        <span class="n">b_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="o">.</span><span class="n">sym_type</span>
+        <span class="k">if</span> <span class="nb">all</span><span class="p">([</span><span class="n">a_type</span><span class="p">,</span> <span class="n">b_type</span><span class="p">]):</span>
+            <span class="n">compatible</span><span class="p">,</span> <span class="n">ret_type</span> <span class="o">=</span> <span class="n">types</span><span class="o">.</span><span class="n">is_tensor_and_is_compatible_general_shape</span><span class="p">(</span>
+                <span class="n">a_type</span><span class="p">,</span> <span class="n">b_type</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">compatible</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">ret_type</span>
+            <span class="k">elif</span> <span class="n">a_type</span> <span class="o">==</span> <span class="n">b_type</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">a_type</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Type mismatch </span><span class="si">{}</span><span class="s2"> vs. </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">a_type</span><span class="p">,</span> <span class="n">b_type</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">a_type</span> <span class="k">if</span> <span class="n">a_type</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">b_type</span>
+
+    <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cond</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">a</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">b</span><span class="o">.</span><span class="n">val</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="while_loop"><a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.control_flow.while_loop">[docs]</a><span class="nd">@register_op</span><span class="p">(</span><span class="n">doc_str</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">while_loop</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Perform the body repeatedly while the condition ``cond`` is true.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    _cond: function  (Required)</span>
+<span class="sd">        * A Python function that takes ``loop_vars`` as positional arguments.</span>
+<span class="sd">        * The function must return a ``bool`` ``Var``.</span>
+
+<span class="sd">    _body: function  (Required)</span>
+<span class="sd">        * A Python function that takes ``loop_vars`` as positional arguments.</span>
+<span class="sd">        * The function must return the same number of output vars as ``loop_var``</span>
+<span class="sd">          with the same types.</span>
+
+<span class="sd">    loop_vars: tuple (Required)</span>
+<span class="sd">        * Python tuple of ``Variables``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple</span>
+<span class="sd">        * Python tuple (same type as ``loop_vars``).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
+        <span class="c1"># arg name with underscore prefix won&#39;t be printed.</span>
+        <span class="n">_cond</span><span class="o">=</span><span class="n">PyFunctionInputType</span><span class="p">(),</span>
+        <span class="n">_body</span><span class="o">=</span><span class="n">PyFunctionInputType</span><span class="p">(),</span>
+        <span class="n">loop_vars</span><span class="o">=</span><span class="n">TupleInputType</span><span class="p">(),</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">while_loop</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_check_equal_value</span><span class="p">(</span><span class="n">val1</span><span class="p">,</span> <span class="n">val2</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">val1</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">val2</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="n">val1</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">val2</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val1</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val2</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array_equal</span><span class="p">(</span><span class="n">val1</span><span class="p">,</span> <span class="n">val2</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">val1</span> <span class="o">==</span> <span class="n">val2</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_clean_up_child_ops</span><span class="p">(</span><span class="n">block</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="p">):</span>
+
+            <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">blocks</span><span class="p">:</span>
+                <span class="n">while_loop</span><span class="o">.</span><span class="n">_clean_up_child_ops</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+
+            <span class="n">inputs</span> <span class="o">=</span> <span class="n">op</span><span class="o">.</span><span class="n">get_flattened_inputs</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">in_var</span> <span class="ow">in</span> <span class="n">inputs</span><span class="p">:</span>
+                <span class="n">in_var</span><span class="o">.</span><span class="n">remove_child_op</span><span class="p">(</span><span class="n">op</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_build_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">block_inputs</span><span class="p">):</span>
+        <span class="c1"># Cond block:</span>
+        <span class="n">block_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;_cond_block&#39;</span>
+        <span class="k">with</span> <span class="n">Block</span><span class="p">(</span><span class="n">block_inputs</span><span class="o">=</span><span class="n">block_inputs</span><span class="p">,</span> <span class="n">outer_op</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
+                <span class="n">name</span><span class="o">=</span><span class="n">block_name</span><span class="p">)</span> <span class="k">as</span> <span class="n">cond_block</span><span class="p">:</span>
+
+            <span class="n">cond_func</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cond</span><span class="o">.</span><span class="n">val</span>
+            <span class="n">cond_var</span> <span class="o">=</span> <span class="n">cond_func</span><span class="p">(</span><span class="o">*</span><span class="n">cond_block</span><span class="o">.</span><span class="n">inputs</span><span class="p">)</span>
+            <span class="n">cond_vars</span> <span class="o">=</span> <span class="n">cond_var</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cond_var</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">cond_var</span><span class="p">]</span>
+            <span class="n">cond_block</span><span class="o">.</span><span class="n">set_outputs</span><span class="p">(</span><span class="n">cond_vars</span><span class="p">)</span>
+
+        <span class="c1"># Body block</span>
+        <span class="n">block_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;_body_block&#39;</span>
+        <span class="k">with</span> <span class="n">Block</span><span class="p">(</span><span class="n">block_inputs</span><span class="o">=</span><span class="n">block_inputs</span><span class="p">,</span> <span class="n">outer_op</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
+                <span class="n">name</span><span class="o">=</span><span class="n">block_name</span><span class="p">)</span> <span class="k">as</span> <span class="n">body_block</span><span class="p">:</span>
+            <span class="n">body_func</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_body</span><span class="o">.</span><span class="n">val</span>
+            <span class="n">exit_vars</span> <span class="o">=</span> <span class="n">body_func</span><span class="p">(</span><span class="o">*</span><span class="n">body_block</span><span class="o">.</span><span class="n">inputs</span><span class="p">)</span>
+            <span class="n">exit_vars</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">exit_vars</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">exit_vars</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">))</span> \
+                <span class="k">else</span> <span class="p">[</span><span class="n">exit_vars</span><span class="p">]</span>
+            <span class="n">body_block</span><span class="o">.</span><span class="n">set_outputs</span><span class="p">(</span><span class="n">exit_vars</span><span class="p">)</span>
+            <span class="c1">#self.blocks.append(body_block)</span>
+
+        <span class="k">return</span> <span class="n">cond_block</span><span class="p">,</span> <span class="n">body_block</span><span class="p">,</span> <span class="n">exit_vars</span>
+
+    <span class="k">def</span> <span class="nf">build_nested_blocks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># self.loop_vars is python tuple of Vars.</span>
+
+        <span class="c1"># block_inputs Var are not produced by any op.</span>
+        <span class="c1"># We assume block_inputs have the same types as self.loop_var. If not</span>
+        <span class="c1"># (e.g., when certain dimensions change shape during iterate), we&#39;d</span>
+        <span class="c1"># adjust later.</span>
+
+        <span class="c1"># We assume that sym_val is unchanging across the block iterate. If it</span>
+        <span class="c1"># changes, we rebuild the block and rerun type and value inference.</span>
+
+        <span class="c1"># Design notes on two blocks (cond and body):</span>
+        <span class="c1">#</span>
+        <span class="c1"># - Observe that two blocks can always be represented as a single</span>
+        <span class="c1"># block that contains both cond and body logic, which would return</span>
+        <span class="c1"># [loop_cond] + loop_carries. `loop_cond` is a bool.</span>
+        <span class="c1">#</span>
+        <span class="c1"># - Observe that single block implies a do-while logic,</span>
+        <span class="c1"># in which the first iterate is always executed. It&#39;s possible to add</span>
+        <span class="c1"># a cond input to while_loop to modify do-while behavior:</span>
+        <span class="c1">#</span>
+        <span class="c1">#   %first_cond = cond_logic(...)</span>
+        <span class="c1">#   while_loop(cond=%first_cond, loop_vars=(...))</span>
+        <span class="c1">#</span>
+        <span class="c1"># and we enter the first iterate only if cond is True. But this would</span>
+        <span class="c1"># require caller to execute cond logic outside of while_loop first</span>
+        <span class="c1"># (which also needs to be duplicated within the loop),</span>
+        <span class="c1"># resulting in duplicated code / ops.</span>
+        <span class="c1">#</span>
+        <span class="c1"># - Thus, single block is unnatural for the natural execution order,</span>
+        <span class="c1"># in which we execute the cond block first to get the loop_cond. Only</span>
+        <span class="c1"># if `loop_cond` is True do we execute the body block. This is the</span>
+        <span class="c1"># semantics of tf.while_loop.</span>
+
+        <span class="n">block_inputs</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">copy</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">loop_vars</span><span class="p">)</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">visible_vars</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">enclosing_block</span><span class="o">.</span><span class="n">_visible_vars_in_block</span><span class="p">()</span>
+        <span class="n">name_count</span> <span class="o">=</span> <span class="p">{</span><span class="n">v</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="mi">1</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">visible_vars</span><span class="p">}</span>
+        <span class="n">seen</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span> <span class="c1"># Avoid using same name among block inputs</span>
+        <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">block_inputs</span><span class="p">:</span>
+            <span class="n">v</span><span class="o">.</span><span class="n">_op</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">v</span><span class="o">.</span><span class="n">op_output_idx</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">v</span><span class="o">.</span><span class="n">_child_ops</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+
+            <span class="c1"># Get unique name</span>
+            <span class="n">old_v_name</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">name</span>
+            <span class="k">if</span> <span class="n">v</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="n">name_count</span><span class="p">:</span>
+                <span class="n">v</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_x&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">name_count</span><span class="p">[</span><span class="n">v</span><span class="o">.</span><span class="n">name</span><span class="p">])</span>
+                <span class="n">name_count</span><span class="p">[</span><span class="n">old_v_name</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">v</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_x0&quot;</span>
+                <span class="n">name_count</span><span class="p">[</span><span class="n">old_v_name</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+
+            <span class="n">v</span><span class="o">.</span><span class="n">_sym_val</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">_sym_val</span>
+            <span class="n">v</span><span class="o">.</span><span class="n">consuming_blocks</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+            <span class="n">seen</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+        <span class="n">cond_block</span><span class="p">,</span> <span class="n">body_block</span><span class="p">,</span> <span class="n">exit_vars</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_block</span><span class="p">(</span><span class="n">block_inputs</span><span class="p">)</span>
+
+        <span class="c1"># Verify exit_vars has the same types as loop_vars</span>
+        <span class="n">block_input_type_change</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">v_in</span><span class="p">,</span> <span class="n">v_out</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">block_inputs</span><span class="p">,</span> <span class="n">exit_vars</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">is_subtype</span><span class="p">(</span><span class="n">v_out</span><span class="o">.</span><span class="n">sym_type</span><span class="p">,</span> <span class="n">v_in</span><span class="o">.</span><span class="n">sym_type</span><span class="p">):</span>
+                <span class="n">compat_shape</span> <span class="o">=</span> <span class="n">while_loop</span><span class="o">.</span><span class="n">get_compat_shape</span><span class="p">(</span><span class="n">v_out</span><span class="o">.</span><span class="n">sym_type</span><span class="p">,</span>
+                        <span class="n">v_in</span><span class="o">.</span><span class="n">sym_type</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">compat_shape</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;loop_vars &#39;</span><span class="si">{}</span><span class="s2">&#39; changes in the body of &quot;</span> \
+                          <span class="s2">&quot;while_loop &#39;</span><span class="si">{}</span><span class="s2">&#39;:</span><span class="se">\n</span><span class="s2"> </span><span class="si">{}</span><span class="s2"> -&gt; </span><span class="si">{}</span><span class="s2">&quot;</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="n">v_in</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                        <span class="n">v_in</span><span class="o">.</span><span class="n">sym_type</span><span class="p">,</span> <span class="n">v_out</span><span class="o">.</span><span class="n">sym_type</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">block_inputs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">_sym_type</span> <span class="o">=</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span>
+                            <span class="n">v_in</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">compat_shape</span><span class="p">)</span>
+                    <span class="n">block_input_type_change</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">while_loop</span><span class="o">.</span><span class="n">_check_equal_value</span><span class="p">(</span><span class="n">v_out</span><span class="o">.</span><span class="n">sym_val</span><span class="p">,</span> <span class="n">v_in</span><span class="o">.</span><span class="n">sym_val</span><span class="p">):</span>
+                <span class="n">block_inputs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">_sym_val</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="n">block_input_type_change</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">if</span> <span class="n">block_input_type_change</span><span class="p">:</span>
+            <span class="c1"># Since we are going to build the block again, we first need to remove ops</span>
+            <span class="c1"># in the block from vars&#39;s _child_ops.</span>
+            <span class="n">while_loop</span><span class="o">.</span><span class="n">_clean_up_child_ops</span><span class="p">(</span><span class="n">cond_block</span><span class="p">)</span>
+            <span class="n">while_loop</span><span class="o">.</span><span class="n">_clean_up_child_ops</span><span class="p">(</span><span class="n">body_block</span><span class="p">)</span>
+
+            <span class="c1"># Rebuild our block to invoke type inference.</span>
+            <span class="n">cond_block</span><span class="p">,</span> <span class="n">body_block</span><span class="p">,</span> <span class="n">exit_vars</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_block</span><span class="p">(</span><span class="n">block_inputs</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">v_in</span><span class="p">,</span> <span class="n">v_out</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">block_inputs</span><span class="p">,</span> <span class="n">exit_vars</span><span class="p">)):</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">is_subtype</span><span class="p">(</span><span class="n">v_out</span><span class="o">.</span><span class="n">sym_type</span><span class="p">,</span> <span class="n">v_in</span><span class="o">.</span><span class="n">sym_type</span><span class="p">):</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Block output </span><span class="si">{}</span><span class="s1">: </span><span class="si">{}</span><span class="s1"> is not a subtype of &#39;</span> <span class="o">+</span>\
+                            <span class="s1">&#39;block input </span><span class="si">{}</span><span class="s1">: </span><span class="si">{}</span><span class="s1"> after factoring shape changes&#39;</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">v_out</span><span class="o">.</span><span class="n">name</span><span class="o">.</span> <span class="n">v</span><span class="o">.</span><span class="n">sym_type</span><span class="p">,</span>
+                        <span class="n">v_in</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">v_in</span><span class="o">.</span><span class="n">sym_type</span><span class="p">))</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">while_loop</span><span class="o">.</span><span class="n">_check_equal_value</span><span class="p">(</span><span class="n">v_out</span><span class="o">.</span><span class="n">sym_val</span><span class="p">,</span> <span class="n">v_in</span><span class="o">.</span><span class="n">sym_val</span><span class="p">):</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Block output </span><span class="si">{}</span><span class="s1">: </span><span class="si">{}</span><span class="s1"> is not equal to &#39;</span> <span class="o">+</span>\
+                            <span class="s1">&#39;block input </span><span class="si">{}</span><span class="s1">: </span><span class="si">{}</span><span class="s1"> after value changes&#39;</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">v_out</span><span class="o">.</span><span class="n">name</span><span class="o">.</span> <span class="n">v</span><span class="o">.</span><span class="n">sym_val</span><span class="p">,</span>
+                        <span class="n">v_in</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">v_in</span><span class="o">.</span><span class="n">sym_val</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cond_block</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">body_block</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_compat_shape</span><span class="p">(</span><span class="n">type1</span><span class="p">,</span> <span class="n">type2</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        For tensor types `type1`, `type2` that are of the same rank, return</span>
+<span class="sd">        compat_shape (python list) where compat_shape[i] is integer iff type1</span>
+<span class="sd">        and type2 have the same integer shape on dim i. compat_shape[i] is</span>
+<span class="sd">        symbolic otherwise.</span>
+
+<span class="sd">        Return None if `type1`, `type2` have different rank or non-tensor</span>
+<span class="sd">        type.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">types</span><span class="o">.</span><span class="n">is_tensor</span><span class="p">(</span><span class="n">type1</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">types</span><span class="o">.</span><span class="n">is_tensor</span><span class="p">(</span><span class="n">type2</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="n">s1</span> <span class="o">=</span> <span class="n">type1</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span>
+        <span class="n">s2</span> <span class="o">=</span> <span class="n">type2</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">s1</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">s2</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="n">compat_shape</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">d1</span><span class="p">,</span> <span class="n">d2</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">s1</span><span class="p">,</span> <span class="n">s2</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">d1</span> <span class="o">!=</span> <span class="n">d2</span><span class="p">:</span>
+                <span class="n">compat_shape</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">get_new_symbol</span><span class="p">())</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">compat_shape</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">d1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">compat_shape</span>
+
+    <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Skip the conditional var</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">sym_type</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">outputs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="make_list"><a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.control_flow.make_list">[docs]</a><span class="nd">@register_op</span><span class="p">(</span><span class="n">doc_str</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">make_list</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Create a list of tensor elements. The elements should have the same shape.</span>
+<span class="sd">    The list is similar to an auto-resizing array.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    init_length: &lt;i32&gt; (Optional)</span>
+<span class="sd">        * Initial length for the list. If ``dynamic_length`` is ``False``,</span>
+<span class="sd">          ``init_length`` is the fixed length of the list throughout runtime.</span>
+<span class="sd">        * Default is ``1``.</span>
+
+<span class="sd">    dynamic_length: &lt;bool&gt; (Optional)</span>
+<span class="sd">        * Initial length for the list. If ``dynamic_length`` is ``False``,</span>
+<span class="sd">          ``init_length`` is the fixed length of the list throughout runtime.</span>
+<span class="sd">        * Default is ``True``.</span>
+
+<span class="sd">    elem_shape: &lt;K,i32&gt; (Required)</span>
+<span class="sd">        * Non-symbolic 1-D tensor denoting the shape of elements.</span>
+<span class="sd">        * If not provided, the resulting ``List`` won’t have the elementary shape</span>
+<span class="sd">          info, which may cause backend errors. Remedy this with SSA passes.</span>
+
+<span class="sd">    dtype: const&lt;str&gt;  (Optional)</span>
+<span class="sd">        * Element tensor’s ``dtype``.</span>
+<span class="sd">        * Default is ``fp32``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    List[*]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
+        <span class="n">init_length</span><span class="o">=</span><span class="n">IntInputType</span><span class="p">(</span><span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+        <span class="n">dynamic_length</span><span class="o">=</span><span class="n">BoolInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+        <span class="n">elem_shape</span><span class="o">=</span><span class="n">TupleInputType</span><span class="p">(),</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="n">StringInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">default_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">DefaultInputs</span><span class="p">(</span>
+            <span class="n">init_length</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">dynamic_length</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;fp32&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">make_list</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">builtin_dtype</span> <span class="o">=</span> <span class="n">types</span><span class="o">.</span><span class="n">string_to_builtin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">val</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">builtin_dtype</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unsupported dtype </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">val</span><span class="p">))</span>
+        <span class="c1"># Replace string with symbol</span>
+        <span class="n">elem_shape_sym</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">s_var</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">elem_shape</span><span class="p">:</span>
+            <span class="c1"># s is str or int</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="n">s_var</span><span class="o">.</span><span class="n">val</span>
+            <span class="k">if</span> <span class="n">s</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;make_list elem_shape must be tuple of const. &#39;</span> <span class="o">+</span>\
+                    <span class="s1">&#39;Tuple elem </span><span class="si">{}</span><span class="s1"> is not&#39;</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">s_var</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">symbol</span> <span class="o">=</span> <span class="n">get_existing_symbol</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                    <span class="c1"># Must be a new symbol</span>
+                    <span class="n">symbol</span> <span class="o">=</span> <span class="n">get_new_symbol</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+                <span class="n">elem_shape_sym</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">symbol</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+              <span class="n">elem_shape_sym</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+        <span class="n">elem_type</span> <span class="o">=</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">builtin_dtype</span><span class="p">,</span> <span class="n">elem_shape_sym</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">list</span><span class="p">(</span>
+            <span class="n">elem_type</span><span class="p">,</span>
+            <span class="n">init_length</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">init_length</span><span class="o">.</span><span class="n">val</span><span class="p">,</span>
+            <span class="n">dynamic_length</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dynamic_length</span><span class="o">.</span><span class="n">val</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="list_length"><a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.control_flow.list_length">[docs]</a><span class="nd">@register_op</span><span class="p">(</span><span class="n">doc_str</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">list_length</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the length of ``ls``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ls: List[*] (Required)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    &lt;i32&gt;</span>
+<span class="sd">        * Length of ``ls``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span><span class="n">ls</span><span class="o">=</span><span class="n">ListInputType</span><span class="p">(),)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">list_length</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">int32</span>
+
+    <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span> <span class="o">|</span> <span class="n">SYMBOL</span> <span class="o">|</span> <span class="n">NONE</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">ls</span><span class="o">.</span><span class="n">dynamic_length</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ls</span><span class="o">.</span><span class="n">init_length</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="list_write"><a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.control_flow.list_write">[docs]</a><span class="nd">@register_op</span><span class="p">(</span><span class="n">doc_str</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">list_write</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Write a value into index ``index`` of ``ls``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ls: List (Required)</span>
+
+<span class="sd">    index: &lt;i32&gt; (Required)</span>
+<span class="sd">        * Size of the list.</span>
+
+<span class="sd">    value: &lt;*,T&gt; (Optional)</span>
+<span class="sd">        * Element value to write, which must match the element shape of ``ls``.</span>
+<span class="sd">        * Default is ``None``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    List[*]</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T: fp32, i32, bool</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
+        <span class="n">ls</span><span class="o">=</span><span class="n">ListInputType</span><span class="p">(),</span>
+        <span class="n">index</span><span class="o">=</span><span class="n">IntInputType</span><span class="p">(),</span>
+        <span class="n">value</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(),</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">list_write</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">list_elem_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ls</span><span class="o">.</span><span class="n">elem_type</span>
+        <span class="n">value_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">sym_type</span>
+        <span class="n">dynamic_length</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ls</span><span class="o">.</span><span class="n">dynamic_length</span>
+        <span class="n">init_length</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ls</span><span class="o">.</span><span class="n">init_length</span>
+
+        <span class="k">if</span> <span class="n">list_elem_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># fill in the elem type using value&#39;s type info.</span>
+            <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">list</span><span class="p">(</span>
+                <span class="n">value_type</span><span class="p">,</span> <span class="n">init_length</span><span class="o">=</span><span class="n">init_length</span><span class="p">,</span> <span class="n">dynamic_length</span><span class="o">=</span><span class="n">dynamic_length</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">list_elem_type</span> <span class="o">==</span> <span class="n">types</span><span class="o">.</span><span class="n">unknown</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Input ls elem type unknown. Override with </span><span class="si">{}</span><span class="s2">&quot;</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">value_type</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">list</span><span class="p">(</span>
+                <span class="n">value_type</span><span class="p">,</span> <span class="n">init_length</span><span class="o">=</span><span class="n">init_length</span><span class="p">,</span> <span class="n">dynamic_length</span><span class="o">=</span><span class="n">dynamic_length</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">types</span><span class="o">.</span><span class="n">is_subtype</span><span class="p">(</span><span class="n">value_type</span><span class="p">,</span> <span class="n">list_elem_type</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Elem type mismatch: ls elem type </span><span class="si">{}</span><span class="s2"> vs &quot;</span> <span class="o">+</span> <span class="s2">&quot;value type </span><span class="si">{}</span><span class="s2">&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">list_elem_type</span><span class="o">.</span><span class="n">__type_info__</span><span class="p">(),</span>
+              <span class="n">value_type</span><span class="o">.</span><span class="n">__type_info__</span><span class="p">()))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ls</span><span class="o">.</span><span class="n">sym_type</span></div>
+
+
+<div class="viewcode-block" id="list_read"><a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.control_flow.list_read">[docs]</a><span class="nd">@register_op</span><span class="p">(</span><span class="n">doc_str</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">list_read</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Read the value at location ``index`` of ``ls``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ls: List[\*] (Required)</span>
+
+<span class="sd">    index: &lt;i32&gt; (Required)</span>
+<span class="sd">        * Size of the list.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    &lt;\*,T&gt;</span>
+<span class="sd">        * The element&#39;s value.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T: fp32, i32, bool</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
+        <span class="n">ls</span><span class="o">=</span><span class="n">ListInputType</span><span class="p">(),</span>
+        <span class="n">index</span><span class="o">=</span><span class="n">IntInputType</span><span class="p">(),</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">list_read</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">list_elem_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ls</span><span class="o">.</span><span class="n">elem_type</span>
+        <span class="k">if</span> <span class="n">list_elem_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">&quot;Unknown element type. The List might not have been &quot;</span>
+                <span class="o">+</span> <span class="s2">&quot;written to (</span><span class="si">{}</span><span class="s2">)&quot;</span>
+            <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">list_elem_type</span></div>
+
+
+
+<div class="viewcode-block" id="list_gather"><a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.control_flow.list_gather">[docs]</a><span class="nd">@register_op</span><span class="p">(</span><span class="n">doc_str</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">list_gather</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return selected values in ``ls`` as a packed ``Tensor``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ls: List[\*] (Required)</span>
+
+<span class="sd">    indices: &lt;K,i32&gt; (Required)</span>
+<span class="sd">        * Gather from indices, whose element must be in ``[0, ls.length)`` at runtime.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    &lt;\*K,T&gt;</span>
+<span class="sd">        * Selected tensors packed into a ``len(ls.elem_shape)+1`` rank tensor.</span>
+<span class="sd">        * ``K[0] == len(indices)``.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T: fp32, i32, bool</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
+        <span class="n">ls</span><span class="o">=</span><span class="n">ListInputType</span><span class="p">(),</span>
+        <span class="n">indices</span><span class="o">=</span><span class="n">IntTensorInputType</span><span class="p">(),</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">list_gather</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">list_elem_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ls</span><span class="o">.</span><span class="n">elem_type</span>
+        <span class="k">if</span> <span class="n">list_elem_type</span> <span class="o">==</span> <span class="n">types</span><span class="o">.</span><span class="n">unknown</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">&quot;Unknown element type. The List might not have been &quot;</span>
+                <span class="o">+</span> <span class="s2">&quot;written to (</span><span class="si">{}</span><span class="s2">)&quot;</span>
+            <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+        <span class="n">elem_shape</span> <span class="o">=</span> <span class="n">list_elem_type</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()</span>
+        <span class="n">dtype</span> <span class="o">=</span> <span class="n">list_elem_type</span><span class="o">.</span><span class="n">get_primitive</span><span class="p">()</span>
+        <span class="n">ret_shape</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">indices</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">elem_shape</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">dtype</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">ret_shape</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="list_scatter"><a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.control_flow.list_scatter">[docs]</a><span class="nd">@register_op</span><span class="p">(</span><span class="n">doc_str</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">list_scatter</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Scatter ``values`` to ``ls`` at locations ``indices``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ls: List[*] (Required)</span>
+
+<span class="sd">    indices: tensor&lt;num_updates, i32&gt; (Required)</span>
+<span class="sd">        * Indices of ``ls`` to scatter to.</span>
+<span class="sd">        * Elements of ``indices`` must be in ``[0, ls.length)`` at runtime.</span>
+<span class="sd">        * If indices are greater than or equal to the list length, the list is</span>
+<span class="sd">          dynamically resized.</span>
+
+<span class="sd">    value: &lt;*,T&gt; (Optional)</span>
+<span class="sd">        * Element value to write, which must match the element shape of ``ls``.</span>
+<span class="sd">        * Default is ``None``.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    List[*]</span>
+<span class="sd">        * Updated list.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    T: fp32, i32, bool</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
+        <span class="n">ls</span><span class="o">=</span><span class="n">ListInputType</span><span class="p">(),</span>
+        <span class="n">indices</span><span class="o">=</span><span class="n">IntTensorInputType</span><span class="p">(),</span>
+        <span class="n">value</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(),</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">list_scatter</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">num_indices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">indices</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">num_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">num_values</span> <span class="o">!=</span> <span class="n">num_indices</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Cannot scatter </span><span class="si">{}</span><span class="s2"> values to </span><span class="si">{}</span><span class="s2"> indices&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">num_values</span><span class="p">,</span> <span class="n">num_indices</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="n">list_elem_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ls</span><span class="o">.</span><span class="n">elem_type</span>
+        <span class="n">value_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="n">sym_type</span>
+        <span class="n">dynamic_length</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ls</span><span class="o">.</span><span class="n">dynamic_length</span>
+        <span class="n">init_length</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ls</span><span class="o">.</span><span class="n">init_length</span>
+
+        <span class="n">elem_type</span> <span class="o">=</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">value_type</span><span class="o">.</span><span class="n">get_primitive</span><span class="p">(),</span> <span class="n">value_type</span><span class="o">.</span><span class="n">get_shape</span><span class="p">()[</span><span class="mi">1</span><span class="p">:])</span>
+        <span class="k">if</span> <span class="n">list_elem_type</span> <span class="o">==</span> <span class="n">types</span><span class="o">.</span><span class="n">unknown</span><span class="p">:</span>
+            <span class="c1"># fill in the elem type using value&#39;s type info.</span>
+            <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">list</span><span class="p">(</span>
+                <span class="n">elem_type</span><span class="p">,</span> <span class="n">dynamic_length</span><span class="o">=</span><span class="n">dynamic_length</span><span class="p">,</span> <span class="n">init_length</span><span class="o">=</span><span class="n">init_length</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">types</span><span class="o">.</span><span class="n">is_subtype</span><span class="p">(</span><span class="n">elem_type</span><span class="p">,</span> <span class="n">list_elem_type</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Elem type mismatch: ls elem type </span><span class="si">{}</span><span class="s2"> vs &quot;</span> <span class="o">+</span> <span class="s2">&quot;value type </span><span class="si">{}</span><span class="s2">&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">list_elem_type</span><span class="p">,</span> <span class="n">elem_type</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">ls</span><span class="o">.</span><span class="n">sym_type</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Apple Inc.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
