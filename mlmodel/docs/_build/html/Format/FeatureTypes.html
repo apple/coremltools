@@ -1,0 +1,548 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>FeatureTypes &mdash; Core ML Format Reference  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Parameters" href="Parameters.html" />
+    <link rel="prev" title="DataStructures" href="DataStructures.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Core ML Format Reference
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Model.html">Core ML Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="NeuralNetwork.html">NeuralNetwork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="MIL.html">MILspec.Program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Regressors.html">Regressors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Classifiers.html">Classifiers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="OtherModels.html">Other Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FeatureEngineering.html">Feature Engineering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Pipeline.html">Pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Identity.html">Simple Math Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="SVM.html">Support Vector Machine</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="DataStructuresTypes.html">Data Structures, Types and Parameters</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="DataStructures.html">DataStructures</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">FeatureTypes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#int64featuretype">Int64FeatureType</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#doublefeaturetype">DoubleFeatureType</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stringfeaturetype">StringFeatureType</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sizerange">SizeRange</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#imagefeaturetype">ImageFeatureType</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#imagefeaturetype-imagesize">ImageFeatureType.ImageSize</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#imagefeaturetype-enumeratedimagesizes">ImageFeatureType.EnumeratedImageSizes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#imagefeaturetype-imagesizerange">ImageFeatureType.ImageSizeRange</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#arrayfeaturetype">ArrayFeatureType</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#arrayfeaturetype-shape">ArrayFeatureType.Shape</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#arrayfeaturetype-enumeratedshapes">ArrayFeatureType.EnumeratedShapes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#arrayfeaturetype-shaperange">ArrayFeatureType.ShapeRange</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#dictionaryfeaturetype">DictionaryFeatureType</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#sequencefeaturetype">SequenceFeatureType</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#featuretype">FeatureType</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#arrayfeaturetype-arraydatatype">ArrayFeatureType.ArrayDataType</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#imagefeaturetype-colorspace">ImageFeatureType.ColorSpace</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="Parameters.html">Parameters</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Resources</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://coremltools.readme.io/docs">Guides and examples</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/index.html">Core ML Tools (coremltools) API</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools/tree/main/mlmodel">GitHub</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Core ML Format Reference</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="DataStructuresTypes.html">Data Structures, Types and Parameters</a> &raquo;</li>
+        
+      <li>FeatureTypes</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/Format/FeatureTypes.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="featuretypes">
+<h1>FeatureTypes<a class="headerlink" href="#featuretypes" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="int64featuretype">
+<h2>Int64FeatureType<a class="headerlink" href="#int64featuretype" title="Permalink to this headline">¶</a></h2>
+<p>The 64-bit integer feature type.</p>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Int64FeatureType</span> <span class="p">{}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="doublefeaturetype">
+<h2>DoubleFeatureType<a class="headerlink" href="#doublefeaturetype" title="Permalink to this headline">¶</a></h2>
+<p>The double-precision floating point number feature type.</p>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">DoubleFeatureType</span> <span class="p">{}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="stringfeaturetype">
+<h2>StringFeatureType<a class="headerlink" href="#stringfeaturetype" title="Permalink to this headline">¶</a></h2>
+<p>The string feature type.</p>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">StringFeatureType</span> <span class="p">{}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="sizerange">
+<h2>SizeRange<a class="headerlink" href="#sizerange" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">SizeRange</span> <span class="p">{</span>
+    <span class="kt">uint64</span> <span class="na">lowerBound</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="kt">int64</span> <span class="na">upperBound</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span> <span class="c1">// negative value means unbound otherwise upperbound is included in range</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="imagefeaturetype">
+<h2>ImageFeatureType<a class="headerlink" href="#imagefeaturetype" title="Permalink to this headline">¶</a></h2>
+<p>The image feature type.</p>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ImageFeatureType</span> <span class="p">{</span>
+    <span class="c1">// Assumes raw (decompressed) format</span>
+    <span class="kd">enum</span> <span class="n">ColorSpace</span> <span class="p">{</span>
+        <span class="na">INVALID_COLOR_SPACE</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="na">GRAYSCALE</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span> <span class="c1">//  8 bits per pixel</span>
+        <span class="na">RGB</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>       <span class="c1">// 32 bits per pixel: RGBA with A channel ignored</span>
+        <span class="na">BGR</span> <span class="o">=</span> <span class="mi">30</span><span class="p">;</span>       <span class="c1">// 32 bits per pixel: BGRA with A channel ignored</span>
+    <span class="p">}</span>
+
+    <span class="kd">message</span> <span class="nc">ImageSize</span> <span class="p">{</span>
+        <span class="kt">uint64</span> <span class="na">width</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="kt">uint64</span> <span class="na">height</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="kd">message</span> <span class="nc">EnumeratedImageSizes</span> <span class="p">{</span>
+        <span class="k">repeated</span> <span class="n">ImageSize</span> <span class="na">sizes</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="kd">message</span> <span class="nc">ImageSizeRange</span> <span class="p">{</span>
+        <span class="n">SizeRange</span> <span class="na">widthRange</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="n">SizeRange</span> <span class="na">heightRange</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="c1">// The required or default image size is width x height</span>
+    <span class="c1">//</span>
+    <span class="c1">// If specificationVersion &lt;= 2 or SizeFlexibility is empty,</span>
+    <span class="c1">// width x height is the required fixed image size</span>
+    <span class="c1">//</span>
+    <span class="c1">// If SizeFlexibility is present, width x height indicate a &quot;default&quot;</span>
+    <span class="c1">// image size which must be consistent with the flexibilty specified</span>
+
+    <span class="kt">int64</span> <span class="na">width</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="kt">int64</span> <span class="na">height</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+
+    <span class="c1">// For specification version &gt;= 3 you can specify image size flexibility.</span>
+
+    <span class="k">oneof</span> <span class="n">SizeFlexibility</span> <span class="p">{</span>
+
+        <span class="c1">// Use enumeratedSizes for a set of distinct fixed sizes</span>
+        <span class="c1">// e.g. portrait or landscape: [80 x 100, 100 x 8]</span>
+        <span class="c1">//</span>
+        <span class="c1">// If the width x height fields above are specified then they must be</span>
+        <span class="c1">// one of the sizes listed.</span>
+        <span class="c1">//</span>
+        <span class="c1">// If width and height are not specified above then the default width</span>
+        <span class="c1">// and height will be enumeratedSizes[0]</span>
+        <span class="c1">//</span>
+        <span class="c1">// Must be non-empty</span>
+
+        <span class="n">EnumeratedImageSizes</span> <span class="na">enumeratedSizes</span> <span class="o">=</span> <span class="mi">21</span><span class="p">;</span>
+
+        <span class="c1">// Use imageSizeRange to allow for ranges of values</span>
+        <span class="c1">// e.g. any image greater than 10 x 20: [10..&lt;max] x [20..&lt;max]</span>
+        <span class="c1">//</span>
+        <span class="c1">// If width and height are specified above they must fall in the range</span>
+        <span class="c1">// specified in imageSizeRange. They will be treated as the default size.</span>
+        <span class="c1">//</span>
+        <span class="c1">// If width and height are not specified above then the default width</span>
+        <span class="c1">// and height will be imageSizeRange.widthRange.lowerBound x imageSizeRange.heightRange.lowerBound</span>
+
+        <span class="n">ImageSizeRange</span> <span class="na">imageSizeRange</span> <span class="o">=</span> <span class="mi">31</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="n">ColorSpace</span> <span class="na">colorSpace</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="section" id="imagefeaturetype-imagesize">
+<h3>ImageFeatureType.ImageSize<a class="headerlink" href="#imagefeaturetype-imagesize" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ImageSize</span> <span class="p">{</span>
+    <span class="kt">uint64</span> <span class="na">width</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="kt">uint64</span> <span class="na">height</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="imagefeaturetype-enumeratedimagesizes">
+<h3>ImageFeatureType.EnumeratedImageSizes<a class="headerlink" href="#imagefeaturetype-enumeratedimagesizes" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">EnumeratedImageSizes</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="n">ImageSize</span> <span class="na">sizes</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="imagefeaturetype-imagesizerange">
+<h3>ImageFeatureType.ImageSizeRange<a class="headerlink" href="#imagefeaturetype-imagesizerange" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ImageSizeRange</span> <span class="p">{</span>
+    <span class="n">SizeRange</span> <span class="na">widthRange</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="n">SizeRange</span> <span class="na">heightRange</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="arrayfeaturetype">
+<h2>ArrayFeatureType<a class="headerlink" href="#arrayfeaturetype" title="Permalink to this headline">¶</a></h2>
+<p>The array feature type.</p>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ArrayFeatureType</span> <span class="p">{</span>
+
+    <span class="kd">enum</span> <span class="n">ArrayDataType</span> <span class="p">{</span>
+        <span class="na">INVALID_ARRAY_DATA_TYPE</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="na">FLOAT32</span> <span class="o">=</span> <span class="mi">65568</span><span class="p">;</span> <span class="c1">// 0x10000 | 32</span>
+        <span class="na">DOUBLE</span> <span class="o">=</span> <span class="mi">65600</span><span class="p">;</span>  <span class="c1">// 0x10000 | 64</span>
+        <span class="na">INT32</span> <span class="o">=</span> <span class="mi">131104</span><span class="p">;</span>  <span class="c1">// 0x20000 | 32</span>
+    <span class="p">}</span>
+
+    <span class="c1">// The required or default shape</span>
+    <span class="c1">//</span>
+    <span class="c1">// If specificationVersion &lt;= 2 or ShapeFlexibility is empty,</span>
+    <span class="c1">// shape is the required fixed shape</span>
+    <span class="c1">//</span>
+    <span class="c1">// If ShapeFlexibility is present, shape indicate a &quot;default&quot;</span>
+    <span class="c1">// shape which must be consistent with the flexibilty specified</span>
+
+    <span class="k">repeated</span> <span class="kt">int64</span> <span class="na">shape</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+
+    <span class="n">ArrayDataType</span> <span class="na">dataType</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+
+    <span class="kd">message</span> <span class="nc">Shape</span> <span class="p">{</span>
+        <span class="k">repeated</span> <span class="kt">int64</span> <span class="na">shape</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="kd">message</span> <span class="nc">EnumeratedShapes</span> <span class="p">{</span>
+        <span class="k">repeated</span> <span class="n">Shape</span> <span class="na">shapes</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="kd">message</span> <span class="nc">ShapeRange</span> <span class="p">{</span>
+        <span class="c1">// sizeRanges.size() must be length 1 or 3</span>
+        <span class="c1">// sizeRanges[d] specifies the allowed range for dimension d</span>
+        <span class="k">repeated</span> <span class="n">SizeRange</span> <span class="na">sizeRanges</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="c1">// For specification version &gt;= 3 you can specify image size flexibility.</span>
+
+    <span class="k">oneof</span> <span class="n">ShapeFlexibility</span> <span class="p">{</span>
+
+        <span class="c1">// Use enumeratedShapes for a set of distinct fixed shapes</span>
+        <span class="c1">//</span>
+        <span class="c1">// If the shape field is specified then it must be</span>
+        <span class="c1">// one of the enumerated shapes.</span>
+        <span class="c1">// If shape is not specifed, the &quot;default&quot; shape will be considered</span>
+        <span class="c1">// enumeratedShapes[0]</span>
+        <span class="c1">//</span>
+        <span class="c1">// Must be non-empty</span>
+
+        <span class="n">EnumeratedShapes</span> <span class="na">enumeratedShapes</span> <span class="o">=</span> <span class="mi">21</span><span class="p">;</span>
+
+        <span class="c1">// Use shapeRange to allow the size of each dimension vary within</span>
+        <span class="c1">// indpendently specified ranges</span>
+        <span class="c1">//</span>
+        <span class="c1">// If you specify shape above it must fall in the range</span>
+        <span class="c1">// specified in shapeRanges. It will be treated as the default shape.</span>
+        <span class="c1">//</span>
+        <span class="c1">// If you don&#39;t specify shape above then the default shape will</span>
+        <span class="c1">// have shape[d] = shapeRange.sizeRanges[d].lowerBound</span>
+
+        <span class="n">ShapeRange</span> <span class="na">shapeRange</span> <span class="o">=</span> <span class="mi">31</span><span class="p">;</span>
+
+    <span class="p">}</span>
+
+    <span class="k">oneof</span> <span class="n">defaultOptionalValue</span> <span class="p">{</span>
+        <span class="kt">int32</span> <span class="na">intDefaultValue</span> <span class="o">=</span> <span class="mi">41</span><span class="p">;</span>
+        <span class="kt">float</span> <span class="na">floatDefaultValue</span> <span class="o">=</span> <span class="mi">51</span><span class="p">;</span>
+        <span class="kt">double</span> <span class="na">doubleDefaultValue</span> <span class="o">=</span> <span class="mi">61</span><span class="p">;</span>
+    <span class="p">}</span>
+
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="section" id="arrayfeaturetype-shape">
+<h3>ArrayFeatureType.Shape<a class="headerlink" href="#arrayfeaturetype-shape" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Shape</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="kt">int64</span> <span class="na">shape</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="arrayfeaturetype-enumeratedshapes">
+<h3>ArrayFeatureType.EnumeratedShapes<a class="headerlink" href="#arrayfeaturetype-enumeratedshapes" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">EnumeratedShapes</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="n">Shape</span> <span class="na">shapes</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="arrayfeaturetype-shaperange">
+<h3>ArrayFeatureType.ShapeRange<a class="headerlink" href="#arrayfeaturetype-shaperange" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ShapeRange</span> <span class="p">{</span>
+    <span class="c1">// sizeRanges.size() must be length 1 or 3</span>
+    <span class="c1">// sizeRanges[d] specifies the allowed range for dimension d</span>
+    <span class="k">repeated</span> <span class="n">SizeRange</span> <span class="na">sizeRanges</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="dictionaryfeaturetype">
+<h2>DictionaryFeatureType<a class="headerlink" href="#dictionaryfeaturetype" title="Permalink to this headline">¶</a></h2>
+<p>The dictionary feature type.</p>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">DictionaryFeatureType</span> <span class="p">{</span>
+    <span class="k">oneof</span> <span class="n">KeyType</span> <span class="p">{</span>
+        <span class="n">Int64FeatureType</span> <span class="na">int64KeyType</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="n">StringFeatureType</span> <span class="na">stringKeyType</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="sequencefeaturetype">
+<h2>SequenceFeatureType<a class="headerlink" href="#sequencefeaturetype" title="Permalink to this headline">¶</a></h2>
+<p>The Sequence feature type.</p>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">SequenceFeatureType</span> <span class="p">{</span>
+
+    <span class="k">oneof</span> <span class="n">Type</span> <span class="p">{</span>
+        <span class="n">Int64FeatureType</span> <span class="na">int64Type</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="n">StringFeatureType</span> <span class="na">stringType</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="c1">// Range of allowed size/length/count of sequence</span>
+    <span class="n">SizeRange</span> <span class="na">sizeRange</span> <span class="o">=</span> <span class="mi">101</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="featuretype">
+<h2>FeatureType<a class="headerlink" href="#featuretype" title="Permalink to this headline">¶</a></h2>
+<p>A feature, which may be optional.</p>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">FeatureType</span> <span class="p">{</span>
+    <span class="k">oneof</span> <span class="n">Type</span> <span class="p">{</span>
+        <span class="n">Int64FeatureType</span> <span class="na">int64Type</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="n">DoubleFeatureType</span> <span class="na">doubleType</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+        <span class="n">StringFeatureType</span> <span class="na">stringType</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+        <span class="n">ImageFeatureType</span> <span class="na">imageType</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
+        <span class="n">ArrayFeatureType</span> <span class="na">multiArrayType</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span>
+        <span class="n">DictionaryFeatureType</span> <span class="na">dictionaryType</span> <span class="o">=</span> <span class="mi">6</span><span class="p">;</span>
+        <span class="n">SequenceFeatureType</span> <span class="na">sequenceType</span> <span class="o">=</span> <span class="mi">7</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="kt">bool</span> <span class="na">isOptional</span> <span class="o">=</span> <span class="mi">1000</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="section" id="arrayfeaturetype-arraydatatype">
+<h3>ArrayFeatureType.ArrayDataType<a class="headerlink" href="#arrayfeaturetype-arraydatatype" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">enum</span> <span class="n">ArrayDataType</span> <span class="p">{</span>
+    <span class="na">INVALID_ARRAY_DATA_TYPE</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="na">FLOAT32</span> <span class="o">=</span> <span class="mi">65568</span><span class="p">;</span> <span class="c1">// 0x10000 | 32</span>
+    <span class="na">DOUBLE</span> <span class="o">=</span> <span class="mi">65600</span><span class="p">;</span>  <span class="c1">// 0x10000 | 64</span>
+    <span class="na">INT32</span> <span class="o">=</span> <span class="mi">131104</span><span class="p">;</span>  <span class="c1">// 0x20000 | 32</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="imagefeaturetype-colorspace">
+<h3>ImageFeatureType.ColorSpace<a class="headerlink" href="#imagefeaturetype-colorspace" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">enum</span> <span class="n">ColorSpace</span> <span class="p">{</span>
+    <span class="na">INVALID_COLOR_SPACE</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="na">GRAYSCALE</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span> <span class="c1">//  8 bits per pixel</span>
+    <span class="na">RGB</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>       <span class="c1">// 32 bits per pixel: RGBA with A channel ignored</span>
+    <span class="na">BGR</span> <span class="o">=</span> <span class="mi">30</span><span class="p">;</span>       <span class="c1">// 32 bits per pixel: BGRA with A channel ignored</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="Parameters.html" class="btn btn-neutral float-right" title="Parameters" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="DataStructures.html" class="btn btn-neutral float-left" title="DataStructures" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2021, Apple Inc.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

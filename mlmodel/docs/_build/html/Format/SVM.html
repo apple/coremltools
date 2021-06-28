@@ -1,0 +1,404 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Support Vector Machine &mdash; Core ML Format Reference  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Data Structures, Types and Parameters" href="DataStructuresTypes.html" />
+    <link rel="prev" title="Simple Math Functions" href="Identity.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Core ML Format Reference
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Model.html">Core ML Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="NeuralNetwork.html">NeuralNetwork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="MIL.html">MILspec.Program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Regressors.html">Regressors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Classifiers.html">Classifiers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="OtherModels.html">Other Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FeatureEngineering.html">Feature Engineering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Pipeline.html">Pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Identity.html">Simple Math Functions</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Support Vector Machine</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#linearkernel">LinearKernel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#rbfkernel">RBFKernel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#polykernel">PolyKernel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sigmoidkernel">SigmoidKernel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#kernel">Kernel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sparsenode">SparseNode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sparsevector">SparseVector</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sparsesupportvectors">SparseSupportVectors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#densevector">DenseVector</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#densesupportvectors">DenseSupportVectors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#coefficients">Coefficients</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#supportvectorclassifier">SupportVectorClassifier</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#supportvectorregressor">SupportVectorRegressor</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="DataStructuresTypes.html">Data Structures, Types and Parameters</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Resources</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://coremltools.readme.io/docs">Guides and examples</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/index.html">Core ML Tools (coremltools) API</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools/tree/main/mlmodel">GitHub</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Core ML Format Reference</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>Support Vector Machine</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/Format/SVM.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="support-vector-machine">
+<h1>Support Vector Machine<a class="headerlink" href="#support-vector-machine" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="linearkernel">
+<h2>LinearKernel<a class="headerlink" href="#linearkernel" title="Permalink to this headline">¶</a></h2>
+<p>A linear kernel.</p>
+<p>This function has the following formula:</p>
+<div class="math notranslate nohighlight">
+\[K(\boldsymbol{x}, \boldsymbol{x'}) = \boldsymbol{x}^T \boldsymbol{x'}\]</div>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">LinearKernel</span> <span class="p">{</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="rbfkernel">
+<h2>RBFKernel<a class="headerlink" href="#rbfkernel" title="Permalink to this headline">¶</a></h2>
+<p>A Gaussian radial basis function (RBF) kernel.</p>
+<p>This function has the following formula:</p>
+<div class="math notranslate nohighlight">
+\[K(\boldsymbol{x}, \boldsymbol{x'}) = \
+     \exp(-\gamma || \boldsymbol{x} - \boldsymbol{x'} ||^2 )\]</div>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">RBFKernel</span> <span class="p">{</span>
+    <span class="kt">double</span> <span class="na">gamma</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="polykernel">
+<h2>PolyKernel<a class="headerlink" href="#polykernel" title="Permalink to this headline">¶</a></h2>
+<p>A polynomial kernel.</p>
+<p>This function has the following formula:</p>
+<div class="math notranslate nohighlight">
+\[K(\boldsymbol{x}, \boldsymbol{x'}) = \
+      (\gamma \boldsymbol{x}^T \boldsymbol{x'} + c)^{degree}\]</div>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">PolyKernel</span> <span class="p">{</span>
+    <span class="kt">int32</span> <span class="na">degree</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="kt">double</span> <span class="na">c</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+    <span class="kt">double</span> <span class="na">gamma</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="sigmoidkernel">
+<h2>SigmoidKernel<a class="headerlink" href="#sigmoidkernel" title="Permalink to this headline">¶</a></h2>
+<p>A sigmoid kernel.</p>
+<p>This function has the following formula:</p>
+<div class="math notranslate nohighlight">
+\[K(\boldsymbol{x}, \boldsymbol{x'}) = \
+      \tanh(\gamma \boldsymbol{x}^T \boldsymbol{x'} + c)\]</div>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">SigmoidKernel</span> <span class="p">{</span>
+    <span class="kt">double</span> <span class="na">gamma</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="kt">double</span> <span class="na">c</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="kernel">
+<h2>Kernel<a class="headerlink" href="#kernel" title="Permalink to this headline">¶</a></h2>
+<p>A kernel.</p>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Kernel</span> <span class="p">{</span>
+    <span class="k">oneof</span> <span class="n">kernel</span> <span class="p">{</span>
+        <span class="n">LinearKernel</span> <span class="na">linearKernel</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="n">RBFKernel</span> <span class="na">rbfKernel</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+        <span class="n">PolyKernel</span> <span class="na">polyKernel</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+        <span class="n">SigmoidKernel</span> <span class="na">sigmoidKernel</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="sparsenode">
+<h2>SparseNode<a class="headerlink" href="#sparsenode" title="Permalink to this headline">¶</a></h2>
+<p>A sparse node.</p>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">SparseNode</span> <span class="p">{</span>
+    <span class="kt">int32</span> <span class="na">index</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="c1">// 1-based indexes, like libsvm</span>
+    <span class="kt">double</span> <span class="na">value</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="sparsevector">
+<h2>SparseVector<a class="headerlink" href="#sparsevector" title="Permalink to this headline">¶</a></h2>
+<p>A sparse vector.</p>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">SparseVector</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="n">SparseNode</span> <span class="na">nodes</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="sparsesupportvectors">
+<h2>SparseSupportVectors<a class="headerlink" href="#sparsesupportvectors" title="Permalink to this headline">¶</a></h2>
+<p>One or more sparse support vectors.</p>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">SparseSupportVectors</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="n">SparseVector</span> <span class="na">vectors</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="densevector">
+<h2>DenseVector<a class="headerlink" href="#densevector" title="Permalink to this headline">¶</a></h2>
+<p>A dense vector.</p>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">DenseVector</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="kt">double</span> <span class="na">values</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="densesupportvectors">
+<h2>DenseSupportVectors<a class="headerlink" href="#densesupportvectors" title="Permalink to this headline">¶</a></h2>
+<p>One or more dense support vectors.</p>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">DenseSupportVectors</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="n">DenseVector</span> <span class="na">vectors</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="coefficients">
+<h2>Coefficients<a class="headerlink" href="#coefficients" title="Permalink to this headline">¶</a></h2>
+<p>One or more coefficients.</p>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Coefficients</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="kt">double</span> <span class="na">alpha</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="supportvectorclassifier">
+<h2>SupportVectorClassifier<a class="headerlink" href="#supportvectorclassifier" title="Permalink to this headline">¶</a></h2>
+<p>A support vector classifier</p>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">SupportVectorClassifier</span> <span class="p">{</span>
+    <span class="n">Kernel</span> <span class="na">kernel</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+
+    <span class="k">repeated</span> <span class="kt">int32</span> <span class="na">numberOfSupportVectorsPerClass</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+
+    <span class="k">oneof</span> <span class="n">supportVectors</span> <span class="p">{</span>
+        <span class="n">SparseSupportVectors</span> <span class="na">sparseSupportVectors</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+        <span class="n">DenseSupportVectors</span> <span class="na">denseSupportVectors</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">repeated</span> <span class="n">Coefficients</span> <span class="na">coefficients</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span>
+
+    <span class="k">repeated</span> <span class="kt">double</span> <span class="na">rho</span> <span class="o">=</span> <span class="mi">6</span><span class="p">;</span>
+
+    <span class="k">repeated</span> <span class="kt">double</span> <span class="na">probA</span> <span class="o">=</span> <span class="mi">7</span><span class="p">;</span>
+    <span class="k">repeated</span> <span class="kt">double</span> <span class="na">probB</span> <span class="o">=</span> <span class="mi">8</span><span class="p">;</span>
+
+    <span class="k">oneof</span> <span class="n">ClassLabels</span> <span class="p">{</span>
+        <span class="n">StringVector</span> <span class="na">stringClassLabels</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+        <span class="n">Int64Vector</span> <span class="na">int64ClassLabels</span> <span class="o">=</span> <span class="mi">101</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="supportvectorregressor">
+<h2>SupportVectorRegressor<a class="headerlink" href="#supportvectorregressor" title="Permalink to this headline">¶</a></h2>
+<p>A support vector regressor.</p>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">SupportVectorRegressor</span> <span class="p">{</span>
+    <span class="n">Kernel</span> <span class="na">kernel</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+
+    <span class="c1">// Support vectors, either sparse or dense format</span>
+    <span class="k">oneof</span> <span class="n">supportVectors</span> <span class="p">{</span>
+        <span class="n">SparseSupportVectors</span> <span class="na">sparseSupportVectors</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+        <span class="n">DenseSupportVectors</span> <span class="na">denseSupportVectors</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="c1">// Coefficients, one for each support vector</span>
+    <span class="n">Coefficients</span> <span class="na">coefficients</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
+
+    <span class="kt">double</span> <span class="na">rho</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="DataStructuresTypes.html" class="btn btn-neutral float-right" title="Data Structures, Types and Parameters" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="Identity.html" class="btn btn-neutral float-left" title="Simple Math Functions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2021, Apple Inc.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
