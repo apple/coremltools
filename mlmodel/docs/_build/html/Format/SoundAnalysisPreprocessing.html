@@ -1,0 +1,297 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>SoundAnalysisPreprocessing &mdash; Core ML Format Reference  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="LinkedModel" href="LinkedModel.html" />
+    <link rel="prev" title="ItemSimilarityRecommender" href="ItemSimilarityRecommender.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Core ML Format Reference
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Model.html">Core ML Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="NeuralNetwork.html">NeuralNetwork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="MIL.html">MILspec.Program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Regressors.html">Regressors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Classifiers.html">Classifiers</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="OtherModels.html">Other Models</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="AudioFeaturePrint.html">AudioFeaturePrint</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CustomModel.html">CustomModel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Gazetteer.html">Gazetteer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ItemSimilarityRecommender.html">ItemSimilarityRecommender</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">SoundAnalysisPreprocessing</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#id1">SoundAnalysisPreprocessing</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#soundanalysispreprocessing-vggish">SoundAnalysisPreprocessing.Vggish</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="LinkedModel.html">LinkedModel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="TextClassifier.html">TextClassifier</a></li>
+<li class="toctree-l2"><a class="reference internal" href="VisionFeaturePrint.html">VisionFeaturePrint</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WordEmbedding.html">WordEmbedding</a></li>
+<li class="toctree-l2"><a class="reference internal" href="WordTagger.html">WordTagger</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="FeatureEngineering.html">Feature Engineering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Pipeline.html">Pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Identity.html">Simple Math Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="SVM.html">Support Vector Machine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DataStructuresTypes.html">Data Structures, Types and Parameters</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Resources</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://coremltools.readme.io/docs">Guides and examples</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/index.html">Core ML Tools (coremltools) API</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools/tree/main/mlmodel">GitHub</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Core ML Format Reference</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="OtherModels.html">Other Models</a> &raquo;</li>
+        
+      <li>SoundAnalysisPreprocessing</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/Format/SoundAnalysisPreprocessing.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="soundanalysispreprocessing">
+<h1>SoundAnalysisPreprocessing<a class="headerlink" href="#soundanalysispreprocessing" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="id1">
+<h2>SoundAnalysisPreprocessing<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<p>A model which takes audio signal samples as input and outputs an array of
+preprocessed samples according to the specified preprocessing types</p>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span>message SoundAnalysisPreprocessing {
+
+    // Specific preprocessing types for sound analysis
+
+       be fed to Vggish feature extractor.
+       c.f. https://arxiv.org/pdf/1609.09430.pdf
+
+       The preprocessing takes input a single channel (monophonic) audio samples
+       975 miliseconds long, sampled at 16KHz, i.e., 15600 samples 1D multiarray
+       and produces preprocessed samples in multiarray of shape [1, 96, 64]
+
+     (1) Splits the input audio samples into overlapping frames, where each
+         frame is 25 milliseconds long and hops forward by 10 milliseconds.
+         Any partial frames at the end are dropped.
+
+     (2) Hann window: apply a periodic Hann with a window_length of
+         25 milliseconds, which translates to 400 samples in 16KHz sampling rate
+
+         w(n) = 0.5 - 0.5 * cos(2*pi*n/window_length_sample),
+         where 0 &lt;= n &lt;= window_lenth_samples - 1 and window_lenth_samples = 400
+
+         Then, the Hann window is applied to each frame as below
+
+         windowed_frame(n) = frame(n) * w(n)
+         where 0 &lt;= n &lt;= window_lenth_samples - 1 and window_lenth_samples = 400
+
+     (3) Power spectrum: calculate short-time Fourier transfor magnitude, with
+         an FFT length of 512
+
+     (4) Log Mel filter bank: calculates a log magnitude mel-frequency
+         spectrogram minimum frequency of 125Hz and maximum frequency of 7500Hz,
+         number of mel bins is 64, log_offset is 0.01, number of spectrum bins
+         is 64.
+
+    message Vggish {
+        // no specific parameter
+    }
+
+    // Vision feature print type
+    oneof SoundAnalysisPreprocessingType {
+        Vggish vggish = 20;
+    }
+
+}
+</pre></div>
+</div>
+<div class="section" id="soundanalysispreprocessing-vggish">
+<h3>SoundAnalysisPreprocessing.Vggish<a class="headerlink" href="#soundanalysispreprocessing-vggish" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Vggish</span> <span class="p">{</span>
+    <span class="c1">// no specific parameter</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="LinkedModel.html" class="btn btn-neutral float-right" title="LinkedModel" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="ItemSimilarityRecommender.html" class="btn btn-neutral float-left" title="ItemSimilarityRecommender" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2021, Apple Inc.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
