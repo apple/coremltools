@@ -40,25 +40,25 @@ check_python_flake8:
 
 build_wheel_linux_py35:
   <<: *build_linux
-  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-20.04:1.0.2
+  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-18.04:1.0.0
   variables:
     PYTHON: "3.5"
 
 build_wheel_linux_py36:
   <<: *build_linux
-  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-20.04:1.0.2
+  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-18.04:1.0.0
   variables:
     PYTHON: "3.6"
 
 build_wheel_linux_py37:
   <<: *build_linux
-  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-20.04:1.0.2
+  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-18.04:1.0.0
   variables:
     PYTHON: "3.7"
 
 build_wheel_linux_py38:
   <<: *build_linux
-  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-20.04:1.0.2
+  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-18.04:1.0.0
   variables:
     PYTHON: "3.8"
 
@@ -214,7 +214,7 @@ build_documentation:
   tags:
     - docker
   stage: test
-  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-20.04:1.0.0
+  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-18.04:1.0.0
   script:
     - export PATH=$PATH:/opt/anaconda/bin/
     - bash -e scripts/build_docs.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON}
