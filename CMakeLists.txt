@@ -80,8 +80,13 @@ target_compile_definitions(modelpackage
 target_link_libraries(modelpackage
   mlmodel
   libprotobuf
-  stdc++fs
   )
+
+if (CMAKE_COMPILER_IS_GNUCC AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 9.1)
+  target_link_libraries(modelpackage
+    stdc++fs
+    )
+endif()
 
 if (APPLE)
   # Allow Python to be found at runtime instead of compile/link time
