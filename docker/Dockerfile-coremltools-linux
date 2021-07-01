@@ -1,5 +1,5 @@
 # An Ubuntu based image that is used for gitlab based ci infrastructure
-FROM ubuntu:20.04
+FROM ubuntu:18.04
 
 # Install dependencies, particularly libraries that python or CMake need
 RUN  apt-get -y update \
