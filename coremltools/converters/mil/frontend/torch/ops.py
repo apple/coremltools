@@ -743,6 +743,26 @@ def max_pool3d(context, node):
 
 
 @register_torch_op
+def minimum(context, node):
+    inputs = _get_inputs(context, node, expected=2)
+    assert len(node.outputs) == 1
+    x = context[node.inputs[0]]
+    y = context[node.inputs[1]]
+    out = mb.minimum(x=x, y=y, name=node.name)
+    context.add(out)
+
+
+@register_torch_op
+def maximum(context, node):
+    inputs = _get_inputs(context, node, expected=2)
+    assert len(node.outputs) == 1
+    x = context[node.inputs[0]]
+    y = context[node.inputs[1]]
+    out = mb.maximum(x=x, y=y, name=node.name)
+    context.add(out)
+
+
+@register_torch_op
 def div(context, node):
     inputs = _get_inputs(context, node, expected=2)
 
