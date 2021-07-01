@@ -966,6 +966,29 @@ class TestMaxPool(TorchBaseTest):
         )
         self.run_compare_torch(input_shape, model, backend=backend)
 
+class TestMaximumMinimum(TorchBaseTest):
+
+    @pytest.mark.parametrize(
+        "input_shape, mode, backend",
+        itertools.product(
+            [(2, 5, 7, 3), (3, 2, 9)],
+            ["minimum", "maximum"],
+            backends,
+        ),
+    )
+    def test_minimum_maximum(self, input_shape, mode, backend):
+        class TestModel(torch.nn.Module):
+            def forward(self, x, y):
+                if mode == "minimum":
+                    return torch.minimum(x, y)
+                elif mode == "maximum":
+                    return torch.maximum(x, y)
+                else:
+                    raise ValueError(f"Unsupported mode: {mode}")
+
+        model = TestModel()
+        self.run_compare_torch([input_shape] * 2, model, backend=backend)
+
 class TestPoolSymbolicInput(TorchBaseTest):
     def test_max_pool(self):
         model = nn.MaxPool2d(
