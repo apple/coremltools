@@ -15,7 +15,17 @@
 #include <sstream>
 #include <istream>
 #include <string>
+
+#if __has_include(<filesystem>)
 #include <filesystem>
+#elif __has_include(<experimental/filesystem>)
+#include <experimental/filesystem> 
+namespace std {
+  namespace filesystem = std::experimental::filesystem;
+}
+#else
+#error "missing required header <filesystem>"
+#endif
 #include <uuid/uuid.h>
 #include <vector>
 
