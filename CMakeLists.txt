@@ -80,6 +80,7 @@ target_compile_definitions(modelpackage
 target_link_libraries(modelpackage
   mlmodel
   libprotobuf
+  stdc++fs
   )
 
 if (APPLE)
