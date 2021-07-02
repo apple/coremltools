@@ -1,3 +1,8 @@
+Support Vector Machine
+=======================
+
+
+
 LinearKernel
 ________________________________________________________________________________
 
@@ -213,37 +218,6 @@ One or more coefficients.
 
 
 
-
-
-
-SupportVectorRegressor
-________________________________________________________________________________
-
-A support vector regressor.
-
-
-.. code-block:: proto
-
-	message SupportVectorRegressor {
-	    Kernel kernel = 1;
-	
-	    // Support vectors, either sparse or dense format
-	    oneof supportVectors {
-	        SparseSupportVectors sparseSupportVectors = 2;
-	        DenseSupportVectors denseSupportVectors = 3;
-	    }
-	
-	    // Coefficients, one for each support vector
-	    Coefficients coefficients = 4;
-	
-	    double rho = 5;
-	}
-
-
-
-
-
-
 SupportVectorClassifier
 ________________________________________________________________________________
 
@@ -274,3 +248,32 @@ A support vector classifier
 	        Int64Vector int64ClassLabels = 101;
 	    }
 	}
+
+
+SupportVectorRegressor
+________________________________________________________________________________
+
+A support vector regressor.
+
+
+.. code-block:: proto
+
+	message SupportVectorRegressor {
+	    Kernel kernel = 1;
+	
+	    // Support vectors, either sparse or dense format
+	    oneof supportVectors {
+	        SparseSupportVectors sparseSupportVectors = 2;
+	        DenseSupportVectors denseSupportVectors = 3;
+	    }
+	
+	    // Coefficients, one for each support vector
+	    Coefficients coefficients = 4;
+	
+	    double rho = 5;
+	}
+
+
+
+
+

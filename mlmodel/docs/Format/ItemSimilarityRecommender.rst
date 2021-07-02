@@ -1,3 +1,6 @@
+ItemSimilarityRecommender
+=========================
+
 Each tree is a collection of nodes,
 each of which is identified by a unique identifier.
 
