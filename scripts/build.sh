@@ -13,7 +13,7 @@ NUM_PROCS=1
 BUILD_PROTO=0
 BUILD_DIST=0
 BUILD_DIST_DEV=0
-PYTHON="3.7"
+PYTHON="3.8"
 CHECK_ENV=1
 
 # Defaults, which may be overridden

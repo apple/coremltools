@@ -17,7 +17,7 @@ include_build_deps=1
 include_test_deps=1
 include_docs_deps=0
 DEV=0
-PYTHON="3.7"
+PYTHON="3.8"
 force=0
 
 function print_help {
@@ -90,6 +90,7 @@ fi
 # Activate and install packages in the environment
 echo "Installing basic build requirements."
 if [[ $include_build_deps == 1 ]]; then
+    conda install -y numpy cmake
     python -m pip install -r $COREMLTOOLS_HOME/reqs/build.pip
 fi
 
