@@ -195,7 +195,7 @@ class TestTensorFlow1ConverterExamples:
         # optionally, you can save model to disk
         # mlmodel.save(frozen_graph_file.replace("pb", "mlmodel"))
         try:
-            shutil.rmtree(model_dir)
+            rmtree(model_dir)
         except:
             pass
 
@@ -1507,7 +1507,7 @@ class TestMLProgramConverterExamples:
         model.save(filename)
         assert os.path.exists(filename)
         try:
-            shutil.rmtree(model_dir)
+            rmtree(model_dir)
         except:
             pass
 
