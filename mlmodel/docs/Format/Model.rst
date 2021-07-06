@@ -139,6 +139,7 @@ Specification Versions : OS Availability (Core ML Version)
 6 : iOS 15, macOS 12, tvOS 15, watchOS 8 (Core ML 5)
 
 	- Core ML Audio Feature Print
+	- MIL model type
 
 .. code-block:: proto
 
