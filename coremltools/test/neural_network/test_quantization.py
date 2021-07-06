@@ -174,10 +174,6 @@ class QuantizationNumericalCorrectnessTests(unittest.TestCase):
     def test_quantized_tiny_conv_crop_1d_random(self):
         self.keras_tester.test_tiny_conv_crop_1d_random()
 
-    @pytest.mark.xfail(
-        reason="rdar://78057487 (Re-enable tests after fixing regression in embedding layer)",
-        run=False
-    )
     def test_quantized_embedding(self):
         self.keras_tester.test_embedding()
 
@@ -1003,10 +999,6 @@ class DynamicQuantizedInt8Int8MatMul(unittest.TestCase):
     "Missing macOS 10.15+. Skipping tests.",
 )
 class QuantizeWeightsAPI(unittest.TestCase):
-    @pytest.mark.xfail(
-        reason="rdar://78057487 (Re-enable tests after fixing regression in embedding layer)",
-        run=False
-    )
     def test_embeddingND_quantize(self):
         input_features = [("data", datatypes.Array(10, 1))]
         output_features = [("output", None)]

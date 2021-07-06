@@ -30,7 +30,7 @@ def tf_lstm_to_core_lstm(prog):
     - If tf_lstm_block_cell: only cs, h output (outputs[1], outputs[6])
       are consumed. Similar to above.
 
-    - batch size == 1 (due to bugs in core lstm backend impl rdar://62475041)
+    - batch size == 1
 
     Inputs:
 
@@ -68,14 +68,8 @@ def try_replace_with_core_lstm(op):
     else:  # tf_lstm_block
         batch = op.x.shape[1]
 
-    # Check for unsupported configuration
-    # 1. Peephole is present
-    # TODO: rdar://62913058 ([LSTM] Incorrect output when pass peephole values to LSTM/rnn_arch)
+    # Check for unsupported configuration : When peephole is present
     if op.use_peephole.val:
-        return False
-    # 2. Clip is provided
-    # TODO: rdar://62913148 ([LSTM] Incorrect output when clip is used for LSTM/rnn_arch)
-    if op.cell_clip is not None:
         return False
 
     # Check if tf_lstm_block_cell can be replaced with lstm op

@@ -198,8 +198,8 @@ class TestConvolution(TensorFlowBaseTest):
             [(2, 4, 4, 2, 2, 2), (3, 7, 5, 1, 3, 2)],
             [(1, 1, 1), (1, 2, 3), (1, 3, 2)],
             [
-                (1, 1, 1)
-            ],  # rdar://62951360 (Enhance SpaceToBatchND op to support more dialation rate of Conv)
+                (1, 1, 1), (2, 2, 2),
+            ],
             [1, 3],
             [1, 2],
         ),
@@ -220,6 +220,16 @@ class TestConvolution(TensorFlowBaseTest):
         # tensorflow supports groupwise convolution only for version > tf.2.5.0-rc3
         if _get_version(_tf.__version__) < _StrictVersion("2.5.0") and groups != 1:
             return
+
+        # TF does not support strides > 1 in conjunction with dilation_rate > 1
+        for i, stride in enumerate(strides):
+            if stride > 1 and dilations[i] > 1:
+                return
+
+        # Dilations with Conv3D not supported yet, since SpaceToBatchND is only supported for ranks 3 or 4
+        for d in dilations:
+            if d > 1 and op == tf.keras.layers.Conv3D:
+                return
 
         s1, s2, s3, k1, k2, k3 = spatial_dim_and_ks
         c_in, c_out = 2, 4
@@ -277,7 +287,7 @@ class TestConvolution(TensorFlowBaseTest):
         ),
         itertools.product(
             [True, False],
-            ["neuralnetwork"], # rdar://66998312 ([MIL] concat layer with variable length input support)
+            backends,
             [
                 tf.keras.layers.LocallyConnected1D,
                 tf.keras.layers.LocallyConnected2D,
@@ -287,8 +297,8 @@ class TestConvolution(TensorFlowBaseTest):
             [(2, 4, 4, 2, 2, 2), (3, 7, 5, 1, 3, 2)],
             [(1, 1, 1), (1, 2, 3), (1, 3, 2)],
             [
-                (1, 1, 1)
-            ],  # rdar://62951360 (Enhance SpaceToBatchND op to support more dialation rate of Conv)
+                (1, 1, 1), (2, 2, 2),
+            ],
             [1, 3],
         ),
     )
@@ -1225,9 +1235,6 @@ class TestRecurrent(TensorFlowBaseTest):
         "use_cpu_only, backend", itertools.product([True, False], backends)
     )
     def test_lstm_dynamic_batch(self, use_cpu_only, backend):
-         # Support dynamic elem_shape <rdar://problem/69522780>
-        if backend != "neuralnetwork":
-            return
         input_shape = (1, 1280)
         inp = tf.keras.layers.Input(shape=input_shape)
         h0 = tf.keras.layers.Input(shape=(512,))

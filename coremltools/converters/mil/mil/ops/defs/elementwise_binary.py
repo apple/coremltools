@@ -597,8 +597,8 @@ class real_div(elementwise_binary):
     
     Returns
     -------
-    tensor<\*?, bool>
-        * A boolean tensor with the same shape as the inputs.
+    tensor<\*?, T>
+        * A tensor with the same type and shape as the inputs.
     
     Attributes
     ----------
@@ -606,13 +606,17 @@ class real_div(elementwise_binary):
     """
     
     def __init__(self, **kwargs):
+        # TODO(rdar://79925291): Allow int32 input to floor_div
+        from coremltools.converters.mil.mil import Builder as mb
+        from coremltools.converters.mil.mil import types
+        accepted_types = [types.fp32, types.fp16]
+        for input_name in ["x", "y"]:
+            if kwargs[input_name].dtype not in accepted_types:
+                kwargs[input_name] = mb.cast(x=kwargs[input_name], dtype="fp32")
         super(real_div, self).__init__(**kwargs)
 
     def get_operator(self):
         return operator.truediv
-
-    def get_dtype(self, promoted_dtype):
-        return types.float
 
 
 @register_op(doc_str="")

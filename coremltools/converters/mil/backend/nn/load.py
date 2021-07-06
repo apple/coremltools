@@ -37,8 +37,8 @@ from .passes.nn_passes import nn_backend_passes
 from coremltools.converters._profile_utils import _profile
 
 
-def _convert_to_image_input(proto, inputs):
-    tmp_model = MLModel(proto)
+def _convert_to_image_input(proto, inputs, skip_model_load=False):
+    tmp_model = MLModel(proto, skip_model_load=skip_model_load)
     for input_type in inputs:
         if isinstance(input_type, ImageType):
             if input_type.color_layout == "G":
@@ -64,8 +64,8 @@ def _convert_to_image_input(proto, inputs):
     return tmp_model.get_spec()
 
 
-def _convert_to_classifier(proto, classifier_config):
-    tmp_model = MLModel(proto)
+def _convert_to_classifier(proto, classifier_config, skip_model_load=False):
+    tmp_model = MLModel(proto, skip_model_load=skip_model_load)
     tmp_model = neural_network.utils.make_nn_classifier(
         tmp_model,
         classifier_config.class_labels,
@@ -284,12 +284,14 @@ def load(prog, **kwargs):
     # image input
     has_image_input = any([isinstance(s, ImageType) for s in input_types])
     if has_image_input:
-        proto = _convert_to_image_input(proto, input_types)
+        proto = _convert_to_image_input(proto, input_types,
+                                        skip_model_load=kwargs.get("skip_model_load", False))
 
     # classifier flag
     classifier_config = kwargs.get("classifier_config", None)
     if classifier_config is not None:
-        proto = _convert_to_classifier(proto, classifier_config)
+        proto = _convert_to_classifier(proto, classifier_config,
+                                       skip_model_load=kwargs.get("skip_model_load", False))
 
     _set_user_inputs(proto, input_types)
     _set_symbolic_inputs(proto, symbolic_inputs)

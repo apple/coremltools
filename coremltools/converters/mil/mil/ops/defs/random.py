@@ -14,6 +14,7 @@ Random Op Superclass
 
 class RandomDistribution(Operation):
     input_spec = InputSpec(shape=IntTensorInputType(),)
+    out_dtype = types.fp32
 
     def __init__(self, **kwargs):
         super(RandomDistribution, self).__init__(**kwargs)
@@ -21,14 +22,14 @@ class RandomDistribution(Operation):
     def type_inference(self):
         if any_symbolic(self.shape.shape):
             # We can't infer any shape if shape has variable length.
-            return types.tensor(types.fp32, (get_new_variadic_symbol(),))
+            return types.tensor(self.out_dtype, (get_new_variadic_symbol(),))
 
         # shape has fixed length here.
         if self.shape.sym_val is None:
             shape = tuple([get_new_symbol() for _ in range(self.shape.shape[0])])
-            return types.tensor(types.fp32, shape)
+            return types.tensor(self.out_dtype, shape)
 
-        return types.tensor(types.fp32, tuple(self.shape.sym_val.tolist()))
+        return types.tensor(self.out_dtype, tuple(self.shape.sym_val.tolist()))
 
 
 """
@@ -88,6 +89,10 @@ class random_bernoulli(RandomDistribution):
     def __init__(self, **kwargs):
         super(random_bernoulli, self).__init__(**kwargs)
 
+    def type_inference(self):
+        self.out_dtype = self.prob.dtype
+        return super().type_inference()
+
 
 @register_op(doc_str="")
 class random_categorical(Operation):
@@ -138,8 +143,9 @@ class random_categorical(Operation):
         super(random_categorical, self).__init__(**kwargs)
 
     def type_inference(self):
+        self.out_dtype = self.x.dtype
         output_shape = self.x.shape[:-1] + (self.size.val,)
-        return types.tensor(types.fp32, output_shape)
+        return types.tensor(self.out_dtype, output_shape)
 
 
 @register_op(doc_str="")
@@ -191,6 +197,12 @@ class random_normal(RandomDistribution):
 
     def __init__(self, **kwargs):
         super(random_normal, self).__init__(**kwargs)
+
+    def type_inference(self):
+        if self.mean.dtype != self.stddev.dtype:
+            raise ValueError("Incompatible primitive types in random_normal operation")
+        self.out_dtype = self.mean.dtype
+        return super().type_inference()
 
 
 @register_op(doc_str="")
@@ -251,3 +263,9 @@ class random_uniform(RandomDistribution):
 
     def __init__(self, **kwargs):
         super(random_uniform, self).__init__(**kwargs)
+
+    def type_inference(self):
+        if self.low.dtype != self.high.dtype:
+            raise ValueError("Incompatible primitive types in random_uniform operation")
+        self.out_dtype = self.low.dtype
+        return super().type_inference()

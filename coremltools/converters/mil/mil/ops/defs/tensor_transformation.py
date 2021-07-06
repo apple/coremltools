@@ -4,6 +4,7 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import functools
+import logging
 import numpy as np
 import sympy as sm
 

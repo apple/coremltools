@@ -22,6 +22,7 @@ from coremltools.converters.mil.mil import (
 )
 from coremltools.converters.mil.mil.input_type import (
     BoolInputType,
+    BoolTensorInputType,
     DefaultInputs,
     InputSpec,
     InternalScalarOrTensorInputType,
@@ -174,12 +175,18 @@ class const(Operation):
             value = np.int32(value)
         elif isinstance(value, (tuple, list, np.ndarray)):
             value = np.array(value)
-            if value.dtype == np.int64:
-                # We use int32 by default.
+
+            # For the int type, we use int32 by default
+            if value.dtype in [np.uint8, np.int8, np.uint16, np.int16, np.uint32, np.uint64, np.int64]:
+                if value.dtype in [np.uint64, np.int64]:
+                    msg = "Downcast const op {} data int64 as int32".format(self.name)
+                    logging.warning(msg)
                 value = value.astype(np.int32)
 
-            if value.dtype == np.float64:
-                # We use float32 by default.
+            # For the float type, we use float32 by default
+            elif value.dtype == np.float64:
+                msg = "Downcast const op {} data fp64 as fp32".format(self.name)
+                logging.warning(msg)
                 value = value.astype(np.float32)
 
         elif isinstance(value, mil_list):
@@ -229,8 +236,8 @@ class select(Operation):
 
     Parameters
     ----------
-    cond: tensor<[\*D1], T> (Required)
-        * Tensor. When ``True`` (non-zero), select element from ``x``, otherwise, ``y``.
+    cond: tensor<[\*D1], B> (Required)
+        * Tensor. When ``True``, select element from ``x``, otherwise, ``y``.
 
     a: tensor<[\*D2], T> (Optional)
         * Values selected at indices where ``cond`` is ``True``.
@@ -251,11 +258,12 @@ class select(Operation):
 
     Attributes
     ----------
+    B: bool
     T: fp32
     """
-    
+
     input_spec = InputSpec(
-        cond=TensorInputType(), a=TensorInputType(), b=TensorInputType()
+        cond=BoolTensorInputType(), a=TensorInputType(), b=TensorInputType()
     )
 
     def __init__(self, **kwargs):
@@ -451,8 +459,8 @@ class while_loop(Operation):
                 if not is_subtype(v_out.sym_type, v_in.sym_type):
                     msg = 'Block output {}: {} is not a subtype of ' +\
                             'block input {}: {} after factoring shape changes'
-                    raise ValueError(msg.format(v_out.name. v.sym_type,
-                        v_in.name, v_in.sym_type))
+                    raise ValueError(msg.format(v_out.name, v_out.sym_type.__name__,
+                        v_in.name, v_in.sym_type.__name__))
                 if not while_loop._check_equal_value(v_out.sym_val, v_in.sym_val):
                     msg = 'Block output {}: {} is not equal to ' +\
                             'block input {}: {} after value changes'

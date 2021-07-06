@@ -23,6 +23,9 @@ import pytest
 from shutil import rmtree
 from tempfile import mkdtemp
 
+if _HAS_TORCH:
+    import torch
+
 
 ###############################################################################
 # Note: all tests are also used as examples such as in readme.md as a reference
@@ -191,7 +194,6 @@ class TestTensorFlow1ConverterExamples:
         mlmodel = ct.convert(frozen_graph_file)
         # optionally, you can save model to disk
         # mlmodel.save(frozen_graph_file.replace("pb", "mlmodel"))
-        import shutil
         try:
             shutil.rmtree(model_dir)
         except:
@@ -490,7 +492,6 @@ class TestPyTorchConverterExamples:
 
     @staticmethod
     def test_int64_inputs():
-        import torch
 
         num_tokens = 3
         embedding_size = 5
@@ -569,7 +570,6 @@ class TestPyTorchConverterExamples:
         All dims of the inputs are dynamic, and write to slice to one of the
         inputs.
         """
-        import torch
 
         class Model(torch.nn.Module):
             def __init__(self, index):
@@ -598,14 +598,14 @@ class TestPyTorchConverterExamples:
             torch_res = model(x, y)
             results = mlmodel.predict({"x": x.cpu().detach().numpy(),
               "y": y.cpu().detach().numpy()})
-            np.testing.assert_allclose(torch_res[0], results['y.3'])
+            np.testing.assert_allclose(torch_res[0], results['y.5'])
             np.testing.assert_allclose(torch_res[1], results['x'])
 
             x, y = torch.rand(1, 6), torch.rand(2, 3)
             torch_res = model(x, y)
             results = mlmodel.predict({"x": x.cpu().detach().numpy(),
               "y": y.cpu().detach().numpy()})
-            np.testing.assert_allclose(torch_res[0], results['y.3'])
+            np.testing.assert_allclose(torch_res[0], results['y.5'])
             np.testing.assert_allclose(torch_res[1], results['x'])
 
 
@@ -639,6 +639,7 @@ class TestMILExamples:
             )
             assert len(prediction) == 1
 
+@pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
 class TestInvalidInput:
     @staticmethod
     def test_rank0_inputs_mil():
@@ -656,7 +657,6 @@ class TestInvalidInput:
         """Similar to TestPyTorchConverterExamples::test_int64_inputs but
         using rank-0 int input.
         """
-        import torch
 
         num_tokens = 3
         embedding_size = 5
@@ -798,7 +798,6 @@ class TestFlexibleShape:
             "use_symbol", [True, False])
     @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
     def test_torch_range_dim(use_symbol):
-        import torch
 
         num_tokens = 3
         embedding_size = 5
@@ -858,8 +857,6 @@ class TestFlexibleShape:
         """
         This example shows how to run LSTM with previous hidden / cell states
         """
-        import torch
-        import coremltools as ct
 
         input_size = 3
         hidden_size = 2
@@ -953,7 +950,6 @@ class TestFlexibleShape:
             "use_symbol", [True, False])
     @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
     def test_torch_outofbound_range_dim(use_symbol):
-        import torch
 
         num_tokens = 3
         embedding_size = 5
@@ -1059,7 +1055,6 @@ class TestFlexibleShape:
     @staticmethod
     @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
     def test_torch_enumerated_shapes():
-        import torch
 
         in_channels = 3
         out_channels = 2
@@ -1134,7 +1129,6 @@ class TestFlexibleShape:
     @staticmethod
     @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
     def test_torch_image_enumerated_shapes():
-        import torch
         import torchvision
         torch_model = torchvision.models.mobilenet_v2().features
         torch_model.eval()
@@ -1188,7 +1182,6 @@ class TestOptionalInput:
     @staticmethod
     @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
     def test_torch_optional_input():
-        import torch
 
         num_tokens = 3
         embedding_size = 5
@@ -1266,7 +1259,6 @@ class TestMILConverterExamples:
     @staticmethod
     @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
     def test_convert_torch_traced_model(tmpdir):
-        import torch
         from torch import nn
         class Network(nn.Module):
             def __init__(self):
@@ -1320,21 +1312,17 @@ class TestMILConverterExamples:
         # compare op names of the two programs
         np.testing.assert_array_equal(get_op_types_in_program(mil_prog1), get_op_types_in_program(mil_prog2))
 
-
-@pytest.mark.skipif(ct.utils._macos_version() < (10, 16), reason='Model produces specification 6.')
 class TestMLProgramConverterExamples:
     @staticmethod
     @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
     @pytest.mark.parametrize(
         "convert_to", ['neuralnetwork', 'mlprogram'])
     def test_convert_to_argument(tmpdir, convert_to):
-        import torch
-        from torch import nn
-        class Network(nn.Module):
+        class Network(torch.nn.Module):
             def __init__(self):
                 super(Network, self).__init__()
-                self.hidden = nn.Linear(30, 5)
-                self.relu = nn.ReLU()
+                self.hidden = torch.nn.Linear(30, 5)
+                self.relu = torch.nn.ReLU()
 
             def forward(self, x):
                 x = self.hidden(x)
@@ -1359,13 +1347,11 @@ class TestMLProgramConverterExamples:
     @staticmethod
     @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
     def test_deployment_target_argument(tmpdir):
-        import torch
-        from torch import nn
-        class Network(nn.Module):
+        class Network(torch.nn.Module):
             def __init__(self):
                 super(Network, self).__init__()
-                self.hidden = nn.Linear(30, 5)
-                self.relu = nn.ReLU()
+                self.hidden = torch.nn.Linear(30, 5)
+                self.relu = torch.nn.ReLU()
 
             def forward(self, x):
                 x = self.hidden(x)
@@ -1456,13 +1442,11 @@ class TestMLProgramConverterExamples:
     @staticmethod
     @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
     def test_get_milprogram_method(tmpdir):
-        import torch
-        from torch import nn
-        class Network(nn.Module):
+        class Network(torch.nn.Module):
             def __init__(self):
                 super(Network, self).__init__()
-                self.hidden = nn.Linear(100, 10)
-                self.relu = nn.ReLU()
+                self.hidden = torch.nn.Linear(100, 10)
+                self.relu = torch.nn.ReLU()
 
             def forward(self, x):
                 x = self.hidden(x)
@@ -1480,7 +1464,55 @@ class TestMLProgramConverterExamples:
         )
         assert isinstance(model._get_mil_internal(), ct.converters.mil.Program)
 
-@pytest.mark.skipif(ct.utils._macos_version() < (10, 16), reason='Model produces specification 6.')
+    @staticmethod
+    @pytest.mark.skipif(not _HAS_TORCH or ct.utils._macos_version() < (12, 0),
+                        reason=MSG_TORCH_NOT_FOUND)
+    def test_classifier():
+        torch_model = torch.nn.ReLU().eval()
+        traced_model = torch.jit.trace(torch_model, torch.rand(3,))
+        model = ct.convert(
+            traced_model,
+            inputs=[ct.TensorType(shape=(3,))],
+            classifier_config = ct.ClassifierConfig(['a', 'b', 'c']),
+            convert_to='mlprogram'
+        )
+        spec = model.get_spec()
+        input_name = spec.description.input[0].name
+        out_dict = model.predict({input_name : np.array([1.0, 2.0, 3.0])})
+        assert 'classLabel' in out_dict
+        assert out_dict['classLabel'] == 'c'
+
+    @pytest.mark.skipif(not ct.utils._is_macos(), reason="Platform is not Mac OS")
+    @pytest.mark.parametrize("skip_model_load", [True, False])
+    def test_model_load_skip_flag(self, skip_model_load):
+        @mb.program(input_specs=[mb.TensorSpec(shape=(3,)), ])
+        def prog(x):
+            return mb.relu(x=x, name='relu')
+
+        if ct.utils._macos_version() < (12, 0) and not skip_model_load:
+            # converting to mlprogram, on macOS < 12
+            # should raise a runtime error when skip_model_load is False
+            with pytest.warns(RuntimeWarning):
+                model = ct.convert(prog, convert_to='mlprogram',
+                                   skip_model_load=skip_model_load)
+        else:
+            model = ct.convert(prog, convert_to='mlprogram',
+                                skip_model_load=skip_model_load)
+
+        assert model is not None
+        if skip_model_load:
+            assert model.__proxy__ is None
+        model_dir = mkdtemp()
+        filename = os.path.join(model_dir, 'test.mlpackage')
+        model.save(filename)
+        assert os.path.exists(filename)
+        try:
+            shutil.rmtree(model_dir)
+        except:
+            pass
+
+
+@pytest.mark.skipif(ct.utils._macos_version() < (12, 0), reason='Model produces specification 6.')
 class TestMLProgramFP16Transform:
     @staticmethod
     def test_compute_precision_api():

@@ -79,6 +79,21 @@ def remove_linear(op, block):
     block.remove_ops([op])
     return True
 
+def remove_transpose(op, block):
+    perm = np.sort(op.perm.val)
+    if (perm != op.perm.val).any():
+        return False
+
+    input_var = op.x
+    input_op = input_var.op
+
+    op.enclosing_block.replace_uses_of_var_after_op(
+        anchor_op=input_op, old_var=op.outputs[0], new_var=input_var
+    )
+
+    # Remove all the ops at once
+    block.remove_ops([op])
+    return True
 
 _SUPPORTED_OPS = {
     "add",
@@ -93,6 +108,7 @@ _SUPPORTED_OPS = {
     "slice_by_size",
     "pad",
     "tile",
+    "transpose",
     "upsample_nearest_neighbor",
     "upsample_bilinear",
     "resize_bilinear",
@@ -112,6 +128,7 @@ op_to_removal_fn = {
     "slice_by_size": remove_same_shape,
     "pad": remove_same_shape,
     "tile": remove_same_shape,
+    "transpose": remove_transpose,
     "upsample_nearest_neighbor": remove_same_shape,
     "upsample_bilinear": remove_same_shape,
     "resize_bilinear": remove_same_shape,

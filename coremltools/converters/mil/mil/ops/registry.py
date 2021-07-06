@@ -29,7 +29,6 @@ class SSAOpRegistry:
 
         def class_wrapper(op_cls):
             op_type = op_cls.__name__
-            # op_cls.__doc__ = doc_str  # TODO: rdar://58622145
 
             # Operation specific to custom op
             op_msg = "Custom op" if is_custom_op else "op"
