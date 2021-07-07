@@ -184,11 +184,8 @@ class Var(object):
     def set_name(self, name):
         self.name = name
 
-    def is_tensor_of(self, dtype: str):
-        return types.is_tensor(self.sym_type) and builtin_to_string(self.dtype) == dtype
-
-    def is_scalar_of(self, dtype: str):
-        return types.is_scalar(self.sym_type) and builtin_to_string(self.dtype) == dtype
+    def is_tensor_or_scalar_of(self, dtype: str):
+        return (types.is_tensor(self.sym_type) or types.is_scalar(self.sym_type)) and builtin_to_string(self.dtype) == dtype
 
     def __str__(self):
         return "%" + self.name + ": " + self.shape_str() + self.type_str()

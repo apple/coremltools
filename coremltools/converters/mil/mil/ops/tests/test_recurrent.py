@@ -37,7 +37,6 @@ class TestGRU:
             # output(always 0) for second batch onwards
             [2, 32],
             [1, 16],
-            # rdar://66661491 (GRU with bias fails on NNv1 and MIL backend)
             [True, False],
             [True, False],
             ["forward", "reverse"],
@@ -334,7 +333,6 @@ class TestLSTM:
             use_cpu_only=use_cpu_only,
             frontend_only=False,
             backend=backend,
-            # rdar://63839623 ([GITLAB-CI] precision issue on various tests on gitlab ci)
             atol=1e-3,
             rtol=1e-3,
         )
@@ -379,9 +377,6 @@ class TestLSTM:
         direction,
         symbolic,
     ):
-        # TODO: <rdar://problem/59540160> [MIL] LSTM layer- Implement eval and tf register routine
-        # Testing 1. peephole values
-        #         2. clip values
 
         torch.manual_seed(50)
         rnn = torch.nn.LSTM(input_size, hidden_size, 1, bias=has_bias)
@@ -489,8 +484,7 @@ class TestLSTM:
         ],
         argvalues=itertools.product(
             [True],
-            # TODO: rdar://66768742 (BiLSTM output numerically mismatch for MIL backend)
-            ["neuralnetwork"],
+            backends,
             [1, 8],
             [1, 32],
             [1, 64],

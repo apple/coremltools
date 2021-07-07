@@ -1271,6 +1271,11 @@ class TestTorchOps:
     ):
         if pad > kernel_size / 2:
             return
+
+        if ceil_mode:
+            if kernel_size == 1 and stride == 2 and pad == 0 and input_shape[-1] == 10:
+                pytest.xfail("Torch ceil_mode does not match exactly with CoreML's ceil_mode. rdar://80050546")
+
         test_input = torch.rand(input_shape)
         expected_result = F.avg_pool1d(
             test_input,
@@ -1305,6 +1310,11 @@ class TestTorchOps:
     ):
         if pad > kernel_size / 2:
             return
+
+        if ceil_mode:
+            if kernel_size == 1 and stride == 2 and pad == 0 and input_shape[-1] == 10:
+                pytest.xfail("Torch ceil_mode does not match exactly with CoreML's ceil_mode. rdar://80050546")
+
         test_input = torch.rand(input_shape)
         expected_result = F.avg_pool2d(
             test_input,
@@ -1341,6 +1351,11 @@ class TestTorchOps:
     ):
         if pad > kernel_size / 2:
             return
+
+        if ceil_mode:
+            if kernel_size == 1 and stride == 2 and pad == 0 and input_shape[-1] == 10:
+                pytest.xfail("Torch ceil_mode does not match exactly with CoreML's ceil_mode. rdar://80050546")
+
         test_input = torch.rand(input_shape)
         expected_result = F.max_pool1d(
             test_input,
@@ -1373,6 +1388,11 @@ class TestTorchOps:
     ):
         if pad > kernel_size / 2:
             return
+
+        if ceil_mode:
+            if kernel_size == 1 and stride == 2 and pad == 0 and input_shape[-1] == 10:
+                pytest.xfail("Torch ceil_mode does not match exactly with CoreML's ceil_mode. rdar://80050546")
+
         test_input = torch.rand(input_shape)
         expected_result = F.max_pool2d(
             test_input,

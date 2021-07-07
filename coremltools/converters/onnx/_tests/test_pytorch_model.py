@@ -282,7 +282,7 @@ class OnnxModelTest(unittest.TestCase):
         torch_model.train(False)
         _test_torch_model_single_io(torch_model, (3, 2, 3), (3, 2, 3))  # type: ignore
 
-    @pytest.mark.skip(reason="rdar://64224329")
+    @pytest.mark.skip(reason="")
     @unittest.skipIf(
         _macos_version() < MIN_MACOS_VERSION_10_15,
         "macOS 10.15+ required. Skipping test.",
@@ -301,7 +301,7 @@ class OnnxModelTest(unittest.TestCase):
         torch_model.train(False)
         _test_torch_model_single_io(torch_model, (3, 1, 256), (3, 1, 256), minimum_ios_deployment_target="13")  # type: ignore
 
-    @pytest.mark.skip(reason="rdar://64224329")
+    @pytest.mark.skip(reason="")
     @unittest.skipIf(
         _macos_version() < MIN_MACOS_VERSION_10_15,
         "macOS 10.15+ required. Skipping test.",
@@ -322,7 +322,7 @@ class OnnxModelTest(unittest.TestCase):
         torch_model.train(False)
         _test_torch_model_single_io(torch_model, (3, 1, 256), (3, 1, 256), minimum_ios_deployment_target="13")  # type: ignore
 
-    @pytest.mark.skip(reason="rdar://64224329")
+    @pytest.mark.skip(reason="")
     @unittest.skipIf(
         _macos_version() < MIN_MACOS_VERSION_10_15,
         "macOS 10.15+ required. Skipping test.",
@@ -995,7 +995,7 @@ class TransformationTests(unittest.TestCase):
         _macos_version() < MIN_MACOS_VERSION_10_15,
         "macOS 10.15+ required. Skipping test.",
     )
-    @pytest.mark.skip(reason="test failure: <rdar://63138211>")
+    @pytest.mark.skip(reason="")
     def test_cast_removal_transformation(self, minimum_ios_deployment_target="13"):
         torch_model = nn.Upsample(scale_factor=2)
         torch_model.train(False)

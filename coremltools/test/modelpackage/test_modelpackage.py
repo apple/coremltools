@@ -128,7 +128,7 @@ class MLModelTest(unittest.TestCase):
         model.save(package.name)
         loaded_model = MLModel(package.name)
 
-        if utils._macos_version() >= (10, 17):
+        if utils._macos_version() >= (12, 0):
             preds = loaded_model.predict({"feature_1": 1.0, "feature_2": 1.0})
             self.assertIsNotNone(preds)
             self.assertEqual(preds["output"], 3.1)
@@ -146,7 +146,7 @@ class MLModelTest(unittest.TestCase):
         model.save(package.name)
         loaded_model = MLModel(package.name)
 
-        if utils._macos_version() >= (10, 17):
+        if utils._macos_version() >= (12, 0):
             preds = loaded_model.predict({"renamed_feature": 1.0, "feature_2": 1.0})
             self.assertIsNotNone(preds)
             self.assertEqual(preds["output"], 3.1)
@@ -167,7 +167,7 @@ class MLModelTest(unittest.TestCase):
         model.save(package.name)
         loaded_model = MLModel(package.name)
 
-        if utils._macos_version() >= (10, 17):
+        if utils._macos_version() >= (12, 0):
             preds = loaded_model.predict({"feature_1": 1.0, "feature_2": 1.0})
             self.assertIsNotNone(preds)
             self.assertEqual(preds["output"], 3.1)
@@ -187,7 +187,7 @@ class MLModelTest(unittest.TestCase):
             model.save(package.name)
             loaded_model = MLModel(package.name)
 
-            if utils._macos_version() >= (10, 17):
+            if utils._macos_version() >= (12, 0):
                 preds = loaded_model.predict({"feature_1": 1.0, "feature_2": 1.0})
                 self.assertIsNotNone(preds)
                 self.assertEqual(preds["output"], 3.1)
@@ -241,7 +241,7 @@ class MLModelTest(unittest.TestCase):
             # Read back the saved bundle and compile
             mlmodel2 = MLModel(package_path, useCPUOnly=True)
 
-            if utils._macos_version() >= (10, 17):
+            if utils._macos_version() >= (12, 0):
                 result = mlmodel2.predict(
                     {"input": example_input.cpu().detach().numpy().astype(np.float32)}
                 )

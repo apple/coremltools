@@ -627,7 +627,7 @@ class TestElementwiseUnary:
         itertools.product(
             [True, False],
             backends,
-            [("fp32", "int32"), ("fp16", "fp32"), ("fp32", "fp16"), ("fp16", "int32")],
+            [("fp16", "fp32"), ("fp32", "fp16")],
         ),
     )
     def test_builder_to_backend_stress_cast(
