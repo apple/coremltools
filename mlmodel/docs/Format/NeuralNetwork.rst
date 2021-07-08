@@ -7277,6 +7277,117 @@ Output: x[:, begin:begin+2, :]
 
 
 
+Neural Network Specializations
+-------------------------------
+
+
+NeuralNetworkClassifier
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+A neural network specialized as a classifier.
+
+
+.. code-block:: proto
+
+	message NeuralNetworkClassifier {
+
+	    repeated NeuralNetworkLayer layers = 1;
+	    repeated NeuralNetworkPreprocessing preprocessing = 2;
+
+	    // use this enum value to determine the input tensor shapes to the neural network, for multiarray inputs
+	    NeuralNetworkMultiArrayShapeMapping arrayInputShapeMapping = 5;
+
+	    // use this enum value to determine the input tensor shapes to the neural network, for image inputs
+	    NeuralNetworkImageShapeMapping imageInputShapeMapping = 6;
+
+	    NetworkUpdateParameters updateParams = 10;
+
+	    // The set of labels for every possible class.
+	    oneof ClassLabels {
+	        StringVector stringClassLabels = 100;
+	        Int64Vector int64ClassLabels = 101;
+	    }
+
+	    // The name of the output blob containing the probability of each class.
+	    // In other words, the score vector. Must be a 1-D tensor with the same
+	    // number and order of elements as ClassLabels.
+	    string labelProbabilityLayerName = 200;
+	}
+
+
+
+
+
+
+OneHotLayerParams
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+
+.. code-block:: proto
+
+	message OneHotLayerParams {
+
+	    uint64 oneHotVectorSize = 1;
+	    int64 axis = 2;
+	    float onValue = 3;
+	    float offValue = 4;
+	}
+
+
+
+
+
+
+CumSumLayerParams
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+
+.. code-block:: proto
+
+	message CumSumLayerParams {
+
+	    int64 axis = 1;
+
+	    bool excludeFinalSum = 2;
+
+	    bool reverse = 3;
+	}
+
+
+
+
+
+
+NeuralNetworkRegressor
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+A neural network specialized as a regressor.
+
+
+.. code-block:: proto
+
+	message NeuralNetworkRegressor {
+
+	    repeated NeuralNetworkLayer layers = 1;
+	    repeated NeuralNetworkPreprocessing preprocessing = 2;
+
+	    // use this enum value to determine the input tensor shapes to the neural network, for multiarray inputs
+	    NeuralNetworkMultiArrayShapeMapping arrayInputShapeMapping = 5;
+
+	    // use this enum value to determine the input tensor shapes to the neural network, for image inputs
+	    NeuralNetworkImageShapeMapping imageInputShapeMapping = 6;
+
+	    NetworkUpdateParameters updateParams = 10;
+
+	}
+
+
+
+
 On-device Training Messages
 -----------------------------
 

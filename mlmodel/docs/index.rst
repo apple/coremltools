@@ -17,16 +17,16 @@ feature engineering model types, and predictive model types.
     :maxdepth: 1
     
     Format/Model.rst
-    Format/NeuralNetwork.rst
+    Format/DataStructuresTypes.rst
+    Format/FeatureEngineering.rst
+    Format/Identity.rst
     Format/MIL.rst
-    Format/Regressors.rst
+    Format/NeuralNetwork.rst
     Format/Classifiers.rst
     Format/OtherModels.rst
-    Format/FeatureEngineering.rst
-    Format/Pipeline.rst
-    Format/Identity.rst
+    Format/Regressors.rst
     Format/SVM.rst
-    Format/DataStructuresTypes.rst
+    Format/TreeEnsemble.rst
 
 .. toctree::
    :maxdepth: 1
