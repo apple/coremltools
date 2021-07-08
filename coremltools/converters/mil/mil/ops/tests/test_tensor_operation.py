@@ -292,10 +292,6 @@ class TestFill:
 
 
 class TestNonMaximumSuppression:
-    @pytest.mark.xfail(
-        condition=backends[0] == "mlprogram",
-        reason="Investigate failure rdar://78630549",
-    )
     @pytest.mark.parametrize(
         "use_cpu_only, backend", itertools.product([True, False], backends,)
     )
@@ -492,7 +488,6 @@ class TestNonMaximumSuppression:
 
         return out1, out2, out3, out4
 
-    @pytest.mark.xfail(reason="rdar://60390856", run=False)
     @pytest.mark.parametrize(
         ",".join(
             [
@@ -528,6 +523,9 @@ class TestNonMaximumSuppression:
         n_score,
         per_class_suppression,
     ):
+        if backend == "mlprogram" and iou_threshold_percentile == 0:
+            pytest.xfail("rdar://78080118")
+
         n_boxes_in, n_boxes_out = n_boxes
         boxes_val = random_gen((n_batch, n_boxes_in, 4), 0, 100)
         scores_val = random_gen((n_batch, n_boxes_in, n_score), -100, 100)

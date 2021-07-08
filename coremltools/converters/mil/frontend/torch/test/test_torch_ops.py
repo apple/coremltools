@@ -13,7 +13,7 @@ from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.testing_reqs import *
 from .testing_utils import *
 from coremltools import TensorType
-
+from coremltools._deps import version_lt
 
 pytestmark = pytest.mark.skipif(
     sys.version_info >= (3, 8), reason="Segfault with Python 3.8+"
@@ -30,6 +30,100 @@ np.random.seed(30)
 # set of shapes are kept separate
 COMMON_SHAPES = [(1, 10), (1, 5, 6), (1, 3, 5, 6), (1, 3, 4, 5, 6)]
 COMMON_SHAPES_ALL = [(1, )] + COMMON_SHAPES
+
+
+class TestAffineGrid(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "backend, x_shape_and_target_size, "
+        "sampling_mode, padding_mode, align_corners",
+        itertools.product(
+            backends,
+            [
+                # shape format: (Batch, Channel, Height, Width)
+                [(1, 1, 3, 3), (1, 1, 3, 3)],  # no size change
+                [(2, 3, 5, 5), (2, 3, 3, 2)],  # down-sampling
+                [(3, 1, 6, 6), (3, 1, 8, 8)],  # up-sampling
+            ],
+            ["bilinear"],
+            ["zeros"],
+            [True],
+        ),
+    )
+    def test(
+        self,
+        backend,
+        x_shape_and_target_size,
+        sampling_mode,
+        padding_mode,
+        align_corners,
+    ):
+        if backend == "neuralnetwork":
+            pytest.xfail("nn backend not supported")
+
+        x_shape, target_size = x_shape_and_target_size
+        theta = torch.rand((x_shape[0], 2, 3))
+
+        class TestModule(torch.nn.Module):
+            def __init__(self):
+                super(TestModule, self).__init__()
+                self.affine_grid = torch.nn.functional.affine_grid
+                self.grid_sample = torch.nn.functional.grid_sample
+
+            def forward(self, x):
+                grid = self.affine_grid(
+                    theta=theta, size=target_size, align_corners=align_corners,
+                )
+                x = self.grid_sample(
+                    x,
+                    grid=grid,
+                    mode=sampling_mode,
+                    padding_mode=padding_mode,
+                    align_corners=align_corners,
+                )
+                return x
+
+        model = TestModule()
+        self.run_compare_torch(x_shape, model, backend=backend)
+
+
+class TestGridSample(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "backend, data_grid_shapes, mode, padding_mode, align_corners",
+        itertools.product(
+            backends,
+            [
+                # Input shape format: (Batch, C, Hin, Win)
+                # Grid shape format: (Batch, Hout, Wout, 2)
+                [(1, 1, 3, 3), (1, 3, 3, 2)],  # no size change
+                [(2, 3, 5, 5), (2, 3, 3, 2)],  # down-sampling
+                [(3, 1, 6, 6), (3, 8, 8, 2)],  # up-sampling
+            ],
+            ["bilinear", "nearest"],
+            ["zeros", "border", "reflection"],
+            [True, False],
+        ),
+    )
+    def test(
+        self,
+        backend,
+        data_grid_shapes,
+        mode,
+        padding_mode,
+        align_corners,
+    ):
+        if backend == "neuralnetwork":
+            pytest.xfail("nn backend not supported")
+
+        params = {
+            "mode": mode,
+            "padding_mode": padding_mode,
+            "align_corners": align_corners,
+        }
+        model = ModuleWrapper(
+            function=torch.nn.functional.grid_sample, kwargs=params
+        )
+        self.run_compare_torch(data_grid_shapes, model, backend=backend)
+
 
 class TestNLLLoss(TorchBaseTest):
     @pytest.mark.parametrize(
@@ -84,24 +178,42 @@ class TestArgSort(TorchBaseTest):
 
 class TestBatchNorm(TorchBaseTest):
     @pytest.mark.parametrize(
-        "num_features, eps, backend",
-        itertools.product([5, 3, 1], [0.1, 1e-05], backends),
+        "num_features, eps, affine, backend",
+        itertools.product([5, 3, 1], [0.1, 1e-05], [True, False], backends),
     )
-    def test_batchnorm(self, num_features, eps, backend):
-        model = nn.BatchNorm2d(num_features, eps)
+    def test_batchnorm(self, num_features, eps, affine, backend):
+        model = nn.BatchNorm2d(num_features, eps, affine=affine)
         self.run_compare_torch((6, num_features, 5, 5), model, backend=backend)
 
     @pytest.mark.parametrize(
-        "num_features, eps, dynamic_input, backend",
-        itertools.product([5, 1], [0.1, 1e-05], ["None", "Batch", "Height", "Width", "Depth", "All"], backends),
+        "affine, backend",
+        itertools.product([True, False], backends),
     )
-    def test_batchnorm_3d(self, num_features, eps, dynamic_input, backend):
-        if backend != "neuralnetwork" and dynamic_input == "All" and num_features == 5:
+    def test_batchnorm_2d_with_conv(self, affine, backend):
+        class CRNNBase(nn.Module):
+            def __init__(self, ch_in, ch_out, kernel_size=3):
+                super(CRNNBase, self).__init__()
+                self.conv = nn.Conv2d(ch_in, ch_out, kernel_size=kernel_size)
+                self.norm = nn.BatchNorm2d(ch_out, affine=affine)
+
+            def forward(self, x):
+                x = self.conv(x)
+                x = self.norm(x)
+                return x
+        model = CRNNBase(ch_in=6, ch_out=16)
+        self.run_compare_torch((1, 6, 15, 30), model, backend=backend)
+
+    @pytest.mark.parametrize(
+        "num_features, eps, affine, dynamic_input, backend",
+        itertools.product([5, 1], [0.1, 1e-05], [True, False], ["None", "Batch", "Height", "Width", "Depth", "All"], backends),
+    )
+    def test_batchnorm_3d(self, num_features, eps, affine, dynamic_input, backend):
+        if backend != "neuralnetwork" and num_features == 5 and (dynamic_input == "All" or affine == False):
             pytest.xfail("rdar://75770475 ([ActivateMIL] Failure in "
                          "test_ops_public_torch.py::TestBatchNorm::test_batchnorm_3d "
                          "[elementwise_kernel_cpu: Cannot broadcast])")
 
-        model = nn.BatchNorm3d(num_features, eps)
+        model = nn.BatchNorm3d(num_features, eps, affine=affine)
         input_shape = (6, num_features, 2, 3, 4)
         if dynamic_input == "None":
             self.run_compare_torch(
@@ -160,13 +272,16 @@ class TestBatchNorm(TorchBaseTest):
             inputs, model, expected_results, input_as_shape=False, backend=backend,
         )
 
-    @pytest.mark.parametrize("backend", backends)
-    def test_batchnorm_1d(self, backend):
+    @pytest.mark.parametrize(
+        "affine, backend",
+        itertools.product([True, False], backends),
+    )
+    def test_batchnorm_1d_with_conv(self, affine, backend):
         class CRNNBase(nn.Module):
-            def __init__(self, ch_in, ch_out, kernel_size=3, use_bn=True):
+            def __init__(self, ch_in, ch_out, kernel_size=3):
                 super(CRNNBase, self).__init__()
                 self.conv = nn.Conv1d(ch_in, ch_out, kernel_size=kernel_size)
-                self.norm = nn.BatchNorm1d(ch_out)
+                self.norm = nn.BatchNorm1d(ch_out, affine=affine)
 
             def forward(self, x):
                 x = self.conv(x)
@@ -176,23 +291,23 @@ class TestBatchNorm(TorchBaseTest):
         self.run_compare_torch((1, 6, 15), model, backend=backend)
 
     @pytest.mark.parametrize(
-        "shape, eps, backend",
-        itertools.product([(1, 10), (4, 6), (10, 1)], [0.1, 1e-05], backends),
+        "shape, eps, affine, backend",
+        itertools.product([(1, 10), (4, 6), (10, 1)], [0.1, 1e-05], [True, False], backends),
     )
-    def test_batchnorm1d_rank2(self, shape, eps, backend):
+    def test_batchnorm1d_rank2(self, shape, eps, affine, backend):
         N,C = shape
-        batchnorm = nn.BatchNorm1d(C, eps=eps).eval()
+        batchnorm = nn.BatchNorm1d(C, eps=eps, affine=affine).eval()
         self.run_compare_torch(
             (N, C), batchnorm, backend=backend,
         )
 
     @pytest.mark.parametrize(
-        "shape, eps, backend",
-        itertools.product([(4, 8, 2), (1, 5, 3), (5, 10, 1), (6, 1, 4)], [0.1, 1e-05], backends),
+        "shape, eps, affine, backend",
+        itertools.product([(4, 8, 2), (1, 5, 3), (5, 10, 1), (6, 1, 4)], [0.1, 1e-05], [True, False], backends),
     )
-    def test_batchnorm1d_rank3(self, shape, eps, backend):
+    def test_batchnorm1d_rank3(self, shape, eps, affine, backend):
         N,C,L = shape
-        batchnorm = nn.BatchNorm1d(C, eps=eps).eval()
+        batchnorm = nn.BatchNorm1d(C, eps=eps, affine=affine).eval()
         self.run_compare_torch(
             (N, C, L), batchnorm, backend=backend,
         )
@@ -224,20 +339,37 @@ class TestGroupNorm(TorchBaseTest):
 
 class TestLinear(TorchBaseTest):
     @pytest.mark.parametrize(
-        "in_features, out_features, backend",
-        itertools.product([10, 25], [3, 6], backends),
+        "in_features, out_features, bias, backend",
+        itertools.product([5], [10], [True, False], backends),
     )
-    def test_addmm(self, in_features, out_features, backend):
-        model = nn.Linear(in_features, out_features)
+    def test_linear_rank1_input(self, in_features, out_features, bias, backend):
+        model = nn.Linear(in_features, out_features, bias=bias)
+        self.run_compare_torch((in_features,), model, backend=backend)
+
+    @pytest.mark.parametrize(
+        "in_features, out_features, bias, backend",
+        itertools.product([10, 25], [3, 6], [True, False], backends),
+    )
+    def test_linear_rank2_input(self, in_features, out_features, bias, backend):
+        model = nn.Linear(in_features, out_features, bias=bias)
         self.run_compare_torch((1, in_features), model, backend=backend)
 
     @pytest.mark.parametrize(
-        "in_features, out_features, backend",
-        itertools.product([5], [10], backends),
+        "in_features, out_features, bias, backend",
+        itertools.product([10], [6], [True, False], backends),
     )
-    def test_linear_rank1_input(self, in_features, out_features, backend):
-        model = nn.Linear(in_features, out_features)
-        self.run_compare_torch((in_features,), model, backend=backend)
+    def test_linear_rank3_input(self, in_features, out_features, bias, backend):
+        model = nn.Linear(in_features, out_features, bias=bias)
+        self.run_compare_torch((1, 3, in_features), model, backend=backend)
+
+    @pytest.mark.parametrize(
+        "in_features, out_features, bias, backend",
+        itertools.product([10], [6], [True, False], backends),
+    )
+    def test_linear_rank4_input(self, in_features, out_features, bias, backend):
+        model = nn.Linear(in_features, out_features, bias=bias)
+        self.run_compare_torch((1, 5, 3, in_features), model, backend=backend)
+
 
 class TestConv(TorchBaseTest):
     @pytest.mark.parametrize(
@@ -984,7 +1116,7 @@ class TestMaximumMinimum(TorchBaseTest):
                 elif mode == "maximum":
                     return torch.maximum(x, y)
                 else:
-                    raise ValueError(f"Unsupported mode: {mode}")
+                    raise ValueError("Unsupported mode: {mode}".format(mode=mode))
 
         model = TestModel()
         self.run_compare_torch([input_shape] * 2, model, backend=backend)
@@ -1547,7 +1679,6 @@ class TestCumSum(TorchBaseTest):
 
 
 class TestReshape(TorchBaseTest):
-    # TODO: <rdar://66239973> Add dynamic & rank preserving reshape tests for pytorch
     @pytest.mark.parametrize(
         "backend, output_shape",
         itertools.product(backends, [(3, 2), (2, -1), (2, 1, 1, 3),],),
@@ -1742,7 +1873,7 @@ class TestActivation(TorchBaseTest):
     )
     @pytest.mark.skipif(
         _macos_version() <= (10, 15),
-        reason="Parametric SoftPlus segfaults on macOS 10.15 and below. (rdar://problem/66555235)",
+        reason="Parametric SoftPlus segfaults on macOS 10.15 and below.",
     )
     def test_softplus(self, backend, beta, threshold):
         input_shape = (1, 10, 5, 15)
@@ -1759,6 +1890,39 @@ class TestActivation(TorchBaseTest):
         model = nn.Softsign().eval()
         self.run_compare_torch(
             shape, model, backend=backend,
+        )
+
+    @pytest.mark.skipif(
+        condition=version_lt(torch, "1.7.0"),
+        reason="torch.nn.SiLU available only in PyTorch 1.7.0+",
+    )
+    @pytest.mark.parametrize(
+        "shape, backend",
+        itertools.product([(1, 10), (1, 3, 4), (1, 4, 5, 6)], backends),
+    )
+    def test_silu(self, shape, backend):
+        if backend == "neuralnetwork":
+            pytest.xfail("nn backend not supported")
+
+        model = ModuleWrapper(function=torch.nn.functional.silu)
+        self.run_compare_torch([shape], model, backend=backend)
+
+    @pytest.mark.parametrize(
+        "rounding_mode, backend",
+        itertools.product([None, "floor", "trunc"], backends),
+    )
+    def test_div(self, rounding_mode, backend):
+        model = ModuleWrapper(function=torch.div,
+                              kwargs={"rounding_mode": rounding_mode})
+        x1 = torch.from_numpy(np.array([2.3, 2.6, -3.6, -3.2], dtype=np.float32))
+        x2 = torch.from_numpy(np.array([1.0, 1.0, 1.0, 1.0], dtype=np.float32))
+        out = torch.div(x1, x2, rounding_mode=rounding_mode)
+        self.run_compare_torch(
+            [x1, x2],
+            model,
+            backend=backend,
+            input_as_shape=False,
+            expected_results=out,
         )
 
 
@@ -1830,6 +1994,7 @@ class TestElementWiseUnary(TorchBaseTest):
         model = torch.nn.Threshold(threshold[0], threshold[1]).eval()
         self.run_compare_torch(
             shape, model, backend=backend,
+            use_cpu_for_conversion=True, # TODO: change this to False (rdar://78343191)
         )
 
     @pytest.mark.parametrize(
@@ -1913,6 +2078,9 @@ class TestTo(TorchBaseTest):
     def test_cast_bug(self, use_cpu_for_conversion, backend):
         if backend == "mlprogram" and not use_cpu_for_conversion:
             pytest.xfail("rdar://78343191 ((MIL GPU) Core ML Tools Unit Test failures [failure to load or Seg fault])")
+
+        if backend == "mlprogram" and use_cpu_for_conversion:
+            pytest.xfail("numerical mismatch : rdar://78952850")
 
         class TestModel(torch.nn.Module):
             def forward(self, spans, embedding):
@@ -2191,6 +2359,57 @@ class TestFlip(TorchBaseTest):
         model = FlipModel()
         self.run_compare_torch(
             input_shape, model, backend=backend,
+        )
+
+class TestWhere(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "backend, shape",
+        itertools.product(
+            backends,
+            [(2, 6), (3, 4, 5)]
+        ),
+    )
+    def test_where_test1(self, backend, shape):
+
+        class WhereModel(nn.Module):
+            def __init__(self):
+                super(WhereModel, self).__init__()
+
+            def forward(self, x, y):
+                return torch.where(x > 0.5, x, y)
+
+        input_shape = [shape, shape]
+        model = WhereModel()
+        self.run_compare_torch(
+            input_shape, model, backend=backend,
+        )
+
+    @pytest.mark.parametrize(
+        "backend, shape",
+        itertools.product(
+            backends,
+            [(2, 6), (3, 4, 5)]
+        ),
+    )
+    def test_where_test2(self, backend, shape):
+
+        class WhereModel(nn.Module):
+            def __init__(self):
+                super(WhereModel, self).__init__()
+
+            def forward(self, cond, x, y):
+                return torch.where(cond, x, y)
+
+        cond = torch.rand(*shape) > 0.5
+        inputs = [cond, torch.rand(*shape), torch.rand(*shape)]
+        model = WhereModel()
+        expected_results = model(*inputs)
+        self.run_compare_torch(
+            inputs,
+            model,
+            backend=backend,
+            expected_results=expected_results,
+            input_as_shape=False,
         )
 
 class TestSelect(TorchBaseTest):

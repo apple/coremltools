@@ -17,15 +17,17 @@ import warnings as _warnings
 from coremltools.proto import Model_pb2 as _Model_pb2
 
 from .._deps import _HAS_SKLEARN
+from ..libmodelpackage import ModelPackage
+
+
+_MLMODEL_EXTENSION = ".mlmodel"
+_MLPACKAGE_EXTENSION = ".mlpackage"
+
 
 try:
     from ..libmodelpackage import ModelPackage
 except ModuleNotFoundError:
     pass
-
-_MLMODEL_EXTENSION = ".mlmodel"
-_MLPACKAGE_EXTENSION = ".mlpackage"
-
 
 if _HAS_SKLEARN:
     import scipy.sparse as _sp
@@ -572,6 +574,33 @@ def rename_feature(
                 rename_outputs or (index < len(spec.pipeline.models)),
             )
 
+    # Rename for mlProgram
+    if spec.HasField("mlProgram"):
+        from coremltools.converters.mil.backend.mil.helper import NameSanitizer
+        new_name_sanitized = NameSanitizer().sanitize_name(new_name)
+        if new_name != new_name_sanitized:
+            raise ValueError("Input/output names for ML Program must be of the format [a-zA-Z_][a-zA-Z0-9_]*. "
+                             "That is, it must start with a letter and only contain numerals, underscore or letters. "
+                             "Provided feature name, \"{}\" does not satisfy these requirements.".format(new_name))
+        mil = spec.mlProgram
+        for function in mil.functions.values():
+            for name_value_type in function.inputs:
+                if name_value_type.name == current_name:
+                    name_value_type.name = new_name
+            for block in function.block_specializations.values():
+                for i, out_name in enumerate(block.outputs):
+                    if out_name == current_name:
+                        block.outputs[i] = new_name
+                for op in block.operations:
+                    for argument in op.inputs.values():
+                        for binding in argument.arguments:
+                            if binding.HasField("name"):
+                                if binding.name == current_name:
+                                    binding.name = new_name
+                    for name_value_type in op.outputs:
+                        if name_value_type.name == current_name:
+                            name_value_type.name = new_name
+
 
 def _sanitize_value(x):
     """
@@ -791,11 +820,12 @@ def _macos_version():
     version comparisons. On non-Macs, it returns an empty tuple.
     """
     if _is_macos():
-        import platform
-
-        ver_str = platform.mac_ver()[0]
-        return tuple([int(v) for v in ver_str.split(".")])
-
+        try:
+            import subprocess
+            ver_str = subprocess.run(["sw_vers", "-productVersion"], stdout=subprocess.PIPE).stdout.decode('utf-8').strip('\n')
+            return tuple([int(v) for v in ver_str.split(".")])
+        except:
+            raise Exception("Unable to detemine the macOS version")
     return ()
 
 

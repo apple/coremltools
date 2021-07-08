@@ -183,9 +183,6 @@ class TestApiVisibilities:
     def test_converters_xgboost(self):
         _check_visible_modules(_get_visible_items(ct.converters.xgboost), ["convert"])
 
-    def test_converters_mil(self):
-        pass  # TODO: [Create API visibility tests for MIL](rdar://64413959)
-
     def test_models_neural_network_quantization_utils(self):
         expected = [
             "AdvancedQuantizedLayerSelector",

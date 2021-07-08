@@ -26,7 +26,7 @@ class ClassifierConfig(object):
         Parameters
         ----------
         class_labels: str / list of int / list of str
-            If a ``list`` if given, the ``list`` maps the index of the output of a
+            If a ``list`` is given, the ``list`` maps the index of the output of a
             neural network to labels in a classifier.
             
             If a ``str`` is given, the ``str`` points to a file which maps the index

@@ -38,8 +38,13 @@ def convert_ops(const_context, builder, ops, outputs):
         elif op.op_type in MIL_TO_NN_MAPPING_REGISTRY:
             mapper = MIL_TO_NN_MAPPING_REGISTRY[op.op_type]
         else:
-            msg = "{} is not implemented for nn backend. block: {}"
-            raise ValueError(msg.format(op.op_type, op.enclosing_block))
+            msg = ("Op {} is used in the source model. This op is not supported "
+                   "by the NeuralNetwork (compatibility with MacOS < 12, iOS < 15) model "
+                   "type. To successfully convert this model, convert to the ML Program "
+                   "model type (minimum target MacOS 12, iOS 15 and later).\n"
+                   "Use coremltools.convert(..., convert_to=\"mlprogram\") to convert to ML Program.\n"
+                   "block: {}")
+            raise NotImplementedError(msg.format(op.op_type, op.enclosing_block))
         # const is globally shared in nn.
         mapper(const_context, builder, op)
 
@@ -423,8 +428,6 @@ def conv_helper(const_context, builder, op):
             pad["padding_left"] = op.pad.val[4]
             pad["padding_right"] = op.pad.val[5]
 
-    # This doesn't work till builder fills in all optional values
-    # (rdar://59280101)
     has_bias = op.bias is not None
     groups = op.groups.val
 
@@ -440,7 +443,7 @@ def conv_helper(const_context, builder, op):
         dilations = dilations[:-1] + [1] + dilations[-1:]
         strides = strides[:-1] + [1] + strides[-1:]
 
-    if weights is not None and weights.dtype == 'uint8':
+    if weights is not None and op.op_type == "conv_quantized":
         nbits = op.nbits.val
         weights = _convert_array_to_nbit_quantized_bytes(weights.flatten(), nbits).tobytes()
         quantization_type = op.quantization_type.val
@@ -2422,46 +2425,63 @@ def layer_norm(const_context, builder, op):
     axes = [axis+rank if axis < 0 else axis for axis in op.axes.val]
     epsilon = op.epsilon.val
 
-    if rank in [2, 3] and len(axes) == 1 and axes[0] == rank - 1 and input_shape.count(-1) < 2 and input_shape[-1] != -1:
+    # if input shape = (X1, X2) or (X0, X1, X2), axes = [-1], X1 and X2 are known
+    # then the following operations are performed
+    # - reshape to (X1, 1, X2) / (X0, X1, 1, X2)
+    # - apply MVN layer, which normalizes across last 2 dims
+    # - apply scale layer
+    # - reshape back to (X1, X2) / (X0, X1, X2)
+    # Otherwise, we express the layer_norm as primitive operations
+    if rank in [2, 3] and len(axes) == 1 and axes[0] == rank - 1 and input_shape.count(-1) < 2 \
+        and input_shape[-1] != -1 and input_shape[-2] != -1:
 
-        normalized_shape = input_shape[-len(axes) :]
-        gamma = _np.ones(normalized_shape) if op.gamma is None else op.gamma.val
-        beta = _np.zeros(normalized_shape) if op.beta is None else op.beta.val
+        reshaped_shape = input_shape[:]
+        # Insert a singleton dimension in the 'height' position
+        reshaped_shape.insert(-1, 1)
+
+        if len(reshaped_shape) == 4:    
+            gamma_shape = reshaped_shape[1:]
+        else:
+            gamma_shape = reshaped_shape
+
+        gamma = _np.ones(gamma_shape) if op.gamma is None else _np.tile(op.gamma.val, (gamma_shape[0], 1, 1))
+        beta = _np.zeros(gamma_shape) if op.beta is None else _np.tile(op.beta.val, (gamma_shape[0], 1, 1))
 
         builder.add_reshape_static(
             name=op.name + "_reshape",
             input_name=make_input(const_context, builder, op.x),
-            output_name=op.x.name + "_reshape",
-            output_shape=input_shape + [1, 1],
+            output_name=op.name + "_reshape",
+            output_shape=reshaped_shape,
         )
-
+        
         builder.add_mvn(
-            name=op.x.name + "_mvn",
-            input_name=op.x.name + "_reshape",
-            output_name=op.x.name + "_mvn",
-            across_channels=True,
+            name=op.name + "_mvn",
+            input_name=op.name + "_reshape",
+            output_name=op.name + "_mvn",
+            across_channels=False,
             normalize_variance=True,
             epsilon=epsilon,
         )
 
         builder.add_scale(
-            name=op.x.name + "_5d",
-            input_name=op.x.name + "_mvn",
-            output_name=op.x.name + "_5d",
+            name=op.name + "_scale",
+            input_name=op.name + "_mvn",
+            output_name=op.name + "_scale",
             W=gamma,
             b=beta,
             has_bias=True,
-            shape_scale=[len(gamma)],
-            shape_bias=[len(beta)],
+            shape_scale=_np.shape(gamma),
+            shape_bias=_np.shape(beta),
         )
 
         builder.add_reshape_static(
             name=op.name,
-            input_name=op.x.name + "_5d",
+            input_name=op.name + "_scale",
             output_name=op.outputs[0].name,
             output_shape=input_shape,
         )
-    else:
+
+    else: # We don't meet the conditions for an MVN layer, so we use primitives
         mean_name = op.name + "_mean"
         builder.add_reduce_mean(
             name=mean_name,
@@ -2780,11 +2800,7 @@ def shape(const_context, builder, op):
     )
 
 
-@register_mil_to_nn_mapping
-def upsample_nearest_neighbor(const_context, builder, op):
-    scale_factor_h = op.scale_factor_height.val
-    scale_factor_w = op.scale_factor_width.val
-
+def add_upsample_nn(const_context, builder, op, scale_factor_h, scale_factor_w):
     if _np.abs(_np.round(scale_factor_h) - scale_factor_h) < 1e-4 and scale_factor_h >= 1 - 1e-4:
         scale_factor_h = int(scale_factor_h)
     else:
@@ -2806,6 +2822,26 @@ def upsample_nearest_neighbor(const_context, builder, op):
         output_name=op.outputs[0].name,
         mode="NN",
     )
+
+
+@register_mil_to_nn_mapping
+def resize_nearest_neighbor(const_context, builder, op):
+    Hout, Wout = op.target_size_height.val, op.target_size_width.val
+    x_shape = op.x.shape
+    Hin, Win = x_shape[-2], x_shape[-1]
+
+    scale_factor_h = Hout / Hin if Hout % Hin == 0 else (Hout + 1e-4) / Hin
+    scale_factor_w = Wout / Win if Wout % Win == 0 else (Wout + 1e-4) / Win
+
+    add_upsample_nn(const_context, builder, op, scale_factor_h, scale_factor_w)
+
+
+@register_mil_to_nn_mapping
+def upsample_nearest_neighbor(const_context, builder, op):
+    scale_factor_h = op.scale_factor_height.val
+    scale_factor_w = op.scale_factor_width.val
+
+    add_upsample_nn(const_context, builder, op, scale_factor_h, scale_factor_w)
 
 
 @register_mil_to_nn_mapping

@@ -7,6 +7,7 @@ import re
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.types import builtin_to_proto_types
 from coremltools.models.model import _WEIGHTS_DIR_NAME, _WEIGHTS_FILE_NAME
+import coremltools.proto.FeatureTypes_pb2 as ft
 
 from coremltools.converters.mil.mil.types import (
     type_to_builtin_type,
@@ -353,3 +354,14 @@ def create_immediate_value(var):
             raise NotImplementedError("List element type, {}, not supported yet.".format(var.sym_type.__type_info__()))
     else:
         return create_scalar_value(var.val)
+
+def cast_to_framework_io_dtype(var, is_output):
+    if var.dtype == types.fp32:
+        return ft.ArrayFeatureType.ArrayDataType.FLOAT32
+    elif var.dtype == types.int32:
+        return ft.ArrayFeatureType.ArrayDataType.INT32
+    else:
+        ioname = "Output " if is_output else "Input "
+        ioname2 = "outputs" if is_output else "inputs"
+        raise NotImplementedError(ioname + var.name + " has data type " + builtin_to_string(var.dtype) + \
+                                  ". ML Program models only support fp32 and int32 " + ioname2 + ".")

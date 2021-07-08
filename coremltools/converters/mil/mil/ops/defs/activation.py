@@ -5,7 +5,7 @@
 import numpy as np
 import scipy
 
-from coremltools.converters.mil.mil import Operation, VALUE
+from coremltools.converters.mil.mil import Operation, types, VALUE
 from coremltools.converters.mil.mil.input_type import (
     DefaultInputs,
     FloatInputType,
@@ -491,6 +491,31 @@ class sigmoid_hard(Operation):
     def type_inference(self):
         return self.x.sym_type
 
+@register_op(doc_str="")
+class silu(Operation):
+    """
+    Sigmoid Linear Unit, element-wise apply the SiLU or Swish operation ``x * sigmoid(x)``.
+
+    Parameters
+    ----------
+    x: tensor<*, T>
+
+    Returns
+    -------
+    tensor<*, T>
+
+    Attributes
+    ----------
+    T: fp32
+    """
+
+    input_spec = InputSpec(x=TensorInputType(),)
+
+    def __init__(self, **kwargs):
+        super(silu, self).__init__(**kwargs)
+
+    def type_inference(self):
+        return types.tensor(self.x.dtype, tuple(self.x.shape))
 
 @register_op(doc_str="")
 class softplus(elementwise_unary):

@@ -42,6 +42,7 @@ def convert(
     minimum_deployment_target=None,
     convert_to=None,
     compute_precision=None,
+    skip_model_load=False,
     **kwargs
 ):
     """
@@ -203,6 +204,18 @@ def convert(
             - Before coremltools 5.0 release, change the default
               to coremltools.precision.FLOAT16 when convert_to="mlprogram"
 
+    skip_model_load : bool
+        Set to True to prevent coremltools from calling into the Core ML framework
+        to compile and load the model, post-conversion. In that case, the returned
+        model object cannot be used to make a prediction, but can be used to save
+        via "model.save()". This flag may be used to convert to a newer model type
+        on an older Mac, which if done without turning this flag on, may raise a
+        runtime warning.
+        Example: Use this flag to suppress runtime warning when converting to
+        ML program model type on a macOS 11, since ML program
+        can only be compiled and loaded from macOS12+.
+        Defaults to False.
+
     Returns
     -------
     model : ``coremltools.models.MLModel`` or ``coremltools.converters.mil.Program``
@@ -283,6 +296,7 @@ def convert(
         outputs=outputs,
         classifier_config=classifier_config,
         transforms=transforms,
+        skip_model_load=skip_model_load,
         **kwargs
     )
 

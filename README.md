@@ -34,7 +34,7 @@ The coremltools 5 package offers several performance improvements over previous 
 To install coremltools 5, use the following command:
 
 ```shell
-pip install coremltools==5.0b1
+pip install coremltools==5.0b2
 ```
 
 

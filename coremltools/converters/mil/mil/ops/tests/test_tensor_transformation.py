@@ -510,8 +510,6 @@ class TestSliceBySize:
         "use_cpu_only, backend", itertools.product([True, False], backends,)
     )
     def test_builder_to_backend_smoke(self, use_cpu_only, backend):
-        if backend != "nn_poto":
-            pytest.xfail("TODO: activate after rdar://75290346 is fixed and is in the build. Tracked by rdar://75823380")
         x_val = np.array(list(range(24))).reshape((2, 3, 4)).astype(np.float32)
         begin_val = np.array([1, 1, 1], dtype=np.int32)
         input_placeholders = {
