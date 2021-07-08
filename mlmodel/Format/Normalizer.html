@@ -83,11 +83,7 @@
             
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="Model.html">Core ML Model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="NeuralNetwork.html">NeuralNetwork</a></li>
-<li class="toctree-l1"><a class="reference internal" href="MIL.html">MILspec.Program</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Regressors.html">Regressors</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Classifiers.html">Classifiers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="OtherModels.html">Other Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DataStructuresTypes.html">Data Structures, Types and Parameters</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="FeatureEngineering.html">Feature Engineering</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="ArrayFeatureExtractor.html">ArrayFeatureExtractor</a></li>
 <li class="toctree-l2"><a class="reference internal" href="CategoricalMapping.html">CategoricalMapping</a></li>
@@ -96,20 +92,21 @@
 <li class="toctree-l2"><a class="reference internal" href="Imputer.html">Imputer</a></li>
 <li class="toctree-l2"><a class="reference internal" href="NonMaximumSuppression.html">NonMaximumSuppression</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Normalizer</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id1">Normalizer</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#normalizer-normtype">Normalizer.NormType</a></li>
-</ul>
-</li>
+<li class="toctree-l3"><a class="reference internal" href="#normalizer-normtype">Normalizer.NormType</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="OneHotEncoder.html">OneHotEncoder</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Scaler.html">Scaler</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="Pipeline.html">Pipeline</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Identity.html">Simple Math Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Identity.html">Identity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="MIL.html">MILspec.Program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="NeuralNetwork.html">NeuralNetwork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Classifiers.html">Other Classifiers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="OtherModels.html">Other Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Regressors.html">Other Regressors</a></li>
 <li class="toctree-l1"><a class="reference internal" href="SVM.html">Support Vector Machine</a></li>
-<li class="toctree-l1"><a class="reference internal" href="DataStructuresTypes.html">Data Structures, Types and Parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="TreeEnsemble.html">TreeEnsemble</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Resources</span></p>
 <ul>
@@ -184,8 +181,6 @@
             
   <div class="section" id="normalizer">
 <h1>Normalizer<a class="headerlink" href="#normalizer" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="id1">
-<h2>Normalizer<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
 <p>A normalization preprocessor.</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Normalizer</span> <span class="p">{</span>
     <span class="kd">enum</span> <span class="n">NormType</span> <span class="p">{</span>
@@ -199,7 +194,7 @@
 </pre></div>
 </div>
 <div class="section" id="normalizer-normtype">
-<h3>Normalizer.NormType<a class="headerlink" href="#normalizer-normtype" title="Permalink to this headline">¶</a></h3>
+<h2>Normalizer.NormType<a class="headerlink" href="#normalizer-normtype" title="Permalink to this headline">¶</a></h2>
 <p>There are three normalization modes,
 which have the corresponding formulas:</p>
 <dl>
@@ -219,7 +214,6 @@ which have the corresponding formulas:</p>
     <span class="na">L2</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
-</div>
 </div>
 </div>
 </div>

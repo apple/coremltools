@@ -2,10 +2,6 @@ Normalizer
 ==========
 
 
-
-Normalizer
-________________________________________________________________________________
-
 A normalization preprocessor.
 
 
@@ -31,7 +27,7 @@ A normalization preprocessor.
 
 
 Normalizer.NormType
---------------------------------------------------------------------------------
+________________________________________________________________________________
 
 There are three normalization modes,
 which have the corresponding formulas:

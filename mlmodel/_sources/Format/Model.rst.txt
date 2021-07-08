@@ -59,6 +59,158 @@ Data Structures, Feature Types, and Parameters
 
 
 
+Pipeline
+________________________________________________________________________________
+
+A pipeline consisting of one or more models.
+
+
+.. code-block:: proto
+
+	message Pipeline {
+	    repeated Model models = 1;
+	
+	    // Optional names given for each model
+	    // If not supplied it defaults to ["model0",..., "model"(models.size()-1)]
+	    // These names can be used to disambiguate the scope / domain of a parameter
+	    repeated string names = 2;
+	}
+
+
+
+
+
+
+PipelineClassifier
+________________________________________________________________________________
+
+A classifier pipeline.
+
+
+.. code-block:: proto
+
+	message PipelineClassifier {
+	    Pipeline pipeline = 1;
+	}
+
+
+
+
+
+
+PipelineRegressor
+________________________________________________________________________________
+
+A regressor pipeline.
+
+
+.. code-block:: proto
+
+	message PipelineRegressor {
+	    Pipeline pipeline = 1;
+	}
+
+
+
+
+
+FeatureDescription
+________________________________________________________________________________
+
+A feature description,
+consisting of a name, short description, and type.
+
+
+.. code-block:: proto
+
+	message FeatureDescription {
+	    string name = 1;
+	    string shortDescription = 2;
+	    FeatureType type = 3;
+	}
+
+
+
+
+
+Metadata
+________________________________________________________________________________
+
+Model metadata,
+consisting of a short description, a version string,
+an author, a license, and any other user defined
+key/value meta data.
+
+
+.. code-block:: proto
+
+	message Metadata {
+	    string shortDescription = 1;
+	    string versionString = 2;
+	    string author = 3;
+	    string license = 4;
+	    map<string, string> userDefined = 100;
+	}
+
+
+
+
+
+ModelDescription
+________________________________________________________________________________
+
+A description of a model,
+consisting of descriptions of its input and output features.
+Both regressor and classifier models require the name of the
+primary predicted output feature (``predictedFeatureName``).
+Classifier models can specify the output feature containing
+probabilities for the predicted classes
+(``predictedProbabilitiesName``).
+
+
+.. code-block:: proto
+
+	message ModelDescription {
+	    repeated FeatureDescription input = 1;
+	    repeated FeatureDescription output = 10;
+	
+	    // [Required for regressor and classifier models]: the name
+	    // to give to an output feature containing the prediction.
+	    string predictedFeatureName = 11;
+	
+	    // [Optional for classifier models]: the name to give to an
+	    // output feature containing a dictionary mapping class
+	    // labels to their predicted probabilities. If not specified,
+	    // the dictionary will not be returned by the model.
+	    string predictedProbabilitiesName = 12;
+	
+	    repeated FeatureDescription trainingInput = 50;
+	
+	    Metadata metadata = 100;
+	}
+
+
+
+SerializedModel
+________________________________________________________________________________
+
+
+
+
+.. code-block:: proto
+
+	message SerializedModel {
+	    // Identifier whose content describes the model type of the serialized protocol buffer message.
+	    string identifier = 1;
+	
+	    // Must be a valid serialized protocol buffer of the above specified type.
+	    bytes model = 2;
+	}
+
+
+
+
+
 Model
 ________________________________________________________________________________
 
@@ -139,6 +291,7 @@ Specification Versions : OS Availability (Core ML Version)
 6 : iOS 15, macOS 12, tvOS 15, watchOS 8 (Core ML 5)
 
 	- Core ML Audio Feature Print
+	- MIL model type
 
 .. code-block:: proto
 
@@ -218,82 +371,4 @@ Specification Versions : OS Availability (Core ML Version)
 	        SerializedModel serializedModel = 3000;
 	    }
 	}
-
-
-
-FeatureDescription
-________________________________________________________________________________
-
-A feature description,
-consisting of a name, short description, and type.
-
-
-.. code-block:: proto
-
-	message FeatureDescription {
-	    string name = 1;
-	    string shortDescription = 2;
-	    FeatureType type = 3;
-	}
-
-
-
-
-
-Metadata
-________________________________________________________________________________
-
-Model metadata,
-consisting of a short description, a version string,
-an author, a license, and any other user defined
-key/value meta data.
-
-
-.. code-block:: proto
-
-	message Metadata {
-	    string shortDescription = 1;
-	    string versionString = 2;
-	    string author = 3;
-	    string license = 4;
-	    map<string, string> userDefined = 100;
-	}
-
-
-
-
-
-ModelDescription
-________________________________________________________________________________
-
-A description of a model,
-consisting of descriptions of its input and output features.
-Both regressor and classifier models require the name of the
-primary predicted output feature (``predictedFeatureName``).
-Classifier models can specify the output feature containing
-probabilities for the predicted classes
-(``predictedProbabilitiesName``).
-
-
-.. code-block:: proto
-
-	message ModelDescription {
-	    repeated FeatureDescription input = 1;
-	    repeated FeatureDescription output = 10;
-	
-	    // [Required for regressor and classifier models]: the name
-	    // to give to an output feature containing the prediction.
-	    string predictedFeatureName = 11;
-	
-	    // [Optional for classifier models]: the name to give to an
-	    // output feature containing a dictionary mapping class
-	    // labels to their predicted probabilities. If not specified,
-	    // the dictionary will not be returned by the model.
-	    string predictedProbabilitiesName = 12;
-	
-	    repeated FeatureDescription trainingInput = 50;
-	
-	    Metadata metadata = 100;
-	}
-
 

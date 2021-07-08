@@ -82,20 +82,19 @@
             
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="Model.html">Core ML Model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="NeuralNetwork.html">NeuralNetwork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DataStructuresTypes.html">Data Structures, Types and Parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FeatureEngineering.html">Feature Engineering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Identity.html">Identity</a></li>
 <li class="toctree-l1"><a class="reference internal" href="MIL.html">MILspec.Program</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Regressors.html">Regressors</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Classifiers.html">Classifiers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="NeuralNetwork.html">NeuralNetwork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Classifiers.html">Other Classifiers</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="OtherModels.html">Other Models</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="AudioFeaturePrint.html">AudioFeaturePrint</a></li>
 <li class="toctree-l2"><a class="reference internal" href="CustomModel.html">CustomModel</a></li>
 <li class="toctree-l2"><a class="reference internal" href="Gazetteer.html">Gazetteer</a></li>
 <li class="toctree-l2"><a class="reference internal" href="ItemSimilarityRecommender.html">ItemSimilarityRecommender</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">SoundAnalysisPreprocessing</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id1">SoundAnalysisPreprocessing</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#soundanalysispreprocessing-vggish">SoundAnalysisPreprocessing.Vggish</a></li>
-</ul>
-</li>
+<li class="toctree-l3"><a class="reference internal" href="#soundanalysispreprocessing-vggish">SoundAnalysisPreprocessing.Vggish</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="LinkedModel.html">LinkedModel</a></li>
@@ -105,11 +104,9 @@
 <li class="toctree-l2"><a class="reference internal" href="WordTagger.html">WordTagger</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="FeatureEngineering.html">Feature Engineering</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Pipeline.html">Pipeline</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Identity.html">Simple Math Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Regressors.html">Other Regressors</a></li>
 <li class="toctree-l1"><a class="reference internal" href="SVM.html">Support Vector Machine</a></li>
-<li class="toctree-l1"><a class="reference internal" href="DataStructuresTypes.html">Data Structures, Types and Parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="TreeEnsemble.html">TreeEnsemble</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Resources</span></p>
 <ul>
@@ -184,8 +181,6 @@
             
   <div class="section" id="soundanalysispreprocessing">
 <h1>SoundAnalysisPreprocessing<a class="headerlink" href="#soundanalysispreprocessing" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="id1">
-<h2>SoundAnalysisPreprocessing<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
 <p>A model which takes audio signal samples as input and outputs an array of
 preprocessed samples according to the specified preprocessing types</p>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span>message SoundAnalysisPreprocessing {
@@ -235,12 +230,11 @@ preprocessed samples according to the specified preprocessing types</p>
 </pre></div>
 </div>
 <div class="section" id="soundanalysispreprocessing-vggish">
-<h3>SoundAnalysisPreprocessing.Vggish<a class="headerlink" href="#soundanalysispreprocessing-vggish" title="Permalink to this headline">¶</a></h3>
+<h2>SoundAnalysisPreprocessing.Vggish<a class="headerlink" href="#soundanalysispreprocessing-vggish" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Vggish</span> <span class="p">{</span>
     <span class="c1">// no specific parameter</span>
 <span class="p">}</span>
 </pre></div>
-</div>
 </div>
 </div>
 </div>

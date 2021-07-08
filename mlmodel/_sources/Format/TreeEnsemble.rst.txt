@@ -169,10 +169,25 @@ A tree ensemble classifier.
 
 
 
+TreeEnsembleRegressor
+________________________________________________________________________________
+
+A tree ensemble regressor.
+
+
+.. code-block:: proto
+
+	message TreeEnsembleRegressor {
+	    TreeEnsembleParameters treeEnsemble = 1;
+	    TreeEnsemblePostEvaluationTransform postEvaluationTransform = 2;
+	}
+
+
+
 
 
 TreeEnsembleParameters.TreeNode.TreeNodeBehavior
---------------------------------------------------------------------------------
+________________________________________________________________________________
 
 
 
@@ -191,7 +206,7 @@ TreeEnsembleParameters.TreeNode.TreeNodeBehavior
 
 
 TreeEnsemblePostEvaluationTransform
---------------------------------------------------------------------------------
+________________________________________________________________________________
 
 A tree ensemble post-evaluation transform.
 
@@ -203,3 +218,4 @@ A tree ensemble post-evaluation transform.
 	    Regression_Logistic = 2;
 	    Classification_SoftMaxWithZeroClassReference = 3;
 	}
+

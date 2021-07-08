@@ -82,10 +82,12 @@
             
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="Model.html">Core ML Model</a></li>
-<li class="toctree-l1"><a class="reference internal" href="NeuralNetwork.html">NeuralNetwork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DataStructuresTypes.html">Data Structures, Types and Parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FeatureEngineering.html">Feature Engineering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Identity.html">Identity</a></li>
 <li class="toctree-l1"><a class="reference internal" href="MIL.html">MILspec.Program</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Regressors.html">Regressors</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Classifiers.html">Classifiers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="NeuralNetwork.html">NeuralNetwork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Classifiers.html">Other Classifiers</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="OtherModels.html">Other Models</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="AudioFeaturePrint.html">AudioFeaturePrint</a></li>
 <li class="toctree-l2"><a class="reference internal" href="CustomModel.html">CustomModel</a></li>
@@ -95,24 +97,20 @@
 <li class="toctree-l2"><a class="reference internal" href="LinkedModel.html">LinkedModel</a></li>
 <li class="toctree-l2"><a class="reference internal" href="TextClassifier.html">TextClassifier</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">VisionFeaturePrint</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#id1">VisionFeaturePrint</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#visionfeatureprint-scene">VisionFeaturePrint.Scene</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#visionfeatureprint-object">VisionFeaturePrint.Object</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#visionfeatureprint-object-objectversion">VisionFeaturePrint.Object.ObjectVersion</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#visionfeatureprint-scene-sceneversion">VisionFeaturePrint.Scene.SceneVersion</a></li>
-</ul>
-</li>
+<li class="toctree-l3"><a class="reference internal" href="#id1">VisionFeaturePrint</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#visionfeatureprint-scene">VisionFeaturePrint.Scene</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#visionfeatureprint-object">VisionFeaturePrint.Object</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#visionfeatureprint-object-objectversion">VisionFeaturePrint.Object.ObjectVersion</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#visionfeatureprint-scene-sceneversion">VisionFeaturePrint.Scene.SceneVersion</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="WordEmbedding.html">WordEmbedding</a></li>
 <li class="toctree-l2"><a class="reference internal" href="WordTagger.html">WordTagger</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="FeatureEngineering.html">Feature Engineering</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Pipeline.html">Pipeline</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Identity.html">Simple Math Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Regressors.html">Other Regressors</a></li>
 <li class="toctree-l1"><a class="reference internal" href="SVM.html">Support Vector Machine</a></li>
-<li class="toctree-l1"><a class="reference internal" href="DataStructuresTypes.html">Data Structures, Types and Parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="TreeEnsemble.html">TreeEnsemble</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Resources</span></p>
 <ul>
@@ -234,8 +232,9 @@ according to the specified feature types</p>
 <span class="p">}</span>
 </pre></div>
 </div>
+</div>
 <div class="section" id="visionfeatureprint-scene">
-<h3>VisionFeaturePrint.Scene<a class="headerlink" href="#visionfeatureprint-scene" title="Permalink to this headline">¶</a></h3>
+<h2>VisionFeaturePrint.Scene<a class="headerlink" href="#visionfeatureprint-scene" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Scene</span> <span class="p">{</span>
     <span class="kd">enum</span> <span class="n">SceneVersion</span> <span class="p">{</span>
         <span class="na">SCENE_VERSION_INVALID</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
@@ -250,7 +249,7 @@ according to the specified feature types</p>
 </div>
 </div>
 <div class="section" id="visionfeatureprint-object">
-<h3>VisionFeaturePrint.Object<a class="headerlink" href="#visionfeatureprint-object" title="Permalink to this headline">¶</a></h3>
+<h2>VisionFeaturePrint.Object<a class="headerlink" href="#visionfeatureprint-object" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Object</span> <span class="p">{</span>
     <span class="kd">enum</span> <span class="n">ObjectVersion</span> <span class="p">{</span>
         <span class="na">OBJECT_VERSION_INVALID</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
@@ -269,7 +268,7 @@ according to the specified feature types</p>
 </div>
 </div>
 <div class="section" id="visionfeatureprint-object-objectversion">
-<h3>VisionFeaturePrint.Object.ObjectVersion<a class="headerlink" href="#visionfeatureprint-object-objectversion" title="Permalink to this headline">¶</a></h3>
+<h2>VisionFeaturePrint.Object.ObjectVersion<a class="headerlink" href="#visionfeatureprint-object-objectversion" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">enum</span> <span class="n">ObjectVersion</span> <span class="p">{</span>
     <span class="na">OBJECT_VERSION_INVALID</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
     <span class="c1">// VERSION_1 is available on iOS,tvOS 14.0+, macOS 11.0+</span>
@@ -282,7 +281,7 @@ according to the specified feature types</p>
 </div>
 </div>
 <div class="section" id="visionfeatureprint-scene-sceneversion">
-<h3>VisionFeaturePrint.Scene.SceneVersion<a class="headerlink" href="#visionfeatureprint-scene-sceneversion" title="Permalink to this headline">¶</a></h3>
+<h2>VisionFeaturePrint.Scene.SceneVersion<a class="headerlink" href="#visionfeatureprint-scene-sceneversion" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">enum</span> <span class="n">SceneVersion</span> <span class="p">{</span>
     <span class="na">SCENE_VERSION_INVALID</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
     <span class="c1">// VERSION_1 is available on iOS,tvOS 12.0+, macOS 10.14+</span>
@@ -290,7 +289,6 @@ according to the specified feature types</p>
     <span class="na">SCENE_VERSION_1</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
 <span class="p">}</span>
 </pre></div>
-</div>
 </div>
 </div>
 </div>

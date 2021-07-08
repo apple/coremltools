@@ -35,7 +35,7 @@
   <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="NeuralNetwork" href="NeuralNetwork.html" />
+    <link rel="next" title="Data Structures, Types and Parameters" href="DataStructuresTypes.html" />
     <link rel="prev" title="Core ML Model Format Specification" href="../index.html" /> 
 </head>
 
@@ -82,22 +82,26 @@
             
               <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Core ML Model</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#model">Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pipeline">Pipeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pipelineclassifier">PipelineClassifier</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pipelineregressor">PipelineRegressor</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#featuredescription">FeatureDescription</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#metadata">Metadata</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#modeldescription">ModelDescription</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#serializedmodel">SerializedModel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#model">Model</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="NeuralNetwork.html">NeuralNetwork</a></li>
-<li class="toctree-l1"><a class="reference internal" href="MIL.html">MILspec.Program</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Regressors.html">Regressors</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Classifiers.html">Classifiers</a></li>
-<li class="toctree-l1"><a class="reference internal" href="OtherModels.html">Other Models</a></li>
-<li class="toctree-l1"><a class="reference internal" href="FeatureEngineering.html">Feature Engineering</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Pipeline.html">Pipeline</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Identity.html">Simple Math Functions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="SVM.html">Support Vector Machine</a></li>
 <li class="toctree-l1"><a class="reference internal" href="DataStructuresTypes.html">Data Structures, Types and Parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FeatureEngineering.html">Feature Engineering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Identity.html">Identity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="MIL.html">MILspec.Program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="NeuralNetwork.html">NeuralNetwork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Classifiers.html">Other Classifiers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="OtherModels.html">Other Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Regressors.html">Other Regressors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="SVM.html">Support Vector Machine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="TreeEnsemble.html">TreeEnsemble</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Resources</span></p>
 <ul>
@@ -235,6 +239,108 @@ and can be any one of the following types:</p>
 </ul>
 </dd>
 </dl>
+<div class="section" id="pipeline">
+<h2>Pipeline<a class="headerlink" href="#pipeline" title="Permalink to this headline">¶</a></h2>
+<p>A pipeline consisting of one or more models.</p>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Pipeline</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="n">Model</span> <span class="na">models</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+
+    <span class="c1">// Optional names given for each model</span>
+    <span class="c1">// If not supplied it defaults to [&quot;model0&quot;,..., &quot;model&quot;(models.size()-1)]</span>
+    <span class="c1">// These names can be used to disambiguate the scope / domain of a parameter</span>
+    <span class="k">repeated</span> <span class="kt">string</span> <span class="na">names</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="pipelineclassifier">
+<h2>PipelineClassifier<a class="headerlink" href="#pipelineclassifier" title="Permalink to this headline">¶</a></h2>
+<p>A classifier pipeline.</p>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">PipelineClassifier</span> <span class="p">{</span>
+    <span class="n">Pipeline</span> <span class="na">pipeline</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="pipelineregressor">
+<h2>PipelineRegressor<a class="headerlink" href="#pipelineregressor" title="Permalink to this headline">¶</a></h2>
+<p>A regressor pipeline.</p>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">PipelineRegressor</span> <span class="p">{</span>
+    <span class="n">Pipeline</span> <span class="na">pipeline</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="featuredescription">
+<h2>FeatureDescription<a class="headerlink" href="#featuredescription" title="Permalink to this headline">¶</a></h2>
+<p>A feature description,
+consisting of a name, short description, and type.</p>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">FeatureDescription</span> <span class="p">{</span>
+    <span class="kt">string</span> <span class="na">name</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="kt">string</span> <span class="na">shortDescription</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+    <span class="n">FeatureType</span> <span class="na">type</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="metadata">
+<h2>Metadata<a class="headerlink" href="#metadata" title="Permalink to this headline">¶</a></h2>
+<p>Model metadata,
+consisting of a short description, a version string,
+an author, a license, and any other user defined
+key/value meta data.</p>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Metadata</span> <span class="p">{</span>
+    <span class="kt">string</span> <span class="na">shortDescription</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="kt">string</span> <span class="na">versionString</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+    <span class="kt">string</span> <span class="na">author</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+    <span class="kt">string</span> <span class="na">license</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
+    <span class="n">map</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;</span> <span class="na">userDefined</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="modeldescription">
+<h2>ModelDescription<a class="headerlink" href="#modeldescription" title="Permalink to this headline">¶</a></h2>
+<p>A description of a model,
+consisting of descriptions of its input and output features.
+Both regressor and classifier models require the name of the
+primary predicted output feature (<code class="docutils literal notranslate"><span class="pre">predictedFeatureName</span></code>).
+Classifier models can specify the output feature containing
+probabilities for the predicted classes
+(<code class="docutils literal notranslate"><span class="pre">predictedProbabilitiesName</span></code>).</p>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ModelDescription</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="n">FeatureDescription</span> <span class="na">input</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="k">repeated</span> <span class="n">FeatureDescription</span> <span class="na">output</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+
+    <span class="c1">// [Required for regressor and classifier models]: the name</span>
+    <span class="c1">// to give to an output feature containing the prediction.</span>
+    <span class="kt">string</span> <span class="na">predictedFeatureName</span> <span class="o">=</span> <span class="mi">11</span><span class="p">;</span>
+
+    <span class="c1">// [Optional for classifier models]: the name to give to an</span>
+    <span class="c1">// output feature containing a dictionary mapping class</span>
+    <span class="c1">// labels to their predicted probabilities. If not specified,</span>
+    <span class="c1">// the dictionary will not be returned by the model.</span>
+    <span class="kt">string</span> <span class="na">predictedProbabilitiesName</span> <span class="o">=</span> <span class="mi">12</span><span class="p">;</span>
+
+    <span class="k">repeated</span> <span class="n">FeatureDescription</span> <span class="na">trainingInput</span> <span class="o">=</span> <span class="mi">50</span><span class="p">;</span>
+
+    <span class="n">Metadata</span> <span class="na">metadata</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="serializedmodel">
+<h2>SerializedModel<a class="headerlink" href="#serializedmodel" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">SerializedModel</span> <span class="p">{</span>
+    <span class="c1">// Identifier whose content describes the model type of the serialized protocol buffer message.</span>
+    <span class="kt">string</span> <span class="na">identifier</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+
+    <span class="c1">// Must be a valid serialized protocol buffer of the above specified type.</span>
+    <span class="kt">bytes</span> <span class="na">model</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
 <div class="section" id="model">
 <h2>Model<a class="headerlink" href="#model" title="Permalink to this headline">¶</a></h2>
 <p>Core ML model compatibility is indicated by
@@ -328,6 +434,7 @@ described by <a class="reference external" href="http://semver.org/">Semantic Ve
 <blockquote>
 <div><ul class="simple">
 <li><p>Core ML Audio Feature Print</p></li>
+<li><p>MIL model type</p></li>
 </ul>
 </div></blockquote>
 <div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Model</span> <span class="p">{</span>
@@ -409,64 +516,6 @@ described by <a class="reference external" href="http://semver.org/">Semantic Ve
 </pre></div>
 </div>
 </div>
-<div class="section" id="featuredescription">
-<h2>FeatureDescription<a class="headerlink" href="#featuredescription" title="Permalink to this headline">¶</a></h2>
-<p>A feature description,
-consisting of a name, short description, and type.</p>
-<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">FeatureDescription</span> <span class="p">{</span>
-    <span class="kt">string</span> <span class="na">name</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-    <span class="kt">string</span> <span class="na">shortDescription</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
-    <span class="n">FeatureType</span> <span class="na">type</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="metadata">
-<h2>Metadata<a class="headerlink" href="#metadata" title="Permalink to this headline">¶</a></h2>
-<p>Model metadata,
-consisting of a short description, a version string,
-an author, a license, and any other user defined
-key/value meta data.</p>
-<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Metadata</span> <span class="p">{</span>
-    <span class="kt">string</span> <span class="na">shortDescription</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-    <span class="kt">string</span> <span class="na">versionString</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
-    <span class="kt">string</span> <span class="na">author</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
-    <span class="kt">string</span> <span class="na">license</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
-    <span class="n">map</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;</span> <span class="na">userDefined</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</div>
-<div class="section" id="modeldescription">
-<h2>ModelDescription<a class="headerlink" href="#modeldescription" title="Permalink to this headline">¶</a></h2>
-<p>A description of a model,
-consisting of descriptions of its input and output features.
-Both regressor and classifier models require the name of the
-primary predicted output feature (<code class="docutils literal notranslate"><span class="pre">predictedFeatureName</span></code>).
-Classifier models can specify the output feature containing
-probabilities for the predicted classes
-(<code class="docutils literal notranslate"><span class="pre">predictedProbabilitiesName</span></code>).</p>
-<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">ModelDescription</span> <span class="p">{</span>
-    <span class="k">repeated</span> <span class="n">FeatureDescription</span> <span class="na">input</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
-    <span class="k">repeated</span> <span class="n">FeatureDescription</span> <span class="na">output</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
-
-    <span class="c1">// [Required for regressor and classifier models]: the name</span>
-    <span class="c1">// to give to an output feature containing the prediction.</span>
-    <span class="kt">string</span> <span class="na">predictedFeatureName</span> <span class="o">=</span> <span class="mi">11</span><span class="p">;</span>
-
-    <span class="c1">// [Optional for classifier models]: the name to give to an</span>
-    <span class="c1">// output feature containing a dictionary mapping class</span>
-    <span class="c1">// labels to their predicted probabilities. If not specified,</span>
-    <span class="c1">// the dictionary will not be returned by the model.</span>
-    <span class="kt">string</span> <span class="na">predictedProbabilitiesName</span> <span class="o">=</span> <span class="mi">12</span><span class="p">;</span>
-
-    <span class="k">repeated</span> <span class="n">FeatureDescription</span> <span class="na">trainingInput</span> <span class="o">=</span> <span class="mi">50</span><span class="p">;</span>
-
-    <span class="n">Metadata</span> <span class="na">metadata</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
-<span class="p">}</span>
-</pre></div>
-</div>
-</div>
 </div>
 
 
@@ -477,7 +526,7 @@ probabilities for the predicted classes
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="NeuralNetwork.html" class="btn btn-neutral float-right" title="NeuralNetwork" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="DataStructuresTypes.html" class="btn btn-neutral float-right" title="Data Structures, Types and Parameters" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="../index.html" class="btn btn-neutral float-left" title="Core ML Model Format Specification" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

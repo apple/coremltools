@@ -36,8 +36,8 @@
   <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="MILspec.Program" href="MIL.html" />
-    <link rel="prev" title="Core ML Model" href="Model.html" /> 
+    <link rel="next" title="Other Classifiers" href="Classifiers.html" />
+    <link rel="prev" title="MILspec.Program" href="MIL.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -83,6 +83,10 @@
             
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="Model.html">Core ML Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DataStructuresTypes.html">Data Structures, Types and Parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="FeatureEngineering.html">Feature Engineering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Identity.html">Identity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="MIL.html">MILspec.Program</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">NeuralNetwork</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#preprocessing">Preprocessing</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#neuralnetworkimagescaler">NeuralNetworkImageScaler</a></li>
@@ -293,6 +297,13 @@
 <li class="toctree-l3"><a class="reference internal" href="#slicebysizelayerparams">SliceBySizeLayerParams</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="#neural-network-specializations">Neural Network Specializations</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#neuralnetworkclassifier">NeuralNetworkClassifier</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#onehotlayerparams">OneHotLayerParams</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#cumsumlayerparams">CumSumLayerParams</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#neuralnetworkregressor">NeuralNetworkRegressor</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#on-device-training-messages">On-device Training Messages</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#networkupdateparameters">NetworkUpdateParameters</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#losslayer">LossLayer</a></li>
@@ -326,15 +337,11 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="MIL.html">MILspec.Program</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Regressors.html">Regressors</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Classifiers.html">Classifiers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Classifiers.html">Other Classifiers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="OtherModels.html">Other Models</a></li>
-<li class="toctree-l1"><a class="reference internal" href="FeatureEngineering.html">Feature Engineering</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Pipeline.html">Pipeline</a></li>
-<li class="toctree-l1"><a class="reference internal" href="Identity.html">Simple Math Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Regressors.html">Other Regressors</a></li>
 <li class="toctree-l1"><a class="reference internal" href="SVM.html">Support Vector Machine</a></li>
-<li class="toctree-l1"><a class="reference internal" href="DataStructuresTypes.html">Data Structures, Types and Parameters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="TreeEnsemble.html">TreeEnsemble</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Resources</span></p>
 <ul>
@@ -5656,6 +5663,84 @@ axis: 1</p>
 </div>
 </div>
 </div>
+<div class="section" id="neural-network-specializations">
+<h2>Neural Network Specializations<a class="headerlink" href="#neural-network-specializations" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="neuralnetworkclassifier">
+<h3>NeuralNetworkClassifier<a class="headerlink" href="#neuralnetworkclassifier" title="Permalink to this headline">¶</a></h3>
+<p>A neural network specialized as a classifier.</p>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">NeuralNetworkClassifier</span> <span class="p">{</span>
+
+    <span class="k">repeated</span> <span class="n">NeuralNetworkLayer</span> <span class="na">layers</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="k">repeated</span> <span class="n">NeuralNetworkPreprocessing</span> <span class="na">preprocessing</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+
+    <span class="c1">// use this enum value to determine the input tensor shapes to the neural network, for multiarray inputs</span>
+    <span class="n">NeuralNetworkMultiArrayShapeMapping</span> <span class="na">arrayInputShapeMapping</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span>
+
+    <span class="c1">// use this enum value to determine the input tensor shapes to the neural network, for image inputs</span>
+    <span class="n">NeuralNetworkImageShapeMapping</span> <span class="na">imageInputShapeMapping</span> <span class="o">=</span> <span class="mi">6</span><span class="p">;</span>
+
+    <span class="n">NetworkUpdateParameters</span> <span class="na">updateParams</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+
+    <span class="c1">// The set of labels for every possible class.</span>
+    <span class="k">oneof</span> <span class="n">ClassLabels</span> <span class="p">{</span>
+        <span class="n">StringVector</span> <span class="na">stringClassLabels</span> <span class="o">=</span> <span class="mi">100</span><span class="p">;</span>
+        <span class="n">Int64Vector</span> <span class="na">int64ClassLabels</span> <span class="o">=</span> <span class="mi">101</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="c1">// The name of the output blob containing the probability of each class.</span>
+    <span class="c1">// In other words, the score vector. Must be a 1-D tensor with the same</span>
+    <span class="c1">// number and order of elements as ClassLabels.</span>
+    <span class="kt">string</span> <span class="na">labelProbabilityLayerName</span> <span class="o">=</span> <span class="mi">200</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="onehotlayerparams">
+<h3>OneHotLayerParams<a class="headerlink" href="#onehotlayerparams" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">OneHotLayerParams</span> <span class="p">{</span>
+
+    <span class="kt">uint64</span> <span class="na">oneHotVectorSize</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="kt">int64</span> <span class="na">axis</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+    <span class="kt">float</span> <span class="na">onValue</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+    <span class="kt">float</span> <span class="na">offValue</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="cumsumlayerparams">
+<h3>CumSumLayerParams<a class="headerlink" href="#cumsumlayerparams" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">CumSumLayerParams</span> <span class="p">{</span>
+
+    <span class="kt">int64</span> <span class="na">axis</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+
+    <span class="kt">bool</span> <span class="na">excludeFinalSum</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+
+    <span class="kt">bool</span> <span class="na">reverse</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="neuralnetworkregressor">
+<h3>NeuralNetworkRegressor<a class="headerlink" href="#neuralnetworkregressor" title="Permalink to this headline">¶</a></h3>
+<p>A neural network specialized as a regressor.</p>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">NeuralNetworkRegressor</span> <span class="p">{</span>
+
+    <span class="k">repeated</span> <span class="n">NeuralNetworkLayer</span> <span class="na">layers</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="k">repeated</span> <span class="n">NeuralNetworkPreprocessing</span> <span class="na">preprocessing</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+
+    <span class="c1">// use this enum value to determine the input tensor shapes to the neural network, for multiarray inputs</span>
+    <span class="n">NeuralNetworkMultiArrayShapeMapping</span> <span class="na">arrayInputShapeMapping</span> <span class="o">=</span> <span class="mi">5</span><span class="p">;</span>
+
+    <span class="c1">// use this enum value to determine the input tensor shapes to the neural network, for image inputs</span>
+    <span class="n">NeuralNetworkImageShapeMapping</span> <span class="na">imageInputShapeMapping</span> <span class="o">=</span> <span class="mi">6</span><span class="p">;</span>
+
+    <span class="n">NetworkUpdateParameters</span> <span class="na">updateParams</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
 <div class="section" id="on-device-training-messages">
 <h2>On-device Training Messages<a class="headerlink" href="#on-device-training-messages" title="Permalink to this headline">¶</a></h2>
 <div class="section" id="networkupdateparameters">
@@ -6163,10 +6248,10 @@ grid_point[i] = min(Xin-1, max(0, i * spacing + 0.5 * spacing - 0.5)), for i = 0
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="MIL.html" class="btn btn-neutral float-right" title="MILspec.Program" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="Classifiers.html" class="btn btn-neutral float-right" title="Other Classifiers" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="Model.html" class="btn btn-neutral float-left" title="Core ML Model" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="MIL.html" class="btn btn-neutral float-left" title="MILspec.Program" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
