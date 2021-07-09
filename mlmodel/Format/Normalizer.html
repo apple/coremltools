@@ -1,0 +1,270 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Normalizer &mdash; Core ML Format Reference  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="OneHotEncoder" href="OneHotEncoder.html" />
+    <link rel="prev" title="NonMaximumSuppression" href="NonMaximumSuppression.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Core ML Format Reference
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Model.html">Core ML Model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DataStructuresTypes.html">Data Structures, Types and Parameters</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="FeatureEngineering.html">Feature Engineering</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="ArrayFeatureExtractor.html">ArrayFeatureExtractor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="CategoricalMapping.html">CategoricalMapping</a></li>
+<li class="toctree-l2"><a class="reference internal" href="DictVectorizer.html">DictVectorizer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="FeatureVectorizer.html">FeatureVectorizer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Imputer.html">Imputer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="NonMaximumSuppression.html">NonMaximumSuppression</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Normalizer</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#normalizer-normtype">Normalizer.NormType</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="OneHotEncoder.html">OneHotEncoder</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Scaler.html">Scaler</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Identity.html">Identity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="MIL.html">MILspec.Program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="NeuralNetwork.html">NeuralNetwork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Classifiers.html">Other Classifiers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="OtherModels.html">Other Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Regressors.html">Other Regressors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="SVM.html">Support Vector Machine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="TreeEnsemble.html">TreeEnsemble</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Resources</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://coremltools.readme.io/docs">Guides and examples</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/index.html">Core ML Tools (coremltools) API</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools/tree/main/mlmodel">GitHub</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Core ML Format Reference</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="FeatureEngineering.html">Feature Engineering</a> &raquo;</li>
+        
+      <li>Normalizer</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/Format/Normalizer.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="normalizer">
+<h1>Normalizer<a class="headerlink" href="#normalizer" title="Permalink to this headline">¶</a></h1>
+<p>A normalization preprocessor.</p>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Normalizer</span> <span class="p">{</span>
+    <span class="kd">enum</span> <span class="n">NormType</span> <span class="p">{</span>
+        <span class="na">LMax</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="na">L1</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+        <span class="na">L2</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="n">NormType</span> <span class="na">normType</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="section" id="normalizer-normtype">
+<h2>Normalizer.NormType<a class="headerlink" href="#normalizer-normtype" title="Permalink to this headline">¶</a></h2>
+<p>There are three normalization modes,
+which have the corresponding formulas:</p>
+<dl>
+<dt>Max</dt><dd><div class="math notranslate nohighlight">
+\[max(x_i)\]</div>
+</dd>
+<dt>L1</dt><dd><div class="math notranslate nohighlight">
+\[z = ||x||_1 = \sum_{i=1}^{n} |x_i|\]</div>
+</dd>
+<dt>L2</dt><dd><div class="math notranslate nohighlight">
+\[z = ||x||_2 = \sqrt{\sum_{i=1}^{n} x_i^2}\]</div>
+</dd>
+</dl>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">enum</span> <span class="n">NormType</span> <span class="p">{</span>
+    <span class="na">LMax</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="na">L1</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="na">L2</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="OneHotEncoder.html" class="btn btn-neutral float-right" title="OneHotEncoder" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="NonMaximumSuppression.html" class="btn btn-neutral float-left" title="NonMaximumSuppression" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2021, Apple Inc.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

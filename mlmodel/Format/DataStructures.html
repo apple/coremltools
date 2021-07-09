@@ -1,0 +1,343 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>DataStructures &mdash; Core ML Format Reference  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="FeatureTypes" href="FeatureTypes.html" />
+    <link rel="prev" title="Data Structures, Types and Parameters" href="DataStructuresTypes.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> Core ML Format Reference
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Model.html">Core ML Model</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="DataStructuresTypes.html">Data Structures, Types and Parameters</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">DataStructures</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#stringtoint64map">StringToInt64Map</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#int64tostringmap">Int64ToStringMap</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stringtodoublemap">StringToDoubleMap</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#int64todoublemap">Int64ToDoubleMap</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stringvector">StringVector</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#int64vector">Int64Vector</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#floatvector">FloatVector</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#doublevector">DoubleVector</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#int64range">Int64Range</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#int64set">Int64Set</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#doublerange">DoubleRange</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="FeatureTypes.html">FeatureTypes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="Parameters.html">Parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="FeatureEngineering.html">Feature Engineering</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Identity.html">Identity</a></li>
+<li class="toctree-l1"><a class="reference internal" href="MIL.html">MILspec.Program</a></li>
+<li class="toctree-l1"><a class="reference internal" href="NeuralNetwork.html">NeuralNetwork</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Classifiers.html">Other Classifiers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="OtherModels.html">Other Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Regressors.html">Other Regressors</a></li>
+<li class="toctree-l1"><a class="reference internal" href="SVM.html">Support Vector Machine</a></li>
+<li class="toctree-l1"><a class="reference internal" href="TreeEnsemble.html">TreeEnsemble</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Resources</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://coremltools.readme.io/docs">Guides and examples</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/index.html">Core ML Tools (coremltools) API</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools/tree/main/mlmodel">GitHub</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Core ML Format Reference</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+          <li><a href="DataStructuresTypes.html">Data Structures, Types and Parameters</a> &raquo;</li>
+        
+      <li>DataStructures</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/Format/DataStructures.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="datastructures">
+<h1>DataStructures<a class="headerlink" href="#datastructures" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="stringtoint64map">
+<h2>StringToInt64Map<a class="headerlink" href="#stringtoint64map" title="Permalink to this headline">¶</a></h2>
+<p>A mapping from a string
+to a 64-bit integer.</p>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">StringToInt64Map</span> <span class="p">{</span>
+    <span class="n">map</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">int64</span><span class="p">&gt;</span> <span class="na">map</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="int64tostringmap">
+<h2>Int64ToStringMap<a class="headerlink" href="#int64tostringmap" title="Permalink to this headline">¶</a></h2>
+<p>A mapping from a 64-bit integer
+to a string.</p>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Int64ToStringMap</span> <span class="p">{</span>
+    <span class="n">map</span><span class="p">&lt;</span><span class="kt">int64</span><span class="p">,</span> <span class="kt">string</span><span class="p">&gt;</span> <span class="na">map</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="stringtodoublemap">
+<h2>StringToDoubleMap<a class="headerlink" href="#stringtodoublemap" title="Permalink to this headline">¶</a></h2>
+<p>A mapping from a string
+to a double-precision floating point number.</p>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">StringToDoubleMap</span> <span class="p">{</span>
+    <span class="n">map</span><span class="p">&lt;</span><span class="kt">string</span><span class="p">,</span> <span class="kt">double</span><span class="p">&gt;</span> <span class="na">map</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="int64todoublemap">
+<h2>Int64ToDoubleMap<a class="headerlink" href="#int64todoublemap" title="Permalink to this headline">¶</a></h2>
+<p>A mapping from a 64-bit integer
+to a double-precision floating point number.</p>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Int64ToDoubleMap</span> <span class="p">{</span>
+    <span class="n">map</span><span class="p">&lt;</span><span class="kt">int64</span><span class="p">,</span> <span class="kt">double</span><span class="p">&gt;</span> <span class="na">map</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="stringvector">
+<h2>StringVector<a class="headerlink" href="#stringvector" title="Permalink to this headline">¶</a></h2>
+<p>A vector of strings.</p>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">StringVector</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="kt">string</span> <span class="na">vector</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="int64vector">
+<h2>Int64Vector<a class="headerlink" href="#int64vector" title="Permalink to this headline">¶</a></h2>
+<p>A vector of 64-bit integers.</p>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Int64Vector</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="kt">int64</span> <span class="na">vector</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="floatvector">
+<h2>FloatVector<a class="headerlink" href="#floatvector" title="Permalink to this headline">¶</a></h2>
+<p>A vector of floating point numbers.</p>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">FloatVector</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="kt">float</span> <span class="na">vector</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="doublevector">
+<h2>DoubleVector<a class="headerlink" href="#doublevector" title="Permalink to this headline">¶</a></h2>
+<p>A vector of double-precision floating point numbers.</p>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">DoubleVector</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="kt">double</span> <span class="na">vector</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="int64range">
+<h2>Int64Range<a class="headerlink" href="#int64range" title="Permalink to this headline">¶</a></h2>
+<p>A range of int64 values</p>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Int64Range</span> <span class="p">{</span>
+    <span class="kt">int64</span> <span class="na">minValue</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="kt">int64</span> <span class="na">maxValue</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="int64set">
+<h2>Int64Set<a class="headerlink" href="#int64set" title="Permalink to this headline">¶</a></h2>
+<p>A set of int64 values</p>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">Int64Set</span> <span class="p">{</span>
+    <span class="k">repeated</span> <span class="kt">int64</span> <span class="na">values</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="doublerange">
+<h2>DoubleRange<a class="headerlink" href="#doublerange" title="Permalink to this headline">¶</a></h2>
+<p>A range of double values</p>
+<div class="highlight-proto notranslate"><div class="highlight"><pre><span></span><span class="kd">message</span> <span class="nc">DoubleRange</span> <span class="p">{</span>
+    <span class="kt">double</span> <span class="na">minValue</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="kt">double</span> <span class="na">maxValue</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="FeatureTypes.html" class="btn btn-neutral float-right" title="FeatureTypes" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="DataStructuresTypes.html" class="btn btn-neutral float-left" title="Data Structures, Types and Parameters" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2021, Apple Inc.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
