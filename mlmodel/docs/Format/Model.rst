@@ -1,53 +1,61 @@
-A Core ML model consists of a specification version
-and a model description,
+Core ML Model
+==============
+
+A Core ML model consists of a specification version and a model description,
 and can be any one of the following types:
 
 Neural Networks
   - `NeuralNetwork`
 
 Regressors
-  - ``GLMRegressor``
-  - ``SupportVectorRegressor``
-  - ``TreeEnsembleRegressor``
-  - ``NeuralNetworkRegressor``
-  - ``BayesianProbitRegressor``
+  - `BayesianProbitRegressor`
+  - `GLMRegressor`
+  - `NeuralNetworkRegressor`
+  - `SupportVectorRegressor`
+  - `TreeEnsembleRegressor`
 
 Classifiers
-  - `NeuralNetworkClassifier`
-  - `TreeEnsembleClassifier`
   - `GLMClassifier`
-  - `SupportVectorClassifier`
   - `KNearestNeighborsClassifier`
+  - `NeuralNetworkClassifier`
+  - `SupportVectorClassifier`
+  - `TreeEnsembleClassifier`
 
 Other models
+  - `AudioFeaturePrint`
   - `CustomModel`
-  - `TextClassifier`
-  - `WordTagger`
   - `Gazetteer`
-  - `WordEmbedding`
-  - `VisionFeaturePrint`
+  - `ItemSimilarityRecommender`
   - `LinkedModel`
   - `SoundAnalysisPreprocessing`
-  - `ItemSimilarityRecommender`
+  - `TextClassifier`
+  - `VisionFeaturePrint`
+  - `WordEmbedding`
+  - `WordTagger`
 
 Feature Engineering
+  - `ArrayFeatureExtractor`
+  - `CategoricalMapping`
+  - `DictVectorizer`
+  - `FeatureVectorizer`
   - `Imputer`
-  - `Scaler`
+  - `NonMaximumSuppression`
   - `Normalizer`
   - `OneHotEncoder`
-  - `CategoricalMapping`
-  - `FeatureVectorizer`
-  - `DictVectorizer`
-  - `ArrayFeatureExtractor`
-  - `NonMaximumSuppression`
+  - `Scaler`
 
 Pipelines
+  - `Pipeline`
   - `PipelineClassifier`
   - `PipelineRegressor`
-  - `Pipeline`
 
 Simple Mathematical Functions
   - `Identity`
+
+Data Structures, Feature Types, and Parameters
+  - `DataStructures`
+  - `FeatureTypes`
+  - `Parameters`
 
 
 
@@ -106,7 +114,6 @@ A regressor pipeline.
 
 
 
-
 FeatureDescription
 ________________________________________________________________________________
 
@@ -121,7 +128,6 @@ consisting of a name, short description, and type.
 	    string shortDescription = 2;
 	    FeatureType type = 3;
 	}
-
 
 
 
@@ -145,9 +151,6 @@ key/value meta data.
 	    string license = 4;
 	    map<string, string> userDefined = 100;
 	}
-
-
-
 
 
 
@@ -188,9 +191,6 @@ probabilities for the predicted classes
 
 
 
-
-
-
 SerializedModel
 ________________________________________________________________________________
 
@@ -211,13 +211,9 @@ ________________________________________________________________________________
 
 
 
-
 Model
 ________________________________________________________________________________
 
-A Core ML model,
-consisting of a specification version,
-a model description, and a model type.
 
 Core ML model compatibility is indicated by
 a monotonically increasing specification version number,
@@ -228,40 +224,74 @@ described by `Semantic Versioning 2.0.0 <http://semver.org/>`_).
 Specification Versions : OS Availability (Core ML Version)
 
 1 : iOS 11, macOS 10.13, tvOS 11, watchOS 4 (Core ML 1)
-- Feedforward & Recurrent Neural Networks
-- General Linear Models
-- Tree Ensembles
-- Support Vector Machines
-- Pipelines
-- Feature Engineering
+
+	- Feedforward & Recurrent Neural Networks
+	- General Linear Models
+	- Tree Ensembles
+	- Support Vector Machines
+	- Pipelines
+	- Feature Engineering
 
 2 : iOS 11.2, macOS 10.13.2, tvOS 11.2, watchOS 4.2 (Core ML 1.2)
-- Custom Layers for Neural Networks
-- Float 16 support for Neural Network layers
+
+	- Custom Layers for Neural Networks
+	- Float 16 support for Neural Network layers
 
 3 : iOS 12, macOS 10.14, tvOS 12, watchOS 5 (Core ML 2)
-- Flexible shapes and image sizes
-- Categorical sequences
-- Core ML Vision Feature Print, Text Classifier, Word Tagger
-- Non Max Suppression
-- Crop and Resize Bilinear NN layers
-- Custom Models
+
+	- Flexible shapes and image sizes
+	- Categorical sequences
+	- Core ML Vision Feature Print, Text Classifier, Word Tagger
+	- Non Max Suppression
+	- Crop and Resize Bilinear NN layers
+	- Custom Models
 
 4 : iOS 13, macOS 10.15, tvOS 13, watchOS 6 (Core ML 3)
-- Updatable models
-- Exact shape / general rank mapping for neural networks
-- Large expansion of supported neural network layers
-  - Generalized operations
-  - Control flow
-  - Dynamic layers
-  - See NeuralNetwork.proto
-- Nearest Neighbor Classifier
-- Sound Analysis Prepreocessing
-- Recommender
-- Linked Model
-- NLP Gazeteer
-- NLP WordEmbedding
 
+	- Updatable models
+	- Exact shape / general rank mapping for neural networks
+	- Large expansion of supported neural network layers:
+
+		 - Generalized operations
+		 - Control flow
+		 - Dynamic layers
+		 - See NeuralNetwork.proto
+	
+	- Nearest Neighbor Classifier
+	- Sound Analysis Prepreocessing
+	- Recommender
+	- Linked Model
+	- NLP Gazeteer
+	- NLP WordEmbedding
+
+5 : iOS 14, macOS 11, tvOS 14, watchOS 7 (Core ML 4)
+
+	- Model Deployment
+	- Model Encryption
+	- Unified converter API with PyTorch and Tensorflow 2 Support in coremltools 4
+	- MIL builder for neural networks and composite ops in coremltools 4
+	- New layers in neural network:
+	
+		 - CumSum
+		 - OneHot
+		 - ClampedReLu
+		 - ArgSort
+		 - SliceBySize
+		 - Convolution3D
+		 - Pool3D
+		 - Bilinear Upsample with align corners and fractional factors
+		 - PixelShuffle
+		 - MatMul with int8 weights and int8 activations
+		 - Concat interleave
+		 - See NeuralNetwork.proto
+	
+	- Enhanced Xcode model view with interactive previews
+	- Enhanced Xcode Playground support for Core ML models
+
+6 : iOS 15, macOS 12, tvOS 15, watchOS 8 (Core ML 5)
+
+	- Core ML Audio Feature Print
+	- MIL model type
 
 .. code-block:: proto
 
@@ -269,6 +299,14 @@ Specification Versions : OS Availability (Core ML Version)
 	    int32 specificationVersion = 1;
 	    ModelDescription description = 2;
 	    
+		/*
+		 * Following model types support on-device update:
+		 *
+		 * - NeuralNetworkClassifier
+		 * - NeuralNetworkRegressor
+		 * - NeuralNetwork
+		 * - KNearestNeighborsClassifier
+		 */
 	    bool isUpdatable = 10;
 	    
 	    // start at 200 here
@@ -293,9 +331,10 @@ Specification Versions : OS Availability (Core ML Version)
 	        NeuralNetworkClassifier neuralNetworkClassifier = 403;
 	        KNearestNeighborsClassifier kNearestNeighborsClassifier = 404;
 	
-	        // generic models start at 500
-	        NeuralNetwork neuralNetwork = 500;
-	        ItemSimilarityRecommender itemSimilarityRecommender = 501;
+			// generic models start at 500
+			NeuralNetwork neuralNetwork = 500;
+			ItemSimilarityRecommender itemSimilarityRecommender = 501;
+			MILSpec.Program mlProgram = 502;
 	
 	        // Custom and linked models
 	        CustomModel customModel = 555;
@@ -325,9 +364,11 @@ Specification Versions : OS Availability (Core ML Version)
 	        CoreMLModels.SoundAnalysisPreprocessing soundAnalysisPreprocessing = 2003;
 	        CoreMLModels.Gazetteer gazetteer = 2004;
 	        CoreMLModels.WordEmbedding wordEmbedding = 2005;
+	        CoreMLModels.AudioFeaturePrint audioFeaturePrint = 2006;
 	        
 	        // Reserved private messages start at 3000
 	        // These messages are subject to change with no notice or support.
 	        SerializedModel serializedModel = 3000;
 	    }
 	}
+

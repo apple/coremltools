@@ -1,5 +1,6 @@
 Identity
-________________________________________________________________________________
+======================
+
 
 An identity model.
 
@@ -11,3 +12,5 @@ Intended to be used for testing purposes.
 
 	message Identity {
 	}
+
+
