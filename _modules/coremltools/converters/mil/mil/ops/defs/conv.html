@@ -13,8 +13,6 @@
   
   <link rel="stylesheet" href="../../../../../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../../../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../../../../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../../../_static/graphviz.css" type="text/css" />
 
   
@@ -32,7 +30,6 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../../../../../../" src="../../../../../../../_static/documentation_options.js"></script>
-        <script data-url_root="../../../../../../../" id="documentation_options" src="../../../../../../../_static/documentation_options.js"></script>
         <script src="../../../../../../../_static/jquery.js"></script>
         <script src="../../../../../../../_static/underscore.js"></script>
         <script src="../../../../../../../_static/doctools.js"></script>
@@ -96,7 +93,7 @@
 <p class="caption"><span class="caption-text">Resources</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference external" href="https://coremltools.readme.io/docs">Guides and examples</a></li>
-<li class="toctree-l1"><a class="reference external" href="https://mlmodel.readme.io/reference">Core ML Format Specification</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Format Specification</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
 </ul>
 
@@ -228,12 +225,14 @@
 <span class="sd">              ``d_out[i] = ceil(d_in[i] / strides[i])``.</span>
 
 <span class="sd">        Specifically, for ``i = 0,..,,len(d_in)-1``, the equivalent paddings are</span>
-<span class="sd">        as follows, when dilated kernel is even (for example, ``(K[i]-1)*dilations[i]+1)``):</span>
+<span class="sd">        calculated as follows:</span>
 
-<span class="sd">            * ``pad[2*i] = ceil[((K[i]-1)*dilations[i]+1)/2]``.</span>
-<span class="sd">            * ``pad[2*i+1] = floor[((K[i]-1)*dilations[i]+1)/2]``.</span>
-
-<span class="sd">        Otherwise, ``pad[2*i] = pad[2*i+1] = (K[i]-1) * dilations[i] / 2``.</span>
+<span class="sd">            * ``dilated_kernel = (K[i] - 1) * dilate[i] + 1``</span>
+<span class="sd">            * if ``dilated_kernel`` is odd,</span>
+<span class="sd">              ``padding[2*i] = padding[2*i+1] = floor(dilated_kernel / 2)``</span>
+<span class="sd">            * Otherwise:</span>
+<span class="sd">              ``padding[2*i] = ceil((dilated_kernel - 1) / 2)``,</span>
+<span class="sd">              ``padding[2*i+1] = floor((dilated_kernel - 1) / 2)``</span>
 
 <span class="sd">    pad: const tensor&lt;[P], i32&gt; (Optional. Default to all zeros)</span>
 
