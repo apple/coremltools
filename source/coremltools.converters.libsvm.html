@@ -88,7 +88,7 @@
               
             
             
-              <p class="caption"><span class="caption-text">API Contents</span></p>
+              <p class="caption" role="heading"><span class="caption-text">API Contents</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="coremltools.converters.html">Converters</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="coremltools.converters.mil.html">Unified (TensorFlow and Pytorch)</a></li>
@@ -103,10 +103,10 @@
 <li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Resources</span></p>
+<p class="caption" role="heading"><span class="caption-text">Resources</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference external" href="https://coremltools.readme.io/docs">Guides and examples</a></li>
-<li class="toctree-l1"><a class="reference external" href="https://mlmodel.readme.io/reference">Core ML Format Specification</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Format Specification</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
 </ul>
 
@@ -177,43 +177,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="module-coremltools.converters.libsvm._libsvm_converter">
-<span id="libsvm"></span><h1>LibSVM<a class="headerlink" href="#module-coremltools.converters.libsvm._libsvm_converter" title="Permalink to this headline">¶</a></h1>
-<dl class="py function">
-<dt class="sig sig-object py" id="coremltools.converters.libsvm._libsvm_converter.convert">
-<span class="sig-prename descclassname"><span class="pre">coremltools.converters.libsvm._libsvm_converter.</span></span><span class="sig-name descname"><span class="pre">convert</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">libsvm_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">probability</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/libsvm/_libsvm_converter.html#convert"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.libsvm._libsvm_converter.convert" title="Permalink to this definition">¶</a></dt>
-<dd><p>Convert a svm model to the protobuf spec.</p>
-<dl class="simple">
-<dt>This currently supports:</dt><dd><ul class="simple">
-<li><p>C-SVC</p></li>
-<li><p>nu-SVC</p></li>
-<li><p>Epsilon-SVR</p></li>
-<li><p>nu-SVR</p></li>
-</ul>
-</dd>
-</dl>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>model_path: libsvm_model</strong></dt><dd><p>Libsvm representation of the model.</p>
-</dd>
-<dt><strong>feature_names</strong><span class="classifier">[str] | str</span></dt><dd><p>Names of each of the features.</p>
-</dd>
-<dt><strong>target: str</strong></dt><dd><p>Name of the predicted class column.</p>
-</dd>
-<dt><strong>probability: str</strong></dt><dd><p>Name of the class probability column. Only used for C-SVC and nu-SVC.</p>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><dl class="simple">
-<dt>model_spec: An object of type Model_pb.</dt><dd><p>Protobuf representation of the model</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
+  <div class="section" id="libsvm">
+<h1>LibSVM<a class="headerlink" href="#libsvm" title="Permalink to this headline">¶</a></h1>
 </div>
 
 
