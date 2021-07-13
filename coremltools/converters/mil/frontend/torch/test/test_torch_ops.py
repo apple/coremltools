@@ -259,7 +259,7 @@ class TestBatchNorm(TorchBaseTest):
         input_shape = input_shape[:rank]
         _input = torch.randn(*input_shape)
 
-        if training == True and running_vars_exist == True:
+        if training and running_vars_exist:
             _mean = None
             _var = None
             inputs = [_input]
