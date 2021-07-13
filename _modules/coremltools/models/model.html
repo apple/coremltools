@@ -13,8 +13,6 @@
   
   <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
 
   
@@ -32,7 +30,6 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
         <script src="../../../_static/jquery.js"></script>
         <script src="../../../_static/underscore.js"></script>
         <script src="../../../_static/doctools.js"></script>
@@ -96,7 +93,7 @@
 <p class="caption"><span class="caption-text">Resources</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference external" href="https://coremltools.readme.io/docs">Guides and examples</a></li>
-<li class="toctree-l1"><a class="reference external" href="https://mlmodel.readme.io/reference">Core ML Format Specification</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Format Specification</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
 </ul>
 
@@ -178,7 +175,7 @@
 
 <span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">_has_custom_layer</span> <span class="k">as</span> <span class="n">_has_custom_layer</span>
 <span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">load_spec</span> <span class="k">as</span> <span class="n">_load_spec</span>
-<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">_macos_version</span> <span class="k">as</span> <span class="n">_macos_version</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">_macos_version</span><span class="p">,</span> <span class="n">_is_macos</span>
 <span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">save_spec</span> <span class="k">as</span> <span class="n">_save_spec</span>
 <span class="kn">from</span> <span class="nn">..proto</span> <span class="kn">import</span> <span class="n">Model_pb2</span> <span class="k">as</span> <span class="n">_Model_pb2</span>
 
@@ -263,7 +260,7 @@
             <span class="k">yield</span> <span class="n">f</span><span class="o">.</span><span class="n">name</span>
 
 
-<span class="k">def</span> <span class="nf">_get_proxy_and_spec</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">use_cpu_only</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_get_proxy_and_spec</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">use_cpu_only</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">skip_model_load</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="kn">from</span> <span class="nn">..libcoremlpython</span> <span class="kn">import</span> <span class="n">_MLModelProxy</span>
     <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
@@ -272,7 +269,7 @@
     <span class="n">filename</span> <span class="o">=</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
     <span class="n">specification</span> <span class="o">=</span> <span class="n">_load_spec</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">_MLModelProxy</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">_MLModelProxy</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">skip_model_load</span><span class="p">:</span>
 
         <span class="c1"># check if the version is supported</span>
         <span class="n">engine_version</span> <span class="o">=</span> <span class="n">_MLModelProxy</span><span class="o">.</span><span class="n">maximum_supported_specification_version</span><span class="p">()</span>
@@ -346,7 +343,11 @@
 <span class="sd">    predict</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="MLModel.__init__"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.model.MLModel.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">useCPUOnly</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">is_temp_package</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">mil_program</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="MLModel.__init__"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.model.MLModel.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span>
+                 <span class="n">useCPUOnly</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">is_temp_package</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">mil_program</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">skip_model_load</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Construct an MLModel from a .mlmodel</span>
 
@@ -369,7 +370,16 @@
 <span class="sd">        mil_program : coremltools.converters.mil.Program</span>
 <span class="sd">            Set to the mil program object, if available.</span>
 <span class="sd">            It is avaiable whenever an MLModel object is constructed using</span>
-<span class="sd">            the unified converter API coremltools.convert() </span>
+<span class="sd">            the unified converter API coremltools.convert()</span>
+
+<span class="sd">        skip_model_load : bool</span>
+<span class="sd">            Set to True to prevent coremltools from calling into the Core ML framework</span>
+<span class="sd">            to compile and load the model. In that case, the returned model object cannot</span>
+<span class="sd">            be used to make a prediction. This flag may be used to load a newer model</span>
+<span class="sd">            type on an older Mac, to inspect or load/save the spec.</span>
+<span class="sd">            Example: Loading ML Program model type on a macOS 11, since ML Program can only be</span>
+<span class="sd">            compiled and loaded from macOS12+.</span>
+<span class="sd">            Defaults to False.</span>
 
 <span class="sd">        Notes</span>
 <span class="sd">        -----</span>
@@ -399,13 +409,13 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">package_path</span> <span class="o">=</span> <span class="n">model</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">is_temp_package</span> <span class="o">=</span> <span class="n">is_temp_package</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">__proxy__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spec</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_framework_error</span> <span class="o">=</span> <span class="n">_get_proxy_and_spec</span><span class="p">(</span>
-                <span class="n">model</span><span class="p">,</span> <span class="n">useCPUOnly</span>
+                <span class="n">model</span><span class="p">,</span> <span class="n">useCPUOnly</span><span class="p">,</span> <span class="n">skip_model_load</span><span class="o">=</span><span class="n">skip_model_load</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">_Model_pb2</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
             <span class="n">filename</span> <span class="o">=</span> <span class="n">_tempfile</span><span class="o">.</span><span class="n">mktemp</span><span class="p">(</span><span class="n">suffix</span><span class="o">=</span><span class="n">_MLMODEL_EXTENSION</span><span class="p">)</span>
             <span class="n">_save_spec</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">__proxy__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spec</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_framework_error</span> <span class="o">=</span> <span class="n">_get_proxy_and_spec</span><span class="p">(</span>
-                <span class="n">filename</span><span class="p">,</span> <span class="n">useCPUOnly</span>
+                <span class="n">filename</span><span class="p">,</span> <span class="n">useCPUOnly</span><span class="p">,</span> <span class="n">skip_model_load</span><span class="o">=</span><span class="n">skip_model_load</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">_os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
@@ -547,6 +557,11 @@
 <span class="sd">        &gt;&gt;&gt; data = {&#39;bedroom&#39;: 1.0, &#39;bath&#39;: 1.0, &#39;size&#39;: 1240}</span>
 <span class="sd">        &gt;&gt;&gt; predictions = model.predict(data)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_package</span> <span class="ow">and</span> <span class="n">_is_macos</span><span class="p">()</span> <span class="ow">and</span> <span class="n">_macos_version</span><span class="p">()</span> <span class="o">&lt;</span> <span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                <span class="s2">&quot;predict() for .mlpackage is not supported in macOS version older than 12.0.&quot;</span>
+            <span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__proxy__</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__proxy__</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">useCPUOnly</span><span class="p">)</span>

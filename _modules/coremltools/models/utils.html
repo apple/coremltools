@@ -13,8 +13,6 @@
   
   <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
 
   
@@ -32,7 +30,6 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
-        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
         <script src="../../../_static/jquery.js"></script>
         <script src="../../../_static/underscore.js"></script>
         <script src="../../../_static/doctools.js"></script>
@@ -96,7 +93,7 @@
 <p class="caption"><span class="caption-text">Resources</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference external" href="https://coremltools.readme.io/docs">Guides and examples</a></li>
-<li class="toctree-l1"><a class="reference external" href="https://mlmodel.readme.io/reference">Core ML Format Specification</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Format Specification</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
 </ul>
 
@@ -183,15 +180,17 @@
 <span class="kn">from</span> <span class="nn">coremltools.proto</span> <span class="kn">import</span> <span class="n">Model_pb2</span> <span class="k">as</span> <span class="n">_Model_pb2</span>
 
 <span class="kn">from</span> <span class="nn">.._deps</span> <span class="kn">import</span> <span class="n">_HAS_SKLEARN</span>
+<span class="kn">from</span> <span class="nn">..libmodelpackage</span> <span class="kn">import</span> <span class="n">ModelPackage</span>
+
+
+<span class="n">_MLMODEL_EXTENSION</span> <span class="o">=</span> <span class="s2">&quot;.mlmodel&quot;</span>
+<span class="n">_MLPACKAGE_EXTENSION</span> <span class="o">=</span> <span class="s2">&quot;.mlpackage&quot;</span>
+
 
 <span class="k">try</span><span class="p">:</span>
     <span class="kn">from</span> <span class="nn">..libmodelpackage</span> <span class="kn">import</span> <span class="n">ModelPackage</span>
 <span class="k">except</span> <span class="ne">ModuleNotFoundError</span><span class="p">:</span>
     <span class="k">pass</span>
-
-<span class="n">_MLMODEL_EXTENSION</span> <span class="o">=</span> <span class="s2">&quot;.mlmodel&quot;</span>
-<span class="n">_MLPACKAGE_EXTENSION</span> <span class="o">=</span> <span class="s2">&quot;.mlpackage&quot;</span>
-
 
 <span class="k">if</span> <span class="n">_HAS_SKLEARN</span><span class="p">:</span>
     <span class="kn">import</span> <span class="nn">scipy.sparse</span> <span class="k">as</span> <span class="nn">_sp</span>
@@ -736,7 +735,34 @@
                 <span class="n">new_name</span><span class="p">,</span>
                 <span class="n">rename_inputs</span> <span class="ow">or</span> <span class="p">(</span><span class="n">index</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">),</span>
                 <span class="n">rename_outputs</span> <span class="ow">or</span> <span class="p">(</span><span class="n">index</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">spec</span><span class="o">.</span><span class="n">pipeline</span><span class="o">.</span><span class="n">models</span><span class="p">)),</span>
-            <span class="p">)</span></div>
+            <span class="p">)</span>
+
+    <span class="c1"># Rename for mlProgram</span>
+    <span class="k">if</span> <span class="n">spec</span><span class="o">.</span><span class="n">HasField</span><span class="p">(</span><span class="s2">&quot;mlProgram&quot;</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">coremltools.converters.mil.backend.mil.helper</span> <span class="kn">import</span> <span class="n">NameSanitizer</span>
+        <span class="n">new_name_sanitized</span> <span class="o">=</span> <span class="n">NameSanitizer</span><span class="p">()</span><span class="o">.</span><span class="n">sanitize_name</span><span class="p">(</span><span class="n">new_name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">new_name</span> <span class="o">!=</span> <span class="n">new_name_sanitized</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Input/output names for ML Program must be of the format [a-zA-Z_][a-zA-Z0-9_]*. &quot;</span>
+                             <span class="s2">&quot;That is, it must start with a letter and only contain numerals, underscore or letters. &quot;</span>
+                             <span class="s2">&quot;Provided feature name, </span><span class="se">\&quot;</span><span class="si">{}</span><span class="se">\&quot;</span><span class="s2"> does not satisfy these requirements.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">new_name</span><span class="p">))</span>
+        <span class="n">mil</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">mlProgram</span>
+        <span class="k">for</span> <span class="n">function</span> <span class="ow">in</span> <span class="n">mil</span><span class="o">.</span><span class="n">functions</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="k">for</span> <span class="n">name_value_type</span> <span class="ow">in</span> <span class="n">function</span><span class="o">.</span><span class="n">inputs</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">name_value_type</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">current_name</span><span class="p">:</span>
+                    <span class="n">name_value_type</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">new_name</span>
+            <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">function</span><span class="o">.</span><span class="n">block_specializations</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">out_name</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">outputs</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">out_name</span> <span class="o">==</span> <span class="n">current_name</span><span class="p">:</span>
+                        <span class="n">block</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_name</span>
+                <span class="k">for</span> <span class="n">op</span> <span class="ow">in</span> <span class="n">block</span><span class="o">.</span><span class="n">operations</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">argument</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">inputs</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                        <span class="k">for</span> <span class="n">binding</span> <span class="ow">in</span> <span class="n">argument</span><span class="o">.</span><span class="n">arguments</span><span class="p">:</span>
+                            <span class="k">if</span> <span class="n">binding</span><span class="o">.</span><span class="n">HasField</span><span class="p">(</span><span class="s2">&quot;name&quot;</span><span class="p">):</span>
+                                <span class="k">if</span> <span class="n">binding</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">current_name</span><span class="p">:</span>
+                                    <span class="n">binding</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">new_name</span>
+                    <span class="k">for</span> <span class="n">name_value_type</span> <span class="ow">in</span> <span class="n">op</span><span class="o">.</span><span class="n">outputs</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">name_value_type</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">current_name</span><span class="p">:</span>
+                            <span class="n">name_value_type</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">new_name</span></div>
 
 
 <span class="k">def</span> <span class="nf">_sanitize_value</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
@@ -957,11 +983,12 @@
 <span class="sd">    version comparisons. On non-Macs, it returns an empty tuple.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">_is_macos</span><span class="p">():</span>
-        <span class="kn">import</span> <span class="nn">platform</span>
-
-        <span class="n">ver_str</span> <span class="o">=</span> <span class="n">platform</span><span class="o">.</span><span class="n">mac_ver</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="k">return</span> <span class="nb">tuple</span><span class="p">([</span><span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">ver_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)])</span>
-
+        <span class="k">try</span><span class="p">:</span>
+            <span class="kn">import</span> <span class="nn">subprocess</span>
+            <span class="n">ver_str</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="s2">&quot;sw_vers&quot;</span><span class="p">,</span> <span class="s2">&quot;-productVersion&quot;</span><span class="p">],</span> <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">)</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="nb">tuple</span><span class="p">([</span><span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">ver_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)])</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Unable to detemine the macOS version&quot;</span><span class="p">)</span>
     <span class="k">return</span> <span class="p">()</span>
 
 
