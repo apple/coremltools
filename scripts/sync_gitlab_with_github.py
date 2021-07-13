@@ -17,7 +17,7 @@ current_remotes = set([remote.name for remote in local_repo.remotes])
 
 g = Github(os.getenv('COREMLTOOLS_GITHUB_API_TOKEN'))
 remote_repo = g.get_repo('apple/coremltools')
-pulls = remote_repo.get_pulls(state='open', sort='created', base='master')
+pulls = remote_repo.get_pulls(state='open', sort='created', base='main')
 for pr in pulls:
     remote_name = pr.head.repo.owner.login
     remote_url = pr.head.repo.clone_url
