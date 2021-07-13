@@ -246,26 +246,36 @@ class TestBatchNorm(TorchBaseTest):
             )
 
     @pytest.mark.parametrize(
-        "rank, num_features, eps, training, backend",
-        itertools.product([3, 4, 5], [5, 1], [0.1, 1e-05], [True, False], backends),
+        "rank, num_features, eps, running_vars_exist, training, backend",
+        itertools.product([3, 4, 5], [5, 1], [0.1, 1e-05], [True, False], [True, False], backends),
     )
-    def test_batchnorm_dynamic(self, rank, num_features, eps, training, backend):
+    def test_batchnorm_dynamic(self, rank, num_features, eps, running_vars_exist, training, backend):
         if backend != "neuralnetwork" and rank == 5 and num_features == 5:
             pytest.xfail("rdar://75770475 ([ActivateMIL] Failure in "
                          "test_ops_public_torch.py::TestBatchNorm::test_batchnorm_3d "
                          "[elementwise_kernel_cpu: Cannot broadcast])")
 
-        model = ModuleWrapper(
-            nn.functional.batch_norm,
-            {"training": training, "eps": eps,},
-        )
         input_shape = [6, num_features, 3, 4, 5]
         input_shape = input_shape[:rank]
         _input = torch.randn(*input_shape)
-        _mean = torch.randn(num_features)
-        _var = torch.randn(num_features)
 
-        inputs = (_input, _mean, _var)
+        if training and running_vars_exist:
+            _mean = None
+            _var = None
+            inputs = [_input]
+            model = ModuleWrapper(
+                nn.functional.batch_norm,
+                {"training": training, "eps": eps, "running_mean": _mean, "running_var": _var},
+            )
+        else:
+            _mean = torch.randn(num_features)
+            _var = torch.randn(num_features)
+            inputs = (_input, _mean, _var)
+            model = ModuleWrapper(
+                nn.functional.batch_norm,
+                {"training": training, "eps": eps,},
+            )
+
         expected_results = model(*inputs)
 
         self.run_compare_torch(

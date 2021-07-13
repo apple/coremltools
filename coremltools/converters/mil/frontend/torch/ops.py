@@ -1194,8 +1194,6 @@ def batch_norm(context, node):
     # helper functions for different type of batch norm
     def _add_batch_norm_dynamic():
         x = _input
-        shape = [1] * x.rank
-        shape[1] = -1 if any_symbolic(running_mean.shape) else running_mean.shape[0]
 
         if training:
             axes = [axis for axis in range(x.rank) if axis != 1]
@@ -1204,6 +1202,8 @@ def batch_norm(context, node):
             square = mb.mul(x=num, y=num)
             variance = mb.reduce_mean(x=square, axes=axes, keep_dims=True)
         else:
+            shape = [1] * x.rank
+            shape[1] = -1 if any_symbolic(running_mean.shape) else running_mean.shape[0]
             mean = mb.reshape(x=running_mean, shape=shape)
             num = mb.sub(x=x, y=mean)
             variance = mb.reshape(x=running_var, shape=shape)
