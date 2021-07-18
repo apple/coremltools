@@ -5,12 +5,13 @@
 
 import coremltools as ct
 from coremltools._deps import _HAS_TORCH, MSG_TORCH_NOT_FOUND
-import numpy as np
+import numpy as _np
 import PIL.Image
 import pytest
 
 if _HAS_TORCH:
     import torch
+    torch.manual_seed(10)
 
     class TestConvModule(torch.nn.Module):
         def __init__(self, in_channels=3, out_channels=10, kernel_size=3):
@@ -27,9 +28,21 @@ def _numpy_array_to_pil_image(x):
     assert len(x.shape) == 4
     assert list(x.shape[:2]) == [1, 3]
     x = x[0, :, :, :] # (3, H, W)
-    x = np.transpose(x, [1, 2, 0]) # (H, W, 3)
-    x = x.astype(np.uint8)
+    x = _np.transpose(x, [1, 2, 0]) # (H, W, 3)
+    x = x.astype(_np.uint8)
     return PIL.Image.fromarray(x)
+
+
+def _compute_snr(arr1, arr2):
+    arr1 = arr1.flatten()
+    arr2 = arr2.flatten()
+    noise = arr1 - arr2
+    noise_var = _np.sum(noise ** 2) / len(noise) + 1e-7
+    signal_energy = _np.sum(arr2 ** 2) / len(arr2)
+    max_signal_energy = _np.amax(arr2 ** 2)
+    snr = 10 * _np.log10(signal_energy / noise_var)
+    psnr = 10 * _np.log10(max_signal_energy / noise_var)
+    return snr, psnr
 
 def _assert_torch_coreml_output_shapes(coreml_model, spec, torch_model, torch_example_input, is_image_input=False):
     torch_out = torch_model(torch_example_input)
@@ -42,6 +55,9 @@ def _assert_torch_coreml_output_shapes(coreml_model, spec, torch_model, torch_ex
         input_dict[input_name] = torch_example_input.numpy()
     coreml_out = coreml_model.predict(input_dict)[output_name]
     assert torch_out.shape == coreml_out.shape
+    snr, psnr = _compute_snr(torch_out.cpu().detach().numpy(), coreml_out)
+    _np.testing.assert_array_less(20, snr)
+    _np.testing.assert_array_less(30, psnr)
 
 
 @pytest.mark.skipif(not _HAS_TORCH or not ct.utils._is_macos(), reason=MSG_TORCH_NOT_FOUND)
@@ -52,7 +68,7 @@ class TestFlexibleInputShapes:
         if convert_to == "mlprogram" and ct.utils._macos_version() < (12, 0):
             return
 
-        example_input = torch.rand(1, 3, 50, 50)
+        example_input = torch.rand(1, 3, 50, 50) * 100
         traced_model = torch.jit.trace(TestConvModule().eval(), example_input)
 
         input_shape = ct.Shape(shape=(1, 3, ct.RangeDim(25, 100, default=45), ct.RangeDim(25, 100, default=45)))
@@ -71,7 +87,7 @@ class TestFlexibleInputShapes:
         if convert_to == "mlprogram" and ct.utils._macos_version() < (12, 0):
             return
 
-        example_input = torch.rand(1, 3, 50, 50)
+        example_input = torch.rand(1, 3, 50, 50) * 100
         traced_model = torch.jit.trace(TestConvModule().eval(), example_input)
 
         input_shape = ct.EnumeratedShapes(shapes=[[1, 3, 25, 25], [1, 3, 50, 50], [1, 3, 67, 67]],
