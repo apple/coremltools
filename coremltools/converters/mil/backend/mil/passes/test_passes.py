@@ -724,6 +724,7 @@ class TestPassFuseActivationSiLU:
     input --> silu --> output
     """
 
+    @pytest.mark.skipif(ct.utils._macos_version() < (12, 0), reason="mlprogram predict available only on macOS12+")
     @pytest.mark.parametrize(
         "reverse_order", itertools.product([True, False]),
     )
