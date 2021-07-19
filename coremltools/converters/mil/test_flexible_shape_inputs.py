@@ -102,12 +102,9 @@ class TestFlexibleInputShapes:
         assert len(spec.description.input[0].type.multiArrayType.enumeratedShapes.shapes) == 3
         _assert_torch_coreml_output_shapes(model, spec, traced_model, example_input)
 
-    @pytest.mark.skipif(ct.utils._macos_version() < (12, 0), reason=MSG_TORCH_NOT_FOUND)
+    @pytest.mark.skipif(ct.utils._macos_version() < (12, 0), reason="Image input with RangeDim works correctly on macOS12+")
     @pytest.mark.parametrize("convert_to", ['neuralnetwork', 'mlprogram'])
     def test_image_input_rangedim(self, convert_to):
-        if convert_to == "mlprogram" and ct.utils._macos_version() < (12, 0):
-            return
-
         example_input = torch.rand(1, 3, 50, 50) * 255
         traced_model = torch.jit.trace(TestConvModule().eval(), example_input)
 
