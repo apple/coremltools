@@ -3158,6 +3158,8 @@ def meshgrid(context, node):
     dimensions defined by the other inputs.
     """
     inputs = _get_inputs(context, node)
+    if len(inputs) == 1:
+        inputs = inputs[0]
     if len(inputs) < 2:
         raise ValueError("Requires > 2 tensor inputs.")
 
@@ -3180,7 +3182,6 @@ def meshgrid(context, node):
         view_shape = [1] * size
         view_shape[i] = -1
         view_shape = tuple(view_shape)
-        tensor = torch.tensor(inputs[i].val).cpu()
         # (a.) in docstring
         view = mb.reshape(
             x=inputs[i], shape=view_shape, name=node.name + "_view_" + str(i)
