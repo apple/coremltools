@@ -2080,6 +2080,26 @@ def scatter_nd(const_context, builder, op):
         mode=op.mode.val.upper(),
     )
 
+@register_mil_to_nn_mapping
+def silu(const_context, builder, op):
+    '''
+    silu is:
+    y = x * sigmoid(x)
+    '''
+    inp = make_input(const_context, builder, op.x)
+    builder.add_activation(
+        name=op.name + "__silu_sigmoid__",
+        non_linearity="SIGMOID",
+        input_name=inp,
+        output_name=op.name + "__silu_sigmoid__",
+    )
+    builder.add_elementwise(
+        name=op.name,
+        input_names=[inp, op.name + "__silu_sigmoid__"],
+        output_name=op.outputs[0].name,
+        mode='MULTIPLY',
+    )
+
 
 @register_mil_to_nn_mapping
 def tile(const_context, builder, op):

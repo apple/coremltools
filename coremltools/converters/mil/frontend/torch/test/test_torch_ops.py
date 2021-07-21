@@ -1911,9 +1911,6 @@ class TestActivation(TorchBaseTest):
         itertools.product([(1, 10), (1, 3, 4), (1, 4, 5, 6)], backends),
     )
     def test_silu(self, shape, backend):
-        if backend == "neuralnetwork":
-            pytest.xfail("nn backend not supported")
-
         model = ModuleWrapper(function=torch.nn.functional.silu)
         self.run_compare_torch([shape], model, backend=backend)
 
