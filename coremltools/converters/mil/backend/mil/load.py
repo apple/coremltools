@@ -248,7 +248,7 @@ def _add_classify_op(prog, classifier_config):
 def load(prog, weights_dir, resume_on_errors=False, **kwargs):
     if "main" not in prog.functions:
         raise ValueError("main function not found in program")
-    
+
     mil_backend_passes(prog)
 
     # if user has specified "ClassifierConfig", then add the "classify" op to the prog
@@ -314,9 +314,7 @@ def load(prog, weights_dir, resume_on_errors=False, **kwargs):
 
             if name not in image_input_names:
                 # make a feature type of Type "multiArrayType"
-                array_type = ft.ArrayFeatureType(
-                    shape=shape, dataType=ft.ArrayFeatureType.ArrayDataType.FLOAT32
-                )
+                array_type = ft.ArrayFeatureType(shape=shape, dataType=cast_to_framework_io_dtype(var, False))
                 input_feature_type.multiArrayType.CopyFrom(array_type)
             else:
                 if len(shape) < 3:
@@ -344,7 +342,7 @@ def load(prog, weights_dir, resume_on_errors=False, **kwargs):
                 ml.FeatureDescription(name=name, type=input_feature_type)
             )
         elif types.is_scalar(var.sym_type):
-            array_type = ft.ArrayFeatureType(shape=[1], dataType=ft.ArrayFeatureType.ArrayDataType.FLOAT32)
+            array_type = ft.ArrayFeatureType(shape=[1], dataType=cast_to_framework_io_dtype(var, False))
             input_feature_type.multiArrayType.CopyFrom(array_type)
             input_features.append(ml.FeatureDescription(name=var.name, type=input_feature_type))
         else:
@@ -353,8 +351,15 @@ def load(prog, weights_dir, resume_on_errors=False, **kwargs):
     for var in prog.functions["main"].outputs:
         output_feature_type = ft.FeatureType()
         if types.is_tensor(var.sym_type) or types.is_primitive(var.sym_type):
-            # Ignore output type; always set to ArrayFeatureType(shape=None, dataType=FLOAT32)
-            array_type = ft.ArrayFeatureType(shape=None, dataType=ft.ArrayFeatureType.ArrayDataType.FLOAT32)
+            dataType = None
+            if classifier_config is None or var.name != predicted_feature_name:
+                # Not a classifier output, make sure model output type matches with ML Program type.
+                dataType = cast_to_framework_io_dtype(var, True)
+            else:
+                # Classifier outputs are set up separately, so default to fp32 for now.
+                dataType = ft.ArrayFeatureType.ArrayDataType.FLOAT32
+
+            array_type = ft.ArrayFeatureType(shape=None, dataType=dataType)
             output_feature_type.multiArrayType.CopyFrom(array_type)
             output_features.append(ml.FeatureDescription(name=var.name, type=output_feature_type))
         elif (types.is_dict(var.sym_type)):

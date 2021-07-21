@@ -34,7 +34,7 @@ The coremltools 5 package offers several performance improvements over previous 
 To install coremltools 5, use the following command:
 
 ```shell
-pip install coremltools==5.0b1
+pip install coremltools==5.0b2
 ```
 
 
@@ -49,7 +49,7 @@ To install coremltools, see the [“Installation“ page](https://coremltools.re
 * [Release Notes](https://github.com/apple/coremltools/releases/) 
 * [Guides and examples](https://coremltools.readme.io/) 
 * [API Reference](https://apple.github.io/coremltools/index.html)
-* [Core ML Specification](https://mlmodel.readme.io/)
+* [Core ML Specification](https://apple.github.io/coremltools/mlmodel/index.html)
 * [Building from Source](BUILDING.md)
 * [Contribution Guidelines](CONTRIBUTING.md) 
 

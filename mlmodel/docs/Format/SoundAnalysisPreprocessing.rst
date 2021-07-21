@@ -1,5 +1,6 @@
 SoundAnalysisPreprocessing
-________________________________________________________________________________
+==========================
+
 
 A model which takes audio signal samples as input and outputs an array of
 preprocessed samples according to the specified preprocessing types

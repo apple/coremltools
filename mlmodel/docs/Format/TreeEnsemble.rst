@@ -1,3 +1,7 @@
+TreeEnsemble
+============
+
+
 Each tree is a collection of nodes,
 each of which is identified by a unique identifier.
 
@@ -165,9 +169,6 @@ A tree ensemble classifier.
 
 
 
-
-
-
 TreeEnsembleRegressor
 ________________________________________________________________________________
 
@@ -185,13 +186,8 @@ A tree ensemble regressor.
 
 
 
-
-
-
-
-
 TreeEnsembleParameters.TreeNode.TreeNodeBehavior
---------------------------------------------------------------------------------
+________________________________________________________________________________
 
 
 
@@ -222,3 +218,4 @@ A tree ensemble post-evaluation transform.
 	    Regression_Logistic = 2;
 	    Classification_SoftMaxWithZeroClassReference = 3;
 	}
+

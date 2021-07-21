@@ -10,6 +10,7 @@ To build coremltools from source, you need the following:
 * [CMake](https://cmake.org/)
 * [Miniconda](https://docs.conda.io/en/latest/miniconda.html) (or [Anaconda](https://www.anaconda.com/))
 * [Zsh shell](http://zsh.sourceforge.net/) (the default shell for macOS 10.16+) installed in /usr/bin
+* A C++17 compatible compiler (if using GCC, need GCC 9.0 or later)
 
 ## Build script
 
@@ -54,6 +55,6 @@ For more information, see the following:
 * [Release Notes](https://github.com/apple/coremltools/releases/) for the current release and previous releases
 * [Guides and examples](https://coremltools.readme.io/) with installation and troubleshooting
 * [API Reference](https://apple.github.io/coremltools/index.html)
-* [Core ML Specification](https://mlmodel.readme.io/)
+* [Core ML Specification](https://apple.github.io/coremltools/mlmodel/index.html)
 * [Contribution Guidelines](CONTRIBUTING.md) for reporting issues and making requests
 

@@ -151,17 +151,17 @@ class FP16ComputePrecision(AbstractQuantizationPass):
             casted_inputs[param] = list(inputs[:])
             for i, var in enumerate(inputs):
                 # Second loop, iterates over all the vars of a python list corresponding to an input parameter.
-                if not (var.is_tensor_of(dtype="fp32") or var.is_scalar_of(dtype="fp32")):
+                if not var.is_tensor_or_scalar_of(dtype="fp32"):
                     continue
 
                 inputs_modified = True
                 with block:
                     casted_var_name = var.name + "_to_fp16"
-                    if len(var._child_ops) > 1 and casted_var_name in self.cache_vars:
+                    if len(var._child_ops) > 1 and casted_var_name in self.cache_vars and (self.cache_vars[casted_var_name] in block._visible_vars_in_block()[1]):
                         casted_inputs[param][i] = self.cache_vars[casted_var_name]
                     else:
                         x = mb.cast(
-                            x=var, dtype="fp16", name=casted_var_name, before_op=op
+                            x=var, dtype="fp16", name=casted_var_name, before_op= op
                         )
                         casted_inputs[param][i] = x
                         if len(var._child_ops) > 1:
@@ -183,8 +183,8 @@ class FP16ComputePrecision(AbstractQuantizationPass):
                 quant_output = [quant_output]
 
             for old_output_var, new_output_var in zip(op.outputs, quant_output):
-                if old_output_var.is_tensor_of(dtype="fp32") and (
-                    not new_output_var.is_tensor_of(dtype="fp32")
+                if old_output_var.is_tensor_or_scalar_of(dtype="fp32") and (
+                    not new_output_var.is_tensor_or_scalar_of(dtype="fp32")
                 ):
                     with block:
                         x = mb.cast(

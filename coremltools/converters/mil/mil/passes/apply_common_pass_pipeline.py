@@ -74,6 +74,7 @@ def apply_common_pass_pipeline(prog, passes):
         "common::noop_elimination",
         "common::dedup_op_and_var_names",
         "common::reduce_transposes",  # fuse_layernorm_or_instancenorm can potentially adding transposes
+        "common::topological_reorder",
         "common::dead_code_elimination",  # always end with dce
     ]
 

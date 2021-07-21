@@ -1,3 +1,8 @@
+Support Vector Machine
+=======================
+
+
+
 LinearKernel
 ________________________________________________________________________________
 
@@ -213,9 +218,6 @@ One or more coefficients.
 
 
 
-
-
-
 SupportVectorRegressor
 ________________________________________________________________________________
 
@@ -238,8 +240,6 @@ A support vector regressor.
 	
 	    double rho = 5;
 	}
-
-
 
 
 
@@ -274,3 +274,7 @@ A support vector classifier
 	        Int64Vector int64ClassLabels = 101;
 	    }
 	}
+
+
+
+

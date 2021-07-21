@@ -210,7 +210,7 @@ class BoostedTreeClassificationBostonHousingXGboostNumericTest(unittest.TestCase
             self._train_convert_evaluate_assert(**arg)
 
 
-@unittest.skipIf(_macos_version() >= (10, 16), "rdar://problem/75172473")
+@unittest.skipIf(_macos_version() >= (12, 0), "rdar://problem/75172473")
 @unittest.skipIf(not _HAS_SKLEARN, "Missing sklearn. Skipping tests.")
 @unittest.skipIf(not _HAS_XGBOOST, "Skipping, no xgboost")
 class BoostedTreeBinaryClassificationBostonHousingXGboostNumericTest(
@@ -241,7 +241,7 @@ class BoostedTreeBinaryClassificationBostonHousingXGboostNumericTest(
         self._classifier_stress_test()
 
 
-@unittest.skipIf(_macos_version() >= (10, 16), "rdar://problem/75172473")
+@unittest.skipIf(_macos_version() >= (12, 0), "rdar://problem/75172473")
 @unittest.skipIf(not _HAS_SKLEARN, "Missing sklearn. Skipping tests.")
 @unittest.skipIf(not _HAS_XGBOOST, "Skipping, no xgboost")
 class BoostedTreeMultiClassClassificationBostonHousingXGboostNumericTest(

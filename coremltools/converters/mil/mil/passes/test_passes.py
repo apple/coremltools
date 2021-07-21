@@ -23,8 +23,6 @@ np.random.seed(1984)
 validate_model = True
 
 
-# TODO: rdar://58993652 (Add recursive block test cases for graph pass tests)
-
 
 def test_const_elimination():
     @mb.program(input_specs=[mb.TensorSpec(shape=(2, 4))])
@@ -445,3 +443,34 @@ def test_gelu_exact_approximation(op_type, is_first_op1, is_first_op2, is_first_
         expected_output_shapes={block.outputs[0].name: (3, 5, 6)},
     )
 
+class TestTopologicalReorder:
+
+    def test_move_sink_casts_to_the_end(self):
+        @mb.program(input_specs=[mb.TensorSpec(shape=(10, 20))])
+        def prog(x):
+            x = mb.cast(x=x, dtype="fp16")
+            x1 = mb.square(x=x)
+            x2 = mb.cast(x=x1, dtype="fp32")
+            x3 = mb.log(x=x)
+            x4 = mb.cast(x=x3, dtype="fp32")
+            x5 = mb.relu(x=x)
+            x6 = mb.cast(x=x5, dtype="fp32")
+            x7 = mb.relu(x=x6)
+            return x2, x4, x7
+
+        assert get_op_types_in_program(prog) == ['cast', 'square', 'cast', 'log', 'cast', 'relu', 'cast', 'relu']
+
+        apply_pass_and_basic_check(prog, "common::topological_reorder")
+        _, _, block = apply_pass_and_basic_check(prog, "common::dead_code_elimination")
+
+        assert get_op_types_in_program(prog) == ["cast", "square", "log", "relu", "cast", "cast", "cast", "relu"]
+
+        assert_model_is_valid(
+            prog,
+            {"x": (10, 20)},
+            expected_output_shapes={
+                block.outputs[0].name: (10, 20),
+                block.outputs[1].name: (10, 20),
+                block.outputs[2].name: (10, 20),
+            },
+        )

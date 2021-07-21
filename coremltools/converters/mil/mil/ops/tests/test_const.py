@@ -16,15 +16,26 @@ class TestConst:
         "use_cpu_for_conversion, backend, dtype", itertools.product(
             [True, False],
             backends,
-            [np.float32, np.int32]
+            [
+                np.uint8,
+                np.int8,
+                np.uint16,
+                np.int16,
+                np.uint32,
+                np.int32,
+                np.uint64,
+                np.int64,
+                np.float32,
+                np.float64,
+            ]
         )
     )
     def test_builder_to_backend_smoke(self, use_cpu_for_conversion, backend, dtype):
         if backend == "mlprogram" and not use_cpu_for_conversion:
             pytest.xfail("rdar://78343191 ((MIL GPU) Core ML Tools Unit Test failures [failure to load or Seg fault])")
 
-        t = np.random.randint(0, 100, (100, 2)).astype(np.float32)
-        constant = np.random.randint(0, 100, (100, 2)).astype(dtype)
+        t = np.random.randint(0, 5, (4, 2)).astype(np.float32)
+        constant = np.random.randint(0, 5, (4, 2)).astype(dtype)
         input_placeholders = {
             "x": mb.placeholder(shape=t.shape),
         }
@@ -36,7 +47,7 @@ class TestConst:
             z = mb.add(x=x, y=y)
             return mb.cast(x=z, dtype='fp32')
 
-        expected_output_types = (100, 2, types.fp32)
+        expected_output_types = (4, 2, types.fp32)
         expected_outputs = t + constant.astype(np.float32)
 
         run_compare_builder(

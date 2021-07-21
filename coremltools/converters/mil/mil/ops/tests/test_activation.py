@@ -322,7 +322,6 @@ class TestLinearActivation:
         )
 
 
-# TODO (rdar://59954690): Broken when there is 1 channel
 class TestPReLU:
     @pytest.mark.parametrize(
         "use_cpu_only, backend", itertools.product([True, False], backends,)
@@ -650,6 +649,40 @@ class TestSigmoidHard:
         )
 
 
+class TestSiLU:
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend", itertools.product([True, False], backends,)
+    )
+    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+        if backend == "neuralnetwork":
+            pytest.xfail("nn backend not supported")
+
+        x_val = np.array([-1.1, 2.2, -3.3, 4.4], dtype=np.float32).reshape((1, 2, 1, 2))
+
+        input_placeholder_dict = {
+            "x": mb.placeholder(shape=x_val.shape),
+        }
+        input_value_dict = {"x": x_val}
+        expected_output_type = x_val.shape + (types.fp32,)
+
+        def build(x):
+            return mb.silu(x=x)
+
+        expected_output = np.array(
+            [-0.2747, 1.9805, -0.1174, 4.3466], dtype=np.float32
+        ).reshape(expected_output_type[:-1])
+
+        run_compare_builder(
+            build,
+            input_placeholder_dict,
+            input_value_dict,
+            expected_output_type,
+            expected_output,
+            use_cpu_only=use_cpu_only,
+            backend=backend,
+        )
+
+
 class TestSoftplus:
     @pytest.mark.parametrize(
         "use_cpu_only, backend", itertools.product([True, False], backends,)
@@ -688,7 +721,6 @@ class TestSoftplus:
         )
 
 
-# TODO (rdar://59954690): NN Segfaults when converting from MIL ParametricSoftplus layer
 # No torch test because there is no direct torch translation to this layer
 class TestSoftplusParametric:
     @pytest.mark.parametrize(
