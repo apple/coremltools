@@ -1498,7 +1498,7 @@ class TestTypeAs(TorchBaseTest):
 
 class TestReduction(TorchBaseTest):
     @pytest.mark.parametrize(
-        "input_shape, mode, dim, keepdim, backend",
+        "input_shape, dim, keepdim, mode, backend",
         itertools.product([(2, 2), (1, 1)], [0, 1], [True, False], ["min", "max"], backends)
     )
     def test_min_max(self, input_shape, dim, keepdim, mode, backend):
