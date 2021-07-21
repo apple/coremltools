@@ -3268,8 +3268,24 @@ def zeros(context, node):
         zeros = mb.const(val=zeros_array, name=node.name)
 
     context.add(zeros)
+    
+    
+@register_torch_op
+def min(context, node):
+    inputs = _get_inputs(context, node, expected=3)
+    _input = inputs[0]
+    dim = inputs[1].val
+    keepdim = inputs[2].val
 
+    values = mb.reduce_min(x=_input, axes=[dim], keep_dims=keepdim)
+    indices = mb.reduce_argmin(x=_input, axis=dim, keep_dims=keepdim)
+    assert len(node.outputs) == 2
+    values_name = node.outputs[0]
+    indices_name = node.outputs[1]
+    context.add(values, torch_name=values_name)
+    context.add(indices, torch_name=indices_name)
 
+    
 @register_torch_op
 def max(context, node):
     inputs = _get_inputs(context, node, expected=3)
