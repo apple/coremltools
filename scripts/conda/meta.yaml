@@ -14,12 +14,13 @@ requirements:
   build:
     - cmake
     - make
-    #- {{ compiler('c') }}
-    #- {{ compiler('cxx') }}
+    - {{ compiler('c') }}  # [linux]
+    - {{ compiler('cxx') }}  # [linux]
   host:
     - python
     - numpy
     - pip
+    - libuuid  # [linux]
   run:
     - python
     - {{ pin_compatible('numpy') }}
@@ -30,15 +31,14 @@ requirements:
     - scipy
     - tqdm
     - packaging
+    - libuuid  # [linux]
   run_constrained:
-    - __osx >={{ MACOSX_DEPLOYMENT_TARGET|default("10.9") }}  # [osx]
+    - __osx >={{ MACOSX_DEPLOYMENT_TARGET|default("10.15") }}  # [osx]
     - pytorch >=1.4,<1.7  # inferred by testing
 
 test:
   imports:
     - coremltools
-  commands:
-    - coremlconverter --help
 
 about:
   home: https://github.com/apple/coremltools
