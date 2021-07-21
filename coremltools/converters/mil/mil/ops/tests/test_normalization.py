@@ -316,25 +316,25 @@ class TestNormalizationLayerNorm:
 
     @staticmethod
     def _keras_layer_norm( x, axes, epsilon):
-            layer = tf.keras.layers.LayerNormalization(axis=axes, epsilon=epsilon)
-            data = tf.constant(x, dtype=tf.float32)
-            output = layer(data)
-            return output.numpy()
+        layer = tf.keras.layers.LayerNormalization(axis=axes, epsilon=epsilon)
+        data = tf.constant(x, dtype=tf.float32)
+        output = layer(data)
+        return output.numpy()
 
     @staticmethod
     def _np_layer_norm(x, axes, gamma=None, beta=None, epsilon=1e-5):
-            rank = len(x.shape)
-            axes = [axis + rank if axis < 0 else axis for axis in axes]
-            normalized_shape = [x.shape[i] if i in axes else 1 for i in range(rank)]
-            gamma = np.ones(shape=normalized_shape) if gamma is None else np.reshape(gamma, normalized_shape)
-            beta = np.zeros(shape=normalized_shape) if beta is None else np.reshape(beta, normalized_shape)
-            num = x - np.mean(x, axis=tuple(axes), keepdims=True)
-            dem = np.sqrt(
-                np.sum(np.square(num), axis=tuple(axes), keepdims=True)
-                / np.prod(normalized_shape)
-                + epsilon
-            )
-            return num / dem * gamma + beta
+        rank = len(x.shape)
+        axes = [axis + rank if axis < 0 else axis for axis in axes]
+        normalized_shape = [x.shape[i] if i in axes else 1 for i in range(rank)]
+        gamma = np.ones(shape=normalized_shape) if gamma is None else np.reshape(gamma, normalized_shape)
+        beta = np.zeros(shape=normalized_shape) if beta is None else np.reshape(beta, normalized_shape)
+        num = x - np.mean(x, axis=tuple(axes), keepdims=True)
+        dem = np.sqrt(
+            np.sum(np.square(num), axis=tuple(axes), keepdims=True)
+            / np.prod(normalized_shape)
+            + epsilon
+        )
+        return num / dem * gamma + beta
 
     @pytest.mark.parametrize(
         "use_cpu_only, backend", itertools.product([True, False], backends,)
@@ -343,6 +343,8 @@ class TestNormalizationLayerNorm:
         x_val = np.array([[[1.0, -7.0], [5.0, -6.0], [-3.0, -5.0]]], dtype=np.float32)
         input_placeholders = {"x": mb.placeholder(shape=x_val.shape)}
         input_values = {"x": x_val}
+        gamma_val = np.array([1.0, 1.0], dtype=np.float32)
+        beta_val = np.array([1.0, 0.0], dtype=np.float32)
 
         def build(x):
             return [
@@ -350,9 +352,11 @@ class TestNormalizationLayerNorm:
                 mb.layer_norm(x=x, axes=[2], epsilon=1e-4),
                 # V2->V1 lowering (op_mappings.py): else branch
                 mb.layer_norm(x=x, axes=[-2, -1], epsilon=1e-4),
+                # V2->V1 lowering (op_mappings.py): if branch with scale
+                mb.layer_norm(x=x, axes=[2], epsilon=1e-4, gamma=gamma_val, beta=beta_val),                
             ]
 
-        expected_output_types = [(1, 3, 2, types.fp32), (1, 3, 2, types.fp32)]
+        expected_output_types = [(1, 3, 2, types.fp32), (1, 3, 2, types.fp32), (1, 3, 2, types.fp32)]
         expected_outputs = [
             np.array(
                 [
@@ -370,6 +374,67 @@ class TestNormalizationLayerNorm:
                         [ 0.82687193, -1.06312108],
                         [ 1.77186835, -0.82687193],
                         [-0.11812456, -0.59062278],
+                    ]
+                ],
+                dtype=np.float32,
+            ),
+            np.array(
+                [
+                    [
+                        [ 1.9999969,  -0.9999969 ],
+                        [ 1.99999833, -0.99999833],
+                        [ 1.99995005, -0.99995005],
+                    ]
+                ],
+                dtype=np.float32,
+            ),
+        ]
+
+        run_compare_builder(
+            build,
+            input_placeholders,
+            input_values,
+            expected_output_types,
+            expected_outputs,
+            use_cpu_only=use_cpu_only,
+            backend=backend,
+        )
+
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend", itertools.product([True, False], backends,)
+    )
+    def test_builder_to_backend_smoke_rank_2(self, use_cpu_only, backend):
+        x_val = np.array([[1.0, -7.0], [5.0, -6.0], [-3.0, -5.0]], dtype=np.float32)
+        gamma_val = np.array([1.0, 1.0], dtype=np.float32)
+        beta_val = np.array([1.0, 0.0], dtype=np.float32)
+        input_placeholders = {"x": mb.placeholder(shape=x_val.shape)}
+        input_values = {"x": x_val}
+
+        def build(x):
+            return [
+                # V2->V1 lowering (op_mappings.py): if branch
+                mb.layer_norm(x=x, axes=[1], epsilon=1e-4),
+                mb.layer_norm(x=x, axes=[1], epsilon=1e-4, gamma=gamma_val, beta=beta_val)
+            ]
+
+        expected_output_types = [(3, 2, types.fp32), (3, 2, types.fp32)]
+        expected_outputs = [
+            np.array(
+                [
+                    [
+                        [ 0.9999969,  -0.9999969 ],
+                        [ 0.99999833, -0.99999833],
+                        [ 0.99995005, -0.99995005],
+                    ]
+                ],
+                dtype=np.float32,
+            ),
+            np.array(
+                [
+                    [
+                        [ 1.9999969,  -0.9999969 ],
+                        [ 1.99999833, -0.99999833],
+                        [ 1.99995005, -0.99995005],
                     ]
                 ],
                 dtype=np.float32,

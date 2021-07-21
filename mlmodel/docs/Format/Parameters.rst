@@ -1,3 +1,8 @@
+Parameters
+==========
+
+
+
 Int64Parameter
 ________________________________________________________________________________
 
@@ -73,3 +78,26 @@ A default bool value must be provided
 	message BoolParameter {
 	    bool defaultValue = 1;
 	}
+
+
+
+CumSumLayerParams
+________________________________________________________________________________
+
+
+
+.. code-block:: proto
+
+	message CumSumLayerParams {
+
+	    int64 axis = 1;
+
+	    bool excludeFinalSum = 2;
+
+	    bool reverse = 3;
+	}
+
+
+
+
+

@@ -217,6 +217,111 @@ def _construct_constant(val, name):
 
 
 @register_torch_op
+def affine_grid_generator(context, node):
+    # rdar://73165386 (Improve error handling of coremltools "affine" op PyTorch conversion.)
+
+    affine_op_name = node.name
+    theta, size, align_corners = _get_inputs(context, node, expected=3)
+
+    # note: only add consts here as PyTorch uses affine_grid + grid_sampler together
+    is_theta_const = theta.val is not None
+    if is_theta_const:
+        context.add(mb.const(val=theta.val, name="{}_theta".format(affine_op_name)))
+    else:  # theta is dynamic input, keep track of it's name
+        context.add(mb.const(val=theta.name, name="{}_theta".format(affine_op_name)))
+
+    context.add(mb.const(val=size.val, name="{}_size".format(affine_op_name)))
+    context.add(mb.const(val=align_corners.val, name="{}_align_corners".format(affine_op_name)))
+
+
+@register_torch_op
+def grid_sampler(context, node):
+    affine_op_name = node.inputs[1]
+    # https://github.com/pytorch/pytorch/blob/00d432a1ed179eff52a9d86a0630f623bf20a37a/aten/src/ATen/native/GridSampler.h#L10-L11
+    m_mode = {0: "bilinear", 1: "nearest"}
+    m_padding_mode = {0: "constant", 1: "border", 2: "reflection"}
+
+    # add `resample` if grid/coordinates is in input, otherwise,
+    # add `affine` to generate grid from `affine_grid_generator`.
+    if affine_op_name in context:  # add `resample` op
+        inputs = _get_inputs(context, node, expected=5)
+        sampling_mode = m_mode[inputs[2].val]
+        padding_mode = m_padding_mode[inputs[3].val]
+        align_corners = inputs[4].val
+
+        # When align_corners=False, padding_mode is corresponding to Core ML's symmetric
+        if padding_mode == "reflection" and align_corners is False:
+            padding_mode = "symmetric"
+
+        x = mb.resample(
+            x=inputs[0],
+            coordinates=inputs[1],
+            sampling_mode=sampling_mode,
+            padding_mode=padding_mode,
+            padding_value=0.0,
+            coordinates_mode="normalized_minus_one_to_one",
+            align_corners=align_corners,
+            name=node.name,
+        )
+        context.add(x)
+    else:  # add `affine` op instead
+        x = context[node.inputs[0]]
+        # inputs from `affine_grid_generator`
+        affine_theta = context["{}_theta".format(affine_op_name)]
+        affine_size = context["{}_size".format(affine_op_name)]
+        affine_align_corners = context["{}_align_corners".format(affine_op_name)]
+
+        # affine_theta.val is either name string (dynamic input) or np.ndarray (static values)
+        # see `affine_grid_generator` for details.
+        is_theta_const = not isinstance(affine_theta.val, str)
+        if is_theta_const:
+            transform_matrix = _np.reshape(affine_theta.val, (affine_theta.shape[0], 6))
+        else:  # theta is dynamic input, add `reshape` op to PyMIL
+            transform_matrix = mb.reshape(
+                x=context[affine_theta.val],
+                shape=(-1, 6),
+                name=node.name + "_theta_reshape",
+            )
+
+        # inputs from `grid_sampler`
+        sampling_mode = m_mode[context[node.inputs[2]].val]
+        padding_mode = m_padding_mode[context[node.inputs[3]].val]
+        align_corners = context[node.inputs[4]].val
+
+        if sampling_mode != "bilinear":
+            raise NotImplementedError("'sampling_mode' not supported.")
+
+        if padding_mode != "constant":
+            raise NotImplementedError("'padding_mode' not supported.")
+
+        if affine_align_corners.val != align_corners:
+            raise ValueError(
+                "Op 'affine_grid_generator' and 'grid_sampler' must agree on 'align_corners'."
+            )
+
+        x = mb.affine(
+            x=x,
+            transform_matrix=transform_matrix,
+            output_height=affine_size.val[2],
+            output_width=affine_size.val[3],
+            sampling_mode=sampling_mode,
+            padding_mode=padding_mode,
+            padding_value=0.0,
+            coordinates_mode="normalized_minus_one_to_one",
+            align_corners=align_corners,
+            name=node.name,
+        )
+        context.add(x)
+
+
+@register_torch_op(torch_alias=["silu_"])
+def silu(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+    x = mb.silu(x=inputs[0], name=node.name)
+    context.add(x)
+
+
+@register_torch_op
 def constant(context, node):
     assert len(node.inputs) == 0
     assert len(node.outputs) == 1
@@ -380,10 +485,8 @@ def addmm(context, node):
     # addmm(Tensor input, Tensor mat1, Tensor mat2, Scalar beta=1, Scalar alpha=1)
     # output = beta * input + alpha * mat1 * mat2
 
-    assert len(node.inputs) == 5
     assert len(node.outputs) == 1
-
-    inputs = [context[name] for name in node.inputs]
+    inputs = _get_inputs(context, node, expected=5)
     bias = inputs[0]
     mat1 = inputs[1]
     mat2 = inputs[2]
@@ -408,6 +511,14 @@ def addmm(context, node):
     addmm_node = mb.linear(x=mat1, weight=mat2, bias=bias, name=node.name)
     context.add(addmm_node)
 
+@register_torch_op
+def linear(context, node):
+    inputs = _get_inputs(context, node, expected=[2, 3])
+    x = inputs[0]
+    W = inputs[1]
+    bias = inputs[2] if len(node.inputs) == 3 else None
+    res = mb.linear(x=x, weight=W, bias=bias, name=node.name)
+    context.add(res)
 
 @register_torch_op(torch_alias=["conv2d"])
 def _convolution(context, node):
@@ -486,8 +597,6 @@ def _convolution(context, node):
             #
             # For ConvTranspose2d: [bottom, right] -> [0, b, 0, r]
             output_padding = [0 if i % 2 == 0 else out_pad[i//2] for i in range(len(pad))]
-            # TODO: rdar://65588783 ([PyTorch] Define and error out on unsupported configuration for output_padding)
-            # error out here with unsupported configuration along with output padding
             if sum(pad) == 0 and any(output_padding):
                 raise ValueError("ConvTranspose configuration of padding=0 and output_padding > 0 not supported!")
             post_crop = pad.copy()
@@ -764,9 +873,30 @@ def maximum(context, node):
 
 @register_torch_op
 def div(context, node):
-    inputs = _get_inputs(context, node, expected=2)
+    inputs = _get_inputs(context, node, expected=[2,3])
 
-    res = mb.real_div(x=inputs[0], y=inputs[1], name=node.name)
+    if len(inputs) > 2 and inputs[2] is not None:
+        rounding_mode = inputs[2].val
+        if rounding_mode == "floor":
+            # round towards negative infinity
+            # e.g.:
+            # values before floor: [2.6, -3.4, -3.6]
+            # values after floor: [2, -4, -4]
+            res = mb.floor_div(x=inputs[0], y=inputs[1], name=node.name)
+        elif rounding_mode == "trunc":
+            # round towards 0
+            # e.g.:
+            # values before trunc: [2.6, -3.4, -3.6]
+            # values after trunc: [2, -3, -3]
+            z = mb.real_div(x=inputs[0], y=inputs[1])
+            s = mb.sign(x=z)
+            all_positive = mb.mul(x=z, y=s)
+            all_positive_floor = mb.floor(x=all_positive)
+            res = mb.mul(x=all_positive_floor, y=s, name=node.name)
+        else:
+            raise NotImplementedError("rounding mode \"{}\" not supported in the \"div\" op".format(rounding_mode))
+    else:
+        res = mb.real_div(x=inputs[0], y=inputs[1], name=node.name)
     context.add(res)
 
 
@@ -1064,8 +1194,6 @@ def batch_norm(context, node):
     # helper functions for different type of batch norm
     def _add_batch_norm_dynamic():
         x = _input
-        shape = [1] * x.rank
-        shape[1] = -1 if any_symbolic(running_mean.shape) else running_mean.shape[0]
 
         if training:
             axes = [axis for axis in range(x.rank) if axis != 1]
@@ -1074,6 +1202,8 @@ def batch_norm(context, node):
             square = mb.mul(x=num, y=num)
             variance = mb.reduce_mean(x=square, axes=axes, keep_dims=True)
         else:
+            shape = [1] * x.rank
+            shape[1] = -1 if any_symbolic(running_mean.shape) else running_mean.shape[0]
             mean = mb.reshape(x=running_mean, shape=shape)
             num = mb.sub(x=x, y=mean)
             variance = mb.reshape(x=running_var, shape=shape)
@@ -1194,7 +1324,7 @@ def batch_norm(context, node):
     is_batch_norm_2d = (input_rank == 3 or input_rank == 4)
     is_batch_norm_3d = input_rank == 5
 
-    if training or running_mean.val is None or running_var.val is None:
+    if training or running_mean.val is None or running_var.val is None or weight is None or bias is None:
         _add_batch_norm_dynamic()
     elif is_batch_norm_1d:
         _add_batch_norm_1d()
@@ -2037,7 +2167,7 @@ def lstm(context, node):
                         out1, out2 = mb.split(x=out_state_tensors_list[i], num_splits=2, axis=1) # each output of shape [B, H] after the split
                         out = mb.stack(values=[out1, out2], axis=0)  # [2, B, H]
                         list_of_tensors_to_stack.append(out)
-                    final_out = mb.concat(values=list_of_tensors_to_stack, axis=0) # output of shape (num_layers * 2, B, H)
+                    final_out = mb.concat(values=list_of_tensors_to_stack, axis=0, name=name) # output of shape (num_layers * 2, B, H)
                     context.add(final_out, name)
             else:
                 if num_layers == 1:
@@ -2672,7 +2802,7 @@ def log_softmax(context, node):
     res = mb.log(x=res, name=node.name)
     context.add(res)
 
-@register_torch_op
+@register_torch_op(torch_alias=["nll_loss_nd"])
 def nll_loss(context, node):
     inputs = _get_inputs(context, node, expected=5)
 
@@ -2999,12 +3129,16 @@ def masked_fill(context, node):
     value = inputs[2]
     # @mb.select does not properly broadcast scalar input, so as a workaround
     # we create a full sized tensor.
-    # rdar://61463562
 
     if types.is_int(value.dtype):
         # @mb.fill cannot handle value with dtype integer
         # so we cast the value.
         value = mb.cast(x=value, dtype="fp32")
+
+    if not types.is_bool(mask.dtype):
+        # cond must be bool type
+        mask = mb.cast(x=mask, dtype="bool")
+
     shape = mb.shape(x=x, name=node.name + "_shape")
     value = mb.fill(shape=shape, value=value, name=node.name + "_value")
     res = mb.select(cond=mask, a=value, b=x, name=node.name)
@@ -3384,7 +3518,12 @@ def is_floating_point(context, node):
 @register_torch_op
 def where(context, node):
     inputs = _get_inputs(context, node, expected=3)
-    context.add(mb.select(cond=inputs[0], a=inputs[1], b=inputs[2], name=node.name))
+    cond = inputs[0]
+    if not types.is_bool(cond.dtype):
+        # cond must be bool type
+        cond = mb.cast(x=cond, dtype="bool")
+
+    context.add(mb.select(cond=cond, a=inputs[1], b=inputs[2], name=node.name))
 
 @register_torch_op
 def neg(context, node):

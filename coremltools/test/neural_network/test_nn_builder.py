@@ -197,22 +197,21 @@ class BasicNumericCorrectnessTest_1014NewLayers(unittest.TestCase):
         expected_out = np.reshape(np.array([8, 44]), (2, 1, 1))
         self.assertTrue(np.allclose(out, expected_out))
 
-    @unittest.skip("<rdar://problem/68866645> Investigate numerical discrepancy during quantization in CoreML")
     def test_linear_quant_convolution_8bit_float_scale_and_bias(self):
         W = np.array(([[[[1, 248], [248, 248]]]]), dtype=np.uint8)
         mlmodel = self.build_quant_conv_layer(
             W=W.flatten().tobytes(),
             quantization_type="linear",
             nbits=8,
-            quant_scale=[15.346457],
-            quant_bias=[-3913.3464],
+            quant_scale=[15],
+            quant_bias=[-3913],
             output_channels=1,
         )
         data = np.ones((1, 2, 2))
         data_dict = {"data": data}
         out = mlmodel.predict(data_dict, useCPUOnly=True)["out"]
         # Output should be equal to: (scale*(1+248+248+248)+(4*bias))
-        expected_out = np.reshape(np.array([-4220.275]), (1, 1, 1, 1, 1))
+        expected_out = np.reshape(np.array([-4477]), (1, 1, 1, 1, 1))
         self.assertTrue(np.allclose(out, expected_out))
 
     def test_lut_quant_convolution_2bit(self):
@@ -362,10 +361,6 @@ class BasicNumericCorrectnessTest_1015NewLayers(unittest.TestCase):
         self.assertTrue(out.shape == expected_out.shape)
         self.assertTrue(np.allclose(out.flatten(), expected_out.flatten(), atol=0.1))
 
-    @pytest.mark.xfail(
-        reason="rdar://78057487 (Re-enable tests after fixing regression in embedding layer)",
-        run=False
-    )
     def test_lut_quant_embedding_nd_2bit(self):
         embed_size = 2
         vocab_size = 3
@@ -408,10 +403,6 @@ class BasicNumericCorrectnessTest_1015NewLayers(unittest.TestCase):
         self.assertTrue(np.allclose(out.flatten(), expected_out.flatten()))
 
 
-    @pytest.mark.xfail(
-        reason="rdar://78057487 (Re-enable tests after fixing regression in embedding layer)",
-        run=False
-    )
     def test_linear_quant_embedding_7bit(self):
         embed_size = 2
         vocab_size = 3

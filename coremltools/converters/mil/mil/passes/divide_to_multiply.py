@@ -8,6 +8,7 @@
 
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil import types as _types
 
 
 def divide_to_multiply_block(block):
@@ -18,7 +19,12 @@ def divide_to_multiply_block(block):
             # This op can't be divide.
             continue
 
-        if op.op_type == "real_div" and op.y.val is not None:
+        # If real_div has integer input, the result is an integer (following TensorFlow spec).
+        # Hence this pass needs disabled if the input is not float, since it translates y
+        # to a floating point number. If x or y was originally an integer, and y becomes
+        # a floating point number, then the original type
+        # signature (with integer output) would not be preserved.
+        if op.op_type == "real_div" and op.y.val is not None and _types.is_float(op.x.dtype):
             with block:
                 x = mb.mul(
                     x=op.x, y=1.0 / op.y.val, name="_inversed_" + op.name, before_op=op

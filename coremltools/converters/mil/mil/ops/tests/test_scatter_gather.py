@@ -225,7 +225,6 @@ class TestScatterAlongAxis:
 
 
 class TestScatterNd:
-    # TODO: <rdar://problem/59737282> [MIL] Scatter and ScatterNd in tensoflow
     @pytest.mark.parametrize(
         "use_cpu_only, backend", itertools.product([True, False], backends,)
     )

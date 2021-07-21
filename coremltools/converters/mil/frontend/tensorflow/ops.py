@@ -1091,10 +1091,87 @@ def Fill(context, node):
 
 
 @register_tf_op
+def ImageProjectiveTransformV2(context, node):
+    # Data shape format: [batch, height, width, channels]
+    x = context[node.inputs[0]]
+    # Transforms shape format: [batch, 8] or [1, 8] matrix, [a0, a1, a2, b0, b1, b2, c0, c1]
+    transforms = context[node.inputs[1]]
+    # 1-D Tensor [new_height, new_width]
+    output_shape = context[node.inputs[2]]
+
+    if len(node.inputs) > 3:
+        raise NotImplementedError("'interpolation', 'fill_mode' not supported")
+
+    # Don't allow non-zero c0 or c1, check for each batch
+    n_batch = transforms.val.shape[0]
+    transform_matrix = _np.empty((n_batch, 6))
+    for b in range(n_batch):
+        c0 = transforms.val[b][6]
+        c1 = transforms.val[b][7]
+        if not (c0 == c1 == 0.0):
+            raise NotImplementedError(
+                "'affine' op with 'transforms' contains non-zero " +
+                "c0 or c1 is not supported, Got: {}".format(
+                    transforms
+                )
+            )
+        # drop c0 and c1 values from the transform matrix
+        transform_matrix[b] = _np.delete(transforms.val[b], [6, 7])
+
+    x = _transpose_NHWC_to_NCHW(x)
+    x = mb.affine(
+        x=x,
+        transform_matrix=transform_matrix,
+        output_height=output_shape.val[0],
+        output_width=output_shape.val[1],
+        sampling_mode="bilinear",
+        padding_mode="constant",
+        padding_value=0.0,
+        coordinates_mode="unnormalized",
+        align_corners=True,
+        name=node.name + "_affine",
+    )
+    x = _transpose_NCHW_to_NHWC(x, node.name)
+    context.add(node.name, x)
+
+
+@register_tf_op
 def RealDiv(context, node):
     x = context[node.inputs[0]]
     y = context[node.inputs[1]]
     x = mb.real_div(x=x, y=y, name=node.name)
+    context.add(node.name, x)
+
+
+@register_tf_op(tf_alias=["Addons>Resampler"])
+def Resampler(context, node):
+    # Data shape format: (Batch, Hin, Win, C)
+    x = context[node.inputs[0]]
+    # Warp shape format: (Batch, Hout, Wout, 2)
+    warp = context[node.inputs[1]]
+
+    # Handle rank-3 warp tensor
+    is_rank3_warp = warp.rank == 3
+    if is_rank3_warp:  # expand spatial dimension
+        warp = mb.expand_dims(x=warp, axes=[1], name=warp.name + "_expand_dims")
+
+    x = _transpose_NHWC_to_NCHW(x)
+    x = mb.resample(
+        x=x,
+        coordinates=warp,
+        sampling_mode="bilinear",
+        padding_mode="constant",
+        padding_value=0.0,
+        coordinates_mode="unnormalized",
+        align_corners=True,
+        name=node.name + "_resample",
+    )
+    x = _transpose_NCHW_to_NHWC(
+        x, node.name + "_transpose" if is_rank3_warp else node.name
+    )
+    if is_rank3_warp:  # squeeze spatial dimension
+        x = mb.squeeze(x=x, axes=[1], name=node.name)
+
     context.add(node.name, x)
 
 
@@ -1797,7 +1874,11 @@ def Select(context, node):
     if rank_cond == 1 and rank_a > 1:
         axes = [-i - 1 for i in range(rank_a - rank_cond)]
         cond = mb.expand_dims(x=cond, axes=axes)
-
+        
+    if not types.is_bool(cond.dtype):
+        # cond must be bool type
+        cond = mb.cast(x=cond, dtype="bool")
+        
     x = mb.select(cond=cond, a=a, b=b, name=node.name)
     context.add(node.name, x)
 
@@ -2168,7 +2249,7 @@ def ResizeNearestNeighbor(context, node):
         raise ValueError(
             '"ResizeNearestNeighbor" op: the second input, which is the output size, must have 2 elements'
         )
-
+    Hout, Wout = None, None
     if context[node.inputs[1]].val is None:
         # for the dynamic input shape case,
         # context[node.inputs[1]] is a mul(x=input_shape, y=scaling_factor) op.
@@ -2186,16 +2267,48 @@ def ResizeNearestNeighbor(context, node):
 
     # first transpose to from channel last to channel first format for coreml
     x = _transpose_NHWC_to_NCHW(x)
-    # add the upsample layer
-    x = mb.upsample_nearest_neighbor(
-        x=x,
-        scale_factor_height=scaling_factor_h,
-        scale_factor_width=scaling_factor_w,
-        name=node.name + "_channel_first_upsample",
-    )
+
+    align_corners = node.attr.get("align_corners", False)
+    half_pixel_centers = node.attr.get("half_pixel_centers", False)
+
+    # add either the resize or the upsample layer
+    if align_corners is False and half_pixel_centers is False:
+        x = mb.upsample_nearest_neighbor(
+            x=x,
+            scale_factor_height=scaling_factor_h,
+            scale_factor_width=scaling_factor_w,
+            name=node.name + "_channel_first_upsample",
+        )
+    elif align_corners is False and half_pixel_centers is True:
+        # if output size can be determined at compile time,
+        # we call the core op resize_nearest_neighbor,
+        # otherwise we use upsample_nearest_neighbor for approximation.
+        # rdar://75204549 (resize_nearest_neighbor need to support dynamic input shape)
+        if Hout is not None and Wout is not None:
+            x = mb.resize_nearest_neighbor(
+                x=x,
+                target_size_height=Hout,
+                target_size_width=Wout,
+                name=node.name + "_channel_first_resize",
+            )
+        else:
+            _logging.warning('Using upsample_nearest_neighbor to approximate resize_nearest_neighbor.')
+            x = mb.upsample_nearest_neighbor(
+                x=x,
+                scale_factor_height=scaling_factor_h,
+                scale_factor_width=scaling_factor_w,
+                name=node.name + "_channel_first_upsample",
+            )
+
+    else:
+        raise NotImplementedError(
+            "ResizeNearestNeighbor op with align_corners={}and half_pixel_centers={} not supported".format(
+                    align_corners, half_pixel_centers
+                )
+        )
+
     # transpose again
     x = _transpose_NCHW_to_NHWC(x, node.name)
-
     context.add(node.name, x)
 
 
@@ -2485,7 +2598,7 @@ def Split(context, node):
     else:
         x = mb.split(x=x, num_splits=num_splits, axis=axis, name=node.name)
         context.add(node.name, x)
-        # TODO (rdar://60358242) If tf.split output is returned, there's no
+        # TODO : If tf.split output is returned, there's no
         # get_tuple nodes. Some graph pass is needed. Example:
         #
         #    x = tf.placeholder(tf.float32, shape=input_shape1)
@@ -2522,7 +2635,7 @@ def ScatterNd(context, node):
     indices = context[node.inputs[0]]
     updates = context[node.inputs[1]]
     shape = context[node.inputs[2]]
-    x = mb.fill(shape=shape, value=0)
+    x = mb.fill(shape=shape, value=types.nptype_from_builtin(updates.dtype)(0))
     x = mb.scatter_nd(data=x, indices=indices, updates=updates, name=node.name)
     context.add(node.name, x)
 
@@ -2585,6 +2698,8 @@ def CropAndResize(context, node):
         box_indices = context[node.inputs[2]]
         boxes = context[node.inputs[1]]
         box_indices = mb.expand_dims(x=box_indices, axes=[1])
+        if box_indices.dtype != boxes.dtype:
+            box_indices = mb.cast(x=box_indices, dtype=types.builtin_to_string(boxes.dtype))
         boxes = mb.concat(values=(box_indices, boxes), axis=1)
         # TODO: Dynamic rank: Use GetShape and select indices dynamically
         boxes = mb.reshape(x=boxes, shape=[boxes.shape[0], 1, boxes.shape[1], 1, 1])

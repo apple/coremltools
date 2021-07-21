@@ -4,6 +4,7 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from .activation import *
+from .classify import classify
 from .control_flow import *
 from .conv import *
 from .elementwise_binary import *

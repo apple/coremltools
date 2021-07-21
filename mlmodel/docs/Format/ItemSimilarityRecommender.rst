@@ -1,3 +1,6 @@
+ItemSimilarityRecommender
+=========================
+
 Each tree is a collection of nodes,
 each of which is identified by a unique identifier.
 
@@ -18,26 +21,23 @@ starting from the root node.
 
 
 ItemSimilarityRecommender
-________________________________________________________________________________
+--------------------------------------------------------------------------------
 
-Item Similarity Recommender
+The Item Similarity recommender takes as input a list of items and scores,
+then uses that information and a table of item similarities to predict similarity
+scores for all items.  By default, the items predicted are most similar to the given
+items but not part of that item set.
 
- The Item Similarity recommender takes as input a list of items and scores,
- then uses that information and a table of item similarities to predict similarity
- scores for all items.  By default, the items predicted are most similar to the given
- items but not part of that item set.
+The predicted score for a given item k is as follows:
 
- The predicted score for a given item k is
-   sum_(i in observed items)   sim_(k,i) * (score_i - shift_k)
+	| sum_(i in observed items)   
+	| sim_(k,i) * (score_i - shift_k)
 
- Because only the most similar scores for each item i are stored,
- sim_(k,i) is often zero.
+Because only the most similar scores for each item i are stored,
+``sim_(k,i)`` is often zero.
 
- For many models, the score adjustment parameter shift_j is zero -- it's occasionally used
- to counteract global biases for popular items.
-
-
- References:
+For many models, the score adjustment parameter ``shift_j`` is zero -- 
+it's occasionally used to counteract global biases for popular items.
 
 
 .. code-block:: proto

@@ -12,7 +12,7 @@ from copy import deepcopy as _deepcopy
 
 from .utils import _has_custom_layer as _has_custom_layer
 from .utils import load_spec as _load_spec
-from .utils import _macos_version as _macos_version
+from .utils import _macos_version, _is_macos
 from .utils import save_spec as _save_spec
 from ..proto import Model_pb2 as _Model_pb2
 
@@ -97,7 +97,7 @@ class _FeatureDescription(object):
             yield f.name
 
 
-def _get_proxy_and_spec(filename, use_cpu_only=False):
+def _get_proxy_and_spec(filename, use_cpu_only=False, skip_model_load=False):
     try:
         from ..libcoremlpython import _MLModelProxy
     except Exception:
@@ -106,7 +106,7 @@ def _get_proxy_and_spec(filename, use_cpu_only=False):
     filename = _os.path.expanduser(filename)
     specification = _load_spec(filename)
 
-    if _MLModelProxy:
+    if _MLModelProxy and not skip_model_load:
 
         # check if the version is supported
         engine_version = _MLModelProxy.maximum_supported_specification_version()
@@ -180,7 +180,11 @@ class MLModel(object):
     predict
     """
 
-    def __init__(self, model, useCPUOnly=False, is_temp_package=False, mil_program=None):
+    def __init__(self, model,
+                 useCPUOnly=False,
+                 is_temp_package=False,
+                 mil_program=None,
+                 skip_model_load=False):
         """
         Construct an MLModel from a .mlmodel
 
@@ -203,7 +207,16 @@ class MLModel(object):
         mil_program : coremltools.converters.mil.Program
             Set to the mil program object, if available.
             It is avaiable whenever an MLModel object is constructed using
-            the unified converter API coremltools.convert() 
+            the unified converter API coremltools.convert()
+
+        skip_model_load : bool
+            Set to True to prevent coremltools from calling into the Core ML framework
+            to compile and load the model. In that case, the returned model object cannot
+            be used to make a prediction. This flag may be used to load a newer model
+            type on an older Mac, to inspect or load/save the spec.
+            Example: Loading ML Program model type on a macOS 11, since ML Program can only be
+            compiled and loaded from macOS12+.
+            Defaults to False.
 
         Notes
         -----
@@ -233,13 +246,13 @@ class MLModel(object):
                 self.package_path = model
                 self.is_temp_package = is_temp_package
             self.__proxy__, self._spec, self._framework_error = _get_proxy_and_spec(
-                model, useCPUOnly
+                model, useCPUOnly, skip_model_load=skip_model_load,
             )
         elif isinstance(model, _Model_pb2.Model):
             filename = _tempfile.mktemp(suffix=_MLMODEL_EXTENSION)
             _save_spec(model, filename)
             self.__proxy__, self._spec, self._framework_error = _get_proxy_and_spec(
-                filename, useCPUOnly
+                filename, useCPUOnly, skip_model_load=skip_model_load,
             )
             try:
                 _os.remove(filename)
@@ -381,6 +394,11 @@ class MLModel(object):
         >>> data = {'bedroom': 1.0, 'bath': 1.0, 'size': 1240}
         >>> predictions = model.predict(data)
         """
+
+        if self.is_package and _is_macos() and _macos_version() < (12, 0):
+            raise Exception(
+                "predict() for .mlpackage is not supported in macOS version older than 12.0."
+            )
 
         if self.__proxy__:
             return self.__proxy__.predict(data, useCPUOnly)

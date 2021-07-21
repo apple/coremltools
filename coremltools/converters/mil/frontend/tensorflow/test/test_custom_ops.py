@@ -187,7 +187,6 @@ class TestCustomTopK:
                 ret_shape[axis] = k
                 return types.tensor(x_type, ret_shape), types.tensor(types.int32, ret_shape)
 
-        # TODO: rdar://61241807 ([MIL] [Polish] Custom layer operator documentation)
         # Following logging is to ensure testing of TopK implemented in tf converter
         # default path is testing with appropriate conversion function
         # Log default tf topk

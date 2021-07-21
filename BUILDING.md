@@ -55,6 +55,6 @@ For more information, see the following:
 * [Release Notes](https://github.com/apple/coremltools/releases/) for the current release and previous releases
 * [Guides and examples](https://coremltools.readme.io/) with installation and troubleshooting
 * [API Reference](https://apple.github.io/coremltools/index.html)
-* [Core ML Specification](https://mlmodel.readme.io/)
+* [Core ML Specification](https://apple.github.io/coremltools/mlmodel/index.html)
 * [Contribution Guidelines](CONTRIBUTING.md) for reporting issues and making requests
 

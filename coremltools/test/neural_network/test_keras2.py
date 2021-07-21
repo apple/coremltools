@@ -1374,8 +1374,6 @@ class KerasSingleLayerTest(unittest.TestCase):
         self.assertTrue(layers[1].innerProduct)
         self.assertTrue(layers[1].isUpdatable)
 
-    # <rdar://problem/53688606>
-    # when loss was specified as a string the converter had failed to work.
     def test_updatable_model_flag_mse_string_adam(self):
         """
         Tests the 'respect_trainable' flag when used along with string
@@ -1445,7 +1443,6 @@ class KerasSingleLayerTest(unittest.TestCase):
         self.assertEqual(adopt.beta2.defaultValue, 0.75)
         self.assertEqual(adopt.eps.defaultValue, 0.25)
 
-    # <rdar://problem/53688606>
     def test_updatable_model_flag_cce_string_sgd(self):
         """
         Tests the 'respect_trainable' flag when used along with string

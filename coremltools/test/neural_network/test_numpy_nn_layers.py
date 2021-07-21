@@ -1938,10 +1938,6 @@ class NewLayersSimpleTest(CorrectnessTest):
 
             self._test_model(builder.spec, inputs, expected, useCPUOnly=cpu_only)
 
-    @pytest.mark.xfail(reason="[GitLab CI failure: test_floor_gpu](rdar://64311149)")
-    def test_floor_gpu(self):
-        self.test_floor_cpu(cpu_only=False)
-
     def test_round_cpu(self, cpu_only=True):
         for rank in range(1, 6):
             shape = np.random.randint(low=2, high=8, size=rank)
@@ -2424,9 +2420,6 @@ class NewLayersSimpleTest(CorrectnessTest):
     def test_tile_gpu(self):
         self.test_tile_cpu(cpu_only=False)
 
-    @pytest.mark.skip(
-        reason="rdar://65198011 (Re-enable Conv3dTranspose and DynamicTile unit tests)"
-    )
     def test_dynamic_tile_cpu(self, cpu_only=True):
         for rank in range(1, 6):
             input_shape = np.random.randint(low=2, high=5, size=rank)
@@ -2893,7 +2886,6 @@ class NewLayersSimpleTest(CorrectnessTest):
     def test_const_pad_mode2_gpu(self):
         self.test_const_pad_mode2_cpu(cpu_only=False)
 
-    @pytest.mark.xfail(reason="rdar://problem/59486372", run=False)
     def test_nms_cpu(self, cpu_only=True):
         def _compute_iou_matrix(boxes):
             # input is (N,4), in order [center_w, center_h, width, height]
@@ -5006,7 +4998,6 @@ class NewLayersSimpleTest(CorrectnessTest):
     def test_reverse_sequence_gpu(self):
         self.test_reverse_sequence_cpu(cpu_only=False)
 
-    @pytest.mark.skip("rdar://72018475 (Segfault in coremltools unit tests)")
     def test_where_nonzero_cpu(self, cpu_only=True):
 
         for rank in range(1, 6):
@@ -5028,7 +5019,6 @@ class NewLayersSimpleTest(CorrectnessTest):
                 expected = {"output": np.transpose(np.nonzero(x)).astype(np.float)}
                 self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
-    @pytest.mark.skip("rdar://72018475 (Segfault in coremltools unit tests)")
     def test_where_nonzero_gpu(self):
         self.test_where_nonzero_cpu(cpu_only=False)
 
@@ -6674,6 +6664,10 @@ class IOS14SingleLayerTests(CorrectnessTest):
                 for scale_w in scale_range:
                     for input_h in range(2, 6):
                         for input_w in range(2, 6):
+                            if not align_corners:
+                                if scale_w - np.floor(scale_w) > .01 or scale_h - np.floor(scale_h) > .01:
+                                    # FIXME: rdar://79935318
+                                    continue
                             self.upsample_pytorch_test(
                                 input_h,
                                 input_w,

@@ -26,6 +26,8 @@ class TestSelect:
         input_values = {"cond": cond_val, "a": a_val, "b": b_val}
 
         def build(cond, a, b):
+            if not types.is_bool(cond.dtype):
+                cond = mb.cast(x=cond, dtype="bool")
             return [mb.select(cond=cond, a=a, b=b)]
 
         expected_output_types = [(3, 3, types.fp32)]
@@ -60,6 +62,8 @@ class TestSelect:
         input_values = {"cond": cond_val, "a": a_val, "b": b_val}
 
         def build(cond, a, b):
+            if not types.is_bool(cond.dtype):
+                cond = mb.cast(x=cond, dtype="bool")
             return [mb.select(cond=cond, a=a, b=b)]
 
         expected_output_types = [(3, 3, types.fp32)]
@@ -81,7 +85,7 @@ class TestSelect:
 
     @ssa_fn
     def test_builder_eval(self):
-        cond = np.random.randint(low=0, high=2, size=(6, 1, 7))
+        cond = np.random.randint(low=0, high=2, size=(6, 1, 7)).astype(np.bool)
         a = random_gen(shape=(6, 1, 7), rand_min=-1962.0, rand_max=0.0)
         b = random_gen(shape=(6, 1, 7), rand_min=0.0, rand_max=1964.0)
         res = mb.select(cond=cond, a=a, b=b)
@@ -89,7 +93,7 @@ class TestSelect:
 
     @ssa_fn
     def test_builder_eval_broadcast(self):
-        cond = np.array([[1], [0], [1]])
+        cond = np.array([[True], [False], [True]])
         a = np.array([[1, 2], [3, 4], [5, 6]], dtype=np.float32)
         b = np.array([[7, 8], [9, 10], [11, 12]], dtype=np.float32)
         res = mb.select(cond=cond, a=a, b=b)

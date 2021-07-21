@@ -5,9 +5,6 @@ from .internal_graph import *
 
 
 def transform_inplace_ops(graph, name_remap_dict=None):
-    # TODO: one recent 1P model has included the op `copy_`. This is another
-    # in-place op that should be fixed by this pass.
-    # See rdar://64267506
 
     # As we modify ops, we'll need to remap symbols.
     if name_remap_dict is None:

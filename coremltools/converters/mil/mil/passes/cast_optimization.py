@@ -119,7 +119,7 @@ def try_to_transform(root_op, cached_vars):
     block = root_op.enclosing_block
 
     # Scenario: Redundant cast when source and destination dtype are same.
-    if root_op.op_type == "cast" and root_op.x.is_tensor_of(dtype=root_op.dtype.val):
+    if root_op.op_type == "cast" and root_op.x.is_tensor_or_scalar_of(dtype=root_op.dtype.val):
         block.replace_uses_of_var_after_op(
             anchor_op=root_op,
             old_var=root_op.outputs[0],
@@ -144,7 +144,7 @@ def try_to_transform(root_op, cached_vars):
 
     fused_output_var_name = cast_1.x.name + "_to_{}".format(cast_2.dtype.val)
 
-    if cast_1.x.is_tensor_of(dtype=cast_2.dtype.val):
+    if cast_1.x.is_tensor_or_scalar_of(dtype=cast_2.dtype.val):
         # when consecutive casts cancel each other
         # Please checkout: test_linear_consecutive_cast_ops_cancellation in test_cast_optimization.py
         new_output_var = cast_1.x

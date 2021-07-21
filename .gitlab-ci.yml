@@ -174,7 +174,7 @@ test_macos11_py37_mil:
     - build_wheel_macos_py37
   variables:
     PYTHON: "3.7"
-    TEST_PACKAGE: coremltools.converters.mil.mil
+    TEST_PACKAGE: coremltools.converters.mil
     WHEEL_PATH: build/dist/*cp37*10_16*
 
 #########################################################################

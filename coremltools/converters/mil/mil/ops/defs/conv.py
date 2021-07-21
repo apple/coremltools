@@ -62,12 +62,14 @@ class conv(Operation):
               ``d_out[i] = ceil(d_in[i] / strides[i])``.
 
         Specifically, for ``i = 0,..,,len(d_in)-1``, the equivalent paddings are
-        as follows, when dilated kernel is even (for example, ``(K[i]-1)*dilations[i]+1)``):
+        calculated as follows:
 
-            * ``pad[2*i] = ceil[((K[i]-1)*dilations[i]+1)/2]``.
-            * ``pad[2*i+1] = floor[((K[i]-1)*dilations[i]+1)/2]``.
-
-        Otherwise, ``pad[2*i] = pad[2*i+1] = (K[i]-1) * dilations[i] / 2``.
+            * ``dilated_kernel = (K[i] - 1) * dilate[i] + 1``
+            * if ``dilated_kernel`` is odd,
+              ``padding[2*i] = padding[2*i+1] = floor(dilated_kernel / 2)``
+            * Otherwise:
+              ``padding[2*i] = ceil((dilated_kernel - 1) / 2)``,
+              ``padding[2*i+1] = floor((dilated_kernel - 1) / 2)``
 
     pad: const tensor<[P], i32> (Optional. Default to all zeros)
 

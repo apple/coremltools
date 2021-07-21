@@ -235,10 +235,14 @@ def _mil_convert(
         return modelClass(package_path,
                           useCPUOnly=kwargs.get("useCPUOnly", False), # important: keep the default "useCPUOnly" flag to False
                           is_temp_package=not kwargs.get('package_dir'),
-                          mil_program=mil_program)
+                          mil_program=mil_program,
+                          skip_model_load=kwargs.get('skip_model_load', False))
 
     # important: keep the default "useCPUOnly" flag to False
-    return modelClass(proto, useCPUOnly=kwargs.get("useCPUOnly", False), mil_program=mil_program)
+    return modelClass(proto,
+                      useCPUOnly=kwargs.get("useCPUOnly", False),
+                      mil_program=mil_program,
+                      skip_model_load=kwargs.get('skip_model_load', False))
 
 def mil_convert_to_proto(
     model,

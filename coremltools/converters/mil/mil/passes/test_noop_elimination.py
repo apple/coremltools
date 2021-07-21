@@ -45,7 +45,14 @@ def test_elementwise_elimination(op_type, pos, val):
     elif op_type in {'mul'}:
         if val == 1 or val == [1, 1, 1, 1]:
             new_program = ["relu"]
-    elif op_type in {'pow', 'real_div', 'floor_div'}:
+    elif op_type in {'real_div'}:
+        # TODO(rdar://79925291): Remove this branch and add `real_div` to the
+        # following elif once fp32 casts for `real_div` are no longer required.
+        original_program = ["cast"] + original_program
+        new_program = original_program
+        if pos == 'y' and (val == 1 or val == [1, 1, 1, 1]):
+            new_program = ["cast", "relu"]
+    elif op_type in {'pow', 'floor_div'}:
         if pos == 'y' and (val == 1 or val == [1, 1, 1, 1]):
             new_program = ["relu"]
     elif op_type in {'sub'}:
@@ -376,6 +383,24 @@ def test_linear_elimination():
         prog,
         {"x": (2, 4)},
         expected_output_shapes={block.outputs[0].name: (2, 4)},
+    )
+
+
+def test_transpose_elimination():
+    @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3, 4))])
+    def prog(x):
+        r1 = mb.transpose(x=x, perm=[0, 1, 2])
+        return mb.relu(x=r1)
+
+    prev_prog, prev_block, block = apply_pass_and_basic_check(
+        prog, "common::noop_elimination"
+    )
+    assert get_op_types_in_program(prev_prog) == ["transpose", "relu"]
+    assert get_op_types_in_program(prog) == ["relu"]
+    assert_model_is_valid(
+        prog,
+        {"x": (2, 3, 4)},
+        expected_output_shapes={block.outputs[0].name: (2, 3, 4)},
     )
 
 
