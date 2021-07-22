@@ -2716,3 +2716,40 @@ class TestPad(TorchBaseTest):
         input_shape = (3, 4, 5, 6, 2)
         model = torch.nn.ConstantPad3d((5, 6, 3, 8, 2, 4), 3.5).eval()
         self.run_compare_torch(input_shape, model, backend=backend)
+        
+class TestMeshgrid(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "rows, cols, dtype, inp_mode, backend",
+        itertools.product(
+            [1, 2, 3], [1, 2, 3], [torch.int, torch.float], ["norm", "list"], backends
+        ),
+    )
+    def test_meshgrid(
+        self,        
+        rows,
+        cols,
+        dtype,
+        inp_mode,
+        backend,
+    ):
+        class TestModel(nn.Module):
+            def __init__(self):
+                super(TestModel, self).__init__()
+            
+            def forward(self, rows, cols):
+                if inp_mode == "norm":
+                    return torch.meshgrid(rows, cols)
+                elif inp_mode == "list":
+                    return torch.meshgrid([rows, cols])
+                else:
+                    raise ValueError("Unsupported mode: {mode}".format(mode=mode))
+        
+        inputs = (
+            torch.arange(start=0, end=rows, step=1, dtype=dtype),
+            torch.arange(start=0, end=cols, step=1, dtype=dtype)
+        )
+        model = TestModel().eval()
+        expected_results = model(*inputs)
+        self.run_compare_torch(
+            inputs, model, expected_results, input_as_shape=False, backend=backend,
+        )
