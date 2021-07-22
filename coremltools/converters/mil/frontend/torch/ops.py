@@ -1358,7 +1358,7 @@ def group_norm(context, node):
     bias = inputs[3]
     eps = inputs[4]
     n,c,h,w = x.shape[0],x.shape[1],x.shape[2],x.shape[3]
-    num_groups = min(num_groups,c)
+    num_groups = _math.min(num_groups,c)
     x = mb.reshape(x=x, shape=[n,num_groups,c//num_groups,h,w])
     mean = mb.reduce_mean(x=x, axes=[2,3,4], keep_dims=True)
     var = _std(x,[2,3,4],True,False,eps.val)
