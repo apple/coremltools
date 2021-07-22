@@ -314,7 +314,7 @@ def grid_sampler(context, node):
         context.add(x)
 
 
-@register_torch_op
+@register_torch_op(torch_alias=["silu_"])
 def silu(context, node):
     inputs = _get_inputs(context, node, expected=1)
     x = mb.silu(x=inputs[0], name=node.name)
