@@ -2742,7 +2742,7 @@ class TestMeshgrid(TorchBaseTest):
                 elif inp_mode == "list":
                     return torch.meshgrid([rows, cols])
                 else:
-                    raise ValueError("Unsupported mode: {mode}".format(mode=mode))
+                    raise ValueError("Unsupported mode: {mode}".format(mode=inp_mode))
         
         inputs = (
             torch.arange(start=0, end=rows, step=1, dtype=dtype),
