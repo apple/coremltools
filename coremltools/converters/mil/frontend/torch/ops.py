@@ -5,6 +5,7 @@
 
 import logging as _logging
 
+import builtins
 import math as _math
 import numbers
 import numpy as _np
@@ -1358,7 +1359,7 @@ def group_norm(context, node):
     bias = inputs[3]
     eps = inputs[4]
     n,c,h,w = x.shape[0],x.shape[1],x.shape[2],x.shape[3]
-    num_groups = min(num_groups,c)
+    num_groups = builtins.min(num_groups,c)
     x = mb.reshape(x=x, shape=[n,num_groups,c//num_groups,h,w])
     mean = mb.reduce_mean(x=x, axes=[2,3,4], keep_dims=True)
     var = _std(x,[2,3,4],True,False,eps.val)
@@ -3158,6 +3159,8 @@ def meshgrid(context, node):
     dimensions defined by the other inputs.
     """
     inputs = _get_inputs(context, node)
+    if len(inputs) == 1:
+        inputs = inputs[0]
     if len(inputs) < 2:
         raise ValueError("Requires > 2 tensor inputs.")
 
@@ -3180,7 +3183,6 @@ def meshgrid(context, node):
         view_shape = [1] * size
         view_shape[i] = -1
         view_shape = tuple(view_shape)
-        tensor = torch.tensor(inputs[i].val).cpu()
         # (a.) in docstring
         view = mb.reshape(
             x=inputs[i], shape=view_shape, name=node.name + "_view_" + str(i)
@@ -3267,8 +3269,24 @@ def zeros(context, node):
         zeros = mb.const(val=zeros_array, name=node.name)
 
     context.add(zeros)
+    
+    
+@register_torch_op
+def min(context, node):
+    inputs = _get_inputs(context, node, expected=3)
+    _input = inputs[0]
+    dim = inputs[1].val
+    keepdim = inputs[2].val
 
+    values = mb.reduce_min(x=_input, axes=[dim], keep_dims=keepdim)
+    indices = mb.reduce_argmin(x=_input, axis=dim, keep_dims=keepdim)
+    assert len(node.outputs) == 2
+    values_name = node.outputs[0]
+    indices_name = node.outputs[1]
+    context.add(values, torch_name=values_name)
+    context.add(indices, torch_name=indices_name)
 
+    
 @register_torch_op
 def max(context, node):
     inputs = _get_inputs(context, node, expected=3)
