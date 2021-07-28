@@ -1498,19 +1498,24 @@ class TestTypeAs(TorchBaseTest):
 
 class TestReduction(TorchBaseTest):
     @pytest.mark.parametrize(
-        "input_shape, dim, keepdim, backend",
-        itertools.product([(2, 2), (1, 1)], [0, 1], [True, False], backends),
+        "input_shape, dim, keepdim, mode, backend",
+        itertools.product([(2, 2), (1, 1)], [0, 1], [True, False], ["min", "max"], backends)
     )
-    def test_max(self, input_shape, dim, keepdim, backend):
-        class TestMax(nn.Module):
+    def test_min_max(self, input_shape, dim, keepdim, mode, backend):
+        class TestModel(nn.Module):
             def __init__(self):
-                super(TestMax, self).__init__()
+                super(TestModel, self).__init__()
 
             def forward(self, x):
-                return torch.max(x, dim=dim, keepdim=keepdim)
+                if mode == "min":
+                    return torch.min(x, dim=dim, keepdim=keepdim)
+                elif mode == "max":
+                    return torch.max(x, dim=dim, keepdim=keepdim)
+                else:
+                    raise ValueError("Unsupported mode: {mode}".format(mode=mode))
 
         input_data = torch.rand(input_shape)
-        model = TestMax()
+        model = TestModel()
         # rdar://62681982 (Determine the output names of MLModels)
         expected_results = model(input_data)[::-1]
         self.run_compare_torch(
@@ -1520,8 +1525,8 @@ class TestReduction(TorchBaseTest):
             input_as_shape=False,
             backend=backend,
         )
-
-
+        
+        
 class TestLayerNorm(TorchBaseTest):
     @pytest.mark.parametrize(
         "input_shape, eps, backend",
@@ -1911,9 +1916,6 @@ class TestActivation(TorchBaseTest):
         itertools.product([(1, 10), (1, 3, 4), (1, 4, 5, 6)], backends),
     )
     def test_silu(self, shape, backend):
-        if backend == "neuralnetwork":
-            pytest.xfail("nn backend not supported")
-
         model = ModuleWrapper(function=torch.nn.functional.silu)
         self.run_compare_torch([shape], model, backend=backend)
 
@@ -2716,3 +2718,40 @@ class TestPad(TorchBaseTest):
         input_shape = (3, 4, 5, 6, 2)
         model = torch.nn.ConstantPad3d((5, 6, 3, 8, 2, 4), 3.5).eval()
         self.run_compare_torch(input_shape, model, backend=backend)
+        
+class TestMeshgrid(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "rows, cols, dtype, inp_mode, backend",
+        itertools.product(
+            [1, 2, 3], [1, 2, 3], [torch.int, torch.float], ["norm", "list"], backends
+        ),
+    )
+    def test_meshgrid(
+        self,        
+        rows,
+        cols,
+        dtype,
+        inp_mode,
+        backend,
+    ):
+        class TestModel(nn.Module):
+            def __init__(self):
+                super(TestModel, self).__init__()
+            
+            def forward(self, rows, cols):
+                if inp_mode == "norm":
+                    return torch.meshgrid(rows, cols)
+                elif inp_mode == "list":
+                    return torch.meshgrid([rows, cols])
+                else:
+                    raise ValueError("Unsupported mode: {mode}".format(mode=inp_mode))
+        
+        inputs = (
+            torch.arange(start=0, end=rows, step=1, dtype=dtype),
+            torch.arange(start=0, end=cols, step=1, dtype=dtype)
+        )
+        model = TestModel().eval()
+        expected_results = model(*inputs)
+        self.run_compare_torch(
+            inputs, model, expected_results, input_as_shape=False, backend=backend,
+        )

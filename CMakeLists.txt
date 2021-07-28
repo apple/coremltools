@@ -68,7 +68,7 @@ target_link_libraries(milstoragepython
 add_library(modelpackage
   SHARED
   modelpackage/src/ModelPackage.cpp
-  modelpackage/src/utils/JsonMap.mm
+  modelpackage/src/utils/JsonMap.cpp
   modelpackage/src/ModelPackagePython.cpp
   )
   

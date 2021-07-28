@@ -1,0 +1,3 @@
+MACOSX_DEPLOYMENT_TARGET:      # [osx]
+  - 11.0                       # [osx and arm64]
+  - 10.15                      # [osx and x86_64]
