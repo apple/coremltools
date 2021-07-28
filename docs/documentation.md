@@ -32,11 +32,11 @@ To automatically generate the content for the [API Reference](https://apple.gith
 
 1. Set up the Sphinx configuration, and create and edit the `index.rst` file in the `coremltools/docs/` folder, and the other `.rst` files in the `coremltools/docs/source` folder, to establish the documentation's layout and navigation. 
    
-   This step is performed once (and has already been performed by the team). You don't need to do it again unless you need to make changes to the Sphinx configuration, layout, or navigation, such as adding a new module or MIL op. For details on how to create and edit these files, see [Generating the top-level RST files](#generating-the-top-level-rst-files).
+   This step is performed once (and has already been performed by the team). You don't need to do it again unless you need to make changes to the Sphinx configuration, layout, or navigation, such as adding a new module. For details on how to create and edit these files, see [Generating the top-level RST files](#generating-the-top-level-rst-files).
 
 2. Use Sphinx to generate the HTML files, and host the `html` folder on [GitHub](https://apple.github.io/coremltools/index.html).
    
-   After updating the `docstrings` in the source files as described in the next section, perform this step to generate HTML from the source files, and to check the generated `html` folder into the `gh-pages` branch of [this repository](https://github.com/apple/coremltools).
+   After updating the `docstrings` in the source files as described in the next section, perform this step to generate HTML from the source files, and to check the generated `html` folder into the `gh-pages` branch of the [coremltools repository](https://github.com/apple/coremltools).
 
 
 ## Updating the API Reference
