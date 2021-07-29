@@ -2588,6 +2588,7 @@ def layer_norm(const_context, builder, op):
         gamma = _np.ones((1, 1, reshaped_shape[-1])) if op.gamma is None else _np.expand_dims(op.gamma.val, axis=(0, 1))
         beta = _np.zeros((1, 1, reshaped_shape[-1])) if op.beta is None else _np.expand_dims(op.beta.val, axis=(0, 1))
 
+
         builder.add_reshape_static(
             name=op.name + "_reshape",
             input_name=make_input(const_context, builder, op.x),
@@ -3306,7 +3307,7 @@ def custom_op(const_context, builder, op):
     if len(input_order) == 0:
         raise ValueError("Inputs not provided for Custom Layer: {}".format(op.name))
 
-    # Get input names
+    # Get input vars
     inputs = [op.inputs[_name] for _name in input_order]
 
     # Get output names
