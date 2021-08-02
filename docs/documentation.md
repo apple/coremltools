@@ -4,8 +4,10 @@ coremltools API Documentation
 This document describes the following:
 
 * [Viewing documentation](#viewing-documentation)
-* [Updating the documentation](#updating-the-documentation)
-* [Generating a new API reference](#generating-a-new-api-reference)
+* [Updating the guides and examples](#updating-the-guides-and-examples)
+* [How the API Reference is auto-generated](#how-the-api-reference-is-auto-generated)
+* [Updating the API Reference](#updating-the-api-reference)
+* [Generating the top-level RST files](#generating-the-top-level-rst-files)
 
 
 ## Viewing documentation
@@ -13,137 +15,69 @@ This document describes the following:
 For coremltools documentation, see the following:
 
 * Core ML Tools [README](https://github.com/apple/coremltools/blob/main/README.md) file for this repository
-* [Guides and examples](https://coremltools.readme.io/) with installation and troubleshooting
-* [API Reference](https://apple.github.io/coremltools/index.html)
-* [Building from Source](https://github.com/apple/coremltools/blob/main/BUILDING.md)
+* [Guides and examples](https://coremltools.readme.io/) 
 * [Release Notes](https://github.com/apple/coremltools/releases/) for the current release and previous releases
+* [API Reference](https://apple.github.io/coremltools/index.html): Documentation describing the coremltools API, auto-generated from _docstrings_ in the [source code](https://github.com/apple/coremltools/tree/main/coremltools).
+* [Core ML Format Specification](https://apple.github.io/coremltools/mlmodel/index.html): Documentation describing the Core ML model spec, auto-generated from the proto files located in [`coremltools/mlmodel/format`](https://github.com/apple/coremltools/tree/main/mlmodel/format).
 
 
-## Updating the documentation
-
-You can update the following:
-
-### Updating the guides and examples
+## Updating the guides and examples
 
 To make editing changes to [Guides and examples](https://coremltools.readme.io/), see [the Documentation section of Contributing](https://coremltools.readme.io/docs/how-to-contribute#documentation).
 
-### Updating the API reference
 
-To create a new version or update the HTML files for the API reference, follow these general steps:
+## How the API Reference is auto-generated
+​
+To automatically generate the content for the [API Reference](https://apple.github.io/coremltools/index.html), the Core ML Tools team uses the following process with [Sphinx](https://www.sphinx-doc.org) and [numpydoc](https://pypi.org/project/numpydoc/) to generate the HTML files from the _docstrings_ in the source code:
 
-1. Fork and clone the repo and edit the content as usual.
-2. Generate the HTML files by running this script from the root folder: `zsh -i scripts/build_docs.sh`. The HTML files appear in the `docs/_build/html` folder.
-3. Copy the `html` folder to a temporary location, and use it to preview your changes. Repeat 1-3 until finished.
-4. Push the changes to your fork, and create a pull request (PR) to merge them with the `main` branch of Apple's repo.
-5. Checkout the `gh-pages` branch from upstream.
-6. Copy the contents of the `html` folder to the root folder, overwriting the existing contents.
-7. Commit and push your changes to *your* fork, and submit a PR to merge them with the remote `gh-pages` branch.
+1. Set up the Sphinx configuration, and create and edit the `index.rst` file in the `coremltools/docs/` folder, and the other `.rst` files in the `coremltools/docs/source` folder, to establish the documentation's layout and navigation. 
+   
+   This step is performed once (and has already been performed by the team). You don't need to do it again unless you need to make changes to the Sphinx configuration, layout, or navigation, such as adding a new module. For details on how to create and edit these files, see [Generating the top-level RST files](#generating-the-top-level-rst-files).
 
-At this point you can share the following URL to preview the new version, with your GitHub ID for `sample-user`: `https://sample-user.github.io/coremltools/`.
+2. Use Sphinx to generate the HTML files, and host the `html` folder on [GitHub](https://apple.github.io/coremltools/index.html).
+   
+   After updating the `docstrings` in the source files as described in the next section, perform this step to generate HTML from the source files, and to check the generated `html` folder into the `gh-pages` branch of the [coremltools repository](https://github.com/apple/coremltools).
 
 
-#### Fork and clone
+## Updating the API Reference
 
-The following are the specific steps in git corresponding to the first part of general step 1:
+To update the `docstrings` in the source files for the [API Reference](https://apple.github.io/coremltools/index.html), and then publish the changes, fork and clone the [coremltools repository](https://github.com/apple/coremltools) (if you haven't already done so), and make your editing changes to the source files. Then follow these general steps:
 
-1. With your GitHub ID for `sample-user`, fork and clone the `coremltools` repo, change to your fork clone's root folder (`coremltools/`), and add the upstream repo to the list of remotes:
+1. To generate the HTML and see a preview of your changes, run the following script from the root (`coremltools`) folder:
+   
+   ```shell
+   zsh -i scripts/build_docs.sh
+   ```
+   
+   The HTML files appear in the `coremltools/docs/_build/html` folder. Open `html/index.html` in your browser for a preview.
 
-	```shell
-	# Clone your fork to your local machine.
-	git clone git@github.com:sample-user/coremltools.git
-	cd coremltools
-	# Add 'upstream' repo to list of remotes.
-	git remote add upstream https://github.com/apple/coremltools.git
-	# Verify the new remote named 'upstream'
-	git remote -v
-	```
-	
-    You should see the following, with your GitHub ID for `sample-user`:
+2. Push the changes to your fork, and create a pull request (PR) to merge them with the `main` branch of Apple's repo.
+
+3. To make changes during PR review, switch to the `docs` folder, and run the following command to clean out the previous HTML before repeating the above steps:
+   
+   ```shell
+   make clean 
+   ```
+
+After the PR is reviewed and merged, perform the following steps to generate the final HTML:
+
+1. Run the following script from the root (`coremltools`) folder:
+   
+   ```
+   zsh -i scripts/build_docs.sh
+   ```
+   
+   The HTML files appear in the `coremltools/docs/_build/html` folder.
+
+2. Switch to the root folder (`coremltools/`), check out the `main` branch, and then checkout the `gh-pages` branch from upstream:
     
-    ```shell
-    origin   git@github.com:sample-user/coremltools.git (fetch)
-	origin   git@github.com:sample-user/coremltools.git (push)
-	upstream      https://github.com/apple/coremltools.git (fetch)
-	upstream      https://github.com/apple/coremltools.git (push)
-	```
-
-2. Update your fork and create a new branch (`newfeature`) for changes:
-
-    ```shell
-	# Fetch from upstream remote.
-	git fetch upstream
-	# Checkout your main branch and merge upstream.
-	git checkout main
-	git merge upstream/main
-	# Create a new branch named newfeature.
-	git branch newfeature
-	# Switch to your new branch.
-	git checkout newfeature
-	```
-
-#### Install Sphinx and theme
-
-In the `coremltools` clone root directory, install or upgrade Sphinx, the theme, and numpydoc for this environment if you haven’t already done so:
-
-```shell
-conda install sphinx
-conda install numpydoc
-conda install sphinx_rtd_theme
-```
-
-
-#### Edit the content as usual
-
-The following are the specific steps in git corresponding to the last part of general step 1:
-
-1. Make your editing changes, check status to see the files that changed, and add your changes for the commit.
-    
-    ```shell
-    git status
-    # You should see the files you changed. Add them all:
-    git add --all
-    ```
-
-2. Make the commit.
-    
-    ```shell
-    git commit -m "Commit message"
-    ```
-
-#### Generate and preview the HTML files
-
-The following are the specific steps in git corresponding to general steps 2-4:
-
-1. From the root folder (`coremltools/`), run the following script:
-
-	```shell
-	zsh -i scripts/build_docs.sh
-	```
-
-	The HTML files appear in the `docs/_build/html/` folder.
-
-2. Copy the `html/` folder to a temporarily location on your computer (outside of the `coremltools` clone controlled by git).
-
-3. Preview your changes by right-clicking the `index.html` file in the `html/` folder and choosing **Safari** (or another browser). 
-
-4. Repeat all steps from [Edit the content as usual](#edit-the-content-as-usual) to this step until you are satisfied with the preview.
-
-5. Push your changes to your fork, and on your fork, request a Pull Request (PR) for your changes. Once approved, these changes will eventually be merged from your `newfeature` branch to the `main` branch. Do not delete your local branch yet.
-
-
-#### Copy the HTML to gh-pages
-
-The following are the specific steps in git corresponding to general steps 5-7:
-
-1. Switch to the root folder (`coremltools/`), check out the `main` branch, and then checkout the `gh-pages` branch from upstream:
-
 	```shell
 	git checkout main
 	git checkout -b gh-pages upstream/gh-pages
 	```
 
-2. If the following folders appear in the root folder (or in a `git status` command), remove them using the Finder:
-
+3. If the following folders appear in the root folder (or in a `git status` command), remove them:
+    
 	```
 	coremltools.egg-info/
 	coremltools/
@@ -151,73 +85,54 @@ The following are the specific steps in git corresponding to general steps 5-7:
 	envs/
     ```
 
-3. Copy the entire contents of the  `html/` folder from your temporarily location to the root directory (`coremltools/`), overwriting any existing files and folders with the same names.
+4. Copy the entire contents of the  `html/` folder from your temporarily location to the root directory (`coremltools/`), overwriting any existing files and folders with the same names.
 
-4. Add and commit your changes, and push your changes to *your* fork: 
+5. Commit and push your changes to *your* fork only, and submit a PR to merge them with the remote `gh-pages` branch.
 
-	```shell
-	git add --all
-	git commit -m "Commit message for gh-pages"
-	git push origin gh-pages
-	```
-
-	At this point you can share the following URL to preview the new version (substituting your user name for `sample-user`): `https://sample-user.github.io/coremltools/`.
-
-5. On your fork, request a Pull Request (PR) for your changes to merge them with the `gh-pages` branch on the Apple repo. Once approved, these changes will eventually be merged from your `gh-pages` branch to the Apple repo's `gh-pages` branch. 
+At this point you can share the following URL to preview the new version, with your GitHub ID for `sample-user`: `https://sample-user.github.io/coremltools/`.
 
 
-## Generating a new API reference
+## Generating the top-level RST files
 
-This section is for generating a new version of the API Reference from scratch, and also shows how to edit the Sphinx navigation and content selection elements.
-
-
-### Set up the environment
-
-You need to do this only once.
-
-1. Start by creating a Conda environment and installing Sphinx and the theme:
-
-	```shell
-	conda create coremltools-env
-	conda activate coremltools-env
-	```
-
-2. Follow the steps in [Fork and clone](#fork-and-clone) including creating and checking out your `newfeature` branch.
+This section describes how to generate a new version of the [API Reference](https://apple.github.io/coremltools/index.html) from scratch. It also shows how to edit the Sphinx navigation and content selection elements.
 
 
-3. Install the following in the root (`coremltools/`) folder:
+### Set up your environment and Sphinx
+​
+You need to do this only once. Follow these steps:
 
-	```shell
-	conda install sphinx
-	conda install numpydoc
-	conda install sphinx_rtd_theme
-	```
+1. In the `coremltools` root directory, create a Conda environment and install Sphinx, numpydoc, and the theme: 
+   
+   ```shell
+   conda create coremltools-env
+   conda activate coremltools-env
+   conda install sphinx
+   conda install numpydoc
+   conda install sphinx_rtd_theme
+   ```
 
-4. Create a new `docs/` folder in the root folder:
-
+2. Create a new `docs` folder in the root folder:
+    
 	```shell
 	mkdir docs
 	```
 
-
-### Set the Sphinx options
-
-1. Change to the `docs/` folder and start `sphinx-quickstart`:
-
+3. Switch to the `coremltools/docs` folder and start `sphinx-quickstart`:
+    
 	```shell
 	cd docs
 	sphinx-quickstart
 	```
 
-2. Accept the defaults for all options except the project name and author name:
-
+4. Accept the defaults for all options except the project name and author name:
+    
 	```
 	> Project name: coremltools API Reference
 	> Author name(s): Apple Inc
 	```
-
-	This finishes by adding the following to the `docs/` folder (including the hidden `.gitignore`, still there from before):
-
+    
+	Sphinx finishes by adding the following to the `docs` folder:
+    
 	```
 	_build
 	_static
@@ -228,8 +143,8 @@ You need to do this only once.
 	Makefile
 	```
 
-3. Set the Sphinx configuration by editing the `docs/conf.py` file:
-
+5. Change the Sphinx configuration by editing the `conf.py` file to un-comment the `sys.path` and add options and extensions, including the [napoleon](https://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html) extension and its options:
+    
 	```python
 	...
 	import os
@@ -256,15 +171,16 @@ You need to do this only once.
 	html_theme = 'sphinx_rtd_theme'
 	```
 
-4. From the `docs/` folder, run `sphinx-apidoc` to create the `source/` folder with the `.rst` files for Sphinx doc generation:
+6. From the `docs` folder, run `sphinx-apidoc` to create the `source` folder and the initial set of `.rst` files:
 
 	```shell
 	sphinx-apidoc -o source/ ../coremltools
 	```
 
-### Edit the RST files {#edit-the-rst-files}
 
-1. Edit the `.rst` files in your local `source/` folder, replacing them with the contents of the [existing versions in the repo](https://github.com/apple/coremltools/tree/main/docs/source):
+### Edit the RST files
+
+1. Edit the `.rst` files in the `source` folder, replacing their contents with the contents of the [existing versions in the repo](https://github.com/apple/coremltools/tree/main/docs/source):
 
 	```
 	coremltools.converters.rst
@@ -281,9 +197,9 @@ You need to do this only once.
     
     Make editing changes to the above files as needed to change navigation and content.
     
-2. Create `coremltools.converters.mil.input_types.rst` in the `source/` folder with the [existing version in the repo](https://github.com/apple/coremltools/tree/main/docs/source/coremltools.converters.mil.input_types.rst).
+2. Create `coremltools.converters.mil.input_types.rst` in the `source` folder with the [existing version in the repo](https://github.com/apple/coremltools/tree/main/docs/source/coremltools.converters.mil.input_types.rst).
 
-3. Delete all other `.rst` files in your local `source/` folder. You should now have the following files in your local `source/` folder:
+3. Delete all other `.rst` files in your `source` folder. You should now have the following files in your `source` folder, along with any additional modules you may have added:
 
 	```
 	coremltools.converters.keras.rst
@@ -300,7 +216,7 @@ You need to do this only once.
 	modules.rst
 	```
 
-4. Switch back to the `docs/` folder, and edit the `index.rst` file as follows (or make changes as needed):
+4. Switch back to the `docs` folder, and edit the `index.rst` file as follows (or make changes as needed):
 
 	```
 	coremltools API
@@ -325,56 +241,12 @@ You need to do this only once.
 	   :caption: Resources
    
    Guides <https://coremltools.readme.io/docs>
-   Core ML Format Specification <https://mlmodel.readme.io/reference>
+   Core ML Format Specification <https://apple.github.io/coremltools/mlmodel/index.html>
    GitHub <https://github.com/apple/coremltools>
    
 	```
 
-### Generate the HTML
-
-1. From the root folder (`coremltools/`), run the following script:
-
-	```shell
-	zsh -i scripts/build_docs.sh
-	```
-
-	The HTML files appear in the `docs/_build/html/` folder.
-
-2. Copy the `html/` folder to a temporarily location on your computer (outside of the `coremltools` clone controlled by git).
-
-3. Preview your changes by right-clicking the `index.html` file in the `html/` folder and choosing **Safari** (or another browser). 
-
-
-### Iterate on this process
-
-To iterate on this process, switch to the `docs/` folder, run `make clean` to delete the old HTML files, and change back to the `coremltools/` root folder:
-
-	```shell
-	cd docs
-	make clean
-	cd ..
-	```
-
-Then repeat the steps in [Edit the RST files](#edit-the-rst-files).
-
-
-### Finish the process
-
-When finished with editing and previewing, follow these steps:
-
-1. Check status to see the files that changed, and add your changes for the commit.
-    
-    ```shell
-    git status
-    # You should see the files you changed. Add them all:
-    git add --all
-    ```
-
-2. Push your changes to your fork, and on your fork, request a Pull Request (PR) for your changes. Once approved, these changes will eventually be merged from your `newfeature` branch to the `main` branch. Do not delete your local branch yet.
-
-3. Follow the steps in [Copy the HTML to gh-pages](#copy-the-html-to-gh-pages).
-
-
+5. Follow the steps in [Updating the API Reference](#updating-the-api-reference).
 
 
 
