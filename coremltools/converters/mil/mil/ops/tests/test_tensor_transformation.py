@@ -599,7 +599,7 @@ class TestSqueeze:
         "use_cpu_for_conversion, backend", itertools.product([True, False], backends,)
     )
     def test_builder_to_backend_smoke(self, use_cpu_for_conversion, backend):
-        if backend == "mlprogram" and not use_cpu_for_conversion:
+        if backend[0] == "mlprogram" and not use_cpu_for_conversion:
             pytest.xfail("rdar://78343225 ((MIL GPU) Core ML Tools Unit Test failures [numerical error])")
 
         x = np.array([[[[1], [2], [3]]]], dtype=np.float32)
@@ -646,6 +646,13 @@ class TestSqueeze:
         v = mb.squeeze(x=x, axes=(-4, 3))
         assert is_close(np.squeeze(x, axis=(-4, 3)), v.val)
 
+    @ssa_fn
+    def test_builder_eval_rank_0(self):
+        x = np.array([1], dtype=np.float32)
+        v = mb.squeeze(x=x)
+        assert v.shape == ()
+        assert type(v.val) == np.float32
+        assert is_close(np.squeeze(x), v.val)
 
 class TestTranspose:
     @pytest.mark.parametrize(

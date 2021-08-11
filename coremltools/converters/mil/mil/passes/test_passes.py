@@ -11,7 +11,7 @@ from coremltools.converters.mil.testing_utils import (
     get_op_types_in_program,
     apply_pass_and_basic_check,
 )
-from coremltools.converters.mil.mil import Symbol, types
+from coremltools.converters.mil.mil import Symbol, types, get_new_symbol
 from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
 import copy
 import pytest
@@ -442,6 +442,224 @@ def test_gelu_exact_approximation(op_type, is_first_op1, is_first_op2, is_first_
         {"x": (3, 5, 6)},
         expected_output_shapes={block.outputs[0].name: (3, 5, 6)},
     )
+
+
+
+class TestLeakyReluFusionPass:
+
+    @pytest.mark.parametrize(
+        "swap_mul_input_order, swap_max_input_order",
+        itertools.product(
+            [True, False],
+            [True, False],
+            )
+        )
+    def test_valid_leaky_relu_pattern(self, swap_mul_input_order, swap_max_input_order):
+        """
+        Input graph:
+
+                const (val = 0.3)
+                    |
+        input ----> mul ---------------> maximum -----------> output
+          |                                 |
+          |----------------------------------
+
+        Output graph:
+
+        input --------> leaky_relu ---------> output
+        """
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(3, 5, 6))])
+        def prog(x):
+            if swap_mul_input_order:
+                x1 = mb.mul(x=x, y=0.3)
+            else:
+                x1 = mb.mul(x=0.3, y=x)
+            if swap_max_input_order:
+                x1 = mb.maximum(x=x1, y=x)
+            else:
+                x1 = mb.maximum(x=x, y=x1)
+            return x1
+
+        prev_prog, prev_block, block = apply_pass_and_basic_check(
+            prog, "common::fuse_leaky_relu"
+        )
+        assert get_op_types_in_program(prev_prog) == ["mul", "maximum"]
+        assert get_op_types_in_program(prog) == ["leaky_relu"]
+        assert_model_is_valid(
+            prog,
+            {"x": (3, 5, 6)},
+            expected_output_shapes={block.outputs[0].name: (3, 5, 6)},
+        )
+
+    def test_invalid_leaky_relu_pattern1(self):
+        """
+        Invalid because alpha value greater than 1
+
+        Input graph:
+
+                const (val = 1.3)
+                    |
+        input ----> mul ---------------> maximum -----------> output
+          |                                 |
+          |----------------------------------
+
+        Output graph: same as input graph
+        """
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(3, 5, 6))])
+        def prog(x):
+            x1 = mb.mul(x=x, y=1.3)
+            x1 = mb.maximum(x=x1, y=x)
+            return x1
+
+        prev_prog, prev_block, block = apply_pass_and_basic_check(
+            prog, "common::fuse_leaky_relu"
+        )
+        assert get_op_types_in_program(prev_prog) == ["mul", "maximum"]
+        assert get_op_types_in_program(prog) == ["mul", "maximum"]
+
+
+    def test_invalid_leaky_relu_pattern2(self):
+        """
+        Invalid because input to the "maximum" op is not same as the input of the "mul" op
+
+        Input graph:
+
+                const (val = 0.3)
+                    |
+        input ----> mul ---------------> maximum -----------> output
+                                           |
+                                         const
+
+
+        Output graph: same as input graph
+        """
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(3, 5, 6))])
+        def prog(x):
+            x1 = mb.mul(x=x, y=0.3)
+            x1 = mb.maximum(x=x1, y=0.4)
+            return x1
+
+        prev_prog, prev_block, block = apply_pass_and_basic_check(
+            prog, "common::fuse_leaky_relu"
+        )
+        assert get_op_types_in_program(prev_prog) == ["mul", "maximum"]
+        assert get_op_types_in_program(prog) == ["mul", "maximum"]
+
+class TestReduceMeanFusionPass:
+
+    def test_valid_pattern1(self):
+        @mb.program(input_specs=[mb.TensorSpec(shape=(3, 5, 6))])
+        def prog(x):
+            x1 = mb.reduce_sum(x=x, axes=[-1, -2], keep_dims=True)
+            x1 = mb.mul(x=1.0 / 30, y=x1)
+            return x1
+
+        prev_prog, prev_block, block = apply_pass_and_basic_check(
+            prog, "common::fuse_reduce_mean"
+        )
+        assert get_op_types_in_program(prev_prog) == ["reduce_sum", "mul"]
+        assert get_op_types_in_program(prog) == ["reduce_mean"]
+        assert_model_is_valid(
+            prog,
+            {"x": (3, 5, 6)},
+            expected_output_shapes={block.outputs[0].name: (3, 1, 1)},
+        )
+
+    def test_valid_pattern2(self):
+        @mb.program(input_specs=[mb.TensorSpec(shape=(4, 5))])
+        def prog(x):
+            x1 = mb.reduce_sum(x=x, axes=[0], keep_dims=False)
+            x1 = mb.real_div(x=x1, y=4.0)
+            return x1
+
+        prev_prog, prev_block, block = apply_pass_and_basic_check(
+            prog, "common::fuse_reduce_mean"
+        )
+        assert get_op_types_in_program(prev_prog) == ["reduce_sum", "real_div"]
+        assert get_op_types_in_program(prog) == ["reduce_mean"]
+        assert_model_is_valid(
+            prog,
+            {"x": (4, 5)},
+            expected_output_shapes={block.outputs[0].name: (5,)},
+        )
+
+    def test_invalid_pattern1(self):
+        '''
+        The mul does not correspond to "1/count"
+        '''
+        @mb.program(input_specs=[mb.TensorSpec(shape=(3, 5, 6))])
+        def prog(x):
+            x1 = mb.reduce_sum(x=x, axes=[-1, -2], keep_dims=True)
+            x1 = mb.mul(x=5.0, y=x1)
+            return x1
+
+        prev_prog, prev_block, block = apply_pass_and_basic_check(
+            prog, "common::fuse_reduce_mean"
+        )
+        assert get_op_types_in_program(prog) == ["reduce_sum", "mul"]
+
+    def test_invalid_pattern2(self):
+        '''
+        The div does not correspond to "count"
+        '''
+        @mb.program(input_specs=[mb.TensorSpec(shape=(3, 5, 6))])
+        def prog(x):
+            x1 = mb.reduce_sum(x=x, axes=[-1, -2], keep_dims=True)
+            x1 = mb.real_div(x=x1, y=31.0)
+            return x1
+
+        prev_prog, prev_block, block = apply_pass_and_basic_check(
+            prog, "common::fuse_reduce_mean"
+        )
+        assert get_op_types_in_program(prog) == ["reduce_sum", "real_div"]
+
+    def test_invalid_pattern3(self):
+        '''
+        One of the reduction dim is symbolic
+        '''
+        @mb.program(input_specs=[mb.TensorSpec(shape=(3, get_new_symbol(), 6))])
+        def prog(x):
+            x1 = mb.reduce_sum(x=x, axes=[-1, -2], keep_dims=True)
+            x1 = mb.real_div(x=x1, y=30.0)
+            return x1
+
+        pass_name = "common::fuse_reduce_mean"
+        PASS_REGISTRY[pass_name](prog)
+        assert get_op_types_in_program(prog) == ["reduce_sum", "real_div"]
+
+    def test_invalid_pattern4(self):
+        '''
+        output of reduce_sum is model output
+        '''
+        @mb.program(input_specs=[mb.TensorSpec(shape=(3, 5, 6))])
+        def prog(x):
+            x1 = mb.reduce_sum(x=x, axes=[-1, -2], keep_dims=True)
+            y1 = mb.real_div(x=x1, y=30.0)
+            return y1, x1
+
+        pass_name = "common::fuse_reduce_mean"
+        PASS_REGISTRY[pass_name](prog)
+        assert get_op_types_in_program(prog) == ["reduce_sum", "real_div"]
+
+    def test_invalid_pattern5(self):
+        '''
+        output of reduce_sum is feeding into another op
+        '''
+        @mb.program(input_specs=[mb.TensorSpec(shape=(3, 5, 6))])
+        def prog(x):
+            x1 = mb.reduce_sum(x=x, axes=[-1, -2], keep_dims=True)
+            y1 = mb.real_div(x=x1, y=30.0)
+            y2 = mb.mul(x=x1, y=10.0)
+            y3 = mb.add(x=y1, y=y2)
+            return y3
+
+        pass_name = "common::fuse_reduce_mean"
+        PASS_REGISTRY[pass_name](prog)
+        assert get_op_types_in_program(prog) == ["reduce_sum", "real_div", "mul", "add"]
+
 
 class TestTopologicalReorder:
 

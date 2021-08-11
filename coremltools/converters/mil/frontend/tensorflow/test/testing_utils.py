@@ -11,7 +11,7 @@ from six import string_types as _string_types
 from coremltools import TensorType
 import coremltools.models.utils as coremltoolsutils
 from coremltools.converters.mil.testing_utils import compare_shapes, \
-    compare_backend, run_core_ml_predict
+    compare_backend, run_core_ml_predict, ct_convert
 from coremltools.converters.mil.testing_reqs import ct
 
 from tensorflow.python.framework import dtypes
@@ -112,7 +112,7 @@ def get_tf_node_names(tf_nodes, mode="inputs"):
 
 
 def tf_graph_to_mlmodel(
-    graph, feed_dict, output_nodes, frontend="tensorflow", backend="neuralnetwork",
+    graph, feed_dict, output_nodes, frontend="tensorflow", backend=("neuralnetwork", "fp32"),
     use_cpu_for_conversion=False,
 ):
     """
@@ -145,7 +145,7 @@ def tf_graph_to_mlmodel(
     output_names = get_tf_node_names(output_nodes, mode="outputs")
     input_values = {name: val for name, val in zip(input_names, feed_dict.values())}
 
-    mlmodel = ct.convert(
+    mlmodel = ct_convert(
         graph, inputs=None, outputs=output_names, source=frontend, convert_to=backend,
         useCPUOnly=use_cpu_for_conversion,
     )
@@ -179,7 +179,7 @@ def run_compare_tf(
     use_cpu_for_conversion=False,
     frontend_only=False,
     frontend="tensorflow",
-    backend="neuralnetwork",
+    backend=("neuralnetwork", "fp32"),
     atol=1e-04,
     rtol=1e-05,
     validate_shapes_only=False,
@@ -298,6 +298,7 @@ def run_compare_tf(
             atol=atol,
             rtol=rtol,
             also_compare_shapes=True,
+            dtype=backend[1],
         )
     pred=None
     if not coremltoolsutils._has_custom_layer(mlmodel.get_spec()):
@@ -339,7 +340,7 @@ class TensorFlowBaseTest(object):
     def run_compare_tf(graph, feed_dict, output_nodes, use_cpu_only=False,
                        use_cpu_for_conversion=False,
                        frontend_only=False, frontend="tensorflow",
-                       backend="neuralnetwork", atol=1e-04, rtol=1e-05,
+                       backend=("neuralnetwork", "fp32"), atol=1e-04, rtol=1e-05,
                        validate_shapes_only=False, freeze_graph=False,
                        tf_outputs=None):
         res = run_compare_tf(graph, feed_dict, output_nodes,

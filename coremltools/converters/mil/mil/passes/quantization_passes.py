@@ -3,6 +3,8 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import numpy as np
+
 from coremltools.converters.mil.mil.program import Program
 from coremltools.converters.mil.mil.operation import Operation
 from coremltools.converters.mil.mil import Builder as mb
@@ -14,6 +16,17 @@ class ComputePrecision(Enum):
     FLOAT16 = "float16"
     FLOAT32 = "float32"
 
+type_eps = {}
+type_min = {}
+type_negmin = {}
+
+def _close_to_zero(val, np_type):
+    if np_type not in type_eps:
+        type_eps[np_type] = np.finfo(np_type).eps
+        type_min[np_type] = np.nextafter(0., 1., dtype=np_type)
+        type_negmin[np_type] = np.nextafter(0., -1., dtype=np_type)
+
+    return np.isclose(val, 0, atol=type_min[np_type], rtol=type_eps[np_type])
 
 class AbstractQuantizationPass(object):
     """
@@ -105,6 +118,19 @@ class FP16ComputePrecision(AbstractQuantizationPass):
         # For reference: Checkout test_single_input_to_multiple_operations in test_fp16_compute_precision.py
         self.cache_vars = {}
 
+    def fp16_overflow(self, op):
+        # Constants with values more than 65504 or less than -65504 overflows in FP16
+        for _, inputs in op.inputs.items():
+            is_list_input = isinstance(inputs, (list, tuple))
+            if not is_list_input:
+                inputs = [inputs]
+            for var in inputs:
+                if var.op is not None and var.op.op_type == "const" and var.is_tensor_or_scalar_of(dtype="fp32"):
+                    if np.max(np.abs(var.op.val.val), initial=0.0) > 65504:
+                        return True
+        return False
+
+
     def is_valid_op(self, op):
 
         if op.op_type in ["cast", "while_loop", "cond"]:
@@ -117,6 +143,9 @@ class FP16ComputePrecision(AbstractQuantizationPass):
             return False  #  rdar://74158925
 
         if op.op_type in ["gru", "rnn", "lstm"]:
+            return False
+
+        if self.fp16_overflow(op):
             return False
 
         return True
@@ -133,6 +162,28 @@ class FP16ComputePrecision(AbstractQuantizationPass):
             return False
 
         return True
+
+    def _check_underflow_to_zero(self, new_var, var):
+        # We check whether there are casted values that "becomes" 0 which is not ideal for eps purposes.
+        # However we skip arrays with more than 400 in case we compare through a large sparse matrix.
+        if new_var.val is not None and \
+             len(var.val.flatten()) < 400 and \
+             _close_to_zero(new_var.val, np.float16).any():
+            value_modified = False
+            original_val = var.val.flatten()
+            new_val = new_var.val.flatten()
+
+            for idx in range(len(original_val)):
+                if not _close_to_zero(original_val[idx], np.float32) and \
+                     _close_to_zero(new_val[idx], np.float16):
+                    new_val[idx] = type_min[np.float16] if np.sign(original_val[idx]) > 0 else type_negmin[np.float16]
+                    value_modified = True
+
+            if value_modified:
+                if np.isscalar(new_var.val):
+                    new_var._sym_val.val = new_val[0]
+                else:
+                    new_var._sym_val.val = new_val.reshape(new_var.val.shape)
 
     def transform_op(self, op):
         block = op.enclosing_block
@@ -163,6 +214,8 @@ class FP16ComputePrecision(AbstractQuantizationPass):
                         x = mb.cast(
                             x=var, dtype="fp16", name=casted_var_name, before_op= op
                         )
+                        self._check_underflow_to_zero(x, var)
+
                         casted_inputs[param][i] = x
                         if len(var._child_ops) > 1:
                             self.cache_vars[casted_var_name] = casted_inputs[param][i]

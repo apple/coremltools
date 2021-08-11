@@ -2,8 +2,8 @@
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
+import math
 import numpy as np
-import scipy
 
 from coremltools.converters.mil.mil import Operation, types, VALUE
 from coremltools.converters.mil.mil.operation import precondition
@@ -313,7 +313,8 @@ class erf(elementwise_unary):
 
     @precondition(allow=VALUE)
     def value_inference(self):
-        return scipy.special.erf(self.x.val)
+        erf_vector_function = np.vectorize(math.erf)
+        return erf_vector_function(self.x.val)
 
 
 @register_op(doc_str="")

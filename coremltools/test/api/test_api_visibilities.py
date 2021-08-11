@@ -23,6 +23,7 @@ class TestApiVisibilities:
     def test_top_level(self):
         expected = [
             "ClassifierConfig",
+            "ComputeUnit",
             "EnumeratedShapes",
             "ImageType",
             "RangeDim",

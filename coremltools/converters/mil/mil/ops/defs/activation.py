@@ -2,8 +2,8 @@
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
+import math
 import numpy as np
-import scipy
 
 from coremltools.converters.mil.mil import Operation, types, VALUE
 from coremltools.converters.mil.mil.input_type import (
@@ -169,7 +169,9 @@ class gelu(Operation):
         elif self.mode.val == "SIGMOID_APPROXIMATION":
             return self.x.val * (1 / (1 + np.exp(-(1.702 * self.x.val))))
         else:
-            return 0.5 * self.x.val * (1 + scipy.special.erf(self.x.val / np.sqrt(2)))
+            sqaure_root_of_2 = np.sqrt(2)
+            vfunc = np.vectorize(lambda x: 0.5 * x * (1 + math.erf(x / sqaure_root_of_2)))
+            return vfunc(self.x.val)
 
     def type_inference(self):
         allowed_values = {"EXACT", "TANH_APPROXIMATION", "SIGMOID_APPROXIMATION"}
@@ -644,8 +646,9 @@ class softmax(Operation):
     def value_inference(self):
         x = self.x.val
         axis = self.axis.val
-        return scipy.special.softmax(x, axis=axis)
-
+        max_vals = np.max(x, axis=axis, keepdims=True)
+        temp = np.exp(x - max_vals)
+        return temp / np.sum(temp, axis=axis, keepdims=True)
 
 @register_op(doc_str="")
 class softsign(elementwise_unary):

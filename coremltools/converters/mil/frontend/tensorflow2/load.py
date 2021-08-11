@@ -43,6 +43,7 @@ from tensorflow.python.framework.function_def_to_graph import (
 )
 from tensorflow.python.keras.saving import saving_utils as _saving_utils
 from tqdm import tqdm as _tqdm
+from tensorflow.python.eager import context
 
 from .converter import TF2Converter
 from distutils.version import StrictVersion as _StrictVersion
@@ -214,7 +215,7 @@ class TF2Loader(TFLoader):
 
         for name in sub_graphs:
             sg = graph_fns.get(name)
-            fn_def = sg.definition
+            fn_def = context.get_function_def(name)
             op_input_shapes = sg_input_shapes[name]
             op_input_shapes = op_input_shapes[-len(fn_def.signature.input_arg) :]
             fn_graph = _function_def_to_graph(fn_def, input_shapes=op_input_shapes)
@@ -255,7 +256,7 @@ class TF2Loader(TFLoader):
             graph_dict[fn_name].update({op.name: ParsedTFNode(op.node_def)})
 
         for name, sg in graph._functions.items():
-            sg_def = sg.definition
+            sg_def = context.get_function_def(name)
             if name in sg_input_shapes:
                 input_shapes = sg_input_shapes[name]
                 input_shapes = input_shapes[-len(sg_def.signature.input_arg):]

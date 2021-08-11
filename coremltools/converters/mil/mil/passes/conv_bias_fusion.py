@@ -9,26 +9,12 @@
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import types
+from .helper import _check_child_op_type
 import numpy as np
 import logging
 
 
 child_op_types = ["add", "sub"]
-
-def _check_child_op_type(op, child_op_type):
-    """
-    :param op: operation
-    :param child_op_type: str
-    :return: Return True if op has 1 child and type of that child matches child_op_type
-    """
-    if len(op.outputs) != 1:
-        return False
-    child_ops = list(op.outputs[0].child_ops)
-    if len(child_ops) != 1:
-        return False
-    if child_ops[0].op_type == child_op_type:
-        return True
-    return False
 
 def _match_pattern(op):
     if op.op_type == "conv" or op.op_type == "conv_transpose":

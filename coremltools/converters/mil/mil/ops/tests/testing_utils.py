@@ -3,13 +3,13 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import os
 import logging
-
+import os
 import pytest
+
 from coremltools.converters.mil.mil.types.symbolic import is_symbolic
 from coremltools.converters.mil.mil import Program, Function
-from coremltools.converters.mil.testing_utils import compare_backend
+from coremltools.converters.mil.testing_utils import compare_backend, ct_convert
 
 UNK_VARIADIC = "*s_unk"
 UNK_SYM = "s_unk"
@@ -23,8 +23,7 @@ def run_compare_builder(
     expected_outputs=None,
     use_cpu_only=False,
     frontend_only=False,
-    backend="neuralnetwork",
-    quantize_fp16 = False,
+    backend=("neuralnetwork", "fp32"),
     atol=1e-04,
     rtol=1e-05,
     inputs=None,
@@ -61,8 +60,6 @@ def run_compare_builder(
     """
     from coremltools.converters.mil.testing_reqs import ct
 
-    if backend == "neuralnetwork" and quantize_fp16:
-        return
 
     if not isinstance(expected_output_types, list):
         expected_output_types = [expected_output_types]
@@ -121,8 +118,7 @@ def run_compare_builder(
         if output_shape != expected_shape:
             raise ValueError(msg)
 
-    compute_precision = ct.precision.FLOAT16 if quantize_fp16 else ct.precision.FLOAT32
-    mlmodel = ct.convert(prog, source="milinternal", convert_to=backend, inputs=inputs, compute_precision=compute_precision,
+    mlmodel = ct_convert(prog, source="milinternal", convert_to=backend, inputs=inputs,
                          useCPUOnly=use_cpu_for_conversion)
 
     if frontend_only:
@@ -144,8 +140,8 @@ def run_compare_builder(
         input_key_values=input_values,
         expected_outputs=expected_outputs,
         use_cpu_only=use_cpu_only,
-        quantize_fp16=quantize_fp16,
         atol=atol,
         rtol=rtol,
         also_compare_shapes=also_compare_shapes,
+        dtype=backend[1]
     )

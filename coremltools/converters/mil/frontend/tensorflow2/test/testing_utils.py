@@ -4,6 +4,7 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 from coremltools.converters.mil.testing_reqs import ct
 import coremltools.models.utils as coremltoolsutils
+import os
 import pytest
 import numpy as np
 
@@ -15,7 +16,7 @@ from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import (
 
 from coremltools.converters.mil.input_types import TensorType, RangeDim
 from coremltools.converters.mil.testing_utils import compare_shapes, \
-    compare_backend, run_core_ml_predict
+    compare_backend, run_core_ml_predict, ct_convert
 from tensorflow.python.framework import dtypes
 from coremltools.models.utils import _macos_version
 
@@ -69,7 +70,7 @@ def run_compare_tf2(
     use_cpu_for_conversion=False,
     frontend_only=False,
     frontend="tensorflow",
-    backend="neuralnetwork",
+    backend=("neuralnetwork", "fp32"),
     debug=False,
     atol=1e-04,
     rtol=1e-05,
@@ -137,7 +138,7 @@ def run_compare_tf2(
         ref = [tf_outputs.numpy()]
     expected_outputs = {n: v for n, v in zip(outputs, ref)}
 
-    mlmodel = ct.convert(
+    mlmodel = ct_convert(
         model,
         source=frontend,
         inputs=inputs,
@@ -162,6 +163,7 @@ def run_compare_tf2(
         atol=atol,
         rtol=rtol,
         also_compare_shapes=True,
+        dtype=backend[1],
     )
 
     pred = None
@@ -178,7 +180,7 @@ def run_compare_tf_keras(
     use_cpu_only=False,
     frontend_only=False,
     frontend="tensorflow",
-    backend="neuralnetwork",
+    backend=("neuralnetwork", "fp32"),
     atol=1e-04,
     rtol=1e-05,
 ):
@@ -202,11 +204,11 @@ def run_compare_tf_keras(
     rtol: float
         The relative tolerance parameter.
     """
-    mlmodel = ct.convert(model, source=frontend, convert_to=backend)
+    mlmodel = ct_convert(model, source=frontend, convert_to=backend)
 
     # assumes conversion preserve the i/o names
     proto = mlmodel.get_spec()
-    inputs = sorted([str(i.name) for i in proto.description.input])
+    inputs = [i.name.split(":")[0].strip() for i in model.inputs]
     outputs = [str(o.name) for o in proto.description.output]
 
     # get tf.keras model output as reference and run comparison
@@ -228,6 +230,7 @@ def run_compare_tf_keras(
         atol=atol,
         rtol=rtol,
         also_compare_shapes=True,
+        dtype=backend[1]
     )
 
     pred = None
@@ -248,7 +251,7 @@ class TensorFlow2BaseTest(TensorFlowBaseTest):
             use_cpu_for_conversion=False,
             frontend_only=False,
             frontend="tensorflow",
-            backend="neuralnetwork",
+            backend=("neuralnetwork", "fp32"),
             debug=False,
             atol=1e-04,
             rtol=1e-05):
@@ -271,7 +274,7 @@ class TensorFlow2BaseTest(TensorFlowBaseTest):
     @staticmethod
     def run_compare_tf_keras(model, input_values, use_cpu_only=False,
             frontend_only=False, frontend="tensorflow",
-            backend="neuralnetwork", atol=1e-04, rtol=1e-05):
+            backend=("neuralnetwork", "fp32"), atol=1e-04, rtol=1e-05):
         res = run_compare_tf_keras(model, input_values, use_cpu_only=
         use_cpu_only,
                                    frontend_only=frontend_only,

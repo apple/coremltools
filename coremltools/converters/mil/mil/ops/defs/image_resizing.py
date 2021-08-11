@@ -381,6 +381,11 @@ class upsample_bilinear(Operation):
     """
     Upsample the spatial dimensions (last two dimensions) of the input
     by scale factors using bilinear interpolation.
+    The upsample_bilinear operation in MIL corresponds to the recompute_scale_factor=True
+    mode in the pyorch bilinear interpolation op. That is,
+    the scale factor is recomputed by the output size.
+    Note that when the scale_factor_height and scale_factor_width are floating point, this
+    could result in a different scale factor due to rounding.
 
     Parameters
     ----------

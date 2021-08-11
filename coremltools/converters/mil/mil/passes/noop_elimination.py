@@ -80,8 +80,9 @@ def remove_linear(op, block):
     return True
 
 def remove_transpose(op, block):
-    perm = np.sort(op.perm.val)
-    if (perm != op.perm.val).any():
+    perm = np.array([p if p >= 0 else p+len(op.perm.val) for p in op.perm.val])
+    sorted_perm = np.sort(perm)
+    if (perm != sorted_perm).any():
         return False
 
     input_var = op.x

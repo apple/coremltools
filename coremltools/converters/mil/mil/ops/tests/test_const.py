@@ -31,7 +31,7 @@ class TestConst:
         )
     )
     def test_builder_to_backend_smoke(self, use_cpu_for_conversion, backend, dtype):
-        if backend == "mlprogram" and not use_cpu_for_conversion:
+        if backend[0] == "mlprogram" and not use_cpu_for_conversion:
             pytest.xfail("rdar://78343191 ((MIL GPU) Core ML Tools Unit Test failures [failure to load or Seg fault])")
 
         t = np.random.randint(0, 5, (4, 2)).astype(np.float32)

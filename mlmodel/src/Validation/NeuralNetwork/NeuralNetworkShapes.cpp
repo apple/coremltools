@@ -839,6 +839,11 @@ void NeuralNetworkShaper::shapePermuteLayer(const Specification::NeuralNetworkLa
     size_t axis1 = static_cast<size_t>(permute.axis(1));
     size_t axis2 = static_cast<size_t>(permute.axis(2));
     size_t axis3 = static_cast<size_t>(permute.axis(3));
+    
+    // Check that indices into "ranges" and "outranges" are not out of bounds.
+    if (axis0 > 3 || axis1 > 3 || axis2 > 3 || axis3 > 3) {
+        throw std::runtime_error("Ranges axis index is out of bounds in shapePermuteLayer.");
+    }
 
     ShapeConstraint& outputShape = blobShapes[specLayer.output(0)];
     outputShape.setName(specLayer.output(0));

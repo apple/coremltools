@@ -3,13 +3,20 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import itertools
+import numpy as np
+import pytest
 import scipy
 from scipy import special
-from coremltools.converters.mil import testing_reqs
-from coremltools.converters.mil.mil import get_new_symbol
-from coremltools.converters.mil.testing_reqs import *
 
-from .testing_utils import run_compare_builder
+from coremltools.converters.mil import testing_reqs
+from coremltools.converters.mil.mil import (
+    Builder as mb,
+    get_new_symbol,
+    types,
+)
+from coremltools.converters.mil.mil.ops.tests.testing_utils import run_compare_builder
+from coremltools.converters.mil.testing_utils import is_close, random_gen, ssa_fn
 
 backends = testing_reqs.backends
 
@@ -279,3 +286,19 @@ class TestReduction:
             frontend_only=False,
             backend=backend,
         )
+
+    @pytest.mark.parametrize(
+        "input_size", [(1), (2), (1,2), (2,2), (2,3,4), (2,3,4,10)]
+    )
+    def test_reduce_log_sum_exp_value_inference(self, input_size):
+        rs = np.random.RandomState(1234)
+        x = rs.random(input_size)
+
+        for axis in range(-x.ndim, x.ndim - 1):
+            @mb.program(input_specs=[])
+            def prog():
+                return  mb.reduce_log_sum_exp(x=x, axes=(axis,))
+
+            op = list(prog.functions.values())[0].operations[3]
+            assert op.op_type == 'reduce_log_sum_exp'
+            assert is_close(op.value_inference(), scipy.special.logsumexp(x, axis=axis))

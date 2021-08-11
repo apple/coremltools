@@ -4,7 +4,9 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 import gc
 import collections
+import warnings
 
+from coremltools import ComputeUnit as _ComputeUnit
 from coremltools.converters.mil.mil.passes.quantization_passes import AbstractQuantizationPass, FP16ComputePrecision
 from coremltools.converters.mil.mil.passes.quantization_passes import ComputePrecision as precision
 from coremltools.converters.mil.input_types import InputType, ClassifierConfig
@@ -43,6 +45,7 @@ def convert(
     convert_to=None,
     compute_precision=None,
     skip_model_load=False,
+    compute_units=_ComputeUnit.ALL,
     **kwargs
 ):
     """
@@ -199,10 +202,9 @@ def convert(
 
                   The above casts all the float32 tensors to be float16, except
                   the input/output tensors to any ``linear`` op.
-            - If ``None``, the parameter defaults to ``coremltools.precision.FLOAT32``.
-        - TODO: rdar://74140243.
-            - Before coremltools 5.0 release, change the default
-              to coremltools.precision.FLOAT16 when convert_to="mlprogram"
+            - If ``None``,
+                - when convert_to="mlprogram", compute_precision parameter defaults to ``coremltools.precision.FLOAT16``.
+                - when convert_to="neuralnetwork", compute_precision parameter needs to be None and has no meaning.
 
     skip_model_load : bool
         Set to True to prevent coremltools from calling into the Core ML framework
@@ -215,6 +217,14 @@ def convert(
         ML program model type on a macOS 11, since ML program
         can only be compiled and loaded from macOS12+.
         Defaults to False.
+
+    compute_units: coremltools.ComputeUnit
+        A enum with three possible values:
+            - coremltools.ComputeUnit.ALL - use all compute units available, including the
+                  neural engine.
+            - coremltools.ComputeUnit.CPU_ONLY - limit the model to only use the CPU.
+            - coremltools.ComputeUnit.CPU_AND_GPU - use both the CPU and GPU, but not the
+                  neural engine.
 
     Returns
     -------
@@ -272,13 +282,14 @@ def convert(
     _validate_inputs(model, exact_source, inputs, outputs, classifier_config, compute_precision,
                      exact_target, **kwargs)
 
+    if "useCPUOnly" in kwargs and kwargs["useCPUOnly"]:
+        warnings.warn('The "useCPUOnly" parameter is deprecated and will be removed in 6.0. '
+                      'Use the compute_units parameter: "compute_units=coremotools.ComputeUnits.CPU_ONLY".')
+        compute_units = _ComputeUnit.CPU_ONLY
+
 
     if compute_precision is None:
-        # TODO: rdar://74140243
-        # Before 5.0 release,
-        # map "None" to "fp32" for "neuralnetwork"
-        # and to "fp16" for "mlprogram"
-        transforms = list()
+        transforms = [FP16ComputePrecision(op_selector=lambda op: True)] if convert_to != "neuralnetwork" else list()
     elif compute_precision == precision.FLOAT32:
         transforms = list()
     elif compute_precision == precision.FLOAT16:
@@ -295,8 +306,9 @@ def convert(
         inputs=inputs,
         outputs=outputs,
         classifier_config=classifier_config,
-        transforms=transforms,
+        transforms=tuple(transforms),
         skip_model_load=skip_model_load,
+        compute_units=compute_units,
         **kwargs
     )
 
@@ -355,12 +367,11 @@ def _validate_inputs(model, exact_source, inputs, outputs, classifier_config, co
             msg = '"classifier_config" must be of type ClassifierConfig'
             raise ValueError(msg)
 
-    if convert_to.lower() == 'neuralnetwork':
-        if compute_precision is not None:
-            if compute_precision != precision.FLOAT32:
-                msg = "'compute_precision' must be coremltools.precision.FLOAT32 when " \
-                    "the target is 'neuralnetwork' (i.e. deployment target is less than iOS15)"
-                raise ValueError(msg)
+    if convert_to.lower() == 'neuralnetwork' and compute_precision is not None:
+        msg = "compute_precision is only supported for mlprogram target and must be None if target=='neuralnetwork'.\n" \
+              "Note that target may be implicitly set depending on the minimum_deployment_target.\n" \
+              "See minimum_deployment_target for more details."
+        raise ValueError(msg)
 
     if compute_precision is not None:
         if compute_precision not in [precision.FLOAT32, precision.FLOAT16]:

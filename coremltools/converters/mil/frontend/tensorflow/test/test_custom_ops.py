@@ -94,19 +94,25 @@ class TestCustomMatMul:
 
     @pytest.mark.skipif(not testing_reqs._HAS_TF_1, reason=MSG_TF1_NOT_FOUND)
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, transpose_a, transpose_b," "a_is_sparse, b_is_sparse",
+        "use_cpu_only, backend, transpose_a, transpose_b," "a_is_sparse, b_is_sparse, b_is_const",
         itertools.product(
-            [True], backends, [True, False], [True, False], [True, False], [True, False]
+            [True], backends, [True, False], [True, False], [True, False], [True, False], [True, False],
         ),
     )
     def test_tf(
-        self, use_cpu_only, backend, transpose_a, transpose_b, a_is_sparse, b_is_sparse
+        self, use_cpu_only, backend, transpose_a, transpose_b, a_is_sparse, b_is_sparse, b_is_const,
     ):
         rank = 2
         shape = list(np.random.randint(low=3, high=100, size=1)) * rank
         with tf.Graph().as_default() as graph:
             x = tf.placeholder(tf.float32, shape=shape)
-            y = tf.placeholder(tf.float32, shape=shape)
+
+            if b_is_const:
+                y_value = random_gen(shape, rand_min=-100, rand_max=100)
+                y = tf.constant(y_value, dtype=tf.float32)
+            else:
+                y = tf.placeholder(tf.float32, shape=shape)
+
             ref = tf.sparse_matmul(
                 x,
                 y,
@@ -118,6 +124,8 @@ class TestCustomMatMul:
             mlmodel, _, _, _ = tf_graph_to_mlmodel(
                 graph,
                 {
+                    x: random_gen(shape, rand_min=-100, rand_max=100),
+                } if b_is_const else {
                     x: random_gen(shape, rand_min=-100, rand_max=100),
                     y: random_gen(shape, rand_min=-100, rand_max=100),
                 },
@@ -141,6 +149,8 @@ class TestCustomMatMul:
             assert (
                 b_is_sparse == layers[-1].custom.parameters["y_is_sparse"].boolValue
             ), "Incorrect parameter value k"
+
+            assert len(layers) == 2 if b_is_const else len(layers) == 1
 
 
 class TestCustomTopK:

@@ -644,11 +644,14 @@ void ShapeConstraint::updateConstraint(const Specification::FeatureType& type) {
                     size_t minSize = SIZE_MAX;
                     size_t maxSize = 0;
                     for (int i = 0; i < type.multiarraytype().enumeratedshapes().shapes_size(); i++) {
-                        size_t size = static_cast<size_t>(type.multiarraytype().enumeratedshapes().shapes(i).shape(d));
-                        if (minSize > size)
-                            minSize = size;
-                        if (maxSize < size)
-                            maxSize = size;
+                        // Check that the index "d" does not exceed the size of *this* shapes(i) which may be smaller than "maxDims".
+                        if (d < type.multiarraytype().enumeratedshapes().shapes(i).shape_size()) {
+                            size_t size = static_cast<size_t>(type.multiarraytype().enumeratedshapes().shapes(i).shape(d));
+                            if (minSize > size)
+                                minSize = size;
+                            if (maxSize < size)
+                                maxSize = size;
+                        }
                     }
                     ranges.push_back(ShapeRange(minSize,maxSize));
                 }

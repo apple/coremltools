@@ -4,19 +4,20 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil import get_new_symbol
+from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
 from coremltools.converters.mil.testing_utils import (
     assert_op_count_match,
     assert_model_is_valid,
     get_op_types_in_program,
     apply_pass_and_basic_check,
 )
-import unittest
-import pytest
-
 import numpy as np
+import pytest
+from .reduce_transposes import _find_transpose_compliment
+import unittest
 
 np.random.seed(1984)
-
 
 class TransposeOptimizationPass(unittest.TestCase):
     """"""
@@ -1431,7 +1432,7 @@ class TransposeOptimizationPass(unittest.TestCase):
             x5 = mb.concat(values=[x4, x3], axis=1)
             x6 = mb.transpose(x=x5, perm=[0, 3, 2, 1])
             return x6
-            
+
         prev_prog, prev_block, block = apply_pass_and_basic_check(
             prog, "common::reduce_transposes"
         )
@@ -1796,17 +1797,15 @@ class TransposeOptimizationPass(unittest.TestCase):
     def test_pass_through_broadcasted_binary_op(self):
         """
         Input graph:
-                               const
-                                 |
-        input --> transpose --> add --> transpose --> relu
+                                                                const (shape=(1,1,1,3))
+                                                                     |
+        input (shape=(1,4,3,2)) --> transpose (shape=(1,2,4,3)) --> add --> transpose --> relu
 
         Output graph:
 
-                 const
-                   |
-        input --> add --> relu
-
-        Note: the `const` op is of shape (1, 1, 1, 3) which is pre-broadcasted.
+                             const (shape=(1,1,3,1))
+                                     |
+        input (shape=(1,4,3,2)) --> add --> relu
         """
 
         @mb.program(input_specs=[mb.TensorSpec(shape=(1, 4, 3, 2))])
@@ -1829,3 +1828,227 @@ class TransposeOptimizationPass(unittest.TestCase):
             {"x": (1, 4, 3, 2)},
             expected_output_shapes={block.outputs[0].name: (1, 4, 3, 2)},
         )
+
+    def test_binary_op_with_constant_input(self):
+        """
+        Input graph:
+                                                                const (shape=(4,3))
+                                                                     |
+        input (shape=(1,4,3,2)) --> transpose (shape=(1,2,4,3)) --> add --> transpose --> relu
+
+        Output graph:
+
+                             const (shape=(1,4,3,1))
+                                     |
+        input (shape=(1,4,3,2)) --> add --> relu
+        """
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(1, 4, 3, 2))])
+        def prog(x):
+            x = mb.transpose(x=x, perm=[0, 3, 1, 2])
+            x = mb.add(x=x, y=np.array(np.ones(shape=(4, 3))))
+            x = mb.transpose(x=x, perm=[0, 2, 3, 1])
+            x = mb.relu(x=x)
+            return x
+
+        prev_prog, prev_block, block = apply_pass_and_basic_check(
+            prog, "common::reduce_transposes"
+        )
+        self.assertEqual(
+            get_op_types_in_program(prev_prog), ["transpose", "add", "transpose", "relu"],
+        )
+        self.assertEqual(get_op_types_in_program(prog), ["add", "relu"])
+        assert_model_is_valid(
+            prog,
+            {"x": (1, 4, 3, 2)},
+            expected_output_shapes={block.outputs[0].name: (1, 4, 3, 2)},
+        )
+
+    def test_binary_op_with_non_constant_input1(self):
+        """
+        Input graph:
+                                                                input (shape=(3,))
+                                                                     |
+        input (shape=(1,4,3,2)) --> transpose (shape=(1,2,4,3)) --> add --> transpose --> relu
+
+        Output graph:
+
+                                  input (shape=(3,))
+                                     |
+                                 reshape (shape=(1,1,3,1))
+                                     |
+        input (shape=(1,4,3,2)) --> add --> relu
+        """
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(1, 4, 3, 2)), mb.TensorSpec(shape=(3,))])
+        def prog(x, y):
+            x = mb.transpose(x=x, perm=[0, 3, 1, 2])
+            x = mb.add(x=x, y=y)
+            x = mb.transpose(x=x, perm=[0, 2, 3, 1])
+            x = mb.relu(x=x)
+            return x
+
+        prev_prog, prev_block, block = apply_pass_and_basic_check(
+            prog, "common::reduce_transposes"
+        )
+        self.assertEqual(
+            get_op_types_in_program(prev_prog), ["transpose", "add", "transpose", "relu"],
+        )
+        self.assertEqual(get_op_types_in_program(prog), ["reshape", "add", "relu"])
+        reshape_op = prog.find_ops(op_type="reshape", exactly_one=True)[0]
+        assert reshape_op.outputs[0].shape == (1, 1, 3, 1)
+        assert_model_is_valid(
+            prog,
+            {"x": (1, 4, 3, 2), "y": (3,)},
+            expected_output_shapes={block.outputs[0].name: (1, 4, 3, 2)},
+        )
+
+    def test_binary_op_with_non_constant_input2(self):
+        """
+        Input graph:
+                                                                input (shape=(3,1,2))
+                                                                     |
+        input (shape=(5,3,4,2)) --> transpose (shape=(4,3,5,2)) --> add --> transpose --> relu
+
+        Output graph:
+
+                                  input (shape=(3,1,2))
+                                     |
+                                 reshape (shape=(1,3,1,2))
+                                     |
+        input (shape=(5,3,4,2)) --> add --> relu
+        """
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(5, 3, 4, 2)), mb.TensorSpec(shape=(3, 1, 2))])
+        def prog(x, y):
+            x = mb.transpose(x=x, perm=[2, 1, 0, 3])
+            x = mb.add(x=x, y=y)
+            x = mb.transpose(x=x, perm=[2, 1, 0, 3])
+            x = mb.relu(x=x)
+            return x
+
+        prev_prog, prev_block, block = apply_pass_and_basic_check(
+            prog, "common::reduce_transposes"
+        )
+        self.assertEqual(
+            get_op_types_in_program(prev_prog), ["transpose", "add", "transpose", "relu"],
+        )
+        self.assertEqual(get_op_types_in_program(prog), ["reshape", "add", "relu"])
+        reshape_op = prog.find_ops(op_type="reshape", exactly_one=True)[0]
+        assert reshape_op.outputs[0].shape == (1, 3, 1, 2)
+        assert_model_is_valid(
+            prog,
+            {"x": (5, 3, 4, 2), "y": (3, 1, 2)},
+            expected_output_shapes={block.outputs[0].name: (5, 3, 4, 2)},
+        )
+
+    def test_binary_op_with_non_constant_input3(self):
+        """
+        Input graph:
+                                                                input (shape=(3,1,2))
+                                                                     |
+        input (shape=(s,3,4,2)) --> transpose (shape=(4,3,s,2)) --> add --> transpose --> relu
+
+        Output graph:
+
+                                input (shape=(3,1,2))
+                                     |
+                                 reshape (shape=(1,3,1,2))
+                                     |
+        input (shape=(s,3,4,2)) --> add --> relu
+        """
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(get_new_symbol(), 3, 4, 2)), mb.TensorSpec(shape=(3, 1, 2))])
+        def prog(x, y):
+            x = mb.transpose(x=x, perm=[2, 1, 0, 3])
+            x = mb.add(x=x, y=y)
+            x = mb.transpose(x=x, perm=[2, 1, 0, 3])
+            x = mb.relu(x=x)
+            return x
+
+        pass_name = "common::reduce_transposes"
+        PASS_REGISTRY[pass_name](prog)
+        self.assertEqual(get_op_types_in_program(prog), ["reshape", "add", "relu"])
+        reshape_op = prog.find_ops(op_type="reshape", exactly_one=True)[0]
+        assert reshape_op.outputs[0].shape == (1, 3, 1, 2)
+        block = prog.functions["main"]
+        assert_model_is_valid(
+            prog,
+            {"x": (5, 3, 4, 2), "y": (3, 1, 2)},
+            expected_output_shapes={block.outputs[0].name: (5, 3, 4, 2)},
+        )
+
+    def test_binary_op_with_non_constant_input4(self):
+        """
+        Input graph:
+                                                                input (shape=(3,s,2))
+                                                                     |
+        input (shape=(1,3,4,2)) --> transpose (shape=(4,3,1,2)) --> add --> transpose --> relu
+
+        Output graph: same as input graph since the non-transpose input of the add op has symbolic shape
+        """
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(1, 3, 4, 2)), mb.TensorSpec(shape=(3, get_new_symbol(), 2))])
+        def prog(x, y):
+            x = mb.transpose(x=x, perm=[2, 1, 0, 3])
+            x = mb.add(x=x, y=y)
+            x = mb.transpose(x=x, perm=[2, 1, 0, 3])
+            x = mb.relu(x=x)
+            return x
+
+        pass_name = "common::reduce_transposes"
+        PASS_REGISTRY[pass_name](prog)
+        self.assertEqual(get_op_types_in_program(prog), ["transpose", "add", "transpose", "relu"])
+        block = prog.functions["main"]
+        assert_model_is_valid(
+            prog,
+            {"x": (1, 3, 4, 2), "y": (3, 10, 2)},
+            expected_output_shapes={block.outputs[0].name: (10, 3, 4, 2)},
+        )
+
+    def test_binary_op_with_non_constant_input5(self):
+        """
+        Input graph:
+                                                                input (shape=(3,4))
+                                                                     |
+        input (shape=(5,3,4,2)) --> transpose (shape=(5,2,3,4)) --> add --> transpose --> relu
+
+        Output graph: same as input graph since transpose compliment for 2nd input of add cannot be represented
+        as a static reshape
+        """
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(5, 3, 4, 2)), mb.TensorSpec(shape=(3, 4))])
+        def prog(x, y):
+            x = mb.transpose(x=x, perm=[0, 3, 1, 2])
+            x = mb.add(x=x, y=y)
+            x = mb.transpose(x=x, perm=[0, 2, 3, 1])
+            x = mb.relu(x=x)
+            return x
+
+        prev_prog, prev_block, block = apply_pass_and_basic_check(
+            prog, "common::reduce_transposes"
+        )
+        self.assertEqual(
+            get_op_types_in_program(prev_prog), ["transpose", "add", "transpose", "relu"],
+        )
+        self.assertEqual(
+            get_op_types_in_program(prog), ["transpose", "add", "transpose", "relu"],
+        )
+        assert_model_is_valid(
+            prog,
+            {"x": (5, 3, 4, 2), "y": (3, 4)},
+            expected_output_shapes={block.outputs[0].name: (5, 3, 4, 2)},
+        )
+
+
+class TestTransposePassUtilityMethods():
+
+    @staticmethod
+    @pytest.mark.parametrize("rank", [1, 2, 3, 4, 5])
+    def test_transpose_compliment_method(rank):
+        x = np.random.rand(*np.random.randint(low=1, high=15, size=rank))
+        perm = np.random.permutation(rank)
+        reverse_perm = _find_transpose_compliment(perm)
+        x_transpose = np.transpose(x, perm)
+        x_transpose_transpose = np.transpose(x_transpose, reverse_perm)
+        np.testing.assert_equal(x, x_transpose_transpose)

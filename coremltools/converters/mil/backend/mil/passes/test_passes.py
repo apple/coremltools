@@ -259,7 +259,7 @@ class TestAdjustToSupportedTypes:
         prev_prog, prev_block, block = apply_pass_and_basic_check(
             prog, "mil_backend::adjust_io_to_supported_types"
         )
-        
+
         assert get_op_types_in_program(prev_prog) == ['cast']
         assert get_op_types_in_program(prog) == ['cast']
 
@@ -293,7 +293,7 @@ class TestAdjustToSupportedTypes:
         prev_prog, prev_block, block = apply_pass_and_basic_check(
             prog, "mil_backend::adjust_io_to_supported_types"
         )
-        
+
         assert get_op_types_in_program(prev_prog) == ['cast']
         assert get_op_types_in_program(prog) == []
 
@@ -750,8 +750,64 @@ class TestPassFuseActivationSiLU:
         assert_model_is_valid(
             program=program,
             inputs={"x": x_shape},
-            backend="mlprogram",
+            backend=("mlprogram", "fp32"),
             expected_output_shapes={block.outputs[0].name: tuple(x_shape)},
+        )
+
+class TestPassRank0ExpandDimsSwap:
+    """
+    Input graph:
+                                 2.0
+                                  |
+                                  v
+    input --> slice_by_index --> sub --> expand_dims --> output
+
+    Output graph:
+                                                [2.0]
+                                                  |
+                                                  v
+    input --> slice_by_index --> expand_dims --> sub --> output
+    """
+
+    @pytest.mark.parametrize(
+        "reverse_order, elem_op",
+        itertools.product(
+            [True, False],
+            ["add", "sub", "mul", "real_div", "floor_div"],
+        ),
+    )
+    def test(self, reverse_order, elem_op):
+        x_shape = [1,]
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=x_shape)])
+        def program(x):
+            x = mb.slice_by_index(x=x, begin=[0], end=[1], squeeze_mask=[True])
+            func = getattr(mb, elem_op)
+
+            if reverse_order:
+                x = func(x=2.0, y=x)
+            else:
+                x = func(x=x, y=2.0)
+
+            expand = mb.expand_dims(x=x, axes=[0])
+            other_1 = mb.add(x=x, y=[1, 2, 3])
+            other_2 = mb.sub(x=x, y=[1, 2, 3])
+            return expand, other_1, other_2
+
+        prev_prog, prev_block, block = apply_pass_and_basic_check(
+            program, "mil_backend::rank0_expand_dims_swap"
+        )
+        assert get_op_types_in_program(prev_prog) == ["slice_by_index", elem_op, "expand_dims", "add", "sub"]
+        assert get_op_types_in_program(program) == ["slice_by_index", "expand_dims", "expand_dims", elem_op, "squeeze", "add", "sub"]
+        assert_model_is_valid(
+            program=program,
+            inputs={"x": x_shape},
+            backend=("mlprogram", "fp32"),
+            expected_output_shapes={
+                block.outputs[0].name: tuple(x_shape),
+                block.outputs[1].name: (3,),
+                block.outputs[2].name: (3,),
+            },
         )
 
 class TestHomogenizeInputDtypes:

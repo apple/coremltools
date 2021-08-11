@@ -16,7 +16,7 @@ import warnings as _warnings
 
 from coremltools.proto import Model_pb2 as _Model_pb2
 
-from .._deps import _HAS_SKLEARN
+from .._deps import _HAS_SCIPY
 from ..libmodelpackage import ModelPackage
 
 
@@ -29,7 +29,7 @@ try:
 except ModuleNotFoundError:
     pass
 
-if _HAS_SKLEARN:
+if _HAS_SCIPY:
     import scipy.sparse as _sp
 
 
@@ -609,7 +609,7 @@ def _sanitize_value(x):
     """
     if isinstance(x, (str, int, float,)):
         return x
-    elif _HAS_SKLEARN and _sp.issparse(x):
+    elif _HAS_SCIPY and _sp.issparse(x):
         return x.todense()
     elif isinstance(x, _np.ndarray):
         return x

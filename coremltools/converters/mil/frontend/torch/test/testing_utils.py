@@ -13,6 +13,7 @@ from coremltools.models import MLModel
 from coremltools._deps import _IS_MACOS, _HAS_TORCH
 from coremltools.converters.mil.mil.types.type_mapping import nptype_from_builtin
 from coremltools.converters.mil.testing_reqs import ct
+from coremltools.converters.mil.testing_utils import ct_convert
 import pytest
 
 
@@ -66,7 +67,7 @@ def convert_to_coreml_inputs(input_description, inputs):
     return coreml_inputs
 
 
-def convert_to_mlmodel(model_spec, tensor_inputs, backend="neuralnetwork", converter_input_type=None,
+def convert_to_mlmodel(model_spec, tensor_inputs, backend=("neuralnetwork", "fp32"), converter_input_type=None,
                        use_cpu_for_conversion=False):
     def _convert_to_inputtype(inputs):
         if isinstance(inputs, list):
@@ -86,7 +87,7 @@ def convert_to_mlmodel(model_spec, tensor_inputs, backend="neuralnetwork", conve
         inputs = list(_convert_to_inputtype(tensor_inputs))
     else:
         inputs = converter_input_type
-    return ct.convert(model_spec, inputs=inputs, convert_to=backend,
+    return ct_convert(model_spec, inputs=inputs, convert_to=backend,
                       source="pytorch", useCPUOnly=use_cpu_for_conversion)
 
 
@@ -130,8 +131,8 @@ def flatten_and_detach_torch_results(torch_results):
 
 
 def convert_and_compare(input_data, model_spec,
-        expected_results=None, atol=1e-5,
-        backend="neuralnetwork",
+        expected_results=None, atol=1e-4,
+        backend=("neuralnetwork", "fp32"),
         converter_input_type=None,
         use_cpu_for_conversion=False):
     """
@@ -165,6 +166,10 @@ def convert_and_compare(input_data, model_spec,
     if not _IS_MACOS:
         return model_spec, mlmodel, coreml_inputs, None
 
+    _ , dtype = backend
+    if dtype == "fp16":
+        atol = max(atol * 100.0, 5e-1)
+
     if not coremltoolsutils._has_custom_layer(mlmodel.get_spec()):
         coreml_results = mlmodel.predict(coreml_inputs, useCPUOnly=True)
         sorted_coreml_results = [
@@ -194,7 +199,7 @@ class TorchBaseTest(object):
     @staticmethod
     def run_compare_torch(
             input_data, model, expected_results=None, places=5,
-            input_as_shape=True, backend="neuralnetwork",
+            input_as_shape=True, backend=("neuralnetwork", "fp32"),
             rand_range=(0.0, 1.0), use_scripting=False,
             converter_input_type=None,
             use_cpu_for_conversion=False,

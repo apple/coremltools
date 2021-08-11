@@ -68,6 +68,12 @@ __RUNTIME_SUPPORTED_TYPES = [_types.fp16, _types.fp32, _types.int32, _types.str,
 #####
 # Main Function
 #####
+def _adjust_var_dtype_helper(var, dtype):
+    if (_types.is_scalar(var.sym_type)):
+        var._sym_type = dtype
+    else:
+        var._sym_type = _types.tensor(dtype, var.sym_type.get_shape())
+
 def _adjust_main_inputs(func):
     first_op = func.operations[0] if len(func.operations) > 0 else None
     for input_name, input_var in func.inputs.items():
@@ -81,13 +87,13 @@ def _adjust_main_inputs(func):
                                ". Only integer variables of bit width 32 are supported by the CoreML runtime. " +\
                                "This input will be assigned a dType of int32. " +\
                                "No cast will be inserted; the previous dtype will be replaced.")
-                input_var._sym_type = _types.tensor(_types.int32, input_var.sym_type.get_shape())
+                _adjust_var_dtype_helper(input_var, _types.int32)
             elif input_var.dtype == _types.fp64:
                 # Replace float64 input type with fp32.
                 _warnings.warn("Input" + input_var.name + " is of dtype fp64. 64 bit float inputs are " +\
                                "not supported by ML program models. This input will be assigned a dType " +\
                                "of fp32. No cast will be inserted; the previous dtype will be replaced.")
-                input_var._sym_type = _types.tensor(_types.fp32, input_var.sym_type.get_shape())
+                _adjust_var_dtype_helper(input_var, _types.fp32)
             else:
                 # This is some other dType. Change the type to fp32 and add a cast.
                 # This is only a limitation of main--other functions do not represent CoreML model inputs
@@ -100,8 +106,7 @@ def _adjust_main_inputs(func):
                 with func:
                     casted_input_var = _mb.cast(x=input_var, dtype=input_dtype_str, before_op=first_op)
                     func.replace_uses_of_var_after_op(anchor_op=casted_input_var.op, old_var=input_var, new_var=casted_input_var)
-                    input_var._sym_type = _types.tensor(_types.fp32, input_var.sym_type.get_shape())
-
+                    _adjust_var_dtype_helper(input_var, _types.fp32)
 
 def _adjust_main_outputs(func):
     new_outputs = []
@@ -145,14 +150,14 @@ def _adjust_var(var):
                            ". Only integer variables of bit width 32 are supported by the CoreML runtime. " +\
                            "This input will be assigned a dType of int32. " +\
                            "No cast will be inserted; the previous dtype will be replaced.")
-            var._sym_type = _types.tensor(_types.int32, var.sym_type.get_shape())
+            _adjust_var_dtype_helper(var, _types.int32)
         else:
             # This is some other unsupported dType. Change the input type to fp32.
             _warnings.warn("Var " + var.name + " is of dType " + dtype_str + ". The CoreML runtime " +\
                            "does not support this dType (only fp16, fp32, bool, and int32 are supported). " +\
                            "This input will be assigned a dType of fp32. No cast will be inserted; " +\
                            "the previous dtype will be replaced.")
-            var._sym_type = _types.tensor(_types.fp32, var.sym_type.get_shape())
+            _adjust_var_dtype_helper(var, _types.fp32)
 
 
 def _adjust_func_inputs(func):

@@ -498,6 +498,10 @@ class TestNormalizationLayerNorm:
             [True, False]),
         )
     def test_builder_to_backend_stress_numpy(self, use_cpu_only, backend, rank_and_axes, epsilon, provides_gamma_beta):
+
+        if backend == ("mlprogram", "fp16") and not use_cpu_only:
+            pytest.xfail("rdar://80662357 ([GPU failures] LayerNorm FP16 tests failing on GPU with numerical errors)")
+
         rank, axes = rank_and_axes
         shape = np.random.randint(low=2, high=6, size=rank)
         x_val = random_gen(shape=shape, rand_min=-100.0, rand_max=100.0)

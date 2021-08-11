@@ -10,7 +10,6 @@ from coremltools import utils
 
 import numpy as np
 import os
-import PIL.Image
 import pytest
 import shutil
 import tempfile
@@ -126,12 +125,18 @@ class MLModelTest(unittest.TestCase):
         package.cleanup()
 
         model.save(package.name)
-        loaded_model = MLModel(package.name)
 
         if utils._macos_version() >= (12, 0):
-            preds = loaded_model.predict({"feature_1": 1.0, "feature_2": 1.0})
-            self.assertIsNotNone(preds)
-            self.assertEqual(preds["output"], 3.1)
+            for compute_units in coremltools.ComputeUnit:
+                loaded_model = MLModel(package.name, compute_units=compute_units)
+
+                preds = loaded_model.predict({"feature_1": 1.0, "feature_2": 1.0})
+                self.assertIsNotNone(preds)
+                self.assertEqual(preds["output"], 3.1)
+                self.assertEqual(loaded_model.compute_unit, compute_units)
+        else:
+            # just check if we can load it
+            loaded_model = MLModel(package.name)
 
         # cleanup
         MLModelTest._remove_path(package.name)
@@ -221,6 +226,7 @@ class MLModelTest(unittest.TestCase):
                 package_dir = converted_package_path,
                 source='pytorch',
                 convert_to='mlprogram',
+                compute_precision=coremltools.precision.FLOAT32,
                 inputs=[
                     coremltools.TensorType(
                         name="input",

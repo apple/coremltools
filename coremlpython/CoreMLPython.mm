@@ -1,3 +1,7 @@
+// Copyright (c) 2021, Apple Inc. All rights reserved.
+//
+// Use of this source code is governed by a BSD-3-clause license that can be
+// found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 #import <CoreML/CoreML.h>
 #import "CoreMLPythonArray.h"
 #import "CoreMLPython.h"
@@ -27,7 +31,7 @@ Model::~Model() {
     }
 }
 
-Model::Model(const std::string& urlStr, bool useCPUOnly) {
+Model::Model(const std::string& urlStr, const std::string& computeUnits) {
     @autoreleasepool {
 
         // Compile the model
@@ -58,8 +62,13 @@ Model::Model(const std::string& urlStr, bool useCPUOnly) {
 
         if (@available(macOS 10.14, *)) {
             MLModelConfiguration *configuration = [MLModelConfiguration new];
-            if (useCPUOnly){
+            if (computeUnits == "CPU_ONLY") {
                 configuration.computeUnits = MLComputeUnitsCPUOnly;
+            } else if (computeUnits == "CPU_AND_GPU") {
+                configuration.computeUnits = MLComputeUnitsCPUAndGPU;
+            } else {
+                assert(computeUnits == "ALL");
+                configuration.computeUnits = MLComputeUnitsAll;
             }
             m_model = [MLModel modelWithContentsOfURL:compiledUrl configuration:configuration error:&error];
         } else {
@@ -141,7 +150,7 @@ PYBIND11_PLUGIN(libcoremlpython) {
     py::module m("libcoremlpython", "CoreML.Framework Python bindings");
 
     py::class_<Model>(m, "_MLModelProxy")
-        .def(py::init<const std::string&, bool>())
+        .def(py::init<const std::string&, const std::string&>())
         .def("predict", &Model::predict)
         .def_static("auto_set_specification_version", &Model::autoSetSpecificationVersion)
         .def_static("maximum_supported_specification_version", &Model::maximumSupportedSpecificationVersion);

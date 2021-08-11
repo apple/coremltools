@@ -138,6 +138,7 @@ def mil_convert(
     model,
     convert_from,
     convert_to,
+    compute_units,
     **kwargs
 ):
     """
@@ -153,6 +154,14 @@ def mil_convert(
         The value must be one of ['tensorflow', 'tensorflow2',
         'pytorch', 'milinternal'] (aka name of a `ConverterRegistry.frontend`).
 
+    compute_units: coremltools.ComputeUnit
+        A enum with three possible values:
+            - coremltools.ComputeUnit.ALL - use all compute units available, including the
+                neural engine.
+            - coremltools.ComputeUnit.CPU_ONLY - limit the model to only use the CPU.
+            - coremltools.ComputeUnit.CPU_AND_GPU - use both the CPU and GPU, but not the
+                neural engine.
+
     convert_to: str
        Value must be one of ['neuralnetwork', 'mlprogram', 'milinternal']
        See `coremltools.converters.convert`
@@ -163,7 +172,7 @@ def mil_convert(
     `coremltools.converters.mil.Program`
         See `coremltools.converters.convert`
     """
-    return _mil_convert(model, convert_from, convert_to, ConverterRegistry, MLModel, **kwargs)
+    return _mil_convert(model, convert_from, convert_to, ConverterRegistry, MLModel, compute_units, **kwargs)
 
 
 def _mil_convert(
@@ -172,6 +181,7 @@ def _mil_convert(
     convert_to,
     registry,
     modelClass,
+    compute_units,
     **kwargs
 ):
 
@@ -233,16 +243,15 @@ def _mil_convert(
         package = None
 
         return modelClass(package_path,
-                          useCPUOnly=kwargs.get("useCPUOnly", False), # important: keep the default "useCPUOnly" flag to False
                           is_temp_package=not kwargs.get('package_dir'),
                           mil_program=mil_program,
-                          skip_model_load=kwargs.get('skip_model_load', False))
+                          skip_model_load=kwargs.get('skip_model_load', False),
+                          compute_units=compute_units)
 
-    # important: keep the default "useCPUOnly" flag to False
     return modelClass(proto,
-                      useCPUOnly=kwargs.get("useCPUOnly", False),
                       mil_program=mil_program,
-                      skip_model_load=kwargs.get('skip_model_load', False))
+                      skip_model_load=kwargs.get('skip_model_load', False),
+                      compute_units=compute_units)
 
 def mil_convert_to_proto(
     model,

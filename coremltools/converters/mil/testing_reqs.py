@@ -23,7 +23,7 @@ from coremltools._deps import (
 from .testing_utils import ssa_fn, is_close, random_gen
 import coremltools as ct
 
-backends = ['neuralnetwork']
+backends = [('neuralnetwork', 'fp32')]
 
 np.random.seed(1984)
 
