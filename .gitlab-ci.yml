@@ -128,7 +128,7 @@ test_macos11_py37_coremltools_test:
   dependencies:
     - build_wheel_macos_py37
   variables:
-    WHEEL_PATH: build/dist/*cp37*10_16*
+    WHEEL_PATH: build/dist/*cp37*10_15*
     TEST_PACKAGE: coremltools.test
     PYTHON: "3.7"
 
@@ -141,7 +141,7 @@ test_macos11_py37_pytorch:
   variables:
     PYTHON: "3.7"
     TEST_PACKAGE: coremltools.converters.mil.frontend.torch
-    WHEEL_PATH: build/dist/*cp37*10_16*
+    WHEEL_PATH: build/dist/*cp37*10_15*
 
 test_macos11_py37_tf1:
   <<: *test_macos_pkg
@@ -152,7 +152,7 @@ test_macos11_py37_tf1:
   variables:
     PYTHON: "3.7"
     TEST_PACKAGE: coremltools.converters.mil.frontend.tensorflow
-    WHEEL_PATH: build/dist/*cp37*10_16*
+    WHEEL_PATH: build/dist/*cp37*10_15*
 
 test_macos11_py37_tf2:
   <<: *test_macos_pkg_with_reqs
@@ -164,7 +164,7 @@ test_macos11_py37_tf2:
     PYTHON: "3.7"
     REQUIREMENTS: reqs/test_tf2.pip
     TEST_PACKAGE: coremltools.converters.mil.frontend.tensorflow2
-    WHEEL_PATH: build/dist/*cp37*10_16*
+    WHEEL_PATH: build/dist/*cp37*10_15*
 
 test_macos11_py37_mil:
   <<: *test_macos_pkg
@@ -175,7 +175,7 @@ test_macos11_py37_mil:
   variables:
     PYTHON: "3.7"
     TEST_PACKAGE: coremltools.converters.mil
-    WHEEL_PATH: build/dist/*cp37*10_16*
+    WHEEL_PATH: build/dist/*cp37*10_15*
 
 #########################################################################
 ##
@@ -190,7 +190,7 @@ test_macos11_py38_coremltools_smoke_test:
   dependencies:
     - build_wheel_macos_py38
   variables:
-    WHEEL_PATH: build/dist/*cp38*10_16*
+    WHEEL_PATH: build/dist/*cp38*10_15*
     TEST_PACKAGE: coremltools.test.neural_network.test_simple_nn_inference
     PYTHON: "3.8"
 
