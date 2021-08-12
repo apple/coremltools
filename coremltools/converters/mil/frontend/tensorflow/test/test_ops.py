@@ -1704,6 +1704,10 @@ class TestConvTranspose(TensorFlowBaseTest):
     def test_conv3d_transpose(
         self, use_cpu_only, backend, padding, data_format, DHWkDkHkW, strides, dilations, dynamic,
     ):
+        if _macos_version() < (12, 0) and strides == (1, 2, 3) and padding == "VALID":
+            # Behavior changed in macOS 12
+            return
+
         D, H, W, kD, kH, kW = DHWkDkHkW
         N, C_in, C_out = 2, 1, 2
 

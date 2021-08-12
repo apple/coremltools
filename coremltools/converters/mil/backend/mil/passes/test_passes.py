@@ -769,6 +769,7 @@ class TestPassRank0ExpandDimsSwap:
     input --> slice_by_index --> expand_dims --> sub --> output
     """
 
+    @pytest.mark.skipif(ct.utils._macos_version() < (12, 0), reason="mlprogram predict available only on macOS12+")
     @pytest.mark.parametrize(
         "reverse_order, elem_op",
         itertools.product(
