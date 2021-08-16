@@ -483,6 +483,10 @@ class TestGatherAlongAxis:
         "use_cpu_only, backend", itertools.product([True, False], backends,)
     )
     def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+
+        if backend[0] == "mlprogram" and not use_cpu_only:
+            pytest.xfail("rdar://80710279 (Crash in GatherAlongAxis unit test on MIL GPU context)")
+
         x = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
         indices = np.array([[1, 0, 1], [1, 1, 0]], dtype=np.int32)
         input_placeholders = {
@@ -544,7 +548,7 @@ class TestGatherAlongAxis:
         ),
     )
     def test_builder_to_backend_programmatic(self, use_cpu_for_conversion, backend, rank_axis):
-        if backend == "mlprogram" and not use_cpu_for_conversion:
+        if backend[0] == "mlprogram" and not use_cpu_for_conversion:
             pytest.xfail("rdar://78343225 ((MIL GPU) Core ML Tools Unit Test failures [numerical error])")
 
         rank, axis = rank_axis

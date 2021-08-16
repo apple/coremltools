@@ -29,7 +29,6 @@ class TestConvTranspose:
                 "groups",
                 "test_symbolic",
                 "test_output_shape",
-                "quantize_fp16"
             ]
         ),
         itertools.product(
@@ -44,7 +43,6 @@ class TestConvTranspose:
             [1, 2],
             [True, False],
             [True, False],
-            [True, False]
         ),
     )
     def test_builder_to_backend_stress(
@@ -60,10 +58,9 @@ class TestConvTranspose:
         groups,
         test_symbolic,
         test_output_shape,
-        quantize_fp16,
     ):
-        if backend == "mlprogram" and not use_cpu_only:
-            pytest.xfail("rdar://78343191 ((MIL GPU) Core ML Tools Unit Test failures [failure to load or Seg fault])")
+        if backend[0] == "mlprogram" and conv_dim != "conv3d":
+            pytest.xfail("rdar://81337723 (Conv1d, Conv2d, and Conv3d tests fail on GPU backend)")
 
         if test_symbolic and test_output_shape:
             # conv_transpose output_shape can only be constant (non-symbolic)
@@ -183,7 +180,6 @@ class TestConvTranspose:
             use_cpu_only=use_cpu_only,
             frontend_only=False,
             backend=backend,
-            quantize_fp16=quantize_fp16,
         )
 
 
@@ -202,7 +198,6 @@ class TestConv:
                 "has_bias",
                 "groups",
                 "symbolic",
-                "quantize_fp16",
             ]
         ),
         itertools.product(
@@ -216,7 +211,6 @@ class TestConv:
             [True, False],
             [1, 2],
             [True, False],
-            [True, False]
         ),
     )
     def test_builder_to_backend_stress(
@@ -231,8 +225,12 @@ class TestConv:
         has_bias,
         groups,
         symbolic,
-        quantize_fp16,
     ):
+        if backend[0] == "mlprogram" and conv_dim != "conv3d":
+            pytest.xfail("rdar://81337723 (Conv1d, Conv2d, and Conv3d tests fail on GPU backend)")
+        if backend[0] == "mlprogram" and conv_dim == "conv3d" and groups == 2:
+            pytest.xfail("rdar://81337723 (Conv1d, Conv2d, and Conv3d tests fail on GPU backend)")
+
         D, H, W, Kd, Kh, Kw = DHWKdKhKw
         N, C_in, C_out = 1, 1 * groups, 2 * groups
 
@@ -348,7 +346,6 @@ class TestConv:
             use_cpu_only=use_cpu_only,
             frontend_only=False,
             backend=backend,
-            quantize_fp16=quantize_fp16
         )
 
     @pytest.mark.skip("<rdar://problem/53460668> Dynamic weights + bias not supported on GPU")

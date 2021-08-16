@@ -136,8 +136,7 @@ class OpNameDeduplicationPass(unittest.TestCase):
                 # two ops with name "x"
                 return mb.add(x=x, y=-1, name='x')
 
-            is_one = mb.equal(x=mb.squeeze(x=x), y=1)
-            pred = mb.squeeze(x=is_one)
+            pred = mb.equal(x=mb.squeeze(x=x), y=1)
             return mb.cond(pred=pred, _true_fn=true_fn, _false_fn=false_fn)
 
         cond_op = prog.functions['main'].operations[-1]

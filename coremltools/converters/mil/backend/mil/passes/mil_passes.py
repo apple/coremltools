@@ -14,6 +14,8 @@ def mil_backend_passes(prog):
         "mil_backend::adjust_io_to_supported_types",
         "mil_backend::insert_image_preprocessing_ops",
         "mil_backend::fuse_activation_silu",
+        "mil_backend::rank0_expand_dims_swap",
+        "common::const_elimination", # rank0_expand_dims_swap might introduce some new const tensor
         # TODO: Right now, "const elimination" pass CANNOT be done after the "homogenize_input_dtypes" pass.
         # Remove this requirement in rdar://76032946.
         # Right now due to a bug in the PYMIL const op, which is that it can only produce FP32 and INT32 types tensors (e.g. it can't produce int64),

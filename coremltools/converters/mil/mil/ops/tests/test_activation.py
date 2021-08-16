@@ -7,6 +7,7 @@ import itertools
 import numpy as np
 import pytest
 import scipy
+from scipy import special
 
 from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.mil import Builder as mb, types
@@ -654,7 +655,7 @@ class TestSiLU:
         "use_cpu_only, backend", itertools.product([True, False], backends,)
     )
     def test_builder_to_backend_smoke(self, use_cpu_only, backend):
-        if backend == "neuralnetwork":
+        if backend[0] == "neuralnetwork":
             pytest.xfail("nn backend not supported")
 
         x_val = np.array([-1.1, 2.2, -3.3, 4.4], dtype=np.float32).reshape((1, 2, 1, 2))
@@ -898,6 +899,22 @@ class TestSoftmax:
         x_val = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.float32)
         v = mb.softmax(x=x_val, axis=0)
         assert is_close(scipy.special.softmax(x_val, axis=0), v.val)
+
+    @pytest.mark.parametrize(
+        "input_size", [(1), (2), (1,2), (2,2), (2,3,4), (2,3,4,10)]
+    )
+    def test_value_inference(self, input_size):
+        rs = np.random.RandomState(1234)
+        x = rs.random(input_size)
+
+        for axis in range(-x.ndim, x.ndim - 1):
+            @mb.program(input_specs=[])
+            def prog():
+                return  mb.softmax(x=x, axis=axis)
+
+            op = list(prog.functions.values())[0].operations[2]
+            assert op.op_type == 'softmax'
+            assert is_close(op.value_inference(), scipy.special.softmax(x, axis=axis))
 
 
 class TestSoftsign:

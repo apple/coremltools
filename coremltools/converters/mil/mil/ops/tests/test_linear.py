@@ -13,10 +13,10 @@ backends = testing_reqs.backends
 
 class TestLinear:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, quantize_fp16",
-        itertools.product([True], backends, [True, False]),
+        "use_cpu_only, backend",
+        itertools.product([True], backends),
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend, quantize_fp16):
+    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
         x_val = np.array([[-4.7182, 11.94], [-3.3939, 9.2166]], dtype=np.float32)
         weight_val = np.array([[1.2313, -0.095], [-1.4075, -0.8816]], dtype=np.float32)
         bias_val = np.array([1.0, 2.0], dtype=np.float32)
@@ -41,7 +41,6 @@ class TestLinear:
             expected_outputs,
             use_cpu_only=use_cpu_only,
             backend=backend,
-            quantize_fp16=quantize_fp16,
         )
 
     @ssa_fn
@@ -53,10 +52,10 @@ class TestLinear:
         assert is_close(np.matmul(x_val, weight_val.T) + bias_val, v.val)
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, rank, quantize_fp16",
-        itertools.product([True, False], backends, [2, 3, 5], [True, False]),
+        "use_cpu_only, backend, rank",
+        itertools.product([True, False], backends, [2, 3, 5]),
     )
-    def test_builder_to_backend_stress(self, use_cpu_only, backend, rank, quantize_fp16):
+    def test_builder_to_backend_stress(self, use_cpu_only, backend, rank):
         x_shape = np.random.randint(low=1, high=3, size=(rank,))
         x_val = np.random.rand(*x_shape)
         out_channels = 3
@@ -83,7 +82,6 @@ class TestLinear:
             expected_outputs=expected_outputs,
             use_cpu_only=use_cpu_only,
             backend=backend,
-            quantize_fp16=quantize_fp16,
         )
 
 

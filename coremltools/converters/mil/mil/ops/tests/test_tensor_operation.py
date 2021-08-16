@@ -4,7 +4,7 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from coremltools.converters.mil import testing_reqs
-from coremltools.converters.mil.mil import get_new_symbol
+from coremltools.converters.mil.mil import types, get_new_symbol
 from coremltools.converters.mil.testing_reqs import *
 
 from .testing_utils import UNK_SYM, UNK_VARIADIC, run_compare_builder
@@ -523,8 +523,11 @@ class TestNonMaximumSuppression:
         n_score,
         per_class_suppression,
     ):
-        if backend == "mlprogram" and iou_threshold_percentile == 0:
+        if backend[0] == "mlprogram" and iou_threshold_percentile == 0:
             pytest.xfail("rdar://78080118")
+
+        if backend == ("mlprogram", "fp16"):
+            pytest.xfail("CPU: rdar://80662705 and GPU: rdar://80661262")
 
         n_boxes_in, n_boxes_out = n_boxes
         boxes_val = random_gen((n_batch, n_boxes_in, 4), 0, 100)
@@ -599,7 +602,7 @@ class TestNonMaximumSuppression:
 
 class TestNonZero:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], ["neuralnetwork"])
+        "use_cpu_only, backend", itertools.product([True, False], backends)
     )
     def test_builder_to_backend_smoke(self, use_cpu_only, backend):
         x_val = np.array([[3, 0, 0], [0, 4, 0], [5, 6, 0]], dtype=np.float32)
@@ -1026,9 +1029,9 @@ class TestDynamicTile:
         rep3 = np.array([2, 3]).astype(np.int32)
         input_placeholders = {
             "x": mb.placeholder(shape=x.shape),
-            "reps1": mb.placeholder(shape=rep1.shape),
-            "reps2": mb.placeholder(shape=rep2.shape),
-            "reps3": mb.placeholder(shape=rep3.shape),
+            "reps1": mb.placeholder(shape=rep1.shape, dtype=types.int32),
+            "reps2": mb.placeholder(shape=rep2.shape, dtype=types.int32),
+            "reps3": mb.placeholder(shape=rep3.shape, dtype=types.int32),
         }
 
         input_values = {"x": x, "reps1": rep1, "reps2": rep2, "reps3": rep3}

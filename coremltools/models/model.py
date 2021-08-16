@@ -10,6 +10,7 @@ import tempfile as _tempfile
 import warnings as _warnings
 from copy import deepcopy as _deepcopy
 
+from coremltools import ComputeUnit as _ComputeUnit
 from .utils import _has_custom_layer as _has_custom_layer
 from .utils import load_spec as _load_spec
 from .utils import _macos_version, _is_macos
@@ -97,7 +98,7 @@ class _FeatureDescription(object):
             yield f.name
 
 
-def _get_proxy_and_spec(filename, use_cpu_only=False, skip_model_load=False):
+def _get_proxy_and_spec(filename, compute_units, skip_model_load=False):
     try:
         from ..libcoremlpython import _MLModelProxy
     except Exception:
@@ -116,7 +117,7 @@ def _get_proxy_and_spec(filename, use_cpu_only=False, skip_model_load=False):
             return (None, specification, None)
 
         try:
-            return (_MLModelProxy(filename, use_cpu_only), specification, None)
+            return (_MLModelProxy(filename, compute_units.name), specification, None)
         except RuntimeError as e:
             _warnings.warn(
                 "You will not be able to run predict() on this Core ML model."
@@ -184,7 +185,8 @@ class MLModel(object):
                  useCPUOnly=False,
                  is_temp_package=False,
                  mil_program=None,
-                 skip_model_load=False):
+                 skip_model_load=False,
+                 compute_units=_ComputeUnit.ALL):
         """
         Construct an MLModel from a .mlmodel
 
@@ -198,18 +200,23 @@ class MLModel(object):
             For NeuralNetwork, model can be path string (.mlmodel) or Model_pb2.
 
         useCPUOnly: bool
+            This parameter is deprecated and will be removed in 6.0. Use the `compute_units`
+            parameter instead.
+
+            The `compute_units` parameter overrides any usages of this parameter.
+
             Set to true to restrict loading of model on CPU Only. Defaults to False.
 
         is_temp_package: bool
             Set to true if the input model package dir is temporary and can be
             deleted upon destruction of this class.
 
-        mil_program : coremltools.converters.mil.Program
+        mil_program: coremltools.converters.mil.Program
             Set to the mil program object, if available.
             It is avaiable whenever an MLModel object is constructed using
             the unified converter API coremltools.convert()
 
-        skip_model_load : bool
+        skip_model_load: bool
             Set to True to prevent coremltools from calling into the Core ML framework
             to compile and load the model. In that case, the returned model object cannot
             be used to make a prediction. This flag may be used to load a newer model
@@ -217,6 +224,14 @@ class MLModel(object):
             Example: Loading ML Program model type on a macOS 11, since ML Program can only be
             compiled and loaded from macOS12+.
             Defaults to False.
+
+        compute_units: coremltools.ComputeUnit
+            A enum with three possible values:
+                - coremltools.ComputeUnit.ALL - use all compute units available, including the
+                      neural engine.
+                - coremltools.ComputeUnit.CPU_ONLY - limit the model to only use the CPU.
+                - coremltools.ComputeUnit.CPU_AND_GPU - use both the CPU and GPU, but not the
+                      neural engine.
 
         Notes
         -----
@@ -233,8 +248,16 @@ class MLModel(object):
         --------
         >>> loaded_model = MLModel('my_model_file.mlmodel')
         """
+        if useCPUOnly:
+            _warnings.warn('The "useCPUOnly" parameter is deprecated and will be removed in 6.0. '
+                           'Use the "compute_units" parameter: "compute_units=coremotools.ComputeUnits.CPUOnly".')
+            compute_units = _ComputeUnit.CPU_ONLY
+        if not isinstance(compute_units, _ComputeUnit):
+            raise TypeError('"compute_units" parameter must be of type: coremltools.ComputeUnit')
+
         self.is_package = False
         self.package_path = None
+        self.compute_unit = compute_units
         if mil_program is not None:
             from coremltools.converters.mil.mil.program import Program
             if not isinstance(mil_program, Program):
@@ -246,13 +269,13 @@ class MLModel(object):
                 self.package_path = model
                 self.is_temp_package = is_temp_package
             self.__proxy__, self._spec, self._framework_error = _get_proxy_and_spec(
-                model, useCPUOnly, skip_model_load=skip_model_load,
+                model, compute_units, skip_model_load=skip_model_load,
             )
         elif isinstance(model, _Model_pb2.Model):
             filename = _tempfile.mktemp(suffix=_MLMODEL_EXTENSION)
             _save_spec(model, filename)
             self.__proxy__, self._spec, self._framework_error = _get_proxy_and_spec(
-                filename, useCPUOnly, skip_model_load=skip_model_load,
+                filename, compute_units, skip_model_load=skip_model_load,
             )
             try:
                 _os.remove(filename)
@@ -268,7 +291,8 @@ class MLModel(object):
 
     def __del__(self):
         # Cleanup temporary package upon destruction
-        if self.is_package and self.is_temp_package:
+        if hasattr(self, 'is_package') and self.is_package \
+           and hasattr(self, 'is_temp_package') and self.is_temp_package:
             _shutil.rmtree(self.package_path)
 
     @property
@@ -381,7 +405,11 @@ class MLModel(object):
             the names of the input features.
 
         useCPUOnly: bool
-            Set to true to restrict computation to use only the CPU. Defaults to False.
+            This parameter is deprecated and will be removed in 6.0. Instead use the `compute_units`
+            parameter at load time or conversion time, i.e. in `coremltools.models.MLModel()` or
+            `coremltools.convert()`.
+
+            Set to True to restrict computation to use only the CPU. Defaults to False.
 
         Returns
         -------
@@ -394,6 +422,10 @@ class MLModel(object):
         >>> data = {'bedroom': 1.0, 'bath': 1.0, 'size': 1240}
         >>> predictions = model.predict(data)
         """
+        if useCPUOnly:
+            _warnings.warn('The "useCPUOnly" parameter is deprecated and will be removed in 6.0. '
+                           'Please use the "compute_units" parameter at load time or conversion time, '
+                           'i.e. in "coremltools.models.MLModel()" or "coremltools.convert()".')
 
         if self.is_package and _is_macos() and _macos_version() < (12, 0):
             raise Exception(

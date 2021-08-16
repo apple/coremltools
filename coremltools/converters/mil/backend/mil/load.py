@@ -4,7 +4,7 @@ import os
 import tempfile
 
 from coremltools.converters.mil.backend.mil.helper import *
-from coremltools.converters.mil.backend.mil.passes.mil_passes import mil_backend_passes
+import coremltools.converters.mil.backend.mil.passes.mil_passes as mil_passes
 import coremltools.proto.MIL_pb2 as pm
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil import Function
@@ -249,7 +249,7 @@ def load(prog, weights_dir, resume_on_errors=False, **kwargs):
     if "main" not in prog.functions:
         raise ValueError("main function not found in program")
 
-    mil_backend_passes(prog)
+    mil_passes.mil_backend_passes(prog)
 
     # if user has specified "ClassifierConfig", then add the "classify" op to the prog
     classifier_config = kwargs.get("classifier_config", None)

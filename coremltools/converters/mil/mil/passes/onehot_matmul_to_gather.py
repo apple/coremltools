@@ -8,46 +8,8 @@
 
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 from coremltools.converters.mil.mil import Builder as mb
+from .helper import _check_child_op_type, _check_var_scalar_value
 import numpy as np
-
-
-def _check_child_op_type(op, child_op_type):
-    """
-    :param op: operation
-    :param child_op_type: str
-    :return: Return True if op has 1 child and type of that child matches child_op_type
-    """
-    if len(op.outputs) != 1:
-        return False
-    child_ops = list(op.outputs[0].child_ops)
-    if len(child_ops) != 1:
-        return False
-    if child_ops[0].op_type == child_op_type:
-        return True
-    return False
-
-
-def _check_var_scalar_value(x, val, tol=1e-3):
-    """
-    :param x: var
-    :param val: a scalar value
-    :return: True if the value of var is equal to val otherwise return False
-    """
-    if x.val is None:
-        return False
-    if not isinstance(x.val, (np.ndarray, np.generic)):
-        return False
-
-    if isinstance(x.val, np.ndarray):
-        if x.val.size != 1:
-            return False
-        x_val = x.val[:][0]
-    else:
-        x_val = x.val
-
-    if abs(x_val - val) < tol:
-        return True
-    return False
 
 
 def try_to_transform(onehot_op, block):

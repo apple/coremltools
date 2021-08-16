@@ -6664,10 +6664,6 @@ class IOS14SingleLayerTests(CorrectnessTest):
                 for scale_w in scale_range:
                     for input_h in range(2, 6):
                         for input_w in range(2, 6):
-                            if not align_corners:
-                                if scale_w - np.floor(scale_w) > .01 or scale_h - np.floor(scale_h) > .01:
-                                    # FIXME: rdar://79935318
-                                    continue
                             self.upsample_pytorch_test(
                                 input_h,
                                 input_w,
@@ -6705,12 +6701,13 @@ class IOS14SingleLayerTests(CorrectnessTest):
 
         # Get result from PyTorch
         x = torch.from_numpy(np.reshape(input_tensor, (1, 1, h, w)))
-        m = torch.nn.Upsample(
+        pytorch_output = torch.nn.functional.interpolate(
+            x,
             scale_factor=(scale_h, scale_w),
             mode="bilinear",
             align_corners=align_corners,
+            recompute_scale_factor=True,
         )
-        pytorch_output = m(x)
 
         # Expect PyTorch output matches CoreML output
         expected = {"output": pytorch_output.numpy()}

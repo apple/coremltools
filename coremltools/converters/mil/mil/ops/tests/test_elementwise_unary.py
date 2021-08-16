@@ -3,10 +3,18 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import itertools
+import numpy as np
+import pytest
 import scipy
 from scipy import special
+
 from coremltools.converters.mil import testing_reqs
-from coremltools.converters.mil.testing_reqs import *
+from coremltools.converters.mil.mil import (
+    Builder as mb,
+    types,
+)
+from coremltools.converters.mil.testing_utils import ssa_fn, is_close
 
 from .testing_utils import run_compare_builder
 
@@ -26,13 +34,13 @@ class TestElementwiseUnary:
                 "asin",
                 "atan",
                 "atanh",
-                "exp2",
+                "cast",
                 "clip",
                 "cos",
                 "cosh",
                 "erf",
                 "exp",
-                "erf",
+                "exp2",
                 "floor",
                 "inverse",
                 "log",
@@ -46,12 +54,11 @@ class TestElementwiseUnary:
                 "tan",
                 "tanh",
                 "threshold",
-                "cast",
             ],
         ),
     )
     def test_builder_to_backend_smoke(self, use_cpu_for_conversion, backend, mode):
-        if backend == "mlprogram" and not use_cpu_for_conversion and mode == "cast":
+        if backend[0] == "mlprogram" and not use_cpu_for_conversion and mode == "cast":
             pytest.xfail("rdar://78343191 ((MIL GPU) Core ML Tools Unit Test failures [failure to load or Seg fault])")
 
         if mode == "abs":
@@ -598,7 +605,7 @@ class TestElementwiseUnary:
     def test_builder_to_backend_stress_log(
             self, use_cpu_only, backend, epsilon
     ):
-        if backend == "mlprogram" and not use_cpu_only:
+        if backend[0] == "mlprogram" and not use_cpu_only:
             pytest.xfail("rdar://78343225 ((MIL GPU) Core ML Tools Unit Test failures [numerical error])")
 
         x = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
@@ -633,7 +640,7 @@ class TestElementwiseUnary:
     def test_builder_to_backend_stress_cast(
             self, use_cpu_for_conversion, backend, src_dst
     ):
-        if backend == "mlprogram" and not use_cpu_for_conversion:
+        if backend[0] == "mlprogram" and not use_cpu_for_conversion:
             pytest.xfail("rdar://78343191 ((MIL GPU) Core ML Tools Unit Test failures [failure to load or Seg fault])")
 
         src_dtype, dst_dtype = src_dst
@@ -673,3 +680,19 @@ class TestElementwiseUnary:
             backend=backend,
             use_cpu_for_conversion=use_cpu_for_conversion,
         )
+
+    def test_erf_value_inference(self):
+        INPUT_SIZE=(2,3,4)
+        rs = np.random.RandomState(1234)
+        x = rs.random(INPUT_SIZE)
+
+        @mb.program(input_specs=[])
+        def prog():
+            return  mb.erf(x=x)
+
+        ops = list(prog.functions.values())[0].operations
+        assert len(ops) == 2
+        assert ops[0].op_type == 'const'
+        erf_op = ops[1]
+        assert erf_op.op_type == 'erf'
+        assert is_close(erf_op.value_inference(), scipy.special.erf(x))

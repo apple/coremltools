@@ -221,6 +221,9 @@ class TestConvolution(TensorFlowBaseTest):
         if _get_version(_tf.__version__) < _StrictVersion("2.5.0") and groups != 1:
             return
 
+        if op == tf.keras.layers.Conv3D and groups != 1:
+            pytest.xfail("rdar://81629932 (Conv3d with group > 1 tests failing in TF2.0 converter)")
+
         # TF does not support strides > 1 in conjunction with dilation_rate > 1
         for i, stride in enumerate(strides):
             if stride > 1 and dilations[i] > 1:
@@ -737,7 +740,6 @@ class TestDense(TensorFlowBaseTest):
 
 
 class TestEmbedding(TensorFlowBaseTest):
-    @pytest.mark.xfail(reason="rdar://63414784")
     @pytest.mark.parametrize(
         "use_cpu_only, backend, dims, batch_size, input_length",
         itertools.product(
@@ -1436,7 +1438,7 @@ class TestUpSampling(TensorFlowBaseTest):
             backend=backend,
         )[0]
         # also check if the scale factor are integers
-        if backend == 'neuralnetwork':
+        if backend[0] == 'neuralnetwork':
             for layer in spec.neuralNetwork.layers:
                 if layer.WhichOneof('layer') == "upsample":
                     assert len(layer.upsample.fractionalScalingFactor) == 0

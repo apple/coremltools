@@ -598,15 +598,15 @@ class TestPyTorchConverterExamples:
             torch_res = model(x, y)
             results = mlmodel.predict({"x": x.cpu().detach().numpy(),
               "y": y.cpu().detach().numpy()})
-            np.testing.assert_allclose(torch_res[0], results['y.5'])
-            np.testing.assert_allclose(torch_res[1], results['x'])
+            for i, name in enumerate(mlmodel.output_description):
+                np.testing.assert_allclose(torch_res[i], results[name])
 
             x, y = torch.rand(1, 6), torch.rand(2, 3)
             torch_res = model(x, y)
             results = mlmodel.predict({"x": x.cpu().detach().numpy(),
               "y": y.cpu().detach().numpy()})
-            np.testing.assert_allclose(torch_res[0], results['y.5'])
-            np.testing.assert_allclose(torch_res[1], results['x'])
+            for i, name in enumerate(mlmodel.output_description):
+                np.testing.assert_allclose(torch_res[i], results[name])
 
 
 class TestMILExamples:
@@ -1208,22 +1208,27 @@ class TestOptionalInput:
         default_value = np.array([3]).astype(np.float32)
         optional_input = ct.TensorType(name="optional_input", shape=(1,),
             default_value=default_value)
-        mlmodel = ct.convert(
-            traced_model,
-            inputs=[required_input, optional_input],
-        )
 
-        if ct.utils._is_macos():
-            result = mlmodel.predict(
-                {"required_input":
-                  example_input[0].detach().numpy().astype(np.float32)}
+        for compute_units in ct.ComputeUnit:
+            mlmodel = ct.convert(
+                traced_model,
+                inputs=[required_input, optional_input],
+                compute_units=compute_units,
             )
 
-            # Verify outputs
-            torch_default_value = torch.tensor([3])
-            expected = model(example_input[0].detach(), torch_default_value)
-            name = list(result.keys())[0]
-            np.testing.assert_allclose(result[name], expected.detach().numpy())
+            assert(mlmodel.compute_unit == compute_units)
+
+            if ct.utils._is_macos():
+                result = mlmodel.predict(
+                    {"required_input":
+                     example_input[0].detach().numpy().astype(np.float32)}
+                )
+
+                # Verify outputs
+                torch_default_value = torch.tensor([3])
+                expected = model(example_input[0].detach(), torch_default_value)
+                name = list(result.keys())[0]
+                np.testing.assert_allclose(result[name], expected.detach().numpy())
 
 ###############################################################################
 # Note: all tests are examples of conversion to the Core ML format
@@ -1548,9 +1553,6 @@ class TestMLProgramFP16Transform:
                          "coremltools.precision.FLOAT16 or of type coremltools.transform.FP16ComputePrecision()"
         assert expected_error == str(e.value)
 
-        with pytest.raises(ValueError) as e:
+        expected_pattern = "compute_precision .* supported .* mlprogram .* None .* target==\'neuralnetwork\'.*\n.*minimum_deployment_target.*"
+        with pytest.raises(ValueError, match=expected_pattern) as e:
             mlmodel = ct.convert(copy.deepcopy(prog), compute_precision='fp16')
-        expected_error = "'compute_precision' must be coremltools.precision.FLOAT32 when the target is " \
-                         "'neuralnetwork' (i.e. deployment target is less than iOS15)"
-        assert expected_error == str(e.value)
-

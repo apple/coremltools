@@ -229,6 +229,13 @@ except:
     _HAS_ONNX = False
 MSG_ONNX_NOT_FOUND = "ONNX not found."
 
+try:
+    import scipy
+except:
+    _HAS_SCIPY = False
+else:
+    _HAS_SCIPY = True
+
 # General utils
 def version_ge(module, target_version):
     """

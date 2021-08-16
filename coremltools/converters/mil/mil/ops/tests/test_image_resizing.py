@@ -17,7 +17,7 @@ class TestAffine:
         "use_cpu_only, backend", itertools.product([True, False], backends)
     )
     def test_builder_to_backend_smoke(self, use_cpu_only, backend):
-        if backend == "neuralnetwork":
+        if backend[0] == "neuralnetwork":
             pytest.xfail("nn backend not supported")
 
         x_val = np.array([11.0, 22.0, 33.0, 44.0], dtype=np.float32).reshape(
@@ -90,8 +90,11 @@ class TestResample:
         "use_cpu_only, backend", itertools.product([True, False], backends,)
     )
     def test_builder_to_backend_smoke(self, use_cpu_only, backend):
-        if backend == "neuralnetwork":
+        if backend[0] == "neuralnetwork":
             pytest.xfail("nn backend not supported")
+
+        if backend == ("mlprogram", "fp16"):
+            pytest.xfail("rdar://80662845 (Resample FP16 unit test failing in coremltools)")
 
         x_ = np.array([11.0, 22.0, 33.0, 44.0], dtype=np.float32).reshape([1, 1, 2, 2])
         coordinates_ = np.array(
@@ -231,10 +234,10 @@ class TestUpsampleNearestNeighborFractionalScales:
         "use_cpu_for_conversion, backend", itertools.product([True, False], backends)
     )
     def test_builder_to_backend_smoke(self, use_cpu_for_conversion, backend):
-        if backend == "neuralnetwork":
+        if backend[0] == "neuralnetwork":
             pytest.xfail("nn backend not supported")
 
-        if backend == "mlprogram" and not use_cpu_for_conversion:
+        if backend[0] == "mlprogram" and not use_cpu_for_conversion:
             pytest.xfail("rdar://78343225 ((MIL GPU) Core ML Tools Unit Test failures [numerical error])")
 
         x_val = np.array([1.5, -2.5, 3.5], dtype=np.float32).reshape([1, 1, 1, 3])
@@ -286,7 +289,7 @@ class TestResizeBilinear:
         "use_cpu_only, backend", itertools.product([True, False], backends,)
     )
     def test_builder_to_backend_smoke(self, use_cpu_only, backend):
-        if backend == "mlprogram":
+        if backend[0] == "mlprogram":
             pytest.xfail("Seg fault: rdar://78343191 ((MIL GPU) Core ML Tools Unit Test failures [failure to load or Seg fault])")
 
         x = np.array([0, 1], dtype=np.float32).reshape(1, 1, 2)
@@ -360,7 +363,7 @@ class TestResizeBilinear:
             backend=backend,
         )
 
-        if backend != "neuralnetwork":
+        if backend[0] != "neuralnetwork":
             def build_mode_4(x):
                 return mb.resize_bilinear(
                     x=x,
@@ -390,7 +393,7 @@ class TestUpsampleBilinear:
         "use_cpu_only, backend", itertools.product([True, False], backends,)
     )
     def test_builder_to_backend_smoke(self, use_cpu_only, backend):
-        if backend == "mlprogram" and not use_cpu_only:
+        if backend[0] == "mlprogram" and not use_cpu_only:
             pytest.xfail("test failing on gpu with nan output")
 
         x = np.array([0, 1], dtype=np.float32).reshape(1, 1, 2)
@@ -440,32 +443,50 @@ class TestUpsampleBilinear:
         )
 
 
-    @pytest.mark.xfail(reason="rdar://66964398, failing on both NNv1 and MIL", run=True)
     @pytest.mark.skipif(not testing_reqs._HAS_TORCH, reason="PyTorch not installed.")
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, input_shape, scale_factor, align_corners",
+        "use_cpu_only, backend, input_shape, scale_factor, align_corners, recompute_scale_factor",
         itertools.product(
             [True],
             backends,
             [(2, 5, 10, 22)],
             [(3, 4), (2.5, 2.0), (0.5, 0.75)],
             [True, False],
+            [True, False],
         ),
     )
     def test_builder_to_backend_stress(
-        self, use_cpu_only, backend, input_shape, scale_factor, align_corners
+        self, use_cpu_only, backend, input_shape, scale_factor, align_corners, recompute_scale_factor
     ):
-        def _get_torch_upsample_prediction(x, scale_factor=(2, 2), align_corners=False):
+        scale_factor_height, scale_factor_width = scale_factor
+        _, _, height, width = input_shape
+        height = height * scale_factor_height
+        width = width * scale_factor_width
+        is_h_float = height - np.floor(height) > 0.001
+        is_w_float = width - np.floor(width) > 0.001
+
+        # Currently, MIL is not suporting recompute_scale_factor=False + align_corners=False
+        # with fractional output size
+        if not recompute_scale_factor and not align_corners and (is_h_float or is_w_float):
+            pytest.xfail("rdar://81124053 (Support recompute_scale_factor)")
+
+        def _get_torch_upsample_prediction(x, scale_factor=(2, 2), align_corners=False, recompute_scale_factor=True):
             x = torch.from_numpy(x)
-            m = torch.nn.Upsample(
-                scale_factor=scale_factor, mode="bilinear", align_corners=align_corners
+            out = torch.nn.functional.interpolate(
+                x,
+                scale_factor=scale_factor,
+                mode="bilinear",
+                align_corners=align_corners,
+                recompute_scale_factor=recompute_scale_factor,
             )
-            out = m(x)
             return out.numpy()
 
         x = random_gen(input_shape, rand_min=-100, rand_max=100)
         torch_pred = _get_torch_upsample_prediction(
-            x, scale_factor=scale_factor, align_corners=align_corners
+            x,
+            scale_factor=scale_factor,
+            align_corners=align_corners,
+            recompute_scale_factor=recompute_scale_factor,
         )
 
         input_placeholder_dict = {"x": mb.placeholder(shape=x.shape)}
@@ -616,16 +637,15 @@ class TestCrop:
 
 
 class TestCropResize:
-    @pytest.mark.xfail(
-        backends == ["mlprogram"],
-        reason="rdar://78343191 ((MIL GPU) Core ML Tools Unit Test failures [failure to load or Seg fault])",
-        run=True,
-    )
     @pytest.mark.parametrize(
         "use_cpu_only, backend, is_symbolic",
         itertools.product([True, False], backends, [True, False]),
     )
     def test_builder_to_backend_smoke(self, use_cpu_only, backend, is_symbolic):
+
+        if backend[0] == "mlprogram":
+            pytest.xfail("rdar://78343191 ((MIL GPU) Core ML Tools Unit Test failures [failure to load or Seg fault])")
+
         x = np.array(
             [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 16]],
             dtype=np.float32,
@@ -784,7 +804,7 @@ class TestCropResize:
         import functools
         for mode in range(6):
             ## nn-proto does not support UNALIGN_CORNERS
-            if not (backend == 'neuralnetwork' and mode == 5):
+            if not (backend[0] == 'neuralnetwork' and mode == 5):
                 run_compare_builder(
                     functools.partial(build, mode=mode),
                     input_placeholder_dict,

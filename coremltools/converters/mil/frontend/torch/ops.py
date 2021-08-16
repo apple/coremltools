@@ -537,10 +537,10 @@ def _convolution(context, node):
     # we require a (2 * n)-tuple, where n is the number of spatial dimensions, start and end for each spatial dimension
     pad = inputs[4].val
 
-    if weight.val.ndim in (3, 4):
+    if len(weight.shape) in (3, 4):
         # 1D and 2D: Need to explicitly state L-R, T-B pad
         pad = _np.repeat(pad, 2)
-    elif weight.val.ndim == 5:
+    elif len(weight.shape) == 5:
         # 3D: Need to explicitly state F-Bk, L-R, T-B pad
         if type(pad) == int:
             pad = _np.repeat(pad, 6)
@@ -1195,6 +1195,8 @@ def batch_norm(context, node):
     # helper functions for different type of batch norm
     def _add_batch_norm_dynamic():
         x = _input
+        shape = [1] * x.rank
+        shape[1] = -1 if any_symbolic(running_mean.shape) else running_mean.shape[0]
 
         if training:
             axes = [axis for axis in range(x.rank) if axis != 1]
@@ -1203,8 +1205,6 @@ def batch_norm(context, node):
             square = mb.mul(x=num, y=num)
             variance = mb.reduce_mean(x=square, axes=axes, keep_dims=True)
         else:
-            shape = [1] * x.rank
-            shape[1] = -1 if any_symbolic(running_mean.shape) else running_mean.shape[0]
             mean = mb.reshape(x=running_mean, shape=shape)
             num = mb.sub(x=x, y=mean)
             variance = mb.reshape(x=running_var, shape=shape)
@@ -2213,6 +2213,10 @@ def _get_scales_from_output_size(output_size, input_shape):
 
 @register_torch_op
 def upsample_bilinear2d(context, node):
+
+    def _is_float_value(x, threshold=0.001):
+        return x - _math.floor(x) > threshold
+
     inputs = _get_inputs(context, node)
     _input = inputs[0]
     output_size = inputs[1]
@@ -2224,9 +2228,30 @@ def upsample_bilinear2d(context, node):
     if scale_factors is not None and scale_factors.val is not None \
         and scale_factors.rank == 1 and scale_factors.shape[0] == 2:
         # get scale factors from provided inputs
+        # this happens when recompute_scale_factor = False
         scale_factors = scale_factors.val
         scales_h = scale_factors[0]
         scales_w = scale_factors[1]
+
+        # currently, we are not supporting recompute_scale_factor = False, align_corners = False with float output size
+        _, _, h, w = _input.shape
+        if not is_symbolic(h) and not is_symbolic(w):
+            # For the static input shape, we can compute the output size beforehand
+            output_h = h * scales_h
+            output_w = w * scales_w
+            is_h_float = _is_float_value(output_h)
+            is_w_float = _is_float_value(output_w)
+
+        else:
+            # For the dynamic input shape, we check if the scale factor itself is float
+            is_h_float = _is_float_value(scales_h)
+            is_w_float = _is_float_value(scales_w)
+
+        if (is_h_float or is_w_float) and not align_corners:
+            msg = "recompute_scale_factor = False, align_corners = False with float output size is " + \
+            "not supported for the upsample op {}".format(node.name)
+            raise NotImplementedError("")
+
     elif isinstance(output_size, list)and output_size[0].val is None and output_size[1].val is None:
         # the input shape is dynamic and recompute_scale_factor = True
         # need to trace the graph to find the scale factor
@@ -2242,6 +2267,7 @@ def upsample_bilinear2d(context, node):
         return
     else:
         # infer scale factors from output sizes
+        # This happens when recompute_scale_factor = True or the output_size is specified
         scales = _get_scales_from_output_size(output_size, _input.shape)
         if scales:
             scales_h, scales_w = scales

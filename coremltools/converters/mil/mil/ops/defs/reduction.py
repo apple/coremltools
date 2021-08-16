@@ -3,8 +3,22 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 import numpy as np
-import scipy
-from ._op_reqs import *
+
+from ._op_reqs import register_op
+from coremltools.converters.mil.mil import (
+    Operation,
+    precondition,
+    types,
+    VALUE
+)
+from coremltools.converters.mil.mil.input_type import (
+    BoolInputType,
+    DefaultInputs,
+    InputSpec,
+    IntInputType,
+    IntTensorInputType,
+    TensorInputType
+)
 
 
 class ReductionAxes(Operation):
@@ -363,7 +377,18 @@ class reduce_log_sum_exp(ReductionAxes):
         super(reduce_log_sum_exp, self).__init__(**kwargs)
 
     def get_operator(self):
-        return scipy.special.logsumexp
+        def operator(a, axis=None, keepdims=False):
+            max_values = np.amax(a, axis=axis, keepdims=True)
+            temp = np.exp(a - max_values)
+
+            if not keepdims:
+                max_values = np.squeeze(max_values, axis=axis)
+
+            sum = np.sum(temp, axis=axis, keepdims=keepdims)
+            result = np.log(sum)
+            return result + max_values
+
+        return operator
 
 
 @register_op(doc_str="")

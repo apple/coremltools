@@ -57,7 +57,7 @@ class TestAffineGrid(TorchBaseTest):
         padding_mode,
         align_corners,
     ):
-        if backend == "neuralnetwork":
+        if backend[0] == "neuralnetwork":
             pytest.xfail("nn backend not supported")
 
         x_shape, target_size = x_shape_and_target_size
@@ -111,8 +111,11 @@ class TestGridSample(TorchBaseTest):
         padding_mode,
         align_corners,
     ):
-        if backend == "neuralnetwork":
+        if backend[0] == "neuralnetwork":
             pytest.xfail("nn backend not supported")
+
+        if backend == ("mlprogram", "fp16"):
+            pytest.xfail("rdar://80658318 (GridSample FP16 tests are failing in torch converter)")
 
         params = {
             "mode": mode,
@@ -208,11 +211,6 @@ class TestBatchNorm(TorchBaseTest):
         itertools.product([5, 1], [0.1, 1e-05], [True, False], ["None", "Batch", "Height", "Width", "Depth", "All"], backends),
     )
     def test_batchnorm_3d(self, num_features, eps, affine, dynamic_input, backend):
-        if backend != "neuralnetwork" and num_features == 5 and (dynamic_input == "All" or affine == False):
-            pytest.xfail("rdar://75770475 ([ActivateMIL] Failure in "
-                         "test_ops_public_torch.py::TestBatchNorm::test_batchnorm_3d "
-                         "[elementwise_kernel_cpu: Cannot broadcast])")
-
         model = nn.BatchNorm3d(num_features, eps, affine=affine)
         input_shape = (6, num_features, 2, 3, 4)
         if dynamic_input == "None":
@@ -246,36 +244,21 @@ class TestBatchNorm(TorchBaseTest):
             )
 
     @pytest.mark.parametrize(
-        "rank, num_features, eps, running_vars_exist, training, backend",
-        itertools.product([3, 4, 5], [5, 1], [0.1, 1e-05], [True, False], [True, False], backends),
+        "rank, num_features, eps, training, backend",
+        itertools.product([3, 4, 5], [5, 1], [0.1, 1e-05], [True, False], backends),
     )
-    def test_batchnorm_dynamic(self, rank, num_features, eps, running_vars_exist, training, backend):
-        if backend != "neuralnetwork" and rank == 5 and num_features == 5:
-            pytest.xfail("rdar://75770475 ([ActivateMIL] Failure in "
-                         "test_ops_public_torch.py::TestBatchNorm::test_batchnorm_3d "
-                         "[elementwise_kernel_cpu: Cannot broadcast])")
-
+    def test_batchnorm_dynamic(self, rank, num_features, eps, training, backend):
+        model = ModuleWrapper(
+            nn.functional.batch_norm,
+            {"training": training, "eps": eps,},
+        )
         input_shape = [6, num_features, 3, 4, 5]
         input_shape = input_shape[:rank]
         _input = torch.randn(*input_shape)
+        _mean = torch.randn(num_features)
+        _var = torch.randn(num_features)
 
-        if training and running_vars_exist:
-            _mean = None
-            _var = None
-            inputs = [_input]
-            model = ModuleWrapper(
-                nn.functional.batch_norm,
-                {"training": training, "eps": eps, "running_mean": _mean, "running_var": _var},
-            )
-        else:
-            _mean = torch.randn(num_features)
-            _var = torch.randn(num_features)
-            inputs = (_input, _mean, _var)
-            model = ModuleWrapper(
-                nn.functional.batch_norm,
-                {"training": training, "eps": eps,},
-            )
-
+        inputs = (_input, _mean, _var)
         expected_results = model(*inputs)
 
         self.run_compare_torch(
@@ -387,12 +370,12 @@ class TestConv(TorchBaseTest):
         [ (*param, bend) for param, bend in itertools.product([
              (5, 3, 1, 1, 1, 2, 0, 1),
              (3, 3, 1, 1, 1, 2, 1, 3),
-             (4, 3, 3, 3, 1, 2, 0, 1),
+             (4, 3, 3, 3, 2, 2, 0, 1),
              (7, 3, 3, 3, 1, 3, 0, 1),
              (5, 5, 3, 3, 1, 3, 0, 1),
              (3, 5, 3, 3, 1, 3, 0, 1),
              (3, 5, 3, 3, 1, 3, 1, 3),
-             (7, 5, 3, 3, 1, 3, 1, 3),
+             (7, 5, 3, 3, 2, 3, 1, 3),
            ], backends)
         ],
     )
@@ -420,6 +403,92 @@ class TestConv(TorchBaseTest):
         self.run_compare_torch((1, in_channels, height, width), model,
                            backend=backend)
 
+class TestDynamicConv(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "width, in_channels, out_channels, kernel_size, stride, padding, backend",
+        [ (*param, bend) for param, bend in itertools.product([
+             (5, 1, 1, 1, 2, 1),
+             (3, 1, 1, 1, 2, 3),
+             (4, 3, 3, 1, 2, 1),
+             (7, 3, 3, 1, 3, 1),
+             (5, 3, 3, 2, 2, 1),
+             (3, 3, 3, 1, 3, 1),
+             (3, 3, 3, 1, 3, 3),
+             (7, 3, 3, 3, 1, 3),
+           ], backends)
+        ],
+    )
+    def test_convolution1d(
+        self,
+        width,
+        in_channels,
+        out_channels,
+        kernel_size,
+        stride,
+        padding,
+        backend,
+        groups=1,
+    ):
+
+        class DynamicConv(nn.Module):
+            def __init__(self):
+                super(DynamicConv, self).__init__()
+
+            def forward(self, input_data, weights):
+                return nn.functional.conv1d(
+                    input_data,
+                    weights,
+                    stride=stride,
+                    padding=padding
+                )
+
+        model = DynamicConv()
+        self.run_compare_torch([(1, in_channels, width), (out_channels, int(in_channels/groups), kernel_size)],
+            model, backend=backend)
+
+    @pytest.mark.parametrize(
+        "height, width, in_channels, out_channels, kernel_size, stride, padding, dilation, backend",
+        [ (*param, bend) for param, bend in itertools.product([
+             (5, 3, 1, 1, 1, 2, 0, 1),
+             (3, 3, 1, 1, 1, 2, 1, 3),
+             (4, 3, 3, 3, 1, 2, 0, 1),
+             (7, 3, 3, 3, 1, 3, 0, 1),
+             (5, 5, 3, 3, 2, 1, 0, 1),
+             (3, 5, 3, 3, 1, 3, 0, 1),
+             (3, 5, 3, 3, 1, 3, 1, 3),
+             (7, 5, 3, 3, 2, 3, 1, 3),
+           ], backends)
+        ],
+    )
+    def test_convolution2d(
+        self,
+        height,
+        width,
+        in_channels,
+        out_channels,
+        kernel_size,
+        stride,
+        padding,
+        dilation,
+        backend,
+        groups=1,
+    ):
+
+        class DynamicConv(nn.Module):
+            def __init__(self):
+                super(DynamicConv, self).__init__()
+
+            def forward(self, input_data, weights):
+                return nn.functional.conv2d(
+                    input_data,
+                    weights,
+                    stride=stride,
+                    padding=padding
+                )
+
+        model = DynamicConv()
+        self.run_compare_torch([(1, in_channels, height, width), (out_channels, int(in_channels/groups), kernel_size, kernel_size)],
+            model, backend=backend)
 
 class TestConvTranspose(TorchBaseTest):
     @pytest.mark.parametrize(
@@ -636,10 +705,12 @@ class TestConvTranspose(TorchBaseTest):
 
 class TestCond(TorchBaseTest):
     @pytest.mark.parametrize(
-        "use_cpu_for_conversion, backend", itertools.product([True, False], backends,)
+        "use_cpu_for_conversion, backend", itertools.product([True, False], backends)
     )
     def test_cond(self, use_cpu_for_conversion, backend):
-        if backend == "mlprogram" and not use_cpu_for_conversion:
+        if backend[0] == "mlprogram":
+            pytest.skip("rdar://81169758 (Cond tests hang on mlprogram backend)")
+        if backend[0] == "mlprogram" and not use_cpu_for_conversion:
             pytest.xfail("rdar://78343191 ((MIL GPU) Core ML Tools Unit Test failures [failure to load or Seg fault])")
         in_features = 1
         out_features = 2
@@ -738,21 +809,35 @@ class TestUpsample(TorchBaseTest):
         self.run_compare_torch(input_shape, model, backend=backend)
 
     @pytest.mark.parametrize(
-        "scales_h, scales_w, align_corners, backend",
+        "scales_h, scales_w, align_corners, recompute_scale_factor, backend",
          itertools.product(
-            [2, 4.5], [4, 5.5], [True, False], backends
+            [2, 0.5, 4.1], [3, 0.5, 5.3], [True, False], [True, False], backends
         )
     )
     def test_upsample_bilinear2d_with_scales(
-        self, scales_h, scales_w, align_corners, backend
+        self, scales_h, scales_w, align_corners, recompute_scale_factor, backend
     ):
-        input_shape = (1, 3, 10, 10)
+        def _is_float_value(x, threshold=0.001):
+            return x - np.floor(x) > threshold
+
+        Height = 8
+        Width = 22
+        input_shape = (1, 3, Height, Width)
+        output_h = Height * scales_h
+        output_w = Width * scales_w
+        is_h_float = _is_float_value(output_h)
+        is_w_float = _is_float_value(output_w)
+
+        if (is_h_float or is_w_float) and  not align_corners and not recompute_scale_factor:
+            pytest.xfail("rdar://81124053 (Support recompute_scale_factor)")
+
         model = ModuleWrapper(
             nn.functional.interpolate,
             {
                 "scale_factor": (scales_h, scales_w),
                 "mode": "bilinear",
                 "align_corners": align_corners,
+                "recompute_scale_factor": recompute_scale_factor,
             },
         )
         self.run_compare_torch(input_shape, model, backend=backend)
@@ -775,7 +860,7 @@ class TestUpsample(TorchBaseTest):
         itertools.product([2, 3, 4.5], [4, 5, 5.5], backends),
     )
     def test_upsample_nearest2d_with_scales(self, scales_h, scales_w, backend):
-        if backend == "neuralnetwork":
+        if backend[0] == "neuralnetwork":
             if isinstance(scales_h, float) or isinstance(scales_w, float):
                 return  # Skip fractional scale factors tests for neuralnetwork
 
@@ -802,38 +887,47 @@ class TestUpsample(TorchBaseTest):
                                converter_input_type=converter_input_type)[1]
 
         # also check if the scale factor are integers
-        if backend == 'neuralnetwork':
+        if backend[0] == 'neuralnetwork':
             for layer in mlmodel._spec.neuralNetwork.layers:
                 if layer.WhichOneof('layer') == "upsample":
                     assert len(layer.upsample.fractionalScalingFactor) == 0
 
 
     @pytest.mark.parametrize(
-        "scales_h, scales_w, align_corners, backend",
+        "scales_h, scales_w, align_corners, recompute_scale_factor, backend",
         itertools.product(
-           [2, 3], [4, 5], [True, False], backends
+           [2, 3.6], [4, 0.7], [True, False], [True, False], backends
         )
     )
     def test_upsample_bilinear2d_with_scales_dynamic(
-        self, scales_h, scales_w, align_corners, backend
+        self, scales_h, scales_w, align_corners, recompute_scale_factor, backend
     ):
-        input_shape = (1, 3, 10, 10)
+        def _is_float_value(x, threshold=0.001):
+            return x - np.floor(x) > threshold
+
+        is_h_float = _is_float_value(scales_h)
+        is_w_float = _is_float_value(scales_w)
+        input_shape = (1, 3, 9, 22)
+
+        if (is_h_float or is_w_float) and not align_corners and not recompute_scale_factor:
+            pytest.xfail("rdar://81124053 (Support recompute_scale_factor)")
+
         model = ModuleWrapper(
             nn.functional.interpolate,
             {
                 "scale_factor": (scales_h, scales_w),
                 "mode": "bilinear",
                 "align_corners": align_corners,
-                "recompute_scale_factor": True,
+                "recompute_scale_factor": recompute_scale_factor,
             },
         )
-        converter_input_type = [TensorType(shape=(1, 3, RangeDim(), RangeDim()), dtype=np.float32)]
+        converter_input_type = [TensorType(shape=(1, 3, RangeDim(default=9), RangeDim(default=22)), dtype=np.float32)]
         mlmodel = self.run_compare_torch(input_shape, model,
                                backend=backend,
                                converter_input_type=converter_input_type)[1]
 
         # also check if the scale factor are integers
-        if backend == 'neuralnetwork':
+        if backend[0] == 'neuralnetwork' and not is_h_float and not is_w_float:
             for layer in mlmodel._spec.neuralNetwork.layers:
                 if layer.WhichOneof('layer') == "upsample":
                     assert len(layer.upsample.fractionalScalingFactor) == 0
@@ -1530,7 +1624,7 @@ class TestReduction(TorchBaseTest):
 class TestLayerNorm(TorchBaseTest):
     @pytest.mark.parametrize(
         "input_shape, eps, backend",
-        itertools.product([(1, 3, 15, 15), (1, 1, 1, 1)], [1e-5, 1e-9], backends),
+        itertools.product([(1, 3, 15, 15), (1, 1, 1, 1)], [1e-5, 1e-7], backends),
     )
     def test_layer_norm(self, input_shape, eps, backend):
         model = nn.LayerNorm(input_shape, eps=eps)
@@ -2088,10 +2182,10 @@ class TestTo(TorchBaseTest):
         "use_cpu_for_conversion, backend", itertools.product([True, False], backends,)
     )
     def test_cast_bug(self, use_cpu_for_conversion, backend):
-        if backend == "mlprogram" and not use_cpu_for_conversion:
+        if backend[0] == "mlprogram" and not use_cpu_for_conversion:
             pytest.xfail("rdar://78343191 ((MIL GPU) Core ML Tools Unit Test failures [failure to load or Seg fault])")
 
-        if backend == "mlprogram" and use_cpu_for_conversion:
+        if backend[0] == "mlprogram" and use_cpu_for_conversion:
             pytest.xfail("numerical mismatch : rdar://78952850")
 
         class TestModel(torch.nn.Module):

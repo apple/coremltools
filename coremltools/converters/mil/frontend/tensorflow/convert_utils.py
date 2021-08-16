@@ -177,6 +177,10 @@ def convert_graph(context, graph, outputs=None):
 
         if node.op == "NoOp":
             continue
+
+        if node.op == "Assert":
+            continue
+
         _add_op = _TF_OPS_REGISTRY.get(node.op, None)
         if _add_op is None:
             msg = "Conversion for TF op '{0}' not implemented.\n \n{1}".format(

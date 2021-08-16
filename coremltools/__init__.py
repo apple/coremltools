@@ -21,9 +21,11 @@ format. In particular, it can be used to:
 
 For more information: http://developer.apple.com/documentation/coreml
 """
+from enum import Enum as _Enum
+from logging import getLogger as _getLogger
+
 
 # Backup root logger handlers
-from logging import getLogger as _getLogger
 _root_logger = _getLogger()
 _root_logger_handlers_backup = _root_logger.handlers.copy()
 
@@ -57,6 +59,14 @@ _SPECIFICATION_VERSION_IOS_14 = 5
 
 # New versions for iOS 15.0
 _SPECIFICATION_VERSION_IOS_15 = 6
+
+class ComputeUnit(_Enum):
+    '''
+    The set of processing-unit configurations the model can use to make predictions.
+    '''
+    ALL = 1  # Allows the model to use all compute units available, including the neural engine
+    CPU_AND_GPU = 2 # Allows the model to use both the CPU and GPU, but not the neural engine
+    CPU_ONLY = 3 # Limit the model to only use the CPU
 
 # expose sub packages as directories
 from . import converters

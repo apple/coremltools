@@ -44,7 +44,10 @@ def apply_common_pass_pipeline(prog, passes):
         "common::fuse_linear_bias",
         "common::fuse_gelu_tanh_approximation",
         "common::fuse_gelu_exact",
-        "common::pad_conv_connect",
+        "common::fuse_leaky_relu",
+        "common::use_reflection_padding",
+        "common::merge_consecutive_paddings", # Should come after use_reflection_padding, which will introduce new padding layers
+        "common::pad_conv_connect", # Should come after merge_consecutive_paddings
         'common::image_input_preprocess',
         "common::replace_stack_reshape", # should come before detect_concat_interleave since it may add concat
         "common::reduce_transposes",
@@ -53,6 +56,7 @@ def apply_common_pass_pipeline(prog, passes):
         "common::fuse_onehot_matmul_to_gather",
         "common::fuse_layernorm_or_instancenorm",  # should come after reduce_transposes, to detect instance_norm
         "common::fuse_elementwise_to_batchnorm",  # should come after fuse_layernorm_or_instancenorm
+        "common::fuse_reduce_mean", # should come after fuse_layernorm_or_instancenorm
         "common::fuse_conv_batchnorm", # should come after fuse_elementwise_to_batchnorm
         "common::fuse_conv_scale", # Re-run the fuse conv scale pass after the conv and batch_norm are fused
         "common::fuse_conv_bias", # Re-run the fuse conv bias pass after the conv and batch_norm are fused

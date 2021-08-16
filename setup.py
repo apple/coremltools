@@ -72,7 +72,6 @@ setup(
         "numpy >= 1.14.5",
         "protobuf >= 3.1.0",
         "sympy",
-        "scipy",
         "tqdm",
         "packaging",
     ],

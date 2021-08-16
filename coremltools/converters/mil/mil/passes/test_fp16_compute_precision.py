@@ -3,6 +3,7 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+from coremltools._deps import _IS_MACOS
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil.passes import quantization_passes as transform
 from coremltools.converters.mil.testing_utils import (
@@ -12,6 +13,7 @@ from coremltools.converters.mil.testing_utils import (
 )
 import unittest
 import numpy as np
+import coremltools as ct
 
 np.random.seed(1984)
 
@@ -58,6 +60,37 @@ class FP16CastTransform(unittest.TestCase):
             {"x": (10, 20)},
             expected_output_shapes={block.outputs[0].name: (10, 20)},
         )
+
+    """
+    Input graph:
+        input -----> div -----> out
+                      ^
+        const(eps) ---|
+
+    Output graph:
+        input --------> cast(dtype="fp16") -----> div -----> cast(dtype="fp32") ---> out
+                                                   ^
+        const(eps) ---> cast(dtype="fp16") --------|
+    """
+
+    def test_divide_by_zero_operation(self):
+        @mb.program(input_specs=[mb.TensorSpec(shape=(10, 20))])
+        def prog(x):
+            eps = mb.const(val=1e-10)
+            x = mb.real_div(x=x, y=eps)
+            return x
+
+        prev_prog, prev_block, block = apply_pass_and_basic_check(
+            prog, transform.FP16ComputePrecision(op_selector=lambda op: True)
+        )
+
+        mlmodel = ct.convert(prog, source="milinternal")
+        input_dict = {"x": np.random.rand(10, 20)}
+
+        if _IS_MACOS:
+            prediction = mlmodel.predict(input_dict, useCPUOnly=True)
+            assert(not np.isnan(prediction['real_div_0']).any())
+            assert(np.isfinite(prediction['real_div_0']).all())
 
     """
     Input graph:

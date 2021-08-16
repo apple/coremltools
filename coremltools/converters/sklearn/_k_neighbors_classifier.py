@@ -3,7 +3,7 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from ..._deps import _HAS_SKLEARN
+from ..._deps import _HAS_SCIPY, _HAS_SKLEARN
 from ...models import MLModel as _MLModel
 import coremltools
 
@@ -13,8 +13,11 @@ if _HAS_SKLEARN:
     import sklearn.neighbors as _neighbors
     from . import _sklearn_util
 
+if _HAS_SCIPY:
+    import scipy as sp
+
 import numpy as np
-import scipy as sp
+
 
 model_type = "classifier"
 sklearn_class = _neighbors.KNeighborsClassifier
@@ -276,11 +279,13 @@ def _is_printable(obj):
 
 def _is_valid_sparse_format(obj):
     """Check if the object is in CSR sparse format (the only valid type for KNeighborsClassifier)"""
+    if not _HAS_SCIPY:
+        return False
     return isinstance(obj, sp.sparse.csr_matrix)
 
 
 def _unpack_sparse(obj):
     """Unpack the sparse matrix into a format that we can easily iterate over for insertion into a CoreML model."""
-    if not sp.sparse.issparse(obj):
+    if not _HAS_SCIPY and not sp.sparse.issparse(obj):
         raise TypeError("Object {} is not a scipy sparse matrix type".format(type(obj)))
     return obj.toarray()

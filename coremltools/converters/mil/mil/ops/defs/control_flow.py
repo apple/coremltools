@@ -180,13 +180,14 @@ class const(Operation):
             if value.dtype in [np.uint8, np.int8, np.uint16, np.int16, np.uint32, np.uint64, np.int64]:
                 if value.dtype in [np.uint64, np.int64]:
                     msg = "Downcast const op {} data int64 as int32".format(self.name)
-                    logging.warning(msg)
+                    logging.debug(msg)
                 value = value.astype(np.int32)
+
 
             # For the float type, we use float32 by default
             elif value.dtype == np.float64:
                 msg = "Downcast const op {} data fp64 as fp32".format(self.name)
-                logging.warning(msg)
+                logging.debug(msg)
                 value = value.astype(np.float32)
 
         elif isinstance(value, mil_list):

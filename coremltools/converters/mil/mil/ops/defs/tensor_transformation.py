@@ -3,7 +3,6 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import functools
 import logging
 import numpy as np
 import sympy as sm
@@ -17,18 +16,29 @@ from coremltools.converters.mil.mil.types.symbolic import (
 from coremltools.converters.mil.mil import (
     get_new_symbol,
     get_new_variadic_symbol,
-    VALUE,
+    Operation,
+    precondition,
     SYMBOL,
     types,
+    VALUE,
 )
-from ._op_reqs import *
+from coremltools.converters.mil.mil.input_type import (
+    BoolTensorInputType,
+    DefaultInputs,
+    InputSpec,
+    IntInputType,
+    IntTensorInputType,
+    ScalarOrTensorInputType,
+    TensorInputType
+)
+from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
 
 
 @register_op(doc_str="")
 class depth_to_space(Operation):
     """
     Rearrange elements in a tensor from depth (channel) into spatial dimensions.
-    
+
     Parameters
     ----------
     x: tensor<[n, C, H, W], T> (Required)
@@ -36,12 +46,12 @@ class depth_to_space(Operation):
     block_size: const i32 (Required)
         * The size of the spatial block. Must be greater than ``1`` and divisible by
           channel dimension ``C``.
-    
+
     Returns
     -------
     tensor<[n, C / block_size^2, H x block_size, W x block_size], T>
         * Where ``b`` is the block size.
-    
+
     Attributes
     ----------
     T: fp32
@@ -67,7 +77,7 @@ class depth_to_space(Operation):
 class expand_dims(Operation):
     """
     Insert a single-dimension in a 1-D or higher tensor at each axis in axes.
-    
+
     Parameters
     ----------
     x: tensor<\*?, T> (Required)
@@ -77,19 +87,19 @@ class expand_dims(Operation):
         * Insert single dimension at dimension index at each axes.
         * Negative value to index from the end. ``-d-1 <= axis <= d``
           where ``d`` is the rank of ``x``.
-    
+
     Returns
     -------
     tensor<\*(rank(x)+K), T>
         * Same type as the input ``x`` with rank ``rank(x)+K``.
-    
+
     Attributes
     ----------
     T: fp32
     """
-    
+
     input_spec = InputSpec(
-        x=ScalarOrTensorInputType(), 
+        x=ScalarOrTensorInputType(),
         axes=IntTensorInputType(const=True),
     )
 
@@ -151,20 +161,20 @@ class reshape(Operation):
     """
     Return a tensor that has the same values as ``x`` with shape ``shape``.
     ``shape`` must have the same volume (number of elements) as ``x``.
-    
+
     Parameters
     ----------
     x: tensor<\*?, T> (Required)
-    
+
         * A n-D tensor or a scalar.
         * If ``x`` is fixed rank (and possibly contains symbolic dimension),
           shape may contain elements that are not positive integers (see below).
         * If ``x`` is variadic rank, shape can only contain positive integers.
-        
+
     shape: tensor<[K], i32> (Required)
-    
+
         A 1-D tensor, with elements from the following:
-        
+
             * Positive integers.
             * Symbols: All but one symbol in shape must be present in ``x.shape``.
               The new symbol that is not present in ``x.shape`` represent a dimension
@@ -175,12 +185,12 @@ class reshape(Operation):
               if ``x`` is variadic rank.
             * ``0``: If ``K == rank(x)`` then ``0`` means inheriting from the corresponding
               dimension in ``x.shape``. ``0`` is illegal if ``x`` is variadic rank.
-    
+
     Returns
     -------
     tensor<\*?, T>
         * Tensor with shape determined by the input shape.
-    
+
     Attributes
     ----------
     T: fp32
@@ -284,31 +294,31 @@ class reshape(Operation):
 class reverse(Operation):
     """
     Reverse the order of the input tensor ``x`` along specified ``axes``(dimensions).
-    
+
     Parameters
     ----------
     x: tensor<\*?, T> (Required)
         * Input tensor.
-    
+
     axes: const<D, i32> (Optional)
         * Dimension(s) to reverse. Each axis must be in the range ``[-rank(x), rank(x))``.
         * Defaults to None (reverse on all dimensions).
-    
+
     Returns
     -------
     tensor<\*?, T>
         * Same type and shape as the input tensor.
-    
+
     Attributes
     ----------
     T: fp32
-    
+
     References
     ----------
     See `tf.reverse <https://www.tensorflow.org/api_docs/python/tf/reverse>`_
     and `TORCH <https://pytorch.org/docs/stable/torch.html#torch.flip>`_.
     """
-    
+
     input_spec = InputSpec(
         x=TensorInputType(),
         axes=IntTensorInputType(const=True, optional=True),
@@ -356,22 +366,22 @@ class reverse_sequence(Operation):
     batch_axis: const<i32> (Optional)
         * Dimension for slicing.
         * Defaults to ``0``.
-    
+
     Returns
     -------
     tensor<\*?, T>
         * Same type and shape as the input tensor.
-    
+
     Attributes
     ----------
     T: fp32
-    
+
     References
     ----------
     `tf.reverse_sequence <https://www.tensorflow.org/api_docs/python/tf/reverse_sequence>`_
-    
+
     """
-    
+
     input_spec = InputSpec(
         x=TensorInputType(),
         lengths=IntTensorInputType(),
@@ -709,7 +719,7 @@ class slice_by_size(Operation):
 class space_to_depth(Operation):
     """
     Rearrange elements in a tensor from spatial into depth (channel) dimension.
-    
+
     Parameters
     ----------
     x: tensor<[n, C, H, W], T> (Required)
@@ -717,12 +727,12 @@ class space_to_depth(Operation):
     block_size: const<i32> (Required)
         * The size of the spatial block. Must be greater than ``1`` and divisible
           by spatial dimensions ``H, W``.
-    
+
     Returns
     -------
     tensor<[n, C x block_size^2, H / block_size, W / block_size], T>
         * Where ``b`` is the block size.
-    
+
     Attributes
     ----------
     T: fp32
@@ -747,7 +757,7 @@ class space_to_depth(Operation):
 class squeeze(Operation):
     """
     Remove single-dimension dimensions in a 1-D or higher tensor.
-    
+
     Parameters
     ----------
     x: tensor<\*?,T> (Required)
@@ -755,17 +765,17 @@ class squeeze(Operation):
     axes: const<K,i32> (Optional)
         * Axes to squeeze out.
         * Default to remove all single-dimensions.
-    
+
     Returns
     -------
     tensor<\*(rank(x)-K),T>
         * Tensor with same type as input ``x`` and rank ``rank(x)-K``.
-    
+
     Attributes
     ----------
     T: fp32
     """
-    
+
     input_spec = InputSpec(
         x=TensorInputType(),
         axes=IntTensorInputType(const=True, optional=True),
@@ -797,39 +807,39 @@ class squeeze(Operation):
                     )
                 squeezed_shape.pop(i)
 
-        return types.tensor(x_type, tuple(squeezed_shape))
+        return types.tensor(x_type, tuple(squeezed_shape)) if len(squeezed_shape) != 0 else x_type
 
     @precondition(allow=VALUE)
     def value_inference(self):
         if self.x.val is None:
             return None
         if self.axes is None:
-            return np.squeeze(self.x.val)
+            val =  np.squeeze(self.x.val)
         else:
-            return np.squeeze(self.x.val, axis=tuple(self.axes.val))
-
+            val = np.squeeze(self.x.val, axis=tuple(self.axes.val))
+        return val if val.shape != () else self.x.val[0]
 
 @register_op(doc_str="")
 class transpose(Operation):
     """
     Permute tensor ``x`` dimensions according to ``perm``.
-    
+
     Parameters
     ----------
     x: tensor<\*?, T> (Required)
         * Must be at least 1-D. ``x`` may have a symbolic shape.
     perm: const<[rank(x)], i32> (Required)
-        * Permutation order. Must be non-negative integers.
-    
+        * Permutation order. -rank(x) <= perm[I] < rank(x) for all perm entries.
+
     Returns
     -------
     tensor<\*?,T>
         * Tensor with same rank and type as ``x``.
-    
+
     Attributes
     ----------
     T: fp32
-    
+
     References
     ----------
     `torch.Tensor.permute <https://pytorch.org/docs/stable/tensors.html#torch.Tensor.permute>`_
@@ -867,28 +877,28 @@ class pixel_shuffle(Operation):
     """
     Rearrange elements in a tensor from depth (channel) into spatial dimensions.
     Equivalent to PyTorch's ``PixelShuffle``.
-    
+
     Parameters
     ----------
     x: tensor<[n, C x f^2, H, W], T> (Required)
         * Input tensor of rank ``4``.
     upscale_factor: const<i32>
         * Factor to increase spatial resolution by.
-    
+
     Returns
     -------
     tensor<[n, C, H x f, W x f], T>
         * Where ``f`` is the upscale factor.
-    
+
     Attributes
     ----------
     T: fp32
-    
+
     References
     ----------
     `torch.nn.PixelShuffle <https://pytorch.org/docs/stable/generated/torch.nn.PixelShuffle.html?highlight=pixel%20shuffle#torch.nn.PixelShuffle>`_
     """
-    
+
     input_spec = InputSpec(
         x=TensorInputType(), upscale_factor=IntInputType(const=True),
     )
@@ -909,33 +919,33 @@ class sliding_windows(Operation):
     """
     Return a tensor containing all windows of ``size``, separated by stride along the
     given ``axis``.
-    
+
     Parameters
     ----------
     x: tensor<[\*d0, d_axis, *dn], T>
         * Input tensor.
-    
+
     axis: const<i32>
         * Axis to perform the operation.
-    
+
     size: const<i32>
         * Number of elements in the sliding window.
-    
+
     stride: const<i32> Optional
         * Default to ``1``.
         * The stride of the input elements in the sliding window.
-    
+
     Returns
     -------
     tensor<[\*d0, d_axis - size // stride + 1, size, \*dn], T>
         * The output will be a tensor of rank ``N+1`` where ``N`` is the input tensor
           rank.
-    
+
     Attributes
     ----------
     T: fp32
     """
-    
+
     input_spec = InputSpec(
         x=TensorInputType(),
         axis=IntInputType(const=True),

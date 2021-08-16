@@ -2,7 +2,9 @@
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
+from pathlib import Path
 
+import os
 import logging
 import numpy as np
 import copy
@@ -12,10 +14,18 @@ from coremltools.converters.mil.mil import Program, Function
 from coremltools.converters.mil.mil.passes.quantization_passes import AbstractQuantizationPass
 from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
 from coremltools._deps import _IS_MACOS
+
+import coremltools as ct
 import PIL.Image
 
 np.random.seed(10)
 
+def _serialize_current_pytest(mlmodel):
+    class_name = os.environ.get('PYTEST_CURRENT_TEST').split("::")[1].strip()
+    test_name = "::".join(os.environ.get('PYTEST_CURRENT_TEST').split("::")[2:]).split("(call)")[0].strip()
+    mlpackage_path = "/tmp/pytest_failures/{}/{}/model.mlpackage".format(class_name,test_name)
+    Path(mlpackage_path).mkdir(parents=True, exist_ok=True)
+    mlmodel.save(mlpackage_path)
 
 def assert_op_count_match(program, expect, op=None, verbose=False):
     """
@@ -36,7 +46,7 @@ def assert_op_count_match(program, expect, op=None, verbose=False):
 
 
 def assert_model_is_valid(
-    program, inputs, backend="neuralnetwork", verbose=True, expected_output_shapes=None
+    program, inputs, backend=("neuralnetwork", "fp32"), verbose=True, expected_output_shapes=None
 ):
     """
     Assert Core ML model is valid.
@@ -53,7 +63,7 @@ def assert_model_is_valid(
     for name, shape in inputs.items():
         input_dict[name] = np.random.rand(*shape)
 
-    mlmodel = ct.convert(program, source="milinternal", convert_to=backend, useCPUOnly=True)
+    mlmodel = ct_convert(program, source="milinternal", convert_to=backend, useCPUOnly=True)
     assert mlmodel is not None
 
     if verbose:
@@ -199,7 +209,7 @@ def compare_backend(
     input_key_values,
     expected_outputs,
     use_cpu_only=True,
-    quantize_fp16 = False,
+    dtype = "fp32",
     atol=1e-04,
     rtol=1e-05,
     also_compare_shapes=True,
@@ -217,6 +227,10 @@ def compare_backend(
         - use_cpu_only: True/False.
     """
     if _IS_MACOS:
+
+        if dtype not in ["fp32", "fp16"]:
+            raise ValueError("Unsupported dtype config")
+
         pred = run_core_ml_predict(mlmodel, input_key_values,
             use_cpu_only=use_cpu_only)
         if also_compare_shapes:
@@ -227,7 +241,7 @@ def compare_backend(
                 use_cpu_only=use_cpu_only,
                 pred=pred,
             )
-        if not use_cpu_only or quantize_fp16:
+        if not use_cpu_only or (dtype == "fp16"):
             atol = max(atol * 100.0, 5e-1)
             rtol = max(rtol * 100.0, 5e-2)
         for o, expected in expected_outputs.items():
@@ -273,10 +287,56 @@ def compare_shapes(
                 continue
             assert coreml_out.shape == expected.shape, msg
 
+def ct_convert(
+    program,
+    source = "auto",
+    inputs = None,
+    outputs = None,
+    classifier_config = None,
+    minimum_deployment_target = None,
+    convert_to = None,
+    compute_precision = None,
+    skip_model_load = False,
+    **kwargs,
+):
+
+    """
+    Overloaded ct.convert function with the only difference being in the argument `convert_to`
+    which in this overloaded call accepts a tuple of (target, dtype).
+    Ex: ("neuralnetwork", "fp32"), ("mlprogram", "fp16")
+    """
+
+    target, dtype = convert_to
+
+    if dtype not in ["fp32", "fp16"]:
+        raise ValueError("Unsupported dtype config")
+
+    compute_precision = ct.precision.FLOAT16 if dtype == "fp16" else ct.precision.FLOAT32
+    if target == "neuralnetwork":
+        compute_precision = None
+
+    mlmodel = ct.convert(
+                program,
+                source = source,
+                inputs = inputs,
+                outputs = outputs,
+                classifier_config = classifier_config,
+                minimum_deployment_target = minimum_deployment_target,
+                convert_to = target,
+                compute_precision = compute_precision,
+                skip_model_load = skip_model_load,
+                **kwargs
+    )
+
+    if os.environ.get("DEBUG_SAVE_MLMODEL", "0") == "1":
+        from coremltools.converters.mil.testing_utils import _serialize_current_pytest
+        _serialize_current_pytest(mlmodel)
+
+    return mlmodel
 
 def get_core_ml_prediction(
     build, input_placeholders, input_values, use_cpu_only=True,
-    backend="neuralnetwork"):
+    backend=("neuralnetwork", "fp32")):
     """
     Return predictions of the given model.
     """
@@ -293,7 +353,7 @@ def get_core_ml_prediction(
         ssa_func.set_outputs(output_vars)
         program.add_function("main", ssa_func)
 
-    mlmodel = ct.convert(program, source="milinternal",
+    mlmodel = ct_convert(program, source="milinternal",
                          convert_to=backend, useCPUOnly=use_cpu_only)
     return mlmodel.predict(input_values, useCPUOnly=use_cpu_only)
 

@@ -5,7 +5,7 @@
 
 import itertools
 import numpy as np
-from coremltools._deps import version_lt
+from coremltools._deps import version_lt, version_ge
 from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.frontend.tensorflow.test import (
     testing_utils as tf_testing_utils,
@@ -116,8 +116,8 @@ del TestWhileLoop.test_nested_while_body  # tf.function() error in TF2
 
 
 class TestImageResample(TensorFlow2BaseTest):
-    @pytest.mark.skipif(condition=version_lt(tf, "2.4"),
-                        reason="tfa.image.resample requires TF 2.4+")
+    @pytest.mark.skipif(condition=version_lt(tf, "2.4") or version_ge(tf, "2.5"),
+                        reason="tfa.image.resample requires TF 2.4+. On TF 2.5+, TF package has this symbol missing")
     @pytest.mark.parametrize(
         "use_cpu_only, backend, data_warp_shapes",
         itertools.product(
@@ -135,7 +135,7 @@ class TestImageResample(TensorFlow2BaseTest):
     def test_resample(
         self, use_cpu_only, backend, data_warp_shapes,
     ):
-        if backend == "neuralnetwork":
+        if backend[0] == "neuralnetwork":
             pytest.xfail("nn backend not supported")
 
         tfa = pytest.importorskip("tensorflow_addons")
@@ -184,7 +184,7 @@ class TestImageTransform(TensorFlow2BaseTest):
     )
     def test(self, use_cpu_only, backend, transforms, interpolation, shapes):
         x_shape, output_shape = shapes
-        if backend == "neuralnetwork":
+        if backend[0] == "neuralnetwork":
             pytest.xfail("nn backend not supported")
 
         tfa = pytest.importorskip("tensorflow_addons")
@@ -222,7 +222,7 @@ class TestActivationSiLU(TensorFlow2BaseTest):
         ),
     )
     def test(self, use_cpu_only, backend, rank, tf_op):
-        if backend == "neuralnetwork":
+        if backend[0] == "neuralnetwork":
             pytest.xfail("nn backend not supported")
 
         x_shape = tuple(np.random.randint(low=1, high=4, size=rank))
@@ -265,15 +265,15 @@ class TestResizeNearestNeighbor(TensorFlow2BaseTest):
         if align_corners is True and half_pixel_centers is True:
             return
 
-        if backend == "neuralnetwork":
+        if backend[0] == "neuralnetwork":
             # neural network backend does not support fractional scale factors for nearest neighbor upsample op
             if target_shape[-1] % input_shape[-1] != 0:
                 return
             if target_shape[-2] % input_shape[-2] != 0:
                 return
 
-        if not use_cpu_only and not half_pixel_centers and backend == "mlprogram":
-            # use_cpu_only == False & half_pixel_centers == False, & backend == mlprogram
+        if not use_cpu_only and not half_pixel_centers and backend[0] == "mlprogram":
+            # use_cpu_only == False & half_pixel_centers == False, & backend[0] == mlprogram
             # then there are numerical errors
             pytest.xfail("rdar://78321005")
 
@@ -299,7 +299,7 @@ class TestResizeNearestNeighbor(TensorFlow2BaseTest):
         itertools.product([True, False], backends, [(1, 1), (2, 3), (4, 1)]),
     )
     def test_keras_layer(self, use_cpu_only, backend, size):
-        if backend == "neuralnetwork":
+        if backend[0] == "neuralnetwork":
             pytest.xfail("nn backend not supported")
 
         x_shape = tuple(np.random.randint(low=1, high=4, size=4))
@@ -327,13 +327,13 @@ class TestResizeNearestNeighbor(TensorFlow2BaseTest):
         ),
     )
     def test_tf_image_resize(self, use_cpu_only, backend, size, method):
-        if backend == "mlprogram" and not use_cpu_only:
+        if backend[0] == "mlprogram" and not use_cpu_only:
             pytest.xfail("rdar://78343225 ((MIL GPU) Core ML Tools Unit Test failures [numerical error])")
 
-        if backend == "mlprogram" and size == (1, 1):
+        if backend[0] == "mlprogram" and size == (1, 1):
             pytest.xfail("rdar://79699954 (Nearest neighbor resize numerical mismatch when output size is (1,1))")
 
-        if backend == "neuralnetwork":
+        if backend[0] == "neuralnetwork":
             pytest.xfail("nn backend not supported")
 
         x_shape = tuple(np.random.randint(low=1, high=3, size=4))

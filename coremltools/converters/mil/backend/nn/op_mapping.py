@@ -640,8 +640,18 @@ def _add_elementwise_binary(
             return
         add_const(const_context, builder, op.y.name, op.y.val)
 
+
+    if mode in {"add", "multiply", "max", "min"} and op.x.shape == op.y.shape:
+        builder.add_elementwise(
+            name=name,
+            input_names=make_input(const_context, builder, [op.x, op.y]),
+            output_name=output_name,
+            mode=mode.upper(),
+        )
+        return
+
     # the broadcast feature in the elementwise layer is hardcoded to 4D or less
-    # The issue is tracked by rdar://74997492 (Espresso element wise layer should support 5D tensor broadcast)
+    # for the 5d tensor, we need to use broadcasable layers instead.
     if mode in {"add", "multiply", "subtract"} and op.x.rank < 5 and op.y.rank < 5:
         shape_x = _np.array([1] * (5 - op.x.rank) + list(op.x.shape))
         shape_y = _np.array([1] * (5 - op.y.rank) + list(op.y.shape))
@@ -696,26 +706,18 @@ def _add_elementwise_binary(
             return
 
     if mode in {"add", "multiply", "max", "min"}:
-        if op.x.shape == op.y.shape:
-            builder.add_elementwise(
-                name=name,
-                input_names=make_input(const_context, builder, [op.x, op.y]),
-                output_name=output_name,
-                mode=mode.upper(),
-            )
-        else:
-            add_func = getattr(builder, "add_" + mode + "_broadcastable", None)
+        add_func = getattr(builder, "add_" + mode + "_broadcastable", None)
 
-            if add_func is None:
-                msg = "Element-wise binary method {} not found in builder."
-                raise ValueError(msg.format(mode))
+        if add_func is None:
+            msg = "Element-wise binary method {} not found in builder."
+            raise ValueError(msg.format(mode))
 
-            add_func(
-                name=name,
-                input_names=make_input(const_context, builder, [op.x, op.y]),
-                output_name=output_name,
-                **kwargs
-            )
+        add_func(
+            name=name,
+            input_names=make_input(const_context, builder, [op.x, op.y]),
+            output_name=output_name,
+            **kwargs
+        )
     else:
         if mode in ["divide", "floor_div", "mod", "pow", "subtract"]:
             add_func = getattr(builder, "add_" + mode + "_broadcastable", None)
@@ -1105,9 +1107,43 @@ def slice_by_index(const_context, builder, op):
 @register_mil_to_nn_mapping
 def slice_by_size(const_context, builder, op):
     """
-    A block of ops achieving slice_by_size with dynamic input x and size.
+    If the inputs satisfy
+    1. op.x has static input shape for those dimension whose size is not -1
+    2. op.begin and op.size are both known during compile time
+    we use add_slice_static directly
+
+    Otherwise, build a block of ops achieving slice_by_size with dynamic input x and size.
     """
 
+    # The static case
+    if op.begin.val is not None and op.size.val is not None:
+        shape = op.x.shape
+        begin = op.begin.val
+        size = op.size.val
+        rank = op.x.rank
+        end = []
+
+        for i in range(rank):
+            if size[i] == -1:
+                end.append(op.x.shape[i])
+            else:
+                end.append(begin[i] + size[i])
+
+        if not any_symbolic(end):
+            builder.add_slice_static(
+                name=op.name,
+                input_name=make_input(const_context, builder, op.x),
+                output_name=op.outputs[0].name,
+                begin_ids=begin,
+                end_ids=end,
+                strides=[1] * rank,
+                begin_masks=[False] * rank,
+                end_masks=[False] * rank,
+                squeeze_masks=[False] * rank,
+            )
+            return
+
+    # The dynamic case
     # get the end_index of input x
     # for instance, x with shape [2,3,4] results in [2,3,4]
     end_index_name = op.name + "_end_index"
@@ -2007,7 +2043,7 @@ def gather(const_context, builder, op):
         builder.add_embedding_nd(
             name=op.name,
             input_name=op.name + "_expand_dims",
-            output_name=op.name,
+            output_name=op.outputs[0].name,
             vocab_size=W.shape[0],
             embedding_size=W.shape[1],
             W=_np.transpose(W),
@@ -2459,7 +2495,7 @@ def layer_norm(const_context, builder, op):
         # Insert a singleton dimension in the 'height' position
         reshaped_shape.insert(-1, 1)
 
-        if len(reshaped_shape) == 4:    
+        if len(reshaped_shape) == 4:
             gamma_shape = reshaped_shape[1:]
         else:
             gamma_shape = reshaped_shape
@@ -2473,7 +2509,7 @@ def layer_norm(const_context, builder, op):
             output_name=op.name + "_reshape",
             output_shape=reshaped_shape,
         )
-        
+
         builder.add_mvn(
             name=op.name + "_mvn",
             input_name=op.name + "_reshape",
@@ -2669,7 +2705,7 @@ def conv_transpose(const_context, builder, op):
     # padding
     padding_mode = op.pad_type.val
     pad = {}
-    if padding_mode == "custom" or op.pad is not None:
+    if padding_mode == "custom":
         if is_conv_transpose_1d:
             padding_mode = "valid"
             pad["padding_top"] = 0
@@ -3198,7 +3234,7 @@ def custom_op(const_context, builder, op):
         raise ValueError("Inputs not provided for Custom Layer: {}".format(op.name))
 
     # Get input names
-    input_names = [op.inputs[_name].name for _name in input_order]
+    inputs = [op.inputs[_name] for _name in input_order]
 
     # Get output names
     output_names = [_output.name for _output in op.outputs]
@@ -3234,7 +3270,7 @@ def custom_op(const_context, builder, op):
     # Add a custom layer
     builder.add_custom(
         name=op.name,
-        input_names=input_names,
+        input_names=make_input(const_context, builder, inputs),
         output_names=output_names,
         custom_proto_spec=params,
     )
