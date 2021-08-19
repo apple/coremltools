@@ -215,9 +215,11 @@ def convert(
         via ``"model.save()"``. This flag may be used to convert to a newer model type
         on an older Mac, which if done without turning this flag on, may raise a
         runtime warning.
+        
         Example: Use this flag to suppress runtime warning when converting to
         ML program model type on a macOS 11, since ML program
         can only be compiled and loaded from macOS12+.
+        
         Defaults to False.
 
     compute_units: coremltools.ComputeUnit
