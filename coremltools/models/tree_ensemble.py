@@ -258,6 +258,9 @@ class TreeEnsembleRegressor(TreeEnsembleBase):
 
     Examples
     --------
+    
+    In the following example, the code saves the model to disk, which is a
+    recommended practice but not required.
 
     .. sourcecode:: python
 
@@ -343,6 +346,9 @@ class TreeEnsembleClassifier(TreeEnsembleBase):
 
     Examples
     --------
+
+    In the following example, the code saves the model to disk, which is a
+    recommended practice but not required.
 
     .. sourcecode:: python
 

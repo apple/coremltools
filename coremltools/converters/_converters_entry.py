@@ -78,11 +78,11 @@ def convert(
             - Path to a ``.pt`` file
 
     source : str (optional)
-        One of [``auto``, ``tensorflow``, ``pytorch``, ``milinternal``]. `auto`
+        One of [``auto``, ``tensorflow``, ``pytorch``, ``milinternal``]. ``auto``
         determines the framework automatically for most cases. Raises
         ``ValueError`` if it fails to determine the source framework.
 
-    inputs : list of `TensorType` or `ImageType`
+    inputs : list of ``TensorType`` or ``ImageType``
 
         TensorFlow 1 and 2:
             - The ``inputs`` parameter is optional. If not provided, the inputs
@@ -188,13 +188,13 @@ def convert(
                       coremltools.transform.FP16ComputePrecision(op_selector=
                                                              lambda op:True)
 
-                  The above transfomr injects ``cast`` ops to convert the
+                  The above transform injects ``cast`` ops to convert the
                   float32 dtypes of intermediate tensors to float16.
             - ``coremltools.precision.FLOAT32``
                 - No transform is applied. The original float32 tensor dtype in
                   the source model is preserved.
             - ``coremltools.transform.FP16ComputePrecision(op_selector=...)``
-                - Use the above to control which tensors get cast to float16.
+                - Use the above to control which tensors are cast to float16.
                 - For example:
                   ::
                       coremltools.transform.FP16ComputePrecision(op_selector=
@@ -203,14 +203,16 @@ def convert(
                   The above casts all the float32 tensors to be float16, except
                   the input/output tensors to any ``linear`` op.
             - If ``None``,
-                - when convert_to="mlprogram", compute_precision parameter defaults to ``coremltools.precision.FLOAT16``.
-                - when convert_to="neuralnetwork", compute_precision parameter needs to be None and has no meaning.
+                - When ``convert_to="mlprogram"``, compute_precision parameter
+                  defaults to ``coremltools.precision.FLOAT16``.
+                - When ``convert_to="neuralnetwork"``, compute_precision parameter
+                  needs to be ``None`` and has no meaning.
 
     skip_model_load : bool
         Set to True to prevent coremltools from calling into the Core ML framework
         to compile and load the model, post-conversion. In that case, the returned
         model object cannot be used to make a prediction, but can be used to save
-        via "model.save()". This flag may be used to convert to a newer model type
+        via ``"model.save()"``. This flag may be used to convert to a newer model type
         on an older Mac, which if done without turning this flag on, may raise a
         runtime warning.
         Example: Use this flag to suppress runtime warning when converting to
@@ -219,12 +221,12 @@ def convert(
         Defaults to False.
 
     compute_units: coremltools.ComputeUnit
-        A enum with three possible values:
-            - coremltools.ComputeUnit.ALL - use all compute units available, including the
-                  neural engine.
-            - coremltools.ComputeUnit.CPU_ONLY - limit the model to only use the CPU.
-            - coremltools.ComputeUnit.CPU_AND_GPU - use both the CPU and GPU, but not the
-                  neural engine.
+        An enum with three possible values:
+            - `coremltools.ComputeUnit.ALL`: Use all compute units available, including the
+              neural engine.
+            - `coremltools.ComputeUnit.CPU_ONLY`: Limit the model to only use the CPU.
+            - `coremltools.ComputeUnit.CPU_AND_GPU`: Use both the CPU and GPU, but not the
+              neural engine.
 
     Returns
     -------

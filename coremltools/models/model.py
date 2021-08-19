@@ -188,7 +188,7 @@ class MLModel(object):
                  skip_model_load=False,
                  compute_units=_ComputeUnit.ALL):
         """
-        Construct an MLModel from a .mlmodel
+        Construct an MLModel from an .mlmodel
 
         Parameters
         ----------
@@ -197,7 +197,7 @@ class MLModel(object):
             For MIL, model must be path string to directory containing bundle
             artifacts (e.g. weights.bin).
 
-            For NeuralNetwork, model can be path string (.mlmodel) or Model_pb2.
+            For NeuralNetwork, model can be path string (`.mlmodel`) or Model_pb2.
 
         useCPUOnly: bool
             This parameter is deprecated and will be removed in 6.0. Use the `compute_units`
@@ -226,22 +226,22 @@ class MLModel(object):
             Defaults to False.
 
         compute_units: coremltools.ComputeUnit
-            A enum with three possible values:
-                - coremltools.ComputeUnit.ALL - use all compute units available, including the
+            An enum with three possible values:
+                - `coremltools.ComputeUnit.ALL`: Use all compute units available, including the
                       neural engine.
-                - coremltools.ComputeUnit.CPU_ONLY - limit the model to only use the CPU.
-                - coremltools.ComputeUnit.CPU_AND_GPU - use both the CPU and GPU, but not the
-                      neural engine.
+                - `coremltools.ComputeUnit.CPU_ONLY`: Limit the model to only use the CPU.
+                - `coremltools.ComputeUnit.CPU_AND_GPU`: Use both the CPU and GPU,
+                  but not the neural engine.
 
         Notes
         -----
         Internally this maintains the following:
 
-        - `_MLModelProxy`: a pybind wrapper around
+        - `_MLModelProxy`: A pybind wrapper around
           CoreML::Python::Model (see
-          `coremltools/coremlpython/CoreMLPython.mm`)
+          [`coremltools/coremlpython/CoreMLPython.mm`](https://github.com/apple/coremltools/blob/main/coremlpython/CoreMLPython.mm))
 
-        - `bundle_path` (MIL only): directory containing all artifacts (.mlmodel,
+        - `bundle_path` (MIL only): Directory containing all artifacts (`.mlmodel`,
           weights etc).
 
         Examples
@@ -347,18 +347,14 @@ class MLModel(object):
 
     def save(self, filename):
         """
-        Save the model to a .mlmodel format. For MIL program filename is
+        Save the model to a `.mlmodel` format. For MIL program filename is
         package directory containing the mlmodel and weights
 
         Parameters
         ----------
         filename: str
-            Target filename / bundle directory for the model. Must have
+            Target filename / bundle directory for the model. Must have the
             `.mlmodel` extension
-
-        See Also
-        --------
-        coremltools.utils.load_model
 
         Examples
         --------
@@ -395,7 +391,7 @@ class MLModel(object):
 
     def predict(self, data, useCPUOnly=False, **kwargs):
         """
-        Return predictions for the model. The kwargs gets passed into the
+        Return predictions for the model. The kwargs are passed into the
         model as a dictionary.
 
         Parameters
@@ -406,8 +402,9 @@ class MLModel(object):
 
         useCPUOnly: bool
             This parameter is deprecated and will be removed in 6.0. Instead use the `compute_units`
-            parameter at load time or conversion time, i.e. in `coremltools.models.MLModel()` or
-            `coremltools.convert()`.
+            parameter at load time or conversion time (that is, in
+            [`coremltools.models.MLModel()`](https://apple.github.io/coremltools/source/coremltools.models.html#module-coremltools.models.model) or
+            [`coremltools.convert()`](https://apple.github.io/coremltools/source/coremltools.converters.mil.html#module-coremltools.converters._converters_entry)).
 
             Set to True to restrict computation to use only the CPU. Defaults to False.
 
@@ -479,9 +476,9 @@ class MLModel(object):
 
     def _get_mil_internal(self):
         """
-        Get a deep copy of the mil program object, if avaiable.
-        Its avaiable whenever an MLModel object is constructed using
-        the unified converter API coremltools.convert()
+        Get a deep copy of the `mil` program object, if available.
+        It's available whenever an MLModel object is constructed using
+        the unified converter API [`coremltools.convert()`](https://apple.github.io/coremltools/source/coremltools.converters.mil.html#coremltools.converters._converters_entry.convert).
 
         Returns
         -------
