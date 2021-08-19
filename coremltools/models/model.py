@@ -227,21 +227,21 @@ class MLModel(object):
 
         compute_units: coremltools.ComputeUnit
             An enum with three possible values:
-                - `coremltools.ComputeUnit.ALL`: Use all compute units available, including the
-                      neural engine.
-                - `coremltools.ComputeUnit.CPU_ONLY`: Limit the model to only use the CPU.
-                - `coremltools.ComputeUnit.CPU_AND_GPU`: Use both the CPU and GPU,
+                - ``coremltools.ComputeUnit.ALL``: Use all compute units available, including the
+                  neural engine.
+                - ``coremltools.ComputeUnit.CPU_ONLY``: Limit the model to only use the CPU.
+                - ``coremltools.ComputeUnit.CPU_AND_GPU``: Use both the CPU and GPU,
                   but not the neural engine.
 
         Notes
         -----
         Internally this maintains the following:
 
-        - `_MLModelProxy`: A pybind wrapper around
+        - ``_MLModelProxy``: A pybind wrapper around
           CoreML::Python::Model (see
-          [`coremltools/coremlpython/CoreMLPython.mm`](https://github.com/apple/coremltools/blob/main/coremlpython/CoreMLPython.mm))
+          `coremltools/coremlpython/CoreMLPython.mm <https://github.com/apple/coremltools/blob/main/coremlpython/CoreMLPython.mm`_)
 
-        - `bundle_path` (MIL only): Directory containing all artifacts (`.mlmodel`,
+        - ``bundle_path`` (MIL only): Directory containing all artifacts (`.mlmodel`,
           weights etc).
 
         Examples
@@ -403,8 +403,8 @@ class MLModel(object):
         useCPUOnly: bool
             This parameter is deprecated and will be removed in 6.0. Instead use the `compute_units`
             parameter at load time or conversion time (that is, in
-            [`coremltools.models.MLModel()`](https://apple.github.io/coremltools/source/coremltools.models.html#module-coremltools.models.model) or
-            [`coremltools.convert()`](https://apple.github.io/coremltools/source/coremltools.converters.mil.html#module-coremltools.converters._converters_entry)).
+            `coremltools.models.MLModel() <https://apple.github.io/coremltools/source/coremltools.models.html#module-coremltools.models.model>`_ or
+            `coremltools.convert() <(https://apple.github.io/coremltools/source/coremltools.converters.mil.html#module-coremltools.converters._converters_entry>`).
 
             Set to True to restrict computation to use only the CPU. Defaults to False.
 

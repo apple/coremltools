@@ -222,10 +222,10 @@ def convert(
 
     compute_units: coremltools.ComputeUnit
         An enum with three possible values:
-            - `coremltools.ComputeUnit.ALL`: Use all compute units available, including the
+            - ``coremltools.ComputeUnit.ALL``: Use all compute units available, including the
               neural engine.
-            - `coremltools.ComputeUnit.CPU_ONLY`: Limit the model to only use the CPU.
-            - `coremltools.ComputeUnit.CPU_AND_GPU`: Use both the CPU and GPU, but not the
+            - ``coremltools.ComputeUnit.CPU_ONLY``: Limit the model to only use the CPU.
+            - ``coremltools.ComputeUnit.CPU_AND_GPU``: Use both the CPU and GPU, but not the
               neural engine.
 
     Returns
