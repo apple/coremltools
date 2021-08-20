@@ -13,6 +13,8 @@
   
   <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../_static/graphviz.css" type="text/css" />
 
   
@@ -30,6 +32,7 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
         <script src="../_static/doctools.js"></script>
@@ -85,7 +88,7 @@
               
             
             
-              <p class="caption"><span class="caption-text">API Contents</span></p>
+              <p class="caption" role="heading"><span class="caption-text">API Contents</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="coremltools.converters.html">Converters</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="coremltools.converters.mil.html">Unified (TensorFlow and Pytorch)</a></li>
@@ -100,7 +103,7 @@
 <li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Resources</span></p>
+<p class="caption" role="heading"><span class="caption-text">Resources</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference external" href="https://coremltools.readme.io/docs">Guides and examples</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Format Specification</a></li>
@@ -177,8 +180,8 @@
   <div class="section" id="module-coremltools.converters.onnx._converter">
 <span id="onnx"></span><h1>ONNX<a class="headerlink" href="#module-coremltools.converters.onnx._converter" title="Permalink to this headline">¶</a></h1>
 <dl class="py function">
-<dt id="coremltools.converters.onnx._converter.convert">
-<code class="sig-prename descclassname"><span class="pre">coremltools.converters.onnx._converter.</span></code><code class="sig-name descname"><span class="pre">convert</span></code><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_input_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preprocessing_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_output_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deprocessing_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">predicted_feature_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'classLabel'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_custom_layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_conversion_functions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">onnx_coreml_input_shape_map</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minimum_ios_deployment_target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'12'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/onnx/_converter.html#convert"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.onnx._converter.convert" title="Permalink to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="coremltools.converters.onnx._converter.convert">
+<span class="sig-prename descclassname"><span class="pre">coremltools.converters.onnx._converter.</span></span><span class="sig-name descname"><span class="pre">convert</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_input_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preprocessing_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">image_output_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deprocessing_args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">predicted_feature_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'classLabel'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_custom_layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_conversion_functions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">onnx_coreml_input_shape_map</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minimum_ios_deployment_target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'12'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/onnx/_converter.html#convert"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.onnx._converter.convert" title="Permalink to this definition">¶</a></dt>
 <dd><p>WARNING: This function is deprecated. It will be removed in the 6.0.</p>
 <p>Convert ONNX model to CoreML.</p>
 <dl class="field-list simple">

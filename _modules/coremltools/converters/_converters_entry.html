@@ -13,6 +13,8 @@
   
   <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
 
   
@@ -30,6 +32,7 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
         <script src="../../../_static/jquery.js"></script>
         <script src="../../../_static/underscore.js"></script>
         <script src="../../../_static/doctools.js"></script>
@@ -83,14 +86,14 @@
               
             
             
-              <p class="caption"><span class="caption-text">API Contents</span></p>
+              <p class="caption" role="heading"><span class="caption-text">API Contents</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../source/coremltools.converters.html">Converters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../source/coremltools.models.html">Models</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Resources</span></p>
+<p class="caption" role="heading"><span class="caption-text">Resources</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference external" href="https://coremltools.readme.io/docs">Guides and examples</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Format Specification</a></li>
@@ -167,7 +170,9 @@
 <span class="c1"># found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
 <span class="kn">import</span> <span class="nn">gc</span>
 <span class="kn">import</span> <span class="nn">collections</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
 
+<span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">ComputeUnit</span> <span class="k">as</span> <span class="n">_ComputeUnit</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.quantization_passes</span> <span class="kn">import</span> <span class="n">AbstractQuantizationPass</span><span class="p">,</span> <span class="n">FP16ComputePrecision</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.quantization_passes</span> <span class="kn">import</span> <span class="n">ComputePrecision</span> <span class="k">as</span> <span class="n">precision</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.input_types</span> <span class="kn">import</span> <span class="n">InputType</span><span class="p">,</span> <span class="n">ClassifierConfig</span>
@@ -206,6 +211,7 @@
     <span class="n">convert_to</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">compute_precision</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">skip_model_load</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">compute_units</span><span class="o">=</span><span class="n">_ComputeUnit</span><span class="o">.</span><span class="n">ALL</span><span class="p">,</span>
     <span class="o">**</span><span class="n">kwargs</span>
 <span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -238,11 +244,11 @@
 <span class="sd">            - Path to a ``.pt`` file</span>
 
 <span class="sd">    source : str (optional)</span>
-<span class="sd">        One of [``auto``, ``tensorflow``, ``pytorch``, ``milinternal``]. `auto`</span>
+<span class="sd">        One of [``auto``, ``tensorflow``, ``pytorch``, ``milinternal``]. ``auto``</span>
 <span class="sd">        determines the framework automatically for most cases. Raises</span>
 <span class="sd">        ``ValueError`` if it fails to determine the source framework.</span>
 
-<span class="sd">    inputs : list of `TensorType` or `ImageType`</span>
+<span class="sd">    inputs : list of ``TensorType`` or ``ImageType``</span>
 
 <span class="sd">        TensorFlow 1 and 2:</span>
 <span class="sd">            - The ``inputs`` parameter is optional. If not provided, the inputs</span>
@@ -348,13 +354,13 @@
 <span class="sd">                      coremltools.transform.FP16ComputePrecision(op_selector=</span>
 <span class="sd">                                                             lambda op:True)</span>
 
-<span class="sd">                  The above transfomr injects ``cast`` ops to convert the</span>
+<span class="sd">                  The above transform injects ``cast`` ops to convert the</span>
 <span class="sd">                  float32 dtypes of intermediate tensors to float16.</span>
 <span class="sd">            - ``coremltools.precision.FLOAT32``</span>
 <span class="sd">                - No transform is applied. The original float32 tensor dtype in</span>
 <span class="sd">                  the source model is preserved.</span>
 <span class="sd">            - ``coremltools.transform.FP16ComputePrecision(op_selector=...)``</span>
-<span class="sd">                - Use the above to control which tensors get cast to float16.</span>
+<span class="sd">                - Use the above to control which tensors are cast to float16.</span>
 <span class="sd">                - For example:</span>
 <span class="sd">                  ::</span>
 <span class="sd">                      coremltools.transform.FP16ComputePrecision(op_selector=</span>
@@ -362,22 +368,33 @@
 
 <span class="sd">                  The above casts all the float32 tensors to be float16, except</span>
 <span class="sd">                  the input/output tensors to any ``linear`` op.</span>
-<span class="sd">            - If ``None``, the parameter defaults to ``coremltools.precision.FLOAT32``.</span>
-<span class="sd">        - TODO: rdar://74140243.</span>
-<span class="sd">            - Before coremltools 5.0 release, change the default</span>
-<span class="sd">              to coremltools.precision.FLOAT16 when convert_to=&quot;mlprogram&quot;</span>
+<span class="sd">            - If ``None``,</span>
+<span class="sd">                - When ``convert_to=&quot;mlprogram&quot;``, compute_precision parameter</span>
+<span class="sd">                  defaults to ``coremltools.precision.FLOAT16``.</span>
+<span class="sd">                - When ``convert_to=&quot;neuralnetwork&quot;``, compute_precision parameter</span>
+<span class="sd">                  needs to be ``None`` and has no meaning.</span>
 
 <span class="sd">    skip_model_load : bool</span>
 <span class="sd">        Set to True to prevent coremltools from calling into the Core ML framework</span>
 <span class="sd">        to compile and load the model, post-conversion. In that case, the returned</span>
 <span class="sd">        model object cannot be used to make a prediction, but can be used to save</span>
-<span class="sd">        via &quot;model.save()&quot;. This flag may be used to convert to a newer model type</span>
+<span class="sd">        via ``&quot;model.save()&quot;``. This flag may be used to convert to a newer model type</span>
 <span class="sd">        on an older Mac, which if done without turning this flag on, may raise a</span>
 <span class="sd">        runtime warning.</span>
+<span class="sd">        </span>
 <span class="sd">        Example: Use this flag to suppress runtime warning when converting to</span>
 <span class="sd">        ML program model type on a macOS 11, since ML program</span>
 <span class="sd">        can only be compiled and loaded from macOS12+.</span>
+<span class="sd">        </span>
 <span class="sd">        Defaults to False.</span>
+
+<span class="sd">    compute_units: coremltools.ComputeUnit</span>
+<span class="sd">        An enum with three possible values:</span>
+<span class="sd">            - ``coremltools.ComputeUnit.ALL``: Use all compute units available, including the</span>
+<span class="sd">              neural engine.</span>
+<span class="sd">            - ``coremltools.ComputeUnit.CPU_ONLY``: Limit the model to only use the CPU.</span>
+<span class="sd">            - ``coremltools.ComputeUnit.CPU_AND_GPU``: Use both the CPU and GPU, but not the</span>
+<span class="sd">              neural engine.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -435,13 +452,14 @@
     <span class="n">_validate_inputs</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">exact_source</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">outputs</span><span class="p">,</span> <span class="n">classifier_config</span><span class="p">,</span> <span class="n">compute_precision</span><span class="p">,</span>
                      <span class="n">exact_target</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
+    <span class="k">if</span> <span class="s2">&quot;useCPUOnly&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="ow">and</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;useCPUOnly&quot;</span><span class="p">]:</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;The &quot;useCPUOnly&quot; parameter is deprecated and will be removed in 6.0. &#39;</span>
+                      <span class="s1">&#39;Use the compute_units parameter: &quot;compute_units=coremotools.ComputeUnits.CPU_ONLY&quot;.&#39;</span><span class="p">)</span>
+        <span class="n">compute_units</span> <span class="o">=</span> <span class="n">_ComputeUnit</span><span class="o">.</span><span class="n">CPU_ONLY</span>
+
 
     <span class="k">if</span> <span class="n">compute_precision</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="c1"># TODO: rdar://74140243</span>
-        <span class="c1"># Before 5.0 release,</span>
-        <span class="c1"># map &quot;None&quot; to &quot;fp32&quot; for &quot;neuralnetwork&quot;</span>
-        <span class="c1"># and to &quot;fp16&quot; for &quot;mlprogram&quot;</span>
-        <span class="n">transforms</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="n">transforms</span> <span class="o">=</span> <span class="p">[</span><span class="n">FP16ComputePrecision</span><span class="p">(</span><span class="n">op_selector</span><span class="o">=</span><span class="k">lambda</span> <span class="n">op</span><span class="p">:</span> <span class="kc">True</span><span class="p">)]</span> <span class="k">if</span> <span class="n">convert_to</span> <span class="o">!=</span> <span class="s2">&quot;neuralnetwork&quot;</span> <span class="k">else</span> <span class="nb">list</span><span class="p">()</span>
     <span class="k">elif</span> <span class="n">compute_precision</span> <span class="o">==</span> <span class="n">precision</span><span class="o">.</span><span class="n">FLOAT32</span><span class="p">:</span>
         <span class="n">transforms</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
     <span class="k">elif</span> <span class="n">compute_precision</span> <span class="o">==</span> <span class="n">precision</span><span class="o">.</span><span class="n">FLOAT16</span><span class="p">:</span>
@@ -458,8 +476,9 @@
         <span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">,</span>
         <span class="n">outputs</span><span class="o">=</span><span class="n">outputs</span><span class="p">,</span>
         <span class="n">classifier_config</span><span class="o">=</span><span class="n">classifier_config</span><span class="p">,</span>
-        <span class="n">transforms</span><span class="o">=</span><span class="n">transforms</span><span class="p">,</span>
+        <span class="n">transforms</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">transforms</span><span class="p">),</span>
         <span class="n">skip_model_load</span><span class="o">=</span><span class="n">skip_model_load</span><span class="p">,</span>
+        <span class="n">compute_units</span><span class="o">=</span><span class="n">compute_units</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span>
     <span class="p">)</span>
 
@@ -518,12 +537,11 @@
             <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;&quot;classifier_config&quot; must be of type ClassifierConfig&#39;</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">convert_to</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;neuralnetwork&#39;</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">compute_precision</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">compute_precision</span> <span class="o">!=</span> <span class="n">precision</span><span class="o">.</span><span class="n">FLOAT32</span><span class="p">:</span>
-                <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;&#39;compute_precision&#39; must be coremltools.precision.FLOAT32 when &quot;</span> \
-                    <span class="s2">&quot;the target is &#39;neuralnetwork&#39; (i.e. deployment target is less than iOS15)&quot;</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">convert_to</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;neuralnetwork&#39;</span> <span class="ow">and</span> <span class="n">compute_precision</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;compute_precision is only supported for mlprogram target and must be None if target==&#39;neuralnetwork&#39;.</span><span class="se">\n</span><span class="s2">&quot;</span> \
+              <span class="s2">&quot;Note that target may be implicitly set depending on the minimum_deployment_target.</span><span class="se">\n</span><span class="s2">&quot;</span> \
+              <span class="s2">&quot;See minimum_deployment_target for more details.&quot;</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">compute_precision</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">compute_precision</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="n">precision</span><span class="o">.</span><span class="n">FLOAT32</span><span class="p">,</span> <span class="n">precision</span><span class="o">.</span><span class="n">FLOAT16</span><span class="p">]:</span>

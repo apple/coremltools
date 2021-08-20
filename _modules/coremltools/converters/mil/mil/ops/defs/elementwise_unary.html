@@ -13,6 +13,8 @@
   
   <link rel="stylesheet" href="../../../../../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../../../_static/graphviz.css" type="text/css" />
 
   
@@ -30,6 +32,7 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../../../../../../" src="../../../../../../../_static/documentation_options.js"></script>
+        <script data-url_root="../../../../../../../" id="documentation_options" src="../../../../../../../_static/documentation_options.js"></script>
         <script src="../../../../../../../_static/jquery.js"></script>
         <script src="../../../../../../../_static/underscore.js"></script>
         <script src="../../../../../../../_static/doctools.js"></script>
@@ -83,14 +86,14 @@
               
             
             
-              <p class="caption"><span class="caption-text">API Contents</span></p>
+              <p class="caption" role="heading"><span class="caption-text">API Contents</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../../source/coremltools.converters.html">Converters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../../source/coremltools.models.html">Models</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Resources</span></p>
+<p class="caption" role="heading"><span class="caption-text">Resources</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference external" href="https://coremltools.readme.io/docs">Guides and examples</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Format Specification</a></li>
@@ -165,8 +168,8 @@
 <span class="c1">#</span>
 <span class="c1">#  Use of this source code is governed by a BSD-3-clause license that can be</span>
 <span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
+<span class="kn">import</span> <span class="nn">math</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">scipy</span>
 
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">types</span><span class="p">,</span> <span class="n">VALUE</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.operation</span> <span class="kn">import</span> <span class="n">precondition</span>
@@ -476,7 +479,8 @@
 
     <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">scipy</span><span class="o">.</span><span class="n">special</span><span class="o">.</span><span class="n">erf</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">val</span><span class="p">)</span></div>
+        <span class="n">erf_vector_function</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vectorize</span><span class="p">(</span><span class="n">math</span><span class="o">.</span><span class="n">erf</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">erf_vector_function</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">val</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="exp"><a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.elementwise_unary.exp">[docs]</a><span class="nd">@register_op</span><span class="p">(</span><span class="n">doc_str</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>

@@ -13,6 +13,8 @@
   
   <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../_static/graphviz.css" type="text/css" />
 
   
@@ -30,6 +32,7 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
         <script src="../../../_static/jquery.js"></script>
         <script src="../../../_static/underscore.js"></script>
         <script src="../../../_static/doctools.js"></script>
@@ -83,14 +86,14 @@
               
             
             
-              <p class="caption"><span class="caption-text">API Contents</span></p>
+              <p class="caption" role="heading"><span class="caption-text">API Contents</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../source/coremltools.converters.html">Converters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../source/coremltools.models.html">Models</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Resources</span></p>
+<p class="caption" role="heading"><span class="caption-text">Resources</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference external" href="https://coremltools.readme.io/docs">Guides and examples</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Format Specification</a></li>
@@ -173,6 +176,7 @@
 <span class="kn">import</span> <span class="nn">warnings</span> <span class="k">as</span> <span class="nn">_warnings</span>
 <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span> <span class="k">as</span> <span class="n">_deepcopy</span>
 
+<span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">ComputeUnit</span> <span class="k">as</span> <span class="n">_ComputeUnit</span>
 <span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">_has_custom_layer</span> <span class="k">as</span> <span class="n">_has_custom_layer</span>
 <span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">load_spec</span> <span class="k">as</span> <span class="n">_load_spec</span>
 <span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">_macos_version</span><span class="p">,</span> <span class="n">_is_macos</span>
@@ -260,7 +264,7 @@
             <span class="k">yield</span> <span class="n">f</span><span class="o">.</span><span class="n">name</span>
 
 
-<span class="k">def</span> <span class="nf">_get_proxy_and_spec</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">use_cpu_only</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">skip_model_load</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_get_proxy_and_spec</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">compute_units</span><span class="p">,</span> <span class="n">skip_model_load</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="kn">from</span> <span class="nn">..libcoremlpython</span> <span class="kn">import</span> <span class="n">_MLModelProxy</span>
     <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
@@ -279,7 +283,7 @@
             <span class="k">return</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">specification</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
         <span class="k">try</span><span class="p">:</span>
-            <span class="k">return</span> <span class="p">(</span><span class="n">_MLModelProxy</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">use_cpu_only</span><span class="p">),</span> <span class="n">specification</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">_MLModelProxy</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">compute_units</span><span class="o">.</span><span class="n">name</span><span class="p">),</span> <span class="n">specification</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">RuntimeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="n">_warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
                 <span class="s2">&quot;You will not be able to run predict() on this Core ML model.&quot;</span>
@@ -347,57 +351,81 @@
                  <span class="n">useCPUOnly</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">is_temp_package</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">mil_program</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                 <span class="n">skip_model_load</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+                 <span class="n">skip_model_load</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">compute_units</span><span class="o">=</span><span class="n">_ComputeUnit</span><span class="o">.</span><span class="n">ALL</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Construct an MLModel from a .mlmodel</span>
+<span class="sd">        Construct an MLModel from an ``.mlmodel``.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        model: str or Model_pb2</span>
 
-<span class="sd">            For MIL, model must be path string to directory containing bundle</span>
-<span class="sd">            artifacts (e.g. weights.bin).</span>
+<span class="sd">            For MIL, the model must be a path string to the directory containing bundle</span>
+<span class="sd">            artifacts (such as ``weights.bin``).</span>
 
-<span class="sd">            For NeuralNetwork, model can be path string (.mlmodel) or Model_pb2.</span>
+<span class="sd">            For NeuralNetwork, the model can be a path string (``.mlmodel``) or ``Model_pb2``.</span>
 
 <span class="sd">        useCPUOnly: bool</span>
-<span class="sd">            Set to true to restrict loading of model on CPU Only. Defaults to False.</span>
+<span class="sd">            This parameter is deprecated and will be removed in 6.0. Use the ``compute_units``</span>
+<span class="sd">            parameter instead.</span>
+
+<span class="sd">            The ``compute_units`` parameter overrides any usages of this parameter.</span>
+
+<span class="sd">            Set to True to restrict loading of the model to only the CPU. Defaults to False.</span>
 
 <span class="sd">        is_temp_package: bool</span>
 <span class="sd">            Set to true if the input model package dir is temporary and can be</span>
 <span class="sd">            deleted upon destruction of this class.</span>
 
-<span class="sd">        mil_program : coremltools.converters.mil.Program</span>
-<span class="sd">            Set to the mil program object, if available.</span>
-<span class="sd">            It is avaiable whenever an MLModel object is constructed using</span>
-<span class="sd">            the unified converter API coremltools.convert()</span>
+<span class="sd">        mil_program: coremltools.converters.mil.Program</span>
+<span class="sd">            Set to the MIL program object, if available.</span>
+<span class="sd">            It is available whenever an MLModel object is constructed using</span>
+<span class="sd">            the unified converter API `coremltools.convert() &lt;https://apple.github.io/coremltools/source/coremltools.converters.mil.html#module-coremltools.converters._converters_entry&gt;`_.</span>
 
-<span class="sd">        skip_model_load : bool</span>
+<span class="sd">        skip_model_load: bool</span>
 <span class="sd">            Set to True to prevent coremltools from calling into the Core ML framework</span>
 <span class="sd">            to compile and load the model. In that case, the returned model object cannot</span>
 <span class="sd">            be used to make a prediction. This flag may be used to load a newer model</span>
 <span class="sd">            type on an older Mac, to inspect or load/save the spec.</span>
-<span class="sd">            Example: Loading ML Program model type on a macOS 11, since ML Program can only be</span>
-<span class="sd">            compiled and loaded from macOS12+.</span>
+<span class="sd">            </span>
+<span class="sd">            Example: Loading an ML Program model type on a macOS 11, since an ML Program can be</span>
+<span class="sd">            compiled and loaded only from macOS12+.</span>
+<span class="sd">            </span>
 <span class="sd">            Defaults to False.</span>
+
+<span class="sd">        compute_units: coremltools.ComputeUnit</span>
+<span class="sd">            An enum with three possible values:</span>
+<span class="sd">                - ``coremltools.ComputeUnit.ALL``: Use all compute units available, including the</span>
+<span class="sd">                  neural engine.</span>
+<span class="sd">                - ``coremltools.ComputeUnit.CPU_ONLY``: Limit the model to only use the CPU.</span>
+<span class="sd">                - ``coremltools.ComputeUnit.CPU_AND_GPU``: Use both the CPU and GPU,</span>
+<span class="sd">                  but not the neural engine.</span>
 
 <span class="sd">        Notes</span>
 <span class="sd">        -----</span>
 <span class="sd">        Internally this maintains the following:</span>
 
-<span class="sd">        - `_MLModelProxy`: a pybind wrapper around</span>
+<span class="sd">        - ``_MLModelProxy``: A pybind wrapper around</span>
 <span class="sd">          CoreML::Python::Model (see</span>
-<span class="sd">          `coremltools/coremlpython/CoreMLPython.mm`)</span>
+<span class="sd">          `coremltools/coremlpython/CoreMLPython.mm &lt;https://github.com/apple/coremltools/blob/main/coremlpython/CoreMLPython.mm&gt;`_)</span>
 
-<span class="sd">        - `bundle_path` (MIL only): directory containing all artifacts (.mlmodel,</span>
-<span class="sd">          weights etc).</span>
+<span class="sd">        - ``bundle_path`` (MIL only): Directory containing all artifacts (``.mlmodel``,</span>
+<span class="sd">          weights, and so on).</span>
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
 <span class="sd">        &gt;&gt;&gt; loaded_model = MLModel(&#39;my_model_file.mlmodel&#39;)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">useCPUOnly</span><span class="p">:</span>
+            <span class="n">_warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;The &quot;useCPUOnly&quot; parameter is deprecated and will be removed in 6.0. &#39;</span>
+                           <span class="s1">&#39;Use the &quot;compute_units&quot; parameter: &quot;compute_units=coremotools.ComputeUnits.CPUOnly&quot;.&#39;</span><span class="p">)</span>
+            <span class="n">compute_units</span> <span class="o">=</span> <span class="n">_ComputeUnit</span><span class="o">.</span><span class="n">CPU_ONLY</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">compute_units</span><span class="p">,</span> <span class="n">_ComputeUnit</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;&quot;compute_units&quot; parameter must be of type: coremltools.ComputeUnit&#39;</span><span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">is_package</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">package_path</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">compute_unit</span> <span class="o">=</span> <span class="n">compute_units</span>
         <span class="k">if</span> <span class="n">mil_program</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.program</span> <span class="kn">import</span> <span class="n">Program</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mil_program</span><span class="p">,</span> <span class="n">Program</span><span class="p">):</span>
@@ -409,13 +437,13 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">package_path</span> <span class="o">=</span> <span class="n">model</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">is_temp_package</span> <span class="o">=</span> <span class="n">is_temp_package</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">__proxy__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spec</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_framework_error</span> <span class="o">=</span> <span class="n">_get_proxy_and_spec</span><span class="p">(</span>
-                <span class="n">model</span><span class="p">,</span> <span class="n">useCPUOnly</span><span class="p">,</span> <span class="n">skip_model_load</span><span class="o">=</span><span class="n">skip_model_load</span><span class="p">,</span>
+                <span class="n">model</span><span class="p">,</span> <span class="n">compute_units</span><span class="p">,</span> <span class="n">skip_model_load</span><span class="o">=</span><span class="n">skip_model_load</span><span class="p">,</span>
             <span class="p">)</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">_Model_pb2</span><span class="o">.</span><span class="n">Model</span><span class="p">):</span>
             <span class="n">filename</span> <span class="o">=</span> <span class="n">_tempfile</span><span class="o">.</span><span class="n">mktemp</span><span class="p">(</span><span class="n">suffix</span><span class="o">=</span><span class="n">_MLMODEL_EXTENSION</span><span class="p">)</span>
             <span class="n">_save_spec</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">__proxy__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spec</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_framework_error</span> <span class="o">=</span> <span class="n">_get_proxy_and_spec</span><span class="p">(</span>
-                <span class="n">filename</span><span class="p">,</span> <span class="n">useCPUOnly</span><span class="p">,</span> <span class="n">skip_model_load</span><span class="o">=</span><span class="n">skip_model_load</span><span class="p">,</span>
+                <span class="n">filename</span><span class="p">,</span> <span class="n">compute_units</span><span class="p">,</span> <span class="n">skip_model_load</span><span class="o">=</span><span class="n">skip_model_load</span><span class="p">,</span>
             <span class="p">)</span>
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">_os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
@@ -431,7 +459,8 @@
 
     <span class="k">def</span> <span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># Cleanup temporary package upon destruction</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_package</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_temp_package</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;is_package&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_package</span> \
+           <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;is_temp_package&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_temp_package</span><span class="p">:</span>
             <span class="n">_shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">package_path</span><span class="p">)</span>
 
     <span class="nd">@property</span>
@@ -486,18 +515,14 @@
 
 <div class="viewcode-block" id="MLModel.save"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.model.MLModel.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Save the model to a .mlmodel format. For MIL program filename is</span>
-<span class="sd">        package directory containing the mlmodel and weights</span>
+<span class="sd">        Save the model to a ``.mlmodel`` format. For an MIL program, the filename is</span>
+<span class="sd">        a package directory containing the ``mlmodel`` and weights.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        filename: str</span>
-<span class="sd">            Target filename / bundle directory for the model. Must have</span>
-<span class="sd">            `.mlmodel` extension</span>
-
-<span class="sd">        See Also</span>
-<span class="sd">        --------</span>
-<span class="sd">        coremltools.utils.load_model</span>
+<span class="sd">            Target filename / bundle directory for the model. Must have the</span>
+<span class="sd">            ``.mlmodel`` extension</span>
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
@@ -534,7 +559,7 @@
 
 <div class="viewcode-block" id="MLModel.predict"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.model.MLModel.predict">[docs]</a>    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">useCPUOnly</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Return predictions for the model. The kwargs gets passed into the</span>
+<span class="sd">        Return predictions for the model. The kwargs are passed into the</span>
 <span class="sd">        model as a dictionary.</span>
 
 <span class="sd">        Parameters</span>
@@ -544,7 +569,12 @@
 <span class="sd">            the names of the input features.</span>
 
 <span class="sd">        useCPUOnly: bool</span>
-<span class="sd">            Set to true to restrict computation to use only the CPU. Defaults to False.</span>
+<span class="sd">            This parameter is deprecated and will be removed in 6.0. Instead, use the ``compute_units``</span>
+<span class="sd">            parameter at load time or conversion time (that is, in</span>
+<span class="sd">            `coremltools.models.MLModel() &lt;https://apple.github.io/coremltools/source/coremltools.models.html#module-coremltools.models.model&gt;`_ or</span>
+<span class="sd">            `coremltools.convert() &lt;https://apple.github.io/coremltools/source/coremltools.converters.mil.html#module-coremltools.converters._converters_entry&gt;`_).</span>
+
+<span class="sd">            Set to True to restrict computation to use only the CPU. Defaults to False.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -557,6 +587,10 @@
 <span class="sd">        &gt;&gt;&gt; data = {&#39;bedroom&#39;: 1.0, &#39;bath&#39;: 1.0, &#39;size&#39;: 1240}</span>
 <span class="sd">        &gt;&gt;&gt; predictions = model.predict(data)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">useCPUOnly</span><span class="p">:</span>
+            <span class="n">_warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;The &quot;useCPUOnly&quot; parameter is deprecated and will be removed in 6.0. &#39;</span>
+                           <span class="s1">&#39;Please use the &quot;compute_units&quot; parameter at load time or conversion time, &#39;</span>
+                           <span class="s1">&#39;i.e. in &quot;coremltools.models.MLModel()&quot; or &quot;coremltools.convert()&quot;.&#39;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_package</span> <span class="ow">and</span> <span class="n">_is_macos</span><span class="p">()</span> <span class="ow">and</span> <span class="n">_macos_version</span><span class="p">()</span> <span class="o">&lt;</span> <span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">0</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
@@ -610,9 +644,9 @@
 
     <span class="k">def</span> <span class="nf">_get_mil_internal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Get a deep copy of the mil program object, if avaiable.</span>
-<span class="sd">        Its avaiable whenever an MLModel object is constructed using</span>
-<span class="sd">        the unified converter API coremltools.convert()</span>
+<span class="sd">        Get a deep copy of the MIL program object, if available.</span>
+<span class="sd">        It&#39;s available whenever an MLModel object is constructed using</span>
+<span class="sd">        the unified converter API [`coremltools.convert()`](https://apple.github.io/coremltools/source/coremltools.converters.mil.html#coremltools.converters._converters_entry.convert).</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>

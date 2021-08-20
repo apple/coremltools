@@ -13,6 +13,8 @@
   
   <link rel="stylesheet" href="../../../../../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../../../../../_static/graphviz.css" type="text/css" />
 
   
@@ -30,6 +32,7 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../../../../../../" src="../../../../../../../_static/documentation_options.js"></script>
+        <script data-url_root="../../../../../../../" id="documentation_options" src="../../../../../../../_static/documentation_options.js"></script>
         <script src="../../../../../../../_static/jquery.js"></script>
         <script src="../../../../../../../_static/underscore.js"></script>
         <script src="../../../../../../../_static/doctools.js"></script>
@@ -83,14 +86,14 @@
               
             
             
-              <p class="caption"><span class="caption-text">API Contents</span></p>
+              <p class="caption" role="heading"><span class="caption-text">API Contents</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../../source/coremltools.converters.html">Converters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../../source/coremltools.models.html">Models</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Resources</span></p>
+<p class="caption" role="heading"><span class="caption-text">Resources</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference external" href="https://coremltools.readme.io/docs">Guides and examples</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Format Specification</a></li>
@@ -166,7 +169,6 @@
 <span class="c1">#  Use of this source code is governed by a BSD-3-clause license that can be</span>
 <span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
 
-<span class="kn">import</span> <span class="nn">functools</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">sympy</span> <span class="k">as</span> <span class="nn">sm</span>
@@ -180,18 +182,29 @@
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">get_new_symbol</span><span class="p">,</span>
     <span class="n">get_new_variadic_symbol</span><span class="p">,</span>
-    <span class="n">VALUE</span><span class="p">,</span>
+    <span class="n">Operation</span><span class="p">,</span>
+    <span class="n">precondition</span><span class="p">,</span>
     <span class="n">SYMBOL</span><span class="p">,</span>
     <span class="n">types</span><span class="p">,</span>
+    <span class="n">VALUE</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">._op_reqs</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.input_type</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">BoolTensorInputType</span><span class="p">,</span>
+    <span class="n">DefaultInputs</span><span class="p">,</span>
+    <span class="n">InputSpec</span><span class="p">,</span>
+    <span class="n">IntInputType</span><span class="p">,</span>
+    <span class="n">IntTensorInputType</span><span class="p">,</span>
+    <span class="n">ScalarOrTensorInputType</span><span class="p">,</span>
+    <span class="n">TensorInputType</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs._op_reqs</span> <span class="kn">import</span> <span class="n">register_op</span>
 
 
 <div class="viewcode-block" id="depth_to_space"><a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.tensor_transformation.depth_to_space">[docs]</a><span class="nd">@register_op</span><span class="p">(</span><span class="n">doc_str</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">depth_to_space</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Rearrange elements in a tensor from depth (channel) into spatial dimensions.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    x: tensor&lt;[n, C, H, W], T&gt; (Required)</span>
@@ -199,12 +212,12 @@
 <span class="sd">    block_size: const i32 (Required)</span>
 <span class="sd">        * The size of the spatial block. Must be greater than ``1`` and divisible by</span>
 <span class="sd">          channel dimension ``C``.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    tensor&lt;[n, C / block_size^2, H x block_size, W x block_size], T&gt;</span>
 <span class="sd">        * Where ``b`` is the block size.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    T: fp32</span>
@@ -230,7 +243,7 @@
 <span class="k">class</span> <span class="nc">expand_dims</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Insert a single-dimension in a 1-D or higher tensor at each axis in axes.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    x: tensor&lt;\*?, T&gt; (Required)</span>
@@ -240,19 +253,19 @@
 <span class="sd">        * Insert single dimension at dimension index at each axes.</span>
 <span class="sd">        * Negative value to index from the end. ``-d-1 &lt;= axis &lt;= d``</span>
 <span class="sd">          where ``d`` is the rank of ``x``.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    tensor&lt;\*(rank(x)+K), T&gt;</span>
 <span class="sd">        * Same type as the input ``x`` with rank ``rank(x)+K``.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    T: fp32</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    
+
     <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
-        <span class="n">x</span><span class="o">=</span><span class="n">ScalarOrTensorInputType</span><span class="p">(),</span> 
+        <span class="n">x</span><span class="o">=</span><span class="n">ScalarOrTensorInputType</span><span class="p">(),</span>
         <span class="n">axes</span><span class="o">=</span><span class="n">IntTensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
     <span class="p">)</span>
 
@@ -314,20 +327,20 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return a tensor that has the same values as ``x`` with shape ``shape``.</span>
 <span class="sd">    ``shape`` must have the same volume (number of elements) as ``x``.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    x: tensor&lt;\*?, T&gt; (Required)</span>
-<span class="sd">    </span>
+
 <span class="sd">        * A n-D tensor or a scalar.</span>
 <span class="sd">        * If ``x`` is fixed rank (and possibly contains symbolic dimension),</span>
 <span class="sd">          shape may contain elements that are not positive integers (see below).</span>
 <span class="sd">        * If ``x`` is variadic rank, shape can only contain positive integers.</span>
-<span class="sd">        </span>
+
 <span class="sd">    shape: tensor&lt;[K], i32&gt; (Required)</span>
-<span class="sd">    </span>
+
 <span class="sd">        A 1-D tensor, with elements from the following:</span>
-<span class="sd">        </span>
+
 <span class="sd">            * Positive integers.</span>
 <span class="sd">            * Symbols: All but one symbol in shape must be present in ``x.shape``.</span>
 <span class="sd">              The new symbol that is not present in ``x.shape`` represent a dimension</span>
@@ -338,12 +351,12 @@
 <span class="sd">              if ``x`` is variadic rank.</span>
 <span class="sd">            * ``0``: If ``K == rank(x)`` then ``0`` means inheriting from the corresponding</span>
 <span class="sd">              dimension in ``x.shape``. ``0`` is illegal if ``x`` is variadic rank.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    tensor&lt;\*?, T&gt;</span>
 <span class="sd">        * Tensor with shape determined by the input shape.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    T: fp32</span>
@@ -447,31 +460,31 @@
 <span class="k">class</span> <span class="nc">reverse</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Reverse the order of the input tensor ``x`` along specified ``axes``(dimensions).</span>
-<span class="sd">    </span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    x: tensor&lt;\*?, T&gt; (Required)</span>
 <span class="sd">        * Input tensor.</span>
-<span class="sd">    </span>
+
 <span class="sd">    axes: const&lt;D, i32&gt; (Optional)</span>
 <span class="sd">        * Dimension(s) to reverse. Each axis must be in the range ``[-rank(x), rank(x))``.</span>
 <span class="sd">        * Defaults to None (reverse on all dimensions).</span>
-<span class="sd">    </span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    tensor&lt;\*?, T&gt;</span>
 <span class="sd">        * Same type and shape as the input tensor.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    T: fp32</span>
-<span class="sd">    </span>
+
 <span class="sd">    References</span>
 <span class="sd">    ----------</span>
 <span class="sd">    See `tf.reverse &lt;https://www.tensorflow.org/api_docs/python/tf/reverse&gt;`_</span>
 <span class="sd">    and `TORCH &lt;https://pytorch.org/docs/stable/torch.html#torch.flip&gt;`_.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    
+
     <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
         <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(),</span>
         <span class="n">axes</span><span class="o">=</span><span class="n">IntTensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
@@ -519,22 +532,22 @@
 <span class="sd">    batch_axis: const&lt;i32&gt; (Optional)</span>
 <span class="sd">        * Dimension for slicing.</span>
 <span class="sd">        * Defaults to ``0``.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    tensor&lt;\*?, T&gt;</span>
 <span class="sd">        * Same type and shape as the input tensor.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    T: fp32</span>
-<span class="sd">    </span>
+
 <span class="sd">    References</span>
 <span class="sd">    ----------</span>
 <span class="sd">    `tf.reverse_sequence &lt;https://www.tensorflow.org/api_docs/python/tf/reverse_sequence&gt;`_</span>
-<span class="sd">    </span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
-    
+
     <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
         <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(),</span>
         <span class="n">lengths</span><span class="o">=</span><span class="n">IntTensorInputType</span><span class="p">(),</span>
@@ -872,7 +885,7 @@
 <span class="k">class</span> <span class="nc">space_to_depth</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Rearrange elements in a tensor from spatial into depth (channel) dimension.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    x: tensor&lt;[n, C, H, W], T&gt; (Required)</span>
@@ -880,12 +893,12 @@
 <span class="sd">    block_size: const&lt;i32&gt; (Required)</span>
 <span class="sd">        * The size of the spatial block. Must be greater than ``1`` and divisible</span>
 <span class="sd">          by spatial dimensions ``H, W``.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    tensor&lt;[n, C x block_size^2, H / block_size, W / block_size], T&gt;</span>
 <span class="sd">        * Where ``b`` is the block size.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    T: fp32</span>
@@ -910,7 +923,7 @@
 <span class="k">class</span> <span class="nc">squeeze</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Remove single-dimension dimensions in a 1-D or higher tensor.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    x: tensor&lt;\*?,T&gt; (Required)</span>
@@ -918,17 +931,17 @@
 <span class="sd">    axes: const&lt;K,i32&gt; (Optional)</span>
 <span class="sd">        * Axes to squeeze out.</span>
 <span class="sd">        * Default to remove all single-dimensions.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    tensor&lt;\*(rank(x)-K),T&gt;</span>
 <span class="sd">        * Tensor with same type as input ``x`` and rank ``rank(x)-K``.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    T: fp32</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    
+
     <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
         <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(),</span>
         <span class="n">axes</span><span class="o">=</span><span class="n">IntTensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
@@ -960,39 +973,39 @@
                     <span class="p">)</span>
                 <span class="n">squeezed_shape</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">x_type</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">squeezed_shape</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">x_type</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">squeezed_shape</span><span class="p">))</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">squeezed_shape</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">x_type</span>
 
     <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">val</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">axes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">val</span><span class="p">)</span>
+            <span class="n">val</span> <span class="o">=</span>  <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">val</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">val</span><span class="p">))</span></div>
-
+            <span class="n">val</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">val</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">val</span> <span class="k">if</span> <span class="n">val</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">()</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">val</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
 
 <div class="viewcode-block" id="transpose"><a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.tensor_transformation.transpose">[docs]</a><span class="nd">@register_op</span><span class="p">(</span><span class="n">doc_str</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">transpose</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Permute tensor ``x`` dimensions according to ``perm``.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    x: tensor&lt;\*?, T&gt; (Required)</span>
 <span class="sd">        * Must be at least 1-D. ``x`` may have a symbolic shape.</span>
 <span class="sd">    perm: const&lt;[rank(x)], i32&gt; (Required)</span>
-<span class="sd">        * Permutation order. Must be non-negative integers.</span>
-<span class="sd">    </span>
+<span class="sd">        * Permutation order. -rank(x) &lt;= perm[I] &lt; rank(x) for all perm entries.</span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    tensor&lt;\*?,T&gt;</span>
 <span class="sd">        * Tensor with same rank and type as ``x``.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    T: fp32</span>
-<span class="sd">    </span>
+
 <span class="sd">    References</span>
 <span class="sd">    ----------</span>
 <span class="sd">    `torch.Tensor.permute &lt;https://pytorch.org/docs/stable/tensors.html#torch.Tensor.permute&gt;`_</span>
@@ -1030,28 +1043,28 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Rearrange elements in a tensor from depth (channel) into spatial dimensions.</span>
 <span class="sd">    Equivalent to PyTorch&#39;s ``PixelShuffle``.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    x: tensor&lt;[n, C x f^2, H, W], T&gt; (Required)</span>
 <span class="sd">        * Input tensor of rank ``4``.</span>
 <span class="sd">    upscale_factor: const&lt;i32&gt;</span>
 <span class="sd">        * Factor to increase spatial resolution by.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    tensor&lt;[n, C, H x f, W x f], T&gt;</span>
 <span class="sd">        * Where ``f`` is the upscale factor.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    T: fp32</span>
-<span class="sd">    </span>
+
 <span class="sd">    References</span>
 <span class="sd">    ----------</span>
 <span class="sd">    `torch.nn.PixelShuffle &lt;https://pytorch.org/docs/stable/generated/torch.nn.PixelShuffle.html?highlight=pixel%20shuffle#torch.nn.PixelShuffle&gt;`_</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    
+
     <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
         <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(),</span> <span class="n">upscale_factor</span><span class="o">=</span><span class="n">IntInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
     <span class="p">)</span>
@@ -1072,33 +1085,33 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return a tensor containing all windows of ``size``, separated by stride along the</span>
 <span class="sd">    given ``axis``.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    x: tensor&lt;[\*d0, d_axis, *dn], T&gt;</span>
 <span class="sd">        * Input tensor.</span>
-<span class="sd">    </span>
+
 <span class="sd">    axis: const&lt;i32&gt;</span>
 <span class="sd">        * Axis to perform the operation.</span>
-<span class="sd">    </span>
+
 <span class="sd">    size: const&lt;i32&gt;</span>
 <span class="sd">        * Number of elements in the sliding window.</span>
-<span class="sd">    </span>
+
 <span class="sd">    stride: const&lt;i32&gt; Optional</span>
 <span class="sd">        * Default to ``1``.</span>
 <span class="sd">        * The stride of the input elements in the sliding window.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    tensor&lt;[\*d0, d_axis - size // stride + 1, size, \*dn], T&gt;</span>
 <span class="sd">        * The output will be a tensor of rank ``N+1`` where ``N`` is the input tensor</span>
 <span class="sd">          rank.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    T: fp32</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    
+
     <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
         <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(),</span>
         <span class="n">axis</span><span class="o">=</span><span class="n">IntInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
