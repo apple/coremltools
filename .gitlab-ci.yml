@@ -62,6 +62,12 @@ build_wheel_linux_py38:
   variables:
     PYTHON: "3.8"
 
+build_wheel_linux_py39:
+  <<: *build_linux
+  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-18.04:1.0.0
+  variables:
+    PYTHON: "3.9"
+
 #########################################################################
 ##
 ##                         macOS - Build
@@ -79,47 +85,127 @@ build_wheel_linux_py38:
       paths:
         - build/dist/
 
-## Uses Python 3.5 from python.org
 build_wheel_macos_py35:
   <<: *build_macos
   variables:
     PYTHON: "3.5"
 
-## Uses Python 3.6 from python.org
 build_wheel_macos_py36:
   <<: *build_macos
   variables:
     PYTHON: "3.6"
 
-## Uses Python 3.7 from python.org
 build_wheel_macos_py37:
   <<: *build_macos
   variables:
     PYTHON: "3.7"
 
-## Uses Python 3.8 from python.org
 build_wheel_macos_py38:
   <<: *build_macos
   variables:
     PYTHON: "3.8"
+
+build_wheel_macos_py39:
+  <<: *build_macos
+  variables:
+    PYTHON: "3.9"
+
+#########################################################################
+##
+##                         linux - Test
+##
+#########################################################################
+.test_linux_pkg: &test_linux_pkg
+  stage: test
+  script:
+    - export PATH=$PATH:/opt/anaconda/bin/
+    - zsh -e scripts/test.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON}
+      --test-package=${TEST_PACKAGE} --fast
+
+.test_linux_pkg_with_reqs: &test_linux_pkg_with_reqs
+  stage: test
+  script:
+    - export PATH=$PATH:/opt/anaconda/bin/
+    - zsh -e scripts/test.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON}
+      --test-package=${TEST_PACKAGE} --requirements=${REQUIREMENTS} --fast
+
+test_linux_py37_coremltools_test:
+  <<: *test_linux_pkg
+  tags:
+    - docker
+  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-18.04:1.0.0
+  dependencies:
+    - build_wheel_linux_py37
+  variables:
+    WHEEL_PATH: build/dist/coremltools-*-none-manylinux1_x86_64.whl
+    TEST_PACKAGE: coremltools.test
+    PYTHON: "3.7"
+
+test_linux_py37_pytorch:
+  <<: *test_linux_pkg
+  tags:
+    - docker
+  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-18.04:1.0.0
+  dependencies:
+    - build_wheel_linux_py37
+  variables:
+    PYTHON: "3.7"
+    TEST_PACKAGE: coremltools.converters.mil.frontend.torch
+    WHEEL_PATH: build/dist/coremltools-*-none-manylinux1_x86_64.whl
+
+test_linux_py37_tf1:
+  <<: *test_linux_pkg
+  tags:
+    - docker
+  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-18.04:1.0.0
+  dependencies:
+    - build_wheel_linux_py37
+  variables:
+    PYTHON: "3.7"
+    TEST_PACKAGE: coremltools.converters.mil.frontend.tensorflow
+    WHEEL_PATH: build/dist/coremltools-*-none-manylinux1_x86_64.whl
+
+test_linux_py37_tf2:
+  <<: *test_linux_pkg_with_reqs
+  tags:
+    - docker
+  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-18.04:1.0.0
+  dependencies:
+    - build_wheel_linux_py37
+  variables:
+    PYTHON: "3.7"
+    REQUIREMENTS: reqs/test_tf2.pip
+    TEST_PACKAGE: coremltools.converters.mil.frontend.tensorflow2
+    WHEEL_PATH: build/dist/coremltools-*-none-manylinux1_x86_64.whl
+
+test_linux_py37_mil:
+  <<: *test_linux_pkg
+  tags:
+    - docker
+  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-18.04:1.0.0
+  dependencies:
+    - build_wheel_linux_py37
+  variables:
+    PYTHON: "3.7"
+    TEST_PACKAGE: coremltools.converters.mil
+    WHEEL_PATH: build/dist/coremltools-*-none-manylinux1_x86_64.whl
 
 #########################################################################
 ##
 ##                         macOS - Test
 ##
 #########################################################################
-
 .test_macos_pkg: &test_macos_pkg
-  stage: test
-  script:
-    - zsh -e scripts/test.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON}
-      --test-package=${TEST_PACKAGE} --fast
+   stage: test
+   script:
+     - zsh -e scripts/test.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON}
+       --test-package=${TEST_PACKAGE} --fast
 
 .test_macos_pkg_with_reqs: &test_macos_pkg_with_reqs
-  stage: test
-  script:
-    - zsh -e scripts/test.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON}
-      --test-package=${TEST_PACKAGE} --requirements=${REQUIREMENTS} --fast
+   stage: test
+   script:
+     - zsh -e scripts/test.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON}
+       --test-package=${TEST_PACKAGE} --requirements=${REQUIREMENTS} --fast
 
 test_macos11_py37_coremltools_test:
   <<: *test_macos_pkg
