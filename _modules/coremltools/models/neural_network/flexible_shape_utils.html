@@ -13,6 +13,8 @@
   
   <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../_static/css/theme.css" type="text/css" />
   <link rel="stylesheet" href="../../../../_static/graphviz.css" type="text/css" />
 
   
@@ -30,6 +32,7 @@
   
     
       <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
         <script src="../../../../_static/jquery.js"></script>
         <script src="../../../../_static/underscore.js"></script>
         <script src="../../../../_static/doctools.js"></script>
@@ -83,14 +86,14 @@
               
             
             
-              <p class="caption"><span class="caption-text">API Contents</span></p>
+              <p class="caption" role="heading"><span class="caption-text">API Contents</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.converters.html">Converters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.models.html">Models</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
 </ul>
-<p class="caption"><span class="caption-text">Resources</span></p>
+<p class="caption" role="heading"><span class="caption-text">Resources</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference external" href="https://coremltools.readme.io/docs">Guides and examples</a></li>
 <li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Format Specification</a></li>
@@ -599,10 +602,13 @@
         <span class="n">fixed_width</span> <span class="o">=</span> <span class="n">feature</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">imageType</span><span class="o">.</span><span class="n">width</span>
         <span class="n">sizes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">NeuralNetworkImageSize</span><span class="p">(</span><span class="n">fixed_height</span><span class="p">,</span> <span class="n">fixed_width</span><span class="p">))</span>
 
+    <span class="n">shapes_added_so_far</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">size</span> <span class="ow">in</span> <span class="n">sizes</span><span class="p">:</span>
-        <span class="n">s</span> <span class="o">=</span> <span class="n">feature</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">imageType</span><span class="o">.</span><span class="n">enumeratedSizes</span><span class="o">.</span><span class="n">sizes</span><span class="o">.</span><span class="n">add</span><span class="p">()</span>
-        <span class="n">s</span><span class="o">.</span><span class="n">height</span> <span class="o">=</span> <span class="n">size</span><span class="o">.</span><span class="n">height</span>
-        <span class="n">s</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="n">size</span><span class="o">.</span><span class="n">width</span>
+        <span class="k">if</span> <span class="p">[</span><span class="n">size</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="n">size</span><span class="o">.</span><span class="n">width</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">shapes_added_so_far</span><span class="p">:</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="n">feature</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">imageType</span><span class="o">.</span><span class="n">enumeratedSizes</span><span class="o">.</span><span class="n">sizes</span><span class="o">.</span><span class="n">add</span><span class="p">()</span>
+            <span class="n">s</span><span class="o">.</span><span class="n">height</span> <span class="o">=</span> <span class="n">size</span><span class="o">.</span><span class="n">height</span>
+            <span class="n">s</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="n">size</span><span class="o">.</span><span class="n">width</span>
+            <span class="n">shapes_added_so_far</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">s</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="n">s</span><span class="o">.</span><span class="n">width</span><span class="p">])</span>
 
     <span class="c1"># Bump up specification version</span>
     <span class="n">spec</span><span class="o">.</span><span class="n">specificationVersion</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
@@ -875,18 +881,23 @@
 
     <span class="n">eshape_len</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">feature</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">multiArrayType</span><span class="o">.</span><span class="n">enumeratedShapes</span><span class="o">.</span><span class="n">shapes</span><span class="p">)</span>
 
+    <span class="n">shapes_added_so_far</span> <span class="o">=</span> <span class="p">[]</span>
+
     <span class="c1"># Add default array shape to list of enumerated shapes if enumerated shapes</span>
     <span class="c1"># field is currently empty</span>
     <span class="k">if</span> <span class="n">eshape_len</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">fixed_shape</span> <span class="o">=</span> <span class="n">feature</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">multiArrayType</span><span class="o">.</span><span class="n">shape</span>
         <span class="n">s</span> <span class="o">=</span> <span class="n">feature</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">multiArrayType</span><span class="o">.</span><span class="n">enumeratedShapes</span><span class="o">.</span><span class="n">shapes</span><span class="o">.</span><span class="n">add</span><span class="p">()</span>
         <span class="n">s</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">fixed_shape</span><span class="p">)</span>
+        <span class="n">shapes_added_so_far</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">fixed_shape</span><span class="p">))</span>
 
     <span class="k">for</span> <span class="n">shape</span> <span class="ow">in</span> <span class="n">enumerated_shapes</span><span class="p">:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;An element in &#39;enumerated_shapes&#39; is not a tuple&quot;</span><span class="p">)</span>
-        <span class="n">s</span> <span class="o">=</span> <span class="n">feature</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">multiArrayType</span><span class="o">.</span><span class="n">enumeratedShapes</span><span class="o">.</span><span class="n">shapes</span><span class="o">.</span><span class="n">add</span><span class="p">()</span>
-        <span class="n">s</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">shape</span><span class="p">))</span>
+        <span class="k">if</span> <span class="nb">list</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">shapes_added_so_far</span><span class="p">:</span>
+            <span class="n">s</span> <span class="o">=</span> <span class="n">feature</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">multiArrayType</span><span class="o">.</span><span class="n">enumeratedShapes</span><span class="o">.</span><span class="n">shapes</span><span class="o">.</span><span class="n">add</span><span class="p">()</span>
+            <span class="n">s</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">shape</span><span class="p">))</span>
+            <span class="n">shapes_added_so_far</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">shape</span><span class="p">))</span>
 
     <span class="c1"># Bump up specification version</span>
     <span class="n">spec</span><span class="o">.</span><span class="n">specificationVersion</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
