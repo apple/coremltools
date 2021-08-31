@@ -18,7 +18,7 @@ from coremltools.converters.mil.input_types import (
 )
 from coremltools.models import MLModel
 from coremltools.models import neural_network as neural_network
-import coremltools.models.datatypes as datatypes
+from coremltools.models.datatypes import Array
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.types.symbolic import (
     any_symbolic,
@@ -235,9 +235,9 @@ def load(prog, **kwargs):
                     symbolic_inputs[name] = sym_shape
             else:
                 shape = sym_shape
-            v1_inputs.append((name, datatypes.Array(*shape)))
+            v1_inputs.append((name, Array(*shape)))
         elif types.is_scalar(var.sym_type):
-            v1_inputs.append((name, datatypes.Array(1)))
+            v1_inputs.append((name, Array(1)))
         else:
             raise NotImplementedError()
 

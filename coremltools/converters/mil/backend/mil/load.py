@@ -1,10 +1,15 @@
+#  Copyright (c) 2021, Apple Inc. All rights reserved.
+#
+#  Use of this source code is governed by a BSD-3-clause license that can be
+#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
+
 import logging
 import numpy as _np
 import os
 import tempfile
 
 from coremltools.converters.mil.backend.mil.helper import *
-import coremltools.converters.mil.backend.mil.passes.mil_passes as mil_passes
+from .passes import mil_passes
 import coremltools.proto.MIL_pb2 as pm
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil import Function
