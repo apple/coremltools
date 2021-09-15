@@ -586,5 +586,3 @@ def transform_pattern(pattern):
 * Write the passs, and save it in a file in the `coreml/coremltools/coremltools/converters/mil/experimental/passes` folder
 * Add an import line to the `coreml/coremltools/coremltools/converters/mil/mil/passes/init.py` file
 * Run the experimental (generic) passes by setting the `ENABLE_EXPERIMENTAL_PASSES` environment variable to 1, which will override the regular passes with the same name
-* The whole experimental pass infrastructure, which is a temporary measure (eventually, these passes will just replace the old ones completely), can be found in the [first generic pass PR (gelu tanh approximation)](https://stashweb.sd.apple.com/projects/COREOS/repos/coreml/pull-requests/4024/overview)
-* The quip version of this documentation can be found [here](https://quip-apple.com/qRlCAamhEqQ2)
