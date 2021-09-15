@@ -112,6 +112,7 @@ def var_constraints(pattern):
 
     # for the vector scale case, check if the shape is broacastable
     if not is_scalar:
+        conv_weight = pattern.conv.weight.val
         passed = passed and (
             np.product(scale.shape) == Cout
             or (len(scale.shape) == len(conv_weight.shape) and scale.shape[1] == Cout)
