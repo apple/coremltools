@@ -275,57 +275,6 @@ def types_to_proto(valuetype):
         return create_valuetype_scalar(types_to_proto_primitive(valuetype))
 
 
-class NameSanitizer(object):
-
-    def __init__(self, prefix=None):
-        # to hold all names encountered,
-        # to make sure that all new names are unique
-        self.all_names = set()
-        self.prefix = "_" if prefix is None else prefix
-
-    def sanitize_name(self, name):
-        """
-        Sanitize the input string and return it back.
-        Input string should be of the format: [a-zA-Z_][a-zA-Z0-9_]*
-
-        If it is not, then it is sanitized in the following manner:
-        - first, any character that is not [a-zA-Z0-9_] is replaced with "_"
-        - if the starting character is not [a-zA-Z_], it is prefixed with self.prefix
-        - the resulting string must be unique. If it has been encountered before,
-          it is appended by "_0" or "_1" and so on, until it becomes unique.
-
-        :name: str
-            current name
-
-        :return: str
-            updated name. Returns the same string, if sanitization not required.
-        """
-
-        # replace any character that is not [a-zA-Z0-9_] with an underscore
-        new_name = re.sub("[^a-zA-Z0-9_]", "_", name)
-
-        # now check if the name starts with anything but [A-Za-z_]
-        # if so, then add the prefix
-        if re.match("[^a-zA-Z_]", new_name):
-            new_name = self.prefix + new_name
-
-        if new_name == name:
-            # return if nothing has changed
-            self.all_names.add(name)
-            return name
-        else:
-            # name has changed
-            # make sure it is unique, then return
-            if new_name in self.all_names:
-                idx = 0
-                new_name += "_" + str(idx)
-                while new_name in self.all_names:
-                    idx += 1
-                    new_name += "_" + str(idx)
-            # now we have a unique name
-            self.all_names.add(new_name)
-            return new_name
-
 def create_file_value(output_var, blob_writer):
     if output_var.val.dtype.kind == 'f' and output_var.val.dtype.itemsize == 4:
         offset = blob_writer.write_float_data(output_var.val.flatten())
@@ -365,3 +314,4 @@ def cast_to_framework_io_dtype(var, is_output):
         ioname2 = "outputs" if is_output else "inputs"
         raise NotImplementedError(ioname + var.name + " has data type " + builtin_to_string(var.dtype) + \
                                   ". ML Program models only support fp32 and int32 " + ioname2 + ".")
+

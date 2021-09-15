@@ -199,6 +199,26 @@ class MLModelTest(unittest.TestCase):
 
             MLModelTest._remove_path(package.name)
 
+    def test_save_in_place(self):
+        model = MLModel(self.spec)
+
+        # Verify "save" can be called twice and the saved
+        # model can be loaded successfully each time
+        # the mlpackage remains in place after the first save
+        package = tempfile.TemporaryDirectory(suffix=".mlpackage")
+        package.cleanup()
+        for _ in range(2):
+
+            model.save(package.name)
+            loaded_model = MLModel(package.name)
+
+            if utils._macos_version() >= (12, 0):
+                preds = loaded_model.predict({"feature_1": 1.0, "feature_2": 1.0})
+                self.assertIsNotNone(preds)
+                self.assertEqual(preds["output"], 3.1)
+
+        MLModelTest._remove_path(package.name)
+
     def test_mil_as_package(self):
         import torch
 

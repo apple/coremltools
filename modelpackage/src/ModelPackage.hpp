@@ -85,6 +85,15 @@ public:
     std::string setRootModel(const std::string& path, const std::string& name, const std::string& author, const std::string& description = "");
 
     /**
+     replace a root model in model package. model package may or may not already contain a root model. Each model package has a unique root model, which can be retrieved without needing for an identifier.
+         @param path Path of the model file.
+         @param name Name of the model file.
+         @param author Author of the model file. Reverse DNS identifier of the author application is recommended. Example: com.apple.coremltools.
+         @param description Optional description to describe the model file.
+         @return Unique file identifier that can be used to retrieve the model file. */
+    std::string replaceRootModel(const std::string& path, const std::string& name, const std::string& author, const std::string& description = "");
+
+    /**
      Retrieve previously set root model from the model package.
          @return ModelPackageItemInfo with information about the retrieved root model file.
          @throw Runtime exception if the model package does not contain a root model. */

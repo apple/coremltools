@@ -171,6 +171,7 @@ public:
     }
     
     std::string setRootModel(const std::filesystem::path& path, const std::string& name, const std::string& author, const std::string& description);
+    std::string replaceRootModel(const std::filesystem::path& path, const std::string& name, const std::string& author, const std::string& description);
     ModelPackageItemInfo getRootModel() const;
     
     std::string addItem(const std::filesystem::path& path, const std::string& name, const std::string& author, const std::string& description);
@@ -413,6 +414,18 @@ std::string ModelPackageImpl::setRootModel(const std::filesystem::path& path, co
     return identifier;
 }
 
+std::string ModelPackageImpl::replaceRootModel(const std::filesystem::path& path, const std::string& name, const std::string& author, const std::string& description)
+{
+    if (m_manifest->hasKey(kModelPackageRootModelKey)) {
+        auto rootModelIdentifier = m_manifest->getString(kModelPackageRootModelKey);
+        removeItem(rootModelIdentifier);
+    }
+    
+    auto identifier = addItem(path, name, author, description);
+    m_manifest->setString(kModelPackageRootModelKey, identifier);
+    return identifier;
+}
+
 ModelPackageItemInfo ModelPackageImpl::getRootModel() const
 {
     if (false == m_manifest->hasKey(kModelPackageRootModelKey)) {
@@ -517,6 +530,11 @@ std::string ModelPackage::path() const
 std::string ModelPackage::setRootModel(const std::string& path, const std::string& name, const std::string& author, const std::string& description)
 {
     return m_modelPackageImpl->setRootModel(path, name, author, description);
+}
+
+std::string ModelPackage::replaceRootModel(const std::string& path, const std::string& name, const std::string& author, const std::string& description)
+{
+    return m_modelPackageImpl->replaceRootModel(path, name, author, description);
 }
 
 ModelPackageItemInfo ModelPackage::getRootModel() const

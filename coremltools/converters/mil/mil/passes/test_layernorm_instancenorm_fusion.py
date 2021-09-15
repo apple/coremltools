@@ -111,6 +111,52 @@ class TestLayerNormOrInstanceNormFusionPass:
             prog, {"x": shape}, expected_output_shapes={block.outputs[0].name: shape}
         )
 
+    def test_instance_norm_pattern_1_rank_1_gamma_beta(self):
+        """
+        Detect instance norm pattern
+        y = x * [gamma * rsqrt(variance + eps)] + (beta - mean * [gamma * rsqrt(variance + eps)])
+
+        where input is rank 4, (N,C,H,W), axis=[2, 3], along which reduction happens,
+        and gamma and beta are of shape (C,)
+        """
+        shape = (3, 5, 6, 7)
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=shape)])
+        def prog(x):
+            x1 = mb.reduce_mean(x=x, axes=[1, 2], keep_dims=True)
+            x2 = mb.sub(x=x, y=x1)
+            x2 = mb.square(x=x2)
+            x2 = mb.reduce_mean(x=x2, axes=[1, 2], keep_dims=True)
+            x2 = mb.add(x=x2, y=1e-5)
+            x2 = mb.rsqrt(x=x2)
+            x3 = mb.mul(x=np.random.rand(shape[3]), y=x2)
+            x4 = mb.mul(x=x3, y=x1)
+            x5 = mb.mul(x=x, y=x3)
+            x4 = mb.sub(x=np.random.rand(shape[3]), y=x4)
+            y = mb.add(x=x4, y=x5)
+            return y
+
+        prev_prog, prev_block, block = apply_pass_and_basic_check(
+            prog, "common::fuse_layernorm_or_instancenorm"
+        )
+        assert get_op_types_in_program(prev_prog) == [
+            "reduce_mean",
+            "sub",
+            "square",
+            "reduce_mean",
+            "add",
+            "rsqrt",
+            "mul",
+            "mul",
+            "mul",
+            "sub",
+            "add",
+        ]
+        assert get_op_types_in_program(prog) == ["transpose", "instance_norm", "transpose"]
+        assert_model_is_valid(
+            prog, {"x": shape}, expected_output_shapes={block.outputs[0].name: shape}
+        )
+
     def test_instance_norm_pattern_1_with_channel_last_data_format(self):
         """
         Detect instance norm pattern with channel last data format

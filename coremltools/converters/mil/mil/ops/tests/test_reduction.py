@@ -16,7 +16,7 @@ from coremltools.converters.mil.mil import (
     types,
 )
 from coremltools.converters.mil.mil.ops.tests.testing_utils import run_compare_builder
-from coremltools.converters.mil.testing_utils import is_close, random_gen, ssa_fn
+from coremltools.converters.mil.testing_utils import random_gen, ssa_fn
 
 backends = testing_reqs.backends
 
@@ -172,74 +172,78 @@ class TestReduction:
         def test_reduce_argmax():
             res = mb.reduce_argmax(x=x_val, axis=axis, keep_dims=keep_dims).val
             ref = np.argmax(x_val, axis=axis)
-            assert is_close(ref, res)
+            if keep_dims:
+                ref = np.expand_dims(ref, axis=axis)
+            np.testing.assert_allclose(ref, res, atol=1e-04, rtol=1e-05)
 
         @ssa_fn
         def test_reduce_argmin():
             res = mb.reduce_argmin(x=x_val, axis=axis, keep_dims=keep_dims).val
             ref = np.argmin(x_val, axis=axis)
-            assert is_close(ref, res)
+            if keep_dims:
+                ref = np.expand_dims(ref, axis=axis)
+            np.testing.assert_allclose(ref, res, atol=1e-04, rtol=1e-05)
 
         @ssa_fn
         def test_reduce_l1_norm():
             res = mb.reduce_l1_norm(x=x_val, axes=[axis], keep_dims=keep_dims).val
             ref = np.sum(np.abs(x_val), axis=axis, keepdims=keep_dims)
-            assert is_close(ref, res)
+            np.testing.assert_allclose(ref, res, atol=1e-04, rtol=1e-05)
 
         @ssa_fn
         def test_reduce_l2_norm():
             res = mb.reduce_l2_norm(x=x_val, axes=[axis], keep_dims=keep_dims).val
             ref = np.sqrt(np.sum(np.square(x_val), axis=axis, keepdims=keep_dims))
-            assert is_close(ref, res)
+            np.testing.assert_allclose(ref, res, atol=1e-04, rtol=1e-05)
 
         @ssa_fn
         def test_reduce_log_sum():
             x_val = random_gen(shape=(1, 3, 4, 4), rand_min=0.0, rand_max=100.0)
             res = mb.reduce_log_sum(x=x_val, axes=[axis], keep_dims=keep_dims).val
             ref = np.log(np.sum(x_val, axis=axis, keepdims=keep_dims))
-            assert is_close(ref, res)
+            np.testing.assert_allclose(ref, res, atol=1e-04, rtol=1e-05)
 
         @ssa_fn
         def test_reduce_log_sum_exp():
             res = mb.reduce_log_sum_exp(x=x_val, axes=[axis], keep_dims=keep_dims).val
             ref = scipy.special.logsumexp(x_val, axis=axis, keepdims=keep_dims)
-            assert is_close(ref, res)
+            np.testing.assert_allclose(ref, res, atol=1e-04, rtol=1e-05)
 
         @ssa_fn
         def test_reduce_max():
             res = mb.reduce_max(x=x_val, axes=[axis], keep_dims=keep_dims).val
             ref = np.max(x_val, axis=axis, keepdims=keep_dims)
-            assert is_close(ref, res)
+            np.testing.assert_allclose(ref, res, atol=1e-04, rtol=1e-05)
 
         @ssa_fn
         def test_reduce_mean():
             res = mb.reduce_mean(x=x_val, axes=[axis], keep_dims=keep_dims).val
             ref = np.mean(x_val, axis=axis, keepdims=keep_dims)
-            assert is_close(ref, res)
+            np.testing.assert_allclose(ref, res, atol=1e-04, rtol=1e-05)
 
         @ssa_fn
         def test_reduce_min():
             res = mb.reduce_min(x=x_val, axes=[axis], keep_dims=keep_dims).val
             ref = np.min(x_val, axis=axis, keepdims=keep_dims)
-            assert is_close(ref, res)
+            np.testing.assert_allclose(ref, res, atol=1e-04, rtol=1e-05)
 
         @ssa_fn
         def test_reduce_prod():
             res = mb.reduce_prod(x=x_val, axes=[axis], keep_dims=keep_dims).val
             ref = np.prod(x_val, axis=axis, keepdims=keep_dims)
-            assert is_close(ref, res)
+            np.testing.assert_allclose(ref, res, atol=1e-04, rtol=1e-05)
 
         @ssa_fn
         def test_reduce_sum():
             res = mb.reduce_sum(x=x_val, axes=[axis], keep_dims=keep_dims).val
             ref = np.sum(x_val, axis=axis, keepdims=keep_dims)
-            assert is_close(ref, res)
+            np.testing.assert_allclose(ref, res, atol=1e-04, rtol=1e-05)
 
         @ssa_fn
         def test_reduce_sum_square():
             res = mb.reduce_sum_square(x=x_val, axes=[axis], keep_dims=keep_dims).val
             ref = np.sum(np.square(x_val), axis=axis, keepdims=keep_dims)
-            assert is_close(ref, res)
+            np.testing.assert_allclose(ref, res, atol=1e-04, rtol=1e-05)
 
         test_reduce_argmax()
         test_reduce_argmin()
@@ -273,7 +277,7 @@ class TestReduction:
         expected_output_types = [(s0, 1, types.int32), (1, 3, types.int32)]
         expected_outputs = [
             np.array([[2], [2]], dtype=np.int32),
-            np.array([[0], [0], [0]], dtype=np.int32),
+            np.array([[0, 0, 0]], dtype=np.int32),
         ]
 
         run_compare_builder(
@@ -301,4 +305,4 @@ class TestReduction:
 
             op = list(prog.functions.values())[0].operations[3]
             assert op.op_type == 'reduce_log_sum_exp'
-            assert is_close(op.value_inference(), scipy.special.logsumexp(x, axis=axis))
+            np.testing.assert_allclose(op.value_inference(), scipy.special.logsumexp(x, axis=axis), atol=1e-04, rtol=1e-05)

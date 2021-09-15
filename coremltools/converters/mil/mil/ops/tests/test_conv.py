@@ -59,12 +59,13 @@ class TestConvTranspose:
         test_symbolic,
         test_output_shape,
     ):
-        if backend[0] == "mlprogram" and conv_dim != "conv3d":
-            pytest.xfail("rdar://81337723 (Conv1d, Conv2d, and Conv3d tests fail on GPU backend)")
 
         if test_symbolic and test_output_shape:
             # conv_transpose output_shape can only be constant (non-symbolic)
             return
+
+        if backend[0] == "mlprogram" and groups == 2:
+            pytest.xfail("rdar://81999134 (ConvTranspose with group > 1 crashing on both CPU and GPU backend)")
 
         D, H, W, Kd, Kh, Kw = DHWKdKhKw
         N, C_in, C_out = 1, 1 * groups, 2 * groups
@@ -226,10 +227,7 @@ class TestConv:
         groups,
         symbolic,
     ):
-        if backend[0] == "mlprogram" and conv_dim != "conv3d":
-            pytest.xfail("rdar://81337723 (Conv1d, Conv2d, and Conv3d tests fail on GPU backend)")
-        if backend[0] == "mlprogram" and conv_dim == "conv3d" and groups == 2:
-            pytest.xfail("rdar://81337723 (Conv1d, Conv2d, and Conv3d tests fail on GPU backend)")
+
 
         D, H, W, Kd, Kh, Kw = DHWKdKhKw
         N, C_in, C_out = 1, 1 * groups, 2 * groups

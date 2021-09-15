@@ -14,11 +14,12 @@ from coremltools.converters.mil.testing_utils import compare_shapes, \
     compare_backend, run_core_ml_predict, ct_convert
 from coremltools.converters.mil.testing_reqs import ct
 
+tf = pytest.importorskip("tensorflow", minversion="1.14.0")
+
 from tensorflow.python.framework import dtypes
 from tensorflow.python.tools.freeze_graph import freeze_graph as freeze_g
 from tensorflow.python.keras.saving import saving_utils as _saving_utils
 
-tf = pytest.importorskip("tensorflow", minversion="1.14.0")
 frontend = "tensorflow"
 
 

@@ -10,7 +10,6 @@ from coremltools.converters.mil.testing_utils import (
     assert_model_is_valid,
     get_op_types_in_program,
     apply_pass_and_basic_check,
-    is_close
 )
 from coremltools.converters.mil.testing_reqs import ct
 
@@ -75,7 +74,7 @@ class ReplaceStackReshapePass(unittest.TestCase):
 
         prediction = mlmodel.predict(input_dict, useCPUOnly=True)
 
-        assert is_close(old_prediction, prediction[output_name])
+        np.testing.assert_allclose(old_prediction, prediction[output_name], atol=1e-04, rtol=1e-05)
 
     def test_without_interleave(self):
         """
@@ -128,7 +127,7 @@ class ReplaceStackReshapePass(unittest.TestCase):
         old_prediction = np.reshape(np.stack([input_dict["x1"], input_dict["x2"]], axis=1), newshape=[1, 10, 3, 4])
 
         prediction = mlmodel.predict(input_dict, useCPUOnly=True)
-        assert is_close(old_prediction, prediction[output_name])
+        np.testing.assert_allclose(old_prediction, prediction[output_name], atol=1e-04, rtol=1e-05)
 
     def test_multiple(self):
         @mb.program(input_specs=[mb.TensorSpec(shape=(1, 2, 3, 4)), mb.TensorSpec(shape=(1, 2, 3, 4)), 
@@ -178,7 +177,7 @@ class ReplaceStackReshapePass(unittest.TestCase):
 
         prediction = mlmodel.predict(input_dict, useCPUOnly=True)
 
-        assert is_close(old_prediction, prediction[output_name])
+        np.testing.assert_allclose(old_prediction, prediction[output_name], atol=1e-04, rtol=1e-05)
 
     def test_negative_1(self):
         """

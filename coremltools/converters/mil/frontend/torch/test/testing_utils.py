@@ -44,6 +44,11 @@ def _flatten(object):
             flattened_list.append(item)
     return flattened_list
 
+def _copy_input_data(input_data):
+    if isinstance(input_data, (list, tuple)):
+        return [_copy_input_data(x) for x in input_data]
+    return input_data.clone().detach()
+
 
 def contains_op(torch, op_string):
     if hasattr(torch, op_string):
@@ -156,7 +161,8 @@ def convert_and_compare(input_data, model_spec,
         input_data = [input_data]
 
     if expected_results is None:
-        expected_results = torch_model(*input_data)
+        torch_input = _copy_input_data(input_data)
+        expected_results = torch_model(*torch_input)
     expected_results = flatten_and_detach_torch_results(expected_results)
     mlmodel = convert_to_mlmodel(model_spec, input_data, backend=backend, converter_input_type=converter_input_type,
                                  use_cpu_for_conversion=use_cpu_for_conversion)
@@ -216,7 +222,7 @@ class TorchBaseTest(object):
         if input_as_shape:
             input_data = generate_input_data(input_data, rand_range)
         model_spec = torch.jit.script(model) if use_scripting else trace_model(
-            model, input_data)
+            model, _copy_input_data(input_data))
         model_spec, mlmodel, coreml_inputs, coreml_results = \
             convert_and_compare(
             input_data, model_spec, expected_results=expected_results,

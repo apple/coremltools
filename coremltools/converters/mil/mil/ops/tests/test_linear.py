@@ -49,7 +49,7 @@ class TestLinear:
         weight_val = random_gen(shape=(2, 2), rand_min=-91, rand_max=84)
         bias_val = random_gen(shape=(2,), rand_min=0.0, rand_max=9.0)
         v = mb.linear(x=x_val, weight=weight_val, bias=bias_val)
-        assert is_close(np.matmul(x_val, weight_val.T) + bias_val, v.val)
+        np.testing.assert_allclose(np.matmul(x_val, weight_val.T) + bias_val, v.val, atol=1e-04, rtol=1e-05)
 
     @pytest.mark.parametrize(
         "use_cpu_only, backend, rank",
@@ -146,7 +146,7 @@ class TestMatMul:
         x_val = random_gen(shape=(2, 2, 4), rand_min=-37, rand_max=64)
         y_val = random_gen(shape=(2, 4, 2), rand_min=-91, rand_max=84)
         v = mb.matmul(x=x_val, y=y_val)
-        assert is_close(np.matmul(x_val, y_val), v.val)
+        np.testing.assert_allclose(np.matmul(x_val, y_val), v.val, atol=1e-04, rtol=1e-05)
 
     @pytest.mark.parametrize(
         "use_cpu_only, backend, shapes",
@@ -318,4 +318,4 @@ class TestEinsum:
         y_val = np.arange(24).astype(np.float32).reshape((2, 3, 4))
         equation = "bcd,dce->bce"
         v = mb.einsum(values=(x_val, y_val), equation=equation)
-        assert is_close(np.einsum(equation, x_val, y_val), v.val)
+        np.testing.assert_allclose(np.einsum(equation, x_val, y_val), v.val, atol=1e-04, rtol=1e-05)

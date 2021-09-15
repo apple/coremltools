@@ -421,21 +421,17 @@ class TestNormalizationLayerNorm:
         expected_outputs = [
             np.array(
                 [
-                    [
-                        [ 0.9999969,  -0.9999969 ],
-                        [ 0.99999833, -0.99999833],
-                        [ 0.99995005, -0.99995005],
-                    ]
+                    [ 0.9999969,  -0.9999969 ],
+                    [ 0.99999833, -0.99999833],
+                    [ 0.99995005, -0.99995005],
                 ],
                 dtype=np.float32,
             ),
             np.array(
                 [
-                    [
-                        [ 1.9999969,  -0.9999969 ],
-                        [ 1.99999833, -0.99999833],
-                        [ 1.99995005, -0.99995005],
-                    ]
+                    [ 1.9999969,  -0.9999969 ],
+                    [ 1.99999833, -0.99999833],
+                    [ 1.99995005, -0.99995005],
                 ],
                 dtype=np.float32,
             ),
@@ -592,7 +588,7 @@ class TestNormalizationLayerNorm:
         with Function({}) as ssa_func:
             res = mb.layer_norm(x=x_val, axes=axes, epsilon=epsilon, gamma=gamma_val, beta=beta_val)
             ref = TestNormalizationLayerNorm._np_layer_norm(x=x_val, axes=axes, epsilon=epsilon, gamma=gamma_val, beta=beta_val)
-            assert is_close(ref, res.val)
+            np.testing.assert_allclose(ref, res.val, atol=1e-04, rtol=1e-05)
 
 
 class TestNormalizationLocalResponseNorm:

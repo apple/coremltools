@@ -1,3 +1,7 @@
+// Copyright (c) 2021, Apple Inc. All rights reserved.
+//
+// Use of this source code is governed by a BSD-3-clause license that can be
+// found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 #import "CoreMLPythonArray.h"
 #import "CoreMLPythonUtils.h"
 
@@ -589,18 +593,4 @@ py::object Utils::convertValueToPython(MLFeatureValue *value) {
             return py::none();
     }
     return py::object();
-}
-
-
-
-py::dict Utils::shapeConstraintToPyDict(const ShapeConstraint& constraint) {
-    @autoreleasepool {
-        py::dict ret;
-        ret[py::str("S")] = py::make_tuple((int)constraint.sequenceRange().minimumValue(), (constraint.sequenceRange().maximumValue().isUnbound() ? -1 : (int)constraint.sequenceRange().maximumValue().value()));
-        ret[py::str("B")] = py::make_tuple((int)constraint.batchRange().minimumValue(), (constraint.batchRange().maximumValue().isUnbound() ? -1 : (int)constraint.batchRange().maximumValue().value()));
-        ret[py::str("C")] = py::make_tuple((int)constraint.channelRange().minimumValue(), (constraint.channelRange().maximumValue().isUnbound() ? -1 : (int)constraint.channelRange().maximumValue().value()));
-        ret[py::str("H")] = py::make_tuple((int)constraint.heightRange().minimumValue(), (constraint.heightRange().maximumValue().isUnbound() ? -1 : (int)constraint.heightRange().maximumValue().value()));
-        ret[py::str("W")] = py::make_tuple((int)constraint.widthRange().minimumValue(), (constraint.widthRange().maximumValue().isUnbound() ? -1 : (int)constraint.widthRange().maximumValue().value()));
-        return ret;
-    }
 }

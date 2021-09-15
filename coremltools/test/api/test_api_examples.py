@@ -5,7 +5,10 @@
 import copy
 import coremltools as ct
 from coremltools.converters.mil.testing_utils import get_op_types_in_program
-from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil import Builder as mb
+from coremltools.converters.mil.mil import Program, Function
+from coremltools.converters.mil.frontend.torch.test.testing_utils import _copy_input_data
+
 from coremltools._deps import (
     _HAS_TF_1,
     _HAS_TF_2,
@@ -499,7 +502,7 @@ class TestPyTorchConverterExamples:
         class TestModule(torch.nn.Module):
             def __init__(self):
                 super(TestModule, self).__init__()
-                self.embedding = torch.nn.Embedding(num_tokens, 
+                self.embedding = torch.nn.Embedding(num_tokens,
                     embedding_size)
 
             def forward(self, x):
@@ -595,14 +598,16 @@ class TestPyTorchConverterExamples:
         # running predict() is supported on macOS
         if ct.utils._is_macos():
             x, y = torch.rand(2, 4), torch.rand(1, 2)
-            torch_res = model(x, y)
+            torch_input = _copy_input_data([x, y])
+            torch_res = model(*torch_input)
             results = mlmodel.predict({"x": x.cpu().detach().numpy(),
               "y": y.cpu().detach().numpy()})
             for i, name in enumerate(mlmodel.output_description):
                 np.testing.assert_allclose(torch_res[i], results[name])
 
             x, y = torch.rand(1, 6), torch.rand(2, 3)
-            torch_res = model(x, y)
+            torch_input = _copy_input_data([x, y])
+            torch_res = model(*torch_input)
             results = mlmodel.predict({"x": x.cpu().detach().numpy(),
               "y": y.cpu().detach().numpy()})
             for i, name in enumerate(mlmodel.output_description):
@@ -612,8 +617,6 @@ class TestPyTorchConverterExamples:
 class TestMILExamples:
     @staticmethod
     def test_tutorial():
-        from coremltools.converters.mil import Builder as mb
-
         @mb.program(
             input_specs=[mb.TensorSpec(shape=(1, 100, 100, 3)),]
         )
@@ -628,8 +631,6 @@ class TestMILExamples:
         print("prog:\n", prog)
 
         # Convert and verify
-        import coremltools as ct
-
         mlmodel = ct.convert(prog)
 
         # running predict() is only supported on macOS
@@ -639,12 +640,9 @@ class TestMILExamples:
             )
             assert len(prediction) == 1
 
-@pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
 class TestInvalidInput:
     @staticmethod
     def test_rank0_inputs_mil():
-        from coremltools.converters.mil import Builder as mb
-
         with pytest.raises(ValueError, match=r"Rank-0"):
             @mb.program(
                 input_specs=[mb.TensorSpec(shape=()),]
@@ -653,6 +651,7 @@ class TestInvalidInput:
                 return x
 
     @staticmethod
+    @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
     def test_rank0_inputs_torch():
         """Similar to TestPyTorchConverterExamples::test_int64_inputs but
         using rank-0 int input.
@@ -685,6 +684,73 @@ class TestInvalidInput:
                         dtype=example_input.numpy().dtype,
                     )
                 ],
+            )
+
+@pytest.mark.skipif(ct.utils._macos_version() < (10, 15), reason='Model produces specification 4.')
+class TestInputs:
+    @staticmethod
+    @pytest.mark.skipif(not _HAS_TF_1, reason=MSG_TF1_NOT_FOUND)
+    def test_input_noname():
+        import tensorflow as tf
+
+        with tf.Graph().as_default() as graph:
+            x = tf.placeholder(tf.float32, shape=(1, 2, 3), name="input")
+            x1 = tf.placeholder(tf.float32, shape=(1, 2, 3), name="input_1")
+            y = tf.nn.relu(x, name="output")
+            y1 = tf.nn.relu(x1, name="output_1")
+
+        with pytest.raises(ValueError) as e:
+            model = ct.convert(
+                graph,
+                inputs=[ct.TensorType(shape=(1, 2, 3))]
+            )
+        expected_error = "Multiple inputs are found in graph, but no input name was provided"
+        assert expected_error == str(e.value)
+
+    @staticmethod
+    @pytest.mark.skipif(not _HAS_TF_1, reason=MSG_TF1_NOT_FOUND)
+    def test_input_wrongname():
+        import tensorflow as tf
+
+        with tf.Graph().as_default() as graph:
+            x = tf.placeholder(tf.float32, shape=(1, 2, 3), name="input")
+            x1 = tf.placeholder(tf.float32, shape=(1, 2, 3), name="input_1")
+            y = tf.nn.relu(x, name="output")
+            y1 = tf.nn.relu(x1, name="output_1")
+
+        with pytest.raises(ValueError) as e:
+            model = ct.convert(
+                graph,
+                inputs=[ct.TensorType(shape=(1, 2, 3), name="wrong_input")]
+            )
+        expected_error = "Multiple inputs are found in graph, but no input name was provided"
+        expected_error = "Input ({}) provided is not found in given tensorflow graph. Placeholders in graph are: {}".format("wrong_input", ["input", "input_1"])
+        assert expected_error == str(e.value)
+
+    @staticmethod
+    @pytest.mark.skipif(not ct.utils._is_macos(), reason="Platform is not Mac OS")
+    def test_unsanitized_input_name_during_prediction():
+        '''
+        input name : "x/0" becomes "x_0" due to name sanitization applied during conversion
+        '''
+        prog = Program()
+        func_inputs = {"x/0": mb.placeholder(shape=[2, 3]),
+                       "y": mb.placeholder(shape=[2, 3])}
+        with Function(func_inputs) as ssa_fun:
+            x, y = ssa_fun.inputs["x/0"], ssa_fun.inputs["y"]
+            x = mb.relu(x=x, name="relu")
+            z = mb.add(x=x, y=y, name="out")
+            ssa_fun.set_outputs([z])
+        prog.add_function("main", ssa_fun)
+
+        mlmodel = ct.convert(prog)
+
+        expected_err_str = "Provided key \"x/0\", in the input dict, " \
+                           "does not match to any of the model input name\(s\), which are: .*"
+        with pytest.raises(KeyError, match=expected_err_str):
+            prediction = mlmodel.predict(
+                {"x/0": np.random.rand(2, 3).astype(np.float32),
+                 "y": np.random.rand(2, 3).astype(np.float32)}
             )
 
 class TestFlexibleShape:
@@ -1282,7 +1348,7 @@ class TestMILConverterExamples:
 
         torch_model = Network()
         torch_model.eval()
-        example_input = torch.rand(1, 100) 
+        example_input = torch.rand(1, 100)
         traced_model = torch.jit.trace(torch_model, example_input)
         model = ct.convert(
             traced_model,
@@ -1556,3 +1622,20 @@ class TestMLProgramFP16Transform:
         expected_pattern = "compute_precision .* supported .* mlprogram .* None .* target==\'neuralnetwork\'.*\n.*minimum_deployment_target.*"
         with pytest.raises(ValueError, match=expected_pattern) as e:
             mlmodel = ct.convert(copy.deepcopy(prog), compute_precision='fp16')
+
+    @staticmethod
+    def test_invalid_argument_nn_backend():
+        '''
+        Since the  compute_precision argument is only applicable when converting to "mlprogram",
+        check that an error is correctly raised when conversion is targeted at the neuralnetwork backend
+        '''
+        @mb.program(input_specs=[mb.TensorSpec(shape=(10, 20))])
+        def prog(x):
+            x = mb.square(x=x)
+            return x
+
+        expected_err_str = "compute_precision is only supported for mlprogram target and must be None if target.*"
+        with pytest.raises(ValueError, match=expected_err_str):
+            mlmodel = ct.convert(prog, compute_precision=ct.precision.FLOAT16)
+        with pytest.raises(ValueError, match=expected_err_str):
+            mlmodel = ct.convert(prog, compute_precision=ct.precision.FLOAT32)

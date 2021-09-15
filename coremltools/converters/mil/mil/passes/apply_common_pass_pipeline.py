@@ -8,6 +8,7 @@ from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
 import logging as _logging
 from coremltools.converters._profile_utils import _profile
 from tqdm import tqdm as _tqdm
+from coremltools.converters.mil.experimental.passes.generic_pass_infrastructure import  PassContainer
 
 
 @_profile
@@ -24,8 +25,10 @@ def apply_common_pass_pipeline(prog, passes):
         s = 'passes' if len(passes) > 1 else 'pass'
         for p in _tqdm(passes, desc="Running MIL {} {}".format(name, s), unit=" passes"):
             _logging.info('Performing pass: "{}"'.format(p))
+
             PASS_REGISTRY[p](prog) if not isinstance(p, AbstractQuantizationPass) else p.apply(prog)
-            prog.validate()
+            if isinstance(p, AbstractQuantizationPass) or not isinstance(PASS_REGISTRY[p], PassContainer):
+                prog.validate()
 
         _logging.debug("Program after {} passes:\n{}".format(name, prog))
 
@@ -34,6 +37,7 @@ def apply_common_pass_pipeline(prog, passes):
     common_passes = [
         "common::cast_optimization",
         "common::const_elimination",
+        "common::sanitize_input_output_names",
         "common::divide_to_multiply",
         "common::add_conv_transpose_output_shape",
         "common::const_elimination",
@@ -45,6 +49,7 @@ def apply_common_pass_pipeline(prog, passes):
         "common::fuse_gelu_tanh_approximation",
         "common::fuse_gelu_exact",
         "common::fuse_leaky_relu",
+        "common::rank0_expand_dims_swap",
         "common::use_reflection_padding",
         "common::merge_consecutive_paddings", # Should come after use_reflection_padding, which will introduce new padding layers
         "common::pad_conv_connect", # Should come after merge_consecutive_paddings

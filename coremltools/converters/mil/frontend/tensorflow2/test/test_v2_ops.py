@@ -478,6 +478,9 @@ class TestControlFlowFromAutoGraph(TensorFlowBaseTest):
         "use_cpu_only, backend", itertools.product([True, False], backends)
     )
     def test_if_binary_add_if_else_mul(self, use_cpu_only, backend):
+        if backend[0] == "mlprogram":
+            pytest.xfail("rdar://81983176 (MLProgram Failure: Mismatched elements)")
+
         @make_tf_graph([(1,), (1,)])
         def build_model(x, y):
             if x > y:

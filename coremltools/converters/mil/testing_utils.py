@@ -165,27 +165,6 @@ def to_tuple(v):
     return tuple(v)
 
 
-def is_close(expected, actual, atol=1e-04, rtol=1e-05):
-    """
-    expected, actual: np.array or python primitive (scalar)
-    rtol: relative tolerance. See numpy.isclose.
-    """
-
-    close = np.isclose(expected, actual, atol=atol, rtol=rtol)
-    if not np.all(close):
-        diff = expected - actual
-        num_not_close = np.sum(~close)
-        msg = "Values differ by L1 norm: {}. Num entries not close: {}/{}"
-        logging.error(msg.format(np.sum(np.abs(diff)), num_not_close, expected.size))
-        if num_not_close < 30:
-            logging.error("Differing entries:")
-            logging.error("Expected: {}".format(expected[~close]))
-            logging.error("Actual: {}".format(actual[~close]))
-            logging.error("Delta: {}".format(diff[~close]))
-        return False
-    return True
-
-
 def run_core_ml_predict(mlmodel, input_key_values, use_cpu_only=True):
     for k, v in input_key_values.items():
         if isinstance(v, PIL.Image.Image):
@@ -246,13 +225,7 @@ def compare_backend(
             rtol = max(rtol * 100.0, 5e-2)
         for o, expected in expected_outputs.items():
             coreml_out = _get_coreml_out_from_dict(pred, o)
-            msg = (
-                "Output {} differs. useCPUOnly={}.\nInput={}, "
-                + "\nExpected={}, \nOutput={}\n"
-            )
-            assert is_close(expected, coreml_out, atol, rtol), msg.format(
-                o, use_cpu_only, input_key_values, expected, coreml_out
-            )
+            np.testing.assert_allclose(coreml_out, expected, atol=atol, rtol=rtol)
 
 
 def compare_shapes(
@@ -358,7 +331,7 @@ def get_core_ml_prediction(
     return mlmodel.predict(input_values, useCPUOnly=use_cpu_only)
 
 
-def apply_pass_and_basic_check(prog, pass_name):
+def apply_pass_and_basic_check(prog, pass_name, skip_output_name_check=False):
     """
     Apply pass to the program
     """
@@ -366,6 +339,7 @@ def apply_pass_and_basic_check(prog, pass_name):
     pass_name.apply(prog) if isinstance(pass_name, AbstractQuantizationPass) else PASS_REGISTRY[pass_name](prog)
     block = prog.functions["main"]
     prev_block = prev_prog.functions["main"]
-    assert_same_output_names(prev_prog, prog)
+    if not skip_output_name_check:
+        assert_same_output_names(prev_prog, prog)
     assert_same_output_shapes(prev_prog, prog)
     return prev_prog, prev_block, block

@@ -99,7 +99,7 @@ def _rank0_expand_dims_swap(block):
     return fusion_occurred
 
 
-@register_pass(namespace="mil_backend")
+@register_pass(namespace="common")
 def rank0_expand_dims_swap(prog):
     """
     Identify the pattern that a rank-0 binary elementwise operation followed by an expand_dims op.

@@ -9,7 +9,6 @@ from coremltools.converters.mil.testing_utils import (
     assert_model_is_valid,
     get_op_types_in_program,
     apply_pass_and_basic_check,
-    is_close
 )
 from coremltools.converters.mil.testing_reqs import ct
 
@@ -87,7 +86,7 @@ class ConcatToPixelShuffleTests(unittest.TestCase):
         old_prediction = np.reshape(np.stack((ab, cd), axis=4), newshape=[1, 2, 6, 8])        
 
         prediction = mlmodel.predict(input_dict, useCPUOnly=True)
-        assert is_close(old_prediction, prediction[output_name])
+        np.testing.assert_allclose(old_prediction, prediction[output_name], atol=1e-04, rtol=1e-05)
 
     def test_nested(self):
         """
@@ -146,7 +145,7 @@ class ConcatToPixelShuffleTests(unittest.TestCase):
 
         if _IS_MACOS:
             prediction = mlmodel.predict(input_dict, useCPUOnly=True)
-            assert is_close(old_prediction, prediction[output_name])
+            np.testing.assert_allclose(old_prediction, prediction[output_name], atol=1e-04, rtol=1e-05)
 
     def test_failure_0(self):
         """
