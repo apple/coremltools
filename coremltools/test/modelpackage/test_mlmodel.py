@@ -13,6 +13,7 @@ import coremltools as ct
 from coremltools._deps import _IS_MACOS
 from coremltools.converters.mil.mil.builder import Builder as mb
 from coremltools.models.model import MLModel
+from coremltools.models.utils import _macos_version
 
 
 def test_mlmodel_demo(tmpdir):
@@ -58,8 +59,8 @@ def test_mlmodel_demo(tmpdir):
     # Read back the saved bundle and compile
     mlmodel2 = MLModel(mlpackage_path)
 
-    if not _IS_MACOS:
-        # Can not get predictions unless on macOS.
+    if not _IS_MACOS or _macos_version() < (12, 0):
+        # Can not get predictions unless on macOS 12 or higher.
         shutil.rmtree(mlpackage_path)
         return
 

@@ -4,8 +4,10 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import numpy as np
+import pytest
 import torch
 import torch.nn as nn
+
 from coremltools import TensorType, RangeDim
 import coremltools.models.utils as coremltoolsutils
 from ..converter import torch_to_mil_types
@@ -14,7 +16,6 @@ from coremltools._deps import _IS_MACOS, _HAS_TORCH
 from coremltools.converters.mil.mil.types.type_mapping import nptype_from_builtin
 from coremltools.converters.mil.testing_reqs import ct
 from coremltools.converters.mil.testing_utils import ct_convert
-import pytest
 
 
 class ModuleWrapper(nn.Module):
@@ -169,7 +170,7 @@ def convert_and_compare(input_data, model_spec,
     coreml_inputs = convert_to_coreml_inputs(mlmodel.input_description,
                                              input_data)
 
-    if not _IS_MACOS:
+    if not _IS_MACOS or (mlmodel.is_package and coremltoolsutils._macos_version() < (12, 0)):
         return model_spec, mlmodel, coreml_inputs, None
 
     _ , dtype = backend

@@ -239,7 +239,8 @@ def run_compare_tf(
         graph, feed_dict, output_nodes, frontend, backend, use_cpu_for_conversion=use_cpu_for_conversion,
     )
 
-    if frontend_only or coremltoolsutils._macos_version() < (10, 13):
+    if frontend_only or coremltoolsutils._macos_version() < (10, 13) \
+       or (mlmodel.is_package and coremltoolsutils._macos_version() < (12, 0)):
         return mlmodel._spec, mlmodel, input_key_values, None
 
     if not isinstance(output_nodes, (tuple, list)):
