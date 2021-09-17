@@ -117,6 +117,7 @@ build_wheel_macos_py39:
 #########################################################################
 .test_linux_pkg: &test_linux_pkg
   stage: test
+  timeout: 9h
   script:
     - export PATH=$PATH:/opt/anaconda/bin/
     - zsh -e scripts/test.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON}
@@ -124,6 +125,7 @@ build_wheel_macos_py39:
 
 .test_linux_pkg_with_reqs: &test_linux_pkg_with_reqs
   stage: test
+  timeout: 9h
   script:
     - export PATH=$PATH:/opt/anaconda/bin/
     - zsh -e scripts/test.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON}
@@ -197,12 +199,14 @@ test_linux_py37_mil:
 #########################################################################
 .test_macos_pkg: &test_macos_pkg
    stage: test
+   timeout: 9h
    script:
      - zsh -e scripts/test.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON}
        --test-package=${TEST_PACKAGE} --fast
 
 .test_macos_pkg_with_reqs: &test_macos_pkg_with_reqs
    stage: test
+   timeout: 9h
    script:
      - zsh -e scripts/test.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON}
        --test-package=${TEST_PACKAGE} --requirements=${REQUIREMENTS} --fast
