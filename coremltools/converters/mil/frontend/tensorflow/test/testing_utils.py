@@ -6,7 +6,6 @@ import numpy as np
 import os
 import pytest
 import tempfile
-from six import string_types as _string_types
 
 from coremltools import TensorType
 import coremltools.models.utils as coremltoolsutils

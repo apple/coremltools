@@ -1,6 +1,4 @@
-import six
 import numpy as np
-import coremltools.proto.MIL_pb2 as pm
 import os
 import re
 
@@ -8,6 +6,7 @@ from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.types import builtin_to_proto_types
 from coremltools.models.model import _WEIGHTS_DIR_NAME, _WEIGHTS_FILE_NAME
 import coremltools.proto.FeatureTypes_pb2 as ft
+import coremltools.proto.MIL_pb2 as pm
 
 from coremltools.converters.mil.mil.types import (
     type_to_builtin_type,
@@ -67,7 +66,7 @@ def create_valuetype_tensor(shape, data_type):
 
 
 def set_proto_dim(proto_dim, dim):
-    if isinstance(dim, (six.integer_types, np.integer)):
+    if isinstance(dim, (int, np.integer)):
         proto_dim.constant.size = dim
     else:
         dim_str = str(dim)

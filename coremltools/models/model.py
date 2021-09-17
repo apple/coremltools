@@ -4,7 +4,6 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 import json as _json
 import os as _os
-import six as _six
 import shutil as _shutil
 import tempfile as _tempfile
 import warnings as _warnings
@@ -265,7 +264,7 @@ class MLModel(object):
             if not isinstance(mil_program, Program):
                 raise ValueError("mil_program must be of type 'coremltools.converters.mil.Program'")
         self._mil_program = mil_program
-        if isinstance(model, _six.string_types):
+        if isinstance(model, str):
             if _os.path.isdir(model):
                 self.is_package = True
                 self.package_path = model

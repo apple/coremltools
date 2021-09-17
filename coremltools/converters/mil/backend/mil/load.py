@@ -7,6 +7,7 @@ import logging
 import numpy as _np
 import os
 import tempfile
+import shutil
 
 from coremltools.converters.mil.backend.mil.helper import *
 from coremltools.converters.mil.backend.backend_helper import _get_probability_var_for_classifier
@@ -36,11 +37,9 @@ import coremltools.proto.Model_pb2 as ml
 import coremltools.proto.FeatureTypes_pb2 as ft
 from coremltools.converters.mil.input_types import ImageType, TensorType, EnumeratedShapes, RangeDim
 from coremltools.models.model import _WEIGHTS_FILE_NAME
-import shutil
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import mil_list
 from coremltools import _SPECIFICATION_VERSION_IOS_15
-import six as _six
 
 def should_use_weight_file(val):
     return (
@@ -199,8 +198,7 @@ def _add_classify_op(prog, classifier_config):
         classes = classes.splitlines()
     elif isinstance(classes_in, list):  # list[int or str]
         classes = classes_in
-        assert all([isinstance(x, \
-            (_six.integer_types, _six.string_types)) for x in classes]), message
+        assert all([isinstance(x, (int, str)) for x in classes]), message
     else:
         raise ValueError(message)
 
