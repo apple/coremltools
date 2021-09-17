@@ -2,21 +2,21 @@
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
-from pathlib import Path
-
-import os
+import copy
 import logging
 import numpy as np
-import copy
+import os
+from pathlib import Path
+import PIL.Image
 import re
 
+import coremltools as ct
+from coremltools._deps import _IS_MACOS
 from coremltools.converters.mil.mil import Program, Function
 from coremltools.converters.mil.mil.passes.quantization_passes import AbstractQuantizationPass
 from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
-from coremltools._deps import _IS_MACOS
+import coremltools.models.utils as coremltoolsutils
 
-import coremltools as ct
-import PIL.Image
 
 np.random.seed(10)
 
@@ -205,7 +205,7 @@ def compare_backend(
 
         - use_cpu_only: True/False.
     """
-    if _IS_MACOS:
+    if _IS_MACOS and (not mlmodel.is_package or coremltoolsutils._macos_version() >= (12, 0)):
 
         if dtype not in ["fp32", "fp16"]:
             raise ValueError("Unsupported dtype config")

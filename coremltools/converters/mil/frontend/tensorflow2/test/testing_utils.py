@@ -2,22 +2,26 @@
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
-from coremltools.converters.mil.testing_reqs import ct
-import coremltools.models.utils as coremltoolsutils
+import numpy as np
 import os
 import pytest
-import numpy as np
 
 tf = pytest.importorskip("tensorflow", minversion="2.1.0")
+from tensorflow.python.framework import dtypes
+
+from coremltools.converters.mil.testing_reqs import ct
 from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import (
     get_tf_node_names,
     TensorFlowBaseTest
 )
-
 from coremltools.converters.mil.input_types import TensorType, RangeDim
-from coremltools.converters.mil.testing_utils import compare_shapes, \
-    compare_backend, run_core_ml_predict, ct_convert
-from tensorflow.python.framework import dtypes
+from coremltools.converters.mil.testing_utils import (
+    compare_backend,
+    compare_shapes,
+    ct_convert,
+    run_core_ml_predict
+)
+import coremltools.models.utils as coremltoolsutils
 from coremltools.models.utils import _macos_version
 
 def make_tf2_graph(input_types):
@@ -152,7 +156,8 @@ def run_compare_tf2(
         if isinstance(v, np.ndarray) and issubclass(v.dtype.type, np.integer):
             input_dict[k] = v.astype(np.float) # Core ML only accepts floats
 
-    if frontend_only or _macos_version() < (10, 13):
+    if frontend_only or _macos_version() < (10, 13) \
+       or (mlmodel.is_package and _macos_version() < (12, 0)):
         return mlmodel._spec, mlmodel, input_dict, None
 
     compare_backend(

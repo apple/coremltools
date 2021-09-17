@@ -5,6 +5,7 @@
 
 import itertools
 import numpy as np
+
 from coremltools._deps import version_lt, version_ge
 from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.frontend.tensorflow.test import (
