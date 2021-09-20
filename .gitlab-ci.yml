@@ -117,19 +117,10 @@ build_wheel_macos_py39:
 #########################################################################
 .test_linux_pkg: &test_linux_pkg
   stage: test
-  timeout: 9h
   script:
     - export PATH=$PATH:/opt/anaconda/bin/
     - zsh -e scripts/test.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON}
       --test-package=${TEST_PACKAGE} --fast
-
-.test_linux_pkg_with_reqs: &test_linux_pkg_with_reqs
-  stage: test
-  timeout: 9h
-  script:
-    - export PATH=$PATH:/opt/anaconda/bin/
-    - zsh -e scripts/test.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON}
-      --test-package=${TEST_PACKAGE} --requirements=${REQUIREMENTS} --fast
 
 test_linux_py37_coremltools_test:
   <<: *test_linux_pkg
@@ -153,43 +144,6 @@ test_linux_py37_pytorch:
   variables:
     PYTHON: "3.7"
     TEST_PACKAGE: coremltools.converters.mil.frontend.torch
-    WHEEL_PATH: build/dist/coremltools-*-none-manylinux1_x86_64.whl
-
-test_linux_py37_tf1:
-  <<: *test_linux_pkg
-  tags:
-    - docker
-  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-18.04:1.0.0
-  dependencies:
-    - build_wheel_linux_py37
-  variables:
-    PYTHON: "3.7"
-    TEST_PACKAGE: coremltools.converters.mil.frontend.tensorflow
-    WHEEL_PATH: build/dist/coremltools-*-none-manylinux1_x86_64.whl
-
-test_linux_py37_tf2:
-  <<: *test_linux_pkg_with_reqs
-  tags:
-    - docker
-  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-18.04:1.0.0
-  dependencies:
-    - build_wheel_linux_py37
-  variables:
-    PYTHON: "3.7"
-    REQUIREMENTS: reqs/test_tf2.pip
-    TEST_PACKAGE: coremltools.converters.mil.frontend.tensorflow2
-    WHEEL_PATH: build/dist/coremltools-*-none-manylinux1_x86_64.whl
-
-test_linux_py37_mil:
-  <<: *test_linux_pkg
-  tags:
-    - docker
-  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-18.04:1.0.0
-  dependencies:
-    - build_wheel_linux_py37
-  variables:
-    PYTHON: "3.7"
-    TEST_PACKAGE: coremltools.converters.mil
     WHEEL_PATH: build/dist/coremltools-*-none-manylinux1_x86_64.whl
 
 #########################################################################
