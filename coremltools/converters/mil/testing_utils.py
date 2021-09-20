@@ -70,7 +70,7 @@ def assert_model_is_valid(
         from coremltools.models.neural_network.printer import print_network_spec
         print_network_spec(mlmodel.get_spec(), style="coding")
 
-    if _IS_MACOS:
+    if _IS_MACOS and (not mlmodel.is_package or coremltoolsutils._macos_version() >= (12, 0)):
         prediction = mlmodel.predict(input_dict, useCPUOnly=True)
         assert prediction is not None
         if expected_output_shapes is not None:

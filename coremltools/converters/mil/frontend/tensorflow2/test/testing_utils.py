@@ -224,7 +224,8 @@ def run_compare_tf_keras(
     expected_outputs = {n: v for n, v in zip(outputs, ref)}
     input_key_values = {n: v for n, v in zip(inputs, input_values)}
 
-    if frontend_only or _macos_version() < (10, 13):
+    if frontend_only or _macos_version() < (10, 13) \
+       or (mlmodel.is_package and _macos_version() < (12, 0)):
         return proto, mlmodel, input_key_values, None
 
     compare_backend(
@@ -280,8 +281,7 @@ class TensorFlow2BaseTest(TensorFlowBaseTest):
     def run_compare_tf_keras(model, input_values, use_cpu_only=False,
             frontend_only=False, frontend="tensorflow",
             backend=("neuralnetwork", "fp32"), atol=1e-04, rtol=1e-05):
-        res = run_compare_tf_keras(model, input_values, use_cpu_only=
-        use_cpu_only,
+        res = run_compare_tf_keras(model, input_values, use_cpu_only=use_cpu_only,
                                    frontend_only=frontend_only,
                                    frontend=frontend,
                                    backend=backend, atol=atol, rtol=rtol)
