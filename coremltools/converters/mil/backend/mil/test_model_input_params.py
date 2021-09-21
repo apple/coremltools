@@ -2,13 +2,13 @@
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
+import numpy as np
+import pytest
 
 import coremltools as ct
-import pytest
-import numpy as np
-
-from coremltools._deps import _IS_MACOS
 from coremltools.converters.mil.mil.builder import Builder as mb
+from coremltools.models.utils import _macos_version
+
 
 class TestMILFlexibleShapes:
     from coremltools.converters.mil.mil.program import Symbol
@@ -184,8 +184,8 @@ class TestMILDefaultValues:
         program_input_spec = [ct.TensorType(name="x", shape=[1], default_value=np.array([1.0]).astype(np.float32)), ct.TensorType(name="y", shape=[1])]
         mlmodel = ct.convert(self.basic_network, convert_to="mlprogram", inputs=program_input_spec)
 
-        if not _IS_MACOS:
-            # Can not get predictions unless on macOS.
+        if _macos_version() < (12, 0):
+            # Can only get predictions for ml program on macOS 12+
             return
 
         res = mlmodel.predict({"x": np.array([3.]), "y": np.array([2.])})

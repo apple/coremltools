@@ -313,9 +313,6 @@ def get_core_ml_prediction(
     """
     Return predictions of the given model.
     """
-    # Avoid circular import
-    from coremltools.converters.mil.testing_reqs import ct
-
     program = Program()
     with Function(input_placeholders) as ssa_func:
         output_vars = build(**ssa_func.inputs)
