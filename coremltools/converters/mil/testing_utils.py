@@ -2,21 +2,21 @@
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
-from pathlib import Path
-
-import os
+import copy
 import logging
 import numpy as np
-import copy
+import os
+from pathlib import Path
+import PIL.Image
 import re
 
+import coremltools as ct
+from coremltools._deps import _IS_MACOS
 from coremltools.converters.mil.mil import Program, Function
 from coremltools.converters.mil.mil.passes.quantization_passes import AbstractQuantizationPass
 from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
-from coremltools._deps import _IS_MACOS
+import coremltools.models.utils as coremltoolsutils
 
-import coremltools as ct
-import PIL.Image
 
 np.random.seed(10)
 
@@ -70,7 +70,7 @@ def assert_model_is_valid(
         from coremltools.models.neural_network.printer import print_network_spec
         print_network_spec(mlmodel.get_spec(), style="coding")
 
-    if _IS_MACOS:
+    if _IS_MACOS and (not mlmodel.is_package or coremltoolsutils._macos_version() >= (12, 0)):
         prediction = mlmodel.predict(input_dict, useCPUOnly=True)
         assert prediction is not None
         if expected_output_shapes is not None:
@@ -165,27 +165,6 @@ def to_tuple(v):
     return tuple(v)
 
 
-def is_close(expected, actual, atol=1e-04, rtol=1e-05):
-    """
-    expected, actual: np.array or python primitive (scalar)
-    rtol: relative tolerance. See numpy.isclose.
-    """
-
-    close = np.isclose(expected, actual, atol=atol, rtol=rtol)
-    if not np.all(close):
-        diff = expected - actual
-        num_not_close = np.sum(~close)
-        msg = "Values differ by L1 norm: {}. Num entries not close: {}/{}"
-        logging.error(msg.format(np.sum(np.abs(diff)), num_not_close, expected.size))
-        if num_not_close < 30:
-            logging.error("Differing entries:")
-            logging.error("Expected: {}".format(expected[~close]))
-            logging.error("Actual: {}".format(actual[~close]))
-            logging.error("Delta: {}".format(diff[~close]))
-        return False
-    return True
-
-
 def run_core_ml_predict(mlmodel, input_key_values, use_cpu_only=True):
     for k, v in input_key_values.items():
         if isinstance(v, PIL.Image.Image):
@@ -226,7 +205,7 @@ def compare_backend(
 
         - use_cpu_only: True/False.
     """
-    if _IS_MACOS:
+    if _IS_MACOS and (not mlmodel.is_package or coremltoolsutils._macos_version() >= (12, 0)):
 
         if dtype not in ["fp32", "fp16"]:
             raise ValueError("Unsupported dtype config")
@@ -246,13 +225,7 @@ def compare_backend(
             rtol = max(rtol * 100.0, 5e-2)
         for o, expected in expected_outputs.items():
             coreml_out = _get_coreml_out_from_dict(pred, o)
-            msg = (
-                "Output {} differs. useCPUOnly={}.\nInput={}, "
-                + "\nExpected={}, \nOutput={}\n"
-            )
-            assert is_close(expected, coreml_out, atol, rtol), msg.format(
-                o, use_cpu_only, input_key_values, expected, coreml_out
-            )
+            np.testing.assert_allclose(coreml_out, expected, atol=atol, rtol=rtol)
 
 
 def compare_shapes(
@@ -340,9 +313,6 @@ def get_core_ml_prediction(
     """
     Return predictions of the given model.
     """
-    # Avoid circular import
-    from coremltools.converters.mil.testing_reqs import ct
-
     program = Program()
     with Function(input_placeholders) as ssa_func:
         output_vars = build(**ssa_func.inputs)
@@ -358,7 +328,7 @@ def get_core_ml_prediction(
     return mlmodel.predict(input_values, useCPUOnly=use_cpu_only)
 
 
-def apply_pass_and_basic_check(prog, pass_name):
+def apply_pass_and_basic_check(prog, pass_name, skip_output_name_check=False):
     """
     Apply pass to the program
     """
@@ -366,6 +336,7 @@ def apply_pass_and_basic_check(prog, pass_name):
     pass_name.apply(prog) if isinstance(pass_name, AbstractQuantizationPass) else PASS_REGISTRY[pass_name](prog)
     block = prog.functions["main"]
     prev_block = prev_prog.functions["main"]
-    assert_same_output_names(prev_prog, prog)
+    if not skip_output_name_check:
+        assert_same_output_names(prev_prog, prog)
     assert_same_output_shapes(prev_prog, prog)
     return prev_prog, prev_block, block

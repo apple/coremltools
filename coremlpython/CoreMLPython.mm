@@ -112,33 +112,6 @@ int32_t Model::maximumSupportedSpecificationVersion() {
     return CoreML::MLMODEL_SPECIFICATION_VERSION_NEWEST;
 }
 
-NeuralNetworkShapeInformation::NeuralNetworkShapeInformation(const std::string& filename) {
-    CoreML::Specification::Model model;
-    Result r = CoreML::loadSpecificationPath(model, filename);
-    shaper = std::unique_ptr<NeuralNetworkShaper>(new NeuralNetworkShaper(model));
-}
-
-NeuralNetworkShapeInformation::NeuralNetworkShapeInformation(const std::string& filename, bool useInputAndOutputConstraints) {
-    CoreML::Specification::Model model;
-    Result r = CoreML::loadSpecificationPath(model, filename);
-    shaper = std::unique_ptr<NeuralNetworkShaper>(new NeuralNetworkShaper(model, useInputAndOutputConstraints));
-}
-
-void NeuralNetworkShapeInformation::init(const std::string& filename) {
-    CoreML::Specification::Model model;
-    Result r = CoreML::loadSpecificationPath(model, filename);
-    shaper.reset(new NeuralNetworkShaper(model));
-}
-
-py::dict NeuralNetworkShapeInformation::shape(const std::string& name) {
-    const ShapeConstraint& constraint = shaper->shape(name);
-    return Utils::shapeConstraintToPyDict(constraint);
-}
-
-void NeuralNetworkShapeInformation::print() const {
-    shaper->print();
-}
-
 
 /*
  *
@@ -154,12 +127,6 @@ PYBIND11_PLUGIN(libcoremlpython) {
         .def("predict", &Model::predict)
         .def_static("auto_set_specification_version", &Model::autoSetSpecificationVersion)
         .def_static("maximum_supported_specification_version", &Model::maximumSupportedSpecificationVersion);
-
-    py::class_<NeuralNetworkShapeInformation>(m, "_NeuralNetworkShaperProxy")
-        .def(py::init<const std::string&>())
-        .def(py::init<const std::string&, bool>())
-        .def("shape", &NeuralNetworkShapeInformation::shape)
-        .def("print", &NeuralNetworkShapeInformation::print);
 
     return m.ptr();
 }

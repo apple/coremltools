@@ -152,6 +152,7 @@ class TorchConverter:
             transform_inplace_ops,
             flatten_graph_input_values,
             flatten_graph_output_values,
+            generate_tensor_assignment_ops,
         ]
         for p in passes:
             p(self.graph)

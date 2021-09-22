@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 #  Copyright (c) 2021, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
@@ -8,8 +6,6 @@
 
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 from coremltools.converters.mil.mil import Builder as mb
-from coremltools.converters.mil.mil import types
-import numpy as np
 import logging
 
 
@@ -23,7 +19,7 @@ def torch_upsample_to_core_upsample(prog):
 
         prog: Program
     """
-    for f_name, f in prog.functions.items():
+    for f in prog.functions.values():
         torch_upsample_to_core_upsample_block(f)
 
 

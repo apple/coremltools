@@ -1046,6 +1046,7 @@ def view(context, node):
     if isinstance(shape, list) and all([isinstance(dim, Var) and len(dim.shape) == 0 for dim in shape]) and any([dim.val is None for dim in shape]):
         shape = mb.concat(values=shape, axis=0)
 
+    shape = mb.cast(x=shape, dtype="int32")
     view = mb.reshape(x=x, shape=shape, name=node.name)
     context.add(view)
 
@@ -1630,7 +1631,7 @@ def _add_gru_layer(_input, h0, wi, wh, bi, bh, h_list_name, h_name):
         zt = mb.sigmoid(x=zt)
 
         # nt = tanh(win * xt + bin + rt(whn * h_prev + bhn))
-        # nt : (batcg_size, hidden_dim)
+        # nt : (batch_size, hidden_dim)
         nt_1 = mb.linear(x=xt, weight=w_in, bias=b_in)
         nt_2 = mb.linear(x=h_prev, weight=w_hn, bias=b_hn)
         nt_2 = mb.mul(x=rt, y=nt_2)
@@ -2605,6 +2606,89 @@ def nonzero(context, node):
     nonzero = mb.non_zero(x=x, name=node.name)
     context.add(nonzero)
 
+@register_torch_op
+def _internal_tensor_value_assign(context, node):
+
+    def _get_slice_params(context, data, inputs):
+        rank = data.rank
+        begin = [0] * rank
+        end = [0] * rank
+        stride = [1] * rank
+        begin_mask = [False] * rank
+        end_mask = [False] * rank
+        squeeze_mask = [False] * rank
+
+        num_of_slice_set = len(inputs) // 2
+
+        for i in range(num_of_slice_set):
+            if inputs[2*i + 1] == None:
+                # This is pure index select
+                idx = context[inputs[2*i]].val
+                begin[i] = idx
+                squeeze_mask[i] = True
+            else:
+                # This is a slice
+                begin_var = context[inputs[2*i]]
+                end_var = context[inputs[2*i+1]]
+
+                if begin_var is None:
+                    begin_mask[i] = True
+                else:
+                    begin[i] = begin_var.val
+
+                if end_var is None:
+                    end_mask[i] = True
+                else:
+                    end[i] = end_var.val
+
+        for i in range(num_of_slice_set, rank):
+            begin_mask[i] = True
+            end_mask[i] = True
+
+        return begin, end, stride, begin_mask, end_mask, squeeze_mask
+
+    data = context[node.inputs[0]]
+    updates = context[node.inputs[1]]
+    begin, end, stride, begin_mask, end_mask, squeeze_mask = _get_slice_params(context, data, node.inputs[2:])
+
+    updated_x = mb.torch_tensor_assign(
+        data=data,
+        updates=updates,
+        begin=begin,
+        end=end,
+        stride=stride,
+        begin_mask=begin_mask,
+        end_mask=end_mask,
+        squeeze_mask=squeeze_mask,
+        name=node.name,
+    )
+
+    context.add(updated_x)
+
+@register_torch_op
+def index_put_(context, node):
+    inputs = _get_inputs(context, node, expected=4)
+    x = inputs[0]
+    indices = inputs[1]
+    values = inputs[2]
+    accumulate = inputs[3]
+    rank = x.rank
+
+    if len(indices) != 1 or indices[0] is None or indices[0].sym_type.get_primitive() != types.bool:
+        raise NotImplementedError("Unsupported index_put_ usage.")
+
+    indices = indices[0]
+    assert indices.shape == x.shape, "indices shape must equal to input shape for index put operation."
+    indices = mb.cast(x=indices, dtype="int32")
+    non_zeros_indices = mb.non_zero(x=indices)
+    if len(values.shape) == 0:
+        values = mb.expand_dims(x=values, axes=[0])
+    if values.rank == 1 and values.shape[0] == 1:
+        reps = _value_at(mb.shape(x=non_zeros_indices), 0)
+        reps = mb.expand_dims(x=reps, axes=[0])
+        values = mb.tile(x=values, reps=reps)
+    scatter_x = mb.scatter_nd(data=x, indices=non_zeros_indices, updates=values, mode="update", name=node.name)
+    context.add(scatter_x)
 
 @register_torch_op
 def index(context, node):
@@ -2701,14 +2785,15 @@ def index(context, node):
         context.add(x)
         return
 
-    # For multiple index axes case, we now assume that all the index are equal length
+    # For multiple index axes case, we now assume that all the index have equal shape
     index_length = valid_indices[0].shape
     for index in valid_indices:
         if index.shape != valid_indices[0].shape:
             raise NotImplementedError("Broadcasable tensor index not supported.")
 
     # First stack the index together
-    indices = mb.stack(values=valid_indices, axis=1)
+    indices_rank = valid_indices[0].rank
+    indices = mb.stack(values=valid_indices, axis=indices_rank)
 
     # transpose the input tensor to gather the slicing index in front
     is_connected = True
@@ -2724,7 +2809,8 @@ def index(context, node):
 
     # if the index axes are connect, we need to transpose it back
     if is_connected:
-        new_perm = [indices_axes[0]] + [axis for axis in range(rank - len(indices_axes) + 1) if axis != indices_axes[0]]
+        new_dimensions = list(range(indices_axes[0], indices_axes[0]+ indices_rank))
+        new_perm = new_dimensions + [axis for axis in range(rank + indices_rank - len(indices_axes)) if axis not in new_dimensions]
         perm_back = [new_perm.index(axis) for axis in range(len(new_perm))]
         x = mb.transpose(x=x, perm=perm_back, name=node.name)
     context.add(x)
@@ -3091,6 +3177,8 @@ def constantchunk(context, node):
 
 
 def _expand(context, name, tensor, shape):
+    if tensor.shape == () and len(shape) > 0:
+        tensor = mb.expand_dims(x=tensor, axes=list(range(len(shape))))
     reps = [ds if ds > 0 and ts == 1 else 1 for ts, ds in zip(tensor.shape, shape)]
     res = mb.tile(x=tensor, reps=reps, name=name)
     context.add(res)
@@ -3295,8 +3383,8 @@ def zeros(context, node):
         zeros = mb.const(val=zeros_array, name=node.name)
 
     context.add(zeros)
-    
-    
+
+
 @register_torch_op
 def min(context, node):
     inputs = _get_inputs(context, node, expected=3)
@@ -3312,7 +3400,7 @@ def min(context, node):
     context.add(values, torch_name=values_name)
     context.add(indices, torch_name=indices_name)
 
-    
+
 @register_torch_op
 def max(context, node):
     inputs = _get_inputs(context, node, expected=3)
@@ -3342,14 +3430,11 @@ def sort(context, node):
     inputs = _get_inputs(context, node)
     _input = inputs[0]
     axis = inputs[1].val
-    descending = inputs[2].val
-    # NOTE: This is actually descending
-    # rdar://62901267 (argsort ascending is actually descending)
-    indices = mb.argsort(x=_input, axis=axis, ascending=descending)
-    values = mb.gather_along_axis(x=_input, indices=indices, axis=axis)
-
-    values_name = node.outputs[0]
+    ascending = not inputs[2].val
     indices_name = node.outputs[1]
+    values_name = node.outputs[0]
+    indices = mb.argsort(x=_input, axis=axis, ascending=ascending, name=indices_name)
+    values = mb.gather_along_axis(x=_input, indices=indices, axis=axis, name=values_name)
     context.add(values, torch_name=values_name)
     context.add(indices, torch_name=indices_name)
 

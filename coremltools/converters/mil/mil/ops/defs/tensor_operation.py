@@ -682,9 +682,10 @@ class argsort(Operation):
 
     @precondition(allow=VALUE)
     def value_inference(self):
+        # The default np argsort mode is ascending, which is opposite to MIL's argsort op.
         if self.ascending.val:
-            return np.argsort(-self.x.val, axis=self.axis.val)
-        return np.argsort(self.x.val, axis=self.axis.val)
+            return np.argsort(self.x.val, axis=self.axis.val)
+        return np.argsort(-self.x.val, axis=self.axis.val)
 
 
 @register_op(doc_str="")

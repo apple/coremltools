@@ -12,9 +12,13 @@ from scipy import special
 from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.mil import (
     Builder as mb,
+    Function,
+    get_new_symbol,
+    Program,
     types,
 )
-from coremltools.converters.mil.testing_utils import ssa_fn, is_close
+from coremltools.converters.mil.mil.types.symbolic import is_compatible_symbolic_vector
+from coremltools.converters.mil.testing_utils import ssa_fn
 
 from .testing_utils import run_compare_builder
 
@@ -290,7 +294,7 @@ class TestElementwiseUnary:
         v = mb.abs(x=val)
         expected_outputs = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
 
-        assert is_close(expected_outputs, v.val)
+        np.testing.assert_allclose(expected_outputs, v.val, atol=1e-04, rtol=1e-05)
 
     @ssa_fn
     def test_builder_acos_eval(self):
@@ -300,7 +304,7 @@ class TestElementwiseUnary:
             [[3.14159265, 2.0943951, 1.57079633], [1.15927948, 1.04719755, 0.64350111]],
             dtype=np.float32,
         )
-        assert is_close(expected_outputs, v.val)
+        np.testing.assert_allclose(expected_outputs, v.val, atol=1e-04, rtol=1e-05)
 
     @ssa_fn
     def test_builder_asin_eval(self):
@@ -311,7 +315,7 @@ class TestElementwiseUnary:
             dtype=np.float32,
         )
 
-        assert is_close(expected_outputs, v.val)
+        np.testing.assert_allclose(expected_outputs, v.val, atol=1e-04, rtol=1e-05)
 
     @ssa_fn
     def test_builder_atan_eval(self):
@@ -325,7 +329,7 @@ class TestElementwiseUnary:
             dtype=np.float32,
         )
 
-        assert is_close(expected_outputs, v.val)
+        np.testing.assert_allclose(expected_outputs, v.val, atol=1e-04, rtol=1e-05)
 
     @ssa_fn
     def test_builder_atanh_eval(self):
@@ -336,7 +340,7 @@ class TestElementwiseUnary:
             dtype=np.float32,
         )
 
-        assert is_close(expected_outputs, v.val)
+        np.testing.assert_allclose(expected_outputs, v.val, atol=1e-04, rtol=1e-05)
 
     @ssa_fn
     def test_builder_cast_eval(self):
@@ -345,7 +349,7 @@ class TestElementwiseUnary:
 
         v = mb.cast(x=val, dtype="int32")
 
-        assert is_close(expected_outputs, v.val)
+        np.testing.assert_allclose(expected_outputs, v.val, atol=1e-04, rtol=1e-05)
 
     @ssa_fn
     def test_builder_ceil_eval(self):
@@ -353,7 +357,7 @@ class TestElementwiseUnary:
         v = mb.ceil(x=val)
         expected_outputs = np.array([[-1, 2, -3], [5, -5, 7]], dtype=np.float32)
 
-        assert is_close(expected_outputs, v.val)
+        np.testing.assert_allclose(expected_outputs, v.val, atol=1e-04, rtol=1e-05)
 
     @ssa_fn
     def test_builder_clip_eval(self):
@@ -361,7 +365,7 @@ class TestElementwiseUnary:
         v = mb.clip(x=val, alpha=0.0, beta=5.0)
         expected_outputs = np.array([[0, 2, 0], [4.5, 0, 5]], dtype=np.float32)
 
-        assert is_close(expected_outputs, v.val)
+        np.testing.assert_allclose(expected_outputs, v.val, atol=1e-04, rtol=1e-05)
 
     @ssa_fn
     def test_builder_cos_eval(self):
@@ -375,7 +379,7 @@ class TestElementwiseUnary:
             dtype=np.float32,
         )
 
-        assert is_close(expected_outputs, v.val)
+        np.testing.assert_allclose(expected_outputs, v.val, atol=1e-04, rtol=1e-05)
 
     @ssa_fn
     def test_builder_cosh_eval(self):
@@ -386,13 +390,13 @@ class TestElementwiseUnary:
             dtype=np.float32,
         )
 
-        assert is_close(expected_outputs, v.val)
+        np.testing.assert_allclose(expected_outputs, v.val, atol=1e-04, rtol=1e-05)
 
     @ssa_fn
     def test_builder_erf_eval(self):
         x_val = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.float32)
         v = mb.erf(x=x_val)
-        assert is_close(scipy.special.erf(x_val), v.val)
+        np.testing.assert_allclose(scipy.special.erf(x_val), v.val, atol=1e-04, rtol=1e-05)
 
     @ssa_fn
     def test_builder_exp_eval(self):
@@ -403,7 +407,7 @@ class TestElementwiseUnary:
             dtype=np.float32,
         )
 
-        assert is_close(expected_outputs, v.val)
+        np.testing.assert_allclose(expected_outputs, v.val, atol=1e-04, rtol=1e-05)
 
     @ssa_fn
     def test_builder_exp2_eval(self):
@@ -413,7 +417,7 @@ class TestElementwiseUnary:
             [[0.5, 4.0, 0.125], [16, 0.03125, 64]], dtype=np.float32
         )
 
-        assert is_close(expected_outputs, v.val)
+        np.testing.assert_allclose(expected_outputs, v.val, atol=1e-04, rtol=1e-05)
 
     @ssa_fn
     def test_builder_floor_eval(self):
@@ -421,7 +425,7 @@ class TestElementwiseUnary:
         v = mb.floor(x=val)
         expected_outputs = np.array([[-2, 2, -4], [4, -5, 6]], dtype=np.float32)
 
-        assert is_close(expected_outputs, v.val)
+        np.testing.assert_allclose(expected_outputs, v.val, atol=1e-04, rtol=1e-05)
 
     @ssa_fn
     def test_builder_inverse_eval(self):
@@ -430,7 +434,7 @@ class TestElementwiseUnary:
         expected_outputs = np.array(
             [[-1.0, 0.5, -0.33333334], [0.25, -0.2, 0.16666667]], dtype=np.float32
         )
-        assert is_close(expected_outputs, v.val)
+        np.testing.assert_allclose(expected_outputs, v.val, atol=1e-04, rtol=1e-05)
 
     @ssa_fn
     def test_builder_log_eval(self):
@@ -441,7 +445,7 @@ class TestElementwiseUnary:
             dtype=np.float32,
         )
 
-        assert is_close(expected_outputs, v.val)
+        np.testing.assert_allclose(expected_outputs, v.val, atol=1e-04, rtol=1e-05)
 
     @ssa_fn
     def test_builder_round_eval(self):
@@ -449,7 +453,7 @@ class TestElementwiseUnary:
         v = mb.round(x=val)
         expected_outputs = np.array([[-1, 2, -3], [5, -5, 7]], dtype=np.float32)
 
-        assert is_close(expected_outputs, v.val)
+        np.testing.assert_allclose(expected_outputs, v.val, atol=1e-04, rtol=1e-05)
 
     @ssa_fn
     def test_builder_rsqrt_eval(self):
@@ -460,7 +464,7 @@ class TestElementwiseUnary:
             dtype=np.float32,
         )
 
-        assert is_close(expected_outputs, v.val)
+        np.testing.assert_allclose(expected_outputs, v.val, atol=1e-04, rtol=1e-05)
 
     @ssa_fn
     def test_builder_sign_eval(self):
@@ -468,7 +472,7 @@ class TestElementwiseUnary:
         v = mb.sign(x=val)
         expected_outputs = np.array([[-1, 1, 0], [0, -1, 1]], dtype=np.float32)
 
-        assert is_close(expected_outputs, v.val)
+        np.testing.assert_allclose(expected_outputs, v.val, atol=1e-04, rtol=1e-05)
 
     @ssa_fn
     def test_builder_sin_eval(self):
@@ -482,7 +486,7 @@ class TestElementwiseUnary:
             dtype=np.float32,
         )
 
-        assert is_close(expected_outputs, v.val)
+        np.testing.assert_allclose(expected_outputs, v.val, atol=1e-04, rtol=1e-05)
 
     @ssa_fn
     def test_builder_sinh_eval(self):
@@ -493,7 +497,7 @@ class TestElementwiseUnary:
             dtype=np.float32,
         )
 
-        assert is_close(expected_outputs, v.val)
+        np.testing.assert_allclose(expected_outputs, v.val, atol=1e-04, rtol=1e-05)
 
     @ssa_fn
     def test_builder_sqrt_eval(self):
@@ -504,7 +508,7 @@ class TestElementwiseUnary:
             dtype=np.float32,
         )
 
-        assert is_close(expected_outputs, v.val)
+        np.testing.assert_allclose(expected_outputs, v.val, atol=1e-04, rtol=1e-05)
 
     @ssa_fn
     def test_builder_tan_eval(self):
@@ -514,13 +518,13 @@ class TestElementwiseUnary:
             [[-1.5574, -2.185, 0.1425], [1.15782, 3.3805, -0.291]], dtype=np.float32
         )
 
-        assert is_close(expected_outputs, v.val)
+        np.testing.assert_allclose(expected_outputs, v.val, atol=1e-04, rtol=1e-05)
 
     @ssa_fn
     def test_builder_tanh_eval(self):
         x_val = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.float32)
         v = mb.tanh(x=x_val)
-        assert is_close(np.tanh(x_val), v.val)
+        np.testing.assert_allclose(np.tanh(x_val), v.val, atol=1e-04, rtol=1e-05)
 
     @ssa_fn
     def test_builder_threshold_eval(self):
@@ -528,7 +532,22 @@ class TestElementwiseUnary:
         v = mb.threshold(x=val, alpha=1.0)
         expected_outputs = np.array([[1.0, 2, 1.0], [4.5, 1.0, 6.7]], dtype=np.float32)
 
-        assert is_close(expected_outputs, v.val)
+        np.testing.assert_allclose(expected_outputs, v.val, atol=1e-04, rtol=1e-05)
+
+    def test_cast_with_symbolic_value(self):
+        input_shape = [get_new_symbol(), 1]
+        input_placeholders = {
+            "x": mb.placeholder(shape=input_shape),
+        }
+
+        def build(x):
+            shape = mb.shape(x=x)
+            return mb.cast(x=shape, dtype="int32")
+
+        prog = Program()
+        with Function(input_placeholders) as ssa_func:
+            output_vars = build(**ssa_func.inputs)
+            assert is_compatible_symbolic_vector(output_vars.sym_val, [get_new_symbol(), 1])
 
     @pytest.mark.parametrize(
         "use_cpu_only, backend, epsilon",
@@ -695,4 +714,4 @@ class TestElementwiseUnary:
         assert ops[0].op_type == 'const'
         erf_op = ops[1]
         assert erf_op.op_type == 'erf'
-        assert is_close(erf_op.value_inference(), scipy.special.erf(x))
+        np.testing.assert_allclose(erf_op.value_inference(), scipy.special.erf(x), atol=1e-04, rtol=1e-05)

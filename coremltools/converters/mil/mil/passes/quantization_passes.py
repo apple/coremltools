@@ -139,9 +139,6 @@ class FP16ComputePrecision(AbstractQuantizationPass):
         if op.op_type in ["make_list", "list_gather", "list_scatter", "list_read", "list_write", "list_length"]:
             return False  #  rdar://74458192
 
-        if op.op_type in ["conv", "conv_transpose"] and op.weight.rank == 5:
-            return False  #  rdar://74158925
-
         if op.op_type in ["gru", "rnn", "lstm"]:
             return False
 
@@ -151,6 +148,9 @@ class FP16ComputePrecision(AbstractQuantizationPass):
         return True
 
     def is_valid_parameter(self, op, param_name):
+
+        if op.op_type in ["resample"] and param_name == "coordinates":
+            return False
 
         if op.op_type in ["crop_resize"] and param_name == "spatial_scale":
             return False

@@ -93,9 +93,6 @@ class TestResample:
         if backend[0] == "neuralnetwork":
             pytest.xfail("nn backend not supported")
 
-        if backend == ("mlprogram", "fp16"):
-            pytest.xfail("rdar://80662845 (Resample FP16 unit test failing in coremltools)")
-
         x_ = np.array([11.0, 22.0, 33.0, 44.0], dtype=np.float32).reshape([1, 1, 2, 2])
         coordinates_ = np.array(
             [-1.0, -2.0, -3.7, -1.0, 0.0, 0.0, 3.5, 1.2], dtype=np.float32
@@ -575,9 +572,7 @@ class TestCrop:
             2,
             types.fp32,
         )
-        expected_output = (
-            np.array([2, 3, 6, 7, 10, 11], dtype=np.float32).reshape(1, 1, 3, 2),
-        )
+        expected_output = np.array([2, 3, 6, 7, 10, 11], dtype=np.float32).reshape(1, 1, 3, 2)
 
         run_compare_builder(
             build,

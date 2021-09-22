@@ -7,7 +7,6 @@
 
 import numpy as np
 
-
 def _check_child_op_type(op, child_op_type):
     """
     :param op: operation

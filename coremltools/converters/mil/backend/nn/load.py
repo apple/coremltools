@@ -5,9 +5,8 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import logging
-from collections import defaultdict
 
+from collections import defaultdict
 import coremltools as ct
 from coremltools.converters.mil.input_types import (
     ClassifierConfig,
@@ -16,16 +15,17 @@ from coremltools.converters.mil.input_types import (
     Shape,
     RangeDim,
 )
-from coremltools.models import MLModel
-from coremltools.models import neural_network as neural_network
-from coremltools.models.datatypes import Array
+from coremltools.converters.mil.backend.backend_helper import _get_probability_var_for_classifier
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.types.symbolic import (
     any_symbolic,
     any_variadic,
     is_symbolic,
 )
-from .op_mapping import convert_ops
+from coremltools.converters._profile_utils import _profile
+from coremltools.models import MLModel
+from coremltools.models import neural_network as neural_network
+from coremltools.models.datatypes import Array
 from coremltools.models.neural_network import flexible_shape_utils
 from coremltools.models.neural_network.flexible_shape_utils import (
     update_image_size_range,
@@ -33,8 +33,9 @@ from coremltools.models.neural_network.flexible_shape_utils import (
     set_multiarray_ndshape_range,
     add_multiarray_ndshape_enumeration,
 )
+import logging
+from .op_mapping import convert_ops
 from .passes.nn_passes import nn_backend_passes
-from coremltools.converters._profile_utils import _profile
 
 
 def _convert_to_image_input(proto, inputs, skip_model_load=False):
@@ -272,14 +273,6 @@ def load(prog, **kwargs):
         prog.functions["main"].outputs,
     )
 
-    # Replace model outputs's name with v1_outputs
-    output_names = [x[0] for x in v1_outputs]
-    for i, spec_layer in enumerate(builder.nn_spec.layers):
-        for j, name in enumerate(spec_layer.output):
-            for output_name in output_names:
-                if output_name.split(":")[0] == name:
-                    spec_layer.output[j] = output_name
-
     proto = builder.spec
     # image input
     has_image_input = any([isinstance(s, ImageType) for s in input_types])
@@ -290,6 +283,13 @@ def load(prog, **kwargs):
     # classifier flag
     classifier_config = kwargs.get("classifier_config", None)
     if classifier_config is not None:
+        # verify that classifier_config.predicted_probabilities_output if its exists.
+        # And if its empty/None, fill it with the last non const op's output
+        # this is done in "_get_probability_var_for_classifier()"
+        probability_var = _get_probability_var_for_classifier(prog, classifier_config)
+        if classifier_config.predicted_probabilities_output != probability_var.name:
+            classifier_config.predicted_probabilities_output = probability_var.name
+        # add classifier related fields to the proto spec
         proto = _convert_to_classifier(proto, classifier_config,
                                        skip_model_load=kwargs.get("skip_model_load", False))
 

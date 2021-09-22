@@ -20,3 +20,12 @@ pass_modules = [
 __all__ = pass_modules
 
 from . import *  # import everything in __all__
+
+from coremltools.converters.mil.experimental.passes import (
+    generic_gelu_tanh_approximation_fusion,
+    generic_layernorm_instancenorm_pattern_fusion,
+    generic_linear_bias_fusion,
+    generic_conv_batchnorm_fusion,
+    generic_conv_scale_fusion,
+    generic_conv_bias_fusion
+)

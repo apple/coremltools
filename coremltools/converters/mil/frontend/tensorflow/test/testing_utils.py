@@ -6,7 +6,6 @@ import numpy as np
 import os
 import pytest
 import tempfile
-from six import string_types as _string_types
 
 from coremltools import TensorType
 import coremltools.models.utils as coremltoolsutils
@@ -14,11 +13,12 @@ from coremltools.converters.mil.testing_utils import compare_shapes, \
     compare_backend, run_core_ml_predict, ct_convert
 from coremltools.converters.mil.testing_reqs import ct
 
+tf = pytest.importorskip("tensorflow", minversion="1.14.0")
+
 from tensorflow.python.framework import dtypes
 from tensorflow.python.tools.freeze_graph import freeze_graph as freeze_g
 from tensorflow.python.keras.saving import saving_utils as _saving_utils
 
-tf = pytest.importorskip("tensorflow", minversion="1.14.0")
 frontend = "tensorflow"
 
 
@@ -238,7 +238,8 @@ def run_compare_tf(
         graph, feed_dict, output_nodes, frontend, backend, use_cpu_for_conversion=use_cpu_for_conversion,
     )
 
-    if frontend_only or coremltoolsutils._macos_version() < (10, 13):
+    if frontend_only or coremltoolsutils._macos_version() < (10, 13) \
+       or (mlmodel.is_package and coremltoolsutils._macos_version() < (12, 0)):
         return mlmodel._spec, mlmodel, input_key_values, None
 
     if not isinstance(output_nodes, (tuple, list)):

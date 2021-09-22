@@ -5,7 +5,8 @@
 import math
 import numpy as np
 
-from coremltools.converters.mil.mil import Operation, types, VALUE
+from coremltools.converters.mil.mil import Operation, types, VALUE, SYMBOL
+from coremltools.converters.mil.mil.types.symbolic import is_symbolic
 from coremltools.converters.mil.mil.operation import precondition
 from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
 from coremltools.converters.mil.mil.input_type import (
@@ -36,21 +37,21 @@ Elementwise unary op implementation(s)
 class abs(elementwise_unary):
     """
     Return the absolute values of the input ``x``, element-wise.
-    
+
     Parameters
     ----------
     x: tensor<[\*d], T> (Required)
-    
+
     Returns
     -------
     tensor<[\*d], f32>
         * A tensor of the same shape as ``x``.
-    
+
     Attributes
     ----------
     T: fp32
     """
-    
+
     def __init__(self, **kwargs):
         super(abs, self).__init__(**kwargs)
 
@@ -63,21 +64,21 @@ class abs(elementwise_unary):
 class acos(elementwise_unary):
     """
     Return the inverse cosine values of the input ``x``, element-wise.
-    
+
     Parameters
     ----------
     x: tensor<[\*d], T> (Required)
-    
+
     Returns
     -------
     tensor<[\*d], f32>
         * A tensor of the same shape as ``x``.
-    
+
     Attributes
     ----------
     T: fp32
     """
-    
+
     def __init__(self, **kwargs):
         super(acos, self).__init__(**kwargs)
 
@@ -90,21 +91,21 @@ class acos(elementwise_unary):
 class asin(elementwise_unary):
     """
     Return the inverse sine of the input ``x``, element-wise.
-    
+
     Parameters
     ----------
     x: tensor<[\*d], T> (Required)
-    
+
     Returns
     -------
     tensor<[\*d], f32>
         * A tensor of the same shape as ``x``.
-    
+
     Attributes
     ----------
     T: fp32
     """
-    
+
     def __init__(self, **kwargs):
         super(asin, self).__init__(**kwargs)
 
@@ -117,21 +118,21 @@ class asin(elementwise_unary):
 class atan(elementwise_unary):
     """
     Return the inverse tangent of the input ``x``, element-wise.
-    
+
     Parameters
     ----------
     x: tensor<[\*d], T> (Required)
-    
+
     Returns
     -------
     tensor<[\*d], f32>
         * A tensor of the same shape as ``x``.
-    
+
     Attributes
     ----------
     T: fp32
     """
-    
+
     def __init__(self, **kwargs):
         super(atan, self).__init__(**kwargs)
 
@@ -145,21 +146,21 @@ class atanh(elementwise_unary):
     """
     Return the inverse hyperbolic tangent values of the input
     ``x``, element-wise.
-    
+
     Parameters
     ----------
     x: tensor<[\*d], T> (Required)
-    
+
     Returns
     -------
     tensor<[\*d], f32>
         * A tensor of the same shape as ``x``.
-    
+
     Attributes
     ----------
     T: fp32
     """
-    
+
     def __init__(self, **kwargs):
         super(atanh, self).__init__(**kwargs)
 
@@ -172,21 +173,21 @@ class atanh(elementwise_unary):
 class ceil(elementwise_unary):
     """
     Return the ceil values of the input ``x``, element-wise.
-    
+
     Parameters
     ----------
     x: tensor<[\*d], T> (Required)
-    
+
     Returns
     -------
     tensor<[\*d], f32>
         * A tensor of the same shape as ``x``.
-    
+
     Attributes
     ----------
     T: fp32
     """
-    
+
     def __init__(self, **kwargs):
         super(ceil, self).__init__(**kwargs)
 
@@ -201,23 +202,23 @@ class clip(Operation):
     Clip the values in the input ``x`` to ``[alpha, beta]``, element-wise.
     Any values less than ``alpha`` are set to ``alpha``, and any values greater
     than ``beta`` are set to ``beta``.
-    
+
     Parameters
     ----------
     x: tensor<[\*d], T> (Required)
     alpha: const f32 (Required)
     beta: const f32 (Required)
-    
+
     Returns
     -------
     tensor<[\*d], f32>
         * A tensor of the same shape as ``x``.
-    
+
     Attributes
     ----------
     T: fp32
     """
-    
+
     input_spec = InputSpec(
         x=ScalarOrTensorInputType(),
         alpha=FloatInputType(const=True),
@@ -240,20 +241,20 @@ class cos(elementwise_unary):
     """
     Return cosine of ``x`` element-wise. Input domain is ``(-inf, inf)`` and
     output range is ``[-1,1]``.
-    
+
     Parameters
     ----------
     x: tensor<[\*d], T> (Required)
-    
+
     Returns
     -------
     tensor<[\*d], T>
-    
+
     Attributes
     ----------
     T: fp32
     """
-    
+
     def __init__(self, **kwargs):
         super(cos, self).__init__(**kwargs)
 
@@ -266,21 +267,21 @@ class cos(elementwise_unary):
 class cosh(elementwise_unary):
     """
     Return hyperbolic cosine of the input ``x``, element-wise.
-    
+
     Parameters
     ----------
     x: tensor<[\*d], T> (Required)
-    
+
     Returns
     -------
     tensor<[\*d], T>
         * A tensor of the same shape as ``x``.
-    
+
     Attributes
     ----------
     T: fp32
     """
-    
+
     def __init__(self, **kwargs):
         super(cosh, self).__init__(**kwargs)
 
@@ -293,21 +294,21 @@ class cosh(elementwise_unary):
 class erf(elementwise_unary):
     """
     Return the gauss error function of the input ``x``, element-wise.
-    
+
     Parameters
     ----------
     x: tensor<[\*d], T> (Required)
-    
+
     Returns
     -------
     tensor<[\*d], f32>
         * A tensor of the same shape as ``x``.
-    
+
     Attributes
     ----------
     T: fp32
     """
-    
+
     def __init__(self, **kwargs):
         super(erf, self).__init__(**kwargs)
 
@@ -321,21 +322,21 @@ class erf(elementwise_unary):
 class exp(elementwise_unary):
     """
     Return the exponential values of the input ``x``, element-wise.
-    
+
     Parameters
     ----------
     x: tensor<[\*d], T> (Required)
-    
+
     Returns
     -------
     tensor<[\*d], f32>
         * A tensor of the same shape as ``x``.
-    
+
     Attributes
     ----------
     T: fp32
     """
-    
+
     def __init__(self, **kwargs):
         super(exp, self).__init__(**kwargs)
 
@@ -348,21 +349,21 @@ class exp(elementwise_unary):
 class exp2(elementwise_unary):
     """
     Return the exponential values of the input ``x``, element-wise.
-    
+
     Parameters
     ----------
     x: tensor<[\*d], T> (Required)
-    
+
     Returns
     -------
     tensor<[\*d], f32>
         * A tensor of the same shape as ``x``.
-    
+
     Attributes
     ----------
     T: fp32
     """
-    
+
     def __init__(self, **kwargs):
         super(exp2, self).__init__(**kwargs)
 
@@ -376,21 +377,21 @@ class floor(elementwise_unary):
     """
     Return the floor of the input ``x``, element-wise, the same as rounding
     towards negative infinity.
-    
+
     Parameters
     ----------
     x: tensor<[\*d], T> (Required)
-    
+
     Returns
     -------
     tensor<[\*d], f32>
         * A tensor of the same shape as ``x``.
-    
+
     Attributes
     ----------
     T: fp32
     """
-    
+
     def __init__(self, **kwargs):
         super(floor, self).__init__(**kwargs)
 
@@ -491,21 +492,21 @@ class logical_not(elementwise_unary):
     Return the value of NOT the input ``x``, element-wise. (``1`` for true, ``0``
     for false in numeric domain.) A numeric value ``t`` is evaluated to true
     ``iff t != 0``.
-    
+
     Parameters
     ----------
     x: tensor<[\*d], T> (Required)
-    
+
     Returns
     -------
     tensor<[\*d], f32>
         * A tensor of the same shape as ``x``.
-    
+
     Attributes
     ----------
     T: fp32
     """
-    
+
     def __init__(self, **kwargs):
         super(logical_not, self).__init__(**kwargs)
 
@@ -518,21 +519,21 @@ class logical_not(elementwise_unary):
 class round(elementwise_unary):
     """
     Return the round value of the input ``x``, element-wise.
-    
+
     Parameters
     ----------
     x: tensor<[\*d], T> (Required)
-    
+
     Returns
     -------
     tensor<[\*d], f32>
         * A tensor of the same shape as ``x``.
-    
+
     Attributes
     ----------
     T: fp32
     """
-    
+
     def __init__(self, **kwargs):
         super(round, self).__init__(**kwargs)
 
@@ -589,21 +590,21 @@ class rsqrt(Operation):
 class sign(elementwise_unary):
     """
     Return the sign value of the input ``x``, element-wise.
-    
+
     Parameters
     ----------
     x: tensor<[\*d], T> (Required)
-    
+
     Returns
     -------
     tensor<[\*d], f32>
         * A tensor of the same shape as ``x``.
-    
+
     Attributes
     ----------
     T: fp32
     """
-    
+
     def __init__(self, **kwargs):
         super(sign, self).__init__(**kwargs)
 
@@ -616,21 +617,21 @@ class sign(elementwise_unary):
 class sin(elementwise_unary):
     """
     Return the sine value of the input ``x``, element-wise.
-    
+
     Parameters
     ----------
     x: tensor<[\*d], T> (Required)
-    
+
     Returns
     -------
     tensor<[\*d], f32>
         * A tensor of the same shape as ``x``.
-    
+
     Attributes
     ----------
     T: fp32
     """
-    
+
     def __init__(self, **kwargs):
         super(sin, self).__init__(**kwargs)
 
@@ -643,21 +644,21 @@ class sin(elementwise_unary):
 class sinh(elementwise_unary):
     """
     Return the hyperbolic sine value of the input ``x``, element-wise.
-    
+
     Parameters
     ----------
     x: tensor<[\*d], T> (Required)
-    
+
     Returns
     -------
     tensor<[\*d], f32>
         * A tensor of the same shape as ``x``.
-    
+
     Attributes
     ----------
     T: fp32
     """
-    
+
     def __init__(self, **kwargs):
         super(sinh, self).__init__(**kwargs)
 
@@ -670,21 +671,21 @@ class sinh(elementwise_unary):
 class sqrt(elementwise_unary):
     """
     Returns the square root value of the input ``x``, element-wise.
-    
+
     Parameters
     ----------
     x: tensor<[\*d], T> (Required)
-    
+
     Returns
     -------
     tensor<[\*d], f32>
         * A tensor of the same shape as ``x``.
-    
+
     Attributes
     ----------
     T: fp32
     """
-    
+
     def __init__(self, **kwargs):
         super(sqrt, self).__init__(**kwargs)
 
@@ -697,21 +698,21 @@ class sqrt(elementwise_unary):
 class square(elementwise_unary):
     """
     Return the square value of the input ``x``, element-wise.
-    
+
     Parameters
     ----------
     x: tensor<[\*d], T> (Required)
-    
+
     Returns
     -------
     tensor<[\*d], f32>
         * A tensor of the same shape as ``x``.
-    
+
     Attributes
     ----------
     T: fp32
     """
-    
+
     def __init__(self, **kwargs):
         super(square, self).__init__(**kwargs)
 
@@ -725,21 +726,21 @@ class tan(elementwise_unary):
     """
     Return the tangent value of the input ``x``, element-wise. Both input and output
     ranges are ``(-inf, inf)``.
-    
+
     Parameters
     ----------
     x: tensor<[\*d], T> (Required)
-    
+
     Returns
     -------
     tensor<[\*d], f32>
         * A tensor of the same shape as ``x``.
-    
+
     Attributes
     ----------
     T: fp32
     """
-    
+
     def __init__(self, **kwargs):
         super(tan, self).__init__(**kwargs)
 
@@ -753,21 +754,21 @@ class tanh(elementwise_unary):
     """
     Return the hyperbolic tangent value of the input ``x``, element-wise. Both input
     and output ranges are ``(-inf, inf)`` while output range is ``[-1,  1]``.
-    
+
     Parameters
     ----------
     x: tensor<[\*d], T> (Required)
-    
+
     Returns
     -------
     tensor<[\*d], f32>
         * A tensor of the same shape as ``x``.
-    
+
     Attributes
     ----------
     T: fp32
     """
-    
+
     def __init__(self, **kwargs):
         super(tanh, self).__init__(**kwargs)
 
@@ -781,22 +782,22 @@ class threshold(Operation):
     """
     Set a lower bound ``alpha`` to the values in the input ``x``, element-wise.
     Any values less than ``alpha`` are set to ``alpha``.
-    
+
     Parameters
     ----------
     x: tensor<[\*d], T> (Required)
     alpha: const fp32 (Required)
-    
+
     Returns
     -------
     tensor<[\*d], f32>
         * A tensor of the same shape as ``x``.
-    
+
     Attributes
     ----------
     T: fp32
     """
-    
+
     input_spec = InputSpec(
         x=ScalarOrTensorInputType(), alpha=FloatInputType(const=True),
     )
@@ -816,23 +817,23 @@ class threshold(Operation):
 class cast(Operation):
     """
     Cast the input ``x`` to the new type ``dtype``.
-    
+
     Parameters
     ----------
     x: tensor<[\*d], T> (Required)
     dtype: const str (Required)
         * Can be one of the following types: ``int32``, ``int64``, ``fp32``, ``fp64``.
-    
+
     Returns
     -------
     tensor<[\*d], dtype>
         * A tensor of the same shape as ``x``, with type ``dtype``.
-    
+
     Attributes
     ----------
     T: i32, i64, fp16, fp32, fp64, bool.
     """
-    
+
     input_spec = InputSpec(
         x=ScalarOrTensorInputType(), dtype=StringInputType(const=True)
     )
@@ -862,7 +863,7 @@ class cast(Operation):
         ret_shape = self.x.shape
         return types.tensor(type_map[self.dtype.val], ret_shape)
 
-    @precondition(allow=VALUE)
+    @precondition(allow=VALUE | SYMBOL)
     def value_inference(self):
         type_map = {
             "int32": np.int32,
@@ -878,6 +879,12 @@ class cast(Operation):
                 "Parameter dtype of the cast operation can be one of the {}. "
                 "Provided {}".format(type_map.keys(), self.dtype.val)
             )
+
+        if self.x.val is None:
+            if self.x.sym_val is not None and not is_symbolic(self.x.sym_val) and len(self.x.sym_val.shape) == 1:
+                result = [np.array(val).astype(dtype=type_map[self.dtype.val]).item() if not is_symbolic(val) else val for val in self.x.sym_val]
+                return np.array(result)
+            return None
 
         if not types.is_tensor(self.x.sym_type):
             return self.x.val.astype(dtype=type_map[self.dtype.val])

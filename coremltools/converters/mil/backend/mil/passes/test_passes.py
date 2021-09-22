@@ -682,18 +682,18 @@ class TestSanitizerPass:
         Input:
             main(%x: (1, 3, 20, fp32)(Tensor)) {
               block0() {
-                %var_1: (1, 3, 20, fp32)(Tensor) = relu(x=%x, name="var_1")
+                %var_1!: (1, 3, 20, fp32)(Tensor) = relu(x=%x, name="var_1!")
                 %1: (1, 3, 20, fp32)(Tensor) = relu(x=%x, name="1")
-                %3: (1, 3, 20, fp32)(Tensor) = add(x=%Var_1, y=%1, name="3")
+                %3: (1, 3, 20, fp32)(Tensor) = add(x=%Var_1!, y=%1, name="3")
               } -> (%3)
             }
 
         Output:
             main(%x: (1, 3, 20, fp32)(Tensor)) {
               block0() {
-                %var_1: (1, 3, 20, fp32)(Tensor) = relu(x=%x, name="var_1")
-                %var_1_0: (1, 3, 20, fp32)(Tensor) = relu(x=%x, name="op_1")
-                %var_3: (1, 3, 20, fp32)(Tensor) = add(x=%var_1, y=%var_1_0, name="op_3")
+                %var_1_: (1, 3, 20, fp32)(Tensor) = relu(x=%x, name="var_1_")
+                %var_1: (1, 3, 20, fp32)(Tensor) = relu(x=%x, name="op_1")
+                %var_3: (1, 3, 20, fp32)(Tensor) = add(x=%var_1_, y=%var_1, name="op_3")
               } -> (%var_3)
             }
 
@@ -701,17 +701,17 @@ class TestSanitizerPass:
 
         @mb.program(input_specs=[mb.TensorSpec(shape=(1, 3, 20))])
         def prog(x):
-            y1 = mb.relu(x=x, name = "var_1")
+            y1 = mb.relu(x=x, name = "var_1!")
             y2 = mb.relu(x=x, name = "1")
             z = mb.add(x=y1, y=y2, name = "3")
             return z
 
         PASS_REGISTRY["mil_backend::sanitize_name_strings"](prog)
         block = prog.functions["main"]
-        assert block.find_ops(op_type="relu")[0].outputs[0].name == "var_1"
-        assert block.find_ops(op_type="relu")[1].outputs[0].name == "var_1_0"
+        assert block.find_ops(op_type="relu")[0].outputs[0].name == "var_1_"
+        assert block.find_ops(op_type="relu")[1].outputs[0].name == "var_1"
         assert prog["main"].outputs[0].name == "var_3"
-        assert block.find_ops(op_type="relu")[0].name == "var_1"
+        assert block.find_ops(op_type="relu")[0].name == "var_1_"
         assert block.find_ops(op_type="relu")[1].name == "op_1"
         assert block.find_ops(op_type="add")[0].name == "op_3"
 
@@ -754,62 +754,6 @@ class TestPassFuseActivationSiLU:
             expected_output_shapes={block.outputs[0].name: tuple(x_shape)},
         )
 
-class TestPassRank0ExpandDimsSwap:
-    """
-    Input graph:
-                                 2.0
-                                  |
-                                  v
-    input --> slice_by_index --> sub --> expand_dims --> output
-
-    Output graph:
-                                                [2.0]
-                                                  |
-                                                  v
-    input --> slice_by_index --> expand_dims --> sub --> output
-    """
-
-    @pytest.mark.skipif(ct.utils._macos_version() < (12, 0), reason="mlprogram predict available only on macOS12+")
-    @pytest.mark.parametrize(
-        "reverse_order, elem_op",
-        itertools.product(
-            [True, False],
-            ["add", "sub", "mul", "real_div", "floor_div"],
-        ),
-    )
-    def test(self, reverse_order, elem_op):
-        x_shape = [1,]
-
-        @mb.program(input_specs=[mb.TensorSpec(shape=x_shape)])
-        def program(x):
-            x = mb.slice_by_index(x=x, begin=[0], end=[1], squeeze_mask=[True])
-            func = getattr(mb, elem_op)
-
-            if reverse_order:
-                x = func(x=2.0, y=x)
-            else:
-                x = func(x=x, y=2.0)
-
-            expand = mb.expand_dims(x=x, axes=[0])
-            other_1 = mb.add(x=x, y=[1, 2, 3])
-            other_2 = mb.sub(x=x, y=[1, 2, 3])
-            return expand, other_1, other_2
-
-        prev_prog, prev_block, block = apply_pass_and_basic_check(
-            program, "mil_backend::rank0_expand_dims_swap"
-        )
-        assert get_op_types_in_program(prev_prog) == ["slice_by_index", elem_op, "expand_dims", "add", "sub"]
-        assert get_op_types_in_program(program) == ["slice_by_index", "expand_dims", "expand_dims", elem_op, "squeeze", "add", "sub"]
-        assert_model_is_valid(
-            program=program,
-            inputs={"x": x_shape},
-            backend=("mlprogram", "fp32"),
-            expected_output_shapes={
-                block.outputs[0].name: tuple(x_shape),
-                block.outputs[1].name: (3,),
-                block.outputs[2].name: (3,),
-            },
-        )
 
 class TestHomogenizeInputDtypes:
 

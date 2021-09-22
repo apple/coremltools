@@ -102,6 +102,9 @@ class TestCustomMatMul:
     def test_tf(
         self, use_cpu_only, backend, transpose_a, transpose_b, a_is_sparse, b_is_sparse, b_is_const,
     ):
+        if backend[0] == 'mlprogram':
+            pytest.xfail("Custom layer not supported with ML Program backend")
+
         rank = 2
         shape = list(np.random.randint(low=3, high=100, size=1)) * rank
         with tf.Graph().as_default() as graph:
@@ -223,6 +226,9 @@ class TestCustomTopK:
     )
     @pytest.mark.usefixtures("create_custom_TopK")
     def test_tf(self, use_cpu_only, backend, rank, k):
+        if backend[0] == 'mlprogram':
+            pytest.xfail("Custom layer not supported with ML Program backend")
+
         shape = np.random.randint(low=3, high=6, size=rank)
         with tf.Graph().as_default() as graph:
             x = tf.placeholder(tf.float32, shape=shape)

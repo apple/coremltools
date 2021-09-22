@@ -5,6 +5,7 @@
 
 import itertools
 import numpy as np
+
 from coremltools._deps import version_lt, version_ge
 from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.frontend.tensorflow.test import (
@@ -478,6 +479,9 @@ class TestControlFlowFromAutoGraph(TensorFlowBaseTest):
         "use_cpu_only, backend", itertools.product([True, False], backends)
     )
     def test_if_binary_add_if_else_mul(self, use_cpu_only, backend):
+        if backend[0] == "mlprogram":
+            pytest.xfail("rdar://81983176 (MLProgram Failure: Mismatched elements)")
+
         @make_tf_graph([(1,), (1,)])
         def build_model(x, y):
             if x > y:

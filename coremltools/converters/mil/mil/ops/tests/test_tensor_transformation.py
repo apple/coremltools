@@ -130,17 +130,17 @@ class TestExpandDims:
     def test_builder_eval(self):
         x_val = np.random.rand(1, 6)
         v1 = mb.expand_dims(x=x_val, axes=[2])
-        assert is_close(np.expand_dims(x_val, 2), v1.val)
+        np.testing.assert_allclose(np.expand_dims(x_val, 2), v1.val, atol=1e-04, rtol=1e-05)
 
         v2 = mb.expand_dims(x=x_val, axes=[-1])
-        assert is_close(np.expand_dims(x_val, -1), v2.val)
+        np.testing.assert_allclose(np.expand_dims(x_val, -1), v2.val, atol=1e-04, rtol=1e-05)
 
         v3 = mb.expand_dims(x=x_val, axes=[-1, -2])
         ref = np.expand_dims(np.expand_dims(x_val, -1), -1)
-        assert is_close(ref, v3.val)
+        np.testing.assert_allclose(ref, v3.val, atol=1e-04, rtol=1e-05)
 
         v4 = mb.expand_dims(x=x_val, axes=[0, -1, -2])
-        assert is_close(np.reshape(x_val, (1, 1, 6, 1, 1)), v4.val)
+        np.testing.assert_allclose(np.reshape(x_val, (1, 1, 6, 1, 1)), v4.val, atol=1e-04, rtol=1e-05)
 
     @pytest.mark.parametrize(
         "use_cpu_only, backend, rank_and_axis",
@@ -275,10 +275,10 @@ class TestReshape:
         t = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
         r = mb.reshape(x=t, shape=[3, 2])
         expected_r = np.array([[1, 2], [3, 4], [5, 6]], dtype=np.float32)
-        assert is_close(expected_r, r.val)
+        np.testing.assert_allclose(expected_r, r.val, atol=1e-04, rtol=1e-05)
         r2 = mb.reshape(x=t, shape=[2, -1])
         expected_r2 = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
-        assert is_close(expected_r2, r2.val)
+        np.testing.assert_allclose(expected_r2, r2.val, atol=1e-04, rtol=1e-05)
 
     @pytest.mark.parametrize(
         "use_cpu_only, backend", itertools.product([True, False], backends,)
@@ -367,7 +367,7 @@ class TestReverse:
     def test_builder_eval(self):
         val = np.array([[-1.0, 7.0, -3.0], [4.0, -5.0, 8.0]], dtype=np.float32)
         res = mb.reverse(x=val, axes=[0])
-        assert is_close(np.flip(val, axis=0), res.val)
+        np.testing.assert_allclose(np.flip(val, axis=0), res.val, atol=1e-04, rtol=1e-05)
 
     @pytest.mark.parametrize(
         "use_cpu_only, backend", itertools.product([True, False], backends,)
@@ -559,9 +559,9 @@ class TestSliceBySize:
         v_1 = mb.slice_by_size(x=x, begin=(0, 1, 0), size=(-1, -1, -1))
         v_2 = mb.slice_by_size(x=x, begin=(0, 1, 0), size=(-1, -1, 3))
         v_3 = mb.slice_by_size(x=x, begin=(0, -2, 0), size=(-1, -1, 3))
-        assert is_close(x[:, 1:, :], v_1.val)
-        assert is_close(x[:, 1:, :3], v_2.val)
-        assert is_close(x[:, -2:, :3], v_3.val)
+        np.testing.assert_allclose(x[:, 1:, :], v_1.val, atol=1e-04, rtol=1e-05)
+        np.testing.assert_allclose(x[:, 1:, :3], v_2.val, atol=1e-04, rtol=1e-05)
+        np.testing.assert_allclose(x[:, -2:, :3], v_3.val, atol=1e-04, rtol=1e-05)
 
 
 class TestSpaceToDepth:
@@ -644,7 +644,7 @@ class TestSqueeze:
     def test_builder_eval(self):
         x = np.array([[[[1], [2], [3]], [[4], [5], [6]]]], dtype=np.float32)
         v = mb.squeeze(x=x, axes=(-4, 3))
-        assert is_close(np.squeeze(x, axis=(-4, 3)), v.val)
+        np.testing.assert_allclose(np.squeeze(x, axis=(-4, 3)), v.val, atol=1e-04, rtol=1e-05)
 
     @ssa_fn
     def test_builder_eval_rank_0(self):
@@ -652,7 +652,7 @@ class TestSqueeze:
         v = mb.squeeze(x=x)
         assert v.shape == ()
         assert type(v.val) == np.float32
-        assert is_close(np.squeeze(x), v.val)
+        assert np.isclose(np.squeeze(x), v.val)
 
 class TestTranspose:
     @pytest.mark.parametrize(
@@ -704,7 +704,7 @@ class TestTranspose:
     def test_builder_eval(self):
         x = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
         v = mb.transpose(x=x, perm=(1, 0))
-        assert is_close(x.T, v.val)
+        np.testing.assert_allclose(x.T, v.val, atol=1e-04, rtol=1e-05)
 
     @pytest.mark.parametrize(
         "use_cpu_only, backend", itertools.product([True, False], backends,)
@@ -1056,7 +1056,7 @@ class TestConcat:
             np.random.rand(1, 1, 3, 2),
         ]
         v = mb.concat(values=values, axis=2)
-        assert is_close(np.concatenate(values, 2), v.val)
+        np.testing.assert_allclose(np.concatenate(values, 2), v.val, atol=1e-04, rtol=1e-05)
 
     @ssa_fn
     def test_builder_eval_failure(self):
@@ -1115,7 +1115,7 @@ class TestSplit:
         vs = mb.split(x=t, num_splits=3, axis=0)
         es = np.split(t, [1, 2, 3], axis=0)
         for v, e in zip(vs, es):
-            assert is_close(e, v.val)
+            np.testing.assert_allclose(e, v.val, atol=1e-04, rtol=1e-05)
 
 
 class TestStack:
@@ -1162,4 +1162,4 @@ class TestStack:
             np.random.rand(1, 1, 3, 2).astype(np.float32),
         ]
         v = mb.stack(values=values, axis=2)
-        assert is_close(np.stack(values, 2), v.val)
+        np.testing.assert_allclose(np.stack(values, 2), v.val, atol=1e-04, rtol=1e-05)

@@ -156,15 +156,12 @@ class TFConverter:
                 if inputs[0].name is None:
                     inputs[0].name = tf_placeholder_names[0]
 
-            # filter out those inputs which is not in tf_placeholder_names
-            inputs = [x for x in inputs if x.name in tf_placeholder_names]
-
             # We fill in shapes for user-specified input that doesn't have shape
             for inp in inputs:
                 # Check inputs existence
                 if inp.name is None:
                     raise ValueError(
-                        "Unable to infer input's name or input name was not provided"
+                        "Multiple inputs are found in graph, but no input name was provided"
                     )
                 if inp.name not in tf_placeholder_names:
                     raise ValueError(

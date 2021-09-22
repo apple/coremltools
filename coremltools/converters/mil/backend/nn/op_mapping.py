@@ -151,7 +151,7 @@ def _convert_pool(const_context, builder, op, mode, exclude_padding_from_average
             layer_type=mode.upper(),
             padding_type="INCLUDE_LAST_PIXEL" if op.ceil_mode.val else padding_type,
             input_name=make_input(const_context, builder, op.x),
-            output_name=op.name,
+            output_name=op.outputs[0].name,
             exclude_pad_area=exclude_padding_from_average,
             padding_top=op_pad[0],
             padding_bottom=op_pad[1],
@@ -1265,21 +1265,12 @@ def depth_to_space(const_context, builder, op):
 
 @register_mil_to_nn_mapping
 def expand_dims(const_context, builder, op):
-    if op.x.rank == 0 and not (op.x.op.op_type == 'slice_by_index' and len(op.x.op.squeeze_mask.val) == 1 and op.x.op.squeeze_mask.val[0] == True):
-        # Hacky solution to handle rank 0 inconsistency across squeeze and slice with squeeze mask ops
-        # TODO: rdar://73160449
-        builder.add_copy(
-            name=op.name,
-            input_name=make_input(const_context, builder, op.x),
-            output_name=op.outputs[0].name,
-        )
-    else:
-        builder.add_expand_dims(
-            name=op.name,
-            input_name=make_input(const_context, builder, op.x),
-            output_name=op.outputs[0].name,
-            axes=op.axes.val,
-        )
+    builder.add_expand_dims(
+        name=op.name,
+        input_name=make_input(const_context, builder, op.x),
+        output_name=op.outputs[0].name,
+        axes=op.axes.val,
+    )
 
 
 
@@ -2495,13 +2486,9 @@ def layer_norm(const_context, builder, op):
         # Insert a singleton dimension in the 'height' position
         reshaped_shape.insert(-1, 1)
 
-        if len(reshaped_shape) == 4:
-            gamma_shape = reshaped_shape[1:]
-        else:
-            gamma_shape = reshaped_shape
-
-        gamma = _np.ones(gamma_shape) if op.gamma is None else _np.tile(op.gamma.val, (gamma_shape[0], 1, 1))
-        beta = _np.zeros(gamma_shape) if op.beta is None else _np.tile(op.beta.val, (gamma_shape[0], 1, 1))
+        # Scale layer can't take parameters of size [W], but can take [1, H, W], and H=1 in this case
+        gamma = _np.ones((1, 1, reshaped_shape[-1])) if op.gamma is None else _np.expand_dims(op.gamma.val, axis=(0, 1))
+        beta = _np.zeros((1, 1, reshaped_shape[-1])) if op.beta is None else _np.expand_dims(op.beta.val, axis=(0, 1))
 
         builder.add_reshape_static(
             name=op.name + "_reshape",
@@ -2829,7 +2816,7 @@ def non_maximum_suppression(const_context, builder, op):
     builder.add_nms(
         name=op.name,
         input_names=make_input(const_context, builder, [op.boxes, op.scores]),
-        output_names=["{}:{}".format(op.name, i) for i in range(4)],
+        output_names=[op.outputs[i].name for i in range(4)],
         iou_threshold=op.iou_threshold.val,
         score_threshold=op.score_threshold.val,
         max_boxes=op.max_boxes.val,
@@ -3175,7 +3162,7 @@ def crop(const_context, builder, op):
     builder.add_crop(
         name=op.name,
         input_names=[op.x.name],
-        output_name=op.name,
+        output_name=op.outputs[0].name,
         offset=0,
         left=op.crop_width.val[0],
         right=op.crop_width.val[1],

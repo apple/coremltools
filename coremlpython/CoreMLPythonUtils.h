@@ -1,3 +1,7 @@
+// Copyright (c) 2021, Apple Inc. All rights reserved.
+//
+// Use of this source code is governed by a BSD-3-clause license that can be
+// found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 #include <string>
 
 #pragma clang diagnostic push
@@ -37,8 +41,6 @@ namespace CoreML {
             py::object convertDictionaryValueToPython(NSDictionary<NSObject *,NSNumber *> * value);
             py::object convertImageValueToPython(CVPixelBufferRef value);
             py::object convertSequenceValueToPython(MLSequence *seq) API_AVAILABLE(macos(10.14));
-            py::dict shapeConstraintToPyDict(const ShapeConstraint& constraint);
-
         }
     }
 }

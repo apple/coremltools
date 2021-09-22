@@ -6,6 +6,8 @@
 """
 Utilities for the entire package.
 """
+from coremltools.converters.mil.mil.passes.name_sanitization_utils import NameSanitizer as _NameSanitizer
+from coremltools.proto import Model_pb2 as _Model_pb2
 import math as _math
 import numpy as _np
 import os as _os
@@ -13,9 +15,6 @@ import pathlib as _pathlib
 import sys as _sys
 import tempfile as _tempfile
 import warnings as _warnings
-
-from coremltools.proto import Model_pb2 as _Model_pb2
-
 from .._deps import _HAS_SCIPY
 from ..libmodelpackage import ModelPackage
 
@@ -38,6 +37,15 @@ def _to_unicode(x):
         return x.decode()
     else:
         return x
+
+def _remove_invalid_keys(input_dict, model):
+    # make sure that input_dict does not contain an input name, which
+    # is not present in the list of model inputs
+    input_dict_keys = list(input_dict.keys())
+    model_input_names = set([inp.name for inp in model._spec.description.input])
+    for k in input_dict_keys:
+        if k not in model_input_names:
+            del input_dict[k]
 
 def save_spec(spec, filename, auto_set_specification_version=False):
     """
@@ -105,7 +113,7 @@ def save_spec(spec, filename, auto_set_specification_version=False):
         model_name = _pathlib.Path(filename).with_suffix('.mlmodel').name
         
         # Root file is copied into the model package. Changes to in-memory JSON is commited to disk when package goes out of scope.
-        package.setRootModel(specfile, model_name, "com.apple.CoreML", "CoreML Model Specification");
+        package.replaceRootModel(specfile, model_name, "com.apple.CoreML", "CoreML Model Specification");
 
 def load_spec(filename):
     """
@@ -310,7 +318,9 @@ def evaluate_regressor(model, data, target="target", verbose=False):
     error_squared = 0
 
     for index, row in data.iterrows():
-        predicted = model.predict(dict(row))[_to_unicode(target)]
+        input_dict = dict(row)
+        _remove_invalid_keys(input_dict, model)
+        predicted = model.predict(input_dict)[_to_unicode(target)]
         other_framework = row["prediction"]
         delta = predicted - other_framework
 
@@ -373,7 +383,9 @@ def evaluate_classifier(model, data, target="target", verbose=False):
     num_errors = 0
 
     for index, row in data.iterrows():
-        predicted = model.predict(dict(row))[_to_unicode(target)]
+        input_dict = dict(row)
+        _remove_invalid_keys(input_dict, model)
+        predicted = model.predict(input_dict)[_to_unicode(target)]
         other_framework = row["prediction"]
         if predicted != other_framework:
             num_errors += 1
@@ -421,6 +433,7 @@ def evaluate_classifier_with_probabilities(
 
     for _, row in data.iterrows():
         input_dict = {k: v for k, v in dict(row).items() if k != probabilities}
+        _remove_invalid_keys(input_dict, model)
         predicted_values = model.predict(input_dict)[_to_unicode(probabilities)]
         other_values = row[probabilities]
 
@@ -576,8 +589,7 @@ def rename_feature(
 
     # Rename for mlProgram
     if spec.HasField("mlProgram"):
-        from coremltools.converters.mil.backend.mil.helper import NameSanitizer
-        new_name_sanitized = NameSanitizer().sanitize_name(new_name)
+        new_name_sanitized = _NameSanitizer().sanitize_name(new_name)
         if new_name != new_name_sanitized:
             raise ValueError("Input/output names for ML Program must be of the format [a-zA-Z_][a-zA-Z0-9_]*. "
                              "That is, it must start with a letter and only contain numerals, underscore or letters. "

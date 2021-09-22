@@ -7,7 +7,6 @@ import random
 import itertools
 import pytest
 import numpy as np
-import tensorflow as _tf
 from coremltools._deps import __get_version as _get_version
 from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.testing_reqs import *
@@ -23,6 +22,7 @@ TensorFlowBaseTest.run_compare_tf_keras = \
 backends = testing_reqs.backends
 
 tf = pytest.importorskip("tensorflow", minversion="2.1.0")
+import tensorflow as _tf  # should be after pytest.importorskip checks
 
 
 class TestActivation(TensorFlowBaseTest):

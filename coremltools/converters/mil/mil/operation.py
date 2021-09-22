@@ -257,7 +257,7 @@ class Operation(object):
             for i, (n, sym_type, sym_val) in enumerate(
                 zip(output_names, output_types, output_vals)
             ):
-                name = self.name + ":" + n if n != "" else self.name
+                name = self.name + "_" + n if n != "" else self.name
                 if types.is_list(sym_type):
                     new_var = ListVar(
                         name,

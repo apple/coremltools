@@ -4,7 +4,6 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 import json as _json
 import os as _os
-import six as _six
 import shutil as _shutil
 import tempfile as _tempfile
 import warnings as _warnings
@@ -265,7 +264,7 @@ class MLModel(object):
             if not isinstance(mil_program, Program):
                 raise ValueError("mil_program must be of type 'coremltools.converters.mil.Program'")
         self._mil_program = mil_program
-        if isinstance(model, _six.string_types):
+        if isinstance(model, str):
             if _os.path.isdir(model):
                 self.is_package = True
                 self.package_path = model
@@ -391,10 +390,9 @@ class MLModel(object):
         """
         return _deepcopy(self._spec)
 
-    def predict(self, data, useCPUOnly=False, **kwargs):
+    def predict(self, data, useCPUOnly=False):
         """
-        Return predictions for the model. The kwargs are passed into the
-        model as a dictionary.
+        Return predictions for the model.
 
         Parameters
         ----------
@@ -432,6 +430,11 @@ class MLModel(object):
             )
 
         if self.__proxy__:
+            # Check if the input name given by the user is valid.
+            # Although this is checked during prediction inside CoreML Framework,
+            # we still check it here to return early and
+            # return a more verbose error message
+            self._verify_input_name_exists(data)
             return self.__proxy__.predict(data, useCPUOnly)
         else:
             if _macos_version() < (10, 13):
@@ -491,3 +494,12 @@ class MLModel(object):
         >>> mil_prog = model._get_mil_internal()
         """
         return _deepcopy(self._mil_program)
+
+    def _verify_input_name_exists(self, input_dict):
+        model_input_names = [inp.name for inp in self._spec.description.input]
+        model_input_names_set = set(model_input_names)
+        for given_input in input_dict.keys():
+            if given_input not in model_input_names_set:
+                err_msg = "Provided key \"{}\", in the input dict, " \
+                          "does not match to any of the model input name(s), which are: {}"
+                raise KeyError(err_msg.format(given_input, ",".join(model_input_names)))

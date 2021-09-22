@@ -20,6 +20,9 @@ class PassRegistry:
             raise KeyError("Pass {} not found".format(pass_id))
         return self.passes[pass_id]
 
+    def __contains__(self, pass_id):
+        return pass_id in self.passes
+
     def add(self, namespace, pass_func):
         func_name = pass_func.__name__
         pass_id = namespace + "::" + func_name

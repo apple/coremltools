@@ -46,9 +46,6 @@ class TestContribResampler(TensorFlowBaseTest):
         if backend[0] == "neuralnetwork":
             pytest.xfail("nn backend not supported")
 
-        if backend == ("mlprogram", "fp16"):
-            pytest.xfail("rdar://80660728 (ContribResampler FP16 tests failing in TF converter unit tests)")
-
         data_shape, warp_shape = data_warp_shapes
 
         @make_tf_graph([data_shape, warp_shape])
@@ -289,6 +286,9 @@ class TestAddOrdering(TensorFlowBaseTest):
         itertools.product([True, False], backends),
     )
     def test(self, use_cpu_only, backend):
+        if backend[0] == "mlprogram":
+            pytest.xfail("Not supported on ML Program backend")
+
         @make_tf_graph([(2, 3, 4), (2, 3, 4)])
         def build_model(x, y):
             return tf.math.add(x, y)
@@ -389,6 +389,9 @@ class TestGeluTanhApproximation(TensorFlowBaseTest):
         itertools.product([True], backends, [rank for rank in range(2, 3)]),
     )
     def test(self, use_cpu_only, backend, rank):
+        if backend[0] == 'mlprogram':
+            pytest.xfail("Not supported with ML Program backend")
+
         input_shape = np.random.randint(low=1, high=4, size=rank)
 
         @make_tf_graph([input_shape])
@@ -1813,6 +1816,9 @@ class TestElementWiseBinary(TensorFlowBaseTest):
 
         if backend[0] == "mlprogram" and not use_cpu_only and tf_op == tf.math.floormod:
             pytest.xfail("rdar://78343225 ((MIL GPU) Core ML Tools Unit Test failures [numerical error])")
+
+        if backend[0] == "mlprogram" and not use_cpu_only and tf_op == tf.math.floordiv:
+            pytest.xfail("rdar://82743379")
 
         x_shape = y_shape = list(np.random.randint(low=2, high=4, size=rank))
 
@@ -4002,6 +4008,9 @@ class TestFakeQuant(TensorFlowBaseTest):
         ),
     )
     def test_fake_quant_weight_quantization_with_conv(self, num_bits, weight_boundaries, use_cpu_only, backend):
+        if backend[0] == 'mlprogram':
+            pytest.xfail("Not supported with ML Program backend")
+
         tf.reset_default_graph()
         filter_width = 1
         filter_height = 1
@@ -5191,6 +5200,7 @@ class TestTranspose(TensorFlowBaseTest):
         ),
     )
     def test_transpose_1(self, use_cpu_only, backend, rank_and_perm):
+
         rank, perm = rank_and_perm
         x_shape = np.random.randint(low=1, high=4, size=rank)
 
@@ -5214,6 +5224,7 @@ class TestTranspose(TensorFlowBaseTest):
         itertools.product([True, False], backends, [1, 2, 3, 4], ),
     )
     def test_transpose_2(self, use_cpu_only, backend, rank):
+
         input_shape = np.random.randint(low=1, high=4, size=rank)
         perm = np.random.permutation(rank)
 

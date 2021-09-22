@@ -15,6 +15,7 @@ def torch_passes(prog):
         "common::loop_invariant_elimination",
         "common::dead_code_elimination",
         "torch::torch_upsample_to_core_upsample",
+        "torch::torch_tensor_assign_to_core",
     ]
 
     prog.validate()

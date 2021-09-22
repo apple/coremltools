@@ -35,6 +35,7 @@ PYBIND11_PLUGIN(libmodelpackage) {
         .def(py::init<const std::string&>())
         .def("path", &MPL::ModelPackage::path)
         .def("setRootModel", &MPL::ModelPackage::setRootModel)
+        .def("replaceRootModel", &MPL::ModelPackage::replaceRootModel)
         .def("addItem", &MPL::ModelPackage::addItem)
         .def("getRootModel", &MPL::ModelPackage::getRootModel)
         .def("isValid", &MPL::ModelPackage::isValid);

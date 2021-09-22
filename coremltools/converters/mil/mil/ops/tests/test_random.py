@@ -2,11 +2,12 @@
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
+import unittest
 
 from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.testing_reqs import *
 from coremltools.converters.mil.testing_utils import get_core_ml_prediction
-from coremltools._deps import _IS_MACOS
+from coremltools.models.utils import _macos_version
 from .testing_utils import UNK_SYM, run_compare_builder
 
 backends = testing_reqs.backends
@@ -142,7 +143,8 @@ class TestRandomCategorical:
             backend=backend,
         )
 
-
+    @unittest.skipIf(_macos_version() < (12, 0),
+                     "Can only get predictions for ml program on macOS 12+")
     @pytest.mark.parametrize(
         "use_cpu_only, backend, n_sample, n_class",
         itertools.product([True, False], backends, [50000], [2, 10, 20]),
@@ -163,34 +165,33 @@ class TestRandomCategorical:
                 )
             ]
 
-        if _IS_MACOS:
-            prediction = get_core_ml_prediction(
-                build, input_placeholders, input_values, backend=backend
-            )
+        prediction = get_core_ml_prediction(
+            build, input_placeholders, input_values, backend=backend
+        )
 
-            ref0 = np.random.multinomial(n_sample, probs[0])
-            ref1 = np.random.multinomial(n_sample, probs[1])
+        ref0 = np.random.multinomial(n_sample, probs[0])
+        ref1 = np.random.multinomial(n_sample, probs[1])
 
-            pred0 = prediction[output_name].reshape(2, n_sample)[0]
-            pred1 = prediction[output_name].reshape(2, n_sample)[1]
+        pred0 = prediction[output_name].reshape(2, n_sample)[0]
+        pred1 = prediction[output_name].reshape(2, n_sample)[1]
 
-            # convert to bincount and validate probabilities
-            pred0 = np.bincount(np.array(pred0).astype(np.int), minlength=n_class)
-            pred1 = np.bincount(np.array(pred1).astype(np.int), minlength=n_class)
+        # convert to bincount and validate probabilities
+        pred0 = np.bincount(np.array(pred0).astype(np.int), minlength=n_class)
+        pred1 = np.bincount(np.array(pred1).astype(np.int), minlength=n_class)
 
-            assert np.allclose(np.true_divide(pred0, n_sample), probs[0], atol=1e-2)
-            assert np.allclose(
-                np.true_divide(pred0, n_sample),
-                np.true_divide(ref0, n_sample),
-                atol=1e-2,
-            )
+        assert np.allclose(np.true_divide(pred0, n_sample), probs[0], atol=1e-2)
+        assert np.allclose(
+            np.true_divide(pred0, n_sample),
+            np.true_divide(ref0, n_sample),
+            atol=1e-2,
+        )
 
-            assert np.allclose(np.true_divide(pred1, n_sample), probs[1], atol=1e-2)
-            assert np.allclose(
-                np.true_divide(pred1, n_sample),
-                np.true_divide(ref1, n_sample),
-                atol=1e-2,
-            )
+        assert np.allclose(np.true_divide(pred1, n_sample), probs[1], atol=1e-2)
+        assert np.allclose(
+            np.true_divide(pred1, n_sample),
+            np.true_divide(ref1, n_sample),
+            atol=1e-2,
+        )
 
         # Test probs input
         input_placeholders = {"x": mb.placeholder(shape=(2, n_class))}
@@ -203,31 +204,30 @@ class TestRandomCategorical:
                 )
             ]
 
-        if _IS_MACOS:
-            prediction = get_core_ml_prediction(
-                build, input_placeholders, input_values, backend=backend
-            )
+        prediction = get_core_ml_prediction(
+            build, input_placeholders, input_values, backend=backend
+        )
 
-            pred0 = prediction[output_name].reshape(2, n_sample)[0]
-            pred1 = prediction[output_name].reshape(2, n_sample)[1]
+        pred0 = prediction[output_name].reshape(2, n_sample)[0]
+        pred1 = prediction[output_name].reshape(2, n_sample)[1]
 
-            # convert to bincount and validate probabilities
-            pred0 = np.bincount(np.array(pred0).astype(np.int), minlength=n_class)
-            pred1 = np.bincount(np.array(pred1).astype(np.int), minlength=n_class)
+        # convert to bincount and validate probabilities
+        pred0 = np.bincount(np.array(pred0).astype(np.int), minlength=n_class)
+        pred1 = np.bincount(np.array(pred1).astype(np.int), minlength=n_class)
 
-            assert np.allclose(np.true_divide(pred0, n_sample), probs[0], atol=1e-2)
-            assert np.allclose(
-                np.true_divide(pred0, n_sample),
-                np.true_divide(ref0, n_sample),
-                atol=1e-2,
-            )
+        assert np.allclose(np.true_divide(pred0, n_sample), probs[0], atol=1e-2)
+        assert np.allclose(
+            np.true_divide(pred0, n_sample),
+            np.true_divide(ref0, n_sample),
+            atol=1e-2,
+        )
 
-            assert np.allclose(np.true_divide(pred1, n_sample), probs[1], atol=1e-2)
-            assert np.allclose(
-                np.true_divide(pred1, n_sample),
-                np.true_divide(ref1, n_sample),
-                atol=1e-2,
-            )
+        assert np.allclose(np.true_divide(pred1, n_sample), probs[1], atol=1e-2)
+        assert np.allclose(
+            np.true_divide(pred1, n_sample),
+            np.true_divide(ref1, n_sample),
+            atol=1e-2,
+        )
 
 
 class TestRandomNormal:
