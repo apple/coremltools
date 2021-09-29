@@ -31,10 +31,10 @@ The coremltools 5 package offers several performance improvements over previous 
 * [Core ML model package](https://coremltools.readme.io/docs/new-in-coremltools#save-a-core-ml-model-package): A new model container format that separates the model into components and offers more flexible metadata editing and better source control.
 * [ML program](https://coremltools.readme.io/docs/ml-programs): A new model type that represents computation as programmatic instructions, offers more control over the precision of its intermediate tensors and better performance. 
 
-To install coremltools 5, use the following command:
+To install coremltools, use the following command:
 
 ```shell
-pip install coremltools==5.0b5
+pip install coremltools
 ```
 
 
