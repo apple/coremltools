@@ -704,7 +704,7 @@ def prelu(context, node):
     res = mb.prelu(x=x, alpha=alpha_vec, name=node.name)
     context.add(res)
 
-@register_torch_op
+@register_torch_op(torch_alias=["relu6_"])
 def relu6(context, node):
     inputs = _get_inputs(context, node, expected=1)
 
