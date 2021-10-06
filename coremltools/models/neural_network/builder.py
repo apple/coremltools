@@ -170,8 +170,8 @@ def _get_lstm_weight_fields(lstm_wp):
 def _fill_tensor_fields(tensor_field, ranks=None, shapes=None):
     """
     Fill the tensor fields.
-    ranks - None or a list of integers with the same length of number of inputs/outputs
-    shapes - None or a list of shapes the same length of number of inputs/outputs. Each shape is a list or tuple
+    ranks - ``NONE`` or a list of integers with the same length of number of inputs/outputs
+    shapes - ``NONE`` or a list of shapes the same length of number of inputs/outputs. Each shape is a list or tuple
     """
     if ranks is None and shapes is None:
         return
@@ -278,9 +278,9 @@ class NeuralNetworkBuilder(object):
             name of the feature, and ``array`` is a ``datatype.Array`` object 
             describing the feature type.
             
-            When ``spec`` is None (building from scratch), ``input_features`` must not be None.
+            When ``spec`` is ``None`` (building from scratch), ``input_features`` must not be ``None``.
 
-            When ``spec`` is not None, ``input_features`` will be ignored; 
+            When ``spec`` is not ``None``, ``input_features`` will be ignored; 
             the input feature of the existing spec will be used instead.
 
         output_features: [(str, datatypes.Array or None)] or None
@@ -288,15 +288,15 @@ class NeuralNetworkBuilder(object):
             ``(name, array)`` tuple, where ``name`` is the name of the feature, 
             and ``array`` is a ``datatypes.Array`` object describing the feature type.
             
-            The ``array`` can be None if not known.
+            The ``array`` can be ``None`` if not known.
             
-            When ``spec`` is None (building from scratch), ``output_features`` must not be None.
+            When ``spec`` is ``None`` (building from scratch), ``output_features`` must not be ``None``.
             
-            When ``spec`` is not None, ``output_features`` will be ignored; 
+            When ``spec`` is not ``None``, ``output_features`` will be ignored; 
             the output feature of the existing spec will be used instead.
 
         mode: str ('classifier', 'regressor' or None)
-            Mode (one of ``'classifier'``, ``'regressor'``, or None).
+            Mode (one of ``'classifier'``, ``'regressor'``, or ``None``).
 
             When ``mode = 'classifier'``, a NeuralNetworkClassifier spec will be
             constructed.  When ``mode = 'regressor'``, a NeuralNetworkRegressor
@@ -312,19 +312,19 @@ class NeuralNetworkBuilder(object):
             see description of enums ``NeuralNetworkMultiArrayShapeMapping``
             and ``NeuralNetworkImageShapeMapping`` in NeuralNetwork.proto.
             
-            When ``spec`` is not None, this argument will be ignored.
+            When ``spec`` is not ``None``, this argument will be ignored.
 
         spec: None or coremltools.proto.Model_pb2
-            If None, a new MLModel spec will be created by the builder with 
+            If ``None``, a new MLModel spec will be created by the builder with 
             input and output features.
             
             Otherwise, the builder will continue to build on ``spec``. 
             This is useful when the MLModel is built incrementally.
 
         nn_spec: None or coremltools.proto.NeuralNetwork_pb2
-            If None, a new, empty NeuralNetwork proto will be created for spec.
+            If ``None``, a new, empty NeuralNetwork proto will be created for spec.
             
-            If ``nn_spec`` is not None and ``spec`` is None, the builder will 
+            If ``nn_spec`` is not ``None`` and ``spec`` is ``None``, the builder will 
             build a NeuralNetwork spec without wrapping it within an MLModel. 
             This is useful to create nested NeuralNetworks for models
             with control flow operations.
@@ -627,7 +627,7 @@ class NeuralNetworkBuilder(object):
     def set_optional_input(self, input_idx, value=None, format="float"):
         """
         Marks given input as optional input.
-        Optionally, sets default value for optional input if value is not None
+        Optionally, sets default value for optional input if value is not ``None``.
 
         Parameters
         ----------
@@ -733,12 +733,12 @@ class NeuralNetworkBuilder(object):
 
     def _check_fp16_weight_params_lstms(self, lstm_wp, has_peephole=True):
         """
-        Checks if a lstm layer has at least one weight_param which is in FP16 format
+        Checks if an LSTM layer has at least one ``weight_param`` which is in FP16 format.
 
         Parameters
         ----------
-        lstm_wp: ``lstm`` weights.
-        has_peephole: if the ``lstm`` has a peephole.
+        lstm_wp: LSTM weights.
+        has_peephole: if the LSTM has a peephole.
         """
         if len(lstm_wp.inputGateWeightMatrix.float16Value) > 0:
             return True
@@ -1481,13 +1481,13 @@ class NeuralNetworkBuilder(object):
             If ``W`` is of type ``bytes()`` (quantized), other quantization 
             related arguments must be provided as well (see below).
         b: numpy.array
-            Bias vector of ``shape (output_channels, )``.
+            Bias vector of shape: ``(output_channels, )``.
         input_channels: int
             Number of input channels.
         output_channels: int
             Number of output channels.
         has_bias: boolean
-            Whether the bias vector of this layer is ignored in the ``spec``.
+            Whether the bias vector of this layer is ignored in the specification.
 
             - If True, the bias vector of this layer is not ignored.
             - If False, the bias vector is ignored.
@@ -1941,10 +1941,10 @@ class NeuralNetworkBuilder(object):
             - ``'AVE'``: Compute the element-wise average over the input blobs.
 
         alpha: float
-            if ``mode == 'ADD'`` and there is only one ``input_name``, 
-            ``alpha`` is added to the input.
-            if ``mode == 'MULTIPLY'`` and there is only one ``input_name``, 
-            ``alpha`` is multiplied to the input.
+            * if ``mode == 'ADD'`` and there is only one ``input_name``, 
+              ``alpha`` is added to the input.
+            * if ``mode == 'MULTIPLY'`` and there is only one ``input_name``, 
+              ``alpha`` is multiplied to the input.
 
         See Also
         --------
@@ -2014,8 +2014,8 @@ class NeuralNetworkBuilder(object):
         mode: str
             Overall interpolation mode. The following values are supported:
             
-            ``'NN'``: nearest neighbour
-            ``'BILINEAR'``: bilinear interpolation
+            * ``'NN'``: nearest neighbour
+            * ``'BILINEAR'``: bilinear interpolation
             
         linear_upsample_mode: str
             Specifies the behavior for linear upsampling. Only valid when 
@@ -2026,16 +2026,16 @@ class NeuralNetworkBuilder(object):
             then the grid points are sampled in the following manner:
             
             'DEFAULT':
-                ``spacing = (Xin-Xin/Xout) / (Xout-1)``
-                ``grid_point[i] = min(Xin-1, max(0, i * spacing)), for i = 0,1,2,..,Xout-1``
+                - ``spacing = (Xin-Xin/Xout) / (Xout-1)``
+                - ``grid_point[i] = min(Xin-1, max(0, i * spacing)), for i = 0,1,2,..,Xout-1``
                 
             'ALIGN_CORNERS_TRUE':
-                ``spacing = (Xin-1) / (Xout-1)``
-                ``grid_point[i] = min(Xin-1, max(0, i * spacing)), for i = 0,1,2,..,Xout-1``
+                - ``spacing = (Xin-1) / (Xout-1)``
+                - ``grid_point[i] = min(Xin-1, max(0, i * spacing)), for i = 0,1,2,..,Xout-1``
                 
             'ALIGN_CORNERS_FALSE':
-                ``spacing = Xin / Xout``
-                ``grid_point[i] = min(Xin-1, max(0, i * spacing + 0.5 * spacing - 0.5)), for i = 0,1,2,..,Xout-1``
+                - ``spacing = Xin / Xout``
+                - ``grid_point[i] = min(Xin-1, max(0, i * spacing + 0.5 * spacing - 0.5)), for i = 0,1,2,..,Xout-1``
 
         See Also
         --------
@@ -2318,7 +2318,7 @@ class NeuralNetworkBuilder(object):
             If ``W`` is of type ``bytes()`` (quantized), other quantization 
             related arguments must be provided as well (see below).
 
-            For Core ML specification version >=4, ``W`` can be None. In this case,
+            For Core ML specification version >=4, ``W`` can be ``None``. In this case,
             the convolution layer takes 2 inputs, where the 1st input represents 
             the input feature map, and the 2nd input represents the weight blob.
 
@@ -2338,29 +2338,25 @@ class NeuralNetworkBuilder(object):
             - If False, the convolution layer is performing regular convolution.
 
         output_shape: tuple or None
-            Either None or a 2-tuple, specifying the output 
+            Either ``None`` or a 2-tuple, specifying the output 
             shape ``(output_height, output_width)``. 
             Used only when ``is_deconv == True``.
             When ``is_deconv == False``, this parameter is ignored.
-            If it is None, the output shape is calculated automatically using the ``border_mode``.
+            If it is ``None``, the output shape is calculated automatically using the ``border_mode``.
 
         input_name: str or list of str
             The input blob name(s) of this layer.
         output_name: str
             The output blob name of this layer.
-
         dilation_factors: list of int
             Dilation factors across height and width directions. Must be a list of two positive integers.
             Defaults to ``[1, 1]``.
-
         padding_top, padding_bottom, padding_left, padding_right: int
             values of height (top, bottom) and width (left, right) padding 
             to be used if ``border_more`` is ``"valid"``.
-
         same_padding_asymmetry_mode: str
             Type of asymmetric padding to be used when  ``border_mode`` is ``'same'``.
             Can be either ``'BOTTOM_RIGHT_HEAVY'`` or  ``'TOP_LEFT_HEAVY'``.
-
 		Depthwise convolution
 			Depthwise convolution is a special case of convolution, in which:
 			
@@ -2603,7 +2599,7 @@ class NeuralNetworkBuilder(object):
             True if this is Convolution Transpose, otherwise False.
         output_shape: None or Tuple of int
             Applicable only for Deconvolution layer.
-            None if Convolution.
+            ``None`` if Convolution.
             Tuple of length 3 if Convolution Transpose.
         padding_mode: str
             Option for the padding type and output blob shape. 
@@ -3146,7 +3142,7 @@ class NeuralNetworkBuilder(object):
             Weights of the recurrent layer's input. 
             Must be of shape ``(hidden_size, input_size)``.
         b: numpy.array or None
-            Bias of the recurrent layer's output. If None, bias is ignored. 
+            Bias of the recurrent layer's output. If ``None``, bias is ignored. 
             Otherwise it must be of shape ``(hidden_size, )``.
         hidden_size: int
             Number of hidden units. This is equal to the number of channels of output shape.
@@ -3154,7 +3150,7 @@ class NeuralNetworkBuilder(object):
             Number of the number of channels of input shape.
         activation: str
             Activation function name. Can be one of the following option:
-            ``['RELU', 'TANH', 'SIGMOID', 'SCALED_TANH', 'SIGMOID_HARD', 'LINEAR']``.
+            [``'RELU'``, ``'TANH'``, ``'SIGMOID'``, ``'SCALED_TANH'``, ``'SIGMOID_HARD'``, ``'LINEAR'``].
             See add_activation for more detailed description.
         input_names: list of str
             The input blob names list of this layer, in the order of ``[x, h_input]``.
@@ -3236,20 +3232,20 @@ class NeuralNetworkBuilder(object):
             List of biases of the GRU layer. The ordering is ``[b_z, b_r, b_o]``,
             where ``b_z``, ``b_r``, and ``b_o`` are biases at update gate, 
             reset gate and output gate.
-            If None, biases are ignored. Otherwise the shapes of the biases are ``(hidden_size, )``.
+            If ``None``, biases are ignored. Otherwise the shapes of the biases are ``(hidden_size, )``.
         hidden_size: int
             Number of hidden units. This is equal to the number of channels of output shape.
         input_size: int
             Number of the number of channels of input shape.
         activation: str
             Activation function used at the output gate. Can be one of the following options:
-            ``['RELU', 'TANH', 'SIGMOID', 'SCALED_TANH', 'SIGMOID_HARD', 'LINEAR']``.
+            [``'RELU'``, ``'TANH'``, ``'SIGMOID'``, ``'SCALED_TANH'``, ``'SIGMOID_HARD'``, ``'LINEAR'``].
             Defaults to ``'TANH'``.
             See add_activation for more detailed description.
         inner_activation: str
             Inner activation function used at update and reset gates. 
             Can be one of the following options:
-            ``['RELU', 'TANH', 'SIGMOID', 'SCALED_TANH', 'SIGMOID_HARD', 'LINEAR']``.
+            [``'RELU'``, ``'TANH'``, ``'SIGMOID'``, ``'SCALED_TANH'``, ``'SIGMOID_HARD'``, ``'LINEAR'``].
             Defaults to ``'SIGMOID_HARD'``.
             See add_activation for more detailed description.
         input_names: list of str
@@ -3347,7 +3343,7 @@ class NeuralNetworkBuilder(object):
         b: [numpy.array] or None
             List of biases. The ordering is [b_i, b_f, b_o, b_z],
             where b_i, b_f, b_o, b_z are biases at input gate, forget gate, output gate and cell gate.
-            If None, biases are ignored. Otherwise the shapes of the biases are (hidden_size, ).
+            If ``None``, biases are ignored. Otherwise the shapes of the biases are (hidden_size, ).
         hidden_size: int
             Number of hidden units. This is equal to the number of channels of output shape.
         input_size: int
@@ -3481,68 +3477,89 @@ class NeuralNetworkBuilder(object):
         name: str
             The name of this layer.
         W_h: [numpy.array]
-            List of recursion weight matrices for the forward layer. The ordering is [R_i, R_f, R_o, R_z],
-            where R_i, R_f, R_o, R_z are weight matrices at input gate, forget gate, output gate and cell gate.
-            The shapes of these matrices are (hidden_size, hidden_size).
+            List of recursion weight matrices for the forward layer. 
+            The ordering is ``[R_i, R_f, R_o, R_z]``,
+            where ``R_i``, ``R_f``, ``R_o``, and ``R_z`` are weight matrices at 
+            input gate, forget gate, output gate and cell gate.
+            The shapes of these matrices are ``(hidden_size, hidden_size)``.
         W_x: [numpy.array]
-            List of input weight matrices for the forward layer. The ordering is [W_i, W_f, W_o, W_z],
-            where W_i, W_f, W_o, W_z are weight matrices at input gate, forget gate, output gate and cell gate.
-            The shapes of these matrices are (hidden_size, input_size).
+            List of input weight matrices for the forward layer. The ordering 
+            is ``[W_i, W_f, W_o, W_z]``,
+            where ``W_i``, ``W_f``, ``W_o``, and ``W_z`` are weight matrices at 
+            input gate, forget gate, output gate and cell gate.
+            The shapes of these matrices are ``(hidden_size, input_size)``.
         b: [numpy.array]
-            List of biases for the forward layer. The ordering is [b_i, b_f, b_o, b_z],
-            where b_i, b_f, b_o, b_z are biases at input gate, forget gate, output gate and cell gate.
-            If None, biases are ignored. Otherwise the shapes of the biases are (hidden_size, ).
+            List of biases for the forward layer. The ordering is 
+            ``[b_i, b_f, b_o, b_z]``,
+            where ``b_i``, ``b_f``, ``b_o``, and ``b_z`` are biases at input 
+            gate, forget gate, output gate and cell gate.
+            If ``None``, biases are ignored. Otherwise the shapes of the biases 
+            are ``(hidden_size, )``.
         W_h_back: [numpy.array]
-            List of recursion weight matrices for the backward layer. The ordering is [R_i, R_f, R_o, R_z],
-            where R_i, R_f, R_o, R_z are weight matrices at input gate, forget gate, output gate and cell gate.
-            The shapes of these matrices are (hidden_size, hidden_size).
+            List of recursion weight matrices for the backward layer. The 
+            ordering is ``[R_i, R_f, R_o, R_z]``,
+            where ``R_i``, ``R_f``, ``R_o``, and ``R_z`` are weight matrices 
+            at input gate, forget gate, output gate and cell gate.
+            The shapes of these matrices are ``(hidden_size, hidden_size)``.
         W_x_back: [numpy.array]
-            List of input weight matrices for the backward layer. The ordering is [W_i, W_f, W_o, W_z],
-            where W_i, W_f, W_o, W_z are weight matrices at input gate, forget gate, output gate and cell gate.
-            The shapes of these matrices are (hidden_size, input_size).
+            List of input weight matrices for the backward layer. The ordering 
+            is `[W_i, W_f, W_o, W_z]``,
+            where ``W_i``, ``W_f``, ``W_o``, and ``W_z`` are weight matrices 
+            at input gate, forget gate, output gate and cell gate.
+            The shapes of these matrices are ``(hidden_size, input_size)``.
         b_back: [numpy.array]
-            List of biases for the backward layer. The ordering is [b_i, b_f, b_o, b_z],
-            where b_i, b_f, b_o, b_z are biases at input gate, forget gate, output gate and cell gate.
-            The shapes of the biases (hidden_size).
+            List of biases for the backward layer. The ordering is ``[b_i, b_f, b_o, b_z]``,
+            where ``b_i``, ``b_f``, ``b_o``, and ``b_z`` are biases at input 
+            gate, forget gate, output gate and cell gate.
+            The shapes of the biases ``(hidden_size)``.
         hidden_size: int
             Number of hidden units. This is equal to the number of channels of output shape.
         input_size: int
             Number of the number of channels of input shape.
         input_names: list of str
-            The input blob names of this layer, in the order of [x, h_input, c_input, h_reverse_input, c_reverse_input].
+            The input blob names of this layer, in the order of 
+            ``[x, h_input, c_input, h_reverse_input, c_reverse_input]``.
         output_names: list of str
-            The output blob names of this layer, in the order of [y, h_output, c_output, h_reverse_output, c_reverse_output].
+            The output blob names of this layer, in the order of 
+            ``[y, h_output, c_output, h_reverse_output, c_reverse_output]``.
         inner_activation: str
-            Inner activation function used at input and forget gate. Can be one of the following option:
-            ['RELU', 'TANH', 'SIGMOID', 'SCALED_TANH', 'SIGMOID_HARD', 'LINEAR'].
-            Defaults to 'SIGMOID'.
+            Inner activation function used at input and forget gate. Can be one 
+            of the following options:
+            [``'RELU'``, ``'TANH'``, ``'SIGMOID'``, ``'SCALED_TANH'``, ``'SIGMOID_HARD'``, ``'LINEAR'``].
+            Defaults to ``'SIGMOID'``.
         cell_state_update_activation: str
-            Cell state update activation function used at the cell state update gate.
-            ['RELU', 'TANH', 'SIGMOID', 'SCALED_TANH', 'SIGMOID_HARD', 'LINEAR'].
-            Defaults to 'TANH'.
+            Cell state update activation function used at the cell state update gate. 
+            Can be one of the following options:
+            [``'RELU'``, ``'TANH'``, ``'SIGMOID'``, ``'SCALED_TANH'``, ``'SIGMOID_HARD'``, ``'LINEAR'``].
+            Defaults to ``'TANH'``.
         output_activation: str
-            Activation function used at the output gate. Can be one of the following option:
-            ['RELU', 'TANH', 'SIGMOID', 'SCALED_TANH', 'SIGMOID_HARD', 'LINEAR'].
-            Defaults to 'TANH'.
+            Activation function used at the output gate. Can be one of the following options:
+            [``'RELU'``, ``'TANH'``, ``'SIGMOID'``, ``'SCALED_TANH'``, ``'SIGMOID_HARD'``, ``'LINEAR'``].
+            Defaults to ``'TANH'``.
         peep: [numpy.array] or None
-            List of peephole vectors for the forward layer. The ordering is [p_i, p_f, p_o],
-            where p_i, p_f, and p_o are peephole vectors at input gate, forget gate, output gate.
-            The shapes of the peephole vectors are (hidden_size,). Defaults to None.
+            List of peephole vectors for the forward layer. The ordering 
+            is ``[p_i, p_f, p_o]``,
+            where ``p_i``, ``p_f``, and ``p_o`` are peephole vectors at input 
+            gate, forget gate, and output gate.
+            The shapes of the peephole vectors are ``(hidden_size,)``. Defaults to ``None``.
         peep_back: [numpy.array] or None
-            List of peephole vectors for the backward layer. The ordering is [p_i, p_f, p_o],
-            where p_i, p_f, and p_o are peephole vectors at input gate, forget gate, output gate.
-            The shapes of the peephole vectors are (hidden_size,). Defaults to None.
+            List of peephole vectors for the backward layer. The ordering 
+            is ``[p_i, p_f, p_o]``,
+            where ``p_i``, ``p_f``, and ``p_o`` are peephole vectors at input 
+            gate, forget gate, and output gate.
+            The shapes of the peephole vectors are ``(hidden_size,)``. Defaults to ``None``.
         output_all: boolean
-            Whether the LSTM layer should output at every time step. Defaults to False.
+            Whether the LSTM layer should output at every time step. Defaults to ``False``.
 
-            - If False, the output is the result after the final state update.
-            - If True, the output is a sequence, containing outputs at all time steps.
+            - If ``False``, the output is the result after the final state update.
+            - If ``True``, the output is a sequence, containing outputs at all time steps.
 
         forget_bias: boolean
-            If True, a vector of 1s is added to forget gate bias. Defaults to False.
+            If ``True``, a vector of 1s is added to forget gate bias. Defaults to ``False``.
         coupled_input_forget_gate: boolean
-            If True, the input gate and forget gate is coupled. i.e. forget gate is not used.
-            Defaults to False.
+            If ``True``, the input gate and forget gate is coupled. That is, the
+             forget gate is not used.
+            Defaults to ``False``.
         cell_clip_threshold: float
             The limit on the maximum and minimum values on the cell state.
             Defaults to 50.0.
@@ -3641,8 +3658,10 @@ class NeuralNetworkBuilder(object):
 
     def add_flatten(self, name, mode, input_name, output_name):
         """
-        Add a flatten layer. Only flattens the channel, height and width axis. Leaves the sequence axis as is.
-        Refer to the ``FlattenLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
+        Add a flatten layer. Only flattens the channel, height and width axis. 
+        Leaves the sequence axis as is.
+        Refer to the ``FlattenLayerParams`` message in the 
+        specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -3873,7 +3892,8 @@ class NeuralNetworkBuilder(object):
 
         ``y = gamma * (x - mean) / sqrt(variance + epsilon) + beta``
 
-        Refer to the ``BatchnormLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
+        Refer to the ``BatchnormLayerParams`` message in the specification 
+        (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -3882,24 +3902,25 @@ class NeuralNetworkBuilder(object):
         channels: int
             Number of channels of the input blob.
         gamma: numpy.array
-            Values of gamma. Must be numpy array of shape (channels, ).
+            Values of gamma. Must be numpy array of shape ``(channels, )``.
         beta: numpy.array
-            Values of beta. Must be numpy array of shape (channels, ).
+            Values of beta. Must be numpy array of shape ``(channels, )``.
         mean: numpy.array
-            Means of the input blob on each channel. Must be numpy array of shape (channels, ).
+            Means of the input blob on each channel. Must be numpy array of shape ``(channels, )``.
         variance:
-            Variances of the input blob on each channel. Must be numpy array of shape (channels, ).
+            Variances of the input blob on each channel. Must be numpy array of shape ``(channels, )``.
         input_name: str
             The input blob name of this layer.
         output_name: str
             The output blob name of this layer.
         compute_mean_var: bool
-            Set to True if mean and variance is to be computed from the input data.
+            Set to ``True`` if mean and variance is to be computed from the input data.
         instance_normalization: bool
-            Set compute_mean_var and this to True to perform
-            instance normalization i.e., mean and variance are computed from the single input instance.
+            Set compute_mean_var and this to ``True`` to perform
+            instance normalization. That is, mean and variance are computed 
+            from the single input instance.
         epsilon: float
-            Value of epsilon. Defaults to 1e-5 if not specified.
+            Value of epsilon. Defaults to ``1e-5`` if not specified.
 
         See Also
         --------
@@ -4516,17 +4537,17 @@ class NeuralNetworkBuilder(object):
         name: str
             The name of this layer.
         input_names: list of str
+ 
             Must be a list of two names: image feature map and crop indices/RoI input.
-            First input corresponds to a blob with shape ``[1, Batch, C, H_in, W_in]``. This represents a batch of input image feature data with C channels.
-            The second input shape must be ``[N, 1, 4, 1, 1]`` or ``[N, 1, 5, 1, 1]``. This represents the bounding box coordinates for N patches/RoIs.
-            N: number of patches/RoIs to be extracted
-            If RoI shape = [N, 1, 4, 1, 1]
-            The channel axis corresponds to the four coordinates specifying the bounding box.
-            All the N~ RoIs are extracted from all the batches of the input.
-            If RoI shape = [N, 1, 5, 1, 1]
-            The first element of the channel axis specifies the input batch id from which to extract the RoI and
-            must be in the interval ``[0, Batch - 1]``. That is, n-th RoI is extracted from the RoI[n,0,0,0]-th input batch id.
-            The last four elements of the channel axis specify the bounding box coordinates.
+               * First input corresponds to a blob with shape ``[1, Batch, C, H_in, W_in]``. This represents a batch of input image feature data with ``C`` channels.
+               * The second input shape must be ``[N, 1, 4, 1, 1]`` or ``[N, 1, 5, 1, 1]``. This represents the bounding box coordinates for ``N`` patches/RoIs.
+            *  ``N``: number of patches/RoIs to be extracted
+            * If RoI shape = ``[N, 1, 4, 1, 1]``, the channel axis corresponds to the four coordinates specifying the bounding box.
+              All the N~ RoIs are extracted from all the batches of the input.
+            * If RoI shape = ``[N, 1, 5, 1, 1]``, the first element of the channel axis specifies the input batch id from which to extract the RoI and
+              must be in the interval ``[0, Batch - 1]``. That is, ``n`` -th RoI is extracted from the ``RoI[n,0,0,0]`` -th input batch id.
+              The last four elements of the channel axis specify the bounding box coordinates.
+
         output_name: str
             The output blob name of this layer.
         target_height: int
@@ -4534,20 +4555,26 @@ class NeuralNetworkBuilder(object):
         target_width: int
             Output width dimension.
         mode: str
-            Following values are supported: 'STRICT_ALIGN_ENDPOINTS_MODE', 'ALIGN_ENDPOINTS_MODE', 'UPSAMPLE_MODE', 'ROI_ALIGN_MODE'.
-            This parameter determines the sampling grid used for bilinear interpolation.
+            * The following values are supported: 
+              ``'STRICT_ALIGN_ENDPOINTS_MODE'``, ``'ALIGN_ENDPOINTS_MODE'``, 
+              ``'UPSAMPLE_MODE'``, ``'ROI_ALIGN_MODE'``.
+            * This parameter determines the sampling grid used for bilinear interpolation.
         normalized_roi: bool
-            If true the bounding box coordinates must be in the interval [0, 1].
-            They are scaled by (input_height - 1), (input_width - 1), i.e. based on the input spatial dimensions.
-            If false the bounding box coordinates must be in the interval
-            [0, input_height - 1] and [0, input_width - 1], respectively for height and width dimensions.
+            * If true the bounding box coordinates must be in the interval ``[0, 1]``.
+              They are scaled by ``(input_height - 1)``, ``(input_width - 1)``; 
+              that is, based on the input spatial dimensions.
+            * If false the bounding box coordinates must be in the interval
+              ``[0, input_height - 1]`` and ``[0, input_width - 1]``, 
+              respectively for height and width dimensions.
         box_indices_mode: str
-            Following values are supported: 'CORNERS_HEIGHT_FIRST', 'CORNERS_WIDTH_FIRST', 'CENTER_SIZE_HEIGHT_FIRST', 'CENTER_SIZE_WIDTH_FIRST'
-            Representation used to interpret the bounding box coordinates (RoI) input.
-            'CORNERS_HEIGHT_FIRST': [h_start, w_start, h_end, w_end]
-            'CORNERS_WIDTH_FIRST': [w_start, h_start, w_end, h_end]
-            'CENTER_SIZE_HEIGHT_FIRST': [h_center, w_center, box_height, box_width]
-            'CENTER_SIZE_WIDTH_FIRST': [w_center, h_center, box_width, box_height]
+            * The following values are supported: 
+              ``'CORNERS_HEIGHT_FIRST'``, ``'CORNERS_WIDTH_FIRST'``, 
+              ``'CENTER_SIZE_HEIGHT_FIRST'``, ``'CENTER_SIZE_WIDTH_FIRST'``.
+            * Representation used to interpret the bounding box coordinates (RoI) input.
+                * ``'CORNERS_HEIGHT_FIRST'``: ``[h_start, w_start, h_end, w_end]``
+                * ``'CORNERS_WIDTH_FIRST'``: ``[w_start, h_start, w_end, h_end]``
+                * ``'CENTER_SIZE_HEIGHT_FIRST'``: ``[h_center, w_center, box_height, box_width]``
+                * ``'CENTER_SIZE_WIDTH_FIRST'``: ``[w_center, h_center, box_width, box_height]``
         spatial_scale: float
             Additional spatial scale that multiplies the bounding box coordinates.
             Generally used while implementing the RoI Align layer,
@@ -5643,7 +5670,7 @@ class NeuralNetworkBuilder(object):
         num_splits: int, optional
             Number of splits, default: 2.
         split_sizes: list of int or tuple of int, optional
-            List of size to split, default [] or None.
+            List of size to split, default ``[]`` or ``None``.
         """
 
         if not split_sizes:
@@ -6938,7 +6965,7 @@ class NeuralNetworkBuilder(object):
         quant_lut=None,
     ):
         """
-        Add a N-D Batched Matrix Multiplication layer with numpy like broadcasting.
+        Add a N-D Batched Matrix Multiplication layer with NumPy-like broadcasting.
         Refer to the ``BatchedMatMulLayerParams`` message in the specification
         (NeuralNetwork.proto) for more details.
 
@@ -6966,36 +6993,44 @@ class NeuralNetworkBuilder(object):
             Must be equal to the last dimension of the output, default: 0.
 
         W: float32 numpy.array or bytes(), optional
-            Weight matrix of shape (weight_matrix_rows, weight_matrix_columns)
-            If W is of type bytes(), i.e. quantized to 1-8 bits, other quantization
-            related arguments must be provided as well (see below).
+            Weight matrix of shape ``(weight_matrix_rows, weight_matrix_columns)``. 
+            If ``W`` is of type ``bytes()`` (quantized to 1-8 bits), other
+            quantization-related arguments must be provided as well (see below).
 
         bias: float32 numpy.array, optional
             Bias vector of shape (weight_matrix_columns,).
 
-        Quantization arguments, used when W is of type bytes():
+        Quantization
+        	Quantization arguments, used when ``W`` is of type ``bytes()``:
 
-        is_quantized_weight: bool, optional
-            Set it to true when W is of type bytes(), representing quantized weights, default: false.
+				is_quantized_weight: bool, optional
+					Set it to true when ``W`` is of type ``bytes()``, representing
+					quantized weights, default: false.
 
-        quantization_type: str, optional
-            When weights are quantized (i.e. W is of type bytes()), this should be either "linear" or "lut", default: linear.
+				quantization_type: str, optional
+					When weights are quantized (that is, ``W`` is of type ``bytes()``),
+					this should be either ``"linear"`` or ``"lut"``, default: ``"linear"``.
 
-        nbits: int, optional
-            Should be between 1 and 8 (inclusive). Number of bits per weight value, default: 8.
+				nbits: int, optional
+					Should be between 1 and 8 (inclusive). Number of bits per weight value, default: 8.
 
-        quant_scale: numpy.array(dtype=numpy.float32), optional
-            scale vector to be used with linear quantization. Must be of length either 1 or weight_matrix_columns, default: None.
+				quant_scale: numpy.array(dtype=numpy.float32), optional
+					Scale vector to be used with linear quantization. 
+					Must be of length either 1 or ``weight_matrix_columns``, default: ``None``.
 
-        quant_bias: numpy.array(dtype=numpy.float32), optional
-            bias vector to be used with linear quantization. Must be of length either 1 or weight_matrix_columns, default: None.
+				quant_bias: numpy.array(dtype=numpy.float32), optional
+					Bias vector to be used with linear quantization. 
+					Must be of length either 1 or ``weight_matrix_columns``, default: ``None``.
 
-        quant_lut: numpy.array(dtype=numpy.float32), optional
-            The LUT (look up table) to be used with LUT quantization. Must be of length 2^nbits, default: None.
+				quant_lut: numpy.array(dtype=numpy.float32), optional
+					The LUT (look up table) to be used with LUT quantization. 
+					Must be of length 2^n bits, default: ``None``.
 
-        int_8_dynamic_quantize: bool
-            Whether to quantize and dequantize before and after batched matmul, respectively.
-            Expects byte weights, representing int8 values, if True. See NeuralNetwork.proto for other validation conditions.
+				int_8_dynamic_quantize: bool
+					Whether to quantize and dequantize before and after 
+					batched matmul, respectively.
+					Expects byte weights, representing int8 values, if True. 
+					See NeuralNetwork.proto for other validation conditions.
 
         See Also
         --------
@@ -7367,7 +7402,7 @@ class NeuralNetworkBuilder(object):
         output_name: str
             The output blob name of this layer.
         axes: list of int or tuple of int, optional
-            Dimensions to perform the operation, default: None (squeeze_all).
+            Dimensions to perform the operation, default: ``None`` (squeeze_all).
         squeeze_all: bool, optional
             If true, all dimensions that are 1 are squeezed, default: false.
 
@@ -7952,7 +7987,7 @@ class NeuralNetworkBuilder(object):
             The output blob name of this layer.
         axes: list of int or tuple of int, optional
             List of dimensions for the reduce operations.
-            Each should be in range [-rank(input), rank(input)), default: None (reduce_all)
+            Each should be in range ``[-rank(input), rank(input))``, default: ``None`` (``reduce_all``).
         keepdims: bool, optional
             Whether or not to retain the reduced dimensions with length 1, default: true.
         reduce_all: bool, optional
@@ -8000,7 +8035,7 @@ class NeuralNetworkBuilder(object):
             The output blob name of this layer.
         axes: list of int or tuple of int, optional
             List of dimensions for the reduce operations.
-            Each should be in range [-rank(input), rank(input)), default: None (reduce_all)
+            Each should be in range [-rank(input), rank(input)), default: ``None`` (reduce_all)
         keepdims: bool, optional
             Whether or not to retain the reduced dimensions with length 1, default: true.
         reduce_all: bool, optional
@@ -8049,7 +8084,7 @@ class NeuralNetworkBuilder(object):
             The output blob name of this layer.
         axes: list of int or tuple of int, optional
             List of dimensions for the reduce operations.
-            Each should be in range [-rank(input), rank(input)), default: None (reduce_all)
+            Each should be in range [-rank(input), rank(input)), default: ``None`` (reduce_all)
         keepdims: bool, optional
             Whether or not to retain the reduced dimensions with length 1, default: true.
         reduce_all: bool, optional
@@ -8096,7 +8131,7 @@ class NeuralNetworkBuilder(object):
             The output blob name of this layer.
         axes: list of int or tuple of int, optional
             List of dimensions for the reduce operations.
-            Each should be in range [-rank(input), rank(input)), default: None (reduce_all)
+            Each should be in range [-rank(input), rank(input)), default: ``None`` (reduce_all)
         keepdims: bool, optional
             Whether or not to retain the reduced dimensions with length 1, default: true.
         reduce_all: bool, optional
@@ -8143,7 +8178,7 @@ class NeuralNetworkBuilder(object):
             The output blob name of this layer.
         axes: list of int or tuple of int, optional
             List of dimensions for the reduce operations.
-            Each should be in range [-rank(input), rank(input)), default: None (reduce_all)
+            Each should be in range [-rank(input), rank(input)), default: ``None`` (reduce_all)
         keepdims: bool, optional
             Whether or not to retain the reduced dimensions with length 1, default: true.
         reduce_all: bool, optional
@@ -8190,7 +8225,7 @@ class NeuralNetworkBuilder(object):
             The output blob name of this layer.
         axes: list of int or tuple of int, optional
             List of dimensions for the reduce operations.
-            Each should be in range [-rank(input), rank(input)), default: None (reduce_all)
+            Each should be in range [-rank(input), rank(input)), default: ``None`` (reduce_all)
         keepdims: bool, optional
             Whether or not to retain the reduced dimensions with length 1, default: true.
         reduce_all: bool, optional
@@ -8237,7 +8272,7 @@ class NeuralNetworkBuilder(object):
             The output blob name of this layer.
         axes: list of int or tuple of int, optional
             List of dimensions for the reduce operations.
-            Each should be in range [-rank(input), rank(input)), default: None (reduce_all)
+            Each should be in range [-rank(input), rank(input)), default: ``None`` (reduce_all)
         keepdims: bool, optional
             Whether or not to retain the reduced dimensions with length 1, default: true.
         reduce_all: bool, optional
@@ -8284,7 +8319,7 @@ class NeuralNetworkBuilder(object):
             The output blob name of this layer.
         axes: list of int or tuple of int, optional
             List of dimensions for the reduce operations.
-            Each should be in range [-rank(input), rank(input)), default: None (reduce_all)
+            Each should be in range [-rank(input), rank(input)), default: ``None`` (reduce_all)
         keepdims: bool, optional
             Whether or not to retain the reduced dimensions with length 1, default: true.
         reduce_all: bool, optional
@@ -8331,7 +8366,7 @@ class NeuralNetworkBuilder(object):
             The output blob name of this layer.
         axes: list of int or tuple of int, optional
             List of dimensions for the reduce operations.
-            Each should be in range [-rank(input), rank(input)), default: None (reduce_all)
+            Each should be in range [-rank(input), rank(input)), default: ``None`` (reduce_all)
         keepdims: bool, optional
             Whether or not to retain the reduced dimensions with length 1, default: true.
         reduce_all: bool, optional
@@ -8378,7 +8413,7 @@ class NeuralNetworkBuilder(object):
             The output blob name of this layer.
         axes: list of int or tuple of int, optional
             List of dimensions for the reduce operations.
-            Each should be in range [-rank(input), rank(input)), default: None (reduce_all)
+            Each should be in range [-rank(input), rank(input)), default: ``None`` (reduce_all)
         keepdims: bool, optional
             Whether or not to retain the reduced dimensions with length 1, default: true.
         reduce_all: bool, optional

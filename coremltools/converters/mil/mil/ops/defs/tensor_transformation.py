@@ -372,7 +372,7 @@ class reverse(Operation):
         * Input tensor.
 
     axes: const<D, i32> (Optional)
-        * Dimension(s) to reverse. Each axis must be in the range ``[-rank(x), rank(x))``.
+        * Dimension(s) to reverse. Each axis must be in the range ``[-rank(x), rank(x)]``.
         * Defaults to None (reverse on all dimensions).
 
     Returns
