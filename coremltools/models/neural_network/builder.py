@@ -1487,7 +1487,7 @@ class NeuralNetworkBuilder(object):
         output_channels: int
             Number of output channels.
         has_bias: boolean
-            Whether the bias vector of this layer is ignored in the specification.
+            Whether the bias vector of this layer is ignored in the spec.
 
             - If True, the bias vector of this layer is not ignored.
             - If False, the bias vector is ignored.
