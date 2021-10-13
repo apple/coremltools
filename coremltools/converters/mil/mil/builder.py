@@ -38,21 +38,30 @@ def is_python_value(val):
 
 class Builder:
     """
-    Singleton builder.
+    This class is a singleton builder to construct a MIL program. For more 
+    information, see `Create a MIL program <https://coremltools.readme.io/docs/model-intermediate-language#create-a-mil-program>`_.
+    
+    Importing ``.ops`` triggers the installation of all MIL ops into the Builder.
+    For details on each op, see `MIL ops <https://apple.github.io/coremltools/source/coremltools.converters.mil.mil.ops.defs.html>`_.
 
-    Example:
+    Examples
+    --------
 
-    from coremltools.converters.mil.mil import Builder as mb
-    from coremltools.converters.mil.mil import Program, Function
+    >>> from coremltools.converters.mil.mil import Builder as mb
+    >>> from coremltools.converters.mil.mil import Program, Function
 
-    prog = Program()
-    func_inputs = {"x": mb.placeholder(_shape=[2,3]),
-                   "y": mb.placeholder(_shape=[2,3])}
-    with Function(func_inputs) as ssa_fun:
-      x, y = ssa_fun.inputs['x'], ssa_fun.inputs['x']
-      res_var = mb.add(x=x, y=y) # created within ssa_fun block
-      ssa_fun.set_outputs([res_var])
-    prog.add_function("main", ssa_fun)
+    >>> prog = Program()
+    >>> func_inputs = {"x": mb.placeholder(_shape=[2,3]),
+    >>>                "y": mb.placeholder(_shape=[2,3])}
+    >>> with Function(func_inputs) as ssa_fun:
+    >>>   x, y = ssa_fun.inputs['x'], ssa_fun.inputs['x']
+    >>>   res_var = mb.add(x=x, y=y) # created within ssa_fun block
+    >>>   ssa_fun.set_outputs([res_var])
+    >>> prog.add_function("main", ssa_fun)
+    
+    >>> # Importing ops triggers installation of all ops into Builder.
+    >>> from .ops import defs as _ops
+
     """
 
     name_count = defaultdict(int)
@@ -195,11 +204,25 @@ class Builder:
     @staticmethod
     def program(input_specs=None):
         """
-        Usage:
+        
+        A MIL program contains one or more functions. 
+        The ``mb.program`` decorator creates a MIL program with a single 
+        function (``main``). The input to ``main`` is an fp32 tensor.
+        
+        Parameters
+        ----------
+        
+        input_specs: TensorSpec
+             Describes a tensor.
+        
+        
+        Examples
+        --------
 
-        @mb.program(input_specs=[mb.TensorSpec(shape=(1,2))])
-        def prog(a):
-            return mb.add(x=a, y=2)
+        >>> @mb.program(input_specs=[mb.TensorSpec(shape=(1,2))])
+        >>> def prog(a):
+        >>>     return mb.add(x=a, y=2)
+
         """
         if input_specs is None:
             input_specs = []
