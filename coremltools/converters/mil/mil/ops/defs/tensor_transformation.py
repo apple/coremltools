@@ -364,7 +364,7 @@ class reshape(Operation):
 @register_op(doc_str="")
 class reverse(Operation):
     """
-    Reverse the order of the input tensor ``x`` along specified ``axes``(dimensions).
+    Reverse the order of the input tensor ``x`` along specified ``axes`` (dimensions).
 
     Parameters
     ----------
@@ -480,9 +480,12 @@ class reverse_sequence(Operation):
 class slice_by_index(Operation):
     """
     Method for numpy style indexing and slicing.
-    Suppose we have a tensor ``x``, this method achieves:
+    With a tensor ``x``, this method achieves the following:
+    
     ``result = x[begin[0]: end[0]: stride[0], begin[1]: end[1]: stride[1], ...]``
-    Note this method does not support pure indexing. You would need to do squeeze if indexing is intended.
+    
+    Note: This method does not support pure indexing. You would need to do a 
+    squeeze if indexing is intended.
 
     Parameters
     ----------
@@ -493,7 +496,7 @@ class slice_by_index(Operation):
     end: tensor<[rank(x)], i32> (Required)
         * Ending index for the dimension of slicing.
     stride: tensor<[rank(x)], i32> (Optional)
-        * Default as all ``1``s.
+        * Default is all ``1``.
         * Stride for the dimension of slicing.
     begin_mask: tensor<[rank(x)], bool> (Optional)
         * Default to all ``False``.
@@ -507,7 +510,7 @@ class slice_by_index(Operation):
 
     Returns
     -------
-    tensor<*?, T>
+    tensor<\*?, T>
         - Scalar or tensor.
 
     Attributes
