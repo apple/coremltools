@@ -1,72 +1,32 @@
-
-
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8" />
-  
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
   <title>coremltools.converters.mil.mil.ops.defs.tensor_transformation &mdash; coremltools API Reference  documentation</title>
-  
-
-  
-  <link rel="stylesheet" href="../../../../../../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../../../../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../../../../_static/pygments.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../../../../_static/css/theme.css" type="text/css" />
-  <link rel="stylesheet" href="../../../../../../../_static/graphviz.css" type="text/css" />
-
-  
-  
-
-  
-  
-
-  
-
-  
+      <link rel="stylesheet" href="../../../../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../../../../_static/graphviz.css" type="text/css" />
   <!--[if lt IE 9]>
     <script src="../../../../../../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-    
-      <script type="text/javascript" id="documentation_options" data-url_root="../../../../../../../" src="../../../../../../../_static/documentation_options.js"></script>
         <script data-url_root="../../../../../../../" id="documentation_options" src="../../../../../../../_static/documentation_options.js"></script>
         <script src="../../../../../../../_static/jquery.js"></script>
         <script src="../../../../../../../_static/underscore.js"></script>
         <script src="../../../../../../../_static/doctools.js"></script>
-    
-    <script type="text/javascript" src="../../../../../../../_static/js/theme.js"></script>
-
-    
+    <script src="../../../../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../../../search.html" /> 
 </head>
 
-<body class="wy-body-for-nav">
-
-   
+<body class="wy-body-for-nav"> 
   <div class="wy-grid-for-nav">
-    
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-          
-
-          
             <a href="../../../../../../../index.html" class="icon icon-home"> coremltools API Reference
-          
-
-          
           </a>
-
-          
-            
-            
-          
-
-          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../../../../../../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -74,18 +34,7 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-          
-        </div>
-
-        
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
-          
-            
-            
-              
-            
-            
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">API Contents</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../../source/coremltools.converters.html">Converters</a></li>
@@ -100,69 +49,30 @@
 <li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
 </ul>
 
-            
-          
         </div>
-        
       </div>
     </nav>
 
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
-
-      
-      <nav class="wy-nav-top" aria-label="top navigation">
-        
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
           <a href="../../../../../../../index.html">coremltools API Reference</a>
-        
       </nav>
 
-
       <div class="wy-nav-content">
-        
         <div class="rst-content">
-        
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
-
+          <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-    
       <li><a href="../../../../../../../index.html" class="icon icon-home"></a> &raquo;</li>
-        
           <li><a href="../../../../../../index.html">Module code</a> &raquo;</li>
-        
       <li>coremltools.converters.mil.mil.ops.defs.tensor_transformation</li>
-    
-    
       <li class="wy-breadcrumbs-aside">
-        
       </li>
-    
   </ul>
-
-  
   <hr/>
 </div>
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
-            
+             
   <h1>Source code for coremltools.converters.mil.mil.ops.defs.tensor_transformation</h1><div class="highlight"><pre>
 <span></span><span class="c1">#  Copyright (c) 2020, Apple Inc. All rights reserved.</span>
 <span class="c1">#</span>
@@ -198,6 +108,77 @@
     <span class="n">TensorInputType</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs._op_reqs</span> <span class="kn">import</span> <span class="n">register_op</span>
+
+<span class="k">def</span> <span class="nf">_solve_slice_by_index_shape</span><span class="p">(</span><span class="n">x_shape</span><span class="p">,</span> <span class="n">begin</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">stride</span><span class="p">,</span> <span class="n">begin_mask</span><span class="p">,</span> <span class="n">end_mask</span><span class="p">,</span> <span class="n">squeeze_mask</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Helper function to solve the shape of tensor slicing.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ret_shape</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">if</span> <span class="n">begin</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">begin</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">begin</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">x_shape</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">end</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">end</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">end</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">x_shape</span><span class="p">)</span>
+
+    <span class="c1"># solve for shape inference</span>
+    <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x_shape</span><span class="p">)):</span>
+        <span class="c1"># skip if we want to squeeze the dimension</span>
+        <span class="k">if</span> <span class="n">squeeze_mask</span><span class="p">[</span><span class="n">idx</span><span class="p">]:</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># for those a[:] cases</span>
+        <span class="k">if</span> <span class="n">begin_mask</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="ow">and</span> <span class="n">end_mask</span><span class="p">[</span><span class="n">idx</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">is_symbolic</span><span class="p">(</span><span class="n">x_shape</span><span class="p">[</span><span class="n">idx</span><span class="p">]):</span>
+                <span class="k">if</span> <span class="n">stride</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span> <span class="ow">or</span> <span class="n">stride</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">ret_shape</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x_shape</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">ret_shape</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">get_new_symbol</span><span class="p">())</span>
+                <span class="k">continue</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">num</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">x_shape</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span> <span class="o">/</span> <span class="nb">abs</span><span class="p">(</span><span class="n">stride</span><span class="p">[</span><span class="n">idx</span><span class="p">]))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span>
+                    <span class="n">np</span><span class="o">.</span><span class="n">int32</span>
+                <span class="p">)</span>
+                <span class="n">ret_shape</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">num</span><span class="p">)</span>
+                <span class="k">continue</span>
+
+        <span class="c1"># for symbolic case</span>
+        <span class="k">if</span> <span class="n">is_symbolic</span><span class="p">(</span><span class="n">x_shape</span><span class="p">[</span><span class="n">idx</span><span class="p">]):</span>
+            <span class="n">ret_shape</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">get_new_symbol</span><span class="p">())</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># when begin and end are not determined</span>
+        <span class="k">if</span> <span class="n">begin</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">begin_mask</span><span class="p">[</span><span class="n">idx</span><span class="p">]:</span>
+            <span class="n">ret_shape</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">get_new_symbol</span><span class="p">())</span>
+            <span class="k">continue</span>
+        <span class="k">if</span> <span class="n">end</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">end_mask</span><span class="p">[</span><span class="n">idx</span><span class="p">]:</span>
+            <span class="n">ret_shape</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">get_new_symbol</span><span class="p">())</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># parse negative dimention</span>
+        <span class="k">if</span> <span class="n">begin</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">begin</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">begin</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">begin</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">+</span> <span class="n">x_shape</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">end</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">end</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">end</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">end</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">+</span> <span class="n">x_shape</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
+
+        <span class="c1"># compute shape</span>
+        <span class="n">low</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">x_shape</span><span class="p">[</span><span class="n">idx</span><span class="p">]]</span> <span class="k">if</span> <span class="n">stride</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">x_shape</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+        <span class="n">begin_idx</span><span class="p">,</span> <span class="n">end_idx</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="p">[</span><span class="n">begin</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="n">end</span><span class="p">[</span><span class="n">idx</span><span class="p">]]</span> <span class="k">if</span> <span class="n">stride</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="p">[</span><span class="n">end</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="n">begin</span><span class="p">[</span><span class="n">idx</span><span class="p">]]</span>
+        <span class="p">)</span>
+        <span class="n">is_begin_mask</span><span class="p">,</span> <span class="n">is_end_mask</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="p">[</span><span class="n">begin_mask</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="n">end_mask</span><span class="p">[</span><span class="n">idx</span><span class="p">]]</span>
+            <span class="k">if</span> <span class="n">stride</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span>
+            <span class="k">else</span> <span class="p">[</span><span class="n">end_mask</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="n">begin_mask</span><span class="p">[</span><span class="n">idx</span><span class="p">]]</span>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="n">is_begin_mask</span><span class="p">:</span>
+            <span class="n">begin_idx</span> <span class="o">=</span> <span class="n">low</span>
+        <span class="n">end_idx</span> <span class="o">=</span> <span class="n">high</span> <span class="k">if</span> <span class="n">is_end_mask</span> <span class="k">else</span> <span class="nb">min</span><span class="p">(</span><span class="n">end_idx</span><span class="p">,</span> <span class="n">high</span><span class="p">)</span>
+        <span class="n">num</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">end_idx</span> <span class="o">-</span> <span class="n">begin_idx</span><span class="p">)</span> <span class="o">/</span> <span class="nb">abs</span><span class="p">(</span><span class="n">stride</span><span class="p">[</span><span class="n">idx</span><span class="p">]))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">int32</span>
+        <span class="p">)</span>
+        <span class="n">ret_shape</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">num</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">ret_shape</span>
 
 
 <div class="viewcode-block" id="depth_to_space"><a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.tensor_transformation.depth_to_space">[docs]</a><span class="nd">@register_op</span><span class="p">(</span><span class="n">doc_str</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
@@ -459,7 +440,7 @@
 <div class="viewcode-block" id="reverse"><a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.tensor_transformation.reverse">[docs]</a><span class="nd">@register_op</span><span class="p">(</span><span class="n">doc_str</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">reverse</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Reverse the order of the input tensor ``x`` along specified ``axes``(dimensions).</span>
+<span class="sd">    Reverse the order of the input tensor ``x`` along specified ``axes`` (dimensions).</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -467,7 +448,7 @@
 <span class="sd">        * Input tensor.</span>
 
 <span class="sd">    axes: const&lt;D, i32&gt; (Optional)</span>
-<span class="sd">        * Dimension(s) to reverse. Each axis must be in the range ``[-rank(x), rank(x))``.</span>
+<span class="sd">        * Dimension(s) to reverse. Each axis must be in the range ``[-rank(x), rank(x)]``.</span>
 <span class="sd">        * Defaults to None (reverse on all dimensions).</span>
 
 <span class="sd">    Returns</span>
@@ -575,9 +556,12 @@
 <span class="k">class</span> <span class="nc">slice_by_index</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Method for numpy style indexing and slicing.</span>
-<span class="sd">    Suppose we have a tensor ``x``, this method achieves:</span>
+<span class="sd">    With a tensor ``x``, this method achieves the following:</span>
+<span class="sd">    </span>
 <span class="sd">    ``result = x[begin[0]: end[0]: stride[0], begin[1]: end[1]: stride[1], ...]``</span>
-<span class="sd">    Note this method does not support pure indexing. You would need to do squeeze if indexing is intended.</span>
+<span class="sd">    </span>
+<span class="sd">    Note: This method does not support pure indexing. You would need to do a </span>
+<span class="sd">    squeeze if indexing is intended.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -588,7 +572,7 @@
 <span class="sd">    end: tensor&lt;[rank(x)], i32&gt; (Required)</span>
 <span class="sd">        * Ending index for the dimension of slicing.</span>
 <span class="sd">    stride: tensor&lt;[rank(x)], i32&gt; (Optional)</span>
-<span class="sd">        * Default as all ``1``s.</span>
+<span class="sd">        * Default is all ``1``.</span>
 <span class="sd">        * Stride for the dimension of slicing.</span>
 <span class="sd">    begin_mask: tensor&lt;[rank(x)], bool&gt; (Optional)</span>
 <span class="sd">        * Default to all ``False``.</span>
@@ -602,7 +586,7 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;*?, T&gt;</span>
+<span class="sd">    tensor&lt;\*?, T&gt;</span>
 <span class="sd">        - Scalar or tensor.</span>
 
 <span class="sd">    Attributes</span>
@@ -649,70 +633,7 @@
 
         <span class="c1"># solve shape</span>
         <span class="n">x_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span>
-        <span class="n">ret_shape</span> <span class="o">=</span> <span class="p">[]</span>
-
-        <span class="k">if</span> <span class="n">begin</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">begin</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">begin</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">x_shape</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">end</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">end</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">end</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">x_shape</span><span class="p">)</span>
-
-        <span class="c1"># solve for shape inference</span>
-        <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x_shape</span><span class="p">)):</span>
-            <span class="c1"># skip if we want to squeeze the dimension</span>
-            <span class="k">if</span> <span class="n">squeeze_mask</span><span class="p">[</span><span class="n">idx</span><span class="p">]:</span>
-                <span class="k">continue</span>
-
-            <span class="c1"># for those a[:] cases</span>
-            <span class="k">if</span> <span class="n">begin_mask</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="ow">and</span> <span class="n">end_mask</span><span class="p">[</span><span class="n">idx</span><span class="p">]:</span>
-                <span class="k">if</span> <span class="n">is_symbolic</span><span class="p">(</span><span class="n">x_shape</span><span class="p">[</span><span class="n">idx</span><span class="p">]):</span>
-                    <span class="k">if</span> <span class="n">stride</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span> <span class="ow">or</span> <span class="n">stride</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-                        <span class="n">ret_shape</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x_shape</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="n">ret_shape</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">get_new_symbol</span><span class="p">())</span>
-                    <span class="k">continue</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">num</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">x_shape</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span> <span class="o">/</span> <span class="nb">abs</span><span class="p">(</span><span class="n">stride</span><span class="p">[</span><span class="n">idx</span><span class="p">]))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span>
-                        <span class="n">np</span><span class="o">.</span><span class="n">int32</span>
-                    <span class="p">)</span>
-                    <span class="n">ret_shape</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">num</span><span class="p">)</span>
-                    <span class="k">continue</span>
-
-            <span class="c1"># for symbolic case</span>
-            <span class="k">if</span> <span class="n">is_symbolic</span><span class="p">(</span><span class="n">x_shape</span><span class="p">[</span><span class="n">idx</span><span class="p">]):</span>
-                <span class="n">ret_shape</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">get_new_symbol</span><span class="p">())</span>
-                <span class="k">continue</span>
-
-            <span class="c1"># when begin and end are not determined</span>
-            <span class="k">if</span> <span class="n">begin</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">begin_mask</span><span class="p">[</span><span class="n">idx</span><span class="p">]:</span>
-                <span class="n">ret_shape</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">get_new_symbol</span><span class="p">())</span>
-                <span class="k">continue</span>
-            <span class="k">if</span> <span class="n">end</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">end_mask</span><span class="p">[</span><span class="n">idx</span><span class="p">]:</span>
-                <span class="n">ret_shape</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">get_new_symbol</span><span class="p">())</span>
-                <span class="k">continue</span>
-
-            <span class="c1"># parse negative dimention</span>
-            <span class="k">if</span> <span class="n">begin</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">begin</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="n">begin</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">begin</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">+</span> <span class="n">x_shape</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
-            <span class="k">if</span> <span class="n">end</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">end</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="n">end</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">end</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">+</span> <span class="n">x_shape</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span>
-
-            <span class="c1"># compute shape</span>
-            <span class="n">low</span><span class="p">,</span> <span class="n">high</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">x_shape</span><span class="p">[</span><span class="n">idx</span><span class="p">]]</span> <span class="k">if</span> <span class="n">stride</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">x_shape</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
-            <span class="n">begin_idx</span><span class="p">,</span> <span class="n">end_idx</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="p">[</span><span class="n">begin</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="n">end</span><span class="p">[</span><span class="n">idx</span><span class="p">]]</span> <span class="k">if</span> <span class="n">stride</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="p">[</span><span class="n">end</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="n">begin</span><span class="p">[</span><span class="n">idx</span><span class="p">]]</span>
-            <span class="p">)</span>
-            <span class="n">is_begin_mask</span><span class="p">,</span> <span class="n">is_end_mask</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="p">[</span><span class="n">begin_mask</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="n">end_mask</span><span class="p">[</span><span class="n">idx</span><span class="p">]]</span>
-                <span class="k">if</span> <span class="n">stride</span><span class="p">[</span><span class="n">idx</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span>
-                <span class="k">else</span> <span class="p">[</span><span class="n">end_mask</span><span class="p">[</span><span class="n">idx</span><span class="p">],</span> <span class="n">begin_mask</span><span class="p">[</span><span class="n">idx</span><span class="p">]]</span>
-            <span class="p">)</span>
-            <span class="k">if</span> <span class="n">is_begin_mask</span><span class="p">:</span>
-                <span class="n">begin_idx</span> <span class="o">=</span> <span class="n">low</span>
-            <span class="n">end_idx</span> <span class="o">=</span> <span class="n">high</span> <span class="k">if</span> <span class="n">is_end_mask</span> <span class="k">else</span> <span class="nb">min</span><span class="p">(</span><span class="n">end_idx</span><span class="p">,</span> <span class="n">high</span><span class="p">)</span>
-            <span class="n">num</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">end_idx</span> <span class="o">-</span> <span class="n">begin_idx</span><span class="p">)</span> <span class="o">/</span> <span class="nb">abs</span><span class="p">(</span><span class="n">stride</span><span class="p">[</span><span class="n">idx</span><span class="p">]))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span>
-                <span class="n">np</span><span class="o">.</span><span class="n">int32</span>
-            <span class="p">)</span>
-            <span class="n">ret_shape</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">num</span><span class="p">))</span>
+        <span class="n">ret_shape</span> <span class="o">=</span> <span class="n">_solve_slice_by_index_shape</span><span class="p">(</span><span class="n">x_shape</span><span class="p">,</span> <span class="n">begin</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">stride</span><span class="p">,</span> <span class="n">begin_mask</span><span class="p">,</span> <span class="n">end_mask</span><span class="p">,</span> <span class="n">squeeze_mask</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ret_shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="c1"># Scalar case.</span>
@@ -1138,46 +1059,30 @@
 </pre></div>
 
            </div>
-           
           </div>
           <footer>
 
   <hr/>
 
   <div role="contentinfo">
-    <p>
-        &#169; Copyright 2021, Apple Inc.
-
-    </p>
+    <p>&#169; Copyright 2021, Apple Inc.</p>
   </div>
-    
-    
-    
-    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
     <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    
-    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
 
 </footer>
         </div>
       </div>
-
     </section>
-
   </div>
-  
-
-  <script type="text/javascript">
+  <script>
       jQuery(function () {
           SphinxRtdTheme.Navigation.enable(true);
       });
-  </script>
-
-  
-  
-    
-   
+  </script> 
 
 </body>
 </html>
