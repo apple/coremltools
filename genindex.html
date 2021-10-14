@@ -39,6 +39,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="source/coremltools.converters.html">Converters</a></li>
 <li class="toctree-l1"><a class="reference internal" href="source/coremltools.models.html">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="source/coremltools.converters.mil.html">MIL Builder</a></li>
 <li class="toctree-l1"><a class="reference internal" href="source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
 <li class="toctree-l1"><a class="reference internal" href="source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
 </ul>
@@ -490,11 +491,13 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.tensor_operation.band_part">band_part (class in coremltools.converters.mil.mil.ops.defs.tensor_operation)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="source/coremltools.models.neural_network.html#coremltools.models.neural_network.update_optimizer_utils.Batch">Batch (class in coremltools.models.neural_network.update_optimizer_utils)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.normalization.batch_norm">batch_norm (class in coremltools.converters.mil.mil.ops.defs.normalization)</a>
+</li>
+      <li><a href="source/coremltools.converters.mil.html#coremltools.converters.mil.mil.Builder">Builder (class in coremltools.converters.mil.mil)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -524,7 +527,7 @@
 </li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.conv.conv_transpose">conv_transpose (class in coremltools.converters.mil.mil.ops.defs.conv)</a>
 </li>
-      <li><a href="source/coremltools.converters.mil.html#coremltools.converters._converters_entry.convert">convert() (in module coremltools.converters._converters_entry)</a>
+      <li><a href="source/coremltools.converters.convert.html#coremltools.converters._converters_entry.convert">convert() (in module coremltools.converters._converters_entry)</a>
 
       <ul>
         <li><a href="source/coremltools.converters.keras.html#coremltools.converters.keras._keras_converter.convert">(in module coremltools.converters.keras._keras_converter)</a>
@@ -544,7 +547,7 @@
     coremltools.converters._converters_entry
 
       <ul>
-        <li><a href="source/coremltools.converters.mil.html#module-coremltools.converters._converters_entry">module</a>
+        <li><a href="source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry">module</a>
 </li>
       </ul></li>
       <li>
@@ -573,6 +576,13 @@
 
       <ul>
         <li><a href="source/coremltools.converters.mil.input_types.html#module-coremltools.converters.mil.input_types">module</a>
+</li>
+      </ul></li>
+      <li>
+    coremltools.converters.mil.mil
+
+      <ul>
+        <li><a href="source/coremltools.converters.mil.html#module-coremltools.converters.mil.mil">module</a>
 </li>
       </ul></li>
       <li>
@@ -1012,7 +1022,7 @@
     module
 
       <ul>
-        <li><a href="source/coremltools.converters.mil.html#module-coremltools.converters._converters_entry">coremltools.converters._converters_entry</a>
+        <li><a href="source/coremltools.converters.convert.html#module-coremltools.converters._converters_entry">coremltools.converters._converters_entry</a>
 </li>
         <li><a href="source/coremltools.converters.keras.html#module-coremltools.converters.keras._keras2_converter">coremltools.converters.keras._keras2_converter</a>
 </li>
@@ -1021,6 +1031,8 @@
         <li><a href="source/coremltools.converters.libsvm.html#module-coremltools.converters.libsvm._libsvm_converter">coremltools.converters.libsvm._libsvm_converter</a>
 </li>
         <li><a href="source/coremltools.converters.mil.input_types.html#module-coremltools.converters.mil.input_types">coremltools.converters.mil.input_types</a>
+</li>
+        <li><a href="source/coremltools.converters.mil.html#module-coremltools.converters.mil.mil">coremltools.converters.mil.mil</a>
 </li>
         <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#module-coremltools.converters.mil.mil.ops.defs.activation">coremltools.converters.mil.mil.ops.defs.activation</a>
 </li>
@@ -1143,16 +1155,22 @@
 </li>
       <li><a href="source/coremltools.models.html#coremltools.models.pipeline.PipelineRegressor">PipelineRegressor (class in coremltools.models.pipeline)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.tensor_transformation.pixel_shuffle">pixel_shuffle (class in coremltools.converters.mil.mil.ops.defs.tensor_transformation)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.elementwise_binary.pow">pow (class in coremltools.converters.mil.mil.ops.defs.elementwise_binary)</a>
 </li>
       <li><a href="source/coremltools.models.html#coremltools.models.model.MLModel.predict">predict() (coremltools.models.model.MLModel method)</a>
 </li>
       <li><a href="source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.activation.prelu">prelu (class in coremltools.converters.mil.mil.ops.defs.activation)</a>
 </li>
+      <li><a href="source/coremltools.converters.mil.html#coremltools.converters.mil.mil.Builder.program">program() (coremltools.converters.mil.mil.Builder method)</a>
+
+      <ul>
+        <li><a href="source/coremltools.converters.mil.html#id0">(coremltools.converters.mil.mil.Builder static method)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 

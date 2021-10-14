@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>coremltools.converters.mil.mil.builder &mdash; coremltools API Reference  documentation</title>
+      <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" href="../../../../../_static/graphviz.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../../../" id="documentation_options" src="../../../../../_static/documentation_options.js"></script>
+        <script src="../../../../../_static/jquery.js"></script>
+        <script src="../../../../../_static/underscore.js"></script>
+        <script src="../../../../../_static/doctools.js"></script>
+    <script src="../../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../../../index.html" class="icon icon-home"> coremltools API Reference
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">API Contents</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.converters.html">Converters</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.models.html">Models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.converters.mil.html">MIL Builder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.converters.mil.input_types.html">MIL Input Types</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../source/coremltools.converters.mil.mil.ops.defs.html">MIL Ops</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Resources</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference external" href="https://coremltools.readme.io/docs">Guides and examples</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://apple.github.io/coremltools/mlmodel/index.html">Core ML Format Specification</a></li>
+<li class="toctree-l1"><a class="reference external" href="https://github.com/apple/coremltools">GitHub</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../index.html">coremltools API Reference</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../../../index.html">Module code</a> &raquo;</li>
+      <li>coremltools.converters.mil.mil.builder</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for coremltools.converters.mil.mil.builder</h1><div class="highlight"><pre>
+<span></span><span class="c1">#  Copyright (c) 2020, Apple Inc. All rights reserved.</span>
+<span class="c1">#</span>
+<span class="c1">#  Use of this source code is governed by a BSD-3-clause license that can be</span>
+<span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
+
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">numbers</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.types.symbolic</span> <span class="kn">import</span> <span class="n">any_symbolic</span>
+<span class="kn">from</span> <span class="nn">.program</span> <span class="kn">import</span> <span class="n">Program</span><span class="p">,</span> <span class="n">Placeholder</span>
+<span class="kn">from</span> <span class="nn">.block</span> <span class="kn">import</span> <span class="n">curr_block</span><span class="p">,</span> <span class="n">Function</span>
+<span class="kn">from</span> <span class="nn">.operation</span> <span class="kn">import</span> <span class="n">is_internal_input</span>
+<span class="kn">from</span> <span class="nn">.input_type</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_InputType</span><span class="p">,</span>
+    <span class="n">InternalStringInputType</span><span class="p">,</span>
+    <span class="n">InternalScalarOrTensorInputType</span><span class="p">,</span>
+    <span class="n">ScalarOrTensorInputType</span><span class="p">,</span>
+    <span class="n">ListOrScalarOrTensorInputType</span><span class="p">,</span>
+    <span class="n">TupleInputType</span><span class="p">,</span>
+    <span class="n">InputSpec</span><span class="p">,</span>
+    <span class="n">InternalInputType</span><span class="p">,</span>
+    <span class="n">PyFunctionInputType</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.var</span> <span class="kn">import</span> <span class="n">InternalVar</span><span class="p">,</span> <span class="n">Var</span>
+
+<span class="k">def</span> <span class="nf">is_python_value</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">generic</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">))</span>
+        <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">numbers</span><span class="o">.</span><span class="n">Number</span><span class="p">)</span>
+        <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+        <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="nb">bool</span><span class="p">)</span>
+        <span class="ow">or</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">))</span> <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="n">is_python_value</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">val</span><span class="p">))</span>
+    <span class="p">)</span>
+
+
+<div class="viewcode-block" id="Builder"><a class="viewcode-back" href="../../../../../source/coremltools.converters.mil.html#coremltools.converters.mil.mil.Builder">[docs]</a><span class="k">class</span> <span class="nc">Builder</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This class is a singleton builder to construct a MIL program. For more </span>
+<span class="sd">    information, see `Create a MIL program &lt;https://coremltools.readme.io/docs/model-intermediate-language#create-a-mil-program&gt;`_.</span>
+<span class="sd">    </span>
+<span class="sd">    Importing ``.ops`` triggers the installation of all MIL ops into the Builder.</span>
+<span class="sd">    For details on each op, see `MIL ops &lt;https://apple.github.io/coremltools/source/coremltools.converters.mil.mil.ops.defs.html&gt;`_.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+
+<span class="sd">    &gt;&gt;&gt; from coremltools.converters.mil.mil import Builder as mb</span>
+<span class="sd">    &gt;&gt;&gt; from coremltools.converters.mil.mil import Program, Function</span>
+
+<span class="sd">    &gt;&gt;&gt; prog = Program()</span>
+<span class="sd">    &gt;&gt;&gt; func_inputs = {&quot;x&quot;: mb.placeholder(_shape=[2,3]),</span>
+<span class="sd">    &gt;&gt;&gt;                &quot;y&quot;: mb.placeholder(_shape=[2,3])}</span>
+<span class="sd">    &gt;&gt;&gt; with Function(func_inputs) as ssa_fun:</span>
+<span class="sd">    &gt;&gt;&gt;   x, y = ssa_fun.inputs[&#39;x&#39;], ssa_fun.inputs[&#39;x&#39;]</span>
+<span class="sd">    &gt;&gt;&gt;   res_var = mb.add(x=x, y=y) # created within ssa_fun block</span>
+<span class="sd">    &gt;&gt;&gt;   ssa_fun.set_outputs([res_var])</span>
+<span class="sd">    &gt;&gt;&gt; prog.add_function(&quot;main&quot;, ssa_fun)</span>
+<span class="sd">    </span>
+<span class="sd">    &gt;&gt;&gt; # Importing ops triggers installation of all ops into Builder.</span>
+<span class="sd">    &gt;&gt;&gt; from .ops import defs as _ops</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">name_count</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_get_free_name</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="n">new_name</span> <span class="o">=</span> <span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">name_count</span><span class="p">[</span><span class="n">name</span><span class="p">])</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">name_count</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">new_name</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_maybe_set_name</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">,</span> <span class="n">op_type</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s2">&quot;name&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_get_free_name</span><span class="p">(</span><span class="n">op_type</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">kwargs</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_add_const</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">before_op</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_python_value</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot add const </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">val</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">any_symbolic</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">&quot;Python native vals (list, tuple), np.array that are&quot;</span>
+                <span class="o">+</span> <span class="s2">&quot;operation inputs cannot have symbolic values. Consider feeding&quot;</span>
+                <span class="o">+</span> <span class="s2">&quot;symbolic shape in through placeholder and use mb.shape() &quot;</span>
+                <span class="o">+</span> <span class="s2">&quot;operator. Input </span><span class="si">{}</span><span class="s2">: </span><span class="si">{}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">val</span><span class="p">))</span>
+        <span class="n">const_name</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_get_free_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Adding const op &#39;</span><span class="si">{}</span><span class="s2">&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">const_name</span><span class="p">))</span>
+        <span class="n">output_var</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">const</span><span class="p">(</span><span class="n">val</span><span class="o">=</span><span class="n">val</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">const_name</span><span class="p">,</span>
+            <span class="n">before_op</span><span class="o">=</span><span class="n">before_op</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">output_var</span>
+
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_create_vars</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">input_spec</span><span class="p">,</span> <span class="n">op_name</span><span class="p">,</span> <span class="n">before_op</span><span class="p">,</span>
+        <span class="n">candidate_kv</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        For each key K in `candidate_kv`, create a Var if the</span>
+<span class="sd">        followings are satisfied:</span>
+
+<span class="sd">        - K exists in input_spec and is not an InternalInputType</span>
+<span class="sd">        - candidate_kv[K] is not already a Var</span>
+
+<span class="sd">        Inputs</span>
+<span class="sd">        ------</span>
+<span class="sd">        - candidate_kv: Dict[str, Any]</span>
+<span class="sd">          Key-values may be inputs to an op (whose inputs is defined by</span>
+<span class="sd">          input_spec)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        - var_kv: Dict[str, Var]</span>
+<span class="sd">          For the K satisfying the above, var_kv[K] is the newly</span>
+<span class="sd">          created Var</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">update_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">candidate_kv</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">Var</span><span class="p">):</span>
+                <span class="k">continue</span> <span class="c1"># already a Var</span>
+
+            <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">input_spec</span><span class="o">.</span><span class="n">input_types</span><span class="p">:</span>
+                <span class="k">continue</span> <span class="c1"># k is not an op input</span>
+
+            <span class="n">in_type</span> <span class="o">=</span> <span class="n">input_spec</span><span class="o">.</span><span class="n">input_types</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">in_type</span><span class="p">,</span> <span class="n">InternalInputType</span><span class="p">):</span>
+                <span class="n">new_var_name</span> <span class="o">=</span> <span class="n">op_name</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="n">k</span>
+                <span class="n">var</span> <span class="o">=</span> <span class="n">InternalVar</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">new_var_name</span><span class="p">)</span>
+                <span class="n">curr_block</span><span class="p">()</span><span class="o">.</span><span class="n">add_internal_var</span><span class="p">(</span><span class="n">var</span><span class="p">)</span>
+                <span class="n">update_dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">var</span>
+                <span class="k">continue</span> <span class="c1"># Not a regular Var</span>
+
+            <span class="n">new_var_name</span> <span class="o">=</span> <span class="n">op_name</span> <span class="o">+</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="n">k</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">in_type</span><span class="p">,</span> <span class="n">TupleInputType</span><span class="p">):</span>
+                <span class="n">var</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">Var</span><span class="p">):</span>
+                        <span class="n">var</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+                        <span class="k">continue</span>
+                    <span class="n">var</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="bp">cls</span><span class="o">.</span><span class="n">_add_const</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">new_var_name</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">),</span>
+                          <span class="n">before_op</span><span class="p">)</span>
+                    <span class="p">)</span>
+                <span class="n">update_dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">var</span>
+                <span class="k">continue</span>
+
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">in_type</span><span class="p">,</span> <span class="p">(</span><span class="n">ScalarOrTensorInputType</span><span class="p">,</span>
+              <span class="n">ListOrScalarOrTensorInputType</span><span class="p">)):</span>
+                <span class="n">var</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_add_const</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">new_var_name</span><span class="p">,</span> <span class="n">before_op</span><span class="p">)</span>
+                <span class="n">update_dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">var</span>
+
+        <span class="k">return</span> <span class="n">update_dict</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">_add_op</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">op_cls</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add an op of type `op_cls` (e.g., convolution) to current block.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_maybe_set_name</span><span class="p">(</span><span class="n">kwargs</span><span class="p">,</span> <span class="n">op_cls</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">&quot;Adding op &#39;</span><span class="si">{}</span><span class="s2">&#39; of type </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">],</span> <span class="n">op_cls</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">before_op</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;before_op&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="c1"># Shallow copy list inputs to ensure op inputs are immutable</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">))</span> <span class="k">else</span> <span class="n">v</span><span class="p">[:]</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">}</span>
+        <span class="n">kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">_create_vars</span><span class="p">(</span>
+            <span class="n">input_spec</span><span class="o">=</span><span class="n">op_cls</span><span class="o">.</span><span class="n">input_spec</span><span class="p">,</span>
+            <span class="n">op_name</span><span class="o">=</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">],</span> <span class="n">before_op</span><span class="o">=</span><span class="n">before_op</span><span class="p">,</span>
+            <span class="n">candidate_kv</span><span class="o">=</span><span class="n">kwargs</span><span class="p">))</span>
+        <span class="n">new_op</span> <span class="o">=</span> <span class="n">op_cls</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="c1"># Initialize optional input Vars if it wasn&#39;t in kwargs</span>
+        <span class="n">default_inputs</span> <span class="o">=</span> <span class="n">new_op</span><span class="o">.</span><span class="n">default_inputs</span><span class="p">()</span>
+        <span class="c1"># Shallow copy list inputs to ensure op inputs are immutable</span>
+        <span class="n">missing_optional_vals</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">))</span> <span class="k">else</span> <span class="n">v</span><span class="p">[:]</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">default_inputs</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="ow">and</span> <span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">}</span>
+        <span class="n">missing_optional_vars</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_create_vars</span><span class="p">(</span>
+            <span class="n">input_spec</span><span class="o">=</span><span class="n">op_cls</span><span class="o">.</span><span class="n">input_spec</span><span class="p">,</span>
+            <span class="n">op_name</span><span class="o">=</span><span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">],</span> <span class="n">before_op</span><span class="o">=</span><span class="n">before_op</span><span class="p">,</span>
+            <span class="n">candidate_kv</span><span class="o">=</span><span class="n">missing_optional_vals</span><span class="p">)</span>
+        <span class="n">new_op</span><span class="o">.</span><span class="n">set_inputs</span><span class="p">(</span><span class="n">type_inference</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">missing_optional_vars</span><span class="p">)</span>
+
+        <span class="n">curr_block</span><span class="p">()</span><span class="o">.</span><span class="n">_insert_op_before</span><span class="p">(</span><span class="n">new_op</span><span class="p">,</span> <span class="n">before_op</span><span class="o">=</span><span class="n">before_op</span><span class="p">)</span>
+        <span class="n">new_op</span><span class="o">.</span><span class="n">build_nested_blocks</span><span class="p">()</span>
+        <span class="n">new_op</span><span class="o">.</span><span class="n">type_value_inference</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">new_op</span><span class="o">.</span><span class="n">outputs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">new_op</span><span class="o">.</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">new_op</span><span class="o">.</span><span class="n">outputs</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">placeholder</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Placeholder</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">TensorSpec</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Placeholder</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Builder.program"><a class="viewcode-back" href="../../../../../source/coremltools.converters.mil.html#coremltools.converters.mil.mil.Builder.program">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">program</span><span class="p">(</span><span class="n">input_specs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        </span>
+<span class="sd">        A MIL program contains one or more functions. </span>
+<span class="sd">        The ``mb.program`` decorator creates a MIL program with a single </span>
+<span class="sd">        function (``main``). The input to ``main`` is an fp32 tensor.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        </span>
+<span class="sd">        input_specs: TensorSpec</span>
+<span class="sd">             Describes a tensor.</span>
+<span class="sd">        </span>
+<span class="sd">        </span>
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+
+<span class="sd">        &gt;&gt;&gt; @mb.program(input_specs=[mb.TensorSpec(shape=(1,2))])</span>
+<span class="sd">        &gt;&gt;&gt; def prog(a):</span>
+<span class="sd">        &gt;&gt;&gt;     return mb.add(x=a, y=2)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">input_specs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">input_specs</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">def</span> <span class="nf">wrapper</span><span class="p">(</span><span class="n">main_block</span><span class="p">):</span>
+            <span class="n">program</span> <span class="o">=</span> <span class="n">Program</span><span class="p">()</span>
+            <span class="n">num_args</span> <span class="o">=</span> <span class="n">main_block</span><span class="o">.</span><span class="vm">__code__</span><span class="o">.</span><span class="n">co_argcount</span>
+            <span class="n">arg_names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">main_block</span><span class="o">.</span><span class="vm">__code__</span><span class="o">.</span><span class="n">co_varnames</span><span class="p">)[:</span><span class="n">num_args</span><span class="p">]</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">input_specs</span><span class="p">)</span> <span class="o">!=</span> <span class="n">num_args</span><span class="p">:</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> expects </span><span class="si">{}</span><span class="s2"> inputs: </span><span class="si">{}</span><span class="s2">. Got </span><span class="si">{}</span><span class="s2"> input_specs.&quot;</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="n">main_block</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">num_args</span><span class="p">,</span> <span class="n">arg_names</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">input_specs</span><span class="p">)</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+            <span class="n">input_spec_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">arg_names</span><span class="p">,</span> <span class="n">input_specs</span><span class="p">)}</span>
+            <span class="k">with</span> <span class="n">Function</span><span class="p">(</span><span class="n">input_spec_dict</span><span class="p">)</span> <span class="k">as</span> <span class="n">func</span><span class="p">:</span>
+                <span class="n">input_vars</span> <span class="o">=</span> <span class="p">[</span><span class="n">func</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">arg_names</span><span class="p">]</span>
+                <span class="n">outputs</span> <span class="o">=</span> <span class="n">main_block</span><span class="p">(</span><span class="o">*</span><span class="n">input_vars</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+                    <span class="n">outputs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                    <span class="n">outputs</span> <span class="o">=</span> <span class="p">[</span><span class="n">outputs</span><span class="p">]</span>
+                <span class="n">func</span><span class="o">.</span><span class="n">set_outputs</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span>
+                <span class="n">program</span><span class="o">.</span><span class="n">add_function</span><span class="p">(</span><span class="s2">&quot;main&quot;</span><span class="p">,</span> <span class="n">func</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">program</span>
+
+        <span class="k">return</span> <span class="n">wrapper</span></div></div>
+
+
+<span class="sd">&quot;&quot;&quot;importing ops triggers installation of all ops into Builder&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">.ops</span> <span class="kn">import</span> <span class="n">defs</span> <span class="k">as</span> <span class="n">_ops</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Apple Inc.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
