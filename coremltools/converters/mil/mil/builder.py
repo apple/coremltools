@@ -205,9 +205,8 @@ class Builder:
     def program(input_specs=None):
         """
         
-        A MIL program contains one or more functions. 
         The ``mb.program`` decorator creates a MIL program with a single 
-        function (``main``). The input to ``main`` is an fp32 tensor.
+        function (``main``). The input to ``main`` is a tensor.
         
         Parameters
         ----------
