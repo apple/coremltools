@@ -14,6 +14,7 @@ This the API Reference for coremltools. For guides, installation instructions, a
    
    source/coremltools.converters.rst
    source/coremltools.models.rst
+   source/coremltools.converters.mil.rst
    source/coremltools.converters.mil.input_types.rst
    source/coremltools.converters.mil.mil.ops.defs.rst
    
