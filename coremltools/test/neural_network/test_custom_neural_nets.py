@@ -82,7 +82,7 @@ class SimpleTest(unittest.TestCase):
         coreml_input = {"data": X}
         if _is_macos() and _macos_version() >= (10, 13):
             coreml_preds = coreml_model.predict(coreml_input)["output"]
-            self.assertEquals(len(coreml_preds.flatten()), 2)
+            self.assertEqual(len(coreml_preds.flatten()), 2)
 
         if os.path.exists(model_dir):
             shutil.rmtree(model_dir)

@@ -78,7 +78,7 @@ class GlmCassifierTest(unittest.TestCase):
                 metrics = evaluate_classifier_with_probabilities(
                     spec, df, probabilities="classProbability", verbose=False
                 )
-                self.assertEquals(metrics["num_key_mismatch"], 0)
+                self.assertEqual(metrics["num_key_mismatch"], 0)
                 self.assertLess(metrics["max_probability_error"], 0.00001)
 
     def test_linear_svc_binary_classification_with_string_labels(self):
@@ -113,4 +113,4 @@ class GlmCassifierTest(unittest.TestCase):
                 df["prediction"] = cur_model.predict(x)
 
                 cur_eval_metics = evaluate_classifier(spec, df, verbose=False)
-                self.assertEquals(cur_eval_metics["num_errors"], 0)
+                self.assertEqual(cur_eval_metics["num_errors"], 0)

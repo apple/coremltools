@@ -115,7 +115,7 @@ class NuSVRScikitTest(unittest.TestCase):
 
                 if _is_macos() and _macos_version() >= (10, 13):
                     metrics = evaluate_regressor(spec, df)
-                    self.assertAlmostEquals(metrics["max_error"], 0)
+                    self.assertAlmostEqual(metrics["max_error"], 0)
 
                 if not allow_slow:
                     break
@@ -218,7 +218,7 @@ class NuSVRLibSVMTest(unittest.TestCase):
 
                 if _is_macos() and _macos_version() >= (10, 13):
                     metrics = evaluate_regressor(spec, df)
-                    self.assertAlmostEquals(metrics["max_error"], 0)
+                    self.assertAlmostEqual(metrics["max_error"], 0)
 
                 if not allow_slow:
                     break

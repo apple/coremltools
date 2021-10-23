@@ -102,14 +102,14 @@ class SvcScikitTest(unittest.TestCase):
                         metrics = evaluate_classifier_with_probabilities(
                             spec, df, probabilities="classProbability", verbose=True
                         )
-                        self.assertEquals(metrics["num_key_mismatch"], 0)
+                        self.assertEqual(metrics["num_key_mismatch"], 0)
                         self.assertLess(
                             metrics["max_probability_error"], allowed_prob_delta
                         )
                     else:
                         df["prediction"] = cur_model.predict(x)
                         metrics = evaluate_classifier(spec, df, verbose=False)
-                        self.assertEquals(metrics["num_errors"], 0)
+                        self.assertEqual(metrics["num_errors"], 0)
 
                 if not allow_slow:
                     break
@@ -249,7 +249,7 @@ class CSVCLibSVMTest(unittest.TestCase):
                 self.y, self.x, no_probability_model, " -q"
             )
             metrics = evaluate_classifier(spec, df, verbose=False)
-            self.assertEquals(metrics["num_errors"], 0)
+            self.assertEqual(metrics["num_errors"], 0)
 
     # LibSVM only supports string labels
     @pytest.mark.slow
@@ -317,7 +317,7 @@ class CSVCLibSVMTest(unittest.TestCase):
                     metrics = evaluate_classifier_with_probabilities(
                         spec, df, verbose=False
                     )
-                    self.assertEquals(metrics["num_key_mismatch"], 0)
+                    self.assertEqual(metrics["num_key_mismatch"], 0)
                     self.assertLess(metrics["max_probability_error"], 0.00001)
 
                 if not allow_slow:
@@ -359,7 +359,7 @@ class CSVCLibSVMTest(unittest.TestCase):
 
                 if _is_macos() and _macos_version() >= (10, 13):
                     metrics = evaluate_classifier(spec, df, verbose=False)
-                    self.assertEquals(metrics["num_errors"], 0)
+                    self.assertEqual(metrics["num_errors"], 0)
 
                 if not allow_slow:
                     break

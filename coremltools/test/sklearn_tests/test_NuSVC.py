@@ -107,14 +107,14 @@ class NuSvcScikitTest(unittest.TestCase):
                         metrics = evaluate_classifier_with_probabilities(
                             spec, df, probabilities="classProbability"
                         )
-                        self.assertEquals(metrics["num_key_mismatch"], 0)
+                        self.assertEqual(metrics["num_key_mismatch"], 0)
                         self.assertLess(
                             metrics["max_probability_error"], allowed_prob_delta
                         )
                     else:
                         df["prediction"] = cur_model.predict(x)
                         metrics = evaluate_classifier(spec, df, verbose=False)
-                        self.assertEquals(metrics["num_errors"], 0)
+                        self.assertEqual(metrics["num_errors"], 0)
 
                 if not allow_slow:
                     break
@@ -249,7 +249,7 @@ class NuSVCLibSVMTest(unittest.TestCase):
 
         if _is_macos() and _macos_version() >= (10, 13):
             metrics = evaluate_classifier_with_probabilities(spec, df, verbose=False)
-            self.assertEquals(metrics["num_key_mismatch"], 0)
+            self.assertEqual(metrics["num_key_mismatch"], 0)
             self.assertLess(metrics["max_probability_error"], 0.00001)
 
     @pytest.mark.slow
@@ -295,7 +295,7 @@ class NuSVCLibSVMTest(unittest.TestCase):
                 spec = libsvm.convert(model, column_names, "target")
 
                 metrics = evaluate_classifier(spec, df, verbose=False)
-                self.assertEquals(metrics["num_errors"], 0)
+                self.assertEqual(metrics["num_errors"], 0)
 
     def test_conversion_from_filesystem(self):
         libsvm_model_path = tempfile.mktemp(suffix="model.libsvm")

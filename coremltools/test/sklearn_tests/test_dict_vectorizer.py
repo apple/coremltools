@@ -98,4 +98,4 @@ class DictVectorizerScikitTest(unittest.TestCase):
             )
 
             cur_eval_metics = evaluate_classifier(model, x)
-            self.assertEquals(cur_eval_metics["num_errors"], 0)
+            self.assertEqual(cur_eval_metics["num_errors"], 0)

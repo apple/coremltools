@@ -61,7 +61,7 @@ class CorrectnessTest(unittest.TestCase):
         for out_ in list(ref_output_dict.keys()):
             ref_out = ref_output_dict[out_].flatten()
             coreml_out = coreml_out_dict[out_].flatten()
-            self.assertEquals(len(coreml_out), len(ref_out))
+            self.assertEqual(len(coreml_out), len(ref_out))
             self._compare_predictions_numerical(
                 ref_out, coreml_out, snr_thresh=snr_thresh, psnr_thresh=psnr_thresh
             )

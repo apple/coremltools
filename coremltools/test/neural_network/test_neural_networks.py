@@ -73,7 +73,7 @@ class KerasBasicNumericCorrectnessTest(unittest.TestCase):
             inputs = np.random.rand(input_dim)
             outputs = coremlmodel.predict({"input": inputs})
             # this checks that the dictionary got the right name and type
-            self.assertEquals(type(outputs[output_names[0]]), type({"a": 0.5}))
+            self.assertEqual(type(outputs[output_names[0]]), type({"a": 0.5}))
 
     def test_classifier_no_name(self):
         np.random.seed(1988)
@@ -112,7 +112,7 @@ class KerasBasicNumericCorrectnessTest(unittest.TestCase):
             inputs = np.random.rand(input_dim)
             outputs = coremlmodel.predict({"input": inputs})
             # this checks that the dictionary got the right name and type
-            self.assertEquals(type(outputs[output_names[0]]), type({"a": 0.5}))
+            self.assertEqual(type(outputs[output_names[0]]), type({"a": 0.5}))
 
     def test_internal_layer(self):
 
@@ -171,7 +171,7 @@ class KerasBasicNumericCorrectnessTest(unittest.TestCase):
             partialOutput = coreml2.predict({"input": inputs})
 
             for i in range(0, num_channels2):
-                self.assertAlmostEquals(
+                self.assertAlmostEqual(
                     fullOutputs["middle_layer_output"][i],
                     partialOutput["output2"][i],
                     2,
