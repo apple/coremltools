@@ -21,7 +21,7 @@ if _HAS_SKLEARN:
 @unittest.skipIf(not _HAS_SKLEARN, "Missing sklearn. Skipping tests.")
 class RandomForestClassificationBostonHousingScikitNumericTest(unittest.TestCase):
     def _check_metrics(self, metrics, params={}):
-        self.assertEquals(
+        self.assertEqual(
             metrics["num_errors"],
             0,
             msg="Failed case %s. Results %s" % (params, metrics),

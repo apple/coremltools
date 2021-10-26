@@ -736,7 +736,7 @@ class RNNLayer(RecurrentLayerTest):
                     "output"
                 ].flatten()
                 try:
-                    self.assertEquals(coreml_preds.shape, keras_preds.shape)
+                    self.assertEqual(coreml_preds.shape, keras_preds.shape)
                 except AssertionError:
                     print(
                         "Shape error:\nbase_params: {}\nkeras_preds.shape: {}\ncoreml_preds.shape: {}".format(
@@ -765,10 +765,10 @@ class RNNLayer(RecurrentLayerTest):
                     numerical_err_models.append(base_params)
             i += 1
 
-        self.assertEquals(
+        self.assertEqual(
             shape_err_models, [], msg="Shape error models {}".format(shape_err_models)
         )
-        self.assertEquals(
+        self.assertEqual(
             numerical_err_models,
             [],
             msg="Numerical error models {}\n"
@@ -922,7 +922,7 @@ class LSTMLayer(RecurrentLayerTest):
                     K.tensorflow_backend._SESSION = None
 
                 try:
-                    self.assertEquals(coreml_preds.shape, keras_preds.shape)
+                    self.assertEqual(coreml_preds.shape, keras_preds.shape)
                 except AssertionError:
                     print(
                         "Shape error:\n param: {}\n\n keras_preds.shape: {}\n\n coreml_preds.shape: {}".format(
@@ -971,10 +971,10 @@ class LSTMLayer(RecurrentLayerTest):
 
             i += 1
 
-        self.assertEquals(
+        self.assertEqual(
             shape_err_models, [], msg="Shape error models {}".format(shape_err_models)
         )
-        self.assertEquals(
+        self.assertEqual(
             numerical_err_models,
             [],
             msg="Numerical error models {}".format(numerical_err_models),
@@ -1057,7 +1057,7 @@ class LSTMLayer(RecurrentLayerTest):
                     K.tensorflow_backend._SESSION = None
 
                 try:
-                    self.assertEquals(coreml_preds.shape, keras_preds.shape)
+                    self.assertEqual(coreml_preds.shape, keras_preds.shape)
                 except AssertionError:
                     print(
                         "Shape error:\n param: {}\n\n keras_preds.shape: {}\n\n coreml_preds.shape: {}".format(
@@ -1107,10 +1107,10 @@ class LSTMLayer(RecurrentLayerTest):
 
             i += 1
 
-        self.assertEquals(
+        self.assertEqual(
             shape_err_models, [], msg="Shape error models {}".format(shape_err_models)
         )
-        self.assertEquals(
+        self.assertEqual(
             numerical_err_models,
             [],
             msg="Numerical error models {}".format(numerical_err_models),
@@ -1242,7 +1242,7 @@ class LSTMLayer(RecurrentLayerTest):
                     K.tensorflow_backend._SESSION = None
 
                 try:
-                    self.assertEquals(coreml_preds.shape, keras_preds.shape)
+                    self.assertEqual(coreml_preds.shape, keras_preds.shape)
                 except AssertionError:
                     print(
                         "Shape error:\n base_params: {}\n\n lstm_params: {}\n\n keras_preds.shape: {}\n\n coreml_preds.shape: {}".format(
@@ -1278,10 +1278,10 @@ class LSTMLayer(RecurrentLayerTest):
                     numerical_failiure += 1
                     numerical_err_models.append(base_params)
 
-        self.assertEquals(
+        self.assertEqual(
             shape_err_models, [], msg="Shape error models {}".format(shape_err_models)
         )
-        self.assertEquals(
+        self.assertEqual(
             numerical_err_models,
             [],
             msg="Numerical error models {}".format(numerical_err_models),
@@ -1416,7 +1416,7 @@ class GRULayer(RecurrentLayerTest):
                     K.tensorflow_backend._SESSION.close()
                     K.tensorflow_backend._SESSION = None
                 try:
-                    self.assertEquals(coreml_preds.shape, keras_preds.shape)
+                    self.assertEqual(coreml_preds.shape, keras_preds.shape)
                 except AssertionError:
                     print(
                         "Shape error:\nbase_params: {}\n gru_params: {}\nkeras_preds.shape: {}\ncoreml_preds.shape: {}".format(
@@ -1454,10 +1454,10 @@ class GRULayer(RecurrentLayerTest):
                     numerical_err_models.append(base_params)
             i += 1
 
-        self.assertEquals(
+        self.assertEqual(
             shape_err_models, [], msg="Shape error models {}".format(shape_err_models)
         )
-        self.assertEquals(
+        self.assertEqual(
             numerical_err_models,
             [],
             msg="Numerical error models {}".format(numerical_err_models),
@@ -1607,7 +1607,7 @@ class LSTMStacked(unittest.TestCase):
                 K.tensorflow_backend._SESSION.close()
                 K.tensorflow_backend._SESSION = None
                 try:
-                    self.assertEquals(coreml_preds.shape, keras_preds.shape)
+                    self.assertEqual(coreml_preds.shape, keras_preds.shape)
                 except AssertionError:
                     print(
                         "Shape error:\nbase_params: {}\nkeras_preds.shape: {}\ncoreml_preds.shape: {}".format(
@@ -1635,10 +1635,10 @@ class LSTMStacked(unittest.TestCase):
                     numerical_failiure += 1
                     numerical_err_models.append(base_params)
             i += 1
-        self.assertEquals(
+        self.assertEqual(
             shape_err_models, [], msg="Shape error models {}".format(shape_err_models)
         )
-        self.assertEquals(
+        self.assertEqual(
             numerical_err_models,
             [],
             msg="Numerical error models {}".format(numerical_err_models),
