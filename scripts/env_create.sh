@@ -91,6 +91,11 @@ fi
 echo "Installing basic build requirements."
 if [[ $include_build_deps == 1 ]]; then
     python -m pip install -r $COREMLTOOLS_HOME/reqs/build.pip
+
+    if [[ $(uname -m) == "arm64" ]]; then
+	# Install the earliest version of numpy, we can find, that support arm64
+	conda install -c apple numpy==1.19.5 -y
+    fi
 fi
 
 # Install test requirements (upgrades packages if required)
