@@ -49,42 +49,50 @@ def convert(
     **kwargs
 ):
     """
-    Convert a TensorFlow or PyTorch model to the Core ML model format as either
-    a neural network or an ML program. To learn about the differences, see
+    Convert a TensorFlow or PyTorch model to the Core ML model format as either a neural network or an ML program. 
+    To learn about the differences, see
     `ML Programs <https://coremltools.readme.io/docs/ml-programs>`_.
+    This function is aliased as ``ct.convert`` in examples and guides.
+    Some parameters and requirements differ by TensorFlow and PyTorch frameworks.
 
-    This function is aliased as ``ct.convert`` in examples and guides. Some
-    parameters and requirements differ by TensorFlow and PyTorch frameworks.
 
     Parameters
     ----------
+    
     model :
         TensorFlow 1, TensorFlow 2, or PyTorch model in one of the following
-        formats:
+        formats.
 
-        For TensorFlow versions 1.x:
+        * TensorFlow versions 1.x
+        
             - Frozen `tf.Graph <https://www.tensorflow.org/api_docs/python/tf/Graph>`_
             - Frozen graph (``.pb``) file path
             - `tf.keras.Model <https://www.tensorflow.org/api_docs/python/tf/keras>`_
             -  `HDF5 <https://keras.io/api/models/model_saving_apis/>`_ file path (``.h5``)
             - `SavedModel <https://www.tensorflow.org/guide/saved_model>`_ directory path
-        For TensorFlow versions 2.x:
+
+        * TensorFlow versions 2.x
+        
             - `tf.keras.Model <https://www.tensorflow.org/api_docs/python/tf/keras>`_
             - `HDF5 file path <https://keras.io/api/models/model_saving_apis/>`_ (``.h5``)
             - `SavedModel <https://www.tensorflow.org/guide/saved_model>`_ directory path
             - A `concrete function <https://www.tensorflow.org/guide/concrete_function>`_
-        For PyTorch:
+
+        * PyTorch
+        
             - A `TorchScript <https://pytorch.org/docs/stable/jit.html>`_ object
             - Path to a ``.pt`` file
 
     source : str (optional)
+    
         One of [``auto``, ``tensorflow``, ``pytorch``, ``milinternal``]. ``auto``
         determines the framework automatically for most cases. Raises
         ``ValueError`` if it fails to determine the source framework.
 
     inputs : list of ``TensorType`` or ``ImageType``
 
-        TensorFlow 1 and 2:
+        * TensorFlow 1 and 2
+
             - The ``inputs`` parameter is optional. If not provided, the inputs
               are placeholder nodes in the model (if the model is frozen graph)
               or function inputs (if the model is a ``tf.function``).
@@ -94,7 +102,8 @@ def convert(
               specified. ``shape`` is optional.
             - If ``inputs`` is provided, it must be a flat list.
 
-        PyTorch:
+        * PyTorch
+
             - The ``inputs`` parameter is required.
             - ``inputs`` may be a nested list or tuple.
             - ``TensorType`` and ``ImageType`` in ``inputs`` must have the ``name``
@@ -102,7 +111,8 @@ def convert(
 
     outputs : list[str] (optional)
 
-        TensorFlow 1 and 2:
+        * TensorFlow 1 and 2
+
             - The ``outputs`` parameter is optional.
 
             - If specified, ``outputs`` is a list of string representing node
@@ -111,19 +121,22 @@ def convert(
             - If ``outputs`` is not specified, the converter infers outputs to
               all be terminal identity nodes.
 
-        PyTorch:
+        * PyTorch
+
             - ``outputs`` must not be specified.
 
     classifier_config : ClassifierConfig class (optional)
         The configuration if the MLModel is intended to be a classifier.
 
     minimum_deployment_target : coremltools.target enumeration (optional)
-        - One of the members of enum ``coremltools.target``.
-        - The value of this parameter determines the type of the model
-          reperesentation produced by the converter. Alternatively, you can use
-          the ``convert_to`` parameter to specify the model type (see the
-          ``convert_to`` parameter). To learn about the differences between
-          neural networks and ML programs, see `ML Programs <https://coremltools.readme.io/docs/ml-programs>`_.
+        One of the members of enum ``coremltools.target``.
+        The value of this parameter determines the type of the model
+        representation produced by the converter. Alternatively, you can use
+        the ``convert_to`` parameter to specify the model type (see the
+        ``convert_to`` parameter). To learn about the differences between
+        neural networks and ML programs, see
+        `ML Programs <https://coremltools.readme.io/docs/ml-programs>`_.
+
         - The converter produces a neural network (``neuralnetwork``) if:
           ::
              minimum_deployment_target <= coremltools.target.iOS14/
@@ -150,13 +163,14 @@ def convert(
             convert_to="mlprogram", minimum_deployment_target=coremltools.target.iOS14
 
     convert_to : str (optional)
-        - Must be one of [``'neuralnetwork'``, ``'mlprogram'``, ``'milinternal'``].
-        - The value of this parameter determines the type of the model
-          reperesentation produced by the converter. Alternatively, you can use
-          the ``minimum_deployment_target`` parameter to specify the model type
-          (see the ``minimum_deployment_target`` parameter). To learn about the
-          differences between neural networks and ML programs, see
-          `ML Programs <https://coremltools.readme.io/docs/ml-programs>`_.
+        Must be one of [``'neuralnetwork'``, ``'mlprogram'``, ``'milinternal'``].
+        The value of this parameter determines the type of the model
+        representation produced by the converter. Alternatively, you can use
+        the ``minimum_deployment_target`` parameter to specify the model type
+        (see the ``minimum_deployment_target`` parameter). To learn about the
+        differences between neural networks and ML programs, see
+        `ML Programs <https://coremltools.readme.io/docs/ml-programs>`_.
+        
         - ``'neuralnetwork'``: Returns an MLModel (``coremltools.models.MLModel``)
           containing a NeuralNetwork proto, which is the original Core ML format.
           The model saved from this returned object is executable either on
@@ -179,34 +193,35 @@ def convert(
           parameter is specified, the converter produces the neural network
           model type with as minimum of a deployment target as possible.
 
-    compute_precision :
-    coremltools.precision enumeration or ct.transform.FP16ComputePrecision() (optional)
-        - Must be one of the following:
-            - ``coremltools.precision.FLOAT16``
-                - The following transform is applied:
-                  ::
-                      coremltools.transform.FP16ComputePrecision(op_selector=
-                                                             lambda op:True)
+    compute_precision : coremltools.precision enumeration or ct.transform.FP16ComputePrecision() (optional)
 
-                  The above transform injects ``cast`` ops to convert the
-                  float32 dtypes of intermediate tensors to float16.
-            - ``coremltools.precision.FLOAT32``
-                - No transform is applied. The original float32 tensor dtype in
-                  the source model is preserved.
-            - ``coremltools.transform.FP16ComputePrecision(op_selector=...)``
-                - Use the above to control which tensors are cast to float16.
-                - For example:
-                  ::
-                      coremltools.transform.FP16ComputePrecision(op_selector=
-                                          lambda op: op.op_type != "linear")
+        Must be one of the following.
+        
+        - ``coremltools.precision.FLOAT16``
+            - The following transform is applied:
+              ::
+                 coremltools.transform.FP16ComputePrecision(op_selector=
+                                                         lambda op:True)
 
-                  The above casts all the float32 tensors to be float16, except
-                  the input/output tensors to any ``linear`` op.
-            - If ``None``,
-                - When ``convert_to="mlprogram"``, compute_precision parameter
-                  defaults to ``coremltools.precision.FLOAT16``.
-                - When ``convert_to="neuralnetwork"``, compute_precision parameter
-                  needs to be ``None`` and has no meaning.
+              The above transform injects ``cast`` ops to convert the
+              float32 dtypes of intermediate tensors to float16.
+        - ``coremltools.precision.FLOAT32``
+            - No transform is applied. The original float32 tensor dtype in
+              the source model is preserved.
+        - ``coremltools.transform.FP16ComputePrecision(op_selector=...)``
+            - Use the above to control which tensors are cast to float16.
+            - For example:
+              ::
+                 coremltools.transform.FP16ComputePrecision(op_selector=
+                                         lambda op: op.op_type != "linear")
+
+              The above casts all the float32 tensors to be float16, except
+              the input/output tensors to any ``linear`` op.
+        - ``None``
+            - When ``convert_to="mlprogram"``, compute_precision parameter
+              defaults to ``coremltools.precision.FLOAT16``.
+            - When ``convert_to="neuralnetwork"``, compute_precision parameter
+              needs to be ``None`` and has no meaning.
 
     skip_model_load : bool
         Set to True to prevent coremltools from calling into the Core ML framework
@@ -223,7 +238,9 @@ def convert(
         Defaults to False.
 
     compute_units: coremltools.ComputeUnit
-        An enum with three possible values:
+    
+        An enum with three possible values.
+        
             - ``coremltools.ComputeUnit.ALL``: Use all compute units available, including the
               neural engine.
             - ``coremltools.ComputeUnit.CPU_ONLY``: Limit the model to only use the CPU.
@@ -232,11 +249,13 @@ def convert(
 
     Returns
     -------
+    
     model : ``coremltools.models.MLModel`` or ``coremltools.converters.mil.Program``
         A Core ML MLModel object or MIL Program object (see ``convert_to``).
 
     Examples
     --------
+    
     TensorFlow 1, 2 (``model`` is a frozen graph):
 
         >>> with tf.Graph().as_default() as graph:
