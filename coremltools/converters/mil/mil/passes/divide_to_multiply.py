@@ -8,14 +8,14 @@
 import numpy as np
 
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
+from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import types as _types
 
-
-def divide_to_multiply_block(block):
+def _divide_to_multiply_block(block):
     for op in list(block.operations):
         for b in op.blocks:
-            divide_to_multiply_block(b)
+            _divide_to_multiply_block(b)
         if len(op.blocks) > 0:
             # This op can't be divide.
             continue
@@ -41,9 +41,10 @@ def divide_to_multiply_block(block):
 
 
 @register_pass(namespace="common")
-def divide_to_multiply(prog):
+class divide_to_multiply(AbstractGraphPass):
     """
     Convert divide into multiply if divisor is const.
     """
-    for f in prog.functions.values():
-        divide_to_multiply_block(f)
+    def apply(self, prog):
+        for f in prog.functions.values():
+            _divide_to_multiply_block(f)

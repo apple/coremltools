@@ -1,21 +1,14 @@
-# -*- coding: utf-8 -*-
-
 #  Copyright (c) 2020, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from __future__ import print_function as _
-from __future__ import division as _
-from __future__ import absolute_import as _
-
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
+from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil import Builder as mb
-import numpy as np
-
 
 @register_pass(namespace="common")
-def cast_optimization(prog):
+class cast_optimization(AbstractGraphPass):
     """
     This optimization pass,
     - Removes redundant cast op i.e cast where source and destination tensors have same dtypes.
@@ -36,34 +29,34 @@ def cast_optimization(prog):
     The input graph has maximum precision of fp16 while the output graph has fp32 precision.
 
     """
-    for f in prog.functions.values():
-        block_changed = True
-        cached_vars = {}
-        """
-        Cached vars is used when all the following conditions are met:
-        1. When the output of a cast gets fed into multiple casts of same configuration
-        2. And, these 2 consecutive casts can be fused into a single cast.
-        When above conditions are satisfied, we create a NEW fused cast op ONLY once and
-        the output of all these consecutive casts gets replaced with the ouptut of this fused cast.
+    def apply(self, prog):
+        for f in prog.functions.values():
+            block_changed = True
+            cached_vars = {}
+            """
+            Cached vars is used when all the following conditions are met:
+            1. When the output of a cast gets fed into multiple casts of same configuration
+            2. And, these 2 consecutive casts can be fused into a single cast.
+            When above conditions are satisfied, we create a NEW fused cast op ONLY once and
+            the output of all these consecutive casts gets replaced with the ouptut of this fused cast.
 
-        Input graph:
-                                    |---->cast(dtype="fp16")---->square--->out_1
-                                    |
-        input---->cast(dtype="int32")---->cast(dtype="fp16")---->relu--->out_2
-                                    |
-                                    |---->cast(dtype="fp16")---->log--->out_3
+            Input graph:
+                                        |---->cast(dtype="fp16")---->square--->out_1
+                                        |
+            input---->cast(dtype="int32")---->cast(dtype="fp16")---->relu--->out_2
+                                        |
+                                        |---->cast(dtype="fp16")---->log--->out_3
 
-        Output graph:
+            Output graph:
 
-                                             |---->square--->out_1
-                                             |
-        input---->new_fused_cast(dtype="fp16")---->relu--->out_2
-                                             |
-                                             |---->log--->out_3
-        """
-        while block_changed:
-            block_changed = fuse_or_cancel_consecutive_casts_block(f, cached_vars)
-
+                                                 |---->square--->out_1
+                                                 |
+            input---->new_fused_cast(dtype="fp16")---->relu--->out_2
+                                                 |
+                                                 |---->log--->out_3
+            """
+            while block_changed:
+                block_changed = _fuse_or_cancel_consecutive_casts_block(f, cached_vars)
 
 class Node(object):
     def __init__(self, op_type, match_criterion=None):
@@ -115,7 +108,7 @@ def _match_linear_pattern(root, pattern):
     return []
 
 
-def try_to_transform(root_op, cached_vars):
+def _try_to_transform(root_op, cached_vars):
     block = root_op.enclosing_block
 
     # Scenario: Redundant cast when source and destination dtype are same.
@@ -175,7 +168,7 @@ def try_to_transform(root_op, cached_vars):
     return True
 
 
-def fuse_or_cancel_consecutive_casts_block(block, cached_vars):
+def _fuse_or_cancel_consecutive_casts_block(block, cached_vars):
     block_changed = False
     for i, op in enumerate(list(block.operations)):
         for b in op.blocks:
@@ -183,7 +176,7 @@ def fuse_or_cancel_consecutive_casts_block(block, cached_vars):
             nested_block_cached_vars = {}
             nested_block_cached_vars.update(cached_vars)
             while nested_block_changed:
-                nested_block_changed = fuse_or_cancel_consecutive_casts_block(b, nested_block_cached_vars)
+                nested_block_changed = _fuse_or_cancel_consecutive_casts_block(b, nested_block_cached_vars)
 
         if len(op.blocks) > 0:
             continue
@@ -191,9 +184,8 @@ def fuse_or_cancel_consecutive_casts_block(block, cached_vars):
         # start pattern match if cast op is encountered
         if op.op_type == "cast":
             with block:
-                block_changed = try_to_transform(op, cached_vars)
+                block_changed = _try_to_transform(op, cached_vars)
             # has to break as the downstream iterator is affected.
             if block_changed:
                 return block_changed
     return block_changed
-

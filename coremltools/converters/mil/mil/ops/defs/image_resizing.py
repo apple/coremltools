@@ -5,10 +5,23 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 import numpy as np
 
-from ._op_reqs import *
-from coremltools.converters.mil.mil.types.symbolic import is_symbolic
-from coremltools.converters.mil.mil import get_new_symbol
+from ._op_reqs import register_op
+from coremltools.converters.mil.mil import (
+    BoolInputType,
+    DefaultInputs,
+    FloatInputType,
+    get_new_symbol,
+    InputSpec,
+    IntInputType,
+    IntTensorInputType,
+    IntOrFloatInputType,
+    Operation,
+    StringInputType,
+    TensorInputType,
+    types,
+)
 
+from coremltools.converters.mil.mil.types.symbolic import is_symbolic
 
 @register_op(doc_str="")
 class affine(Operation):

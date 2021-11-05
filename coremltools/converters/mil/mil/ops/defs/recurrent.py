@@ -3,8 +3,16 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from coremltools.converters.mil.mil import get_new_symbol
-from ._op_reqs import *
+from ._op_reqs import register_op
+from coremltools.converters.mil.mil import Operation, types
+from coremltools.converters.mil.mil.input_type import (
+    BoolInputType,
+    DefaultInputs,
+    FloatInputType,
+    InputSpec,
+    TensorInputType,
+    StringInputType
+)
 
 
 @register_op(doc_str="")
@@ -26,7 +34,7 @@ class gru(Operation):
 
     Where:
 
-    * ``W_{ir}``, ``W_{io}``, and `` W_{iz}`` state input-hidden weight for reset, output
+    * ``W_{ir}``, ``W_{io}``, and ``W_{iz}`` state input-hidden weight for reset, output
       and update gate, respectively.
     * ``W_{h[r|o|z]}`` are recurrent weights on hidden state to reset, output, update gate.
     * ``h_t``  is the hidden state at time ``t``.
@@ -130,7 +138,7 @@ class gru(Operation):
         if self.weight_hh.rank != 2:
             raise ValueError(
                 "Invalid weight shape. Expecting Rank 2 input, got {}".format(
-                    len(self.self.weight_hh.rank)
+                    len(self.weight_hh.rank)
                 )
             )
 
@@ -149,8 +157,8 @@ class gru(Operation):
         if hidden_size != (hidden_dim // dim_factor):
             raise ValueError(
                 "Incorrect weight matrix: hidden dim size mismatch. \
-                Provided weight_ih {},weight_hh {}. Expecting <b, 3*H>").format(
-                    weight_ih.shape, weight_hh.shape
+                Provided weight_ih {}, weight_hh {}. Expecting <b, 3*H>").format(
+                    self.weight_ih.shape, self.weight_hh.shape
                 )
 
         out_seq_len = sequence_length if self.output_sequence.val else 1

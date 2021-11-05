@@ -3,12 +3,19 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from coremltools.converters.mil import testing_reqs
-from coremltools.converters.mil.testing_reqs import *
+import itertools
+import pytest
+import numpy as np
 
 from .testing_utils import run_compare_builder
+from coremltools._deps import _HAS_TF_1, MSG_TF1_NOT_FOUND
+from coremltools.converters.mil import testing_reqs
+from coremltools.converters.mil.mil import Builder as mb, types
+from coremltools.converters.mil.testing_reqs import backends
+from coremltools.converters.mil.testing_utils import ssa_fn
 
-backends = testing_reqs.backends
+if _HAS_TF_1:
+    import tensorflow as tf
 
 
 class TestScatter:

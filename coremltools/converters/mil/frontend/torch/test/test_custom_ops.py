@@ -3,18 +3,16 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import itertools
-
-import numpy as np
 import pytest
 import torch
 import torch.nn as nn
 
-from .testing_utils import *
+from .testing_utils import convert_to_mlmodel, TorchBaseTest
+
 
 # Custom layer imports
 
-from coremltools.converters.mil.mil.ops.defs._op_reqs import *
+from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
 from coremltools.converters.mil.frontend.torch.torch_op_registry import (
     register_torch_op,
 )
@@ -22,7 +20,18 @@ from coremltools.converters.mil.frontend.torch.torch_op_registry import (
     _TORCH_OPS_REGISTRY as _TORCH_OPS_REG,
 )
 from coremltools.converters.mil.frontend.torch.ops import _get_inputs
-from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil import (
+    Builder as mb,
+    Operation,
+    types
+)
+from coremltools.converters.mil.mil.input_type import (
+    BoolInputType,
+    DefaultInputs,
+    InputSpec,
+    TensorInputType
+)
+
 
 # Log Converter supported Cosine Similarity conversion function
 default_cosine_similarity = _TORCH_OPS_REG.get("cosine_similarity", None)
@@ -110,7 +119,6 @@ class TestCustomOp:
             # For illustration purpose, assumming getting valid shape
             # Ideally, should consider transpose_?, ?_is_sparse parameters into consideration
             # for computing output shape
-            ret_shape = [x_shape[0], y_shape[1]]
             return types.tensor(x_type, [x_shape[0], y_shape[1]])
 
     @register_torch_op()
@@ -144,14 +152,14 @@ class TestCustomOp:
             "SparseMatMul" == layers[-1].custom.className
         ), "Custom Layer class name mis-match"
         assert (
-            False == layers[-1].custom.parameters["transpose_x"].boolValue
+            not layers[-1].custom.parameters["transpose_x"].boolValue
         ), "Incorrect parameter value k"
         assert (
-            False == layers[-1].custom.parameters["transpose_y"].boolValue
+            not layers[-1].custom.parameters["transpose_y"].boolValue
         ), "Incorrect parameter value k"
         assert (
-            True == layers[-1].custom.parameters["x_is_sparse"].boolValue
+            layers[-1].custom.parameters["x_is_sparse"].boolValue
         ), "Incorrect parameter value k"
         assert (
-            True == layers[-1].custom.parameters["y_is_sparse"].boolValue
+            layers[-1].custom.parameters["y_is_sparse"].boolValue
         ), "Incorrect parameter value k"

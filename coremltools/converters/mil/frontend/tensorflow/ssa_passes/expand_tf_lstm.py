@@ -7,14 +7,14 @@
 
 
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
+from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import types
 import numpy as np
 import logging
 
-
 @register_pass(namespace="tensorflow")
-def expand_tf_lstm(prog):
+class expand_tf_lstm(AbstractGraphPass):
     """
     Expand tf_lstm_block_cell to fine-grained SSA ops following:
 
@@ -36,30 +36,30 @@ def expand_tf_lstm(prog):
 
         prog: Program
     """
-    for f_name, f in prog.functions.items():
-        expand_tf_lstm_helper(f)
+    def apply(self, prog):
+        for f in prog.functions.values():
+            _expand_tf_lstm_helper(f)
 
 
-def expand_tf_lstm_helper(block):
+def _expand_tf_lstm_helper(block):
     # shallow copy hides changes on f.operations during the loop
     for op in block.operations[:]:
         for b in op.blocks:
-            expand_tf_lstm_helper(b)
+            _expand_tf_lstm_helper(b)
 
         if op.op_type == "tf_lstm_block_cell":
-            expand_tf_lstm_block_cell(op)
+            _expand_tf_lstm_block_cell(op)
             logging.info("Expanding {} (op_type: {})".format(op.name, op.op_type))
 
         if op.op_type == "tf_lstm_block":
             # only cs, h are supported for now. Can be easily extended to other outputs at performance hit.
             i, cs, f, o, ci, co, h = op.outputs
             if all(
-                [
-                    len(ov.child_ops) <= 0 and len(ov.consuming_blocks) <= 0
-                    for ov in [i, f, o, ci, co]
-                ]
+                map(lambda x: len(x.child_ops) == 0 and len(x.consuming_blocks) == 0,
+                    (i, f, o, ci, co)
+                )
             ):
-                expand_tf_lstm_block(op)
+                _expand_tf_lstm_block(op)
                 logging.info("Expanding {} (op_type: {})".format(op.name, op.op_type))
 
 
@@ -81,6 +81,7 @@ def _lstm_cell_builder(op, x, h_prev, cs_prev, before_op=None):
     if op.forget_bias.val != 0:
         f = mb.add(x=f, y=forget_bias, before_op=before_op)
 
+    # note that .* means Hadamard product
     # i = sigmoid(cs_prev .* wci + i)
     # f = sigmoid(cs_prev .* wcf + f)
     if op.use_peephole.val:
@@ -98,8 +99,6 @@ def _lstm_cell_builder(op, x, h_prev, cs_prev, before_op=None):
 
     i = mb.sigmoid(x=pre_i, before_op=before_op)
     f = mb.sigmoid(x=pre_f, before_op=before_op)
-
-    # ci = tanh(ci)
     ci = mb.tanh(x=ci, before_op=before_op)
 
     # cs = ci .* i + cs_prev .* f
@@ -120,8 +119,6 @@ def _lstm_cell_builder(op, x, h_prev, cs_prev, before_op=None):
     else:
         pre_o = o
     o = mb.sigmoid(x=pre_o, before_op=before_op)
-
-    # co = tanh(cs)
     co = mb.tanh(x=cs, before_op=before_op)
 
     # h = co .* o
@@ -130,7 +127,7 @@ def _lstm_cell_builder(op, x, h_prev, cs_prev, before_op=None):
     return [i, cs, f, o, ci, co, h]
 
 
-def expand_tf_lstm_block_cell(op):
+def _expand_tf_lstm_block_cell(op):
     if op.op_type != "tf_lstm_block_cell":
         raise ValueError()
 
@@ -152,7 +149,7 @@ def expand_tf_lstm_block_cell(op):
         block.remove_ops([op])
 
 
-def expand_tf_lstm_block(op):
+def _expand_tf_lstm_block(op):
     if op.op_type != "tf_lstm_block":
         raise ValueError()
 
@@ -161,20 +158,7 @@ def expand_tf_lstm_block(op):
         h_prev = op.h_prev  # [b, hidden_dim]
         cs_prev = op.c_prev  # [b, hidden_dim]
 
-        # Allocate two lists: cs & h
-        x_shape = mb.shape(x=x, before_op=op)
-        length = mb.slice_by_index(x=x_shape, begin=[0], end=[1], before_op=op)
-        h_shape = mb.shape(x=h_prev, before_op=op)
-        list_shape = mb.concat(values=[length, h_shape], axis=0, before_op=op)
-        cs_list = mb.fill(shape=list_shape, before_op=op)
-        h_list = mb.fill(shape=list_shape, before_op=op)
-
-        # append initial state at index 0
-        cs_prev = mb.expand_dims(x=cs_prev, axes=[0], before_op=op)
-        cs_list = mb.concat(values=[cs_prev, cs_list], axis=0, before_op=op)
-        h_prev = mb.expand_dims(x=h_prev, axes=[0], before_op=op)
-        h_list = mb.concat(values=[h_prev, h_list], axis=0, before_op=op)
-
+        # cond and body function gor the while_loop
         def cond(i, cs_list, h_list):
             return mb.less(x=i, y=length)
 
@@ -192,6 +176,20 @@ def expand_tf_lstm_block(op):
                 mb.scatter(data=cs_list, indices=counter, updates=cs),
                 mb.scatter(data=h_list, indices=counter, updates=h),
             )
+
+        # Allocate two lists: cs & h
+        x_shape = mb.shape(x=x, before_op=op)
+        length = mb.slice_by_index(x=x_shape, begin=[0], end=[1], before_op=op)
+        h_shape = mb.shape(x=h_prev, before_op=op)
+        list_shape = mb.concat(values=[length, h_shape], axis=0, before_op=op)
+        cs_list = mb.fill(shape=list_shape, before_op=op)
+        h_list = mb.fill(shape=list_shape, before_op=op)
+
+        # append initial state at index 0
+        cs_prev = mb.expand_dims(x=cs_prev, axes=[0], before_op=op)
+        cs_list = mb.concat(values=[cs_prev, cs_list], axis=0, before_op=op)
+        h_prev = mb.expand_dims(x=h_prev, axes=[0], before_op=op)
+        h_list = mb.concat(values=[h_prev, h_list], axis=0, before_op=op)
 
         _, cs_list, h_list = mb.while_loop(
             _cond=cond, _body=body, loop_vars=([0], cs_list, h_list), before_op=op

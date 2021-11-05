@@ -22,7 +22,6 @@ class ModuleWrapper(nn.Module):
     """
     Helper class to transform torch function into torch nn module.
     This helps to keep the testing interface same for torch functional api.
-
     """
     def __init__(self, function, kwargs=None):
         super(ModuleWrapper, self).__init__()
@@ -52,9 +51,7 @@ def _copy_input_data(input_data):
 
 
 def contains_op(torch, op_string):
-    if hasattr(torch, op_string):
-        return True
-    return False
+    return hasattr(torch, op_string)
 
 
 def convert_to_coreml_inputs(input_description, inputs):
@@ -215,15 +212,18 @@ class TorchBaseTest(object):
         Traces a model and runs a numerical test.
         Args:
             input_as_shape <bool>: If true generates random input data with shape.
-                expected_results <iterable, optional>: Expected result from running pytorch model.
-
+            expected_results <iterable, optional>: Expected result from running pytorch model.
             converter_input_type: If not None, then pass it to the "inputs" argument to the ct.convert() call.
         """
         model.eval()
         if input_as_shape:
             input_data = generate_input_data(input_data, rand_range)
-        model_spec = torch.jit.script(model) if use_scripting else trace_model(
-            model, _copy_input_data(input_data))
+
+        if use_scripting:
+            model_spec = torch.jit.script(model)
+        else:
+            model_spec = trace_model(model, _copy_input_data(input_data))
+
         model_spec, mlmodel, coreml_inputs, coreml_results = \
             convert_and_compare(
             input_data, model_spec, expected_results=expected_results,

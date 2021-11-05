@@ -1,12 +1,18 @@
-# -*- coding: utf-8 -*-
-
 #  Copyright (c) 2020, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from ..parsed_tf_node import ParsedTFNode
-from ..basic_graph_ops import *  # pylint: disable=unused-wildcard-import,wildcard-import
+from ..basic_graph_ops import (
+    connect_dests,
+    connect_edge,
+    connect_sources,
+    delete_node,
+    disconnect_edge,
+    replace_dest,
+    replace_source
+)
 from ..tfssa import SSAFunction
 from .visitors import (
     FindAllReachableNodes,
@@ -311,7 +317,6 @@ class FunctionalizeLoops(object):
         # connect constant enters to come from function
         # connect constant enters to exit
         for idx, enter in enumerate(self.constant_enters):
-            body_connected = False
             for output in list(g[enter].outputs):
                 if output not in self.cond and output not in self.body:
                     cond_intersection = (

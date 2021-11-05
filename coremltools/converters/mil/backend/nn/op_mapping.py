@@ -5,6 +5,9 @@
 
 import numpy as _np
 import logging as _logging
+from tqdm import tqdm as _tqdm
+
+from .mil_to_nn_mapping_registry import MIL_TO_NN_MAPPING_REGISTRY, register_mil_to_nn_mapping
 from coremltools.models import neural_network as neural_network
 from coremltools.proto import NeuralNetwork_pb2
 from coremltools.converters.mil.mil.types.symbolic import (
@@ -18,8 +21,6 @@ from coremltools.converters.mil.mil.ops.registry import SSAOpRegistry
 from coremltools.models.neural_network.quantization_utils import (
     _convert_array_to_nbit_quantized_bytes,
 )
-from tqdm import tqdm as _tqdm
-from .mil_to_nn_mapping_registry import *
 
 
 def convert_ops(const_context, builder, ops, outputs):
@@ -431,12 +432,6 @@ def conv_helper(const_context, builder, op):
     has_bias = op.bias is not None
     groups = op.groups.val
 
-    rank_factor = 1
-    if is_conv2d:
-        rank_factor = 2
-    elif is_conv3d:
-        rank_factor = 3
-
     strides = op.strides.val.tolist()
     dilations = op.dilations.val.tolist()
     if is_conv1d:
@@ -639,7 +634,6 @@ def _add_elementwise_binary(
             )
             return
         add_const(const_context, builder, op.y.name, op.y.val)
-
 
     if mode in {"add", "multiply", "max", "min"} and op.x.shape == op.y.shape:
         builder.add_elementwise(
@@ -1045,8 +1039,7 @@ def slice_by_index(const_context, builder, op):
         for i in range(rank):
             if (not begin_mask[i] and begin[i] != 0) or \
                (not end_mask[i] and end[i] != op.x.shape[i]):
-               slice_dim.append(i)
-
+                slice_dim.append(i)
 
         if len(slice_dim) == 1 and not squeeze_mask[slice_dim[0]]:
             dim = slice_dim[0] - rank
@@ -1117,7 +1110,6 @@ def slice_by_size(const_context, builder, op):
 
     # The static case
     if op.begin.val is not None and op.size.val is not None:
-        shape = op.x.shape
         begin = op.begin.val
         size = op.size.val
         rank = op.x.rank
@@ -2381,7 +2373,7 @@ def pad(const_context, builder, op):
         pad = pad[-4:]
         left, right = pad[2], pad[3]
         top, bottom = pad[0], pad[1]
-        layer = builder.add_padding(
+        builder.add_padding(
             name=op.name,
             left=left,
             right=right,
@@ -2480,7 +2472,7 @@ def layer_norm(const_context, builder, op):
     # - reshape back to (X1, X2) / (X0, X1, X2)
     # Otherwise, we express the layer_norm as primitive operations
     if rank in [2, 3] and len(axes) == 1 and axes[0] == rank - 1 and input_shape.count(-1) < 2 \
-        and input_shape[-1] != -1 and input_shape[-2] != -1:
+       and input_shape[-1] != -1 and input_shape[-2] != -1:
 
         reshaped_shape = input_shape[:]
         # Insert a singleton dimension in the 'height' position
@@ -2670,11 +2662,6 @@ def conv_transpose(const_context, builder, op):
         weight = _np.transpose(weight, [1, 0, 2, 3, 4])
     else:
         weight = _np.transpose(weight, [2, 3, 0, 1])
-
-    # Adjust for Deconv1D case
-    # CoreML maps Deconv1D into Deconv2D
-    # Hence, adjust width dimension attributes by setting to 1 for 1D case
-    rank_factor = 1 if is_conv_transpose_1d else 2
 
     strides = op.strides.val.tolist()
     dilations = op.dilations.val.tolist()
@@ -3019,7 +3006,6 @@ def while_loop(const_context, builder, op):
 
     # Also assume all outputs are different from loop inputs (i.e., no loop
     # invariant.)
-    #for vx_in, vx_out in zip(block.inputs, block.outputs[1:]):
     for vx_in, vx_out in zip(body_block.inputs, body_block.outputs):
         if vx_in.name == vx_out.name:
             msg = "Loop invariant var {} detected in block {}"
@@ -3094,12 +3080,6 @@ def stack(const_context, builder, op):
 
 @register_mil_to_nn_mapping
 def split(const_context, builder, op):
-    split_sizes = None
-    if op.split_sizes is not None:
-        if op.split_sizes.val is None:
-            raise ValueError('Non-const split_sizes unsupported in NN')
-        split_sizes = op.split_sizes.val.tolist()
-
     split = op.sizes
     split = [size for size in split if size != 0]
     has_equal_splits = all([size == split[0] for size in split])
@@ -3271,7 +3251,7 @@ def make_list(const_context, builder, op):
     # set the dynamic dimensions to 1 for initialization
     # Ex: op.elem_shape = [i0, 128] will result in [1, 128]
     elem_shape = [1 if isinstance(dim_var.val, str) else
-        dim_var.val for dim_var in op.elem_shape]
+                  dim_var.val for dim_var in op.elem_shape]
 
     if size is not None:
         array_size = size if size > 0 else 1
@@ -3294,7 +3274,7 @@ def make_list(const_context, builder, op):
 
             # Concatenate list length of the input, should be a constant vector of size 1) with element shape
             node_arr_shape_name = op.name + "_arr_shape"
-            layer = builder.add_concat_nd(
+            builder.add_concat_nd(
                 name=node_arr_shape_name,
                 input_names=[op.init_length.name, node_es_name],
                 output_name=node_arr_shape_name,
@@ -3614,4 +3594,3 @@ def list_length(const_context, builder, op):
 def _const_symbolic(const_context, builder, op):
     # do nothing
     pass
-

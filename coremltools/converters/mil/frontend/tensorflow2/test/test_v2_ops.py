@@ -5,12 +5,14 @@
 
 import itertools
 import numpy as np
+import pytest
 
 from coremltools._deps import version_lt, version_ge
 from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.frontend.tensorflow.test import (
     testing_utils as tf_testing_utils,
 )
+from coremltools.converters.mil.testing_utils import random_gen
 
 from coremltools.converters.mil.frontend.tensorflow2.test.testing_utils import (
     TensorFlow2BaseTest
@@ -22,7 +24,6 @@ TensorFlowBaseTest.run_compare_tf = TensorFlow2BaseTest.run_compare_tf2
 from coremltools.converters.mil.frontend.tensorflow2.test.testing_utils import (
     make_tf2_graph as make_tf_graph
 )
-from coremltools.converters.mil.testing_reqs import *
 
 tf = pytest.importorskip("tensorflow", minversion="2.1.0")
 

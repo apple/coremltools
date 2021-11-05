@@ -9,17 +9,26 @@ optional includes
 """
 from distutils.version import StrictVersion as _StrictVersion
 import logging as _logging
+from packaging import version
 import platform as _platform
 import re as _re
 import sys as _sys
-from packaging import version
 
 
-def __get_version(version):
+def _get_version(version):
     # matching 1.6.1, and 1.6.1rc, 1.6.1.dev
     version_regex = r"^\d+\.\d+\.\d+"
     version = _re.search(version_regex, str(version)).group(0)
     return _StrictVersion(version)
+
+
+def _warn_if_above_max_supported_version(package_name, package_version, max_supported_version):
+    if _get_version(package_version) > _StrictVersion(max_supported_version):
+        _logging.warning(
+            "%s version %s has not been tested with coremltools. You may run into unexpected errors. "
+            "%s %s is the most recent version that has been tested."
+            % (package_name, package_version, package_name, max_supported_version)
+        )
 
 
 # ---------------------------------------------------------------------------------------
@@ -77,8 +86,10 @@ MSG_LIBSVM_NOT_FOUND = "Libsvm not found."
 
 # ---------------------------------------------------------------------------------------
 _HAS_XGBOOST = True
+_XGBOOST_MAX_VERSION = "1.4.2"
 try:
     import xgboost
+    _warn_if_above_max_supported_version("XGBoost", xgboost.__version__, _XGBOOST_MAX_VERSION)
 except:
     _HAS_XGBOOST = False
 
@@ -89,12 +100,12 @@ _HAS_TF_2 = False
 _TF_1_MIN_VERSION = "1.12.0"
 _TF_1_MAX_VERSION = "1.15.0"
 _TF_2_MIN_VERSION = "2.1.0"
-_TF_2_MAX_VERSION = "2.3.1"
+_TF_2_MAX_VERSION = "2.5.0"
 
 try:
     import tensorflow
 
-    tf_ver = __get_version(tensorflow.__version__)
+    tf_ver = _get_version(tensorflow.__version__)
 
     # TensorFlow
     if tf_ver < _StrictVersion("2.0.0"):
@@ -112,11 +123,7 @@ try:
                 )
                 % (tensorflow.__version__, _TF_1_MIN_VERSION)
             )
-        elif tf_ver > _StrictVersion(_TF_1_MAX_VERSION):
-            _logging.warning(
-                "TensorFlow version %s detected. Last version known to be fully compatible is %s ."
-                % (tensorflow.__version__, _TF_1_MAX_VERSION)
-            )
+        _warn_if_above_max_supported_version("TensorFlow", tensorflow.__version__, _TF_1_MAX_VERSION)
     elif _HAS_TF_2:
         if tf_ver < _StrictVersion(_TF_2_MIN_VERSION):
             _logging.warn(
@@ -126,11 +133,7 @@ try:
                 )
                 % (tensorflow.__version__, _TF_2_MIN_VERSION)
             )
-        elif tf_ver > _StrictVersion(_TF_2_MAX_VERSION):
-            _logging.warning(
-                "TensorFlow version %s detected. Last version known to be fully compatible is %s ."
-                % (tensorflow.__version__, _TF_2_MAX_VERSION)
-            )
+        _warn_if_above_max_supported_version("TensorFlow", tensorflow.__version__, _TF_2_MAX_VERSION)
 
 except:
     _HAS_TF = False
@@ -168,7 +171,7 @@ try:
         sys.stderr = stderr
     import tensorflow
 
-    k_ver = __get_version(keras.__version__)
+    k_ver = _get_version(keras.__version__)
 
     # keras 1 version too old
     if k_ver < _StrictVersion(_KERAS_MIN_VERSION):
@@ -186,7 +189,8 @@ try:
         _HAS_KERAS_TF = False
         _logging.warning(
             (
-                "Keras version %s detected. Last version known to be fully compatible of Keras is %s ."
+                "Keras version %s has not been tested with coremltools. You may run into unexpected errors. "
+                "Keras %s is the most recent version that has been tested."
             )
             % (keras.__version__, _KERAS_MAX_VERSION)
         )
@@ -214,8 +218,10 @@ except:
 
 # ---------------------------------------------------------------------------------------
 _HAS_TORCH = True
+_TORCH_MAX_VERSION = "1.9.1"
 try:
     import torch
+    _warn_if_above_max_supported_version("Torch", torch.__version__, _TORCH_MAX_VERSION)
 except:
     _HAS_TORCH = False
 MSG_TORCH_NOT_FOUND = "PyTorch not found."

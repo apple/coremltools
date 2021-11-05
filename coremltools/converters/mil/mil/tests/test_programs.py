@@ -1,15 +1,14 @@
-# -*- coding: utf-8 -*-
-
 #  Copyright (c) 2020, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
-import pytest
-import coremltools as ct
-import numpy as np
-from coremltools.converters.mil.mil import Builder as mb
-import coremltools as ct
+
 import logging
+import numpy as np
+
+import coremltools as ct
+from coremltools.converters.mil.mil import Builder as mb
+
 
 np.random.seed(0)
 

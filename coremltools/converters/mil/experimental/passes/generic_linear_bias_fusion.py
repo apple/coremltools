@@ -12,45 +12,48 @@ from coremltools.converters.mil import Builder as mb
 from coremltools.converters.mil.experimental.passes.generic_pass_infrastructure import register_generic_pass
 from coremltools.converters.mil.mil import get_new_symbol
 
-arbitrary_shape = (get_new_symbol(), get_new_symbol())
-np.random.seed()
-arbitrary_weight = np.random.rand(4,3)
-arbitrary_bias =  np.random.rand(4)
+if os.getenv("ENABLE_EXPERIMENTAL_PASSES") == "1":
+    arbitrary_shape = (get_new_symbol(), get_new_symbol())
+    np.random.seed()
+    arbitrary_weight = np.random.rand(4,3)
+    arbitrary_bias =  np.random.rand(4)
 
-@mb.program(input_specs=[mb.TensorSpec(shape=arbitrary_shape)])
-def pattern_add(x):
-    """
-    Original:
-        % 4 = linear(x= % 1, weight = % 2, bias = % 3)  # %2 is a rank-2 const tensor (weight)
-        # %3 is a rank-1 const tensor (bias)
-        ...
-        % 6 = add(x= % 4, y = % 5)  # %5 is a const tensor with same shape as %3
+if os.getenv("ENABLE_EXPERIMENTAL_PASSES") == "1":
+    @mb.program(input_specs=[mb.TensorSpec(shape=arbitrary_shape)])
+    def pattern_add(x):
+        """
+        Original:
+            % 4 = linear(x= % 1, weight = % 2, bias = % 3)  # %2 is a rank-2 const tensor (weight)
+            # %3 is a rank-1 const tensor (bias)
+            ...
+            % 6 = add(x= % 4, y = % 5)  # %5 is a const tensor with same shape as %3
 
-    Result:
-        % 8 = linear(x= % 1, weight = % 2, bias = % 7)  # where %7 is a new const tensor with value
-        # %7 = %3 + %6
-    """
-    linear = mb.linear(x=x, weight=arbitrary_weight, bias=arbitrary_bias, name="linear")
-    add_or_sub = mb.add(x=linear, y=arbitrary_bias, name="add_or_sub")
-    return add_or_sub
+        Result:
+            % 8 = linear(x= % 1, weight = % 2, bias = % 7)  # where %7 is a new const tensor with value
+            # %7 = %3 + %6
+        """
+        linear = mb.linear(x=x, weight=arbitrary_weight, bias=arbitrary_bias, name="linear")
+        add_or_sub = mb.add(x=linear, y=arbitrary_bias, name="add_or_sub")
+        return add_or_sub
 
-@mb.program(input_specs=[mb.TensorSpec(shape=arbitrary_shape)])
-def pattern_sub(x):
-    """
-    Original:
-        %4 = linear(x=%1, weight=%2, bias=%3) # %2 is a rank-2 const tensor (weight)
-                                              # %3 is a rank-1 const tensor (bias)
-        ...
-        %6 = sub(x=%5, y=%4) # %5 is a const tensor with a broacasable shape with %3.
-                               i.e. if %3 has shape (Dout), %5 could be (1, Dout).
+if os.getenv("ENABLE_EXPERIMENTAL_PASSES") == "1":
+    @mb.program(input_specs=[mb.TensorSpec(shape=arbitrary_shape)])
+    def pattern_sub(x):
+        """
+        Original:
+            %4 = linear(x=%1, weight=%2, bias=%3) # %2 is a rank-2 const tensor (weight)
+                                                  # %3 is a rank-1 const tensor (bias)
+            ...
+            %6 = sub(x=%5, y=%4) # %5 is a const tensor with a broacasable shape with %3.
+                                   i.e. if %3 has shape (Dout), %5 could be (1, Dout).
 
-    Result:
-        %9 = linear(x=%1, weight=%7, bias=%8) # where %7 is a new const tensor with value %7 = -%2
-        # %8 = %5 - %3
-    """
-    linear = mb.linear(x=x, weight=arbitrary_weight, bias=arbitrary_bias, name="linear")
-    add_or_sub = mb.sub(x=linear, y=arbitrary_bias, name="add_or_sub")
-    return add_or_sub
+        Result:
+            %9 = linear(x=%1, weight=%7, bias=%8) # where %7 is a new const tensor with value %7 = -%2
+            # %8 = %5 - %3
+        """
+        linear = mb.linear(x=x, weight=arbitrary_weight, bias=arbitrary_bias, name="linear")
+        add_or_sub = mb.sub(x=linear, y=arbitrary_bias, name="add_or_sub")
+        return add_or_sub
 
 
 def var_constraints(pattern):

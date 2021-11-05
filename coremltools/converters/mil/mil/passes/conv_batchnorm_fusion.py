@@ -7,9 +7,9 @@
 
 
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
+from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil import Builder as mb
 import numpy as np
-
 
 def _try_to_transform(conv_op, bn_op, block):
 
@@ -150,7 +150,7 @@ def _fuse_conv_batchnorm_block(block):
 
 
 @register_pass(namespace="common")
-def fuse_conv_batchnorm(prog):
+class fuse_conv_batchnorm(AbstractGraphPass):
     """
     Fuse the following batch_norm layer into conv and conv_transpose
     That is, convert conv + batch_norm to conv, by modifying the weight and bias in the conv layer
@@ -165,7 +165,8 @@ def fuse_conv_batchnorm(prog):
         ...
 
     """
-    for f in prog.functions.values():
-        block_changed = True
-        while block_changed:
-            block_changed = _fuse_conv_batchnorm_block(f)
+    def apply(self, prog):
+        for f in prog.functions.values():
+            block_changed = True
+            while block_changed:
+                block_changed = _fuse_conv_batchnorm_block(f)

@@ -12,9 +12,9 @@ import numpy as np
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import Operation, Block, Var, Program
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
+from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 
 DEBUG = False  # set to true to plot the block before and after the transformation
-
 
 def _check_no_output_connection(block: Block, ops: List[Operation]) -> bool:
     """
@@ -822,7 +822,7 @@ def _fuse_layernorm_or_instancenorm_block(block: Block):
 
 
 @register_pass(namespace="common")
-def fuse_layernorm_or_instancenorm(prog: Program):
+class fuse_layernorm_or_instancenorm(AbstractGraphPass):
     """
     A graph optimization pass on PyMIL to detect and fuse several different
     vairants of layer_norm or instance_norm. Pattern 1 is corresponding to
@@ -830,26 +830,27 @@ def fuse_layernorm_or_instancenorm(prog: Program):
 
     :param prog: PyMIL Program to work on.
     """
-    for f in prog.functions.values():
-        block_changed = True
-        while block_changed:
-            if DEBUG:
-                import graphviz
+    def apply(self, prog):
+        for f in prog.functions.values():
+            block_changed = True
+            while block_changed:
+                if DEBUG:
+                    import graphviz
 
-                graphviz.Source(
-                    f.get_dot_string(highlight_debug_op_types=["instance_norm"],)
-                ).view(filename="/tmp/block_before_fuse_layernorm_or_instancenorm")
-            logging.debug(
-                "Block before fuse_layernorm_or_instancenorm transform:\n{}".format(f)
-            )
+                    graphviz.Source(
+                        f.get_dot_string(highlight_debug_op_types=["instance_norm"],)
+                    ).view(filename="/tmp/block_before_fuse_layernorm_or_instancenorm")
+                logging.debug(
+                    "Block before fuse_layernorm_or_instancenorm transform:\n{}".format(f)
+                )
 
-            block_changed = _fuse_layernorm_or_instancenorm_block(f)
+                block_changed = _fuse_layernorm_or_instancenorm_block(f)
 
-            if DEBUG:
-                graphviz.Source(
-                    f.get_dot_string(highlight_debug_op_types=["instance_norm"],)
-                ).view(filename="/tmp/block_after_fuse_layernorm_or_instancenorm")
+                if DEBUG:
+                    graphviz.Source(
+                        f.get_dot_string(highlight_debug_op_types=["instance_norm"],)
+                    ).view(filename="/tmp/block_after_fuse_layernorm_or_instancenorm")
 
-            logging.debug(
-                "Block after fuse_layernorm_or_instancenorm transform:\n{}".format(f)
-            )
+                logging.debug(
+                    "Block after fuse_layernorm_or_instancenorm transform:\n{}".format(f)
+                )

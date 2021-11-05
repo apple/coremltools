@@ -14,13 +14,32 @@ from coremltools.converters.mil.mil.types.symbolic import (
 from coremltools.converters.mil.mil import (
     get_new_symbol,
     get_new_variadic_symbol,
-    SYMBOL,
-    VALUE,
+    types
+)
+from coremltools.converters.mil.mil.input_type import (
+    BoolInputType,
+    DefaultInputs,
+    FloatInputType,
+    InputSpec,
+    IntInputType,
+    IntOrFloatInputType,
+    IntOrFloatOrBoolInputType,
+    IntTensorInputType,
+    ListOrScalarOrTensorInputType,
+    ScalarOrTensorInputType,
+    StringInputType,
+    TensorInputType,
+    TupleInputType,
+)
+from coremltools.converters.mil.mil.operation import (
     NONE,
+    Operation,
+    precondition,
+    SYMBOL,
+    VALUE
 )
 
-from coremltools.converters.mil.mil import types
-from ._op_reqs import *
+from ._op_reqs import register_op
 from ._utils import promoted_primitive_type
 
 
@@ -611,7 +630,6 @@ class tile(Operation):
             )
             raise ValueError(msg.format(len(reps), self.x.rank))
 
-
         out_shape = []
         for i, rep in enumerate(reps):
             if not is_symbolic(rep):
@@ -919,7 +937,7 @@ class concat(Operation):
     input_spec = InputSpec(values=TupleInputType(),
                            axis=IntInputType(const=True),
                            interleave=BoolInputType(const=True,
-                             optional=True))
+                                                    optional=True))
 
     def default_inputs(self):
         return DefaultInputs(
@@ -1028,6 +1046,7 @@ class concat(Operation):
             return np.stack(values, axis=self.axis.val)
 
         return np.concatenate(values, axis=self.axis.val)
+
 
 @register_op(doc_str="")
 class split(Operation):
@@ -1181,7 +1200,7 @@ class stack(Operation):
     """
 
     input_spec = InputSpec(values=TupleInputType(),
-        axis=IntInputType(const=True),)
+                           axis=IntInputType(const=True),)
 
     def __init__(self, **kwargs):
         super(stack, self).__init__(**kwargs)

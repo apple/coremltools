@@ -10,4 +10,8 @@ register_torch_op = None
 if _HAS_TORCH:
     from .load import load
     from .torch_op_registry import register_torch_op
-    from .dialect_ops import *
+    from .dialect_ops import (
+        torch_tensor_assign,
+        torch_upsample_bilinear,
+        torch_upsample_nearest_neighbor
+    )

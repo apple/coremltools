@@ -7,11 +7,12 @@
 
 
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
+from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil import Builder as mb
 import numpy as np
 from coremltools.converters.mil.mil.types.symbolic import is_symbolic, any_symbolic
 
-def match_pattern(op):
+def _match_pattern(op):
     if op.outputs[0] in op.enclosing_block.outputs:
         return None
 
@@ -48,7 +49,8 @@ def match_pattern(op):
                 return op
     return None
 
-def try_to_transform(concat_op, add_op, block):
+
+def _try_to_transform(concat_op, add_op, block):
     all_ops = [concat_op]
     B, C, H, W = list(concat_op.values[0].shape)
     n = len(concat_op.values)
@@ -117,27 +119,29 @@ def try_to_transform(concat_op, add_op, block):
     block.remove_ops(all_ops)
     return True
 
-def fuse_concat_interleave(block):
+
+def _fuse_concat_interleave(block):
     fusion_status = False
     for op in list(block.operations):
         for b in op.blocks:
             block_changed = True
             while block_changed:
-                block_changed = fuse_concat_interleave(b)
+                block_changed = _fuse_concat_interleave(b)
         if len(op.blocks) > 0:
             continue
 
-        concat_op = match_pattern(op)
+        concat_op = _match_pattern(op)
         if concat_op is not None:
             with block:
-                fusion_status = try_to_transform(op, concat_op, block)
+                fusion_status = _try_to_transform(op, concat_op, block)
             # has to break as the downstream iterator is affected.
             if fusion_status:
                 return fusion_status
     return fusion_status
 
+
 @register_pass(namespace="common")
-def detect_concat_interleave(prog):
+class detect_concat_interleave(AbstractGraphPass):
     """
     Detect the pattern "concat-->reshape--->transpose--->reshape", where concat is
     along the channel axis (axis=-3), and map this pattern to the concat interleave op.
@@ -153,7 +157,8 @@ def detect_concat_interleave(prog):
     Result:
         %6 = concat(%1.a, %1.b, ..., axis=-3, interleave=True)
     """
-    for f in prog.functions.values():
-        block_changed = True
-        while block_changed:
-            block_changed = fuse_concat_interleave(f)
+    def apply(self, prog):
+        for f in prog.functions.values():
+            block_changed = True
+            while block_changed:
+                block_changed = _fuse_concat_interleave(f)

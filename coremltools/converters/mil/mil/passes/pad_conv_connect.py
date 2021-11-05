@@ -7,11 +7,12 @@
 
 
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
+from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil import Builder as mb
 import numpy as np
 import copy
 
-def match_pattern(op):
+def _match_pattern(op):
     ret = set([])
     child_ops = op.outputs[0].child_ops
 
@@ -27,7 +28,7 @@ def match_pattern(op):
     return ret if len(ret) != 0 else None
 
 
-def try_to_transform(pad_op, transpose_ops, block):
+def _try_to_transform(pad_op, transpose_ops, block):
 
     def _compute_new_pad_values(transpose_op):
         if pad_op.inputs["pad"].val is None:
@@ -82,29 +83,29 @@ def try_to_transform(pad_op, transpose_ops, block):
 
     return True
 
-def pad_conv_connect_block(block):
+
+def _pad_conv_connect_block(block):
     fusion_status = False
     for op in list(block.operations):
         for b in op.blocks:
             block_changed = True
             while block_changed:
-                block_changed = pad_conv_connect_block(b)
+                block_changed = _pad_conv_connect_block(b)
 
         if op.op_type != "pad":
             continue
 
-        transpose_ops = match_pattern(op)
+        transpose_ops = _match_pattern(op)
         if transpose_ops is not None:
             with block:
-                fusion_status = try_to_transform(op, transpose_ops, block)
+                fusion_status = _try_to_transform(op, transpose_ops, block)
             # has to break as the downstream iterator is affected.
             if fusion_status:
                 return fusion_status
     return fusion_status
 
-
 @register_pass(namespace="common")
-def pad_conv_connect(prog):
+class pad_conv_connect(AbstractGraphPass):
     """
     When we observe pad -> transpose -> conv, we move the pad to be next to conv.
     This allows us to meld pad + conv if possible.
@@ -122,7 +123,8 @@ def pad_conv_connect(prog):
         ...
 
     """
-    for f in prog.functions.values():
-        block_changed = True
-        while block_changed:
-            block_changed = pad_conv_connect_block(f)
+    def apply(self, prog):
+        for f in prog.functions.values():
+            block_changed = True
+            while block_changed:
+                block_changed = _pad_conv_connect_block(f)

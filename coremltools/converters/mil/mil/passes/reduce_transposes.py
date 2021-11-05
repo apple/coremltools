@@ -7,6 +7,7 @@
 
 
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
+from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil.types.symbolic import any_symbolic
 from coremltools.converters.mil.mil.var import Var
@@ -1227,7 +1228,7 @@ class TransposeOptimization(object):
             op.type_value_inference(overwrite_output=True)
 
 
-def reduce_transposes_block(block):
+def _reduce_transposes_block(block):
     """
     Only apply the optimization if the block is flat,
     i.e, it does not contain any op which contains a sub-block.
@@ -1247,6 +1248,8 @@ def reduce_transposes_block(block):
 
 
 @register_pass(namespace="common")
-def reduce_transposes(prog):
-    for f in prog.functions.values():
-        reduce_transposes_block(f)
+class reduce_transposes(AbstractGraphPass):
+
+    def apply(self, prog):
+        for f in prog.functions.values():
+            _reduce_transposes_block(f)

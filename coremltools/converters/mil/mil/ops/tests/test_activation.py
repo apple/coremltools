@@ -800,7 +800,6 @@ class TestSoftplusParametric:
 
     @ssa_fn
     def test_builder_eval4(self):
-        x_val = np.array([[[-1, 3, 6]], [[-1, 2, -3]], [[4, -5, 6]]], dtype=np.float32)
         with pytest.raises(ValueError, match=r"x .* rank 3"):
             v = mb.softplus_parametric(
                 x=[1],

@@ -5,9 +5,9 @@
 import math
 import numpy as np
 
-from coremltools.converters.mil.mil import Operation, types, VALUE, SYMBOL
+from coremltools.converters.mil.mil import types
+from coremltools.converters.mil.mil.operation import Operation, precondition, SYMBOL, VALUE
 from coremltools.converters.mil.mil.types.symbolic import is_symbolic
-from coremltools.converters.mil.mil.operation import precondition
 from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
 from coremltools.converters.mil.mil.input_type import (
     DefaultInputs,
@@ -321,7 +321,7 @@ class erf(elementwise_unary):
 @register_op(doc_str="")
 class exp(elementwise_unary):
     """
-    Return the exponential values of the input ``x``, element-wise.
+    Return e^x, element-wise.
 
     Parameters
     ----------
@@ -348,7 +348,7 @@ class exp(elementwise_unary):
 @register_op(doc_str="")
 class exp2(elementwise_unary):
     """
-    Return the exponential values of the input ``x``, element-wise.
+    Return 2^x, element-wise.
 
     Parameters
     ----------
@@ -518,7 +518,8 @@ class logical_not(elementwise_unary):
 @register_op(doc_str="")
 class round(elementwise_unary):
     """
-    Return the round value of the input ``x``, element-wise.
+    Return the round value of the input ``x`` to nearest integer, element-wise.
+    ``0.5`` is rounded to ``0``.
 
     Parameters
     ----------
@@ -590,6 +591,8 @@ class rsqrt(Operation):
 class sign(elementwise_unary):
     """
     Return the sign value of the input ``x``, element-wise.
+
+    All elements in the output will be either ``-1``. or ``1``.
 
     Parameters
     ----------
@@ -697,7 +700,7 @@ class sqrt(elementwise_unary):
 @register_op(doc_str="")
 class square(elementwise_unary):
     """
-    Return the square value of the input ``x``, element-wise.
+    Return ``x^2``, element-wise.
 
     Parameters
     ----------

@@ -11,55 +11,57 @@ from coremltools.converters.mil import Builder as mb
 from coremltools.converters.mil.mil.passes.helper import _check_var_scalar_value
 from coremltools.converters.mil.experimental.passes.generic_pass_infrastructure import register_generic_pass
 
-@mb.program(input_specs=[mb.TensorSpec(shape=([1, 1024, 4096])), ])
-def gelu_to_detect_1(x):
-    # MIL operation takes named inputs (instead of positional inputs).
-    # Here `name` argument is MANDATORY.
-    pow = mb.pow(x=x, y=3.0, name="pow")
-    mul_1 = mb.mul(x=0.044714998453855515, y=pow, name="mul_1")
-    add = mb.add(x=x, y=mul_1, name="add")
-    mul_2 = mb.mul(x=0.7978845834732056, y=add, name="mul_2")
-    tanh = mb.tanh(x=mul_2, name="tanh")
-    add_1 = mb.add(x=1.0, y=tanh, name="add_1")
-    mul = mb.mul(x=0.5, y=add_1, name="mul")
-    mul_3 = mb.mul(x=mul, y=x, name="mul_3")
-    return mul_3
-"""
-y = x * (0.5 * (tanh(((.0447)x^3 + x ) * sqrt(2/pi)) + 1))
+if os.getenv("ENABLE_EXPERIMENTAL_PASSES") == "1":
+    @mb.program(input_specs=[mb.TensorSpec(shape=([1, 1024, 4096])), ])
+    def gelu_to_detect_1(x):
+        # MIL operation takes named inputs (instead of positional inputs).
+        # Here `name` argument is MANDATORY.
+        pow = mb.pow(x=x, y=3.0, name="pow")
+        mul_1 = mb.mul(x=0.044714998453855515, y=pow, name="mul_1")
+        add = mb.add(x=x, y=mul_1, name="add")
+        mul_2 = mb.mul(x=0.7978845834732056, y=add, name="mul_2")
+        tanh = mb.tanh(x=mul_2, name="tanh")
+        add_1 = mb.add(x=1.0, y=tanh, name="add_1")
+        mul = mb.mul(x=0.5, y=add_1, name="mul")
+        mul_3 = mb.mul(x=mul, y=x, name="mul_3")
+        return mul_3
+    """
+    y = x * (0.5 * (tanh(((.0447)x^3 + x ) * sqrt(2/pi)) + 1))
+    
+    
+    [...] -----> pow (3) ----> mul (.044715) ---> add -----> mul (sqrt(2/pi)) ---> tanh ----> add (1) ----> mul (0.5) -----> mul ---> [...]
+      |                                            ^                                                                          ^
+      |                                            |                                                                          |
+      |------------------------------------------------------------------------------------------------------------------------
+    
+    """
 
+if os.getenv("ENABLE_EXPERIMENTAL_PASSES") == "1":
+    # In this pattern, 0.5 is first multiplied with the input which is then multiplied with the tanh term.
+    # In pattern1, 0.5 is first multiplied with the tanh term, and then multiplied with input
+    @mb.program(input_specs=[mb.TensorSpec(shape=([1, 1024, 4096])), ])
+    def gelu_to_detect_2(x):
+        pow = mb.pow(x=x, y=3.0, name ="pow")
+        mul_1 = mb.mul(x=0.044714998453855515, y=pow, name="mul_1")
+        add = mb.add(x=x, y=mul_1, name="add")
+        mul_2 = mb.mul(x=0.7978845834732056, y=add, name="mul_2")
+        tanh = mb.tanh(x=mul_2, name="tanh")
+        add_1 = mb.add(x=1.0, y=tanh, name="add_1")
+        mul = mb.mul(x = 0.5, y=x, name="mul")
+        mul_3 = mb.mul(x=mul, y=add_1, name="mul_3")
+        return mul_3
 
-[...] -----> pow (3) ----> mul (.044715) ---> add -----> mul (sqrt(2/pi)) ---> tanh ----> add (1) ----> mul (0.5) -----> mul ---> [...]
-  |                                            ^                                                                          ^
-  |                                            |                                                                          |
-  |------------------------------------------------------------------------------------------------------------------------
-
-"""
-
-# In this pattern, 0.5 is first multiplied with the input which is then multiplied with the tanh term.
-# In pattern1, 0.5 is first multiplied with the tanh term, and then multiplied with input
-@mb.program(input_specs=[mb.TensorSpec(shape=([1, 1024, 4096])), ])
-def gelu_to_detect_2(x):
-    pow = mb.pow(x=x, y=3.0, name ="pow")
-    mul_1 = mb.mul(x=0.044714998453855515, y=pow, name="mul_1")
-    add = mb.add(x=x, y=mul_1, name="add")
-    mul_2 = mb.mul(x=0.7978845834732056, y=add, name="mul_2")
-    tanh = mb.tanh(x=mul_2, name="tanh")
-    add_1 = mb.add(x=1.0, y=tanh, name="add_1")
-    mul = mb.mul(x = 0.5, y=x, name="mul")
-    mul_3 = mb.mul(x=mul, y=add_1, name="mul_3")
-    return mul_3
-
-"""
-y = (0.5 * x) * (tanh(((.0447)x^3 + x ) * sqrt(2/pi)) + 1)
-
-                ---------------------------------------------------------------------------------------------------------
-                ^                                                                                                       |
-                |                                                                                                       V
- [...] -----> mul(0.5)    pow (3) ----> mul (.044715) ---> add -----> mul (sqrt(2/pi)) ---> tanh ----> add (1) -----> mul ---> [...]
-  |                         ^                               ^
-  |                         |                               |
-  |------------------------------------------------------------
-"""
+    """
+    y = (0.5 * x) * (tanh(((.0447)x^3 + x ) * sqrt(2/pi)) + 1)
+    
+                    ---------------------------------------------------------------------------------------------------------
+                    ^                                                                                                       |
+                    |                                                                                                       V
+     [...] -----> mul(0.5)    pow (3) ----> mul (.044715) ---> add -----> mul (sqrt(2/pi)) ---> tanh ----> add (1) -----> mul ---> [...]
+      |                         ^                               ^
+      |                         |                               |
+      |------------------------------------------------------------
+    """
 
 def var_constraints(pattern):
     passed = True

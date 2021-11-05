@@ -8,12 +8,13 @@
 
 import numpy as np
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
+from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil import Builder as mb
 
 child_op_types = ["add", "sub"]
 
+def _match_pattern(op):
 
-def match_pattern(op):
     if op.op_type == "matmul":
         # find add
         child_ops = op.outputs[0].child_ops
@@ -23,8 +24,7 @@ def match_pattern(op):
                 return add_op_candidate
     return None
 
-
-def transpose(v, before_op):
+def _transpose(v, before_op):
     """
     Transpose the last 2 dims.
     v: Var (must be a tensor)
@@ -33,8 +33,7 @@ def transpose(v, before_op):
     perm[-2], perm[-1] = perm[-1], perm[-2]
     return mb.transpose(x=v, perm=perm, before_op=before_op)
 
-
-def try_to_transform(matmul_op, add_op, block):
+def _try_to_transform(matmul_op, add_op, block):
     if matmul_op.x.val is None and matmul_op.y.val is None:
         # This is a dynamic matmul.
         return False
@@ -84,23 +83,23 @@ def try_to_transform(matmul_op, add_op, block):
         # If transpose_x == transpose_weight == False:
         # w*x = (x^T w^T)^T = linear(x^T, w)^T
         x_transposed = (
-            transpose(linear_x, before_op=matmul_op) if not transpose_x else linear_x
+            _transpose(linear_x, before_op=matmul_op) if not transpose_x else linear_x
         )
         w_no_transpose = (
-            weight if not transpose_weight else transpose(weight, before_op=matmul_op)
+            weight if not transpose_weight else _transpose(weight, before_op=matmul_op)
         )
         x = mb.linear(
             x=x_transposed, weight=w_no_transpose, bias=bias, before_op=matmul_op
         )
-        x = transpose(x, before_op=matmul_op, name=out_name)
+        x = _transpose(x, before_op=matmul_op, name=out_name)
     else:
         # If transpose_x == transpose_weight == False
         # x*w = x*(w^T)^T = linear(x, w^T)
         x_no_transpose = (
-            transpose(linear_x, before_op=matmul_op) if transpose_x else linear_x
+            _transpose(linear_x, before_op=matmul_op) if transpose_x else linear_x
         )
         w_transposed = (
-            weight if transpose_weight else transpose(weight, before_op=matmul_op)
+            weight if transpose_weight else _transpose(weight, before_op=matmul_op)
         )
         x = mb.linear(
             x=x_no_transpose,
@@ -118,29 +117,28 @@ def try_to_transform(matmul_op, add_op, block):
     return True
 
 
-def fuse_matmul_weight_bias_block(block):
+def _fuse_matmul_weight_bias_block(block):
     fusion_status = False
     for op in list(block.operations):
         for b in op.blocks:
             block_changed = True
             while block_changed:
-                block_changed = fuse_matmul_weight_bias_block(b)
+                block_changed = _fuse_matmul_weight_bias_block(b)
         if len(op.blocks) > 0:
             # This op can't be matmul
             continue
 
-        add_op = match_pattern(op)
+        add_op = _match_pattern(op)
         if add_op is not None:
             with block:
-                fusion_status = try_to_transform(op, add_op, block)
+                fusion_status = _try_to_transform(op, add_op, block)
             # has to break as the downstream iterator is affected.
             if fusion_status:
                 return fusion_status
     return fusion_status
 
-
 @register_pass(namespace="common")
-def fuse_matmul_weight_bias(prog):
+class fuse_matmul_weight_bias(AbstractGraphPass):
     """
     Convert matmul + add/sub to linear whenever possible.
 
@@ -158,7 +156,8 @@ def fuse_matmul_weight_bias(prog):
 
         prog: Program
     """
-    for f in prog.functions.values():
-        block_changed = True
-        while block_changed:
-            block_changed = fuse_matmul_weight_bias_block(f)
+    def apply(self, prog):
+        for f in prog.functions.values():
+            block_changed = True
+            while block_changed:
+                block_changed = _fuse_matmul_weight_bias_block(f)

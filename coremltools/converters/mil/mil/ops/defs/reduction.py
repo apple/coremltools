@@ -9,7 +9,6 @@ from coremltools.converters.mil.mil import (
     Operation,
     precondition,
     types,
-    VALUE
 )
 from coremltools.converters.mil.mil.input_type import (
     BoolInputType,
@@ -19,6 +18,7 @@ from coremltools.converters.mil.mil.input_type import (
     IntTensorInputType,
     TensorInputType
 )
+from coremltools.converters.mil.mil.operation import VALUE
 
 
 class ReductionAxes(Operation):
@@ -116,12 +116,7 @@ class ReductionAxis(Operation):
         raise NotImplementedError()
 
 
-"""
-Reduction op implementations
-"""
-
-
-@register_op(doc_str="TODO")
+@register_op(doc_str="")
 class reduce_arg(ReductionAxis):
     def __init__(self, **kwargs):
         super(reduce_arg, self).__init__(**kwargs)
@@ -139,6 +134,10 @@ class reduce_arg(ReductionAxis):
 
         return types.tensor(types.int32, tuple(reduced_shape))
 
+
+"""
+Reduction op implementations
+"""
 
 @register_op(doc_str="")
 class reduce_argmax(reduce_arg):
@@ -546,7 +545,7 @@ class reduce_sum(ReductionAxes):
     
     axes: const<K,i32> (Optional, default="None", reduce on all axes.)
         * The dimensions to reduce.
-    
+
     keep_dims: const<bool> (Optional, default=False)
         * If ``False``, the rank is reduced by ``1`` for each entry in ``axes``,
           otherwise retain reduced axes with length ``1``.
@@ -561,7 +560,7 @@ class reduce_sum(ReductionAxes):
     T: f32, int32
     
     """
-    
+
     def __init__(self, **kwargs):
         super(reduce_sum, self).__init__(**kwargs)
 

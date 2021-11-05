@@ -10,4 +10,13 @@ from . import quantization_utils
 from . import spec_inspection_utils
 from . import update_optimizer_utils
 from . import utils
-from .builder import *
+
+# This import should be pruned rdar://84519338
+from .builder import (
+    AdamParams,
+    datatypes,
+    set_training_features,
+    set_transform_interface_params,
+    SgdParams,
+    NeuralNetworkBuilder
+)

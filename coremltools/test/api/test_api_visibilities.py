@@ -58,7 +58,6 @@ class TestApiVisibilities:
             "load_spec",
             "rename_feature",
             "save_spec",
-            "ModelPackage",
         ]
         _check_visible_modules(_get_visible_items(ct.utils), expected)
 

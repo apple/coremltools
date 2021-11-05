@@ -4,8 +4,20 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 import numpy as np
 
+from coremltools.converters.mil.mil import (
+    BoolInputType,
+    DefaultInputs,
+    InputSpec,
+    Operation,
+    precondition,
+    StringInputType,
+    TensorInputType,
+    TupleInputType,
+    types,
+)
+from coremltools.converters.mil.mil.operation import VALUE
 from coremltools.converters.mil.mil.types.symbolic import is_symbolic
-from ._op_reqs import *
+from ._op_reqs import register_op
 from ._utils import broadcast_shapes, parse_einsum_equation
 
 @register_op(doc_str="")

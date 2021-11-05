@@ -4,7 +4,19 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 import numpy as np
 
-from ._op_reqs import *
+from ._op_reqs import register_op
+from coremltools.converters.mil.mil import (
+    DefaultInputs,
+    FloatInputType,
+    InputSpec,
+    IntInputType,
+    IntTensorInputType,
+    Operation,
+    precondition,
+    TensorInputType,
+    types,
+)
+from coremltools.converters.mil.mil.operation import VALUE
 from coremltools.converters.mil.mil.types.symbolic import (
     any_symbolic,
 )
@@ -292,7 +304,7 @@ class local_response_norm(Operation):
     Apply local response normalization to the n-dimensional input tensor:
     
     .. math::
-       x_i \\leftarrow \\dfrac{x_i}{\\left ( k + \\dfrac{\\alpha}{\text{size}} \\sum_j x_j^2 \\right )^\\beta}
+       x_i \\leftarrow \\dfrac{x_i}{\\left ( k + \\dfrac{\\alpha}{\\text{size}} \\sum_j x_j^2 \\right )^\\beta}
     
     
     Parameters

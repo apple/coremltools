@@ -3,8 +3,9 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil import Builder as mb, types
 from coremltools.converters.mil.mil.ops.defs._utils import parse_einsum_equation
+from coremltools.converters.mil.mil.types.symbolic import any_symbolic, is_symbolic
 
 
 def _reverse_input_einsum_eq(equation):
@@ -107,3 +108,40 @@ def build_einsum_mil(a_var, b_var, equation, name):
         )
 
     return x
+
+
+def is_symbolic_dim_in_prog(prog):
+    '''
+    Takes in a MIL program object, checks if any of the tensors in it contain a symbolic dimension.
+    Returns true if it does.
+
+    :param prog: coremltools.converters.mil.Program
+    :return: bool
+    '''
+    def _does_block_contain_symbolic_shape(block):
+        for op in block.operations:
+            for b in op.blocks:
+                if _does_block_contain_symbolic_shape(b):
+                    return True
+            for out in op.outputs:
+                if types.is_tensor(out.sym_type):
+                    shape = out.sym_type.get_shape()
+                    if any_symbolic(shape):
+                        return True
+                elif types.is_scalar(out.sym_type) or types.is_str(out.sym_type):
+                    if is_symbolic(out.val):
+                        return True
+                elif types.is_list(out.sym_type):
+                    if types.is_tensor(out.elem_type):
+                        if any_symbolic(out.elem_type.get_shape()):
+                            return True
+                    else:
+                        raise NotImplementedError("\'{}\' type in a list not handled".format(out.elem_type))
+                else:
+                    raise NotImplementedError("\'{}\' type is not handled".format(out.sym_type))
+        return False
+
+    for f in prog.functions.values():
+        if _does_block_contain_symbolic_shape(f):
+            return True
+    return False

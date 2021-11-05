@@ -3,20 +3,25 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import random
+from distutils.version import StrictVersion as _StrictVersion
 import itertools
-import pytest
 import numpy as np
-from coremltools._deps import __get_version as _get_version
+import pytest
+import random
+
+
+import coremltools as ct
+from coremltools._deps import _get_version
 from coremltools.converters.mil import testing_reqs
-from coremltools.converters.mil.testing_reqs import *
 from coremltools.converters.mil.frontend.tensorflow2.test.testing_utils import (
     TensorFlow2BaseTest
 )
 from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import (
     TensorFlowBaseTest
 )
-from distutils.version import StrictVersion as _StrictVersion
+from coremltools.converters.mil.testing_utils import random_gen
+from ..._utils import is_symbolic_dim_in_prog
+
 TensorFlowBaseTest.run_compare_tf_keras = \
     TensorFlow2BaseTest.run_compare_tf_keras
 backends = testing_reqs.backends
@@ -1257,6 +1262,61 @@ class TestRecurrent(TensorFlowBaseTest):
             use_cpu_only=use_cpu_only,
             backend=backend,
         )
+
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend", itertools.product([True], backends)
+    )
+    def test_lstm_conversion_static_shapes(self, use_cpu_only, backend):
+        '''
+        Test that intermediate tensor shapes are populated correctly by the converter.
+        That is, there are no symbolic dimensions in the shapes, when conversion is
+        performed with a fixed input shape, irrespective of the shape used in the source model definition.
+        '''
+        def _get_keras_simple_lstm_model(input_shape):
+            input = tf.keras.Input(batch_input_shape=input_shape)
+            output = tf.keras.layers.LSTM(5)(input)
+            keras_model = tf.keras.Model(inputs=input, outputs=output)
+            return keras_model
+
+        def _test_for_symbolic_shapes(keras_input_shape, input_shape_for_conversion, are_symbols_expected):
+            keras_model = _get_keras_simple_lstm_model(keras_input_shape)
+            res = TensorFlowBaseTest.run_compare_tf_keras(
+                        keras_model,
+                        [
+                            random_gen((1, 32, 10), -1, 1),
+                        ],
+                        inputs_for_conversion=[ct.TensorType(shape=input_shape_for_conversion)],
+                        use_cpu_only=use_cpu_only,
+                        backend=backend,
+                    )
+            coreml_model = res[1]
+            mil_prog = coreml_model._get_mil_internal()
+            assert is_symbolic_dim_in_prog(mil_prog) == are_symbols_expected
+
+
+        _test_for_symbolic_shapes(keras_input_shape=(1, 32, 10),
+                                  input_shape_for_conversion=(1, 32, 10),
+                                  are_symbols_expected=False)
+
+        _test_for_symbolic_shapes(keras_input_shape=(None, 32, 10),
+                                  input_shape_for_conversion=(1, 32, 10),
+                                  are_symbols_expected=False)
+
+        _test_for_symbolic_shapes(keras_input_shape=(None, None, 10),
+                                  input_shape_for_conversion=(1, 32, 10),
+                                  are_symbols_expected=False)
+
+        _test_for_symbolic_shapes(keras_input_shape=(None, 32, 10),
+                                  input_shape_for_conversion=(ct.RangeDim(1, 10), 32, 10),
+                                  are_symbols_expected=True)
+
+        if backend[0] != "mlprogram":
+            # FIX ME: model load fails if backend is "mlprogram". rdar://84862138
+            _test_for_symbolic_shapes(keras_input_shape=(None, None, 10),
+                                      input_shape_for_conversion=(ct.RangeDim(1, 10), ct.RangeDim(16, 64), 10),
+                                      are_symbols_expected=True)
+
+
 
 class TestRepeatVector(TensorFlowBaseTest):
     @pytest.mark.parametrize(

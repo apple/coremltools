@@ -3,13 +3,23 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from coremltools.converters.mil import testing_reqs
-from coremltools.converters.mil.mil import get_new_symbol
-from coremltools.converters.mil.testing_reqs import *
+import functools
+import itertools
+import numpy as np
+import pytest
 
 from .testing_utils import run_compare_builder
+from coremltools.converters.mil import testing_reqs
+from coremltools.converters.mil.mil import (
+    Builder as mb,
+    get_new_symbol,
+    types
+)
+from coremltools.converters.mil.testing_reqs import backends
+from coremltools.converters.mil.testing_utils import random_gen
 
-backends = testing_reqs.backends
+if testing_reqs._HAS_TORCH:
+    import torch
 
 
 class TestAffine:
@@ -439,7 +449,6 @@ class TestUpsampleBilinear:
             backend=backend,
         )
 
-
     @pytest.mark.skipif(not testing_reqs._HAS_TORCH, reason="PyTorch not installed.")
     @pytest.mark.parametrize(
         "use_cpu_only, backend, input_shape, scale_factor, align_corners, recompute_scale_factor",
@@ -796,9 +805,8 @@ class TestCropResize:
             np.array([3.5, 5.5, 11.5, 13.5], dtype=np.float32).reshape(1, 1, 1, 2, 2),
         ]
 
-        import functools
         for mode in range(6):
-            ## nn-proto does not support UNALIGN_CORNERS
+            # nn-proto does not support UNALIGN_CORNERS
             if not (backend[0] == 'neuralnetwork' and mode == 5):
                 run_compare_builder(
                     functools.partial(build, mode=mode),

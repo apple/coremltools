@@ -727,7 +727,7 @@ def _quantize_nn_spec(nn_spec, nbits, qm, **kwargs):
         layer_type = layer.WhichOneof("layer")
         if not selector.do_quantize(layer):
             continue
-        print("Quantizing layer {}".format(layer.name))
+        print("Quantizing layer {} of type {}".format(layer.name, layer_type))
 
         # Convolution
         if layer_type == "convolution":
@@ -1643,7 +1643,7 @@ def quantize_weights(
             "specification instead.")
         return qspec
 
-    quantized_model = _get_model(qspec)
+    quantized_model = _get_model(qspec, compute_units=full_precision_model.compute_unit)
     if not sample_data:
         return quantized_model
 

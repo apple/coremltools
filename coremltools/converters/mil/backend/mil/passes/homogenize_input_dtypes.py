@@ -7,6 +7,7 @@
 
 from coremltools.converters.mil.mil.ops.defs import elementwise_binary, matmul
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
+from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil.types import promote_dtypes, builtin_to_string
 from coremltools.converters.mil.mil import Builder as mb
 
@@ -23,17 +24,14 @@ def _get_input_params(op):
             return params
     return None
 
-
-def _of_same_dtype(dtype1, dtype2):
+def _is_same_dtype(dtype1, dtype2):
     return (dtype1 is dtype2) or (builtin_to_string(dtype1) == builtin_to_string(dtype2))
-
 
 def _promoted_var(op, var, promoted_dtype):
     x = mb.cast(
         x=var, dtype=builtin_to_string(promoted_dtype), name=var.name + "_promoted", before_op=op
     )
     return x
-
 
 def _homogenize_input_dtypes_block(block):
     for op in list(block.operations):
@@ -47,7 +45,7 @@ def _homogenize_input_dtypes_block(block):
             promoted_dtype = promote_dtypes([var.dtype for var in input_vars])
 
             for i,var in enumerate(input_vars):
-                if not _of_same_dtype(var.dtype, promoted_dtype):
+                if not _is_same_dtype(var.dtype, promoted_dtype):
                     has_mixed_dtypes = True
                     with block:
                         input_vars[i] = _promoted_var(op, var, promoted_dtype)
@@ -59,7 +57,10 @@ def _homogenize_input_dtypes_block(block):
                     {k: v for k, v in op.inputs.items() if k not in new_inputs}
                 )
                 with block:
-                    new_output = getattr(mb, op.op_type)(**new_inputs)
+                    # create a new op with the promoted input vars
+                    new_op_class = getattr(mb,op.op_type)
+                    new_output = new_op_class(**new_inputs)
+
                     op.enclosing_block.replace_uses_of_var_after_op(
                         anchor_op=op, old_var=op.outputs[0], new_var=new_output, no_check_var_types=True,
                         # Has to set no_check_var_types=True because Matmul PyMIL type inference doesn't enforce same dtypes for x & y
@@ -67,9 +68,8 @@ def _homogenize_input_dtypes_block(block):
                     )
                     block.remove_ops([op])
 
-
 @register_pass(namespace="mil_backend")
-def homogenize_input_dtypes(prog):
+class homogenize_input_dtypes(AbstractGraphPass):
     """
     If inputs to an op, doesn't have same dtypes for some parameters, explicit cast operations are injected
     to ensure inputs to that op have same promoted dtype.
@@ -77,8 +77,9 @@ def homogenize_input_dtypes(prog):
     - Only ops specified in dict _SUPPORTED_OPS as its keys, can be affected by this pass
     - Only the named inputs of ops specified in dict _SUPPORTED_OPS as values, are promoted to match dtypes
     """
-    for f_name, f in prog.functions.items():
-        _homogenize_input_dtypes_block(f)
+    def apply(self, prog):
+        for f in prog.functions.values():
+            _homogenize_input_dtypes_block(f)
 
-        for op in f.operations:
-            op.type_value_inference(overwrite_output=True)
+            for op in f.operations:
+                op.type_value_inference(overwrite_output=True)

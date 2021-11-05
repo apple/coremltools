@@ -3,13 +3,18 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from coremltools.converters.mil import testing_reqs
-from coremltools.converters.mil.mil import get_new_symbol
-from coremltools.converters.mil.testing_reqs import *
+import itertools
+import numpy as np
+import pytest
 
 from .testing_utils import run_compare_builder
-
-backends = testing_reqs.backends
+from coremltools.converters.mil import testing_reqs
+from coremltools.converters.mil.mil import (
+    Builder as mb,
+    get_new_symbol,
+    types
+)
+from coremltools.converters.mil.testing_reqs import backends
 
 
 class TestConvTranspose:
@@ -227,8 +232,6 @@ class TestConv:
         groups,
         symbolic,
     ):
-
-
         D, H, W, Kd, Kh, Kw = DHWKdKhKw
         N, C_in, C_out = 1, 1 * groups, 2 * groups
 
@@ -423,7 +426,6 @@ class TestConv:
             )
             input_shape = [N, C_in, H, W]
             paddings = [padding[0], padding[0], padding[1], padding[1]]
-
 
         wts = m.state_dict()
         weight = wts["weight"].detach().numpy()

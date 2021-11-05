@@ -6,8 +6,6 @@
 """
 Utilities for the entire package.
 """
-from coremltools.converters.mil.mil.passes.name_sanitization_utils import NameSanitizer as _NameSanitizer
-from coremltools.proto import Model_pb2 as _Model_pb2
 import math as _math
 import numpy as _np
 import os as _os
@@ -15,8 +13,11 @@ import pathlib as _pathlib
 import sys as _sys
 import tempfile as _tempfile
 import warnings as _warnings
+
+from coremltools import ComputeUnit as _ComputeUnit
+from coremltools.converters.mil.mil.passes.name_sanitization_utils import NameSanitizer as _NameSanitizer
+from coremltools.proto import Model_pb2 as _Model_pb2
 from .._deps import _HAS_SCIPY
-from ..libmodelpackage import ModelPackage
 
 
 _MLMODEL_EXTENSION = ".mlmodel"
@@ -24,9 +25,9 @@ _MLPACKAGE_EXTENSION = ".mlpackage"
 
 
 try:
-    from ..libmodelpackage import ModelPackage
-except ModuleNotFoundError:
-    pass
+    from ..libmodelpackage import ModelPackage as _ModelPackage
+except:
+    _ModelPackage = None
 
 if _HAS_SCIPY:
     import scipy.sparse as _sp
@@ -109,7 +110,12 @@ def save_spec(spec, filename, auto_set_specification_version=False):
         f.write(spec)
 
     if is_package:
-        package = ModelPackage(filename)
+        if _ModelPackage is None:
+            raise Exception(
+                "Unable to load libmodelpackage. Cannot save spec"
+            )
+
+        package = _ModelPackage(filename)
         model_name = _pathlib.Path(filename).with_suffix('.mlmodel').name
         
         # Root file is copied into the model package. Changes to in-memory JSON is commited to disk when package goes out of scope.
@@ -140,13 +146,16 @@ def load_spec(filename):
     --------
     save_spec
     """
-    from ..proto import Model_pb2
+    if _ModelPackage is None:
+        raise Exception(
+            "Unable to load libmodelpackage. Cannot make save spec."
+        )
 
-    spec = Model_pb2.Model()
+    spec = _Model_pb2.Model()
 
     specfile = filename
-    if ModelPackage.isValid(filename):
-        specfile = ModelPackage(filename).getRootModel().path()
+    if _ModelPackage.isValid(filename):
+        specfile = _ModelPackage(filename).getRootModel().path()
 
     with open(specfile, "rb") as f:
         contents = f.read()
@@ -264,7 +273,7 @@ def _convert_neural_network_weights_to_fp16(full_precision_model):
     return _get_model(_convert_neural_network_spec_weights_to_fp16(spec))
 
 
-def _get_model(spec):
+def _get_model(spec, compute_units=_ComputeUnit.ALL):
     """
     Utility to get the model and the data.
     """
@@ -273,7 +282,7 @@ def _get_model(spec):
     if isinstance(spec, MLModel):
         return spec
     else:
-        return MLModel(spec)
+        return MLModel(spec, compute_units=compute_units)
 
 
 def evaluate_regressor(model, data, target="target", verbose=False):

@@ -4,47 +4,56 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import logging
-import numpy as _np
+import numpy as np
 import os
-import tempfile
-import shutil
 
-from coremltools.converters.mil.backend.mil.helper import *
-from coremltools.converters.mil.backend.backend_helper import _get_probability_var_for_classifier
 from .passes import mil_passes
-import coremltools.proto.MIL_pb2 as pm
-from coremltools.converters.mil.mil import types
-from coremltools.converters.mil.mil import Function
+from coremltools import _SPECIFICATION_VERSION_IOS_15
+from coremltools.converters.mil.backend.mil.helper import (
+    cast_to_framework_io_dtype,
+    create_file_value,
+    create_immediate_value,
+    create_list_scalarvalue,
+    create_scalar_value,
+    types_to_proto
+)
+from coremltools.converters.mil.backend.backend_helper import _get_probability_var_for_classifier
+from coremltools.converters.mil.mil import (
+    Builder as mb,
+    Function,
+    mil_list,
+    types
+)
 from coremltools.converters.mil.backend.nn.load import _set_optional_inputs
+from coremltools.converters.mil.input_types import ImageType, TensorType, EnumeratedShapes, RangeDim
 from coremltools.converters.mil.mil.ops.registry import SSAOpRegistry
 from coremltools.converters.mil.mil.types.symbolic import (
     any_symbolic,
     any_variadic,
     is_symbolic,
 )
+from coremltools.converters.mil.mil.types.type_mapping import types_int64
+from coremltools.libmilstoragepython import _BlobStorageWriter as BlobWriter
+from coremltools.models.model import _WEIGHTS_FILE_NAME
 from coremltools.models.neural_network.flexible_shape_utils import (
-    NeuralNetworkImageSize,
-    NeuralNetworkImageSizeRange,
     add_enumerated_image_sizes,
     add_multiarray_ndshape_enumeration,
+    NeuralNetworkImageSize,
+    NeuralNetworkImageSizeRange,
     set_multiarray_ndshape_range,
-    update_image_size_range,
+    update_image_size_range
+)
+from coremltools.proto import (
+    FeatureTypes_pb2 as ft,
+    MIL_pb2 as pm,
+    Model_pb2 as ml
 )
 
-from coremltools.libmilstoragepython import _BlobStorageWriter as BlobWriter
-
-import coremltools.proto.Model_pb2 as ml
-import coremltools.proto.FeatureTypes_pb2 as ft
-from coremltools.converters.mil.input_types import ImageType, TensorType, EnumeratedShapes, RangeDim
-from coremltools.models.model import _WEIGHTS_FILE_NAME
-from coremltools.converters.mil.mil import Builder as mb
-from coremltools.converters.mil.mil import mil_list
-from coremltools import _SPECIFICATION_VERSION_IOS_15
 
 def should_use_weight_file(val):
     return (
         val is not None
-        and isinstance(val, (_np.ndarray, _np.generic))
+        and isinstance(val, (np.ndarray, np.generic))
         and val.size >= 10
         and val.dtype in ['float16', 'float32']
     )
@@ -97,7 +106,7 @@ def translate_generic_op(op, parameters, blob_writer, literal_params=[]):
     blocks = None
     if len(op.blocks) > 0:
         blocks = [create_block(b, parameters, blob_writer) \
-            for b in op.blocks]
+                  for b in op.blocks]
 
     op_type = op.op_type
     attr_dict = {}
@@ -206,6 +215,9 @@ def _add_classify_op(prog, classifier_config):
 
     # add the classify op now
     with block:
+        # cast the int label to np.int64
+        if isinstance(classes[0], int):
+            classes = [np.int64(x) for x in classes]
         classes_var = mb.const(val=mil_list(classes))
         out = mb.classify(probabilities=probability_var, classes=classes_var)
 
@@ -344,7 +356,7 @@ def load(prog, weights_dir, resume_on_errors=False, **kwargs):
             keytype, valtype = var.sym_type.T
             if types.is_str(keytype):
                 output_feature_type.dictionaryType.stringKeyType.MergeFromString(b"")
-            elif (keytype == types_int64):
+            elif (keytype == types.int64):
                 output_feature_type.dictionaryType.int64KeyType.MergeFromString(b"")
             else:
                 raise ValueError("Dictionary key type not supported.")
@@ -444,7 +456,6 @@ def load(prog, weights_dir, resume_on_errors=False, **kwargs):
             set_multiarray_ndshape_range(
                 model, input_name, lower_bounds=lb, upper_bounds=ub
             )
-
 
     # Set optional inputs
     _set_optional_inputs(model, input_types)
