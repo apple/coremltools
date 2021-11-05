@@ -239,7 +239,7 @@ class SimpleTest(CorrectnessTest):
         }
 
         self._test_model(builder.spec, input, expected)
-        self.assertEquals(len(input_dim), builder._get_rank("output"))
+        self.assertEqual(len(input_dim), builder._get_rank("output"))
 
     def test_LRN(self):
         input_dim = (1, 3, 3)
@@ -6713,7 +6713,7 @@ class IOS14SingleLayerTests(CorrectnessTest):
         expected = {"output": pytorch_output.numpy()}
 
         self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
-        self.assertEquals(len(input_dim), builder._get_rank("output"))
+        self.assertEqual(len(input_dim), builder._get_rank("output"))
 
     def test_slice_by_size_cpu(self, cpu_only=True):
 

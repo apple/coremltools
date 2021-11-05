@@ -170,8 +170,8 @@ def _get_lstm_weight_fields(lstm_wp):
 def _fill_tensor_fields(tensor_field, ranks=None, shapes=None):
     """
     Fill the tensor fields.
-    ranks - None or a list of integers with the same length of number of inputs/outputs
-    shapes - None or a list of shapes the same length of number of inputs/outputs. Each shape is a list or tuple
+    ranks - ``NONE`` or a list of integers with the same length of number of inputs/outputs
+    shapes - ``NONE`` or a list of shapes the same length of number of inputs/outputs. Each shape is a list or tuple
     """
     if ranks is None and shapes is None:
         return
@@ -220,11 +220,13 @@ class NeuralNetworkBuilder(object):
 
     The NeuralNetworkBuilder constructs a Core ML neural network specification
     layer by layer. The layers should be added in such an order that the inputs
-    to each layer (referred to as blobs) of each layer has been previously
-    defined. The builder can also set pre-processing steps to handle
-    specialized input format (e.g. images), and set class labels for neural
+    to each layer (referred to as blobs of each layer) have been previously
+    defined. The builder can also set preprocessing steps to handle
+    specialized input formats (such as images), and set class labels for neural
     network classifiers.
-    Refer to the protobuf messages in specification (NeuralNetwork.proto) for more details.
+    
+    Refer to the protobuf messages in the specification (NeuralNetwork.proto) 
+    for more details.
 
     Examples
     --------
@@ -264,55 +266,67 @@ class NeuralNetworkBuilder(object):
         use_float_arraytype=False,
     ):
         """
-        Construct a NeuralNetworkBuilder object to build an MLModel specification with
-        model interface or a NeuralNetwork protobuf message, either from scratch or an
+        Construct a NeuralNetworkBuilder object to build an MLModel specification with a
+        model interface, or a NeuralNetwork protobuf message, either from scratch or using an
         existing specification.
 
         Parameters
         ----------
         input_features: [(str, datatypes.Array)] or None
-            List of input feature of the network. Each feature is a (name,
-            array) tuple, where name the name of the feature, and array
-            is an datatypes.Array object describing the feature type.
-            When spec is None (building from scratch), input_features must not be None.
-            When spec is not None, input_features will be ignored; input feature of
-            existing spec will be used instead.
+            List of input feature of the network. 
+            Each feature is a ``(name, array)`` tuple, where ``name`` is the 
+            name of the feature, and ``array`` is a ``datatype.Array`` object 
+            describing the feature type.
+            
+            When ``spec`` is ``None`` (building from scratch), ``input_features`` must not be ``None``.
+
+            When ``spec`` is not ``None``, ``input_features`` will be ignored; 
+            the input feature of the existing spec will be used instead.
 
         output_features: [(str, datatypes.Array or None)] or None
-            List of output feature of the network. Each feature is a (name,
-            array) tuple, where name is the name of the feature, and array
-            is an datatypes.Array object describing the feature type.
-            array can be None if not known.
-            When spec is None (building from scratch), output_features must not be None.
-            When spec is not None, output_features will be ignored; output feature of
-            existing spec will be used instead.
+            List of output feature of the network. Each feature is a 
+            ``(name, array)`` tuple, where ``name`` is the name of the feature, 
+            and ``array`` is a ``datatypes.Array`` object describing the feature type.
+            
+            The ``array`` can be ``None`` if not known.
+            
+            When ``spec`` is ``None`` (building from scratch), ``output_features`` must not be ``None``.
+            
+            When ``spec`` is not ``None``, ``output_features`` will be ignored; 
+            the output feature of the existing spec will be used instead.
 
         mode: str ('classifier', 'regressor' or None)
-            Mode (one of 'classifier', 'regressor', or None).
+            Mode (one of ``'classifier'``, ``'regressor'``, or ``None``).
 
-            When mode = 'classifier', a NeuralNetworkClassifier spec will be
-            constructed.  When mode = 'regressor', a NeuralNetworkRegressor
+            When ``mode = 'classifier'``, a NeuralNetworkClassifier spec will be
+            constructed.  When ``mode = 'regressor'``, a NeuralNetworkRegressor
             spec will be constructed.
 
         disable_rank5_shape_mapping: bool
             Only applicable for neural networks.
+            
             If True, inputs are no longer forced to map to rank 5 tensors
             (rank is equal to the length of the shape of the tensor).
-            Instead, for multi-array inputs "EXACT_ARRAY_MAPPING" mapping is used, whereas
-            for image inputs "RANK4_IMAGE_MAPPING" is used.
-            For details, see description of enums "NeuralNetworkMultiArrayShapeMapping"
-            and "NeuralNetworkImageShapeMapping" in NeuralNetwork.proto.
-            When spec is not None, this argument will be ignored.
+            Instead, for multi-array inputs ``"EXACT_ARRAY_MAPPING"`` mapping is used, whereas
+            for image inputs ``"RANK4_IMAGE_MAPPING"`` is used. For details, 
+            see description of enums ``NeuralNetworkMultiArrayShapeMapping``
+            and ``NeuralNetworkImageShapeMapping`` in NeuralNetwork.proto.
+            
+            When ``spec`` is not ``None``, this argument will be ignored.
 
         spec: None or coremltools.proto.Model_pb2
-            If None, a new MLModel spec will be created by the builder with input and output features.
-            Otherwise, the builder will continue to build on spec. This is useful when the MLModel is
-            built incrementally.
+            If ``None``, a new MLModel spec will be created by the builder with 
+            input and output features.
+            
+            Otherwise, the builder will continue to build on ``spec``. 
+            This is useful when the MLModel is built incrementally.
 
         nn_spec: None or coremltools.proto.NeuralNetwork_pb2
-            If None, a new, empty NeuralNetwork proto will be created for spec.
-            If nn_spec is not None and spec is None, the builder will build a NeuralNetwork spec without
-            wrapping it within an MLModel. This is useful to create nested NeuralNetworks for models
+            If ``None``, a new, empty NeuralNetwork proto will be created for spec.
+            
+            If ``nn_spec`` is not ``None`` and ``spec`` is ``None``, the builder will 
+            build a NeuralNetwork spec without wrapping it within an MLModel. 
+            This is useful to create nested NeuralNetworks for models
             with control flow operations.
 
         use_float_arraytype: bool
@@ -431,8 +445,8 @@ class NeuralNetworkBuilder(object):
             The input names of the network.
 
         input_dims: [tuple]
-            The input dimensions of the network. The ordering of input_dims
-            is the same as input_names.
+            The input dimensions of the network. The ordering of ``input_dims``
+            is the same as ``input_names``.
 
         Examples
         --------
@@ -492,8 +506,8 @@ class NeuralNetworkBuilder(object):
             The output names of the network.
 
         output_dims: [tuple]
-            The output dimensions of the network. The ordering of output_dims is the same
-            as output_names.
+            The output dimensions of the network. The ordering of ``output_dims`` is the same
+            as ``output_names``.
 
         Examples
         --------
@@ -555,7 +569,7 @@ class NeuralNetworkBuilder(object):
 
         predicted_feature_name: str
             Name of the output feature for the class labels exposed in the
-            Core ML neural network classifier, defaults: 'classLabel'.
+            Core ML neural network classifier, defaults: ``'classLabel'``.
 
         prediction_blob: str
             If provided, then this is the name of the neural network blob which
@@ -613,17 +627,17 @@ class NeuralNetworkBuilder(object):
     def set_optional_input(self, input_idx, value=None, format="float"):
         """
         Marks given input as optional input.
-        Optionally, sets default value for optional input if value is not None
+        Optionally, sets default value for optional input if value is not ``None``.
 
         Parameters
         ----------
         input_idx: int
-            Index of input to be marked and fill with default value
+            Index of input to be marked and fill with default value.
         value: int/double/float/None
-            Value to be fill as default value
+            Value to be fill as default value.
         format: str
-            Format of default value
-            Must be one of 'float', 'double' or 'int'
+            Format of default value.
+            Must be one of ``'float'``, ``'double'``, or ``'int'``.
         """
         if input_idx >= len(self.spec.description.input):
             msg = (
@@ -719,12 +733,12 @@ class NeuralNetworkBuilder(object):
 
     def _check_fp16_weight_params_lstms(self, lstm_wp, has_peephole=True):
         """
-        Checks if a lstm layer has at least one weight_param which is in FP16 format
+        Checks if an LSTM layer has at least one ``weight_param`` which is in FP16 format.
 
         Parameters
         ----------
-        lstm_wp: lstm weights
-        has_peephole: if the lstm has peephole
+        lstm_wp: LSTM weights.
+        has_peephole: if the LSTM has a peephole.
         """
         if len(lstm_wp.inputGateWeightMatrix.float16Value) > 0:
             return True
@@ -758,7 +772,7 @@ class NeuralNetworkBuilder(object):
 
     def _check_fp16_weight_param_exists(self, layers):
         """
-        Checks if the network has at least one weight_param which is in FP16 format
+        Checks if the network has at least one ``weight_param`` which is in FP16 format.
 
         Parameters
         ----------
@@ -925,16 +939,21 @@ class NeuralNetworkBuilder(object):
 
     def set_categorical_cross_entropy_loss(self, name, input):
         r"""
-        Categorical Cross Entropy is used for single label categorization (only one category is applicable for each data point).
+        Categorical Cross Entropy is used for single label categorization 
+        (only one category is applicable for each data point).
 
         Parameters
         ----------
         name: The name of the loss layer
-        input: The name of the input, which should be a vector of length N representing the distribution over N categories. This must be the output of a softmax.
+        input: The name of the input
+        	The ``input`` should be a vector of length N representing the 
+        	distribution over N categories. This must be the output of a softmax.
 
-        Math
+        Notes
         ----------
-        Loss_ {CCE}(input, target) = -\sum_{i = 1} ^ {N}(target == i) log(input[i]) = - log(input[target])
+        
+        .. math::
+           Loss_ {CCE}(input, target) = -\sum_{i = 1} ^ {N}(target == i) log(input[i]) = - log(input[target])
         """
         if self.spec is None:
             return
@@ -1025,10 +1044,15 @@ class NeuralNetworkBuilder(object):
     def set_mean_squared_error_loss(self, name, input_feature=None):
         """
         input_feature: [(str, datatypes.Array)] or None
-            The input feature of the loss layer. Each feature is a (name,
-            array) tuple, where name is the name of the model's tensor our loss will be attached to,
-            and array is a datatypes.Array object describing the shape of that tensor.
+            The input feature of the loss layer. Each feature is a 
+            ``(name, array)`` tuple, where ``name`` is the name of the model's 
+            tensor our loss will be attached to, and ``array`` is a 
+            ``datatypes.Array`` object describing the shape of that tensor.
             Both the name and the array's shape must be provided in the tuple.
+            
+        Examples
+        --------
+        
             >>> feature = [('output_tensor', datatypes.Array((299, 299, 3)))]
         """
         if self.spec is None:
@@ -1204,7 +1228,7 @@ class NeuralNetworkBuilder(object):
         last: int
              The numbers of layers to inspect, starting from the last one.
         verbose: bool
-            Whether to display layer-specific parameters or not
+            Whether to display layer-specific parameters or not.
         """
         n_layers = len(self.nn_spec.layers)
         if last < 0:
@@ -1445,17 +1469,19 @@ class NeuralNetworkBuilder(object):
     ):
         """
         Add an inner product layer to the model.
-        Refer to the **InnerProductLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``InnerProductLayerParams`` message in the specification 
+        (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
         name: str
             The name of this layer.
         W: numpy.array or bytes()
-            Weight matrix of shape (output_channels, input_channels)
-            If W is of type bytes(), i.e. quantized, other quantization related arguments must be provided as well (see below).
+            Weight matrix of shape ``(output_channels, input_channels)``.
+            If ``W`` is of type ``bytes()`` (quantized), other quantization 
+            related arguments must be provided as well (see below).
         b: numpy.array
-            Bias vector of shape (output_channels, ).
+            Bias vector of shape: ``(output_channels, )``.
         input_channels: int
             Number of input channels.
         output_channels: int
@@ -1465,35 +1491,41 @@ class NeuralNetworkBuilder(object):
 
             - If True, the bias vector of this layer is not ignored.
             - If False, the bias vector is ignored.
+        
         input_name: str
             The input blob name of this layer.
         output_name: str
             The output blob name of this layer.
 
-        Quantization arguments, used when W is of type bytes():
-
+        Quantization arguments, used when ``W`` is of type ``bytes()``:
             int_8_dynamic_quantize: boolean
                 Whether to quantize and dequantize before and after inner product, respectively.
-                Expects byte weights, representing int8 values, if True. See NeuralNetwork.proto for other validation conditions.
+                Expects byte weights, representing int8 values, if True. 
+                See NeuralNetwork.proto for other validation conditions.
 
             is_quantized_weight: bool, optional
-                Set it to true when W is of type bytes(), representing quantized weights, default: false.
+                Set it to true when ``W`` is of type ``bytes()``, representing 
+                quantized weights, default: false.
 
             quantization_type: str
-                When weights are quantized (i.e. W is of type bytes()), this should be either "linear" or "lut".
+                When weights are quantized (that is, ``W`` is of type ``bytes()``), 
+                this should be either ``"linear"`` or ``"lut"``.
 
             nbits: int
-                Should be between 1 and 8 (inclusive). Number of bits per weight value. Only applicable when
-                weights are quantized.
+                Should be between 1 and 8 (inclusive). Number of bits per weight 
+                value. Only applicable when weights are quantized.
 
             quant_scale: numpy.array(dtype=numpy.float32)
-                scale vector to be used with linear quantization. Must be of length either 1 or output_channels.
+                scale vector to be used with linear quantization. Must be of 
+                length either 1 or output_channels.
 
             quant_bias: numpy.array(dtype=numpy.float32)
-                bias vector to be used with linear quantization. Must be of length either 1 or output_channels.
+                bias vector to be used with linear quantization. Must be of 
+                length either 1 or output_channels.
 
             quant_lut: numpy.array(dtype=numpy.float32)
-                the LUT (look up table) to be used with LUT quantization. Must be of length 2^nbits.
+                the LUT (look up table) to be used with LUT quantization. 
+                Must be of length 2^n bits.
 
         See Also
         --------
@@ -1561,23 +1593,25 @@ class NeuralNetworkBuilder(object):
     ):
         """
         Add an embedding layer to the model.
-        Refer to the **EmbeddingLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``EmbeddingLayerParams`` message in the specification 
+        (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
         name: str
             The name of this layer.
         W: float32 numpy.array or bytes()
-            Weight matrix of shape (output_channels, input_dim).
-            If W is of type bytes(), i.e. quantized to 1-8 bits, other quantization related arguments must be provided as well (see below).
+            Weight matrix of shape ``(output_channels, input_dim)``.
+            If ``W`` is of type ``bytes()`` (quantized to 1-8 bits), other 
+            quantization related arguments must be provided as well (see below).
         b: numpy.array
-            Bias vector of shape (output_channels, ).
+            Bias vector of shape ``(output_channels, )``.
         input_dim: int
             Size of the vocabulary (1 + maximum integer index of the words).
         output_channels: int
             Number of output channels.
         has_bias: boolean
-            Whether the bias vector of this layer is ignored in the spec.
+            Whether the bias vector of this layer is ignored in the ``spec``.
 
             - If True, the bias vector of this layer is not ignored.
             - If False, the bias vector is ignored.
@@ -1588,25 +1622,29 @@ class NeuralNetworkBuilder(object):
             The output blob name of this layer.
 
 
-        Quantization arguments expected, when W is of type bytes():
+        Quantization arguments expected, when ``W`` is of type ``bytes()``:
 
         is_quantized_weight: bool
-            Set it to true when W is of type bytes(), representing quantized weights
+            Set it to true when ``W`` is of type ``bytes()``, representing quantized weights.
 
         quantization_type: str
-            When weights are quantized (i.e. W is of type bytes()), this should be either "linear" or "lut".
+            When weights are quantized (that is, ``W`` is of type ``bytes()``), 
+            this should be either ``"linear"`` or ``"lut"``.
 
         nbits: int
             Should be between 1 and 8 (inclusive). Number of bits per weight value.
 
         quant_scale: numpy.array(dtype=numpy.float32)
-            scale vector to be used with linear quantization. Must be of length either 1 or output_channels.
+            Scale vector to be used with linear quantization. 
+            Must be of length either 1 or output_channels.
 
         quant_bias: numpy.array(dtype=numpy.float32)
-            bias vector to be used with linear quantization. Must be of length either 1 or output_channels.
+            Bias vector to be used with linear quantization. 
+            Must be of length either 1 or output_channels.
 
         quant_lut: numpy.array(dtype=numpy.float32)
-            the LUT (look up table) to be used with LUT quantization. Must be of length 2^nbits.
+            The LUT (look up table) to be used with LUT quantization. 
+            Must be of length 2^n bits.
 
         See Also
         --------
@@ -1655,7 +1693,8 @@ class NeuralNetworkBuilder(object):
     def add_softmax(self, name, input_name, output_name):
         """
         Add a softmax layer to the model.
-        Refer to the **SoftmaxLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``SoftmaxLayerParams`` message in the specification 
+        (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -1695,52 +1734,58 @@ class NeuralNetworkBuilder(object):
         name: str
             The name of this layer.
         non_linearity: str
-            The non_linearity (activation) function of this layer.
+            The ``non_linearity`` (activation) function of this layer.
             It can be one of the following:
 
-                - 'RELU': Rectified Linear Unit (ReLU) function.
-                - 'SIGMOID': sigmoid function.
-                - 'TANH': tanh function.
-                - 'SCALED_TANH': scaled tanh function, defined as:
+                - ``'RELU'``: Rectified Linear Unit (ReLU) function.
+                - ``'SIGMOID'``: sigmoid function.
+                - ``'TANH'``: tanh function.
+                - ``'SCALED_TANH'``: scaled tanh function, defined as:
 
                   ``f(x) = alpha * tanh(beta * x)``
 
-                  where alpha and beta are constant scalars.
+                  where ``alpha`` and ``beta`` are constant scalars.
 
-                - 'SOFTPLUS': softplus function.
-                - 'SOFTSIGN': softsign function.
-                - 'SIGMOID_HARD': hard sigmoid function, defined as:
+                - ``'SOFTPLUS'``: softplus function.
+                - ``'SOFTSIGN'``: softsign function.
+                - ``'SIGMOID_HARD'``: hard sigmoid function, defined as:
 
                   ``f(x) = min(max(alpha * x + beta, -1), 1)``
 
-                  where alpha and beta are constant scalars.
-                - 'LEAKYRELU': leaky relu function, defined as:
+                  where ``alpha`` and ``beta`` are constant scalars.
+                  
+                - ``'LEAKYRELU'``: leaky relu function, defined as:
 
                   ``f(x) = (x >= 0) * x + (x < 0) * alpha * x``
 
-                  where alpha is a constant scalar.
-                - 'PRELU': Parametric ReLU function, defined as:
+                  where ``alpha`` is a constant scalar.
+                  
+                - ``'PRELU'``: Parametric ReLU function, defined as:
 
                   ``f(x) = (x >= 0) * x + (x < 0) * alpha * x``
 
-                  where alpha is a multi-dimensional array of same size as x.
-                - 'ELU': Exponential linear unit function, defined as:
+                  where ``alpha`` is a multi-dimensional array of same size as ``x``.
+                  
+                - ``'ELU'``: Exponential linear unit function, defined as:
 
                   ``f(x) = (x >= 0) * x + (x < 0) * (alpha * exp(x) - 1)``
 
-                  where alpha is a constant scalar.
+                  where ``alpha`` is a constant scalar.
 
-                - 'PARAMETRICSOFTPLUS': Parametric softplus function, defined as:
+                - ``'PARAMETRICSOFTPLUS'``: Parametric softplus function, defined as:
 
                   ``f(x) = alpha * log(1 + exp(beta * x))``
 
-                  where alpha and beta are two multi-dimensional arrays of same size as x.
-                - 'THRESHOLDEDRELU': Thresholded ReLU function, defined as:
+                  where ``alpha`` and ``beta`` are two multi-dimensional arrays 
+                  of same size as ``x``.
+                  
+                - ``'THRESHOLDEDRELU'``: Thresholded ReLU function, defined as:
 
                   ``f(x) = (x >= alpha) * x``
 
-                  where alpha is a constant scalar.
-                - 'LINEAR': linear function.
+                  where ``alpha`` is a constant scalar.
+                  
+                - ``'LINEAR'``: linear function.
 
                    ``f(x) = alpha * x + beta``
 
@@ -1751,18 +1796,20 @@ class NeuralNetworkBuilder(object):
         params: list of float or numpy.array
             Parameters for the activation, depending on non_linearity.
 
-                - When non_linearity is one of ['RELU', 'SIGMOID', 'TANH', 'SCALED_TANH', 'SOFTPLUS', 'SOFTSIGN'], params is ignored.
-                - When non_linearity is one of ['SCALED_TANH', 'SIGMOID_HARD', 'LINEAR'], param is a list of 2 floats
-                  [alpha, beta].
-                - When non_linearity is one of ['LEAKYRELU', 'ELU', 'THRESHOLDEDRELU'], param is a list of 1 float
-                  [alpha].
-                - When non_linearity is 'PRELU', param is a list of 1 numpy array [alpha]. The shape of
-                  alpha is (C,), where C is either the number of input channels or
-                  1. When C = 1, same alpha is applied to all channels.
-                - When non_linearity is 'PARAMETRICSOFTPLUS', param is a list of 2 numpy arrays [alpha,
-                  beta]. The shape of alpha and beta is (C, ), where C is either
-                  the number of input channels or 1. When C = 1, same alpha and
-                  beta are applied to all channels.
+                - When ``non_linearity`` is one of [``'RELU'``, ``'SIGMOID'``, ``'TANH'``, ``'SCALED_TANH'``, ``'SOFTPLUS'``, ``'SOFTSIGN'``], 
+                  params is ignored.
+                - When ``non_linearity`` is one of [``'SCALED_TANH'``, ``'SIGMOID_HARD'``, ``'LINEAR'``], 
+                  param is a list of 2 floats ``[alpha, beta]``.
+                - When ``non_linearity`` is one of [``'LEAKYRELU'``, ``'ELU'``, ``'THRESHOLDEDRELU'``], 
+                  param is a list of 1 float ``[alpha]``.
+                - When ``non_linearity`` is ``'PRELU'``, param is a list of 1 numpy array ``[alpha]``. 
+                  The shape of ``alpha`` is ``(C,)``, where ``C`` is either the number of input channels or
+                  1. When ``C = 1``, same ``alpha`` is applied to all channels.
+                - When ``non_linearity`` is ``'PARAMETRICSOFTPLUS'``, param is a 
+                  list of 2 numpy arrays ``[alpha, beta]``. The shape of ``alpha`` and 
+                  `beta` is ``(C, )``, where ``C`` is either
+                  the number of input channels or 1. When ``C = 1``, same ``alpha`` and
+                  ``beta`` are applied to all channels.
 
         See Also
         --------
@@ -1881,19 +1928,23 @@ class NeuralNetworkBuilder(object):
         mode: str
             A string specifying the mode of the elementwise layer. It can be one of the following:
 
-            - 'CONCAT': concatenate input blobs along the channel axis.
-            - 'SEQUENCE_CONCAT': concatenate input blobs along the sequence axis.
-            - 'ADD': perform an element-wise summation over the input blobs.
-            - 'MULTIPLY': perform an element-wise multiplication over the input blobs.
-            - 'DOT': compute the dot product of the two input blobs. In this mode, the length of input_names should be 2.
-            - 'COS': compute the cosine similarity of the two input blobs. In this mode, the length of input_names should be 2.
-            - 'MAX': compute the element-wise maximum over the input blobs.
-            - 'MIN': compute the element-wise minimum over the input blobs.
-            - 'AVE': compute the element-wise average over the input blobs.
+            - ``'CONCAT'``: Concatenate input blobs along the channel axis.
+            - ``'SEQUENCE_CONCAT'``: Concatenate input blobs along the sequence axis.
+            - ``'ADD'``: Perform an element-wise summation over the input blobs.
+            - ``'MULTIPLY'``: Perform an element-wise multiplication over the input blobs.
+            - ``'DOT'``: Compute the dot product of the two input blobs. 
+              In this mode, the length of ``input_names`` should be 2.
+            - ``'COS'``: Compute the cosine similarity of the two input blobs. 
+              In this mode, the length of ``input_names`` should be 2.
+            - ``'MAX'``: Compute the element-wise maximum over the input blobs.
+            - ```'MIN'```: Compute the element-wise minimum over the input blobs.
+            - ``'AVE'``: Compute the element-wise average over the input blobs.
 
         alpha: float
-            if mode == 'ADD' and there is only one input_name, alpha is added to the input
-            if mode == 'MULTIPLY' and there is only one input_name, alpha is multiplied to the input
+            * if ``mode == 'ADD'`` and there is only one ``input_name``, 
+              ``alpha`` is added to the input.
+            * if ``mode == 'MULTIPLY'`` and there is only one ``input_name``, 
+              ``alpha`` is multiplied to the input.
 
         See Also
         --------
@@ -1943,37 +1994,48 @@ class NeuralNetworkBuilder(object):
     ):
         """
         Add an upsample layer to the model.
-        Refer to the **UpsampleLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``UpsampleLayerParams`` message in the specification 
+        (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
         name: str
             The name of this layer.
         scaling_factor_h: int or float
-            Scaling factor on the vertical direction. Float values only supported with BILINEAR and ALIGN_CORNERS_*
+            Scaling factor on the vertical direction. Float values only 
+            supported with ``BILINEAR`` and ``ALIGN_CORNERS_*``.
         scaling_factor_w: int or float
-            Scaling factor on the horizontal direction. Float values only supported with BILINEAR and ALIGN_CORNERS_*
+            Scaling factor on the horizontal direction. Float values only 
+            supported with ``BILINEAR`` and ``ALIGN_CORNERS_*``.
         input_name: str
             The input blob name of this layer.
         output_name: str
             The output blob name of this layer.
         mode: str
             Overall interpolation mode. The following values are supported:
-            'NN': nearest neighbour
-            'BILINEAR': bilinear interpolation
+            
+            * ``'NN'``: nearest neighbour
+            * ``'BILINEAR'``: bilinear interpolation
+            
         linear_upsample_mode: str
-            Specifies the behavior for linear upsampling. Only valid when Interpolation Mode is BILINEAR.
-            If input grid is [0, Xin-1] (corresponding to an input size of Xin), and if the output size is Xout,
+            Specifies the behavior for linear upsampling. Only valid when 
+            Interpolation Mode is ``BILINEAR``.
+            
+            If input grid is ``[0, Xin-1]`` (corresponding to an input size of 
+            ``Xin``), and if the output size is ``Xout``,
             then the grid points are sampled in the following manner:
+            
             'DEFAULT':
-                spacing = (Xin-Xin/Xout) / (Xout-1)
-                grid_point[i] = min(Xin-1, max(0, i * spacing)), for i = 0,1,2,..,Xout-1
+                - ``spacing = (Xin-Xin/Xout) / (Xout-1)``
+                - ``grid_point[i] = min(Xin-1, max(0, i * spacing)), for i = 0,1,2,..,Xout-1``
+                
             'ALIGN_CORNERS_TRUE':
-                spacing = (Xin-1) / (Xout-1)
-                grid_point[i] = min(Xin-1, max(0, i * spacing)), for i = 0,1,2,..,Xout-1
+                - ``spacing = (Xin-1) / (Xout-1)``
+                - ``grid_point[i] = min(Xin-1, max(0, i * spacing)), for i = 0,1,2,..,Xout-1``
+                
             'ALIGN_CORNERS_FALSE':
-                spacing = Xin / Xout
-                grid_point[i] = min(Xin-1, max(0, i * spacing + 0.5 * spacing - 0.5)), for i = 0,1,2,..,Xout-1
+                - ``spacing = Xin / Xout``
+                - ``grid_point[i] = min(Xin-1, max(0, i * spacing + 0.5 * spacing - 0.5)), for i = 0,1,2,..,Xout-1``
 
         See Also
         --------
@@ -2050,7 +2112,8 @@ class NeuralNetworkBuilder(object):
     ):
         """
         Add a scale layer to the model.
-        Refer to the **ScaleLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``ScaleLayerParams`` message in the specification 
+        (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -2061,16 +2124,18 @@ class NeuralNetworkBuilder(object):
         b: int or numpy.array
             Bias to add to the input.
         has_bias: boolean
-            Whether the bias vector of this layer is ignored in the spec.
+            Whether the bias vector of this layer is ignored in the ``spec``.
         input_name: str
             The input blob name of this layer.
         output_name: str
             The output blob name of this layer.
 
         shape_scale: list of int or tuple of int
-            List of ints that specifies the shape of the scale parameter. Can be [1] or [C] or [1,H,W] or [C,H,W].
+            List of ints that specifies the shape of the scale parameter. 
+            Can be ``[1]``, ``[C]``, ``[1,H,W]``, or ``[C,H,W]``.
         shape_bias: list of int
-            List of ints that specifies the shape of the bias parameter (if present). Can be [1] or [C] or [1,H,W] or [C,H,W].
+            List of ints that specifies the shape of the bias parameter 
+            (if present). Can be ``[1]``, ``[C]``, ``[1,H,W]``, or ``[C,H,W]``.
 
         See Also
         --------
@@ -2116,7 +2181,8 @@ class NeuralNetworkBuilder(object):
     def add_bias(self, name, b, input_name, output_name, shape_bias=None):
         """
         Add a bias layer to the model.
-        Refer to the **BiasLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``BiasLayerParams`` message in the specification 
+        (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -2129,7 +2195,8 @@ class NeuralNetworkBuilder(object):
         output_name: str
             The output blob name of this layer.
         shape_bias: list of int
-            List of ints that specifies the shape of the bias parameter (if present). Can be [1] or [C] or [1,H,W] or [C,H,W].
+            List of ints that specifies the shape of the bias parameter 
+            (if present). Can be ``[1]``, ``[C]``, ``[1,H,W]``, or ``[C,H,W]``.
 
         See Also
         --------
@@ -2162,7 +2229,8 @@ class NeuralNetworkBuilder(object):
     def add_sequence_repeat(self, name, nrep, input_name, output_name):
         """
         Add a sequence repeat layer to the model.
-        Refer to the **SequenceRepeatLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``SequenceRepeatLayerParams`` message in the specification 
+        (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -2212,7 +2280,8 @@ class NeuralNetworkBuilder(object):
     ):
         """
         Add a convolution layer to the network.
-        Refer to the **ConvolutionLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``ConvolutionLayerParams`` message in the specification 
+        (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -2233,20 +2302,28 @@ class NeuralNetworkBuilder(object):
         border_mode: str
             Option for the padding type and output blob shape. Can be either 'valid' or 'same'.
         groups: int
-            Number of kernel groups. Input is divided into groups along the channel axis. Each kernel group share the same weights.
+            Number of kernel groups. Input is divided into groups along the channel axis. 
+            Each kernel group share the same weights.
         W: numpy.array or bytes() or None
+
             Weight of the convolution kernels.
 
-            - If is_deconv is False, W should have shape (height, width, kernel_channels, output_channels), where kernel_channel = input_channels / groups
-            - If is_deconv is True, W should have shape (height, width, kernel_channels, output_channels / groups), where kernel_channel = input_channels
+            * If ``is_deconv`` is False, ``W`` should have 
+              shape ``(height, width, kernel_channels, output_channels)``, where:
+                 ``kernel_channel = input_channels / groups``.
+            * If ``is_deconv`` is True, ``W`` should have 
+              shape ``(height, width, kernel_channels, output_channels / groups)``, where:
+                 ``kernel_channel = input_channels``.
 
-            If W is of type bytes(), i.e. quantized, other quantization related arguments must be provided as well (see below).
-            For Core ML specification version >=4, W can be None. In this case,
-            the convolution layer takes 2 inputs, where the 1st input represents the input feature map,
-            the 2nd input represents the weight blob.
+            If ``W`` is of type ``bytes()`` (quantized), other quantization 
+            related arguments must be provided as well (see below).
+
+            For Core ML specification version >=4, ``W`` can be ``None``. In this case,
+            the convolution layer takes 2 inputs, where the 1st input represents 
+            the input feature map, and the 2nd input represents the weight blob.
 
         b: numpy.array
-            Biases of the convolution kernels. b should have shape (outputChannels, ).
+            Biases of the convolution kernels. ``b`` should have shape ``(outputChannels, )``.
         has_bias: boolean
             Whether bias is ignored.
 
@@ -2254,56 +2331,62 @@ class NeuralNetworkBuilder(object):
             - If False, bias is ignored.
 
         is_deconv: boolean
-            Whether the convolution layer is performing a convolution or a transposed convolution (deconvolution).
+            Whether the convolution layer is performing a convolution or a 
+            transposed convolution (deconvolution).
 
             - If True, the convolution layer is performing transposed convolution.
             - If False, the convolution layer is performing regular convolution.
 
         output_shape: tuple or None
-            Either None or a 2-tuple, specifying the output shape (output_height, output_width). Used only when is_deconv == True.
-            When is_deconv == False, this parameter is ignored.
-            If it is None, the output shape is calculated automatically using the border_mode.
+            Either ``None`` or a 2-tuple, specifying the output 
+            shape ``(output_height, output_width)``. 
+            Used only when ``is_deconv == True``.
+            When ``is_deconv == False``, this parameter is ignored.
+            If it is ``None``, the output shape is calculated automatically using the ``border_mode``.
 
         input_name: str or list of str
             The input blob name(s) of this layer.
         output_name: str
             The output blob name of this layer.
-
         dilation_factors: list of int
             Dilation factors across height and width directions. Must be a list of two positive integers.
-            Defaults to [1, 1]
-
+            Defaults to ``[1, 1]``.
         padding_top, padding_bottom, padding_left, padding_right: int
-            values of height (top, bottom) and width (left, right) padding to be used if border_more is "valid".
+            values of height (top, bottom) and width (left, right) padding 
+            to be used if ``border_more`` is ``"valid"``.
+        same_padding_asymmetry_mode: str
+            Type of asymmetric padding to be used when  ``border_mode`` is ``'same'``.
+            Can be either ``'BOTTOM_RIGHT_HEAVY'`` or  ``'TOP_LEFT_HEAVY'``.
+		Depthwise convolution
+			Depthwise convolution is a special case of convolution, in which:
+			
+            	* ``kernel_channels = 1 (== input_channels / groups)``
+            	* ``output_channels = channel_multiplier * input_channels``
+           	* ``groups = input_channels``
+            	* ``W``: ``[Kernel_height, Kernel_width, 1, channel_multiplier * input_channels]``
 
-        same_padding_asymmetry_mode: str.
-            Type of asymmetric padding to be used when  border_mode is 'same'.
-            Can be either 'BOTTOM_RIGHT_HEAVY' or  'TOP_LEFT_HEAVY'.
+		Quantization
+			Quantization arguments expected in ``kwargs``, when ``W`` is of type ``bytes()``.
 
-        Depthwise convolution is a special case of convolution, where we have:
-            kernel_channels = 1 (== input_channels / groups)
-            output_channels = channel_multiplier * input_channels
-            groups = input_channels
-            W: [Kernel_height, Kernel_width, 1, channel_multiplier * input_channels]
+				quantization_type: str
+					When weights are quantized (that is, ``W`` is of type ``bytes()``), 
+					this should be either ``"linear"`` or ``"lut"``.
 
+				nbits: int
+					Should be between 1 and 8 (inclusive). Number of bits per weight 
+					value. Only applicable when weights are quantized.
 
-        Quantization arguments expected in kwargs, when W is of type bytes():
+				quant_scale: numpy.array(dtype=numpy.float32)
+					scale vector to be used with linear quantization. Must be of 
+					length either 1 or ``output_channels``.
 
-            quantization_type: str
-                When weights are quantized (i.e. W is of type bytes()), this should be either "linear" or "lut".
+				quant_bias: numpy.array(dtype=numpy.float32)
+					bias vector to be used with linear quantization. Must be of 
+					length either 1 or ``output_channels``.
 
-            nbits: int
-                Should be between 1 and 8 (inclusive). Number of bits per weight value. Only applicable when
-                weights are quantized.
-
-            quant_scale: numpy.array(dtype=numpy.float32)
-                scale vector to be used with linear quantization. Must be of length either 1 or output_channels.
-
-            quant_bias: numpy.array(dtype=numpy.float32)
-                bias vector to be used with linear quantization. Must be of length either 1 or output_channels.
-
-            quant_lut: numpy.array(dtype=numpy.float32)
-                the LUT (look up table) to be used with LUT quantization. Must be of length 2^nbits.
+				quant_lut: numpy.array(dtype=numpy.float32)
+					the LUT (look up table) to be used with LUT quantization. 
+					Must be of length 2^n bits.
 
         See Also
         --------
@@ -2465,8 +2548,8 @@ class NeuralNetworkBuilder(object):
     ):
         """
         Add a 3 dimensional convolution layer to the network.
-        Refer to the **Convolution3DLayerParams** message in specification (NeuralNetwork.proto) for
-        more details.
+        Refer to the ``Convolution3DLayerParams`` message in the specification 
+        (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -2484,13 +2567,21 @@ class NeuralNetworkBuilder(object):
             Width of each kernel.
         W: numpy.array or bytes()
             Weight of the convolution kernels.
-            - W should have shape:
-            - If deconv is False: (output_channels, kernel_channels, depth, height, width), where
-              kernel_channels = input_channels / groups
-            - If deconv is True: (output_channels / groups, kernel_channels, depth, height, width)
-              where kernel_channels = input_channels
+            - ``W`` should have shape:
+            - If ``deconv`` is False:
+            
+                 ``(output_channels, kernel_channels, depth, height, width)``, where:
+                 
+                 ``kernel_channels = input_channels / groups``
+              
+            - If ``deconv`` is True: 
+            
+                 ``(output_channels / groups, kernel_channels, depth, height, width)``, where:
+              
+                 ``kernel_channels = input_channels``
+              
         b: numpy.array
-            Biases of the convolution kernels. b should have shape (outputChannels, ).
+            Biases of the convolution kernels. ``b`` should have shape ``(outputChannels, )``.
         has_bias: boolean
             Whether bias is ignored.
             - If True, bias is not ignored.
@@ -2508,11 +2599,12 @@ class NeuralNetworkBuilder(object):
             True if this is Convolution Transpose, otherwise False.
         output_shape: None or Tuple of int
             Applicable only for Deconvolution layer.
-            None if Convolution.
+            ``None`` if Convolution.
             Tuple of length 3 if Convolution Transpose.
         padding_mode: str
-            Option for the padding type and output blob shape. Can be 'custom', 'valid', or 'same'.
-            Defaults to 'valid'. Case-insensitive.
+            Option for the padding type and output blob shape. 
+            Can be ``'custom'``, ``'valid'``, or ``'same'``.
+            Defaults to ``'valid'``. Case-insensitive.
         padding_front, padding_back, padding_top, padding_bottom, padding_left, padding_right: int
             Values of depth (front, back), height (top, bottom), and width (left, right) padding to
             be used. Must all be positive integers. All default to 0.
@@ -2521,12 +2613,13 @@ class NeuralNetworkBuilder(object):
         output_name: str
             The output blob name of this layer.
 
-        Depthwise convolution is a special case of convolution, where we have:
-            kernel_channels = 1 (== input_channels / groups)
-            output_channels = channel_multiplier * input_channels
-            groups = input_channels
-            W: [Kernel_depth, Kernel_height, Kernel_width, 1, channel_multiplier * input_channels]
-
+        Depthwise convolution
+        	Depthwise convolution is a special case of convolution, in which:
+        
+            * ``kernel_channels = 1`` (``== input_channels / groups``)
+            * ``output_channels = channel_multiplier * input_channels``
+            * ``groups = input_channels``
+            * ``W``: ``[Kernel_depth, Kernel_height, Kernel_width, 1, channel_multiplier * input_channels]``
 
         See Also
         --------
@@ -2635,7 +2728,8 @@ class NeuralNetworkBuilder(object):
     ):
         """
         Add a pooling layer to the model that performs spatial pooling.
-        Refer to the **PoolingLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``PoolingLayerParams`` message in the specification 
+        (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -2650,28 +2744,31 @@ class NeuralNetworkBuilder(object):
         stride_width: int
             Stride along the width direction.
         layer_type: str
-            Type of pooling performed. Can either be 'MAX', 'AVERAGE' or 'L2'.
+            Type of pooling performed. Can either be ``'MAX'``, ``'AVERAGE'``, or ``'L2'``.
         padding_type: str
-            Option for the type of padding and output blob shape. Can be either 'VALID' , 'SAME' or 'INCLUDE_LAST_PIXEL'.
+            Option for the type of padding and output blob shape. Can be either 
+            ``'VALID'``, ``'SAME'``, or ``'INCLUDE_LAST_PIXEL'``.
         input_name: str
             The input blob name of this layer.
         output_name: str
             The output blob name of this layer.
         exclude_pad_area: boolean
-            Whether to exclude padded area in the 'AVERAGE' pooling operation, default: true.
+            Whether to exclude padded area in the ``'AVERAGE'`` pooling operation, default: true.
             - If True, the value of the padded area will be excluded.
             - If False, the padded area will be included.
             This flag is only used with average pooling.
         is_global: boolean
             Whether the pooling operation is global. Defaults to False.
-            - If True, the pooling operation is global -- the pooling region is of the same size of the input blob.
-            Parameters height, width, stride_height, stride_width will be ignored.
+            - If True, the pooling operation is global. The pooling region 
+              is of the same size of the input blob.
+              Parameters ``height``, ``width``, ``stride_height``, and ``stride_width`` will be ignored.
             - If False, the pooling operation is not global.
         padding_top, padding_bottom, padding_left, padding_right: int
-            values of height (top, bottom) and width (left, right) padding to be used if padding type is "VALID" or "INCLUDE_LAST_PIXEL".
+            values of height (top, bottom) and width (left, right) padding 
+            to be used if padding type is ``"VALID"`` or ``"INCLUDE_LAST_PIXEL"``.
         same_padding_asymmetry_mode: str.
-            Type of asymmetric padding to be used when padding_type = 'SAME'.
-            Can be either 'BOTTOM_RIGHT_HEAVY' or 'TOP_LEFT_HEAVY'.
+            Type of asymmetric padding to be used when ``padding_type = 'SAME'``.
+            Can be either ``'BOTTOM_RIGHT_HEAVY'`` or ``'TOP_LEFT_HEAVY'``.
 
         See Also
         --------
@@ -2758,7 +2855,8 @@ class NeuralNetworkBuilder(object):
     ):
         """
         Add a pooling layer to the model that performs spatial pooling across three dimensions.
-        Refer to the **Pooling3DLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``Pooling3DLayerParams`` message in the specification 
+        (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -2769,7 +2867,7 @@ class NeuralNetworkBuilder(object):
         output_name: str
             The output blob name of this layer.
         pooling_type: str
-            Type of pooling performed. Can either be 'MAX' OR 'AVERAGE'.
+            Type of pooling performed. Can either be ``'MAX'`` OR ``'AVERAGE'``.
         kernel_depth: int
             Depth of the pooling region.
         kernel_height: int
@@ -2784,7 +2882,7 @@ class NeuralNetworkBuilder(object):
             Stride along the width direction.
         padding_mode: str
             Option for the padding type and output blob shape.
-            Can be 'VALID', 'SAME', or 'CUSTOM'.
+            Can be ``'VALID'``, ``'SAME'``, or ``'CUSTOM'``.
         custom_padding_front: int
             Padding before the input in the depth direction.
         custom_padding_back: int
@@ -2798,7 +2896,8 @@ class NeuralNetworkBuilder(object):
         custom_padding_right: int
             Padding after the input in the width direction.
         average_pooling_count_excludes_padding: boolean
-            If true, exclude zeros from padding in average pooling.  Can only be true for AVERAGE padding.
+            If true, exclude zeros from padding in average pooling.
+            Can only be true for ``AVERAGE`` padding.
 
         See Also
         --------
@@ -2850,7 +2949,9 @@ class NeuralNetworkBuilder(object):
         Add a layer to pool three spatial dimensions down to one value.
         This behaves like a special case of Pooling3DLayerParams in which
         the Kernel is the size of the input and there is no padding.
-        Refer to the **GlobalPooling3DLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        
+        Refer to the ``GlobalPooling3DLayerParams`` message in the specification 
+        (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -2861,7 +2962,7 @@ class NeuralNetworkBuilder(object):
         output_name: str
             The output blob name of this layer.
         pooling_type: str
-            Type of pooling performed. Can either be 'MAX' OR 'AVERAGE'.
+            Type of pooling performed. Can either be ``'MAX'`` OR ``'AVERAGE'``.
 
         See Also
         --------
@@ -2898,7 +2999,9 @@ class NeuralNetworkBuilder(object):
 
 
         Add a padding layer to the model that performs padding along spatial dimensions.
-        Refer to the **PaddingLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        
+        Refer to the ``PaddingLayerParams`` message in the specification 
+        (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -2913,13 +3016,13 @@ class NeuralNetworkBuilder(object):
         bottom: int
             Number of elements to be padded on the bottom of the input blob.
         value: float
-            Value of the elements padded. Used only when padding_type = 'constant'
+            Value of the elements padded. Used only when ``padding_type = 'constant'``.
         input_name: str
             The input blob name of this layer.
         output_name: str
             The output blob name of this layer.
         padding_type: str
-            Type of the padding. Can be one of 'constant', 'reflection' or 'replication'.
+            Type of the padding. Can be one of ``'constant'``, ``'reflection'``, or ``'replication'``.
 
         See Also
         --------
@@ -2959,11 +3062,12 @@ class NeuralNetworkBuilder(object):
         The cropping layer have two functional modes:
 
             - When it has 1 input blob, it crops the input blob based
-              on the 4 parameters [left, right, top, bottom].
+              on the 4 parameters ``[left, right, top, bottom]``.
             - When it has 2 input blobs, it crops the first input blob based
               on the dimension of the second blob with an offset.
 
-        Refer to the **CropLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``CropLayerParams`` message in the specification 
+        (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -3024,35 +3128,40 @@ class NeuralNetworkBuilder(object):
     ):
         """
         Add a simple recurrent layer to the model.
-        Refer to the **SimpleRecurrentLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``SimpleRecurrentLayerParams`` message in the specification 
+        (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
         name: str
             The name of this layer.
         W_h: numpy.array
-            Weights of the recurrent layer's hidden state. Must be of shape (hidden_size, hidden_size).
+            Weights of the recurrent layer's hidden state. 
+            Must be of shape ``(hidden_size, hidden_size)``.
         W_x: numpy.array
-            Weights of the recurrent layer's input. Must be of shape (hidden_size, input_size).
+            Weights of the recurrent layer's input. 
+            Must be of shape ``(hidden_size, input_size)``.
         b: numpy.array or None
-            Bias of the recurrent layer's output. If None, bias is ignored. Otherwise it must be of shape (hidden_size, ).
+            Bias of the recurrent layer's output. If ``None``, bias is ignored. 
+            Otherwise it must be of shape ``(hidden_size, )``.
         hidden_size: int
             Number of hidden units. This is equal to the number of channels of output shape.
         input_size: int
             Number of the number of channels of input shape.
         activation: str
             Activation function name. Can be one of the following option:
-            ['RELU', 'TANH', 'SIGMOID', 'SCALED_TANH', 'SIGMOID_HARD', 'LINEAR'].
+            [``'RELU'``, ``'TANH'``, ``'SIGMOID'``, ``'SCALED_TANH'``, ``'SIGMOID_HARD'``, ``'LINEAR'``].
             See add_activation for more detailed description.
         input_names: list of str
-            The input blob names list of this layer, in the order of [x, h_input].
+            The input blob names list of this layer, in the order of ``[x, h_input]``.
         output_names: list of str
-            The output blob names list of this layer, in the order of [y, h_output].
+            The output blob names list of this layer, in the order of ``[y, h_output]``.
         output_all: boolean
             Whether the recurrent layer should output at every time step.
 
             - If False, the output is the result after the final state update.
             - If True, the output is a sequence, containing outputs at all time steps.
+
         reverse_input: boolean
             Whether the recurrent layer should process the input sequence in the reverse order.
 
@@ -3102,47 +3211,53 @@ class NeuralNetworkBuilder(object):
     ):
         """
         Add a Gated-Recurrent Unit (GRU) layer to the model.
-        Refer to the **GRULayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``GRULayerParams`` message in the specification 
+        (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
         name: str
             The name of this layer.
         W_h: [numpy.array]
-            List of recursion weight matrices. The ordering is [R_z, R_r, R_o],
-            where R_z, R_r and R_o are weight matrices at update gate, reset gate and output gate.
-            The shapes of these matrices are (hidden_size, hidden_size).
+            List of recursion weight matrices. The ordering is ``[R_z, R_r, R_o]``,
+            where ``R_z``, ``R_r`` and ``R_o`` are weight matrices at update gate, 
+            reset gate and output gate.
+            The shapes of these matrices are ``(hidden_size, hidden_size)``.
         W_x: [numpy.array]
-            List of input weight matrices. The ordering is [W_z, W_r, W_o],
-            where W_z, W_r, and W_o are weight matrices at update gate, reset gate and output gate.
-            The shapes of these matrices are (hidden_size, input_size).
+            List of input weight matrices. The ordering is ``[W_z, W_r, W_o]``,
+            where ``W_z``, ``W_r``, and ``W_o`` are weight matrices at update gate, 
+            reset gate and output gate.
+            The shapes of these matrices are ``(hidden_size, input_size)``.
         b: [numpy.array] or None
-            List of biases of the GRU layer. The ordering is [b_z, b_r, b_o],
-            where b_z, b_r, b_o are biases at update gate, reset gate and output gate.
-            If None, biases are ignored. Otherwise the shapes of the biases are (hidden_size, ).
+            List of biases of the GRU layer. The ordering is ``[b_z, b_r, b_o]``,
+            where ``b_z``, ``b_r``, and ``b_o`` are biases at update gate, 
+            reset gate and output gate.
+            If ``None``, biases are ignored. Otherwise the shapes of the biases are ``(hidden_size, )``.
         hidden_size: int
             Number of hidden units. This is equal to the number of channels of output shape.
         input_size: int
             Number of the number of channels of input shape.
         activation: str
-            Activation function used at the output gate. Can be one of the following option:
-            ['RELU', 'TANH', 'SIGMOID', 'SCALED_TANH', 'SIGMOID_HARD', 'LINEAR'].
-            Defaults to 'TANH'.
+            Activation function used at the output gate. Can be one of the following options:
+            [``'RELU'``, ``'TANH'``, ``'SIGMOID'``, ``'SCALED_TANH'``, ``'SIGMOID_HARD'``, ``'LINEAR'``].
+            Defaults to ``'TANH'``.
             See add_activation for more detailed description.
         inner_activation: str
-            Inner activation function used at update and reset gates. Can be one of the following option:
-            ['RELU', 'TANH', 'SIGMOID', 'SCALED_TANH', 'SIGMOID_HARD', 'LINEAR'].
-            Defaults to 'SIGMOID_HARD'.
+            Inner activation function used at update and reset gates. 
+            Can be one of the following options:
+            [``'RELU'``, ``'TANH'``, ``'SIGMOID'``, ``'SCALED_TANH'``, ``'SIGMOID_HARD'``, ``'LINEAR'``].
+            Defaults to ``'SIGMOID_HARD'``.
             See add_activation for more detailed description.
         input_names: list of str
-            The input blob names list of this layer, in the order of [x, h_input].
+            The input blob names list of this layer, in the order of ``[x, h_input]``.
         output_names: list of str
-            The output blob names list of this layer, in the order of [y, h_output].
+            The output blob names list of this layer, in the order of ``[y, h_output]``.
         output_all: boolean
             Whether the recurrent layer should output at every time step.
 
             - If False, the output is the result after the final state update.
             - If True, the output is a sequence, containing outputs at all time steps.
+
         reverse_input: boolean
             Whether the recurrent layer should process the input sequence in the reverse order.
 
@@ -3210,7 +3325,8 @@ class NeuralNetworkBuilder(object):
     ):
         """
         Add a Uni-directional LSTM layer to the model.
-        Refer to the **UniDirectionalLSTMLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``UniDirectionalLSTMLayerParams`` message in the specification 
+        (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -3227,7 +3343,7 @@ class NeuralNetworkBuilder(object):
         b: [numpy.array] or None
             List of biases. The ordering is [b_i, b_f, b_o, b_z],
             where b_i, b_f, b_o, b_z are biases at input gate, forget gate, output gate and cell gate.
-            If None, biases are ignored. Otherwise the shapes of the biases are (hidden_size, ).
+            If ``None``, biases are ignored. Otherwise the shapes of the biases are (hidden_size, ).
         hidden_size: int
             Number of hidden units. This is equal to the number of channels of output shape.
         input_size: int
@@ -3354,75 +3470,96 @@ class NeuralNetworkBuilder(object):
 
         """
         Add a Bi-directional LSTM layer to the model.
-        Refer to the **BiDirectionalLSTMLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``BiDirectionalLSTMLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
         name: str
             The name of this layer.
         W_h: [numpy.array]
-            List of recursion weight matrices for the forward layer. The ordering is [R_i, R_f, R_o, R_z],
-            where R_i, R_f, R_o, R_z are weight matrices at input gate, forget gate, output gate and cell gate.
-            The shapes of these matrices are (hidden_size, hidden_size).
+            List of recursion weight matrices for the forward layer. 
+            The ordering is ``[R_i, R_f, R_o, R_z]``,
+            where ``R_i``, ``R_f``, ``R_o``, and ``R_z`` are weight matrices at 
+            input gate, forget gate, output gate and cell gate.
+            The shapes of these matrices are ``(hidden_size, hidden_size)``.
         W_x: [numpy.array]
-            List of input weight matrices for the forward layer. The ordering is [W_i, W_f, W_o, W_z],
-            where W_i, W_f, W_o, W_z are weight matrices at input gate, forget gate, output gate and cell gate.
-            The shapes of these matrices are (hidden_size, input_size).
+            List of input weight matrices for the forward layer. The ordering 
+            is ``[W_i, W_f, W_o, W_z]``,
+            where ``W_i``, ``W_f``, ``W_o``, and ``W_z`` are weight matrices at 
+            input gate, forget gate, output gate and cell gate.
+            The shapes of these matrices are ``(hidden_size, input_size)``.
         b: [numpy.array]
-            List of biases for the forward layer. The ordering is [b_i, b_f, b_o, b_z],
-            where b_i, b_f, b_o, b_z are biases at input gate, forget gate, output gate and cell gate.
-            If None, biases are ignored. Otherwise the shapes of the biases are (hidden_size, ).
+            List of biases for the forward layer. The ordering is 
+            ``[b_i, b_f, b_o, b_z]``,
+            where ``b_i``, ``b_f``, ``b_o``, and ``b_z`` are biases at input 
+            gate, forget gate, output gate and cell gate.
+            If ``None``, biases are ignored. Otherwise the shapes of the biases 
+            are ``(hidden_size, )``.
         W_h_back: [numpy.array]
-            List of recursion weight matrices for the backward layer. The ordering is [R_i, R_f, R_o, R_z],
-            where R_i, R_f, R_o, R_z are weight matrices at input gate, forget gate, output gate and cell gate.
-            The shapes of these matrices are (hidden_size, hidden_size).
+            List of recursion weight matrices for the backward layer. The 
+            ordering is ``[R_i, R_f, R_o, R_z]``,
+            where ``R_i``, ``R_f``, ``R_o``, and ``R_z`` are weight matrices 
+            at input gate, forget gate, output gate and cell gate.
+            The shapes of these matrices are ``(hidden_size, hidden_size)``.
         W_x_back: [numpy.array]
-            List of input weight matrices for the backward layer. The ordering is [W_i, W_f, W_o, W_z],
-            where W_i, W_f, W_o, W_z are weight matrices at input gate, forget gate, output gate and cell gate.
-            The shapes of these matrices are (hidden_size, input_size).
+            List of input weight matrices for the backward layer. The ordering 
+            is `[W_i, W_f, W_o, W_z]``,
+            where ``W_i``, ``W_f``, ``W_o``, and ``W_z`` are weight matrices 
+            at input gate, forget gate, output gate and cell gate.
+            The shapes of these matrices are ``(hidden_size, input_size)``.
         b_back: [numpy.array]
-            List of biases for the backward layer. The ordering is [b_i, b_f, b_o, b_z],
-            where b_i, b_f, b_o, b_z are biases at input gate, forget gate, output gate and cell gate.
-            The shapes of the biases (hidden_size).
+            List of biases for the backward layer. The ordering is ``[b_i, b_f, b_o, b_z]``,
+            where ``b_i``, ``b_f``, ``b_o``, and ``b_z`` are biases at input 
+            gate, forget gate, output gate and cell gate.
+            The shapes of the biases ``(hidden_size)``.
         hidden_size: int
             Number of hidden units. This is equal to the number of channels of output shape.
         input_size: int
             Number of the number of channels of input shape.
         input_names: list of str
-            The input blob names of this layer, in the order of [x, h_input, c_input, h_reverse_input, c_reverse_input].
+            The input blob names of this layer, in the order of 
+            ``[x, h_input, c_input, h_reverse_input, c_reverse_input]``.
         output_names: list of str
-            The output blob names of this layer, in the order of [y, h_output, c_output, h_reverse_output, c_reverse_output].
+            The output blob names of this layer, in the order of 
+            ``[y, h_output, c_output, h_reverse_output, c_reverse_output]``.
         inner_activation: str
-            Inner activation function used at input and forget gate. Can be one of the following option:
-            ['RELU', 'TANH', 'SIGMOID', 'SCALED_TANH', 'SIGMOID_HARD', 'LINEAR'].
-            Defaults to 'SIGMOID'.
+            Inner activation function used at input and forget gate. Can be one 
+            of the following options:
+            [``'RELU'``, ``'TANH'``, ``'SIGMOID'``, ``'SCALED_TANH'``, ``'SIGMOID_HARD'``, ``'LINEAR'``].
+            Defaults to ``'SIGMOID'``.
         cell_state_update_activation: str
-            Cell state update activation function used at the cell state update gate.
-            ['RELU', 'TANH', 'SIGMOID', 'SCALED_TANH', 'SIGMOID_HARD', 'LINEAR'].
-            Defaults to 'TANH'.
+            Cell state update activation function used at the cell state update gate. 
+            Can be one of the following options:
+            [``'RELU'``, ``'TANH'``, ``'SIGMOID'``, ``'SCALED_TANH'``, ``'SIGMOID_HARD'``, ``'LINEAR'``].
+            Defaults to ``'TANH'``.
         output_activation: str
-            Activation function used at the output gate. Can be one of the following option:
-            ['RELU', 'TANH', 'SIGMOID', 'SCALED_TANH', 'SIGMOID_HARD', 'LINEAR'].
-            Defaults to 'TANH'.
+            Activation function used at the output gate. Can be one of the following options:
+            [``'RELU'``, ``'TANH'``, ``'SIGMOID'``, ``'SCALED_TANH'``, ``'SIGMOID_HARD'``, ``'LINEAR'``].
+            Defaults to ``'TANH'``.
         peep: [numpy.array] or None
-            List of peephole vectors for the forward layer. The ordering is [p_i, p_f, p_o],
-            where p_i, p_f, and p_o are peephole vectors at input gate, forget gate, output gate.
-            The shapes of the peephole vectors are (hidden_size,). Defaults to None.
+            List of peephole vectors for the forward layer. The ordering 
+            is ``[p_i, p_f, p_o]``,
+            where ``p_i``, ``p_f``, and ``p_o`` are peephole vectors at input 
+            gate, forget gate, and output gate.
+            The shapes of the peephole vectors are ``(hidden_size,)``. Defaults to ``None``.
         peep_back: [numpy.array] or None
-            List of peephole vectors for the backward layer. The ordering is [p_i, p_f, p_o],
-            where p_i, p_f, and p_o are peephole vectors at input gate, forget gate, output gate.
-            The shapes of the peephole vectors are (hidden_size,). Defaults to None.
+            List of peephole vectors for the backward layer. The ordering 
+            is ``[p_i, p_f, p_o]``,
+            where ``p_i``, ``p_f``, and ``p_o`` are peephole vectors at input 
+            gate, forget gate, and output gate.
+            The shapes of the peephole vectors are ``(hidden_size,)``. Defaults to ``None``.
         output_all: boolean
-            Whether the LSTM layer should output at every time step. Defaults to False.
+            Whether the LSTM layer should output at every time step. Defaults to ``False``.
 
-            - If False, the output is the result after the final state update.
-            - If True, the output is a sequence, containing outputs at all time steps.
+            - If ``False``, the output is the result after the final state update.
+            - If ``True``, the output is a sequence, containing outputs at all time steps.
 
         forget_bias: boolean
-            If True, a vector of 1s is added to forget gate bias. Defaults to False.
+            If ``True``, a vector of 1s is added to forget gate bias. Defaults to ``False``.
         coupled_input_forget_gate: boolean
-            If True, the input gate and forget gate is coupled. i.e. forget gate is not used.
-            Defaults to False.
+            If ``True``, the input gate and forget gate is coupled. That is, the
+             forget gate is not used.
+            Defaults to ``False``.
         cell_clip_threshold: float
             The limit on the maximum and minimum values on the cell state.
             Defaults to 50.0.
@@ -3521,8 +3658,10 @@ class NeuralNetworkBuilder(object):
 
     def add_flatten(self, name, mode, input_name, output_name):
         """
-        Add a flatten layer. Only flattens the channel, height and width axis. Leaves the sequence axis as is.
-        Refer to the **FlattenLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Add a flatten layer. Only flattens the channel, height and width axis. 
+        Leaves the sequence axis as is.
+        Refer to the ``FlattenLayerParams`` message in the 
+        specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -3565,7 +3704,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a slice layer. Equivalent to to numpy slice [start_index:end_index:stride],
         start_index is included, while end_index is exclusive.
-        Refer to the **SliceLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``SliceLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -3630,7 +3769,7 @@ class NeuralNetworkBuilder(object):
         Assume input_tensor has shape (2, 3, 4), and axis=1, size=2.
         This would produce input_tensor[:, begin_id:begin_id+2, :]
 
-        Refer to the **SliceBySizeLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``SliceBySizeLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -3753,7 +3892,8 @@ class NeuralNetworkBuilder(object):
 
         ``y = gamma * (x - mean) / sqrt(variance + epsilon) + beta``
 
-        Refer to the **BatchnormLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``BatchnormLayerParams`` message in the specification 
+        (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -3762,24 +3902,25 @@ class NeuralNetworkBuilder(object):
         channels: int
             Number of channels of the input blob.
         gamma: numpy.array
-            Values of gamma. Must be numpy array of shape (channels, ).
+            Values of gamma. Must be numpy array of shape ``(channels, )``.
         beta: numpy.array
-            Values of beta. Must be numpy array of shape (channels, ).
+            Values of beta. Must be numpy array of shape ``(channels, )``.
         mean: numpy.array
-            Means of the input blob on each channel. Must be numpy array of shape (channels, ).
+            Means of the input blob on each channel. Must be numpy array of shape ``(channels, )``.
         variance:
-            Variances of the input blob on each channel. Must be numpy array of shape (channels, ).
+            Variances of the input blob on each channel. Must be numpy array of shape ``(channels, )``.
         input_name: str
             The input blob name of this layer.
         output_name: str
             The output blob name of this layer.
         compute_mean_var: bool
-            Set to True if mean and variance is to be computed from the input data.
+            Set to ``True`` if mean and variance is to be computed from the input data.
         instance_normalization: bool
-            Set compute_mean_var and this to True to perform
-            instance normalization i.e., mean and variance are computed from the single input instance.
+            Set compute_mean_var and this to ``True`` to perform
+            instance normalization. That is, mean and variance are computed 
+            from the single input instance.
         epsilon: float
-            Value of epsilon. Defaults to 1e-5 if not specified.
+            Value of epsilon. Defaults to ``1e-5`` if not specified.
 
         See Also
         --------
@@ -3811,7 +3952,7 @@ class NeuralNetworkBuilder(object):
     def add_permute(self, name, dim, input_name, output_name):
         """
         Add a permute layer. Assumes that the input has dimensions in the order [Seq, C, H, W]
-        Refer to the **PermuteLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``PermuteLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -3859,7 +4000,7 @@ class NeuralNetworkBuilder(object):
     def add_reshape(self, name, input_name, output_name, target_shape, mode):
         """
         Add a reshape layer.
-        Refer to the **ReshapeLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``ReshapeLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -3906,7 +4047,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a reduce layer. Applies the function specified by the parameter mode,
         along dimension(s) specified by the parameter axis.
-        Refer to the **ReduceLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``ReduceLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -4011,7 +4152,7 @@ class NeuralNetworkBuilder(object):
     def add_lrn(self, name, input_name, output_name, alpha, beta, local_size, k=1.0):
         """
         Add a LRN (local response normalization) layer. Supports "across" channels normalization.
-        Refer to the **LRNLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``LRNLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -4054,7 +4195,7 @@ class NeuralNetworkBuilder(object):
     ):
         """
         Add an MVN (mean variance normalization) layer. Computes mean, variance and normalizes the input.
-        Refer to the **MeanVarianceNormalizeLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``MeanVarianceNormalizeLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -4093,7 +4234,7 @@ class NeuralNetworkBuilder(object):
         """
         Add L2 normalize layer. Normalizes the input by the L2 norm, i.e. divides by the
         the square root of the sum of squares of all elements of the input along C, H and W dimensions.
-        Refer to the **L2NormalizeLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``L2NormalizeLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -4133,7 +4274,7 @@ class NeuralNetworkBuilder(object):
         Add a Unary layer. Applies the specified function (mode) to all the elements of the input.
         Prior to the application of the function the input can be scaled and shifted by using the 'scale',
         'shift' parameters.
-        Refer to the **UnaryFunctionLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``UnaryFunctionLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -4218,7 +4359,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a split layer that uniformly splits the input along the channel dimension
         to produce multiple outputs.
-        Refer to the **SplitLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``SplitLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -4241,7 +4382,7 @@ class NeuralNetworkBuilder(object):
     def add_load_constant(self, name, output_name, constant_value, shape):
         """
         Add a load constant layer.
-        Refer to the **LoadConstantLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``LoadConstantLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -4283,7 +4424,7 @@ class NeuralNetworkBuilder(object):
     def add_custom(self, name, input_names, output_names, custom_proto_spec=None):
         """
         Add a custom layer.
-        Refer to the **CustomLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``CustomLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -4325,7 +4466,7 @@ class NeuralNetworkBuilder(object):
     ):
         """
         Add a resize bilinear layer to the model. A layer that resize the input to a given spatial size using bilinear interpolation.
-        Refer to the **ResizeBilinearLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``ResizeBilinearLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -4389,24 +4530,24 @@ class NeuralNetworkBuilder(object):
         Add a crop resize layer to the model. A layer that extracts cropped spatial patches or RoIs (regions of interest)
         from the input and resizes them to a pre-specified size using bilinear interpolation.
         Note that RoI Align layer can be implemented with this layer followed by a pooling layer.
-        Refer to the **CropResizeLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``CropResizeLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
         name: str
             The name of this layer.
         input_names: list of str
+ 
             Must be a list of two names: image feature map and crop indices/RoI input.
-            First input corresponds to a blob with shape ``[1, Batch, C, H_in, W_in]``. This represents a batch of input image feature data with C channels.
-            The second input shape must be ``[N, 1, 4, 1, 1]`` or ``[N, 1, 5, 1, 1]``. This represents the bounding box coordinates for N patches/RoIs.
-            N: number of patches/RoIs to be extracted
-            If RoI shape = [N, 1, 4, 1, 1]
-            The channel axis corresponds to the four coordinates specifying the bounding box.
-            All the N~ RoIs are extracted from all the batches of the input.
-            If RoI shape = [N, 1, 5, 1, 1]
-            The first element of the channel axis specifies the input batch id from which to extract the RoI and
-            must be in the interval ``[0, Batch - 1]``. That is, n-th RoI is extracted from the RoI[n,0,0,0]-th input batch id.
-            The last four elements of the channel axis specify the bounding box coordinates.
+               * First input corresponds to a blob with shape ``[1, Batch, C, H_in, W_in]``. This represents a batch of input image feature data with ``C`` channels.
+               * The second input shape must be ``[N, 1, 4, 1, 1]`` or ``[N, 1, 5, 1, 1]``. This represents the bounding box coordinates for ``N`` patches/RoIs.
+            *  ``N``: number of patches/RoIs to be extracted
+            * If RoI shape = ``[N, 1, 4, 1, 1]``, the channel axis corresponds to the four coordinates specifying the bounding box.
+              All the N~ RoIs are extracted from all the batches of the input.
+            * If RoI shape = ``[N, 1, 5, 1, 1]``, the first element of the channel axis specifies the input batch id from which to extract the RoI and
+              must be in the interval ``[0, Batch - 1]``. That is, ``n`` -th RoI is extracted from the ``RoI[n,0,0,0]`` -th input batch id.
+              The last four elements of the channel axis specify the bounding box coordinates.
+
         output_name: str
             The output blob name of this layer.
         target_height: int
@@ -4414,20 +4555,26 @@ class NeuralNetworkBuilder(object):
         target_width: int
             Output width dimension.
         mode: str
-            Following values are supported: 'STRICT_ALIGN_ENDPOINTS_MODE', 'ALIGN_ENDPOINTS_MODE', 'UPSAMPLE_MODE', 'ROI_ALIGN_MODE'.
-            This parameter determines the sampling grid used for bilinear interpolation.
+            * The following values are supported: 
+              ``'STRICT_ALIGN_ENDPOINTS_MODE'``, ``'ALIGN_ENDPOINTS_MODE'``, 
+              ``'UPSAMPLE_MODE'``, ``'ROI_ALIGN_MODE'``.
+            * This parameter determines the sampling grid used for bilinear interpolation.
         normalized_roi: bool
-            If true the bounding box coordinates must be in the interval [0, 1].
-            They are scaled by (input_height - 1), (input_width - 1), i.e. based on the input spatial dimensions.
-            If false the bounding box coordinates must be in the interval
-            [0, input_height - 1] and [0, input_width - 1], respectively for height and width dimensions.
+            * If true the bounding box coordinates must be in the interval ``[0, 1]``.
+              They are scaled by ``(input_height - 1)``, ``(input_width - 1)``; 
+              that is, based on the input spatial dimensions.
+            * If false the bounding box coordinates must be in the interval
+              ``[0, input_height - 1]`` and ``[0, input_width - 1]``, 
+              respectively for height and width dimensions.
         box_indices_mode: str
-            Following values are supported: 'CORNERS_HEIGHT_FIRST', 'CORNERS_WIDTH_FIRST', 'CENTER_SIZE_HEIGHT_FIRST', 'CENTER_SIZE_WIDTH_FIRST'
-            Representation used to interpret the bounding box coordinates (RoI) input.
-            'CORNERS_HEIGHT_FIRST': [h_start, w_start, h_end, w_end]
-            'CORNERS_WIDTH_FIRST': [w_start, h_start, w_end, h_end]
-            'CENTER_SIZE_HEIGHT_FIRST': [h_center, w_center, box_height, box_width]
-            'CENTER_SIZE_WIDTH_FIRST': [w_center, h_center, box_width, box_height]
+            * The following values are supported: 
+              ``'CORNERS_HEIGHT_FIRST'``, ``'CORNERS_WIDTH_FIRST'``, 
+              ``'CENTER_SIZE_HEIGHT_FIRST'``, ``'CENTER_SIZE_WIDTH_FIRST'``.
+            * Representation used to interpret the bounding box coordinates (RoI) input.
+                * ``'CORNERS_HEIGHT_FIRST'``: ``[h_start, w_start, h_end, w_end]``
+                * ``'CORNERS_WIDTH_FIRST'``: ``[w_start, h_start, w_end, h_end]``
+                * ``'CENTER_SIZE_HEIGHT_FIRST'``: ``[h_center, w_center, box_height, box_width]``
+                * ``'CENTER_SIZE_WIDTH_FIRST'``: ``[w_center, h_center, box_width, box_height]``
         spatial_scale: float
             Additional spatial scale that multiplies the bounding box coordinates.
             Generally used while implementing the RoI Align layer,
@@ -4718,7 +4865,7 @@ class NeuralNetworkBuilder(object):
     def add_transpose(self, name, axes, input_name, output_name):
         """
         Add a N-D transpose layer with axes as a parameter.
-        Refer to the **TransposeLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``TransposeLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -4751,7 +4898,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a softmax_nd layer to the model that performs softmax operation along
         the given axis.
-        Refer to the **SoftmaxNDLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``SoftmaxNDLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -4774,7 +4921,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a concat_nd layer to the model that performs concatenation along the
         given axis.
-        Refer to the **ConcatNDLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``ConcatNDLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -4803,7 +4950,7 @@ class NeuralNetworkBuilder(object):
     def add_erf(self, name, input_name, output_name):
         """
         Add an erf function (gaussian error function) layer to the model.
-        Refer to the **ErfLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``ErfLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -4823,7 +4970,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a GELU (gaussian error linear unit) activation layer, which is:
         ``0.5 * x * (1 + erf(x / sqrt(2)))``.
-        Refer to the **GeluLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``GeluLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -4860,7 +5007,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a sin layer to the model that computes element-wise sine for the
         input tensor.
-        Refer to the **SinLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``SinLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -4884,7 +5031,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a cos layer to the model that computes element-wise cosine for the
         input tensor.
-        Refer to the **CosLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``CosLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -4908,7 +5055,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a tan layer to the model that computes element-wise tangent for the
         input tensor.
-        Refer to the **TanLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``TanLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -4932,7 +5079,7 @@ class NeuralNetworkBuilder(object):
         """
         Add an asin layer to the model that computes element-wise arc-sine for
         the input tensor.
-        Refer to the **AsinLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``AsinLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -4956,7 +5103,7 @@ class NeuralNetworkBuilder(object):
         """
         Add an acos layer to the model that computes element-wise arc-cosine
         for the input tensor.
-        Refer to the **AcosLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``AcosLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -4980,7 +5127,7 @@ class NeuralNetworkBuilder(object):
         """
         Add an atan layer to the model that computes element-wise arc-tangent
         for the input tensor.
-        Refer to the **AtanLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``AtanLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -5003,7 +5150,7 @@ class NeuralNetworkBuilder(object):
     def add_sinh(self, name, input_name, output_name):
         """
         Add a sinh layer to the model that computes element-wise hyperbolic sine for the input tensor.
-        Refer to the **SinhLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``SinhLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -5027,7 +5174,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a osh layer to the model that computes element-wise hyperbolic
         cosine for the input tensor.
-        Refer to the **CoshLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``CoshLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -5051,7 +5198,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a tanh layer to the model that computes element-wise hyperbolic
         tangent for the input tensor.
-        Refer to the **TanhLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``TanhLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -5075,7 +5222,7 @@ class NeuralNetworkBuilder(object):
         """
         Add an asinh layer to the model that computes element-wise inverse
         hyperbolic sine for the input tensor.
-        Refer to the **AsinhLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``AsinhLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -5099,7 +5246,7 @@ class NeuralNetworkBuilder(object):
         """
         Add an acosh layer to the model that computes element-wise inverse
         hyperbolic cosine for the input tensor.
-        Refer to the **AcoshLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``AcoshLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -5123,7 +5270,7 @@ class NeuralNetworkBuilder(object):
         """
         Add an atanh layer to the model that computes element-wise inverse
         hyperbolic tangent for the input tensor.
-        Refer to the **AtanhLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``AtanhLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -5146,7 +5293,7 @@ class NeuralNetworkBuilder(object):
     def add_exp2(self, name, input_name, output_name):
         """
         Add an exp2 layer to the model that performs element-wise experiential operation.
-        Refer to the **Exp2LayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``Exp2LayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -5166,7 +5313,7 @@ class NeuralNetworkBuilder(object):
         """
         Add an add_broadcastable layer to the model that performs element-wise
         addition operation with broadcast support.
-        Refer to the **AddBroadcastableLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``AddBroadcastableLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -5187,7 +5334,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a multiply_broadcastable layer to the model that performs element-wise
         multiplication operation with broadcast support.
-        Refer to the **MultiplyBroadcastableLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``MultiplyBroadcastableLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -5208,7 +5355,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a divide_broadcastable layer to the model that performs element-wise
         division operation with broadcast support.
-        Refer to the **DivideBroadcastableLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``DivideBroadcastableLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -5229,7 +5376,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a subtract_broadcastable layer to the model that performs element-wise
         subtraction operation with broadcast support.
-        Refer to the **SubtractBroadcastableLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``SubtractBroadcastableLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -5250,7 +5397,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a max_broadcastable layer to the model that performs element-wise
         maximum operation with broadcast support.
-        Refer to the **MaxBroadcastableLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``MaxBroadcastableLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -5271,7 +5418,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a min_broadcastable layer to the model that performs element-wise
         minimum operation with broadcast support.
-        Refer to the **MinBroadcastableLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``MinBroadcastableLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -5292,7 +5439,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a floor_div_broadcastable layer to the model that performs floor
         division operation with broadcast support.
-        Refer to the **FloorDivBroadcastableLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``FloorDivBroadcastableLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -5317,7 +5464,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a mod_broadcastable layer to the model that performs element-wise
         modular operation with broadcast support.
-        Refer to the **ModBroadcastableLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``ModBroadcastableLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -5338,7 +5485,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a pow_broadcastable layer to the model that performs element-wise
         power operation with broadcast support.
-        Refer to the **PowBroadcastableLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``PowBroadcastableLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -5359,7 +5506,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a stack layer to the model that performs stack operation on a list of
         tensors into one rank+1 tensor on the given axis.
-        Refer to the **StackLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``StackLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -5383,7 +5530,7 @@ class NeuralNetworkBuilder(object):
         Add a ceil layer to the model that performs element-wise ceil operation
         on the input tensor that rounds the value to the smallest integer not
         less than x.
-        Refer to the **CeilLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``CeilLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -5408,7 +5555,7 @@ class NeuralNetworkBuilder(object):
         Add a floor layer to the model that performs element-wise floor operation
         on the input tensor that rounds the value to the largest integer not
         greater than x.
-        Refer to the **FloorLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``FloorLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -5432,7 +5579,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a round layer to the model that performs element-wise round operation
         on the input tensor that rounds the value to the nearest integer.
-        Refer to the **RoundLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``RoundLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -5452,7 +5599,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a sign layer to the model that performs element-wise sign operation
         (+1 for positive values, -1 for negative values, 0 for zeroes).
-        Refer to the **SignLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``SignLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -5472,7 +5619,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a clip layer to the model that performs element-wise clip operation.
         Clip the values in the input tensor to the range [min_value, max_value].
-        Refer to the **ClipLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``ClipLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -5508,7 +5655,7 @@ class NeuralNetworkBuilder(object):
         Add a split layer to the model that splits the input tensor into multiple
         output tensors. Either uniformly split the input tensor into ``num_splits``
         tensors, or split into given size list ``split_sizes`` output tensors.
-        Refer to the **SplitNDLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``SplitNDLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -5523,7 +5670,7 @@ class NeuralNetworkBuilder(object):
         num_splits: int, optional
             Number of splits, default: 2.
         split_sizes: list of int or tuple of int, optional
-            List of size to split, default [] or None.
+            List of size to split, default ``[]`` or ``None``.
         """
 
         if not split_sizes:
@@ -5557,7 +5704,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a slice_static layer to the model that extracts a slice of size
         ``(end - begin) / stride`` from the given input tensor.
-        Refer to the **SliceStaticLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``SliceStaticLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -5627,7 +5774,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a slice_dynamic layer to the model that extracts a slice of size
         ``(end - begin) / stride`` from the given input tensor.
-        Refer to the **SliceDynamicLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``SliceDynamicLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -5687,7 +5834,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a tile layer to the model that construct a tensor by repeating the
         input tensor multiple number of times.
-        Refer to the **TileLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``TileLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -5735,7 +5882,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a range_static layer that returns a tensor that contains evenly spaced values.
         This layer has no input and three parameters.
-        Refer to the **RangeStaticLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``RangeStaticLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -5772,7 +5919,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a range_dynamic layer that returns a tensor that contains evenly spaced values.
         This layer has up to three inputs or no input and three parameters.
-        Refer to the **RangeDynamicLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``RangeDynamicLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -5812,7 +5959,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a branch layer to the model that provides the functionality of
         branching or an ``if-else`` block.
-        Refer to the **BranchLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``BranchLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -5854,7 +6001,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a loop layer to the model that provides the functionality of a ``for``
         loop, or a ``while`` loop.
-        Refer to the **LoopLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``LoopLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -5901,7 +6048,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a loop_break layer to the model that terminates the loop that
         contains this layer. Must reside in the ``bodyNetwork`` of the loop layer.
-        Refer to the **LoopBreakLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``LoopBreakLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -5923,7 +6070,7 @@ class NeuralNetworkBuilder(object):
         Add a loop_continue layer to the model that stops the current loop
         iteration and continue on the next iteration. Must reside in the
         ``bodyNetwork`` of the loop layer.
-        Refer to the **LoopContinueLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``LoopContinueLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -5944,7 +6091,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a copy layer to the model that copies its input tensor to the output
         tensor. Input tensor and output tensor must have distinct names.
-        Refer to the **CopyLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``CopyLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -5975,8 +6122,8 @@ class NeuralNetworkBuilder(object):
         Add a greater_than layer to the model that performs the element-wise
         greater-than (>) operation or greater-than-or-equal-to (>=) operation.
         Broadcasting is supported.
-        Refer to the **GreaterThanLayerParams**, **GreaterEqualLayerParams** messages
-        in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``GreaterThanLayerParams``, ``GreaterEqualLayerParams`` messages
+        in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -6017,7 +6164,7 @@ class NeuralNetworkBuilder(object):
         Add a less_than layer to the model that performs the element-wise
         less-than (<) operation or less-than-or-equal-to (<=) operation.
         Broadcasting is supported.
-        Refer to the **LessThanL_ayerParams**, **LessEqualLayerParams** messages in
+        Refer to the ``LessThanL_ayerParams``, ``LessEqualLayerParams`` messages in
         specification (NeuralNetwork.proto) for more details.
 
         Parameters
@@ -6055,7 +6202,7 @@ class NeuralNetworkBuilder(object):
         """
         Add an equal layer to the model that performs the element-wise equal
         (=) operation. Broadcasting is supported.
-        Refer to the **EqualLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``EqualLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -6085,7 +6232,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a not_equal layer to the model that performs the element-wise not
         equal (!=) operation. Broadcasting is supported.
-        Refer to the **NotEqualLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``NotEqualLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -6115,8 +6262,8 @@ class NeuralNetworkBuilder(object):
         """
         Add a logical layer to the model that performs element-wise logical
         and/or/xor/not operation. Broadcasting is supported.
-        Refer to the **LogicalOrLayerParams, LogicalNotLayerParams,
-        LogicalNotLayerParams, LogicalAndLayerParam** messages in specification
+        Refer to the ``LogicalOrLayerParams``, ``LogicalNotLayerParams``,
+        ``LogicalNotLayerParams``, and ``LogicalAndLayerParam`` messages in the specification
         (NeuralNetwork.proto) for more details.
 
         Parameters
@@ -6160,7 +6307,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a sliding_windows layer to the model that returns a tensor containing
         all windows of size ``window_size`` * separated by ``step`` along the dimension ``axis``.
-        Refer to the **SlidingWindowsLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``SlidingWindowsLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -6196,7 +6343,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a reverse layer to the model that reverses specific dimensions of
         the input tensor.
-        Refer to the **ReverseLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``ReverseLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -6227,7 +6374,7 @@ class NeuralNetworkBuilder(object):
     ):
         """
         Add a reverse sequence layer to the model that reverses variable length slices.
-        Refer to the **ReverseSeqLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``ReverseSeqLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -6258,7 +6405,7 @@ class NeuralNetworkBuilder(object):
         Add a gather layer to the model that gathers elements or slices from
         data and store to a tensor whose shape is defined by indices from the
         input.
-        Refer to the **GatherLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``GatherLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -6287,7 +6434,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a scatter layer to the model that scatters data into a new tensor
         according to indices from the input.
-        Refer to the **ScatterLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``ScatterLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -6338,7 +6485,7 @@ class NeuralNetworkBuilder(object):
         Add a gather_along_axis layer to the model that gathers elements or slices
         from data and store to a tensor whose shape is defined by indices from the
         input along the given axis into the output tensor.
-        Refer to the **GatherAlongAxisLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``GatherAlongAxisLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -6368,7 +6515,7 @@ class NeuralNetworkBuilder(object):
         Add a scatter_along_axis layer to the model that scatters data into a new
         tensor according to indices from the input along the given axis into the
         output tensor.
-        Refer to the **ScatterAlongAxisLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``ScatterAlongAxisLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -6419,7 +6566,7 @@ class NeuralNetworkBuilder(object):
         Add a gather layer to the model that gathers elements or slices from
         data and store to a tensor whose shape is defined by indices from the
         input. This is the reverse operation of the scatter operation.
-        Refer to the **GatherNDLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``GatherNDLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -6450,7 +6597,7 @@ class NeuralNetworkBuilder(object):
         Add a scatter layer to the model that scatters data into a new tensor
         according to indices from input. This is the reverse operation of the
         gather operation.
-        Refer to the **ScatterNDLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``ScatterNDLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -6499,7 +6646,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a topk layer to the model that returns top or bottom k values and
         the corresponding indices of the input tensor along a given axis.
-        Refer to the **TopKLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``TopKLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -6532,7 +6679,7 @@ class NeuralNetworkBuilder(object):
         """
         Add an argmax layer to the model that returns the indices of the maximum
         value along a specified axis in the input tensor.
-        Refer to the **ArgMaxLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``ArgMaxLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -6571,7 +6718,7 @@ class NeuralNetworkBuilder(object):
         """
         Add an argmin layer to the model that returns the indices of the minimum
         value along a specified axis in the input tensor.
-        Refer to the **ArgMinLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``ArgMinLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -6617,7 +6764,7 @@ class NeuralNetworkBuilder(object):
     ):
         """
         Add a constant pad layer.
-        Refer to the **ConstantPaddingLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``ConstantPaddingLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -6664,7 +6811,7 @@ class NeuralNetworkBuilder(object):
     ):
         """
         Add a non maximum suppression layer.
-        Refer to the **NonMaximumSuppressionLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``NonMaximumSuppressionLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -6720,7 +6867,7 @@ class NeuralNetworkBuilder(object):
         """
         Add an embedding layer to the model that performs a matrix lookup and
         optionally adds a bias.
-        Refer to the **EmbeddingNDLayerParams** message in specification
+        Refer to the ``EmbeddingNDLayerParams`` message in the specification
         (NeuralNetwork.proto) for more details.
 
         Parameters
@@ -6818,8 +6965,8 @@ class NeuralNetworkBuilder(object):
         quant_lut=None,
     ):
         """
-        Add a N-D Batched Matrix Multiplication layer with numpy like broadcasting.
-        Refer to the **BatchedMatMulLayerParams** message in specification
+        Add a N-D Batched Matrix Multiplication layer with NumPy-like broadcasting.
+        Refer to the ``BatchedMatMulLayerParams`` message in the specification
         (NeuralNetwork.proto) for more details.
 
         Parameters
@@ -6846,36 +6993,44 @@ class NeuralNetworkBuilder(object):
             Must be equal to the last dimension of the output, default: 0.
 
         W: float32 numpy.array or bytes(), optional
-            Weight matrix of shape (weight_matrix_rows, weight_matrix_columns)
-            If W is of type bytes(), i.e. quantized to 1-8 bits, other quantization
-            related arguments must be provided as well (see below).
+            Weight matrix of shape ``(weight_matrix_rows, weight_matrix_columns)``. 
+            If ``W`` is of type ``bytes()`` (quantized to 1-8 bits), other
+            quantization-related arguments must be provided as well (see below).
 
         bias: float32 numpy.array, optional
             Bias vector of shape (weight_matrix_columns,).
 
-        Quantization arguments, used when W is of type bytes():
+        Quantization
+        	Quantization arguments, used when ``W`` is of type ``bytes()``:
 
-        is_quantized_weight: bool, optional
-            Set it to true when W is of type bytes(), representing quantized weights, default: false.
+				is_quantized_weight: bool, optional
+					Set it to true when ``W`` is of type ``bytes()``, representing
+					quantized weights, default: false.
 
-        quantization_type: str, optional
-            When weights are quantized (i.e. W is of type bytes()), this should be either "linear" or "lut", default: linear.
+				quantization_type: str, optional
+					When weights are quantized (that is, ``W`` is of type ``bytes()``),
+					this should be either ``"linear"`` or ``"lut"``, default: ``"linear"``.
 
-        nbits: int, optional
-            Should be between 1 and 8 (inclusive). Number of bits per weight value, default: 8.
+				nbits: int, optional
+					Should be between 1 and 8 (inclusive). Number of bits per weight value, default: 8.
 
-        quant_scale: numpy.array(dtype=numpy.float32), optional
-            scale vector to be used with linear quantization. Must be of length either 1 or weight_matrix_columns, default: None.
+				quant_scale: numpy.array(dtype=numpy.float32), optional
+					Scale vector to be used with linear quantization. 
+					Must be of length either 1 or ``weight_matrix_columns``, default: ``None``.
 
-        quant_bias: numpy.array(dtype=numpy.float32), optional
-            bias vector to be used with linear quantization. Must be of length either 1 or weight_matrix_columns, default: None.
+				quant_bias: numpy.array(dtype=numpy.float32), optional
+					Bias vector to be used with linear quantization. 
+					Must be of length either 1 or ``weight_matrix_columns``, default: ``None``.
 
-        quant_lut: numpy.array(dtype=numpy.float32), optional
-            The LUT (look up table) to be used with LUT quantization. Must be of length 2^nbits, default: None.
+				quant_lut: numpy.array(dtype=numpy.float32), optional
+					The LUT (look up table) to be used with LUT quantization. 
+					Must be of length 2^n bits, default: ``None``.
 
-        int_8_dynamic_quantize: bool
-            Whether to quantize and dequantize before and after batched matmul, respectively.
-            Expects byte weights, representing int8 values, if True. See NeuralNetwork.proto for other validation conditions.
+				int_8_dynamic_quantize: bool
+					Whether to quantize and dequantize before and after 
+					batched matmul, respectively.
+					Expects byte weights, representing int8 values, if True. 
+					See NeuralNetwork.proto for other validation conditions.
 
         See Also
         --------
@@ -6966,7 +7121,7 @@ class NeuralNetworkBuilder(object):
     def add_get_shape(self, name, input_name, output_name):
         """
         Add a get_shape layer to the model.
-        Refer to the **GetShapeLayerParams** message in specification
+        Refer to the ``GetShapeLayerParams`` message in the specification
         (NeuralNetwork.proto) for more details.
 
         Parameters
@@ -6992,7 +7147,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a load_constant layer that loads data as a parameter and provides it
         as an output.
-        Refer to the **LoadConstantNDLayerParams** message in specification
+        Refer to the ``LoadConstantNDLayerParams`` message in the specification
         (NeuralNetwork.proto) for more details.
 
         Parameters
@@ -7031,7 +7186,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a fill_like layer to the model outputs a tensor filled with a
         scalar value.
-        Refer to the **FillLikeLayerParams** message in specification
+        Refer to the ``FillLikeLayerParams`` message in the specification
         (NeuralNetwork.proto) for more details.
 
         Parameters
@@ -7059,7 +7214,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a fill_static layer to the model that outputs a tensor filled
         with a scalar value given shape as parameter.
-        Refer to the **FillStaticLayerParams** message in specification
+        Refer to the ``FillStaticLayerParams`` message in the specification
         (NeuralNetwork.proto) for more details.
 
         Parameters
@@ -7089,7 +7244,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a fill_dynamic layer to the model that outputs a tensor filled
         with a scalar value.
-        Refer to the **FillDynamicLayerParams** message in specification
+        Refer to the ``FillDynamicLayerParams`` message in the specification
         (NeuralNetwork.proto) for more details.
 
         Parameters
@@ -7118,7 +7273,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a broadcast_to_like layer to the model that broadcasts a tensor
         to a compatible shape.
-        Refer to the **BroadcastToLikeLayerParams** message in specification
+        Refer to the ``BroadcastToLikeLayerParams`` message in the specification
         (NeuralNetwork.proto) for more details.
 
         Parameters
@@ -7148,7 +7303,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a broadcast_to_static layer to the model that broadcasts a tensor
         to a compatible shape.
-        Refer to the **BroadcastToStaticLayerParams** message in specification
+        Refer to the ``BroadcastToStaticLayerParams`` message in the specification
         (NeuralNetwork.proto) for more details.
 
         Parameters
@@ -7178,7 +7333,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a broadcast_to_dynamic layer to the model that broadcasts a tensor
         to a compatible shape.
-        Refer to the **BroadcastToDynamicLayerParams** message in specification
+        Refer to the ``BroadcastToDynamicLayerParams`` message in the specification
         (NeuralNetwork.proto) for more details.
 
         Parameters
@@ -7206,7 +7361,7 @@ class NeuralNetworkBuilder(object):
         """
         Add an expand dims layer to the model that increases the rank of the
         input tensor by adding unit dimensions.
-        Refer to the **ExpandDimsLayerParams** message in specification
+        Refer to the ``ExpandDimsLayerParams`` message in the specification
         (NeuralNetwork.proto) for more details.
 
         Parameters
@@ -7235,7 +7390,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a squeeze layer to the model that decrease the rank of the input
         tensor by removing unit dimensions.
-        Refer to the **SqueezeLayerParams** message in specification
+        Refer to the ``SqueezeLayerParams`` message in the specification
         (NeuralNetwork.proto) for more details.
 
         Parameters
@@ -7247,7 +7402,7 @@ class NeuralNetworkBuilder(object):
         output_name: str
             The output blob name of this layer.
         axes: list of int or tuple of int, optional
-            Dimensions to perform the operation, default: None (squeeze_all).
+            Dimensions to perform the operation, default: ``None`` (squeeze_all).
         squeeze_all: bool, optional
             If true, all dimensions that are 1 are squeezed, default: false.
 
@@ -7275,7 +7430,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a flatten_to_2d layer to the model that flattens the input tensor
         into a 2-dimensional matrix.
-        Refer to the **FlattenTo2DLayerParams** message in specification
+        Refer to the ``FlattenTo2DLayerParams`` message in the specification
         (NeuralNetwork.proto) for more details.
 
         Parameters
@@ -7303,7 +7458,7 @@ class NeuralNetworkBuilder(object):
     def add_reshape_like(self, name, input_names, output_name):
         """
         Add a reshape_like layer to the model that reshapes a tensor.
-        Refer to the **ReshapeLikeLayerParams** message in specification
+        Refer to the ``ReshapeLikeLayerParams`` message in the specification
         (NeuralNetwork.proto) for more details.
 
         Parameters
@@ -7328,7 +7483,7 @@ class NeuralNetworkBuilder(object):
     def add_reshape_static(self, name, input_name, output_name, output_shape):
         """
         Add a reshape_static layer to the model that reshapes a tensor.
-        Refer to the **ReshapeStaticLayerParams** message in specification
+        Refer to the ``ReshapeStaticLayerParams`` message in the specification
         (NeuralNetwork.proto) for more details.
 
         Parameters
@@ -7356,7 +7511,7 @@ class NeuralNetworkBuilder(object):
     def add_reshape_dynamic(self, name, input_names, output_name):
         """
         Add a reshape_dynamic layer to the model that reshapes a tensor.
-        Refer to the **ReshapeDynamicLayerParams** message in specification
+        Refer to the ``ReshapeDynamicLayerParams`` message in the specification
         (NeuralNetwork.proto) for more details.
 
         Parameters
@@ -7384,7 +7539,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a rank_preserving_reshape layer to the model that reshapes the input
         tensor without altering the rank of the tensor.
-        Refer to the **RankPreservingReshapeLayerParams** message in specification
+        Refer to the ``RankPreservingReshapeLayerParams`` message in the specification
         (NeuralNetwork.proto) for more details.
 
         Parameters
@@ -7425,7 +7580,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a random_normal_like layer to the model that fills the output
         tensor with random values from normal distribution.
-        Refer to the **RandomNormalLikeLayerParams** message in specification
+        Refer to the ``RandomNormalLikeLayerParams`` message in the specification
         (NeuralNetwork.proto) for more details.
 
         Parameters
@@ -7463,7 +7618,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a random_normal_static layer to the model that fills the output
         tensor with random values from normal distribution.
-        Refer to the **RandomNormaStaticLayerParams** message in specification
+        Refer to the ``RandomNormaStaticLayerParams`` message in the specification
         (NeuralNetwork.proto) for more details.
 
         Parameters
@@ -7503,7 +7658,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a random_normal_dynamic layer to the model that fills the output
         tensor with random values from normal distribution.
-        Refer to the **RandomNormalDynamicLayerParams** message in specification
+        Refer to the ``RandomNormalDynamicLayerParams`` message in the specification
         (NeuralNetwork.proto) for more details.
 
         Parameters
@@ -7543,7 +7698,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a random_uniform_like layer to the model that fills the output
         tensors with random values from uniform distribution.
-        Refer to the **RandomUniformLikeLayerParams** message in specification
+        Refer to the ``RandomUniformLikeLayerParams`` message in the specification
         (NeuralNetwork.proto) for more details.
 
         Parameters
@@ -7581,7 +7736,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a random_uniform_static layer to the model that fills the output
         tensors with random values from uniform distribution.
-        Refer to the **RandomUniformStaticLayerParams** message in specification
+        Refer to the ``RandomUniformStaticLayerParams`` message in the specification
         (NeuralNetwork.proto) for more details.
 
         Parameters
@@ -7620,7 +7775,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a random_uniform_dynamic layer to the model that fills the output
         tensors with random values from uniform distribution.
-        Refer to the **RandomUniformDynamicLayerParams** message in specification
+        Refer to the ``RandomUniformDynamicLayerParams`` message in the specification
         (NeuralNetwork.proto) for more details.
 
         Parameters
@@ -7660,7 +7815,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a random_bernoulli_like layer to the model that fills the output
         tensor with random values from Bernoulli distribution.
-        Refer to the **RandomBernoulliLikeLayerParams** message in specification
+        Refer to the ``RandomBernoulliLikeLayerParams`` message in the specification
         (NeuralNetwork.proto) for more details.
 
         Parameters
@@ -7695,7 +7850,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a random_bernoulli_static layer to the model that fills the output
         tensor with random values from Bernoulli distribution.
-        Refer to the **RandomBernoulliStaticLayerParams** message in specification
+        Refer to the ``RandomBernoulliStaticLayerParams`` message in the specification
         (NeuralNetwork.proto) for more details.
 
         Parameters
@@ -7732,7 +7887,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a random_bernoulli_dynamic layer to the model that fills the output
         tensor with random values from Bernoulli distribution.
-        Refer to the **RandomBernoulliDynamicLayerParams** message in specification
+        Refer to the ``RandomBernoulliDynamicLayerParams`` message in the specification
         (NeuralNetwork.proto) for more details.
 
         Parameters
@@ -7778,7 +7933,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a categorical_distribution layer to the model that fills the output
         tensor with random values from categorical distribution.
-        Refer to the **CategoricalDistributionLayerParams** message in specification
+        Refer to the ``CategoricalDistributionLayerParams`` message in the specification
         (NeuralNetwork.proto) for more details.
 
         Parameters
@@ -7819,7 +7974,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a reduce_sum layer to the model that reduces the input tensor
         using ``sum(elements across given dimensions)``.
-        Refer to the **ReduceSumLayerParams** message in specification
+        Refer to the ``ReduceSumLayerParams`` message in the specification
         (NeuralNetwork.proto) for more details.
 
         Parameters
@@ -7832,7 +7987,7 @@ class NeuralNetworkBuilder(object):
             The output blob name of this layer.
         axes: list of int or tuple of int, optional
             List of dimensions for the reduce operations.
-            Each should be in range [-rank(input), rank(input)), default: None (reduce_all)
+            Each should be in range ``[-rank(input), rank(input))``, default: ``None`` (``reduce_all``).
         keepdims: bool, optional
             Whether or not to retain the reduced dimensions with length 1, default: true.
         reduce_all: bool, optional
@@ -7867,7 +8022,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a reduce_prod layer to the model that reduces the input tensor
         using ``prod(elements across given dimensions)``.
-        Refer to the **ReduceProdLayerParams** message in specification
+        Refer to the ``ReduceProdLayerParams`` message in the specification
         (NeuralNetwork.proto) for more details.
 
         Parameters
@@ -7880,7 +8035,7 @@ class NeuralNetworkBuilder(object):
             The output blob name of this layer.
         axes: list of int or tuple of int, optional
             List of dimensions for the reduce operations.
-            Each should be in range [-rank(input), rank(input)), default: None (reduce_all)
+            Each should be in range [-rank(input), rank(input)), default: ``None`` (reduce_all)
         keepdims: bool, optional
             Whether or not to retain the reduced dimensions with length 1, default: true.
         reduce_all: bool, optional
@@ -7916,7 +8071,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a reduce_mean layer to the model that reduces the input tensor
         using ``mean(elements across given dimensions)``.
-        Refer to the **ReduceMeanLayerParams** message in specification
+        Refer to the ``ReduceMeanLayerParams`` message in the specification
         (NeuralNetwork.proto) for more details.
 
         Parameters
@@ -7929,7 +8084,7 @@ class NeuralNetworkBuilder(object):
             The output blob name of this layer.
         axes: list of int or tuple of int, optional
             List of dimensions for the reduce operations.
-            Each should be in range [-rank(input), rank(input)), default: None (reduce_all)
+            Each should be in range [-rank(input), rank(input)), default: ``None`` (reduce_all)
         keepdims: bool, optional
             Whether or not to retain the reduced dimensions with length 1, default: true.
         reduce_all: bool, optional
@@ -7963,7 +8118,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a reduce_max layer to the model that reduces the input tensor
         using ``max(elements across given dimensions)``.
-        Refer to the **ReduceMaxLayerParams** message in specification
+        Refer to the ``ReduceMaxLayerParams`` message in the specification
         (NeuralNetwork.proto) for more details.
 
         Parameters
@@ -7976,7 +8131,7 @@ class NeuralNetworkBuilder(object):
             The output blob name of this layer.
         axes: list of int or tuple of int, optional
             List of dimensions for the reduce operations.
-            Each should be in range [-rank(input), rank(input)), default: None (reduce_all)
+            Each should be in range [-rank(input), rank(input)), default: ``None`` (reduce_all)
         keepdims: bool, optional
             Whether or not to retain the reduced dimensions with length 1, default: true.
         reduce_all: bool, optional
@@ -8010,7 +8165,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a reduce_min layer to the model that reduces the input tensor
         using ``min(elements across given dimensions)``.
-        Refer to the **ReduceMinLayerParams** message in specification
+        Refer to the ``ReduceMinLayerParams`` message in the specification
         (NeuralNetwork.proto) for more details.
 
         Parameters
@@ -8023,7 +8178,7 @@ class NeuralNetworkBuilder(object):
             The output blob name of this layer.
         axes: list of int or tuple of int, optional
             List of dimensions for the reduce operations.
-            Each should be in range [-rank(input), rank(input)), default: None (reduce_all)
+            Each should be in range [-rank(input), rank(input)), default: ``None`` (reduce_all)
         keepdims: bool, optional
             Whether or not to retain the reduced dimensions with length 1, default: true.
         reduce_all: bool, optional
@@ -8057,7 +8212,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a reduce_l2 layer to the model that reduces the input tensor
         using ``l2_normalization(elements across given dimensions)``.
-        Refer to the **ReduceL2LayerParams** message in specification
+        Refer to the ``ReduceL2LayerParams`` message in the specification
         (NeuralNetwork.proto) for more details.
 
         Parameters
@@ -8070,7 +8225,7 @@ class NeuralNetworkBuilder(object):
             The output blob name of this layer.
         axes: list of int or tuple of int, optional
             List of dimensions for the reduce operations.
-            Each should be in range [-rank(input), rank(input)), default: None (reduce_all)
+            Each should be in range [-rank(input), rank(input)), default: ``None`` (reduce_all)
         keepdims: bool, optional
             Whether or not to retain the reduced dimensions with length 1, default: true.
         reduce_all: bool, optional
@@ -8104,7 +8259,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a reduce_l1 layer to the model that reduces the input tensor
         using ``l1_normalization(elements across given dimensions)``.
-        Refer to the **ReduceL1LayerParams** message in specification
+        Refer to the ``ReduceL1LayerParams`` message in the specification
         (NeuralNetwork.proto) for more details.
 
         Parameters
@@ -8117,7 +8272,7 @@ class NeuralNetworkBuilder(object):
             The output blob name of this layer.
         axes: list of int or tuple of int, optional
             List of dimensions for the reduce operations.
-            Each should be in range [-rank(input), rank(input)), default: None (reduce_all)
+            Each should be in range [-rank(input), rank(input)), default: ``None`` (reduce_all)
         keepdims: bool, optional
             Whether or not to retain the reduced dimensions with length 1, default: true.
         reduce_all: bool, optional
@@ -8151,7 +8306,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a reduce_sumsquare layer to the model that reduces the input tensor
         using ``sum(square(elements across given dimensions))``.
-        Refer to the **ReduceSumSquareLayerParams** message in specification
+        Refer to the ``ReduceSumSquareLayerParams`` message in the specification
         (NeuralNetwork.proto) for more details.
 
         Parameters
@@ -8164,7 +8319,7 @@ class NeuralNetworkBuilder(object):
             The output blob name of this layer.
         axes: list of int or tuple of int, optional
             List of dimensions for the reduce operations.
-            Each should be in range [-rank(input), rank(input)), default: None (reduce_all)
+            Each should be in range [-rank(input), rank(input)), default: ``None`` (reduce_all)
         keepdims: bool, optional
             Whether or not to retain the reduced dimensions with length 1, default: true.
         reduce_all: bool, optional
@@ -8198,7 +8353,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a reduce_logsum layer to the model that reduces the input tensor
         using log(sum(elements across given dimensions)).
-        Refer to the **ReduceLogSumLayerParams** message in specification
+        Refer to the ``ReduceLogSumLayerParams`` message in the specification
         (NeuralNetwork.proto) for more details.
 
         Parameters
@@ -8211,7 +8366,7 @@ class NeuralNetworkBuilder(object):
             The output blob name of this layer.
         axes: list of int or tuple of int, optional
             List of dimensions for the reduce operations.
-            Each should be in range [-rank(input), rank(input)), default: None (reduce_all)
+            Each should be in range [-rank(input), rank(input)), default: ``None`` (reduce_all)
         keepdims: bool, optional
             Whether or not to retain the reduced dimensions with length 1, default: true.
         reduce_all: bool, optional
@@ -8245,7 +8400,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a reduce_logsumexp layer to the model that computes ``log(sum(exp(tensor)))``
         and reduces along the given axis.
-        Refer to the **ReduceLogSumExpLayerParams** message in specification
+        Refer to the ``ReduceLogSumExpLayerParams`` message in the specification
         (NeuralNetwork.proto) for more details.
 
         Parameters
@@ -8258,7 +8413,7 @@ class NeuralNetworkBuilder(object):
             The output blob name of this layer.
         axes: list of int or tuple of int, optional
             List of dimensions for the reduce operations.
-            Each should be in range [-rank(input), rank(input)), default: None (reduce_all)
+            Each should be in range [-rank(input), rank(input)), default: ``None`` (reduce_all)
         keepdims: bool, optional
             Whether or not to retain the reduced dimensions with length 1, default: true.
         reduce_all: bool, optional
@@ -8290,7 +8445,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a where_nonzero layer to the model that returns a tensor containing
         the indices of all non-zero elements of input tensor.
-        Refer to the **WhereNonZeroLayerParams** message in specification
+        Refer to the ``WhereNonZeroLayerParams`` message in the specification
         (NeuralNetwork.proto) for more details.
 
         Parameters
@@ -8319,7 +8474,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a matrix_band_part layer to the model that copies a tensor setting
         everything outside a central band in each inner-most matrix to zero.
-        Refer to the **MatrixBandPartLayerParams** message in specification
+        Refer to the ``MatrixBandPartLayerParams`` message in the specification
         (NeuralNetwork.proto) for more details.
 
         Parameters
@@ -8352,7 +8507,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a lower_triangular layer to the model that copies a tensor setting
         everything outside lower triangular to zero.
-        Refer to the **LowerTriangularLayerParams** message in specification
+        Refer to the ``LowerTriangularLayerParams`` message in the specification
         (NeuralNetwork.proto) for more details.
 
         Parameters
@@ -8381,7 +8536,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a upper_triangular layer to the model that copies a tensor setting
         everything outside upper triangular to zero.
-        Refer to the **UpperTriangularLayerParams** message in specification
+        Refer to the ``UpperTriangularLayerParams`` message in the specification
         (NeuralNetwork.proto) for more details.
 
         Parameters
@@ -8411,7 +8566,7 @@ class NeuralNetworkBuilder(object):
         Add a where_broadcastable layer to the model that returns the elements
         either from tensor x or tensor y, depending on the value in the
         condition tensor.
-        Refer to the **WhereBroadcastableLayerParams** message in specification
+        Refer to the ``WhereBroadcastableLayerParams`` message in the specification
         (NeuralNetwork.proto) for more details.
 
         Parameters
@@ -8441,7 +8596,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a layer normalization layer to the model that applies layer
         normalization over the input tensor.
-        Refer to the **LayerNormalizationLayerParams** message in specification
+        Refer to the ``LayerNormalizationLayerParams`` message in the specification
         (NeuralNetwork.proto) for more details.
 
         Parameters
@@ -8495,7 +8650,7 @@ class NeuralNetworkBuilder(object):
     ):
         """
         Add a one hot layer to the model that computes the one hot representation of the input tensor.
-        Refer to the **OneHotLayerParams** message in specification
+        Refer to the ``OneHotLayerParams`` message in the specification
         (NeuralNetwork.proto) for more details.
 
         Parameters
@@ -8536,7 +8691,7 @@ class NeuralNetworkBuilder(object):
     ):
         """
         Add a cum sum layer to the model computes the cumulative sum values of the input along a given axis.
-        Refer to the **CumSumLayerParams** message in specification
+        Refer to the ``CumSumLayerParams`` message in the specification
         (NeuralNetwork.proto) for more details.
 
         Parameters
@@ -8572,7 +8727,7 @@ class NeuralNetworkBuilder(object):
         """
         Add a clamped relu layer to the model.
         Clamped relu formula is f(x) = min((x >= 0 ? x : alpha * x), beta)
-        Refer to the **ClampedReluLayerParams** message in specification (NeuralNetwork.proto) for more details.
+        Refer to the ``ClampedReluLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------
@@ -8610,7 +8765,7 @@ class NeuralNetworkBuilder(object):
     def add_argsort(self, name, input_name, output_name, axis=0, descending=False):
         """
         Add an argsort layer to the model.
-        Refer to the **ArgsortLayerParams** message in the specification (NeuralNetwork.proto) for more details.
+        Refer to the ``ArgsortLayerParams`` message in the specification (NeuralNetwork.proto) for more details.
 
         Parameters
         ----------

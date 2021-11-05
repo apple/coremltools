@@ -121,7 +121,7 @@ class SvrScikitTest(unittest.TestCase):
 
                 if _is_macos() and _macos_version() >= (10, 13):
                     metrics = evaluate_regressor(spec, df)
-                    self.assertAlmostEquals(metrics["max_error"], 0)
+                    self.assertAlmostEqual(metrics["max_error"], 0)
 
                 if not allow_slow:
                     break
@@ -168,7 +168,7 @@ class EpsilonSVRLibSVMTest(unittest.TestCase):
                 data["target"], data["data"].tolist(), self.libsvm_model
             )
             metrics = evaluate_regressor(spec, df)
-            self.assertAlmostEquals(metrics["max_error"], 0)
+            self.assertAlmostEqual(metrics["max_error"], 0)
 
         # One extra parameters. This is legal/possible.
         num_inputs = len(data["data"][0])
@@ -251,7 +251,7 @@ class EpsilonSVRLibSVMTest(unittest.TestCase):
 
                 if _is_macos() and _macos_version() >= (10, 13):
                     metrics = evaluate_regressor(spec, df)
-                    self.assertAlmostEquals(metrics["max_error"], 0)
+                    self.assertAlmostEqual(metrics["max_error"], 0)
 
                 if not allow_slow:
                     break

@@ -48,26 +48,26 @@ class RandomForestBinaryClassifierScikitTest(unittest.TestCase):
         self.assertIsNotNone(spec.description)
 
         # Test the interface class
-        self.assertEquals(spec.description.predictedFeatureName, "target")
+        self.assertEqual(spec.description.predictedFeatureName, "target")
 
         # Test the inputs and outputs
-        self.assertEquals(len(spec.description.output), 2)
-        self.assertEquals(spec.description.output[0].name, "target")
-        self.assertEquals(
+        self.assertEqual(len(spec.description.output), 2)
+        self.assertEqual(spec.description.output[0].name, "target")
+        self.assertEqual(
             spec.description.output[0].type.WhichOneof("Type"), "int64Type"
         )
         for input_type in spec.description.input:
-            self.assertEquals(input_type.type.WhichOneof("Type"), "doubleType")
+            self.assertEqual(input_type.type.WhichOneof("Type"), "doubleType")
         self.assertEqual(
             sorted(input_names), sorted(map(lambda x: x.name, spec.description.input))
         )
 
-        self.assertEquals(len(spec.pipelineClassifier.pipeline.models), 2)
+        self.assertEqual(len(spec.pipelineClassifier.pipeline.models), 2)
         tr = spec.pipelineClassifier.pipeline.models[
             -1
         ].treeEnsembleClassifier.treeEnsemble
         self.assertIsNotNone(tr)
-        self.assertEquals(len(tr.nodes), 1048)
+        self.assertEqual(len(tr.nodes), 1048)
 
     def test_conversion_bad_inputs(self):
         # Error on converting an untrained model
@@ -122,27 +122,27 @@ class RandomForestMultiClassClassifierScikitTest(unittest.TestCase):
         self.assertIsNotNone(spec.treeEnsembleClassifier)
 
         # Test the interface class
-        self.assertEquals(spec.description.predictedFeatureName, "target")
+        self.assertEqual(spec.description.predictedFeatureName, "target")
 
         # Test the inputs and outputs
-        self.assertEquals(len(spec.description.output), 2)
-        self.assertEquals(spec.description.output[0].name, "target")
-        self.assertEquals(
+        self.assertEqual(len(spec.description.output), 2)
+        self.assertEqual(spec.description.output[0].name, "target")
+        self.assertEqual(
             spec.description.output[0].type.WhichOneof("Type"), "int64Type"
         )
 
         for input_type in spec.description.input:
-            self.assertEquals(input_type.type.WhichOneof("Type"), "doubleType")
+            self.assertEqual(input_type.type.WhichOneof("Type"), "doubleType")
         self.assertEqual(
             sorted(input_names), sorted(map(lambda x: x.name, spec.description.input))
         )
 
-        self.assertEquals(len(spec.pipelineClassifier.pipeline.models), 2)
+        self.assertEqual(len(spec.pipelineClassifier.pipeline.models), 2)
         tr = spec.pipelineClassifier.pipeline.models[
             -1
         ].treeEnsembleClassifier.treeEnsemble
         self.assertIsNotNone(tr)
-        self.assertEquals(len(tr.nodes), 2970)
+        self.assertEqual(len(tr.nodes), 2970)
 
     def test_conversion_bad_inputs(self):
         # Error on converting an untrained model

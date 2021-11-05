@@ -219,10 +219,10 @@ class KerasNumericCorrectnessTest(unittest.TestCase):
                     kp = k_pred.flatten()
                 cp = c_preds[idx].flatten()
                 # Compare predictions
-                self.assertEquals(len(kp), len(cp))
+                self.assertEqual(len(kp), len(cp))
                 for i in range(len(kp)):
                     max_den = max(1.0, kp[i], cp[i])
-                    self.assertAlmostEquals(
+                    self.assertAlmostEqual(
                         kp[i] / max_den, cp[i] / max_den, delta=delta
                     )
 
@@ -2653,7 +2653,7 @@ class KerasNumericCorrectnessStressTest(KerasNumericCorrectnessTest):
 
             if use_tmp_folder:
                 shutil.rmtree(model_dir)
-            self.assertEquals(
+            self.assertEqual(
                 len(coreml_preds),
                 len(keras_preds),
                 msg="Failed test case %s. Lengths wrong (%s vs %s)"
@@ -2661,7 +2661,7 @@ class KerasNumericCorrectnessStressTest(KerasNumericCorrectnessTest):
             )
             for i in range(len(keras_preds)):
                 max_den = max(1.0, keras_preds[i], coreml_preds[i])
-                self.assertAlmostEquals(
+                self.assertAlmostEqual(
                     keras_preds[i] / max_den,
                     coreml_preds[i] / max_den,
                     delta=delta,

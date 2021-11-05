@@ -500,10 +500,10 @@ class BasicNumericCorrectnessTest(unittest.TestCase):
         builder = self._build_nn_with_one_ip_layer()
         builder.set_input(input_names=["data_renamed"], input_dims=[(2,)])
 
-        self.assertEquals(
+        self.assertEqual(
             builder.spec.description.input[0].type.multiArrayType.shape[0], 2
         )
-        self.assertEquals(builder.spec.description.input[0].name, "data_renamed")
+        self.assertEqual(builder.spec.description.input[0].name, "data_renamed")
 
     def test_set_input_fail(self):
         builder = self._build_nn_with_one_ip_layer()
@@ -516,10 +516,10 @@ class BasicNumericCorrectnessTest(unittest.TestCase):
         builder = self._build_nn_with_one_ip_layer()
         builder.set_output(output_names=["out_renamed"], output_dims=[(2,)])
 
-        self.assertEquals(
+        self.assertEqual(
             builder.spec.description.output[0].type.multiArrayType.shape[0], 2
         )
-        self.assertEquals(builder.spec.description.output[0].name, "out_renamed")
+        self.assertEqual(builder.spec.description.output[0].name, "out_renamed")
 
     def test_set_output_fail(self):
         builder = self._build_nn_with_one_ip_layer()
@@ -598,9 +598,9 @@ class UseFloatArraytypeTest(unittest.TestCase):
             else coremltools.proto.FeatureTypes_pb2.ArrayFeatureType.DOUBLE
         )
         for input in spec.description.input:
-            self.assertEquals(input.type.multiArrayType.dataType, array_feature_type)
+            self.assertEqual(input.type.multiArrayType.dataType, array_feature_type)
         for output in spec.description.input:
-            self.assertEquals(output.type.multiArrayType.dataType, array_feature_type)
+            self.assertEqual(output.type.multiArrayType.dataType, array_feature_type)
 
         # Assert that the generated spec is functional
         mlmodel = MLModel(spec)

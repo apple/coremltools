@@ -36,13 +36,13 @@ class DecisionTreeRegressorBostonHousingScikitNumericTest(unittest.TestCase):
         """
         Check the metrics
         """
-        self.assertAlmostEquals(
+        self.assertAlmostEqual(
             metrics["rmse"],
             0,
             delta=1e-5,
             msg="Failed case %s. Results %s" % (params, metrics),
         )
-        self.assertAlmostEquals(
+        self.assertAlmostEqual(
             metrics["max_error"],
             0,
             delta=1e-5,

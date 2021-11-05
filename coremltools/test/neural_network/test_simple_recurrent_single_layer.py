@@ -143,7 +143,7 @@ class SimpleRNNLayer(RecurrentLayerTest):
                     "output"
                 ].flatten()
                 try:
-                    self.assertEquals(coreml_preds.shape, keras_preds.shape)
+                    self.assertEqual(coreml_preds.shape, keras_preds.shape)
                 except AssertionError:
                     print(
                         "Shape error:\nbase_params: {}\nkeras_preds.shape: {}\ncoreml_preds.shape: {}".format(
@@ -170,10 +170,10 @@ class SimpleRNNLayer(RecurrentLayerTest):
             shutil.rmtree(model_dir)
             i += 1
 
-        self.assertEquals(
+        self.assertEqual(
             shape_err_models, [], msg="Shape error models {}".format(shape_err_models)
         )
-        self.assertEquals(
+        self.assertEqual(
             numerical_err_models,
             [],
             msg="Numerical error models {}".format(numerical_err_models),
@@ -286,7 +286,7 @@ class LSTMLayer(RecurrentLayerTest):
                     "output"
                 ].flatten()
                 try:
-                    self.assertEquals(coreml_preds.shape, keras_preds.shape)
+                    self.assertEqual(coreml_preds.shape, keras_preds.shape)
                 except AssertionError:
                     print(
                         "Shape error:\nbase_params: {}\nkeras_preds.shape: {}\ncoreml_preds.shape: {}".format(
@@ -313,10 +313,10 @@ class LSTMLayer(RecurrentLayerTest):
             shutil.rmtree(model_dir)
             i += 1
 
-        self.assertEquals(
+        self.assertEqual(
             shape_err_models, [], msg="Shape error models {}".format(shape_err_models)
         )
-        self.assertEquals(
+        self.assertEqual(
             numerical_err_models,
             [],
             msg="Numerical error models {}".format(numerical_err_models),
@@ -427,7 +427,7 @@ class GRULayer(RecurrentLayerTest):
                     "output"
                 ].flatten()
                 try:
-                    self.assertEquals(coreml_preds.shape, keras_preds.shape)
+                    self.assertEqual(coreml_preds.shape, keras_preds.shape)
                 except AssertionError:
                     print(
                         "Shape error:\nbase_params: {}\nkeras_preds.shape: {}\ncoreml_preds.shape: {}".format(
@@ -454,10 +454,10 @@ class GRULayer(RecurrentLayerTest):
             shutil.rmtree(model_dir)
             i += 1
 
-        self.assertEquals(
+        self.assertEqual(
             shape_err_models, [], msg="Shape error models {}".format(shape_err_models)
         )
-        self.assertEquals(
+        self.assertEqual(
             numerical_err_models,
             [],
             msg="Numerical error models {}".format(numerical_err_models),

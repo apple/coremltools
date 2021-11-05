@@ -35,13 +35,13 @@ class GradientBoostingRegressorBostonHousingScikitNumericTest(unittest.TestCase)
         self.output_name = "target"
 
     def _check_metrics(self, metrics, params={}):
-        self.assertAlmostEquals(
+        self.assertAlmostEqual(
             metrics["rmse"],
             0,
             delta=1e-5,
             msg="Failed case %s. Results %s" % (params, metrics),
         )
-        self.assertAlmostEquals(
+        self.assertAlmostEqual(
             metrics["max_error"],
             0,
             delta=1e-5,
@@ -114,13 +114,13 @@ class XgboostBoosterBostonHousingNumericTest(unittest.TestCase):
         """
         Check the metrics
         """
-        self.assertAlmostEquals(
+        self.assertAlmostEqual(
             metrics["rmse"],
             allowed_error.get("rmse", 0),
             delta=1e-2,
             msg="Failed case %s. Results %s" % (params, metrics),
         )
-        self.assertAlmostEquals(
+        self.assertAlmostEqual(
             metrics["max_error"],
             allowed_error.get("max_error", 0),
             delta=1e-2,
@@ -219,13 +219,13 @@ class XGboostRegressorBostonHousingNumericTest(unittest.TestCase):
         self.output_name = "target"
 
     def _check_metrics(self, metrics, params={}, allowed_error={}):
-        self.assertAlmostEquals(
+        self.assertAlmostEqual(
             metrics["rmse"],
             allowed_error.get("rmse", 0),
             delta=1e-2,
             msg="Failed case %s. Results %s" % (params, metrics),
         )
-        self.assertAlmostEquals(
+        self.assertAlmostEqual(
             metrics["max_error"],
             allowed_error.get("max_error", 0),
             delta=1e-2,

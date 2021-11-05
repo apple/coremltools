@@ -59,7 +59,7 @@ class OneHotEncoderScikitTest(unittest.TestCase):
 
         self.assertIsNotNone(spec)
         self.assertIsNotNone(spec.description)
-        self.assertEquals(metrics["num_errors"], 0)
+        self.assertEqual(metrics["num_errors"], 0)
 
     @unittest.skipUnless(
         _is_macos() and _macos_version() >= (10, 13), "Only supported on macOS 10.13+"
@@ -83,7 +83,7 @@ class OneHotEncoderScikitTest(unittest.TestCase):
 
         self.assertIsNotNone(spec)
         self.assertIsNotNone(spec.description)
-        self.assertEquals(metrics["num_errors"], 0)
+        self.assertEqual(metrics["num_errors"], 0)
 
     @unittest.skipUnless(
         _is_macos() and _macos_version() >= (10, 13), "Only supported on macOS 10.13+"
@@ -107,7 +107,7 @@ class OneHotEncoderScikitTest(unittest.TestCase):
 
         self.assertIsNotNone(spec)
         self.assertIsNotNone(spec.description)
-        self.assertEquals(metrics["num_errors"], 0)
+        self.assertEqual(metrics["num_errors"], 0)
 
     @unittest.skipUnless(
         _is_macos() and _macos_version() >= (10, 13), "Only supported on macOS 10.13+"

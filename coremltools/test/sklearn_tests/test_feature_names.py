@@ -19,11 +19,11 @@ class FeatureManagementTests(unittest.TestCase):
             ("c", dt.Double()),
         ]
         out = fm.process_or_validate_features(features)
-        self.assertEquals(out, processed_features)
+        self.assertEqual(out, processed_features)
         self.assertTrue(fm.is_valid_feature_list(out))
 
     def test_single_array(self):
-        self.assertEquals(
+        self.assertEqual(
             fm.process_or_validate_features("a", num_dimensions=10),
             [("a", dt.Array(10))],
         )
