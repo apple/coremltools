@@ -1269,8 +1269,9 @@ class TestOptionalInput:
                 assert isinstance(coreml_out["classLabel"], key_type)
 
         for class_type in ("str", "int"):
-            for backend in ("mlprogram", "neuralnetwork"):
-                _test_classifier(traced_model, example_input, class_type, backend)
+            _test_classifier(traced_model, example_input, class_type, "neuralnetwork")
+            if ct.utils._macos_version() >= (12, 0):
+                _test_classifier(traced_model, example_input, class_type, "mlprogram")
 
     @staticmethod
     @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
