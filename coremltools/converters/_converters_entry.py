@@ -54,7 +54,6 @@ def convert(
     Convert a TensorFlow or PyTorch model to the Core ML model format as either a neural network or an ML program. 
     To learn about the differences, see
     `ML Programs <https://coremltools.readme.io/docs/ml-programs>`_.
-    This function is aliased as ``ct.convert`` in examples and guides.
     Some parameters and requirements differ by TensorFlow and PyTorch frameworks.
 
 
@@ -131,11 +130,9 @@ def convert(
         The configuration if the MLModel is intended to be a classifier.
 
     minimum_deployment_target : coremltools.target enumeration (optional)
-        One of the members of enum ``coremltools.target``.
+        A member of the ``coremltools.target`` enum.
         The value of this parameter determines the type of the model
-        representation produced by the converter. Alternatively, you can use
-        the ``convert_to`` parameter to specify the model type (see the
-        ``convert_to`` parameter). To learn about the differences between
+        representation produced by the converter. To learn about the differences between
         neural networks and ML programs, see
         `ML Programs <https://coremltools.readme.io/docs/ml-programs>`_.
 
@@ -167,9 +164,7 @@ def convert(
     convert_to : str (optional)
         Must be one of [``'neuralnetwork'``, ``'mlprogram'``, ``'milinternal'``].
         The value of this parameter determines the type of the model
-        representation produced by the converter. Alternatively, you can use
-        the ``minimum_deployment_target`` parameter to specify the model type
-        (see the ``minimum_deployment_target`` parameter). To learn about the
+        representation produced by the converter. To learn about the
         differences between neural networks and ML programs, see
         `ML Programs <https://coremltools.readme.io/docs/ml-programs>`_.
         
