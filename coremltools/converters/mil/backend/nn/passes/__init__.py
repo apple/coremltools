@@ -3,23 +3,11 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-# Import all passes in this dir
-from os.path import dirname, basename, isfile, join
-import glob
-
-excluded_files = [
-    "__init__.py",
-    "nn_passes.py",
-]
-modules = glob.glob(join(dirname(__file__), "*.py"))
-pass_modules = [
-    basename(f)[:-3]
-    for f in modules
-    if isfile(f)
-    and basename(f)[:1] != "_"  # Follow python convention to hide _* files.
-    and basename(f)[:4] != "test"
-    and basename(f) not in excluded_files
-]
-__all__ = pass_modules
-
-from . import *  # import everything in __all__
+from . import (
+    alert_return_type_cast,
+    commingle_loop_vars,
+    handle_return_inputs_as_outputs,
+    handle_return_unused_inputs,
+    handle_unused_inputs,
+    mlmodel_passes
+)

@@ -3,18 +3,17 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import itertools
+import numpy as np
+import pytest
+
 from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
 from coremltools.converters.mil.testing_utils import (
     assert_model_is_valid,
     get_op_types_in_program,
     apply_pass_and_basic_check,
 )
-from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
-import copy
-import pytest
-import itertools
-
-import numpy as np
 
 
 @pytest.mark.parametrize("op_type, pos, val", itertools.product(['add', 'mul', 'floor_div', 'pow', 'real_div', 'sub'], ['x', 'y'], [0, 1, [0, 0, 0, 0], [1, 1, 1, 1]]))

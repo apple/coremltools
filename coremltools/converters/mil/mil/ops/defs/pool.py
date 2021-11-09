@@ -3,16 +3,23 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+from coremltools.converters.mil.mil import Operation, types
+from coremltools.converters.mil.mil.input_type import (
+    BoolInputType,
+    DefaultInputs,
+    InputSpec,
+    IntTensorInputType,
+    TensorInputType,
+    StringInputType
+)
+from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
 from coremltools.converters.mil.mil.ops.defs._utils import spatial_dimensions_out_shape
-
-from ._op_reqs import *
-
-"""
-Pooling Op Superclass
-"""
 
 
 class Pooling(Operation):
+    """
+    Pooling Op Superclass
+    """
     input_spec = InputSpec(
         x=TensorInputType(),
         kernel_sizes=IntTensorInputType(const=True),
@@ -151,12 +158,11 @@ class avg_pool(Pooling):
     input_spec = (
         InputSpec(
           exclude_padding_from_average=BoolInputType(const=True,
-            optional=True))
+                                                     optional=True))
         + Pooling.input_spec
     )
 
     def default_inputs(self):
-        num_spatial_dims = self.x.rank - 2
         return super().default_inputs() + \
             DefaultInputs(
                 exclude_padding_from_average=False,

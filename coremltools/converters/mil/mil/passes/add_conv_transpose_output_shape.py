@@ -1,18 +1,16 @@
-# -*- coding: utf-8 -*-
-
 #  Copyright (c) 2020, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-
-from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil.passes.pass_registry import register_pass
+from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil.types.symbolic import any_symbolic
 
 
 @register_pass(namespace="common")
-def add_conv_transpose_output_shape(prog):
+class add_conv_transpose_output_shape(AbstractGraphPass):
     """
     ``conv_transpose`` input ``output_shape`` is an optional input.
     Since we can infer the output shape from type_inference, we add
@@ -26,20 +24,21 @@ def add_conv_transpose_output_shape(prog):
       %2: (3, i32) = const(val=[1,5,39])
       %3: (1, 5, 39, fp32) = conv_transpose(..., output_shape=%2)
     """
-    for f in prog.functions.values():
-        handle_block(f)
+    def apply(self, prog):
+        for f in prog.functions.values():
+            _handle_block(f)
 
-def match_pattern(op):
+def _match_pattern(op):
   return op.op_type == "conv_transpose" \
       and op.output_shape is None \
       and not any_symbolic(op.outputs[0].shape)
 
-def handle_block(block):
+def _handle_block(block):
     for op in list(block.operations):
         for b in op.blocks:
-            handle_block(b)
+            _handle_block(b)
 
-        if not match_pattern(op):
+        if not _match_pattern(op):
             continue
 
         # matched pattern

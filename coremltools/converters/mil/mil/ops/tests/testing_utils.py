@@ -58,9 +58,6 @@ def run_compare_builder(
             That is, "ct.convert(...., useCPUOnly=use_cpu_for_conversion)"
             It forces the model to be loaded on the CPU context, post conversion.
     """
-    from coremltools.converters.mil.testing_reqs import ct
-
-
     if not isinstance(expected_output_types, list):
         expected_output_types = [expected_output_types]
 

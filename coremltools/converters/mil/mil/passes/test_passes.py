@@ -26,8 +26,6 @@ import numpy as np
 np.random.seed(1984)
 validate_model = True
 
-
-
 def test_const_elimination():
     @mb.program(input_specs=[mb.TensorSpec(shape=(2, 4))])
     def prog(x):
@@ -919,8 +917,8 @@ class TestTopologicalReorder:
 
         block = prog.functions["main"]
         # Reorder `split` op to test op with multiple output case
-        from .topological_reorder import  move_operations_to_the_end_block
-        move_operations_to_the_end_block(block, ['split'])
+        from .topological_reorder import  _move_operations_to_the_end_block
+        _move_operations_to_the_end_block(block, ['split'])
 
         assert get_op_types_in_program(prog) == ['square', 'relu', 'split', 'square', 'add']
 
@@ -1121,3 +1119,449 @@ class TestPassRank0ExpandDimsSwap:
                 block.outputs[2].name: (3,),
             },
         )
+
+
+class TestRemoveRedundantOpsPass:
+
+    def test_redundant_ops_just_after_input_valid_pattern_1(self):
+        """
+        Input graph:
+        input----->transpose(perm=[0, 2, 1])--->add---> add ---> out
+               |                                 ^       ^
+               |                                 |       |
+               |---->transpose(perm=[0, 2, 1])----       |
+               |                                         |
+               |                                         |
+               |---->transpose(perm=[0, 2, 1])------------
+
+        Output graph:
+        input----->transpose(perm=[0, 2, 1])--->add---> add ----> out
+                                    |            ^       ^
+                                    |            |       |
+                                    |-------------       |
+                                    |                    |
+                                    |--------------------
+        """
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3, 5))])
+        def prog(x):
+            x1 = mb.transpose(x=x, perm=[0, 2, 1])
+            x2 = mb.transpose(x=x, perm=[0, 2, 1])
+            x3 = mb.transpose(x=x, perm=[0, 2, 1])
+            z = mb.add(x=x1, y=x2)
+            z = mb.add(x=z, y=x3)
+            return z
+
+        prev_prog, _, block = apply_pass_and_basic_check(
+            prog, "common::remove_redundant_ops"
+        )
+        assert get_op_types_in_program(prev_prog) == ["transpose", "transpose", "transpose", "add", "add"]
+        assert get_op_types_in_program(prog) == ["transpose", "add", "add"]
+        assert_model_is_valid(
+            prog,
+            {"x": (2, 3, 5)},
+            expected_output_shapes={block.outputs[0].name: (2, 5, 3)},
+        )
+
+    def test_redundant_ops_just_after_input_valid_pattern_2(self):
+        """
+        Input graph:
+        input----->leaky_relu(alpha=0.3)--->add---> add ---> out
+               |                             ^       ^
+               |                             |       |
+               |----->leaky_relu(alpha=0.3)---       |
+               |                                     |
+               |                                     |
+               |---->leaky_relu(alpha=0.3)------------
+
+        Output graph:
+        input--------->leaky_relu(alpha=0.3)--->add---> add ----> out
+                                    |            ^       ^
+                                    |            |       |
+                                    |-------------       |
+                                    |                    |
+                                    |---------------------
+        """
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3, 5))])
+        def prog(x):
+            x1 = mb.leaky_relu(x=x, alpha=0.3)
+            x2 = mb.leaky_relu(x=x, alpha=0.3)
+            x3 = mb.leaky_relu(x=x, alpha=0.3)
+            z = mb.add(x=x1, y=x2)
+            z = mb.add(x=z, y=x3)
+            return z
+
+        prev_prog, _, block = apply_pass_and_basic_check(
+            prog, "common::remove_redundant_ops"
+        )
+        assert get_op_types_in_program(prev_prog) == ["leaky_relu", "leaky_relu", "leaky_relu", "add", "add"]
+        assert get_op_types_in_program(prog) == ["leaky_relu", "add", "add"]
+        assert_model_is_valid(
+            prog,
+            {"x": (2, 3, 5)},
+            expected_output_shapes={block.outputs[0].name: (2, 3, 5)},
+        )
+
+    def test_redundant_ops_just_after_input_invalid_pattern_1(self):
+        """
+        input----->transpose(perm=[0, 2, 1])---> reshape(shape=[-1]) -----> add ---> out
+               |                                                             ^
+               |                                                             |
+               |---->transpose(perm=[1, 0, 2])----> reshape(shape=[-1])------
+        """
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3, 5))])
+        def prog(x):
+            x1 = mb.transpose(x=x, perm=[0, 2, 1])
+            x2 = mb.transpose(x=x, perm=[1, 0, 2])
+            x1 = mb.reshape(x=x1, shape=[-1])
+            x2 = mb.reshape(x=x2, shape=[-1])
+            z = mb.add(x=x1, y=x2)
+            return z
+
+        prev_prog, _, block = apply_pass_and_basic_check(
+            prog, "common::remove_redundant_ops"
+        )
+        assert get_op_types_in_program(prev_prog) == ["transpose", "transpose", "reshape", "reshape", "add"]
+        assert get_op_types_in_program(prog) == ["transpose", "transpose", "reshape", "reshape", "add"]
+        assert_model_is_valid(
+            prog,
+            {"x": (2, 3, 5)},
+            expected_output_shapes={block.outputs[0].name: (30,)},
+        )
+
+    def test_redundant_ops_just_after_input_invalid_pattern_2(self):
+        """
+        input----->leaky_relu(alpha=0.3) -----> add ---> out
+               |                                 ^
+               |                                 |
+               |---->leaky_relu(alpha=0.4)-------
+
+        """
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3, 5))])
+        def prog(x):
+            x1 = mb.leaky_relu(x=x, alpha=0.3)
+            x2 = mb.leaky_relu(x=x, alpha=0.4)
+            z = mb.add(x=x1, y=x2)
+            return z
+
+        prev_prog, _, block = apply_pass_and_basic_check(
+            prog, "common::remove_redundant_ops"
+        )
+        assert get_op_types_in_program(prev_prog) == ["leaky_relu", "leaky_relu", "add"]
+        assert get_op_types_in_program(prog) == ["leaky_relu", "leaky_relu", "add"]
+        assert_model_is_valid(
+            prog,
+            {"x": (2, 3, 5)},
+            expected_output_shapes={block.outputs[0].name: (2, 3, 5)},
+        )
+
+    def test_redundant_ops_just_after_input_invalid_pattern_3(self):
+        """
+        test case, when inputs of 1 op is a subset of the inputs of the other op
+
+        input----->layer_norm1 -----> add ---> out
+               |                       ^
+               |                       |
+               |---->layer_norm2-------
+
+        """
+        @mb.program(input_specs=[mb.TensorSpec(shape=(1, 3, 2))])
+        def prog(x):
+            x1 = mb.layer_norm(x=x, axes=[2], epsilon=1e-4)
+            gamma_val = np.array([1.0, 1.0], dtype=np.float32)
+            beta_val = np.array([1.0, 0.0], dtype=np.float32)
+            x2 = mb.layer_norm(x=x, axes=[2], epsilon=1e-4, gamma=gamma_val, beta=beta_val)
+            z = mb.add(x=x1, y=x2)
+            return z
+
+        prev_prog, _, block = apply_pass_and_basic_check(
+            prog, "common::remove_redundant_ops"
+        )
+        assert get_op_types_in_program(prev_prog) == ["layer_norm", "layer_norm", "add"]
+        assert get_op_types_in_program(prog) == ["layer_norm", "layer_norm", "add"]
+        assert_model_is_valid(
+            prog,
+            {"x": (1, 3, 2)},
+            expected_output_shapes={block.outputs[0].name: (1, 3, 2)},
+        )
+
+    @staticmethod
+    def _make_repeated_conv_prog(redundant_conv=True):
+        prog = Program()
+        func_inputs = {"x": mb.placeholder(shape=[1, 4, 5, 5])}
+        with Function(func_inputs) as ssa_fun:
+            x = ssa_fun.inputs["x"]
+            x = mb.relu(x=x)
+            W = np.random.rand(8, 4, 3, 3)
+            if redundant_conv:
+                bias = np.random.rand(8)
+                x1 = mb.conv(x=x, weight=W, bias=bias, pad_type="same", strides=[1, 1])
+                x2 = mb.conv(x=x, weight=W, bias=bias, pad_type="same", strides=[1, 1])
+            else:
+                x1 = mb.conv(x=x, weight=W, bias=np.random.rand(8), pad_type="same", strides=[1, 1])
+                x2 = mb.conv(x=x, weight=W, bias=np.random.rand(8), pad_type="same", strides=[1, 1])
+            x1 = mb.relu(x=x1)
+            x2 = mb.relu(x=x2)
+            x1 = mb.avg_pool(x=x1, kernel_sizes=[2, 2], strides=[1, 1], pad_type="same")
+            z = mb.concat(values=(x1, x2), axis=-3)
+            ssa_fun.set_outputs([z])
+        prog.add_function("main", ssa_fun)
+        return prog
+
+    def test_redundant_ops_inside_graph_valid_pattern(self):
+        """
+        Input graph:
+        input--> relu--------->conv------>relu----> pool ---> concat ---> out
+                 |                                              ^
+                 |                                              |
+                 |---->conv---->relu----------------------------
+
+        Output graph:
+        input-> relu--->conv------>relu----> pool ---> concat ---> out
+                                    |                   ^
+                                    |                   |
+                                    |-------------------
+        """
+        prog = self._make_repeated_conv_prog(redundant_conv=True)
+
+        prev_prog, _, block = apply_pass_and_basic_check(
+            prog, "common::remove_redundant_ops"
+        )
+        assert get_op_types_in_program(prev_prog) == ["relu", "conv", "conv", "relu", "relu", "avg_pool", "concat"]
+        assert get_op_types_in_program(prog) == ["relu", "conv", "relu", "avg_pool", "concat"]
+        assert_model_is_valid(
+            prog,
+            {"x": (1, 4, 5, 5)},
+            expected_output_shapes={block.outputs[0].name: (1, 16, 5, 5)},
+        )
+
+    def test_redundant_ops_inside_graph_invalid_pattern(self):
+        """
+        input--->relu--------->conv1------>relu----> pool ---> concat ---> out
+                  |                                              ^
+                  |                                              |
+                  |---->conv2---->relu---------------------------
+        """
+        prog = self._make_repeated_conv_prog(redundant_conv=False)
+
+        prev_prog, _, block = apply_pass_and_basic_check(
+            prog, "common::remove_redundant_ops"
+        )
+        assert get_op_types_in_program(prev_prog) == ["relu", "conv", "conv", "relu", "relu", "avg_pool", "concat"]
+        assert get_op_types_in_program(prog) == ["relu", "conv", "conv", "relu", "relu", "avg_pool", "concat"]
+        assert_model_is_valid(
+            prog,
+            {"x": (1, 4, 5, 5)},
+            expected_output_shapes={block.outputs[0].name: (1, 16, 5, 5)},
+        )
+
+    def test_redundant_op_as_output_valid_pattern_1(self):
+        """
+        Input graph:
+        input--------->relu------> out1
+               |
+               |
+               |---->relu---->tanh---> out2
+
+        Output graph:
+        input--------->relu------> out1
+                             |
+                             |
+                             |---->tanh---> out2
+        """
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3, 5))])
+        def prog(x):
+            x1 = mb.relu(x=x)
+            x2 = mb.relu(x=x)
+            return x1, mb.tanh(x=x2)
+
+        prev_prog, _, block = apply_pass_and_basic_check(
+            prog, "common::remove_redundant_ops"
+        )
+        assert get_op_types_in_program(prev_prog) == ["relu", "relu", "tanh"]
+        assert get_op_types_in_program(prog) == ["relu", "tanh"]
+        assert_model_is_valid(
+            prog,
+            {"x": (2, 3, 5)},
+            expected_output_shapes={block.outputs[0].name: (2, 3, 5), block.outputs[1].name: (2, 3, 5)},
+        )
+
+    def test_redundant_op_as_output_invalid_pattern_1(self):
+        """
+        Input graph:
+        input--------->relu------> out1
+               |
+               |
+               |---->relu---> out2
+
+        "common::remove_redundant_ops" pass does not remove ops if their outputs
+        are block outputs.
+        """
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 3, 5))])
+        def prog(x):
+            x1 = mb.relu(x=x)
+            x2 = mb.relu(x=x)
+            return x1, x2
+
+        prev_prog, _, block = apply_pass_and_basic_check(
+            prog, "common::remove_redundant_ops",
+        )
+        assert get_op_types_in_program(prev_prog) == ["relu", "relu"]
+        assert get_op_types_in_program(prog) == ["relu", "relu"]
+        assert_model_is_valid(
+            prog,
+            {"x": (2, 3, 5)},
+            expected_output_shapes={block.outputs[0].name: (2, 3, 5), block.outputs[1].name: (2, 3, 5)},
+        )
+
+    def test_cond_block_program(self):
+        # to test:
+        # - identical ops within different blocks are not removed. The "relu" op inside true and false blocks
+        #   are not removed since they are in different blocks
+        # - ops that have blocks inside them are not removed. There are two cond ops here, with identical inputs
+        #   but they are not removed, since they are ops that have nested block inside them
+        @mb.program(input_specs=[mb.TensorSpec(shape=(1,))])
+        def prog(x):
+            x1 = mb.cast(x=x, dtype="bool")
+            def true_fn():
+                x = mb.relu(x=x1)
+                x = mb.cast(x=x, dtype="fp32")
+                return mb.add(x=x, y=1)
+
+            def false_fn():
+                x = mb.relu(x=x1)
+                x = mb.cast(x=x, dtype="fp32")
+                return mb.add(x=x, y=-1)
+
+            z1 = mb.cond(pred=x1, _true_fn=true_fn, _false_fn=false_fn)
+            z2 = mb.cond(pred=x1, _true_fn=true_fn, _false_fn=false_fn)
+            z = mb.add(x=z1, y=z2)
+            return z
+
+        prev_prog, _, block = apply_pass_and_basic_check(
+            prog, "common::remove_redundant_ops",
+        )
+        assert get_op_types_in_program(prev_prog) == ["cast", "cond", "cond", "add"]
+        assert get_op_types_in_program(prog) == ["cast", "cond", "cond", "add"]
+        cond_op = prog.find_ops(op_type="cond")[0]
+        assert cond_op.blocks[0].operations[0].op_type == "relu"
+        assert cond_op.blocks[1].operations[0].op_type == "relu"
+        assert_model_is_valid(
+            prog,
+            {"x": (1,)},
+            expected_output_shapes={block.outputs[0].name: (1,)},
+        )
+
+    def test_concat_op_pattern(self):
+        '''
+        Input graph:
+                          ---------------> concat ------> log ------> out1
+                         |                   ^
+                         |                   |
+        input--------->relu------> concat ------> relu----> out2
+                 |                  ^        |
+                 |                  |        |
+                 |---->tanh--------------------
+
+        Output graph:
+                                     |------>log ------> out1
+                                     |
+                                     |
+        input--------->relu------> concat ------> relu----> out2
+                 |                  ^
+                 |                  |
+                 |---->tanh---------
+        '''
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(10, 5))])
+        def prog(x):
+            x1 = mb.relu(x=x)
+            x2 = mb.tanh(x=x)
+            c1 = mb.concat(values=(x1, x2), axis=0)
+            c2 = mb.concat(values=(x1, x2), axis=0)
+            z1 = mb.log(x=c1)
+            z2 = mb.relu(x=c2)
+            return z1, z2
+
+        prev_prog, _, block = apply_pass_and_basic_check(
+            prog, "common::remove_redundant_ops",
+        )
+        assert get_op_types_in_program(prev_prog) == ["relu", "tanh", "concat", "concat", "log", "relu"]
+        assert get_op_types_in_program(prog) == ["relu", "tanh", "concat", "log", "relu"]
+        assert_model_is_valid(
+            prog,
+            {"x": (10, 5)},
+            expected_output_shapes={block.outputs[0].name: (20, 5), block.outputs[1].name: (20, 5)},
+        )
+
+    def test_multiple_redundant_child_ops_pattern(self):
+        '''
+        Input graph
+
+        input -------------> reshape ----------> add ---------> out1
+                  |                               ^
+                  |                               |
+                  |-------> reshape ---------------
+                  |
+                  |------> slice_by_size-----> add ----------> out2
+                  |                             ^
+                  |                             |
+                  |------> slice_by_size -------
+
+        Output graph
+
+        input -------------> reshape ----------> add ------------> out1
+          |                              |        ^
+          |                              |        |
+          |                              |---------
+          |
+          |------> slice_by_size----------> add -----------------> out2
+                        |                    ^
+                        |                    |
+                        |---------------------
+
+        '''
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(10, 5, 4))])
+        def prog(x):
+            x1 = mb.reshape(x=x, shape=[5, 2, -1])
+            x2 = mb.reshape(x=x, shape=[5, 2, -1])
+            x3 = mb.slice_by_size(x=x, begin=[0, 0, 1], size=[2, 4, 3])
+            x4 = mb.slice_by_size(x=x, begin=[0, 0, 1], size=[2, 4, 3])
+            z1 = mb.add(x=x1, y=x2)
+            z2 = mb.add(x=x3, y=x4)
+            return z1, z2
+
+        prev_prog, _, block = apply_pass_and_basic_check(
+            prog, "common::remove_redundant_ops",
+        )
+        assert get_op_types_in_program(prev_prog) == ["reshape", "reshape", "slice_by_size", "slice_by_size", "add", "add"]
+        assert get_op_types_in_program(prog) == ["reshape", "slice_by_size", "add", "add"]
+        assert_model_is_valid(
+            prog,
+            {"x": (10, 5, 4)},
+            expected_output_shapes={block.outputs[0].name: (5, 2, 20), block.outputs[1].name: (2, 4, 3)},
+        )
+
+    def test_random_distribution_op_invalid_pattern(self):
+        """
+        Identical random ops are not removed
+
+        input----->cast---->random_uniform------> add ---> out
+                    |                              ^
+                    |                              |
+                    |---->random_uniform------------
+        """
+        @mb.program(input_specs=[mb.TensorSpec(shape=(3,))])
+        def prog(shape):
+            shape = mb.cast(x=shape, dtype="int32")
+            x1 = mb.random_uniform(shape=shape, low=0.0, high=1.0, seed=11)
+            x2 = mb.random_uniform(shape=shape, low=0.0, high=1.0, seed=11)
+            return mb.add(x=x1, y=x2)
+
+        prev_prog, _, block = apply_pass_and_basic_check(
+            prog, "common::remove_redundant_ops",
+        )
+        assert get_op_types_in_program(prev_prog) == ["cast", "random_uniform", "random_uniform", "add"]
+        assert get_op_types_in_program(prog) == ["cast", "random_uniform", "random_uniform", "add"]
+
+

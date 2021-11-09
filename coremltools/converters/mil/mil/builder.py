@@ -12,7 +12,6 @@ import numpy as np
 from coremltools.converters.mil.mil.types.symbolic import any_symbolic
 from .program import Program, Placeholder
 from .block import curr_block, Function
-from .operation import is_internal_input
 from .input_type import (
     _InputType,
     InternalStringInputType,
@@ -25,6 +24,7 @@ from .input_type import (
     PyFunctionInputType,
 )
 from .var import InternalVar, Var
+
 
 def is_python_value(val):
     return (
@@ -252,5 +252,5 @@ class Builder:
         return wrapper
 
 
-"""importing ops triggers installation of all ops into Builder"""
+# importing ops triggers installation of all ops into Builder
 from .ops import defs as _ops

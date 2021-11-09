@@ -4,9 +4,10 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
+from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil import Builder as mb
 
-def match_pattern(op):
+def _match_pattern(op):
     if op.op_type == "sigmoid":
         # abort fusion if op output is also a block output
         if op.outputs[0] in op.enclosing_block.outputs:
@@ -26,7 +27,7 @@ def match_pattern(op):
     return None
 
 
-def try_to_transform(sigmoid_op, mul_op, block):
+def _try_to_transform(sigmoid_op, mul_op, block):
     out_name = mul_op.outputs[0].name
     # create a new silu op
     x = mb.silu(x=sigmoid_op.x, name=out_name, before_op=sigmoid_op)
@@ -38,20 +39,20 @@ def try_to_transform(sigmoid_op, mul_op, block):
     return True
 
 
-def fuse_activation_silu_block(block):
+def _fuse_activation_silu_block(block):
     fusion_status = False
     for op in list(block.operations):
         for b in op.blocks:
             block_changed = True
             while block_changed:
-                block_changed = fuse_activation_silu_block(b)
+                block_changed = _fuse_activation_silu_block(b)
         if len(op.blocks) > 0:
             continue
 
-        mul_op = match_pattern(op)
+        mul_op = _match_pattern(op)
         if mul_op is not None:
             with block:
-                fusion_status = try_to_transform(op, mul_op, block)
+                fusion_status = _try_to_transform(op, mul_op, block)
             # has to break as the downstream iterator is affected.
             if fusion_status:
                 return fusion_status
@@ -59,7 +60,7 @@ def fuse_activation_silu_block(block):
 
 
 @register_pass(namespace="mil_backend")
-def fuse_activation_silu(prog):
+class fuse_activation_silu(AbstractGraphPass):
     """
     Fold x * sigmoid(x) into silu(x)
 
@@ -72,7 +73,8 @@ def fuse_activation_silu(prog):
         %3 = silu(%0)
         ...
     """
-    for f_name, f in prog.functions.items():
-        block_changed = True
-        while block_changed:
-            block_changed = fuse_activation_silu_block(f)
+    def apply(self, prog):
+        for f in prog.functions.values():
+            block_changed = True
+            while block_changed:
+                block_changed = _fuse_activation_silu_block(f)

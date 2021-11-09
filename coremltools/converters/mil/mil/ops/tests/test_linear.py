@@ -2,13 +2,14 @@
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
-
-from coremltools.converters.mil import testing_reqs
-from coremltools.converters.mil.testing_reqs import *
+import itertools
+import pytest
+import numpy as np
 
 from .testing_utils import run_compare_builder
-
-backends = testing_reqs.backends
+from coremltools.converters.mil.mil import Builder as mb, types
+from coremltools.converters.mil.testing_reqs import backends
+from coremltools.converters.mil.testing_utils import ssa_fn, random_gen
 
 
 class TestLinear:
@@ -209,6 +210,7 @@ class TestMatMul:
             "x": mb.placeholder(shape=x_val.shape),
         }
         input_values = {"x": x_val}
+
         def build(x):
             return [mb.matmul(x=x, y=y_val, transpose_x=False, transpose_y=False)]
 
@@ -309,8 +311,6 @@ class TestEinsum:
             use_cpu_only=use_cpu_only,
             backend=backend,
         )
-
-
 
     @ssa_fn
     def test_builder_eval(self):

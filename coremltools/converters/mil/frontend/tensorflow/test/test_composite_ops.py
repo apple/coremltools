@@ -3,8 +3,12 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from coremltools.converters.mil import testing_reqs
-from coremltools.converters.mil.testing_reqs import *
+import itertools
+import numpy as np
+import pytest
+
+from coremltools.converters.mil.testing_reqs import backends
+from coremltools.converters.mil.testing_utils import random_gen
 from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import (
     make_tf_graph,
     TensorFlowBaseTest
@@ -20,8 +24,9 @@ from coremltools.converters.mil.frontend.tensorflow.tf_op_registry import regist
 from coremltools.converters.mil.frontend.tensorflow.tf_op_registry import (
     _TF_OPS_REGISTRY,
 )
-from coremltools.converters.mil.mil.ops.defs._op_reqs import *
 from coremltools.converters.mil.mil import Builder as mb
+
+tf = pytest.importorskip("tensorflow")
 
 
 class TestCompositeOp(TensorFlowBaseTest):

@@ -1,18 +1,15 @@
-# -*- coding: utf-8 -*-
-
 #  Copyright (c) 2020, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-
-from coremltools.converters.mil.mil.passes.pass_registry import register_pass
-from coremltools.converters.mil.mil import Builder as mb
 from .helper import _check_child_op_type, _check_var_scalar_value
-import numpy as np
+from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil.passes.pass_registry import register_pass
+from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 
 
-def try_to_transform(onehot_op, block):
+def _try_to_transform(onehot_op, block):
     root_var = onehot_op.indices
 
     # check that the output of the onehot op is not a block output
@@ -64,13 +61,13 @@ def try_to_transform(onehot_op, block):
     return True
 
 
-def fuse_onehot_matmul_to_gather_block(block):
+def _fuse_onehot_matmul_to_gather_block(block):
     fusion_status = False
     for i, op in enumerate(list(block.operations)):
         for b in op.blocks:
             block_changed = True
             while block_changed:
-                block_changed = fuse_onehot_matmul_to_gather_block(b)
+                block_changed = _fuse_onehot_matmul_to_gather_block(b)
         if len(op.blocks) > 0:
             # This op can't be pow
             continue
@@ -78,7 +75,7 @@ def fuse_onehot_matmul_to_gather_block(block):
         # start pattern match if one_hot op is encountered
         if op.op_type == "one_hot":
             with block:
-                fusion_status = try_to_transform(op, block)
+                fusion_status = _try_to_transform(op, block)
             # has to break as the downstream iterator is affected.
             if fusion_status:
                 return fusion_status
@@ -86,7 +83,7 @@ def fuse_onehot_matmul_to_gather_block(block):
 
 
 @register_pass(namespace="common")
-def fuse_onehot_matmul_to_gather(prog):
+class fuse_onehot_matmul_to_gather(AbstractGraphPass):
     """
     Detect if onehot (axis=-1, on_value=1, off_value=0) is followed by a matmul op (no bias),
     then they can be replaced by a gather op.
@@ -100,7 +97,8 @@ def fuse_onehot_matmul_to_gather(prog):
         %4 = gather(%3, %2, axis=0)
 
     """
-    for f in prog.functions.values():
-        block_changed = True
-        while block_changed:
-            block_changed = fuse_onehot_matmul_to_gather_block(f)
+    def apply(self, prog):
+        for f in prog.functions.values():
+            block_changed = True
+            while block_changed:
+                block_changed = _fuse_onehot_matmul_to_gather_block(f)

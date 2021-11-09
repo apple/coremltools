@@ -7,6 +7,7 @@ from .mil.passes.apply_common_pass_pipeline import apply_common_pass_pipeline
 from coremltools.converters._profile_utils import _profile
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil.passes.quantization_passes import AbstractQuantizationPass
+from coremltools.converters.mil.mil.types.symbolic import k_used_symbols, k_num_internal_syms
 from coremltools.models import MLModel
 from coremltools.models.model import _MODEL_FILE_NAME, _WEIGHTS_DIR_NAME
 from coremltools.models.utils import _MLMODEL_EXTENSION, _MLPACKAGE_EXTENSION
@@ -132,6 +133,12 @@ def _reset_conversion_state():
     # Clear the "name_count" dict,
     # which is used to generate unique op names in the mil builder class.
     mb.name_count.clear()
+
+    # Clear "k_used_symbols" dict, and the int counter "k_num_internal_syms" that are used to track symbolic names
+    global k_used_symbols
+    global k_num_internal_syms
+    k_used_symbols.clear()
+    k_num_internal_syms = 0
 
 @_profile
 def mil_convert(

@@ -5,16 +5,17 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+from distutils.version import StrictVersion as _StrictVersion
+import gc
 import logging
 import tensorflow as tf
-import gc
+
+from ..basic_graph_ops import const_determined_nodes
 from .delete_constant import delete_unnecessary_constant_nodes
-from ..basic_graph_ops import const_determined_nodes, delete_node, disconnect_edge
+from coremltools._deps import _get_version
+from coremltools.converters._profile_utils import _profile
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.types.type_mapping import numpy_val_to_builtin_val
-from coremltools.converters._profile_utils import _profile
-from distutils.version import StrictVersion as _StrictVersion
-from coremltools._deps import __get_version as _get_version
 
 
 def _get_const_nodes(fn):

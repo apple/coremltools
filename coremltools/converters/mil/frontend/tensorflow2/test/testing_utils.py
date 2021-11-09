@@ -182,6 +182,7 @@ def run_compare_tf2(
 def run_compare_tf_keras(
     model,
     input_values,
+    inputs_for_conversion=None,
     use_cpu_only=False,
     frontend_only=False,
     frontend="tensorflow",
@@ -196,6 +197,8 @@ def run_compare_tf_keras(
         TensorFlow 2.x model annotated with @tf.function.
     input_values: list of np.array
         List of input values in the same order as the input signature.
+    inputs_for_conversion: list of coremltools.TensorType() or coremltools.ImageType() objects
+        Defaults to None. It is passed as is to the "inputs" argument of the converter.
     use_cpu_only: bool
         If true, use CPU only for prediction, otherwise, use GPU also.
     frontend_only: bool
@@ -209,7 +212,7 @@ def run_compare_tf_keras(
     rtol: float
         The relative tolerance parameter.
     """
-    mlmodel = ct_convert(model, source=frontend, convert_to=backend)
+    mlmodel = ct_convert(model, inputs=inputs_for_conversion, source=frontend, convert_to=backend)
 
     # assumes conversion preserve the i/o names
     proto = mlmodel.get_spec()
@@ -278,10 +281,12 @@ class TensorFlow2BaseTest(TensorFlowBaseTest):
         return tuple(alist)
 
     @staticmethod
-    def run_compare_tf_keras(model, input_values, use_cpu_only=False,
+    def run_compare_tf_keras(model, input_values, inputs_for_conversion=None, use_cpu_only=False,
             frontend_only=False, frontend="tensorflow",
             backend=("neuralnetwork", "fp32"), atol=1e-04, rtol=1e-05):
-        res = run_compare_tf_keras(model, input_values, use_cpu_only=use_cpu_only,
+        res = run_compare_tf_keras(model, input_values,
+                                   inputs_for_conversion=inputs_for_conversion,
+                                   use_cpu_only=use_cpu_only,
                                    frontend_only=frontend_only,
                                    frontend=frontend,
                                    backend=backend, atol=atol, rtol=rtol)

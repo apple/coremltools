@@ -3,31 +3,31 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 """Module containing unit tests for verifying various quantization."""
+
+import numpy as np
 import os
+import pytest
 import shutil
 import tempfile
 import unittest
-import numpy as np
-import pytest
 
 import coremltools
+from coremltools import ComputeUnit as _ComputeUnit
+from coremltools.models import (
+    neural_network,
+    _MLMODEL_FULL_PRECISION,
+    _QUANTIZATION_MODE_LINEAR_QUANTIZATION,
+    _QUANTIZATION_MODE_LOOKUP_TABLE_KMEANS,
+    _QUANTIZATION_MODE_CUSTOM_LOOKUP_TABLE,
+)
 import coremltools.models.datatypes as datatypes
-from coremltools.models import neural_network
 import coremltools.models.neural_network.quantization_utils as quantization_utils
 from coremltools.models.neural_network.quantization_utils import (
     activate_int8_int8_matrix_multiplications,
     MatrixMultiplyLayerSelector,
     _quantize_spec_weights,
 )
-
 from coremltools._deps import _HAS_KERAS2_TF
-from coremltools.models import (
-    _MLMODEL_FULL_PRECISION,
-    _QUANTIZATION_MODE_LINEAR_QUANTIZATION,
-    _QUANTIZATION_MODE_LOOKUP_TABLE_KMEANS,
-    _QUANTIZATION_MODE_CUSTOM_LOOKUP_TABLE,
-)
-
 
 @unittest.skipIf(
     not coremltools.utils._is_macos() or coremltools.utils._macos_version() < (10, 14),
@@ -994,12 +994,15 @@ class DynamicQuantizedInt8Int8MatMul(unittest.TestCase):
         self.compare()
 
 
-@unittest.skipIf(
+@pytest.mark.skipif(
     not coremltools.utils._is_macos() or coremltools.utils._macos_version() < (10, 15),
-    "Missing macOS 10.15+. Skipping tests.",
+    reason="Missing macOS 10.15+. Skipping tests.",
 )
-class QuantizeWeightsAPI(unittest.TestCase):
-    def test_embeddingND_quantize(self):
+class TestQuantizeWeightsAPI:
+    @staticmethod
+    @pytest.mark.parametrize(
+        "compute_units", [_ComputeUnit.ALL, _ComputeUnit.CPU_AND_GPU, _ComputeUnit.CPU_ONLY])
+    def test_embeddingND_quantize(compute_units):
         input_features = [("data", datatypes.Array(10, 1))]
         output_features = [("output", None)]
         builder = neural_network.NeuralNetworkBuilder(
@@ -1016,44 +1019,28 @@ class QuantizeWeightsAPI(unittest.TestCase):
         )
 
         spec = builder.spec
-        model_fp32 = coremltools.models.MLModel(spec)
-        self.assertEqual(
-            len(spec.neuralNetwork.layers[0].embeddingND.weights.floatValue), 6000
-        )
+        model_fp32 = coremltools.models.MLModel(spec, compute_units=compute_units)
+        assert len(spec.neuralNetwork.layers[0].embeddingND.weights.floatValue) == 6000
 
         # quantize to FP16
         model_fp16 = quantization_utils.quantize_weights(model_fp32, nbits=16)
+        assert model_fp16.compute_unit == compute_units
         spec_fp16 = model_fp16.get_spec()
-        self.assertEqual(
-            len(spec_fp16.neuralNetwork.layers[0].embeddingND.weights.floatValue), 0
-        )
-        self.assertEqual(
-            len(spec_fp16.neuralNetwork.layers[0].embeddingND.weights.float16Value),
-            2 * 6000,
-        )
+        assert len(spec_fp16.neuralNetwork.layers[0].embeddingND.weights.floatValue) == 0
+        assert len(spec_fp16.neuralNetwork.layers[0].embeddingND.weights.float16Value) == 2 * 6000
 
         # quantize to uint8
         model_uint8 = quantization_utils.quantize_weights(model_fp32, nbits=8)
+        assert model_uint8.compute_unit == compute_units
         spec_uint8 = model_uint8.get_spec()
-        self.assertEqual(
-            len(spec_uint8.neuralNetwork.layers[0].embeddingND.weights.floatValue), 0
-        )
-        self.assertEqual(
-            len(spec_uint8.neuralNetwork.layers[0].embeddingND.weights.float16Value), 0
-        )
-        self.assertEqual(
-            len(spec_uint8.neuralNetwork.layers[0].embeddingND.weights.rawValue), 6000
-        )
+        assert len(spec_uint8.neuralNetwork.layers[0].embeddingND.weights.floatValue) == 0
+        assert len(spec_uint8.neuralNetwork.layers[0].embeddingND.weights.float16Value) == 0
+        assert len(spec_uint8.neuralNetwork.layers[0].embeddingND.weights.rawValue) == 6000
 
         # quantize to uint5
         model_uint5 = quantization_utils.quantize_weights(model_fp32, nbits=5)
+        assert model_uint5.compute_unit == compute_units
         spec_uint5 = model_uint5.get_spec()
-        self.assertEqual(
-            len(spec_uint5.neuralNetwork.layers[0].embeddingND.weights.floatValue), 0
-        )
-        self.assertEqual(
-            len(spec_uint5.neuralNetwork.layers[0].embeddingND.weights.float16Value), 0
-        )
-        self.assertEqual(
-            len(spec_uint5.neuralNetwork.layers[0].embeddingND.weights.rawValue), 3750
-        )  # 3750 = 5*6000/8
+        assert len(spec_uint5.neuralNetwork.layers[0].embeddingND.weights.floatValue) == 0
+        assert len(spec_uint5.neuralNetwork.layers[0].embeddingND.weights.float16Value) == 0
+        assert len(spec_uint5.neuralNetwork.layers[0].embeddingND.weights.rawValue) == 3750  # 3750 = 5*6000/8

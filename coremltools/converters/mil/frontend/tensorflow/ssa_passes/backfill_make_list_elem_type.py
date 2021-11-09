@@ -1,20 +1,17 @@
-# -*- coding: utf-8 -*-
-
 #  Copyright (c) 2020, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-
+from coremltools.converters.mil.mil import Builder as mb, types
+from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
-from coremltools.converters.mil.mil import Builder as mb
-from coremltools.converters.mil.mil import types
-from coremltools.converters.mil.mil.var import ListVar
 from coremltools.converters.mil.mil.types.symbolic import is_symbolic
+from coremltools.converters.mil.mil.var import ListVar
 
 
 @register_pass(namespace="tensorflow")
-def backfill_make_list_elem_type(prog):
+class backfill_make_list_elem_type(AbstractGraphPass):
     """
     TF's TensorArrayV3 (represented as make_list in mil) doesn't necessarily
     contain elem shape/type, which is known when write is performed. We
@@ -24,26 +21,26 @@ def backfill_make_list_elem_type(prog):
 
         prog: Program
     """
-    for f_name, f in prog.functions.items():
-        backfill_make_list_elem_type_block(f)
+    def apply(self, prog):
+        for f in prog.functions.values():
+            _backfill_make_list_elem_type_block(f)
 
 
-def backfill_make_list_elem_type_block(block):
+def _backfill_make_list_elem_type_block(block):
     # shallow copy hides changes on f.operations during the loop
-    for op in block.operations[:]:
+    for op in block.operations:
         for b in op.blocks:
-            backfill_make_list_elem_type_block(b)
+            _backfill_make_list_elem_type_block(b)
 
         if op.op_type != "tf_make_list":
             continue
-        # op is `make_list`
 
         if op.outputs[0].elem_type != types.unknown:
             # elem_type of the list is known
             continue
 
         list_var = op.outputs[0]
-        elem_type = infer_elem_type(list_var)  # types.tensor
+        elem_type = _infer_elem_type(list_var)  # types.tensor
         if elem_type is None:
             msg = (
                 "No list_write or list_scatter op to infer make_list "
@@ -71,7 +68,7 @@ def backfill_make_list_elem_type_block(block):
         block.remove_ops([op])
 
 
-def infer_elem_type(list_var):
+def _infer_elem_type(list_var):
     """
     Returns types.tensor. None if failed to infer element type.
     Example:
@@ -105,7 +102,7 @@ def infer_elem_type(list_var):
             block = o.blocks[0]
             # the corresponding Var in body block
             block_var = block.inputs[idx]
-            elem_type = infer_elem_type(block_var)
+            elem_type = _infer_elem_type(block_var)
             if elem_type is not None:
 
                 def _set_types_for_block_inputs(block):

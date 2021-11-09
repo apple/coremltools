@@ -1,9 +1,12 @@
-# -*- coding: utf-8 -*-
+#  Copyright (c) 2021, Apple Inc. All rights reserved.
+#
+#  Use of this source code is governed by a BSD-3-clause license that can be
+#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from coremltools.converters.mil.mil.passes.pass_registry import register_pass
-from coremltools.converters.mil.mil import Builder as mb
 import numpy as np
 
+from coremltools.converters.mil.mil.passes.pass_registry import register_pass
+from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 
 def _remove_elementwise_binary(op, block, x, y):
     # We remove the ops that has op.x == x or op.y == y
@@ -30,7 +33,6 @@ def _remove_elementwise_binary(op, block, x, y):
 
     return True
 
-
 def remove_elementwise(op, block):
 
     if op.op_type in {"add"}:
@@ -43,7 +45,6 @@ def remove_elementwise(op, block):
         return _remove_elementwise_binary(op, block, None, 0)
     else:
         return False
-
 
 def remove_same_shape(op, block):
     input_shape = op.x.sym_type
@@ -62,7 +63,6 @@ def remove_same_shape(op, block):
     # Remove all the ops at once
     block.remove_ops([op])
     return True
-
 
 def remove_linear(op, block):
     if op.alpha.val != 1 or op.beta.val != 0:
@@ -95,7 +95,6 @@ def remove_transpose(op, block):
     # Remove all the ops at once
     block.remove_ops([op])
     return True
-
 _SUPPORTED_OPS = {
     "add",
     "mul",
@@ -116,6 +115,7 @@ _SUPPORTED_OPS = {
     "crop",
     "linear_activation"
 }
+
 op_to_removal_fn = {
     "add": remove_elementwise,
     "mul": remove_elementwise,
@@ -137,8 +137,7 @@ op_to_removal_fn = {
     "linear_activation": remove_linear,
 }
 
-
-def match_pattern(op):
+def _match_pattern(op):
     # abort if op output is a block output
     if op.outputs[0] in op.enclosing_block.outputs:
         return None
@@ -151,17 +150,16 @@ def match_pattern(op):
 
     return None
 
-
-def noop_elimination_block(block):
+def _noop_elimination_block(block):
     for op in list(block.operations):
         for b in op.blocks:
             block_changed = True
             while block_changed:
-                block_changed = noop_elimination_block(b)
+                block_changed = _noop_elimination_block(b)
         if len(op.blocks) > 0:
             continue
 
-        remove_fn = match_pattern(op)
+        remove_fn = _match_pattern(op)
         if remove_fn is not None:
             with block:
                 status = remove_fn(op, block)
@@ -172,7 +170,7 @@ def noop_elimination_block(block):
 
 
 @register_pass(namespace="common")
-def noop_elimination(prog):
+class noop_elimination(AbstractGraphPass):
     """
     We remove ops that has no effect.
 
@@ -189,7 +187,9 @@ def noop_elimination(prog):
         ...
 
     """
-    for f in prog.functions.values():
-        block_changed = True
-        while block_changed:
-            block_changed = noop_elimination_block(f)
+
+    def apply(self, prog):
+        for f in prog.functions.values():
+            block_changed = True
+            while block_changed:
+                block_changed = _noop_elimination_block(f)

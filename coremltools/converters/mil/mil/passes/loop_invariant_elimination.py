@@ -1,18 +1,13 @@
-# -*- coding: utf-8 -*-
-
 #  Copyright (c) 2020, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-
-import numpy as np
-
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
+from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 
-
-def detect_loop_invariants(while_op):
+def _detect_loop_invariants(while_op):
     block = while_op.blocks[1]  # body block
     loop_invariant_ids = []  # list of index in op.loop_vars, block.inputs
     for i, vx_in in enumerate(block.inputs):
@@ -30,7 +25,7 @@ def detect_loop_invariants(while_op):
     return loop_invariant_ids
 
 
-def loop_invariant_elimination_block(block):
+def _loop_invariant_elimination_block(block):
     # Phase 1: Find vars needed to be renamed.
     #
     # while_loop outputs need to be renamed if the output will be eliminated
@@ -42,12 +37,12 @@ def loop_invariant_elimination_block(block):
     output_rename = []
     for op in list(block.operations):
         for b in op.blocks:
-            loop_invariant_elimination_block(b)
+            _loop_invariant_elimination_block(b)
 
         if op.op_type != "while_loop":
             continue
 
-        loop_invariant_ids = detect_loop_invariants(op)
+        loop_invariant_ids = _detect_loop_invariants(op)
         for i in loop_invariant_ids:
             output_rename.append((op.loop_vars[i], op.outputs[i], op))
         if len(loop_invariant_ids) > 0:
@@ -73,7 +68,7 @@ def loop_invariant_elimination_block(block):
     for op in list(block.operations):
         if op.op_type != "while_loop":
             continue
-        loop_invariant_ids = detect_loop_invariants(op)
+        loop_invariant_ids = _detect_loop_invariants(op)
 
         loop_variant_vars = []
 
@@ -124,9 +119,8 @@ def loop_invariant_elimination_block(block):
         # check healthy state
         op.enclosing_block.validate()
 
-
 @register_pass(namespace="common")
-def loop_invariant_elimination(prog):
+class loop_invariant_elimination(AbstractGraphPass):
     """
     prog: Program
 
@@ -170,5 +164,6 @@ def loop_invariant_elimination(prog):
     # instead of 2 outputs. We also preserve the return var names with
     # identity.
     """
-    for f in prog.functions.values():
-        loop_invariant_elimination_block(f)
+    def apply(self, prog):
+        for f in prog.functions.values():
+            _loop_invariant_elimination_block(f)

@@ -3,8 +3,16 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import itertools
+import numpy as np
+import math
+import os
+import pytest
+import shutil
+import tempfile
+
 from coremltools.converters.mil import testing_reqs
-from coremltools.converters.mil.testing_reqs import *
+from coremltools.converters.mil.testing_utils import random_gen
 from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import (
     make_tf_graph,
     layer_counts,
@@ -14,10 +22,6 @@ from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import (
     tf_graph_to_mlmodel
 )
 from coremltools.models.utils import _macos_version
-
-import math
-import tempfile
-import shutil
 
 backends = testing_reqs.backends
 
@@ -670,6 +674,8 @@ class TestCond(TensorFlowBaseTest):
         "use_cpu_only, backend", itertools.product([True, False], backends,)
     )
     def test_cond_naive(self, use_cpu_only, backend):
+        if (backend[0] == "mlprogram" and backend[1] == "fp16"):
+            pytest.xfail("rdar://83626929 (Reenable CondTests)")
         @make_tf_graph([(1,), (1,)])
         def build_model(x, y):
             return tf.cond(tf.constant(True), lambda: x + y, lambda: x * y)
@@ -874,8 +880,8 @@ class TestWhileLoop(TensorFlowBaseTest):
         input_values = [np.array([[1],[2]], dtype=np.float32),np.array([[1],[2]], dtype=np.float32)]
         input_dict = dict(zip(inputs, input_values))
         TensorFlowBaseTest.run_compare_tf(model, input_dict, outputs,
-                       use_cpu_only=use_cpu_only,
-                       backend=backend)
+                                          use_cpu_only=use_cpu_only,
+                                          backend=backend)
 
     @pytest.mark.parametrize(
         "use_cpu_only, backend", itertools.product([True, False], backends)
@@ -1729,7 +1735,6 @@ class TestConvTranspose(TensorFlowBaseTest):
                 pass
 
         w_shape = (kD, kH, kW, C_out, C_in)
-        x_input = np.random.randn(*input_shape)
 
         @make_tf_graph([tf_input_shape])
         def build_model(x):
@@ -5655,7 +5660,6 @@ class TestLSTMBlockCell(TensorFlowBaseTest):
         # _lstm_block_cell allows fine-grained control of W, peephole etc
         from tensorflow.contrib.rnn.python.ops.lstm_ops import _lstm_block_cell
 
-        actual_len, padded_len = 3, 4
         input_dim, hidden_dim = 2, 3
         x_shape = (batch, input_dim)
         init_h = np.random.rand(batch, hidden_dim).astype(np.float32)
@@ -5701,7 +5705,6 @@ class TestLSTMBlockCell(TensorFlowBaseTest):
         itertools.product([True, False], backends, [1, 2],),
     )
     def test_tf_lstm_block_cell(self, use_cpu_only, backend, batch):
-        actual_len, padded_len = 3, 4
         input_dim, hidden_dim = 2, 3
         # [timelen, batch_size, num_inputs]
         x_shape = (batch, input_dim)

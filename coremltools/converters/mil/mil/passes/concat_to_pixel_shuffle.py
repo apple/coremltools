@@ -5,7 +5,7 @@
 
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
-
+from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 
 def _match_pattern(op):
 
@@ -25,7 +25,7 @@ def _match_pattern(op):
     inputs = list(w_concat.inputs["values"])
     if len(inputs) != 2:
         return None
-    
+
     if not inputs[0].op or not inputs[1].op:
         return None
 
@@ -54,6 +54,7 @@ def _match_pattern(op):
     return w_concat, h_concat_0, h_concat_1
 
 
+
 def _replace_ops(block, w_concat, h_concat_0, h_concat_1):
 
     with block:
@@ -80,14 +81,14 @@ def _concat_to_pixel_shuffle_block(block):
         layers = _match_pattern(op)
         if layers:
             _replace_ops(block, layers[0], layers[1], layers[2])
-           
+
 
 @register_pass(namespace="common")
-def concat_to_pixel_shuffle(prog):
+class concat_to_pixel_shuffle(AbstractGraphPass):
     """
-    Identify nested, interleaved concats which can be replaced by a single concat and a pixel shuffle layer. 
+    Identify nested, interleaved concats which can be replaced by a single concat and a pixel shuffle layer.
 
-    This pattern occurs with the faster up-convolution from the FCRN model (Laina et al., 2016). 
+    This pattern occurs with the faster up-convolution from the FCRN model (Laina et al., 2016).
 
     input(N, C, H, W) -------------------
                                         |
@@ -106,12 +107,13 @@ def concat_to_pixel_shuffle(prog):
                                     |
                                     v
     input(N, C, H, W) -----> concat(axis=1, interleave=True) -----> pixel_shuffle(upscale_factor=2) ----> output
-                                    ^                
-                                    |                
+                                    ^
+                                    |
     input(N, C, H, W) --------------|
                                     |
                                     |
     input(N, C, H, W) ---------------
     """
-    for f in prog.functions.values():
-        _concat_to_pixel_shuffle_block(f)
+    def apply(self, prog):
+        for f in prog.functions.values():
+            _concat_to_pixel_shuffle_block(f)

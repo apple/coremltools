@@ -16,6 +16,13 @@ if os.getenv("TF_SUPPRESS_LOGS", "1") == "1":
 register_tf_op = None
 
 if _HAS_TF_1:
-    from .ops import *  # register all
-    from .dialect_ops import *  # register tf extension ops
+    # Importing these causes them to register their ops
+    from . import ops
+
+    from .dialect_ops import (
+        tf_make_list,
+        TfLSTMBase,
+        tf_lstm_block_cell,
+        tf_lstm_block
+    )
     from .tf_op_registry import register_tf_op

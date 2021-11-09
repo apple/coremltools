@@ -3,14 +3,15 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-
-from coremltools.converters.mil.mil.passes.pass_registry import register_pass
-from coremltools.converters.mil.mil import Builder as mb
 import logging
+
+from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
+from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 
 
 @register_pass(namespace="torch")
-def torch_upsample_to_core_upsample(prog):
+class torch_upsample_to_core_upsample(AbstractGraphPass):
     """
     Try to map Torch dialect ops `torch_upsample_nearest_neighbor` or `torch_upsample_bilinear` to
     `upsample_nearest_neighbor` or `upsample_bilinear` in the core op set if compatible.
@@ -19,22 +20,24 @@ def torch_upsample_to_core_upsample(prog):
 
         prog: Program
     """
-    for f in prog.functions.values():
-        torch_upsample_to_core_upsample_block(f)
+    def apply(self, prog):
+        for f in prog.functions.values():
+            _torch_upsample_to_core_upsample_block(f)
 
 
-def torch_upsample_to_core_upsample_block(block):
+def _torch_upsample_to_core_upsample_block(block):
     for op in block.operations[:]:
         for b in op.blocks:
-            torch_upsample_to_core_upsample_block(b)
+            _torch_upsample_to_core_upsample_block(b)
 
         if op.op_type in ["torch_upsample_nearest_neighbor", "torch_upsample_bilinear"]:
-            if try_replace_with_core_upsample(op):
+            if _try_replace_with_core_upsample(op):
                 logging.info("Successfully map {} to core upsample".format(op.op_type))
             else:
                 raise ValueError("Unable to map {} to core upsample".format(op.op_type))
 
-def try_get_upsample_factor(output_size):
+
+def _try_get_upsample_factor(output_size):
     # output_size = [
     #       (torch.floor((input.size(i + 2).float() * torch.tensor(scale_factors[i], dtype=torch.float32)).float()))
     #        for i in range(dim)
@@ -66,7 +69,8 @@ def try_get_upsample_factor(output_size):
     # we successfully trace back the original scale factor
     return op.y.val
 
-def try_replace_with_core_upsample(op):
+
+def _try_replace_with_core_upsample(op):
     """
     Inputs:
 
@@ -77,8 +81,8 @@ def try_replace_with_core_upsample(op):
     True if op can be represented by mb.upsample_nearest_neighbor or mb.upsample_bilinear op in SSA.
     False otherwise
     """
-    scales_h = try_get_upsample_factor(op.output_height.op)
-    scales_w = try_get_upsample_factor(op.output_width.op)
+    scales_h = _try_get_upsample_factor(op.output_height.op)
+    scales_w = _try_get_upsample_factor(op.output_width.op)
 
     if scales_h is None or scales_w is None:
         return False

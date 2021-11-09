@@ -2,12 +2,14 @@
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
+import itertools
+import pytest
+import numpy as np
 
-from coremltools.converters.mil import testing_reqs
-from coremltools.converters.mil.testing_reqs import *
 from .testing_utils import run_compare_builder, UNK_SYM
-
-backends = testing_reqs.backends
+from coremltools.converters.mil.mil import Builder as mb, types
+from coremltools.converters.mil.testing_reqs import backends
+from coremltools.converters.mil.testing_utils import ssa_fn, random_gen
 
 
 class TestSelect:
@@ -215,7 +217,7 @@ class TestWhileLoop:
                 return mb.less(x=bx, y=b)
 
             res, ignored = mb.while_loop(_cond=cond, _body=body,
-                loop_vars=([1.], [0.]))
+                                         loop_vars=([1.], [0.]))
             return res
 
         input_values = {
@@ -276,11 +278,11 @@ class TestWhileLoop:
 
             def body1(i, j):
                 new_i = mb.while_loop(_cond=cond2, _body=body2,
-                    loop_vars=(i,))
+                                      loop_vars=(i,))
                 return mb.add(x=new_i, y=two), j
 
             return mb.while_loop(_cond=cond1, _body=body1,
-                loop_vars=(x, y))
+                                 loop_vars=(x, y))
 
         input_values = {
             "x": np.array([0], dtype=np.float32),
@@ -306,6 +308,7 @@ class TestWhileLoop:
             frontend_only=False,
             backend=backend,
         )
+
 
 class TestList:
     @pytest.mark.parametrize(

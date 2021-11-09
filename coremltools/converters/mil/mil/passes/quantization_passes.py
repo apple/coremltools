@@ -9,6 +9,7 @@ from coremltools.converters.mil.mil.program import Program
 from coremltools.converters.mil.mil.operation import Operation
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil.types import builtin_to_string, is_tensor
+from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 
 from enum import Enum
 
@@ -28,7 +29,7 @@ def _close_to_zero(val, np_type):
 
     return np.isclose(val, 0, atol=type_min[np_type], rtol=type_eps[np_type])
 
-class AbstractQuantizationPass(object):
+class AbstractQuantizationPass(AbstractGraphPass):
     """
     Base class for Post-Training Quantization transforms.
 
@@ -44,8 +45,8 @@ class AbstractQuantizationPass(object):
                 "accepts a MIL operation object and returns a boolean value."
             )
             raise TypeError(msg)
-        else:
-            self.op_selector = op_selector
+
+        self.op_selector = op_selector
 
     def apply(self, prog):
         """

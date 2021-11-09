@@ -7,9 +7,9 @@
 
 
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
+from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil import Builder as mb
 import numpy as np
-
 
 def _try_to_transform(conv_op, scale_op, block):
 
@@ -167,9 +167,8 @@ def _fuse_conv_scale_block(block):
                 return fusion_occurred
     return fusion_occurred
 
-
 @register_pass(namespace="common")
-def fuse_conv_scale(prog):
+class fuse_conv_scale(AbstractGraphPass):
     """
     Fold mul/div into conv/conv_transpose by updating the weight/bias of the convolution layers.
 
@@ -188,7 +187,8 @@ def fuse_conv_scale(prog):
         ...
 
     """
-    for f in prog.functions.values():
-        block_changed = True
-        while block_changed:
-            block_changed = _fuse_conv_scale_block(f)
+    def apply(self, prog):
+        for f in prog.functions.values():
+            block_changed = True
+            while block_changed:
+                block_changed = _fuse_conv_scale_block(f)

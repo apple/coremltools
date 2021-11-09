@@ -36,32 +36,33 @@ np.random.seed()
 arbitrary_input = (3, arbitrary_cin, 224, 224)
 arbitrary_weight = np.random.rand(arbitrary_cout, arbitrary_cin, 10, 10)
 
-@mb.program(input_specs=[mb.TensorSpec(shape=arbitrary_input)])
-def conv_scale_mul(x):
-    conv = mb.conv(x=x, weight=arbitrary_weight, pad_type="valid", name="conv")
-    mul = mb.mul(x=conv, y=arbitrary_scalar, name="scale")
-    return mul
+if os.getenv("ENABLE_EXPERIMENTAL_PASSES") == "1":
+    @mb.program(input_specs=[mb.TensorSpec(shape=arbitrary_input)])
+    def conv_scale_mul(x):
+        conv = mb.conv(x=x, weight=arbitrary_weight, pad_type="valid", name="conv")
+        mul = mb.mul(x=conv, y=arbitrary_scalar, name="scale")
+        return mul
 
+if os.getenv("ENABLE_EXPERIMENTAL_PASSES") == "1":
+    @mb.program(input_specs=[mb.TensorSpec(shape=arbitrary_input)])
+    def conv_transpose_scale_mul(x):
+        conv = mb.conv_transpose(x=x, weight=arbitrary_weight, pad_type="valid", name="conv")
+        mul = mb.mul(x=conv, y=arbitrary_scalar, name="scale")
+        return mul
 
-@mb.program(input_specs=[mb.TensorSpec(shape=arbitrary_input)])
-def conv_transpose_scale_mul(x):
-    conv = mb.conv_transpose(x=x, weight=arbitrary_weight, pad_type="valid", name="conv")
-    mul = mb.mul(x=conv, y=arbitrary_scalar, name="scale")
-    return mul
+if os.getenv("ENABLE_EXPERIMENTAL_PASSES") == "1":
+    @mb.program(input_specs=[mb.TensorSpec(shape=arbitrary_input)])
+    def conv_scale_div(x):
+        conv = mb.conv(x=x, weight=arbitrary_weight, pad_type="valid", name="conv")
+        real_div = mb.real_div(x=conv, y=arbitrary_scalar, name="scale")
+        return real_div
 
-
-@mb.program(input_specs=[mb.TensorSpec(shape=arbitrary_input)])
-def conv_scale_div(x):
-    conv = mb.conv(x=x, weight=arbitrary_weight, pad_type="valid", name="conv")
-    real_div = mb.real_div(x=conv, y=arbitrary_scalar, name="scale")
-    return real_div
-
-
-@mb.program(input_specs=[mb.TensorSpec(shape=arbitrary_input)])
-def conv_transpose_scale_div(x):
-    conv = mb.conv_transpose(x=x, weight=arbitrary_weight, pad_type="valid", name="conv")
-    real_div = mb.real_div(x=conv, y=arbitrary_scalar, name="scale")
-    return real_div
+if os.getenv("ENABLE_EXPERIMENTAL_PASSES") == "1":
+    @mb.program(input_specs=[mb.TensorSpec(shape=arbitrary_input)])
+    def conv_transpose_scale_div(x):
+        conv = mb.conv_transpose(x=x, weight=arbitrary_weight, pad_type="valid", name="conv")
+        real_div = mb.real_div(x=conv, y=arbitrary_scalar, name="scale")
+        return real_div
 
 
 def _cin_cout(pattern):

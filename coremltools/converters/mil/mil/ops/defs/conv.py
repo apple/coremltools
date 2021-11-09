@@ -9,7 +9,6 @@ from coremltools.converters.mil.mil import (
     IntInputType,
     IntTensorInputType,
     Operation,
-    OrderedDict,
     TensorInputType,
     types,
     ScalarOrTensorInputType,
@@ -157,7 +156,6 @@ class conv(Operation):
         inshape = self.x.shape
         f_shape = self.weight.shape
         kernel_shape = f_shape[2:]
-        num_dims = len(inshape) - 2
         C_out = f_shape[0]
         C_in = self.x.shape[1]
         groups = self.groups.val

@@ -4,6 +4,7 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
+from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil.passes.helper import _check_child_op_type
 
@@ -79,6 +80,7 @@ def _try_to_transform(op, block):
     block.remove_ops(ops_to_remove)
     return True
 
+
 def _rank0_expand_dims_swap(block):
     fusion_occurred = False
     for op in list(block.operations):
@@ -98,9 +100,8 @@ def _rank0_expand_dims_swap(block):
                     return fusion_occurred
     return fusion_occurred
 
-
 @register_pass(namespace="common")
-def rank0_expand_dims_swap(prog):
+class rank0_expand_dims_swap(AbstractGraphPass):
     """
     Identify the pattern that a rank-0 binary elementwise operation followed by an expand_dims op.
     In the MIL backend, the output of the elementwise op becomes rank 1. Hence an expand_dims op
@@ -131,7 +132,9 @@ def rank0_expand_dims_swap(prog):
                                                       |
                                                 [scalar const]
     """
-    for f in prog.functions.values():
-        block_changed = True
-        while block_changed:
-            block_changed = _rank0_expand_dims_swap(f)
+
+    def apply(self, prog):
+        for f in prog.functions.values():
+            block_changed = True
+            while block_changed:
+                block_changed = _rank0_expand_dims_swap(f)

@@ -7,6 +7,7 @@
 
 
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
+from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import types
 import numpy as np
@@ -14,7 +15,7 @@ import logging
 
 
 @register_pass(namespace="tensorflow")
-def tf_lstm_to_core_lstm(prog):
+class tf_lstm_to_core_lstm(AbstractGraphPass):
     """
     Try to map TF dialect ops `tf_lstm_block` and `tf_lstm_block_cell` to
     `lstm` in the core op set if compatible. They are compatible if all of the
@@ -36,24 +37,25 @@ def tf_lstm_to_core_lstm(prog):
 
         prog: Program
     """
-    for f_name, f in prog.functions.items():
-        tf_lstm_to_core_lstm_block(f)
+    def apply(self, prog):
+        for f in prog.functions.values():
+            _tf_lstm_to_core_lstm_block(f)
 
 
-def tf_lstm_to_core_lstm_block(block):
+def _tf_lstm_to_core_lstm_block(block):
     # shallow copy hides changes on f.operations during the loop
-    for op in block.operations[:]:
+    for op in block.operations:
         for b in op.blocks:
-            tf_lstm_to_core_lstm_block(b)
+            _tf_lstm_to_core_lstm_block(b)
 
         if op.op_type in ["tf_lstm_block_cell", "tf_lstm_block"]:
-            if try_replace_with_core_lstm(op):
+            if _try_replace_with_core_lstm(op):
                 logging.info("Successfully map {} to lstm".format(op.op_type))
             else:
                 logging.info("Unable to map {} to lstm".format(op.op_type))
 
 
-def try_replace_with_core_lstm(op):
+def _try_replace_with_core_lstm(op):
     """
     Inputs:
 
@@ -63,6 +65,13 @@ def try_replace_with_core_lstm(op):
 
     True if op can be represented by mb.lstm op in SSA. False otherwise
     """
+    def _check_unsupported_outputs(unsupported_outputs):
+        for ov in unsupported_outputs:
+            if len(ov.child_ops) > 0 or len(ov.consuming_blocks) > 0:
+                return False
+        return True
+
+
     if op.op_type == "tf_lstm_block_cell":
         batch = op.x.shape[0]
     else:  # tf_lstm_block
@@ -76,16 +85,12 @@ def try_replace_with_core_lstm(op):
     i, cs, f, o, ci, co, h = op.outputs
     if op.op_type == "tf_lstm_block_cell":
         unsupported_outputs = [i, f, o, ci, co]  # only cs, h are supported
-        for ov in unsupported_outputs:
-            if len(ov.child_ops) > 0 or len(ov.consuming_blocks) > 0:
-                return False
     else:  # tf_lstm_block
         unsupported_outputs = [i, cs, f, o, ci, co]  # only h is supported
-        for ov in unsupported_outputs:
-            if len(ov.child_ops) > 0 or len(ov.consuming_blocks) > 0:
-                return False
-    # op is compatible with lstm
+    if not _check_unsupported_outputs(unsupported_outputs):
+        return False
 
+    # op is compatible with lstm
     hidden_dim = op.c_prev.shape[1]
 
     mb_peep = None
@@ -94,7 +99,8 @@ def try_replace_with_core_lstm(op):
             [op.weight_peep_i.val, op.weight_peep_f.val, op.weight_peep_o.val]
         )
 
-    # weights. TF1 W is icfo. Need to convert to ifoc
+    # Set weights. The layout of the weight in TF1 is icfo (input, cell, forget, output gate).
+    # Need to convert to ifoc for coreml
     tf_w = op.weight.val  # [input_dim+hidden_dim, 4*hidden_dim] in icfo layout
     tf_w_i, tf_w_c, tf_w_f, tf_w_o = np.split(tf_w, 4, axis=1)
     w = np.concatenate([tf_w_i, tf_w_f, tf_w_o, tf_w_c], axis=1)

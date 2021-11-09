@@ -18,9 +18,7 @@ from coremltools.converters.mil.mil import (
     get_new_variadic_symbol,
     Operation,
     precondition,
-    SYMBOL,
     types,
-    VALUE,
 )
 from coremltools.converters.mil.mil.input_type import (
     BoolTensorInputType,
@@ -31,6 +29,11 @@ from coremltools.converters.mil.mil.input_type import (
     ScalarOrTensorInputType,
     TensorInputType
 )
+from coremltools.converters.mil.mil.operation import (
+    SYMBOL,
+    VALUE
+)
+
 from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
 
 def _solve_slice_by_index_shape(x_shape, begin, end, stride, begin_mask, end_mask, squeeze_mask):

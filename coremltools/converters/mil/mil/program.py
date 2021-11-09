@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 #  Copyright (c) 2020, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
@@ -8,6 +6,7 @@
 import logging as _logging
 import numpy as _np
 import sympy as _sm
+
 from . import types
 from .block import Function
 from .var import Var

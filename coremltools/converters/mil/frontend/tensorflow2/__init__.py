@@ -6,7 +6,9 @@
 from ....._deps import _HAS_TF_2
 
 if _HAS_TF_2:
-    from .ops import *  # register all TF2 ops
+    # importing these causes all its imports to be registered
+    from . import ops
+
     from coremltools.converters.mil.frontend.tensorflow.tf_op_registry import (
         register_tf_op,
     )

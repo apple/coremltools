@@ -7,12 +7,12 @@
 
 
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
+from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil import Builder as mb
 from .helper import _check_child_op_type, _check_var_scalar_value
 import numpy as np
 
-
-def try_to_transform(pow_op, block):
+def _try_to_transform(pow_op, block):
     all_ops = [pow_op]
     root_var = pow_op.x
 
@@ -125,13 +125,13 @@ def try_to_transform(pow_op, block):
     return True
 
 
-def fuse_gelu_tanh_block(block):
+def _fuse_gelu_tanh_block(block):
     fusion_status = False
     for op in list(block.operations):
         for b in op.blocks:
             block_changed = True
             while block_changed:
-                block_changed = fuse_gelu_tanh_block(b)
+                block_changed = _fuse_gelu_tanh_block(b)
         if len(op.blocks) > 0:
             # This op can't be pow
             continue
@@ -140,15 +140,14 @@ def fuse_gelu_tanh_block(block):
         if op.op_type == "pow":
             if _check_var_scalar_value(op.y, 3):
                 with block:
-                    fusion_status = try_to_transform(op, block)
+                    fusion_status = _try_to_transform(op, block)
                 # has to break as the downstream iterator is affected.
                 if fusion_status:
                     return fusion_status
     return fusion_status
 
-
 @register_pass(namespace="common")
-def fuse_gelu_tanh_approximation(prog):
+class fuse_gelu_tanh_approximation(AbstractGraphPass):
     """
     Identify the pattern that corresponds to the tanh approximate version of gelu, and replace it with a single
     gelu layer with mode=TANH_APPROXIMATION
@@ -162,7 +161,8 @@ def fuse_gelu_tanh_approximation(prog):
 
 
     """
-    for f in prog.functions.values():
-        block_changed = True
-        while block_changed:
-            block_changed = fuse_gelu_tanh_block(f)
+    def apply(self, prog):
+        for f in prog.functions.values():
+            block_changed = True
+            while block_changed:
+                block_changed = _fuse_gelu_tanh_block(f)

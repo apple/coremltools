@@ -87,7 +87,7 @@ class GradientBoostingRegressorScikitTest(unittest.TestCase):
             spec = skl_converter.convert(model, "data", "out")
 
 
-@unittest.skipIf(_macos_version() >= (10, 16), "rdar://problem/75172473")
+@unittest.skipIf(_macos_version() >= (10, 16), "rdar://problem/84898245")
 @unittest.skipIf(not _HAS_SKLEARN, "Missing scikit-learn. Skipping tests.")
 @unittest.skipIf(not _HAS_XGBOOST, "Skipping, no xgboost")
 class BoostedTreeRegressorXGboostTest(unittest.TestCase):

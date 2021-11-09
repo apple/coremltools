@@ -5,7 +5,7 @@
 import numpy as np
 import numbers
 
-from coremltools.converters.mil.mil import Operation, types, SYMBOL, VALUE
+from coremltools.converters.mil.mil import Operation, types
 from coremltools.converters.mil.mil.input_type import (
     DefaultInputs,
     InputSpec,
@@ -17,6 +17,11 @@ from coremltools.converters.mil.mil.input_type import (
 from coremltools.converters.mil.mil.operation import precondition
 from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
 from coremltools.converters.mil.mil.types.symbolic import is_compatible_symbolic_vector, is_symbolic
+
+from coremltools.converters.mil.mil.operation import (
+    SYMBOL,
+    VALUE
+)
 
 
 @register_op(doc_str="")
@@ -181,6 +186,7 @@ class scatter(Operation):
     mode: const string (Optional)
         * Can be the following modes: ``update``, ``add``, ``sub``, ``mul``,
           ``div``, ``max``, ``min``.
+        * Default value is ``update``.
 
     Returns
     -------
@@ -224,13 +230,9 @@ class scatter(Operation):
         )
 
         err = "Updates shape {} is incorrect. It should be {}.".format(self.updates.shape, expected_updates_shape)
-        if len(self.updates.shape) == len(expected_updates_shape):
-            for dim1, dim2 in zip(self.updates.shape, expected_updates_shape):
-                if not is_symbolic(dim1) and not is_symbolic(dim2):
-                    if dim1 != dim2:
-                        raise ValueError(err)
-        else:
-            raise ValueError(err)
+        assert is_compatible_symbolic_vector(
+            self.updates.shape, tuple(expected_updates_shape)
+        ), err
 
         return self.data.sym_type
 
@@ -417,7 +419,9 @@ class scatter_along_axis(Operation):
         axis = self.axis.val
         axis = axis if axis >= 0 else axis + self.data.rank
 
-        assert self.indices.shape == self.updates.shape
+        assert is_compatible_symbolic_vector(
+            self.indices.shape, self.updates.shape
+        )
         assert self.data.rank == self.indices.rank
         for i in range(self.data.rank):
             if i != axis:

@@ -6,6 +6,7 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
+from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.input_types import ImageType
 # import mil internal ops to add it to the builder
 from coremltools.converters.mil.mil.ops import defs as _ops
@@ -15,13 +16,14 @@ from coremltools.converters.mil.mil.types import nptype_from_builtin
 import numpy as np
 
 @register_pass(namespace="mil_backend")
-def insert_image_preprocessing_ops(prog):
+class insert_image_preprocessing_ops(AbstractGraphPass):
     """
     Insert preprocessing ops, right after the input if its of type Image
     """
-    for f_name, f in prog.functions.items():
-        if f_name == 'main':
-            _insert_image_preprocessing_ops(f, prog)
+    def apply(self, prog):
+        for f_name, f in prog.functions.items():
+            if f_name == 'main':
+                _insert_image_preprocessing_ops(f, prog)
 
 
 def _insert_image_preprocessing_ops(block, prog):

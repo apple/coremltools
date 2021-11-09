@@ -3,24 +3,24 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import logging as _logging
-
 import builtins
+from collections.abc import Iterable
+import logging as _logging
 import math as _math
 import numbers
 import numpy as _np
+import torch
 from tqdm import tqdm as _tqdm
-from collections.abc import Iterable
 
-from coremltools.converters.mil.mil import types
-from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil import (
+    Builder as mb,
+    types,
+    Symbol
+)
 from coremltools.converters.mil.mil.var import Var, ListVar
-from coremltools.converters.mil.mil import Placeholder, Symbol
-from .internal_graph import *
 from .torch_op_registry import _TORCH_OPS_REGISTRY, register_torch_op
-from coremltools.converters.mil.mil.types.symbolic import any_symbolic, is_symbolic
+from coremltools.converters.mil.mil.types.symbolic import any_symbolic, is_symbolic, is_compatible_symbolic_vector
 from coremltools.converters.mil.mil.types import is_bool
-from coremltools.converters.mil.mil.ops.defs._utils import broadcast_shapes
 from .._utils import build_einsum_mil
 
 # The pytorch args for many of the below ops were sourced from
@@ -52,22 +52,28 @@ def _value_at(x, idx):
 
 
 def convert_nodes(context, graph):
-    """Iterate over the nodes of a graph or block and convert to MIL.
+    """
+    Iterate over the nodes of a graph or block and convert to MIL.
 
-        Arguments:
-            context: A TranscriptionContext object to pull node inputs and
-                assign node outputs.
-            graph: An InternalTorchIRGraph or InternalTorchIRBlock object.
+    Arguments:
+        context: A TranscriptionContext object to pull node inputs and
+            assign node outputs.
+        graph: An InternalTorchIRGraph or InternalTorchIRBlock object.
     """
     for node in _tqdm(graph.nodes, desc="Converting Frontend ==> MIL Ops", unit=" ops"):
-        _add_op = _TORCH_OPS_REGISTRY.get(node.kind, None)
+        op_lookup = node.kind
+        if op_lookup.endswith("_"):
+            # This is an "in place" op.
+            # Look up the standard op instead by removing underscore.
+            op_lookup = op_lookup[:-1]
+        add_op = _TORCH_OPS_REGISTRY.get(op_lookup, None)
+
         _logging.info("Converting op {} : {}".format(node.name, node.kind))
-        if _add_op is None:
+        if add_op is None:
             raise RuntimeError(
                 "PyTorch convert function for op '{}' not implemented.".format(node.kind)
             )
-        else:
-            _add_op(context, node)
+        add_op(context, node)
 
         # We've generated all the outputs the graph needs, terminate conversion.
         if _all_outputs_present(context, graph):
@@ -205,12 +211,12 @@ def _construct_constant(val, name):
 
     # Pytorch uses inf
     if val is not None and isinstance(val, numbers.Number) \
-        and _np.isinf(val):
-          if val < 0:  # neg inf
-              # most negative number in fp32
-              val = -3.4e+38
-          else: # positive inf
-              val = 3.4e+38
+       and _np.isinf(val):
+        if val < 0:  # neg inf
+            # most negative number in fp32
+            val = -3.4e+38
+        else: # positive inf
+            val = 3.4e+38
     if val is None:
         return None
     else:
@@ -315,7 +321,7 @@ def grid_sampler(context, node):
         context.add(x)
 
 
-@register_torch_op(torch_alias=["silu_"])
+@register_torch_op()
 def silu(context, node):
     inputs = _get_inputs(context, node, expected=1)
     x = mb.silu(x=inputs[0], name=node.name)
@@ -333,6 +339,37 @@ def constant(context, node):
     const = _construct_constant(val, name)
     context.add(const, torch_name=name)
 
+@register_torch_op
+def frobenius_norm(context, node):
+    x, dim, keep_dims = _get_inputs(context, node, expected=3)
+    result = mb.reduce_l2_norm(x=x, axes=dim, keep_dims=keep_dims, name=node.name)
+    context.add(result)
+
+@register_torch_op
+def norm(context, node):
+    VALUE_CLOSE_TO_INFINITY = 1e+38
+
+    x, num, dim, keep_dims = _get_inputs(context, node, expected=4)
+    assert x is not None and num is not None and dim is not None and keep_dims is not None
+    if num.val is None:
+        raise RuntimeError("Dynamic 'p' values for 'norm' layers are not supported.")
+    assert num.val != 0
+
+    if num.val == 1:
+        temp = mb.reduce_l1_norm(x=x, axes=dim, keep_dims=keep_dims, name=node.name)
+    elif num.val == 2:
+        temp = mb.reduce_l2_norm(x=x, axes=dim, keep_dims=keep_dims, name=node.name)
+    elif num.val > VALUE_CLOSE_TO_INFINITY:
+        temp = mb.reduce_max(x=x, axes=dim, keep_dims=keep_dims, name=node.name)
+    elif num.val < -VALUE_CLOSE_TO_INFINITY:
+        temp = mb.reduce_min(x=x, axes=dim, keep_dims=keep_dims, name=node.name)
+    else:
+        # sum(abs(x)**num)**(1./num)
+        temp = mb.abs(x=x)
+        temp = mb.pow(x=temp, y=num)
+        temp = mb.reduce_sum(x=temp, axes=dim, keep_dims=keep_dims)
+        temp = mb.pow(x=temp, y=1./num.val, name=node.name)
+    context.add(temp)
 
 def _array_construct(context, node, array_type):
     assert len(node.outputs) == 1
@@ -408,7 +445,7 @@ def gt(context, node):
     context.add(greater)
 
 
-@register_torch_op(torch_alias=["t", "transpose_"])
+@register_torch_op(torch_alias=["t"])
 def transpose(context, node):
     assert len(node.outputs) == 1
     inputs = _get_inputs(context, node)
@@ -688,7 +725,7 @@ def softsign(context, node):
     res = mb.softsign(x=inputs[0], name=node.name)
     context.add(res)
 
-@register_torch_op(torch_alias=["relu_"])
+@register_torch_op()
 def relu(context, node):
     inputs = _get_inputs(context, node, expected=1)
 
@@ -727,7 +764,7 @@ def elu(context, node):
     res = mb.elu(x=inputs[0], alpha = inputs[1], name=node.name)
     context.add(res)
 
-@register_torch_op(torch_alias=["leaky_relu_"])
+@register_torch_op()
 def leaky_relu(context, node):
     inputs = _get_inputs(context, node, expected=2)
 
@@ -928,8 +965,8 @@ def mul(context, node):
     context.add(res)
 
 
-@register_torch_op(torch_alias=["pow"])
-def pow_(context, node):
+@register_torch_op()
+def pow(context, node):
     inputs = _get_inputs(context, node, expected=2)
 
     res = mb.pow(x=inputs[0], y=inputs[1], name=node.name)
@@ -1080,7 +1117,6 @@ def adaptive_avg_pool2d(context, node):
         pad_type = "valid"
         # Need to explicity state L-R, T-B pad
         pad = [0, 0, 0, 0]
-        dilation = [1, 1]
         kernel_sizes = [
             ind - s * (outd - 1)
             for ind, outd, s in zip(_input.shape[-2:], output_size, strides)
@@ -1145,7 +1181,6 @@ def adaptive_max_pool2d(context, node):
         pad_type = "valid"
         # Need to explicity state L-R, T-B pad
         pad = [0, 0, 0, 0]
-        dilation = [1, 1]
         kernel_sizes = [
             ind - s * (outd - 1)
             for ind, outd, s in zip(_input.shape[-2:], output_size, strides)
@@ -1404,7 +1439,7 @@ def embedding(context, node):
     context.add(gather)
 
 
-@register_torch_op(torch_alias=["hardtanh_"])
+@register_torch_op()
 def hardtanh(context, node):
     inputs = _get_inputs(context, node, expected=3)
     _input = inputs[0]
@@ -1832,7 +1867,7 @@ def _add_simple_rnn(context, node, activation):
     (2) h0: (num_layers, B, H)
     '''
     _input = inputs[0]
-    h0     = inputs[1]
+    h0 = inputs[1]
     weights_list = inputs[2]
     has_bias = inputs[3].val
     num_layers = inputs[4].val
@@ -2250,8 +2285,8 @@ def upsample_bilinear2d(context, node):
 
         if (is_h_float or is_w_float) and not align_corners:
             msg = "recompute_scale_factor = False, align_corners = False with float output size is " + \
-            "not supported for the upsample op {}".format(node.name)
-            raise NotImplementedError("")
+                                            "not supported for the upsample op {}".format(node.name)
+            raise NotImplementedError(msg)
 
     elif isinstance(output_size, list)and output_size[0].val is None and output_size[1].val is None:
         # the input shape is dynamic and recompute_scale_factor = True
@@ -2621,7 +2656,7 @@ def _internal_tensor_value_assign(context, node):
         num_of_slice_set = len(inputs) // 2
 
         for i in range(num_of_slice_set):
-            if inputs[2*i + 1] == None:
+            if inputs[2*i + 1] is None:
                 # This is pure index select
                 idx = context[inputs[2*i]].val
                 begin[i] = idx
@@ -2666,7 +2701,7 @@ def _internal_tensor_value_assign(context, node):
     context.add(updated_x)
 
 @register_torch_op
-def index_put_(context, node):
+def index_put(context, node):
     inputs = _get_inputs(context, node, expected=4)
     x = inputs[0]
     indices = inputs[1]
@@ -2712,9 +2747,12 @@ def index(context, node):
     The true value indicates whether the element should be selected.
     The output b is a 1-D vector with shape (N), where N is the number of elements satisfying condition > 0.1
     """
-    if len(indices) == 1 and indices[0] is not None and indices[0].sym_type.get_primitive() == types.bool:
+    if (len(indices) == 1 and
+        indices[0] is not None and
+        indices[0].sym_type.get_primitive() == types.bool and
+        indices[0].shape == x.shape):
+
         indices = indices[0]
-        assert indices.shape == x.shape, "indices shape must equal to input shape for index selection."
         x_reshape = mb.reshape(x=x, shape=[-1])
         indices = mb.cast(x=indices, dtype="int32")
         indices_reshape = mb.reshape(x=indices, shape=[-1])
@@ -2760,6 +2798,16 @@ def index(context, node):
 
         b has shape (1,2,4)
 
+    EX # 4:
+        a = torch.rand(4,5)
+        index_1 = [True, True, False, False]
+        index_2 = [False, True, True, False, False]
+        b = a[index_1, index_2]
+
+        indices is a list [[True, True, False, False], [False, True, True, False, False]]
+
+        b has shape (2, )
+
     Note that, in pytorch, the indices can be broadcasable. And it is NOT supported right now.
     """
 
@@ -2778,17 +2826,23 @@ def index(context, node):
         context.add(x)
         return
 
+    # convert all indices to int type
+    for i, indice in enumerate(valid_indices):
+        if indice is not None and types.is_bool(indice.dtype):
+            indice = mb.non_zero(x=indice)
+            indice = mb.squeeze(x=indice, axes=[1])
+        valid_indices[i] = indice
+
     # For the single index axis case, we can use mb.gather directly
     if len(indices_axes) == 1:
         axis = indices_axes[0]
-        x = mb.gather(x=x, indices=indices[axis], axis=axis, name=node.name)
+        x = mb.gather(x=x, indices=valid_indices[0], axis=axis, name=node.name)
         context.add(x)
         return
 
     # For multiple index axes case, we now assume that all the index have equal shape
-    index_length = valid_indices[0].shape
     for index in valid_indices:
-        if index.shape != valid_indices[0].shape:
+        if not is_compatible_symbolic_vector(index.shape, valid_indices[0].shape):
             raise NotImplementedError("Broadcasable tensor index not supported.")
 
     # First stack the index together
@@ -2824,6 +2878,8 @@ def ones(context, node):
     # device = inputs[3] unused
     # requires_grad = inputs[4] unused
     # out = inputs[5] unused
+    if isinstance(size, list):
+        size = mb.concat(values=size, axis=0)
     fill = mb.fill(shape=size, value=1.0, name=node.name)
     context.add(fill)
 
@@ -2840,12 +2896,23 @@ def ones_like(context, node):
     fill = mb.fill(shape=size, value=1.0, name=node.name)
     context.add(fill)
 
+@register_torch_op
+def full(context, node):
+    inputs = _get_inputs(context, node)
+    size = inputs[0]
+    val = inputs[1].val
+    assert val is not None
+    if isinstance(size, list):
+        size = mb.concat(values=size, axis=0)
+    full = mb.fill(shape=size, value=val, name=node.name)
+    context.add(full)
+
 
 def _avg_pool(context, node, inputs):
     x = inputs[0]
     kernel_sizes = inputs[1]
     strides = inputs[2]
-    if strides.op.op_type == "const"  and (not list(strides.val)):
+    if strides.op.op_type == "const" and (not list(strides.val)):
         strides = mb.const(val=kernel_sizes.val, name=strides.name)
     pad_type = "custom"
     # Need to explicitly state L-R, T-B pad
@@ -2967,7 +3034,7 @@ def sigmoid(context, node):
     res = mb.sigmoid(x=inputs[0], name=node.name)
     context.add(res)
 
-@register_torch_op(torch_alias=["hardsigmoid_"])
+@register_torch_op()
 def hardsigmoid(context, node):
     inputs = _get_inputs(context, node, expected=1)
 
@@ -3147,7 +3214,7 @@ def implicittensortonum(context, node):
     inputs = _get_inputs(context, node, expected=1)
     _input = inputs[0]
 
-    if _input.shape == (): #already a scalar
+    if _input.shape == (): # already a scalar
         context.add(_input, node.name)
     else:
         assert _input.shape == (1,)
@@ -3176,12 +3243,20 @@ def constantchunk(context, node):
         context.add(val, name)
 
 
-def _expand(context, name, tensor, shape):
-    if tensor.shape == () and len(shape) > 0:
-        tensor = mb.expand_dims(x=tensor, axes=list(range(len(shape))))
-    reps = [ds if ds > 0 and ts == 1 else 1 for ts, ds in zip(tensor.shape, shape)]
+def _broadcast(name, tensor, shape):
+    if len(shape) > tensor.rank:
+        new_dims = len(shape) - tensor.rank
+        tensor = mb.expand_dims(x=tensor, axes=list(range(new_dims)))
+
+    reps = []
+    for ts, ds in zip(tensor.shape, shape):
+        if not is_symbolic(ts) and not is_symbolic(ds) and ds > 0 and ts == 1:
+            reps.append(ds)
+        else:
+            reps.append(1)
+
     res = mb.tile(x=tensor, reps=reps, name=name)
-    context.add(res)
+    return res
 
 
 @register_torch_op
@@ -3192,7 +3267,8 @@ def expand(context, node):
     x = inputs[0]
     shape = inputs[1].val
 
-    _expand(context, node.name, x, shape)
+    res = _broadcast(node.name, x, shape)
+    context.add(res)
 
 
 @register_torch_op
@@ -3202,8 +3278,8 @@ def expand_as(context, node):
     x = inputs[0]
     other = inputs[1]
 
-    _expand(context, node.name, x, other.shape)
-
+    res = _broadcast(node.name, x, other.shape)
+    context.add(res)
 
 @register_torch_op
 def arange(context, node):
@@ -3236,7 +3312,7 @@ def arange(context, node):
     context.add(res)
 
 
-@register_torch_op(torch_alias=["masked_fill_"])
+@register_torch_op()
 def masked_fill(context, node):
     inputs = _get_inputs(context, node, expected=3)
     x = inputs[0]
@@ -3957,3 +4033,44 @@ def replication_pad2d(context, node):
     pad = _np.pad(pad_flipped, (len(x.shape) * 2 - len(pad_flipped), 0))
     context.add(mb.pad(x=x, pad=pad, mode='replicate'), node.name)
 
+def _broadcast_tensors(tensors):
+
+    def _solve_broadcast_shape(shapes):
+        rank = _np.max([len(shape) for shape in shapes])
+        shapes = [[1]*(rank - len(shape)) + shape for shape in shapes]
+        result_shape = []
+        for i in range(rank):
+            dims = [shapes[j][i] for j in range(len(tensors))]
+            if any_symbolic(dims):
+                raise NotImplementedError("Only static shaped inputs are supported for torch.broadcast_tensors conversion.")
+            result_shape.append(_np.max(dims))
+        return result_shape
+
+    if len(tensors) == 1:
+        return tensors
+
+    # solve the broadcast shape
+    input_shapes = [list(x.shape) for x in tensors]
+    broadcast_shape = _solve_broadcast_shape(input_shapes)
+
+    # do the broadcasting
+    results = []
+    for tensor in tensors:
+        name = tensor.name + "_after_broadcast"
+        results.append(_broadcast(name, tensor, broadcast_shape))
+    return results
+
+@register_torch_op
+def broadcast_tensors(context, node):
+    inputs = _get_inputs(context, node)
+    context.add(_broadcast_tensors(inputs[0]), node.name)
+
+@register_torch_op
+def scatter_add(context, node):
+    inputs = _get_inputs(context, node)
+    data = inputs[0]
+    axis = inputs[1].val
+    indices = inputs[2]
+    updates = inputs[3]
+    result = mb.scatter_along_axis(data=data, indices=indices, updates=updates, axis=axis, mode="add", name=node.name)
+    context.add(result)

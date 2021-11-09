@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 #  Copyright (c) 2021, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
@@ -7,10 +5,9 @@
 
 
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
+from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil import Builder as mb
 from .helper import _check_var_scalar_value_in_interval, _check_child_op_type
-import numpy as np
-
 
 def _try_to_transform(mul_op, block):
 
@@ -73,9 +70,8 @@ def _fuse_leaky_relu_block(block):
                 return fusion_status
     return fusion_status
 
-
 @register_pass(namespace="common")
-def fuse_leaky_relu(prog):
+class fuse_leaky_relu(AbstractGraphPass):
     """
     Detect the "mul--->max" pattern than can be mapped to leaky relu
 
@@ -107,7 +103,8 @@ def fuse_leaky_relu(prog):
     input --------> leaky_relu ---------> output
 
     """
-    for f in prog.functions.values():
-        block_changed = True
-        while block_changed:
-            block_changed = _fuse_leaky_relu_block(f)
+    def apply(self, prog):
+        for f in prog.functions.values():
+            block_changed = True
+            while block_changed:
+                block_changed = _fuse_leaky_relu_block(f)

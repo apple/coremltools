@@ -7,18 +7,12 @@ import copy
 import numpy as np
 import logging
 
-
 from coremltools.converters.mil.mil import (
     Block,
-    DefaultInputs,
     get_new_symbol,
     get_existing_symbol,
-    SYMBOL,
-    NONE,
     types,
-    mil_list,
-    Operation,
-    VALUE
+
 )
 from coremltools.converters.mil.mil.input_type import (
     BoolInputType,
@@ -35,14 +29,19 @@ from coremltools.converters.mil.mil.input_type import (
     TupleInputType,
     StringInputType,
 )
-from coremltools.converters.mil.mil.operation import precondition
+from coremltools.converters.mil.mil.operation import (
+    mil_list,
+    NONE,
+    Operation,
+    precondition,
+    SYMBOL,
+    VALUE
+)
 from coremltools.converters.mil.mil.types import is_compatible_type
 from coremltools.converters.mil.mil.types.type_mapping import (
     numpy_val_to_builtin_val,
     is_subtype,
 )
-
-from coremltools.converters.mil.mil.var import Var
 from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
 
 @register_op(doc_str="")
@@ -127,10 +126,10 @@ class cond(Operation):
             return [v.val for v in self.blocks[0].outputs]
         return [v.val for v in self.blocks[1].outputs]
 
-@register_op(doc_str="")
-class const(Operation):
+
+class Const(Operation):
     """
-    Return constant values.
+    A base class that returns constant values.
 
     Parameters
     ----------
@@ -155,7 +154,7 @@ class const(Operation):
     )
 
     def __init__(self, **kwargs):
-        super(const, self).__init__(**kwargs)
+        super(Const, self).__init__(**kwargs)
 
     def type_inference(self):
         builtin_type, _ = self._get_type_val(self.val.val)
@@ -197,6 +196,9 @@ class const(Operation):
             if len(list_value) == 0:
                 raise ValueError("'mil_list' points to an empty list")
             builtin_elem_type, _ = self._get_type_val(list_value[0])
+            # mil_list is a special case that we want to preserve the int64 element type
+            if isinstance(list_value[0], np.int64):
+                builtin_elem_type = types.int64
             from coremltools.converters.mil.mil.types.type_list import list as types_list
             builtin_type = types_list(builtin_elem_type, init_length=len(list_value), dynamic_length=False)
             return builtin_type, value
@@ -207,6 +209,11 @@ class const(Operation):
 
         _, builtin_type = numpy_val_to_builtin_val(value)
         return builtin_type, value
+
+@register_op(doc_str="")
+class const(Const):
+    def __init__(self, **kwargs):
+        super(const, self).__init__(**kwargs)
 
 
 # Internal const can have symbolic value (for testing purpose)

@@ -2,12 +2,21 @@
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
+import itertools
+import numpy as np
+import pytest
 
 from coremltools.converters.mil import testing_reqs
-from coremltools.converters.mil.mil import types, get_new_symbol
-from coremltools.converters.mil.testing_reqs import *
-
+from coremltools.converters.mil.mil import (
+    Builder as mb,
+    get_new_symbol,
+    types
+)
+from coremltools.converters.mil.testing_utils import random_gen, ssa_fn
 from .testing_utils import UNK_SYM, UNK_VARIADIC, run_compare_builder
+
+if testing_reqs._HAS_TF_1 or testing_reqs._HAS_TF_2:
+    from coremltools.converters.mil.testing_reqs import tf
 
 backends = testing_reqs.backends
 

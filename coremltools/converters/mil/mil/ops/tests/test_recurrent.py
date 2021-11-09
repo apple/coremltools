@@ -3,13 +3,21 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from coremltools.converters.mil import testing_reqs
-from coremltools.converters.mil.mil import get_new_symbol
-from coremltools.converters.mil.testing_reqs import *
+import itertools
+import numpy as np
+import pytest
 
 from .testing_utils import run_compare_builder
+from coremltools.converters.mil import testing_reqs
+from coremltools.converters.mil.mil import (
+    Builder as mb,
+    get_new_symbol,
+    types
+)
+from coremltools.converters.mil.testing_reqs import backends
 
-backends = testing_reqs.backends
+if testing_reqs._HAS_TORCH:
+    import torch
 
 
 class TestGRU:
@@ -104,7 +112,6 @@ class TestGRU:
             output = np.stack(out, axis=0)
             output = np.transpose(output, (1, 0, 2))
             return output, output[-1, :, :]
-
 
         def get_numpy_prediction_gru_single_batch(X, h, return_seq, direction,
                                                   inner_activation_str='SIGMOID',
@@ -452,7 +459,7 @@ class TestLSTM:
             n_t = torch.flip(n_t, [0])
 
         output, (hn, cn) = rnn(n_t, (h0, c0))
-        if output_sequence == False:
+        if not output_sequence:
             output = output[-1].unsqueeze(0)
 
         output = output.detach().numpy()
@@ -596,7 +603,7 @@ class TestLSTM:
         c0 = torch.randn(2, batch_size, hidden_size)
 
         output, (hn, cn) = rnn(t, (h0, c0))
-        if output_sequence == False:
+        if not output_sequence:
             output_f = output[-1].unsqueeze(0)[:, :, :hidden_size]
             output_r = output[0].unsqueeze(0)[:, :, hidden_size:]
             output = torch.cat([output_f, output_r], dim=2)
@@ -728,7 +735,7 @@ class TestRNN:
             n_t = torch.flip(n_t, [0])
 
         output, hn = rnn(n_t, h0)
-        if output_sequence == False:
+        if not output_sequence:
             output = output[-1].unsqueeze(0)
 
         output = output.detach().numpy()

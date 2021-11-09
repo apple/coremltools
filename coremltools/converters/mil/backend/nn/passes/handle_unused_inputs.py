@@ -8,19 +8,18 @@
 
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
+from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 
-
-def handle_unused_inputs_func(f):
+def _handle_unused_inputs_func(f):
     unused_inputs = [v for v_name, v in f.inputs.items() if len(v.child_ops) == 0]
 
     with f:
         for v in unused_inputs:
-            # copy twice since NN layer cannot have input name == output name
+            # copy the input
             v_tmp = mb.identity(x=v, name=v.name + "_tmp")
 
-
 @register_pass(namespace="nn_backend")
-def handle_unused_inputs(prog):
+class handle_unused_inputs(AbstractGraphPass):
     """
     prog: Program
 
@@ -47,5 +46,6 @@ def handle_unused_inputs(prog):
     #      } -> (%shape_0_const)
     #    }
     """
-    for f_name, f in prog.functions.items():
-        handle_unused_inputs_func(f)
+    def apply(self, prog):
+        for f in prog.functions.values():
+            _handle_unused_inputs_func(f)

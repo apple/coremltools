@@ -2,13 +2,19 @@
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
+import itertools
+import numpy as np
+import pytest
 
+from coremltools._deps import MSG_TF1_NOT_FOUND
 from coremltools.converters.mil import testing_reqs
-from coremltools.converters.mil.testing_reqs import *
+from coremltools.converters.mil.testing_reqs import backends
 from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import (
-    make_tf_graph,
     tf_graph_to_mlmodel
 )
+
+if testing_reqs._HAS_TF_1:
+    from coremltools.converters.mil.testing_reqs import tf
 
 # Custom Op imports
 from coremltools.converters.mil.frontend.tensorflow.tf_op_registry import register_tf_op
@@ -20,8 +26,20 @@ from coremltools.converters.mil.frontend.tensorflow.tf_op_registry import regist
 from coremltools.converters.mil.frontend.tensorflow.tf_op_registry import (
     _TF_OPS_REGISTRY,
 )
-from coremltools.converters.mil.mil.ops.defs._op_reqs import *
-from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.testing_utils import random_gen
+from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
+from coremltools.converters.mil.mil import (
+    Builder as mb,
+    Operation,
+    types,
+)
+from coremltools.converters.mil.mil.input_type import (
+    BoolInputType,
+    DefaultInputs,
+    InputSpec,
+    IntInputType,
+    TensorInputType,
+)
 from coremltools.converters.mil.mil.types.symbolic import is_symbolic
 
 
@@ -251,4 +269,3 @@ class TestCustomTopK:
             assert (
                 True == layers[-1].custom.parameters["sorted"].boolValue
             ), "Incorrect parameter value for Sorted"
-

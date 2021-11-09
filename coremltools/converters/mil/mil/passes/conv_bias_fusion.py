@@ -7,12 +7,12 @@
 
 
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
+from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import types
 from .helper import _check_child_op_type
 import numpy as np
 import logging
-
 
 child_op_types = ["add", "sub"]
 
@@ -273,7 +273,7 @@ def _fuse_conv_bias_block(block):
 
 
 @register_pass(namespace="common")
-def fuse_conv_bias(prog):
+class fuse_conv_bias(AbstractGraphPass):
     """
     Fold add/sub into bias of conv and conv_transpose
     That is, convert conv + add/sub to conv, when add/sub is adding a constant
@@ -306,7 +306,8 @@ def fuse_conv_bias(prog):
         ...
 
     """
-    for f in prog.functions.values():
-        block_changed = True
-        while block_changed:
-            block_changed = _fuse_conv_bias_block(f)
+    def apply(self, prog):
+        for f in prog.functions.values():
+            block_changed = True
+            while block_changed:
+                block_changed = _fuse_conv_bias_block(f)

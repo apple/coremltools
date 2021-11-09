@@ -3,6 +3,8 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import pytest
+
 from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.frontend.tensorflow.test import (
     testing_utils as tf_testing_utils,
@@ -10,7 +12,6 @@ from coremltools.converters.mil.frontend.tensorflow.test import (
 from coremltools.converters.mil.frontend.tensorflow2.test.testing_utils import (
     make_tf2_graph as make_tf_graph
 )
-from coremltools.converters.mil.testing_reqs import *
 
 tf = pytest.importorskip("tensorflow", minversion="2.1.0")
 

@@ -1,35 +1,14 @@
-# -*- coding: utf-8 -*-
-
 #  Copyright (c) 2020, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-
+from distutils.version import StrictVersion as _StrictVersion
 import logging as _logging
 import os.path as _os_path
+from tqdm import tqdm as _tqdm
 
 import tensorflow as _tf
-from coremltools.converters.mil.frontend.tensorflow.basic_graph_ops import fill_outputs
-from coremltools.converters.mil.frontend.tensorflow.load import TFLoader
-from coremltools.converters.mil.frontend.tensorflow.parsed_tf_node import ParsedTFNode
-from coremltools.converters.mil.frontend.tensorflow.tf_graph_pass import (
-    constant_propagation,
-    remove_variable_nodes,
-    tensor_array_resource_removal,
-    insert_get_tuple,
-    delete_disconnected_nodes,
-    fuse_dilation_conv,
-)
-from coremltools.converters.mil.frontend.tensorflow.tfssa import (
-    NetworkEnsemble,
-    SSAFunction,
-)
-from coremltools.converters.mil.frontend.tensorflow2.tf_graph_pass import (
-    flatten_sub_graph_namespaces,
-    rewrite_control_flow_functions,
-)
-from coremltools._deps import __get_version as _get_version
 from tensorflow.lite.python.util import get_grappler_config as _get_grappler_config
 from tensorflow.lite.python.util import (
     run_graph_optimizations as _run_graph_optimizations,
@@ -42,11 +21,30 @@ from tensorflow.python.framework.function_def_to_graph import (
     function_def_to_graph as _function_def_to_graph,
 )
 from tensorflow.python.keras.saving import saving_utils as _saving_utils
-from tqdm import tqdm as _tqdm
 from tensorflow.python.eager import context
 
 from .converter import TF2Converter
-from distutils.version import StrictVersion as _StrictVersion
+from coremltools._deps import _get_version
+from coremltools.converters.mil.frontend.tensorflow.basic_graph_ops import fill_outputs
+from coremltools.converters.mil.frontend.tensorflow.load import TFLoader
+from coremltools.converters.mil.frontend.tensorflow.parsed_tf_node import ParsedTFNode
+from coremltools.converters.mil.frontend.tensorflow.tf_graph_pass import (
+    constant_propagation,
+    delete_disconnected_nodes,
+    fuse_dilation_conv,
+    insert_get_tuple,
+    remove_variable_nodes,
+    tensor_array_resource_removal,
+)
+from coremltools.converters.mil.frontend.tensorflow.tfssa import (
+    NetworkEnsemble,
+    SSAFunction,
+)
+from coremltools.converters.mil.frontend.tensorflow2.tf_graph_pass import (
+    flatten_sub_graph_namespaces,
+    rewrite_control_flow_functions,
+)
+
 
 class TF2Loader(TFLoader):
     def __init__(self, model, debug=False, **kwargs):
@@ -57,7 +55,7 @@ class TF2Loader(TFLoader):
         ----------
         model: Model created with TensorFlow 2.x
             One of the following model format:
-                - TensorFlow tf.keras.Model object or HDF5 (.h5) file path
+                - TensorFlow tf.keras.Model object or HDF5 (.h5 or .hdf5) file path
                 - TensorFlow SavedModel directory path
                 - TensorFlow list of concrete functions(s)
         debug: bool, optional. Defaults to False.
@@ -91,7 +89,8 @@ class TF2Loader(TFLoader):
                     raise ValueError(
                         'Input model "{}" does not exist'.format(self.model)
                     )
-                elif _os_path.isfile(self.model) and self.model.endswith(".h5"):
+                elif _os_path.isfile(self.model) \
+                     and (self.model.endswith(".h5") or self.model.endswith(".hdf5")):
                     cfs = self._concrete_fn_from_tf_keras_or_h5(self.model)
                 elif _os_path.isdir(self.model):
                     saved_model = _tf.saved_model.load(self.model)
