@@ -5,11 +5,10 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
+from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil import Builder as mb
 import numpy as np
-
 
 def _try_to_transform(linear_op, add_or_sub_op, block):
 
@@ -98,9 +97,8 @@ def _fuse_linear_bias_block(block):
                 return fusion_occurred
     return fusion_occurred
 
-
 @register_pass(namespace="common")
-def fuse_linear_bias(prog):
+class fuse_linear_bias(AbstractGraphPass):
     """
     Convert linear + add/sub to a single linear by updating the weight and bias of the linear layer.
 
@@ -130,7 +128,8 @@ def fuse_linear_bias(prog):
 
         prog: Program
     """
-    for f in prog.functions.values():
-        block_changed = True
-        while block_changed:
-            block_changed = _fuse_linear_bias_block(f)
+    def apply(self, prog):
+        for f in prog.functions.values():
+            block_changed = True
+            while block_changed:
+                block_changed = _fuse_linear_bias_block(f)

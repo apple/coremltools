@@ -1,27 +1,34 @@
-# -*- coding: utf-8 -*-
-
 #  Copyright (c) 2020, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-
+from distutils.version import StrictVersion as _StrictVersion
+import gc
 import logging
 import os
-import gc
-
-import tensorflow as tf
-
 from tempfile import mktemp
+import tensorflow as tf
+from tqdm import tqdm as _tqdm
+
 from .basic_graph_ops import fill_outputs
 from .converter import TFConverter
-from .tf_graph_pass import *  # pylint: disable=unused-wildcard-import,wildcard-import
+from .tf_graph_pass import (
+    cond_to_where,
+    constant_propagation,
+    delete_asserts,
+    delete_disconnected_nodes,
+    functionalize_loops,
+    fuse_dilation_conv,
+    insert_get_tuple,
+    quantization_pass,
+    remove_variable_nodes,
+    tensor_array_resource_removal
+)
 from .tfssa import NetworkEnsemble, SSAFunction
 from .parsed_tf_node import ParsedTFNode
 from coremltools.converters._profile_utils import _profile
-from tqdm import tqdm as _tqdm
-from distutils.version import StrictVersion as _StrictVersion
-from coremltools._deps import __get_version as _get_version
+from coremltools._deps import _get_version
 
 
 class TFLoader:

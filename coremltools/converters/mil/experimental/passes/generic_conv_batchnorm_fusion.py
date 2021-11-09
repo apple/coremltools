@@ -34,18 +34,19 @@ arbitrary_weight = np.random.rand(arbitrary_cout, arbitrary_cin, 10, 10)
 arbitrary_mean= np.random.rand(arbitrary_cout)
 arbitrary_variance = np.random.rand(arbitrary_cout)
 
-@mb.program(input_specs=[mb.TensorSpec(shape=arbitrary_input)])
-def conv_batchnorm(x):
-    conv = mb.conv(x=x, weight=arbitrary_weight, pad_type="valid", name="conv")
-    batch_norm = mb.batch_norm(x=conv, mean=arbitrary_mean, variance=arbitrary_variance, name="batchnorm")
-    return batch_norm
+if os.getenv("ENABLE_EXPERIMENTAL_PASSES") == "1":
+    @mb.program(input_specs=[mb.TensorSpec(shape=arbitrary_input)])
+    def conv_batchnorm(x):
+        conv = mb.conv(x=x, weight=arbitrary_weight, pad_type="valid", name="conv")
+        batch_norm = mb.batch_norm(x=conv, mean=arbitrary_mean, variance=arbitrary_variance, name="batchnorm")
+        return batch_norm
 
-
-@mb.program(input_specs=[mb.TensorSpec(shape=arbitrary_input)])
-def conv_transpose_batchorm(x):
-    conv = mb.conv_transpose(x=x, weight=arbitrary_weight, pad_type="valid", name="conv")
-    batch_norm = mb.batch_norm(x=conv, mean=arbitrary_mean, variance=arbitrary_variance, name="batchnorm")
-    return batch_norm
+if os.getenv("ENABLE_EXPERIMENTAL_PASSES") == "1":
+    @mb.program(input_specs=[mb.TensorSpec(shape=arbitrary_input)])
+    def conv_transpose_batchorm(x):
+        conv = mb.conv_transpose(x=x, weight=arbitrary_weight, pad_type="valid", name="conv")
+        batch_norm = mb.batch_norm(x=conv, mean=arbitrary_mean, variance=arbitrary_variance, name="batchnorm")
+        return batch_norm
 
 
 def var_constraints(pattern):

@@ -3,10 +3,18 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 import numpy as np
-
 import operator
-from ._op_reqs import *
+
+from ._op_reqs import register_op
 from ._utils import promoted_primitive_type, broadcast_shapes
+from coremltools.converters.mil.mil import (
+    InputSpec,
+    Operation,
+    precondition,
+    ScalarOrTensorInputType,
+    types
+)
+from coremltools.converters.mil.mil.operation import VALUE
 
 
 class elementwise_binary(Operation):

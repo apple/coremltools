@@ -5,18 +5,21 @@
 
 import numpy as _np
 
+from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.frontend.tensorflow.convert_utils import convert_graph
 from coremltools.converters.mil.frontend.tensorflow.ops import (
     _transpose_NHWC_to_NCHW,
     _transpose_NCHW_to_NHWC,
 )
-
+from coremltools.converters.mil.frontend.tensorflow.tf_op_registry import register_tf_op
+from coremltools.converters.mil.mil.types import builtin_to_string
 from coremltools.converters.mil.mil.types.symbolic import any_symbolic
 
 # TF 2.x now imports and registers all TF 1.x op against the new registry
 # (separated from TF 1.x registry). Overwrite might needed in case the op
 # semantics are different between TF 1.x and TF 2.x.<
-from coremltools.converters.mil.frontend.tensorflow.ops import *
-from coremltools.converters.mil.frontend.tensorflow.dialect_ops import *
+from coremltools.converters.mil.frontend.tensorflow import ops
+from coremltools.converters.mil.frontend.tensorflow import dialect_ops
 
 
 @register_tf_op(override=True, tf_alias=["FusedBatchNorm"])
@@ -136,14 +139,14 @@ def TensorListFromTensor(context, node):
     value = context[node.inputs[0]]
     element_shape = context[node.inputs[1]]
     element_dtype = node.attr.get("element_dtype")
-    dtype_str = types.builtin_to_string(element_dtype)
+    dtype_str = builtin_to_string(element_dtype)
 
     length = mb.shape(x=value)
     length = mb.slice_by_index(x=length, begin=[0], end=[1], squeeze_mask=[True])
 
     if element_shape is not None and all(_np.atleast_1d(element_shape.val) != -1):
         ls = mb.make_list(init_length=length,
-            elem_shape=tuple(element_shape.val.tolist()), dtype=dtype_str)
+                          elem_shape=tuple(element_shape.val.tolist()), dtype=dtype_str)
     else:
         ls = mb.tf_make_list(init_length=length, dtype=dtype_str)
 
@@ -176,28 +179,25 @@ def TensorListLength(context, node):
 
 
 @register_tf_op
-def TensorListResize(context, node):
-    # skip here as the list will be dynamically resized when
-    # necessary in downstream list_write or list_scatter ops
-    Identity(context, node)
-
-
-@register_tf_op
 def TensorListReserve(context, node):
     element_shape = context[node.inputs[0]]
     num_elements = context[node.inputs[1]]
     element_dtype = node.attr.get("element_dtype")
-    dtype = types.builtin_to_string(element_dtype)
+    dtype = builtin_to_string(element_dtype)
 
     if element_shape is not None and all(_np.atleast_1d(element_shape.val) != -1):
         ls = mb.make_list(
             init_length=num_elements,
             elem_shape=tuple(element_shape.val.tolist()),
+            dynamic_length=num_elements.val is None,
             dtype=dtype,
             name=node.name,
         )
     else:
-        ls = mb.tf_make_list(init_length=num_elements, dtype=dtype, name=node.name)
+        ls = mb.tf_make_list(init_length=num_elements,
+                             dtype=dtype,
+                             dynamic_length=num_elements.val is None,
+                             name=node.name)
     context.add(node.name, ls)
 
 

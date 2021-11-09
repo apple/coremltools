@@ -4,11 +4,11 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 
 
 def _match_pattern(concat_op, block):
-
     if concat_op.op_type != "concat":
         return False
 
@@ -66,10 +66,10 @@ def _match_pattern(concat_op, block):
             return False
 
         input_shape = original_input.shape
-        # Check that the slices are in order 
+        # Check that the slices are in order
         if begin[axis] != begin_index and begin[axis] != begin_index + input_shape[axis]:
             return False
-        begin_index = begin_index - 1 
+        begin_index = begin_index - 1
 
         slice_ops_out.append(slice_op)
 
@@ -83,7 +83,7 @@ def _replace_ops(block, concat_op, slice_ops, axis):
         pad_size = len(slice_ops) // 2
         if axis == -1:
             pad = [pad_size, pad_size]
-        elif axis == -2: 
+        elif axis == -2:
             pad = [pad_size, pad_size, 0, 0]
         else:
             return False
@@ -96,13 +96,14 @@ def _replace_ops(block, concat_op, slice_ops, axis):
         block.remove_ops([concat_op] + slice_ops)
         return True
 
+
 def _reflection_padding_block(block):
     for op in list(block.operations):
         _match_pattern(op, block)
-           
+
 
 @register_pass(namespace="common")
-def use_reflection_padding(prog):
+class use_reflection_padding(AbstractGraphPass):
     """
     Identify a reflection padding layer composed out of slices and concats.
 
@@ -116,5 +117,7 @@ def use_reflection_padding(prog):
     Output graph:
     input(1, 2, 6, 8) -----0> pad(mode=reflect, size=[0, 0, 1, 1]) -----> out(1, 2, 6, 10)
     """
-    for f in prog.functions.values():
-        _reflection_padding_block(f)
+
+    def apply(self, prog):
+        for f in prog.functions.values():
+            _reflection_padding_block(f)

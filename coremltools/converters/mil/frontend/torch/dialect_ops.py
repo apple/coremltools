@@ -3,13 +3,20 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from coremltools.converters.mil.mil import types
-from coremltools.converters.mil.mil import Operation
-from coremltools.converters.mil.mil.input_type import *
-from coremltools.converters.mil.mil.ops.registry import SSAOpRegistry
-from coremltools.converters.mil.mil.types.symbolic import is_symbolic, is_compatible_symbolic_vector
-from coremltools.converters.mil.mil import get_new_symbol
+from coremltools.converters.mil.mil import get_new_symbol, Operation, types
+from coremltools.converters.mil.mil.input_type import (
+    BoolInputType,
+    BoolTensorInputType,
+    DefaultInputs,
+    InputSpec,
+    IntOrFloatInputType,
+    IntTensorInputType,
+    TensorInputType
+)
 from coremltools.converters.mil.mil.ops.defs.tensor_transformation import _solve_slice_by_index_shape
+from coremltools.converters.mil.mil.ops.registry import SSAOpRegistry
+from coremltools.converters.mil.mil.types.symbolic import is_compatible_symbolic_vector
+
 
 register_op = SSAOpRegistry.register_op
 

@@ -94,15 +94,15 @@ class FP16CastTransform(unittest.TestCase):
 
     """
     Input graph:
-        input1 ----->| 
+        input1 ----->|
                      concat -----> out
         input2 ----->|
 
     Output graph:
-        input1 -----> cast(dtype="fp16") ----->| 
+        input1 -----> cast(dtype="fp16") ----->|
                                                concat -----> cast(dtype="fp32") ---> out
-        input2 -----> cast(dtype="fp16") ----->| 
-  
+        input2 -----> cast(dtype="fp16") ----->|
+
     """
 
     def test_multiple_inputs_to_single_operation(self):
@@ -149,15 +149,15 @@ class FP16CastTransform(unittest.TestCase):
     """
     Input graph:
                             |-----> output_1
-          input -----> split 
+          input -----> split
                             |-----> output_2
-    
+
     Output graph:
-    
+
                                                      |-----> cast(dtype="fp32") ---> output_1
           input -----> cast(dtype="fp16") -----> split
                                                      |-----> cast(dtype="fp32") ---> output_2
-                                  
+
     """
 
 
@@ -201,7 +201,7 @@ class FP16CastTransform(unittest.TestCase):
 
     """
     Input graph:
-    
+
          |----> square ---> output_1
     input|
          |----> relu   ---> output_2

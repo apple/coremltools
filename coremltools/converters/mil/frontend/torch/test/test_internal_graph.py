@@ -239,7 +239,7 @@ class TestTorchOps:
         self._test_elementwise_binary(
             context,
             "Pow",
-            ops.pow_,
+            ops.pow,
             [test_input_1, test_input_2],
             2,
             np.power(test_input_1, test_input_2),

@@ -333,7 +333,8 @@ def apply_pass_and_basic_check(prog, pass_name, skip_output_name_check=False):
     Apply pass to the program
     """
     prev_prog = copy.deepcopy(prog)
-    pass_name.apply(prog) if isinstance(pass_name, AbstractQuantizationPass) else PASS_REGISTRY[pass_name](prog)
+    graph_pass = pass_name if isinstance(pass_name, AbstractQuantizationPass) else PASS_REGISTRY[pass_name]
+    graph_pass(prog)
     block = prog.functions["main"]
     prev_block = prev_prog.functions["main"]
     if not skip_output_name_check:

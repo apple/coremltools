@@ -8,14 +8,14 @@
 
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
+from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 import logging
 
-
-def remove_vacuous_cond_block(block):
+def _remove_vacuous_cond_block(block):
     num_changes = 0
     for op in list(block.operations):
         for b in op.blocks:
-            num_changes += remove_vacuous_cond_block(b)
+            num_changes += _remove_vacuous_cond_block(b)
 
         if op.op_type != "cond":
             continue
@@ -79,9 +79,8 @@ def remove_vacuous_cond_block(block):
 
     return num_changes
 
-
 @register_pass(namespace="tensorflow2")
-def remove_vacuous_cond(prog):
+class remove_vacuous_cond(AbstractGraphPass):
     """
     Remove cond op and it's sub-graphs that produces identity on both then and
     else branch. One example use case is the TensorListReverse op, in Core ML,
@@ -114,7 +113,8 @@ def remove_vacuous_cond(prog):
           } -> (%cond_0)
         }
     """
-    for f_name, f in prog.functions.items():
-        num_changes = remove_vacuous_cond_block(f)
-        msg = "remove_vacuous_cond: changed {} ops in function '{}'"
-        logging.info(msg.format(num_changes, f_name))
+    def apply(self, prog):
+        for f_name, f in prog.functions.items():
+            num_changes = _remove_vacuous_cond_block(f)
+            msg = "remove_vacuous_cond: changed {} ops in function '{}'"
+            logging.info(msg.format(num_changes, f_name))

@@ -1,15 +1,14 @@
-# -*- coding: utf-8 -*-
-
 #  Copyright (c) 2021, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from collections import defaultdict
-from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil.passes.pass_registry import register_pass
+from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 
-def move_operations_to_the_end_block(block, op_type_to_move):
+
+def _move_operations_to_the_end_block(block, op_type_to_move):
     # Moves ops with `op_type_to_move` in `block.operations` (list) to the end of the program.
     # Note: ops with `op_type_to_move` and is dead code are moved toward end, which can be eliminated
     # later with dead-code-elimination pass.
@@ -59,7 +58,7 @@ def move_operations_to_the_end_block(block, op_type_to_move):
         # Collect input vars from sub-block if present
         relevant_inputs = set()
         for b in current_op.blocks:
-            relevant_inputs |= move_operations_to_the_end_block(b, op_type_to_move)  # |= is set union
+            relevant_inputs |= _move_operations_to_the_end_block(b, op_type_to_move)  # |= is set union
 
         # Collect vars from operation input
         for v in current_op.inputs.values():
@@ -99,8 +98,9 @@ def move_operations_to_the_end_block(block, op_type_to_move):
     vars_consumed_in_block.update(block.outputs)
     return vars_consumed_in_block
 
+
 @register_pass(namespace="common")
-def topological_reorder(prog):
+class topological_reorder(AbstractGraphPass):
     """
     Topologically reorders the list of operations in a program by re-ordering operations closers to their
     first use or at the end if it's not being consumed by any other operation.
@@ -152,5 +152,6 @@ def topological_reorder(prog):
             x2 = mb.cast(x=x1_t, dtype="fp32")
         } -> x2, x4, x7, x8
     """
-    for f_name, f in prog.functions.items():
-        move_operations_to_the_end_block(f, ['cast', 'transpose'])
+    def apply(self, prog):
+        for f_name, f in prog.functions.items():
+            _move_operations_to_the_end_block(f, ['cast', 'transpose'])

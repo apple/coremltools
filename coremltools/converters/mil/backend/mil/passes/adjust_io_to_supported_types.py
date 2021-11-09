@@ -5,15 +5,15 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from coremltools.converters.mil.mil import Builder as _mb
-from coremltools.converters.mil.mil import types as _types
-from coremltools.converters.mil.mil.ops import defs as _ops
-from coremltools.converters.mil.mil.passes.pass_registry import register_pass as _register_pass
+from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil import types as types
+from coremltools.converters.mil.mil.passes.pass_registry import register_pass
+from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 
 import warnings as _warnings
 
-@_register_pass(namespace="mil_backend")
-def adjust_io_to_supported_types(prog):
+@register_pass(namespace="mil_backend")
+class adjust_io_to_supported_types(AbstractGraphPass):
     """
     Converts all dTypes to types that are supported by the CoreML runtime.
     The runtime supports only fp16, fp32, int32, str, and bool variables.
@@ -59,41 +59,43 @@ def adjust_io_to_supported_types(prog):
 
     is unchanged.
     """
-    for name, func in prog.functions.items():
-        _adjust_io_to_supported_types(func, name == "main")
 
+    def apply(self, prog):
+        for name, func in prog.functions.items():
+            is_main_funtion = name == "main"
+            _adjust_io_to_supported_types(func, is_main_funtion)
 
-__RUNTIME_SUPPORTED_TYPES = [_types.fp16, _types.fp32, _types.int32, _types.str, _types.bool]
+__RUNTIME_SUPPORTED_TYPES = [types.fp16, types.fp32, types.int32, types.str, types.bool]
 
 #####
 # Main Function
 #####
 def _adjust_var_dtype_helper(var, dtype):
-    if (_types.is_scalar(var.sym_type)):
+    if (types.is_scalar(var.sym_type)):
         var._sym_type = dtype
     else:
-        var._sym_type = _types.tensor(dtype, var.sym_type.get_shape())
+        var._sym_type = types.tensor(dtype, var.sym_type.get_shape())
 
 def _adjust_main_inputs(func):
     first_op = func.operations[0] if len(func.operations) > 0 else None
     for input_name, input_var in func.inputs.items():
-       if (_types.is_tensor(input_var.sym_type) or _types.is_scalar(input_var.sym_type)) \
-            and input_var.dtype != _types.fp32 \
-            and input_var.dtype != _types.int32:
-            input_dtype_str = _types.builtin_to_string(input_var.dtype)
-            if _types.is_int(input_var.dtype):
+       if (types.is_tensor(input_var.sym_type) or types.is_scalar(input_var.sym_type)) \
+            and input_var.dtype != types.fp32 \
+            and input_var.dtype != types.int32:
+            input_dtype_str = types.builtin_to_string(input_var.dtype)
+            if types.is_int(input_var.dtype):
                 # Replace non-int32 input type with int32.
                 _warnings.warn("Input" + input_var.name + " is of dType " + input_dtype_str +\
                                ". Only integer variables of bit width 32 are supported by the CoreML runtime. " +\
                                "This input will be assigned a dType of int32. " +\
                                "No cast will be inserted; the previous dtype will be replaced.")
-                _adjust_var_dtype_helper(input_var, _types.int32)
-            elif input_var.dtype == _types.fp64:
+                _adjust_var_dtype_helper(input_var, types.int32)
+            elif input_var.dtype == types.fp64:
                 # Replace float64 input type with fp32.
                 _warnings.warn("Input" + input_var.name + " is of dtype fp64. 64 bit float inputs are " +\
                                "not supported by ML program models. This input will be assigned a dType " +\
                                "of fp32. No cast will be inserted; the previous dtype will be replaced.")
-                _adjust_var_dtype_helper(input_var, _types.fp32)
+                _adjust_var_dtype_helper(input_var, types.fp32)
             else:
                 # This is some other dType. Change the type to fp32 and add a cast.
                 # This is only a limitation of main--other functions do not represent CoreML model inputs
@@ -104,18 +106,18 @@ def _adjust_main_inputs(func):
                                "fp32. A cast will be inserted at the beginning of the program to " +\
                                "convert the input to the originally defined dType.")
                 with func:
-                    casted_input_var = _mb.cast(x=input_var, dtype=input_dtype_str, before_op=first_op)
+                    casted_input_var = mb.cast(x=input_var, dtype=input_dtype_str, before_op=first_op)
                     func.replace_uses_of_var_after_op(anchor_op=casted_input_var.op, old_var=input_var, new_var=casted_input_var)
-                    _adjust_var_dtype_helper(input_var, _types.fp32)
+                    _adjust_var_dtype_helper(input_var, types.fp32)
 
 def _adjust_main_outputs(func):
     new_outputs = []
     for output_var in func.outputs:
         output_type = output_var.sym_type
-        if (_types.is_tensor(output_type) or _types.is_scalar(output_type)) \
-            and output_var.dtype != _types.fp32 \
-            and output_var.dtype != _types.int32:
-            output_dtype_str = _types.builtin_to_string(output_var.dtype)
+        if (types.is_tensor(output_type) or types.is_scalar(output_type)) \
+            and output_var.dtype != types.fp32 \
+            and output_var.dtype != types.int32:
+            output_dtype_str = types.builtin_to_string(output_var.dtype)
             _warnings.warn("Output" + output_var.name + " is of dType " + output_dtype_str + ". The " +\
                            "CoreML runtime does not support outputs with this dType (only int32 and " +\
                            "fp32 are supported for outputs). This output will be assigned a dType " +\
@@ -126,7 +128,7 @@ def _adjust_main_outputs(func):
             output_var.set_name(output_var_name + "__pre__output__fp32__cast")
             # Convert the output to fp32, and add a cast.
             with func:
-                output_var = _mb.cast(x=output_var, dtype="fp32")
+                output_var = mb.cast(x=output_var, dtype="fp32")
                 output_var.set_name(output_var_name)
         new_outputs.append(output_var)
     func.set_outputs(new_outputs)
@@ -141,23 +143,23 @@ def _adjust_var(var):
     to the rules outlined in the top level pass comment
     (see adjust_io_to_supported_types).
     """
-    if (_types.is_tensor(var.sym_type) or _types.is_scalar(var.sym_type)) \
+    if (types.is_tensor(var.sym_type) or types.is_scalar(var.sym_type)) \
         and var.dtype not in __RUNTIME_SUPPORTED_TYPES:
-        dtype_str = _types.builtin_to_string(var.dtype)
-        if _types.is_int(var.dtype):
+        dtype_str = types.builtin_to_string(var.dtype)
+        if types.is_int(var.dtype):
             # Replace non-int32 input type with int32.
             _warnings.warn("Input" + var.name + " is of dType " + dtype_str +\
                            ". Only integer variables of bit width 32 are supported by the CoreML runtime. " +\
                            "This input will be assigned a dType of int32. " +\
                            "No cast will be inserted; the previous dtype will be replaced.")
-            _adjust_var_dtype_helper(var, _types.int32)
+            _adjust_var_dtype_helper(var, types.int32)
         else:
             # This is some other unsupported dType. Change the input type to fp32.
             _warnings.warn("Var " + var.name + " is of dType " + dtype_str + ". The CoreML runtime " +\
                            "does not support this dType (only fp16, fp32, bool, and int32 are supported). " +\
                            "This input will be assigned a dType of fp32. No cast will be inserted; " +\
                            "the previous dtype will be replaced.")
-            _adjust_var_dtype_helper(var, _types.fp32)
+            _adjust_var_dtype_helper(var, types.fp32)
 
 
 def _adjust_func_inputs(func):
@@ -193,7 +195,7 @@ def _adjust_ops(block):
         # If the output dtype or input dtype was previously adjusted,
         # the cast op must change or be removed in kind.
         if op.op_type == "cast":
-            output_type_str = _types.builtin_to_string(op.outputs[0].dtype)
+            output_type_str = types.builtin_to_string(op.outputs[0].dtype)
             if op.outputs[0].dtype == op.x.dtype:
                 # The type of the input or output of this cast op was changed per the rules
                 # defined in the top level comment for adjust_io_to_supported_types.
@@ -217,7 +219,7 @@ def _adjust_ops(block):
                 # This cast is meaningful, and the "dtype" param now differs from the output
                 # type. Replace the dtype cast with a new cast op with a matching dtype param.
                 with block:
-                    new_cast_out = _mb.cast(x=op.x, dtype=output_type_str, before_op=op)
+                    new_cast_out = mb.cast(x=op.x, dtype=output_type_str, before_op=op)
                     block.replace_uses_of_var_after_op(
                         anchor_op=op, old_var=op.outputs[0], new_var=new_cast_out
                     )

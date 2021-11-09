@@ -25,8 +25,8 @@ def apply_common_pass_pipeline(prog, passes):
         s = 'passes' if len(passes) > 1 else 'pass'
         for p in _tqdm(passes, desc="Running MIL {} {}".format(name, s), unit=" passes"):
             _logging.info('Performing pass: "{}"'.format(p))
-
-            PASS_REGISTRY[p](prog) if not isinstance(p, AbstractQuantizationPass) else p.apply(prog)
+            graph_pass = PASS_REGISTRY[p] if not isinstance(p, AbstractQuantizationPass) else p
+            graph_pass(prog)
             if isinstance(p, AbstractQuantizationPass) or not isinstance(PASS_REGISTRY[p], PassContainer):
                 prog.validate()
 
@@ -67,6 +67,11 @@ def apply_common_pass_pipeline(prog, passes):
         "common::fuse_conv_bias", # Re-run the fuse conv bias pass after the conv and batch_norm are fused
         "common::detect_concat_interleave",
         "common::concat_to_pixel_shuffle", # should come after detect_concat_interleave and after replace_stack_reshape
+        # "remove_redundant_ops" pass should be applied towards the end, once other graph passes have done their optimizations.
+        # For instance, it should come after passes such as "reduce_transpose" that can introduce redundant transposes
+        # in the network (while reducing the total number of transposes), and after passes such as "fuse_layernorm_or_instancenorm"
+        # which detects patterns that involve redundant ops ("sub") etc.
+        "common::remove_redundant_ops",
         "common::dead_code_elimination",  # always end with dce
     ]
 
@@ -82,7 +87,8 @@ def apply_common_pass_pipeline(prog, passes):
         "common::loop_invariant_elimination",
         "common::noop_elimination",
         "common::dedup_op_and_var_names",
-        "common::reduce_transposes",  # fuse_layernorm_or_instancenorm can potentially adding transposes
+        "common::reduce_transposes",  # fuse_layernorm_or_instancenorm can potentially add transposes
+        "common::remove_redundant_ops",
         "common::topological_reorder",
         "common::dead_code_elimination",  # always end with dce
     ]

@@ -3,16 +3,27 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from coremltools.converters.mil.mil.types.symbolic import any_symbolic
-from coremltools.converters.mil.mil import get_new_symbol, get_new_variadic_symbol
-from ._op_reqs import *
+from coremltools.converters.mil.mil import get_new_symbol, get_new_variadic_symbol, types
+from coremltools.converters.mil.mil.input_type import (
+    DefaultInputs,
+    FloatInputType,
+    InputSpec,
+    IntInputType,
+    IntTensorInputType,
+    TensorInputType,
+    StringInputType
+)
 
-"""
-Random Op Superclass
-"""
+from coremltools.converters.mil.mil.types.symbolic import any_symbolic
+from coremltools.converters.mil.mil.operation import Operation
+
+from ._op_reqs import register_op
 
 
 class RandomDistribution(Operation):
+    """
+    Random Op Superclass
+    """
     input_spec = InputSpec(shape=IntTensorInputType(),)
     out_dtype = types.fp32
 

@@ -1,17 +1,13 @@
-# -*- coding: utf-8 -*-
-
 #  Copyright (c) 2021, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
+from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil.types.symbolic import is_symbolic
 from .helper import _check_var_scalar_value, _check_child_op_type
-import numpy as np
-
 
 def _try_to_transform(reduce_sum_op, block):
 
@@ -22,7 +18,9 @@ def _try_to_transform(reduce_sum_op, block):
     input_shape = reduce_sum_op.x.shape
     if input_shape is None:
         return False
-    axes = reduce_sum_op.axes.val
+    axes = None
+    if reduce_sum_op.axes is not None:
+        axes = reduce_sum_op.axes.val
     if axes is None:
         return False
     count = 1
@@ -90,9 +88,8 @@ def _fuse_reduce_mean_block(block):
                 return fusion_status
     return fusion_status
 
-
 @register_pass(namespace="common")
-def fuse_reduce_mean(prog):
+class fuse_reduce_mean(AbstractGraphPass):
     """
     Detect the "reduce_sum--->mul/real_div" pattern than can be mapped to reduce_mean.
     That is, the operation "reduce_sum/count == reduce_mean"
@@ -108,8 +105,9 @@ def fuse_reduce_mean(prog):
     input --------> reduce_mean ---------> output
 
     """
-    for f in prog.functions.values():
-        block_changed = True
-        while block_changed:
-            block_changed = _fuse_reduce_mean_block(f)
+    def apply(self, prog):
+        for f in prog.functions.values():
+            block_changed = True
+            while block_changed:
+                block_changed = _fuse_reduce_mean_block(f)
 

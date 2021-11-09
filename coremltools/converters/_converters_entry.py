@@ -46,7 +46,9 @@ def convert(
     compute_precision=None,
     skip_model_load=False,
     compute_units=_ComputeUnit.ALL,
-    **kwargs
+    useCPUOnly=False,
+    package_dir=None,
+    debug=False,
 ):
     """
     Convert a TensorFlow or PyTorch model to the Core ML model format as either
@@ -230,6 +232,24 @@ def convert(
             - ``coremltools.ComputeUnit.CPU_AND_GPU``: Use both the CPU and GPU, but not the
               neural engine.
 
+    useCPUOnly: bool
+        Deprecated, to be removed in coremltools 6.0. Please use `compute_units` instead.
+        - if True, identical to setting compute_units to `coremltools.ComputeUnit.CPU_ONLY``
+        - if False, identical to setting compute_units to `coremltools.ComputeUnit.ALL``
+
+    package_dir : str
+        Post conversion, the model is compiled to form the MLModel object ready for prediction.
+        This requires a temporary directory to hold the mlmodelc archive.
+        - if not None, must be a path to a directory that is used for
+          temporarily storing the compiled model assets. If None, a temporary directory is created.
+
+    debug : bool
+        This flag should generally be False except for debugging purposes
+        Setting this flag to True:
+         - For Torch conversion, it will print the list of supported and unsupported ops
+           found in the model if conversion fails due to an unsupported op.
+         - For Tensorflow conversion, it will cause to display extra logging and visualizations
+
     Returns
     -------
     model : ``coremltools.models.MLModel`` or ``coremltools.converters.mil.Program``
@@ -284,9 +304,9 @@ def convert(
     exact_source = _determine_source(model, source, outputs)
     exact_target = _determine_target(convert_to, minimum_deployment_target)
     _validate_inputs(model, exact_source, inputs, outputs, classifier_config, compute_precision,
-                     exact_target, **kwargs)
+                     exact_target)
 
-    if "useCPUOnly" in kwargs and kwargs["useCPUOnly"]:
+    if useCPUOnly:
         warnings.warn('The "useCPUOnly" parameter is deprecated and will be removed in 6.0. '
                       'Use the compute_units parameter: "compute_units=coremotools.ComputeUnits.CPU_ONLY".')
         compute_units = _ComputeUnit.CPU_ONLY
@@ -313,7 +333,8 @@ def convert(
         transforms=tuple(transforms),
         skip_model_load=skip_model_load,
         compute_units=compute_units,
-        **kwargs
+        package_dir=package_dir,
+        debug=debug,
     )
 
     if exact_target == 'milinternal':
@@ -344,8 +365,7 @@ def _check_deployment_target(minimum_deployment_target):
         )
         raise TypeError(msg.format(minimum_deployment_target))
 
-def _validate_inputs(model, exact_source, inputs, outputs, classifier_config, compute_precision, convert_to,
-                     **kwargs):
+def _validate_inputs(model, exact_source, inputs, outputs, classifier_config, compute_precision, convert_to):
     """
     Validate and process model, inputs, outputs, classifier_config based on
     `exact_source` (which cannot be `auto`)
@@ -399,10 +419,6 @@ def _validate_inputs(model, exact_source, inputs, outputs, classifier_config, co
             raise ValueError("Input should be a list of TensorType or ImageType")
 
     elif exact_source == "pytorch":
-        if "example_inputs" in kwargs:
-            msg = 'Unexpected argument "example_inputs" found'
-            raise ValueError(msg)
-
         if inputs is None:
             msg = 'Expected argument for pytorch "inputs" not provided'
             raise ValueError(msg)

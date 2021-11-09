@@ -9,6 +9,7 @@
 #if __apple_build_version__ < 10010028
 #pragma clang diagnostic ignored "-Wextended-offsetof"
 #endif
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 
 #include <google/protobuf/text_format.h>
 #include <google/protobuf/io/coded_stream.h>

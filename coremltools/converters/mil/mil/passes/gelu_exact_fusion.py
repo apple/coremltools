@@ -5,6 +5,7 @@
 
 
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
+from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil import Builder as mb
 from .helper import _check_child_op_type, _check_var_scalar_value
 import numpy as np
@@ -105,9 +106,8 @@ def _fuse_gelu_exact_block(block):
                     return fusion_occurred
     return fusion_occurred
 
-
 @register_pass(namespace="common")
-def fuse_gelu_exact(prog):
+class fuse_gelu_exact(AbstractGraphPass):
     """
     Identify the pattern that corresponds to the exact version of gelu, and replace it with a single
     gelu layer with mode=EXACT
@@ -129,7 +129,8 @@ def fuse_gelu_exact(prog):
     both result in :
         [...] ----> gelu (mode=EXACT) ---> [...]
     """
-    for f in prog.functions.values():
-        block_changed = True
-        while block_changed:
-            block_changed = _fuse_gelu_exact_block(f)
+    def apply(self, prog):
+        for f in prog.functions.values():
+            block_changed = True
+            while block_changed:
+                block_changed = _fuse_gelu_exact_block(f)

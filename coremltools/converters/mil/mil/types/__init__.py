@@ -1,9 +1,9 @@
-# -*- coding: utf-8 -*-
-
 #  Copyright (c) 2020, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
+from math import log, exp
+
 from .type_double import fp16, fp32, fp64, float, double, is_float
 from .type_int import (
     int8,
@@ -60,6 +60,5 @@ from .annotate import apply_delayed_types
 from .annotate import delay_type
 from .get_type_info import get_type_info
 from .global_methods import global_remap
-from math import log, exp
 
 apply_delayed_types()

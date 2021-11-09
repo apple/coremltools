@@ -1,11 +1,23 @@
-import itertools
+#  Copyright (c) 2021, Apple Inc. All rights reserved.
+#
+#  Use of this source code is governed by a BSD-3-clause license that can be
+#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+from collections import OrderedDict
 import numpy as np
 import pytest
 import torch
 
-from ..internal_graph import *
-from ..torchir_passes import *
+from ..internal_graph import (
+    InternalTorchIRBlock,
+    InternalTorchIRGraph,
+    InternalTorchIRNode
+)
+from ..torchir_passes import (
+    flatten_graph_input_values,
+    flatten_graph_output_values,
+    transform_inplace_ops
+)
 
 
 def _build_flattening_test_graph():

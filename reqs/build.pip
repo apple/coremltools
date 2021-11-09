@@ -2,4 +2,6 @@ numpy<1.20; platform_machine != "arm64"
 protobuf
 pytest
 six
+sympy
+tqdm
 wheel

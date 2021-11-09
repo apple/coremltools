@@ -6,8 +6,8 @@
 
 import logging as _logging
 import os.path as _os_path
-
 import torch as _torch
+
 from .converter import TorchConverter, torch_to_mil_types
 from coremltools.converters.mil.input_types import InputType, TensorType
 from coremltools.converters.mil.mil import Program, types
@@ -43,45 +43,11 @@ def load(model_spec, debug=False, **kwargs):
         only.
     """
     torchscript = _torchscript_from_model(model_spec)
-
-    def _convert_to_inputtype(inputs):
-        input_type = []
-        for _input in inputs:
-            if isinstance(_input, (list, tuple)):
-                input_type.append(_convert_to_inputtype(_input))
-            elif isinstance(_input, InputType):
-                input_type.append(_input)
-            elif isinstance(_input, _torch.Tensor):
-                input_type.append(
-                    TensorType(
-                        shape=_input.shape, dtype=torch_to_mil_types[_input.dtype]
-                    )
-                )
-            else:
-                raise ValueError(
-                    "Unknown type {} for conversion to InputType.".format(type(_input))
-                )
-        return input_type
-
-    inputs = _convert_to_inputtype(kwargs["inputs"])
+    inputs = _convert_to_torch_inputtype(kwargs["inputs"])
     outputs = kwargs.get("outputs", None)
     cut_at_symbols = kwargs.get("cut_at_symbols", None)
     converter = TorchConverter(torchscript, inputs, outputs, cut_at_symbols)
-
-    try:
-        prog = converter.convert()
-    except RuntimeError as e:
-        if debug and "convert function" in str(e):
-            implemented, missing = converter.check_ops()
-            print("the following model ops are IMPLEMENTED:")
-            print("\n".join(["  " + str(x) for x in sorted(implemented)]))
-            print("the following model ops are MISSING:")
-            print("\n".join(["  " + str(x) for x in sorted(missing)]))
-        raise e
-    except Exception as e:
-        raise e
-
-    return prog
+    return _perform_torch_convert(converter, debug)
 
 
 def _torchscript_from_model(model_spec):
@@ -96,3 +62,37 @@ def _torchscript_from_model(model_spec):
                 type(model_spec)
             )
         )
+
+def _convert_to_torch_inputtype(inputs):
+    input_type = []
+    for _input in inputs:
+        if isinstance(_input, (list, tuple)):
+            input_type.append(_convert_to_torch_inputtype(_input))
+        elif isinstance(_input, InputType):
+            input_type.append(_input)
+        elif isinstance(_input, _torch.Tensor):
+            input_type.append(
+                TensorType(
+                    shape=_input.shape, dtype=torch_to_mil_types[_input.dtype]
+                )
+            )
+        else:
+            raise ValueError(
+                "Unknown type {} for conversion to InputType.".format(type(_input))
+            )
+    return input_type
+
+def _perform_torch_convert(converter, debug):
+    try:
+        prog = converter.convert()
+    except RuntimeError as e:
+        if debug and "convert function" in str(e):
+            implemented, missing = converter.check_ops()
+            print("the following model ops are IMPLEMENTED:")
+            print("\n".join(["  " + str(x) for x in sorted(implemented)]))
+            print("the following model ops are MISSING:")
+            print("\n".join(["  " + str(x) for x in sorted(missing)]))
+        raise e
+
+    return prog
+

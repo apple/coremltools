@@ -2,14 +2,23 @@
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
-
-from coremltools.converters.mil import testing_reqs
-from coremltools.converters.mil.mil import get_new_symbol, get_new_variadic_symbol
-from coremltools.converters.mil.testing_reqs import *
+import itertools
+import pytest
+import numpy as np
 
 from .testing_utils import UNK_SYM, UNK_VARIADIC, run_compare_builder
+from coremltools._deps import _HAS_TORCH
+from coremltools.converters.mil import testing_reqs
+from coremltools.converters.mil.mil import (
+    Builder as mb,
+    get_new_symbol,
+    types
+)
+from coremltools.converters.mil.testing_reqs import backends
+from coremltools.converters.mil.testing_utils import ssa_fn
 
-backends = testing_reqs.backends
+if _HAS_TORCH:
+    import torch
 
 
 class TestDepthToSpace:
@@ -286,7 +295,6 @@ class TestReshape:
     def test_builder_to_backend_symbolic(self, use_cpu_only, backend):
         s0 = get_new_symbol()
         s_len = get_new_symbol()
-        s1 = get_new_variadic_symbol()
 
         input_placeholders = {
             "x": mb.placeholder(shape=(2, s0)),
@@ -654,6 +662,7 @@ class TestSqueeze:
         assert type(v.val) == np.float32
         assert np.isclose(np.squeeze(x), v.val)
 
+
 class TestTranspose:
     @pytest.mark.parametrize(
         argnames=["use_cpu_only", "backend", "is_symbolic"],
@@ -921,7 +930,6 @@ class TestConcat:
     )
     def test_builder_to_backend_type_promotion(self, use_cpu_only, backend):
         t1 = np.array([[1, 2], [4, 5]], dtype=np.float32)
-        t2 = np.array([[7, 8]], dtype=np.float32)
 
         input_placeholders = {
             "x": mb.placeholder(shape=t1.shape),
@@ -1065,7 +1073,7 @@ class TestConcat:
             np.random.rand(1, 1, 3, 1),
         ]
         with pytest.raises(ValueError):
-            v = mb.concat(values=values, axis=2)
+            mb.concat(values=values, axis=2)
 
 
 class TestSplit:

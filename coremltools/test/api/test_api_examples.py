@@ -2,12 +2,24 @@
 #
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
+
 import copy
+from io import BytesIO
+import numpy as np
+import os
+from os import getcwd, chdir
+from os.path import exists
+from PIL import Image
+import pytest
+from shutil import rmtree
+from tempfile import mkdtemp
+import urllib.request
+
 import coremltools as ct
-from coremltools.converters.mil.testing_utils import get_op_types_in_program
 from coremltools.converters.mil import Builder as mb
-from coremltools.converters.mil.mil import Program, Function
 from coremltools.converters.mil.frontend.torch.test.testing_utils import _copy_input_data
+from coremltools.converters.mil.mil import get_new_symbol, Program, Function
+from coremltools.converters.mil.testing_utils import get_op_types_in_program
 
 from coremltools._deps import (
     _HAS_TF_1,
@@ -18,16 +30,17 @@ from coremltools._deps import (
     MSG_TORCH_NOT_FOUND,
 )
 
-import numpy as np
-import os
-from os.path import exists
-from os import getcwd, chdir
-import pytest
-from shutil import rmtree
-from tempfile import mkdtemp
-
 if _HAS_TORCH:
     import torch
+    import torchvision
+
+if _HAS_TF_1 or _HAS_TF_2:
+    import tensorflow as tf
+
+if _HAS_TF_2:
+    import requests
+    from tensorflow import keras
+    from tensorflow.keras import layers
 
 
 ###############################################################################
@@ -44,8 +57,6 @@ class TestTensorFlow1ConverterExamples:
 
     @staticmethod
     def test_convert_from_frozen_graph(tmpdir):
-        import tensorflow as tf
-
         with tf.Graph().as_default() as graph:
             x = tf.placeholder(tf.float32, shape=(1, 2, 3), name="input")
             y = tf.nn.relu(x, name="output")
@@ -61,7 +72,6 @@ class TestTensorFlow1ConverterExamples:
     @staticmethod
     def test_convert_from_frozen_graph_file(tmpdir):
         # create the model to convert
-        import tensorflow as tf
 
         # write a toy frozen graph
         # Note that we usually needs to run freeze_graph() on tf.Graph()
@@ -121,8 +131,6 @@ class TestTensorFlow1ConverterExamples:
         test_input = np.random.rand(1, 3, 5) - 0.5
 
         # create the model to convert
-        import tensorflow as tf
-
         with tf.compat.v1.Session() as sess:
             x = tf.placeholder(shape=(1, 3, 5), dtype=tf.float32)
             y = tf.nn.relu(x)
@@ -151,9 +159,6 @@ class TestTensorFlow1ConverterExamples:
     @staticmethod
     def test_freeze_and_convert_matmul_graph():
         # testing : https://coremltools.readme.io/docs/tensorflow-1#export-as-frozen-graph-and-convert
-
-        import tensorflow as tf
-
         graph = tf.Graph()
         with graph.as_default():
             x = tf.placeholder(tf.float32, shape=[None, 20], name="input")
@@ -162,11 +167,9 @@ class TestTensorFlow1ConverterExamples:
             y = tf.matmul(x, W) + b
             output_names = [y.op.name]
 
-        import tempfile
-        import os
         from tensorflow.python.tools.freeze_graph import freeze_graph
 
-        model_dir = tempfile.mkdtemp()
+        model_dir = mkdtemp()
         graph_def_file = os.path.join(model_dir, 'tf_graph.pb')
         checkpoint_file = os.path.join(model_dir, 'tf_model.ckpt')
         frozen_graph_file = os.path.join(model_dir, 'tf_frozen.pb')
@@ -213,8 +216,6 @@ class TestTensorFlow2ConverterExamples:
         chdir(self._temp_dir)
 
         # create toy models for conversion examples
-        import tensorflow as tf
-
         # write a toy tf.keras HDF5 model
         tf_keras_model = tf.keras.Sequential(
             [
@@ -235,26 +236,23 @@ class TestTensorFlow2ConverterExamples:
 
     @staticmethod
     def test_convert_tf_keras_h5_file(tmpdir):
-        import tensorflow as tf
+        for file_extension in ("h5", ".hdf5"):
+            x = tf.keras.Input(shape=(32,), name="input")
+            y = tf.keras.layers.Dense(16, activation="softmax")(x)
+            keras_model = tf.keras.Model(x, y)
+            save_dir = str(tmpdir)
+            path = os.path.join(save_dir, "tf_keras_model." + file_extension)
+            keras_model.save(path)
 
-        x = tf.keras.Input(shape=(32,), name="input")
-        y = tf.keras.layers.Dense(16, activation="softmax")(x)
-        keras_model = tf.keras.Model(x, y)
-        save_dir = str(tmpdir)
-        h5_path = os.path.join(save_dir, "tf_keras_model.h5")
-        keras_model.save(h5_path)
+            mlmodel = ct.convert(path)
 
-        mlmodel = ct.convert(h5_path)
-
-        test_input = np.random.rand(2, 32)
-        expected_val = keras_model(test_input)
-        results = mlmodel.predict({"input": test_input})
-        np.testing.assert_allclose(results["Identity"], expected_val, rtol=1e-4)
+            test_input = np.random.rand(2, 32)
+            expected_val = keras_model(test_input)
+            results = mlmodel.predict({"input": test_input})
+            np.testing.assert_allclose(results["Identity"], expected_val, rtol=1e-4)
 
     @staticmethod
     def test_convert_tf_keras_model():
-        import tensorflow as tf
-
         x = tf.keras.Input(shape=(32,), name="input")
         y = tf.keras.layers.Dense(16, activation="softmax")(x)
         keras_model = tf.keras.Model(x, y)
@@ -270,8 +268,6 @@ class TestTensorFlow2ConverterExamples:
     @pytest.mark.parametrize(
             "dtype", ['default', 'mil_type', 'np type'])
     def test_convert_tf_keras_applications_model(dtype):
-        import tensorflow as tf
-
         tf_keras_model = tf.keras.applications.MobileNet(
             weights="imagenet", input_shape=(224, 224, 3)
         )
@@ -309,10 +305,6 @@ class TestTensorFlow2ConverterExamples:
     def test_keras_custom_layer_model():
         # testing : https://coremltools.readme.io/docs/tensorflow-2#conversion-from-user-defined-models
 
-        import tensorflow as tf
-        from tensorflow import keras
-        from tensorflow.keras import layers
-
         class CustomDense(layers.Layer):
             def __init__(self, units=32):
                 super(CustomDense, self).__init__()
@@ -339,7 +331,6 @@ class TestTensorFlow2ConverterExamples:
     @staticmethod
     def test_concrete_function_conversion():
         # testing : https://coremltools.readme.io/docs/tensorflow-2#conversion-from-user-defined-models
-        import tensorflow as tf
 
         @tf.function(input_signature=[tf.TensorSpec(shape=(6,), dtype=tf.float32)])
         def gelu_tanh_activation(x):
@@ -354,7 +345,6 @@ class TestTensorFlow2ConverterExamples:
     @staticmethod
     def test_quickstart_example():
         # testing: https://coremltools.readme.io/docs/introductory-quickstart#quickstart-example
-        import tensorflow as tf  # TF 2.2.0
 
         # Download MobileNetv2 (using tf.keras)
         keras_model = tf.keras.applications.MobileNetV2(
@@ -364,7 +354,6 @@ class TestTensorFlow2ConverterExamples:
         )
 
         # Download class labels (from a separate file)
-        import urllib.request
         label_url = 'https://storage.googleapis.com/download.tensorflow.org/data/ImageNetLabels.txt'
         class_labels = urllib.request.urlopen(label_url).read().splitlines()
         class_labels = class_labels[1:]  # remove the first class which is background
@@ -403,10 +392,6 @@ class TestTensorFlow2ConverterExamples:
         model.version = "2.0"
 
         # get an image
-        from PIL import Image
-        import requests
-        from io import BytesIO
-
         img_url = 'https://files.readme.io/02e3586-daisy.jpg'
         response = requests.get(img_url)
         img = Image.open(BytesIO(response.content))
@@ -424,9 +409,6 @@ class TestTensorFlow2ConverterExamples:
 class TestPyTorchConverterExamples:
     @staticmethod
     def test_convert_torch_vision_mobilenet_v2(tmpdir):
-        import torch
-        import torchvision
-
         """
         In this example, we'll instantiate a PyTorch classification model and convert
         it to Core ML.
@@ -691,8 +673,6 @@ class TestInputs:
     @staticmethod
     @pytest.mark.skipif(not _HAS_TF_1, reason=MSG_TF1_NOT_FOUND)
     def test_input_noname():
-        import tensorflow as tf
-
         with tf.Graph().as_default() as graph:
             x = tf.placeholder(tf.float32, shape=(1, 2, 3), name="input")
             x1 = tf.placeholder(tf.float32, shape=(1, 2, 3), name="input_1")
@@ -710,8 +690,6 @@ class TestInputs:
     @staticmethod
     @pytest.mark.skipif(not _HAS_TF_1, reason=MSG_TF1_NOT_FOUND)
     def test_input_wrongname():
-        import tensorflow as tf
-
         with tf.Graph().as_default() as graph:
             x = tf.placeholder(tf.float32, shape=(1, 2, 3), name="input")
             x1 = tf.placeholder(tf.float32, shape=(1, 2, 3), name="input_1")
@@ -760,8 +738,6 @@ class TestFlexibleShape:
     @pytest.mark.skipif(not _HAS_TF_2, reason=MSG_TF2_NOT_FOUND)
     def test_tf2keras_shared_range_dim(use_symbol):
         # Test examples in https://coremltools.readme.io/docs/flexible-inputs
-        import tensorflow as tf
-
         input_dim = 3
         # None denotes seq_len dimension
         x1 = tf.keras.Input(shape=(None,input_dim), name="seq1")
@@ -1247,6 +1223,58 @@ class TestOptionalInput:
 
     @staticmethod
     @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
+    def test_torch_classifier():
+        class Net(torch.nn.Module):
+            def __init__(self):
+                super(Net, self).__init__()
+                self.linear1 = torch.nn.Linear(28 * 28, 100)
+                self.linear2 = torch.nn.Linear(100, 50)
+                self.final = torch.nn.Linear(50, 10)
+                self.relu = torch.nn.ReLU()
+
+            def forward(self, img):  # convert + flatten
+                x = img.view(-1, 28 * 28)
+                x = self.relu(self.linear1(x))
+                x = self.relu(self.linear2(x))
+                x = self.final(x)
+                return x
+        model = Net()
+        model.eval()
+        example_input = torch.rand(1, 28 * 28, 1)
+        traced_model = torch.jit.trace(model, example_input)
+        traced_model.eval()
+
+        def _test_classifier(traced_model, example_input, class_type, backend):
+            label = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+            if class_type == "str":
+                label = list(map(lambda x: str(x), label))
+            classifier_config = ct.ClassifierConfig(label)
+            mlmodel = ct.convert(
+                traced_model,
+                source='pytorch',
+                convert_to=backend,
+                inputs=[
+                    ct.TensorType(
+                        name="input",
+                        shape=example_input.shape,
+                        dtype=example_input.numpy().dtype,
+                    )
+                ],
+                classifier_config=classifier_config
+            )
+            if ct.utils._is_macos():
+                coreml_out = mlmodel.predict({"input": example_input.detach().numpy()})
+                assert "classLabel" in coreml_out
+                key_type = str if class_type == "str" else int
+                assert isinstance(coreml_out["classLabel"], key_type)
+
+        for class_type in ("str", "int"):
+            _test_classifier(traced_model, example_input, class_type, "neuralnetwork")
+            if ct.utils._macos_version() >= (12, 0):
+                _test_classifier(traced_model, example_input, class_type, "mlprogram")
+
+    @staticmethod
+    @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
     def test_torch_optional_input():
 
         num_tokens = 3
@@ -1534,6 +1562,21 @@ class TestMLProgramConverterExamples:
             convert_to='mlprogram'
         )
         assert isinstance(model._get_mil_internal(), ct.converters.mil.Program)
+
+    @staticmethod
+    @pytest.mark.skipif(not ct.utils._is_macos(), reason="Platform is not Mac OS")
+    def test_deepcopy_error_with_symbols_in_prog():
+        prog = Program()
+        func_inputs = {"x": mb.placeholder(shape=[get_new_symbol(), 3]),
+                       "y": mb.placeholder(shape=[2, 3])}
+        with Function(func_inputs) as ssa_fun:
+            x, y = ssa_fun.inputs["x"], ssa_fun.inputs["y"]
+            x = mb.relu(x=x)
+            z = mb.add(x=x, y=y)
+            ssa_fun.set_outputs([z])
+        prog.add_function("main", ssa_fun)
+        mlmodel = ct.convert(prog, convert_to="mlprogram", compute_precision=ct.precision.FLOAT32)
+        prog2 = mlmodel._get_mil_internal() # this will invoke a deepcopy on the prog
 
     @staticmethod
     @pytest.mark.skipif(not _HAS_TORCH or ct.utils._macos_version() < (12, 0),

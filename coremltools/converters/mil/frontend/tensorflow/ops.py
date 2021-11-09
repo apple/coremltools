@@ -6,13 +6,13 @@
 import logging as _logging
 import numpy as _np
 
-from coremltools.converters.mil.mil import Builder as mb
-from coremltools.converters.mil.mil.ops.defs._utils import broadcast_shapes
+from .._utils import build_einsum_mil
 from .convert_utils import convert_graph
 from .tf_op_registry import register_tf_op
-from coremltools.converters.mil.mil import types
+from coremltools.converters.mil.mil import Builder as mb, types
+from coremltools.converters.mil.mil.ops.defs._utils import broadcast_shapes
 from coremltools.converters.mil.mil.types.symbolic import is_symbolic, any_symbolic
-from .._utils import build_einsum_mil
+
 
 def _adjust_min_max(min, max, num_bits=8):
     if (min <= max) and (max <= 0):

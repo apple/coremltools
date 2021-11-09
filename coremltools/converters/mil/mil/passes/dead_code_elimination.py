@@ -3,11 +3,13 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 import logging
 
+from coremltools.converters.mil.mil.passes.pass_registry import register_pass
+from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 
-def dead_code_elimination_block(block):
+
+def _dead_code_elimination_block(block):
     used_vars = set()
     ops_to_remove = list()
 
@@ -28,7 +30,7 @@ def dead_code_elimination_block(block):
                 used_vars.update([input_var])
 
         for b in op.blocks:
-            used_in_block = dead_code_elimination_block(b)
+            used_in_block = _dead_code_elimination_block(b)
             used_vars.update(used_in_block)
 
     for op in ops_to_remove:
@@ -37,9 +39,8 @@ def dead_code_elimination_block(block):
 
     return used_vars
 
-
 @register_pass(namespace="common")
-def dead_code_elimination(program):
+class dead_code_elimination(AbstractGraphPass):
     """
     Eliminate unused ops in program.
 
@@ -79,6 +80,6 @@ def dead_code_elimination(program):
     In this example, %matmul_0 is an op that's not used in the computation,
     this op and its input ops (%tx_0 and %ty_0) are eliminated in this pass.
     """
-
-    for f in program.functions.values():
-        dead_code_elimination_block(f)
+    def apply(self, prog):
+        for f in prog.functions.values():
+            _dead_code_elimination_block(f)

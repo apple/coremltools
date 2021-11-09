@@ -158,7 +158,7 @@ class GradientBoostingMulticlassClassifierScikitTest(unittest.TestCase):
             spec = skl_converter.convert(model, "data", "out")
 
 
-@unittest.skipIf(_macos_version() >= (10, 16), "rdar://problem/75172473")
+@unittest.skipIf(_macos_version() >= (10, 16), "rdar://problem/84898245")
 @unittest.skipIf(not _HAS_SKLEARN, "Missing sklearn. Skipping tests.")
 @unittest.skipIf(not _HAS_XGBOOST, "Skipping, no xgboost")
 class GradientBoostingBinaryClassifierXGboostTest(unittest.TestCase):
@@ -224,7 +224,7 @@ class GradientBoostingBinaryClassifierXGboostTest(unittest.TestCase):
             spec = xgb_converter.convert(model, "data", "out", mode="classifier")
 
 
-@unittest.skipIf(_macos_version() >= (10, 16), "rdar://problem/75172473")
+@unittest.skipIf(_macos_version() >= (10, 16), "rdar://problem/84898245")
 @unittest.skipIf(not _HAS_SKLEARN, "Missing sklearn. Skipping tests.")
 @unittest.skipIf(not _HAS_XGBOOST, "Skipping, no xgboost")
 class GradientBoostingMulticlassClassifierXGboostTest(unittest.TestCase):

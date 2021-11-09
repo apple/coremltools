@@ -250,7 +250,9 @@ class InternalTorchIRGraph:
                 self.params[name] = value
 
             # Add inputs
-            for index, _input in enumerate(islice(raw_graph.inputs(), len(input_values))):
+            # The first element of the raw_graph.inputs() is the 'self' of the module, which is not used.
+            graph_inputs = list(raw_graph.inputs())[1:]
+            for index, _input in enumerate(islice(graph_inputs, len(input_values))):
                 name = _input.debugName()
                 value = input_values[index]
                 self.inputs[name] = value

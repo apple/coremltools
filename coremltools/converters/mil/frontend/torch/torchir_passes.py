@@ -1,7 +1,12 @@
+#  Copyright (c) 2021, Apple Inc. All rights reserved.
+#
+#  Use of this source code is governed by a BSD-3-clause license that can be
+#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
+
 from collections import OrderedDict
 import logging as _logging
 
-from .internal_graph import *
+from .internal_graph import InternalTorchIRNode, InternalTorchIRGraph
 
 def generate_tensor_assignment_ops(graph):
     """
@@ -120,6 +125,32 @@ def generate_tensor_assignment_ops(graph):
         output = graph.outputs[idx]
         if output in updated_tensor_count:
             graph.outputs[idx] = _get_updated_name(output, updated_tensor_count)
+
+
+def remove_getattr_nodes(graph):
+    """Remove the getattr nodes in the graph
+    """
+
+    getattr_nodes = []
+    new_nodes = []
+
+    for node in graph.nodes:
+
+        for block in node.blocks:
+            remove_getattr_nodes(block)
+
+        if node.kind == "getattr":
+            getattr_nodes.append(node)
+        else:
+            new_nodes.append(node)
+
+    # check the getattr nodes not in the outputs
+    for node in getattr_nodes:
+        if node.name in graph.outputs:
+            raise RuntimeError("{} should not be in the graph outputs.".format(node.name))
+
+    # remove the getattr nodes
+    graph.nodes = new_nodes
 
 
 def transform_inplace_ops(graph, name_remap_dict=None):

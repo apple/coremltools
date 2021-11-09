@@ -3,9 +3,10 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
 import logging
+
 from coremltools.converters._profile_utils import _profile
+from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
 
 
 @_profile

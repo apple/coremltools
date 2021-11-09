@@ -18,6 +18,10 @@ def register_torch_op(_func=None, torch_alias=None, override=False):
         e.g. Sort aliased with SortV1, SortV2
         All provided alias operators must not be registered previously.
 
+        "In place" alias are looked up automatically and do not need to
+        be registered. PyTorch uses an underscore suffix to denote the
+        in place version, e.g. "sum_" is the in place version of "sum".
+
     override: (Boolean) [Default=False]
         If True, overrides earlier registration i.e. specified
         operator and alias will start pointing to current conversion

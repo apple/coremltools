@@ -5,7 +5,7 @@
 import math
 import numpy as np
 
-from coremltools.converters.mil.mil import Operation, types, VALUE
+from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.input_type import (
     DefaultInputs,
     FloatInputType,
@@ -14,8 +14,8 @@ from coremltools.converters.mil.mil.input_type import (
     ScalarOrTensorInputType,
     StringInputType,
     TensorInputType,
-    )
-from coremltools.converters.mil.mil.operation import precondition
+)
+from coremltools.converters.mil.mil.operation import Operation, precondition, VALUE
 from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
 
 from .elementwise_unary import elementwise_unary

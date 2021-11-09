@@ -1,11 +1,15 @@
-from coremltools.converters.mil.mil.passes.pass_registry import register_pass
-from coremltools.converters.mil.input_types import ImageType, Shape, EnumeratedShapes
+#  Copyright (c) 2020, Apple Inc. All rights reserved.
+#
+#  Use of this source code is governed by a BSD-3-clause license that can be
+#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clausefrom
 
+from coremltools.converters.mil.input_types import ImageType, Shape, EnumeratedShapes
+from coremltools.converters.mil.mil.passes.pass_registry import register_pass
+from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil import Builder as mb
 
-
 @register_pass(namespace='common')
-def image_input_preprocess(prog):
+class image_input_preprocess(AbstractGraphPass):
     """
     Plug in transpose for image input that were NHWC to NCHW.
 
@@ -16,13 +20,16 @@ def image_input_preprocess(prog):
             We do not modify this input, since channel_first is the intended
             behaviour for feeding images for optimal performance
         b) channel_first == False
-            We convert the input into a "channel_first" input, and plug in a 
+            We convert the input into a "channel_first" input, and plug in a
             transpose for the input to maintain the remaining graph's dimensionality.
     """
-    for f_name, f in prog.functions.items():
-        if f_name == 'main':
-            # We need to make sure main exist and start here.
-            _image_input_preprocess(prog)
+
+    def apply(self, prog):
+        for f_name, f in prog.functions.items():
+            if f_name == 'main':
+                # We need to make sure main exist and start here.
+                _image_input_preprocess(prog)
+
 
 def _transform_to_channel_first(shape):
     if isinstance(shape, tuple):

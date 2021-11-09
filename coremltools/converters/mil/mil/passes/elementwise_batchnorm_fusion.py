@@ -7,11 +7,11 @@
 
 
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
+from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil import Builder as mb
 import numpy as np
 
-
-def match_pattern(op):
+def _match_pattern(op):
     if op.outputs[0] in op.enclosing_block.outputs:
         return None
 
@@ -47,7 +47,7 @@ def _check_shape(arr):
     return True
 
 
-def try_to_transform(mul_op, add_op, block):
+def _try_to_transform(mul_op, add_op, block):
     non_const_input_mul = mul_op.x if mul_op.x.val is None else mul_op.y
     if non_const_input_mul.rank != 4:
         return False
@@ -89,29 +89,28 @@ def try_to_transform(mul_op, add_op, block):
     return True
 
 
-def fuse_elementwise_to_batchnorm_block(block):
+def _fuse_elementwise_to_batchnorm_block(block):
     fusion_status = False
     for op in list(block.operations):
         for b in op.blocks:
             block_changed = True
             while block_changed:
-                block_changed = fuse_elementwise_to_batchnorm_block(b)
+                block_changed = _fuse_elementwise_to_batchnorm_block(b)
         if len(op.blocks) > 0:
             # This op can't be mul
             continue
 
-        add_op = match_pattern(op)
+        add_op = _match_pattern(op)
         if add_op is not None:
             with block:
-                fusion_status = try_to_transform(op, add_op, block)
+                fusion_status = _try_to_transform(op, add_op, block)
             # has to break as the downstream iterator is affected.
             if fusion_status:
                 return fusion_status
     return fusion_status
 
-
 @register_pass(namespace="common")
-def fuse_elementwise_to_batchnorm(prog):
+class fuse_elementwise_to_batchnorm(AbstractGraphPass):
     """
     Fold mul + add into a batch norm,
     if the const feeding into the mul/add is of shape (1,C,1,1) or (C,1,1)
@@ -142,7 +141,8 @@ def fuse_elementwise_to_batchnorm(prog):
         ...
 
     """
-    for f in prog.functions.values():
-        block_changed = True
-        while block_changed:
-            block_changed = fuse_elementwise_to_batchnorm_block(f)
+    def apply(self, prog):
+        for f in prog.functions.values():
+            block_changed = True
+            while block_changed:
+                block_changed = _fuse_elementwise_to_batchnorm_block(f)

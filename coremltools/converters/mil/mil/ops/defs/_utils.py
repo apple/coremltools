@@ -5,11 +5,9 @@
 
 import math
 
-import coremltools.converters
-
-from coremltools.converters.mil.mil import get_new_symbol
+from coremltools.converters.mil.mil import get_new_symbol, types
 from coremltools.converters.mil.mil.types.symbolic import is_symbolic
-from ._op_reqs import *
+
 
 def broadcast_shapes(shape_x, shape_y):
     """

@@ -14,7 +14,8 @@ from coremltools.converters.mil.mil.passes.helper import _check_var_scalar_value
 from coremltools.converters.mil.experimental.passes.generic_pass_infrastructure import register_generic_pass
 from coremltools.converters.mil.mil import get_new_symbol
 
-shape = (get_new_symbol(), get_new_symbol(), get_new_symbol(), get_new_symbol())
+if os.getenv("ENABLE_EXPERIMENTAL_PASSES") == "1":
+    shape = (get_new_symbol(), get_new_symbol(), get_new_symbol(), get_new_symbol())
 
 def _check_reduce_op(reduce_op, mode="reduce_mean") -> bool:
     """
@@ -36,179 +37,181 @@ def _check_reduce_op(reduce_op, mode="reduce_mean") -> bool:
         return False
     return True
 
+if os.getenv("ENABLE_EXPERIMENTAL_PASSES") == "1":
+    @mb.program(input_specs=[mb.TensorSpec(shape=shape)])
+    def instancenorm_or_layernorm(x):
+        """
+        Identify the pattern:
 
-@mb.program(input_specs=[mb.TensorSpec(shape=shape)])
-def instancenorm_or_layernorm(x):
-    """
-    Identify the pattern:
+        y = gamma * (x - mean) / sqrt(variance + epsilon) + beta
 
-    y = gamma * (x - mean) / sqrt(variance + epsilon) + beta
+        y = x * [gamma * rsqrt(variance + eps)] + (beta - mean * [gamma * rsqrt(variance + eps)])
 
-    y = x * [gamma * rsqrt(variance + eps)] + (beta - mean * [gamma * rsqrt(variance + eps)])
+        x --> main_reduce --> sub --> square --> reduce_mean_2 --> add(epsilon) --> rsqrt
+        |             |        ^                                                      |
+        |             |        |                                                      V
+        |-----------------------                                                mul (gamma)
+        |             |                                                             |
+        |             |                                                     --------|---------
+        |             |                                                     |                |
+        |             |                                                     |                V
+        |             |------------------------------------------------------------------>  mul_3
+        |                                                                   |                |
+        |                                                                   V                |
+        |----------------------------------------------------------------> mul_2             |
+                                                                            |                V
+                                                                            |              sub (beta) --> add_2 --> [...]
+                                                                            |                              ^
+                                                                            |-------------------------------
 
-    x --> main_reduce --> sub --> square --> reduce_mean_2 --> add(epsilon) --> rsqrt
-    |             |        ^                                                      |
-    |             |        |                                                      V
-    |-----------------------                                                mul (gamma)
-    |             |                                                             |
-    |             |                                                     --------|---------
-    |             |                                                     |                |
-    |             |                                                     |                V
-    |             |------------------------------------------------------------------>  mul_3
-    |                                                                   |                |
-    |                                                                   V                |
-    |----------------------------------------------------------------> mul_2             |
-                                                                        |                V
-                                                                        |              sub (beta) --> add_2 --> [...]
-                                                                        |                              ^
-                                                                        |-------------------------------
+        This pattern corresponds to either layer_norm or instance_norm.
 
-    This pattern corresponds to either layer_norm or instance_norm.
+        It is instance_norm if all of the following are true:
+            - input is rank 4
+            - axes of reduce_mean is [-2, -1] or [-3, -2]
+              (when [-3, -2], a channel first to channel last transpose would be inserted)
+            - gamma and beta are rank 1, after squeeze
 
-    It is instance_norm if all of the following are true:
-        - input is rank 4
-        - axes of reduce_mean is [-2, -1] or [-3, -2]
-          (when [-3, -2], a channel first to channel last transpose would be inserted)
-        - gamma and beta are rank 1, after squeeze
+        It is layer_norm if all of the following are true:
+            - axes is either [-1] or [-1, -2] or [-1, -2, -3] and so on
+            - rank of gamma and beta is equal to the length of the axes
+        """
+        main_reduce = mb.reduce_mean(x=x, axes=[2, 3], keep_dims=True, name="main_reduce")
+        sub = mb.sub(x=x, y=main_reduce, name="sub")
+        square = mb.square(x=sub, name="square")
+        reduce_mean_2 = mb.reduce_mean(x=square, axes=[2, 3], keep_dims=True, name="reduce_mean_2")
+        add_epsilon = mb.add(x=reduce_mean_2, y=1e-5, name="add_epsilon")
+        rsqrt = mb.rsqrt(x=add_epsilon, epsilon=1e-12, name="rsqrt")
+        mul_gamma = mb.mul(x=rsqrt, y=np.random.rand(1, 5, 1, 1), name="mul_gamma")
+        mul_2 = mb.mul(x=x, y=mul_gamma, name="mul_2")
+        mul_3 = mb.mul(x=main_reduce, y=mul_gamma, name="mul_3")
+        sub_beta = mb.sub(x=np.random.rand(1, 5, 1, 1), y=mul_3, name="sub_beta")
+        add_2 = mb.add(x=sub_beta, y=mul_2, name="add_2")
+        return add_2
 
-    It is layer_norm if all of the following are true:
-        - axes is either [-1] or [-1, -2] or [-1, -2, -3] and so on
-        - rank of gamma and beta is equal to the length of the axes
-    """
-    main_reduce = mb.reduce_mean(x=x, axes=[2, 3], keep_dims=True, name="main_reduce")
-    sub = mb.sub(x=x, y=main_reduce, name="sub")
-    square = mb.square(x=sub, name="square")
-    reduce_mean_2 = mb.reduce_mean(x=square, axes=[2, 3], keep_dims=True, name="reduce_mean_2")
-    add_epsilon = mb.add(x=reduce_mean_2, y=1e-5, name="add_epsilon")
-    rsqrt = mb.rsqrt(x=add_epsilon, epsilon=1e-12, name="rsqrt")
-    mul_gamma = mb.mul(x=rsqrt, y=np.random.rand(1, 5, 1, 1), name="mul_gamma")
-    mul_2 = mb.mul(x=x, y=mul_gamma, name="mul_2")
-    mul_3 = mb.mul(x=main_reduce, y=mul_gamma, name="mul_3")
-    sub_beta = mb.sub(x=np.random.rand(1, 5, 1, 1), y=mul_3, name="sub_beta")
-    add_2 = mb.add(x=sub_beta, y=mul_2, name="add_2")
-    return add_2
+if os.getenv("ENABLE_EXPERIMENTAL_PASSES") == "1":
+    @mb.program(input_specs=[mb.TensorSpec(shape=shape)])
+    def instancenorm_2(x):
+        """
+        Identify the pattern:
+        y = (x - mean) / pow(variance + epsilon) * gamma + beta
 
-
-@mb.program(input_specs=[mb.TensorSpec(shape=shape)])
-def instancenorm_2(x):
-    """
-    Identify the pattern:
-    y = (x - mean) / pow(variance + epsilon) * gamma + beta
-
-    This pattern corresponds to, should be fused as instance_norm.
-    All of the following must be satisty:
-    1) Input is rank 4 tensor
-    2) Reduce operates on spatial dimensions axes=[-2, -1], or axes=[-3, -2] (a
-       channel first to channel last transpose would be inserted in such case)
-    3) Gamma and beta are both shape (C,) after squeeze, where C is number of channels
-
-
-    |----> sub0 ----------|                            const (0.5)
-    |       ^             |                                |
-    |       |             V                                V
-    x ---> main_reduce  square --> mean1 --> add_eps ---> pow       const_gamma   const_beta
-    |       |                                              |             |            |
-    |       V                                              V             V            V
-    |----> sub1 --------------------------------------> real_div --> mul_gamma --> add_beta --> ...
-    """
-
-    main_reduce = mb.reduce_mean(x=x, axes=[2, 3], keep_dims=True, name="main_reduce")
-    sub0 = mb.sub(x=x, y=main_reduce, name="sub0")
-    sub1 = mb.sub(x=x, y=main_reduce, name="sub1")
-    square = mb.square(x=sub0, name="square")
-    mean1 = mb.reduce_mean(x=square, axes=[2, 3], keep_dims=True, name="mean1")
-    add_epsilon = mb.add(x=mean1, y=1e-5, name="add_epsilon")
-    pow = mb.pow(x=add_epsilon, y=0.5, name="pow")
-    real_div = mb.real_div(x=sub1, y=pow, name="real_div")
-    mul_gamma = mb.mul(x=np.random.rand(1, 5, 1, 1), y=real_div, name="mul_gamma")
-    add_beta = mb.add(x=np.random.rand(1, 5, 1, 1), y=mul_gamma, name="add_beta")
-    return add_beta
+        This pattern corresponds to, should be fused as instance_norm.
+        All of the following must be satisty:
+        1) Input is rank 4 tensor
+        2) Reduce operates on spatial dimensions axes=[-2, -1], or axes=[-3, -2] (a
+           channel first to channel last transpose would be inserted in such case)
+        3) Gamma and beta are both shape (C,) after squeeze, where C is number of channels
 
 
-@mb.program(input_specs=[mb.TensorSpec(shape=shape)])
-def instancenorm_3(x):
-    """
-    Detect InstanceNorm pattern in TensorFlow-Addons.
+        |----> sub0 ----------|                            const (0.5)
+        |       ^             |                                |
+        |       |             V                                V
+        x ---> main_reduce  square --> mean1 --> add_eps ---> pow       const_gamma   const_beta
+        |       |                                              |             |            |
+        |       V                                              V             V            V
+        |----> sub1 --------------------------------------> real_div --> mul_gamma --> add_beta --> ...
+        """
 
-    This pattern corresponds to, should be fused as instance_norm.
-    All of the following must be satisty:
-    1) Input is rank 4 tensor
-    2) Reduce operates on spatial dimensions axes=[-2, -1], or axes=[-3, -2] (a
-       channel first to channel last transpose would be inserted in such case)
-    3) Gamma and beta are absent. Default values for gamma and beta would be used.
-
-           |-------------------------------------------------------|
-           |                                                       |
-           |                                                       V
-    x --> main_reduce   square --> mean1 --> add_eps --> rsqrt --> mul2 --> mul_sub
-    |      |             ^                                |                   |
-    |      V             |                                |                   |
-    | --> sub -----------|                                |                   |
-    |                                                     V                   V
-    |--------------------------------------------------> mul1 -------------> add --> ...
-    """
-
-    main_reduce = mb.reduce_mean(x=x, axes=[2, 3], keep_dims=True, name="main_reduce")
-    sub = mb.sub(x=x, y=main_reduce, name="sub")
-    square = mb.square(x=sub, name="square")
-    mean1 = mb.reduce_mean(x=square, axes=[2, 3], keep_dims=True, name="mean1")
-    add_epsilon = mb.add(x=mean1, y=1e-5, name="add_epsilon")  # epsilon
-    rsqrt = mb.rsqrt(x=add_epsilon, name="rsqrt")
-    mul1 = mb.mul(x=rsqrt, y=x, name="mul1")
-    mul2 = mb.mul(x=main_reduce, y=rsqrt, name="mul2")
-    mul_sub = mb.mul(x=mul2, y=-1, name="mul_sub")
-    add = mb.add(x=mul1, y=mul_sub, name="add")
-    return add
+        main_reduce = mb.reduce_mean(x=x, axes=[2, 3], keep_dims=True, name="main_reduce")
+        sub0 = mb.sub(x=x, y=main_reduce, name="sub0")
+        sub1 = mb.sub(x=x, y=main_reduce, name="sub1")
+        square = mb.square(x=sub0, name="square")
+        mean1 = mb.reduce_mean(x=square, axes=[2, 3], keep_dims=True, name="mean1")
+        add_epsilon = mb.add(x=mean1, y=1e-5, name="add_epsilon")
+        pow = mb.pow(x=add_epsilon, y=0.5, name="pow")
+        real_div = mb.real_div(x=sub1, y=pow, name="real_div")
+        mul_gamma = mb.mul(x=np.random.rand(1, 5, 1, 1), y=real_div, name="mul_gamma")
+        add_beta = mb.add(x=np.random.rand(1, 5, 1, 1), y=mul_gamma, name="add_beta")
+        return add_beta
 
 
-@mb.program(input_specs=[mb.TensorSpec(shape=shape)])
-def instancenorm_4(x):
-    """
-    Identify the pattern:
-    y = x * [gamma * rsqrt(variance + eps)] + (beta - mean * [gamma * rsqrt(variance + eps)])
+if os.getenv("ENABLE_EXPERIMENTAL_PASSES") == "1":
+    @mb.program(input_specs=[mb.TensorSpec(shape=shape)])
+    def instancenorm_3(x):
+        """
+        Detect InstanceNorm pattern in TensorFlow-Addons.
 
-    This pattern corresponds to, should be fused as instance_norm.
-    All of the following must be satisty:
-    1) Input is rank 4 tensor
-    2) Reduce operates on spatial dimensions axes=[-2, -1], or axes=[-3, -2] (a
-       channel first to channel last transpose would be inserted in such case)
-    3) Gamma and beta are both shape (C,) after squeeze, where C is number of channels
+        This pattern corresponds to, should be fused as instance_norm.
+        All of the following must be satisty:
+        1) Input is rank 4 tensor
+        2) Reduce operates on spatial dimensions axes=[-2, -1], or axes=[-3, -2] (a
+           channel first to channel last transpose would be inserted in such case)
+        3) Gamma and beta are absent. Default values for gamma and beta would be used.
 
-    |-----------|
-    |           V
-    |------> mul_square1 -------------> sum1 -----> mul_mean1
-    |                                                   |
-    |                                                   V
-    x --> main_reduce --> mul_mean ==> mul_square --> sub_variance --> add_eps --> rsqrt
-    |                        |                                                      |
-    |                        |                                                      V
-    |                        |                                                  mul_gamma
-    |                        |                                                      |
-    |                        |                                            |----------------|
-    |                        |                                            |                V
-    |                        |--------------------------------------------+-------------> mul2
-    |                                                                     V                |
-    |------------------------------------------------------------------> mul1              |
-                                                                          |                V
-                                                                          |             sub_beta --> add --> [...]
-                                                                          |                           ^
-                                                                          |---------------------------|
-    """
-    mul_square1 = mb.mul(x=x, y=x, name="mul_square1")
-    main_reduce = mb.reduce_sum(x=x, axes=[2, 3], keep_dims=True, name="main_reduce")
-    mul_mean = mb.mul(x=main_reduce, y=3.3333334e-05, name="mul_mean")  # dummy value here
-    mul_square = mb.mul(x=mul_mean, y=mul_mean, name="mul_square")
-    sum1 = mb.reduce_sum(x=mul_square1, axes=[2, 3], keep_dims=True, name="sum1")
-    mul_mean1 = mb.mul(x=sum1, y=8.333333e-06, name="mul_mean1")  # dummy value here
-    sub_variance = mb.sub(x=mul_mean1, y=mul_square, name="sub_variance")
-    add_epsilon = mb.add(x=sub_variance, y=1e-5, name="add_epsilon")  # epsilon
-    rsqrt = mb.rsqrt(x=add_epsilon, name="rsqrt")
-    mul_gamma = mb.mul(x=rsqrt, y=np.random.rand(1, 5, 1, 1), name="mul_gamma")
-    mul1 = mb.mul(x=mul_gamma, y=x, name="mul1")
-    mul2 = mb.mul(x=mul_mean, y=mul_gamma, name="mul2")
-    sub_beta = mb.sub(x=np.random.rand(1, 5, 1, 1), y=mul2, name="sub_beta")
-    add = mb.add(x=mul1, y=sub_beta, name="add")
-    return add
+               |-------------------------------------------------------|
+               |                                                       |
+               |                                                       V
+        x --> main_reduce   square --> mean1 --> add_eps --> rsqrt --> mul2 --> mul_sub
+        |      |             ^                                |                   |
+        |      V             |                                |                   |
+        | --> sub -----------|                                |                   |
+        |                                                     V                   V
+        |--------------------------------------------------> mul1 -------------> add --> ...
+        """
+
+        main_reduce = mb.reduce_mean(x=x, axes=[2, 3], keep_dims=True, name="main_reduce")
+        sub = mb.sub(x=x, y=main_reduce, name="sub")
+        square = mb.square(x=sub, name="square")
+        mean1 = mb.reduce_mean(x=square, axes=[2, 3], keep_dims=True, name="mean1")
+        add_epsilon = mb.add(x=mean1, y=1e-5, name="add_epsilon")  # epsilon
+        rsqrt = mb.rsqrt(x=add_epsilon, name="rsqrt")
+        mul1 = mb.mul(x=rsqrt, y=x, name="mul1")
+        mul2 = mb.mul(x=main_reduce, y=rsqrt, name="mul2")
+        mul_sub = mb.mul(x=mul2, y=-1, name="mul_sub")
+        add = mb.add(x=mul1, y=mul_sub, name="add")
+        return add
+
+
+if os.getenv("ENABLE_EXPERIMENTAL_PASSES") == "1":
+    @mb.program(input_specs=[mb.TensorSpec(shape=shape)])
+    def instancenorm_4(x):
+        """
+        Identify the pattern:
+        y = x * [gamma * rsqrt(variance + eps)] + (beta - mean * [gamma * rsqrt(variance + eps)])
+
+        This pattern corresponds to, should be fused as instance_norm.
+        All of the following must be satisty:
+        1) Input is rank 4 tensor
+        2) Reduce operates on spatial dimensions axes=[-2, -1], or axes=[-3, -2] (a
+           channel first to channel last transpose would be inserted in such case)
+        3) Gamma and beta are both shape (C,) after squeeze, where C is number of channels
+
+        |-----------|
+        |           V
+        |------> mul_square1 -------------> sum1 -----> mul_mean1
+        |                                                   |
+        |                                                   V
+        x --> main_reduce --> mul_mean ==> mul_square --> sub_variance --> add_eps --> rsqrt
+        |                        |                                                      |
+        |                        |                                                      V
+        |                        |                                                  mul_gamma
+        |                        |                                                      |
+        |                        |                                            |----------------|
+        |                        |                                            |                V
+        |                        |--------------------------------------------+-------------> mul2
+        |                                                                     V                |
+        |------------------------------------------------------------------> mul1              |
+                                                                              |                V
+                                                                              |             sub_beta --> add --> [...]
+                                                                              |                           ^
+                                                                              |---------------------------|
+        """
+        mul_square1 = mb.mul(x=x, y=x, name="mul_square1")
+        main_reduce = mb.reduce_sum(x=x, axes=[2, 3], keep_dims=True, name="main_reduce")
+        mul_mean = mb.mul(x=main_reduce, y=3.3333334e-05, name="mul_mean")  # dummy value here
+        mul_square = mb.mul(x=mul_mean, y=mul_mean, name="mul_square")
+        sum1 = mb.reduce_sum(x=mul_square1, axes=[2, 3], keep_dims=True, name="sum1")
+        mul_mean1 = mb.mul(x=sum1, y=8.333333e-06, name="mul_mean1")  # dummy value here
+        sub_variance = mb.sub(x=mul_mean1, y=mul_square, name="sub_variance")
+        add_epsilon = mb.add(x=sub_variance, y=1e-5, name="add_epsilon")  # epsilon
+        rsqrt = mb.rsqrt(x=add_epsilon, name="rsqrt")
+        mul_gamma = mb.mul(x=rsqrt, y=np.random.rand(1, 5, 1, 1), name="mul_gamma")
+        mul1 = mb.mul(x=mul_gamma, y=x, name="mul1")
+        mul2 = mb.mul(x=mul_mean, y=mul_gamma, name="mul2")
+        sub_beta = mb.sub(x=np.random.rand(1, 5, 1, 1), y=mul2, name="sub_beta")
+        add = mb.add(x=mul1, y=sub_beta, name="add")
+        return add
 
 def instancenorm_1_constraints(pattern):
     passed = True

@@ -3,11 +3,13 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import itertools
+import numpy as np
+import pytest
+
 from coremltools.converters.mil import testing_reqs
-from coremltools.converters.mil.testing_reqs import *
 from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import (
     make_tf_graph,
-    layer_counts,
     TensorFlowBaseTest
 )
 backends = testing_reqs.backends

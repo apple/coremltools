@@ -4,6 +4,7 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
+from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil import Function
 import re
 import collections
@@ -18,6 +19,7 @@ def _gen_new_name(seen_names, curr_name):
         new_name = curr_name + "_" + str(i)
         if new_name not in seen_names:
             return new_name
+
 
 def _deduplicate_block(block, func_outputs, seen_var_names, seen_op_names):
     """
@@ -43,7 +45,8 @@ def _deduplicate_block(block, func_outputs, seen_var_names, seen_op_names):
             v.name = _gen_new_name(seen_var_names, v.name)
             seen_var_names.add(v.name)
 
-def ensure_unique_var_names(v_set):
+
+def _ensure_unique_var_names(v_set):
     """
     v_set: set[Variable]
 
@@ -58,7 +61,7 @@ def ensure_unique_var_names(v_set):
                 'function\'s input and output')
 
 @register_pass(namespace="common")
-def dedup_op_and_var_names(prog):
+class dedup_op_and_var_names(AbstractGraphPass):
     """
     For each function, this pass renames ops and variables with the same name
     as any preceding ops/variables across all scopes in the given function,
@@ -73,14 +76,14 @@ def dedup_op_and_var_names(prog):
         %input = some_op(...)
         return %input
     """
-
-    for _, func in prog.functions.items():
-        # Handle function input/outputs as they cannot be changed (to maintain
-        # user interface)
-        inputs = list(func.function_inputs)
-        io_vars = set(inputs + func.outputs)
-        ensure_unique_var_names(io_vars)
-        seen_var_names = set([v.name for v in io_vars])
-        seen_op_names = set()
-        _deduplicate_block(func, set(func.outputs),
-                seen_var_names, seen_op_names)
+    def apply(self, prog):
+        for func in prog.functions.values():
+            # Handle function input/outputs as they cannot be changed (to maintain
+            # user interface)
+            inputs = list(func.function_inputs)
+            io_vars = set(inputs + func.outputs)
+            _ensure_unique_var_names(io_vars)
+            seen_var_names = set([v.name for v in io_vars])
+            seen_op_names = set()
+            _deduplicate_block(func, set(func.outputs),
+                    seen_var_names, seen_op_names)
