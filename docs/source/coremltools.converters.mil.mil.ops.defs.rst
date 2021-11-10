@@ -230,7 +230,6 @@ tensor\_operation
    .. autoclass:: split
    .. autoclass:: stack
    .. autoclass:: identity
-   .. autoclass:: isfinite
 
 
 tensor\_transformation

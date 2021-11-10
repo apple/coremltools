@@ -423,17 +423,19 @@ class pad(Operation):
 
     Parameters
     ----------
+    
     x: tensor<[\*D_in],T>  (Required)
 
     pad: tensor<[2\*N],i32> (Required)
-        * ``N <= D_in``: Last ``N`` dimensions of ``x`` are padded as follows: For
-          each dimension ``i`` of ``x`` if ``i >= D_in - N``:
+        ``N <= D_in``. Last ``N`` dimensions of ``x`` are padded as follows:
+        
+        * For each dimension ``i`` of ``x`` if ``i >= D_in - N``:
             * pad ``pad[2*i]`` elements before ``x[..,i,..]``
             * pad ``pad[2*i+1]`` elements after ``x[..,i,..]``
         * If mode is "reflect" then ``pad[2*i]`` and ``pad[2*i+1]`` can be at
-        most ``D[i]-1``.
+          most ``D[i]-1``.
         * If mode is "replicate" then ``pad[2*i]`` and ``pad[2*i+1]`` can be
-        at most ``D[i]``.
+          at most ``D[i]``.
 
     mode: const<str> (Optional)
         * Default to ``constant``.

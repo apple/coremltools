@@ -272,28 +272,29 @@ class NeuralNetworkBuilder(object):
 
         Parameters
         ----------
+
         input_features: [(str, datatypes.Array)] or None
             List of input feature of the network. 
             Each feature is a ``(name, array)`` tuple, where ``name`` is the 
             name of the feature, and ``array`` is a ``datatype.Array`` object 
             describing the feature type.
             
-            When ``spec`` is ``None`` (building from scratch), ``input_features`` must not be ``None``.
+            * When ``spec`` is ``None`` (building from scratch), ``input_features`` must not be ``None``.
 
-            When ``spec`` is not ``None``, ``input_features`` will be ignored; 
-            the input feature of the existing spec will be used instead.
+            * When ``spec`` is not ``None``, ``input_features`` will be ignored; 
+              the input feature of the existing spec will be used instead.
 
         output_features: [(str, datatypes.Array or None)] or None
             List of output feature of the network. Each feature is a 
             ``(name, array)`` tuple, where ``name`` is the name of the feature, 
             and ``array`` is a ``datatypes.Array`` object describing the feature type.
             
-            The ``array`` can be ``None`` if not known.
+            * The ``array`` can be ``None`` if not known.
             
-            When ``spec`` is ``None`` (building from scratch), ``output_features`` must not be ``None``.
+            * When ``spec`` is ``None`` (building from scratch), ``output_features`` must not be ``None``.
             
-            When ``spec`` is not ``None``, ``output_features`` will be ignored; 
-            the output feature of the existing spec will be used instead.
+            * When ``spec`` is not ``None``, ``output_features`` will be ignored; 
+              the output feature of the existing spec will be used instead.
 
         mode: str ('classifier', 'regressor' or None)
             Mode (one of ``'classifier'``, ``'regressor'``, or ``None``).
@@ -2285,35 +2286,45 @@ class NeuralNetworkBuilder(object):
 
         Parameters
         ----------
+        
         name: str
             The name of this layer.
+
         kernel_channels: int
             Number of channels for the convolution kernels.
+
         output_channels: int
             Number of filter kernels. This is equal to the number of channels in the output blob.
+
         height: int
             Height of each kernel.
+
         width: int
             Width of each kernel.
+
         stride_height: int
             Stride along the height direction.
+
         stride_width: int
             Stride along the height direction.
+
         border_mode: str
             Option for the padding type and output blob shape. Can be either 'valid' or 'same'.
+ 
         groups: int
             Number of kernel groups. Input is divided into groups along the channel axis. 
             Each kernel group share the same weights.
+ 
         W: numpy.array or bytes() or None
 
             Weight of the convolution kernels.
 
             * If ``is_deconv`` is False, ``W`` should have 
               shape ``(height, width, kernel_channels, output_channels)``, where:
-                 ``kernel_channel = input_channels / groups``.
+                 ``kernel_channel = input_channels / groups``
             * If ``is_deconv`` is True, ``W`` should have 
               shape ``(height, width, kernel_channels, output_channels / groups)``, where:
-                 ``kernel_channel = input_channels``.
+                 ``kernel_channel = input_channels``
 
             If ``W`` is of type ``bytes()`` (quantized), other quantization 
             related arguments must be provided as well (see below).
@@ -2324,6 +2335,7 @@ class NeuralNetworkBuilder(object):
 
         b: numpy.array
             Biases of the convolution kernels. ``b`` should have shape ``(outputChannels, )``.
+
         has_bias: boolean
             Whether bias is ignored.
 
@@ -2340,34 +2352,32 @@ class NeuralNetworkBuilder(object):
         output_shape: tuple or None
             Either ``None`` or a 2-tuple, specifying the output 
             shape ``(output_height, output_width)``. 
-            Used only when ``is_deconv == True``.
-            When ``is_deconv == False``, this parameter is ignored.
-            If it is ``None``, the output shape is calculated automatically using the ``border_mode``.
+            
+            - Used only when ``is_deconv == True``.
+            - When ``is_deconv == False``, this parameter is ignored.
+            - If it is ``None``, the output shape is calculated automatically using the ``border_mode``.
 
         input_name: str or list of str
             The input blob name(s) of this layer.
+
         output_name: str
             The output blob name of this layer.
+
         dilation_factors: list of int
             Dilation factors across height and width directions. Must be a list of two positive integers.
             Defaults to ``[1, 1]``.
+
         padding_top, padding_bottom, padding_left, padding_right: int
-            values of height (top, bottom) and width (left, right) padding 
+            Values of height (top, bottom) and width (left, right) padding 
             to be used if ``border_more`` is ``"valid"``.
+
         same_padding_asymmetry_mode: str
             Type of asymmetric padding to be used when  ``border_mode`` is ``'same'``.
             Can be either ``'BOTTOM_RIGHT_HEAVY'`` or  ``'TOP_LEFT_HEAVY'``.
-		Depthwise convolution
-			Depthwise convolution is a special case of convolution, in which:
-			
-            	* ``kernel_channels = 1 (== input_channels / groups)``
-            	* ``output_channels = channel_multiplier * input_channels``
-           	* ``groups = input_channels``
-            	* ``W``: ``[Kernel_height, Kernel_width, 1, channel_multiplier * input_channels]``
 
 		Quantization
 			Quantization arguments expected in ``kwargs``, when ``W`` is of type ``bytes()``.
-
+        
 				quantization_type: str
 					When weights are quantized (that is, ``W`` is of type ``bytes()``), 
 					this should be either ``"linear"`` or ``"lut"``.
@@ -2387,6 +2397,14 @@ class NeuralNetworkBuilder(object):
 				quant_lut: numpy.array(dtype=numpy.float32)
 					the LUT (look up table) to be used with LUT quantization. 
 					Must be of length 2^n bits.
+
+        Depthwise convolution
+        	Depthwise convolution is a special case of convolution, in which:
+        
+                  * ``kernel_channels = 1 (== input_channels / groups)``
+                  * ``output_channels = channel_multiplier * input_channels``
+                  * ``groups = input_channels``
+                  * ``W``: ``[Kernel_height, Kernel_width, 1, channel_multiplier * input_channels]``
 
         See Also
         --------
@@ -2553,21 +2571,28 @@ class NeuralNetworkBuilder(object):
 
         Parameters
         ----------
+
         name: str
             The name of this layer.
+
         input_channels: int
             Number of input channels.
+
         output_channels: int
             Number of filter kernels. This is equal to the number of channels in the output blob.
+
         depth: int
             Depth of each kernel.
+
         height: int
             Height of each kernel.
+
         width: int
             Width of each kernel.
+
         W: numpy.array or bytes()
-            Weight of the convolution kernels.
-            - ``W`` should have shape:
+            Weight of the convolution kernels. ``W`` should have shape:
+
             - If ``deconv`` is False:
             
                  ``(output_channels, kernel_channels, depth, height, width)``, where:
@@ -2582,34 +2607,44 @@ class NeuralNetworkBuilder(object):
               
         b: numpy.array
             Biases of the convolution kernels. ``b`` should have shape ``(outputChannels, )``.
+
         has_bias: boolean
             Whether bias is ignored.
             - If True, bias is not ignored.
             - If False, bias is ignored.
+
         groups: int
             Number of kernel groups. Input is divided into groups along the channel axis. Each
             kernel group share the same weights. Defaults to 1.
+
         stride_depth, stride_height, stride_width: int
             Stride along the depth, height, and width directions, respectively. Must all be positive
             integers. Defaults to 1.
+
         dilation_depth, dilation_width, dilation_height: int
             Dilation factors across depth, height, and width directions. Must all be positive
             integers. Defaults to 1 in each dimension.
+
         is_deconv: bool
             True if this is Convolution Transpose, otherwise False.
+
         output_shape: None or Tuple of int
             Applicable only for Deconvolution layer.
             ``None`` if Convolution.
             Tuple of length 3 if Convolution Transpose.
+
         padding_mode: str
             Option for the padding type and output blob shape. 
             Can be ``'custom'``, ``'valid'``, or ``'same'``.
             Defaults to ``'valid'``. Case-insensitive.
+
         padding_front, padding_back, padding_top, padding_bottom, padding_left, padding_right: int
             Values of depth (front, back), height (top, bottom), and width (left, right) padding to
             be used. Must all be positive integers. All default to 0.
+
         input_name: str or list of str
             The input blob name(s) of this layer.
+
         output_name: str
             The output blob name of this layer.
 
@@ -2733,39 +2768,54 @@ class NeuralNetworkBuilder(object):
 
         Parameters
         ----------
+
         name: str
             The name of this layer.
+
         height: int
             Height of pooling region.
+
         width: int
             Width of pooling region.
+
         stride_height: int
             Stride along the height direction.
+
         stride_width: int
             Stride along the width direction.
+
         layer_type: str
             Type of pooling performed. Can either be ``'MAX'``, ``'AVERAGE'``, or ``'L2'``.
+
         padding_type: str
             Option for the type of padding and output blob shape. Can be either 
             ``'VALID'``, ``'SAME'``, or ``'INCLUDE_LAST_PIXEL'``.
+
         input_name: str
             The input blob name of this layer.
+
         output_name: str
             The output blob name of this layer.
+
         exclude_pad_area: boolean
-            Whether to exclude padded area in the ``'AVERAGE'`` pooling operation, default: true.
+            Whether to exclude padded area in the ``'AVERAGE'`` pooling operation,
+            default: true. This flag is only used with average pooling.
+            
             - If True, the value of the padded area will be excluded.
             - If False, the padded area will be included.
-            This flag is only used with average pooling.
+
         is_global: boolean
             Whether the pooling operation is global. Defaults to False.
+            
             - If True, the pooling operation is global. The pooling region 
               is of the same size of the input blob.
               Parameters ``height``, ``width``, ``stride_height``, and ``stride_width`` will be ignored.
             - If False, the pooling operation is not global.
+
         padding_top, padding_bottom, padding_left, padding_right: int
-            values of height (top, bottom) and width (left, right) padding 
+            Values of height (top, bottom) and width (left, right) padding 
             to be used if padding type is ``"VALID"`` or ``"INCLUDE_LAST_PIXEL"``.
+
         same_padding_asymmetry_mode: str.
             Type of asymmetric padding to be used when ``padding_type = 'SAME'``.
             Can be either ``'BOTTOM_RIGHT_HEAVY'`` or ``'TOP_LEFT_HEAVY'``.
@@ -3558,7 +3608,7 @@ class NeuralNetworkBuilder(object):
             If ``True``, a vector of 1s is added to forget gate bias. Defaults to ``False``.
         coupled_input_forget_gate: boolean
             If ``True``, the input gate and forget gate is coupled. That is, the
-             forget gate is not used.
+            forget gate is not used.
             Defaults to ``False``.
         cell_clip_threshold: float
             The limit on the maximum and minimum values on the cell state.
@@ -4534,31 +4584,42 @@ class NeuralNetworkBuilder(object):
 
         Parameters
         ----------
+
         name: str
             The name of this layer.
+
         input_names: list of str
- 
-            Must be a list of two names: image feature map and crop indices/RoI input.
-               * First input corresponds to a blob with shape ``[1, Batch, C, H_in, W_in]``. This represents a batch of input image feature data with ``C`` channels.
-               * The second input shape must be ``[N, 1, 4, 1, 1]`` or ``[N, 1, 5, 1, 1]``. This represents the bounding box coordinates for ``N`` patches/RoIs.
-            *  ``N``: number of patches/RoIs to be extracted
-            * If RoI shape = ``[N, 1, 4, 1, 1]``, the channel axis corresponds to the four coordinates specifying the bounding box.
+            * Must be a list of two names: image feature map and crop indices/RoI input.
+               * First input corresponds to a blob with shape ``[1, Batch, C, H_in, W_in]``.
+                 This represents a batch of input image feature data with ``C`` channels.
+               * The second input shape must be ``[N, 1, 4, 1, 1]`` or ``[N, 1, 5, 1, 1]``.
+                 This represents the bounding box coordinates for ``N`` patches/RoIs.
+            * ``N``: number of patches/RoIs to be extracted.
+            * If RoI shape = ``[N, 1, 4, 1, 1]``, the channel axis corresponds
+              to the four coordinates specifying the bounding box.
               All the N~ RoIs are extracted from all the batches of the input.
-            * If RoI shape = ``[N, 1, 5, 1, 1]``, the first element of the channel axis specifies the input batch id from which to extract the RoI and
-              must be in the interval ``[0, Batch - 1]``. That is, ``n`` -th RoI is extracted from the ``RoI[n,0,0,0]`` -th input batch id.
-              The last four elements of the channel axis specify the bounding box coordinates.
+            * If RoI shape = ``[N, 1, 5, 1, 1]``, the first element of the
+              channel axis specifies the input batch id from which to extract the RoI and
+              must be in the interval ``[0, Batch - 1]``. That is, ``n`` -th RoI is 
+              extracted from the ``RoI[n,0,0,0]`` -th input batch id.
+              The last four elements of the channel axis specify the
+              bounding box coordinates.
 
         output_name: str
             The output blob name of this layer.
+
         target_height: int
             Output height dimension.
+
         target_width: int
             Output width dimension.
+
         mode: str
             * The following values are supported: 
               ``'STRICT_ALIGN_ENDPOINTS_MODE'``, ``'ALIGN_ENDPOINTS_MODE'``, 
               ``'UPSAMPLE_MODE'``, ``'ROI_ALIGN_MODE'``.
             * This parameter determines the sampling grid used for bilinear interpolation.
+
         normalized_roi: bool
             * If true the bounding box coordinates must be in the interval ``[0, 1]``.
               They are scaled by ``(input_height - 1)``, ``(input_width - 1)``; 
@@ -4566,6 +4627,7 @@ class NeuralNetworkBuilder(object):
             * If false the bounding box coordinates must be in the interval
               ``[0, input_height - 1]`` and ``[0, input_width - 1]``, 
               respectively for height and width dimensions.
+
         box_indices_mode: str
             * The following values are supported: 
               ``'CORNERS_HEIGHT_FIRST'``, ``'CORNERS_WIDTH_FIRST'``, 
@@ -4575,6 +4637,7 @@ class NeuralNetworkBuilder(object):
                 * ``'CORNERS_WIDTH_FIRST'``: ``[w_start, h_start, w_end, h_end]``
                 * ``'CENTER_SIZE_HEIGHT_FIRST'``: ``[h_center, w_center, box_height, box_width]``
                 * ``'CENTER_SIZE_WIDTH_FIRST'``: ``[w_center, h_center, box_width, box_height]``
+
         spatial_scale: float
             Additional spatial scale that multiplies the bounding box coordinates.
             Generally used while implementing the RoI Align layer,
