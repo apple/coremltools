@@ -81,7 +81,19 @@
 <span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">._op_reqs</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">._op_reqs</span> <span class="kn">import</span> <span class="n">register_op</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">DefaultInputs</span><span class="p">,</span>
+    <span class="n">FloatInputType</span><span class="p">,</span>
+    <span class="n">InputSpec</span><span class="p">,</span>
+    <span class="n">IntInputType</span><span class="p">,</span>
+    <span class="n">IntTensorInputType</span><span class="p">,</span>
+    <span class="n">Operation</span><span class="p">,</span>
+    <span class="n">precondition</span><span class="p">,</span>
+    <span class="n">TensorInputType</span><span class="p">,</span>
+    <span class="n">types</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.operation</span> <span class="kn">import</span> <span class="n">VALUE</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.types.symbolic</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">any_symbolic</span><span class="p">,</span>
 <span class="p">)</span>
@@ -369,7 +381,7 @@
 <span class="sd">    Apply local response normalization to the n-dimensional input tensor:</span>
 <span class="sd">    </span>
 <span class="sd">    .. math::</span>
-<span class="sd">       x_i \\leftarrow \\dfrac{x_i}{\\left ( k + \\dfrac{\\alpha}{\text{size}} \\sum_j x_j^2 \\right )^\\beta}</span>
+<span class="sd">       x_i \\leftarrow \\dfrac{x_i}{\\left ( k + \\dfrac{\\alpha}{\\text{size}} \\sum_j x_j^2 \\right )^\\beta}</span>
 <span class="sd">    </span>
 <span class="sd">    </span>
 <span class="sd">    Parameters</span>

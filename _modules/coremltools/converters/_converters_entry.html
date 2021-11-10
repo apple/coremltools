@@ -123,45 +123,54 @@
     <span class="n">compute_precision</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">skip_model_load</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="n">compute_units</span><span class="o">=</span><span class="n">_ComputeUnit</span><span class="o">.</span><span class="n">ALL</span><span class="p">,</span>
-    <span class="o">**</span><span class="n">kwargs</span>
+    <span class="n">useCPUOnly</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">package_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">debug</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
 <span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Convert a TensorFlow or PyTorch model to the Core ML model format as either</span>
-<span class="sd">    a neural network or an ML program. To learn about the differences, see</span>
+<span class="sd">    Convert a TensorFlow or PyTorch model to the Core ML model format as either a neural network or an ML program. </span>
+<span class="sd">    To learn about the differences, see</span>
 <span class="sd">    `ML Programs &lt;https://coremltools.readme.io/docs/ml-programs&gt;`_.</span>
+<span class="sd">    Some parameters and requirements differ by TensorFlow and PyTorch frameworks.</span>
 
-<span class="sd">    This function is aliased as ``ct.convert`` in examples and guides. Some</span>
-<span class="sd">    parameters and requirements differ by TensorFlow and PyTorch frameworks.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
+<span class="sd">    </span>
 <span class="sd">    model :</span>
 <span class="sd">        TensorFlow 1, TensorFlow 2, or PyTorch model in one of the following</span>
-<span class="sd">        formats:</span>
+<span class="sd">        formats.</span>
 
-<span class="sd">        For TensorFlow versions 1.x:</span>
+<span class="sd">        * TensorFlow versions 1.x</span>
+<span class="sd">        </span>
 <span class="sd">            - Frozen `tf.Graph &lt;https://www.tensorflow.org/api_docs/python/tf/Graph&gt;`_</span>
 <span class="sd">            - Frozen graph (``.pb``) file path</span>
 <span class="sd">            - `tf.keras.Model &lt;https://www.tensorflow.org/api_docs/python/tf/keras&gt;`_</span>
 <span class="sd">            -  `HDF5 &lt;https://keras.io/api/models/model_saving_apis/&gt;`_ file path (``.h5``)</span>
 <span class="sd">            - `SavedModel &lt;https://www.tensorflow.org/guide/saved_model&gt;`_ directory path</span>
-<span class="sd">        For TensorFlow versions 2.x:</span>
+
+<span class="sd">        * TensorFlow versions 2.x</span>
+<span class="sd">        </span>
 <span class="sd">            - `tf.keras.Model &lt;https://www.tensorflow.org/api_docs/python/tf/keras&gt;`_</span>
 <span class="sd">            - `HDF5 file path &lt;https://keras.io/api/models/model_saving_apis/&gt;`_ (``.h5``)</span>
 <span class="sd">            - `SavedModel &lt;https://www.tensorflow.org/guide/saved_model&gt;`_ directory path</span>
 <span class="sd">            - A `concrete function &lt;https://www.tensorflow.org/guide/concrete_function&gt;`_</span>
-<span class="sd">        For PyTorch:</span>
+
+<span class="sd">        * PyTorch</span>
+<span class="sd">        </span>
 <span class="sd">            - A `TorchScript &lt;https://pytorch.org/docs/stable/jit.html&gt;`_ object</span>
 <span class="sd">            - Path to a ``.pt`` file</span>
 
 <span class="sd">    source : str (optional)</span>
+<span class="sd">    </span>
 <span class="sd">        One of [``auto``, ``tensorflow``, ``pytorch``, ``milinternal``]. ``auto``</span>
 <span class="sd">        determines the framework automatically for most cases. Raises</span>
 <span class="sd">        ``ValueError`` if it fails to determine the source framework.</span>
 
 <span class="sd">    inputs : list of ``TensorType`` or ``ImageType``</span>
 
-<span class="sd">        TensorFlow 1 and 2:</span>
+<span class="sd">        * TensorFlow 1 and 2</span>
+
 <span class="sd">            - The ``inputs`` parameter is optional. If not provided, the inputs</span>
 <span class="sd">              are placeholder nodes in the model (if the model is frozen graph)</span>
 <span class="sd">              or function inputs (if the model is a ``tf.function``).</span>
@@ -171,7 +180,8 @@
 <span class="sd">              specified. ``shape`` is optional.</span>
 <span class="sd">            - If ``inputs`` is provided, it must be a flat list.</span>
 
-<span class="sd">        PyTorch:</span>
+<span class="sd">        * PyTorch</span>
+
 <span class="sd">            - The ``inputs`` parameter is required.</span>
 <span class="sd">            - ``inputs`` may be a nested list or tuple.</span>
 <span class="sd">            - ``TensorType`` and ``ImageType`` in ``inputs`` must have the ``name``</span>
@@ -179,7 +189,8 @@
 
 <span class="sd">    outputs : list[str] (optional)</span>
 
-<span class="sd">        TensorFlow 1 and 2:</span>
+<span class="sd">        * TensorFlow 1 and 2</span>
+
 <span class="sd">            - The ``outputs`` parameter is optional.</span>
 
 <span class="sd">            - If specified, ``outputs`` is a list of string representing node</span>
@@ -188,19 +199,20 @@
 <span class="sd">            - If ``outputs`` is not specified, the converter infers outputs to</span>
 <span class="sd">              all be terminal identity nodes.</span>
 
-<span class="sd">        PyTorch:</span>
+<span class="sd">        * PyTorch</span>
+
 <span class="sd">            - ``outputs`` must not be specified.</span>
 
 <span class="sd">    classifier_config : ClassifierConfig class (optional)</span>
 <span class="sd">        The configuration if the MLModel is intended to be a classifier.</span>
 
 <span class="sd">    minimum_deployment_target : coremltools.target enumeration (optional)</span>
-<span class="sd">        - One of the members of enum ``coremltools.target``.</span>
-<span class="sd">        - The value of this parameter determines the type of the model</span>
-<span class="sd">          reperesentation produced by the converter. Alternatively, you can use</span>
-<span class="sd">          the ``convert_to`` parameter to specify the model type (see the</span>
-<span class="sd">          ``convert_to`` parameter). To learn about the differences between</span>
-<span class="sd">          neural networks and ML programs, see `ML Programs &lt;https://coremltools.readme.io/docs/ml-programs&gt;`_.</span>
+<span class="sd">        A member of the ``coremltools.target`` enum.</span>
+<span class="sd">        The value of this parameter determines the type of the model</span>
+<span class="sd">        representation produced by the converter. To learn about the differences between</span>
+<span class="sd">        neural networks and ML programs, see</span>
+<span class="sd">        `ML Programs &lt;https://coremltools.readme.io/docs/ml-programs&gt;`_.</span>
+
 <span class="sd">        - The converter produces a neural network (``neuralnetwork``) if:</span>
 <span class="sd">          ::</span>
 <span class="sd">             minimum_deployment_target &lt;= coremltools.target.iOS14/</span>
@@ -227,13 +239,12 @@
 <span class="sd">            convert_to=&quot;mlprogram&quot;, minimum_deployment_target=coremltools.target.iOS14</span>
 
 <span class="sd">    convert_to : str (optional)</span>
-<span class="sd">        - Must be one of [``&#39;neuralnetwork&#39;``, ``&#39;mlprogram&#39;``, ``&#39;milinternal&#39;``].</span>
-<span class="sd">        - The value of this parameter determines the type of the model</span>
-<span class="sd">          reperesentation produced by the converter. Alternatively, you can use</span>
-<span class="sd">          the ``minimum_deployment_target`` parameter to specify the model type</span>
-<span class="sd">          (see the ``minimum_deployment_target`` parameter). To learn about the</span>
-<span class="sd">          differences between neural networks and ML programs, see</span>
-<span class="sd">          `ML Programs &lt;https://coremltools.readme.io/docs/ml-programs&gt;`_.</span>
+<span class="sd">        Must be one of [``&#39;neuralnetwork&#39;``, ``&#39;mlprogram&#39;``, ``&#39;milinternal&#39;``].</span>
+<span class="sd">        The value of this parameter determines the type of the model</span>
+<span class="sd">        representation produced by the converter. To learn about the</span>
+<span class="sd">        differences between neural networks and ML programs, see</span>
+<span class="sd">        `ML Programs &lt;https://coremltools.readme.io/docs/ml-programs&gt;`_.</span>
+<span class="sd">        </span>
 <span class="sd">        - ``&#39;neuralnetwork&#39;``: Returns an MLModel (``coremltools.models.MLModel``)</span>
 <span class="sd">          containing a NeuralNetwork proto, which is the original Core ML format.</span>
 <span class="sd">          The model saved from this returned object is executable either on</span>
@@ -256,34 +267,35 @@
 <span class="sd">          parameter is specified, the converter produces the neural network</span>
 <span class="sd">          model type with as minimum of a deployment target as possible.</span>
 
-<span class="sd">    compute_precision :</span>
-<span class="sd">    coremltools.precision enumeration or ct.transform.FP16ComputePrecision() (optional)</span>
-<span class="sd">        - Must be one of the following:</span>
-<span class="sd">            - ``coremltools.precision.FLOAT16``</span>
-<span class="sd">                - The following transform is applied:</span>
-<span class="sd">                  ::</span>
-<span class="sd">                      coremltools.transform.FP16ComputePrecision(op_selector=</span>
-<span class="sd">                                                             lambda op:True)</span>
+<span class="sd">    compute_precision : coremltools.precision enumeration or ct.transform.FP16ComputePrecision() (optional)</span>
 
-<span class="sd">                  The above transform injects ``cast`` ops to convert the</span>
-<span class="sd">                  float32 dtypes of intermediate tensors to float16.</span>
-<span class="sd">            - ``coremltools.precision.FLOAT32``</span>
-<span class="sd">                - No transform is applied. The original float32 tensor dtype in</span>
-<span class="sd">                  the source model is preserved.</span>
-<span class="sd">            - ``coremltools.transform.FP16ComputePrecision(op_selector=...)``</span>
-<span class="sd">                - Use the above to control which tensors are cast to float16.</span>
-<span class="sd">                - For example:</span>
-<span class="sd">                  ::</span>
-<span class="sd">                      coremltools.transform.FP16ComputePrecision(op_selector=</span>
-<span class="sd">                                          lambda op: op.op_type != &quot;linear&quot;)</span>
+<span class="sd">        Must be one of the following.</span>
+<span class="sd">        </span>
+<span class="sd">        - ``coremltools.precision.FLOAT16``</span>
+<span class="sd">            - The following transform is applied:</span>
+<span class="sd">              ::</span>
+<span class="sd">                 coremltools.transform.FP16ComputePrecision(op_selector=</span>
+<span class="sd">                                                         lambda op:True)</span>
 
-<span class="sd">                  The above casts all the float32 tensors to be float16, except</span>
-<span class="sd">                  the input/output tensors to any ``linear`` op.</span>
-<span class="sd">            - If ``None``,</span>
-<span class="sd">                - When ``convert_to=&quot;mlprogram&quot;``, compute_precision parameter</span>
-<span class="sd">                  defaults to ``coremltools.precision.FLOAT16``.</span>
-<span class="sd">                - When ``convert_to=&quot;neuralnetwork&quot;``, compute_precision parameter</span>
-<span class="sd">                  needs to be ``None`` and has no meaning.</span>
+<span class="sd">              The above transform injects ``cast`` ops to convert the</span>
+<span class="sd">              float32 dtypes of intermediate tensors to float16.</span>
+<span class="sd">        - ``coremltools.precision.FLOAT32``</span>
+<span class="sd">            - No transform is applied. The original float32 tensor dtype in</span>
+<span class="sd">              the source model is preserved.</span>
+<span class="sd">        - ``coremltools.transform.FP16ComputePrecision(op_selector=...)``</span>
+<span class="sd">            - Use the above to control which tensors are cast to float16.</span>
+<span class="sd">            - For example:</span>
+<span class="sd">              ::</span>
+<span class="sd">                 coremltools.transform.FP16ComputePrecision(op_selector=</span>
+<span class="sd">                                         lambda op: op.op_type != &quot;linear&quot;)</span>
+
+<span class="sd">              The above casts all the float32 tensors to be float16, except</span>
+<span class="sd">              the input/output tensors to any ``linear`` op.</span>
+<span class="sd">        - ``None``</span>
+<span class="sd">            - When ``convert_to=&quot;mlprogram&quot;``, compute_precision parameter</span>
+<span class="sd">              defaults to ``coremltools.precision.FLOAT16``.</span>
+<span class="sd">            - When ``convert_to=&quot;neuralnetwork&quot;``, compute_precision parameter</span>
+<span class="sd">              needs to be ``None`` and has no meaning.</span>
 
 <span class="sd">    skip_model_load : bool</span>
 <span class="sd">        Set to True to prevent coremltools from calling into the Core ML framework</span>
@@ -300,20 +312,42 @@
 <span class="sd">        Defaults to False.</span>
 
 <span class="sd">    compute_units: coremltools.ComputeUnit</span>
-<span class="sd">        An enum with three possible values:</span>
+<span class="sd">    </span>
+<span class="sd">        An enum with three possible values.</span>
+<span class="sd">        </span>
 <span class="sd">            - ``coremltools.ComputeUnit.ALL``: Use all compute units available, including the</span>
 <span class="sd">              neural engine.</span>
 <span class="sd">            - ``coremltools.ComputeUnit.CPU_ONLY``: Limit the model to only use the CPU.</span>
 <span class="sd">            - ``coremltools.ComputeUnit.CPU_AND_GPU``: Use both the CPU and GPU, but not the</span>
 <span class="sd">              neural engine.</span>
 
+<span class="sd">    useCPUOnly: bool</span>
+<span class="sd">        Deprecated, to be removed in coremltools 6.0. Please use `compute_units` instead.</span>
+<span class="sd">        - if True, identical to setting compute_units to `coremltools.ComputeUnit.CPU_ONLY``</span>
+<span class="sd">        - if False, identical to setting compute_units to `coremltools.ComputeUnit.ALL``</span>
+
+<span class="sd">    package_dir : str</span>
+<span class="sd">        Post conversion, the model is compiled to form the MLModel object ready for prediction.</span>
+<span class="sd">        This requires a temporary directory to hold the mlmodelc archive.</span>
+<span class="sd">        - if not None, must be a path to a directory that is used for</span>
+<span class="sd">          temporarily storing the compiled model assets. If None, a temporary directory is created.</span>
+
+<span class="sd">    debug : bool</span>
+<span class="sd">        This flag should generally be False except for debugging purposes</span>
+<span class="sd">        Setting this flag to True:</span>
+<span class="sd">         - For Torch conversion, it will print the list of supported and unsupported ops</span>
+<span class="sd">           found in the model if conversion fails due to an unsupported op.</span>
+<span class="sd">         - For Tensorflow conversion, it will cause to display extra logging and visualizations</span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
+<span class="sd">    </span>
 <span class="sd">    model : ``coremltools.models.MLModel`` or ``coremltools.converters.mil.Program``</span>
 <span class="sd">        A Core ML MLModel object or MIL Program object (see ``convert_to``).</span>
 
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
+<span class="sd">    </span>
 <span class="sd">    TensorFlow 1, 2 (``model`` is a frozen graph):</span>
 
 <span class="sd">        &gt;&gt;&gt; with tf.Graph().as_default() as graph:</span>
@@ -361,9 +395,9 @@
     <span class="n">exact_source</span> <span class="o">=</span> <span class="n">_determine_source</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
     <span class="n">exact_target</span> <span class="o">=</span> <span class="n">_determine_target</span><span class="p">(</span><span class="n">convert_to</span><span class="p">,</span> <span class="n">minimum_deployment_target</span><span class="p">)</span>
     <span class="n">_validate_inputs</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">exact_source</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">outputs</span><span class="p">,</span> <span class="n">classifier_config</span><span class="p">,</span> <span class="n">compute_precision</span><span class="p">,</span>
-                     <span class="n">exact_target</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                     <span class="n">exact_target</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="s2">&quot;useCPUOnly&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="ow">and</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;useCPUOnly&quot;</span><span class="p">]:</span>
+    <span class="k">if</span> <span class="n">useCPUOnly</span><span class="p">:</span>
         <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;The &quot;useCPUOnly&quot; parameter is deprecated and will be removed in 6.0. &#39;</span>
                       <span class="s1">&#39;Use the compute_units parameter: &quot;compute_units=coremotools.ComputeUnits.CPU_ONLY&quot;.&#39;</span><span class="p">)</span>
         <span class="n">compute_units</span> <span class="o">=</span> <span class="n">_ComputeUnit</span><span class="o">.</span><span class="n">CPU_ONLY</span>
@@ -390,7 +424,8 @@
         <span class="n">transforms</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">transforms</span><span class="p">),</span>
         <span class="n">skip_model_load</span><span class="o">=</span><span class="n">skip_model_load</span><span class="p">,</span>
         <span class="n">compute_units</span><span class="o">=</span><span class="n">compute_units</span><span class="p">,</span>
-        <span class="o">**</span><span class="n">kwargs</span>
+        <span class="n">package_dir</span><span class="o">=</span><span class="n">package_dir</span><span class="p">,</span>
+        <span class="n">debug</span><span class="o">=</span><span class="n">debug</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="k">if</span> <span class="n">exact_target</span> <span class="o">==</span> <span class="s1">&#39;milinternal&#39;</span><span class="p">:</span>
@@ -421,8 +456,7 @@
         <span class="p">)</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">minimum_deployment_target</span><span class="p">))</span>
 
-<span class="k">def</span> <span class="nf">_validate_inputs</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">exact_source</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">outputs</span><span class="p">,</span> <span class="n">classifier_config</span><span class="p">,</span> <span class="n">compute_precision</span><span class="p">,</span> <span class="n">convert_to</span><span class="p">,</span>
-                     <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_validate_inputs</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">exact_source</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">outputs</span><span class="p">,</span> <span class="n">classifier_config</span><span class="p">,</span> <span class="n">compute_precision</span><span class="p">,</span> <span class="n">convert_to</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Validate and process model, inputs, outputs, classifier_config based on</span>
 <span class="sd">    `exact_source` (which cannot be `auto`)</span>
@@ -476,10 +510,6 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Input should be a list of TensorType or ImageType&quot;</span><span class="p">)</span>
 
     <span class="k">elif</span> <span class="n">exact_source</span> <span class="o">==</span> <span class="s2">&quot;pytorch&quot;</span><span class="p">:</span>
-        <span class="k">if</span> <span class="s2">&quot;example_inputs&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
-            <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Unexpected argument &quot;example_inputs&quot; found&#39;</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
-
         <span class="k">if</span> <span class="n">inputs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Expected argument for pytorch &quot;inputs&quot; not provided&#39;</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>

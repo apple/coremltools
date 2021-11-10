@@ -349,28 +349,29 @@
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
+
 <span class="sd">        input_features: [(str, datatypes.Array)] or None</span>
 <span class="sd">            List of input feature of the network. </span>
 <span class="sd">            Each feature is a ``(name, array)`` tuple, where ``name`` is the </span>
 <span class="sd">            name of the feature, and ``array`` is a ``datatype.Array`` object </span>
 <span class="sd">            describing the feature type.</span>
 <span class="sd">            </span>
-<span class="sd">            When ``spec`` is ``None`` (building from scratch), ``input_features`` must not be ``None``.</span>
+<span class="sd">            * When ``spec`` is ``None`` (building from scratch), ``input_features`` must not be ``None``.</span>
 
-<span class="sd">            When ``spec`` is not ``None``, ``input_features`` will be ignored; </span>
-<span class="sd">            the input feature of the existing spec will be used instead.</span>
+<span class="sd">            * When ``spec`` is not ``None``, ``input_features`` will be ignored; </span>
+<span class="sd">              the input feature of the existing spec will be used instead.</span>
 
 <span class="sd">        output_features: [(str, datatypes.Array or None)] or None</span>
 <span class="sd">            List of output feature of the network. Each feature is a </span>
 <span class="sd">            ``(name, array)`` tuple, where ``name`` is the name of the feature, </span>
 <span class="sd">            and ``array`` is a ``datatypes.Array`` object describing the feature type.</span>
 <span class="sd">            </span>
-<span class="sd">            The ``array`` can be ``None`` if not known.</span>
+<span class="sd">            * The ``array`` can be ``None`` if not known.</span>
 <span class="sd">            </span>
-<span class="sd">            When ``spec`` is ``None`` (building from scratch), ``output_features`` must not be ``None``.</span>
+<span class="sd">            * When ``spec`` is ``None`` (building from scratch), ``output_features`` must not be ``None``.</span>
 <span class="sd">            </span>
-<span class="sd">            When ``spec`` is not ``None``, ``output_features`` will be ignored; </span>
-<span class="sd">            the output feature of the existing spec will be used instead.</span>
+<span class="sd">            * When ``spec`` is not ``None``, ``output_features`` will be ignored; </span>
+<span class="sd">              the output feature of the existing spec will be used instead.</span>
 
 <span class="sd">        mode: str (&#39;classifier&#39;, &#39;regressor&#39; or None)</span>
 <span class="sd">            Mode (one of ``&#39;classifier&#39;``, ``&#39;regressor&#39;``, or ``None``).</span>
@@ -2362,35 +2363,45 @@
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
+<span class="sd">        </span>
 <span class="sd">        name: str</span>
 <span class="sd">            The name of this layer.</span>
+
 <span class="sd">        kernel_channels: int</span>
 <span class="sd">            Number of channels for the convolution kernels.</span>
+
 <span class="sd">        output_channels: int</span>
 <span class="sd">            Number of filter kernels. This is equal to the number of channels in the output blob.</span>
+
 <span class="sd">        height: int</span>
 <span class="sd">            Height of each kernel.</span>
+
 <span class="sd">        width: int</span>
 <span class="sd">            Width of each kernel.</span>
+
 <span class="sd">        stride_height: int</span>
 <span class="sd">            Stride along the height direction.</span>
+
 <span class="sd">        stride_width: int</span>
 <span class="sd">            Stride along the height direction.</span>
+
 <span class="sd">        border_mode: str</span>
 <span class="sd">            Option for the padding type and output blob shape. Can be either &#39;valid&#39; or &#39;same&#39;.</span>
+<span class="sd"> </span>
 <span class="sd">        groups: int</span>
 <span class="sd">            Number of kernel groups. Input is divided into groups along the channel axis. </span>
 <span class="sd">            Each kernel group share the same weights.</span>
+<span class="sd"> </span>
 <span class="sd">        W: numpy.array or bytes() or None</span>
 
 <span class="sd">            Weight of the convolution kernels.</span>
 
 <span class="sd">            * If ``is_deconv`` is False, ``W`` should have </span>
 <span class="sd">              shape ``(height, width, kernel_channels, output_channels)``, where:</span>
-<span class="sd">                 ``kernel_channel = input_channels / groups``.</span>
+<span class="sd">                 ``kernel_channel = input_channels / groups``</span>
 <span class="sd">            * If ``is_deconv`` is True, ``W`` should have </span>
 <span class="sd">              shape ``(height, width, kernel_channels, output_channels / groups)``, where:</span>
-<span class="sd">                 ``kernel_channel = input_channels``.</span>
+<span class="sd">                 ``kernel_channel = input_channels``</span>
 
 <span class="sd">            If ``W`` is of type ``bytes()`` (quantized), other quantization </span>
 <span class="sd">            related arguments must be provided as well (see below).</span>
@@ -2401,6 +2412,7 @@
 
 <span class="sd">        b: numpy.array</span>
 <span class="sd">            Biases of the convolution kernels. ``b`` should have shape ``(outputChannels, )``.</span>
+
 <span class="sd">        has_bias: boolean</span>
 <span class="sd">            Whether bias is ignored.</span>
 
@@ -2417,34 +2429,32 @@
 <span class="sd">        output_shape: tuple or None</span>
 <span class="sd">            Either ``None`` or a 2-tuple, specifying the output </span>
 <span class="sd">            shape ``(output_height, output_width)``. </span>
-<span class="sd">            Used only when ``is_deconv == True``.</span>
-<span class="sd">            When ``is_deconv == False``, this parameter is ignored.</span>
-<span class="sd">            If it is ``None``, the output shape is calculated automatically using the ``border_mode``.</span>
+<span class="sd">            </span>
+<span class="sd">            - Used only when ``is_deconv == True``.</span>
+<span class="sd">            - When ``is_deconv == False``, this parameter is ignored.</span>
+<span class="sd">            - If it is ``None``, the output shape is calculated automatically using the ``border_mode``.</span>
 
 <span class="sd">        input_name: str or list of str</span>
 <span class="sd">            The input blob name(s) of this layer.</span>
+
 <span class="sd">        output_name: str</span>
 <span class="sd">            The output blob name of this layer.</span>
+
 <span class="sd">        dilation_factors: list of int</span>
 <span class="sd">            Dilation factors across height and width directions. Must be a list of two positive integers.</span>
 <span class="sd">            Defaults to ``[1, 1]``.</span>
+
 <span class="sd">        padding_top, padding_bottom, padding_left, padding_right: int</span>
-<span class="sd">            values of height (top, bottom) and width (left, right) padding </span>
+<span class="sd">            Values of height (top, bottom) and width (left, right) padding </span>
 <span class="sd">            to be used if ``border_more`` is ``&quot;valid&quot;``.</span>
+
 <span class="sd">        same_padding_asymmetry_mode: str</span>
 <span class="sd">            Type of asymmetric padding to be used when  ``border_mode`` is ``&#39;same&#39;``.</span>
 <span class="sd">            Can be either ``&#39;BOTTOM_RIGHT_HEAVY&#39;`` or  ``&#39;TOP_LEFT_HEAVY&#39;``.</span>
-<span class="sd">		Depthwise convolution</span>
-<span class="sd">			Depthwise convolution is a special case of convolution, in which:</span>
-<span class="sd">			</span>
-<span class="sd">            	* ``kernel_channels = 1 (== input_channels / groups)``</span>
-<span class="sd">            	* ``output_channels = channel_multiplier * input_channels``</span>
-<span class="sd">           	* ``groups = input_channels``</span>
-<span class="sd">            	* ``W``: ``[Kernel_height, Kernel_width, 1, channel_multiplier * input_channels]``</span>
 
 <span class="sd">		Quantization</span>
 <span class="sd">			Quantization arguments expected in ``kwargs``, when ``W`` is of type ``bytes()``.</span>
-
+<span class="sd">        </span>
 <span class="sd">				quantization_type: str</span>
 <span class="sd">					When weights are quantized (that is, ``W`` is of type ``bytes()``), </span>
 <span class="sd">					this should be either ``&quot;linear&quot;`` or ``&quot;lut&quot;``.</span>
@@ -2464,6 +2474,14 @@
 <span class="sd">				quant_lut: numpy.array(dtype=numpy.float32)</span>
 <span class="sd">					the LUT (look up table) to be used with LUT quantization. </span>
 <span class="sd">					Must be of length 2^n bits.</span>
+
+<span class="sd">        Depthwise convolution</span>
+<span class="sd">        	Depthwise convolution is a special case of convolution, in which:</span>
+<span class="sd">        </span>
+<span class="sd">                  * ``kernel_channels = 1 (== input_channels / groups)``</span>
+<span class="sd">                  * ``output_channels = channel_multiplier * input_channels``</span>
+<span class="sd">                  * ``groups = input_channels``</span>
+<span class="sd">                  * ``W``: ``[Kernel_height, Kernel_width, 1, channel_multiplier * input_channels]``</span>
 
 <span class="sd">        See Also</span>
 <span class="sd">        --------</span>
@@ -2630,21 +2648,28 @@
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
+
 <span class="sd">        name: str</span>
 <span class="sd">            The name of this layer.</span>
+
 <span class="sd">        input_channels: int</span>
 <span class="sd">            Number of input channels.</span>
+
 <span class="sd">        output_channels: int</span>
 <span class="sd">            Number of filter kernels. This is equal to the number of channels in the output blob.</span>
+
 <span class="sd">        depth: int</span>
 <span class="sd">            Depth of each kernel.</span>
+
 <span class="sd">        height: int</span>
 <span class="sd">            Height of each kernel.</span>
+
 <span class="sd">        width: int</span>
 <span class="sd">            Width of each kernel.</span>
+
 <span class="sd">        W: numpy.array or bytes()</span>
-<span class="sd">            Weight of the convolution kernels.</span>
-<span class="sd">            - ``W`` should have shape:</span>
+<span class="sd">            Weight of the convolution kernels. ``W`` should have shape:</span>
+
 <span class="sd">            - If ``deconv`` is False:</span>
 <span class="sd">            </span>
 <span class="sd">                 ``(output_channels, kernel_channels, depth, height, width)``, where:</span>
@@ -2659,34 +2684,44 @@
 <span class="sd">              </span>
 <span class="sd">        b: numpy.array</span>
 <span class="sd">            Biases of the convolution kernels. ``b`` should have shape ``(outputChannels, )``.</span>
+
 <span class="sd">        has_bias: boolean</span>
 <span class="sd">            Whether bias is ignored.</span>
 <span class="sd">            - If True, bias is not ignored.</span>
 <span class="sd">            - If False, bias is ignored.</span>
+
 <span class="sd">        groups: int</span>
 <span class="sd">            Number of kernel groups. Input is divided into groups along the channel axis. Each</span>
 <span class="sd">            kernel group share the same weights. Defaults to 1.</span>
+
 <span class="sd">        stride_depth, stride_height, stride_width: int</span>
 <span class="sd">            Stride along the depth, height, and width directions, respectively. Must all be positive</span>
 <span class="sd">            integers. Defaults to 1.</span>
+
 <span class="sd">        dilation_depth, dilation_width, dilation_height: int</span>
 <span class="sd">            Dilation factors across depth, height, and width directions. Must all be positive</span>
 <span class="sd">            integers. Defaults to 1 in each dimension.</span>
+
 <span class="sd">        is_deconv: bool</span>
 <span class="sd">            True if this is Convolution Transpose, otherwise False.</span>
+
 <span class="sd">        output_shape: None or Tuple of int</span>
 <span class="sd">            Applicable only for Deconvolution layer.</span>
 <span class="sd">            ``None`` if Convolution.</span>
 <span class="sd">            Tuple of length 3 if Convolution Transpose.</span>
+
 <span class="sd">        padding_mode: str</span>
 <span class="sd">            Option for the padding type and output blob shape. </span>
 <span class="sd">            Can be ``&#39;custom&#39;``, ``&#39;valid&#39;``, or ``&#39;same&#39;``.</span>
 <span class="sd">            Defaults to ``&#39;valid&#39;``. Case-insensitive.</span>
+
 <span class="sd">        padding_front, padding_back, padding_top, padding_bottom, padding_left, padding_right: int</span>
 <span class="sd">            Values of depth (front, back), height (top, bottom), and width (left, right) padding to</span>
 <span class="sd">            be used. Must all be positive integers. All default to 0.</span>
+
 <span class="sd">        input_name: str or list of str</span>
 <span class="sd">            The input blob name(s) of this layer.</span>
+
 <span class="sd">        output_name: str</span>
 <span class="sd">            The output blob name of this layer.</span>
 
@@ -2810,39 +2845,54 @@
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
+
 <span class="sd">        name: str</span>
 <span class="sd">            The name of this layer.</span>
+
 <span class="sd">        height: int</span>
 <span class="sd">            Height of pooling region.</span>
+
 <span class="sd">        width: int</span>
 <span class="sd">            Width of pooling region.</span>
+
 <span class="sd">        stride_height: int</span>
 <span class="sd">            Stride along the height direction.</span>
+
 <span class="sd">        stride_width: int</span>
 <span class="sd">            Stride along the width direction.</span>
+
 <span class="sd">        layer_type: str</span>
 <span class="sd">            Type of pooling performed. Can either be ``&#39;MAX&#39;``, ``&#39;AVERAGE&#39;``, or ``&#39;L2&#39;``.</span>
+
 <span class="sd">        padding_type: str</span>
 <span class="sd">            Option for the type of padding and output blob shape. Can be either </span>
 <span class="sd">            ``&#39;VALID&#39;``, ``&#39;SAME&#39;``, or ``&#39;INCLUDE_LAST_PIXEL&#39;``.</span>
+
 <span class="sd">        input_name: str</span>
 <span class="sd">            The input blob name of this layer.</span>
+
 <span class="sd">        output_name: str</span>
 <span class="sd">            The output blob name of this layer.</span>
+
 <span class="sd">        exclude_pad_area: boolean</span>
-<span class="sd">            Whether to exclude padded area in the ``&#39;AVERAGE&#39;`` pooling operation, default: true.</span>
+<span class="sd">            Whether to exclude padded area in the ``&#39;AVERAGE&#39;`` pooling operation,</span>
+<span class="sd">            default: true. This flag is only used with average pooling.</span>
+<span class="sd">            </span>
 <span class="sd">            - If True, the value of the padded area will be excluded.</span>
 <span class="sd">            - If False, the padded area will be included.</span>
-<span class="sd">            This flag is only used with average pooling.</span>
+
 <span class="sd">        is_global: boolean</span>
 <span class="sd">            Whether the pooling operation is global. Defaults to False.</span>
+<span class="sd">            </span>
 <span class="sd">            - If True, the pooling operation is global. The pooling region </span>
 <span class="sd">              is of the same size of the input blob.</span>
 <span class="sd">              Parameters ``height``, ``width``, ``stride_height``, and ``stride_width`` will be ignored.</span>
 <span class="sd">            - If False, the pooling operation is not global.</span>
+
 <span class="sd">        padding_top, padding_bottom, padding_left, padding_right: int</span>
-<span class="sd">            values of height (top, bottom) and width (left, right) padding </span>
+<span class="sd">            Values of height (top, bottom) and width (left, right) padding </span>
 <span class="sd">            to be used if padding type is ``&quot;VALID&quot;`` or ``&quot;INCLUDE_LAST_PIXEL&quot;``.</span>
+
 <span class="sd">        same_padding_asymmetry_mode: str.</span>
 <span class="sd">            Type of asymmetric padding to be used when ``padding_type = &#39;SAME&#39;``.</span>
 <span class="sd">            Can be either ``&#39;BOTTOM_RIGHT_HEAVY&#39;`` or ``&#39;TOP_LEFT_HEAVY&#39;``.</span>
@@ -3635,7 +3685,7 @@
 <span class="sd">            If ``True``, a vector of 1s is added to forget gate bias. Defaults to ``False``.</span>
 <span class="sd">        coupled_input_forget_gate: boolean</span>
 <span class="sd">            If ``True``, the input gate and forget gate is coupled. That is, the</span>
-<span class="sd">             forget gate is not used.</span>
+<span class="sd">            forget gate is not used.</span>
 <span class="sd">            Defaults to ``False``.</span>
 <span class="sd">        cell_clip_threshold: float</span>
 <span class="sd">            The limit on the maximum and minimum values on the cell state.</span>
@@ -4611,31 +4661,42 @@
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
+
 <span class="sd">        name: str</span>
 <span class="sd">            The name of this layer.</span>
+
 <span class="sd">        input_names: list of str</span>
-<span class="sd"> </span>
-<span class="sd">            Must be a list of two names: image feature map and crop indices/RoI input.</span>
-<span class="sd">               * First input corresponds to a blob with shape ``[1, Batch, C, H_in, W_in]``. This represents a batch of input image feature data with ``C`` channels.</span>
-<span class="sd">               * The second input shape must be ``[N, 1, 4, 1, 1]`` or ``[N, 1, 5, 1, 1]``. This represents the bounding box coordinates for ``N`` patches/RoIs.</span>
-<span class="sd">            *  ``N``: number of patches/RoIs to be extracted</span>
-<span class="sd">            * If RoI shape = ``[N, 1, 4, 1, 1]``, the channel axis corresponds to the four coordinates specifying the bounding box.</span>
+<span class="sd">            * Must be a list of two names: image feature map and crop indices/RoI input.</span>
+<span class="sd">               * First input corresponds to a blob with shape ``[1, Batch, C, H_in, W_in]``.</span>
+<span class="sd">                 This represents a batch of input image feature data with ``C`` channels.</span>
+<span class="sd">               * The second input shape must be ``[N, 1, 4, 1, 1]`` or ``[N, 1, 5, 1, 1]``.</span>
+<span class="sd">                 This represents the bounding box coordinates for ``N`` patches/RoIs.</span>
+<span class="sd">            * ``N``: number of patches/RoIs to be extracted.</span>
+<span class="sd">            * If RoI shape = ``[N, 1, 4, 1, 1]``, the channel axis corresponds</span>
+<span class="sd">              to the four coordinates specifying the bounding box.</span>
 <span class="sd">              All the N~ RoIs are extracted from all the batches of the input.</span>
-<span class="sd">            * If RoI shape = ``[N, 1, 5, 1, 1]``, the first element of the channel axis specifies the input batch id from which to extract the RoI and</span>
-<span class="sd">              must be in the interval ``[0, Batch - 1]``. That is, ``n`` -th RoI is extracted from the ``RoI[n,0,0,0]`` -th input batch id.</span>
-<span class="sd">              The last four elements of the channel axis specify the bounding box coordinates.</span>
+<span class="sd">            * If RoI shape = ``[N, 1, 5, 1, 1]``, the first element of the</span>
+<span class="sd">              channel axis specifies the input batch id from which to extract the RoI and</span>
+<span class="sd">              must be in the interval ``[0, Batch - 1]``. That is, ``n`` -th RoI is </span>
+<span class="sd">              extracted from the ``RoI[n,0,0,0]`` -th input batch id.</span>
+<span class="sd">              The last four elements of the channel axis specify the</span>
+<span class="sd">              bounding box coordinates.</span>
 
 <span class="sd">        output_name: str</span>
 <span class="sd">            The output blob name of this layer.</span>
+
 <span class="sd">        target_height: int</span>
 <span class="sd">            Output height dimension.</span>
+
 <span class="sd">        target_width: int</span>
 <span class="sd">            Output width dimension.</span>
+
 <span class="sd">        mode: str</span>
 <span class="sd">            * The following values are supported: </span>
 <span class="sd">              ``&#39;STRICT_ALIGN_ENDPOINTS_MODE&#39;``, ``&#39;ALIGN_ENDPOINTS_MODE&#39;``, </span>
 <span class="sd">              ``&#39;UPSAMPLE_MODE&#39;``, ``&#39;ROI_ALIGN_MODE&#39;``.</span>
 <span class="sd">            * This parameter determines the sampling grid used for bilinear interpolation.</span>
+
 <span class="sd">        normalized_roi: bool</span>
 <span class="sd">            * If true the bounding box coordinates must be in the interval ``[0, 1]``.</span>
 <span class="sd">              They are scaled by ``(input_height - 1)``, ``(input_width - 1)``; </span>
@@ -4643,6 +4704,7 @@
 <span class="sd">            * If false the bounding box coordinates must be in the interval</span>
 <span class="sd">              ``[0, input_height - 1]`` and ``[0, input_width - 1]``, </span>
 <span class="sd">              respectively for height and width dimensions.</span>
+
 <span class="sd">        box_indices_mode: str</span>
 <span class="sd">            * The following values are supported: </span>
 <span class="sd">              ``&#39;CORNERS_HEIGHT_FIRST&#39;``, ``&#39;CORNERS_WIDTH_FIRST&#39;``, </span>
@@ -4652,6 +4714,7 @@
 <span class="sd">                * ``&#39;CORNERS_WIDTH_FIRST&#39;``: ``[w_start, h_start, w_end, h_end]``</span>
 <span class="sd">                * ``&#39;CENTER_SIZE_HEIGHT_FIRST&#39;``: ``[h_center, w_center, box_height, box_width]``</span>
 <span class="sd">                * ``&#39;CENTER_SIZE_WIDTH_FIRST&#39;``: ``[w_center, h_center, box_width, box_height]``</span>
+
 <span class="sd">        spatial_scale: float</span>
 <span class="sd">            Additional spatial scale that multiplies the bounding box coordinates.</span>
 <span class="sd">            Generally used while implementing the RoI Align layer,</span>

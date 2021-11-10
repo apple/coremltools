@@ -146,17 +146,21 @@ existing specification.</p>
 Each feature is a <code class="docutils literal notranslate"><span class="pre">(name,</span> <span class="pre">array)</span></code> tuple, where <code class="docutils literal notranslate"><span class="pre">name</span></code> is the
 name of the feature, and <code class="docutils literal notranslate"><span class="pre">array</span></code> is a <code class="docutils literal notranslate"><span class="pre">datatype.Array</span></code> object
 describing the feature type.</p>
-<p>When <code class="docutils literal notranslate"><span class="pre">spec</span></code> is <code class="docutils literal notranslate"><span class="pre">None</span></code> (building from scratch), <code class="docutils literal notranslate"><span class="pre">input_features</span></code> must not be <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
-<p>When <code class="docutils literal notranslate"><span class="pre">spec</span></code> is not <code class="docutils literal notranslate"><span class="pre">None</span></code>, <code class="docutils literal notranslate"><span class="pre">input_features</span></code> will be ignored;
-the input feature of the existing spec will be used instead.</p>
+<ul class="simple">
+<li><p>When <code class="docutils literal notranslate"><span class="pre">spec</span></code> is <code class="docutils literal notranslate"><span class="pre">None</span></code> (building from scratch), <code class="docutils literal notranslate"><span class="pre">input_features</span></code> must not be <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+<li><p>When <code class="docutils literal notranslate"><span class="pre">spec</span></code> is not <code class="docutils literal notranslate"><span class="pre">None</span></code>, <code class="docutils literal notranslate"><span class="pre">input_features</span></code> will be ignored;
+the input feature of the existing spec will be used instead.</p></li>
+</ul>
 </dd>
 <dt><strong>output_features: [(str, datatypes.Array or None)] or None</strong></dt><dd><p>List of output feature of the network. Each feature is a
 <code class="docutils literal notranslate"><span class="pre">(name,</span> <span class="pre">array)</span></code> tuple, where <code class="docutils literal notranslate"><span class="pre">name</span></code> is the name of the feature,
 and <code class="docutils literal notranslate"><span class="pre">array</span></code> is a <code class="docutils literal notranslate"><span class="pre">datatypes.Array</span></code> object describing the feature type.</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">array</span></code> can be <code class="docutils literal notranslate"><span class="pre">None</span></code> if not known.</p>
-<p>When <code class="docutils literal notranslate"><span class="pre">spec</span></code> is <code class="docutils literal notranslate"><span class="pre">None</span></code> (building from scratch), <code class="docutils literal notranslate"><span class="pre">output_features</span></code> must not be <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
-<p>When <code class="docutils literal notranslate"><span class="pre">spec</span></code> is not <code class="docutils literal notranslate"><span class="pre">None</span></code>, <code class="docutils literal notranslate"><span class="pre">output_features</span></code> will be ignored;
-the output feature of the existing spec will be used instead.</p>
+<ul class="simple">
+<li><p>The <code class="docutils literal notranslate"><span class="pre">array</span></code> can be <code class="docutils literal notranslate"><span class="pre">None</span></code> if not known.</p></li>
+<li><p>When <code class="docutils literal notranslate"><span class="pre">spec</span></code> is <code class="docutils literal notranslate"><span class="pre">None</span></code> (building from scratch), <code class="docutils literal notranslate"><span class="pre">output_features</span></code> must not be <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+<li><p>When <code class="docutils literal notranslate"><span class="pre">spec</span></code> is not <code class="docutils literal notranslate"><span class="pre">None</span></code>, <code class="docutils literal notranslate"><span class="pre">output_features</span></code> will be ignored;
+the output feature of the existing spec will be used instead.</p></li>
+</ul>
 </dd>
 <dt><strong>mode: str (‘classifier’, ‘regressor’ or None)</strong></dt><dd><p>Mode (one of <code class="docutils literal notranslate"><span class="pre">'classifier'</span></code>, <code class="docutils literal notranslate"><span class="pre">'regressor'</span></code>, or <code class="docutils literal notranslate"><span class="pre">None</span></code>).</p>
 <p>When <code class="docutils literal notranslate"><span class="pre">mode</span> <span class="pre">=</span> <span class="pre">'classifier'</span></code>, a NeuralNetworkClassifier spec will be
@@ -711,9 +715,9 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">BiasLa
 <span class="sig-name descname"><span class="pre">add_bidirlstm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">W_h</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">W_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">W_h_back</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">W_x_back</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b_back</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inner_activation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'SIGMOID'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cell_state_update_activation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'TANH'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_activation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'TANH'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peep_back</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_all</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">forget_bias</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coupled_input_forget_gate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cell_clip_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50000.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/neural_network/builder.html#NeuralNetworkBuilder.add_bidirlstm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder.add_bidirlstm" title="Permalink to this definition"></a></dt>
 <dd><p>Add a Bi-directional LSTM layer to the model.
 Refer to the <code class="docutils literal notranslate"><span class="pre">BiDirectionalLSTMLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
-<dl class="field-list">
+<dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><dl>
+<dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
 <dt><strong>W_h: [numpy.array]</strong></dt><dd><p>List of recursion weight matrices for the forward layer.
@@ -796,11 +800,9 @@ The shapes of the peephole vectors are <code class="docutils literal notranslate
 </dd>
 <dt><strong>forget_bias: boolean</strong></dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, a vector of 1s is added to forget gate bias. Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
 </dd>
-<dt><strong>coupled_input_forget_gate: boolean</strong></dt><dd><dl class="simple">
-<dt>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, the input gate and forget gate is coupled. That is, the</dt><dd><p>forget gate is not used.</p>
-</dd>
-</dl>
-<p>Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
+<dt><strong>coupled_input_forget_gate: boolean</strong></dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, the input gate and forget gate is coupled. That is, the
+forget gate is not used.
+Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
 </dd>
 <dt><strong>cell_clip_threshold: float</strong></dt><dd><p>The limit on the maximum and minimum values on the cell state.
 Defaults to 50.0.</p>
@@ -1136,13 +1138,13 @@ Each kernel group share the same weights.</p>
 <li><p>If <code class="docutils literal notranslate"><span class="pre">is_deconv</span></code> is False, <code class="docutils literal notranslate"><span class="pre">W</span></code> should have
 shape <code class="docutils literal notranslate"><span class="pre">(height,</span> <span class="pre">width,</span> <span class="pre">kernel_channels,</span> <span class="pre">output_channels)</span></code>, where:</p>
 <blockquote>
-<div><p><code class="docutils literal notranslate"><span class="pre">kernel_channel</span> <span class="pre">=</span> <span class="pre">input_channels</span> <span class="pre">/</span> <span class="pre">groups</span></code>.</p>
+<div><p><code class="docutils literal notranslate"><span class="pre">kernel_channel</span> <span class="pre">=</span> <span class="pre">input_channels</span> <span class="pre">/</span> <span class="pre">groups</span></code></p>
 </div></blockquote>
 </li>
 <li><p>If <code class="docutils literal notranslate"><span class="pre">is_deconv</span></code> is True, <code class="docutils literal notranslate"><span class="pre">W</span></code> should have
 shape <code class="docutils literal notranslate"><span class="pre">(height,</span> <span class="pre">width,</span> <span class="pre">kernel_channels,</span> <span class="pre">output_channels</span> <span class="pre">/</span> <span class="pre">groups)</span></code>, where:</p>
 <blockquote>
-<div><p><code class="docutils literal notranslate"><span class="pre">kernel_channel</span> <span class="pre">=</span> <span class="pre">input_channels</span></code>.</p>
+<div><p><code class="docutils literal notranslate"><span class="pre">kernel_channel</span> <span class="pre">=</span> <span class="pre">input_channels</span></code></p>
 </div></blockquote>
 </li>
 </ul>
@@ -1168,10 +1170,12 @@ transposed convolution (deconvolution).</p>
 </ul>
 </dd>
 <dt><strong>output_shape: tuple or None</strong></dt><dd><p>Either <code class="docutils literal notranslate"><span class="pre">None</span></code> or a 2-tuple, specifying the output
-shape <code class="docutils literal notranslate"><span class="pre">(output_height,</span> <span class="pre">output_width)</span></code>.
-Used only when <code class="docutils literal notranslate"><span class="pre">is_deconv</span> <span class="pre">==</span> <span class="pre">True</span></code>.
-When <code class="docutils literal notranslate"><span class="pre">is_deconv</span> <span class="pre">==</span> <span class="pre">False</span></code>, this parameter is ignored.
-If it is <code class="docutils literal notranslate"><span class="pre">None</span></code>, the output shape is calculated automatically using the <code class="docutils literal notranslate"><span class="pre">border_mode</span></code>.</p>
+shape <code class="docutils literal notranslate"><span class="pre">(output_height,</span> <span class="pre">output_width)</span></code>.</p>
+<ul class="simple">
+<li><p>Used only when <code class="docutils literal notranslate"><span class="pre">is_deconv</span> <span class="pre">==</span> <span class="pre">True</span></code>.</p></li>
+<li><p>When <code class="docutils literal notranslate"><span class="pre">is_deconv</span> <span class="pre">==</span> <span class="pre">False</span></code>, this parameter is ignored.</p></li>
+<li><p>If it is <code class="docutils literal notranslate"><span class="pre">None</span></code>, the output shape is calculated automatically using the <code class="docutils literal notranslate"><span class="pre">border_mode</span></code>.</p></li>
+</ul>
 </dd>
 <dt><strong>input_name: str or list of str</strong></dt><dd><p>The input blob name(s) of this layer.</p>
 </dd>
@@ -1180,23 +1184,13 @@ If it is <code class="docutils literal notranslate"><span class="pre">None</span
 <dt><strong>dilation_factors: list of int</strong></dt><dd><p>Dilation factors across height and width directions. Must be a list of two positive integers.
 Defaults to <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">1]</span></code>.</p>
 </dd>
-<dt><strong>padding_top, padding_bottom, padding_left, padding_right: int</strong></dt><dd><p>values of height (top, bottom) and width (left, right) padding
+<dt><strong>padding_top, padding_bottom, padding_left, padding_right: int</strong></dt><dd><p>Values of height (top, bottom) and width (left, right) padding
 to be used if <code class="docutils literal notranslate"><span class="pre">border_more</span></code> is <code class="docutils literal notranslate"><span class="pre">&quot;valid&quot;</span></code>.</p>
 </dd>
 <dt><strong>same_padding_asymmetry_mode: str</strong></dt><dd><p>Type of asymmetric padding to be used when  <code class="docutils literal notranslate"><span class="pre">border_mode</span></code> is <code class="docutils literal notranslate"><span class="pre">'same'</span></code>.
 Can be either <code class="docutils literal notranslate"><span class="pre">'BOTTOM_RIGHT_HEAVY'</span></code> or  <code class="docutils literal notranslate"><span class="pre">'TOP_LEFT_HEAVY'</span></code>.</p>
 <blockquote>
-<div><dl class="simple">
-<dt>Depthwise convolution</dt><dd><p>Depthwise convolution is a special case of convolution, in which:</p>
-</dd>
-</dl>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">kernel_channels</span> <span class="pre">=</span> <span class="pre">1</span> <span class="pre">(==</span> <span class="pre">input_channels</span> <span class="pre">/</span> <span class="pre">groups)</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">output_channels</span> <span class="pre">=</span> <span class="pre">channel_multiplier</span> <span class="pre">*</span> <span class="pre">input_channels</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">groups</span> <span class="pre">=</span> <span class="pre">input_channels</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">W</span></code>: <code class="docutils literal notranslate"><span class="pre">[Kernel_height,</span> <span class="pre">Kernel_width,</span> <span class="pre">1,</span> <span class="pre">channel_multiplier</span> <span class="pre">*</span> <span class="pre">input_channels]</span></code></p></li>
-</ul>
-<dl>
+<div><dl>
 <dt>Quantization</dt><dd><p>Quantization arguments expected in <code class="docutils literal notranslate"><span class="pre">kwargs</span></code>, when <code class="docutils literal notranslate"><span class="pre">W</span></code> is of type <code class="docutils literal notranslate"><span class="pre">bytes()</span></code>.</p>
 <blockquote>
 <div><dl class="simple">
@@ -1219,6 +1213,16 @@ Must be of length 2^n bits.</p>
 </div></blockquote>
 </dd>
 </dl>
+</div></blockquote>
+</dd>
+<dt><strong>Depthwise convolution</strong></dt><dd><p>Depthwise convolution is a special case of convolution, in which:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">kernel_channels</span> <span class="pre">=</span> <span class="pre">1</span> <span class="pre">(==</span> <span class="pre">input_channels</span> <span class="pre">/</span> <span class="pre">groups)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">output_channels</span> <span class="pre">=</span> <span class="pre">channel_multiplier</span> <span class="pre">*</span> <span class="pre">input_channels</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">groups</span> <span class="pre">=</span> <span class="pre">input_channels</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">W</span></code>: <code class="docutils literal notranslate"><span class="pre">[Kernel_height,</span> <span class="pre">Kernel_width,</span> <span class="pre">1,</span> <span class="pre">channel_multiplier</span> <span class="pre">*</span> <span class="pre">input_channels]</span></code></p></li>
+</ul>
 </div></blockquote>
 </dd>
 </dl>
@@ -1253,14 +1257,14 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">Convol
 </dd>
 <dt><strong>width: int</strong></dt><dd><p>Width of each kernel.</p>
 </dd>
-<dt><strong>W: numpy.array or bytes()</strong></dt><dd><p>Weight of the convolution kernels.
-- <code class="docutils literal notranslate"><span class="pre">W</span></code> should have shape:
-- If <code class="docutils literal notranslate"><span class="pre">deconv</span></code> is False:</p>
+<dt><strong>W: numpy.array or bytes()</strong></dt><dd><p>Weight of the convolution kernels. <code class="docutils literal notranslate"><span class="pre">W</span></code> should have shape:</p>
+<ul>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">deconv</span></code> is False:</p>
 <blockquote>
 <div><p><code class="docutils literal notranslate"><span class="pre">(output_channels,</span> <span class="pre">kernel_channels,</span> <span class="pre">depth,</span> <span class="pre">height,</span> <span class="pre">width)</span></code>, where:</p>
 <p><code class="docutils literal notranslate"><span class="pre">kernel_channels</span> <span class="pre">=</span> <span class="pre">input_channels</span> <span class="pre">/</span> <span class="pre">groups</span></code></p>
 </div></blockquote>
-<ul>
+</li>
 <li><p>If <code class="docutils literal notranslate"><span class="pre">deconv</span></code> is True:</p>
 <blockquote>
 <div><p><code class="docutils literal notranslate"><span class="pre">(output_channels</span> <span class="pre">/</span> <span class="pre">groups,</span> <span class="pre">kernel_channels,</span> <span class="pre">depth,</span> <span class="pre">height,</span> <span class="pre">width)</span></code>, where:</p>
@@ -1452,25 +1456,32 @@ or a list of 2 strings (2-input crop layer).</p>
 from the input and resizes them to a pre-specified size using bilinear interpolation.
 Note that RoI Align layer can be implemented with this layer followed by a pooling layer.
 Refer to the <code class="docutils literal notranslate"><span class="pre">CropResizeLayerParams</span></code> message in the specification (NeuralNetwork.proto) for more details.</p>
-<dl class="field-list">
+<dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><dl>
+<dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
-<dt><strong>input_names: list of str</strong></dt><dd><dl class="simple">
-<dt>Must be a list of two names: image feature map and crop indices/RoI input.</dt><dd><ul class="simple">
-<li><p>First input corresponds to a blob with shape <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">Batch,</span> <span class="pre">C,</span> <span class="pre">H_in,</span> <span class="pre">W_in]</span></code>. This represents a batch of input image feature data with <code class="docutils literal notranslate"><span class="pre">C</span></code> channels.</p></li>
-<li><p>The second input shape must be <code class="docutils literal notranslate"><span class="pre">[N,</span> <span class="pre">1,</span> <span class="pre">4,</span> <span class="pre">1,</span> <span class="pre">1]</span></code> or <code class="docutils literal notranslate"><span class="pre">[N,</span> <span class="pre">1,</span> <span class="pre">5,</span> <span class="pre">1,</span> <span class="pre">1]</span></code>. This represents the bounding box coordinates for <code class="docutils literal notranslate"><span class="pre">N</span></code> patches/RoIs.</p></li>
+<dt><strong>input_names: list of str</strong></dt><dd><ul class="simple">
+<li><dl class="simple">
+<dt>Must be a list of two names: image feature map and crop indices/RoI input.</dt><dd><ul>
+<li><p>First input corresponds to a blob with shape <code class="docutils literal notranslate"><span class="pre">[1,</span> <span class="pre">Batch,</span> <span class="pre">C,</span> <span class="pre">H_in,</span> <span class="pre">W_in]</span></code>.
+This represents a batch of input image feature data with <code class="docutils literal notranslate"><span class="pre">C</span></code> channels.</p></li>
+<li><p>The second input shape must be <code class="docutils literal notranslate"><span class="pre">[N,</span> <span class="pre">1,</span> <span class="pre">4,</span> <span class="pre">1,</span> <span class="pre">1]</span></code> or <code class="docutils literal notranslate"><span class="pre">[N,</span> <span class="pre">1,</span> <span class="pre">5,</span> <span class="pre">1,</span> <span class="pre">1]</span></code>.
+This represents the bounding box coordinates for <code class="docutils literal notranslate"><span class="pre">N</span></code> patches/RoIs.</p></li>
 </ul>
 </dd>
 </dl>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">N</span></code>: number of patches/RoIs to be extracted</p></li>
-<li><p>If RoI shape = <code class="docutils literal notranslate"><span class="pre">[N,</span> <span class="pre">1,</span> <span class="pre">4,</span> <span class="pre">1,</span> <span class="pre">1]</span></code>, the channel axis corresponds to the four coordinates specifying the bounding box.
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">N</span></code>: number of patches/RoIs to be extracted.</p></li>
+<li><p>If RoI shape = <code class="docutils literal notranslate"><span class="pre">[N,</span> <span class="pre">1,</span> <span class="pre">4,</span> <span class="pre">1,</span> <span class="pre">1]</span></code>, the channel axis corresponds
+to the four coordinates specifying the bounding box.
 All the N~ RoIs are extracted from all the batches of the input.</p></li>
-<li><p>If RoI shape = <code class="docutils literal notranslate"><span class="pre">[N,</span> <span class="pre">1,</span> <span class="pre">5,</span> <span class="pre">1,</span> <span class="pre">1]</span></code>, the first element of the channel axis specifies the input batch id from which to extract the RoI and
-must be in the interval <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">Batch</span> <span class="pre">-</span> <span class="pre">1]</span></code>. That is, <code class="docutils literal notranslate"><span class="pre">n</span></code> -th RoI is extracted from the <code class="docutils literal notranslate"><span class="pre">RoI[n,0,0,0]</span></code> -th input batch id.
-The last four elements of the channel axis specify the bounding box coordinates.</p></li>
+<li><p>If RoI shape = <code class="docutils literal notranslate"><span class="pre">[N,</span> <span class="pre">1,</span> <span class="pre">5,</span> <span class="pre">1,</span> <span class="pre">1]</span></code>, the first element of the
+channel axis specifies the input batch id from which to extract the RoI and
+must be in the interval <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">Batch</span> <span class="pre">-</span> <span class="pre">1]</span></code>. That is, <code class="docutils literal notranslate"><span class="pre">n</span></code> -th RoI is
+extracted from the <code class="docutils literal notranslate"><span class="pre">RoI[n,0,0,0]</span></code> -th input batch id.
+The last four elements of the channel axis specify the
+bounding box coordinates.</p></li>
 </ul>
 </dd>
 <dt><strong>output_name: str</strong></dt><dd><p>The output blob name of this layer.</p>
@@ -3025,9 +3036,9 @@ the output is the same as the input.</p>
 <dd><p>Add a pooling layer to the model that performs spatial pooling.
 Refer to the <code class="docutils literal notranslate"><span class="pre">PoolingLayerParams</span></code> message in the specification
 (NeuralNetwork.proto) for more details.</p>
-<dl class="field-list">
+<dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><dl>
+<dd class="field-odd"><dl class="simple">
 <dt><strong>name: str</strong></dt><dd><p>The name of this layer.</p>
 </dd>
 <dt><strong>height: int</strong></dt><dd><p>Height of pooling region.</p>
@@ -3047,22 +3058,22 @@ Refer to the <code class="docutils literal notranslate"><span class="pre">Poolin
 </dd>
 <dt><strong>output_name: str</strong></dt><dd><p>The output blob name of this layer.</p>
 </dd>
-<dt><strong>exclude_pad_area: boolean</strong></dt><dd><p>Whether to exclude padded area in the <code class="docutils literal notranslate"><span class="pre">'AVERAGE'</span></code> pooling operation, default: true.
-- If True, the value of the padded area will be excluded.
-- If False, the padded area will be included.
-This flag is only used with average pooling.</p>
-</dd>
-<dt><strong>is_global: boolean</strong></dt><dd><p>Whether the pooling operation is global. Defaults to False.
-- If True, the pooling operation is global. The pooling region</p>
-<blockquote>
-<div><p>is of the same size of the input blob.
-Parameters <code class="docutils literal notranslate"><span class="pre">height</span></code>, <code class="docutils literal notranslate"><span class="pre">width</span></code>, <code class="docutils literal notranslate"><span class="pre">stride_height</span></code>, and <code class="docutils literal notranslate"><span class="pre">stride_width</span></code> will be ignored.</p>
-</div></blockquote>
+<dt><strong>exclude_pad_area: boolean</strong></dt><dd><p>Whether to exclude padded area in the <code class="docutils literal notranslate"><span class="pre">'AVERAGE'</span></code> pooling operation,
+default: true. This flag is only used with average pooling.</p>
 <ul class="simple">
+<li><p>If True, the value of the padded area will be excluded.</p></li>
+<li><p>If False, the padded area will be included.</p></li>
+</ul>
+</dd>
+<dt><strong>is_global: boolean</strong></dt><dd><p>Whether the pooling operation is global. Defaults to False.</p>
+<ul class="simple">
+<li><p>If True, the pooling operation is global. The pooling region
+is of the same size of the input blob.
+Parameters <code class="docutils literal notranslate"><span class="pre">height</span></code>, <code class="docutils literal notranslate"><span class="pre">width</span></code>, <code class="docutils literal notranslate"><span class="pre">stride_height</span></code>, and <code class="docutils literal notranslate"><span class="pre">stride_width</span></code> will be ignored.</p></li>
 <li><p>If False, the pooling operation is not global.</p></li>
 </ul>
 </dd>
-<dt><strong>padding_top, padding_bottom, padding_left, padding_right: int</strong></dt><dd><p>values of height (top, bottom) and width (left, right) padding
+<dt><strong>padding_top, padding_bottom, padding_left, padding_right: int</strong></dt><dd><p>Values of height (top, bottom) and width (left, right) padding
 to be used if padding type is <code class="docutils literal notranslate"><span class="pre">&quot;VALID&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;INCLUDE_LAST_PIXEL&quot;</span></code>.</p>
 </dd>
 <dt><strong>same_padding_asymmetry_mode: str.</strong></dt><dd><p>Type of asymmetric padding to be used when <code class="docutils literal notranslate"><span class="pre">padding_type</span> <span class="pre">=</span> <span class="pre">'SAME'</span></code>.

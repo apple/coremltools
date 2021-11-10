@@ -80,8 +80,16 @@
 <span class="c1">#  Use of this source code is governed by a BSD-3-clause license that can be</span>
 <span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
 
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">get_new_symbol</span>
-<span class="kn">from</span> <span class="nn">._op_reqs</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">._op_reqs</span> <span class="kn">import</span> <span class="n">register_op</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">types</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.input_type</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">BoolInputType</span><span class="p">,</span>
+    <span class="n">DefaultInputs</span><span class="p">,</span>
+    <span class="n">FloatInputType</span><span class="p">,</span>
+    <span class="n">InputSpec</span><span class="p">,</span>
+    <span class="n">TensorInputType</span><span class="p">,</span>
+    <span class="n">StringInputType</span>
+<span class="p">)</span>
 
 
 <div class="viewcode-block" id="gru"><a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.recurrent.gru">[docs]</a><span class="nd">@register_op</span><span class="p">(</span><span class="n">doc_str</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
@@ -103,7 +111,7 @@
 
 <span class="sd">    Where:</span>
 
-<span class="sd">    * ``W_{ir}``, ``W_{io}``, and `` W_{iz}`` state input-hidden weight for reset, output</span>
+<span class="sd">    * ``W_{ir}``, ``W_{io}``, and ``W_{iz}`` state input-hidden weight for reset, output</span>
 <span class="sd">      and update gate, respectively.</span>
 <span class="sd">    * ``W_{h[r|o|z]}`` are recurrent weights on hidden state to reset, output, update gate.</span>
 <span class="sd">    * ``h_t``  is the hidden state at time ``t``.</span>
@@ -207,7 +215,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight_hh</span><span class="o">.</span><span class="n">rank</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="s2">&quot;Invalid weight shape. Expecting Rank 2 input, got </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                    <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">self</span><span class="o">.</span><span class="n">weight_hh</span><span class="o">.</span><span class="n">rank</span><span class="p">)</span>
+                    <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weight_hh</span><span class="o">.</span><span class="n">rank</span><span class="p">)</span>
                 <span class="p">)</span>
             <span class="p">)</span>
 
@@ -226,8 +234,8 @@
         <span class="k">if</span> <span class="n">hidden_size</span> <span class="o">!=</span> <span class="p">(</span><span class="n">hidden_dim</span> <span class="o">//</span> <span class="n">dim_factor</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="s2">&quot;Incorrect weight matrix: hidden dim size mismatch. </span><span class="se">\</span>
-<span class="s2">                Provided weight_ih </span><span class="si">{}</span><span class="s2">,weight_hh </span><span class="si">{}</span><span class="s2">. Expecting &lt;b, 3*H&gt;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                    <span class="n">weight_ih</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">weight_hh</span><span class="o">.</span><span class="n">shape</span>
+<span class="s2">                Provided weight_ih </span><span class="si">{}</span><span class="s2">, weight_hh </span><span class="si">{}</span><span class="s2">. Expecting &lt;b, 3*H&gt;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">weight_ih</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight_hh</span><span class="o">.</span><span class="n">shape</span>
                 <span class="p">)</span>
 
         <span class="n">out_seq_len</span> <span class="o">=</span> <span class="n">sequence_length</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_sequence</span><span class="o">.</span><span class="n">val</span> <span class="k">else</span> <span class="mi">1</span>

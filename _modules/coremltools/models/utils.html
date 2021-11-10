@@ -83,8 +83,6 @@
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Utilities for the entire package.</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.name_sanitization_utils</span> <span class="kn">import</span> <span class="n">NameSanitizer</span> <span class="k">as</span> <span class="n">_NameSanitizer</span>
-<span class="kn">from</span> <span class="nn">coremltools.proto</span> <span class="kn">import</span> <span class="n">Model_pb2</span> <span class="k">as</span> <span class="n">_Model_pb2</span>
 <span class="kn">import</span> <span class="nn">math</span> <span class="k">as</span> <span class="nn">_math</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">_np</span>
 <span class="kn">import</span> <span class="nn">os</span> <span class="k">as</span> <span class="nn">_os</span>
@@ -92,8 +90,11 @@
 <span class="kn">import</span> <span class="nn">sys</span> <span class="k">as</span> <span class="nn">_sys</span>
 <span class="kn">import</span> <span class="nn">tempfile</span> <span class="k">as</span> <span class="nn">_tempfile</span>
 <span class="kn">import</span> <span class="nn">warnings</span> <span class="k">as</span> <span class="nn">_warnings</span>
+
+<span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">ComputeUnit</span> <span class="k">as</span> <span class="n">_ComputeUnit</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.name_sanitization_utils</span> <span class="kn">import</span> <span class="n">NameSanitizer</span> <span class="k">as</span> <span class="n">_NameSanitizer</span>
+<span class="kn">from</span> <span class="nn">coremltools.proto</span> <span class="kn">import</span> <span class="n">Model_pb2</span> <span class="k">as</span> <span class="n">_Model_pb2</span>
 <span class="kn">from</span> <span class="nn">.._deps</span> <span class="kn">import</span> <span class="n">_HAS_SCIPY</span>
-<span class="kn">from</span> <span class="nn">..libmodelpackage</span> <span class="kn">import</span> <span class="n">ModelPackage</span>
 
 
 <span class="n">_MLMODEL_EXTENSION</span> <span class="o">=</span> <span class="s2">&quot;.mlmodel&quot;</span>
@@ -101,9 +102,9 @@
 
 
 <span class="k">try</span><span class="p">:</span>
-    <span class="kn">from</span> <span class="nn">..libmodelpackage</span> <span class="kn">import</span> <span class="n">ModelPackage</span>
-<span class="k">except</span> <span class="ne">ModuleNotFoundError</span><span class="p">:</span>
-    <span class="k">pass</span>
+    <span class="kn">from</span> <span class="nn">..libmodelpackage</span> <span class="kn">import</span> <span class="n">ModelPackage</span> <span class="k">as</span> <span class="n">_ModelPackage</span>
+<span class="k">except</span><span class="p">:</span>
+    <span class="n">_ModelPackage</span> <span class="o">=</span> <span class="kc">None</span>
 
 <span class="k">if</span> <span class="n">_HAS_SCIPY</span><span class="p">:</span>
     <span class="kn">import</span> <span class="nn">scipy.sparse</span> <span class="k">as</span> <span class="nn">_sp</span>
@@ -186,7 +187,12 @@
         <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">is_package</span><span class="p">:</span>
-        <span class="n">package</span> <span class="o">=</span> <span class="n">ModelPackage</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">_ModelPackage</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+                <span class="s2">&quot;Unable to load libmodelpackage. Cannot save spec&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">package</span> <span class="o">=</span> <span class="n">_ModelPackage</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
         <span class="n">model_name</span> <span class="o">=</span> <span class="n">_pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s1">&#39;.mlmodel&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">name</span>
         
         <span class="c1"># Root file is copied into the model package. Changes to in-memory JSON is commited to disk when package goes out of scope.</span>
@@ -217,13 +223,16 @@
 <span class="sd">    --------</span>
 <span class="sd">    save_spec</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span> <span class="nn">..proto</span> <span class="kn">import</span> <span class="n">Model_pb2</span>
+    <span class="k">if</span> <span class="n">_ModelPackage</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+            <span class="s2">&quot;Unable to load libmodelpackage. Cannot make save spec.&quot;</span>
+        <span class="p">)</span>
 
-    <span class="n">spec</span> <span class="o">=</span> <span class="n">Model_pb2</span><span class="o">.</span><span class="n">Model</span><span class="p">()</span>
+    <span class="n">spec</span> <span class="o">=</span> <span class="n">_Model_pb2</span><span class="o">.</span><span class="n">Model</span><span class="p">()</span>
 
     <span class="n">specfile</span> <span class="o">=</span> <span class="n">filename</span>
-    <span class="k">if</span> <span class="n">ModelPackage</span><span class="o">.</span><span class="n">isValid</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
-        <span class="n">specfile</span> <span class="o">=</span> <span class="n">ModelPackage</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span><span class="o">.</span><span class="n">getRootModel</span><span class="p">()</span><span class="o">.</span><span class="n">path</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">_ModelPackage</span><span class="o">.</span><span class="n">isValid</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+        <span class="n">specfile</span> <span class="o">=</span> <span class="n">_ModelPackage</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span><span class="o">.</span><span class="n">getRootModel</span><span class="p">()</span><span class="o">.</span><span class="n">path</span><span class="p">()</span>
 
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">specfile</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
         <span class="n">contents</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
@@ -341,7 +350,7 @@
     <span class="k">return</span> <span class="n">_get_model</span><span class="p">(</span><span class="n">_convert_neural_network_spec_weights_to_fp16</span><span class="p">(</span><span class="n">spec</span><span class="p">))</span>
 
 
-<span class="k">def</span> <span class="nf">_get_model</span><span class="p">(</span><span class="n">spec</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_get_model</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">compute_units</span><span class="o">=</span><span class="n">_ComputeUnit</span><span class="o">.</span><span class="n">ALL</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Utility to get the model and the data.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -350,7 +359,7 @@
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">MLModel</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">spec</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">MLModel</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">MLModel</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">compute_units</span><span class="o">=</span><span class="n">compute_units</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="evaluate_regressor"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.utils.evaluate_regressor">[docs]</a><span class="k">def</span> <span class="nf">evaluate_regressor</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">&quot;target&quot;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>

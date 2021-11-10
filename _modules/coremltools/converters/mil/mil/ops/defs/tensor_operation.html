@@ -91,13 +91,32 @@
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">get_new_symbol</span><span class="p">,</span>
     <span class="n">get_new_variadic_symbol</span><span class="p">,</span>
-    <span class="n">SYMBOL</span><span class="p">,</span>
-    <span class="n">VALUE</span><span class="p">,</span>
+    <span class="n">types</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.input_type</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">BoolInputType</span><span class="p">,</span>
+    <span class="n">DefaultInputs</span><span class="p">,</span>
+    <span class="n">FloatInputType</span><span class="p">,</span>
+    <span class="n">InputSpec</span><span class="p">,</span>
+    <span class="n">IntInputType</span><span class="p">,</span>
+    <span class="n">IntOrFloatInputType</span><span class="p">,</span>
+    <span class="n">IntOrFloatOrBoolInputType</span><span class="p">,</span>
+    <span class="n">IntTensorInputType</span><span class="p">,</span>
+    <span class="n">ListOrScalarOrTensorInputType</span><span class="p">,</span>
+    <span class="n">ScalarOrTensorInputType</span><span class="p">,</span>
+    <span class="n">StringInputType</span><span class="p">,</span>
+    <span class="n">TensorInputType</span><span class="p">,</span>
+    <span class="n">TupleInputType</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.operation</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">NONE</span><span class="p">,</span>
+    <span class="n">Operation</span><span class="p">,</span>
+    <span class="n">precondition</span><span class="p">,</span>
+    <span class="n">SYMBOL</span><span class="p">,</span>
+    <span class="n">VALUE</span>
 <span class="p">)</span>
 
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">types</span>
-<span class="kn">from</span> <span class="nn">._op_reqs</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">._op_reqs</span> <span class="kn">import</span> <span class="n">register_op</span>
 <span class="kn">from</span> <span class="nn">._utils</span> <span class="kn">import</span> <span class="n">promoted_primitive_type</span>
 
 
@@ -481,17 +500,19 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
+<span class="sd">    </span>
 <span class="sd">    x: tensor&lt;[\*D_in],T&gt;  (Required)</span>
 
 <span class="sd">    pad: tensor&lt;[2\*N],i32&gt; (Required)</span>
-<span class="sd">        * ``N &lt;= D_in``: Last ``N`` dimensions of ``x`` are padded as follows: For</span>
-<span class="sd">          each dimension ``i`` of ``x`` if ``i &gt;= D_in - N``:</span>
+<span class="sd">        ``N &lt;= D_in``. Last ``N`` dimensions of ``x`` are padded as follows:</span>
+<span class="sd">        </span>
+<span class="sd">        * For each dimension ``i`` of ``x`` if ``i &gt;= D_in - N``:</span>
 <span class="sd">            * pad ``pad[2*i]`` elements before ``x[..,i,..]``</span>
 <span class="sd">            * pad ``pad[2*i+1]`` elements after ``x[..,i,..]``</span>
 <span class="sd">        * If mode is &quot;reflect&quot; then ``pad[2*i]`` and ``pad[2*i+1]`` can be at</span>
-<span class="sd">        most ``D[i]-1``.</span>
+<span class="sd">          most ``D[i]-1``.</span>
 <span class="sd">        * If mode is &quot;replicate&quot; then ``pad[2*i]`` and ``pad[2*i+1]`` can be</span>
-<span class="sd">        at most ``D[i]``.</span>
+<span class="sd">          at most ``D[i]``.</span>
 
 <span class="sd">    mode: const&lt;str&gt; (Optional)</span>
 <span class="sd">        * Default to ``constant``.</span>
@@ -687,7 +708,6 @@
                 <span class="s2">&quot;equal to the rank of the input x (</span><span class="si">{}</span><span class="s2">)&quot;</span>
             <span class="p">)</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">reps</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">rank</span><span class="p">))</span>
-
 
         <span class="n">out_shape</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">rep</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">reps</span><span class="p">):</span>
@@ -996,7 +1016,7 @@
     <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span><span class="n">values</span><span class="o">=</span><span class="n">TupleInputType</span><span class="p">(),</span>
                            <span class="n">axis</span><span class="o">=</span><span class="n">IntInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
                            <span class="n">interleave</span><span class="o">=</span><span class="n">BoolInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                             <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+                                                    <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="nf">default_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">DefaultInputs</span><span class="p">(</span>
@@ -1105,6 +1125,7 @@
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="o">.</span><span class="n">val</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="o">.</span><span class="n">val</span><span class="p">)</span></div>
+
 
 <div class="viewcode-block" id="split"><a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.tensor_operation.split">[docs]</a><span class="nd">@register_op</span><span class="p">(</span><span class="n">doc_str</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">split</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
@@ -1258,7 +1279,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span><span class="n">values</span><span class="o">=</span><span class="n">TupleInputType</span><span class="p">(),</span>
-        <span class="n">axis</span><span class="o">=</span><span class="n">IntInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">),)</span>
+                           <span class="n">axis</span><span class="o">=</span><span class="n">IntInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">),)</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">stack</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>

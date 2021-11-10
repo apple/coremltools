@@ -80,16 +80,23 @@
 <span class="c1">#  Use of this source code is governed by a BSD-3-clause license that can be</span>
 <span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
 
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">types</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.input_type</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">BoolInputType</span><span class="p">,</span>
+    <span class="n">DefaultInputs</span><span class="p">,</span>
+    <span class="n">InputSpec</span><span class="p">,</span>
+    <span class="n">IntTensorInputType</span><span class="p">,</span>
+    <span class="n">TensorInputType</span><span class="p">,</span>
+    <span class="n">StringInputType</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs._op_reqs</span> <span class="kn">import</span> <span class="n">register_op</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs._utils</span> <span class="kn">import</span> <span class="n">spatial_dimensions_out_shape</span>
-
-<span class="kn">from</span> <span class="nn">._op_reqs</span> <span class="kn">import</span> <span class="o">*</span>
-
-<span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">Pooling Op Superclass</span>
-<span class="sd">&quot;&quot;&quot;</span>
 
 
 <span class="k">class</span> <span class="nc">Pooling</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Pooling Op Superclass</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
         <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(),</span>
         <span class="n">kernel_sizes</span><span class="o">=</span><span class="n">IntTensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
@@ -228,12 +235,11 @@
     <span class="n">input_spec</span> <span class="o">=</span> <span class="p">(</span>
         <span class="n">InputSpec</span><span class="p">(</span>
           <span class="n">exclude_padding_from_average</span><span class="o">=</span><span class="n">BoolInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-            <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+                                                     <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
         <span class="o">+</span> <span class="n">Pooling</span><span class="o">.</span><span class="n">input_spec</span>
     <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">default_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">num_spatial_dims</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">rank</span> <span class="o">-</span> <span class="mi">2</span>
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">default_inputs</span><span class="p">()</span> <span class="o">+</span> \
             <span class="n">DefaultInputs</span><span class="p">(</span>
                 <span class="n">exclude_padding_from_average</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>

@@ -86,7 +86,6 @@
     <span class="n">IntInputType</span><span class="p">,</span>
     <span class="n">IntTensorInputType</span><span class="p">,</span>
     <span class="n">Operation</span><span class="p">,</span>
-    <span class="n">OrderedDict</span><span class="p">,</span>
     <span class="n">TensorInputType</span><span class="p">,</span>
     <span class="n">types</span><span class="p">,</span>
     <span class="n">ScalarOrTensorInputType</span><span class="p">,</span>
@@ -234,7 +233,6 @@
         <span class="n">inshape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span>
         <span class="n">f_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight</span><span class="o">.</span><span class="n">shape</span>
         <span class="n">kernel_shape</span> <span class="o">=</span> <span class="n">f_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span>
-        <span class="n">num_dims</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">inshape</span><span class="p">)</span> <span class="o">-</span> <span class="mi">2</span>
         <span class="n">C_out</span> <span class="o">=</span> <span class="n">f_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">C_in</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
         <span class="n">groups</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">groups</span><span class="o">.</span><span class="n">val</span>
