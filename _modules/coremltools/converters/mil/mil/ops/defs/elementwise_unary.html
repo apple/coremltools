@@ -82,9 +82,9 @@
 <span class="kn">import</span> <span class="nn">math</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">types</span><span class="p">,</span> <span class="n">VALUE</span><span class="p">,</span> <span class="n">SYMBOL</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">types</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.operation</span> <span class="kn">import</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">precondition</span><span class="p">,</span> <span class="n">SYMBOL</span><span class="p">,</span> <span class="n">VALUE</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.types.symbolic</span> <span class="kn">import</span> <span class="n">is_symbolic</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.operation</span> <span class="kn">import</span> <span class="n">precondition</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs._op_reqs</span> <span class="kn">import</span> <span class="n">register_op</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.input_type</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">DefaultInputs</span><span class="p">,</span>
@@ -398,7 +398,7 @@
 <div class="viewcode-block" id="exp"><a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.elementwise_unary.exp">[docs]</a><span class="nd">@register_op</span><span class="p">(</span><span class="n">doc_str</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">exp</span><span class="p">(</span><span class="n">elementwise_unary</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Return the exponential values of the input ``x``, element-wise.</span>
+<span class="sd">    Return e^x, element-wise.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -425,7 +425,7 @@
 <div class="viewcode-block" id="exp2"><a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.elementwise_unary.exp2">[docs]</a><span class="nd">@register_op</span><span class="p">(</span><span class="n">doc_str</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">exp2</span><span class="p">(</span><span class="n">elementwise_unary</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Return the exponential values of the input ``x``, element-wise.</span>
+<span class="sd">    Return 2^x, element-wise.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -595,7 +595,8 @@
 <div class="viewcode-block" id="round"><a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.elementwise_unary.round">[docs]</a><span class="nd">@register_op</span><span class="p">(</span><span class="n">doc_str</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">round</span><span class="p">(</span><span class="n">elementwise_unary</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Return the round value of the input ``x``, element-wise.</span>
+<span class="sd">    Return the round value of the input ``x`` to nearest integer, element-wise.</span>
+<span class="sd">    ``0.5`` is rounded to ``0``.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -667,6 +668,8 @@
 <span class="k">class</span> <span class="nc">sign</span><span class="p">(</span><span class="n">elementwise_unary</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return the sign value of the input ``x``, element-wise.</span>
+
+<span class="sd">    All elements in the output will be either ``-1``. or ``1``.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -774,7 +777,7 @@
 <div class="viewcode-block" id="square"><a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.elementwise_unary.square">[docs]</a><span class="nd">@register_op</span><span class="p">(</span><span class="n">doc_str</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">square</span><span class="p">(</span><span class="n">elementwise_unary</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Return the square value of the input ``x``, element-wise.</span>
+<span class="sd">    Return ``x^2``, element-wise.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>

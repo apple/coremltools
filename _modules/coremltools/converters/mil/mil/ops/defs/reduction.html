@@ -86,7 +86,6 @@
     <span class="n">Operation</span><span class="p">,</span>
     <span class="n">precondition</span><span class="p">,</span>
     <span class="n">types</span><span class="p">,</span>
-    <span class="n">VALUE</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.input_type</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">BoolInputType</span><span class="p">,</span>
@@ -96,6 +95,7 @@
     <span class="n">IntTensorInputType</span><span class="p">,</span>
     <span class="n">TensorInputType</span>
 <span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.operation</span> <span class="kn">import</span> <span class="n">VALUE</span>
 
 
 <span class="k">class</span> <span class="nc">ReductionAxes</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
@@ -193,12 +193,7 @@
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
 
 
-<span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">Reduction op implementations</span>
-<span class="sd">&quot;&quot;&quot;</span>
-
-
-<div class="viewcode-block" id="reduce_arg"><a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.reduction.reduce_arg">[docs]</a><span class="nd">@register_op</span><span class="p">(</span><span class="n">doc_str</span><span class="o">=</span><span class="s2">&quot;TODO&quot;</span><span class="p">)</span>
+<div class="viewcode-block" id="reduce_arg"><a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.reduction.reduce_arg">[docs]</a><span class="nd">@register_op</span><span class="p">(</span><span class="n">doc_str</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">reduce_arg</span><span class="p">(</span><span class="n">ReductionAxis</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">reduce_arg</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -216,6 +211,10 @@
 
         <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">reduced_shape</span><span class="p">))</span></div>
 
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Reduction op implementations</span>
+<span class="sd">&quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="reduce_argmax"><a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.reduction.reduce_argmax">[docs]</a><span class="nd">@register_op</span><span class="p">(</span><span class="n">doc_str</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">reduce_argmax</span><span class="p">(</span><span class="n">reduce_arg</span><span class="p">):</span>
@@ -623,7 +622,7 @@
 <span class="sd">    </span>
 <span class="sd">    axes: const&lt;K,i32&gt; (Optional, default=&quot;None&quot;, reduce on all axes.)</span>
 <span class="sd">        * The dimensions to reduce.</span>
-<span class="sd">    </span>
+
 <span class="sd">    keep_dims: const&lt;bool&gt; (Optional, default=False)</span>
 <span class="sd">        * If ``False``, the rank is reduced by ``1`` for each entry in ``axes``,</span>
 <span class="sd">          otherwise retain reduced axes with length ``1``.</span>
@@ -638,7 +637,7 @@
 <span class="sd">    T: f32, int32</span>
 <span class="sd">    </span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    
+
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">reduce_sum</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 

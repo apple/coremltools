@@ -6,4 +6,3 @@ MIL Builder
    .. autoclass:: Builder
       :members:
       
-      .. method:: program

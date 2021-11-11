@@ -82,7 +82,7 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">numbers</span>
 
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">types</span><span class="p">,</span> <span class="n">SYMBOL</span><span class="p">,</span> <span class="n">VALUE</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">types</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.input_type</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">DefaultInputs</span><span class="p">,</span>
     <span class="n">InputSpec</span><span class="p">,</span>
@@ -94,6 +94,11 @@
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.operation</span> <span class="kn">import</span> <span class="n">precondition</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs._op_reqs</span> <span class="kn">import</span> <span class="n">register_op</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.types.symbolic</span> <span class="kn">import</span> <span class="n">is_compatible_symbolic_vector</span><span class="p">,</span> <span class="n">is_symbolic</span>
+
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.operation</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">SYMBOL</span><span class="p">,</span>
+    <span class="n">VALUE</span>
+<span class="p">)</span>
 
 
 <div class="viewcode-block" id="gather"><a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.scatter_gather.gather">[docs]</a><span class="nd">@register_op</span><span class="p">(</span><span class="n">doc_str</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
@@ -258,6 +263,7 @@
 <span class="sd">    mode: const string (Optional)</span>
 <span class="sd">        * Can be the following modes: ``update``, ``add``, ``sub``, ``mul``,</span>
 <span class="sd">          ``div``, ``max``, ``min``.</span>
+<span class="sd">        * Default value is ``update``.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -301,13 +307,9 @@
         <span class="p">)</span>
 
         <span class="n">err</span> <span class="o">=</span> <span class="s2">&quot;Updates shape </span><span class="si">{}</span><span class="s2"> is incorrect. It should be </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">updates</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">expected_updates_shape</span><span class="p">)</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">updates</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">expected_updates_shape</span><span class="p">):</span>
-            <span class="k">for</span> <span class="n">dim1</span><span class="p">,</span> <span class="n">dim2</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">updates</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">expected_updates_shape</span><span class="p">):</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">is_symbolic</span><span class="p">(</span><span class="n">dim1</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_symbolic</span><span class="p">(</span><span class="n">dim2</span><span class="p">):</span>
-                    <span class="k">if</span> <span class="n">dim1</span> <span class="o">!=</span> <span class="n">dim2</span><span class="p">:</span>
-                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">err</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">is_compatible_symbolic_vector</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">updates</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">expected_updates_shape</span><span class="p">)</span>
+        <span class="p">),</span> <span class="n">err</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">sym_type</span></div>
 
@@ -494,7 +496,9 @@
         <span class="n">axis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="o">.</span><span class="n">val</span>
         <span class="n">axis</span> <span class="o">=</span> <span class="n">axis</span> <span class="k">if</span> <span class="n">axis</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">axis</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">rank</span>
 
-        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">indices</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">updates</span><span class="o">.</span><span class="n">shape</span>
+        <span class="k">assert</span> <span class="n">is_compatible_symbolic_vector</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">indices</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">updates</span><span class="o">.</span><span class="n">shape</span>
+        <span class="p">)</span>
         <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">rank</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">indices</span><span class="o">.</span><span class="n">rank</span>
         <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">rank</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">axis</span><span class="p">:</span>

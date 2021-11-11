@@ -616,31 +616,7 @@ the operation’s return type.</p></li>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.control_flow.const">
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.control_flow.</span></span><span class="sig-name descname"><span class="pre">const</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/control_flow.html#const"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.control_flow.const" title="Permalink to this definition"></a></dt>
-<dd><p>Return constant values.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>mode: immediate_value, file_value (Optional)</strong></dt><dd><ul class="simple">
-<li><p>Determines how the constant value is stored in the internal MIL format.</p></li>
-<li><p>For  large constants such as convolution weights, use <code class="docutils literal notranslate"><span class="pre">file_value</span></code>.</p></li>
-<li><p>For smaller-size constants such as values of a stride, use <code class="docutils literal notranslate"><span class="pre">immediate_value</span></code>.</p></li>
-</ul>
-</dd>
-<dt><strong>val: const&lt;*,T&gt; (Required)</strong></dt><dd></dd>
-</dl>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><dl class="simple">
-<dt>const&lt;*,T&gt;</dt><dd></dd>
-</dl>
-</dd>
-<dt class="field-odd">Attributes</dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>T: fp32, i32, str</strong></dt><dd></dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
+<dd></dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.control_flow.select">
@@ -2027,7 +2003,7 @@ output range is <code class="docutils literal notranslate"><span class="pre">[-1
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.elementwise_unary.exp">
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.elementwise_unary.</span></span><span class="sig-name descname"><span class="pre">exp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/elementwise_unary.html#exp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.elementwise_unary.exp" title="Permalink to this definition"></a></dt>
-<dd><p>Return the exponential values of the input <code class="docutils literal notranslate"><span class="pre">x</span></code>, element-wise.</p>
+<dd><p>Return e^x, element-wise.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
@@ -2053,7 +2029,7 @@ output range is <code class="docutils literal notranslate"><span class="pre">[-1
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.elementwise_unary.exp2">
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.elementwise_unary.</span></span><span class="sig-name descname"><span class="pre">exp2</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/elementwise_unary.html#exp2"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.elementwise_unary.exp2" title="Permalink to this definition"></a></dt>
-<dd><p>Return the exponential values of the input <code class="docutils literal notranslate"><span class="pre">x</span></code>, element-wise.</p>
+<dd><p>Return 2^x, element-wise.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
@@ -2197,7 +2173,8 @@ for false in numeric domain.) A numeric value <code class="docutils literal notr
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.elementwise_unary.round">
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.elementwise_unary.</span></span><span class="sig-name descname"><span class="pre">round</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/elementwise_unary.html#round"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.elementwise_unary.round" title="Permalink to this definition"></a></dt>
-<dd><p>Return the round value of the input <code class="docutils literal notranslate"><span class="pre">x</span></code>, element-wise.</p>
+<dd><p>Return the round value of the input <code class="docutils literal notranslate"><span class="pre">x</span></code> to nearest integer, element-wise.
+<code class="docutils literal notranslate"><span class="pre">0.5</span></code> is rounded to <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
@@ -2256,6 +2233,7 @@ for false in numeric domain.) A numeric value <code class="docutils literal notr
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.elementwise_unary.sign">
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.elementwise_unary.</span></span><span class="sig-name descname"><span class="pre">sign</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/elementwise_unary.html#sign"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.elementwise_unary.sign" title="Permalink to this definition"></a></dt>
 <dd><p>Return the sign value of the input <code class="docutils literal notranslate"><span class="pre">x</span></code>, element-wise.</p>
+<p>All elements in the output will be either <code class="docutils literal notranslate"><span class="pre">-1</span></code>. or <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
@@ -2359,7 +2337,7 @@ for false in numeric domain.) A numeric value <code class="docutils literal notr
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.elementwise_unary.square">
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.elementwise_unary.</span></span><span class="sig-name descname"><span class="pre">square</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/elementwise_unary.html#square"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.elementwise_unary.square" title="Permalink to this definition"></a></dt>
-<dd><p>Return the square value of the input <code class="docutils literal notranslate"><span class="pre">x</span></code>, element-wise.</p>
+<dd><p>Return <code class="docutils literal notranslate"><span class="pre">x^2</span></code>, element-wise.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
@@ -3201,7 +3179,7 @@ shape <code class="docutils literal notranslate"><span class="pre">(5,6)</span><
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.normalization.</span></span><span class="sig-name descname"><span class="pre">local_response_norm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/normalization.html#local_response_norm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.normalization.local_response_norm" title="Permalink to this definition"></a></dt>
 <dd><p>Apply local response normalization to the n-dimensional input tensor:</p>
 <div class="math notranslate nohighlight">
-\[x_i \leftarrow \dfrac{x_i}{\left ( k + \dfrac{\alpha}{   ext{size}} \sum_j x_j^2 \right )^\beta}\]</div>
+\[x_i \leftarrow \dfrac{x_i}{\left ( k + \dfrac{\alpha}{\text{size}} \sum_j x_j^2 \right )^\beta}\]</div>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
@@ -3678,7 +3656,7 @@ the results are officially undefined and may eventually raise an error.</p>
 \[h_t = (1 − z_t) * o_t + z_t * h_{(t−1)}\]</div>
 <p>Where:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">W_{ir}</span></code>, <code class="docutils literal notranslate"><span class="pre">W_{io}</span></code>, and `` W_{iz}`` state input-hidden weight for reset, output
+<li><p><code class="docutils literal notranslate"><span class="pre">W_{ir}</span></code>, <code class="docutils literal notranslate"><span class="pre">W_{io}</span></code>, and <code class="docutils literal notranslate"><span class="pre">W_{iz}</span></code> state input-hidden weight for reset, output
 and update gate, respectively.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">W_{h[r|o|z]}</span></code> are recurrent weights on hidden state to reset, output, update gate.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">h_t</span></code>  is the hidden state at time <code class="docutils literal notranslate"><span class="pre">t</span></code>.</p></li>
@@ -4602,6 +4580,7 @@ by operation <code class="docutils literal notranslate"><span class="pre">mode</
 <dt><strong>mode: const string (Optional)</strong></dt><dd><ul class="simple">
 <li><p>Can be the following modes: <code class="docutils literal notranslate"><span class="pre">update</span></code>, <code class="docutils literal notranslate"><span class="pre">add</span></code>, <code class="docutils literal notranslate"><span class="pre">sub</span></code>, <code class="docutils literal notranslate"><span class="pre">mul</span></code>,
 <code class="docutils literal notranslate"><span class="pre">div</span></code>, <code class="docutils literal notranslate"><span class="pre">max</span></code>, <code class="docutils literal notranslate"><span class="pre">min</span></code>.</p></li>
+<li><p>Default value is <code class="docutils literal notranslate"><span class="pre">update</span></code>.</p></li>
 </ul>
 </dd>
 </dl>
@@ -5109,25 +5088,25 @@ while other locations take the <code class="docutils literal notranslate"><span 
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.tensor_operation.pad">
 <em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.tensor_operation.</span></span><span class="sig-name descname"><span class="pre">pad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/tensor_operation.html#pad"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.tensor_operation.pad" title="Permalink to this definition"></a></dt>
 <dd><p>Pad a tensor.</p>
-<dl class="field-list">
+<dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><dl>
+<dd class="field-odd"><dl class="simple">
 <dt><strong>x: tensor&lt;[*D_in],T&gt;  (Required)</strong></dt><dd></dd>
-<dt><strong>pad: tensor&lt;[2*N],i32&gt; (Required)</strong></dt><dd><ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">N</span> <span class="pre">&lt;=</span> <span class="pre">D_in</span></code>: Last <code class="docutils literal notranslate"><span class="pre">N</span></code> dimensions of <code class="docutils literal notranslate"><span class="pre">x</span></code> are padded as follows: For
-each dimension <code class="docutils literal notranslate"><span class="pre">i</span></code> of <code class="docutils literal notranslate"><span class="pre">x</span></code> if <code class="docutils literal notranslate"><span class="pre">i</span> <span class="pre">&gt;=</span> <span class="pre">D_in</span> <span class="pre">-</span> <span class="pre">N</span></code>:</p>
-<blockquote>
-<div><ul class="simple">
+<dt><strong>pad: tensor&lt;[2*N],i32&gt; (Required)</strong></dt><dd><p><code class="docutils literal notranslate"><span class="pre">N</span> <span class="pre">&lt;=</span> <span class="pre">D_in</span></code>. Last <code class="docutils literal notranslate"><span class="pre">N</span></code> dimensions of <code class="docutils literal notranslate"><span class="pre">x</span></code> are padded as follows:</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt>For each dimension <code class="docutils literal notranslate"><span class="pre">i</span></code> of <code class="docutils literal notranslate"><span class="pre">x</span></code> if <code class="docutils literal notranslate"><span class="pre">i</span> <span class="pre">&gt;=</span> <span class="pre">D_in</span> <span class="pre">-</span> <span class="pre">N</span></code>:</dt><dd><ul>
 <li><p>pad <code class="docutils literal notranslate"><span class="pre">pad[2*i]</span></code> elements before <code class="docutils literal notranslate"><span class="pre">x[..,i,..]</span></code></p></li>
 <li><p>pad <code class="docutils literal notranslate"><span class="pre">pad[2*i+1]</span></code> elements after <code class="docutils literal notranslate"><span class="pre">x[..,i,..]</span></code></p></li>
 </ul>
-</div></blockquote>
+</dd>
+</dl>
 </li>
-<li><p>If mode is “reflect” then <code class="docutils literal notranslate"><span class="pre">pad[2*i]</span></code> and <code class="docutils literal notranslate"><span class="pre">pad[2*i+1]</span></code> can be at</p></li>
+<li><p>If mode is “reflect” then <code class="docutils literal notranslate"><span class="pre">pad[2*i]</span></code> and <code class="docutils literal notranslate"><span class="pre">pad[2*i+1]</span></code> can be at
+most <code class="docutils literal notranslate"><span class="pre">D[i]-1</span></code>.</p></li>
+<li><p>If mode is “replicate” then <code class="docutils literal notranslate"><span class="pre">pad[2*i]</span></code> and <code class="docutils literal notranslate"><span class="pre">pad[2*i+1]</span></code> can be
+at most <code class="docutils literal notranslate"><span class="pre">D[i]</span></code>.</p></li>
 </ul>
-<p>most <code class="docutils literal notranslate"><span class="pre">D[i]-1</span></code>.
-* If mode is “replicate” then <code class="docutils literal notranslate"><span class="pre">pad[2*i]</span></code> and <code class="docutils literal notranslate"><span class="pre">pad[2*i+1]</span></code> can be
-at most <code class="docutils literal notranslate"><span class="pre">D[i]</span></code>.</p>
 </dd>
 <dt><strong>mode: const&lt;str&gt; (Optional)</strong></dt><dd><ul class="simple">
 <li><p>Default to <code class="docutils literal notranslate"><span class="pre">constant</span></code>.</p></li>

@@ -804,7 +804,7 @@
         <span class="n">layer_type</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">WhichOneof</span><span class="p">(</span><span class="s2">&quot;layer&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">selector</span><span class="o">.</span><span class="n">do_quantize</span><span class="p">(</span><span class="n">layer</span><span class="p">):</span>
             <span class="k">continue</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Quantizing layer </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Quantizing layer </span><span class="si">{}</span><span class="s2"> of type </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">layer</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">layer_type</span><span class="p">))</span>
 
         <span class="c1"># Convolution</span>
         <span class="k">if</span> <span class="n">layer_type</span> <span class="o">==</span> <span class="s2">&quot;convolution&quot;</span><span class="p">:</span>
@@ -1720,7 +1720,7 @@
             <span class="s2">&quot;specification instead.&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">qspec</span>
 
-    <span class="n">quantized_model</span> <span class="o">=</span> <span class="n">_get_model</span><span class="p">(</span><span class="n">qspec</span><span class="p">)</span>
+    <span class="n">quantized_model</span> <span class="o">=</span> <span class="n">_get_model</span><span class="p">(</span><span class="n">qspec</span><span class="p">,</span> <span class="n">compute_units</span><span class="o">=</span><span class="n">full_precision_model</span><span class="o">.</span><span class="n">compute_unit</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">sample_data</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">quantized_model</span>
 
