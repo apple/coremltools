@@ -1,6 +1,7 @@
 import tensorflow as tf 
 import matplotlib.pyplot as plt
 import numpy as np 
+import coremltools as tc
 
 class RU(tf.keras.layers.Layer) :
     def __init__(self,filters,activation = "relu",strides = 1) :
@@ -53,4 +54,11 @@ model.add(tf.keras.layers.GlobalAvgPool2D())
 model.add(tf.keras.layers.Flatten())
 model.add(tf.keras.layers.Dense(10,activation = "softmax"))
 
-model.summary() 
+model.summary() #show summary
+
+
+model = tc.convert(model)# convert tf2 model to coreml model
+
+
+
+
