@@ -671,25 +671,25 @@ def _convolution(context, node):
         conv = mb.conv(**kwargs)
     context.add(conv)
 
+
 # Convolution with "same" padding
 @register_torch_op
 def _convolution_mode(context, node):
     inputs = _get_inputs(context, node, expected=7)
-    #import ipdb; ipdb.set_trace()
-
     assert(inputs[4].val == "same")
     
-    args = {
-        "x": inputs[0],
-        "weight": inputs[1],
-        "bias": inputs[2],
-        "strides": inputs[3],
-        "pad_type": "same",
-        "dilations": inputs[5],
-        "groups": inputs[6],
-        "name": node.name
-    }
-    context.add(mb.conv(**args))
+    context.add(mb.conv(
+        x=inputs[0],
+        weight=inputs[1],
+        bias=inputs[2],
+        strides=inputs[3],
+        pad_type="same",
+        dilations=inputs[5],
+        groups=inputs[6],
+        name=node.name
+        )
+    )
+
 
 @register_torch_op
 def softmax(context, node):
