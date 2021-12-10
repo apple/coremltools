@@ -453,6 +453,25 @@ class TestConv(TorchBaseTest):
         self.run_compare_torch((1, in_channels, height, width), model,
                            backend=backend)
 
+    @pytest.mark.parametrize("height, width, in_channels, out_channels, kernel_size, stride, dilation, groups, bias, backend",
+                             itertools.product(
+                                 (5, 3, 7),
+                                 (3, 5),
+                                 (1, 3),
+                                 (1, 3),
+                                 (1, 2),
+                                 (1, 2, 3),
+                                 (1, 3),
+                                 (1, 2),
+                                 (True, False),
+                                 backends
+                             ))
+    def test_convolution_same_padding(self, height, width, in_channels, out_channels, kernel_size, stride, dilation, groups, bias, backend):
+        model = torch.nn.Conv2d(in_channels=in_channels, out_channels=out_channels, kernel_size=kernel_size,
+                                padding="same", stride=1, dilation=1, groups=1, bias=bias, padding_mode='zeros', device=None, dtype=None)
+        self.run_compare_torch((1, in_channels, height, width), model, backend=backend)
+
+
 class TestDynamicConv(TorchBaseTest):
     @pytest.mark.parametrize(
         "width, in_channels, out_channels, kernel_size, stride, padding, backend",
