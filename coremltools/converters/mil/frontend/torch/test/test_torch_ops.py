@@ -417,7 +417,7 @@ class TestLinear(TorchBaseTest):
 class TestConv(TorchBaseTest):
     @pytest.mark.parametrize(
         "height, width, in_channels, out_channels, kernel_size, stride, padding, dilation, backend",
-        [ (*param, bend) for param, bend in itertools.product([
+        [ (*param, backend) for param, backend in itertools.product([
              (5, 3, 1, 1, 1, 2, 0, 1),
              (3, 3, 1, 1, 1, 2, 1, 3),
              (4, 3, 3, 3, 2, 2, 0, 1),
@@ -452,6 +452,32 @@ class TestConv(TorchBaseTest):
         )
         self.run_compare_torch((1, in_channels, height, width), model,
                            backend=backend)
+
+    @pytest.mark.parametrize("height, width, in_channels, out_channels, kernel_size, stride, "
+                             "dilation, groups, bias, backend",
+                             [(*param, backend) for param, backend in itertools.product(
+                                 [(7, 3, 3, 1, 2, 1, 1, 2, True),
+                                  (5, 3, 1, 3, 2, 3, 3, 1, False),
+                                  (7, 3, 1, 3, 2, 3, 1, 1, False),
+                                  (5, 3, 3, 3, 2, 1, 3, 2, False),
+                                  (5, 3, 1, 1, 1, 3, 3, 2, True),
+                                  (5, 5, 1, 3, 2, 2, 3, 1, True),
+                                  (5, 3, 1, 3, 1, 3, 3, 1, False),
+                                  (3, 3, 3, 1, 2, 2, 3, 1, False),
+                                  (5, 5, 3, 3, 1, 2, 3, 1, True),
+                                  (7, 3, 1, 3, 1, 2, 1, 2, True),
+                                  (7, 5, 3, 1, 2, 3, 1, 1, False),
+                                  (5, 5, 1, 3, 2, 1, 1, 2, True),
+                                 ],
+                                 backends
+                             )]
+    )
+    def test_convolution_same_padding(self, height, width, in_channels, out_channels, kernel_size,
+                                    stride, dilation, groups, bias, backend):
+        model = torch.nn.Conv2d(in_channels=in_channels, out_channels=out_channels, kernel_size=kernel_size,
+                                padding="same", stride=1, dilation=1, groups=1, bias=bias)
+        self.run_compare_torch((1, in_channels, height, width), model, backend=backend)
+
 
 class TestDynamicConv(TorchBaseTest):
     @pytest.mark.parametrize(
