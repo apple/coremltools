@@ -3,6 +3,9 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import numpy as np
+import pytest
+
 from coremltools._deps import _IS_MACOS
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.testing_utils import (
@@ -12,9 +15,6 @@ from coremltools.converters.mil.testing_utils import (
 )
 from coremltools.converters.mil.testing_reqs import ct
 
-import pytest
-
-import numpy as np
 
 np.random.seed(1984)
 
@@ -43,6 +43,7 @@ class TestUseReflectionPadding:
             expected_output_shapes={block.outputs[0].name: (1, 2, 6, 10)},
         )
 
+
     def test_success_w_axis_multiple(self):
         @mb.program(input_specs=[mb.TensorSpec(shape=(1, 2, 6, 8))])
         def prog(x1):
@@ -67,6 +68,7 @@ class TestUseReflectionPadding:
             expected_output_shapes={block.outputs[0].name: (1, 2, 6, 12)},
         )
 
+
     def test_success_h_axis(self):
         @mb.program(input_specs=[mb.TensorSpec(shape=(1, 2, 6, 8))])
         def prog(x1):
@@ -88,6 +90,7 @@ class TestUseReflectionPadding:
             inputs,
             expected_output_shapes={block.outputs[0].name: (1, 2, 8, 8)},
         )        
+
 
     def test_failure_wrong_concat_order(self):
         @mb.program(input_specs=[mb.TensorSpec(shape=(1, 2, 6, 8))])
@@ -111,6 +114,7 @@ class TestUseReflectionPadding:
             inputs,
             expected_output_shapes={block.outputs[0].name: (1, 2, 8, 8)},
         )        
+
 
     def test_failure_wrong_concat_order_2(self):
         @mb.program(input_specs=[mb.TensorSpec(shape=(1, 2, 6, 8))])
@@ -137,6 +141,7 @@ class TestUseReflectionPadding:
             expected_output_shapes={block.outputs[0].name: (1, 2, 6, 12)},
         )
 
+
     def test_failure_wrong_slice_size(self):
         @mb.program(input_specs=[mb.TensorSpec(shape=(1, 2, 6, 8))])
         def prog(x1):
@@ -159,6 +164,7 @@ class TestUseReflectionPadding:
             inputs,
             expected_output_shapes={block.outputs[0].name: (1, 2, 9, 8)},
         )        
+
 
     def test_failure_not_all_same_input(self):
         @mb.program(input_specs=[mb.TensorSpec(shape=(1, 2, 6, 8)), mb.TensorSpec(shape=(1, 2, 6, 8))])
@@ -185,6 +191,7 @@ class TestUseReflectionPadding:
             expected_output_shapes={block.outputs[0].name: (1, 2, 6, 12)},
         )
 
+
     def test_failure_slice_output(self):
         @mb.program(input_specs=[mb.TensorSpec(shape=(1, 2, 6, 8))])
         def prog(x1):
@@ -206,4 +213,23 @@ class TestUseReflectionPadding:
             prog,
             inputs,
             expected_output_shapes={block.outputs[0].name: (1, 2, 6, 10), block.outputs[1].name: (1, 2, 6, 1)},
+        )
+
+
+    def test_concat_input_only(self):
+        @mb.program(input_specs=[mb.TensorSpec(shape=(1, 2, 6, 8))])
+        def prog(x):
+            x = mb.concat(values=[x, x, x], axis=0)
+            return x
+
+        prev_prog, _, block = apply_pass_and_basic_check(
+            prog, "common::use_reflection_padding"
+        )
+        assert get_op_types_in_program(prog) == ["concat"]
+
+        inputs = {"x": (1, 2, 6, 8)}
+        assert_model_is_valid(
+            prog,
+            inputs,
+            expected_output_shapes={block.outputs[0].name: (3, 2, 6, 8)},
         )
