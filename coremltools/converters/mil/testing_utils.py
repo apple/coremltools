@@ -76,7 +76,9 @@ def assert_model_is_valid(
         if expected_output_shapes is not None:
             for out_name, out_shape in expected_output_shapes.items():
                 assert out_name in prediction
-                assert out_shape == prediction[out_name].shape
+                assert (out_shape == prediction[out_name].shape,
+                        "{} != {}".format(out_shape, prediction[out_name].shape)
+                )
 
 
 def assert_same_output_names(prog1, prog2, func_name="main"):
