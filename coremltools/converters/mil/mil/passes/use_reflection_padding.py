@@ -20,10 +20,9 @@ def _match_pattern(concat_op, block):
     # The original input will need to be in the middle of the concatenated inputs
     original_input = concat_inputs[len(concat_inputs)//2]
 
+    axis = None
     slice_ops_out = []
-
     end_mask = None
-
     begin_index = len(concat_inputs)//2
 
     for slice_op in concat_inputs:
@@ -72,6 +71,9 @@ def _match_pattern(concat_op, block):
         begin_index = begin_index - 1
 
         slice_ops_out.append(slice_op)
+
+    if axis is None:
+        return False
 
     return _replace_ops(block, concat_op, slice_ops_out, axis - len(end_mask))
 
