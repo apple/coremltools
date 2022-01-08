@@ -214,6 +214,19 @@ class TestMv(TorchBaseTest):
         TorchBaseTest.run_compare_torch((matrix, vector), model, backend=backend, input_as_shape=False)
 
 
+class TestDot(TorchBaseTest):
+    @pytest.mark.parametrize("vector_length, backend",
+                             itertools.product([1, 5, 11], backends)
+                             )
+    def test_mv(self, vector_length, backend):
+        model = ModuleWrapper(function=torch.dot)
+
+        vector1 = generate_input_data((vector_length, ))
+        vector2 = generate_input_data((vector_length, ))
+
+        TorchBaseTest.run_compare_torch((vector1, vector2), model, backend=backend, input_as_shape=False)
+
+
 class TestNorms(TorchBaseTest):
     @pytest.mark.parametrize(
         "shape, backend, keepdim",

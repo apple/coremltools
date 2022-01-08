@@ -340,6 +340,13 @@ def constant(context, node):
     context.add(const, torch_name=name)
 
 @register_torch_op
+def dot(context, node):
+    inputs = _get_inputs(context, node, expected=2)
+    xy = mb.mul(x=inputs[0], y=inputs[1])
+    sum_xy = mb.reduce_sum(x=xy, axes=[0])
+    context.add(sum_xy, node.name)
+
+@register_torch_op
 def mv(context, node):
     inputs = _get_inputs(context, node, expected=2)
     expand = mb.expand_dims(x=inputs[1], axes=[-1], name=node.name + "_expanded")
