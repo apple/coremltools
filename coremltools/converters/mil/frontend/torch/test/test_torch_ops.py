@@ -9,7 +9,12 @@ import numpy as np
 import pytest
 import torch.nn as nn
 
-from .testing_utils import contains_op, ModuleWrapper, TorchBaseTest
+from .testing_utils import (
+    contains_op,
+    generate_input_data,
+    ModuleWrapper,
+    TorchBaseTest
+)
 from coremltools import RangeDim
 from coremltools.models.utils import _python_version
 from coremltools.models.utils import _macos_version
@@ -193,6 +198,33 @@ class TestSort(TorchBaseTest):
             function=torch.sort, kwargs={"dim": axis, "descending": descending}
         )
         TorchBaseTest.run_compare_torch(shape, model, backend=backend)
+
+
+class TestMv(TorchBaseTest):
+    @pytest.mark.parametrize("matrix_shape, backend",
+                             itertools.product([(2, 3), (10, 12), (10, 1), (1, 5)], backends)
+                             )
+    def test_mv(self, matrix_shape, backend):
+        model = ModuleWrapper(function=torch.mv)
+
+        matrix = generate_input_data(matrix_shape)
+        vector_length = matrix_shape[-1]
+        vector = generate_input_data((vector_length, ))
+
+        TorchBaseTest.run_compare_torch((matrix, vector), model, backend=backend, input_as_shape=False)
+
+
+class TestDot(TorchBaseTest):
+    @pytest.mark.parametrize("vector_length, backend",
+                             itertools.product([1, 5, 11], backends)
+                             )
+    def test_mv(self, vector_length, backend):
+        model = ModuleWrapper(function=torch.dot)
+
+        vector1 = generate_input_data((vector_length, ))
+        vector2 = generate_input_data((vector_length, ))
+
+        TorchBaseTest.run_compare_torch((vector1, vector2), model, backend=backend, input_as_shape=False)
 
 
 class TestNorms(TorchBaseTest):
