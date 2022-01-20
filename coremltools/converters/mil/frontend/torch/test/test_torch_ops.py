@@ -2361,10 +2361,22 @@ class TestSplit(TorchBaseTest):
 
 class TestUnbind(TorchBaseTest):
     @pytest.mark.parametrize(
-        "backend, input_shape, dim",
-        itertools.product(backends, [(1), (3, 3, 4)], [0,1,2]),
+        "backend, dim",
+        itertools.product(backends, [0,1,2]),
     )
-    def test_unbind(self, backend, input_shape, dim):
+    def test_unbind(self, backend, dim):
+        input_shape = (3, 3, 4)
+        model = ModuleWrapper(function=torch.unbind,
+                              kwargs={"dim": dim})
+        self.run_compare_torch(input_shape, model, backend=backend)
+
+    @pytest.mark.parametrize(
+        "backend",
+        backends,
+    )
+    def test_unbind_one_dim_shape(self, backend):
+        input_shape = (1,)
+        dim = 0
         model = ModuleWrapper(function=torch.unbind,
                               kwargs={"dim": dim})
         self.run_compare_torch(input_shape, model, backend=backend)
