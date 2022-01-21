@@ -3179,8 +3179,11 @@ def unbind(context, node):
     x = inputs[0]
     dim = inputs[1].val
     split_sizes = [1]*x.shape[dim]
-    res = mb.split(x=x, split_sizes=split_sizes, axis=dim, name=node.name)
-    res = [mb.squeeze(x=x, axes=[dim]) for x in res]
+    if len(split_sizes) == 1:
+        res = [mb.squeeze(x=x, axes=[dim])]
+    else:
+        res = mb.split(x=x, split_sizes=split_sizes, axis=dim, name=node.name)
+        res = [mb.squeeze(x=x, axes=[dim]) for x in res]
     context.add(res, torch_name=node.name)
 
 @register_torch_op
