@@ -157,7 +157,6 @@ def convert_tree_ensemble(
     import json
     import os
 
-    feature_map = None
     if isinstance(
         model, (_xgboost.core.Booster, _xgboost.XGBRegressor, _xgboost.XGBClassifier)
     ):
@@ -202,14 +201,12 @@ def convert_tree_ensemble(
             raise ValueError(
                 "The XGBoost model does not have feature names. They must be provided in convert method."
             )
-            feature_names = model.feature_names
+        # Use user given feature names if they exist
         if feature_names is None:
             feature_names = model.feature_names
-
+        feature_map = {f: i for i, f in enumerate(feature_names)}
+        
         xgb_model_str = model.get_dump(with_stats=True, dump_format="json")
-
-        if model.feature_names:
-            feature_map = {f: i for i, f in enumerate(model.feature_names)}
 
     # Path on the file system where the XGboost model exists.
     elif isinstance(model, str):
