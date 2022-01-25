@@ -1,15 +1,14 @@
-  //
-  //  ItemSimilarityRecommenderCommon.cpp
-  //  CoreML_framework
-  //
-  //  Created by Hoyt Koepke on 1/30/19.
-  //  Copyright © 2019 Apple Inc. All rights reserved.
-  //
+// Copyright (c) 2022, Apple Inc. All rights reserved.
+//
+// Use of this source code is governed by a BSD-3-clause license that can be
+// found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+#include "Format.hpp"
 #include "ItemSimilarityRecommenderCommon.hpp"
 #include "Validation/ValidatorUtils-inl.hpp"
 #include "Validation/Validators.hpp"
-#include "Format.hpp"
+
+#include <stdexcept>
 
 namespace CoreML { namespace Recommender {
 

@@ -9,6 +9,7 @@
 #include "framework/TestUtils.hpp"
 #include "MLModelTests.hpp"
 
+#include <stdexcept>
 #include <string_view>
 
 using namespace MILBlob;

@@ -7,6 +7,7 @@
 #include "MILBlob/Blob/StorageFormat.hpp"
 
 #include <cstdio>
+#include <stdexcept>
 #include <sys/mman.h>
 #include <sys/stat.h>
 
