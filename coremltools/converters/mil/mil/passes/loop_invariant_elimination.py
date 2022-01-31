@@ -70,8 +70,6 @@ def _loop_invariant_elimination_block(block):
             continue
         loop_invariant_ids = _detect_loop_invariants(op)
 
-        loop_variant_vars = []
-
         # replace uses of loop_invariants with its source from outside of the
         # while_loop op.
         for i in loop_invariant_ids:

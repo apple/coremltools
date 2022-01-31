@@ -8,7 +8,6 @@ import unittest
 
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.testing_utils import (
-    assert_op_count_match,
     assert_model_is_valid,
     get_op_types_in_program,
     apply_pass_and_basic_check,
@@ -40,7 +39,7 @@ class CastOptimizationPass(unittest.TestCase):
         self.assertEqual(get_op_types_in_program(prog), ['cast', 'square', 'cast'])
 
         apply_pass_and_basic_check(prog, "common::cast_optimization")
-        _,_,block = apply_pass_and_basic_check(prog, "common::dead_code_elimination")
+        _, _, block = apply_pass_and_basic_check(prog, "common::dead_code_elimination")
 
         self.assertEqual(get_op_types_in_program(prog), ["square"])
 
@@ -69,7 +68,7 @@ class CastOptimizationPass(unittest.TestCase):
         self.assertEqual(get_op_types_in_program(prog), ['cast', 'cast', 'square'])
 
         apply_pass_and_basic_check(prog, "common::cast_optimization")
-        _,_,block = apply_pass_and_basic_check(prog, "common::dead_code_elimination")
+        _, _, block = apply_pass_and_basic_check(prog, "common::dead_code_elimination")
 
         self.assertEqual(get_op_types_in_program(prog), ["square"])
 
@@ -98,7 +97,7 @@ class CastOptimizationPass(unittest.TestCase):
         self.assertEqual(get_op_types_in_program(prog), ['cast', 'cast', 'square'])
 
         apply_pass_and_basic_check(prog, "common::cast_optimization")
-        _,_,block = apply_pass_and_basic_check(prog, "common::dead_code_elimination")
+        _, _, block = apply_pass_and_basic_check(prog, "common::dead_code_elimination")
 
         self.assertEqual(get_op_types_in_program(prog), ["cast", "square"])
         self.assertEqual(block.find_ops(op_type="cast")[0].dtype.val, "fp16")
@@ -132,7 +131,7 @@ class CastOptimizationPass(unittest.TestCase):
         self.assertEqual(get_op_types_in_program(prog), ['cast', 'cast', 'cast', 'cast', 'cast', 'cast', 'square'])
 
         apply_pass_and_basic_check(prog, "common::cast_optimization")
-        _,_,block = apply_pass_and_basic_check(prog, "common::dead_code_elimination")
+        _, _, block = apply_pass_and_basic_check(prog, "common::dead_code_elimination")
 
         self.assertEqual(get_op_types_in_program(prog), ["cast", "square"])
         self.assertEqual(block.find_ops(op_type="cast")[0].dtype.val, "fp16")
@@ -152,7 +151,7 @@ class CastOptimizationPass(unittest.TestCase):
                                |---->cast(dtype="fp32")---->log--->out_3
 
     Output graph:
-    
+
          |---->square--->out_1
          |
     input---->relu--->out_2
@@ -175,7 +174,7 @@ class CastOptimizationPass(unittest.TestCase):
         self.assertEqual(get_op_types_in_program(prog), ['cast', 'cast', 'cast', 'cast', 'square', 'relu', 'log'])
 
         apply_pass_and_basic_check(prog, "common::cast_optimization")
-        _,_,block = apply_pass_and_basic_check(prog, "common::dead_code_elimination")
+        _, _, block = apply_pass_and_basic_check(prog, "common::dead_code_elimination")
 
         self.assertEqual(get_op_types_in_program(prog), ["square", "relu", "log"])
 

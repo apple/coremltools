@@ -1,15 +1,10 @@
-# -*- coding: utf-8 -*-
-
 #  Copyright (c) 2020, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-
-from collections import defaultdict
 import coremltools as ct
 from coremltools.converters.mil.input_types import (
-    ClassifierConfig,
     ImageType,
     EnumeratedShapes,
     Shape,
@@ -23,17 +18,17 @@ from coremltools.converters.mil.mil.types.symbolic import (
     is_symbolic,
 )
 from coremltools.converters._profile_utils import _profile
-from coremltools.models import MLModel
-from coremltools.models import neural_network as neural_network
+from coremltools.models import (
+    MLModel,
+    neural_network as neural_network
+)
 from coremltools.models.datatypes import Array
 from coremltools.models.neural_network import flexible_shape_utils
 from coremltools.models.neural_network.flexible_shape_utils import (
-    update_image_size_range,
     add_enumerated_image_sizes,
     set_multiarray_ndshape_range,
     add_multiarray_ndshape_enumeration,
 )
-import logging
 from .op_mapping import convert_ops
 from .passes.nn_passes import nn_backend_passes
 
@@ -81,7 +76,7 @@ def _set_user_inputs(proto, inputs):
         shape = input_type.shape
         if isinstance(shape, EnumeratedShapes):
             if isinstance(input_type, ImageType):
-                default_height , default_width = 0, 0
+                default_height, default_width = 0, 0
                 for inp in proto.description.input:
                     if inp.name == input_type.name:
                         default_height = inp.type.imageType.height

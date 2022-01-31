@@ -405,10 +405,10 @@ class TestImagePreprocessingPass:
             return z
 
         prog.main_input_types = (ct.ImageType(name='x',
-                                             shape=[1, 1, 20, 20],
-                                             bias=2.0,
-                                             color_layout="G",
-                                             channel_first=True),)
+                                              shape=[1, 1, 20, 20],
+                                              bias=2.0,
+                                              color_layout="G",
+                                              channel_first=True),)
 
         prev_prog, prev_block, block = apply_pass_and_basic_check(
             prog, "mil_backend::insert_image_preprocessing_ops"

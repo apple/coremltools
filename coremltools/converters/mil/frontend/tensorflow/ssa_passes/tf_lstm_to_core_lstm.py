@@ -1,17 +1,15 @@
-# -*- coding: utf-8 -*-
-
 #  Copyright (c) 2020, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-
-from coremltools.converters.mil.mil.passes.pass_registry import register_pass
-from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
-from coremltools.converters.mil.mil import Builder as mb
-from coremltools.converters.mil.mil import types
-import numpy as np
 import logging
+
+import numpy as np
+
+from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
+from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 
 
 @register_pass(namespace="tensorflow")
@@ -70,12 +68,6 @@ def _try_replace_with_core_lstm(op):
             if len(ov.child_ops) > 0 or len(ov.consuming_blocks) > 0:
                 return False
         return True
-
-
-    if op.op_type == "tf_lstm_block_cell":
-        batch = op.x.shape[0]
-    else:  # tf_lstm_block
-        batch = op.x.shape[1]
 
     # Check for unsupported configuration : When peephole is present
     if op.use_peephole.val:

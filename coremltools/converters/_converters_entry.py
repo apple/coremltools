@@ -2,13 +2,21 @@
 #
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
-import gc
+
 import collections
+import gc
+import os
 import warnings
 
-from coremltools import ComputeUnit as _ComputeUnit
-from coremltools.converters.mil.mil.passes.quantization_passes import AbstractQuantizationPass, FP16ComputePrecision
-from coremltools.converters.mil.mil.passes.quantization_passes import ComputePrecision as precision
+from coremltools import (
+    ComputeUnit as _ComputeUnit,
+    __version__ as _ct_version
+)
+from coremltools.converters.mil.mil.passes.quantization_passes import (
+    AbstractQuantizationPass,
+    ComputePrecision as precision,
+    FP16ComputePrecision
+)
 from coremltools.converters.mil.input_types import InputType, ClassifierConfig
 from coremltools.converters.mil.converter import mil_convert
 from coremltools.converters.mil.mil import Program
@@ -16,6 +24,7 @@ from coremltools._deps import _HAS_TORCH, _HAS_TF_1, _HAS_TF_2
 from coremltools.converters._profile_utils import _profile
 
 from coremltools.models import _METADATA_VERSION, _METADATA_SOURCE
+from coremltools.models.utils import _MLPACKAGE_EXTENSION
 from coremltools.converters.mil._deployment_compatibility import (
     AvailableTarget,
     check_deployment_compatibility,
@@ -250,10 +259,10 @@ def convert(
         - if False, identical to setting compute_units to `coremltools.ComputeUnit.ALL``
 
     package_dir : str
-        Post conversion, the model is compiled to form the MLModel object ready for prediction.
-        This requires a temporary directory to hold the mlmodelc archive.
-        - if not None, must be a path to a directory that is used for
-          temporarily storing the compiled model assets. If None, a temporary directory is created.
+        Post conversion, the model is saved at a temporary location and
+        loaded to form the MLModel object ready for prediction.
+        If package_dir is provided, model will be saved at this location instead of creating a temporary directory.
+        - if not None, must be a path to a directory with extension .mlpackage
 
     debug : bool
         This flag should generally be False except for debugging purposes
@@ -312,8 +321,6 @@ def convert(
     See `neural-network-conversion <https://coremltools.readme.io/docs/neural-network-conversion>`_ for
     more advanced options.
     """
-    from coremltools import __version__ as ct_version
-
     _check_deployment_target(minimum_deployment_target)
     exact_source = _determine_source(model, source, outputs)
     exact_target = _determine_target(convert_to, minimum_deployment_target)
@@ -336,6 +343,11 @@ def convert(
         transforms = [compute_precision]
     else:
         raise ValueError("Invalid value of the argument 'compute_precision'")
+
+    if package_dir is not None:
+        _, ext = os.path.splitext(package_dir)
+        if ext != _MLPACKAGE_EXTENSION:
+            raise Exception("If package_dir is provided, it must have extension {} (not {})".format(_MLPACKAGE_EXTENSION, ext))
 
     mlmodel = mil_convert(
         model,
@@ -363,8 +375,7 @@ def convert(
 
     gc.collect()
 
-    mlmodel = _record_src_version(mlmodel, exact_source)
-    mlmodel.user_defined_metadata[_METADATA_VERSION] = ct_version
+    mlmodel = _record_build_metadata(mlmodel, exact_source)
 
     return mlmodel
 
@@ -553,11 +564,14 @@ def _determine_target(convert_to, minimum_deployment_target):
         else:
             return "mlprogram"
 
-def _record_src_version(mlmodel, exact_source):
+def _record_build_metadata(mlmodel, exact_source):
     # recording metadata: coremltools version, source framework and version
+    src_pkg, pkg_ver = None, None
     if exact_source in {"tensorflow", "tensorflow2"} and (_HAS_TF_1 or _HAS_TF_2):
+        src_pkg, pkg_ver = "tensorflow", tf.__version__
         src_pkg_version = "tensorflow=={0}".format(tf.__version__)
     elif exact_source == "pytorch" and _HAS_TORCH:
+        src_pkg, pkg_ver = "pytorch", torch.__version__
         src_pkg_version = "torch=={0}".format(torch.__version__)
     elif exact_source == 'milinternal':
         src_pkg_version = "milinternal"
@@ -565,4 +579,12 @@ def _record_src_version(mlmodel, exact_source):
         raise ValueError('Unsupported source {}'.format(exact_source))
 
     mlmodel.user_defined_metadata[_METADATA_SOURCE] = src_pkg_version
+    mlmodel.user_defined_metadata[_METADATA_VERSION] = _ct_version
+
+    if mlmodel.is_package:
+        build_info = {'coremltools-version': _ct_version}
+        if src_pkg is not None and pkg_ver is not None:
+            build_info['coremltools-component-' + src_pkg] = str(pkg_ver)
+        mlmodel._set_build_info_mil_attributes(build_info)
+
     return mlmodel

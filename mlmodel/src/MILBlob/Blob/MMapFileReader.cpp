@@ -35,6 +35,7 @@ MMapFileReader::MMapFileReader(const std::string& filename)
         mmap(nullptr, fileLength, PROT_READ, MAP_PRIVATE, fileno(f.get()), 0 /*offset*/),
         [length = fileLength](void* ptr) { munmap(ptr, length); });
 
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-cstyle-cast) -- MAP_FAILED is (void*) -1.
     MILVerifyIsTrue(mmapPtr.get() != nullptr && mmapPtr.get() != MAP_FAILED,
                     std::runtime_error,
                     "Unable to mmap file " + filename);

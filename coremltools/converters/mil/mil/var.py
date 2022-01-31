@@ -5,10 +5,7 @@
 
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.types import builtin_to_string
-from coremltools.converters.mil.mil.types.symbolic import (
-    is_symbolic,
-    any_symbolic,
-)
+from coremltools.converters.mil.mil.types.symbolic import any_symbolic
 
 
 class Var(object):
@@ -18,9 +15,11 @@ class Var(object):
 
     Example Usage:
 
-    from coremltools.converters.mil.mil import Builder as mb
-    from coremltools.converters.mil.mil import Function
-    from coremltools.converters.mil.mil import types
+    from coremltools.converters.mil.mil import (
+        Builder as mb,
+        Function,
+        types
+    )
 
     func_inputs = {"a": mb.placeholder(shape=(1,2)),
                    "b": mb.placeholder(shape=(1,2)) }

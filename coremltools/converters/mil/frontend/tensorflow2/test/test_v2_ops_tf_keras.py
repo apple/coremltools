@@ -5,10 +5,10 @@
 
 from distutils.version import StrictVersion as _StrictVersion
 import itertools
-import numpy as np
-import pytest
 import random
 
+import numpy as np
+import pytest
 
 import coremltools as ct
 from coremltools._deps import _get_version
@@ -28,6 +28,9 @@ backends = testing_reqs.backends
 
 tf = pytest.importorskip("tensorflow", minversion="2.1.0")
 import tensorflow as _tf  # should be after pytest.importorskip checks
+from tensorflow.keras import Input
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Conv2D, GlobalMaxPooling2D
 
 
 class TestActivation(TensorFlowBaseTest):
@@ -419,7 +422,7 @@ class TestConvolution(TensorFlowBaseTest):
         batch_size,
     ):
         s1, s2, k1, k2 = spatial_dim_and_ks
-        c_in, c_out = 2, 6
+        c_in = 2
 
         if len(strides) != np.sum(strides) and len(dilations) != np.sum(dilations):
             # TF produces incorrect output for non-one strides + dilations
@@ -466,10 +469,6 @@ class TestConvolution(TensorFlowBaseTest):
         backend,
         padding,
     ):
-        from tensorflow.keras import Input
-        from tensorflow.keras.models import Model
-        from tensorflow.keras.layers import Conv2D, GlobalMaxPooling2D
-
         # Test same padding
         input_layer = Input(batch_size=1, shape=(None, None, 1))
         layer = Conv2D(
@@ -482,7 +481,7 @@ class TestConvolution(TensorFlowBaseTest):
         model = Model(inputs=[input_layer], outputs=[output_layer])
         TensorFlowBaseTest.run_compare_tf_keras(
             model,
-            [random_gen((1, 80, 40 ,1), rand_min=-10, rand_max=10)],
+            [random_gen((1, 80, 40, 1), rand_min=-10, rand_max=10)],
             use_cpu_only=use_cpu_only,
             backend=backend,
         )
@@ -855,6 +854,9 @@ class TestBatchNormalization(TensorFlowBaseTest):
                 )
             ]
         )
+        random_weights = np.random.rand(4, shape[axis])
+        model.layers[0].set_weights(random_weights)
+
         TensorFlowBaseTest.run_compare_tf_keras(
             model,
             [random_gen(shape, rand_min=-10, rand_max=10)],
@@ -883,6 +885,9 @@ class TestBatchNormalization(TensorFlowBaseTest):
                 )
             ]
         )
+        random_weights = np.random.rand(4, shape[axis])
+        model.layers[0].set_weights(random_weights)
+
         TensorFlowBaseTest.run_compare_tf_keras(
             model,
             [random_gen(shape, rand_min=-10, rand_max=10)],
@@ -1247,9 +1252,9 @@ class TestRecurrent(TensorFlowBaseTest):
         h0 = tf.keras.layers.Input(shape=(512,))
         c0 = tf.keras.layers.Input(shape=(512,))
         out, hn, cn = tf.keras.layers.LSTM(512,
-                                        return_sequences=True,
-                                        return_state=True,
-                                        recurrent_activation='sigmoid')(inp)
+                                           return_sequences=True,
+                                           return_state=True,
+                                           recurrent_activation='sigmoid')(inp)
         model = tf.keras.models.Model(inputs=[inp, h0, c0], outputs=[out, hn, cn])
         batch_size = 2
         TensorFlowBaseTest.run_compare_tf_keras(
@@ -1281,18 +1286,15 @@ class TestRecurrent(TensorFlowBaseTest):
         def _test_for_symbolic_shapes(keras_input_shape, input_shape_for_conversion, are_symbols_expected):
             keras_model = _get_keras_simple_lstm_model(keras_input_shape)
             res = TensorFlowBaseTest.run_compare_tf_keras(
-                        keras_model,
-                        [
-                            random_gen((1, 32, 10), -1, 1),
-                        ],
-                        inputs_for_conversion=[ct.TensorType(shape=input_shape_for_conversion)],
-                        use_cpu_only=use_cpu_only,
-                        backend=backend,
-                    )
+                keras_model,
+                [random_gen((1, 32, 10), -1, 1)],
+                inputs_for_conversion=[ct.TensorType(shape=input_shape_for_conversion)],
+                use_cpu_only=use_cpu_only,
+                backend=backend,
+            )
             coreml_model = res[1]
             mil_prog = coreml_model._get_mil_internal()
             assert is_symbolic_dim_in_prog(mil_prog) == are_symbols_expected
-
 
         _test_for_symbolic_shapes(keras_input_shape=(1, 32, 10),
                                   input_shape_for_conversion=(1, 32, 10),

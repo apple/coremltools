@@ -29,9 +29,9 @@ class add_conv_transpose_output_shape(AbstractGraphPass):
             _handle_block(f)
 
 def _match_pattern(op):
-  return op.op_type == "conv_transpose" \
-      and op.output_shape is None \
-      and not any_symbolic(op.outputs[0].shape)
+    return op.op_type == "conv_transpose" \
+        and op.output_shape is None \
+        and not any_symbolic(op.outputs[0].shape)
 
 def _handle_block(block):
     for op in list(block.operations):

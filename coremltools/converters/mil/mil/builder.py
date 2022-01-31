@@ -51,8 +51,8 @@ class Builder:
     >>> from coremltools.converters.mil.mil import Program, Function
 
     >>> prog = Program()
-    >>> func_inputs = {"x": mb.placeholder(_shape=[2,3]),
-    >>>                "y": mb.placeholder(_shape=[2,3])}
+    >>> func_inputs = {"x": mb.placeholder(shape=[2,3]),
+    >>>                "y": mb.placeholder(shape=[2,3])}
     >>> with Function(func_inputs) as ssa_fun:
     >>>   x, y = ssa_fun.inputs['x'], ssa_fun.inputs['x']
     >>>   res_var = mb.add(x=x, y=y) # created within ssa_fun block

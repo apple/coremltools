@@ -4,22 +4,25 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import copy
-import pytest
-import numpy as np
-import unittest
 from sys import platform
+import unittest
+
+import numpy as np
 
 from coremltools._deps import _IS_MACOS
 import coremltools.models.datatypes as datatypes
 from coremltools.models.utils import _macos_version
-from coremltools.models import neural_network as neural_network
-from coremltools.models import MLModel
+from coremltools.models import (
+    neural_network as neural_network,
+    MLModel
+)
 from coremltools.models.neural_network.printer import print_network_spec
 from coremltools.converters.mil.backend.nn.passes.mlmodel_passes import (
     remove_disconnected_layers,
     transform_conv_crop,
     remove_redundant_transposes,
 )
+
 
 DEBUG = False
 np.random.seed(10)
@@ -338,7 +341,7 @@ class Redundant_Transposees_Test(unittest.TestCase):
         remove_redundant_transposes(builder.spec)
 
         layers = builder.spec.neuralNetwork.layers
-        if expected_layer_num == None:
+        if expected_layer_num is None:
             self.assertTrue(len(layers) < num_layers_before)
         else:
             self.assertEqual(len(layers), expected_layer_num)
@@ -1029,7 +1032,6 @@ class Redundant_Transposees_Test(unittest.TestCase):
         builder = neural_network.NeuralNetworkBuilder(
             [("data", datatypes.Array(2, 4, 8))], [("out", None)]
         )
-        last_layer = "data"
         builder.add_transpose(
             name="t1", axes=[0, 2, 1], input_name="data", output_name="t1"
         )

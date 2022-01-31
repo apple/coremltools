@@ -16,6 +16,7 @@ from .converter import TFConverter
 from .tf_graph_pass import (
     cond_to_where,
     constant_propagation,
+    delete_unnecessary_constant_nodes,
     delete_asserts,
     delete_disconnected_nodes,
     functionalize_loops,
@@ -197,6 +198,7 @@ class TF1Loader(TFLoader):
             delete_asserts,
             functionalize_loops,
             constant_propagation,
+            delete_unnecessary_constant_nodes, # must come after constant_propagation
             quantization_pass,
             cond_to_where,
             remove_variable_nodes,

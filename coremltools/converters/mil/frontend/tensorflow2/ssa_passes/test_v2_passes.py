@@ -3,17 +3,17 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import copy
+
+import numpy as np
+
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.testing_utils import (
-    assert_op_count_match,
     assert_model_is_valid,
     assert_same_output_names,
 )
 from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
 from coremltools.converters.mil.mil import types
-import copy
-
-import numpy as np
 
 np.random.seed(1984)
 validate_model = True

@@ -16,7 +16,7 @@ namespace MILBlob {
  *  (https://ieeexplore.ieee.org/document/8766229)
  */
 struct Fp16 {
-    explicit Fp16(uint16_t bytes) : bytes(bytes) {}
+    explicit Fp16(uint16_t bs) : bytes(bs) {}
     Fp16() : bytes(0) {}
 
     static Fp16 FromFloat(float f);

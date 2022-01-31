@@ -113,17 +113,18 @@ def test_dead_code_elimination():
 
     @mb.program(input_specs=[mb.TensorSpec(shape=(2, 4))])
     def program1(x):
-        weights_val = np.random.rand(2, 4).T.astype(np.float32)
+        weights_val = np.random.rand(4, 2).T.astype(np.float32)
         weights = mb.const(val=weights_val)
-        bias_val = np.random.rand(4).astype(np.float32)
+        bias_val = np.random.rand(2).astype(np.float32)
         bias = mb.const(val=bias_val)
 
         # unused op and its inputs should be eliminated
-        mb.matmul(x=x, y=weights)
+        weights_for_matmul = mb.transpose(x=weights, perm=[1,0])
+        mb.matmul(x=x, y=weights_for_matmul)
 
         return mb.linear(x=x, weight=weights, bias=bias)
 
-    assert_op_count_match(program1, expect=6)
+    assert_op_count_match(program1, expect=8)
     prev_prog = copy.deepcopy(program1)
     PASS_REGISTRY["common::dead_code_elimination"](program1)
     assert_same_output_names(prev_prog, program1)
@@ -253,96 +254,6 @@ def test_loop_invariant_elimination2():
     if validate_model:
         assert_model_is_valid(prog, {"a": (1, 2), "b": (1, 2)})
 
-
-def test_gelu_tanh_approximation():
-    """
-    Detect gelu tanh approx pattern, found in the TF bert model.
-    y = ( tanh((.0447)x^3 + x ) * (sqrt(2/pi)) + 1 ) * 0.5 * x
-    """
-
-    @mb.program(input_specs=[mb.TensorSpec(shape=(3, 5, 6))])
-    def prog(x):
-        x1 = mb.pow(x=x, y=3)
-        x1 = mb.mul(x=0.044715, y=x1)
-        x1 = mb.add(x=x1, y=x)
-        x1 = mb.mul(x=x1, y=np.sqrt(2 / np.pi))
-        x1 = mb.tanh(x=x1)
-        x1 = mb.add(x=1, y=x1)
-        x1 = mb.mul(x=0.5, y=x1)
-        x1 = mb.mul(x=x, y=x1)
-        return x1
-
-    prev_prog, prev_block, block = apply_pass_and_basic_check(
-        prog, "common::fuse_gelu_tanh_approximation"
-    )
-    assert get_op_types_in_program(prev_prog) == [
-        "pow",
-        "mul",
-        "add",
-        "mul",
-        "tanh",
-        "add",
-        "mul",
-        "mul",
-    ]
-    assert get_op_types_in_program(prog) == ["gelu"]
-    assert_model_is_valid(
-        prog,
-        {"x": (3, 5, 6)},
-        expected_output_shapes={block.outputs[0].name: (3, 5, 6)},
-    )
-
-@pytest.mark.parametrize(
-    "first_op_1, first_op_2, first_op_3, first_op_4, first_op_5, first_op_6",
-     itertools.product(
-         [True, False],
-         [True, False],
-         [True, False],
-         [True, False],
-         [True, False],
-         [True, False]
-     )
-)
-def test_gelu_tanh_approximation2(first_op_1, first_op_2, first_op_3, first_op_4, first_op_5, first_op_6):
-    """
-    Detect gelu tanh approx pattern, found in the TF Sanitized GPT2 model.
-    y = ( tanh((.0447)x^3 + x ) * (sqrt(2/pi)) + 1 ) * 0.5 * x
-    """
-
-    @mb.program(input_specs=[mb.TensorSpec(shape=(3, 5, 6))])
-    def prog(x):
-        firstmul = mb.mul(x=x, y=0.5) if first_op_1 else mb.mul(x=0.5, y=x)
-        x1 = mb.pow(x=x, y=3)
-        x1 = mb.mul(x=0.044715, y=x1) if first_op_2 else mb.mul(x=x1, y=0.044715)
-        x1 = mb.add(x=x1, y=x) if first_op_3 else mb.add(x=x, y=x1)
-        x1 = mb.mul(x=x1, y=np.sqrt(2 / np.pi)) if first_op_4 else mb.mul(x=np.sqrt(2 / np.pi), y=x1)
-        x1 = mb.tanh(x=x1)
-        x1 = mb.add(x=1, y=x1) if first_op_5 else mb.add(x=x1, y=1)
-        x1 = mb.mul(x=firstmul, y=x1) if first_op_6 else mb.mul(x=x1, y=firstmul)
-        return x1
-
-    prev_prog, prev_block, block = apply_pass_and_basic_check(
-        prog, "common::fuse_gelu_tanh_approximation"
-    )
-    assert get_op_types_in_program(prev_prog) == [
-        "mul",
-        "pow",
-        "mul",
-        "add",
-        "mul",
-        "tanh",
-        "add",
-        "mul",
-    ]
-
-    if os.getenv('ENABLE_EXPERIMENTAL_PASSES') == '1':
-        assert get_op_types_in_program(prog) == ["gelu"]
-        assert_model_is_valid(
-            prog,
-            {"x": (3, 5, 6)},
-            expected_output_shapes={block.outputs[0].name: (3, 5, 6)},
-        )
-
 def test_generic_child_ordering():
     """
     Checks that the new generic pattern matching infrastructure works
@@ -374,7 +285,7 @@ def test_generic_child_ordering():
         constraints_passed &= _check_var_scalar_value(pattern.thepowerop.y, 3)
         constraints_passed &= _check_var_scalar_value(pattern.sub_0.y, 5)
         constraints_passed &= _check_var_scalar_value(pattern.add_0.x, 5) or _check_var_scalar_value(pattern.add_0.y, 5)
-        constraints_passed &=  _check_var_scalar_value(pattern.mul_0.x, 5) or _check_var_scalar_value(pattern.mul_0.y, 5)
+        constraints_passed &= _check_var_scalar_value(pattern.mul_0.x, 5) or _check_var_scalar_value(pattern.mul_0.y, 5)
         return constraints_passed
 
     def transform_pattern(pattern):
@@ -499,69 +410,159 @@ def test_add_conv_transpose_output_shape():
     assert get_op_types_in_program(prev_prog) == ["conv_transpose"]
     assert get_op_types_in_program(prog) == ["conv_transpose"]
     prev_conv_transpose_op = prev_prog.find_ops(op_type="conv_transpose",
-        exactly_one=True)[0]
+                                                exactly_one=True)[0]
     conv_transpose_op = prog.find_ops(op_type="conv_transpose",
-        exactly_one=True)[0]
+                                      exactly_one=True)[0]
     assert np.all(conv_transpose_op.output_shape.val ==
-        prev_conv_transpose_op.outputs[0].shape)
+                  prev_conv_transpose_op.outputs[0].shape)
 
-@pytest.mark.parametrize(
-    "op_type, is_first_op1, is_first_op2, is_first_op3, is_first_op4, const_mul_first",
-    itertools.product(
-        ["real_div", "mul"],
-        [True, False],
-        [True, False],
-        [True ,False],
-        [True, False],
-        [True, False],
+
+class TestGeluFusionPass:
+
+    def test_gelu_tanh_approximation1(self):
+        """
+        Detect gelu tanh approx pattern, found in the TF bert model.
+        y = ( tanh((.0447)x^3 + x ) * (sqrt(2/pi)) + 1 ) * 0.5 * x
+        """
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(3, 5, 6))])
+        def prog(x):
+            x1 = mb.pow(x=x, y=3)
+            x1 = mb.mul(x=0.044715, y=x1)
+            x1 = mb.add(x=x1, y=x)
+            x1 = mb.mul(x=x1, y=np.sqrt(2 / np.pi))
+            x1 = mb.tanh(x=x1)
+            x1 = mb.add(x=1, y=x1)
+            x1 = mb.mul(x=0.5, y=x1)
+            x1 = mb.mul(x=x, y=x1)
+            return x1
+
+        prev_prog, prev_block, block = apply_pass_and_basic_check(
+            prog, "common::fuse_gelu_tanh_approximation"
+        )
+        assert get_op_types_in_program(prev_prog) == [
+            "pow",
+            "mul",
+            "add",
+            "mul",
+            "tanh",
+            "add",
+            "mul",
+            "mul",
+        ]
+        assert get_op_types_in_program(prog) == ["gelu"]
+        assert_model_is_valid(
+            prog,
+            {"x": (3, 5, 6)},
+            expected_output_shapes={block.outputs[0].name: (3, 5, 6)},
+        )
+
+    @pytest.mark.parametrize(
+        "first_op_1, first_op_2, first_op_3, first_op_4, first_op_5, first_op_6",
+        itertools.product(
+            [True, False],
+            [True, False],
+            [True, False],
+            [True, False],
+            [True, False],
+            [True, False]
         )
     )
-def test_gelu_exact_approximation(op_type, is_first_op1, is_first_op2, is_first_op3, is_first_op4, const_mul_first):
-    """
-    Detect gelu exact pattern.
-    y = 0.5 * x * ( 1 + erf ( x / srqt(2)))
-    """
+    def test_gelu_tanh_approximation2(self, first_op_1, first_op_2, first_op_3, first_op_4, first_op_5, first_op_6):
+        """
+        Detect gelu tanh approx pattern, found in the TF Sanitized GPT2 model.
+        y = ( tanh((.0447)x^3 + x ) * (sqrt(2/pi)) + 1 ) * 0.5 * x
+        """
 
-    @mb.program(input_specs=[mb.TensorSpec(shape=(3, 5, 6))])
-    def prog(x):
-        if op_type == "real_div":
-            x1 = mb.real_div(x=x, y=2**0.5)
-        elif op_type == "mul":
-            x1 = mb.mul(x=x, y=2**-0.5) if is_first_op1 else mb.mul(x=2**-0.5, y=x)
+        @mb.program(input_specs=[mb.TensorSpec(shape=(3, 5, 6))])
+        def prog(x):
+            firstmul = mb.mul(x=x, y=0.5) if first_op_1 else mb.mul(x=0.5, y=x)
+            x1 = mb.pow(x=x, y=3)
+            x1 = mb.mul(x=0.044715, y=x1) if first_op_2 else mb.mul(x=x1, y=0.044715)
+            x1 = mb.add(x=x1, y=x) if first_op_3 else mb.add(x=x, y=x1)
+            x1 = mb.mul(x=x1, y=np.sqrt(2 / np.pi)) if first_op_4 else mb.mul(x=np.sqrt(2 / np.pi), y=x1)
+            x1 = mb.tanh(x=x1)
+            x1 = mb.add(x=1, y=x1) if first_op_5 else mb.add(x=x1, y=1)
+            x1 = mb.mul(x=firstmul, y=x1) if first_op_6 else mb.mul(x=x1, y=firstmul)
+            return x1
 
-        x2 = mb.erf(x=x1)
-        x3 = mb.add(x=x2, y=1) if is_first_op2 else mb.add(x=1, y=x2)
+        prev_prog, prev_block, block = apply_pass_and_basic_check(
+            prog, "common::fuse_gelu_tanh_approximation"
+        )
+        assert get_op_types_in_program(prev_prog) == [
+            "mul",
+            "pow",
+            "mul",
+            "add",
+            "mul",
+            "tanh",
+            "add",
+            "mul",
+        ]
 
-        if const_mul_first:
-            y1 = mb.const(val=0.5)
-            y2 = x
-        else:
-            y1 = x
-            y2 = mb.const(val=0.5)
+        assert get_op_types_in_program(prog) == ["gelu"]
+        assert_model_is_valid(
+            prog,
+            {"x": (3, 5, 6)},
+            expected_output_shapes={block.outputs[0].name: (3, 5, 6)},
+        )
 
-        x4 = mb.mul(x=x3, y=y1) if is_first_op3 else mb.mul(x=y1, y=x3)
-        x5 = mb.mul(x=x4, y=y2) if is_first_op4 else mb.mul(x=y2, y=x4)
+    @pytest.mark.parametrize(
+        "op_type, is_first_op1, is_first_op2, is_first_op3, is_first_op4, const_mul_first",
+        itertools.product(
+            ["real_div", "mul"],
+            [True, False],
+            [True, False],
+            [True ,False],
+            [True, False],
+            [True, False],
+            )
+        )
+    def test_gelu_exact(self, op_type, is_first_op1, is_first_op2, is_first_op3, is_first_op4, const_mul_first):
+        """
+        Detect gelu exact pattern.
+        y = 0.5 * x * ( 1 + erf ( x / srqt(2)))
+        """
 
-        return x5
+        @mb.program(input_specs=[mb.TensorSpec(shape=(3, 5, 6))])
+        def prog(x):
+            if op_type == "real_div":
+                x1 = mb.real_div(x=x, y=2**0.5)
+            elif op_type == "mul":
+                x1 = mb.mul(x=x, y=2**-0.5) if is_first_op1 else mb.mul(x=2**-0.5, y=x)
 
-    prev_prog, prev_block, block = apply_pass_and_basic_check(
-        prog, "common::fuse_gelu_exact"
-    )
+            x2 = mb.erf(x=x1)
+            x3 = mb.add(x=x2, y=1) if is_first_op2 else mb.add(x=1, y=x2)
 
-    assert get_op_types_in_program(prev_prog) == [
-        op_type,
-        "erf",
-        "add",
-        "mul",
-        "mul",
-    ]
-    assert get_op_types_in_program(prog) == ["gelu"]
-    assert_model_is_valid(
-        prog,
-        {"x": (3, 5, 6)},
-        expected_output_shapes={block.outputs[0].name: (3, 5, 6)},
-    )
+            if const_mul_first:
+                y1 = mb.const(val=0.5)
+                y2 = x
+            else:
+                y1 = x
+                y2 = mb.const(val=0.5)
 
+            x4 = mb.mul(x=x3, y=y1) if is_first_op3 else mb.mul(x=y1, y=x3)
+            x5 = mb.mul(x=x4, y=y2) if is_first_op4 else mb.mul(x=y2, y=x4)
+
+            return x5
+
+        prev_prog, prev_block, block = apply_pass_and_basic_check(
+            prog, "common::fuse_gelu_exact"
+        )
+
+        assert get_op_types_in_program(prev_prog) == [
+            op_type,
+            "erf",
+            "add",
+            "mul",
+            "mul",
+        ]
+        assert get_op_types_in_program(prog) == ["gelu"]
+        assert_model_is_valid(
+            prog,
+            {"x": (3, 5, 6)},
+            expected_output_shapes={block.outputs[0].name: (3, 5, 6)},
+        )
 
 
 class TestLeakyReluFusionPass:
@@ -571,8 +572,8 @@ class TestLeakyReluFusionPass:
         itertools.product(
             [True, False],
             [True, False],
-            )
         )
+    )
     def test_valid_leaky_relu_pattern(self, swap_mul_input_order, swap_max_input_order):
         """
         Input graph:

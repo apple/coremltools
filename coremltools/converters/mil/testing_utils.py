@@ -2,13 +2,15 @@
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
+
 import copy
 import logging
-import numpy as np
 import os
 from pathlib import Path
-import PIL.Image
 import re
+
+import numpy as np
+import PIL.Image
 
 import coremltools as ct
 from coremltools._deps import _IS_MACOS
@@ -212,7 +214,7 @@ def compare_backend(
             raise ValueError("Unsupported dtype config")
 
         pred = run_core_ml_predict(mlmodel, input_key_values,
-            use_cpu_only=use_cpu_only)
+                                   use_cpu_only=use_cpu_only)
         if also_compare_shapes:
             compare_shapes(
                 mlmodel,
@@ -249,7 +251,7 @@ def compare_shapes(
     if _IS_MACOS:
         if not pred:
             pred = run_core_ml_predict(mlmodel, input_key_values,
-                use_cpu_only)
+                                       use_cpu_only)
         for o, expected in expected_outputs.items():
             coreml_out = _get_coreml_out_from_dict(pred, o)
             msg = "Output: {}. expected shape {} != actual shape {}".format(

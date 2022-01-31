@@ -69,14 +69,14 @@ def convert(model, input_features, output_features):
     is_str = None
     for feature_name in model.feature_names_:
         if isinstance(feature_name, str):
-            if is_str == False:
+            if is_str is False:
                 raise ValueError("Mapping of DictVectorizer mixes int and str types.")
 
             tr_spec.stringToIndex.vector.append(feature_name)
             is_str == True
 
         if isinstance(feature_name, int):
-            if is_str == True:
+            if is_str is True:
                 raise ValueError("Mapping of DictVectorizer mixes int and str types.")
 
             tr_spec.int64ToIndex.vector.append(feature_name)

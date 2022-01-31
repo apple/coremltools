@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 #  Copyright (c) 2020, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
@@ -17,10 +15,8 @@ class sanitize_name_strings(AbstractGraphPass):
     of the format [a-zA-Z_][a-zA-Z0-9_]*
     """
     def apply(self, prog):
-	    sanitizer_vars = NameSanitizer(prefix="var_")
-	    sanitizer_ops = NameSanitizer(prefix="op_")
+        sanitizer_vars = NameSanitizer(prefix="var_")
+        sanitizer_ops = NameSanitizer(prefix="op_")
 
-	    for f in prog.functions.values():
-	        sanitize_block(f, sanitizer_vars, sanitizer_ops, prog.main_input_types)
-
-
+        for f in prog.functions.values():
+            sanitize_block(f, sanitizer_vars, sanitizer_ops, prog.main_input_types)

@@ -52,12 +52,12 @@ class SpanSize final {
 public:
     SpanSize() = default;
     ~SpanSize() = default;
-    SpanSize(const SpanSize&) noexcept = default;
+    SpanSize(const SpanSize&) = default;
     SpanSize(SpanSize&&) noexcept = default;
-    SpanSize& operator=(const SpanSize&) noexcept = default;
+    SpanSize& operator=(const SpanSize&) = default;
     SpanSize& operator=(SpanSize&&) noexcept = default;
 
-    constexpr size_t Size() const noexcept
+    constexpr size_t Size() const
     {
         return m_size;
     }
@@ -71,14 +71,14 @@ class SpanSize<DynamicExtent> final {
 public:
     SpanSize() = delete;
     ~SpanSize() = default;
-    SpanSize(const SpanSize&) noexcept = default;
+    SpanSize(const SpanSize&) = default;
     SpanSize(SpanSize&&) noexcept = default;
-    SpanSize& operator=(const SpanSize&) noexcept = default;
+    SpanSize& operator=(const SpanSize&) = default;
     SpanSize& operator=(SpanSize&&) noexcept = default;
 
     explicit SpanSize(size_t size) : m_size(size) {}
 
-    size_t Size() const noexcept
+    size_t Size() const
     {
         return m_size;
     }
@@ -125,24 +125,24 @@ public:
     public:
         SliceIterator(pointer p, size_t stride) : m_ptr(p), m_stride(stride) {}
 
-        bool operator==(const SliceIterator& other) const noexcept
+        bool operator==(const SliceIterator& other) const
         {
             return m_ptr == other.m_ptr && m_stride == other.m_stride;
         }
 
-        bool operator!=(const SliceIterator& other) const noexcept
+        bool operator!=(const SliceIterator& other) const
         {
             return !(*this == other);
         }
 
-        SliceIterator& operator++() noexcept
+        SliceIterator& operator++()
         {
             m_ptr += m_stride;
             return *this;
         }
 
         // NOLINTNEXTLINE(cert-dcl21-cpp)
-        SliceIterator operator++(int) const noexcept
+        SliceIterator operator++(int) const
         {
             return SliceIterator(m_ptr + m_stride, m_stride);
         }
@@ -162,24 +162,24 @@ public:
     public:
         explicit StaticSliceIterator(pointer p) : m_ptr(p) {}
 
-        bool operator==(const StaticSliceIterator<Stride>& other) const noexcept
+        bool operator==(const StaticSliceIterator<Stride>& other) const
         {
             return m_ptr == other.m_ptr;
         }
 
-        bool operator!=(const StaticSliceIterator<Stride>& other) const noexcept
+        bool operator!=(const StaticSliceIterator<Stride>& other) const
         {
             return !(*this == other);
         }
 
-        StaticSliceIterator& operator++() noexcept
+        StaticSliceIterator& operator++()
         {
             m_ptr += Stride;
             return *this;
         }
 
         // NOLINTNEXTLINE(cert-dcl21-cpp)
-        StaticSliceIterator operator++(int) const noexcept
+        StaticSliceIterator operator++(int) const
         {
             return StaticSliceIterator<Stride>(m_ptr + Stride);
         }
@@ -215,10 +215,10 @@ public:
 
     ~Span() = default;
 
-    Span(const Span<T, Extent>&) noexcept = default;
+    Span(const Span<T, Extent>&) = default;
     Span(Span<T, Extent>&&) noexcept = default;
 
-    Span<T, Extent>& operator=(const Span<T, Extent>&) noexcept = default;
+    Span<T, Extent>& operator=(const Span<T, Extent>&) = default;
     Span<T, Extent>& operator=(Span<T, Extent>&&) noexcept = default;
 
     /** Implicit copy constructor for converting a mutable span to a const span. Extent and type must be the same. */
@@ -226,8 +226,8 @@ public:
               typename std::enable_if<!std::is_same<T, NonConstT>::value &&
                                           std::is_same<T, typename std::add_const<NonConstT>::type>::value,
                                       int>::type = 0>
-    Span(const Span<NonConstT, Extent>& other) noexcept : m_ptr(other.Data())
-                                                        , m_size(other.Size())
+    Span(const Span<NonConstT, Extent>& other) : m_ptr(other.Data())
+                                               , m_size(other.Size())
     {}
 
     /** Implicit move constructor for converting a mutable span to a const span. Extent and type must be the same. */
@@ -235,8 +235,8 @@ public:
               typename std::enable_if<!std::is_same<T, NonConstT>::value &&
                                           std::is_same<T, typename std::add_const<NonConstT>::type>::value,
                                       int>::type = 0>
-    Span(Span<NonConstT, Extent>&& other) noexcept : m_ptr(other.Data())
-                                                   , m_size(other.Size())
+    Span(Span<NonConstT, Extent>&& other) : m_ptr(other.Data())
+                                          , m_size(other.Size())
     {}
 
     template <size_t Extent__ = Extent, typename std::enable_if<IsDynamicExtent<Extent__>::value, int>::type = 0>
@@ -257,17 +257,17 @@ public:
     // properties
     //
 
-    pointer Data() const noexcept
+    pointer Data() const
     {
         return m_ptr;
     }
 
-    size_t Size() const noexcept
+    size_t Size() const
     {
         return m_size.Size();
     }
 
-    constexpr bool IsEmpty() const noexcept
+    constexpr bool IsEmpty() const
     {
         return Size() == 0;
     }
@@ -340,22 +340,22 @@ public:
     // basic C++ iterators
     //
 
-    iterator begin() const noexcept
+    iterator begin() const
     {
         return Data();
     }
 
-    iterator end() const noexcept
+    iterator end() const
     {
         return Data() + Size();
     }
 
-    const_iterator cbegin() const noexcept
+    const_iterator cbegin() const
     {
         return Data();
     }
 
-    const_iterator cend() const noexcept
+    const_iterator cend() const
     {
         return Data() + Size();
     }
@@ -444,19 +444,19 @@ Span<TargetT> MakeSpan(const C<T, Args...>& c)
 //     auto span = MakeSpan(v); // span is Span<const int, 3>
 
 template <typename T, size_t N>
-Span<T, N> MakeSpan(std::array<T, N>& v) noexcept
+Span<T, N> MakeSpan(std::array<T, N>& v)
 {
     return Span<T, N>(v.data());
 }
 
 template <typename T, size_t N, typename MutableT = typename std::remove_const<T>::type>
-Span<T, N> MakeSpan(const std::array<MutableT, N>& v) noexcept
+Span<T, N> MakeSpan(const std::array<MutableT, N>& v)
 {
     return Span<T, N>(v.data());
 }
 
 template <typename T, size_t N, typename ConstT = typename std::add_const<T>::type>
-Span<ConstT, N> MakeSpan(const std::array<T, N>& v) noexcept
+Span<ConstT, N> MakeSpan(const std::array<T, N>& v)
 {
     return Span<ConstT, N>(v.data());
 }

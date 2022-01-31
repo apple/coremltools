@@ -1,16 +1,12 @@
-# -*- coding: utf-8 -*-
-
 #  Copyright (c) 2021, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import operator
 import os
 import numpy as np
 
 from coremltools.converters.mil import Builder as mb
-from coremltools.converters.mil.mil.passes.helper import _check_var_scalar_value
 from coremltools.converters.mil.experimental.passes.generic_pass_infrastructure import register_generic_pass
 from coremltools.converters.mil.mil import get_new_symbol
 
@@ -341,7 +337,8 @@ def _instancenorm_constraints(pattern):
     passed = passed and _check_axes_and_var_shape(negative_axes, pattern.beta_var.shape)
 
     requires_rank4_transpose = False
-    if negative_axes == [-3, -2]: requires_rank4_transpose = True
+    if negative_axes == [-3, -2]:
+        requires_rank4_transpose = True
     pattern.add_attribute("requires_rank4_transpose", requires_rank4_transpose)
     pattern.add_attribute("is_instancenorm", True)
     return passed

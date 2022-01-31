@@ -2,21 +2,39 @@
 #
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
-import json as _json
+
+from copy import deepcopy as _deepcopy
 import os as _os
 import shutil as _shutil
 import tempfile as _tempfile
 import warnings as _warnings
-from copy import deepcopy as _deepcopy
 
+
+from ..proto import (
+    Model_pb2 as _Model_pb2,
+    MIL_pb2 as _MIL_pb2
+)
+from .utils import (
+    _create_mlpackage,
+    _has_custom_layer,
+    _is_macos,
+    _macos_version,
+    _MLMODEL_EXTENSION,
+    _MLPACKAGE_AUTHOR_NAME,
+    _MLPACKAGE_EXTENSION,
+    _WEIGHTS_DIR_NAME,
+    load_spec as _load_spec,
+    save_spec as _save_spec
+)
 from coremltools import ComputeUnit as _ComputeUnit
-from .utils import _has_custom_layer as _has_custom_layer
-from .utils import load_spec as _load_spec
-from .utils import _macos_version, _is_macos
-from .utils import save_spec as _save_spec
-from ..proto import Model_pb2 as _Model_pb2
+from coremltools.converters.mil.mil.program import Program as _Program
 
-from .utils import _MLMODEL_EXTENSION, _MLPACKAGE_EXTENSION
+
+try:
+    from ..libmodelpackage import ModelPackage as _ModelPackage
+except:
+    _ModelPackage = None
+
 
 _MLMODEL_FULL_PRECISION = "float32"
 _MLMODEL_HALF_PRECISION = "float16"
@@ -59,9 +77,7 @@ _LUT_BASED_QUANTIZATION = [
 _METADATA_VERSION = "com.github.apple.coremltools.version"
 _METADATA_SOURCE = "com.github.apple.coremltools.source"
 
-_MODEL_FILE_NAME = 'model.mlmodel'
-_WEIGHTS_FILE_NAME = 'weight.bin'
-_WEIGHTS_DIR_NAME = 'weights'
+
 
 class _FeatureDescription(object):
     def __init__(self, fd_spec):
@@ -128,6 +144,23 @@ def _get_proxy_and_spec(filename, compute_units, skip_model_load=False):
 
     return (None, specification, None)
 
+def _try_get_weights_dir_path(mlpackage_path):
+    """
+    Try to find the weights in mlpackage and return the path to the weights directory if found.
+    Return None if not found.
+    :param mlpackage_path: str, path to the mlpackage directory
+    :return: path to the weights directory inside the mlpackage directory
+    """
+    weights_dir = None
+    try:
+        if _ModelPackage.isValid(mlpackage_path):
+            item_info = _ModelPackage(mlpackage_path).findItemByNameAuthor(_WEIGHTS_DIR_NAME, _MLPACKAGE_AUTHOR_NAME)
+            if item_info is not None:
+                weights_dir = item_info.path()
+    except:
+        pass
+    return weights_dir
+
 
 class MLModel(object):
     """
@@ -170,10 +203,17 @@ class MLModel(object):
         >>> predictions = model.predict({'bedroom': 1.0, 'bath': 1.0, 'size': 1240})
 
         # Get the spec of the model
-        >>> model.spec
+        >>> spec = model.get_spec()
 
         # Save the model
-        >>> model.save('HousePricer.mlmodel')
+        >>> model.save('HousePricer.mlpackage')
+
+        # Load the model from the spec object
+        >>> spec = model.get_spec()
+        >>> # modify spec (e.g. rename inputs/ouputs etc)
+        >>> model = MLModel(spec)
+        >>> # if model type is mlprogram, i.e. spec.WhichOneof('Type') == "mlProgram", then:
+        >>> model = MLModel(spec, weights_dir=model.weights_dir)
 
     See Also
     --------
@@ -185,7 +225,8 @@ class MLModel(object):
                  is_temp_package=False,
                  mil_program=None,
                  skip_model_load=False,
-                 compute_units=_ComputeUnit.ALL):
+                 compute_units=_ComputeUnit.ALL,
+                 weights_dir=None):
         """
         Construct an MLModel from an ``.mlmodel``.
 
@@ -193,10 +234,16 @@ class MLModel(object):
         ----------
         model: str or Model_pb2
 
-            For MIL, the model must be a path string to the directory containing bundle
+            For MLProgram, the model can be a path string (``.mlpackage``) or ``Model_pb2``.
+            If its a path string, it must point to a directory containing bundle
             artifacts (such as ``weights.bin``).
+            If it is of type ``Model_pb2`` (spec), then ``weights_dir`` must also be provided, if the model
+            has weights, since to initialize and load the model, both the proto spec and the weights are
+            required. Proto spec for an MLProgram, unlike the NeuralNetwork, does not contain the weights,
+            they are stored separately. If the model does not have weights, an empty weights_dir can be provided.
 
-            For NeuralNetwork, the model can be a path string (``.mlmodel``) or ``Model_pb2``.
+            For non mlprogram model types, the model can be a path string (``.mlmodel``) or type ``Model_pb2``,
+            i.e. a spec object.
 
         useCPUOnly: bool
             This parameter is deprecated and will be removed in 6.0. Use the ``compute_units``
@@ -234,6 +281,10 @@ class MLModel(object):
                 - ``coremltools.ComputeUnit.CPU_AND_GPU``: Use both the CPU and GPU,
                   but not the neural engine.
 
+        weights_dir: str
+            Path to the weight directory, required when loading an MLModel of type mlprogram,
+            from a spec object, i.e. when the argument ``model`` is of type ``Model_pb2``
+
         Notes
         -----
         Internally this maintains the following:
@@ -242,12 +293,15 @@ class MLModel(object):
           CoreML::Python::Model (see
           `coremltools/coremlpython/CoreMLPython.mm <https://github.com/apple/coremltools/blob/main/coremlpython/CoreMLPython.mm>`_)
 
-        - ``bundle_path`` (MIL only): Directory containing all artifacts (``.mlmodel``,
+        - ``package_path`` (mlprogram only): Directory containing all artifacts (``.mlmodel``,
           weights, and so on).
+
+        - ``weights_dir`` (mlprogram only): Directory containing weights inside the package_path.
 
         Examples
         --------
-        >>> loaded_model = MLModel('my_model_file.mlmodel')
+        >>> loaded_model = MLModel('my_model.mlmodel')
+        >>> loaded_model = MLModel("my_model.mlpackage")
         """
         if useCPUOnly:
             _warnings.warn('The "useCPUOnly" parameter is deprecated and will be removed in 6.0. '
@@ -255,26 +309,40 @@ class MLModel(object):
             compute_units = _ComputeUnit.CPU_ONLY
         if not isinstance(compute_units, _ComputeUnit):
             raise TypeError('"compute_units" parameter must be of type: coremltools.ComputeUnit')
+        self.compute_unit = compute_units
 
         self.is_package = False
         self.package_path = None
-        self.compute_unit = compute_units
+        self._weights_dir = None
         if mil_program is not None:
-            from coremltools.converters.mil.mil.program import Program
-            if not isinstance(mil_program, Program):
+            if not isinstance(mil_program, _Program):
                 raise ValueError("mil_program must be of type 'coremltools.converters.mil.Program'")
         self._mil_program = mil_program
+
         if isinstance(model, str):
             if _os.path.isdir(model):
                 self.is_package = True
                 self.package_path = model
                 self.is_temp_package = is_temp_package
+                self._weights_dir = _try_get_weights_dir_path(model)
             self.__proxy__, self._spec, self._framework_error = _get_proxy_and_spec(
                 model, compute_units, skip_model_load=skip_model_load,
             )
         elif isinstance(model, _Model_pb2.Model):
-            filename = _tempfile.mktemp(suffix=_MLMODEL_EXTENSION)
-            _save_spec(model, filename)
+            if model.WhichOneof('Type') == "mlProgram":
+                if weights_dir is None:
+                    raise Exception('MLModel of type mlProgram cannot be loaded just from the model spec object. '
+                                    'It also needs the path to the weights file. Please provide that as well, '
+                                    'using the \'weights_dir\' argument.')
+                self.is_package = True
+                self.is_temp_package = True
+                filename = _create_mlpackage(model, weights_dir, copy_weights=True)
+                self.package_path = filename
+                self._weights_dir = _try_get_weights_dir_path(filename)
+            else:
+                filename = _tempfile.mktemp(suffix=_MLMODEL_EXTENSION)
+                _save_spec(model, filename)
+
             self.__proxy__, self._spec, self._framework_error = _get_proxy_and_spec(
                 filename, compute_units, skip_model_load=skip_model_load,
             )
@@ -289,6 +357,7 @@ class MLModel(object):
 
         self._input_description = _FeatureDescription(self._spec.description.input)
         self._output_description = _FeatureDescription(self._spec.description.output)
+
 
     def __del__(self):
         # Cleanup temporary package upon destruction
@@ -335,6 +404,10 @@ class MLModel(object):
     @property
     def version(self):
         return self._spec.description.metadata.versionString
+
+    @property
+    def weights_dir(self):
+        return self._weights_dir
 
     @version.setter
     def version(self, version_string):
@@ -389,6 +462,7 @@ class MLModel(object):
         >>> spec = model.get_spec()
         """
         return _deepcopy(self._spec)
+
 
     def predict(self, data, useCPUOnly=False):
         """
@@ -445,16 +519,14 @@ class MLModel(object):
             try:
                 from ..libcoremlpython import _MLModelProxy
             except Exception as e:
-                print("exception loading model proxy: %s\n" % e)
+                print("Exception loading model proxy: %s\n" % e)
                 _MLModelProxy = None
             except:
-                print("exception while loading model proxy.\n")
+                print("Exception while loading model proxy.\n")
                 _MLModelProxy = None
 
             if not _MLModelProxy:
-                raise Exception(
-                    "Unable to load CoreML.framework. Cannot make predictions."
-                )
+                raise Exception("Unable to load CoreML.framework. Cannot make predictions.")
             elif (
                 _MLModelProxy.maximum_supported_specification_version()
                 < self._spec.specificationVersion
@@ -475,9 +547,21 @@ class MLModel(object):
                 if self._framework_error:
                     raise self._framework_error
                 else:
-                    raise Exception(
-                        "Unable to load CoreML.framework. Cannot make predictions."
-                    )
+                    raise Exception("Unable to load CoreML.framework. Cannot make predictions.")
+
+
+    def _set_build_info_mil_attributes(self, metadata):
+        assert self.is_package
+        ml_program_attributes = self._spec.mlProgram.attributes
+        build_info_proto_dict = ml_program_attributes["buildInfo"].immediateValue.dictionary
+
+        # Copy the metadata
+        for k, v in metadata.items():
+            key_pair = _MIL_pb2.DictionaryValue.KeyValuePair()
+            key_pair.key.immediateValue.tensor.strings.values.append(k)
+            key_pair.value.immediateValue.tensor.strings.values.append(v)
+            build_info_proto_dict.values.append(key_pair)
+
 
     def _get_mil_internal(self):
         """
@@ -495,11 +579,12 @@ class MLModel(object):
         """
         return _deepcopy(self._mil_program)
 
+
     def _verify_input_name_exists(self, input_dict):
         model_input_names = [inp.name for inp in self._spec.description.input]
         model_input_names_set = set(model_input_names)
         for given_input in input_dict.keys():
             if given_input not in model_input_names_set:
                 err_msg = "Provided key \"{}\", in the input dict, " \
-                          "does not match to any of the model input name(s), which are: {}"
+                          "does not match any of the model input name(s), which are: {}"
                 raise KeyError(err_msg.format(given_input, ",".join(model_input_names)))

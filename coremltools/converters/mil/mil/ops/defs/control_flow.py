@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #  Copyright (c) 2020, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
@@ -20,7 +19,6 @@ from coremltools.converters.mil.mil.input_type import (
     DefaultInputs,
     InputSpec,
     InternalScalarOrTensorInputType,
-    InternalStringInputType,
     IntTensorInputType,
     IntInputType,
     ListInputType,
@@ -43,6 +41,7 @@ from coremltools.converters.mil.mil.types.type_mapping import (
     is_subtype,
 )
 from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
+
 
 @register_op(doc_str="")
 class cond(Operation):
@@ -310,7 +309,7 @@ class while_loop(Operation):
 
     _body: function  (Required)
         * A Python function that takes ``loop_vars`` as positional arguments.
-        * The function must return the same number of output vars as ``loop_var``
+        * The function must return the same number of output vars as ``loop_vars``
           with the same types.
 
     loop_vars: tuple (Required)
@@ -357,7 +356,7 @@ class while_loop(Operation):
         # Cond block:
         block_name = self.name + '_cond_block'
         with Block(block_inputs=block_inputs, outer_op=self,
-                name=block_name) as cond_block:
+                   name=block_name) as cond_block:
 
             cond_func = self._cond.val
             cond_var = cond_func(*cond_block.inputs)
@@ -367,13 +366,12 @@ class while_loop(Operation):
         # Body block
         block_name = self.name + '_body_block'
         with Block(block_inputs=block_inputs, outer_op=self,
-                name=block_name) as body_block:
+                   name=block_name) as body_block:
             body_func = self._body.val
             exit_vars = body_func(*body_block.inputs)
             exit_vars = list(exit_vars) if isinstance(exit_vars, (list, tuple)) \
                 else [exit_vars]
             body_block.set_outputs(exit_vars)
-            #self.blocks.append(body_block)
 
         return cond_block, body_block, exit_vars
 
@@ -717,7 +715,6 @@ class list_read(Operation):
             )
             raise ValueError(msg.format(self.name))
         return list_elem_type
-
 
 
 @register_op(doc_str="")

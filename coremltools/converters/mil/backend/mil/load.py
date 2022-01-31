@@ -32,9 +32,8 @@ from coremltools.converters.mil.mil.types.symbolic import (
     any_variadic,
     is_symbolic,
 )
-from coremltools.converters.mil.mil.types.type_mapping import types_int64
 from coremltools.libmilstoragepython import _BlobStorageWriter as BlobWriter
-from coremltools.models.model import _WEIGHTS_FILE_NAME
+from coremltools.models.utils import _WEIGHTS_FILE_NAME
 from coremltools.models.neural_network.flexible_shape_utils import (
     add_enumerated_image_sizes,
     add_multiarray_ndshape_enumeration,
@@ -105,8 +104,7 @@ def translate_generic_op(op, parameters, blob_writer, literal_params=[]):
     ]
     blocks = None
     if len(op.blocks) > 0:
-        blocks = [create_block(b, parameters, blob_writer) \
-                  for b in op.blocks]
+        blocks = [create_block(b, parameters, blob_writer) for b in op.blocks]
 
     op_type = op.op_type
     attr_dict = {}
@@ -253,8 +251,7 @@ def load(prog, weights_dir, resume_on_errors=False, **kwargs):
 
     function_protos = {}
     for func_name, func in prog.functions.items():
-        function_protos[func_name] = convert_function(func, prog.parameters,
-            blob_writer)
+        function_protos[func_name] = convert_function(func, prog.parameters, blob_writer)
 
     proto = pm.Program(
         version=1,

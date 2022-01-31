@@ -8,7 +8,6 @@ import numpy as np
 import pytest
 
 from coremltools.converters.mil.mil import Builder as mb
-from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
 from coremltools.converters.mil.testing_utils import (
     assert_model_is_valid,
     get_op_types_in_program,
@@ -57,7 +56,7 @@ def test_elementwise_elimination(op_type, pos, val):
     elif op_type in {'sub'}:
         if pos == 'y' and (val == 0 or val == [0, 0, 0, 0]):
             new_program = ["relu"]
-            
+
     assert get_op_types_in_program(prev_prog) == original_program
     assert get_op_types_in_program(prog) == new_program
     assert_model_is_valid(

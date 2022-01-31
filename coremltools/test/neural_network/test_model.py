@@ -11,7 +11,7 @@ import tempfile
 import unittest
 
 from coremltools._deps import _HAS_TORCH
-from coremltools.proto import Model_pb2
+from coremltools.converters.mil import Builder as mb
 from coremltools.models.utils import (
     rename_feature,
     save_spec,
@@ -23,6 +23,7 @@ from coremltools.models.utils import (
 from coremltools.models import MLModel, datatypes
 from coremltools.models.neural_network import NeuralNetworkBuilder
 from coremltools.models.neural_network.utils import make_image_input, make_nn_classifier
+from coremltools.proto import Model_pb2
 
 if _HAS_TORCH:
     import torch as _torch
@@ -508,15 +509,20 @@ class MLModelTest(unittest.TestCase):
         np.testing.assert_equal(out, np.array([8.0, 10.0, 12.0]).reshape(3, 1, 1))
 
     @unittest.skipUnless(
-        _is_macos() and _macos_version() >= (12, 0) and _HAS_TORCH, "Only supported on macOS 12+"
+        _is_macos() and _macos_version() >= (12, 0), "Only supported on macOS 12+"
     )
     def test_rename_feature_mlprogram(self):
-        torch_model = _torch.nn.ReLU().eval()
+        @mb.program(input_specs=[mb.TensorSpec(shape=(3,))])
+        def linear_prog(input):
+            W = np.ones((10, 3), dtype=np.float)
+            out = mb.linear(x=input, weight=W, name="output")
+            return out
+
         model = coremltools.convert(
-            _torch.jit.trace(torch_model, _torch.rand(3, )),
-            inputs=[coremltools.TensorType(shape=(3,))],
+            linear_prog,
             convert_to='mlprogram'
         )
+
         spec = model.get_spec()
         input_name = spec.description.input[0].name
         output_name = spec.description.output[0].name
@@ -524,16 +530,18 @@ class MLModelTest(unittest.TestCase):
         # rename input
         rename_feature(spec, input_name, "new_input_name")
         self.assertEqual(spec.description.input[0].name, "new_input_name")
-        model = coremltools.models.MLModel(spec)
+        model = coremltools.models.MLModel(spec, weights_dir=model.weights_dir)
         out = model.predict({"new_input_name": np.array([1.0, 2.0, 3.0])})[output_name]
-        self.assertEqual(out[0], 1.0)
+        self.assertEqual(out.shape, (10,))
+        self.assertEqual(out[0], 6.0)
 
         # rename output
         rename_feature(spec, output_name, "new_output_name")
         self.assertEqual(spec.description.output[0].name, "new_output_name")
-        model = coremltools.models.MLModel(spec)
+        model = coremltools.models.MLModel(spec, weights_dir=model.weights_dir)
         out = model.predict({"new_input_name": np.array([1.0, 2.0, 3.0])})["new_output_name"]
-        self.assertEqual(out[1], 2.0)
+        self.assertEqual(out.shape, (10,))
+        self.assertEqual(out[1], 6.0)
 
     @unittest.skipUnless(
         _is_macos() and _macos_version() >= (12, 0) and _HAS_TORCH, "Only supported on macOS 12+"
@@ -550,7 +558,7 @@ class MLModelTest(unittest.TestCase):
         input_name = spec.description.input[0].name
 
         rename_feature(spec, 'classLabel', 'highestProbClass')
-        model = coremltools.models.MLModel(spec)
+        model = coremltools.models.MLModel(spec, weights_dir=model.weights_dir)
         output_class = model.predict({input_name: np.array([1.0, 2.0, 3.0])})['highestProbClass']
         self.assertEqual(output_class, 'c')
 

@@ -2,12 +2,8 @@
 #
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
-
-import numpy as _np
-
 from . import datatypes
-from ._feature_management import process_or_validate_features
-from ._feature_management import is_valid_feature_list
+from ._feature_management import process_or_validate_features, is_valid_feature_list
 from . import _feature_management as _fm
 from ..proto import Model_pb2
 

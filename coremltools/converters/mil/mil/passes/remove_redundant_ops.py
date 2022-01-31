@@ -4,10 +4,8 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from collections import OrderedDict
-import numpy as np
 
 from .helper import _are_ops_identical
-from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 
@@ -188,5 +186,3 @@ class remove_redundant_ops(AbstractGraphPass):
             block_changed = True
             while block_changed:
                 block_changed = _remove_redundant_ops_in_block(f)
-
-

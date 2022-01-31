@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 #  Copyright (c) 2020, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
@@ -10,14 +8,13 @@ import itertools
 
 from ...mil.passes import pass_registry
 
-# IMPORTANT: List of Asssumptions we are making about the problem
+# IMPORTANT: List of assumptions we are making about the problem
 # 1) The user defined pattern has exactly one root variable, and one final output operation. As such, we will be searching for a singlular
 #    root variable in the larger program, and using that root variable as a starting point for our pattern matching.
 #    And, we will only match one of the final operations for the larger program.
 # 2) The root variable in the larger program, where we start off the pattern matching, must have the same number of child ops as the
 #    root variable in the user defined program
 # 3) The outputs of an operation are stored in identical, predictable order. The child operations of an operation are stored in a random order.
-
 
 
 class Pattern:
@@ -69,9 +66,9 @@ class Pattern:
     def add_attribute(self, attribute_name, attribute):
         if attribute_name in self.attribute_set:
             raise NameError("Pattern " + attribute_name + " is being overwritten. "
-                "Make sure every operation in your MIL pattern to detect "
-                "has a unique name, and that no operation in it or an attribute you are setting is named "
-                "root_var, block, final_op, op_set, or attribute_set.")
+                            "Make sure every operation in your MIL pattern to detect "
+                            "has a unique name, and that no operation in it or an attribute you are setting is named "
+                            "root_var, block, final_op, op_set, or attribute_set.")
         setattr(self, attribute_name, attribute)
 
     def add_op(self, op_name, op):
@@ -83,7 +80,7 @@ class Pattern:
 
 def _lists_op_equality(oplist1, oplist2):
     if (len(oplist1) != len(oplist2)):
-        return False;
+        return False
 
     for i in range(len(oplist1)):
         if oplist1[i].op_type != oplist2[i].op_type:
@@ -133,7 +130,7 @@ def _pattern_detected(pattern, program_op, pattern_op, program_root_var, pattern
                     output_same = True
                     break
 
-        if output_same == False:
+        if output_same is False:
             return False
 
     if pattern_op is not None:
@@ -158,9 +155,9 @@ def _detect_pattern(program_op, ops_arrangement_root_var, block):
             # (except the last one)
             for op in pattern.op_list():
                if op is not pattern.final_op:
-                    for out in op.outputs:
-                        if out in pattern.block.outputs:
-                            return False, None
+                   for out in op.outputs:
+                       if out in pattern.block.outputs:
+                           return False, None
 
             return True, pattern
 
@@ -189,7 +186,7 @@ def _fuse_one_block(block, ops_arrangement, var_constraints, transform_pattern):
     return fusion_status
 
 
-def _fuse_all_blocks(ops_arrangement, var_constraints, transform_pattern, prog):
+def fuse_all_blocks(ops_arrangement, var_constraints, transform_pattern, prog):
     for f in prog.functions.values():
         block_changed = True
         while block_changed:
@@ -213,10 +210,11 @@ class PassContainer():
         self.passes.append(pass_function)
 
 def register_generic_pass(ops_arrangement, var_constraints, transform_pattern, pass_name, namespace):
-    pass_function = partial(_fuse_all_blocks, ops_arrangement, var_constraints, transform_pattern)
+    pass_function = partial(fuse_all_blocks, ops_arrangement, var_constraints, transform_pattern)
 
     pass_id = namespace + "::" + pass_name
     if pass_id not in pass_registry.PASS_REGISTRY or not isinstance(pass_registry.PASS_REGISTRY[pass_id], PassContainer):
         pass_registry.PASS_REGISTRY.passes[pass_id] = PassContainer(pass_name)
 
     pass_registry.PASS_REGISTRY[pass_id].add(pass_function)
+

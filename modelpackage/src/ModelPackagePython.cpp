@@ -24,7 +24,7 @@ namespace py = pybind11;
 PYBIND11_PLUGIN(libmodelpackage) {
     py::module m("libmodelpackage", "Library to create, access and edit model packages");
     
-    py::class_<MPL::ModelPackageItemInfo>(m, "ModelPackageItemInfo")
+    py::class_<MPL::ModelPackageItemInfo, std::shared_ptr<MPL::ModelPackageItemInfo>>(m, "ModelPackageItemInfo")
         .def("identifier", &MPL::ModelPackageItemInfo::identifier)
         .def("path", &MPL::ModelPackageItemInfo::path)
         .def("name", &MPL::ModelPackageItemInfo::name)
@@ -38,7 +38,8 @@ PYBIND11_PLUGIN(libmodelpackage) {
         .def("replaceRootModel", &MPL::ModelPackage::replaceRootModel)
         .def("addItem", &MPL::ModelPackage::addItem)
         .def("getRootModel", &MPL::ModelPackage::getRootModel)
-        .def("isValid", &MPL::ModelPackage::isValid);
+        .def("isValid", &MPL::ModelPackage::isValid)
+        .def("findItemByNameAuthor", py::overload_cast<const std::string&, const std::string&>(&MPL::ModelPackage::findItem, py::const_));
     
     return m.ptr();
 }

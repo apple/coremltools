@@ -1,18 +1,16 @@
-# -*- coding: utf-8 -*-
-
 #  Copyright (c) 2020, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-
-import os
-import numpy as np
 import logging
+import numpy as np
+import os
 
 from coremltools.converters.mil import Builder as mb
 from coremltools.converters.mil.experimental.passes.generic_pass_infrastructure import register_generic_pass
 from coremltools.converters.mil.mil import types
+
 
 """
 Fold add/sub into bias of conv and conv_transpose
@@ -144,9 +142,6 @@ def transform_pattern(pattern):
     if not isinstance(bias_value, np.ndarray):
         is_bias_scalar = True
 
-    # find rank of the conv input
-    rank = pattern.conv.x.rank
-
     bias_value = np.array([bias_value]) if is_bias_scalar else np.squeeze(bias_value)
 
     if pattern.add_or_sub.op_type == "sub":
@@ -179,7 +174,7 @@ def transform_pattern(pattern):
         weight_np_type = types.nptype_from_builtin(pattern.conv.inputs["weight"].sym_type.get_primitive())
         logging.warning("conv_bias_fusion pass: casting bias "
                         "from {} to {} to match the dtype of the weight of the conv layer".format(
-                        new_bias_value.dtype, weight_np_type
+                            new_bias_value.dtype, weight_np_type
                         )
         )
         new_bias_value = new_bias_value.astype(weight_np_type)
@@ -266,7 +261,7 @@ def transform_transpose_pattern(pattern):
     pattern.block.remove_ops(pattern.op_list())
 
 def _bias_mod_and_validity(bias, Cout, pattern):
- # check if the bias is compatible for fusion
+    # check if the bias is compatible for fusion
     is_bias_scalar = True
     if isinstance(bias, np.ndarray):
         if bias.shape == ():

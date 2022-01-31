@@ -4,6 +4,7 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from collections import OrderedDict
+
 import numpy as np
 import pytest
 import torch
@@ -171,7 +172,6 @@ class TestTorchPasses:
         np.testing.assert_equal(len(graph.outputs), 1)
         np.testing.assert_equal(graph.outputs[0], graph.nodes[-1].outputs[0])
 
-
     def test_transform_inplace_ops_loop(self):
         # The test graph is:
         #    graph(
@@ -264,7 +264,6 @@ class TestTorchPasses:
         np.testing.assert_equal(loop_node.name, loop_node.outputs[0])
         # That graph output should now be the output of the graph.
         np.testing.assert_equal(loop_node.outputs[0], graph.outputs[0])
-
 
     @pytest.mark.xfail(reason="rdar://64235006")
     def test_transform_inplace_ops_if(self):

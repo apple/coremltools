@@ -41,10 +41,12 @@ mil_to_torch_types = {v: k for k, v in torch_to_mil_types.items()}
 
 
 class TranscriptionContext:
-    """Maintains a map from torch operations to their MIL values
-        while building the graph. Can be used to process subgraphs recursively
-        by pushing new context when stepping into a subgraph and popping that
-        context when stepping out."""
+    """
+    Maintains a map from torch operations to their MIL values
+    while building the graph. Can be used to process subgraphs recursively
+    by pushing new context when stepping into a subgraph and popping that
+    context when stepping out.
+    """
 
     def __init__(self, name=None):
         self.name = name if name else ""
@@ -65,9 +67,10 @@ class TranscriptionContext:
         self._current_graph[-1][torch_name] = ssa_var
 
     def __getitem__(self, torch_name):
-        """ Lookup a name in the context. Note that since nested blocks must be
-            able to access anything that was defined before them, we have to
-            search all contexts for a name, starting with the most local scope.
+        """
+        Lookup a name in the context. Note that since nested blocks must be
+        able to access anything that was defined before them, we have to
+        search all contexts for a name, starting with the most local scope.
         """
         for idx in reversed(range(len(self._current_graph))):
             current_graph = self._current_graph[idx]
@@ -120,25 +123,28 @@ class TranscriptionContext:
 
 
 class TorchConverter:
-    """Class that handles conversion of pytorch models represented in TorchScript
+    """
+    Class that handles conversion of pytorch models represented in TorchScript
     format to the MIL format.
 
     Models passed to the @TorchConverter go from:
     TorchScript -> Expanded/Optimized Torch IR -> Internal Graph -> CoreML SSA
     The internal graph representation was added to make testing easier.
-
-    Arguments:
-        torchscript: torch.jit.ScriptModule object representing the model to convert.
-        inputs: Input values and optional names. See kwarg in load.py for full description.
-        outputs: Names of the graph's outputs. See kwarg in load.py for full description.
-        cut_at_symbols: A list of internal symbol name strings. Graph conversion will
-            terminate once these symbols have been generated. For debugging use
-            only. See kwarg in load.py.
     """
 
     def __init__(
         self, torchscript, inputs, outputs=None, cut_at_symbols=None,
     ):
+        """
+        Arguments:
+            torchscript: torch.jit.ScriptModule object representing the model to convert.
+            inputs: Input values and optional names. See kwarg in load.py for full description.
+            outputs: Names of the graph's outputs. See kwarg in load.py for full description.
+            cut_at_symbols: A list of internal symbol name strings. Graph conversion will
+                terminate once these symbols have been generated. For debugging use
+                only. See kwarg in load.py.
+        """
+
         assert isinstance(torchscript, _torch.jit.ScriptModule)
         self.inputs = inputs
         for idx, inp in enumerate(self.inputs):
@@ -163,12 +169,15 @@ class TorchConverter:
             p(self.graph)
         self.inputs = [v for v in self.graph.inputs.values()]
         self.torch_passes = torch_passes
+        self._prog = Program()
 
     @staticmethod
     def _check_ops(graph):
-        """ Returns the set of ops in @graph that are implemented, and the set
-            for which no conversion function is registered. @graph can be
-            either InternalTorchIRGraph or InternalTorchIRBlock."""
+        """
+        Returns the set of ops in @graph that are implemented, and the set
+        for which no conversion function is registered. @graph can be
+        either InternalTorchIRGraph or InternalTorchIRBlock.
+        """
         implemented_ops = set()
         missing_ops = set()
         for node in graph.nodes:
@@ -185,7 +194,8 @@ class TorchConverter:
 
     @staticmethod
     def _create_placeholder(_input):
-        """Converts an InputType into a Placeholder.
+        """
+        Converts an InputType into a Placeholder.
 
         _input: TensorType
         """
@@ -194,8 +204,10 @@ class TorchConverter:
         return mb.placeholder(shape, dtype=dtype)
 
     def check_ops(self):
-        """ Returns the set of ops in @self.graph that are implemented, and
-            the set for which no conversion function is registered."""
+        """
+        Returns the set of ops in @self.graph that are implemented, and
+        the set for which no conversion function is registered.
+        """
         return TorchConverter._check_ops(self.graph)
 
     def convert_const(self):
@@ -204,11 +216,10 @@ class TorchConverter:
             self.context.add(const)
 
     def convert(self):
-
         _logging.info("Converting graph.")
 
         # This will hold the converted model.
-        prog = Program()
+        prog = self._prog
 
         # Construct placeholder for input to ssa function
         # This is where input renaming occurs
@@ -393,7 +404,8 @@ class TorchConverter:
 
     @staticmethod
     def _expand_and_optimize_ir(torchscript):
-        """Given a torch.jit.ScriptModule, convert it to a optimized
+        """
+        Given a torch.jit.ScriptModule, convert it to a optimized
         torch._C.Graph and dict of model parameter's names to tensors.
         """
         graph = torchscript.forward.graph
@@ -409,15 +421,6 @@ class TorchConverter:
         # eliminated.
         _torch._C._jit_pass_dce(graph)
         # From PyTorch code: checks well-formedness and invariants of graph.
-        _torch._C._jit_pass_lint(graph)
-        # From PyTorch code: remove all in-place ops and replace them with
-        # out-of-place equivalents.
-        # e.g.
-        #   %foo = aten::add_(%foo, %n)
-        # becomes
-        #   %foo.2 = aten::add(%foo, %n)
-        _torch._C._jit_pass_remove_inplace_ops(graph)
-        _torch._C._jit_pass_dce(graph)
         _torch._C._jit_pass_lint(graph)
         # Replaces a couple specific ops patterns (add, sub, mul, div, chunk).
         if version_lt(_torch, '1.6.0'):

@@ -23,7 +23,7 @@ public:
     Impl& operator=(const Impl&) = delete;
     Impl& operator=(Impl&&) = delete;
 
-    Impl(std::string filename) : m_filePath(std::move(filename)) {}
+    explicit Impl(std::string filename) : m_filePath(std::move(filename)) {}
     ~Impl() = default;
 
     const std::string& GetFilename() const
@@ -60,12 +60,18 @@ public:
         return metadata.offset;
     }
 
+    uint64_t GetDataSize(uint64_t metadataOffset) const
+    {
+        auto metadata = GetMetadata(metadataOffset);
+        return metadata.sizeInBytes;
+    }
+
 private:
     void EnsureLoaded() const
     {
         auto load = [this]() {
             auto reader = MakeMMapFileReader(m_filePath);
-            const storage_header& header = reader->ReadStruct<storage_header>(0);
+            const auto& header = reader->ReadStruct<storage_header>(0);
             MILVerifyIsTrue(header.version == 2, std::runtime_error, "Storage Reader expects file format version 2.");
 
             // once we're good with the structure of the file, then set class state
@@ -104,6 +110,12 @@ const std::string& StorageReader::GetFilename() const
 }
 
 template <>
+Util::Span<const int8_t> StorageReader::GetDataView<int8_t>(uint64_t offset) const
+{
+    return m_impl->GetDataView<int8_t>(offset);
+}
+
+template <>
 Util::Span<const uint8_t> StorageReader::GetDataView<uint8_t>(uint64_t offset) const
 {
     return m_impl->GetDataView<uint8_t>(offset);
@@ -126,7 +138,12 @@ Util::Span<const uint8_t> StorageReader::GetRawDataView(uint64_t offset) const
     return m_impl->GetRawDataView(offset);
 }
 
-uint64_t StorageReader::GetDataOffset(uint64_t offset) const
+uint64_t StorageReader::GetDataOffset(uint64_t metadataOffset) const
 {
-    return m_impl->GetDataOffset(offset);
+    return m_impl->GetDataOffset(metadataOffset);
+}
+
+uint64_t StorageReader::GetDataSize(uint64_t metadataOffset) const
+{
+    return m_impl->GetDataSize(metadataOffset);
 }

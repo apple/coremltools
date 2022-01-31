@@ -3,14 +3,16 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import logging
-from .basic_graph_ops import topsort
-from coremltools.converters.mil.mil.types.symbolic import is_symbolic, any_variadic
-from coremltools.converters.mil.mil import types
-from .tf_op_registry import _TF_OPS_REGISTRY
-from coremltools.converters.mil.mil.var import ListVar
 from collections import defaultdict
+import logging
+
 from tqdm import tqdm as _tqdm
+
+from .basic_graph_ops import topsort
+from .tf_op_registry import _TF_OPS_REGISTRY
+from coremltools.converters.mil.mil import types
+from coremltools.converters.mil.mil.types.symbolic import is_symbolic, any_variadic
+from coremltools.converters.mil.mil.var import ListVar
 
 
 def compatible_shapes(tf_shape, inf_shape):
@@ -22,7 +24,7 @@ def compatible_shapes(tf_shape, inf_shape):
         elif is_symbolic(ds):
             if is_symbolic(dt) and dt != ds:
                 logging.warning("Symbolic dim {} and {}".format(ds, dt) +\
-                        " assumed to be equal")
+                                " assumed to be equal")
             return True
         else:
             return False
@@ -175,19 +177,16 @@ def convert_graph(context, graph, outputs=None):
             "[{}/{}] Converting {} op '{}'".format(i + 1, num_nodes, node.op, node.name)
         )
 
-        if node.op == "NoOp":
+        if node.op in ("NoOp", "Assert"):
             continue
 
-        if node.op == "Assert":
-            continue
-
-        _add_op = _TF_OPS_REGISTRY.get(node.op, None)
-        if _add_op is None:
+        add_op = _TF_OPS_REGISTRY.get(node.op, None)
+        if add_op is None:
             msg = "Conversion for TF op '{0}' not implemented.\n \n{1}".format(
                 node.op, node.original_node
             )
             raise NotImplementedError(msg)
-        _add_op(context, node)
+        add_op(context, node)
 
         if len(node.outputs) > 0:
             # set_global / get_global / NoOp has no direct consumer / outputs

@@ -1,10 +1,17 @@
-import coremltools
-from coremltools import utils
-import coremltools.models.datatypes as datatypes
-from coremltools.models import neural_network as neural_network
+# Copyright (c) 2021, Apple Inc. All rights reserved.
+#
+# Use of this source code is governed by a BSD-3-clause license that can be
+# found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
+
+import os
 
 import numpy as np
-import os
+
+import coremltools
+from coremltools import utils
+from coremltools.models import neural_network as neural_network
+import coremltools.models.datatypes as datatypes
+
 
 class TestNeuralNetworkPrediction:
 

@@ -249,6 +249,7 @@ message SerializedModel {
  *
  * 6 : iOS 15, macOS 12, tvOS 15, watchOS 8 (Core ML 5)
  * - Core ML Audio Feature Print
+ * - new type of model: mlprogram (MILSpec.Program)
  *
  */
 message Model {

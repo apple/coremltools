@@ -100,7 +100,7 @@ _HAS_TF_2 = False
 _TF_1_MIN_VERSION = "1.12.0"
 _TF_1_MAX_VERSION = "1.15.0"
 _TF_2_MIN_VERSION = "2.1.0"
-_TF_2_MAX_VERSION = "2.5.0"
+_TF_2_MAX_VERSION = "2.6.2"
 
 try:
     import tensorflow
@@ -147,7 +147,7 @@ MSG_TF2_NOT_FOUND = "TensorFlow 2.x not found."
 _HAS_KERAS_TF = True
 _HAS_KERAS2_TF = True
 _KERAS_MIN_VERSION = "1.2.2"
-_KERAS_MAX_VERSION = "2.2.4"
+_KERAS_MAX_VERSION = "2.6.0"
 MSG_KERAS1_NOT_FOUND = "Keras 1 not found."
 MSG_KERAS2_NOT_FOUND = "Keras 2 not found."
 
@@ -218,7 +218,7 @@ except:
 
 # ---------------------------------------------------------------------------------------
 _HAS_TORCH = True
-_TORCH_MAX_VERSION = "1.9.1"
+_TORCH_MAX_VERSION = "1.10.1"
 try:
     import torch
     _warn_if_above_max_supported_version("Torch", torch.__version__, _TORCH_MAX_VERSION)

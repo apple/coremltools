@@ -8,6 +8,7 @@ import shutil
 import tempfile
 
 import pytest
+
 import coremltools.converters as converter
 from coremltools.converters.mil.input_types import TensorType
 from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import (

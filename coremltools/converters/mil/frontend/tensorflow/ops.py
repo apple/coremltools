@@ -75,6 +75,7 @@ def _value_at(x, idx):
 def _freq_to_mel(freq):
     return 1127.0 * _np.log(1 + freq / 700.0)
 
+
 def _get_MFCC_constants(spectrogram_N,
                         sample_rate,
                         upper_frequency_limit,
@@ -131,7 +132,7 @@ def _get_MFCC_constants(spectrogram_N,
         else:
             if channel >= 0:
                 weights[i] = (center_frequencies[channel + 1] - _freq_to_mel(i * hz_per_sbin)) / (
-                            center_frequencies[channel + 1] - center_frequencies[channel])
+                    center_frequencies[channel + 1] - center_frequencies[channel])
             else:
                 weights[i] = (center_frequencies[0] - _freq_to_mel(i * hz_per_sbin)) / (center_frequencies[0] - mel_low)
 
@@ -176,7 +177,7 @@ def AddN(context, node):
         if var == values[-1]:
             x = mb.add(x=prev_var, y=var, name=node.name)
         else:
-            prev_var = mb.add(x=prev_var, y=var, name=node.name+"_tmpAddN_"+str(idx))
+            prev_var = mb.add(x=prev_var, y=var, name=node.name + "_tmpAddN_" + str(idx))
     context.add(node.name, x)
 
 
@@ -495,6 +496,7 @@ def Einsum(context, node):
     x = build_einsum_mil(a, b, equation, node.name)
     context.add(node.name, x)
 
+
 @register_tf_op
 def Equal(context, node):
     x = context[node.inputs[0]]
@@ -640,6 +642,11 @@ def Log(context, node):
     x = mb.log(x=x, name=node.name)
     context.add(node.name, x)
 
+@register_tf_op
+def Log1p(context, node):
+    x = context[node.inputs[0]]
+    x = mb.log(x=x, epsilon=1., name=node.name)
+    context.add(node.name, x)
 
 @register_tf_op
 def LogicalAnd(context, node):
@@ -994,7 +1001,7 @@ def Conv3DBackpropInputV2(context, node):
         x = _transpose_NDHWC_to_NCDHW(x)
         if output_shape is not None:
             output_shape = [output_shape[0], output_shape[4],
-                output_shape[1], output_shape[2], output_shape[3]]
+                            output_shape[1], output_shape[2], output_shape[3]]
 
     # Only the last op should have the same name as node.name
     conv_name = node.name + "_x" if data_format == "NDHWC" else node.name
@@ -1035,6 +1042,7 @@ def EuclideanNorm(context, node):
     keep_dims = node.attr.get("keep_dims", False)
     x = mb.reduce_l2_norm(x=x, axes=axes, keep_dims=keep_dims, name=node.name)
     context.add(node.name, x)
+
 
 @register_tf_op
 def ExpandDims(context, node):
@@ -1135,7 +1143,7 @@ def ImageProjectiveTransformV2(context, node):
     context.add(node.name, x)
 
 
-@register_tf_op
+@register_tf_op(tf_alias=["DivNoNan"])
 def RealDiv(context, node):
     x = context[node.inputs[0]]
     y = context[node.inputs[1]]
@@ -1418,6 +1426,23 @@ def Square(context, node):
     x = mb.mul(x=x, y=x, name=node.name)
     context.add(node.name, x)
 
+@register_tf_op
+def SparseSoftmaxCrossEntropyWithLogits(context, node):
+    feats = context[node.inputs[0]]
+    labels = context[node.inputs[1]]
+    class_nums = feats.shape[1]
+    labels = mb.one_hot(
+        indices=labels, 
+        one_hot_vector_size=class_nums,
+        )
+
+    # compute the log softmax
+    y = mb.reduce_log_sum_exp(x=feats, axes=[-1], keep_dims=True)
+    log_softmax = mb.sub(x=feats, y=y)
+    loss = mb.mul(x=labels, y=log_softmax)
+    loss = mb.mul(x=-1, y=loss)
+    loss = mb.reduce_sum(x=loss, axes=[-1], name=node.name)
+    context.add(node.name, loss)
 
 @register_tf_op
 def StridedSlice(context, node):
@@ -1471,7 +1496,7 @@ def StridedSlice(context, node):
         stride = [] if stride is None else stride.val.tolist()
 
         # pad masks function
-        new_dims = sum(i == True for i in new_axis_mask)
+        new_dims = sum(i is True for i in new_axis_mask)
         if new_dims > 0:
             x_rank = x.rank + new_dims
         else:
@@ -1572,8 +1597,8 @@ def StridedSlice(context, node):
         new_axis_mask,
     )
 
-    if sum(i == True for i in new_axis_mask) > 0:
-        axes = [i for i, val in enumerate(new_axis_mask) if val == True]
+    if sum(i is True for i in new_axis_mask) > 0:
+        axes = [i for i, val in enumerate(new_axis_mask) if val is True]
         x = mb.expand_dims(x=x, axes=axes, name=node.name + "_new_axes")
 
     x = mb.slice_by_index(
@@ -1595,8 +1620,12 @@ def Sum(context, node):
     x = context[node.inputs[0]]
     axes = _check_axes_type(context[node.inputs[1]])
     keep_dims = node.attr.get("keep_dims", False)
-    x = mb.reduce_sum(x=x, axes=axes, keep_dims=keep_dims, name=node.name)
-    context.add(node.name, x)
+    input_type = x.sym_type
+    if _is_scalar(input_type):
+        context.add(node.name, x, is_new_var=False)
+    else:
+        x = mb.reduce_sum(x=x, axes=axes, keep_dims=keep_dims, name=node.name)
+        context.add(node.name, x)
 
 
 @register_tf_op
@@ -1636,7 +1665,7 @@ def MatrixDiag(context, node):
         raise NotImplementedError('Only support MatrixDiag op with input rank = 1.')
     length = mb.shape(x=x)
     x = mb.expand_dims(x=x, axes=[0])
-    reps = mb.concat(values=[length,[1]], axis=0)
+    reps = mb.concat(values=[length, [1]], axis=0)
     x = mb.tile(x=x, reps=reps)
     x = mb.band_part(x=x, lower=0, upper=0, name=node.name)
     context.add(node.name, x)
@@ -1874,11 +1903,11 @@ def Select(context, node):
     if rank_cond == 1 and rank_a > 1:
         axes = [-i - 1 for i in range(rank_a - rank_cond)]
         cond = mb.expand_dims(x=cond, axes=axes)
-        
+
     if not types.is_bool(cond.dtype):
         # cond must be bool type
         cond = mb.cast(x=cond, dtype="bool")
-        
+
     x = mb.select(cond=cond, a=a, b=b, name=node.name)
     context.add(node.name, x)
 
@@ -2083,8 +2112,8 @@ def Tile(context, node):
 @register_tf_op
 def Where(context, node):
     if len(node.inputs) > 1:
-        raise NotImplementedError('tf.where with x,y will be supported by '+\
-                'MIL::select in the future')
+        raise NotImplementedError('tf.where with x,y will be supported by '
+                                  'MIL::select in the future')
     x = context[node.inputs[0]]
     # rdar://78409794 (Remove cast in tf Where op lowering after rdar://77514629
     # goes into MIL build)
@@ -2132,7 +2161,7 @@ def Conv2DBackpropInput(context, node):
         x = _transpose_NHWC_to_NCHW(x)
         if output_shape is not None:
             output_shape = [output_shape[0], output_shape[3],
-                output_shape[1], output_shape[2]]
+                            output_shape[1], output_shape[2]]
 
     # Only the last op should have the same name as node.name
     conv_name = node.name + "x" if data_format == "NHWC" else node.name
@@ -2303,8 +2332,8 @@ def ResizeNearestNeighbor(context, node):
     else:
         raise NotImplementedError(
             "ResizeNearestNeighbor op with align_corners={}and half_pixel_centers={} not supported".format(
-                    align_corners, half_pixel_centers
-                )
+                align_corners, half_pixel_centers
+            )
         )
 
     # transpose again
@@ -3007,7 +3036,7 @@ def AudioSpectrogram(context, node):
     fout = fout.astype(_np.int)
 
     # construct constant for hann window tensor, of shape (window_size,)
-    h = _np.arange(window_size) * ((2*_np.pi) / window_size)
+    h = _np.arange(window_size) * ((2 * _np.pi) / window_size)
     h = 0.5 - 0.5 * _np.cos(h)
 
     # construct the constant DFT matrices

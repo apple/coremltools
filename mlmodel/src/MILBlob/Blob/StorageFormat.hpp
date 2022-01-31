@@ -52,6 +52,7 @@ enum BlobDataType : uint32_t
     Float16 = 1,
     Float32 = 2,
     UInt8 = 3,
+    Int8 = 4,
 };
 
 template <typename T>
@@ -70,6 +71,11 @@ struct BlobDataTypeTraits<Fp16> {
 template <>
 struct BlobDataTypeTraits<uint8_t> {
     static constexpr BlobDataType DataType = BlobDataType::UInt8;
+};
+
+template <>
+struct BlobDataTypeTraits<int8_t> {
+    static constexpr BlobDataType DataType = BlobDataType::Int8;
 };
 
 /**

@@ -345,13 +345,13 @@ class TensorFlowBaseTest(object):
                        validate_shapes_only=False, freeze_graph=False,
                        tf_outputs=None):
         res = run_compare_tf(graph, feed_dict, output_nodes,
-                        use_cpu_only=use_cpu_only,
-                        use_cpu_for_conversion=use_cpu_for_conversion,
-                       frontend_only=frontend_only, frontend=frontend,
-                       backend=backend, atol=atol,
-                       rtol=rtol,
-                       validate_shapes_only=validate_shapes_only,
-                       freeze_graph=freeze_graph, tf_outputs=tf_outputs)
+                             use_cpu_only=use_cpu_only,
+                             use_cpu_for_conversion=use_cpu_for_conversion,
+                             frontend_only=frontend_only, frontend=frontend,
+                             backend=backend, atol=atol,
+                             rtol=rtol,
+                             validate_shapes_only=validate_shapes_only,
+                             freeze_graph=freeze_graph, tf_outputs=tf_outputs)
         alist = []
         if res is not None:
             alist = list(res)

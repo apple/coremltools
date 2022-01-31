@@ -1,18 +1,21 @@
-# -*- coding: utf-8 -*-
-
 #  Copyright (c) 2020, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import logging
+import numpy as np
 from typing import List, Optional
 
-import numpy as np
-from coremltools.converters.mil.mil import Builder as mb
-from coremltools.converters.mil.mil import Operation, Block, Var, Program
+from coremltools.converters.mil.mil import (
+    Block,
+    Builder as mb,
+    Operation,
+    Var
+)
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
+
 
 DEBUG = False  # set to true to plot the block before and after the transformation
 
@@ -237,8 +240,6 @@ def _try_match_and_transform_pattern_1(reduce_op, block) -> bool:
     if root_var.shape is None:
         return False
 
-    rank = len(root_var.shape)
-
     # check that root_var feeds into exactly 3 ops
     if len(list(root_var.child_ops)) != 3:
         return False
@@ -371,8 +372,6 @@ def _try_match_and_transform_pattern_2(reduce_op, block) -> bool:
     if root_var.shape is None:
         return False
 
-    rank = len(root_var.shape)
-
     # check that root_var feeds into exactly 3 ops
     if len(root_var.child_ops) != 3:
         return False
@@ -498,8 +497,6 @@ def _try_match_and_transform_pattern_3(reduce_op, block) -> bool:
 
     if root_var.shape is None:
         return False
-
-    rank = len(root_var.shape)
 
     # check that root_var feeds into exactly 3 ops
     if len(root_var.child_ops) != 3:
@@ -650,8 +647,6 @@ def _try_match_and_transform_pattern_4(reduce_op: Operation, block: Block) -> bo
 
     if root_var.shape is None:
         return False
-
-    rank = len(root_var.shape)
 
     # check that root_var feeds into exactly 4 ops
     if len(root_var.child_ops) != 4:

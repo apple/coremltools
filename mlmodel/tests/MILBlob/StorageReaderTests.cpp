@@ -4,6 +4,7 @@
 // found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 #include "MILBlob/Blob/StorageReader.hpp"
+#include "MILBlob/Blob/StorageWriter.hpp"
 #include "MILBlob/Fp16.hpp"
 #include "MILBlob/Util/SpanCast.hpp"
 #include "AutoDeleteTempFile.hpp"
@@ -293,15 +294,38 @@ int testStorageReaderTestsDataOffset()
 
     {  // read data offset for uint8_t weights from metadata 1
         ML_ASSERT_EQ(uint64_t(128), reader.GetDataOffset(64));
+        ML_ASSERT_EQ(uint64_t(5), reader.GetDataSize(64));
     }
 
     {  // read data offset for Fp16 weights from metadata 2
         ML_ASSERT_EQ(uint64_t(256), reader.GetDataOffset(192));
+        ML_ASSERT_EQ(uint64_t(8), reader.GetDataSize(192));
     }
 
     {  // read data offset for float weights from metadata 3
         ML_ASSERT_EQ(uint64_t(384), reader.GetDataOffset(320));
+        ML_ASSERT_EQ(uint64_t(16), reader.GetDataSize(320));
     }
+
+    return 0;
+}
+
+int testStorageReaderTestsInt8Data()
+{
+    AutoDeleteTempFile tempfile;
+    const std::vector<int8_t> data{1, -1, -20, 25, 13};
+    uint64_t offset = 0;
+    {
+        StorageWriter writer(tempfile.GetFilename());
+        auto span = Util::MakeSpan(data);
+        offset = writer.WriteData(span);
+    }
+
+    StorageReader reader(tempfile.GetFilename());
+    const auto readData = reader.GetDataView<int8_t>(offset);
+    ML_ASSERT_EQ(readData.Size(), data.size());
+
+    ML_ASSERT_SPAN_EQ(readData, Util::MakeSpan(data));
 
     return 0;
 }

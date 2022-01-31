@@ -42,6 +42,8 @@ private:
 };
 
 template <>
+uint64_t StorageWriter::WriteData<int8_t>(Util::Span<const int8_t>);
+template <>
 uint64_t StorageWriter::WriteData<uint8_t>(Util::Span<const uint8_t>);
 template <>
 uint64_t StorageWriter::WriteData<Fp16>(Util::Span<const Fp16>);

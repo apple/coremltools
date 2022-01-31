@@ -19,9 +19,8 @@ class TestNameSanitizer:
                                       ("dense_2_1/BiasAdd", "dense_2_1_BiasAdd"),
                                       ("dense_2_1-BiasAdd", "dense_2_1_BiasAdd"),
                                       ("key:0", "key_0"),
-                                    ]
+        ]
 
         for i, in_and_out_str in enumerate(input_and_expected_strings):
             out = _NameSanitizer().sanitize_name(in_and_out_str[0])
             assert out == in_and_out_str[1]
-

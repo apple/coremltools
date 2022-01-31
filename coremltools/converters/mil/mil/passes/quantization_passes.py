@@ -3,17 +3,16 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+from enum import Enum as _Enum
+
 import numpy as np
 
-from coremltools.converters.mil.mil.program import Program
-from coremltools.converters.mil.mil.operation import Operation
 from coremltools.converters.mil.mil import Builder as mb
-from coremltools.converters.mil.mil.types import builtin_to_string, is_tensor
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
+from coremltools.converters.mil.mil.program import Program
 
-from enum import Enum
 
-class ComputePrecision(Enum):
+class ComputePrecision(_Enum):
     FLOAT16 = "float16"
     FLOAT32 = "float32"
 
@@ -168,8 +167,8 @@ class FP16ComputePrecision(AbstractQuantizationPass):
         # We check whether there are casted values that "becomes" 0 which is not ideal for eps purposes.
         # However we skip arrays with more than 400 in case we compare through a large sparse matrix.
         if new_var.val is not None and \
-             len(var.val.flatten()) < 400 and \
-             _close_to_zero(new_var.val, np.float16).any():
+           len(var.val.flatten()) < 400 and \
+           _close_to_zero(new_var.val, np.float16).any():
             value_modified = False
             original_val = var.val.flatten()
             new_val = new_var.val.flatten()

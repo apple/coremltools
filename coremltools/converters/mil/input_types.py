@@ -3,8 +3,8 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import logging
 import numpy as np
+
 from coremltools.converters.mil.mil.types.symbolic import is_symbolic
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.types.type_mapping import (
@@ -28,19 +28,19 @@ class ClassifierConfig(object):
         class_labels: str / list of int / list of str
             If a ``list`` is given, the ``list`` maps the index of the output of a
             neural network to labels in a classifier.
-            
+
             If a ``str`` is given, the ``str`` points to a file which maps the index
             to labels in a classifier.
-        
+
         predicted_feature_name: str
             Name of the output feature for the class labels exposed in the
             Core ML neural network classifier. Default: ``'classLabel'``.
-        
+
         predicted_probabilities_output: str
             If provided, then this is the name of the neural network blob which
             generates the probabilities for each class label (typically the output
-            of a softmax layer). 
-            
+            of a softmax layer).
+
             If not provided, then the last output layer is assumed.
         """
         self.class_labels = class_labels
@@ -57,10 +57,10 @@ class InputType(object):
         ----------
         name: (str)
             The name of the input.
-        
+
         shape: list, tuple, Shape object, EnumeratedShapes object, or None
             The shape(s) that are valid for this input.
-            
+
             If set to ``None``, the shape will be infered from the model itself.
         """
 
@@ -89,26 +89,26 @@ class ImageType(InputType):
         ----------
         scale: (float)
             The scaling factor for all values in the image channels.
-        
+
         bias: float or list of float
             If ``color_layout`` is ``'G'``, bias would be a ``float``.
-            
+
             If `color_layout` is ``'RGB'`` or ``'BGR'``, bias would be a list of ``float``.
-        
+
         color_layout: string
             Color layout of the image.
-            
+
             Valid values:
                 * ``'G'``: Grayscale
                 * ``'RGB'``: [Red, Green, Blue]
                 * ``'BGR'``: [Blue, Green, Red]
-            
+
         channel_first: (bool) or None
             Set to ``True`` if input format is channel first.
-            
+
             Default format:
-            	For TensorFlow: channel last (``channel_first=False``).
-            	
+                For TensorFlow: channel last (``channel_first=False``).
+
                 For PyTorch: channel first (``channel_first=True``).
         """
         super(ImageType, self).__init__(name, shape)
@@ -148,27 +148,27 @@ class TensorType(InputType):
         name: str
             Input name. Must match an input name in the model (usually the
             Placeholder name for TensorFlow or the input name for PyTorch).
-            
+
             The ``name`` is required except for a TensorFlow model in which there is
             exactly one input Placeholder.
-        
+
         shape: (1) list of positive int or RangeDim, or (2) EnumeratedShapes
             The shape of the input.
-            
+
             For TensorFlow:
               * The ``shape`` is optional. If omitted, the shape is inferred from
                 TensorFlow graph's Placeholder shape.
-            
+
             For PyTorch:
               * The ``shape`` is required.
-        
+
         dtype: np.generic or mil.type type
             Numpy ``dtype`` (for example, ``np.int32``). Default is ``np.float32``.
-        
+
         default_value: np.ndarray
             If provided, the input is considered optional. At runtime, if the
             input is not provided, ``default_value`` is used.
-            
+
             Limitations:
               *  If ``default_value`` is ``np.ndarray``, all
                  elements are required to have the same value.
@@ -180,9 +180,9 @@ class TensorType(InputType):
         --------
         * ``ct.TensorType(name="input", shape=(1, 2, 3))` implies `dtype ==
           np.float32``
-        
+
         * ``ct.TensorType(name="input", shape=(1, 2, 3), dtype=np.int32)``
-    	
+
         * ``ct.TensorType(name="input", shape=(1, 2, 3),
           dtype=ct.converters.mil.types.fp32)``
         """
@@ -243,17 +243,17 @@ class RangeDim(object):
         ----------
         lower_bound: (int)
             The minimum valid value for the shape.
-        
+
         upper_bound: (int)
             The maximum valid value for the shape.
-            
+
             Set to ``-1`` if there's no upper limit.
-        
+
         default: (int) or None
             The default value that is used for initiating the model, and set in
 
             input shape field of the model file.
-            
+
             If set to ``None``, ``lower_bound`` would be used as default.
 
         symbol: (str)
@@ -366,9 +366,9 @@ class Shape(object):
         return any(is_symbolic(s) for s in self.symbolic_shape)
 
     def to_list(self, allow_symbolic=False):
-      if not allow_symbolic and self.has_symbolic:
-          return None
-      return self.symbolic_shape
+        if not allow_symbolic and self.has_symbolic:
+            return None
+        return self.symbolic_shape
 
 
 class EnumeratedShapes(object):
@@ -380,14 +380,14 @@ class EnumeratedShapes(object):
         ----------
         shapes: list of Shape objects, or Shape-compatible lists.
             The valid shapes of the inputs.
-            
+
             If input provided is not Shape object, but can be converted to Shape,
             the Shape object would be stored in ``shapes`` instead.
-        
+
         default: tuple of int or None
             The default shape that is used for initiating the model, and set in
             the metadata of the model file.
-            
+
             If None, then the first element in ``shapes`` is used.
         """
         from coremltools.converters.mil.mil import get_new_symbol

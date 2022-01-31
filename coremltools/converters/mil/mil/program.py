@@ -14,7 +14,7 @@ from .types.symbolic import k_used_symbols, k_num_internal_syms
 from coremltools.converters.mil.input_types import InputType
 
 
-class Program(object):
+class Program:
     def __init__(self):
         self.main_input_types = []
         self.functions = {}
@@ -57,7 +57,7 @@ class Program(object):
         return found_ops
 
     def validate(self):
-        for f_name, f in self.functions.items():
+        for f in self.functions.values():
             f.validate()
 
     def __getitem__(self, func_name):
@@ -76,7 +76,7 @@ class Program(object):
         return s
 
 
-class Placeholder(object):
+class Placeholder:
     counter = 0
 
     def __init__(self, sym_shape, dtype=None, name=None):
@@ -154,9 +154,10 @@ def get_new_symbol(name=None):
 def get_existing_symbol(name):
     global k_used_symbols
     if name not in k_used_symbols:
-      msg = 'Symbol name {} does not exist'
-      raise ValueError(msg.format(name))
+        msg = 'Symbol name {} does not exist'
+        raise ValueError(msg.format(name))
     return k_used_symbols[name]
+
 
 class Symbol(_sm.Symbol):
     def __init__(self, sym_name):

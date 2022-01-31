@@ -62,6 +62,3 @@ python setup.py sdist
 cp $WHEEL_DIR/*.whl dist/.
 twine check dist/*
 
-# Disabled. For now, we treat "release" as a collection job.
-# Upload the wheel
-# twine upload --config-file ~/.pypirc --repository $PYPI $1/dist/*
