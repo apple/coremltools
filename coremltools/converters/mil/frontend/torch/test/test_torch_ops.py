@@ -177,8 +177,8 @@ class TestScriptedModels(TorchBaseTest):
     @pytest.mark.parametrize("backend", backends)
     def test_conv(self, backend):
         pytest.xfail("rdar://88194776 ([Converter] coremltools is not working with scripted torch convolution model)")
-        model = torch.nn.Conv2d(in_channels=in_channels, out_channels=out_channels, kernel_size=kernel_size,
-                                padding="same", stride=1, dilation=1, groups=1, bias=bias)        
+        model = torch.nn.Conv2d(in_channels=2, out_channels=3, kernel_size=1,
+                                padding="same", stride=1, dilation=1, groups=1, bias=False)
         self.run_compare_torch(
             (1, 2, 4, 5), 
             model,
