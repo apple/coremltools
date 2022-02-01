@@ -218,7 +218,7 @@ except:
 
 # ---------------------------------------------------------------------------------------
 _HAS_TORCH = True
-_TORCH_MAX_VERSION = "1.10.1"
+_TORCH_MAX_VERSION = "1.10.2"
 try:
     import torch
     _warn_if_above_max_supported_version("Torch", torch.__version__, _TORCH_MAX_VERSION)
