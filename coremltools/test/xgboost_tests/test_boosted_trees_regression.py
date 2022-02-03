@@ -208,3 +208,18 @@ class BoostedTreeRegressorXGboostTest(unittest.TestCase):
         with self.assertRaises(TypeError):
             model = OneHotEncoder()
             spec = xgb_converter.convert(model, "data", "out")
+
+    def test_conversion_model_without_feature_names(self):
+        # Train model without feature names
+        dtrain = xgboost.DMatrix(
+            self.scikit_data.data,
+            label=self.scikit_data.target
+        )
+        model = xgboost.train({}, dtrain, 1)
+
+        spec = xgb_converter.convert(model, feature_names=self.feature_names)
+
+        self.assertEqual(
+            sorted(self.feature_names),
+            sorted(map(lambda x: x.name, spec.description.input))
+        )
