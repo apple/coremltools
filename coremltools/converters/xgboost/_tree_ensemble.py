@@ -39,7 +39,10 @@ def recurse_json(
     if "leaf" not in xgb_tree_json:
         branch_mode = "BranchOnValueLessThan"
         split_name = xgb_tree_json["split"]
-        feature_index = split_name if not feature_map else feature_map[split_name]
+        if split_name in feature_map:
+            feature_index = feature_map[split_name]
+        else:
+            feature_index = int(split_name)
 
         # xgboost internally uses float32, but the parsing from json pulls it out
         # as a 64bit double.  To trigger the internal float32 detection in the
