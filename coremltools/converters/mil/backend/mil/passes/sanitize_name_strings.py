@@ -15,8 +15,7 @@ class sanitize_name_strings(AbstractGraphPass):
     of the format [a-zA-Z_][a-zA-Z0-9_]*
     """
     def apply(self, prog):
-        sanitizer_vars = NameSanitizer(prefix="var_")
-        sanitizer_ops = NameSanitizer(prefix="op_")
-
         for f in prog.functions.values():
+            sanitizer_vars = NameSanitizer(prefix="var_")
+            sanitizer_ops = NameSanitizer(prefix="op_")
             sanitize_block(f, sanitizer_vars, sanitizer_ops, prog.main_input_types)

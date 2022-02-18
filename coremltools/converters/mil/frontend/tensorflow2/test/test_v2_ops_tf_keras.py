@@ -469,6 +469,10 @@ class TestConvolution(TensorFlowBaseTest):
         backend,
         padding,
     ):
+
+        if backend[0] == "mlprogram" and ct.utils._macos_version() > (12, 0):
+            pytest.xfail("rdar://88857567")
+
         # Test same padding
         input_layer = Input(batch_size=1, shape=(None, None, 1))
         layer = Conv2D(
@@ -1318,6 +1322,79 @@ class TestRecurrent(TensorFlowBaseTest):
                                       input_shape_for_conversion=(ct.RangeDim(1, 10), ct.RangeDim(16, 64), 10),
                                       are_symbols_expected=True)
 
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend",
+        itertools.product([True, False], backends,),
+    )
+    def test_lstm_block_fused_op(self, use_cpu_only, backend):
+        '''
+        Define a model with custom LSTM ops that uses tf.raw_ops.BlockLSTM and
+        verify that it converts to a fused lstm op.
+
+        %x (shape: (Seq, Batch, idim) == (5, 2, 4))
+        %x1 = LSTM(h=10) (%input) # shape = (5, 2, 10)
+        %x2 = LSTM(h=20) (%x1) # shape = (5, 2, 20)
+        %x3 = slice()(%x2) # shape = (1, 2, 20), to get the final seq value
+        %x4 = reshape((1, -1)) (%x3) # shape = (1, 40)
+        %x5 = Dense(h=3)(%x4) # shape = (1, 3)
+        '''
+        class CustomLSTM(tf.keras.layers.Layer):
+            def __init__(self, num_units, max_seq_length, batch_size):
+                super(CustomLSTM, self).__init__()
+                self.hidden_dim = num_units
+                self.seq_length = max_seq_length
+                self.batch_size = batch_size
+
+            def build(self, input_shape):
+                input_dim = input_shape[-1]
+                self.w = self.add_weight(
+                    shape=(input_dim + self.hidden_dim, 4 * self.hidden_dim),
+                    initializer="random_normal",
+                    trainable=True,
+                )
+                self.b = self.add_weight(shape=(4 * self.hidden_dim,), initializer="random_normal", trainable=True)
+                self.init_h = tf.constant(np.zeros((self.batch_size, self.hidden_dim)).astype(np.float32))
+                self.init_c = tf.constant(np.zeros((self.batch_size, self.hidden_dim)).astype(np.float32))
+
+            def call(self, inputs):
+                _, output_state, _, _, _, _, output = tf.raw_ops.BlockLSTM(
+                    seq_len_max=self.seq_length,
+                    x=inputs,
+                    cs_prev=self.init_c,
+                    h_prev=self.init_h,
+                    w=self.w,
+                    wci=tf.constant(np.zeros((self.hidden_dim)).astype(np.float32)),
+                    wcf=tf.constant(np.zeros((self.hidden_dim)).astype(np.float32)),
+                    wco=tf.constant(np.zeros((self.hidden_dim)).astype(np.float32)),
+                    b=self.b,
+                )
+                return output
+
+        input_dim = 4
+        seq_length = 5
+        batch_size = 2
+        x_shape = (seq_length, batch_size, input_dim)
+        hidden_dim_1 = 10
+        hidden_dim_2 = 20
+
+        x = tf.keras.Input(batch_input_shape=x_shape)  # (5, 2, 4)
+        x1 = CustomLSTM(num_units=hidden_dim_1, max_seq_length=seq_length, batch_size=batch_size)(x)  # (5, 2, 10)
+        x2 = CustomLSTM(num_units=hidden_dim_2, max_seq_length=seq_length, batch_size=batch_size)(x1)  # (5, 2, 20)
+        x3 = tf.slice(x2, begin=[4, 0, 0], size=[1, 2, 20])  # (1, 2, 20)
+        x4 = tf.reshape(x3, shape=(1, -1))  # (1, 40)
+        x5 = tf.keras.layers.Dense(3)(x4)  # (1, 3)
+        keras_model = tf.keras.Model(inputs=x, outputs=x5)
+
+        res = TensorFlowBaseTest.run_compare_tf_keras(
+            keras_model,
+            [random_gen(x_shape, -1, 1)],
+            use_cpu_only=use_cpu_only,
+            backend=backend,
+        )
+        coreml_model = res[1]
+        mil_prog = coreml_model._get_mil_internal()
+        # assert that "lstm" ops are present in the mil program
+        assert len(mil_prog.find_ops(op_type="lstm")) == 2
 
 
 class TestRepeatVector(TensorFlowBaseTest):

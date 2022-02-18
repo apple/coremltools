@@ -23,11 +23,6 @@ from coremltools.converters.mil import testing_reqs
 from coremltools import TensorType
 from coremltools._deps import version_lt
 
-pytestmark = pytest.mark.skipif(
-    sys.version_info >= (3, 8), reason="Segfault with Python 3.8+"
-)  # rdar://problem/65730375
-
-
 
 backends = testing_reqs.backends
 torch = pytest.importorskip("torch")
@@ -2147,6 +2142,121 @@ class TestExpandDims(TorchBaseTest):
         model = ModuleWrapper(function=torch.unsqueeze, kwargs={"dim": axis})
         self.run_compare_torch(input_shape, model, backend=backend)
 
+class TestLinspace(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "backend, start_end, steps",
+        itertools.product(
+            backends,
+            [(-0.1, -0.7), (1, 10)],
+            [1, 3],
+        ),
+    )
+    def test_linspace_static(self, backend, start_end, steps):
+        input_shape = tuple([steps])
+        start, end = start_end
+        class Model(nn.Module):
+            def __init__(self):
+                super(Model, self).__init__()
+
+            def forward(self, x):
+                return torch.linspace(start, end, steps)
+                
+        model = Model()
+        self.run_compare_torch(input_shape, model, backend=backend)
+
+    @pytest.mark.parametrize(
+        "backend",
+        backends,
+    )
+    def test_linspace_static_large(self, backend):
+        input_shape = tuple([1])
+        class Model(nn.Module):
+            def __init__(self):
+                super(Model, self).__init__()
+
+            def forward(self, x):
+                return torch.linspace(1, 2_000_000, 2_000_000)
+                
+        model = Model()
+        self.run_compare_torch(input_shape, model, backend=backend)
+
+    @pytest.mark.parametrize(
+        "backend, start_end, steps",
+        itertools.product(
+            backends,
+            [(-0.1, -0.7), (1, 10)],
+            [1, 2, 100],
+        ),
+    )
+    def test_linspace_dynamic(self, backend, start_end, steps):
+        input_shape = tuple([steps])
+        start, end = start_end
+        class Model(nn.Module):
+            def __init__(self):
+                super(Model, self).__init__()
+
+            def forward(self, x):
+                return torch.linspace(x[0], x[1], steps)
+                
+        model = Model()
+        inputs = [torch.Tensor([start, end])]
+        self.run_compare_torch(inputs, model, backend=backend, input_as_shape=False)
+
+class TestArange(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "backend, start_end_step",
+        itertools.product(
+            backends,
+            [
+                (-0.1, -0.7, -0.07), 
+                (3, 10, 0.3), 
+                (1, 10, 100), 
+                (1, 300000, 1),
+                (1, 10, 1e-6),
+            ],
+        ),
+    )
+    def test_arange_static(self, backend, start_end_step):
+        if start_end_step == (1, 10, 1e-6):
+            pytest.xfail("rdar://88998831 (range_1d has numerical issue when the step is small)")
+        input_shape = tuple([1,])
+        start, end, step = start_end_step
+        class Model(nn.Module):
+            def __init__(self):
+                super(Model, self).__init__()
+
+            def forward(self, x):
+                return torch.arange(start, end, step)
+                
+        model = Model()
+        self.run_compare_torch(input_shape, model, backend=backend)
+
+    @pytest.mark.parametrize(
+        "backend, start_end_step",
+        itertools.product(
+            backends,
+            [
+                (-0.1, -0.7, -0.07), 
+                (3, 10, 0.3), 
+                (1, 10, 100), 
+                (1, 300000, 1),
+            ],
+        ),
+    )
+    def test_arange_dynamic(self, backend, start_end_step):
+        input_shape = tuple([1,])
+        start, end, step = start_end_step
+        class Model(nn.Module):
+            def __init__(self):
+                super(Model, self).__init__()
+
+            def forward(self, x):
+                return torch.arange(x[0], x[1], x[2])
+                
+        model = Model()
+        inputs = [torch.tensor([start, end, step])]
+        self.run_compare_torch(inputs, model, backend=backend, input_as_shape=False)
+
 class TestEinsum(TorchBaseTest):
     @pytest.mark.parametrize(
         "backend, equation, reverse_input_order",
@@ -2305,11 +2415,16 @@ class TestActivation(TorchBaseTest):
         )
 
     @pytest.mark.parametrize(
-        "backend, alpha", itertools.product(backends, [0.1, 0.25, 2.0]),
+        "backend, alpha, shape", 
+        itertools.product(
+            backends, 
+            [0.25, 2.0],
+            [(1, 5, 6, 7), (1, 128)],
+        ),
     )
-    def test_prelu(self, backend, alpha):
-        input_shape = (1, 5, 6, 7)
-        C = input_shape[1]
+    def test_prelu(self, backend, alpha, shape):
+        input_shape = shape
+        C = input_shape[1] if len(input_shape) >= 3 else 1
         model = nn.PReLU(C, alpha).eval()
         self.run_compare_torch(
             input_shape, model, backend=backend,

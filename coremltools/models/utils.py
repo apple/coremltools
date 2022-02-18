@@ -6,12 +6,14 @@
 """
 Utilities for the entire package.
 """
+from functools import lru_cache as _lru_cache
 import math as _math
 import numpy as _np
 import os as _os
 import pathlib as _pathlib
 import shutil as _shutil
 import stat as _stat
+import subprocess as _subprocess
 import sys as _sys
 import tempfile as _tempfile
 import warnings as _warnings
@@ -908,6 +910,7 @@ def _is_macos():
     return _sys.platform == "darwin"
 
 
+@_lru_cache()
 def _macos_version():
     """
     Returns macOS version as a tuple of integers, making it easy to do proper
@@ -915,8 +918,7 @@ def _macos_version():
     """
     if _is_macos():
         try:
-            import subprocess
-            ver_str = subprocess.run(["sw_vers", "-productVersion"], stdout=subprocess.PIPE).stdout.decode('utf-8').strip('\n')
+            ver_str = _subprocess.run(["sw_vers", "-productVersion"], stdout=_subprocess.PIPE).stdout.decode('utf-8').strip('\n')
             return tuple([int(v) for v in ver_str.split(".")])
         except:
             raise Exception("Unable to detemine the macOS version")

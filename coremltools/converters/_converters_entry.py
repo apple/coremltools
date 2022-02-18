@@ -574,6 +574,7 @@ def _record_build_metadata(mlmodel, exact_source):
         src_pkg, pkg_ver = "pytorch", torch.__version__
         src_pkg_version = "torch=={0}".format(torch.__version__)
     elif exact_source == 'milinternal':
+        src_pkg, pkg_ver = "milinternal", ""
         src_pkg_version = "milinternal"
     else:
         raise ValueError('Unsupported source {}'.format(exact_source))
@@ -581,10 +582,9 @@ def _record_build_metadata(mlmodel, exact_source):
     mlmodel.user_defined_metadata[_METADATA_SOURCE] = src_pkg_version
     mlmodel.user_defined_metadata[_METADATA_VERSION] = _ct_version
 
-    if mlmodel.is_package:
-        build_info = {'coremltools-version': _ct_version}
-        if src_pkg is not None and pkg_ver is not None:
-            build_info['coremltools-component-' + src_pkg] = str(pkg_ver)
-        mlmodel._set_build_info_mil_attributes(build_info)
+    build_info = {'coremltools-version': _ct_version}
+    if src_pkg is not None and pkg_ver is not None:
+        build_info['coremltools-component-' + src_pkg] = str(pkg_ver)
+    mlmodel._set_build_info_mil_attributes(build_info)
 
     return mlmodel

@@ -23,6 +23,7 @@ from coremltools.converters.mil.mil.ops.defs.tensor_transformation import _solve
 from coremltools.converters.mil.mil.types import is_bool
 from coremltools.converters.mil.mil.types.symbolic import any_symbolic, is_symbolic, is_compatible_symbolic_vector
 from coremltools.converters.mil.mil.var import Var, ListVar
+from coremltools.converters.mil.mil.ops.defs._utils import MAX_SIZE_CONSTANT_FOLDING
 
 # The pytorch args for many of the below ops were sourced from
 # https://github.com/pytorch/pytorch/blob/d971007c291c0ead1003d12cd553d18ddb582207/torch/csrc/jit/mobile/register_mobile_ops.cpp#L216
@@ -177,7 +178,7 @@ TYPE_TO_DTYPE_STRING = {
     types.int32: "int32",
 }
 
-def _get_inputs(context, node, expected=None):
+def _get_inputs(context, node, expected=None, min_expected=None):
     """
     Look up a node's inputs in @context and return them as a list. If
     @expected is not None, also verifies the number of inputs matches the
@@ -191,6 +192,13 @@ def _get_inputs(context, node, expected=None):
             raise ValueError(
                 "node {} ({}) got {} input(s), expected {}".format(
                     node.name, node.kind, len(inputs), expected
+                )
+            )
+    if min_expected is not None:
+        if len(inputs) < min_expected:
+            raise ValueError(
+                "node {} ({}) got {} input(s), expected minimum {} inputs".format(
+                    node.name, node.kind, len(inputs), min_expected
                 )
             )
 
@@ -806,9 +814,55 @@ def relu(context, node):
 def prelu(context, node):
     inputs = _get_inputs(context, node, expected=2)
     x = inputs[0]
-    alpha = inputs[1].val
-    alpha_vec = _np.ones((x.shape[1],))*alpha
-    res = mb.prelu(x=x, alpha=alpha_vec, name=node.name)
+    alpha = inputs[1]
+    # In the MIL backend, it assumes that the inputs of prelu should have
+    # at least rank 3, i.e. [batch, channel, spatial_dims*].
+    if x.rank < 3:
+        x = mb.expand_dims(x=x, axes=[1])
+        x = mb.prelu(x=x, alpha=alpha)
+        res = mb.squeeze(x=x, axes=[1], name=node.name)
+    else:
+        alpha = alpha.val
+        alpha_vec = _np.ones((x.shape[1],))*alpha
+        res = mb.prelu(x=x, alpha=alpha_vec, name=node.name)
+    context.add(res)
+
+@register_torch_op
+def linspace(context, node):
+    inputs = _get_inputs(context, node, min_expected=3)
+
+    start = inputs[0]
+    end = inputs[1]
+    nums = inputs[2]
+    start = mb.cast(x=start, dtype="fp32")
+    end = mb.cast(x=end, dtype="fp32")
+
+    if start.val is not None and end.val is not None and nums.val is not None:
+        start_val = start.val
+        end_val = end.val
+        nums_val = nums.val
+        if nums_val < MAX_SIZE_CONSTANT_FOLDING:
+            res = mb.const(val=_np.linspace(start_val, end_val, nums_val), name=node.name)
+            context.add(res)
+            return
+
+    if nums.val is None:
+        msg = "Dynamic steps input for torch.linspace is not supported. Please use torch.arange instead"
+        raise NotImplementedError(msg)
+    else:
+        if nums.val == 1:
+            res = mb.expand_dims(x=start, axes=[0], name=node.name)
+        else:
+            # step = (end - start) / (nums - 1)
+            x = mb.sub(x=end, y=start)
+            y = mb.sub(x=nums, y=1)
+            step = mb.real_div(x=x, y=y)
+
+            # Note that the range_1d op excluded the end point,
+            # so we have to add the end back to the resulting array.
+            arange = mb.range_1d(end=end, start=start, step=step)
+            new_end = mb.expand_dims(x=end, axes=[0])
+            res = mb.concat(values=[arange, new_end], axis=0, name=node.name)
     context.add(res)
 
 @register_torch_op
@@ -3398,7 +3452,15 @@ def arange(context, node):
         raise ValueError(
             "arange must have exactly 5, 6, or 7 inputs, got {}".format(len(inputs))
         )
+    # If start, end, and step don't have the same dtype, we cast them to fp32
+    int_start = isinstance(start, int) or types.is_int(start.dtype)
+    int_end = isinstance(end, int) or types.is_int(end.dtype)
+    int_step = isinstance(step, int) or types.is_int(step.dtype)
 
+    if int_start != int_end or int_start != int_step:
+        start = mb.cast(x=start, dtype="fp32")
+        end = mb.cast(x=end, dtype="fp32")
+        step = mb.cast(x=step, dtype="fp32")
     res = mb.range_1d(start=start, end=end, step=step, name=node.name)
     context.add(res)
 

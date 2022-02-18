@@ -551,16 +551,30 @@ class MLModel(object):
 
 
     def _set_build_info_mil_attributes(self, metadata):
-        assert self.is_package
+        if self._spec.WhichOneof('Type') != "mlProgram":
+            # No MIL attributes to set
+            return
+
         ml_program_attributes = self._spec.mlProgram.attributes
-        build_info_proto_dict = ml_program_attributes["buildInfo"].immediateValue.dictionary
+        build_info_proto = ml_program_attributes["buildInfo"]
+
+        # Set ValueType to dictionary of string to string
+        str_type = _MIL_pb2.ValueType()
+        str_type.tensorType.dataType = _MIL_pb2.DataType.STRING
+        dict_type_str_to_str = _MIL_pb2.ValueType()
+        dict_type_str_to_str.dictionaryType.keyType.CopyFrom(str_type)
+        dict_type_str_to_str.dictionaryType.valueType.CopyFrom(str_type)
+        build_info_proto.type.CopyFrom(dict_type_str_to_str)
 
         # Copy the metadata
+        build_info_dict = build_info_proto.immediateValue.dictionary
         for k, v in metadata.items():
             key_pair = _MIL_pb2.DictionaryValue.KeyValuePair()
             key_pair.key.immediateValue.tensor.strings.values.append(k)
+            key_pair.key.type.CopyFrom(str_type)
             key_pair.value.immediateValue.tensor.strings.values.append(v)
-            build_info_proto_dict.values.append(key_pair)
+            key_pair.value.type.CopyFrom(str_type)
+            build_info_dict.values.append(key_pair)
 
 
     def _get_mil_internal(self):

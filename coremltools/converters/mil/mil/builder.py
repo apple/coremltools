@@ -194,8 +194,8 @@ class Builder:
         return new_op.outputs
 
     @staticmethod
-    def placeholder(shape, dtype=None):
-        return Placeholder(shape, dtype)
+    def placeholder(shape, dtype=None, allow_rank0_input=False):
+        return Placeholder(shape, dtype, allow_rank0_input=allow_rank0_input)
 
     @staticmethod
     def TensorSpec(shape, dtype=None):

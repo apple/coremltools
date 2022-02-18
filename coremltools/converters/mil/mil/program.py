@@ -79,17 +79,24 @@ class Program:
 class Placeholder:
     counter = 0
 
-    def __init__(self, sym_shape, dtype=None, name=None):
+    def __init__(self, sym_shape, dtype=None, name=None, allow_rank0_input=False):
         """
         sym_shape: () or [] for scalar. list, tuple, np.ndarray for tensor. May
         contain Symbol as symbolic shape (but not string).
 
         dtype: types.float or other scalar builtin types.
+        allow_rank0_input: A flag that allows the rank 0 placeholder.
         """
         if not isinstance(sym_shape, (list, tuple, _np.ndarray)):
             raise ValueError("Illegal shape for Placeholder: {}".format(sym_shape))
+
         if len(sym_shape) == 0:
-            raise ValueError('Rank-0 (input {}) is unsupported'.format(name))
+            if not allow_rank0_input:
+                raise ValueError('Rank-0 (input {}) is unsupported'.format(name))
+            else:
+                _logging.warning('Rank-0 (input {}) is unsupported in coreml. You might run into error while\
+                running this model'.format(name))
+
         for i, d in enumerate(sym_shape):
             if not isinstance(d, (_np.generic, int, Symbol)):
                 msg = 'Placeholder dim {} in {} is not integer or symbol'

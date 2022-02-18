@@ -8,6 +8,7 @@ import math
 from coremltools.converters.mil.mil import get_new_symbol, types
 from coremltools.converters.mil.mil.types.symbolic import is_symbolic
 
+MAX_SIZE_CONSTANT_FOLDING = 1024 * 1024 / 4 # When a fp32 const takes over 1MB, we won't create a const op for that
 
 def broadcast_shapes(shape_x, shape_y):
     """

@@ -224,6 +224,10 @@ def run_compare_tf(
         The relative tolerance parameter.
     validate_shapes_only: bool
         If true, skip element-wise value comparision.
+    freeze_graph: bool
+        If True, use the "tensorflow.python.tools.freeze_graph" function
+        to freeze the TF graph prior to conversion. This will ensure that
+        all the variables in the graph have been converted to constants.
     tf_outputs: float or list[float]
         If present, use it as TensorFlow predictions
 
@@ -234,6 +238,39 @@ def run_compare_tf(
         # use_cpu_for_conversion = True && use_cpu_only = False
         raise ValueError("use_cpu_for_conversion = True && use_cpu_only = False is an invalid test case")
 
+    if not isinstance(output_nodes, (tuple, list)):
+        output_nodes = [output_nodes]
+
+    if freeze_graph:
+        with tempfile.TemporaryDirectory() as model_dir:
+            graph_def_file = os.path.join(model_dir, "tf_graph.pb")
+            checkpoint_file = os.path.join(model_dir, "tf_model.ckpt")
+            static_model_file = os.path.join(model_dir, "tf_static.pb")
+
+            with tf.Session(graph=graph) as sess:
+                sess.run(tf.global_variables_initializer())
+                if tf_outputs is None:
+                    tf_outputs = sess.run(output_nodes, feed_dict=feed_dict)
+                tf.train.write_graph(sess.graph, model_dir, graph_def_file, as_text=False)
+                saver = tf.train.Saver()
+                saver.save(sess, checkpoint_file)
+                output_node_names = get_tf_node_names(output_nodes, mode="outputs")
+                output_node_names = [name.split(":")[0] for name in output_node_names]
+                output_op_names = ",".join(output_node_names)
+                freeze_g(
+                    input_graph=graph_def_file,
+                    input_saver="",
+                    input_binary=True,
+                    input_checkpoint=checkpoint_file,
+                    output_node_names=output_op_names,
+                    restore_op_name="save/restore_all",
+                    filename_tensor_name="save/Const:0",
+                    output_graph=static_model_file,
+                    clear_devices=True,
+                    initializer_nodes="",
+                )
+            graph = load_tf_pb(static_model_file)
+
     mlmodel, input_key_values, output_names, output_nodes = tf_graph_to_mlmodel(
         graph, feed_dict, output_nodes, frontend, backend, use_cpu_for_conversion=use_cpu_for_conversion,
     )
@@ -242,46 +279,11 @@ def run_compare_tf(
        or (mlmodel.is_package and coremltoolsutils._macos_version() < (12, 0)):
         return mlmodel._spec, mlmodel, input_key_values, None
 
-    if not isinstance(output_nodes, (tuple, list)):
-        output_nodes = [output_nodes]
-
-    if freeze_graph:
-        model_dir = tempfile.mkdtemp()
-        graph_def_file = os.path.join(model_dir, "tf_graph.pb")
-        checkpoint_file = os.path.join(model_dir, "tf_model.ckpt")
-        static_model_file = os.path.join(model_dir, "tf_static.pb")
-        coreml_model_file = os.path.join(model_dir, "coreml_model.mlmodel")
-
+    if tf_outputs is None:
         with tf.Session(graph=graph) as sess:
             sess.run(tf.global_variables_initializer())
             tf_outputs = sess.run(output_nodes, feed_dict=feed_dict)
 
-            tf.train.write_graph(sess.graph, model_dir, graph_def_file, as_text=False)
-            saver = tf.train.Saver()
-            saver.save(sess, checkpoint_file)
-            freeze_g(
-                input_graph=graph_def_file,
-                input_saver="",
-                input_binary=True,
-                input_checkpoint=checkpoint_file,
-                output_node_names=",".join([n.op.name for n in output_nodes]),
-                restore_op_name="save/restore_all",
-                filename_tensor_name="save/Const:0",
-                output_graph=static_model_file,
-                clear_devices=True,
-                initializer_nodes="",
-            )
-        graph = load_tf_pb(static_model_file)
-
-        # Need to convert again using frozen graph
-        mlmodel, input_key_values, output_names, output_nodes = tf_graph_to_mlmodel(
-            graph, feed_dict, output_nodes, frontend, backend
-        )
-    else:
-        if not tf_outputs:
-            with tf.Session(graph=graph) as sess:
-                sess.run(tf.global_variables_initializer())
-                tf_outputs = sess.run(output_nodes, feed_dict=feed_dict)
     expected_outputs = {name: val for name, val in zip(output_names, tf_outputs)}
 
     for k,v in input_key_values.items():

@@ -57,6 +57,9 @@ def run_compare_builder(
             Argument which is passed as is to the unified converter API.
             That is, "ct.convert(...., useCPUOnly=use_cpu_for_conversion)"
             It forces the model to be loaded on the CPU context, post conversion.
+
+    Returns:
+        The converted mlmodel
     """
     if not isinstance(expected_output_types, list):
         expected_output_types = [expected_output_types]
@@ -119,7 +122,7 @@ def run_compare_builder(
                          useCPUOnly=use_cpu_for_conversion)
 
     if frontend_only:
-        return
+        return mlmodel
 
     if expected_outputs:
         assert len(output_vars) == len(expected_outputs), (
@@ -142,3 +145,5 @@ def run_compare_builder(
         also_compare_shapes=also_compare_shapes,
         dtype=backend[1]
     )
+    
+    return mlmodel

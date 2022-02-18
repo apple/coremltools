@@ -29,8 +29,6 @@ class tf_lstm_to_core_lstm(AbstractGraphPass):
     - If tf_lstm_block_cell: only cs, h output (outputs[1], outputs[6])
       are consumed. Similar to above.
 
-    - batch size == 1
-
     Inputs:
 
         prog: Program
