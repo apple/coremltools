@@ -198,18 +198,6 @@ test_macos11_py37_tf1:
     TEST_PACKAGE: coremltools.converters.mil.frontend.tensorflow
     WHEEL_PATH: build/dist/*cp37*10_15*
 
-test_macos11_py37_tf2:
-  <<: *test_macos_pkg_with_reqs
-  tags:
-    - macos11
-  dependencies:
-    - build_wheel_macos_py37
-  variables:
-    PYTHON: "3.7"
-    REQUIREMENTS: reqs/test_tf2.pip
-    TEST_PACKAGE: coremltools.converters.mil.frontend.tensorflow2
-    WHEEL_PATH: build/dist/*cp37*10_15*
-
 test_macos11_py37_mil:
   <<: *test_macos_pkg
   tags:
@@ -218,7 +206,7 @@ test_macos11_py37_mil:
     - build_wheel_macos_py37
   variables:
     PYTHON: "3.7"
-    TEST_PACKAGE: coremltools.converters.mil
+    TEST_PACKAGE: coremltools.converters.mil.mil
     WHEEL_PATH: build/dist/*cp37*10_15*
 
 #########################################################################
