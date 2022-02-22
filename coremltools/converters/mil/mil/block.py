@@ -6,17 +6,16 @@
 from collections import Counter, OrderedDict
 import copy
 import logging
-import numpy as _np
+
 from . import SPACES, types
-from .var import Var, InternalVar, ListVar
-from .visitors.dot_visitor import DotVisitor
 from .types.symbolic import (
     k_used_symbols,
     k_num_internal_syms,
-    any_symbolic,
     is_symbolic,
 )
-from .input_type import TupleInputType
+from .var import Var, InternalVar
+from .visitors.dot_visitor import DotVisitor
+
 
 # BLOCK_STACK[-1] is the current block
 BLOCK_STACK = []
@@ -102,7 +101,6 @@ class Block(object):
 
         # Must be set before self.validate()
         self.outer_op = outer_op
-
 
         self._block_inputs = block_inputs
         if self._block_inputs is None:

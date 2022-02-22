@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 #  Copyright (c) 2021, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
@@ -15,8 +13,8 @@ from coremltools.converters.mil.mil import get_new_symbol
 if os.getenv("ENABLE_EXPERIMENTAL_PASSES") == "1":
     arbitrary_shape = (get_new_symbol(), get_new_symbol())
     np.random.seed()
-    arbitrary_weight = np.random.rand(4,3)
-    arbitrary_bias =  np.random.rand(4)
+    arbitrary_weight = np.random.rand(4, 3)
+    arbitrary_bias = np.random.rand(4)
 
 if os.getenv("ENABLE_EXPERIMENTAL_PASSES") == "1":
     @mb.program(input_specs=[mb.TensorSpec(shape=arbitrary_shape)])
@@ -87,8 +85,10 @@ def transform_pattern(pattern):
     linear_bias, bias, Dout = _get_linear_bias_bias_Dout(pattern, is_first_input)
     bias = np.reshape(bias, (Dout,))
 
-    if is_sub and is_first_input: bias = -bias
-    if is_sub and not is_first_input: linear_bias = -linear_bias
+    if is_sub and is_first_input:
+        bias = -bias
+    if is_sub and not is_first_input:
+        linear_bias = -linear_bias
 
     new_bias = linear_bias + bias
 

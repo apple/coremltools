@@ -87,6 +87,7 @@ class TestApiVisibilities:
             "short_description",
             "user_defined_metadata",
             "version",
+            "weights_dir",
         ]
         _check_visible_modules(_get_visible_items(ct.models.MLModel), expected)
 

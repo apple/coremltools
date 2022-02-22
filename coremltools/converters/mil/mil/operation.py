@@ -413,8 +413,7 @@ class Operation(object):
                 raise ValueError(msg_prefix + \
                     "Required input {} is missing".format(name))
 
-    def _validate_and_set_inputs(self, input_kvs,
-        no_check_var_types=False):
+    def _validate_and_set_inputs(self, input_kvs, no_check_var_types=False):
         """
         For each k, v in `input_kvs`, perform the followings:
 
@@ -456,7 +455,7 @@ class Operation(object):
 
         for name, var in input_kvs.items():
             # TODO: remove InternalVar check
-            #if not isinstance(var, InternalVar):
+            # if not isinstance(var, InternalVar):
 
             # Remove this operation itself from existing input
             # Var's child_ops

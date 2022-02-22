@@ -40,7 +40,7 @@ if 'PYMIL_TEST_TARGETS' in os.environ:
 else:
     backends = [('mlprogram', "fp16"), ('neuralnetwork', "fp32")]
     if os.getenv('INCLUDE_MIL_FP32_UNIT_TESTS') == '1':
-            backends.append(('mlprogram', 'fp32'))
+        backends.append(('mlprogram', 'fp32'))
 
 np.random.seed(1984)
 

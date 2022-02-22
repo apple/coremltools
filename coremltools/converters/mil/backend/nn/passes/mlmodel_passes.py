@@ -1,11 +1,7 @@
-# -*- coding: utf-8 -*-
-
 #  Copyright (c) 2020, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
-
-from itertools import permutations
 
 
 def _get_nn_spec(spec):
@@ -455,7 +451,7 @@ def remove_redundant_transposes(spec):
             # Get layers to delete using sol_bt
             cursor = 0
             while cursor < len(dp):
-                if sol_bt[cursor] == None:
+                if sol_bt[cursor] is None:
                     break
                 cursor = sol_bt[cursor]
                 tmp = [layers[i] for i in range(cursor, cursor + dp[cursor])]

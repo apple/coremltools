@@ -150,25 +150,6 @@ def _match_pattern(op):
 
     return None
 
-def _noop_elimination_block(block):
-    for op in list(block.operations):
-        for b in op.blocks:
-            block_changed = True
-            while block_changed:
-                block_changed = _noop_elimination_block(b)
-        if len(op.blocks) > 0:
-            continue
-
-        remove_fn = _match_pattern(op)
-        if remove_fn is not None:
-            with block:
-                status = remove_fn(op, block)
-            # has to break as the downstream iterator is affected.
-            if status:
-                return status
-    return False
-
-
 @register_pass(namespace="common")
 class noop_elimination(AbstractGraphPass):
     """
@@ -187,9 +168,33 @@ class noop_elimination(AbstractGraphPass):
         ...
 
     """
+    def __init__(self):
+        self.ops_to_skip = set()
+
+    def set_ops_to_skip(self, prog):
+        pass
 
     def apply(self, prog):
+        self.set_ops_to_skip(prog)
         for f in prog.functions.values():
             block_changed = True
             while block_changed:
-                block_changed = _noop_elimination_block(f)
+                block_changed = self._noop_elimination_block(f)
+
+    def _noop_elimination_block(self, block):
+        for op in list(block.operations):
+            for b in op.blocks:
+                block_changed = True
+                while block_changed:
+                    block_changed = self._noop_elimination_block(b)
+            if len(op.blocks) > 0:
+                continue
+
+            remove_fn = _match_pattern(op)
+            if remove_fn is not None and op not in self.ops_to_skip:
+                with block:
+                    status = remove_fn(op, block)
+                # has to break as the downstream iterator is affected.
+                if status:
+                    return status
+        return False

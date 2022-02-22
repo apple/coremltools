@@ -3,6 +3,10 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import itertools
+import numpy as np
+import pytest
+
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.testing_utils import (
     assert_model_is_valid,
@@ -11,9 +15,6 @@ from coremltools.converters.mil.testing_utils import (
 )
 from coremltools.converters.mil import testing_reqs
 
-import pytest
-import numpy as np
-import itertools
 
 np.random.seed(1984)
 
@@ -23,34 +24,34 @@ def _apply_weight_transform(inputs, is_deconv):
     """
     Utility funtion to test the weight transform function in conv batch_norm fusion pass.
     """
-    Cin, Cout, groups = 10, 20, 10
+    Cin, _, groups = 10, 20, 10
     input_shape = (1, Cin, 2, 2)
     @mb.program(input_specs=[mb.TensorSpec(shape=input_shape)])
     def prog(x):
 
         if is_deconv:
             x = mb.conv_transpose(
-                    x=x,
-                    weight=inputs["conv_weight"],
-                    bias=inputs["conv_bias"],
-                    groups=groups,
-                )
+                x=x,
+                weight=inputs["conv_weight"],
+                bias=inputs["conv_bias"],
+                groups=groups,
+            )
         else:
             x = mb.conv(
-                    x=x,
-                    weight=inputs["conv_weight"],
-                    bias=inputs["conv_bias"],
-                    groups=groups,
-                )
+                x=x,
+                weight=inputs["conv_weight"],
+                bias=inputs["conv_bias"],
+                groups=groups,
+            )
 
         x = mb.batch_norm(
-                x=x,
-                mean=inputs["mean"],
-                variance=inputs["variance"],
-                gamma=inputs["gamma"],
-                beta=inputs["beta"],
-                epsilon=inputs["epsilon"],
-            )
+            x=x,
+            mean=inputs["mean"],
+            variance=inputs["variance"],
+            gamma=inputs["gamma"],
+            beta=inputs["beta"],
+            epsilon=inputs["epsilon"],
+        )
         return x
 
     apply_pass_and_basic_check(
@@ -197,9 +198,6 @@ class TestConvBatchNormOptimizationPasses:
         assert get_op_types_in_program(prog) == ["conv"]
 
         # validate graph pass
-        input_dict = {
-            "x": np.random.rand(*input_shape),
-        }
         output_shape = (2, Cout, 19) if rank == 3 else (2, Cout, 19, 22)
         assert_model_is_valid(
             prog,
@@ -230,11 +228,11 @@ class TestConvBatchNormOptimizationPasses:
             conv_weight = np.random.rand(Cin, Cout // groups, 2) if rank == 3 else np.random.rand(Cin, Cout // groups, 2, 3)
             conv_bias = np.random.rand(Cout) if has_bias else None
             x = mb.conv_transpose(
-                    x=x,
-                    weight=conv_weight,
-                    bias=conv_bias,
-                    groups=groups,
-                )
+                x=x,
+                weight=conv_weight,
+                bias=conv_bias,
+                groups=groups,
+            )
 
             # batch_norm layer
             gamma = np.random.rand(Cout)

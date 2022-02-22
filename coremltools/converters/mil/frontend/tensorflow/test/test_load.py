@@ -3,11 +3,14 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import numpy as np
+
 import os
-import pytest
-import shutil
 import tempfile
+import shutil
+
+import numpy as np
+import pytest
+
 import coremltools as ct
 import coremltools.converters as converter
 from coremltools._deps import _IS_MACOS
@@ -195,7 +198,7 @@ class TestTf1ModelInputsOutputs(TensorFlowBaseTest):
             e.match(r"Unable to determine the shape of input .*")
 
         mlmodel = converter.convert(model, source=frontend,
-                inputs=[ct.TensorType(shape=(1,))])
+                                    inputs=[ct.TensorType(shape=(1,))])
         assert mlmodel is not None
 
     @pytest.mark.xfail(reason="Rank-0 input is not supported", run=True)
@@ -225,10 +228,12 @@ class TestTf1ModelInputsOutputs(TensorFlowBaseTest):
 
         # static-Flexible shape
         mlmodel = converter.convert(
-            model, inputs=[
+            model,
+            inputs=[
                 # Use TF's input shapes (None, 4, 5)
-                TensorType(name=input_name)],
-                outputs=[output_name]
+                TensorType(name=input_name)
+            ],
+            outputs=[output_name]
         )
         assert mlmodel is not None
         input_values = [random_gen((3, 4, 5), -10.0, 10.0)]
@@ -278,7 +283,7 @@ class TestTf1ModelInputsOutputs(TensorFlowBaseTest):
             np.allclose(ret[output_name], np.maximum(input_values[0], 0.0))
 
         if _IS_MACOS:
-            with pytest.raises(RuntimeError) as e:
+            with pytest.raises(RuntimeError):
                 input_values = [random_gen((2, 4, 5), -10.0, 10.0)]
                 input_dict = {input_name: input_values[0]}
                 ret = mlmodel.predict(input_dict)
@@ -422,7 +427,6 @@ class TestTf1ModelFormats:
     def test_invalid_converter_target(self):
         with tf.Graph().as_default() as graph:
             x = tf.placeholder(tf.float32, shape=(3, 4, 5))
-            out = tf.nn.relu(x)
         with pytest.raises(NotImplementedError) as e:
             converter.convert(graph, convert_to="invalid", source="tensorflow")
         e.match(r"Backend converter .* not implemented")

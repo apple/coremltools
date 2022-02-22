@@ -3,6 +3,7 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+from ._op_reqs import register_op
 from coremltools.converters.mil.mil import get_new_symbol, get_new_variadic_symbol, types
 from coremltools.converters.mil.mil.input_type import (
     DefaultInputs,
@@ -13,11 +14,8 @@ from coremltools.converters.mil.mil.input_type import (
     TensorInputType,
     StringInputType
 )
-
-from coremltools.converters.mil.mil.types.symbolic import any_symbolic
 from coremltools.converters.mil.mil.operation import Operation
-
-from ._op_reqs import register_op
+from coremltools.converters.mil.mil.types.symbolic import any_symbolic
 
 
 class RandomDistribution(Operation):
@@ -95,7 +93,7 @@ class random_bernoulli(RandomDistribution):
             DefaultInputs(
                 seed=-1,
                 prob=0.5,
-                )
+            )
 
     def __init__(self, **kwargs):
         super(random_bernoulli, self).__init__(**kwargs)
@@ -148,7 +146,7 @@ class random_categorical(Operation):
             mode="logits",
             size=1,
             seed=-1,
-            )
+        )
 
     def __init__(self, **kwargs):
         super(random_categorical, self).__init__(**kwargs)
@@ -204,7 +202,7 @@ class random_normal(RandomDistribution):
                 mean=0.,
                 stddev=1.,
                 seed=-1,
-                )
+            )
 
     def __init__(self, **kwargs):
         super(random_normal, self).__init__(**kwargs)
@@ -270,7 +268,7 @@ class random_uniform(RandomDistribution):
                 low=0.,
                 high=1.,
                 seed=-1,
-                )
+            )
 
     def __init__(self, **kwargs):
         super(random_uniform, self).__init__(**kwargs)

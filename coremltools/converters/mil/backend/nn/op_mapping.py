@@ -3,8 +3,9 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import numpy as _np
 import logging as _logging
+
+import numpy as _np
 from tqdm import tqdm as _tqdm
 
 from .mil_to_nn_mapping_registry import MIL_TO_NN_MAPPING_REGISTRY, register_mil_to_nn_mapping
@@ -319,29 +320,134 @@ def batch_norm(const_context, builder, op):
     x_name = make_input(const_context, builder, op.x)
     out_name = op.outputs[0].name
 
-    if op.x.rank == 3:
+    is_batchnorm_1d = op.x.rank == 3
+    is_batchnorm_2d = op.x.rank == 4
+    is_batchnorm_3d = op.x.rank == 5
+
+    if is_batchnorm_1d:
         x_name = op.name + "_expanded"
         builder.add_expand_dims(
             name=x_name, input_name=op.x.name, output_name=x_name, axes=[-2],
         )
         out_name += "_batch_norm"
 
-    builder.add_batchnorm(
-        name=op.name,
-        channels=channels,
-        gamma=gamma,
-        beta=beta,
-        mean=op.mean.val,
-        variance=op.variance.val,
-        input_name=x_name,
-        output_name=out_name,
-        compute_mean_var=False,
-        instance_normalization=False,
-        epsilon=op.epsilon.val,
-    )
+    if is_batchnorm_1d or is_batchnorm_2d:
+        # batch norm 1d / 2d
+        builder.add_batchnorm(
+            name=op.name,
+            channels=channels,
+            gamma=gamma,
+            beta=beta,
+            mean=op.mean.val,
+            variance=op.variance.val,
+            input_name=x_name,
+            output_name=out_name,
+            compute_mean_var=False,
+            instance_normalization=False,
+            epsilon=op.epsilon.val,
+        )
+    elif is_batchnorm_3d:
+        # batch norm 3d
+        batch_size, channel, height, width, depth = op.x.shape
+        assert not is_symbolic(channel), "Channel dimension must be known for batchnorm layer."
+        symbolic_num = sum([is_symbolic(x) for x in op.x.shape])
+
+        if symbolic_num > 1:
+            gamma_expand = _np.expand_dims(gamma, axis=(0, 2, 3, 4))
+            beta_expand = _np.expand_dims(beta, axis=(0, 2, 3, 4))
+            mean_expand = _np.expand_dims(op.mean.val, axis=(0, 2, 3, 4))
+            var_expand = _np.expand_dims(op.variance.val, axis=(0, 2, 3, 4))
+
+            # compute batch norm 3d by decomposing it into elementwise operations
+            negative_mean_name = op.name + "_negative_mean"
+            add_const(const_context, builder, negative_mean_name, -mean_expand)
+
+            numerator_name = op.name + "_numerator"
+            builder.add_add_broadcastable(
+                name=numerator_name,
+                input_names=[x_name, negative_mean_name],
+                output_name=numerator_name,
+            )
+
+            var_expand = var_expand + op.epsilon.val
+            denominator = _np.sqrt(var_expand)
+            gamma_expand = gamma_expand / denominator
+            gamma_name = op.name + "_gamma"
+            add_const(const_context, builder, gamma_name, gamma_expand)
+
+            mul_name = op.name + "_mul"
+            builder.add_multiply_broadcastable(
+                name=mul_name,
+                input_names=[numerator_name, gamma_name],
+                output_name=mul_name,
+            )
+
+            beta_name = op.name + "_beta"
+            add_const(const_context, builder, beta_name, beta_expand)
+
+            builder.add_add_broadcastable(
+                name=out_name,
+                input_names=[mul_name, beta_name],
+                output_name=out_name,
+            )
+        else:
+            is_batch_symbloic = is_symbolic(batch_size)
+            is_height_symbolic = is_symbolic(height)
+            is_width_symbolic = is_symbolic(width)
+            is_depth_symbolic = is_symbolic(depth)
+
+            if is_batch_symbloic:
+                shape1 = [-1, channel, height * width, depth]
+                shape2 = [-1, channel, height, width, depth]
+
+            elif is_height_symbolic:
+                shape1 = [batch_size, channel, -1, width*depth]
+                shape2 = [batch_size, channel, -1, width, depth]
+
+            elif is_width_symbolic:
+                shape1 = [batch_size, channel, -1, height*depth]
+                shape2 = [batch_size, channel, height, -1, depth]
+
+            elif is_depth_symbolic:
+                shape1 = [batch_size, channel, height * width, -1]
+                shape2 = [batch_size, channel, height, width, -1]
+
+            else:
+                shape1 = [batch_size, channel, height*width, depth]
+                shape2 = [batch_size, channel, height, width, depth]
+
+            reshape_4d_name = op.name + "_reshape_4d"
+            builder.add_reshape_static(
+                name=reshape_4d_name,
+                input_name=x_name,
+                output_name=reshape_4d_name,
+                output_shape=shape1,
+            )
+
+            batchnorm_name = op.name + "_batchnorm_4d"
+            builder.add_batchnorm(
+                name=batchnorm_name,
+                channels=channels,
+                gamma=gamma,
+                beta=beta,
+                mean=op.mean.val,
+                variance=op.variance.val,
+                input_name=reshape_4d_name,
+                output_name=batchnorm_name,
+                compute_mean_var=False,
+                instance_normalization=False,
+                epsilon=op.epsilon.val,
+            )
+
+            builder.add_reshape_static(
+                name=out_name,
+                input_name=batchnorm_name,
+                output_name=out_name,
+                output_shape=shape2,
+            )
 
     # Squeeze added `Width` dimension for 1d case
-    if op.x.rank == 3:
+    if is_batchnorm_1d:
         x_name = op.name + "_squeeze"
         builder.add_squeeze(
             name=x_name,
@@ -3360,7 +3466,6 @@ def _realloc_list(const_context, builder, ls_var, index_var, value_var, mode):
             )
     else:
         add_const(const_context, builder, value_elem_shape_name, _np.array(elem_shape))
-
 
     # if elem_shape is runtime-determined, check if we need to re-initialize the array
 

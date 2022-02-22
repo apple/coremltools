@@ -6,29 +6,32 @@
 from collections import OrderedDict
 from itertools import islice
 
-import torch
-
 
 def _make_ssa_name(name):
-    """Converts a symbol name (string) into an SSA name, by prepending '%'.
+    """
+    Converts a symbol name (string) into an SSA name, by prepending '%'.
     Only used for pretty printing the graph.
     """
+    if name is None:
+        return "None"
     return "%" + name
 
 
 def _ssa_name_list(names):
-    """Take a list of symbol names (strings) and return them as SSA names. Only
+    """
+    Take a list of symbol names (strings) and return them as SSA names. Only
     used for pretty printing the graph.
     """
     return [_make_ssa_name(x) for x in names]
 
 
 def _find_new_name(old_name, node_names):
-    """Disambiguate a node's name from a list of existing node names by adding
+    """
+    Disambiguate a node's name from a list of existing node names by adding
     successively larger integers.
     """
     count = 0
-    new_name = old_name + "." + str(count)
+    new_name = old_name + "." + str(count) if count != 0 else old_name
     while new_name in node_names:
         count += 1
         new_name = old_name + "." + str(count)
@@ -46,17 +49,20 @@ def _replace_in_list(ls, old_val, new_val):
 
 
 class InternalTorchIRBlock:
-    """CoreML internal representation of a torch IR block.
+    """
+    CoreML internal representation of a torch IR block.
+    """
 
+    def __init__(self, raw_block=None, parent=None, nodes=None, inputs=None, outputs=None):
+        """"
         Arguments:
             raw_block: The torch._C.Block to convert, or None.
             parent: The InternalTorchIRNode this block belongs to.
             nodes: If @raw_block is None, the list of InternalTorchIRNodes in the block
             inputs: If @raw_block is None, the list of input symbols.
             outputs: If @raw_block is None, the list of output symbols.
-    """
+        """
 
-    def __init__(self, raw_block=None, parent=None, nodes=None, inputs=None, outputs=None):
         self.nodes = []
         node_names = set()
         self.inputs = []
@@ -112,12 +118,18 @@ class InternalTorchIRBlock:
 
 
 class InternalTorchIRNode:
-    """CoreML internal representation of a torch IR node.
+    """
+    CoreML internal representation of a torch IR node.
     Can construct itself from a provided torchIR node or manually constructed with
     args for testing.
 
     See InternalTorchIRGraph for the motivation behind this structure.
+    """
 
+    def __init__(
+        self, node=None, parent=None, attr=None, inputs=None, outputs=None, kind=None, blocks=None,
+    ):
+        """
         Arguments:
             node: The torch._C.Node to convert, or None.
             parent: The InternalTorchIRGraph/Block this node belongs to.
@@ -126,11 +138,8 @@ class InternalTorchIRNode:
             outputs: If @node is not specified, the list of output symbols.
             kind: If @node is not specified, the kind (op) of the node.
             blocks: If @node is not specified, the list of InternalTorchIRBlock.
-    """
+        """
 
-    def __init__(
-        self, node=None, parent=None, attr=None, inputs=None, outputs=None, kind=None, blocks=None,
-    ):
         self.parent = parent
         if node is not None:
             self.inputs = [_input.debugName() for _input in node.inputs()]
@@ -189,7 +198,8 @@ class InternalTorchIRNode:
 
 
 class InternalTorchIRGraph:
-    """CoreML internal representation of a torch IR graph. A torch._C.Graph
+    """
+    CoreML internal representation of a torch IR graph. A torch._C.Graph
     object is not an ideal structure to use in converting to CoreML. Conversion
     to an InternalTorchIRGraph is inserted between the original graph and the
     final CoreML model to address several issues:
@@ -207,7 +217,13 @@ class InternalTorchIRGraph:
           they have to come from actually converting a PyTorch graph. With an
           internal structure, we can directly build the test cases we need for
           unit testing.
+    """
 
+    def __init__(
+            self, raw_graph=None, params_dict=None, input_values=None, cut_at_symbols=None,
+            nodes=None, params=None, inputs=None, outputs=None,
+    ):
+        """
         Arguments:
             raw_graph: raw_graph: The torch._C.Graph to convert, or None.
             params_dict: A dictionary mapping graph parameter names to tensors.
@@ -224,11 +240,8 @@ class InternalTorchIRGraph:
             inputs: If @raw_graph is None, the OrderedDict mapping input names
                 to their example values.
             outputs: If @raw_graph is None, the list of outputs from the graph.
-    """
+        """
 
-    def __init__(
-        self, raw_graph=None, params_dict=None, input_values=None, cut_at_symbols=None, nodes=None, params=None, inputs=None, outputs=None,
-    ):
         self.nodes = []
         node_names = set()
         self.params = {}

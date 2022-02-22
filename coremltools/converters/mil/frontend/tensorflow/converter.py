@@ -4,28 +4,26 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import logging
+
+from .basic_graph_ops import simple_topsort
+from .convert_utils import convert_graph
+from .ssa_passes.tf_passes import tensorflow_passes
 from coremltools.converters.mil.input_types import (
+    _get_shaping_class,
     InputType,
-    TensorType,
     ImageType,
     RangeDim,
-    _get_shaping_class,
+    Shape as InputShape,
+    TensorType
 )
-from coremltools.converters.mil.input_types import Shape as InputShape
 from coremltools.converters.mil.mil.var import Var
-from coremltools.converters.mil.mil import get_new_symbol
 from coremltools.converters.mil.mil.types.symbolic import is_symbolic
-from coremltools.converters.mil.mil.types import is_tensor
-
-from coremltools.converters.mil.mil import types
-from .basic_graph_ops import topsort, simple_topsort
-
-from .convert_utils import convert_graph
-
-from coremltools.converters.mil.mil import Builder as mb
-from coremltools.converters.mil.mil import Program
-from coremltools.converters.mil.mil import Function
-from .ssa_passes.tf_passes import tensorflow_passes
+from coremltools.converters.mil.mil import (
+    Builder as mb,
+    Function,
+    get_new_symbol,
+    Program
+)
 from coremltools.converters._profile_utils import _profile
 
 

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 #  Copyright (c) 2020, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
@@ -102,7 +100,6 @@ class DotVisitor(object):
                 + node.name
                 + '"'
             )
-            innode = graph[input_name]
             self.result.append(edge)
 
         for i in node.control_inputs:
@@ -118,7 +115,6 @@ class DotVisitor(object):
                 + node.name
                 + '"'
             )
-            innode = graph[input_name]
             edge = edge + " [style=dotted]"
             self.result.append(edge)
 

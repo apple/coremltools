@@ -127,7 +127,7 @@ def run_compare_tf2(
         shape = [RangeDim() if s is None or s == -1 else s \
                 for s in list(t.get_shape())]
         inputs.append(TensorType(name=name, shape=shape,
-            dtype=t.dtype.as_numpy_dtype))
+                                 dtype=t.dtype.as_numpy_dtype))
     outputs = []
     for t in output_names:
         name = get_tf_node_names(t)[0]
@@ -254,16 +254,16 @@ class TensorFlow2BaseTest(TensorFlowBaseTest):
 
     @staticmethod
     def run_compare_tf2(model,
-            input_dict,
-            output_names,
-            use_cpu_only=False,
-            use_cpu_for_conversion=False,
-            frontend_only=False,
-            frontend="tensorflow",
-            backend=("neuralnetwork", "fp32"),
-            debug=False,
-            atol=1e-04,
-            rtol=1e-05):
+                        input_dict,
+                        output_names,
+                        use_cpu_only=False,
+                        use_cpu_for_conversion=False,
+                        frontend_only=False,
+                        frontend="tensorflow",
+                        backend=("neuralnetwork", "fp32"),
+                        debug=False,
+                        atol=1e-04,
+                        rtol=1e-05):
         res = run_compare_tf2(model,
                               input_dict,
                               output_names,
@@ -282,8 +282,8 @@ class TensorFlow2BaseTest(TensorFlowBaseTest):
 
     @staticmethod
     def run_compare_tf_keras(model, input_values, inputs_for_conversion=None, use_cpu_only=False,
-            frontend_only=False, frontend="tensorflow",
-            backend=("neuralnetwork", "fp32"), atol=1e-04, rtol=1e-05):
+                             frontend_only=False, frontend="tensorflow",
+                             backend=("neuralnetwork", "fp32"), atol=1e-04, rtol=1e-05):
         res = run_compare_tf_keras(model, input_values,
                                    inputs_for_conversion=inputs_for_conversion,
                                    use_cpu_only=use_cpu_only,

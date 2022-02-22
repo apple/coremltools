@@ -65,7 +65,7 @@ def build_einsum_mil(a_var, b_var, equation, name):
         x = mb.matmul(x=a_var, y=b_var, transpose_x=False, transpose_y=False, name=name)
     elif parsed_vectors == ([0,1,2],[2,3,4],[0,1,3,4]) or parsed_vectors_rev == ([0,1,2],[2,3,4],[0,1,3,4]): # equation == "abc,cde->abde"
         if parsed_vectors_rev == ([0,1,2],[2,3,4],[0,1,3,4]):
-             a_var, b_var = _swap(a_var, b_var)
+            a_var, b_var = _swap(a_var, b_var)
         x_1 = mb.reshape(x=a_var, shape=[a_var.shape[0] * a_var.shape[1], a_var.shape[2]])
         x_2 = mb.reshape(x=b_var, shape=[b_var.shape[0], b_var.shape[1] * b_var.shape[2]])
         x = mb.matmul(x=x_1, y=x_2, transpose_x=False, transpose_y=False)
@@ -89,9 +89,7 @@ def build_einsum_mil(a_var, b_var, equation, name):
             a_var, b_var = _swap(a_var, b_var)
         x_1 = mb.reshape(x=a_var, shape=[a_var.shape[0], a_var.shape[1], a_var.shape[2] * a_var.shape[3]])
         x_2 = mb.reshape(x=b_var, shape=[b_var.shape[0] * b_var.shape[1], b_var.shape[2]])
-        x = mb.matmul(
-                x=x_1, y=x_2, transpose_x=False, transpose_y=False, name=name
-        )
+        x = mb.matmul(x=x_1, y=x_2, transpose_x=False, transpose_y=False, name=name)
     elif parsed_vectors == ([0,1,2,3],[0,3,2,4],[0,1,2,4]) or parsed_vectors_rev == ([0,1,2,3],[0,3,2,4],[0,1,2,4]): # equation == "nchw,nwhu->nchu"
         if parsed_vectors == ([0,1,2,3],[0,3,2,4],[0,1,2,4]):
             x = mb.einsum(values=(a_var, b_var), equation=equation, name=name)

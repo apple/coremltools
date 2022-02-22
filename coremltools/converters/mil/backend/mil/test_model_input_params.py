@@ -3,15 +3,15 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 import numpy as np
-import pytest
 
 import coremltools as ct
 from coremltools.converters.mil.mil.builder import Builder as mb
+from coremltools.converters.mil.mil.program import Symbol
 from coremltools.models.utils import _macos_version
 
 
 class TestMILFlexibleShapes:
-    from coremltools.converters.mil.mil.program import Symbol
+
     @mb.program(
         input_specs = [
             mb.TensorSpec(shape=[1, 3, Symbol("H"), Symbol("W")])

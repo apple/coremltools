@@ -13,25 +13,31 @@ from coremltools.converters.mil.mil import Builder as mb
 
 child_op_types = ["add", "sub"]
 
-def _match_pattern(op):
+def _find_candidate_op(op):
 
-    if op.op_type == "matmul":
-        # find add
-        child_ops = op.outputs[0].child_ops
-        if len(child_ops) == 1:
-            add_op_candidate = list(child_ops)[0]
-            if add_op_candidate.op_type in child_op_types:
-                return add_op_candidate
-    return None
+    if op.op_type != "matmul":
+        return None
+    # find add
+    child_ops = op.outputs[0].child_ops
+    if len(child_ops) == 1:
+        add_op_candidate = list(child_ops)[0]
+        if add_op_candidate.op_type in child_op_types:
+            return add_op_candidate
 
-def _transpose(v, before_op):
+def _transpose(v, before_op, name=None):
     """
     Transpose the last 2 dims.
-    v: Var (must be a tensor)
+    v: (Var, must be a tensor)
+    before_op: (Operation) the op right before the new added transpose op
+    name: name for the transpose op if provided
     """
     perm = list(range(v.rank))
     perm[-2], perm[-1] = perm[-1], perm[-2]
-    return mb.transpose(x=v, perm=perm, before_op=before_op)
+
+    if name is None:
+        return mb.transpose(x=v, perm=perm, before_op=before_op)
+    else:
+        return mb.transpose(x=v, perm=perm, before_op=before_op, name=name)
 
 def _try_to_transform(matmul_op, add_op, block):
     if matmul_op.x.val is None and matmul_op.y.val is None:
@@ -116,27 +122,6 @@ def _try_to_transform(matmul_op, add_op, block):
     block.remove_ops([matmul_op, add_op])
     return True
 
-
-def _fuse_matmul_weight_bias_block(block):
-    fusion_status = False
-    for op in list(block.operations):
-        for b in op.blocks:
-            block_changed = True
-            while block_changed:
-                block_changed = _fuse_matmul_weight_bias_block(b)
-        if len(op.blocks) > 0:
-            # This op can't be matmul
-            continue
-
-        add_op = _match_pattern(op)
-        if add_op is not None:
-            with block:
-                fusion_status = _try_to_transform(op, add_op, block)
-            # has to break as the downstream iterator is affected.
-            if fusion_status:
-                return fusion_status
-    return fusion_status
-
 @register_pass(namespace="common")
 class fuse_matmul_weight_bias(AbstractGraphPass):
     """
@@ -156,8 +141,41 @@ class fuse_matmul_weight_bias(AbstractGraphPass):
 
         prog: Program
     """
+    def __init__(self):
+        self.ops_to_skip = set()
+
+    def set_ops_to_skip(self, prog):
+        pass
+
     def apply(self, prog):
+        self.set_ops_to_skip(prog)
         for f in prog.functions.values():
             block_changed = True
             while block_changed:
-                block_changed = _fuse_matmul_weight_bias_block(f)
+                block_changed = self._fuse_matmul_weight_bias_block(f)
+
+    def _fuse_matmul_weight_bias_block(self, block):
+        fusion_status = False
+        for op in list(block.operations):
+            for b in op.blocks:
+                block_changed = True
+                while block_changed:
+                    block_changed = self._fuse_matmul_weight_bias_block(b)
+            if len(op.blocks) > 0:
+                # This op can't be matmul
+                continue
+
+            if op in self.ops_to_skip:
+                continue
+
+            add_op = _find_candidate_op(op)
+            if add_op in self.ops_to_skip:
+                continue
+
+            if add_op is not None:
+                with block:
+                    fusion_status = _try_to_transform(op, add_op, block)
+                # has to break as the downstream iterator is affected.
+                if fusion_status:
+                    return fusion_status
+        return fusion_status

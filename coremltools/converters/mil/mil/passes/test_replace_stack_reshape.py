@@ -3,22 +3,21 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import numpy as np
+import unittest
+
 from coremltools._deps import _IS_MACOS
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.testing_utils import (
-    assert_op_count_match,
     assert_model_is_valid,
     get_op_types_in_program,
     apply_pass_and_basic_check,
 )
 from coremltools.converters.mil.testing_reqs import ct
 
-import unittest
-import pytest
-
-import numpy as np
 
 np.random.seed(1984)
+
 
 class ReplaceStackReshapePass(unittest.TestCase):
     
@@ -130,7 +129,7 @@ class ReplaceStackReshapePass(unittest.TestCase):
         np.testing.assert_allclose(old_prediction, prediction[output_name], atol=1e-04, rtol=1e-05)
 
     def test_multiple(self):
-        @mb.program(input_specs=[mb.TensorSpec(shape=(1, 2, 3, 4)), mb.TensorSpec(shape=(1, 2, 3, 4)), 
+        @mb.program(input_specs=[mb.TensorSpec(shape=(1, 2, 3, 4)), mb.TensorSpec(shape=(1, 2, 3, 4)),
                                  mb.TensorSpec(shape=(1, 2, 3, 4)), mb.TensorSpec(shape=(1, 2, 3, 4))])
         def prog(x1, x2, x3, x4):
             a = mb.stack(values=[x1, x2], axis=1)
@@ -139,7 +138,7 @@ class ReplaceStackReshapePass(unittest.TestCase):
             b = mb.stack(values=[x3, x4], axis=1)
             b = mb.reshape(x=b, shape=[1, 4, 3, 4])
 
-            c = mb.stack(values=[a, b], axis=2) 
+            c = mb.stack(values=[a, b], axis=2)
             c = mb.reshape(x=c, shape=[1, 4, 6, 4])
 
             return c
@@ -259,7 +258,7 @@ class ReplaceStackReshapePass(unittest.TestCase):
 
     def test_negative_4(self):
         """
-        More than two inputs to the stack op -- can't be transformed. 
+        More than two inputs to the stack op -- can't be transformed.
         """
         @mb.program(input_specs=[mb.TensorSpec(shape=(1, 5, 3, 4)), mb.TensorSpec(shape=(1, 5, 3, 4)), mb.TensorSpec(shape=(1, 5, 3, 4))])
         def prog(x1, x2, x3):

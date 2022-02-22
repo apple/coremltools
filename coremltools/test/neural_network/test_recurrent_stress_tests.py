@@ -1,12 +1,17 @@
-import itertools
-import unittest
-from copy import copy
+#  Copyright (c) 2021, Apple Inc. All rights reserved.
+#
+#  Use of this source code is governed by a BSD-3-clause license that can be
+#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+from copy import copy
+import itertools
 import numpy as np
 import pytest
+import unittest
 
 from coremltools._deps import _HAS_KERAS2_TF, _HAS_KERAS_TF
 from coremltools.models.utils import _macos_version, _is_macos
+
 
 np.random.seed(1377)
 
@@ -692,7 +697,7 @@ class RNNLayer(RecurrentLayerTest):
             rnn_params = dict(zip(self.simple_rnn_params_dict.keys(), rnn_params))
             model = Sequential()
             unroll = base_params["unroll"]
-            if base_params["input_dims"][1] == 1 and unroll == True:
+            if base_params["input_dims"][1] == 1 and unroll is True:
                 unroll = False
             if keras_major_version == 2:
                 model.add(
@@ -1117,7 +1122,6 @@ class LSTMLayer(RecurrentLayerTest):
         )
 
     def _test_lstm_layer(self, keras_major_version, limit=None):
-        params_keys = list(self.params_dict.keys())
         numerical_err_models = []
         shape_err_models = []
         numerical_failiure = 0
@@ -1137,7 +1141,7 @@ class LSTMLayer(RecurrentLayerTest):
             lstm_params = dict(zip(self.lstm_params_dict.keys(), lstm_params))
             model = Sequential()
             unroll = base_params["unroll"]
-            if base_params["input_dims"][1] == 1 and unroll == True:
+            if base_params["input_dims"][1] == 1 and unroll is True:
                 unroll = False
             if lstm_params["bidirectional"] is True:
                 if keras_major_version == 2:
@@ -1357,7 +1361,7 @@ class GRULayer(RecurrentLayerTest):
             gru_params = dict(zip(self.gru_params_dict.keys(), gru_params))
             model = Sequential()
             unroll = base_params["unroll"]
-            if base_params["input_dims"][1] == 1 and unroll == True:
+            if base_params["input_dims"][1] == 1 and unroll is True:
                 unroll = False
             if keras_major_version == 2:
                 model.add(
@@ -1521,7 +1525,7 @@ class LSTMStacked(unittest.TestCase):
             base_params = dict(zip(self.params_dict.keys(), base_params))
             model = Sequential()
             unroll = base_params["unroll"]
-            if base_params["input_dims"][1] == 1 and unroll == True:
+            if base_params["input_dims"][1] == 1 and unroll is True:
                 unroll = False
             settings = dict(
                 activation=base_params["activation"],

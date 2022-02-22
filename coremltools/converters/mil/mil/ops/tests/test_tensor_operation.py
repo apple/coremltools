@@ -12,7 +12,7 @@ from coremltools.converters.mil.mil import (
     get_new_symbol,
     types
 )
-from coremltools.converters.mil.testing_utils import random_gen, ssa_fn
+from coremltools.converters.mil.testing_utils import random_gen, ssa_fn, get_op_types_in_program
 from .testing_utils import UNK_SYM, UNK_VARIADIC, run_compare_builder
 
 if testing_reqs._HAS_TF_1 or testing_reqs._HAS_TF_2:
@@ -979,6 +979,42 @@ class TestRange1d:
             use_cpu_only=use_cpu_only,
             backend=backend,
         )
+
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend", itertools.product([True, False], backends,)
+    )
+    def test_large_array(self, use_cpu_only, backend):
+        
+        input_placeholders = {
+            "x": mb.placeholder(shape=(1,)), # dummpy input
+        }
+        input_values = {"x": 0.5}
+
+        def build(x):
+            return [mb.range_1d(start=0.0, end=2000000.0, step=1.0)]
+
+        expected_output_types = [
+            (2000000, types.fp32)
+        ]
+
+        expected_outputs = [
+            np.arange(0.0, 2000000.0, 1.0),
+        ]
+
+        mlmodel = run_compare_builder(
+            build,
+            input_placeholders,
+            input_values,
+            expected_output_types,
+            expected_outputs,
+            use_cpu_only=use_cpu_only,
+            backend=backend,
+        )
+
+        # verify that the range_1d op is not const folded
+        prog = mlmodel._mil_program
+        ops = get_op_types_in_program(prog)
+        assert ops == ["range_1d", "identity"]
 
     @ssa_fn
     def test_builder_eval(self):

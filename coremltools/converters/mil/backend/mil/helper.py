@@ -3,16 +3,15 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import numpy as np
 import os
-import re
+
+import numpy as np
 
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.types import builtin_to_proto_types
-from coremltools.models.model import _WEIGHTS_DIR_NAME, _WEIGHTS_FILE_NAME
+from coremltools.models.utils import _WEIGHTS_DIR_NAME, _WEIGHTS_FILE_NAME
 import coremltools.proto.FeatureTypes_pb2 as ft
 import coremltools.proto.MIL_pb2 as pm
-
 from coremltools.converters.mil.mil.types import (
     type_to_builtin_type,
     numpy_type_to_builtin_type,
@@ -318,4 +317,3 @@ def cast_to_framework_io_dtype(var, is_output):
         ioname2 = "outputs" if is_output else "inputs"
         raise NotImplementedError(ioname + var.name + " has data type " + builtin_to_string(var.dtype) + \
                                   ". ML Program models only support fp32 and int32 " + ioname2 + ".")
-

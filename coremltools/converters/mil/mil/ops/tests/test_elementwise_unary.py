@@ -544,7 +544,6 @@ class TestElementwiseUnary:
             shape = mb.shape(x=x)
             return mb.cast(x=shape, dtype="int32")
 
-        prog = Program()
         with Function(input_placeholders) as ssa_func:
             output_vars = build(**ssa_func.inputs)
             assert is_compatible_symbolic_vector(output_vars.sym_val, [get_new_symbol(), 1])
@@ -663,16 +662,6 @@ class TestElementwiseUnary:
             pytest.xfail("rdar://78343191 ((MIL GPU) Core ML Tools Unit Test failures [failure to load or Seg fault])")
 
         src_dtype, dst_dtype = src_dst
-
-        type_map = {
-            "int32": np.int32,
-            "int64": np.int64,
-            "fp16": np.float16,
-            "fp32": np.float32,
-            "fp64": np.float64,
-            "bool": np.bool,
-        }
-
         x = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
         numpy_pred = x.astype(dtype=np.float16)
 
@@ -707,7 +696,7 @@ class TestElementwiseUnary:
 
         @mb.program(input_specs=[])
         def prog():
-            return  mb.erf(x=x)
+            return mb.erf(x=x)
 
         ops = list(prog.functions.values())[0].operations
         assert len(ops) == 2

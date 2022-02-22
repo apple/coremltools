@@ -19,7 +19,7 @@ from coremltools.converters.mil.mil import Function, get_new_symbol
 from coremltools.converters.mil.testing_utils import random_gen
 
 from .. import ops
-from ..converter import TorchConverter, TranscriptionContext
+from ..converter import TranscriptionContext
 from ..internal_graph import InternalTorchIRNode
 
 
@@ -168,7 +168,7 @@ class TestTorchOps:
 
     @pytest.mark.parametrize(
         "test_input_1, test_input_2",
-        [(np.random.rand(3, 2), np.random.rand(3, 2)), (np.random.rand(3, 2), 5),],
+        [(np.random.rand(3, 2), np.random.rand(3, 2)), (np.random.rand(3, 2), 5), ],
     )
     def test_sub(self, context, test_input_1, test_input_2):
         scale_factor = 1
@@ -183,7 +183,7 @@ class TestTorchOps:
 
     @pytest.mark.parametrize(
         "test_input_1, test_input_2",
-        [(np.random.rand(3, 2), np.random.rand(3, 2)), (np.random.rand(3, 2), 5),],
+        [(np.random.rand(3, 2), np.random.rand(3, 2)), (np.random.rand(3, 2), 5), ],
     )
     def test_rsub(self, context, test_input_1, test_input_2):
         scale_factor = 1
@@ -612,7 +612,7 @@ class TestTorchOps:
             dilation=dilation,
         )
         expected_shape = tuple(torch_conv(test_input).shape)
-        assert ssa.val == None
+        assert ssa.val is None
         assert expected_shape == ssa.shape
 
     @pytest.mark.parametrize(
@@ -756,7 +756,7 @@ class TestTorchOps:
             dilation=dilation,
         )
         expected_shape = tuple(torch_conv(test_input).shape)
-        assert ssa.val == None
+        assert ssa.val is None
         assert expected_shape == ssa.shape
 
     @pytest.mark.parametrize(
@@ -912,7 +912,7 @@ class TestTorchOps:
             outputs=[output_name],
         )
         with pytest.raises(ValueError):
-            ssa = self._construct_test_graph(
+            self._construct_test_graph(
                 context,
                 ops.adaptive_avg_pool2d,
                 adaptive_avg_pool2d_node,
@@ -946,7 +946,7 @@ class TestTorchOps:
         ssa = self._construct_test_graph(
             context, ops.batch_norm, batch_norm_node, output_name, constants=constants
         )
-        assert ssa.val == None
+        assert ssa.val is None
         assert ssa.shape == tuple(test_input.shape)
 
     @pytest.mark.parametrize("input_shape", [(1, 3, 15, 15), (1, 1, 1, 1)])
@@ -974,7 +974,7 @@ class TestTorchOps:
         ssa = self._construct_test_graph(
             context, ops.instance_norm, instant_norm_node, output_name, constants=constants
         )
-        assert ssa.val == None
+        assert ssa.val is None
         assert ssa.shape == tuple(test_input.shape)
 
     @pytest.mark.parametrize("axis", [1, 2, 3])
@@ -1077,7 +1077,7 @@ class TestTorchOps:
             kind="item", inputs=input_list, outputs=[output_name]
         )
         with pytest.raises(ValueError):
-            ssa = self._construct_test_graph(
+            self._construct_test_graph(
                 context, ops.item, item_node, output_name, constants=constants,
             )
 
@@ -1114,7 +1114,7 @@ class TestTorchOps:
             graph_inputs=graph_inputs,
             constants=constants,
         )
-        assert ssa.val == None
+        assert ssa.val is None
         assert ssa.shape == input_shape
 
     @pytest.mark.parametrize("shape", [(1, 2), (2, 3, 4, 5), (3, 4, 5),])
@@ -1741,7 +1741,7 @@ class TestTorchOps:
         node = InternalTorchIRNode(
             kind="sort", inputs=input_list, outputs=["out1", "out2"],
         )
-        ssa = self._construct_test_graph(context, ops.sort, node, constants=constants)
+        self._construct_test_graph(context, ops.sort, node, constants=constants)
         expected_sort, expected_index = torch.sort(
             test_input, dim=dim, descending=descending
         )
@@ -1810,7 +1810,7 @@ class TestTorchOps:
         topk_node = InternalTorchIRNode(
             kind="topk", inputs=input_list, outputs=["out1", "out2"]
         )
-        ssa = self._construct_test_graph(
+        self._construct_test_graph(
             context, ops.topk, topk_node, constants=constants
         )
         topk_result = context["out1"].val

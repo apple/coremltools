@@ -24,16 +24,21 @@ class const_elimination(AbstractGraphPass):
     #   %4 = other_op(%2_const, %3)
     #
     """
+    def __init__(self):
+        self.ops_to_skip = set()
 
-    def _const_elimination_block(self, block, ops_to_ignore):
+    def set_ops_to_skip(self, prog):
+        pass
+
+    def _const_elimination_block(self, block):
         # shallow copy hides changes on f.operations during the loop
         for op in list(block.operations):
 
-            if op in ops_to_ignore:
+            if op.op_type == "const" or op in self.ops_to_skip:
                 continue
 
             for b in op.blocks:
-                self._const_elimination_block(b, ops_to_ignore)
+                self._const_elimination_block(b)
 
             all_outputs_are_const = True
             for i, o in enumerate(op.outputs):
@@ -57,28 +62,8 @@ class const_elimination(AbstractGraphPass):
             if all_outputs_are_const:
                 op.remove_from_block()
 
-    def _get_ops_to_ignore(self, prog):
-        """
-        utility function to get the ops which cannot be removed in the const elimination pass, which is all the const ops.
-        """
-        ops_to_ignore = set()
-
-        def _get_ops_to_ignore_block(block):
-
-            for op in list(block.operations):
-
-                for b in op.blocks:
-                    _get_ops_to_ignore_block(b)
-
-                if op.op_type == "const":
-                    ops_to_ignore.add(op)
-
-        for f in prog.functions.values():
-            _get_ops_to_ignore_block(f)
-
-        return ops_to_ignore
 
     def apply(self, prog):
-        ops_to_ignore = self._get_ops_to_ignore(prog)
+        self.set_ops_to_skip(prog)
         for f in prog.functions.values():
-            self._const_elimination_block(f, ops_to_ignore)
+            self._const_elimination_block(f)

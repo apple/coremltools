@@ -10,6 +10,8 @@ from coremltools.converters.mil.frontend.tensorflow.convert_utils import convert
 from coremltools.converters.mil.frontend.tensorflow.ops import (
     _transpose_NHWC_to_NCHW,
     _transpose_NCHW_to_NHWC,
+    _transpose_NDHWC_to_NCDHW,
+    _transpose_NCDHW_to_NDHWC
 )
 from coremltools.converters.mil.frontend.tensorflow.tf_op_registry import register_tf_op
 from coremltools.converters.mil.mil.types import builtin_to_string
@@ -69,11 +71,15 @@ def FusedBatchNormV3(context, node):
 
     if data_format == "NHWC":
         x = _transpose_NHWC_to_NCHW(x)
+    elif data_format == "NDHWC":
+        x = _transpose_NDHWC_to_NCDHW(x)
 
     x = _add_batch_norm(x, mean, variance, scale, offset, epsilon, batch_norm_name)
 
     if data_format == "NHWC":
         x = _transpose_NCHW_to_NHWC(x, node.name)
+    elif data_format == "NDHWC":
+        x = _transpose_NCDHW_to_NDHWC(x, node.name)
 
     # Inference only batch norm does not have meaningful outputs for
     # batch_mean, batch_variance etc.

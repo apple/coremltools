@@ -3,11 +3,12 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import coremltools as ct
-from coremltools._deps import _HAS_TORCH, MSG_TORCH_NOT_FOUND
 import numpy as _np
 import PIL.Image
 import pytest
+
+import coremltools as ct
+from coremltools._deps import _HAS_TORCH, MSG_TORCH_NOT_FOUND
 
 if _HAS_TORCH:
     import torch
@@ -18,6 +19,7 @@ if _HAS_TORCH:
             super(TestConvModule, self).__init__()
             self.conv = torch.nn.Conv2d(in_channels, out_channels,
                                         kernel_size)
+
         def forward(self, x):
             return self.conv(x)
 
@@ -141,8 +143,3 @@ class TestFlexibleInputShapes:
         assert spec.description.input[0].type.imageType.enumeratedSizes.sizes[0].width == 25
         assert spec.description.input[0].type.imageType.enumeratedSizes.sizes[0].height == 25
         _assert_torch_coreml_output_shapes(model, spec, traced_model, example_input, is_image_input=True)
-
-
-
-
-

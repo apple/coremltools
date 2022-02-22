@@ -3,12 +3,13 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import collections
+import itertools
+
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil import Function
-import re
-import collections
-import itertools
+
 
 def _gen_new_name(seen_names, curr_name):
     if curr_name not in seen_names:
@@ -55,10 +56,11 @@ def _ensure_unique_var_names(v_set):
     """
     names = [v.name for v in v_set]
     dup_names = [name for name, count in \
-            collections.Counter(names).items() if count > 1]
+                 collections.Counter(names).items() if count > 1]
     if len(dup_names) > 0:
         raise ValueError('Var names {} is used both as '.format(dup_names) +\
                 'function\'s input and output')
+
 
 @register_pass(namespace="common")
 class dedup_op_and_var_names(AbstractGraphPass):
@@ -69,7 +71,7 @@ class dedup_op_and_var_names(AbstractGraphPass):
     variable names are tracked separately, so an op may have the same name as
     a variable.
 
-	The pass preserves input and output name. Raises ValueError if we cannot
+    The pass preserves input and output name. Raises ValueError if we cannot
     dedup without changing the input/output var names.
 
     func main(%input):
