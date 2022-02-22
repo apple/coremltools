@@ -3,14 +3,11 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-
-import logging as _logging
 import os.path as _os_path
 import torch as _torch
 
 from .converter import TorchConverter, torch_to_mil_types
 from coremltools.converters.mil.input_types import InputType, TensorType
-from coremltools.converters.mil.mil import Program, types
 
 
 def load(model_spec, debug=False, **kwargs):
@@ -95,4 +92,3 @@ def _perform_torch_convert(converter, debug):
         raise e
 
     return prog
-

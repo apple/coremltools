@@ -108,6 +108,12 @@ StorageWriter::StorageWriter(const std::string& filePath, bool truncateFile)
 {}
 
 template <>
+uint64_t StorageWriter::WriteData<int8_t>(Util::Span<const int8_t> data)
+{
+    return m_impl->WriteData(data);
+}
+
+template <>
 uint64_t StorageWriter::WriteData<uint8_t>(Util::Span<const uint8_t> data)
 {
     return m_impl->WriteData(data);

@@ -21,12 +21,11 @@ six
 sympy > 1.6
 tensorflow==1.14.0; python_version < '3.8'
 torch==1.5.0; python_version == '3.5'
-torch==1.9.1; python_version > '3.5'
+torch==1.10.2; python_version > '3.5'
 torchvision==0.6.1; python_version == '3.5'
-torchvision==0.10.1; python_version > '3.5'
+torchvision==0.11.3; python_version > '3.5'
 xgboost==1.4.2
 mock
 wrapt
-pyyaml > 5.3
 tqdm
 pytest-timeout

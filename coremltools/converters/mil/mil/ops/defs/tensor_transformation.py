@@ -486,7 +486,7 @@ class slice_by_index(Operation):
     With a tensor ``x``, this method achieves the following:
     
     ``result = x[begin[0]: end[0]: stride[0], begin[1]: end[1]: stride[1], ...]``
-    
+
     Note: This method does not support pure indexing. You would need to do a 
     squeeze if indexing is intended.
 
@@ -571,7 +571,6 @@ class slice_by_index(Operation):
     def value_inference(self):
         if self.x.sym_val is None or self.begin.val is None or self.end.val is None:
             return None
-        x_shape = self.x.shape
         begin = [int(i) for i in list(self.begin.val[:])]
         end = [int(i) for i in list(self.end.val[:])]
         stride = [1] * self.x.rank if self.stride is None else self.stride.val
@@ -816,8 +815,7 @@ class squeeze(Operation):
             for i in sorted(axes)[::-1]:  # descending order
                 if len(squeezed_shape) <= i:
                     raise ValueError(
-                        "Cannot squeeze dim {} for shape"
-                        + " {}".format(i, squeezed_shape)
+                        "Cannot squeeze dim {} for shape {}".format(i, squeezed_shape)
                     )
                 squeezed_shape.pop(i)
 
@@ -828,7 +826,7 @@ class squeeze(Operation):
         if self.x.val is None:
             return None
         if self.axes is None:
-            val =  np.squeeze(self.x.val)
+            val = np.squeeze(self.x.val)
         else:
             val = np.squeeze(self.x.val, axis=tuple(self.axes.val))
         return val if val.shape != () else self.x.val[0]

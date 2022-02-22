@@ -723,13 +723,13 @@ class TestInputs:
 
         mlmodel = ct.convert(prog)
 
-        expected_err_str = "Provided key \"x/0\", in the input dict, " \
-                           "does not match to any of the model input name\(s\), which are: .*"
-        with pytest.raises(KeyError, match=expected_err_str):
-            prediction = mlmodel.predict(
+        with pytest.raises(KeyError) as error_info:
+            mlmodel.predict(
                 {"x/0": np.random.rand(2, 3).astype(np.float32),
                  "y": np.random.rand(2, 3).astype(np.float32)}
             )
+        error_str = str(error_info.value)
+        assert "does not match any of the model input" in error_str
 
 class TestFlexibleShape:
     @staticmethod

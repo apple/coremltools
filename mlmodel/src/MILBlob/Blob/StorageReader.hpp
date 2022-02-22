@@ -55,15 +55,23 @@ public:
 
     /**
      * Returns file offset of data from given metadata offset
-     * @throws std::range_error if offset is not valid.
+     * @throws std::range_error if metadataOffset is not valid.
      */
-    uint64_t GetDataOffset(uint64_t offset) const;
+    uint64_t GetDataOffset(uint64_t metadataOffset) const;
+
+    /**
+     * Returns the size of the data blob for the given metadata offset
+     * @throws std::range_error if metadataOffset is not valid.
+     */
+    uint64_t GetDataSize(uint64_t metadataOffset) const;
 
 private:
     class Impl;
     const std::unique_ptr<Impl> m_impl;
 };
 
+template <>
+Util::Span<const int8_t> StorageReader::GetDataView<int8_t>(uint64_t) const;
 template <>
 Util::Span<const uint8_t> StorageReader::GetDataView<uint8_t>(uint64_t) const;
 template <>

@@ -90,10 +90,9 @@ int testStorageIntegrationTestsReadDataWithIncorrectOffset()
     AutoDeleteTempFile tempfile;
 
     const std::vector<uint8_t> data = {0x02, 0x00, 0x40, 0x00, 0x07};
-    uint64_t offset;
     {
         StorageWriter writer(tempfile.GetFilename());
-        offset = writer.WriteData(Util::MakeSpan(data));
+        writer.WriteData(Util::MakeSpan(data));
     }
 
     StorageReader reader(tempfile.GetFilename());

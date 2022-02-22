@@ -17,7 +17,9 @@ import pytest
 from .reduce_transposes import _find_transpose_compliment
 import unittest
 
+
 np.random.seed(1984)
+
 
 class TransposeOptimizationPass(unittest.TestCase):
     """"""

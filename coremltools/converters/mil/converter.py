@@ -2,6 +2,13 @@
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
+
+import os as _os
+import shutil as _shutil
+import stat as _stat
+import tempfile as _tempfile
+import warnings as _warnings
+
 from . import InputType, ImageType
 from .mil.passes.apply_common_pass_pipeline import apply_common_pass_pipeline
 from coremltools.converters._profile_utils import _profile
@@ -9,19 +16,13 @@ from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil.passes.quantization_passes import AbstractQuantizationPass
 from coremltools.converters.mil.mil.types.symbolic import k_used_symbols, k_num_internal_syms
 from coremltools.models import MLModel
-from coremltools.models.model import _MODEL_FILE_NAME, _WEIGHTS_DIR_NAME
+from coremltools.models.model import _create_mlpackage
 from coremltools.models.utils import _MLMODEL_EXTENSION, _MLPACKAGE_EXTENSION
 
 try:
     from coremltools.libmodelpackage import ModelPackage
 except ModuleNotFoundError:
     pass
-
-import os as _os
-import shutil as _shutil
-import stat as _stat
-import tempfile as _tempfile
-import warnings as _warnings
 
 
 class ConverterRegistry:
@@ -220,35 +221,7 @@ def _mil_convert(
         return mil_program # mil program
 
     elif convert_to == 'mlprogram':
-        # Save proto to disk
-        proto_spec_str = proto.SerializeToString()
-        spec_file = _tempfile.NamedTemporaryFile(suffix=_MLMODEL_EXTENSION)
-        spec_file.write(proto_spec_str)
-        spec_file.flush()
-
-        # To make sure everyone can read this file
-        _os.chmod(spec_file.name, _stat.S_IRUSR | _stat.S_IWUSR | _stat.S_IRGRP | _stat.S_IROTH)
-
-        # If package directory is already provided, use that
-        package_path = kwargs.get("package_dir")
-        if not package_path:
-            package_path = _tempfile.mkdtemp(suffix=_MLPACKAGE_EXTENSION)
-
-        if _os.path.exists(package_path):
-            _shutil.rmtree(package_path)
-
-        package = ModelPackage(package_path)
-
-        # Root model file is copied into the model package.
-        package.setRootModel(spec_file.name, _MODEL_FILE_NAME, "com.apple.CoreML", "CoreML Model Specification");
-        spec_file.close() # clean up spec file now that it is part of the model package
-
-        # Weights bundle is copied into the model package. Changes to in-memory JSON is commited to disk when package goes out of scope.
-        package.addItem(weights_dir, _WEIGHTS_DIR_NAME, "com.apple.CoreML", "CoreML Model Weights")
-        _shutil.rmtree(weights_dir) # clean up weights now that it is part of the model package
-
-        package = None
-
+        package_path = _create_mlpackage(proto, weights_dir, kwargs.get("package_dir"))
         return modelClass(package_path,
                           is_temp_package=not kwargs.get('package_dir'),
                           mil_program=mil_program,

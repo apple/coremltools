@@ -1,6 +1,15 @@
+# Copyright (c) 2021, Apple Inc. All rights reserved.
+#
+# Use of this source code is governed by a BSD-3-clause license that can be
+# found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
+
 from enum import Enum
-from coremltools import _SPECIFICATION_VERSION_IOS_13, _SPECIFICATION_VERSION_IOS_14, \
-                        _SPECIFICATION_VERSION_IOS_15
+
+from coremltools import (
+    _SPECIFICATION_VERSION_IOS_13,
+    _SPECIFICATION_VERSION_IOS_14,
+    _SPECIFICATION_VERSION_IOS_15
+)
 
 
 class AvailableTarget(Enum):
@@ -15,7 +24,7 @@ class AvailableTarget(Enum):
     macOS10_15 = _SPECIFICATION_VERSION_IOS_13
     macOS10_16 = _SPECIFICATION_VERSION_IOS_14
     macOS11 = _SPECIFICATION_VERSION_IOS_14
-    macOS12 = _SPECIFICATION_VERSION_IOS_14
+    macOS12 = _SPECIFICATION_VERSION_IOS_15
 
     # watchOS versions (aliases of iOS versions)
     watchOS6 = _SPECIFICATION_VERSION_IOS_13

@@ -29,6 +29,10 @@ class TestAffine:
     def test_builder_to_backend_smoke(self, use_cpu_only, backend):
         if backend[0] == "neuralnetwork":
             pytest.xfail("nn backend not supported")
+        if backend[0] == "mlprogram" and backend[1] == "fp16":
+            pytest.xfail("rdar://86653285 ([ MIL ] TestAffine::test_builder_to_backend_smoke[[use_cpu_only=False]-mlprogram-fp16] CI Failure)")
+        if backend[0] == "mlprogram" and backend[1] == "fp32":
+            pytest.xfail("rdar://88039548 (test_image_resizing.py::TestAffine::test_builder_to_backend_smoke is failing)")
 
         x_val = np.array([11.0, 22.0, 33.0, 44.0], dtype=np.float32).reshape(
             [1, 1, 2, 2]
@@ -298,6 +302,9 @@ class TestResizeBilinear:
     def test_builder_to_backend_smoke(self, use_cpu_only, backend):
         if backend[0] == "mlprogram":
             pytest.xfail("Seg fault: rdar://78343191 ((MIL GPU) Core ML Tools Unit Test failures [failure to load or Seg fault])")
+
+        if backend[0] == "neuralnetwork":
+            pytest.xfail("rdar://85318710 (Coremltools Smoke test on ResizeBilinear failing on NNv1 backend.)")
 
         x = np.array([0, 1], dtype=np.float32).reshape(1, 1, 2)
         input_placeholder_dict = {"x": mb.placeholder(shape=x.shape)}

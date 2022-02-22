@@ -40,7 +40,7 @@ from coremltools.converters.mil.mil.operation import (
 )
 
 from ._op_reqs import register_op
-from ._utils import promoted_primitive_type
+from ._utils import promoted_primitive_type, MAX_SIZE_CONSTANT_FOLDING
 
 
 @register_op(doc_str="")
@@ -561,7 +561,12 @@ class range_1d(Operation):
         start = self.start.val
         end = self.end.val
         step = self.step.val
-        return np.arange(start, end, step).astype(np.int32)
+        shape = (end - start) / step
+        # To prevent from creating constant greater then 1MB,
+        # a upper bound of the size of the resulting array is set.
+        if shape > MAX_SIZE_CONSTANT_FOLDING:
+            return None
+        return np.arange(start, end, step)
 
     def type_inference(self):
         start = self.start.sym_val

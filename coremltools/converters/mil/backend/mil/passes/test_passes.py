@@ -405,10 +405,10 @@ class TestImagePreprocessingPass:
             return z
 
         prog.main_input_types = (ct.ImageType(name='x',
-                                             shape=[1, 1, 20, 20],
-                                             bias=2.0,
-                                             color_layout="G",
-                                             channel_first=True),)
+                                              shape=[1, 1, 20, 20],
+                                              bias=2.0,
+                                              color_layout="G",
+                                              channel_first=True),)
 
         prev_prog, prev_block, block = apply_pass_and_basic_check(
             prog, "mil_backend::insert_image_preprocessing_ops"
@@ -714,6 +714,58 @@ class TestSanitizerPass:
         assert block.find_ops(op_type="relu")[0].name == "var_1_"
         assert block.find_ops(op_type="relu")[1].name == "op_1"
         assert block.find_ops(op_type="add")[0].name == "op_3"
+
+    def test_sanitize_var_names_with_two_functions(self):
+        """
+        Input:
+            main(%x: (1, 3, 20, fp32)(Tensor)) {
+              block0() {
+                %var_1!: (1, 3, 20, fp32)(Tensor) = relu(x=%x, name="var_1!")
+              } -> (%var_1!)
+            }
+
+            main_2(%x: (1, 3, 20, fp32)(Tensor)) {
+              block0() {
+                %var_1!: (1, 3, 20, fp32)(Tensor) = relu(x=%x, name="var_1!")
+              } -> (%var_1!)
+            }
+
+
+        Output:
+            main(%x: (1, 3, 20, fp32)(Tensor)) {
+              block0() {
+                %var_1!: (1, 3, 20, fp32)(Tensor) = relu(x=%x, name="var_1_")
+              } -> (%var_1_)
+            }
+
+            main_2(%x: (1, 3, 20, fp32)(Tensor)) {
+              block0() {
+                %var_1!: (1, 3, 20, fp32)(Tensor) = relu(x=%x, name="var_1_")
+              } -> (%var_1_)
+            }
+
+        """
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(1, 3, 20))])
+        def prog(x):
+            z = mb.relu(x=x, name = "var_1!")
+            return z
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(1, 3, 20))])
+        def prog_2(x):
+            z = mb.relu(x=x, name = "var_1!")
+            return z
+
+        prog.add_function("main_2", prog_2.functions["main"])
+        PASS_REGISTRY["mil_backend::sanitize_name_strings"](prog)
+        block = prog.functions["main"]
+        assert block.find_ops(op_type="relu")[0].outputs[0].name == "var_1_"
+        assert prog["main"].outputs[0].name == "var_1_"
+        assert block.find_ops(op_type="relu")[0].name == "var_1_"
+        block = prog.functions["main_2"]
+        assert block.find_ops(op_type="relu")[0].outputs[0].name == "var_1_"
+        assert prog["main"].outputs[0].name == "var_1_"
+        assert block.find_ops(op_type="relu")[0].name == "var_1_"
 
 
 class TestPassFuseActivationSiLU:

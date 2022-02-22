@@ -1,16 +1,14 @@
-# -*- coding: utf-8 -*-
-
 #  Copyright (c) 2021, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from coremltools.converters.mil.mil import Builder as mb
-from coremltools.converters.mil.mil import types as types
+import warnings as _warnings
+
+from coremltools.converters.mil.mil import Builder as mb, types as types
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 
-import warnings as _warnings
 
 @register_pass(namespace="mil_backend")
 class adjust_io_to_supported_types(AbstractGraphPass):
@@ -164,13 +162,11 @@ def _adjust_var(var):
 
 def _adjust_func_inputs(func):
     for input_name, input_var in func.inputs.items():
-       _adjust_var(input_var)
-
+        _adjust_var(input_var)
 
 def _adjust_block_inputs(block):
     for input_var in block.inputs:
-       _adjust_var(input_var)
-
+        _adjust_var(input_var)
 
 def _adjust_ops(block):
     len_block = len(block.operations)

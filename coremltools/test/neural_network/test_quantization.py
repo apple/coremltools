@@ -169,6 +169,7 @@ class QuantizationNumericalCorrectnessTests(unittest.TestCase):
         self.keras_tester.test_large_input_length_conv1d_same_random()
 
     def test_quantized_conv_dense(self):
+        pytest.xfail(reason="rdar://87349588 ([Rome gitlab CI] Re-enable time out tests)")
         self.keras_tester.test_conv_dense()
 
     def test_quantized_tiny_conv_crop_1d_random(self):

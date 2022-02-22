@@ -4,16 +4,13 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import numpy as np
-import pytest
 
-from coremltools._deps import _IS_MACOS
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.testing_utils import (
     assert_model_is_valid,
     get_op_types_in_program,
     apply_pass_and_basic_check,
 )
-from coremltools.converters.mil.testing_reqs import ct
 
 
 np.random.seed(1984)

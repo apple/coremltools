@@ -8,13 +8,11 @@ import pytest
 import torch
 import torch.nn as nn
 
-from coremltools import TensorType, RangeDim
-import coremltools.models.utils as coremltoolsutils
 from ..converter import torch_to_mil_types
-from coremltools.models import MLModel
-from coremltools._deps import _IS_MACOS, _HAS_TORCH
+from coremltools import TensorType, RangeDim
+from coremltools._deps import _IS_MACOS
+import coremltools.models.utils as coremltoolsutils
 from coremltools.converters.mil.mil.types.type_mapping import nptype_from_builtin
-from coremltools.converters.mil.testing_reqs import ct
 from coremltools.converters.mil.testing_utils import ct_convert
 
 
@@ -44,6 +42,7 @@ def _flatten(object):
             flattened_list.append(item)
     return flattened_list
 
+
 def _copy_input_data(input_data):
     if isinstance(input_data, (list, tuple)):
         return [_copy_input_data(x) for x in input_data]
@@ -55,7 +54,8 @@ def contains_op(torch, op_string):
 
 
 def convert_to_coreml_inputs(input_description, inputs):
-    """Convenience function to combine a CoreML model's input description and
+    """
+    Convenience function to combine a CoreML model's input description and
     set of raw inputs into the format expected by the model's predict function.
     """
     flattened_inputs = _flatten(inputs)
@@ -70,8 +70,8 @@ def convert_to_coreml_inputs(input_description, inputs):
     return coreml_inputs
 
 
-def convert_to_mlmodel(model_spec, tensor_inputs, backend=("neuralnetwork", "fp32"), converter_input_type=None,
-                       use_cpu_for_conversion=False):
+def convert_to_mlmodel(model_spec, tensor_inputs, backend=("neuralnetwork", "fp32"),
+                       converter_input_type=None,use_cpu_for_conversion=False):
     def _convert_to_inputtype(inputs):
         if isinstance(inputs, list):
             return [_convert_to_inputtype(x) for x in inputs]
@@ -134,10 +134,10 @@ def flatten_and_detach_torch_results(torch_results):
 
 
 def convert_and_compare(input_data, model_spec,
-        expected_results=None, atol=1e-4,
-        backend=("neuralnetwork", "fp32"),
-        converter_input_type=None,
-        use_cpu_for_conversion=False):
+                        expected_results=None, atol=1e-4,
+                        backend=("neuralnetwork", "fp32"),
+                        converter_input_type=None,
+                        use_cpu_for_conversion=False):
     """
     If expected results is not set, it will by default
     be set to the flattened output of the torch model.
@@ -162,15 +162,16 @@ def convert_and_compare(input_data, model_spec,
         torch_input = _copy_input_data(input_data)
         expected_results = torch_model(*torch_input)
     expected_results = flatten_and_detach_torch_results(expected_results)
-    mlmodel = convert_to_mlmodel(model_spec, input_data, backend=backend, converter_input_type=converter_input_type,
+    mlmodel = convert_to_mlmodel(model_spec, input_data, backend=backend,
+                                 converter_input_type=converter_input_type,
                                  use_cpu_for_conversion=use_cpu_for_conversion)
-    coreml_inputs = convert_to_coreml_inputs(mlmodel.input_description,
-                                             input_data)
+
+    coreml_inputs = convert_to_coreml_inputs(mlmodel.input_description, input_data)
 
     if not _IS_MACOS or (mlmodel.is_package and coremltoolsutils._macos_version() < (12, 0)):
         return model_spec, mlmodel, coreml_inputs, None
 
-    _ , dtype = backend
+    _, dtype = backend
     if dtype == "fp16":
         atol = max(atol * 100.0, 5e-1)
 
@@ -180,18 +181,19 @@ def convert_and_compare(input_data, model_spec,
             coreml_results[key] for key in sorted(coreml_results.keys())
         ]
         for torch_result, coreml_result in zip(expected_results,
-                                                   sorted_coreml_results):
+                                               sorted_coreml_results):
             if torch_result.shape == ():
                 torch_result = np.array([torch_result])
             np.testing.assert_equal(coreml_result.shape, torch_result.shape)
             np.testing.assert_allclose(coreml_result, torch_result,
-                                           atol=atol)
+                                       atol=atol)
     return model_spec, mlmodel, coreml_inputs, coreml_results
 
 
 class TorchBaseTest(object):
-    testclassname=''
-    testmodelname=''
+    testclassname = ''
+    testmodelname = ''
+
     @pytest.fixture(autouse=True)
     def store_testname_with_args(self, request):
         TorchBaseTest.testclassname = type(self).__name__
@@ -213,7 +215,8 @@ class TorchBaseTest(object):
         Args:
             input_as_shape <bool>: If true generates random input data with shape.
             expected_results <iterable, optional>: Expected result from running pytorch model.
-            converter_input_type: If not None, then pass it to the "inputs" argument to the ct.convert() call.
+            converter_input_type: If not None, then pass it to the "inputs" argument to the 
+                ct.convert() call.
         """
         model.eval()
         if input_as_shape:
@@ -226,11 +229,11 @@ class TorchBaseTest(object):
 
         model_spec, mlmodel, coreml_inputs, coreml_results = \
             convert_and_compare(
-            input_data, model_spec, expected_results=expected_results,
-            atol=10.0 ** -places, backend=backend,
-            converter_input_type=converter_input_type,
-            use_cpu_for_conversion=use_cpu_for_conversion,
-        )
+                input_data, model_spec, expected_results=expected_results,
+                atol=10.0 ** -places, backend=backend,
+                converter_input_type=converter_input_type,
+                use_cpu_for_conversion=use_cpu_for_conversion,
+            )
 
         return model_spec, mlmodel, coreml_inputs, coreml_results, \
-               TorchBaseTest.testclassname, TorchBaseTest.testmodelname
+            TorchBaseTest.testclassname, TorchBaseTest.testmodelname

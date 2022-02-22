@@ -273,7 +273,7 @@ class ConcatToPixelShuffleTests(unittest.TestCase):
         )
         self.assertEqual(get_op_types_in_program(prog), ["concat", "concat", "concat"])
 
-    def test_failure_5(self):
+    def test_failure_6(self):
         """
         The inputs are the wrong rank, so the pattern won't match.
         """
@@ -294,7 +294,7 @@ class ConcatToPixelShuffleTests(unittest.TestCase):
         )
         self.assertEqual(get_op_types_in_program(prog), ["concat", "concat", "concat"])
 
-    def test_failure_6(self):
+    def test_failure_7(self):
         """ 
         Extra input to the w_concats means the pattern won't match.
         """

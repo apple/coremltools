@@ -236,7 +236,6 @@ class TestCustomTopK:
 
         _TF_OPS_REGISTRY["TopKV2"] = default_tf_topk
 
-
     @pytest.mark.skipif(not testing_reqs._HAS_TF_1, reason=MSG_TF1_NOT_FOUND)
     @pytest.mark.parametrize(
         "use_cpu_only, backend, rank, k",
@@ -267,5 +266,5 @@ class TestCustomTopK:
                 k == layers[-1].custom.parameters["k"].intValue
             ), "Incorrect parameter value k"
             assert (
-                True == layers[-1].custom.parameters["sorted"].boolValue
+                layers[-1].custom.parameters["sorted"].boolValue is True
             ), "Incorrect parameter value for Sorted"

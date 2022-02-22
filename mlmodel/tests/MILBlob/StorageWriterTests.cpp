@@ -109,6 +109,22 @@ int testStorageWriterTestsSupportedTypes()
         ML_ASSERT(IsCorrectData<float>(filePath, offset, expectedSpan));
     }
 
+    // Writing int8 values
+    {
+        const std::vector<int8_t> val = {1, -1, 10, -25};
+        auto expectedSpan = Util::MakeSpan(val);
+        uint64_t offset = 0;
+        {
+            StorageWriter writer(tempfile.GetFilename(), /* truncateFile */ false);
+            offset = writer.WriteData(expectedSpan);
+        }
+
+        ML_ASSERT_EQ(offset % DefaultStorageAlignment, uint64_t(0));
+        ML_ASSERT(IsCorrectHeader(filePath, 4 /*count*/));
+        ML_ASSERT(IsCorrectMetadata<int8_t>(filePath, offset, 4, BlobDataType::Int8));
+        ML_ASSERT(IsCorrectData<int8_t>(filePath, offset, expectedSpan));
+    }
+
     return 0;
 }
 

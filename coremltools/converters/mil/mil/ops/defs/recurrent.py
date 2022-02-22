@@ -114,7 +114,7 @@ class gru(Operation):
             output_sequence=False,
             recurrent_activation="sigmoid",
             activation="tanh",
-            )
+        )
 
     def __init__(self, **kwargs):
         super(gru, self).__init__(**kwargs)
@@ -159,7 +159,7 @@ class gru(Operation):
                 "Incorrect weight matrix: hidden dim size mismatch. \
                 Provided weight_ih {}, weight_hh {}. Expecting <b, 3*H>").format(
                     self.weight_ih.shape, self.weight_hh.shape
-                )
+            )
 
         out_seq_len = sequence_length if self.output_sequence.val else 1
         output_shape = [out_seq_len, batch_size, hidden_size]
@@ -364,13 +364,12 @@ class lstm(Operation):
                     )
 
             hidden_size = wt_hh.shape[1]
-            input_size = wt_ih.shape[1]
             if wt_hh.shape[0] // hidden_size != 4 or wt_ih.shape[0] // hidden_size != 4:
                 raise ValueError(
                     "Incorrect weight matrix: hidden dim size mismatch. \
                                 Provided weight_ih {}, weight_hh {}. Expecting <4*H, H>").format(
                                     wt_ih.shape, wt_hh.shape
-                                )
+                )
 
         direction = self.direction.val
         valid_directions = {"forward", "reverse", "bidirectional"}
@@ -378,7 +377,7 @@ class lstm(Operation):
             raise ValueError(
                 "Direction {} not supported. Supported directions: {}").format(
                     direction, valid_directions
-                )
+            )
 
         weight_shape_check(self.weight_ih, self.weight_hh)
         if direction == "bidirectional":

@@ -3,17 +3,18 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import itertools
+import numpy as np
+import pytest
+
+from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.testing_utils import (
     assert_model_is_valid,
     get_op_types_in_program,
     apply_pass_and_basic_check,
 )
-from coremltools.converters.mil import testing_reqs
 
-import pytest
-import numpy as np
-import itertools
 
 np.random.seed(1984)
 
@@ -28,15 +29,15 @@ def _apply_transform(inputs, func, is_first_input, has_bias):
 
         if has_bias:
             linear = mb.linear(
-                    x=x,
-                    weight=inputs["linear_weight"],
-                    bias=inputs["linear_bias"],
-                )
+                x=x,
+                weight=inputs["linear_weight"],
+                bias=inputs["linear_bias"],
+            )
         else:
             linear = mb.linear(
-                    x=x,
-                    weight=inputs["linear_weight"],
-                )
+                x=x,
+                weight=inputs["linear_weight"],
+            )
 
         if is_first_input:
             kwargs = {
@@ -121,7 +122,6 @@ class TestLinearBiasOptimizationPasses:
         np.testing.assert_almost_equal(new_weight, expected_weight)
         np.testing.assert_almost_equal(new_bias, expected_bias)
 
-
     @pytest.mark.parametrize(
         "rank, op_type, is_first_input, broadcast, backend",
         itertools.product(
@@ -156,10 +156,10 @@ class TestLinearBiasOptimizationPasses:
                     bias = np.reshape(bias, (1, 2))
 
             x = mb.linear(
-                    x=x,
-                    weight=linear_weight,
-                    bias=linear_bias,
-                )
+                x=x,
+                weight=linear_weight,
+                bias=linear_bias,
+            )
 
             func = mb.add if op_type == "add" else mb.sub
             if is_first_input:
@@ -183,9 +183,6 @@ class TestLinearBiasOptimizationPasses:
         assert get_op_types_in_program(prog) == ["linear"]
 
         # validate graph pass
-        input_dict = {
-            "x": np.random.rand(*input_shape),
-        }
         output_shape = [1, 2, 2]
         output_shape = tuple(output_shape[-rank:])
         assert_model_is_valid(

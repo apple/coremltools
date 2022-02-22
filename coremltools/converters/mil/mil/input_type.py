@@ -26,7 +26,8 @@ SUPPORT_FLOAT_TYPES = [
                         types.fp64,
                     ]
 
-class DefaultInputs(object):
+
+class DefaultInputs:
     def __init__(self, **kwargs):
         # Since python 3.6, kwargs preserves the input order. See
         # https://docs.python.org/3/whatsnew/3.6.html#whatsnew36-pep468
@@ -44,7 +45,8 @@ class DefaultInputs(object):
             self._ordered_dict[k] = v
         return self
 
-class InputSpec(object):
+
+class InputSpec:
     def __init__(self, **kwargs):
         # Since python 3.6, kwargs preserves the input order. See
         # https://docs.python.org/3/whatsnew/3.6.html#whatsnew36-pep468
@@ -124,7 +126,7 @@ class InputSpec(object):
 
 
 
-class _InputType(object):
+class _InputType:
     """
     (Untyped) input containing fundamental properties of all inputs to an
     Operation:
@@ -179,6 +181,7 @@ class _InputType(object):
         """Descriptive string describing expected mil types"""
         return self.__str__(self)
 
+
 class ListInputType(_InputType):
     def __init__(self, **kwargs):
         super(ListInputType, self).__init__(**kwargs)
@@ -189,6 +192,7 @@ class ListInputType(_InputType):
     @property
     def type_str(self):
         return 'list'
+
 
 class ScalarOrTensorInputType(_InputType):
     def __init__(self, **kwargs):
@@ -412,6 +416,7 @@ class TupleInputType(_InputType):
     @property
     def type_str(self):
         return 'tuple'
+
 
 class InternalInputType(_InputType):
     """

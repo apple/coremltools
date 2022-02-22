@@ -64,7 +64,20 @@ class linear(Operation):
         x_shape = self.x.shape
         weight_shape = self.weight.shape
         assert len(weight_shape) == 2
-
+        if not (
+                x_shape[-1] == weight_shape[-1]
+                or is_symbolic(x_shape[-1])
+                or is_symbolic(weight_shape[-1])
+        ):
+            msg = "Op '{}' (linear op): Size of the last dimension of x, which is {}, " \
+                  "does not match the last dimension of weights, which is {}"
+            raise ValueError(msg.format(self.name, x_shape[-1], weight_shape[-1]))
+        if self.bias is not None:
+            assert len(self.bias.shape) == 1
+            if len(self.bias.val) != weight_shape[-2]:
+                msg = "Op '{}' (linear op): Size of the bias, which is {}, " \
+                      "does not match the first dimension of weights, which is {}"
+                raise ValueError(msg.format(self.name, len(self.bias.val), weight_shape[-2]))
         shape = list(x_shape)
         shape[-1] = weight_shape[0]
         return types.tensor(x_type, tuple(shape))

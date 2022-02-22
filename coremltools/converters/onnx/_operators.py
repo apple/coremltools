@@ -1125,7 +1125,7 @@ def _convert_concat(
                 builder,
                 node,
                 graph,
-                "Unsupported axis {} in input of shape".format(
+                "Unsupported axis {} in input of shape {}".format(
                     axis, str(first_input_shape)
                 ),
             )

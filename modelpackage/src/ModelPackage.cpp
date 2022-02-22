@@ -149,6 +149,8 @@ private:
     
     std::unique_ptr<JsonMap> m_manifest;
     
+    bool m_readOnly;
+    
     void validate();
     
     std::unique_ptr<JsonMap> getItemInfoEntries() const;
@@ -163,7 +165,7 @@ private:
 
 public:
 
-    ModelPackageImpl(const std::filesystem::path& path, bool createIfNecessary = true);
+    ModelPackageImpl(const std::filesystem::path& path, bool createIfNecessary = true, bool readOnly = false);
     ~ModelPackageImpl();
     
     inline const std::filesystem::path& path() const {
@@ -172,7 +174,7 @@ public:
     
     std::string setRootModel(const std::filesystem::path& path, const std::string& name, const std::string& author, const std::string& description);
     std::string replaceRootModel(const std::filesystem::path& path, const std::string& name, const std::string& author, const std::string& description);
-    ModelPackageItemInfo getRootModel() const;
+    std::shared_ptr<ModelPackageItemInfo> getRootModel() const;
     
     std::string addItem(const std::filesystem::path& path, const std::string& name, const std::string& author, const std::string& description);
     std::shared_ptr<ModelPackageItemInfo> findItem(const std::string& identifier) const;
@@ -187,11 +189,12 @@ public:
 
 #pragma mark ModelPackageImpl
 
-ModelPackageImpl::ModelPackageImpl(const std::filesystem::path& path, bool createIfNecessary)
+ModelPackageImpl::ModelPackageImpl(const std::filesystem::path& path, bool createIfNecessary, bool readOnly)
 : m_packagePath(path),
   m_manifestPath(path / kModelPackageManifestFileName),
   m_packageDataDirPath(path / kModelPackageDataDir),
-  m_manifest(nullptr)
+  m_manifest(nullptr),
+  m_readOnly(readOnly)
 {
     if (std::filesystem::exists(m_packagePath)) {
         if (std::filesystem::exists(m_manifestPath)) {
@@ -227,9 +230,26 @@ ModelPackageImpl::ModelPackageImpl(const std::filesystem::path& path, bool creat
 
 ModelPackageImpl::~ModelPackageImpl()
 {
-    std::ofstream manifestStream(m_manifestPath, std::ios::binary);
-    m_manifest->serialize(manifestStream);
-    manifestStream.close();
+    if (m_readOnly) {
+        return;
+    }
+    
+    std::filesystem::path uniquedDestination(m_manifestPath);
+    std::filesystem::path suffix(generateIdentifier()); // std::filesystem::path from stringified UUID
+    uniquedDestination.replace_extension(suffix); // unique filename in the presumed writable directory where Manifest.json is sited
+    
+    std::ofstream uniquedStream(uniquedDestination, std::ios::binary);
+    m_manifest->serialize(uniquedStream);
+    uniquedStream.close();
+    if (uniquedStream.fail()) { // If any of the above fail do not go on to move uniquedDestination to m_manifestPath.
+        return;
+    }
+    
+    std::error_code ecode;
+    std::filesystem::rename(uniquedDestination, m_manifestPath, ecode); // On failure sets ecode and makes no changes. Does not throw.
+    if (ecode.value()) {
+        std::filesystem::remove(uniquedDestination);
+    }
 }
 
 void ModelPackageImpl::validate()
@@ -426,14 +446,14 @@ std::string ModelPackageImpl::replaceRootModel(const std::filesystem::path& path
     return identifier;
 }
 
-ModelPackageItemInfo ModelPackageImpl::getRootModel() const
+std::shared_ptr<ModelPackageItemInfo> ModelPackageImpl::getRootModel() const
 {
     if (false == m_manifest->hasKey(kModelPackageRootModelKey)) {
         throw std::runtime_error("Failed to look up root model");
     }
     
     auto rootModelIdentifier = m_manifest->getString(kModelPackageRootModelKey);
-    return *(findItem(rootModelIdentifier));
+    return findItem(rootModelIdentifier);
 }
 
 std::shared_ptr<ModelPackageItemInfo> ModelPackageImpl::findItem(const std::string& identifier) const
@@ -513,8 +533,8 @@ bool ModelPackageImpl::isValid(const std::filesystem::path& path)
 
 #pragma mark ModelPackage
 
-ModelPackage::ModelPackage(const std::string& packagePath, bool createIfNecessary)
-: m_modelPackageImpl(std::make_shared<ModelPackageImpl>(packagePath, createIfNecessary))
+ModelPackage::ModelPackage(const std::string& packagePath, bool createIfNecessary, bool readOnly)
+: m_modelPackageImpl(std::make_shared<ModelPackageImpl>(packagePath, createIfNecessary, readOnly))
 {
 }
 
@@ -537,7 +557,7 @@ std::string ModelPackage::replaceRootModel(const std::string& path, const std::s
     return m_modelPackageImpl->replaceRootModel(path, name, author, description);
 }
 
-ModelPackageItemInfo ModelPackage::getRootModel() const
+std::shared_ptr<ModelPackageItemInfo> ModelPackage::getRootModel() const
 {
     return m_modelPackageImpl->getRootModel();
 }

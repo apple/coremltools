@@ -3,6 +3,10 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import pytest
+import numpy as np
+import itertools
+
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.testing_utils import (
     assert_model_is_valid,
@@ -10,10 +14,6 @@ from coremltools.converters.mil.testing_utils import (
     apply_pass_and_basic_check,
 )
 from coremltools.converters.mil import testing_reqs
-
-import pytest
-import numpy as np
-import itertools
 
 np.random.seed(1984)
 
@@ -23,7 +23,7 @@ def _apply_weight_transform(inputs, is_deconv, is_real_div, is_conv_first_input,
     """
     Utility funtion to test the weight transform function in conv scale fusion pass.
     """
-    Cin, Cout, groups = 10, 20, 10
+    Cin, _, groups = 10, 20, 10
     input_shape = (1, Cin, 2, 2)
     @mb.program(input_specs=[mb.TensorSpec(shape=input_shape)])
     def prog(x):

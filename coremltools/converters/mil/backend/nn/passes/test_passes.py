@@ -4,11 +4,15 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import copy
+
 import pytest
+
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
-from coremltools.converters.mil.testing_utils import assert_model_is_valid
-from coremltools.converters.mil.testing_utils import assert_same_output_names
+from coremltools.converters.mil.testing_utils import (
+    assert_model_is_valid,
+    assert_same_output_names
+)
 
 
 def test_commingle_loop_vars():
@@ -61,8 +65,7 @@ def test_handle_return_inputs_as_outputs():
     assert prog["main"].outputs[1].op is not None  # output comes from an op
     assert prog["main"].outputs[1].op.op_type == "identity"
 
-    with pytest.raises(ValueError,
-            match='used both as function\'s input and output'):
+    with pytest.raises(ValueError, match='used both as function\'s input and output'):
         # prog has input and output names 'b' that refer to different vars
         # This program can pass if we disable 'dedup_op_and_var_names' pass
         assert_model_is_valid(prog, {"a": (1, 2), "b": (1, 2)})

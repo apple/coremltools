@@ -2,6 +2,7 @@
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
+
 import numpy as np
 import numbers
 
@@ -17,7 +18,6 @@ from coremltools.converters.mil.mil.input_type import (
 from coremltools.converters.mil.mil.operation import precondition
 from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
 from coremltools.converters.mil.mil.types.symbolic import is_compatible_symbolic_vector, is_symbolic
-
 from coremltools.converters.mil.mil.operation import (
     SYMBOL,
     VALUE
@@ -55,7 +55,7 @@ class gather(Operation):
     .. math::
        x[p_0, ..., p_{axis-1}, ~~~~~~~ indices[i_0, ..., i_{M-1}], ~~~~~~~ p_{axis+1}, ..., p_{rank(x)-1}]
 
-    Where ``M = rank(x)``.
+    Where ``M = rank(indices)``.
 
     Parameters
     ----------
@@ -149,7 +149,7 @@ class scatter(Operation):
     .. math::
        updates[p_0, ..., p_{axis-1}, i, p_{axis+1}, ..., p_D]
 
-    * For ``j! = i``:
+    * For ``j != i``:
 
     .. math::
        output[p_0, ..., p_{axis-1}, j, p_{axis+1}, ..., p_D] =
@@ -167,7 +167,7 @@ class scatter(Operation):
     .. math::
        x[p_0, ..., p_{axis-1}, indice[i], p_{axis+1}, ..., p_D]
 
-    * For ``j! = i``:
+    * For ``j != i``:
 
     .. math::
        output[p_0, ..., p_{axis-1}, j, p_{axis+1}, ..., p_D] =

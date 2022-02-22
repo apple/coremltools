@@ -1282,9 +1282,8 @@ def _characterize_qmodel_perf_with_data_dir(fpmodel, qspec, data_dir):
 
     if not test_image_paths:
         raise Exception(
-            """Path contains no supported image files.
-        Supported file types include jpg, bmp, png and jpeg.
-        """.format(
+            "{} contains no supported image files. "
+            "Supported file types include jpg, bmp, png and jpeg.".format(
                 data_dir
             )
         )

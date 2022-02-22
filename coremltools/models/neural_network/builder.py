@@ -2396,7 +2396,7 @@ class NeuralNetworkBuilder(object):
 
 				quant_lut: numpy.array(dtype=numpy.float32)
 					the LUT (look up table) to be used with LUT quantization. 
-					Must be of length 2^n bits.
+                                        Must be of length 2^n bits.
 
         Depthwise convolution
         	Depthwise convolution is a special case of convolution, in which:
@@ -2482,7 +2482,7 @@ class NeuralNetworkBuilder(object):
             return
 
         # Weight assignments
-        quantization = len(kwargs) > 0 and ('quantization_type' in kwargs and kwargs.get('quantization_type') != None)
+        quantization = len(kwargs) > 0 and ('quantization_type' in kwargs and kwargs.get('quantization_type') is not None)
         if quantization:
             _verify_quantization_arguments(
                 weight=W, output_channels=output_channels, **kwargs

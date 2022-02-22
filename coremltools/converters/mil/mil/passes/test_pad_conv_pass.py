@@ -8,7 +8,6 @@ import unittest
 
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.testing_utils import (
-    assert_op_count_match,
     assert_model_is_valid,
     get_op_types_in_program,
     apply_pass_and_basic_check,
@@ -30,7 +29,7 @@ class PadConvOptimizationPass(unittest.TestCase):
     def test_simple_direct_output(self):
         @mb.program(input_specs=[mb.TensorSpec(shape=(1, 16, 20, 24))])
         def prog(x):
-            x = mb.pad(x=x, pad=[0,0,1,1,1,1,0,0])
+            x = mb.pad(x=x, pad=[0, 0, 1, 1, 1, 1, 0, 0])
             x = mb.transpose(x=x, perm=[0, 3, 1, 2])
             x = mb.conv(x=x, weight=np.random.random([24,24,3,3]), pad_type="valid")
             x = mb.transpose(x=x, perm=[0, 2, 3, 1])
@@ -67,12 +66,12 @@ class PadConvOptimizationPass(unittest.TestCase):
     def test_pad_transposed_forked_conv(self):
         @mb.program(input_specs=[mb.TensorSpec(shape=(1, 16, 20, 24))])
         def prog(x):
-            pad = mb.pad(x=x, pad=[0,0,1,1,1,1,0,0])
+            pad = mb.pad(x=x, pad=[0, 0, 1, 1, 1, 1, 0, 0])
             x = mb.transpose(x=pad, perm=[0, 3, 1, 2])
-            x = mb.conv(x=x, weight=np.random.random([24,24,3,3]), pad_type="valid")
+            x = mb.conv(x=x, weight=np.random.random([24, 24, 3, 3]), pad_type="valid")
             x = mb.transpose(x=x, perm=[0, 2, 3, 1])
             y = mb.transpose(x=pad, perm=[0, 3, 1, 2])
-            y = mb.conv(x=y, weight=np.random.random([24,24,3,3]), pad_type="valid")
+            y = mb.conv(x=y, weight=np.random.random([24, 24, 3, 3]), pad_type="valid")
             y = mb.transpose(x=y, perm=[0, 2, 3, 1])
             return x, y
 

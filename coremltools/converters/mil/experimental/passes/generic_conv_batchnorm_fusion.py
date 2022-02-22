@@ -1,10 +1,7 @@
-# -*- coding: utf-8 -*-
-
 #  Copyright (c) 2021, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
-
 
 import os
 import numpy as np
@@ -68,7 +65,7 @@ def transform_pattern(pattern):
 
     # get type of the conv layer
     is_deconv = pattern.conv.op_type == 'conv_transpose'
-    is_conv_1d  = len(conv_weight.shape) == 3
+    is_conv_1d = len(conv_weight.shape) == 3
 
     # D_in denotes the spatial dimensions for conv kernel weight
     # for conv_transpose, conv_weight has shape [Cin, Cout / groups, *D_in]

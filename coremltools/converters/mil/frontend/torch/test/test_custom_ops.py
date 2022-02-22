@@ -9,7 +9,6 @@ import torch.nn as nn
 
 from .testing_utils import convert_to_mlmodel, TorchBaseTest
 
-
 # Custom layer imports
 
 from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op

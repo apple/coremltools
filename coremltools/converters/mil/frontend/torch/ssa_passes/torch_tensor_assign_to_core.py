@@ -50,7 +50,6 @@ def _torch_tensor_assign_to_core_block(block):
 
 def _transform_tensor_assign(op, block):
     begin = op.begin.val
-    end = op.end.val
     strides = op.stride.val
 
     begin_mask = op.begin_mask.val

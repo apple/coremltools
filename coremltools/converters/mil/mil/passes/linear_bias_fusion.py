@@ -62,41 +62,6 @@ def _try_to_transform(linear_op, add_or_sub_op, block):
     block.remove_ops([linear_op, add_or_sub_op])
     return True
 
-
-def _fuse_linear_bias_block(block):
-
-    def _match_pattern(op):
-        if op.op_type == "linear":
-            # abort fusion if op output is also a block output
-            if op.outputs[0] in op.enclosing_block.outputs:
-                return None
-            # find add/sub op
-            child_ops = op.outputs[0].child_ops
-            if len(child_ops) == 1:
-                op_candidate = list(child_ops)[0]
-                if op_candidate.op_type in ["add", "sub"]:
-                    return op_candidate
-        return None
-
-    fusion_occurred = False
-    for op in list(block.operations):
-        for b in op.blocks:
-            block_changed = True
-            while block_changed:
-                block_changed = _fuse_linear_bias_block(b)
-        if len(op.blocks) > 0:
-            # This op can't be conv or conv_transpose
-            continue
-
-        add_or_sub_op = _match_pattern(op)
-        if add_or_sub_op is not None:
-            with block:
-                fusion_occurred = _try_to_transform(op, add_or_sub_op, block)
-            # has to break as the downstream iterator is affected.
-            if fusion_occurred:
-                return fusion_occurred
-    return fusion_occurred
-
 @register_pass(namespace="common")
 class fuse_linear_bias(AbstractGraphPass):
     """
@@ -128,8 +93,51 @@ class fuse_linear_bias(AbstractGraphPass):
 
         prog: Program
     """
+    def __init__(self):
+        self.ops_to_skip = set()
+
+    def set_ops_to_skip(self, prog):
+        pass
+
     def apply(self, prog):
+        self.set_ops_to_skip(prog)
         for f in prog.functions.values():
             block_changed = True
             while block_changed:
-                block_changed = _fuse_linear_bias_block(f)
+                block_changed = self._fuse_linear_bias_block(f)
+
+    def _fuse_linear_bias_block(self, block):
+
+        def _find_candicate_op(op):
+            if op.op_type != "linear":
+                return None
+            # abort fusion if op output is also a block output
+            if op.outputs[0] in op.enclosing_block.outputs:
+                return None
+            # find add/sub op
+            child_ops = op.outputs[0].child_ops
+            if len(child_ops) == 1:
+                op_candidate = list(child_ops)[0]
+                if op_candidate.op_type in ["add", "sub"]:
+                    return op_candidate
+
+        fusion_occurred = False
+        for op in list(block.operations):
+            for b in op.blocks:
+                block_changed = True
+                while block_changed:
+                    block_changed = self._fuse_linear_bias_block(b)
+            if len(op.blocks) > 0:
+                # This op can't be conv or conv_transpose
+                continue
+            if op in self.ops_to_skip:
+                continue
+
+            add_or_sub_op = _find_candicate_op(op)
+            if add_or_sub_op is not None and add_or_sub_op not in self.ops_to_skip:
+                with block:
+                    fusion_occurred = _try_to_transform(op, add_or_sub_op, block)
+                # has to break as the downstream iterator is affected.
+                if fusion_occurred:
+                    return fusion_occurred
+        return fusion_occurred

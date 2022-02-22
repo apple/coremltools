@@ -122,7 +122,7 @@ class torch_upsample_bilinear(Operation):
     def default_inputs(self):
         return DefaultInputs(
             align_corners=True,
-            )
+        )
 
     def __init__(self, **kwargs):
         super(torch_upsample_bilinear, self).__init__(**kwargs)
@@ -196,7 +196,7 @@ class torch_tensor_assign(Operation):
             begin_mask=None,
             end_mask=None,
             squeeze_mask=None,
-            )
+        )
 
     def __init__(self, **kwargs):
         super(torch_tensor_assign, self).__init__(**kwargs)

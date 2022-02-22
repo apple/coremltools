@@ -5,11 +5,13 @@
 
 class AbstractGraphPass():
 
-    def __call__(self, prog):
-        self.apply(prog)
+	def __call__(self, prog):
+		self.apply(prog)
 
-    def apply(self, prog):
-        raise NotImplementedError(
-            'Graph pass transformation not implemented for "{}".'.format(self)
-        )
+	def __str__(self):
+		return type(self).__name__
 
+	def apply(self, prog):
+		raise NotImplementedError(
+			'Graph pass transformation not implemented for "{}".'.format(self)
+		)
