@@ -128,8 +128,8 @@
 <span class="sd">    &gt;&gt;&gt; from coremltools.converters.mil.mil import Program, Function</span>
 
 <span class="sd">    &gt;&gt;&gt; prog = Program()</span>
-<span class="sd">    &gt;&gt;&gt; func_inputs = {&quot;x&quot;: mb.placeholder(_shape=[2,3]),</span>
-<span class="sd">    &gt;&gt;&gt;                &quot;y&quot;: mb.placeholder(_shape=[2,3])}</span>
+<span class="sd">    &gt;&gt;&gt; func_inputs = {&quot;x&quot;: mb.placeholder(shape=[2,3]),</span>
+<span class="sd">    &gt;&gt;&gt;                &quot;y&quot;: mb.placeholder(shape=[2,3])}</span>
 <span class="sd">    &gt;&gt;&gt; with Function(func_inputs) as ssa_fun:</span>
 <span class="sd">    &gt;&gt;&gt;   x, y = ssa_fun.inputs[&#39;x&#39;], ssa_fun.inputs[&#39;x&#39;]</span>
 <span class="sd">    &gt;&gt;&gt;   res_var = mb.add(x=x, y=y) # created within ssa_fun block</span>
@@ -271,8 +271,8 @@
         <span class="k">return</span> <span class="n">new_op</span><span class="o">.</span><span class="n">outputs</span>
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">placeholder</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">Placeholder</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">placeholder</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">allow_rank0_input</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Placeholder</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">allow_rank0_input</span><span class="o">=</span><span class="n">allow_rank0_input</span><span class="p">)</span>
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">TensorSpec</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>

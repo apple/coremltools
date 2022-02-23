@@ -191,7 +191,7 @@
             <span class="n">output_sequence</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
             <span class="n">recurrent_activation</span><span class="o">=</span><span class="s2">&quot;sigmoid&quot;</span><span class="p">,</span>
             <span class="n">activation</span><span class="o">=</span><span class="s2">&quot;tanh&quot;</span><span class="p">,</span>
-            <span class="p">)</span>
+        <span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">gru</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -236,7 +236,7 @@
                 <span class="s2">&quot;Incorrect weight matrix: hidden dim size mismatch. </span><span class="se">\</span>
 <span class="s2">                Provided weight_ih </span><span class="si">{}</span><span class="s2">, weight_hh </span><span class="si">{}</span><span class="s2">. Expecting &lt;b, 3*H&gt;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">weight_ih</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight_hh</span><span class="o">.</span><span class="n">shape</span>
-                <span class="p">)</span>
+            <span class="p">)</span>
 
         <span class="n">out_seq_len</span> <span class="o">=</span> <span class="n">sequence_length</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_sequence</span><span class="o">.</span><span class="n">val</span> <span class="k">else</span> <span class="mi">1</span>
         <span class="n">output_shape</span> <span class="o">=</span> <span class="p">[</span><span class="n">out_seq_len</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">hidden_size</span><span class="p">]</span>
@@ -441,13 +441,12 @@
                     <span class="p">)</span>
 
             <span class="n">hidden_size</span> <span class="o">=</span> <span class="n">wt_hh</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-            <span class="n">input_size</span> <span class="o">=</span> <span class="n">wt_ih</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
             <span class="k">if</span> <span class="n">wt_hh</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="n">hidden_size</span> <span class="o">!=</span> <span class="mi">4</span> <span class="ow">or</span> <span class="n">wt_ih</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="n">hidden_size</span> <span class="o">!=</span> <span class="mi">4</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                     <span class="s2">&quot;Incorrect weight matrix: hidden dim size mismatch. </span><span class="se">\</span>
 <span class="s2">                                Provided weight_ih </span><span class="si">{}</span><span class="s2">, weight_hh </span><span class="si">{}</span><span class="s2">. Expecting &lt;4*H, H&gt;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
                                     <span class="n">wt_ih</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">wt_hh</span><span class="o">.</span><span class="n">shape</span>
-                                <span class="p">)</span>
+                <span class="p">)</span>
 
         <span class="n">direction</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">direction</span><span class="o">.</span><span class="n">val</span>
         <span class="n">valid_directions</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;forward&quot;</span><span class="p">,</span> <span class="s2">&quot;reverse&quot;</span><span class="p">,</span> <span class="s2">&quot;bidirectional&quot;</span><span class="p">}</span>
@@ -455,7 +454,7 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="s2">&quot;Direction </span><span class="si">{}</span><span class="s2"> not supported. Supported directions: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
                     <span class="n">direction</span><span class="p">,</span> <span class="n">valid_directions</span>
-                <span class="p">)</span>
+            <span class="p">)</span>
 
         <span class="n">weight_shape_check</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weight_ih</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight_hh</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">direction</span> <span class="o">==</span> <span class="s2">&quot;bidirectional&quot;</span><span class="p">:</span>

@@ -79,6 +79,7 @@
 <span class="c1">#</span>
 <span class="c1">#  Use of this source code is governed by a BSD-3-clause license that can be</span>
 <span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
+
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">numbers</span>
 
@@ -94,7 +95,6 @@
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.operation</span> <span class="kn">import</span> <span class="n">precondition</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs._op_reqs</span> <span class="kn">import</span> <span class="n">register_op</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.types.symbolic</span> <span class="kn">import</span> <span class="n">is_compatible_symbolic_vector</span><span class="p">,</span> <span class="n">is_symbolic</span>
-
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.operation</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">SYMBOL</span><span class="p">,</span>
     <span class="n">VALUE</span>
@@ -132,7 +132,7 @@
 <span class="sd">    .. math::</span>
 <span class="sd">       x[p_0, ..., p_{axis-1}, ~~~~~~~ indices[i_0, ..., i_{M-1}], ~~~~~~~ p_{axis+1}, ..., p_{rank(x)-1}]</span>
 
-<span class="sd">    Where ``M = rank(x)``.</span>
+<span class="sd">    Where ``M = rank(indices)``.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -226,7 +226,7 @@
 <span class="sd">    .. math::</span>
 <span class="sd">       updates[p_0, ..., p_{axis-1}, i, p_{axis+1}, ..., p_D]</span>
 
-<span class="sd">    * For ``j! = i``:</span>
+<span class="sd">    * For ``j != i``:</span>
 
 <span class="sd">    .. math::</span>
 <span class="sd">       output[p_0, ..., p_{axis-1}, j, p_{axis+1}, ..., p_D] =</span>
@@ -244,7 +244,7 @@
 <span class="sd">    .. math::</span>
 <span class="sd">       x[p_0, ..., p_{axis-1}, indice[i], p_{axis+1}, ..., p_D]</span>
 
-<span class="sd">    * For ``j! = i``:</span>
+<span class="sd">    * For ``j != i``:</span>
 
 <span class="sd">    .. math::</span>
 <span class="sd">       output[p_0, ..., p_{axis-1}, j, p_{axis+1}, ..., p_D] =</span>

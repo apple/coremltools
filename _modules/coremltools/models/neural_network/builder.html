@@ -2473,7 +2473,7 @@
 
 <span class="sd">				quant_lut: numpy.array(dtype=numpy.float32)</span>
 <span class="sd">					the LUT (look up table) to be used with LUT quantization. </span>
-<span class="sd">					Must be of length 2^n bits.</span>
+<span class="sd">                                        Must be of length 2^n bits.</span>
 
 <span class="sd">        Depthwise convolution</span>
 <span class="sd">        	Depthwise convolution is a special case of convolution, in which:</span>
@@ -2559,7 +2559,7 @@
             <span class="k">return</span>
 
         <span class="c1"># Weight assignments</span>
-        <span class="n">quantization</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="p">(</span><span class="s1">&#39;quantization_type&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="ow">and</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;quantization_type&#39;</span><span class="p">)</span> <span class="o">!=</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">quantization</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="p">(</span><span class="s1">&#39;quantization_type&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span> <span class="ow">and</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;quantization_type&#39;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">quantization</span><span class="p">:</span>
             <span class="n">_verify_quantization_arguments</span><span class="p">(</span>
                 <span class="n">weight</span><span class="o">=</span><span class="n">W</span><span class="p">,</span> <span class="n">output_channels</span><span class="o">=</span><span class="n">output_channels</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>

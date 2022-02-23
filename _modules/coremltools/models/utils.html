@@ -83,23 +83,30 @@
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Utilities for the entire package.</span>
 <span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">lru_cache</span> <span class="k">as</span> <span class="n">_lru_cache</span>
 <span class="kn">import</span> <span class="nn">math</span> <span class="k">as</span> <span class="nn">_math</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">_np</span>
 <span class="kn">import</span> <span class="nn">os</span> <span class="k">as</span> <span class="nn">_os</span>
 <span class="kn">import</span> <span class="nn">pathlib</span> <span class="k">as</span> <span class="nn">_pathlib</span>
+<span class="kn">import</span> <span class="nn">shutil</span> <span class="k">as</span> <span class="nn">_shutil</span>
+<span class="kn">import</span> <span class="nn">stat</span> <span class="k">as</span> <span class="nn">_stat</span>
+<span class="kn">import</span> <span class="nn">subprocess</span> <span class="k">as</span> <span class="nn">_subprocess</span>
 <span class="kn">import</span> <span class="nn">sys</span> <span class="k">as</span> <span class="nn">_sys</span>
 <span class="kn">import</span> <span class="nn">tempfile</span> <span class="k">as</span> <span class="nn">_tempfile</span>
 <span class="kn">import</span> <span class="nn">warnings</span> <span class="k">as</span> <span class="nn">_warnings</span>
 
+<span class="kn">from</span> <span class="nn">.._deps</span> <span class="kn">import</span> <span class="n">_HAS_SCIPY</span>
+
 <span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">ComputeUnit</span> <span class="k">as</span> <span class="n">_ComputeUnit</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.name_sanitization_utils</span> <span class="kn">import</span> <span class="n">NameSanitizer</span> <span class="k">as</span> <span class="n">_NameSanitizer</span>
 <span class="kn">from</span> <span class="nn">coremltools.proto</span> <span class="kn">import</span> <span class="n">Model_pb2</span> <span class="k">as</span> <span class="n">_Model_pb2</span>
-<span class="kn">from</span> <span class="nn">.._deps</span> <span class="kn">import</span> <span class="n">_HAS_SCIPY</span>
-
 
 <span class="n">_MLMODEL_EXTENSION</span> <span class="o">=</span> <span class="s2">&quot;.mlmodel&quot;</span>
 <span class="n">_MLPACKAGE_EXTENSION</span> <span class="o">=</span> <span class="s2">&quot;.mlpackage&quot;</span>
-
+<span class="n">_MODEL_FILE_NAME</span> <span class="o">=</span> <span class="s1">&#39;model.mlmodel&#39;</span>
+<span class="n">_WEIGHTS_FILE_NAME</span> <span class="o">=</span> <span class="s1">&#39;weight.bin&#39;</span>
+<span class="n">_WEIGHTS_DIR_NAME</span> <span class="o">=</span> <span class="s1">&#39;weights&#39;</span>
+<span class="n">_MLPACKAGE_AUTHOR_NAME</span> <span class="o">=</span> <span class="s2">&quot;com.apple.CoreML&quot;</span>
 
 <span class="k">try</span><span class="p">:</span>
     <span class="kn">from</span> <span class="nn">..libmodelpackage</span> <span class="kn">import</span> <span class="n">ModelPackage</span> <span class="k">as</span> <span class="n">_ModelPackage</span>
@@ -125,7 +132,58 @@
         <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">model_input_names</span><span class="p">:</span>
             <span class="k">del</span> <span class="n">input_dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
 
-<div class="viewcode-block" id="save_spec"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.utils.save_spec">[docs]</a><span class="k">def</span> <span class="nf">save_spec</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">auto_set_specification_version</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_create_mlpackage</span><span class="p">(</span><span class="n">proto_spec</span><span class="p">,</span> <span class="n">weights_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">package_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">copy_weights</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ---------</span>
+<span class="sd">    proto_spec: Model_pb2</span>
+<span class="sd">    weights_dir: str</span>
+<span class="sd">        copy or move weights from this path to the mlpackage</span>
+<span class="sd">    package_path: str</span>
+<span class="sd">        If provided place the created mlpackage at this path</span>
+<span class="sd">    copy_weights: bool</span>
+<span class="sd">        If False, delete the weights directory provided in ``weights_dir``</span>
+
+<span class="sd">    :return: str</span>
+<span class="sd">        path to the mlpackage</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Save proto to disk</span>
+    <span class="n">proto_spec_str</span> <span class="o">=</span> <span class="n">proto_spec</span><span class="o">.</span><span class="n">SerializeToString</span><span class="p">()</span>
+    <span class="n">spec_file</span> <span class="o">=</span> <span class="n">_tempfile</span><span class="o">.</span><span class="n">NamedTemporaryFile</span><span class="p">(</span><span class="n">suffix</span><span class="o">=</span><span class="n">_MLMODEL_EXTENSION</span><span class="p">)</span>
+    <span class="n">spec_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">proto_spec_str</span><span class="p">)</span>
+    <span class="n">spec_file</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+    <span class="c1"># To make sure everyone can read this file</span>
+    <span class="n">_os</span><span class="o">.</span><span class="n">chmod</span><span class="p">(</span><span class="n">spec_file</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">_stat</span><span class="o">.</span><span class="n">S_IRUSR</span> <span class="o">|</span> <span class="n">_stat</span><span class="o">.</span><span class="n">S_IWUSR</span> <span class="o">|</span> <span class="n">_stat</span><span class="o">.</span><span class="n">S_IRGRP</span> <span class="o">|</span> <span class="n">_stat</span><span class="o">.</span><span class="n">S_IROTH</span><span class="p">)</span>
+
+    <span class="c1"># If package directory is already provided, use that</span>
+    <span class="k">if</span> <span class="n">package_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">package_path</span> <span class="o">=</span> <span class="n">_tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">(</span><span class="n">suffix</span><span class="o">=</span><span class="n">_MLPACKAGE_EXTENSION</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">name</span><span class="p">,</span> <span class="n">ext</span> <span class="o">=</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">package_path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ext</span> <span class="o">!=</span> <span class="n">_MLPACKAGE_EXTENSION</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;For an ML Package, extension must be </span><span class="si">{}</span><span class="s2"> (not </span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">_MLPACKAGE_EXTENSION</span><span class="p">,</span> <span class="n">ext</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">package_path</span><span class="p">):</span>
+        <span class="n">_shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">package_path</span><span class="p">)</span>
+
+    <span class="n">package</span> <span class="o">=</span> <span class="n">_ModelPackage</span><span class="p">(</span><span class="n">package_path</span><span class="p">)</span>
+
+    <span class="c1"># Root model file is copied into the model package.</span>
+    <span class="n">package</span><span class="o">.</span><span class="n">setRootModel</span><span class="p">(</span><span class="n">spec_file</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">_MODEL_FILE_NAME</span><span class="p">,</span> <span class="n">_MLPACKAGE_AUTHOR_NAME</span><span class="p">,</span>
+                         <span class="s2">&quot;CoreML Model Specification&quot;</span><span class="p">)</span>
+    <span class="n">spec_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>  <span class="c1"># clean up spec file now that it is part of the model package</span>
+
+    <span class="c1"># Weights bundle is copied into the model package. Changes to in-memory JSON is commited to disk when package goes out of scope.</span>
+    <span class="k">if</span> <span class="n">weights_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">package</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="n">weights_dir</span><span class="p">,</span> <span class="n">_WEIGHTS_DIR_NAME</span><span class="p">,</span> <span class="n">_MLPACKAGE_AUTHOR_NAME</span><span class="p">,</span> <span class="s2">&quot;CoreML Model Weights&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">copy_weights</span><span class="p">:</span>
+            <span class="n">_shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">weights_dir</span><span class="p">)</span>  <span class="c1"># clean up weights now that it is part of the model package</span>
+
+    <span class="k">return</span> <span class="n">package_path</span>
+
+
+<div class="viewcode-block" id="save_spec"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.utils.save_spec">[docs]</a><span class="k">def</span> <span class="nf">save_spec</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">auto_set_specification_version</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">weights_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Save a protobuf model specification to file.</span>
 
@@ -140,11 +198,18 @@
 <span class="sd">    auto_set_specification_version: bool</span>
 <span class="sd">        If true, will always try to set specification version automatically.</span>
 
+<span class="sd">    weights_dir: str</span>
+<span class="sd">        Path to the directory containing the weigths.bin file. This is required</span>
+<span class="sd">        when the spec if of model type mlprogram. If the mlprogram does not contain</span>
+<span class="sd">        any weights, this path can be an empty directory.</span>
+
 <span class="sd">    Examples</span>
 <span class="sd">    --------</span>
 <span class="sd">    .. sourcecode:: python</span>
 
 <span class="sd">        &gt;&gt;&gt; coremltools.utils.save_spec(spec, &#39;HousePricer.mlmodel&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; coremltools.utils.save_spec(spec, &#39;HousePricer.mlpackage&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; coremltools.utils.save_spec(spec, &#39;mlprogram_model.mlpackage&#39;, weights_dir=&quot;/path/to/weights/directory&quot;)</span>
 
 <span class="sd">    See Also</span>
 <span class="sd">    --------</span>
@@ -163,7 +228,6 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Extension must be </span><span class="si">{}</span><span class="s2"> or </span><span class="si">{}</span><span class="s2"> (not </span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">_MLMODEL_EXTENSION</span><span class="p">,</span> <span class="n">_MLPACKAGE_EXTENSION</span><span class="p">,</span> <span class="n">ext</span><span class="p">))</span>
 
-    <span class="n">spec</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">SerializeToString</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">auto_set_specification_version</span><span class="p">:</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="c1"># always try to downgrade the specification version to the</span>
@@ -178,25 +242,20 @@
                 <span class="ne">RuntimeWarning</span><span class="p">,</span>
             <span class="p">)</span>
 
-    <span class="n">specfile</span> <span class="o">=</span> <span class="n">filename</span>
-    <span class="k">if</span> <span class="n">is_package</span><span class="p">:</span>
-        <span class="n">tempfile</span> <span class="o">=</span> <span class="n">_tempfile</span><span class="o">.</span><span class="n">NamedTemporaryFile</span><span class="p">(</span><span class="n">suffix</span><span class="o">=</span><span class="n">_MLMODEL_EXTENSION</span><span class="p">)</span>
-        <span class="n">specfile</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">name</span>
-
-    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">specfile</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
-
     <span class="k">if</span> <span class="n">is_package</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">_ModelPackage</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
                 <span class="s2">&quot;Unable to load libmodelpackage. Cannot save spec&quot;</span>
             <span class="p">)</span>
-
-        <span class="n">package</span> <span class="o">=</span> <span class="n">_ModelPackage</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
-        <span class="n">model_name</span> <span class="o">=</span> <span class="n">_pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span><span class="o">.</span><span class="n">with_suffix</span><span class="p">(</span><span class="s1">&#39;.mlmodel&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">name</span>
-        
-        <span class="c1"># Root file is copied into the model package. Changes to in-memory JSON is commited to disk when package goes out of scope.</span>
-        <span class="n">package</span><span class="o">.</span><span class="n">replaceRootModel</span><span class="p">(</span><span class="n">specfile</span><span class="p">,</span> <span class="n">model_name</span><span class="p">,</span> <span class="s2">&quot;com.apple.CoreML&quot;</span><span class="p">,</span> <span class="s2">&quot;CoreML Model Specification&quot;</span><span class="p">);</span></div>
+        <span class="k">if</span> <span class="n">spec</span><span class="o">.</span><span class="n">WhichOneof</span><span class="p">(</span><span class="s1">&#39;Type&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;mlProgram&quot;</span> <span class="ow">and</span> <span class="n">weights_dir</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;spec of type mlProgram cannot be saved without the&#39;</span>
+                                <span class="s1">&#39; weights file. Please provide the path to the weights file as well, &#39;</span>
+                                <span class="s1">&#39;using the </span><span class="se">\&#39;</span><span class="s1">weights_dir</span><span class="se">\&#39;</span><span class="s1"> argument.&#39;</span><span class="p">)</span>
+        <span class="n">_create_mlpackage</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">weights_dir</span><span class="o">=</span><span class="n">weights_dir</span><span class="p">,</span> <span class="n">package_path</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span> <span class="n">copy_weights</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">spec_str</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">SerializeToString</span><span class="p">()</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">spec_str</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="load_spec"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.utils.load_spec">[docs]</a><span class="k">def</span> <span class="nf">load_spec</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -218,6 +277,7 @@
 <span class="sd">    .. sourcecode:: python</span>
 
 <span class="sd">        &gt;&gt;&gt; spec = coremltools.utils.load_spec(&#39;HousePricer.mlmodel&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; spec = coremltools.utils.load_spec(&#39;HousePricer.mlpackage&#39;)</span>
 
 <span class="sd">    See Also</span>
 <span class="sd">    --------</span>
@@ -586,7 +646,22 @@
 <span class="sd">    .. sourcecode:: python</span>
 
 <span class="sd">        # In-place rename of spec</span>
+<span class="sd">        &gt;&gt;&gt; model = MLModel(&quot;model.mlmodel&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; spec = model.get_spec()</span>
 <span class="sd">        &gt;&gt;&gt; coremltools.utils.rename_feature(spec, &#39;old_feature&#39;, &#39;new_feature_name&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; # re-initialize model</span>
+<span class="sd">        &gt;&gt;&gt; model = MLModel(spec)</span>
+<span class="sd">        &gt;&gt;&gt; model.save(&quot;model.mlmodel&quot;)</span>
+
+<span class="sd">        # Rename a spec when the model is an mlprogram, in that case, weights are stored outside of the spec</span>
+<span class="sd">        &gt;&gt;&gt; model = coremltools.convert(torch_model, convert_to=&quot;mlprogram&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; spec = model.get_spec()</span>
+<span class="sd">        &gt;&gt;&gt; # print info about inputs and outputs</span>
+<span class="sd">        &gt;&gt;&gt; print(spec.description)</span>
+<span class="sd">        &gt;&gt;&gt; coremltools.utils.rename_feature(spec, &#39;old_feature&#39;, &#39;new_feature_name&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; # re-initialize model</span>
+<span class="sd">        &gt;&gt;&gt; model = MLModel(spec, weights_dir=model.weights_dir)</span>
+<span class="sd">        &gt;&gt;&gt; model.save(&quot;model.mlpackage&quot;)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">from</span> <span class="nn">coremltools.models</span> <span class="kn">import</span> <span class="n">MLModel</span>
 
@@ -912,6 +987,7 @@
     <span class="k">return</span> <span class="n">_sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s2">&quot;darwin&quot;</span>
 
 
+<span class="nd">@_lru_cache</span><span class="p">()</span>
 <span class="k">def</span> <span class="nf">_macos_version</span><span class="p">():</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Returns macOS version as a tuple of integers, making it easy to do proper</span>
@@ -919,8 +995,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">_is_macos</span><span class="p">():</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="kn">import</span> <span class="nn">subprocess</span>
-            <span class="n">ver_str</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="s2">&quot;sw_vers&quot;</span><span class="p">,</span> <span class="s2">&quot;-productVersion&quot;</span><span class="p">],</span> <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">)</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">ver_str</span> <span class="o">=</span> <span class="n">_subprocess</span><span class="o">.</span><span class="n">run</span><span class="p">([</span><span class="s2">&quot;sw_vers&quot;</span><span class="p">,</span> <span class="s2">&quot;-productVersion&quot;</span><span class="p">],</span> <span class="n">stdout</span><span class="o">=</span><span class="n">_subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">)</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
             <span class="k">return</span> <span class="nb">tuple</span><span class="p">([</span><span class="nb">int</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">ver_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)])</span>
         <span class="k">except</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Unable to detemine the macOS version&quot;</span><span class="p">)</span>

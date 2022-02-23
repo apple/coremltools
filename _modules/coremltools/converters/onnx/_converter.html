@@ -166,8 +166,8 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="n">SupportedVersion</span><span class="o">.</span><span class="n">ios_support_check</span><span class="p">(</span><span class="n">minimum_ios_deployment_target</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
                 <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> not supported. Please provide one of target iOS: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                <span class="n">minimum_ios_deployment_target</span><span class="p">,</span>
-                <span class="n">SupportedVersion</span><span class="o">.</span><span class="n">supported_ios_version</span>
+                    <span class="n">minimum_ios_deployment_target</span><span class="p">,</span>
+                    <span class="n">SupportedVersion</span><span class="o">.</span><span class="n">supported_ios_version</span>
                 <span class="p">)</span>
             <span class="p">)</span>
 
