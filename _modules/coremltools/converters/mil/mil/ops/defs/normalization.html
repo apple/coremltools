@@ -103,19 +103,19 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Normalize input tensor ``x`` by ``mean`` and ``variance``, and optionally apply a</span>
 <span class="sd">    scale ``gamma`` and an offset ``beta``:</span>
-<span class="sd">    </span>
+
 <span class="sd">    .. math::</span>
 <span class="sd">       y_i = \\gamma_i \\dfrac{ (x_i - mean_i)}{\\sqrt{variance_i + epsilon}} + beta_i \\;,\\;i=1,....,C</span>
-<span class="sd">    </span>
+
 <span class="sd">    The ``mean``, ``variance``, ``gamma``, and ``beta``</span>
 <span class="sd">    must be 1-D tensors whose lengths are equal to the second axis (the &quot;depth&quot;</span>
 <span class="sd">    or &quot;channel&quot; dimension) of ``x``.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    x: tensor&lt;[n,C,*D], T&gt; (Required)</span>
-<span class="sd">        * ``3 &lt;= rank &lt;= 4``.</span>
-<span class="sd">        * ``*D`` refers to the spatial dimensions, ``1 &lt;= rank(*D) &lt;= 2``.</span>
+<span class="sd">        * ``3 &lt;= rank &lt;= 5``.</span>
+<span class="sd">        * ``*D`` refers to the spatial dimensions, ``1 &lt;= rank(*D) &lt;= 3``.</span>
 <span class="sd">        * ``n`` is the batch dimension.</span>
 <span class="sd">    mean: const tensor&lt;[C], T&gt; (Required)</span>
 <span class="sd">    variance: const tensor&lt;[C], T&gt; (Required)</span>
@@ -127,7 +127,7 @@
 <span class="sd">        * Default is all zeros.</span>
 <span class="sd">    epsilon: const fp32 (Optional)</span>
 <span class="sd">        * Default is ``1e-5``.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    tensor&lt;[n,C,*D], T&gt;</span>
@@ -137,7 +137,7 @@
 <span class="sd">    ----------</span>
 <span class="sd">    T: fp32</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    
+
     <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
         <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(),</span>
         <span class="n">mean</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
@@ -152,7 +152,7 @@
             <span class="n">gamma</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
             <span class="n">beta</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
             <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">,</span>
-            <span class="p">)</span>
+        <span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">batch_norm</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -166,7 +166,7 @@
 <span class="k">class</span> <span class="nc">instance_norm</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Apply instance normalization to the n-dimensional input tensor.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    x: tensor&lt;[n,C,*D], T&gt;  (Required)</span>
@@ -181,13 +181,13 @@
 <span class="sd">        * Default to all zeros.</span>
 <span class="sd">    epsilon: const f32 (Optional)</span>
 <span class="sd">        * Default to ``1e-5``.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    tensor&lt;[n,C,*D], T&gt;</span>
 <span class="sd">        * Output tensor has the same shape and type as the input ``x``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    
+
     <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
         <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(),</span>
         <span class="n">gamma</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
@@ -200,7 +200,7 @@
             <span class="n">gamma</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
             <span class="n">beta</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
             <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">,</span>
-            <span class="p">)</span>
+        <span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">instance_norm</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -215,11 +215,11 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Apply L2 normalization to the n-dimensional input tensor. That is, divide the input</span>
 <span class="sd">    tensor by the square root of the sum of squares of all elements of the input.</span>
-<span class="sd">    </span>
+
 <span class="sd">    .. math::</span>
 <span class="sd">       x_i \\leftarrow \\dfrac{x_i}{\\sqrt{\\sum{x_i^2} + \\epsilon}}</span>
-<span class="sd">    </span>
-<span class="sd">    </span>
+
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    x: tensor&lt;[*D,C,H,W], T&gt; (Required)</span>
@@ -236,12 +236,12 @@
 <span class="sd">    -------</span>
 <span class="sd">    tensor&lt;[\*D,C,H,W], T&gt;</span>
 <span class="sd">        * Same type and shape as the input tensor ``x``.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    T: fp32</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    
+
     <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
         <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(),</span>
         <span class="n">epsilon</span><span class="o">=</span><span class="n">FloatInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
@@ -302,7 +302,7 @@
 <span class="sd">    ----------</span>
 <span class="sd">    T: fp32</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    
+
     <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
         <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(),</span>
         <span class="n">axes</span><span class="o">=</span><span class="n">IntTensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
@@ -326,8 +326,8 @@
     <span class="k">def</span> <span class="nf">_is_compatible_shape</span><span class="p">(</span><span class="n">shapea</span><span class="p">,</span> <span class="n">shapeb</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">shapea</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">shapeb</span><span class="p">):</span>
             <span class="k">return</span> <span class="kc">False</span>
-        <span class="k">for</span> <span class="n">a</span><span class="p">,</span><span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">shapea</span><span class="p">,</span> <span class="n">shapeb</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">any_symbolic</span><span class="p">([</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">]):</span>
+        <span class="k">for</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">shapea</span><span class="p">,</span> <span class="n">shapeb</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">any_symbolic</span><span class="p">([</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">]):</span>
                 <span class="k">continue</span>
             <span class="k">if</span> <span class="n">a</span> <span class="o">!=</span> <span class="n">b</span><span class="p">:</span>
                 <span class="k">return</span> <span class="kc">False</span>
@@ -379,11 +379,11 @@
 <span class="k">class</span> <span class="nc">local_response_norm</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Apply local response normalization to the n-dimensional input tensor:</span>
-<span class="sd">    </span>
+
 <span class="sd">    .. math::</span>
 <span class="sd">       x_i \\leftarrow \\dfrac{x_i}{\\left ( k + \\dfrac{\\alpha}{\\text{size}} \\sum_j x_j^2 \\right )^\\beta}</span>
-<span class="sd">    </span>
-<span class="sd">    </span>
+
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    x: tensor&lt;[n,C,*D], T&gt; (Required)</span>
@@ -401,17 +401,17 @@
 <span class="sd">    k: const fp32 (Optional)</span>
 <span class="sd">        * Additive factor.</span>
 <span class="sd">        * Default is ``1.0``.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    tensor&lt;[n,C,*D], T&gt;</span>
 <span class="sd">        * Same type and shape as the input tensor ``x``.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    T: fp32</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    
+
     <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
         <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(),</span>
         <span class="n">size</span><span class="o">=</span><span class="n">IntInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>

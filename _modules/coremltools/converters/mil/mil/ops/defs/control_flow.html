@@ -75,8 +75,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for coremltools.converters.mil.mil.ops.defs.control_flow</h1><div class="highlight"><pre>
-<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
-<span class="c1">#  Copyright (c) 2020, Apple Inc. All rights reserved.</span>
+<span></span><span class="c1">#  Copyright (c) 2020, Apple Inc. All rights reserved.</span>
 <span class="c1">#</span>
 <span class="c1">#  Use of this source code is governed by a BSD-3-clause license that can be</span>
 <span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
@@ -97,7 +96,6 @@
     <span class="n">DefaultInputs</span><span class="p">,</span>
     <span class="n">InputSpec</span><span class="p">,</span>
     <span class="n">InternalScalarOrTensorInputType</span><span class="p">,</span>
-    <span class="n">InternalStringInputType</span><span class="p">,</span>
     <span class="n">IntTensorInputType</span><span class="p">,</span>
     <span class="n">IntInputType</span><span class="p">,</span>
     <span class="n">ListInputType</span><span class="p">,</span>
@@ -120,6 +118,7 @@
     <span class="n">is_subtype</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs._op_reqs</span> <span class="kn">import</span> <span class="n">register_op</span>
+
 
 <div class="viewcode-block" id="cond"><a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.control_flow.cond">[docs]</a><span class="nd">@register_op</span><span class="p">(</span><span class="n">doc_str</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">cond</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
@@ -387,7 +386,7 @@
 
 <span class="sd">    _body: function  (Required)</span>
 <span class="sd">        * A Python function that takes ``loop_vars`` as positional arguments.</span>
-<span class="sd">        * The function must return the same number of output vars as ``loop_var``</span>
+<span class="sd">        * The function must return the same number of output vars as ``loop_vars``</span>
 <span class="sd">          with the same types.</span>
 
 <span class="sd">    loop_vars: tuple (Required)</span>
@@ -434,7 +433,7 @@
         <span class="c1"># Cond block:</span>
         <span class="n">block_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;_cond_block&#39;</span>
         <span class="k">with</span> <span class="n">Block</span><span class="p">(</span><span class="n">block_inputs</span><span class="o">=</span><span class="n">block_inputs</span><span class="p">,</span> <span class="n">outer_op</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
-                <span class="n">name</span><span class="o">=</span><span class="n">block_name</span><span class="p">)</span> <span class="k">as</span> <span class="n">cond_block</span><span class="p">:</span>
+                   <span class="n">name</span><span class="o">=</span><span class="n">block_name</span><span class="p">)</span> <span class="k">as</span> <span class="n">cond_block</span><span class="p">:</span>
 
             <span class="n">cond_func</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cond</span><span class="o">.</span><span class="n">val</span>
             <span class="n">cond_var</span> <span class="o">=</span> <span class="n">cond_func</span><span class="p">(</span><span class="o">*</span><span class="n">cond_block</span><span class="o">.</span><span class="n">inputs</span><span class="p">)</span>
@@ -444,13 +443,12 @@
         <span class="c1"># Body block</span>
         <span class="n">block_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;_body_block&#39;</span>
         <span class="k">with</span> <span class="n">Block</span><span class="p">(</span><span class="n">block_inputs</span><span class="o">=</span><span class="n">block_inputs</span><span class="p">,</span> <span class="n">outer_op</span><span class="o">=</span><span class="bp">self</span><span class="p">,</span>
-                <span class="n">name</span><span class="o">=</span><span class="n">block_name</span><span class="p">)</span> <span class="k">as</span> <span class="n">body_block</span><span class="p">:</span>
+                   <span class="n">name</span><span class="o">=</span><span class="n">block_name</span><span class="p">)</span> <span class="k">as</span> <span class="n">body_block</span><span class="p">:</span>
             <span class="n">body_func</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_body</span><span class="o">.</span><span class="n">val</span>
             <span class="n">exit_vars</span> <span class="o">=</span> <span class="n">body_func</span><span class="p">(</span><span class="o">*</span><span class="n">body_block</span><span class="o">.</span><span class="n">inputs</span><span class="p">)</span>
             <span class="n">exit_vars</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">exit_vars</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">exit_vars</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">))</span> \
                 <span class="k">else</span> <span class="p">[</span><span class="n">exit_vars</span><span class="p">]</span>
             <span class="n">body_block</span><span class="o">.</span><span class="n">set_outputs</span><span class="p">(</span><span class="n">exit_vars</span><span class="p">)</span>
-            <span class="c1">#self.blocks.append(body_block)</span>
 
         <span class="k">return</span> <span class="n">cond_block</span><span class="p">,</span> <span class="n">body_block</span><span class="p">,</span> <span class="n">exit_vars</span>
 
@@ -794,7 +792,6 @@
             <span class="p">)</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
         <span class="k">return</span> <span class="n">list_elem_type</span></div>
-
 
 
 <div class="viewcode-block" id="list_gather"><a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.control_flow.list_gather">[docs]</a><span class="nd">@register_op</span><span class="p">(</span><span class="n">doc_str</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>

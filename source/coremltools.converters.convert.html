@@ -98,7 +98,7 @@ Some parameters and requirements differ by TensorFlow and PyTorch frameworks.</p
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl>
-<dt><strong>model :</strong></dt><dd><p>TensorFlow 1, TensorFlow 2, or PyTorch model in one of the following
+<dt><strong>model</strong></dt><dd><p>TensorFlow 1, TensorFlow 2, or PyTorch model in one of the following
 formats.</p>
 <ul>
 <li><p>TensorFlow versions 1.x</p>
@@ -329,12 +329,10 @@ neural engine.</p></li>
 - if True, identical to setting compute_units to <cite>coremltools.ComputeUnit.CPU_ONLY`</cite>
 - if False, identical to setting compute_units to <cite>coremltools.ComputeUnit.ALL`</cite></p>
 </dd>
-<dt><strong>package_dir</strong><span class="classifier">str</span></dt><dd><p>Post conversion, the model is compiled to form the MLModel object ready for prediction.
-This requires a temporary directory to hold the mlmodelc archive.
-- if not None, must be a path to a directory that is used for</p>
-<blockquote>
-<div><p>temporarily storing the compiled model assets. If None, a temporary directory is created.</p>
-</div></blockquote>
+<dt><strong>package_dir</strong><span class="classifier">str</span></dt><dd><p>Post conversion, the model is saved at a temporary location and
+loaded to form the MLModel object ready for prediction.
+If package_dir is provided, model will be saved at this location instead of creating a temporary directory.
+- if not None, must be a path to a directory with extension .mlpackage</p>
 </dd>
 <dt><strong>debug</strong><span class="classifier">bool</span></dt><dd><p>This flag should generally be False except for debugging purposes
 Setting this flag to True:</p>

@@ -80,8 +80,8 @@
 <span class="c1">#  Use of this source code is governed by a BSD-3-clause license that can be</span>
 <span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
 
-<span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.types.symbolic</span> <span class="kn">import</span> <span class="n">is_symbolic</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">types</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.types.type_mapping</span> <span class="kn">import</span> <span class="p">(</span>
@@ -105,19 +105,19 @@
 <span class="sd">        class_labels: str / list of int / list of str</span>
 <span class="sd">            If a ``list`` is given, the ``list`` maps the index of the output of a</span>
 <span class="sd">            neural network to labels in a classifier.</span>
-<span class="sd">            </span>
+
 <span class="sd">            If a ``str`` is given, the ``str`` points to a file which maps the index</span>
 <span class="sd">            to labels in a classifier.</span>
-<span class="sd">        </span>
+
 <span class="sd">        predicted_feature_name: str</span>
 <span class="sd">            Name of the output feature for the class labels exposed in the</span>
 <span class="sd">            Core ML neural network classifier. Default: ``&#39;classLabel&#39;``.</span>
-<span class="sd">        </span>
+
 <span class="sd">        predicted_probabilities_output: str</span>
 <span class="sd">            If provided, then this is the name of the neural network blob which</span>
 <span class="sd">            generates the probabilities for each class label (typically the output</span>
-<span class="sd">            of a softmax layer). </span>
-<span class="sd">            </span>
+<span class="sd">            of a softmax layer).</span>
+
 <span class="sd">            If not provided, then the last output layer is assumed.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">class_labels</span> <span class="o">=</span> <span class="n">class_labels</span>
@@ -134,10 +134,10 @@
 <span class="sd">        ----------</span>
 <span class="sd">        name: (str)</span>
 <span class="sd">            The name of the input.</span>
-<span class="sd">        </span>
+
 <span class="sd">        shape: list, tuple, Shape object, EnumeratedShapes object, or None</span>
 <span class="sd">            The shape(s) that are valid for this input.</span>
-<span class="sd">            </span>
+
 <span class="sd">            If set to ``None``, the shape will be infered from the model itself.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
@@ -166,26 +166,26 @@
 <span class="sd">        ----------</span>
 <span class="sd">        scale: (float)</span>
 <span class="sd">            The scaling factor for all values in the image channels.</span>
-<span class="sd">        </span>
+
 <span class="sd">        bias: float or list of float</span>
 <span class="sd">            If ``color_layout`` is ``&#39;G&#39;``, bias would be a ``float``.</span>
-<span class="sd">            </span>
+
 <span class="sd">            If `color_layout` is ``&#39;RGB&#39;`` or ``&#39;BGR&#39;``, bias would be a list of ``float``.</span>
-<span class="sd">        </span>
+
 <span class="sd">        color_layout: string</span>
 <span class="sd">            Color layout of the image.</span>
-<span class="sd">            </span>
+
 <span class="sd">            Valid values:</span>
 <span class="sd">                * ``&#39;G&#39;``: Grayscale</span>
 <span class="sd">                * ``&#39;RGB&#39;``: [Red, Green, Blue]</span>
 <span class="sd">                * ``&#39;BGR&#39;``: [Blue, Green, Red]</span>
-<span class="sd">            </span>
+
 <span class="sd">        channel_first: (bool) or None</span>
 <span class="sd">            Set to ``True`` if input format is channel first.</span>
-<span class="sd">            </span>
+
 <span class="sd">            Default format:</span>
-<span class="sd">            	For TensorFlow: channel last (``channel_first=False``).</span>
-<span class="sd">            	</span>
+<span class="sd">                For TensorFlow: channel last (``channel_first=False``).</span>
+
 <span class="sd">                For PyTorch: channel first (``channel_first=True``).</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">ImageType</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">shape</span><span class="p">)</span>
@@ -225,27 +225,27 @@
 <span class="sd">        name: str</span>
 <span class="sd">            Input name. Must match an input name in the model (usually the</span>
 <span class="sd">            Placeholder name for TensorFlow or the input name for PyTorch).</span>
-<span class="sd">            </span>
+
 <span class="sd">            The ``name`` is required except for a TensorFlow model in which there is</span>
 <span class="sd">            exactly one input Placeholder.</span>
-<span class="sd">        </span>
+
 <span class="sd">        shape: (1) list of positive int or RangeDim, or (2) EnumeratedShapes</span>
 <span class="sd">            The shape of the input.</span>
-<span class="sd">            </span>
+
 <span class="sd">            For TensorFlow:</span>
 <span class="sd">              * The ``shape`` is optional. If omitted, the shape is inferred from</span>
 <span class="sd">                TensorFlow graph&#39;s Placeholder shape.</span>
-<span class="sd">            </span>
+
 <span class="sd">            For PyTorch:</span>
 <span class="sd">              * The ``shape`` is required.</span>
-<span class="sd">        </span>
+
 <span class="sd">        dtype: np.generic or mil.type type</span>
 <span class="sd">            Numpy ``dtype`` (for example, ``np.int32``). Default is ``np.float32``.</span>
-<span class="sd">        </span>
+
 <span class="sd">        default_value: np.ndarray</span>
 <span class="sd">            If provided, the input is considered optional. At runtime, if the</span>
 <span class="sd">            input is not provided, ``default_value`` is used.</span>
-<span class="sd">            </span>
+
 <span class="sd">            Limitations:</span>
 <span class="sd">              *  If ``default_value`` is ``np.ndarray``, all</span>
 <span class="sd">                 elements are required to have the same value.</span>
@@ -257,9 +257,9 @@
 <span class="sd">        --------</span>
 <span class="sd">        * ``ct.TensorType(name=&quot;input&quot;, shape=(1, 2, 3))` implies `dtype ==</span>
 <span class="sd">          np.float32``</span>
-<span class="sd">        </span>
+
 <span class="sd">        * ``ct.TensorType(name=&quot;input&quot;, shape=(1, 2, 3), dtype=np.int32)``</span>
-<span class="sd">    	</span>
+
 <span class="sd">        * ``ct.TensorType(name=&quot;input&quot;, shape=(1, 2, 3),</span>
 <span class="sd">          dtype=ct.converters.mil.types.fp32)``</span>
 <span class="sd">        &quot;&quot;&quot;</span>
@@ -320,17 +320,17 @@
 <span class="sd">        ----------</span>
 <span class="sd">        lower_bound: (int)</span>
 <span class="sd">            The minimum valid value for the shape.</span>
-<span class="sd">        </span>
+
 <span class="sd">        upper_bound: (int)</span>
 <span class="sd">            The maximum valid value for the shape.</span>
-<span class="sd">            </span>
+
 <span class="sd">            Set to ``-1`` if there&#39;s no upper limit.</span>
-<span class="sd">        </span>
+
 <span class="sd">        default: (int) or None</span>
 <span class="sd">            The default value that is used for initiating the model, and set in</span>
 
 <span class="sd">            input shape field of the model file.</span>
-<span class="sd">            </span>
+
 <span class="sd">            If set to ``None``, ``lower_bound`` would be used as default.</span>
 
 <span class="sd">        symbol: (str)</span>
@@ -443,9 +443,9 @@
         <span class="k">return</span> <span class="nb">any</span><span class="p">(</span><span class="n">is_symbolic</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbolic_shape</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">to_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">allow_symbolic</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-      <span class="k">if</span> <span class="ow">not</span> <span class="n">allow_symbolic</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_symbolic</span><span class="p">:</span>
-          <span class="k">return</span> <span class="kc">None</span>
-      <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbolic_shape</span></div>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">allow_symbolic</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_symbolic</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbolic_shape</span></div>
 
 
 <div class="viewcode-block" id="EnumeratedShapes"><a class="viewcode-back" href="../../../../source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.EnumeratedShapes">[docs]</a><span class="k">class</span> <span class="nc">EnumeratedShapes</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
@@ -457,14 +457,14 @@
 <span class="sd">        ----------</span>
 <span class="sd">        shapes: list of Shape objects, or Shape-compatible lists.</span>
 <span class="sd">            The valid shapes of the inputs.</span>
-<span class="sd">            </span>
+
 <span class="sd">            If input provided is not Shape object, but can be converted to Shape,</span>
 <span class="sd">            the Shape object would be stored in ``shapes`` instead.</span>
-<span class="sd">        </span>
+
 <span class="sd">        default: tuple of int or None</span>
 <span class="sd">            The default shape that is used for initiating the model, and set in</span>
 <span class="sd">            the metadata of the model file.</span>
-<span class="sd">            </span>
+
 <span class="sd">            If None, then the first element in ``shapes`` is used.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">get_new_symbol</span>
