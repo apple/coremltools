@@ -95,8 +95,8 @@ def convert(
 
     source : str (optional)
     
-        One of [``auto``, ``tensorflow``, ``pytorch``, ``milinternal``]. ``auto``
-        determines the framework automatically for most cases. Raises
+        One of [``auto``, ``tensorflow``, ``pytorch``, ``milinternal``]. Use ``auto``
+        to determine the framework automatically for most cases -- it raises
         ``ValueError`` if it fails to determine the source framework.
 
     inputs : list of ``TensorType`` or ``ImageType``
@@ -104,12 +104,12 @@ def convert(
         * TensorFlow 1 and 2
 
             - The ``inputs`` parameter is optional. If not provided, the inputs
-              are placeholder nodes in the model (if the model is frozen graph)
+              are placeholder nodes in the model (if the model is a frozen graph)
               or function inputs (if the model is a ``tf.function``).
-            - The inputs must correspond to all or some of the placeholder nodes
+            - The inputs must correspond to some or all of the placeholder nodes
               in the TF model.
             - ``TensorType`` and ``ImageType`` in ``inputs`` must have the ``name``
-              specified. ``shape`` is optional.
+              specified (``shape`` is optional).
             - If ``inputs`` is provided, it must be a flat list.
 
         * PyTorch
@@ -125,7 +125,7 @@ def convert(
 
             - The ``outputs`` parameter is optional.
 
-            - If specified, ``outputs`` is a list of string representing node
+            - If specified, ``outputs`` is a list of strings representing node
               names.
 
             - If ``outputs`` is not specified, the converter infers outputs to
@@ -224,24 +224,24 @@ def convert(
               The above casts all the float32 tensors to be float16, except
               the input/output tensors to any ``linear`` op.
         - ``None``
-            - When ``convert_to="mlprogram"``, compute_precision parameter
+            - When ``convert_to="mlprogram"``, ``compute_precision`` parameter
               defaults to ``coremltools.precision.FLOAT16``.
-            - When ``convert_to="neuralnetwork"``, compute_precision parameter
+            - When ``convert_to="neuralnetwork"``, ``compute_precision`` parameter
               needs to be ``None`` and has no meaning.
 
     skip_model_load : bool
-        Set to True to prevent coremltools from calling into the Core ML framework
+        Set to ``True`` to prevent coremltools from calling into the Core ML framework
         to compile and load the model, post-conversion. In that case, the returned
         model object cannot be used to make a prediction, but can be used to save
         via ``"model.save()"``. This flag may be used to convert to a newer model type
-        on an older Mac, which if done without turning this flag on, may raise a
+        on an older Mac, which, if done without turning this flag on, may raise a
         runtime warning.
         
-        Example: Use this flag to suppress runtime warning when converting to
-        ML program model type on a macOS 11, since ML program
+        Example: Use this flag to suppress a runtime warning when converting to
+        the ML program model type on a macOS 11, since an ML program
         can only be compiled and loaded from macOS12+.
         
-        Defaults to False.
+        Defaults to ``False``.
 
     compute_units: coremltools.ComputeUnit
     
@@ -254,22 +254,26 @@ def convert(
               neural engine.
 
     useCPUOnly: bool
-        Deprecated, to be removed in coremltools 6.0. Please use `compute_units` instead.
-        - if True, identical to setting compute_units to `coremltools.ComputeUnit.CPU_ONLY``
-        - if False, identical to setting compute_units to `coremltools.ComputeUnit.ALL``
+        Deprecated, to be removed in coremltools 6.0. Please use ``compute_units`` instead.
+        
+            - ``True`` is identical to setting ``compute_units`` to ``coremltools.ComputeUnit.CPU_ONLY``. 
+            - ``False`` is identical to setting ``compute_units`` to ``coremltools.ComputeUnit.ALL``.
 
     package_dir : str
         Post conversion, the model is saved at a temporary location and
         loaded to form the MLModel object ready for prediction.
-        If package_dir is provided, model will be saved at this location instead of creating a temporary directory.
-        - if not None, must be a path to a directory with extension .mlpackage
+        
+            - If ``package_dir`` is provided, the model will be saved at this location 
+              rather than creating a temporary directory.
+            - if not ``None``, it must be a path to a directory with the extension ``.mlpackage``.
 
     debug : bool
-        This flag should generally be False except for debugging purposes
-        Setting this flag to True:
-         - For Torch conversion, it will print the list of supported and unsupported ops
-           found in the model if conversion fails due to an unsupported op.
-         - For Tensorflow conversion, it will cause to display extra logging and visualizations
+        This flag should generally be ``False`` except for debugging purposes.
+        Setting this flag to ``True``:
+        
+            - For Torch conversion, it will print the list of supported and unsupported ops
+              found in the model if conversion fails due to an unsupported op.
+            - For Tensorflow conversion, it will cause to display extra logging and visualizations.
 
     Returns
     -------
@@ -318,7 +322,7 @@ def convert(
         >>> results = mlmodel.predict({"input": example_input.numpy()})
         >>> print(results['1651']) # 1651 is the node name given by PyTorch's JIT
 
-    See `neural-network-conversion <https://coremltools.readme.io/docs/neural-network-conversion>`_ for
+    See `Conversion Options <https://coremltools.readme.io/docs/neural-network-conversion>`_ for
     more advanced options.
     """
     _check_deployment_target(minimum_deployment_target)
