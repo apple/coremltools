@@ -18,6 +18,15 @@ from coremltools.converters.mil.mil.input_type import (
     StringInputType
 )
 
+
+def _maintain_shape(x, y):
+    # numpy converts rank 0 tensors to scalars
+    if x.ndim == 0:
+        # convert back to rank 0 tensor
+        return np.array(y)
+    return y
+
+
 class elementwise_unary(Operation):
     """
     Elementwise Unary Op Superclass
@@ -58,7 +67,8 @@ class abs(elementwise_unary):
 
     @precondition(allow=VALUE)
     def value_inference(self):
-        return np.abs(self.x.val)
+        result = np.abs(self.x.val)
+        return _maintain_shape(self.x.val, result)
 
 
 @register_op(doc_str="")
@@ -85,7 +95,8 @@ class acos(elementwise_unary):
 
     @precondition(allow=VALUE)
     def value_inference(self):
-        return np.arccos(self.x.val)
+        result = np.arccos(self.x.val)
+        return _maintain_shape(self.x.val, result)
 
 
 @register_op(doc_str="")
@@ -112,7 +123,8 @@ class asin(elementwise_unary):
 
     @precondition(allow=VALUE)
     def value_inference(self):
-        return np.arcsin(self.x.val)
+        result = np.arcsin(self.x.val)
+        return _maintain_shape(self.x.val, result)
 
 
 @register_op(doc_str="")
@@ -139,7 +151,8 @@ class atan(elementwise_unary):
 
     @precondition(allow=VALUE)
     def value_inference(self):
-        return np.arctan(self.x.val)
+        result = np.arctan(self.x.val)
+        return _maintain_shape(self.x.val, result)
 
 
 @register_op(doc_str="")
@@ -167,7 +180,8 @@ class atanh(elementwise_unary):
 
     @precondition(allow=VALUE)
     def value_inference(self):
-        return np.arctanh(self.x.val)
+        result = np.arctanh(self.x.val)
+        return _maintain_shape(self.x.val, result)
 
 
 @register_op(doc_str="")
@@ -194,7 +208,8 @@ class ceil(elementwise_unary):
 
     @precondition(allow=VALUE)
     def value_inference(self):
-        return np.ceil(self.x.val)
+        result = np.ceil(self.x.val)
+        return _maintain_shape(self.x.val, result)
 
 
 @register_op(doc_str="")
@@ -261,7 +276,8 @@ class cos(elementwise_unary):
 
     @precondition(allow=VALUE)
     def value_inference(self):
-        return np.cos(self.x.val)
+        result = np.cos(self.x.val)
+        return _maintain_shape(self.x.val, result)
 
 
 @register_op(doc_str="")
@@ -288,7 +304,8 @@ class cosh(elementwise_unary):
 
     @precondition(allow=VALUE)
     def value_inference(self):
-        return np.cosh(self.x.val)
+        result = np.cosh(self.x.val)
+        return _maintain_shape(self.x.val, result)
 
 
 @register_op(doc_str="")
@@ -344,13 +361,7 @@ class exp(elementwise_unary):
     @precondition(allow=VALUE)
     def value_inference(self):
         result = np.exp(self.x.val)
-
-        # numpy converts rank 0 tensors to scalars
-        if self.x.val.ndim == 0:
-            # convert back to rank 0 tensor
-            result = np.array(result)
-
-        return result
+        return _maintain_shape(self.x.val, result)
 
 
 @register_op(doc_str="")
@@ -377,7 +388,8 @@ class exp2(elementwise_unary):
 
     @precondition(allow=VALUE)
     def value_inference(self):
-        return np.exp2(self.x.val)
+        result = np.exp2(self.x.val)
+        return _maintain_shape(self.x.val, result)
 
 
 @register_op(doc_str="")
@@ -405,7 +417,8 @@ class floor(elementwise_unary):
 
     @precondition(allow=VALUE)
     def value_inference(self):
-        return np.floor(self.x.val)
+        result = np.floor(self.x.val)
+        return _maintain_shape(self.x.val, result)
 
 
 @register_op(doc_str="")
@@ -548,7 +561,8 @@ class round(elementwise_unary):
 
     @precondition(allow=VALUE)
     def value_inference(self):
-        return np.round(self.x.val)
+        result = np.round(self.x.val)
+        return _maintain_shape(self.x.val, result)
 
 
 @register_op(doc_str="")
@@ -592,7 +606,8 @@ class rsqrt(Operation):
 
     @precondition(allow=VALUE)
     def value_inference(self):
-        return 1.0 / np.sqrt(self.x.val + self.epsilon.val)
+        result = 1.0 / np.sqrt(self.x.val + self.epsilon.val)
+        return _maintain_shape(self.x.val, result)
 
 
 @register_op(doc_str="")
@@ -621,7 +636,8 @@ class sign(elementwise_unary):
 
     @precondition(allow=VALUE)
     def value_inference(self):
-        return np.sign(self.x.val)
+        result = np.sign(self.x.val)
+        return _maintain_shape(self.x.val, result)
 
 
 @register_op(doc_str="")
@@ -648,7 +664,8 @@ class sin(elementwise_unary):
 
     @precondition(allow=VALUE)
     def value_inference(self):
-        return np.sin(self.x.val)
+        result = np.sin(self.x.val)
+        return _maintain_shape(self.x.val, result)
 
 
 @register_op(doc_str="")
@@ -675,7 +692,8 @@ class sinh(elementwise_unary):
 
     @precondition(allow=VALUE)
     def value_inference(self):
-        return np.sinh(self.x.val)
+        result = np.sinh(self.x.val)
+        return _maintain_shape(self.x.val, result)
 
 
 @register_op(doc_str="")
@@ -702,7 +720,8 @@ class sqrt(elementwise_unary):
 
     @precondition(allow=VALUE)
     def value_inference(self):
-        return np.sqrt(self.x.val)
+        result = np.sqrt(self.x.val)
+        return _maintain_shape(self.x.val, result)
 
 
 @register_op(doc_str="")
@@ -757,7 +776,8 @@ class tan(elementwise_unary):
 
     @precondition(allow=VALUE)
     def value_inference(self):
-        return np.tan(self.x.val)
+        result = np.tan(self.x.val)
+        return _maintain_shape(self.x.val, result)
 
 
 @register_op(doc_str="")
@@ -785,7 +805,8 @@ class tanh(elementwise_unary):
 
     @precondition(allow=VALUE)
     def value_inference(self):
-        return np.tanh(self.x.val)
+        result = np.tanh(self.x.val)
+        return _maintain_shape(self.x.val, result)
 
 
 @register_op(doc_str="")

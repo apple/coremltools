@@ -3268,13 +3268,18 @@ class TestTorchTensor(TorchBaseTest):
 
 
     @pytest.mark.parametrize(
-        "backend",
-        backends,
+        "backend, torch_op",
+        itertools.product(
+            backends,
+            [torch.abs, torch.acos, torch.asin, torch.atan, torch.atanh, torch.ceil, torch.cos,
+             torch.cosh, torch.exp, torch.exp2, torch.floor, torch.round, torch.rsqrt, torch.sign,
+             torch.sin, torch.sinh, torch.sqrt, torch.square, torch.tan, torch.tanh],
+        ),
     )
-    def test_torch_rank0_tensor(self, backend):
+    def test_torch_rank0_tensor(self, backend, torch_op):
         class Model(nn.Module):
             def forward(self, x: torch.Tensor) -> torch.Tensor:
-                return torch.exp(torch.tensor(2.))
+                return torch_op(torch.tensor(.1))
 
         model = Model()
         self.run_compare_torch(
