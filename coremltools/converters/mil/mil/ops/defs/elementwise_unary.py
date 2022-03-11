@@ -2,6 +2,7 @@
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
+
 import math
 import numpy as np
 
@@ -342,7 +343,14 @@ class exp(elementwise_unary):
 
     @precondition(allow=VALUE)
     def value_inference(self):
-        return np.exp(self.x.val)
+        result = np.exp(self.x.val)
+
+        # numpy converts rank 0 tensors to scalars
+        if self.x.val.ndim == 0:
+            # convert back to rank 0 tensor
+            result = np.array(result)
+
+        return result
 
 
 @register_op(doc_str="")

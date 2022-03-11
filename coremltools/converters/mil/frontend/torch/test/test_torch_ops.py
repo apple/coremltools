@@ -3265,7 +3265,25 @@ class TestTorchTensor(TorchBaseTest):
         self.run_compare_torch(
             shape, model, backend=backend,
         )
-        
+
+
+    @pytest.mark.parametrize(
+        "backend",
+        backends,
+    )
+    def test_torch_rank0_tensor(self, backend):
+        class Model(nn.Module):
+            def forward(self, x: torch.Tensor) -> torch.Tensor:
+                return torch.exp(torch.tensor(2.))
+
+        model = Model()
+        self.run_compare_torch(
+            torch.tensor([1., 2., 3.]),
+            model,
+            input_as_shape=False,
+            backend=backend,
+        )
+
 
 class TestTensorAssign(TorchBaseTest):
 
