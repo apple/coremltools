@@ -11,6 +11,7 @@
 #include "MILBlob/Util/SpanCast.hpp"
 
 #include <mutex>
+#include <stdexcept>
 #include <unordered_map>
 
 using namespace MILBlob;

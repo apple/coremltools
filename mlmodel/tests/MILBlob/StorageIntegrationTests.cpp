@@ -11,6 +11,8 @@
 #include "framework/TestUtils.hpp"
 #include "MLModelTests.hpp"
 
+#include <stdexcept>
+
 using namespace MILBlob;
 using namespace MILBlob::Blob;
 using MILBlob::TestUtil::AutoDeleteTempFile;
