@@ -1,4 +1,4 @@
-# Copyright (c) 2017-2019, Apple Inc. All rights reserved.
+# Copyright (c) 2017, Apple Inc. All rights reserved.
 #
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
@@ -281,9 +281,6 @@ class NeuralNetworkBuilder(object):
             
             * When ``spec`` is ``None`` (building from scratch), ``input_features`` must not be ``None``.
 
-            * When ``spec`` is not ``None``, ``input_features`` will be ignored; 
-              the input feature of the existing spec will be used instead.
-
         output_features: [(str, datatypes.Array or None)] or None
             List of output feature of the network. Each feature is a 
             ``(name, array)`` tuple, where ``name`` is the name of the feature, 
@@ -293,9 +290,6 @@ class NeuralNetworkBuilder(object):
             
             * When ``spec`` is ``None`` (building from scratch), ``output_features`` must not be ``None``.
             
-            * When ``spec`` is not ``None``, ``output_features`` will be ignored; 
-              the output feature of the existing spec will be used instead.
-
         mode: str ('classifier', 'regressor' or None)
             Mode (one of ``'classifier'``, ``'regressor'``, or ``None``).
 
