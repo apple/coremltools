@@ -557,6 +557,12 @@ def conv_helper(const_context, builder, op):
         quant_scale = None
 
     if is_conv1d or is_conv2d:
+        if weights is None and has_bias:
+            # weights are dyanmic.
+            # In this case, bias, if present, cannot be part of the conv op
+            # it needs to be added separately via an add op
+            out_name += "_without_bias"
+
         builder.add_convolution(
             name=out_name,
             kernel_channels=op.weight.shape[1],
@@ -568,8 +574,8 @@ def conv_helper(const_context, builder, op):
             border_mode=padding_mode,
             groups=groups,
             W=weights,
-            b=op.bias.val if has_bias else None,
-            has_bias=has_bias,
+            b=op.bias.val if has_bias and weights is not None else None,
+            has_bias=has_bias if weights is not None else False,
             is_deconv=False,
             input_name=input_names,
             output_name=out_name,
@@ -580,6 +586,24 @@ def conv_helper(const_context, builder, op):
             quant_scale=quant_scale,
             **pad  # Python 2.7.16 will fail with a syntax error if a comma is included after `**pad`
         )
+
+        # add bias if weights are dynamic
+        if weights is None and has_bias:
+            Cout = op.weight.shape[0]
+            assert op.bias.val.size == Cout, \
+                "size of bias for convolution must be same as the number of output channels"
+            builder.add_load_constant_nd(
+                name=op.name + '_constant_bias', output_name=op.name + "_constant_bias",
+                constant_value=op.bias.val.reshape((Cout, 1, 1)), shape=(Cout, 1, 1)
+            )
+            add_op_output_name = op.name + "_with_bias" if is_conv1d else op.outputs[0].name
+            builder.add_add_broadcastable(
+                name=add_op_output_name,
+                input_names=[out_name, op.name + "_constant_bias"],
+                output_name=add_op_output_name,
+            )
+            if is_conv1d:
+                out_name = add_op_output_name
 
         # Squeeze added `Width` dimension for 1d case
         if is_conv1d:
