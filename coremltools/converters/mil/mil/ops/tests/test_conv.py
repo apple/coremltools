@@ -409,7 +409,8 @@ class TestConv:
             [True, False],
             backends,
             ["conv1d", "conv2d"],
-            [{
+            [
+            {
                 "padding": (1, 1, 1),
                 "DHWKdKhKw": (10, 12, 14, 3, 2, 4),
                 "stride": (2, 1, 1),
@@ -461,6 +462,12 @@ class TestConv:
         has_bias = config["has_bias"]
         groups = config["groups"]
         symbolic = config["symbolic"]
+
+        if backend[0] == "neuralnetwork" and groups > 1:
+            pytest.xfail("dyanmic conv with groups > 1 is not supported on the neuralnetwork backend")
+
+        if backend[0] == "mlprogram" and conv_dim == "conv1d" and not use_cpu_only:
+            pytest.xfail("rdar://90819258, mlprogram fails with dynamic weights conv1d on the GPU")
 
         D, H, W, Kd, Kh, Kw = DHWKdKhKw
         N, C_in, C_out = 1, 1 * groups, 2 * groups
@@ -549,6 +556,7 @@ class TestConv:
             use_cpu_only=use_cpu_only,
             frontend_only=False,
             backend=backend,
+            use_cpu_for_conversion=use_cpu_only,
         )
 
     @pytest.mark.parametrize(

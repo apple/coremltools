@@ -563,6 +563,11 @@ def conv_helper(const_context, builder, op):
             # it needs to be added separately via an add op
             out_name += "_without_bias"
 
+        if weights is None and groups > 1:
+            raise NotImplementedError("Convolution with dynamic weights and groups > 1 is not supported on the "
+                                      "neuralnetwork backend. Please use the mlprogram backend "
+                                      "(convert_to=\"mlprogram\")")
+
         builder.add_convolution(
             name=out_name,
             kernel_channels=op.weight.shape[1],
