@@ -26,28 +26,54 @@ class TestConvTranspose:
                 "use_cpu_only",
                 "backend",
                 "conv_dim",
-                "padding",
-                "DHWKdKhKw",
-                "stride",
-                "dilation",
-                "has_bias",
-                "groups",
-                "test_symbolic",
-                "test_output_shape",
+                "config",
             ]
         ),
         itertools.product(
             [True, False],
             backends,
             ["conv1d", "conv2d", "conv3d"],
-            [(1, 2, 3), (2, 2, 2)],
-            [(7, 7, 7, 2, 2, 2), (10, 12, 14, 3, 2, 4)],
-            [(1, 1, 1), (2, 1, 2)],
-            [(1, 1, 1), (1, 2, 1)],
-            [True, False],
-            [1, 2],
-            [True, False],
-            [True, False],
+            [{
+                "padding": (1, 2, 3),
+                "DHWKdKhKw": (10, 12, 14, 3, 2, 4),
+                "stride": (2, 1, 1),
+                "dilation": (1, 1, 1),
+                "has_bias": False,
+                "groups": 1,
+                "test_symbolic": False,
+                "test_output_shape": True,
+            },
+            {
+                "padding": (2, 2, 2),
+                "DHWKdKhKw": (10, 12, 14, 3, 2, 4),
+                "stride": (2, 2, 2),
+                "dilation": (2, 1, 1),
+                "has_bias": False,
+                "groups": 2,
+                "test_symbolic": True,
+                "test_output_shape": False,
+            },
+            {
+                "padding": (1, 2, 3),
+                "DHWKdKhKw": (7, 7, 7, 2, 2, 2),
+                "stride": (2, 2, 2),
+                "dilation": (2, 1, 1),
+                "has_bias": True,
+                "groups": 1,
+                "test_symbolic": True,
+                "test_output_shape": False,
+            },
+            {
+                "padding": (2, 2, 2),
+                "DHWKdKhKw": (7, 7, 7, 2, 2, 2),
+                "stride": (2, 1, 1),
+                "dilation": (1, 1, 1),
+                "has_bias": True,
+                "groups": 2,
+                "test_symbolic": False,
+                "test_output_shape": False,
+            },
+            ],
         ),
     )
     def test_builder_to_backend_stress(
@@ -55,22 +81,16 @@ class TestConvTranspose:
         use_cpu_only,
         backend,
         conv_dim,
-        padding,
-        DHWKdKhKw,
-        stride,
-        dilation,
-        has_bias,
-        groups,
-        test_symbolic,
-        test_output_shape,
+        config,
     ):
-
-        if test_symbolic and test_output_shape:
-            # conv_transpose output_shape can only be constant (non-symbolic)
-            return
-
-        if backend[0] == "mlprogram" and groups == 2:
-            pytest.xfail("rdar://81999134 (ConvTranspose with group > 1 crashing on both CPU and GPU backend)")
+        padding = config["padding"]
+        DHWKdKhKw = config["DHWKdKhKw"]
+        stride = config["stride"]
+        dilation = config["dilation"]
+        has_bias = config["has_bias"]
+        groups = config["groups"]
+        test_symbolic = config["test_symbolic"]
+        test_output_shape = config["test_output_shape"]
 
         D, H, W, Kd, Kh, Kw = DHWKdKhKw
         N, C_in, C_out = 1, 1 * groups, 2 * groups
@@ -197,26 +217,50 @@ class TestConv:
                 "use_cpu_only",
                 "backend",
                 "conv_dim",
-                "padding",
-                "DHWKdKhKw",
-                "stride",
-                "dilation",
-                "has_bias",
-                "groups",
-                "symbolic",
+                "config",
             ]
         ),
         itertools.product(
             [True, False],
             backends,
             ["conv1d", "conv2d", "conv3d"],
-            [(1, 1, 1), (2, 2, 2)],
-            [(5, 5, 5, 2, 2, 2), (10, 12, 14, 3, 2, 4)],
-            [(2, 2, 2), (2, 1, 1)],
-            [(1, 1, 1), (2, 1, 1)],
-            [True, False],
-            [1, 2],
-            [True, False],
+            [{
+                "padding": (1, 1, 1),
+                "DHWKdKhKw": (10, 12, 14, 3, 2, 4),
+                "stride": (2, 1, 1),
+                "dilation": (1, 1, 1),
+                "has_bias": False,
+                "groups": 1,
+                "symbolic": False,
+             },
+             {
+                "padding": (2, 2, 2),
+                "DHWKdKhKw": (10, 12, 14, 3, 2, 4),
+                "stride": (2, 2, 2),
+                "dilation": (2, 1, 1),
+                "has_bias": False,
+                "groups": 2,
+                "symbolic": True,
+             },
+             {
+                "padding": (1, 1, 1),
+                "DHWKdKhKw": (5, 5, 5, 2, 2, 2),
+                "stride": (2, 2, 2),
+                "dilation": (2, 1, 1),
+                "has_bias": True,
+                "groups": 1,
+                "symbolic": True,
+             },
+             {
+                "padding": (2, 2, 2),
+                "DHWKdKhKw": (5, 5, 5, 2, 2, 2),
+                "stride": (2, 1, 1),
+                "dilation": (1, 1, 1),
+                "has_bias": True,
+                "groups": 2,
+                "symbolic": False,
+             },
+             ],
         ),
     )
     def test_builder_to_backend_stress(
@@ -224,14 +268,16 @@ class TestConv:
         use_cpu_only,
         backend,
         conv_dim,
-        padding,
-        DHWKdKhKw,
-        stride,
-        dilation,
-        has_bias,
-        groups,
-        symbolic,
+        config,
     ):
+        padding = config["padding"]
+        DHWKdKhKw = config["DHWKdKhKw"]
+        stride = config["stride"]
+        dilation = config["dilation"]
+        has_bias = config["has_bias"]
+        groups = config["groups"]
+        symbolic = config["symbolic"]
+
         D, H, W, Kd, Kh, Kw = DHWKdKhKw
         N, C_in, C_out = 1, 1 * groups, 2 * groups
 
@@ -349,7 +395,6 @@ class TestConv:
             backend=backend,
         )
 
-    @pytest.mark.skip("<rdar://problem/53460668> Dynamic weights + bias not supported on GPU")
     @pytest.mark.skipif(not testing_reqs._HAS_TORCH, reason="PyTorch not installed.")
     @pytest.mark.parametrize(
         ",".join(
@@ -357,24 +402,51 @@ class TestConv:
                 "use_cpu_only",
                 "backend",
                 "conv_dim",
-                "padding",
-                "DHWKdKhKw",
-                "stride",
-                "groups",
-                "symbolic",
-                "has_bias"
+                "config",
             ]
         ),
         itertools.product(
             [True, False],
             backends,
             ["conv1d", "conv2d"],
-            [(1, 1, 1), (2, 2, 2)],
-            [(5, 5, 5, 2, 2, 2), (10, 12, 14, 3, 2, 4)],
-            [(1, 2, 1)],
-            [1, 2],
-            [True, False],
-            [True],
+            [
+            {
+                "padding": (1, 1, 1),
+                "DHWKdKhKw": (10, 12, 14, 3, 2, 4),
+                "stride": (2, 1, 1),
+                "dilation": (1, 1, 1),
+                "has_bias": False,
+                "groups": 1,
+                "symbolic": False,
+            },
+            {
+                "padding": (2, 2, 2),
+                "DHWKdKhKw": (10, 12, 14, 3, 2, 4),
+                "stride": (2, 2, 2),
+                "dilation": (2, 1, 1),
+                "has_bias": False,
+                "groups": 2,
+                "symbolic": True,
+            },
+            {
+                "padding": (1, 1, 1),
+                "DHWKdKhKw": (5, 5, 5, 2, 2, 2),
+                "stride": (2, 2, 2),
+                "dilation": (2, 1, 1),
+                "has_bias": True,
+                "groups": 1,
+                "symbolic": True,
+            },
+            {
+                "padding": (2, 2, 2),
+                "DHWKdKhKw": (5, 5, 5, 2, 2, 2),
+                "stride": (2, 1, 1),
+                "dilation": (1, 1, 1),
+                "has_bias": True,
+                "groups": 2,
+                "symbolic": False,
+            },
+            ],
         ),
     )
     def test_builder_to_backend_stress_weights_input(
@@ -382,13 +454,21 @@ class TestConv:
         use_cpu_only,
         backend,
         conv_dim,
-        padding,
-        DHWKdKhKw,
-        stride,
-        groups,
-        symbolic,
-        has_bias
+        config,
     ):
+        padding = config["padding"]
+        DHWKdKhKw = config["DHWKdKhKw"]
+        stride = config["stride"]
+        has_bias = config["has_bias"]
+        groups = config["groups"]
+        symbolic = config["symbolic"]
+
+        if backend[0] == "neuralnetwork" and groups > 1:
+            pytest.xfail("dynamic conv with groups > 1 is not supported on the neuralnetwork backend")
+
+        if backend[0] == "mlprogram" and conv_dim == "conv1d" and not use_cpu_only:
+            pytest.xfail("rdar://90819258, mlprogram fails with dynamic weights conv1d on the GPU")
+
         D, H, W, Kd, Kh, Kw = DHWKdKhKw
         N, C_in, C_out = 1, 1 * groups, 2 * groups
 
@@ -476,6 +556,7 @@ class TestConv:
             use_cpu_only=use_cpu_only,
             frontend_only=False,
             backend=backend,
+            use_cpu_for_conversion=use_cpu_only,
         )
 
     @pytest.mark.parametrize(
