@@ -1449,6 +1449,9 @@ class TestDepthwiseConv(TensorFlowBaseTest):
                 use_cpu_for_conversion=use_cpu_for_conversion,
             )
 
+        if backend[0] == "neuralnetwork" and dynamic_weights:
+            pytest.xfail("dynamic conv with groups > 1 is not supported on the neuralnetwork backend")
+
         # We do not support dynamic weight when dilations != 1.
         test_dynamic_W() if dynamic_weights and dilations == (1, 1) else test_static_W()
 
@@ -1577,6 +1580,8 @@ class TestSeparableConv(TensorFlowBaseTest):
 
         test_static_W()
         if not any([True if d > 1 else False for d in dilations]):
+            if backend[0] == "neuralnetwork":
+                pytest.xfail("dynamic conv with groups > 1 is not supported on the neuralnetwork backend")
             test_dynamic_W()
 
 class TestConvTranspose(TensorFlowBaseTest):
