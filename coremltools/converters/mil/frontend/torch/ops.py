@@ -4274,3 +4274,9 @@ def scatter_add(context, node):
     updates = inputs[3]
     result = mb.scatter_along_axis(data=data, indices=indices, updates=updates, axis=axis, mode="add", name=node.name)
     context.add(result)
+
+@register_torch_op
+def clamp_min(context, node):
+    x = _get_inputs(context, node, expected=2)
+    x = mb.clip(x=x[0], alpha=x[1], beta=float("inf"), name=node.name)
+    context.add(x)
