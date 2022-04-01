@@ -1,6 +1,6 @@
 ---
 name: "❓Question"
-about: Any issue that is not a bug/feature request
+about: Ask a question
 title: ''
 labels: question
 assignees: ''
@@ -9,5 +9,4 @@ assignees: ''
 
 ## ❓Question
 
-## System Information
-- If applicable
+- If this is a question about the Core ML Frame work or Xcode, please ask your question in the Apple Developer Forum: https://developer.apple.com/forums/
