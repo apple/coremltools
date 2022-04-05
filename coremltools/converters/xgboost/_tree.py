@@ -68,7 +68,7 @@ def convert(
 		>>> coreml_model = coremltools.converters.xgboost.convert(model)
 
 		# Saving the Core ML model to a file.
-		>>> coremltools.save('my_model.mlmodel')
+		>>> coreml_model.save('my_model.mlmodel')
     """
     model = _MLModel(
         _convert_tree_ensemble(
