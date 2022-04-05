@@ -130,6 +130,7 @@ linear
 
    .. autoclass:: linear
    .. autoclass:: matmul
+   .. autoclass:: einsum
 
 
 normalization

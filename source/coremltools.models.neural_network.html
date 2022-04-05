@@ -148,8 +148,6 @@ name of the feature, and <code class="docutils literal notranslate"><span class=
 describing the feature type.</p>
 <ul class="simple">
 <li><p>When <code class="docutils literal notranslate"><span class="pre">spec</span></code> is <code class="docutils literal notranslate"><span class="pre">None</span></code> (building from scratch), <code class="docutils literal notranslate"><span class="pre">input_features</span></code> must not be <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
-<li><p>When <code class="docutils literal notranslate"><span class="pre">spec</span></code> is not <code class="docutils literal notranslate"><span class="pre">None</span></code>, <code class="docutils literal notranslate"><span class="pre">input_features</span></code> will be ignored;
-the input feature of the existing spec will be used instead.</p></li>
 </ul>
 </dd>
 <dt><strong>output_features: [(str, datatypes.Array or None)] or None</strong></dt><dd><p>List of output feature of the network. Each feature is a
@@ -158,8 +156,6 @@ and <code class="docutils literal notranslate"><span class="pre">array</span></c
 <ul class="simple">
 <li><p>The <code class="docutils literal notranslate"><span class="pre">array</span></code> can be <code class="docutils literal notranslate"><span class="pre">None</span></code> if not known.</p></li>
 <li><p>When <code class="docutils literal notranslate"><span class="pre">spec</span></code> is <code class="docutils literal notranslate"><span class="pre">None</span></code> (building from scratch), <code class="docutils literal notranslate"><span class="pre">output_features</span></code> must not be <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
-<li><p>When <code class="docutils literal notranslate"><span class="pre">spec</span></code> is not <code class="docutils literal notranslate"><span class="pre">None</span></code>, <code class="docutils literal notranslate"><span class="pre">output_features</span></code> will be ignored;
-the output feature of the existing spec will be used instead.</p></li>
 </ul>
 </dd>
 <dt><strong>mode: str (‘classifier’, ‘regressor’ or None)</strong></dt><dd><p>Mode (one of <code class="docutils literal notranslate"><span class="pre">'classifier'</span></code>, <code class="docutils literal notranslate"><span class="pre">'regressor'</span></code>, or <code class="docutils literal notranslate"><span class="pre">None</span></code>).</p>
