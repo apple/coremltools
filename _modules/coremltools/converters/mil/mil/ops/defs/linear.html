@@ -304,7 +304,7 @@
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">matmul</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span></div>
 
 
-<span class="nd">@register_op</span><span class="p">(</span><span class="n">doc_str</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+<div class="viewcode-block" id="einsum"><a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.linear.einsum">[docs]</a><span class="nd">@register_op</span><span class="p">(</span><span class="n">doc_str</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">einsum</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Perform tensor multiplication expressed according to the einsum notation.</span>
@@ -312,35 +312,37 @@
 <span class="sd">    dimensions -1 and -3, treating all the other dimensions as batch. Broadcasting is supported along batch dimensions.</span>
 <span class="sd">    In particular, the inputs must be of the following shapes:</span>
 
-<span class="sd">    * rank 4 input case</span>
-<span class="sd">        * input 1: [B, C, H, W1]</span>
-<span class="sd">        * input 2: [B, W1, H, W2]</span>
-<span class="sd">        * output: [B, C, H, W2]</span>
-<span class="sd">        * if , for one of the inputs, the dimensions &quot;B&quot; or &quot;H&quot; is 1, they are broadcast to match the other input</span>
+<span class="sd">    * Rank 4 input case</span>
+<span class="sd">        * Input 1: ``[B, C, H, W1]``</span>
+<span class="sd">        * Input 2: ``[B, W1, H, W2]``</span>
+<span class="sd">        * Output: ``[B, C, H, W2]``</span>
+<span class="sd">        * If, for one of the inputs, the dimensions ``&quot;B&quot;`` or ``&quot;H&quot;`` is 1,</span>
+<span class="sd">          they are broadcast to match the other input.</span>
 
-<span class="sd">    * rank 3 input case</span>
-<span class="sd">        * input 1: [C, H, W1]</span>
-<span class="sd">        * input 2: [W1, H, W2]</span>
-<span class="sd">        * output: [C, H, W2]</span>
-<span class="sd">        * if , for one of the inputs, the dimension &quot;H&quot; is 1, it is broadcast to match the other input</span>
+<span class="sd">    * Rank 3 input case</span>
+<span class="sd">        * Input 1: ``[C, H, W1]``</span>
+<span class="sd">        * Input 2: ``[W1, H, W2]``</span>
+<span class="sd">        * Output: ``[C, H, W2]``</span>
+<span class="sd">        * If, for one of the inputs, the dimension ``&quot;H&quot;`` is 1,</span>
+<span class="sd">          it is broadcast to match the other input.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    values : Tuple(tensor_1, tensor_2)</span>
-<span class="sd">        * where</span>
-<span class="sd">            * tensor_1: tensor&lt;[*D, C, H, W1], T&gt;</span>
-<span class="sd">            * must be of rank 3 or 4</span>
-<span class="sd">            * tensor_2: tensor&lt;[*D, W1, H, W2], T&gt;</span>
-<span class="sd">            * must be of rank 3 or 4</span>
+<span class="sd">        * Where:</span>
+<span class="sd">            * ``tensor_1``: ``tensor&lt;[*D, C, H, W1], T&gt;``</span>
+<span class="sd">            * Must be of rank 3 or 4.</span>
+<span class="sd">            * ``tensor_2``: ``tensor&lt;[*D, W1, H, W2], T&gt;``</span>
+<span class="sd">            * Must be of rank 3 or 4.</span>
 <span class="sd">    equation: const&lt;str&gt;</span>
-<span class="sd">        * supported equations are:</span>
-<span class="sd">            * &quot;nchw,nwhu-&gt;nchu&quot; and its equivalent equation strings</span>
-<span class="sd">            * &quot;chw,whr-&gt;chr&quot; and its equivalent equation strings</span>
+<span class="sd">        * Supported equations are:</span>
+<span class="sd">            * ``&quot;nchw,nwhu-&gt;nchu&quot;`` and its equivalent equation strings</span>
+<span class="sd">            * ``&quot;chw,whr-&gt;chr&quot;`` and its equivalent equation strings</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;[*D, C, H, W2], T&gt;</span>
-<span class="sd">        * same ranks as the inputs</span>
+<span class="sd">    tensor&lt;[\*D, C, H, W2], T&gt;</span>
+<span class="sd">        * Same ranks as the inputs.</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
@@ -417,7 +419,7 @@
         <span class="n">res</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">equation</span><span class="o">.</span><span class="n">val</span><span class="p">,</span>
                         <span class="n">np</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="n">x_shape</span><span class="p">),</span>
                         <span class="n">np</span><span class="o">.</span><span class="n">broadcast_to</span><span class="p">(</span><span class="n">y</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="n">y_shape</span><span class="p">))</span>
-        <span class="k">return</span> <span class="n">res</span>
+        <span class="k">return</span> <span class="n">res</span></div>
 </pre></div>
 
            </div>

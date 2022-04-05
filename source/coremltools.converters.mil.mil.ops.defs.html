@@ -2984,6 +2984,82 @@ It has no effect when <code class="docutils literal notranslate"><span class="pr
 </dl>
 </dd></dl>
 
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.linear.einsum">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.linear.</span></span><span class="sig-name descname"><span class="pre">einsum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/linear.html#einsum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.linear.einsum" title="Permalink to this definition"></a></dt>
+<dd><p>Perform tensor multiplication expressed according to the einsum notation.
+The mode/equation that is currently supported is mutiplying matrices that are laid out on
+dimensions -1 and -3, treating all the other dimensions as batch. Broadcasting is supported along batch dimensions.
+In particular, the inputs must be of the following shapes:</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt>Rank 4 input case</dt><dd><ul>
+<li><p>Input 1: <code class="docutils literal notranslate"><span class="pre">[B,</span> <span class="pre">C,</span> <span class="pre">H,</span> <span class="pre">W1]</span></code></p></li>
+<li><p>Input 2: <code class="docutils literal notranslate"><span class="pre">[B,</span> <span class="pre">W1,</span> <span class="pre">H,</span> <span class="pre">W2]</span></code></p></li>
+<li><p>Output: <code class="docutils literal notranslate"><span class="pre">[B,</span> <span class="pre">C,</span> <span class="pre">H,</span> <span class="pre">W2]</span></code></p></li>
+<li><p>If, for one of the inputs, the dimensions <code class="docutils literal notranslate"><span class="pre">&quot;B&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;H&quot;</span></code> is 1,
+they are broadcast to match the other input.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Rank 3 input case</dt><dd><ul>
+<li><p>Input 1: <code class="docutils literal notranslate"><span class="pre">[C,</span> <span class="pre">H,</span> <span class="pre">W1]</span></code></p></li>
+<li><p>Input 2: <code class="docutils literal notranslate"><span class="pre">[W1,</span> <span class="pre">H,</span> <span class="pre">W2]</span></code></p></li>
+<li><p>Output: <code class="docutils literal notranslate"><span class="pre">[C,</span> <span class="pre">H,</span> <span class="pre">W2]</span></code></p></li>
+<li><p>If, for one of the inputs, the dimension <code class="docutils literal notranslate"><span class="pre">&quot;H&quot;</span></code> is 1,
+it is broadcast to match the other input.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>values</strong><span class="classifier">Tuple(tensor_1, tensor_2)</span></dt><dd><ul class="simple">
+<li><dl class="simple">
+<dt>Where:</dt><dd><ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">tensor_1</span></code>: <code class="docutils literal notranslate"><span class="pre">tensor&lt;[*D,</span> <span class="pre">C,</span> <span class="pre">H,</span> <span class="pre">W1],</span> <span class="pre">T&gt;</span></code></p></li>
+<li><p>Must be of rank 3 or 4.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tensor_2</span></code>: <code class="docutils literal notranslate"><span class="pre">tensor&lt;[*D,</span> <span class="pre">W1,</span> <span class="pre">H,</span> <span class="pre">W2],</span> <span class="pre">T&gt;</span></code></p></li>
+<li><p>Must be of rank 3 or 4.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+<dt><strong>equation: const&lt;str&gt;</strong></dt><dd><ul class="simple">
+<li><dl class="simple">
+<dt>Supported equations are:</dt><dd><ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;nchw,nwhu-&gt;nchu&quot;</span></code> and its equivalent equation strings</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;chw,whr-&gt;chr&quot;</span></code> and its equivalent equation strings</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>tensor&lt;[*D, C, H, W2], T&gt;</dt><dd><ul class="simple">
+<li><p>Same ranks as the inputs.</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Attributes</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>T: fp32</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 <section id="module-coremltools.converters.mil.mil.ops.defs.normalization">
 <span id="normalization"></span><h2>normalization<a class="headerlink" href="#module-coremltools.converters.mil.mil.ops.defs.normalization" title="Permalink to this headline"></a></h2>

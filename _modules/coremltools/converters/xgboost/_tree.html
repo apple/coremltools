@@ -145,7 +145,7 @@
 <span class="sd">		&gt;&gt;&gt; coreml_model = coremltools.converters.xgboost.convert(model)</span>
 
 <span class="sd">		# Saving the Core ML model to a file.</span>
-<span class="sd">		&gt;&gt;&gt; coremltools.save(&#39;my_model.mlmodel&#39;)</span>
+<span class="sd">		&gt;&gt;&gt; coreml_model.save(&#39;my_model.mlmodel&#39;)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">model</span> <span class="o">=</span> <span class="n">_MLModel</span><span class="p">(</span>
         <span class="n">_convert_tree_ensemble</span><span class="p">(</span>

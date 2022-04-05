@@ -75,7 +75,7 @@
            <div itemprop="articleBody">
              
   <h1>Source code for coremltools.models.neural_network.builder</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (c) 2017-2019, Apple Inc. All rights reserved.</span>
+<span></span><span class="c1"># Copyright (c) 2017, Apple Inc. All rights reserved.</span>
 <span class="c1">#</span>
 <span class="c1"># Use of this source code is governed by a BSD-3-clause license that can be</span>
 <span class="c1"># found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
@@ -358,9 +358,6 @@
 <span class="sd">            </span>
 <span class="sd">            * When ``spec`` is ``None`` (building from scratch), ``input_features`` must not be ``None``.</span>
 
-<span class="sd">            * When ``spec`` is not ``None``, ``input_features`` will be ignored; </span>
-<span class="sd">              the input feature of the existing spec will be used instead.</span>
-
 <span class="sd">        output_features: [(str, datatypes.Array or None)] or None</span>
 <span class="sd">            List of output feature of the network. Each feature is a </span>
 <span class="sd">            ``(name, array)`` tuple, where ``name`` is the name of the feature, </span>
@@ -370,9 +367,6 @@
 <span class="sd">            </span>
 <span class="sd">            * When ``spec`` is ``None`` (building from scratch), ``output_features`` must not be ``None``.</span>
 <span class="sd">            </span>
-<span class="sd">            * When ``spec`` is not ``None``, ``output_features`` will be ignored; </span>
-<span class="sd">              the output feature of the existing spec will be used instead.</span>
-
 <span class="sd">        mode: str (&#39;classifier&#39;, &#39;regressor&#39; or None)</span>
 <span class="sd">            Mode (one of ``&#39;classifier&#39;``, ``&#39;regressor&#39;``, or ``None``).</span>
 
