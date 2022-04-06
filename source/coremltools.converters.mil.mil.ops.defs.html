@@ -3727,7 +3727,7 @@ the results are officially undefined and may eventually raise an error.</p>
 <div class="math notranslate nohighlight">
 \[z_t = \rm{recurrent\_activation}(W_{iz} x_t + b_{iz} + W_{hz} h_(t−1) + b_{hz})\]</div>
 <div class="math notranslate nohighlight">
-\[o_t = activation(W_{io} x_t + b_{io} + r_t * (W_{ho} h_(t−1) + b_{ho}))\]</div>
+\[o_t = activation(W_{io} x_t + b_{io} + r_t * W_{ho} h_(t−1) + b_{ho})\]</div>
 <div class="math notranslate nohighlight">
 \[h_t = (1 − z_t) * o_t + z_t * h_{(t−1)}\]</div>
 <p>Where:</p>
@@ -3769,7 +3769,7 @@ concatenation and <code class="docutils literal notranslate"><span class="pre">[
 </dd>
 <dt><strong>bias: const&lt;3*H, T&gt; (Optional) [Default all 0s]</strong></dt><dd><ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">bias[0]</span></code> are input-hidden and hidden-hidden bias.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">3*H</span></code> are biases for <code class="docutils literal notranslate"><span class="pre">[b_{ir}</span> <span class="pre">+</span> <span class="pre">b_{hz},</span> <span class="pre">b_{io}]</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">3*H</span></code> are biases for <code class="docutils literal notranslate"><span class="pre">[b_{ir}</span> <span class="pre">|</span> <span class="pre">b_{io}</span> <span class="pre">|</span> <span class="pre">b_{hz}]</span></code>.</p></li>
 <li><p>This is used when direction=”forward” or “reverse”.</p></li>
 </ul>
 </dd>

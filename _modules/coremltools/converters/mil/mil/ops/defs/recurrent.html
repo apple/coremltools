@@ -104,7 +104,7 @@
 <span class="sd">       z_t = \rm{recurrent\_activation}(W_{iz} x_t + b_{iz} + W_{hz} h_(t−1) + b_{hz})</span>
 
 <span class="sd">    .. math::</span>
-<span class="sd">       o_t = activation(W_{io} x_t + b_{io} + r_t * (W_{ho} h_(t−1) + b_{ho}))</span>
+<span class="sd">       o_t = activation(W_{io} x_t + b_{io} + r_t * W_{ho} h_(t−1) + b_{ho})</span>
 
 <span class="sd">    .. math::</span>
 <span class="sd">       h_t = (1 − z_t) * o_t + z_t * h_{(t−1)}</span>
@@ -143,7 +143,7 @@
 
 <span class="sd">    bias: const&lt;3*H, T&gt; (Optional) [Default all 0s]</span>
 <span class="sd">        * ``bias[0]`` are input-hidden and hidden-hidden bias.</span>
-<span class="sd">        * ``3*H`` are biases for ``[b_{ir} + b_{hz}, b_{io}]``.</span>
+<span class="sd">        * ``3*H`` are biases for ``[b_{ir} | b_{io} | b_{hz}]``.</span>
 <span class="sd">        * This is used when direction=&quot;forward&quot; or &quot;reverse&quot;.</span>
 
 <span class="sd">    direction: const&lt;str&gt; (Optional) [Default=forward]</span>
