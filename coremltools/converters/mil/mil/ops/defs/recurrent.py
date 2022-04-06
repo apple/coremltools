@@ -27,7 +27,7 @@ class gru(Operation):
        z_t = \rm{recurrent\_activation}(W_{iz} x_t + b_{iz} + W_{hz} h_(t−1) + b_{hz})
 
     .. math::
-       o_t = activation(W_{io} x_t + b_{io} + r_t * (W_{ho} h_(t−1) + b_{ho}))
+       o_t = activation(W_{io} x_t + b_{io} + r_t * W_{ho} h_(t−1) + b_{ho})
 
     .. math::
        h_t = (1 − z_t) * o_t + z_t * h_{(t−1)}
@@ -66,7 +66,7 @@ class gru(Operation):
 
     bias: const<3*H, T> (Optional) [Default all 0s]
         * ``bias[0]`` are input-hidden and hidden-hidden bias.
-        * ``3*H`` are biases for ``[b_{ir} + b_{hz}, b_{io}]``.
+        * ``3*H`` are biases for ``[b_{ir} | b_{io} | b_{hz}]``.
         * This is used when direction="forward" or "reverse".
 
     direction: const<str> (Optional) [Default=forward]

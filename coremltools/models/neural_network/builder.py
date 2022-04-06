@@ -945,7 +945,7 @@ class NeuralNetworkBuilder(object):
         	distribution over N categories. This must be the output of a softmax.
 
         Notes
-        ----------
+        -----
         
         .. math::
            Loss_ {CCE}(input, target) = -\sum_{i = 1} ^ {N}(target == i) log(input[i]) = - log(input[target])
