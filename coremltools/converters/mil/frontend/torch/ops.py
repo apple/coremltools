@@ -387,6 +387,14 @@ def mv(context, node):
     context.add(res)
 
 @register_torch_op
+def outer(context, node):
+    inputs = _get_inputs(context, node, expected=2)
+    x = mb.reshape(x=inputs[0], shape=[-1, 1])
+    y = mb.reshape(x=inputs[1], shape=[1, -1])
+    res = mb.matmul(x=x, y=y, name=node.name)
+    context.add(res)
+
+@register_torch_op
 def frobenius_norm(context, node):
     x, dim, keep_dims = _get_inputs(context, node, expected=3)
     result = mb.reduce_l2_norm(x=x, axes=dim, keep_dims=keep_dims, name=node.name)
