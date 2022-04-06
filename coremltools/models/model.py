@@ -458,7 +458,7 @@ class MLModel(object):
             Protobuf specification of the model.
 
         Examples
-        ----------
+        --------
         >>> spec = model.get_spec()
         """
         return _deepcopy(self._spec)
@@ -588,7 +588,7 @@ class MLModel(object):
         program: coremltools.converters.mil.Program
 
         Examples
-        ----------
+        --------
         >>> mil_prog = model._get_mil_internal()
         """
         return _deepcopy(self._mil_program)

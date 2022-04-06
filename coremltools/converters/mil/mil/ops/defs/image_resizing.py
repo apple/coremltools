@@ -152,7 +152,7 @@ class affine(Operation):
         return types.tensor(self.x.dtype, tuple(ret_shape))
 
 
-@register_op(doc_str="TODO")
+@register_op(doc_str="")
 class upsample_nearest_neighbor(Operation):
     """
     Upsample the spatial dimensions (last two dimensions) of the input
@@ -335,7 +335,7 @@ class resample(Operation):
         return types.tensor(self.x.dtype, tuple(ret_shape))
 
 
-@register_op(doc_str="TODO")
+@register_op(doc_str="")
 class resize_nearest_neighbor(Operation):
     """
     Resize the spatial (last two) dimensions to the specified target size
@@ -389,7 +389,7 @@ class resize_nearest_neighbor(Operation):
         return types.tensor(self.x.dtype, ret_shape)
 
 
-@register_op(doc_str="TODO")
+@register_op(doc_str="")
 class upsample_bilinear(Operation):
     """
     Upsample the spatial dimensions (last two dimensions) of the input
@@ -500,7 +500,7 @@ class upsample_bilinear(Operation):
         return types.tensor(self.x.dtype, ret_shape)
 
 
-@register_op(doc_str="TODO")
+@register_op(doc_str="")
 class resize_bilinear(Operation):
     """
     Resize the spatial (last two) dimensions to the specified target size
@@ -638,7 +638,7 @@ class resize_bilinear(Operation):
         return types.tensor(self.x.dtype, ret_shape)
 
 
-@register_op(doc_str="TODO")
+@register_op(doc_str="")
 class crop_resize(Operation):
     """
     Resize the spatial dimensions (last two dimensions) of the first input
@@ -784,7 +784,7 @@ class crop_resize(Operation):
         return types.tensor(self.x.dtype, ret_shape)
 
 
-@register_op(doc_str="TODO")
+@register_op(doc_str="")
 class crop(Operation):
     """
     Crop the spatial dimensions (last two dimensions) of the input by the
