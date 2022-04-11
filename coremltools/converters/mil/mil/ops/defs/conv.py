@@ -30,7 +30,7 @@ class conv(Operation):
 
         * ``d_in`` are (possibly runtime-determined) spatial dimensions. For example,
           ``d_in = [224, 224]`` for 2D convolution.
-        * ``1 <= len(d_in) <= 2``: Only 1-D and 2-D convolution.
+        * ``1 <= len(d_in) <= 3``.
         * ``C_in`` is the number of input channels or depth dimensions.
         * ``n``  is the batch dimension.
 
@@ -263,7 +263,7 @@ class conv_transpose(Operation):
     x: tensor<[n,C_in,*D_in],T> (Required)
         * Input data.
         * ``D_in`` are spatial dimensions.
-        * ``1 <= len(D_in) <= 2``.
+        * ``1 <= len(D_in) <= 3``.
         * ``C_in`` is the number of input channels.
 
     weight: const tensor<[C_in,C_out/groups,*D_in], T> (Required)
