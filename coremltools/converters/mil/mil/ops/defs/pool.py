@@ -77,14 +77,13 @@ class Pooling(Operation):
 @register_op(doc_str="")
 class avg_pool(Pooling):
     """
-    Perform average pooling. Supports spatial 1-D, 2-D, and 3-D
-    cases.
+    Perform average pooling. Supports 1-D, 2-D, and 3-D pool (1, 2, or 3 spatial dimensions).
     
     Parameters
     ----------
     x: tensor<[n,C_in,\*D_in],T> (Required)
         *  ``3 <= rank <= 5``.
-        *  ``D_in`` are spatial dimensions, ``1 <= len(D_in) <= 2``.
+        *  ``D_in`` are spatial dimensions, ``1 <= len(D_in) <= 3``.
         *  ``C_in`` is the number of input channels or depth dimensions.
         *  ``n`` is the batch dimension.
     
@@ -121,7 +120,6 @@ class avg_pool(Pooling):
     ceil_mode: const<bool>
         * Same as PyTorch's ``ceil`` mode.
         * ``ceil`` is used instead of floor in calculating the output size.
-        * Only supported for a 1D or 2D pool.
         * Optional, defaults to ``False``.
         * Only applicable when ``pad_type`` is ``valid`` or ``custom``.
         * When ``ceil_mode`` is True, padding must be symmetric; that is, if specified, 
@@ -178,7 +176,7 @@ class avg_pool(Pooling):
 @register_op(doc_str="")
 class l2_pool(Pooling):
     """
-    Perform L2 pooling. Supports 1-D, 2-D, and 3-D.
+    Perform L2 pooling. Supports 1-D, 2-D, and 3-D pool.
     
     Parameters
     ----------
@@ -218,7 +216,7 @@ class l2_pool(Pooling):
 @register_op(doc_str="")
 class max_pool(Pooling):
     """
-    Perform max pooling. Supports 1-D, 2-D, and 3-D.
+    Perform max pooling. Supports 1-D, 2-D, and 3-D pool.
     
     Parameters
     ----------
