@@ -99,8 +99,7 @@
 <div class="viewcode-block" id="conv"><a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.conv.conv">[docs]</a><span class="nd">@register_op</span><span class="p">(</span><span class="n">doc_str</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">conv</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Perform convolution over input. Currently supports only 1-D and 2-D</span>
-<span class="sd">    convolution.</span>
+<span class="sd">    Perform convolution over input. Supports 1-D, 2-D, and 3-D convolution.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -108,7 +107,7 @@
 
 <span class="sd">        * ``d_in`` are (possibly runtime-determined) spatial dimensions. For example,</span>
 <span class="sd">          ``d_in = [224, 224]`` for 2D convolution.</span>
-<span class="sd">        * ``1 &lt;= len(d_in) &lt;= 2``: Only 1-D and 2-D convolution.</span>
+<span class="sd">        * ``1 &lt;= len(d_in) &lt;= 3``.</span>
 <span class="sd">        * ``C_in`` is the number of input channels or depth dimensions.</span>
 <span class="sd">        * ``n``  is the batch dimension.</span>
 
@@ -117,7 +116,7 @@
 <span class="sd">        * Filter weights.</span>
 <span class="sd">        * ``C_in`` is the number of input channels.</span>
 <span class="sd">        * ``C_in`` must be divisible by ``groups``.</span>
-<span class="sd">        * ``K`` are kernel sizes. For example, ``K = [KH, KW]`` for 2-D conv.</span>
+<span class="sd">        * ``K`` are kernel sizes. For example, ``K = [KH, KW]`` for 2-D convolution.</span>
 <span class="sd">        * When ``dilations`` is not all ``1``, ``weight`` has to be ``const``</span>
 <span class="sd">          at compile time</span>
 
@@ -134,14 +133,14 @@
 <span class="sd">            * ``valid``: No padding. This is equivalent to custom pad with</span>
 <span class="sd">              ``pad[2*i] == pad[2*i+1] == 0, for i=0,...,len(d_in)-1``.</span>
 <span class="sd">            * ``custom``: Specify custom padding in the parameter ``pad``.</span>
-<span class="sd">            * ``same``: input is padded such that out spatial shapes are</span>
+<span class="sd">            * ``same``: Input is padded such that out spatial shapes are</span>
 <span class="sd">              ``d_out[i] = ceil(d_in[i] / strides[i])``.</span>
 
 <span class="sd">        Specifically, for ``i = 0,..,,len(d_in)-1``, the equivalent paddings are</span>
 <span class="sd">        calculated as follows:</span>
 
 <span class="sd">            * ``dilated_kernel = (K[i] - 1) * dilate[i] + 1``</span>
-<span class="sd">            * if ``dilated_kernel`` is odd,</span>
+<span class="sd">            * If ``dilated_kernel`` is odd,</span>
 <span class="sd">              ``padding[2*i] = padding[2*i+1] = floor(dilated_kernel / 2)``</span>
 <span class="sd">            * Otherwise:</span>
 <span class="sd">              ``padding[2*i] = ceil((dilated_kernel - 1) / 2)``,</span>
@@ -193,7 +192,7 @@
 <span class="sd">        * Output activation has the same rank and spatial dimension as the input.</span>
 <span class="sd">          That is, ``len(d_out) == len(d_in)``.</span>
 <span class="sd">        * For ``i=0,..,len(d_in)-1, d_out[i] = floor [(D_in[i] + pad[2*i] +</span>
-<span class="sd">          pad[2*i+1] - (K[i]-1)*dilations[i] - 1) / strides[i] ] + 1``</span>
+<span class="sd">          pad[2*i+1] - (K[i]-1)*dilations[i] - 1) / strides[i] ] + 1``.</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
@@ -333,7 +332,7 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Perform transposed convolution (also known as deconvolution and fractionally</span>
 <span class="sd">    stride convolution) over input. ``conv_transpose`` can also be used to compute</span>
-<span class="sd">    the gradient of conv. Currently supports only 1-D and 2-D.</span>
+<span class="sd">    the gradient of ``conv``. Supports 1-D, 2-D, and 3-D convolution.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -341,7 +340,7 @@
 <span class="sd">    x: tensor&lt;[n,C_in,*D_in],T&gt; (Required)</span>
 <span class="sd">        * Input data.</span>
 <span class="sd">        * ``D_in`` are spatial dimensions.</span>
-<span class="sd">        * ``1 &lt;= len(D_in) &lt;= 2``.</span>
+<span class="sd">        * ``1 &lt;= len(D_in) &lt;= 3``.</span>
 <span class="sd">        * ``C_in`` is the number of input channels.</span>
 
 <span class="sd">    weight: const tensor&lt;[C_in,C_out/groups,*D_in], T&gt; (Required)</span>
@@ -361,7 +360,9 @@
 <span class="sd">    output_shape: const tensor&lt;[P],i32&gt; (Optional, default None)</span>
 <span class="sd">        * Expected output shape. The first two dim must be ``[n, C_out]``.</span>
 <span class="sd">        * The output shape of conv_transpose is underdetermined in general,</span>
-<span class="sd">        * because conv can map multiple input shape to a single output shape. For example, for &#39;same&#39; padding mode, `conv_out = ceil(conv_in/stride)`. Hence we need `output_shape` when this occurs.</span>
+<span class="sd">        * because conv can map multiple input shape to a single output shape.</span>
+<span class="sd">          For example, for ``same`` padding mode, ``conv_out = ceil(conv_in/stride)``.</span>
+<span class="sd">          Hence we need ``output_shape`` when this occurs.</span>
 
 <span class="sd">    pad_type: const tensor&lt;[P],i32&gt; (Optional, default valid)</span>
 <span class="sd">        * One of ``same``, ``valid``, or ``custom``.</span>

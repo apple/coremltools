@@ -316,15 +316,13 @@
 <span class="sd">        * Input 1: ``[B, C, H, W1]``</span>
 <span class="sd">        * Input 2: ``[B, W1, H, W2]``</span>
 <span class="sd">        * Output: ``[B, C, H, W2]``</span>
-<span class="sd">        * If, for one of the inputs, the dimensions ``&quot;B&quot;`` or ``&quot;H&quot;`` is 1,</span>
-<span class="sd">          they are broadcast to match the other input.</span>
+<span class="sd">        * If, for one of the inputs, the dimensions ``&quot;B&quot;`` or ``&quot;H&quot;`` is 1, they are broadcast to match the other input.</span>
 
 <span class="sd">    * Rank 3 input case</span>
 <span class="sd">        * Input 1: ``[C, H, W1]``</span>
 <span class="sd">        * Input 2: ``[W1, H, W2]``</span>
 <span class="sd">        * Output: ``[C, H, W2]``</span>
-<span class="sd">        * If, for one of the inputs, the dimension ``&quot;H&quot;`` is 1,</span>
-<span class="sd">          it is broadcast to match the other input.</span>
+<span class="sd">        * If, for one of the inputs, the dimension ``&quot;H&quot;`` is 1, it is broadcast to match the other input.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -341,7 +339,7 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;[\*D, C, H, W2], T&gt;</span>
+<span class="sd">    tensor&lt;[*D, C, H, W2], T&gt;</span>
 <span class="sd">        * Same ranks as the inputs.</span>
 
 <span class="sd">    Attributes</span>
