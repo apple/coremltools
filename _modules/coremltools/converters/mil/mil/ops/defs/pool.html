@@ -154,14 +154,13 @@
 <div class="viewcode-block" id="avg_pool"><a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.pool.avg_pool">[docs]</a><span class="nd">@register_op</span><span class="p">(</span><span class="n">doc_str</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">avg_pool</span><span class="p">(</span><span class="n">Pooling</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Perform average pooling. Currently defined only for spatial 1-D and</span>
-<span class="sd">    2-D cases. (Can be extended to the 3-D case easily.)</span>
+<span class="sd">    Perform average pooling. Supports 1-D, 2-D, and 3-D pool (1, 2, or 3 spatial dimensions).</span>
 <span class="sd">    </span>
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    x: tensor&lt;[n,C_in,\*D_in],T&gt; (Required)</span>
 <span class="sd">        *  ``3 &lt;= rank &lt;= 5``.</span>
-<span class="sd">        *  ``D_in`` are spatial dimensions, ``1 &lt;= len(D_in) &lt;= 2``.</span>
+<span class="sd">        *  ``D_in`` are spatial dimensions, ``1 &lt;= len(D_in) &lt;= 3``.</span>
 <span class="sd">        *  ``C_in`` is the number of input channels or depth dimensions.</span>
 <span class="sd">        *  ``n`` is the batch dimension.</span>
 <span class="sd">    </span>
@@ -180,48 +179,50 @@
 <span class="sd">        * ``valid``: No padding. This is equivalent to custom pad with ``pad[i] = 0, for</span>
 <span class="sd">          all i``.</span>
 <span class="sd">        * ``same`` : This is equivalent to custom pad with ``pad[2*i] + pad[2*i+1] = kernel_size[i]``.</span>
-<span class="sd">        * ``custom``: Specify custom padding in the parameter pad. note that &quot;same&quot;</span>
+<span class="sd">        * ``custom``: Specify custom padding in the parameter pad. note that ``same``</span>
 <span class="sd">          padding is equivalent to custom padding with</span>
 <span class="sd">          ``pad[2*i] + pad[2*i+1] = kernel_size[i]``.</span>
 <span class="sd">    </span>
 <span class="sd">    pad: const&lt;[P],i32&gt; (Optional. Default to all 0s)</span>
 <span class="sd">        * ``pad`` represents the number of elements to pad before and after each </span>
-<span class="sd">          dimension: `pad[2*i], pad[2*i+1]` are the pad size before and after spatial</span>
+<span class="sd">          dimension: ``pad[2*i], pad[2*i+1]`` are the pad size before and after spatial</span>
 <span class="sd">          dimension ``i``.</span>
 <span class="sd">        * ``P = 2 * len(D_in)``.</span>
 <span class="sd">        * ``pad`` should be specified if and only if ``pad_type == custom``</span>
 <span class="sd">    </span>
 <span class="sd">    exclude_padding_from_average: const tensor&lt;[], bool&gt; (Optional, default to False)</span>
-<span class="sd">        * If &#39;&#39;True&#39;&#39;, padded values (0s) are excluded from the denominator count</span>
+<span class="sd">        * If ``True``, padded values (0s) are excluded from the denominator count</span>
 <span class="sd">          when computing the average over the kernel window.</span>
 
 <span class="sd">    ceil_mode: const&lt;bool&gt;</span>
-<span class="sd">        * same as PyTorch&#39;s ceil mode</span>
-<span class="sd">        * ceil is used instead of floor in calculating the output size</span>
-<span class="sd">        * only supported when its 1D or 2D pool</span>
-<span class="sd">        * optional, defaults to False</span>
-<span class="sd">        * only applicable when pad_type is ``valid`` or ``custom``</span>
-<span class="sd">        * when ceil_mode is True, padding must be symmetric, that is, if specified, ``pad[2*i] == pad[2*i+1]`` must hold</span>
+<span class="sd">        * Same as PyTorch&#39;s ``ceil`` mode.</span>
+<span class="sd">        * ``ceil`` is used instead of floor in calculating the output size.</span>
+<span class="sd">        * Optional, defaults to ``False``.</span>
+<span class="sd">        * Only applicable when ``pad_type`` is ``valid`` or ``custom``.</span>
+<span class="sd">        * When ``ceil_mode`` is True, padding must be symmetric; that is, if specified, </span>
+<span class="sd">          ``pad[2*i] == pad[2*i+1]`` must hold.</span>
 <span class="sd">    </span>
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    tensor&lt;[n, C_out,\*D_out],T&gt;</span>
 <span class="sd">        * Same rank as ``x``.</span>
-<span class="sd">        * when ceil_mode= False:</span>
+<span class="sd">        * When ``ceil_mode = False``:</span>
 <span class="sd">            * ``D_out[i] = floor[(D_in[i] + pad[2*i] + pad[2*i+1] - kernel_sizes[i]) /</span>
 <span class="sd">              strides[i]] +1, for i = 0, .., len(D_in) - 1`` is mathematically the same</span>
 <span class="sd">              as (when all parameters involved are integers):</span>
 
 <span class="sd">                  * ``D_out[i] = ceil [(D_in[i] + pad[2*i] + pad[2*i+1] - kernel_size[i] - 1) / stride[i]], for i = 0, .., len(D_in) - 1``.</span>
-<span class="sd">                  * ``*D_out`` is all 1s if ``global_pooling`` is ``true``.</span>
+<span class="sd">                  * ``*D_out`` is all ones if ``global_pooling`` is ``true``.</span>
 
-<span class="sd">        * when ceil_mode= True</span>
-<span class="sd">            * `D_out[i] = ceil[(D_in[i] + pad[2*i] + pad[2*i+1] - kernel_sizes[i]) / strides[i]] +1, for i = 0, .., len(D_in) - 1``</span>
-<span class="sd">                * if  `(D_out[i] - 1) * strides[i] &gt;= D_in[i] + pad[2*i] and (pad[2*i] + pad[2*i+1] &gt; 0)`:</span>
-<span class="sd">                        then `D_out[i] = D_out[i] - 1`</span>
+<span class="sd">        * When ``ceil_mode = True``:</span>
+<span class="sd">            * ``D_out[i] = ceil[(D_in[i] + pad[2*i] + pad[2*i+1] - kernel_sizes[i]) / strides[i]] +1, for i = 0, .., len(D_in) - 1``</span>
 
-<span class="sd">            * the first equation is same as :</span>
-<span class="sd">                * `D_out[i] = floor[(D_in[i] + pad[2*i] + pad[2*i+1] - kernel_sizes[i] + strides[i] - 1) / strides[i]] +1, for i = 0, .., len(D_in) - 1``</span>
+<span class="sd">                  * If  ``(D_out[i] - 1) * strides[i] &gt;= D_in[i] + pad[2*i] and (pad[2*i] + pad[2*i+1] &gt; 0)``</span>
+<span class="sd">                    then ``D_out[i] = D_out[i] - 1``.</span>
+
+<span class="sd">            * The first equation is same as:</span>
+
+<span class="sd">                * ``D_out[i] = floor[(D_in[i] + pad[2*i] + pad[2*i+1] - kernel_sizes[i] + strides[i] - 1) / strides[i]] +1, for i = 0, .., len(D_in) - 1``</span>
 <span class="sd">    </span>
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
@@ -252,7 +253,7 @@
 <div class="viewcode-block" id="l2_pool"><a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.pool.l2_pool">[docs]</a><span class="nd">@register_op</span><span class="p">(</span><span class="n">doc_str</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">l2_pool</span><span class="p">(</span><span class="n">Pooling</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Perform L2 pooling. Currently supports only 1-D and 2-D.</span>
+<span class="sd">    Perform L2 pooling. Supports 1-D, 2-D, and 3-D pool.</span>
 <span class="sd">    </span>
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -292,7 +293,7 @@
 <div class="viewcode-block" id="max_pool"><a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.pool.max_pool">[docs]</a><span class="nd">@register_op</span><span class="p">(</span><span class="n">doc_str</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">max_pool</span><span class="p">(</span><span class="n">Pooling</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Perform max pooling. Currently supports only 1-D and 2-D.</span>
+<span class="sd">    Perform max pooling. Supports 1-D, 2-D, and 3-D pool.</span>
 <span class="sd">    </span>
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>

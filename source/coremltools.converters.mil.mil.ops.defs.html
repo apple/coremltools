@@ -900,15 +900,14 @@ dynamically resized.</p></li>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.conv.conv">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.conv.</span></span><span class="sig-name descname"><span class="pre">conv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/conv.html#conv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.conv.conv" title="Permalink to this definition"></a></dt>
-<dd><p>Perform convolution over input. Currently supports only 1-D and 2-D
-convolution.</p>
+<dd><p>Perform convolution over input. Supports 1-D, 2-D, and 3-D convolution.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl>
 <dt><strong>x: tensor&lt;[n, C_in, *d_in], T&gt; (Required)</strong></dt><dd><ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">d_in</span></code> are (possibly runtime-determined) spatial dimensions. For example,
 <code class="docutils literal notranslate"><span class="pre">d_in</span> <span class="pre">=</span> <span class="pre">[224,</span> <span class="pre">224]</span></code> for 2D convolution.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">&lt;=</span> <span class="pre">len(d_in)</span> <span class="pre">&lt;=</span> <span class="pre">2</span></code>: Only 1-D and 2-D convolution.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">&lt;=</span> <span class="pre">len(d_in)</span> <span class="pre">&lt;=</span> <span class="pre">3</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">C_in</span></code> is the number of input channels or depth dimensions.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">n</span></code>  is the batch dimension.</p></li>
 </ul>
@@ -917,7 +916,7 @@ convolution.</p>
 <li><p>Filter weights.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">C_in</span></code> is the number of input channels.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">C_in</span></code> must be divisible by <code class="docutils literal notranslate"><span class="pre">groups</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">K</span></code> are kernel sizes. For example, <code class="docutils literal notranslate"><span class="pre">K</span> <span class="pre">=</span> <span class="pre">[KH,</span> <span class="pre">KW]</span></code> for 2-D conv.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">K</span></code> are kernel sizes. For example, <code class="docutils literal notranslate"><span class="pre">K</span> <span class="pre">=</span> <span class="pre">[KH,</span> <span class="pre">KW]</span></code> for 2-D convolution.</p></li>
 <li><p>When <code class="docutils literal notranslate"><span class="pre">dilations</span></code> is not all <code class="docutils literal notranslate"><span class="pre">1</span></code>, <code class="docutils literal notranslate"><span class="pre">weight</span></code> has to be <code class="docutils literal notranslate"><span class="pre">const</span></code>
 at compile time</p></li>
 </ul>
@@ -934,7 +933,7 @@ at compile time</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">valid</span></code>: No padding. This is equivalent to custom pad with
 <code class="docutils literal notranslate"><span class="pre">pad[2*i]</span> <span class="pre">==</span> <span class="pre">pad[2*i+1]</span> <span class="pre">==</span> <span class="pre">0,</span> <span class="pre">for</span> <span class="pre">i=0,...,len(d_in)-1</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">custom</span></code>: Specify custom padding in the parameter <code class="docutils literal notranslate"><span class="pre">pad</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">same</span></code>: input is padded such that out spatial shapes are
+<li><p><code class="docutils literal notranslate"><span class="pre">same</span></code>: Input is padded such that out spatial shapes are
 <code class="docutils literal notranslate"><span class="pre">d_out[i]</span> <span class="pre">=</span> <span class="pre">ceil(d_in[i]</span> <span class="pre">/</span> <span class="pre">strides[i])</span></code>.</p></li>
 </ul>
 </div></blockquote>
@@ -943,7 +942,7 @@ calculated as follows:</p>
 <blockquote>
 <div><ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">dilated_kernel</span> <span class="pre">=</span> <span class="pre">(K[i]</span> <span class="pre">-</span> <span class="pre">1)</span> <span class="pre">*</span> <span class="pre">dilate[i]</span> <span class="pre">+</span> <span class="pre">1</span></code></p></li>
-<li><p>if <code class="docutils literal notranslate"><span class="pre">dilated_kernel</span></code> is odd,
+<li><p>If <code class="docutils literal notranslate"><span class="pre">dilated_kernel</span></code> is odd,
 <code class="docutils literal notranslate"><span class="pre">padding[2*i]</span> <span class="pre">=</span> <span class="pre">padding[2*i+1]</span> <span class="pre">=</span> <span class="pre">floor(dilated_kernel</span> <span class="pre">/</span> <span class="pre">2)</span></code></p></li>
 <li><p>Otherwise:
 <code class="docutils literal notranslate"><span class="pre">padding[2*i]</span> <span class="pre">=</span> <span class="pre">ceil((dilated_kernel</span> <span class="pre">-</span> <span class="pre">1)</span> <span class="pre">/</span> <span class="pre">2)</span></code>,
@@ -1002,7 +1001,7 @@ convolution.</p></li>
 <li><p>Output activation has the same rank and spatial dimension as the input.
 That is, <code class="docutils literal notranslate"><span class="pre">len(d_out)</span> <span class="pre">==</span> <span class="pre">len(d_in)</span></code>.</p></li>
 <li><p>For <code class="docutils literal notranslate"><span class="pre">i=0,..,len(d_in)-1,</span> <span class="pre">d_out[i]</span> <span class="pre">=</span> <span class="pre">floor</span> <span class="pre">[(D_in[i]</span> <span class="pre">+</span> <span class="pre">pad[2*i]</span> <span class="pre">+</span>
-<span class="pre">pad[2*i+1]</span> <span class="pre">-</span> <span class="pre">(K[i]-1)*dilations[i]</span> <span class="pre">-</span> <span class="pre">1)</span> <span class="pre">/</span> <span class="pre">strides[i]</span> <span class="pre">]</span> <span class="pre">+</span> <span class="pre">1</span></code></p></li>
+<span class="pre">pad[2*i+1]</span> <span class="pre">-</span> <span class="pre">(K[i]-1)*dilations[i]</span> <span class="pre">-</span> <span class="pre">1)</span> <span class="pre">/</span> <span class="pre">strides[i]</span> <span class="pre">]</span> <span class="pre">+</span> <span class="pre">1</span></code>.</p></li>
 </ul>
 </dd>
 </dl>
@@ -1028,14 +1027,14 @@ That is, <code class="docutils literal notranslate"><span class="pre">len(d_out)
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.conv.</span></span><span class="sig-name descname"><span class="pre">conv_transpose</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/conv.html#conv_transpose"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.conv.conv_transpose" title="Permalink to this definition"></a></dt>
 <dd><p>Perform transposed convolution (also known as deconvolution and fractionally
 stride convolution) over input. <code class="docutils literal notranslate"><span class="pre">conv_transpose</span></code> can also be used to compute
-the gradient of conv. Currently supports only 1-D and 2-D.</p>
+the gradient of <code class="docutils literal notranslate"><span class="pre">conv</span></code>. Supports 1-D, 2-D, and 3-D convolution.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>x: tensor&lt;[n,C_in,*D_in],T&gt; (Required)</strong></dt><dd><ul class="simple">
 <li><p>Input data.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">D_in</span></code> are spatial dimensions.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">&lt;=</span> <span class="pre">len(D_in)</span> <span class="pre">&lt;=</span> <span class="pre">2</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">&lt;=</span> <span class="pre">len(D_in)</span> <span class="pre">&lt;=</span> <span class="pre">3</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">C_in</span></code> is the number of input channels.</p></li>
 </ul>
 </dd>
@@ -1059,7 +1058,9 @@ dimension <code class="docutils literal notranslate"><span class="pre">i</span><
 <dt><strong>output_shape: const tensor&lt;[P],i32&gt; (Optional, default None)</strong></dt><dd><ul class="simple">
 <li><p>Expected output shape. The first two dim must be <code class="docutils literal notranslate"><span class="pre">[n,</span> <span class="pre">C_out]</span></code>.</p></li>
 <li><p>The output shape of conv_transpose is underdetermined in general,</p></li>
-<li><p>because conv can map multiple input shape to a single output shape. For example, for ‘same’ padding mode, <cite>conv_out = ceil(conv_in/stride)</cite>. Hence we need <cite>output_shape</cite> when this occurs.</p></li>
+<li><p>because conv can map multiple input shape to a single output shape.
+For example, for <code class="docutils literal notranslate"><span class="pre">same</span></code> padding mode, <code class="docutils literal notranslate"><span class="pre">conv_out</span> <span class="pre">=</span> <span class="pre">ceil(conv_in/stride)</span></code>.
+Hence we need <code class="docutils literal notranslate"><span class="pre">output_shape</span></code> when this occurs.</p></li>
 </ul>
 </dd>
 <dt><strong>pad_type: const tensor&lt;[P],i32&gt; (Optional, default valid)</strong></dt><dd><ul class="simple">
@@ -2997,8 +2998,7 @@ In particular, the inputs must be of the following shapes:</p>
 <li><p>Input 1: <code class="docutils literal notranslate"><span class="pre">[B,</span> <span class="pre">C,</span> <span class="pre">H,</span> <span class="pre">W1]</span></code></p></li>
 <li><p>Input 2: <code class="docutils literal notranslate"><span class="pre">[B,</span> <span class="pre">W1,</span> <span class="pre">H,</span> <span class="pre">W2]</span></code></p></li>
 <li><p>Output: <code class="docutils literal notranslate"><span class="pre">[B,</span> <span class="pre">C,</span> <span class="pre">H,</span> <span class="pre">W2]</span></code></p></li>
-<li><p>If, for one of the inputs, the dimensions <code class="docutils literal notranslate"><span class="pre">&quot;B&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;H&quot;</span></code> is 1,
-they are broadcast to match the other input.</p></li>
+<li><p>If, for one of the inputs, the dimensions <code class="docutils literal notranslate"><span class="pre">&quot;B&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;H&quot;</span></code> is 1, they are broadcast to match the other input.</p></li>
 </ul>
 </dd>
 </dl>
@@ -3008,8 +3008,7 @@ they are broadcast to match the other input.</p></li>
 <li><p>Input 1: <code class="docutils literal notranslate"><span class="pre">[C,</span> <span class="pre">H,</span> <span class="pre">W1]</span></code></p></li>
 <li><p>Input 2: <code class="docutils literal notranslate"><span class="pre">[W1,</span> <span class="pre">H,</span> <span class="pre">W2]</span></code></p></li>
 <li><p>Output: <code class="docutils literal notranslate"><span class="pre">[C,</span> <span class="pre">H,</span> <span class="pre">W2]</span></code></p></li>
-<li><p>If, for one of the inputs, the dimension <code class="docutils literal notranslate"><span class="pre">&quot;H&quot;</span></code> is 1,
-it is broadcast to match the other input.</p></li>
+<li><p>If, for one of the inputs, the dimension <code class="docutils literal notranslate"><span class="pre">&quot;H&quot;</span></code> is 1, it is broadcast to match the other input.</p></li>
 </ul>
 </dd>
 </dl>
@@ -3046,7 +3045,7 @@ it is broadcast to match the other input.</p></li>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><dl class="simple">
-<dt>tensor&lt;[*D, C, H, W2], T&gt;</dt><dd><ul class="simple">
+<dt>tensor&lt;[<a href="#id18"><span class="problematic" id="id19">*</span></a>D, C, H, W2], T&gt;</dt><dd><ul class="simple">
 <li><p>Same ranks as the inputs.</p></li>
 </ul>
 </dd>
@@ -3308,14 +3307,13 @@ shape <code class="docutils literal notranslate"><span class="pre">(5,6)</span><
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.pool.avg_pool">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.pool.</span></span><span class="sig-name descname"><span class="pre">avg_pool</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/pool.html#avg_pool"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.pool.avg_pool" title="Permalink to this definition"></a></dt>
-<dd><p>Perform average pooling. Currently defined only for spatial 1-D and
-2-D cases. (Can be extended to the 3-D case easily.)</p>
+<dd><p>Perform average pooling. Supports 1-D, 2-D, and 3-D pool (1, 2, or 3 spatial dimensions).</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>x: tensor&lt;[n,C_in,*D_in],T&gt; (Required)</strong></dt><dd><ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">3</span> <span class="pre">&lt;=</span> <span class="pre">rank</span> <span class="pre">&lt;=</span> <span class="pre">5</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">D_in</span></code> are spatial dimensions, <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">&lt;=</span> <span class="pre">len(D_in)</span> <span class="pre">&lt;=</span> <span class="pre">2</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">D_in</span></code> are spatial dimensions, <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">&lt;=</span> <span class="pre">len(D_in)</span> <span class="pre">&lt;=</span> <span class="pre">3</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">C_in</span></code> is the number of input channels or depth dimensions.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">n</span></code> is the batch dimension.</p></li>
 </ul>
@@ -3336,31 +3334,31 @@ input tensor.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">valid</span></code>: No padding. This is equivalent to custom pad with <code class="docutils literal notranslate"><span class="pre">pad[i]</span> <span class="pre">=</span> <span class="pre">0,</span> <span class="pre">for</span>
 <span class="pre">all</span> <span class="pre">i</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">same</span></code> : This is equivalent to custom pad with <code class="docutils literal notranslate"><span class="pre">pad[2*i]</span> <span class="pre">+</span> <span class="pre">pad[2*i+1]</span> <span class="pre">=</span> <span class="pre">kernel_size[i]</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">custom</span></code>: Specify custom padding in the parameter pad. note that “same”
+<li><p><code class="docutils literal notranslate"><span class="pre">custom</span></code>: Specify custom padding in the parameter pad. note that <code class="docutils literal notranslate"><span class="pre">same</span></code>
 padding is equivalent to custom padding with
 <code class="docutils literal notranslate"><span class="pre">pad[2*i]</span> <span class="pre">+</span> <span class="pre">pad[2*i+1]</span> <span class="pre">=</span> <span class="pre">kernel_size[i]</span></code>.</p></li>
 </ul>
 </dd>
 <dt><strong>pad: const&lt;[P],i32&gt; (Optional. Default to all 0s)</strong></dt><dd><ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">pad</span></code> represents the number of elements to pad before and after each
-dimension: <cite>pad[2*i], pad[2*i+1]</cite> are the pad size before and after spatial
+dimension: <code class="docutils literal notranslate"><span class="pre">pad[2*i],</span> <span class="pre">pad[2*i+1]</span></code> are the pad size before and after spatial
 dimension <code class="docutils literal notranslate"><span class="pre">i</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">P</span> <span class="pre">=</span> <span class="pre">2</span> <span class="pre">*</span> <span class="pre">len(D_in)</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">pad</span></code> should be specified if and only if <code class="docutils literal notranslate"><span class="pre">pad_type</span> <span class="pre">==</span> <span class="pre">custom</span></code></p></li>
 </ul>
 </dd>
 <dt><strong>exclude_padding_from_average: const tensor&lt;[], bool&gt; (Optional, default to False)</strong></dt><dd><ul class="simple">
-<li><p>If ‘’True’’, padded values (0s) are excluded from the denominator count
+<li><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, padded values (0s) are excluded from the denominator count
 when computing the average over the kernel window.</p></li>
 </ul>
 </dd>
 <dt><strong>ceil_mode: const&lt;bool&gt;</strong></dt><dd><ul class="simple">
-<li><p>same as PyTorch’s ceil mode</p></li>
-<li><p>ceil is used instead of floor in calculating the output size</p></li>
-<li><p>only supported when its 1D or 2D pool</p></li>
-<li><p>optional, defaults to False</p></li>
-<li><p>only applicable when pad_type is <code class="docutils literal notranslate"><span class="pre">valid</span></code> or <code class="docutils literal notranslate"><span class="pre">custom</span></code></p></li>
-<li><p>when ceil_mode is True, padding must be symmetric, that is, if specified, <code class="docutils literal notranslate"><span class="pre">pad[2*i]</span> <span class="pre">==</span> <span class="pre">pad[2*i+1]</span></code> must hold</p></li>
+<li><p>Same as PyTorch’s <code class="docutils literal notranslate"><span class="pre">ceil</span></code> mode.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ceil</span></code> is used instead of floor in calculating the output size.</p></li>
+<li><p>Optional, defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
+<li><p>Only applicable when <code class="docutils literal notranslate"><span class="pre">pad_type</span></code> is <code class="docutils literal notranslate"><span class="pre">valid</span></code> or <code class="docutils literal notranslate"><span class="pre">custom</span></code>.</p></li>
+<li><p>When <code class="docutils literal notranslate"><span class="pre">ceil_mode</span></code> is True, padding must be symmetric; that is, if specified,
+<code class="docutils literal notranslate"><span class="pre">pad[2*i]</span> <span class="pre">==</span> <span class="pre">pad[2*i+1]</span></code> must hold.</p></li>
 </ul>
 </dd>
 </dl>
@@ -3370,14 +3368,14 @@ when computing the average over the kernel window.</p></li>
 <dt>tensor&lt;[n, C_out,*D_out],T&gt;</dt><dd><ul>
 <li><p>Same rank as <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p></li>
 <li><dl>
-<dt>when ceil_mode= False:</dt><dd><ul>
+<dt>When <code class="docutils literal notranslate"><span class="pre">ceil_mode</span> <span class="pre">=</span> <span class="pre">False</span></code>:</dt><dd><ul>
 <li><p><code class="docutils literal notranslate"><span class="pre">D_out[i]</span> <span class="pre">=</span> <span class="pre">floor[(D_in[i]</span> <span class="pre">+</span> <span class="pre">pad[2*i]</span> <span class="pre">+</span> <span class="pre">pad[2*i+1]</span> <span class="pre">-</span> <span class="pre">kernel_sizes[i])</span> <span class="pre">/</span>
 <span class="pre">strides[i]]</span> <span class="pre">+1,</span> <span class="pre">for</span> <span class="pre">i</span> <span class="pre">=</span> <span class="pre">0,</span> <span class="pre">..,</span> <span class="pre">len(D_in)</span> <span class="pre">-</span> <span class="pre">1</span></code> is mathematically the same
 as (when all parameters involved are integers):</p>
 <blockquote>
 <div><ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">D_out[i]</span> <span class="pre">=</span> <span class="pre">ceil</span> <span class="pre">[(D_in[i]</span> <span class="pre">+</span> <span class="pre">pad[2*i]</span> <span class="pre">+</span> <span class="pre">pad[2*i+1]</span> <span class="pre">-</span> <span class="pre">kernel_size[i]</span> <span class="pre">-</span> <span class="pre">1)</span> <span class="pre">/</span> <span class="pre">stride[i]],</span> <span class="pre">for</span> <span class="pre">i</span> <span class="pre">=</span> <span class="pre">0,</span> <span class="pre">..,</span> <span class="pre">len(D_in)</span> <span class="pre">-</span> <span class="pre">1</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">*D_out</span></code> is all 1s if <code class="docutils literal notranslate"><span class="pre">global_pooling</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">*D_out</span></code> is all ones if <code class="docutils literal notranslate"><span class="pre">global_pooling</span></code> is <code class="docutils literal notranslate"><span class="pre">true</span></code>.</p></li>
 </ul>
 </div></blockquote>
 </li>
@@ -3385,25 +3383,22 @@ as (when all parameters involved are integers):</p>
 </dd>
 </dl>
 </li>
-<li><dl class="simple">
-<dt>when ceil_mode= True</dt><dd><ul class="simple">
-<li><dl class="simple">
-<dt><cite>D_out[i] = ceil[(D_in[i] + pad[2*i] + pad[2*i+1] - kernel_sizes[i]) / strides[i]] +1, for i = 0, .., len(D_in) - 1`</cite></dt><dd><ul>
-<li><dl class="simple">
-<dt>if  <cite>(D_out[i] - 1) * strides[i] &gt;= D_in[i] + pad[2*i] and (pad[2*i] + pad[2*i+1] &gt; 0)</cite>:</dt><dd><p>then <cite>D_out[i] = D_out[i] - 1</cite></p>
-</dd>
-</dl>
-</li>
+<li><dl>
+<dt>When <code class="docutils literal notranslate"><span class="pre">ceil_mode</span> <span class="pre">=</span> <span class="pre">True</span></code>:</dt><dd><ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">D_out[i]</span> <span class="pre">=</span> <span class="pre">ceil[(D_in[i]</span> <span class="pre">+</span> <span class="pre">pad[2*i]</span> <span class="pre">+</span> <span class="pre">pad[2*i+1]</span> <span class="pre">-</span> <span class="pre">kernel_sizes[i])</span> <span class="pre">/</span> <span class="pre">strides[i]]</span> <span class="pre">+1,</span> <span class="pre">for</span> <span class="pre">i</span> <span class="pre">=</span> <span class="pre">0,</span> <span class="pre">..,</span> <span class="pre">len(D_in)</span> <span class="pre">-</span> <span class="pre">1</span></code></p>
+<blockquote>
+<div><ul class="simple">
+<li><p>If  <code class="docutils literal notranslate"><span class="pre">(D_out[i]</span> <span class="pre">-</span> <span class="pre">1)</span> <span class="pre">*</span> <span class="pre">strides[i]</span> <span class="pre">&gt;=</span> <span class="pre">D_in[i]</span> <span class="pre">+</span> <span class="pre">pad[2*i]</span> <span class="pre">and</span> <span class="pre">(pad[2*i]</span> <span class="pre">+</span> <span class="pre">pad[2*i+1]</span> <span class="pre">&gt;</span> <span class="pre">0)</span></code>
+then <code class="docutils literal notranslate"><span class="pre">D_out[i]</span> <span class="pre">=</span> <span class="pre">D_out[i]</span> <span class="pre">-</span> <span class="pre">1</span></code>.</p></li>
 </ul>
-</dd>
-</dl>
+</div></blockquote>
 </li>
-<li><dl class="simple">
-<dt>the first equation is same as :</dt><dd><ul>
-<li><p><cite>D_out[i] = floor[(D_in[i] + pad[2*i] + pad[2*i+1] - kernel_sizes[i] + strides[i] - 1) / strides[i]] +1, for i = 0, .., len(D_in) - 1`</cite></p></li>
+<li><p>The first equation is same as:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">D_out[i]</span> <span class="pre">=</span> <span class="pre">floor[(D_in[i]</span> <span class="pre">+</span> <span class="pre">pad[2*i]</span> <span class="pre">+</span> <span class="pre">pad[2*i+1]</span> <span class="pre">-</span> <span class="pre">kernel_sizes[i]</span> <span class="pre">+</span> <span class="pre">strides[i]</span> <span class="pre">-</span> <span class="pre">1)</span> <span class="pre">/</span> <span class="pre">strides[i]]</span> <span class="pre">+1,</span> <span class="pre">for</span> <span class="pre">i</span> <span class="pre">=</span> <span class="pre">0,</span> <span class="pre">..,</span> <span class="pre">len(D_in)</span> <span class="pre">-</span> <span class="pre">1</span></code></p></li>
 </ul>
-</dd>
-</dl>
+</div></blockquote>
 </li>
 </ul>
 </dd>
@@ -3432,7 +3427,7 @@ as (when all parameters involved are integers):</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.pool.l2_pool">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.pool.</span></span><span class="sig-name descname"><span class="pre">l2_pool</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/pool.html#l2_pool"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.pool.l2_pool" title="Permalink to this definition"></a></dt>
-<dd><p>Perform L2 pooling. Currently supports only 1-D and 2-D.</p>
+<dd><p>Perform L2 pooling. Supports 1-D, 2-D, and 3-D pool.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
@@ -3485,7 +3480,7 @@ as (when all parameters involved are integers):</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.pool.max_pool">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.pool.</span></span><span class="sig-name descname"><span class="pre">max_pool</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/pool.html#max_pool"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.pool.max_pool" title="Permalink to this definition"></a></dt>
-<dd><p>Perform max pooling. Currently supports only 1-D and 2-D.</p>
+<dd><p>Perform max pooling. Supports 1-D, 2-D, and 3-D pool.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
