@@ -3904,12 +3904,28 @@ def is_floating_point(context, node):
     context.add(mb.const(val=is_float, name=node.name))
 
 @register_torch_op()
+def logical_and(context, node):
+    inputs = _get_inputs(context, node, expected=2)
+    x, y = inputs
+    x = mb.cast(x=x, dtype="bool")
+    y = mb.cast(x=y, dtype="bool")
+    context.add(mb.logical_and(x=x, y=y, name=node.name))
+
+@register_torch_op()
 def logical_or(context, node):
     inputs = _get_inputs(context, node, expected=2)
     x, y = inputs
     x = mb.cast(x=x, dtype="bool")
     y = mb.cast(x=y, dtype="bool")
     context.add(mb.logical_or(x=x, y=y, name=node.name))
+
+@register_torch_op()
+def logical_xor(context, node):
+    inputs = _get_inputs(context, node, expected=2)
+    x, y = inputs
+    x = mb.cast(x=x, dtype="bool")
+    y = mb.cast(x=y, dtype="bool")
+    context.add(mb.logical_xor(x=x, y=y, name=node.name))
 
 @register_torch_op
 def where(context, node):
