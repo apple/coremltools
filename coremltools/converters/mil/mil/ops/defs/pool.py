@@ -77,14 +77,13 @@ class Pooling(Operation):
 @register_op(doc_str="")
 class avg_pool(Pooling):
     """
-    Perform average pooling. Currently defined only for spatial 1-D and
-    2-D cases. (Can be extended to the 3-D case easily.)
+    Perform average pooling. Supports 1-D, 2-D, and 3-D pool (1, 2, or 3 spatial dimensions).
     
     Parameters
     ----------
     x: tensor<[n,C_in,\*D_in],T> (Required)
         *  ``3 <= rank <= 5``.
-        *  ``D_in`` are spatial dimensions, ``1 <= len(D_in) <= 2``.
+        *  ``D_in`` are spatial dimensions, ``1 <= len(D_in) <= 3``.
         *  ``C_in`` is the number of input channels or depth dimensions.
         *  ``n`` is the batch dimension.
     
@@ -103,48 +102,50 @@ class avg_pool(Pooling):
         * ``valid``: No padding. This is equivalent to custom pad with ``pad[i] = 0, for
           all i``.
         * ``same`` : This is equivalent to custom pad with ``pad[2*i] + pad[2*i+1] = kernel_size[i]``.
-        * ``custom``: Specify custom padding in the parameter pad. note that "same"
+        * ``custom``: Specify custom padding in the parameter pad. note that ``same``
           padding is equivalent to custom padding with
           ``pad[2*i] + pad[2*i+1] = kernel_size[i]``.
     
     pad: const<[P],i32> (Optional. Default to all 0s)
         * ``pad`` represents the number of elements to pad before and after each 
-          dimension: `pad[2*i], pad[2*i+1]` are the pad size before and after spatial
+          dimension: ``pad[2*i], pad[2*i+1]`` are the pad size before and after spatial
           dimension ``i``.
         * ``P = 2 * len(D_in)``.
         * ``pad`` should be specified if and only if ``pad_type == custom``
     
     exclude_padding_from_average: const tensor<[], bool> (Optional, default to False)
-        * If ''True'', padded values (0s) are excluded from the denominator count
+        * If ``True``, padded values (0s) are excluded from the denominator count
           when computing the average over the kernel window.
 
     ceil_mode: const<bool>
-        * same as PyTorch's ceil mode
-        * ceil is used instead of floor in calculating the output size
-        * only supported when its 1D or 2D pool
-        * optional, defaults to False
-        * only applicable when pad_type is ``valid`` or ``custom``
-        * when ceil_mode is True, padding must be symmetric, that is, if specified, ``pad[2*i] == pad[2*i+1]`` must hold
+        * Same as PyTorch's ``ceil`` mode.
+        * ``ceil`` is used instead of floor in calculating the output size.
+        * Optional, defaults to ``False``.
+        * Only applicable when ``pad_type`` is ``valid`` or ``custom``.
+        * When ``ceil_mode`` is True, padding must be symmetric; that is, if specified, 
+          ``pad[2*i] == pad[2*i+1]`` must hold.
     
     Returns
     -------
     tensor<[n, C_out,\*D_out],T>
         * Same rank as ``x``.
-        * when ceil_mode= False:
+        * When ``ceil_mode = False``:
             * ``D_out[i] = floor[(D_in[i] + pad[2*i] + pad[2*i+1] - kernel_sizes[i]) /
               strides[i]] +1, for i = 0, .., len(D_in) - 1`` is mathematically the same
               as (when all parameters involved are integers):
 
                   * ``D_out[i] = ceil [(D_in[i] + pad[2*i] + pad[2*i+1] - kernel_size[i] - 1) / stride[i]], for i = 0, .., len(D_in) - 1``.
-                  * ``*D_out`` is all 1s if ``global_pooling`` is ``true``.
+                  * ``*D_out`` is all ones if ``global_pooling`` is ``true``.
 
-        * when ceil_mode= True
-            * `D_out[i] = ceil[(D_in[i] + pad[2*i] + pad[2*i+1] - kernel_sizes[i]) / strides[i]] +1, for i = 0, .., len(D_in) - 1``
-                * if  `(D_out[i] - 1) * strides[i] >= D_in[i] + pad[2*i] and (pad[2*i] + pad[2*i+1] > 0)`:
-                        then `D_out[i] = D_out[i] - 1`
+        * When ``ceil_mode = True``:
+            * ``D_out[i] = ceil[(D_in[i] + pad[2*i] + pad[2*i+1] - kernel_sizes[i]) / strides[i]] +1, for i = 0, .., len(D_in) - 1``
 
-            * the first equation is same as :
-                * `D_out[i] = floor[(D_in[i] + pad[2*i] + pad[2*i+1] - kernel_sizes[i] + strides[i] - 1) / strides[i]] +1, for i = 0, .., len(D_in) - 1``
+                  * If  ``(D_out[i] - 1) * strides[i] >= D_in[i] + pad[2*i] and (pad[2*i] + pad[2*i+1] > 0)``
+                    then ``D_out[i] = D_out[i] - 1``.
+
+            * The first equation is same as:
+
+                * ``D_out[i] = floor[(D_in[i] + pad[2*i] + pad[2*i+1] - kernel_sizes[i] + strides[i] - 1) / strides[i]] +1, for i = 0, .., len(D_in) - 1``
     
     Attributes
     ----------
@@ -175,7 +176,7 @@ class avg_pool(Pooling):
 @register_op(doc_str="")
 class l2_pool(Pooling):
     """
-    Perform L2 pooling. Currently supports only 1-D and 2-D.
+    Perform L2 pooling. Supports 1-D, 2-D, and 3-D pool.
     
     Parameters
     ----------
@@ -215,7 +216,7 @@ class l2_pool(Pooling):
 @register_op(doc_str="")
 class max_pool(Pooling):
     """
-    Perform max pooling. Currently supports only 1-D and 2-D.
+    Perform max pooling. Supports 1-D, 2-D, and 3-D pool.
     
     Parameters
     ----------
