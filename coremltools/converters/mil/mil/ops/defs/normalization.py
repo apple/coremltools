@@ -58,7 +58,7 @@ class batch_norm(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
     """
 
     input_spec = InputSpec(
@@ -109,6 +109,10 @@ class instance_norm(Operation):
     -------
     tensor<[n,C,*D], T>
         * Output tensor has the same shape and type as the input ``x``.
+
+    Attributes
+    ----------
+    T: fp16, fp32
     """
 
     input_spec = InputSpec(
@@ -162,7 +166,7 @@ class l2_norm(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
     """
 
     input_spec = InputSpec(
@@ -223,7 +227,7 @@ class layer_norm(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
     """
 
     input_spec = InputSpec(
@@ -332,7 +336,7 @@ class local_response_norm(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
     """
 
     input_spec = InputSpec(

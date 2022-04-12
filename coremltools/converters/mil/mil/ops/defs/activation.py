@@ -40,7 +40,7 @@ class clamped_relu(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
     """
 
     input_spec = InputSpec(
@@ -80,7 +80,7 @@ class elu(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
     """
 
     input_spec = InputSpec(
@@ -145,7 +145,7 @@ class gelu(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
     """
 
     input_spec = InputSpec(
@@ -199,7 +199,7 @@ class leaky_relu(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
     """
 
     input_spec = InputSpec(
@@ -244,7 +244,7 @@ class linear_activation(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
     """
 
     input_spec = InputSpec(
@@ -286,7 +286,7 @@ class prelu(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
     """
 
     input_spec = InputSpec(
@@ -334,7 +334,7 @@ class relu(elementwise_unary):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
     """
 
     def __init__(self, **kwargs):
@@ -361,7 +361,7 @@ class relu6(elementwise_unary):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
     """
 
     def __init__(self, **kwargs):
@@ -393,7 +393,7 @@ class scaled_tanh(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
     """
 
     input_spec = InputSpec(
@@ -435,7 +435,7 @@ class sigmoid(elementwise_unary):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
     """
 
     def __init__(self, **kwargs):
@@ -466,7 +466,7 @@ class sigmoid_hard(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
     """
 
     input_spec = InputSpec(
@@ -508,7 +508,7 @@ class silu(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
     """
 
     input_spec = InputSpec(x=TensorInputType(),)
@@ -535,7 +535,7 @@ class softplus(elementwise_unary):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
     """
 
     def __init__(self, **kwargs):
@@ -564,7 +564,7 @@ class softplus_parametric(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
     """
 
     input_spec = InputSpec(
@@ -623,7 +623,7 @@ class softmax(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
     """
 
     input_spec = InputSpec(
@@ -663,6 +663,10 @@ class softsign(elementwise_unary):
     -------
     tensor<\*?, T>
         * A tensor of the same shape and type as ``x``.
+
+    Attributes
+    ----------
+    T: fp16, fp32
     """
 
     def __init__(self, **kwargs):
@@ -688,6 +692,10 @@ class thresholded_relu(Operation):
     -------
     tensor<\*, T>
         * A tensor of the same shape and type as ``x``.
+
+    Attributes
+    ----------
+    T: fp16, fp32
     """
 
     input_spec = InputSpec(

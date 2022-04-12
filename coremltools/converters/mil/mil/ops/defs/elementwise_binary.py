@@ -102,7 +102,7 @@ class add(elementwise_binary):
     
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32, i32
     """
     
     def __init__(self, **kwargs):
@@ -134,7 +134,7 @@ class equal(elementwise_binary):
     
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32, i32
     """
 
     def __init__(self, **kwargs):
@@ -169,7 +169,7 @@ class floor_div(elementwise_binary):
     
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32, i32
     """
     
     def __init__(self, **kwargs):
@@ -201,7 +201,7 @@ class greater(elementwise_binary):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32, i32
     """
 
     def __init__(self, **kwargs):
@@ -236,7 +236,7 @@ class greater_equal(elementwise_binary):
     
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32, i32
     """
 
     def __init__(self, **kwargs):
@@ -271,7 +271,7 @@ class less(elementwise_binary):
     
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32, i32
     """
 
     def __init__(self, **kwargs):
@@ -306,7 +306,7 @@ class less_equal(elementwise_binary):
     
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32, i32
     """
     
     def __init__(self, **kwargs):
@@ -342,7 +342,7 @@ class logical_and(elementwise_binary):
     
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32, i32
     
     """
     
@@ -379,7 +379,7 @@ class logical_or(elementwise_binary):
     
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32, i32
     
     """
     
@@ -416,7 +416,7 @@ class logical_xor(elementwise_binary):
     
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32, i32
     
     """
     
@@ -451,7 +451,7 @@ class maximum(elementwise_binary):
     
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32, i32
     """
     
     def __init__(self, **kwargs):
@@ -482,7 +482,7 @@ class minimum(elementwise_binary):
     
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32, i32
     """
     
     def __init__(self, **kwargs):
@@ -513,7 +513,7 @@ class mod(elementwise_binary):
     
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32, i32
     """
     
     def __init__(self, **kwargs):
@@ -544,7 +544,7 @@ class mul(elementwise_binary):
     
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32, i32
     """
     
     def __init__(self, **kwargs):
@@ -576,7 +576,7 @@ class not_equal(elementwise_binary):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32, i32
     """
     
     def __init__(self, **kwargs):
@@ -610,7 +610,7 @@ class real_div(elementwise_binary):
     
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32, i32
     """
     
     def __init__(self, **kwargs):
@@ -648,7 +648,7 @@ class pow(elementwise_binary):
     
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32, i32
     """
     
     def __init__(self, **kwargs):
@@ -679,7 +679,7 @@ class sub(elementwise_binary):
     
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32, i32
     """
     
     def __init__(self, **kwargs):

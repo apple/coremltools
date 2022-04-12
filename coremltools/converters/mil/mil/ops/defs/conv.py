@@ -22,7 +22,8 @@ from coremltools.converters.mil.mil.ops.defs._utils import spatial_dimensions_ou
 @register_op(doc_str="")
 class conv(Operation):
     """
-    Perform convolution over input. Supports 1-D, 2-D, and 3-D convolution.
+    Perform convolution over input. Currently supports only 1-D and 2-D
+    convolution.
 
     Parameters
     ----------
@@ -30,7 +31,7 @@ class conv(Operation):
 
         * ``d_in`` are (possibly runtime-determined) spatial dimensions. For example,
           ``d_in = [224, 224]`` for 2D convolution.
-        * ``1 <= len(d_in) <= 3``.
+        * ``1 <= len(d_in) <= 2``: Only 1-D and 2-D convolution.
         * ``C_in`` is the number of input channels or depth dimensions.
         * ``n``  is the batch dimension.
 
@@ -39,7 +40,7 @@ class conv(Operation):
         * Filter weights.
         * ``C_in`` is the number of input channels.
         * ``C_in`` must be divisible by ``groups``.
-        * ``K`` are kernel sizes. For example, ``K = [KH, KW]`` for 2-D convolution.
+        * ``K`` are kernel sizes. For example, ``K = [KH, KW]`` for 2-D conv.
         * When ``dilations`` is not all ``1``, ``weight`` has to be ``const``
           at compile time
 
@@ -56,14 +57,14 @@ class conv(Operation):
             * ``valid``: No padding. This is equivalent to custom pad with
               ``pad[2*i] == pad[2*i+1] == 0, for i=0,...,len(d_in)-1``.
             * ``custom``: Specify custom padding in the parameter ``pad``.
-            * ``same``: Input is padded such that out spatial shapes are
+            * ``same``: input is padded such that out spatial shapes are
               ``d_out[i] = ceil(d_in[i] / strides[i])``.
 
         Specifically, for ``i = 0,..,,len(d_in)-1``, the equivalent paddings are
         calculated as follows:
 
             * ``dilated_kernel = (K[i] - 1) * dilate[i] + 1``
-            * If ``dilated_kernel`` is odd,
+            * if ``dilated_kernel`` is odd,
               ``padding[2*i] = padding[2*i+1] = floor(dilated_kernel / 2)``
             * Otherwise:
               ``padding[2*i] = ceil((dilated_kernel - 1) / 2)``,
@@ -115,11 +116,11 @@ class conv(Operation):
         * Output activation has the same rank and spatial dimension as the input.
           That is, ``len(d_out) == len(d_in)``.
         * For ``i=0,..,len(d_in)-1, d_out[i] = floor [(D_in[i] + pad[2*i] +
-          pad[2*i+1] - (K[i]-1)*dilations[i] - 1) / strides[i] ] + 1``.
+          pad[2*i+1] - (K[i]-1)*dilations[i] - 1) / strides[i] ] + 1``
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
 
     See Also
     --------
@@ -223,7 +224,7 @@ class conv_quantized(conv):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
     """
     input_spec = InputSpec(
         x=TensorInputType(),
@@ -255,7 +256,7 @@ class conv_transpose(Operation):
     """
     Perform transposed convolution (also known as deconvolution and fractionally
     stride convolution) over input. ``conv_transpose`` can also be used to compute
-    the gradient of ``conv``. Supports 1-D, 2-D, and 3-D convolution.
+    the gradient of conv. Currently supports only 1-D and 2-D.
 
     Parameters
     ----------
@@ -263,7 +264,7 @@ class conv_transpose(Operation):
     x: tensor<[n,C_in,*D_in],T> (Required)
         * Input data.
         * ``D_in`` are spatial dimensions.
-        * ``1 <= len(D_in) <= 3``.
+        * ``1 <= len(D_in) <= 2``.
         * ``C_in`` is the number of input channels.
 
     weight: const tensor<[C_in,C_out/groups,*D_in], T> (Required)
@@ -283,9 +284,7 @@ class conv_transpose(Operation):
     output_shape: const tensor<[P],i32> (Optional, default None)
         * Expected output shape. The first two dim must be ``[n, C_out]``.
         * The output shape of conv_transpose is underdetermined in general,
-        * because conv can map multiple input shape to a single output shape.
-          For example, for ``same`` padding mode, ``conv_out = ceil(conv_in/stride)``.
-          Hence we need ``output_shape`` when this occurs.
+        * because conv can map multiple input shape to a single output shape. For example, for 'same' padding mode, `conv_out = ceil(conv_in/stride)`. Hence we need `output_shape` when this occurs.
 
     pad_type: const tensor<[P],i32> (Optional, default valid)
         * One of ``same``, ``valid``, or ``custom``.
@@ -311,7 +310,7 @@ class conv_transpose(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
 
     See Also
     --------

@@ -42,7 +42,7 @@ class linear(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32, i32
     """
     input_spec = InputSpec(
         x=TensorInputType(),
@@ -160,7 +160,7 @@ class matmul(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32, i32
     """
     input_spec = InputSpec(
         x=TensorInputType(),
@@ -267,7 +267,7 @@ class einsum(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
     """
 
     input_spec = InputSpec(values=TupleInputType(),
