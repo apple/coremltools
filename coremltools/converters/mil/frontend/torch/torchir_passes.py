@@ -97,7 +97,7 @@ def generate_tensor_assignment_ops(graph):
             input_name = node.inputs[idx]
             node.inputs[idx] = _get_updated_name(input_name, updated_tensor_count)
 
-        if node.kind in ("select", "slice"):
+        if node.kind in ("empty", "select", "slice"):
             node_input = node.inputs[0]
             node_output = node.outputs[0]
             node_sequence = tensor_to_node_sequence_mapping.get(node_input, [])
