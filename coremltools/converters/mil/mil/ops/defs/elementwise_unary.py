@@ -504,7 +504,7 @@ class logical_not(elementwise_unary):
 
     Attributes
     ----------
-    T: fp16, fp32
+    T: bool
     """
 
     def __init__(self, **kwargs):

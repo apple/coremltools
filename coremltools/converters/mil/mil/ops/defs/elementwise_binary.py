@@ -342,7 +342,7 @@ class logical_and(elementwise_binary):
     
     Attributes
     ----------
-    T: fp16, fp32, i32
+    T: bool
     
     """
     
@@ -379,7 +379,7 @@ class logical_or(elementwise_binary):
     
     Attributes
     ----------
-    T: fp16, fp32, i32
+    T: bool
     
     """
     
@@ -416,7 +416,7 @@ class logical_xor(elementwise_binary):
     
     Attributes
     ----------
-    T: fp16, fp32, i32
+    T: bool
     
     """
     
