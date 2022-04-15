@@ -3587,9 +3587,10 @@ def zeros_like(context, node):
 
     context.add(zeros_like)
 
-@register_torch_op
+
+@register_torch_op(torch_alias=["empty"])
 def zeros(context, node):
-    inputs = _get_inputs(context, node, expected=5)
+    inputs = _get_inputs(context, node)
     size = inputs[0]
     dtype = inputs[1].val
     if isinstance(size, list):
