@@ -2393,13 +2393,16 @@ class TestReshape(TorchBaseTest):
 
 class TestFlatten(TorchBaseTest):
     @pytest.mark.parametrize(
-        "backend, start_dim",
-        itertools.product(backends, [2,-2],),
+        "backend, start_dim, end_dim, is_dynamic",
+        itertools.product(backends, [2, -2, 0], [3, -1], [False, True]),
     )
-    def test_reshape(self, backend, start_dim):
+    def test_flatten(self, backend, start_dim, end_dim, is_dynamic):
         input_shape = (2, 3, 4, 5)
-        model = ModuleWrapper(function=torch.flatten, kwargs={"start_dim": start_dim})
-        self.run_compare_torch(input_shape, model, backend=backend)
+        converter_input_type = None
+        if is_dynamic:
+            converter_input_type = [TensorType(shape=(2, 3, RangeDim(default=4), RangeDim(default=5)), dtype=np.float32)]
+        model = ModuleWrapper(function=torch.flatten, kwargs={"start_dim": start_dim, "end_dim": end_dim})
+        self.run_compare_torch(input_shape, model, backend=backend, converter_input_type=converter_input_type)
 
 
 class TestGather(TorchBaseTest):
