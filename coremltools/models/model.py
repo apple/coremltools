@@ -8,6 +8,7 @@ import os as _os
 import shutil as _shutil
 import tempfile as _tempfile
 import warnings as _warnings
+import numpy
 
 
 from ..proto import (
@@ -509,6 +510,7 @@ class MLModel(object):
             # we still check it here to return early and
             # return a more verbose error message
             self._verify_input_name_exists(data)
+            self._verify_input_type(data)
             return self.__proxy__.predict(data, useCPUOnly)
         else:
             if _macos_version() < (10, 13):
@@ -602,3 +604,28 @@ class MLModel(object):
                 err_msg = "Provided key \"{}\", in the input dict, " \
                           "does not match any of the model input name(s), which are: {}"
                 raise KeyError(err_msg.format(given_input, ",".join(model_input_names)))
+
+
+    def _verify_input_type(self, input_dict):
+        model_input_types = {}
+        for inp in self._spec.description.input:
+            type_value = inp.type.multiArrayType.dataType
+            type_name = inp.type.multiArrayType.ArrayDataType.Name(type_value)
+            if type_name != "INVALID_ARRAY_DATA_TYPE":
+                model_input_types[inp.name] = type_name
+
+        supported_dtype = [
+            numpy.float32,
+            numpy.float64,
+            numpy.int32,
+        ]
+
+        for given_input_name, given_input in input_dict.items():
+            if not given_input_name in model_input_types:
+                continue
+            if not isinstance(given_input, numpy.ndarray):
+                err_msg = "Expected type for {} is numpy.ndarray, but {} was given"
+                raise ValueError(err_msg.format(given_input_name, type(given_input.dtype)))
+            if given_input.dtype not in supported_dtype:
+                err_msg = "dtype of {} is {}, it is not supported"
+                raise ValueError(err_msg.format(given_input_name, given_input.dtype))

@@ -731,6 +731,52 @@ class TestInputs:
         error_str = str(error_info.value)
         assert "does not match any of the model input" in error_str
 
+    @staticmethod
+    @pytest.mark.skipif(not ct.utils._is_macos(), reason="Platform is not Mac OS")
+    def test_unsanitized_input_type_during_prediction():
+        prog = Program()
+        func_inputs = {"x": mb.placeholder(shape=[2, 3]),
+                       "y": mb.placeholder(shape=[2, 3])}
+        with Function(func_inputs) as ssa_fun:
+            x, y = ssa_fun.inputs["x"], ssa_fun.inputs["y"]
+            x = mb.relu(x=x, name="relu")
+            z = mb.add(x=x, y=y, name="out")
+            ssa_fun.set_outputs([z])
+        prog.add_function("main", ssa_fun)
+
+        mlmodel = ct.convert(prog)
+
+        with pytest.raises(ValueError) as error_info:
+            mlmodel.predict(
+                {"x": np.random.rand(2, 3).astype(np.float32),
+                 "y": np.random.rand(2, 3).astype(np.int64)}  # int64 is not supported
+            )
+        error_str = str(error_info.value)
+        assert "dtype of y is " in error_str
+
+    @staticmethod
+    @pytest.mark.skipif(not ct.utils._is_macos(), reason="Platform is not Mac OS")
+    def test_unsanitized_input_not_numpy_array_during_prediction():
+        prog = Program()
+        func_inputs = {"x": mb.placeholder(shape=[2, 3]),
+                       "y": mb.placeholder(shape=[2, 3])}
+        with Function(func_inputs) as ssa_fun:
+            x, y = ssa_fun.inputs["x"], ssa_fun.inputs["y"]
+            x = mb.relu(x=x, name="relu")
+            z = mb.add(x=x, y=y, name="out")
+            ssa_fun.set_outputs([z])
+        prog.add_function("main", ssa_fun)
+
+        mlmodel = ct.convert(prog)
+
+        with pytest.raises(ValueError) as error_info:
+            mlmodel.predict(
+                {"x": torch.rand(2, 3).to(torch.float32),  # ndarray is expected
+                 "y": np.random.rand(2, 3).astype(np.float32)}
+            )
+        error_str = str(error_info.value)
+        assert "Expected type for x is numpy.ndarray" in error_str
+
 class TestFlexibleShape:
     @staticmethod
     @pytest.mark.parametrize(
