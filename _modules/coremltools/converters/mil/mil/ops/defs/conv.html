@@ -196,7 +196,7 @@
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
-<span class="sd">    T: fp32</span>
+<span class="sd">    T: fp16, fp32</span>
 
 <span class="sd">    See Also</span>
 <span class="sd">    --------</span>
@@ -300,7 +300,7 @@
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
-<span class="sd">    T: fp32</span>
+<span class="sd">    T: fp16, fp32</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
         <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(),</span>
@@ -332,7 +332,7 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Perform transposed convolution (also known as deconvolution and fractionally</span>
 <span class="sd">    stride convolution) over input. ``conv_transpose`` can also be used to compute</span>
-<span class="sd">    the gradient of ``conv``. Supports 1-D, 2-D, and 3-D convolution.</span>
+<span class="sd">    the gradient of conv. Supports 1-D, 2-D, and 3-D convolution.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -360,7 +360,7 @@
 <span class="sd">    output_shape: const tensor&lt;[P],i32&gt; (Optional, default None)</span>
 <span class="sd">        * Expected output shape. The first two dim must be ``[n, C_out]``.</span>
 <span class="sd">        * The output shape of conv_transpose is underdetermined in general,</span>
-<span class="sd">        * because conv can map multiple input shape to a single output shape.</span>
+<span class="sd">        * Because conv can map multiple input shape to a single output shape.</span>
 <span class="sd">          For example, for ``same`` padding mode, ``conv_out = ceil(conv_in/stride)``.</span>
 <span class="sd">          Hence we need ``output_shape`` when this occurs.</span>
 
@@ -388,7 +388,7 @@
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
-<span class="sd">    T: fp32</span>
+<span class="sd">    T: fp16, fp32</span>
 
 <span class="sd">    See Also</span>
 <span class="sd">    --------</span>
