@@ -49,7 +49,7 @@ class abs(elementwise_unary):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32, i32
     """
 
     def __init__(self, **kwargs):
@@ -76,7 +76,7 @@ class acos(elementwise_unary):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
     """
 
     def __init__(self, **kwargs):
@@ -103,7 +103,7 @@ class asin(elementwise_unary):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
     """
 
     def __init__(self, **kwargs):
@@ -130,7 +130,7 @@ class atan(elementwise_unary):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
     """
 
     def __init__(self, **kwargs):
@@ -158,7 +158,7 @@ class atanh(elementwise_unary):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
     """
 
     def __init__(self, **kwargs):
@@ -185,7 +185,7 @@ class ceil(elementwise_unary):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
     """
 
     def __init__(self, **kwargs):
@@ -216,7 +216,7 @@ class clip(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
     """
 
     input_spec = InputSpec(
@@ -252,7 +252,7 @@ class cos(elementwise_unary):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
     """
 
     def __init__(self, **kwargs):
@@ -279,7 +279,7 @@ class cosh(elementwise_unary):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
     """
 
     def __init__(self, **kwargs):
@@ -306,7 +306,7 @@ class erf(elementwise_unary):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
     """
 
     def __init__(self, **kwargs):
@@ -334,7 +334,7 @@ class exp(elementwise_unary):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
     """
 
     def __init__(self, **kwargs):
@@ -361,7 +361,7 @@ class exp2(elementwise_unary):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32, i32
     """
 
     def __init__(self, **kwargs):
@@ -389,7 +389,7 @@ class floor(elementwise_unary):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
     """
 
     def __init__(self, **kwargs):
@@ -420,7 +420,7 @@ class inverse(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
     """
 
     input_spec = InputSpec(
@@ -463,7 +463,7 @@ class log(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
     """
 
     input_spec = InputSpec(
@@ -504,7 +504,7 @@ class logical_not(elementwise_unary):
 
     Attributes
     ----------
-    T: fp32
+    T: bool
     """
 
     def __init__(self, **kwargs):
@@ -532,7 +532,7 @@ class round(elementwise_unary):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
     """
 
     def __init__(self, **kwargs):
@@ -563,7 +563,7 @@ class rsqrt(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
     """
 
     input_spec = InputSpec(
@@ -605,7 +605,7 @@ class sign(elementwise_unary):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32, i32
     """
 
     def __init__(self, **kwargs):
@@ -632,7 +632,7 @@ class sin(elementwise_unary):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
     """
 
     def __init__(self, **kwargs):
@@ -659,7 +659,7 @@ class sinh(elementwise_unary):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
     """
 
     def __init__(self, **kwargs):
@@ -686,7 +686,7 @@ class sqrt(elementwise_unary):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
     """
 
     def __init__(self, **kwargs):
@@ -713,7 +713,7 @@ class square(elementwise_unary):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32, i32
     """
 
     def __init__(self, **kwargs):
@@ -741,7 +741,7 @@ class tan(elementwise_unary):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
     """
 
     def __init__(self, **kwargs):
@@ -769,7 +769,7 @@ class tanh(elementwise_unary):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
     """
 
     def __init__(self, **kwargs):
@@ -798,7 +798,7 @@ class threshold(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32, i32
     """
 
     input_spec = InputSpec(

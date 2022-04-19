@@ -149,7 +149,7 @@ class avg_pool(Pooling):
     
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
     
     See Also
     --------
@@ -202,7 +202,7 @@ class l2_pool(Pooling):
     
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
     
     See Also
     --------
@@ -245,7 +245,7 @@ class max_pool(Pooling):
     
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
 
     See Also
     --------

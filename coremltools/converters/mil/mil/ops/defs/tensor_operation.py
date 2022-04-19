@@ -70,6 +70,10 @@ class band_part(Operation):
     -------
     tensor<\*?, T>
         * Same type and shape as the input tensor.
+
+    Attributes
+    ----------
+    T: fp16, fp32, i32, bool
     """
 
     input_spec = InputSpec(
@@ -119,7 +123,7 @@ class cumsum(Operation):
 
     Attributes
     ----------
-    T: fp32, int32
+    T: fp16, fp32, i32
     """
 
     input_spec = InputSpec(
@@ -186,7 +190,7 @@ class fill(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32, i32, bool
     """
 
     input_spec = InputSpec(
@@ -262,7 +266,7 @@ class non_maximum_suppression(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
     """
 
     input_spec = InputSpec(
@@ -314,7 +318,7 @@ class non_zero(Operation):
 
     Attributes
     ----------
-    T: fp32, int32
+    T: fp16, fp32, i32, bool
     """
 
     input_spec = InputSpec(x=TensorInputType())
@@ -360,7 +364,7 @@ class one_hot(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32, i32, bool
     """
 
     input_spec = InputSpec(
@@ -453,7 +457,7 @@ class pad(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
     """
 
     input_spec = InputSpec(
@@ -544,7 +548,7 @@ class range_1d(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: i32, fp16, fp32
     """
 
     input_spec = InputSpec(
@@ -612,7 +616,7 @@ class tile(Operation):
 
     Attributes
     ----------
-    T: Any
+    T: fp16, fp32, i32, bool
     """
 
     input_spec = InputSpec(x=TensorInputType(), reps=TensorInputType(),)
@@ -684,7 +688,7 @@ class argsort(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32, i32
     """
 
     input_spec = InputSpec(
@@ -742,7 +746,7 @@ class topk(Operation):
 
     Attributes
     ----------
-    T: fp32, int32
+    T: fp16, fp32, i32
     """
 
     input_spec = InputSpec(
@@ -818,7 +822,7 @@ class flatten2d(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32, i32, bool
     """
 
     input_spec = InputSpec(
@@ -870,7 +874,7 @@ class shape(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32, i32, bool
     """
 
     input_spec = InputSpec(x = ScalarOrTensorInputType())
@@ -938,7 +942,7 @@ class concat(Operation):
 
     Attributes
     ----------
-    T: fp32, int32
+    T: fp16, fp32, i32, bool
     """
 
     input_spec = InputSpec(values=TupleInputType(),
@@ -1096,7 +1100,7 @@ class split(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32, i32, bool
     """
 
     input_spec = InputSpec(
@@ -1203,7 +1207,7 @@ class stack(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32, i32, bool
     """
 
     input_spec = InputSpec(values=TupleInputType(),
@@ -1267,6 +1271,9 @@ class identity(Operation):
     tensor<\*?, T>
         * Same type and shape as the input tensor.
 
+    Attributes
+    ----------
+    T: fp16, fp32, i32, bool
     """
 
     input_spec = InputSpec(x=ListOrScalarOrTensorInputType())

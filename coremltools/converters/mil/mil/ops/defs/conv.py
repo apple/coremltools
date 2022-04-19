@@ -119,7 +119,7 @@ class conv(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
 
     See Also
     --------
@@ -223,7 +223,7 @@ class conv_quantized(conv):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
     """
     input_spec = InputSpec(
         x=TensorInputType(),
@@ -255,7 +255,7 @@ class conv_transpose(Operation):
     """
     Perform transposed convolution (also known as deconvolution and fractionally
     stride convolution) over input. ``conv_transpose`` can also be used to compute
-    the gradient of ``conv``. Supports 1-D, 2-D, and 3-D convolution.
+    the gradient of conv. Supports 1-D, 2-D, and 3-D convolution.
 
     Parameters
     ----------
@@ -283,7 +283,7 @@ class conv_transpose(Operation):
     output_shape: const tensor<[P],i32> (Optional, default None)
         * Expected output shape. The first two dim must be ``[n, C_out]``.
         * The output shape of conv_transpose is underdetermined in general,
-        * because conv can map multiple input shape to a single output shape.
+        * Because conv can map multiple input shape to a single output shape.
           For example, for ``same`` padding mode, ``conv_out = ceil(conv_in/stride)``.
           Hence we need ``output_shape`` when this occurs.
 
@@ -311,7 +311,7 @@ class conv_transpose(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
 
     See Also
     --------

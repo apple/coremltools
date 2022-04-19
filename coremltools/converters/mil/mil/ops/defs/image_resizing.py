@@ -83,7 +83,7 @@ class affine(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
     """
 
     input_spec = InputSpec(
@@ -178,7 +178,8 @@ class upsample_nearest_neighbor(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
+    U: fp32, i32
     """
 
     input_spec = InputSpec(
@@ -275,8 +276,8 @@ class resample(Operation):
 
     Attributes
     ----------
-    T: fp32
-    U: fp32, i32, i64
+    T: fp16, fp32
+    U: fp32, i32
     """
 
     input_spec = InputSpec(
@@ -365,7 +366,7 @@ class resize_nearest_neighbor(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
     """
 
     input_spec = InputSpec(
@@ -465,8 +466,8 @@ class upsample_bilinear(Operation):
 
     Attributes
     ----------
-    T: fp32
-    T2 : fp32 or int32
+    T: fp16, fp32
+    T2 : fp32, i32
     """
 
     input_spec = InputSpec(
@@ -593,7 +594,7 @@ class resize_bilinear(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
     """
 
     input_spec = InputSpec(
@@ -723,7 +724,7 @@ class crop_resize(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
     """
 
     input_spec = InputSpec(
@@ -809,7 +810,7 @@ class crop(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
     """
 
     input_spec = InputSpec(

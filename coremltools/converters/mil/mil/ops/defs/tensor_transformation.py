@@ -128,7 +128,7 @@ class depth_to_space(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
     """
 
     input_spec = InputSpec(
@@ -169,7 +169,7 @@ class expand_dims(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32, i32, bool
     """
 
     input_spec = InputSpec(
@@ -267,7 +267,7 @@ class reshape(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32, i32, bool
     """
 
     input_spec = InputSpec(
@@ -385,7 +385,7 @@ class reverse(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32, i32, bool
 
     References
     ----------
@@ -448,7 +448,7 @@ class reverse_sequence(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32, i32, bool
 
     References
     ----------
@@ -518,7 +518,7 @@ class slice_by_index(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32, i32, bool
 
     """
 
@@ -650,7 +650,7 @@ class slice_by_size(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32, i32, bool
     """
 
     input_spec = InputSpec(
@@ -748,7 +748,7 @@ class space_to_depth(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
     """
 
     input_spec = InputSpec(
@@ -786,7 +786,7 @@ class squeeze(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32, i32, bool
     """
 
     input_spec = InputSpec(
@@ -850,7 +850,7 @@ class transpose(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32, i32, bool
 
     References
     ----------
@@ -904,7 +904,7 @@ class pixel_shuffle(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
 
     References
     ----------
@@ -955,7 +955,7 @@ class sliding_windows(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32, i32
     """
 
     input_spec = InputSpec(

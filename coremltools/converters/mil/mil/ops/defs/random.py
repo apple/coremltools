@@ -73,7 +73,11 @@ class random_bernoulli(RandomDistribution):
     -------
     <\*, T>
         * A tensor of the given target output shape filled with random values.
-    
+
+    Attributes
+    ----------
+    T: fp16, fp32
+
     See Also
     --------
     random_categorical, random_normal, random_uniform
@@ -128,7 +132,11 @@ class random_categorical(Operation):
     -------
     <\*D_in[:-1] + [size], T>
         * A tensor of the given target output shape filled with random values.
-    
+
+    Attributes
+    ----------
+    T: fp16, fp32
+
     See Also
     --------
     random_bernoulli, random_normal, random_uniform
@@ -180,7 +188,11 @@ class random_normal(RandomDistribution):
     -------
     <\*, T>
         * A tensor of the given target output shape filled with random values.
-    
+
+    Attributes
+    ----------
+    T: fp16, fp32
+
     See Also
     --------
     random_categorical, random_bernoulli, random_uniform
@@ -246,7 +258,11 @@ class random_uniform(RandomDistribution):
     -------
     <\*, T>
         * A tensor of the given target output shape filled with random values.
-    
+
+    Attributes
+    ----------
+    T: fp16, fp32
+
     See Also
     --------
     random_categorical, random_bernoulli, random_normal

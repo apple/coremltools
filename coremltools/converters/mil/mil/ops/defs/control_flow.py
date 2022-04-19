@@ -145,7 +145,7 @@ class Const(Operation):
 
     Attributes
     ----------
-    T: fp32, i32, str
+    T: fp16, fp32, i32, str, bool
     """
 
     input_spec = InputSpec(
@@ -266,7 +266,7 @@ class select(Operation):
     Attributes
     ----------
     B: bool
-    T: fp32
+    T: fp16, fp32, i32
     """
 
     input_spec = InputSpec(
@@ -601,6 +601,10 @@ class list_length(Operation):
     -------
     <i32>
         * Length of ``ls``.
+
+    Attributes
+    ----------
+    T: fp16, fp32, i32, bool
     """
 
     input_spec = InputSpec(ls=ListInputType(),)
@@ -640,7 +644,7 @@ class list_write(Operation):
 
     Attributes
     ----------
-    T: fp32, i32, bool
+    T: fp16, fp32, i32, bool
     """
 
     input_spec = InputSpec(
@@ -695,7 +699,7 @@ class list_read(Operation):
 
     Attributes
     ----------
-    T: fp32, i32, bool
+    T: fp16, fp32, i32, bool
     """
 
     input_spec = InputSpec(
@@ -737,7 +741,7 @@ class list_gather(Operation):
 
     Attributes
     ----------
-    T: fp32, i32, bool
+    T: fp16, fp32, i32, bool
     """
 
     input_spec = InputSpec(
@@ -788,7 +792,7 @@ class list_scatter(Operation):
 
     Attributes
     ----------
-    T: fp32, i32, bool
+    T: fp16, fp32, i32, bool
     """
 
     input_spec = InputSpec(

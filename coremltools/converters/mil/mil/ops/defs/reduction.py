@@ -163,7 +163,7 @@ class reduce_argmax(reduce_arg):
     
     Attributes
     ----------
-    T: f32, int32
+    T: i32, fp16, fp32
     
     References
     ----------
@@ -202,7 +202,7 @@ class reduce_argmin(reduce_arg):
     
     Attributes
     ----------
-    T: f32, int32
+    T: i32, fp16, fp32
     
     References
     ----------
@@ -241,7 +241,7 @@ class reduce_l1_norm(ReductionAxes):
     
     Attributes
     ----------
-    T: f32, int32
+    T: i32, fp16, fp32
     
     References
     ----------
@@ -283,8 +283,7 @@ class reduce_l2_norm(ReductionAxes):
     
     Attributes
     ----------
-    T: f32, int32
-    
+    T: i32, fp16, fp32
     """
     
     def __init__(self, **kwargs):
@@ -322,8 +321,7 @@ class reduce_log_sum(ReductionAxes):
     
     Attributes
     ----------
-    T: f32, int32
-    
+    T: i32, fp16, fp32
     """
     
     def __init__(self, **kwargs):
@@ -364,7 +362,7 @@ class reduce_log_sum_exp(ReductionAxes):
     
     Attributes
     ----------
-    T: f32, int32
+    T: i32, fp16, fp32
     
     References
     ----------
@@ -414,8 +412,7 @@ class reduce_max(ReductionAxes):
     
     Attributes
     ----------
-    T: f32, int32
-    
+    T: i32, fp16, fp32
     """
     
     def __init__(self, **kwargs):
@@ -449,7 +446,7 @@ class reduce_mean(ReductionAxes):
     
     Attributes
     ----------
-    T: f32, int32
+    T: i32, fp16, fp32
     
     References
     ----------
@@ -487,8 +484,7 @@ class reduce_min(ReductionAxes):
     
     Attributes
     ----------
-    T: f32, int32
-    
+    T: i32, fp16, fp32
     """
     
     def __init__(self, **kwargs):
@@ -522,8 +518,7 @@ class reduce_prod(ReductionAxes):
     
     Attributes
     ----------
-    T: f32, int32
-    
+    T:  i32, fp16, fp32
     """
     
     def __init__(self, **kwargs):
@@ -557,8 +552,7 @@ class reduce_sum(ReductionAxes):
     
     Attributes
     ----------
-    T: f32, int32
-    
+    T: i32, fp16, fp32
     """
 
     def __init__(self, **kwargs):
@@ -592,8 +586,7 @@ class reduce_sum_square(ReductionAxes):
     
     Attributes
     ----------
-    T: f32, int32
-    
+    T: i32, fp16, fp32
     """
     
     def __init__(self, **kwargs):

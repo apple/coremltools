@@ -72,7 +72,7 @@ class gather(Operation):
 
     Attributes
     ----------
-    T: fp32
+    U: fp16, fp32, i32
 
     References
     ----------
@@ -195,7 +195,7 @@ class scatter(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32, i32
     """
 
     input_spec = InputSpec(
@@ -262,7 +262,7 @@ class gather_along_axis(Operation):
 
     Attributes
     ----------
-    T: fp32
+    U: fp16, fp32, i32
     """
 
     input_spec = InputSpec(
@@ -378,7 +378,7 @@ class scatter_along_axis(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32, i32
     """
 
     input_spec = InputSpec(
@@ -456,7 +456,7 @@ class gather_nd(Operation):
 
     Attributes
     ----------
-    T: fp32
+    U: fp16, fp32, i32
 
     References
     ----------
@@ -516,7 +516,7 @@ class scatter_nd(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32, i32
     """
 
     input_spec = InputSpec(
