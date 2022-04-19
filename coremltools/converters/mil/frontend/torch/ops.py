@@ -3770,6 +3770,18 @@ def clamp(context, node):
     max_val = inputs[2] if inputs[2] else _np.finfo(_np.float32).max
     context.add(mb.clip(x=inputs[0], alpha=min_val, beta=max_val, name=node.name))
 
+@register_torch_op
+def triu(context, node):
+    inputs = _get_inputs(context, node, expected=2)
+    x = inputs[0]
+    diagonal = inputs[1]
+    diagonal = 0 if diagonal is None else diagonal.val
+    if diagonal <= 0:
+        res = mb.band_part(x=x, lower=-diagonal, upper=-1, name=node.name)
+    else:
+        y = mb.band_part(x=x, lower=-1, upper=diagonal - 1)
+        res = mb.sub(x=x, y=y, name=node.name)
+    context.add(res)
 
 @register_torch_op
 def cos(context, node):
