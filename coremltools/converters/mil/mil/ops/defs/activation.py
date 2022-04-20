@@ -496,15 +496,15 @@ class sigmoid_hard(Operation):
 @register_op(doc_str="")
 class silu(Operation):
     """
-    Sigmoid Linear Unit, element-wise apply the SiLU or Swish operation ``x * sigmoid(x)``.
+    Sigmoid Linear Unit, elementwise apply the SiLU or Swish operation ``x * sigmoid(x)``.
 
     Parameters
     ----------
-    x: tensor<*, T>
+    x: tensor<\*, T>
 
     Returns
     -------
-    tensor<*, T>
+    tensor<\*, T>
 
     Attributes
     ----------
