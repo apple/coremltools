@@ -521,7 +521,7 @@ class make_list(Operation):
         * If ``dynamic_length`` is ``False``,
           ``init_length`` is the fixed length of the list throughout runtime.
 
-    dynamic_length: <bool> (Optional, Default is ``True``)
+    dynamic_length: <bool> (Optional, Default is True)
  
     elem_shape: <K,T> (Required)
     	* Where ``T = "string", "int32"``.
@@ -529,7 +529,7 @@ class make_list(Operation):
         * If not provided, the resulting ``List`` won’t have the elementary shape
           info, which may cause backend errors. Remedy this with SSA passes.
 
-    dtype: const (Optional, Default is ``fp32``)
+    dtype: const (Optional, Default is fp32)
     	* Possible values: ``{"bool", "fp16", "fp32", "int32"}``
         * Element tensor’s ``dtype``.
 
