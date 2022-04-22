@@ -2913,9 +2913,6 @@ class TestZeros(TorchBaseTest):
         ),
     )
     def test_zeros_like_static(self, backend, rank):
-        if backend[0] == 'mlprogram':
-            pytest.xfail("Not supported with ML Program backend")
-
         class ZerosLikeStaticModel(nn.Module):
             def __init__(self):
                 super(ZerosLikeStaticModel, self).__init__()
@@ -2936,9 +2933,6 @@ class TestZeros(TorchBaseTest):
         ),
     )
     def test_zeros_like_dynamic(self, backend, rank):
-        if backend[0] == 'mlprogram':
-            pytest.xfail("Not supported with ML Program backend")
-
         class ZerosLikeDynamicModel(nn.Module):
             def __init__(self):
                 super(ZerosLikeDynamicModel, self).__init__()
@@ -2967,9 +2961,6 @@ class TestZeros(TorchBaseTest):
         ),
     )
     def test_zeros_static(self, backend, rank):
-        if backend[0] == 'mlprogram':
-            pytest.xfail("Not supported with ML Program backend")
-
         class ZerosStaticModel(nn.Module):
             def __init__(self):
                 super(ZerosStaticModel, self).__init__()
@@ -2993,9 +2984,6 @@ class TestZeros(TorchBaseTest):
         ),
     )
     def test_zeros_dynamic(self, backend, rank):
-        if backend[0] == 'mlprogram':
-            pytest.xfail("Not supported with ML Program backend")
-
         class ZerosDynamicModel(nn.Module):
             def __init__(self):
                 super(ZerosDynamicModel, self).__init__()
