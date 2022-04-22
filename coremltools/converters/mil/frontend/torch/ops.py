@@ -3034,6 +3034,14 @@ def full(context, node):
     context.add(result)
 
 @register_torch_op()
+def full_like(context, node):
+    inputs = _get_inputs(context, node, expected=7)
+    size = mb.shape(x=inputs[0])
+    val = inputs[1].val
+    result = _make_fill_op(size, val, node.name)
+    context.add(result)
+
+@register_torch_op()
 def new_full(context, node):
     # The difference between "new_full" and "full" is that the "new_full" is called from
     # an existing tensor: tensor.new_full(size, fill_value), while the "full" is called
