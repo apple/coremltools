@@ -29,6 +29,17 @@ from .utils import (
 )
 from coremltools import ComputeUnit as _ComputeUnit
 from coremltools.converters.mil.mil.program import Program as _Program
+from coremltools._deps import (
+    _HAS_TF_1,
+    _HAS_TF_2,
+    _HAS_TORCH,
+)
+
+if _HAS_TORCH:
+    import torch
+
+if _HAS_TF_1 or _HAS_TF_2:
+    import tensorflow as tf
 
 
 try:
@@ -605,6 +616,11 @@ class MLModel(object):
                           "does not match any of the model input name(s), which are: {}"
                 raise KeyError(err_msg.format(given_input, ",".join(model_input_names)))
 
+    _supported_dtype = [
+        numpy.float32,
+        numpy.float64,
+        numpy.int32,
+    ]
 
     def _verify_input_type(self, input_dict):
         model_input_types = {}
@@ -614,18 +630,25 @@ class MLModel(object):
             if type_name != "INVALID_ARRAY_DATA_TYPE":
                 model_input_types[inp.name] = type_name
 
-        supported_dtype = [
-            numpy.float32,
-            numpy.float64,
-            numpy.int32,
-        ]
-
         for given_input_name, given_input in input_dict.items():
             if not given_input_name in model_input_types:
                 continue
-            if not isinstance(given_input, numpy.ndarray):
-                err_msg = "Expected type for {} is numpy.ndarray, but {} was given"
-                raise ValueError(err_msg.format(given_input_name, type(given_input.dtype)))
-            if given_input.dtype not in supported_dtype:
+            input_dict[given_input_name] = self._convert_to_numpy_if_enable(given_input, given_input_name)
+            given_input = input_dict[given_input_name]
+            if given_input.dtype not in self._supported_dtype:
                 err_msg = "dtype of {} is {}, it is not supported"
                 raise ValueError(err_msg.format(given_input_name, given_input.dtype))
+
+    def _convert_to_numpy_if_enable(self, given_input, given_input_name):
+        if isinstance(given_input, numpy.ndarray):
+            sanitized_input = given_input
+        elif _HAS_TORCH and isinstance(given_input, torch.Tensor):
+            sanitized_input = given_input.detach().numpy()
+        elif (_HAS_TF_1 or _HAS_TF_2) and isinstance(given_input, tf.Tensor):
+            sanitized_input = given_input.eval(session=tf.compat.v1.Session())
+        else:
+            sanitized_input = numpy.array(given_input)
+            if sanitized_input.dtype not in self._supported_dtype:
+                err_msg = "Expected type for {} is numpy.ndarray, but {} was given"
+                raise ValueError(err_msg.format(given_input_name, type(given_input)))
+        return sanitized_input
