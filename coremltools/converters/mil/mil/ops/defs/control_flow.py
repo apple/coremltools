@@ -470,7 +470,7 @@ class while_loop(Operation):
                 if not while_loop._check_equal_value(v_out.sym_val, v_in.sym_val):
                     msg = 'Block output {}: {} is not equal to ' +\
                             'block input {}: {} after value changes'
-                    raise ValueError(msg.format(v_out.name. v.sym_val,
+                    raise ValueError(msg.format(v_out.name, v.sym_val,
                         v_in.name, v_in.sym_val))
         self.blocks.append(cond_block)
         self.blocks.append(body_block)
