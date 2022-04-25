@@ -19,6 +19,7 @@ activation
    .. autoclass:: scaled_tanh
    .. autoclass:: sigmoid
    .. autoclass:: sigmoid_hard
+   .. autoclass:: silu
    .. autoclass:: softplus
    .. autoclass:: softplus_parametric
    .. autoclass:: softmax
@@ -32,7 +33,7 @@ control\_flow
 .. automodule:: coremltools.converters.mil.mil.ops.defs.control_flow
 
    .. autoclass:: cond
-   .. autoclass:: const
+   .. autoclass:: Const
    .. autoclass:: select
    .. autoclass:: while_loop
    .. autoclass:: make_list
@@ -116,8 +117,11 @@ image\_resizing
 
 .. automodule:: coremltools.converters.mil.mil.ops.defs.image_resizing
 
+   .. autoclass:: affine
    .. autoclass:: upsample_nearest_neighbor
    .. autoclass:: upsample_bilinear
+   .. autoclass:: resample
+   .. autoclass:: resize_nearest_neighbor
    .. autoclass:: resize_bilinear
    .. autoclass:: crop_resize
    .. autoclass:: crop
@@ -181,7 +185,6 @@ reduction
 
 .. automodule:: coremltools.converters.mil.mil.ops.defs.reduction
 
-   .. autoclass:: reduce_arg
    .. autoclass:: reduce_argmax
    .. autoclass:: reduce_argmin
    .. autoclass:: reduce_l1_norm

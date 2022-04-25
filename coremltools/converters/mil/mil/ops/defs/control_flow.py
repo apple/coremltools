@@ -134,7 +134,7 @@ class Const(Operation):
     ----------
     mode: immediate_value, file_value (Optional)
         * Determines how the constant value is stored in the internal MIL format.
-        * For  large constants such as convolution weights, use ``file_value``.
+        * For large constants such as convolution weights, use ``file_value``.
         * For smaller-size constants such as values of a stride, use ``immediate_value``.
 
     val: const<\*,T> (Required)
@@ -516,24 +516,22 @@ class make_list(Operation):
 
     Parameters
     ----------
-    init_length: <i32> (Optional)
-        * Initial length for the list. If ``dynamic_length`` is ``False``,
+    init_length: <i32> (Optional, Default=1)
+        * Initial length for the list.
+        * If ``dynamic_length`` is ``False``,
           ``init_length`` is the fixed length of the list throughout runtime.
-        * Default is ``1``.
 
-    dynamic_length: <bool> (Optional)
-        * Initial length for the list. If ``dynamic_length`` is ``False``,
-          ``init_length`` is the fixed length of the list throughout runtime.
-        * Default is ``True``.
-
-    elem_shape: <K,i32> (Required)
+    dynamic_length: <bool> (Optional, Default is True)
+ 
+    elem_shape: <K,T> (Required)
+    	* Where ``T = "string", "int32"``.
         * Non-symbolic 1-D tensor denoting the shape of elements.
         * If not provided, the resulting ``List`` won’t have the elementary shape
           info, which may cause backend errors. Remedy this with SSA passes.
 
-    dtype: const<str>  (Optional)
+    dtype: const (Optional, Default is fp32)
+    	* Possible values: ``{"bool", "fp16", "fp32", "int32"}``
         * Element tensor’s ``dtype``.
-        * Default is ``fp32``.
 
     Returns
     -------
