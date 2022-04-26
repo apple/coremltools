@@ -444,6 +444,29 @@ based on the following formulas:</p>
 </dd></dl>
 
 <dl class="py class">
+<dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.activation.silu">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.activation.</span></span><span class="sig-name descname"><span class="pre">silu</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/activation.html#silu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.activation.silu" title="Permalink to this definition"></a></dt>
+<dd><p>Sigmoid Linear Unit, elementwise apply the SiLU or Swish operation <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">*</span> <span class="pre">sigmoid(x)</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x: tensor&lt;*, T&gt;</strong></dt><dd></dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>tensor&lt;*, T&gt;</dt><dd></dd>
+</dl>
+</dd>
+<dt class="field-odd">Attributes</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>T: fp16, fp32</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.activation.softplus">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.activation.</span></span><span class="sig-name descname"><span class="pre">softplus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/activation.html#softplus"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.activation.softplus" title="Permalink to this definition"></a></dt>
 <dd><p>Return <code class="docutils literal notranslate"><span class="pre">log(</span> <span class="pre">1</span> <span class="pre">+</span> <span class="pre">e^x</span> <span class="pre">)</span></code> elementwise.</p>
@@ -624,9 +647,33 @@ the operation’s return type.</p></li>
 </dd></dl>
 
 <dl class="py class">
-<dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.control_flow.const">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.control_flow.</span></span><span class="sig-name descname"><span class="pre">const</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/control_flow.html#const"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.control_flow.const" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.control_flow.Const">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.control_flow.</span></span><span class="sig-name descname"><span class="pre">Const</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/control_flow.html#Const"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.control_flow.Const" title="Permalink to this definition"></a></dt>
+<dd><p>A base class that returns constant values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>mode: immediate_value, file_value (Optional)</strong></dt><dd><ul class="simple">
+<li><p>Determines how the constant value is stored in the internal MIL format.</p></li>
+<li><p>For large constants such as convolution weights, use <code class="docutils literal notranslate"><span class="pre">file_value</span></code>.</p></li>
+<li><p>For smaller-size constants such as values of a stride, use <code class="docutils literal notranslate"><span class="pre">immediate_value</span></code>.</p></li>
+</ul>
+</dd>
+<dt><strong>val: const&lt;*,T&gt; (Required)</strong></dt><dd></dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>const&lt;*,T&gt;</dt><dd></dd>
+</dl>
+</dd>
+<dt class="field-odd">Attributes</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>T: fp16, fp32, i32, str, bool</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.control_flow.select">
@@ -719,27 +766,23 @@ The list is similar to an auto-resizing array.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>init_length: &lt;i32&gt; (Optional)</strong></dt><dd><ul class="simple">
-<li><p>Initial length for the list. If <code class="docutils literal notranslate"><span class="pre">dynamic_length</span></code> is <code class="docutils literal notranslate"><span class="pre">False</span></code>,
+<dt><strong>init_length: &lt;i32&gt; (Optional, Default=1)</strong></dt><dd><ul class="simple">
+<li><p>Initial length for the list.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">dynamic_length</span></code> is <code class="docutils literal notranslate"><span class="pre">False</span></code>,
 <code class="docutils literal notranslate"><span class="pre">init_length</span></code> is the fixed length of the list throughout runtime.</p></li>
-<li><p>Default is <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p></li>
 </ul>
 </dd>
-<dt><strong>dynamic_length: &lt;bool&gt; (Optional)</strong></dt><dd><ul class="simple">
-<li><p>Initial length for the list. If <code class="docutils literal notranslate"><span class="pre">dynamic_length</span></code> is <code class="docutils literal notranslate"><span class="pre">False</span></code>,
-<code class="docutils literal notranslate"><span class="pre">init_length</span></code> is the fixed length of the list throughout runtime.</p></li>
-<li><p>Default is <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
-</ul>
-</dd>
-<dt><strong>elem_shape: &lt;K,i32&gt; (Required)</strong></dt><dd><ul class="simple">
+<dt><strong>dynamic_length: &lt;bool&gt; (Optional, Default is ``True``)</strong></dt><dd></dd>
+<dt><strong>elem_shape: &lt;K,T&gt; (Required)</strong></dt><dd><ul class="simple">
+<li><p>Where <code class="docutils literal notranslate"><span class="pre">T</span> <span class="pre">=</span> <span class="pre">&quot;string&quot;,</span> <span class="pre">&quot;int32&quot;</span></code>.</p></li>
 <li><p>Non-symbolic 1-D tensor denoting the shape of elements.</p></li>
 <li><p>If not provided, the resulting <code class="docutils literal notranslate"><span class="pre">List</span></code> won’t have the elementary shape
 info, which may cause backend errors. Remedy this with SSA passes.</p></li>
 </ul>
 </dd>
-<dt><strong>dtype: const&lt;str&gt;  (Optional)</strong></dt><dd><ul class="simple">
+<dt><strong>dtype: const (Optional, Default is ``fp32``)</strong></dt><dd><ul class="simple">
+<li><p>Possible values: <code class="docutils literal notranslate"><span class="pre">{&quot;bool&quot;,</span> <span class="pre">&quot;fp16&quot;,</span> <span class="pre">&quot;fp32&quot;,</span> <span class="pre">&quot;int32&quot;}</span></code></p></li>
 <li><p>Element tensor’s <code class="docutils literal notranslate"><span class="pre">dtype</span></code>.</p></li>
-<li><p>Default is <code class="docutils literal notranslate"><span class="pre">fp32</span></code>.</p></li>
 </ul>
 </dd>
 </dl>
@@ -2492,6 +2535,110 @@ Any values less than <code class="docutils literal notranslate"><span class="pre
 <section id="module-coremltools.converters.mil.mil.ops.defs.image_resizing">
 <span id="image-resizing"></span><h2>image_resizing<a class="headerlink" href="#module-coremltools.converters.mil.mil.ops.defs.image_resizing" title="Permalink to this headline"></a></h2>
 <dl class="py class">
+<dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.image_resizing.affine">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.image_resizing.</span></span><span class="sig-name descname"><span class="pre">affine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/image_resizing.html#affine"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.image_resizing.affine" title="Permalink to this definition"></a></dt>
+<dd><p>Apply a linear affine transform to the input 2D image tensor. The value at the
+<code class="docutils literal notranslate"><span class="pre">(x,</span> <span class="pre">y)</span></code> (i.e., <code class="docutils literal notranslate"><span class="pre">(w,</span> <span class="pre">h)</span></code>) coordinate of the output is computed by first computing
+the coordinates <code class="docutils literal notranslate"><span class="pre">x’</span></code> and <code class="docutils literal notranslate"><span class="pre">y’</span></code> with the following equation, and then computing the
+value at the coordinate <code class="docutils literal notranslate"><span class="pre">(x’,y’)</span></code> in the input image using either bilinear or
+nearest neighbor interpolation. If the <code class="docutils literal notranslate"><span class="pre">(x’,</span> <span class="pre">y’)</span></code> point falls outside the input
+image, then padding information is used to compute the value.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>* x’ = a0 * x + a1 * y + a2
+* y’ = b0 * x + b1 * y + b2
+</pre></div>
+</div>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>x: tensor&lt;[B, C, H1, W1], T&gt;</strong></dt><dd><ul class="simple">
+<li><p>Must be rank <code class="docutils literal notranslate"><span class="pre">4</span></code>.</p></li>
+</ul>
+</dd>
+<dt><strong>transform_matrix: tensor&lt;[D, 6], T&gt;</strong></dt><dd><ul class="simple">
+<li><p>Must be rank <code class="docutils literal notranslate"><span class="pre">2</span></code>.</p></li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">D</span></code> can be either <code class="docutils literal notranslate"><span class="pre">B</span></code> or 1.</dt><dd><ul>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">D</span> <span class="pre">==</span> <span class="pre">B</span></code>, there is a separate transform matrix for each batch.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">D</span> <span class="pre">==</span> <span class="pre">1</span></code>, the same matrix is used for all input batches.</p></li>
+<li><p>For each batch: <code class="docutils literal notranslate"><span class="pre">[a0,</span> <span class="pre">a1,</span> <span class="pre">a2,</span> <span class="pre">b0,</span> <span class="pre">b1,</span> <span class="pre">b2]</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+<dt><strong>output_height: const&lt;i32&gt;</strong></dt><dd><ul class="simple">
+<li><p>Target output height</p></li>
+</ul>
+</dd>
+<dt><strong>output_width: const&lt;i32&gt;</strong></dt><dd><ul class="simple">
+<li><p>Target output width</p></li>
+</ul>
+</dd>
+<dt><strong>sampling_mode: const&lt;str&gt;</strong></dt><dd><ul class="simple">
+<li><p>Allowed values: <code class="docutils literal notranslate"><span class="pre">&quot;bilinear&quot;</span></code></p></li>
+</ul>
+</dd>
+<dt><strong>padding_mode: const&lt;str&gt;</strong></dt><dd><ul class="simple">
+<li><p>Allowed values: <code class="docutils literal notranslate"><span class="pre">&quot;constant&quot;</span></code>.</p></li>
+<li><p>Note that the following example is 1D case for brevity.
+The op supports only 2D image input.</p></li>
+<li><dl class="simple">
+<dt>If <code class="docutils literal notranslate"><span class="pre">padding_mode</span> <span class="pre">==</span> <span class="pre">&quot;constant&quot;</span></code>:</dt><dd><ul>
+<li><p>The input image is assumed to be padded with the padding_value.</p></li>
+<li><p>For example, <code class="docutils literal notranslate"><span class="pre">|1,</span> <span class="pre">2,</span> <span class="pre">3|</span> <span class="pre">-&gt;</span> <span class="pre">|0,</span> <span class="pre">0,</span> <span class="pre">0,</span> <span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">3,</span> <span class="pre">0,</span> <span class="pre">0,</span> <span class="pre">0|</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+<dt><strong>padding_value: const&lt;T&gt;</strong></dt><dd><ul class="simple">
+<li><p>Currently non-zero values are not supported.</p></li>
+<li><p>To be used only when <code class="docutils literal notranslate"><span class="pre">padding_mode</span> <span class="pre">==</span> <span class="pre">&quot;constant&quot;</span></code>, ignored in other cases.</p></li>
+</ul>
+</dd>
+<dt><strong>coordinates_mode: const&lt;str&gt;</strong></dt><dd><ul>
+<li><p>Allowed values: <code class="docutils literal notranslate"><span class="pre">&quot;normalized_minus_one_to_one&quot;</span></code></p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">coordinates_mode</span> <span class="pre">==</span> <span class="pre">&quot;normalized_minus_one_to_one&quot;</span></code>, in-image values are <code class="docutils literal notranslate"><span class="pre">[-1,</span> <span class="pre">1]</span></code>.</p></li>
+<li><p>For example, if <code class="docutils literal notranslate"><span class="pre">coordinates_mode</span> <span class="pre">==</span> <span class="pre">&quot;normalized_minus_one_to_one&quot;</span></code>,
+the in range values are <code class="docutils literal notranslate"><span class="pre">[-1,</span> <span class="pre">1]</span></code>. That is:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">(-1,</span> <span class="pre">-1)</span></code>, i.e. <code class="docutils literal notranslate"><span class="pre">(w=-1,</span> <span class="pre">h=-1)</span></code>, corresponds to the top-left pixel.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">(1,</span> <span class="pre">-1)</span></code>, i.e. <code class="docutils literal notranslate"><span class="pre">(w=1,</span> <span class="pre">h=-1)</span></code>, corresponds to the top-right pixel.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">(-1,</span> <span class="pre">1)</span></code>, i.e. <code class="docutils literal notranslate"><span class="pre">(w=-1,</span> <span class="pre">h=1)</span></code>, corresponds to the bottom-left pixel.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">(1,</span> <span class="pre">1)</span></code>, i.e. <code class="docutils literal notranslate"><span class="pre">(w=1,</span> <span class="pre">h=1)</span></code>, corresponds to the bottom-right pixel.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</dd>
+<dt><strong>align_corners: const&lt;bool&gt;</strong></dt><dd><ul class="simple">
+<li><p>Currently <code class="docutils literal notranslate"><span class="pre">align_corners=False</span></code> is not supported.</p></li>
+<li><p>To be used only when <code class="docutils literal notranslate"><span class="pre">coordinates_mode</span> <span class="pre">!=</span> <span class="pre">unnormalized</span></code>, ignored otherwise.</p></li>
+<li><p>if <code class="docutils literal notranslate"><span class="pre">align_corners</span> <span class="pre">==</span> <span class="pre">True</span></code>, the extrema coordinates correspond
+to the center of the first and last corner pixels.</p></li>
+<li><p>if <code class="docutils literal notranslate"><span class="pre">align_corners</span> <span class="pre">==</span> <span class="pre">False</span></code>, the extrema coordinates correspond
+to the edge of the first and last corner pixels.</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>tensor&lt;[B, C, output_height, output_width], T&gt;</dt><dd></dd>
+</dl>
+</dd>
+<dt class="field-odd">Attributes</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>T: fp16, fp32</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.image_resizing.upsample_nearest_neighbor">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.image_resizing.</span></span><span class="sig-name descname"><span class="pre">upsample_nearest_neighbor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/image_resizing.html#upsample_nearest_neighbor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.image_resizing.upsample_nearest_neighbor" title="Permalink to this definition"></a></dt>
 <dd><p>Upsample the spatial dimensions (last two dimensions) of the input
@@ -2618,6 +2765,178 @@ the following manner:</p>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>T: fp16, fp32</strong></dt><dd></dd>
 <dt><strong>T2</strong><span class="classifier">fp32, i32</span></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.image_resizing.resample">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.image_resizing.</span></span><span class="sig-name descname"><span class="pre">resample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/image_resizing.html#resample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.image_resizing.resample" title="Permalink to this definition"></a></dt>
+<dd><p>Resample the input image tensor <code class="docutils literal notranslate"><span class="pre">x</span></code> at the <code class="docutils literal notranslate"><span class="pre">coordinates</span></code>.
+Resampling is required if the coordinates do not correspond to exact
+pixels in the input image. The <a href="#id18"><span class="problematic" id="id19">``</span></a>sampling_mode <a href="#id20"><span class="problematic" id="id21">``</span></a>determines
+the algorithm used for resampling and computing the values.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>x: tensor&lt;[B, C, H1, W1], T&gt;</strong></dt><dd><ul class="simple">
+<li><p>Must be rank <code class="docutils literal notranslate"><span class="pre">4</span></code>.</p></li>
+</ul>
+</dd>
+<dt><strong>coordinates: tensor&lt;[B, H2, W2, 2], U&gt;</strong></dt><dd><ul class="simple">
+<li><p>Must be rank <code class="docutils literal notranslate"><span class="pre">4</span></code>.</p></li>
+<li><p>Coordinates are provided in the order <code class="docutils literal notranslate"><span class="pre">(x,</span> <span class="pre">y)</span></code> (i.e. <code class="docutils literal notranslate"><span class="pre">(w,</span> <span class="pre">h)</span></code>).</p></li>
+<li><p>The value of each output location <code class="docutils literal notranslate"><span class="pre">output[b,</span> <span class="pre">c,</span> <span class="pre">h,</span> <span class="pre">w]</span></code> is calculated
+by sampling from the input image <code class="docutils literal notranslate"><span class="pre">x[b,</span> <span class="pre">c,</span> <span class="pre">:,</span> <span class="pre">:]</span></code>.</p></li>
+<li><p>The pixel at the <code class="docutils literal notranslate"><span class="pre">(x,</span> <span class="pre">y)</span></code> location corresponds to the length-2
+vector: <code class="docutils literal notranslate"><span class="pre">coordinates[b,</span> <span class="pre">h,</span> <span class="pre">w,</span> <span class="pre">:]</span></code>.</p></li>
+<li><p>Coordinate (normalized or unnormalized) should be specified according
+to <code class="docutils literal notranslate"><span class="pre">coordinates_mode</span></code>.</p></li>
+</ul>
+</dd>
+<dt><strong>sampling_mode: const&lt;str&gt;</strong></dt><dd><ul class="simple">
+<li><p>Allowed values: <code class="docutils literal notranslate"><span class="pre">&quot;bilinear&quot;</span> <span class="pre">,</span> <span class="pre">&quot;nearest&quot;</span></code></p></li>
+</ul>
+</dd>
+<dt><strong>padding_mode: const&lt;str&gt;</strong></dt><dd><ul class="simple">
+<li><p>Allowed values: <code class="docutils literal notranslate"><span class="pre">&quot;constant&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;border&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;reflection&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;symmetric&quot;</span></code></p></li>
+<li><p>Note that the following example is 1D case for brevity.
+The op supports only 2D image input.</p></li>
+<li><dl class="simple">
+<dt>If <code class="docutils literal notranslate"><span class="pre">padding_mode</span> <span class="pre">==</span> <span class="pre">&quot;constant&quot;</span></code>:</dt><dd><ul>
+<li><p>The input image is assumed to be padded with the <code class="docutils literal notranslate"><span class="pre">padding_value</span></code>.</p></li>
+<li><p>For example: <code class="docutils literal notranslate"><span class="pre">|1,</span> <span class="pre">2,</span> <span class="pre">3|</span> <span class="pre">-&gt;</span> <span class="pre">|0,</span> <span class="pre">0,</span> <span class="pre">0,</span> <span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">3,</span> <span class="pre">0,</span> <span class="pre">0,</span> <span class="pre">0|</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>if <code class="docutils literal notranslate"><span class="pre">padding_mode</span> <span class="pre">==</span> <span class="pre">&quot;border&quot;</span></code>:</dt><dd><ul>
+<li><p>The input image is assumed to be padded with the values replicated
+from the values at the edge. This is also referred to as the
+“clamped” or “replication” mode, since the padded values are
+clamped to the border values.</p></li>
+<li><p>For example: <code class="docutils literal notranslate"><span class="pre">|1,</span> <span class="pre">2,</span> <span class="pre">3|</span> <span class="pre">-&gt;</span> <span class="pre">|1,</span> <span class="pre">1,</span> <span class="pre">1,</span> <span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">3,</span> <span class="pre">3,</span> <span class="pre">3,</span> <span class="pre">3|</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>If <code class="docutils literal notranslate"><span class="pre">padding_mode</span> <span class="pre">==</span> <span class="pre">&quot;reflection&quot;</span></code>:</dt><dd><ul>
+<li><p>The border values are reflected, <em>not</em> including the values at the edge/border.</p></li>
+<li><p>For example: <code class="docutils literal notranslate"><span class="pre">|1,</span> <span class="pre">2,</span> <span class="pre">3|</span> <span class="pre">-&gt;</span> <span class="pre">|2,</span> <span class="pre">3,</span> <span class="pre">2,</span> <span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">3,</span> <span class="pre">2,</span> <span class="pre">1,</span> <span class="pre">2|</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>If <code class="docutils literal notranslate"><span class="pre">padding_mode</span> <span class="pre">==</span> <span class="pre">&quot;symmetric&quot;</span></code>:</dt><dd><ul>
+<li><p>Values are reflected, including the border/edge values.</p></li>
+<li><p>For example: <code class="docutils literal notranslate"><span class="pre">|1,</span> <span class="pre">2,</span> <span class="pre">3|</span> <span class="pre">-&gt;</span> <span class="pre">|3,</span> <span class="pre">2,</span> <span class="pre">1</span> <span class="pre">,</span> <span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">3,</span> <span class="pre">3,</span> <span class="pre">2,</span> <span class="pre">1|</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+<dt><strong>padding_value: const&lt;T&gt;</strong></dt><dd><ul class="simple">
+<li><p>To be used only when <code class="docutils literal notranslate"><span class="pre">padding_mode</span> <span class="pre">==</span> <span class="pre">&quot;constant&quot;</span></code>, ignored in other cases.</p></li>
+</ul>
+</dd>
+<dt><strong>coordinates_mode: const&lt;str&gt;</strong></dt><dd><ul>
+<li><p>Allowed values: <code class="docutils literal notranslate"><span class="pre">&quot;unnormalized&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;normalized_minus_one_to_one&quot;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&quot;normalized_zero_to_one&quot;</span></code></p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">coordinates_mode</span> <span class="pre">==</span> <span class="pre">&quot;unnormalized&quot;</span></code>, the coordinates input values
+are interpreted to be in range <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">W</span> <span class="pre">-</span> <span class="pre">1]</span> <span class="pre">/</span> <span class="pre">[0,</span> <span class="pre">H</span> <span class="pre">-</span> <span class="pre">1]</span></code>, which
+corresponds to the in-image point.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">coordinates_mode</span> <span class="pre">==</span> <span class="pre">&quot;normalized_minus_one_to_one&quot;</span></code>,
+the in-image values are <code class="docutils literal notranslate"><span class="pre">[-1,</span> <span class="pre">1]</span></code>.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">coordinates_mode</span> <span class="pre">==</span> <span class="pre">&quot;normalized_zero_to_one&quot;</span></code>,
+in-image values are <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code>.</p></li>
+<li><p>For example, if <code class="docutils literal notranslate"><span class="pre">coordinates_mode</span> <span class="pre">==</span> <span class="pre">&quot;normalized_minus_one_to_one&quot;</span></code>,
+the in range values are [-1, 1]. That is:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">(-1,</span> <span class="pre">-1)</span></code>, i.e. <code class="docutils literal notranslate"><span class="pre">(w=-1,</span> <span class="pre">h=-1)</span></code>, corresponds to the top-left pixel.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">(1,</span> <span class="pre">-1)</span></code>, i.e. <code class="docutils literal notranslate"><span class="pre">(w=1,</span> <span class="pre">h=-1)</span></code>, corresponds to the top-right pixel.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">(-1,</span> <span class="pre">1)</span></code>, i.e. <code class="docutils literal notranslate"><span class="pre">(w=-1,</span> <span class="pre">h=1)</span></code>, corresponds to the bottom-left pixel.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">(1,</span> <span class="pre">1)</span></code>, i.e. <code class="docutils literal notranslate"><span class="pre">(w=1,</span> <span class="pre">h=1)</span></code>, corresponds to the bottom-right pixel.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</dd>
+<dt><strong>align_corners: const&lt;bool&gt;</strong></dt><dd><ul class="simple">
+<li><p>If <code class="docutils literal notranslate"><span class="pre">align_corners</span> <span class="pre">==</span> <span class="pre">True</span></code>, the extrema coordinates correspond
+to the center of the first and last corner pixels.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">align_corners</span> <span class="pre">==</span> <span class="pre">False</span></code>, the extrema coordinates correspond
+to the edge of the first and last corner pixels.</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>tensor&lt;[B, C, H2, W2], T&gt;</dt><dd></dd>
+</dl>
+</dd>
+<dt class="field-odd">Attributes</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>T: fp16, fp32</strong></dt><dd></dd>
+<dt><strong>U: fp32, i32</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.image_resizing.resize_nearest_neighbor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.image_resizing.</span></span><span class="sig-name descname"><span class="pre">resize_nearest_neighbor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/image_resizing.html#resize_nearest_neighbor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.image_resizing.resize_nearest_neighbor" title="Permalink to this definition"></a></dt>
+<dd><p>Resize the spatial (last two) dimensions to the specified target size
+using nearest neighbor interpolation. Although this op is similar to
+<code class="docutils literal notranslate"><span class="pre">upsample_nearest_neighbor</span></code>, <code class="docutils literal notranslate"><span class="pre">resize_nearest_neighbor</span></code> works with
+a target size rather than with scale factors.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x: tensor&lt;[*D, H1, W1], T&gt; (Required)</strong></dt><dd><ul class="simple">
+<li><p>Must be at least rank <code class="docutils literal notranslate"><span class="pre">3</span></code>.</p></li>
+</ul>
+</dd>
+<dt><strong>target_size_height: const&lt;int32&gt; (Required)</strong></dt><dd><ul class="simple">
+<li><p>Target spatial size for the height dimension (<code class="docutils literal notranslate"><span class="pre">axis=-2</span></code>).</p></li>
+</ul>
+</dd>
+<dt><strong>target_size_width: const&lt;int32&gt; (Required)</strong></dt><dd><ul class="simple">
+<li><p>Target spatial size for the width dimension (<code class="docutils literal notranslate"><span class="pre">axis=-1</span></code>).</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>tensor&lt;[*D, H2, W2], T&gt;</dt><dd><ul class="simple">
+<li><p>Tensor with same type as the input.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">H2</span></code> = <code class="docutils literal notranslate"><span class="pre">target_size_height</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">W2</span></code> = <code class="docutils literal notranslate"><span class="pre">target_size_width</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#coremltools.converters.mil.mil.ops.defs.image_resizing.resize_bilinear" title="coremltools.converters.mil.mil.ops.defs.image_resizing.resize_bilinear"><code class="xref py py-obj docutils literal notranslate"><span class="pre">resize_bilinear</span></code></a></dt><dd></dd>
+</dl>
+</div>
+<p class="rubric">Notes</p>
+<p>See <code class="docutils literal notranslate"><span class="pre">resize_bilinear</span></code> for examples.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>T: fp16, fp32</strong></dt><dd></dd>
 </dl>
 </dd>
 </dl>
@@ -3061,7 +3380,7 @@ In particular, the inputs must be of the following shapes:</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><dl class="simple">
-<dt>tensor&lt;[<a href="#id18"><span class="problematic" id="id19">*</span></a>D, C, H, W2], T&gt;</dt><dd><ul class="simple">
+<dt>tensor&lt;[<a href="#id22"><span class="problematic" id="id23">*</span></a>D, C, H, W2], T&gt;</dt><dd><ul class="simple">
 <li><p>Same ranks as the inputs.</p></li>
 </ul>
 </dd>
@@ -4096,11 +4415,6 @@ input dimension.</p></li>
 </section>
 <section id="module-coremltools.converters.mil.mil.ops.defs.reduction">
 <span id="reduction"></span><h2>reduction<a class="headerlink" href="#module-coremltools.converters.mil.mil.ops.defs.reduction" title="Permalink to this headline"></a></h2>
-<dl class="py class">
-<dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.reduction.reduce_arg">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.reduction.</span></span><span class="sig-name descname"><span class="pre">reduce_arg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/reduction.html#reduce_arg"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.reduction.reduce_arg" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.reduction.reduce_argmax">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.reduction.</span></span><span class="sig-name descname"><span class="pre">reduce_argmax</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/reduction.html#reduce_argmax"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.reduction.reduce_argmax" title="Permalink to this definition"></a></dt>

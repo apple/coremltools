@@ -193,7 +193,7 @@
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
 
 
-<div class="viewcode-block" id="reduce_arg"><a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.reduction.reduce_arg">[docs]</a><span class="nd">@register_op</span><span class="p">(</span><span class="n">doc_str</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="nd">@register_op</span><span class="p">(</span><span class="n">doc_str</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">reduce_arg</span><span class="p">(</span><span class="n">ReductionAxis</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">reduce_arg</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -209,7 +209,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">reduced_shape</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">axis</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">reduced_shape</span><span class="p">))</span></div>
+        <span class="k">return</span> <span class="n">types</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">reduced_shape</span><span class="p">))</span>
 
 
 <span class="sd">&quot;&quot;&quot;</span>
