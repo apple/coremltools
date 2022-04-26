@@ -203,7 +203,7 @@
         <span class="k">return</span> <span class="p">[</span><span class="n">v</span><span class="o">.</span><span class="n">val</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">outputs</span><span class="p">]</span></div>
 
 
-<span class="k">class</span> <span class="nc">Const</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+<div class="viewcode-block" id="Const"><a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.control_flow.Const">[docs]</a><span class="k">class</span> <span class="nc">Const</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A base class that returns constant values.</span>
 
@@ -211,7 +211,7 @@
 <span class="sd">    ----------</span>
 <span class="sd">    mode: immediate_value, file_value (Optional)</span>
 <span class="sd">        * Determines how the constant value is stored in the internal MIL format.</span>
-<span class="sd">        * For  large constants such as convolution weights, use ``file_value``.</span>
+<span class="sd">        * For large constants such as convolution weights, use ``file_value``.</span>
 <span class="sd">        * For smaller-size constants such as values of a stride, use ``immediate_value``.</span>
 
 <span class="sd">    val: const&lt;\*,T&gt; (Required)</span>
@@ -284,12 +284,12 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unknown value for constant: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
 
         <span class="n">_</span><span class="p">,</span> <span class="n">builtin_type</span> <span class="o">=</span> <span class="n">numpy_val_to_builtin_val</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">builtin_type</span><span class="p">,</span> <span class="n">value</span>
+        <span class="k">return</span> <span class="n">builtin_type</span><span class="p">,</span> <span class="n">value</span></div>
 
-<div class="viewcode-block" id="const"><a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.control_flow.const">[docs]</a><span class="nd">@register_op</span><span class="p">(</span><span class="n">doc_str</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="nd">@register_op</span><span class="p">(</span><span class="n">doc_str</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">const</span><span class="p">(</span><span class="n">Const</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">const</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+        <span class="nb">super</span><span class="p">(</span><span class="n">const</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
 
 <span class="c1"># Internal const can have symbolic value (for testing purpose)</span>
@@ -593,24 +593,22 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    init_length: &lt;i32&gt; (Optional)</span>
-<span class="sd">        * Initial length for the list. If ``dynamic_length`` is ``False``,</span>
+<span class="sd">    init_length: &lt;i32&gt; (Optional, Default=1)</span>
+<span class="sd">        * Initial length for the list.</span>
+<span class="sd">        * If ``dynamic_length`` is ``False``,</span>
 <span class="sd">          ``init_length`` is the fixed length of the list throughout runtime.</span>
-<span class="sd">        * Default is ``1``.</span>
 
-<span class="sd">    dynamic_length: &lt;bool&gt; (Optional)</span>
-<span class="sd">        * Initial length for the list. If ``dynamic_length`` is ``False``,</span>
-<span class="sd">          ``init_length`` is the fixed length of the list throughout runtime.</span>
-<span class="sd">        * Default is ``True``.</span>
-
-<span class="sd">    elem_shape: &lt;K,i32&gt; (Required)</span>
+<span class="sd">    dynamic_length: &lt;bool&gt; (Optional, Default is ``True``)</span>
+<span class="sd"> </span>
+<span class="sd">    elem_shape: &lt;K,T&gt; (Required)</span>
+<span class="sd">    	* Where ``T = &quot;string&quot;, &quot;int32&quot;``.</span>
 <span class="sd">        * Non-symbolic 1-D tensor denoting the shape of elements.</span>
 <span class="sd">        * If not provided, the resulting ``List`` won’t have the elementary shape</span>
 <span class="sd">          info, which may cause backend errors. Remedy this with SSA passes.</span>
 
-<span class="sd">    dtype: const&lt;str&gt;  (Optional)</span>
+<span class="sd">    dtype: const (Optional, Default is ``fp32``)</span>
+<span class="sd">    	* Possible values: ``{&quot;bool&quot;, &quot;fp16&quot;, &quot;fp32&quot;, &quot;int32&quot;}``</span>
 <span class="sd">        * Element tensor’s ``dtype``.</span>
-<span class="sd">        * Default is ``fp32``.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
