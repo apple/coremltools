@@ -1776,6 +1776,7 @@ class TestBitwiseNot(TorchBaseTest):
             torch_in = torch.tensor([True, False, True, False])
         self.run_compare_torch(torch_in, model, backend=backend, input_as_shape=False)
 
+
 class TestFull(TorchBaseTest):
     @pytest.mark.parametrize(
         "backend, rank",
@@ -1787,7 +1788,7 @@ class TestFull(TorchBaseTest):
     def test_full_dynamic(self, backend, rank):
         class FullDynamicModel(nn.Module):
             def __init__(self):
-                super(FullDynamicModel, self).__init__()
+                super().__init__()
 
             def forward(self, x):
                 if rank == 1:
@@ -1819,12 +1820,31 @@ class TestFull(TorchBaseTest):
         shape, val = shape_val
         class FullStaticModel(nn.Module):
             def __init__(self):
-                super(FullStaticModel, self).__init__()
+                super().__init__()
 
             def forward(self, x):
                 return torch.full(x.shape, fill_value=val)
 
         self.run_compare_torch(shape, FullStaticModel().eval(), backend=backend)
+
+    @pytest.mark.parametrize("shape_val, backend",
+        itertools.product(
+            [
+                [(1,), 0.],
+                [(2, 3), 3.1415],
+                [(1, 1, 2, 5, 1), -2.],
+            ],
+            backends,
+            )
+        )
+    def test_full_like(self, shape_val, backend):
+        shape, val = shape_val
+        class FullLikeModel(nn.Module):
+            def forward(self, x):
+                return torch.full_like(x, fill_value=val)
+
+        self.run_compare_torch(shape, FullLikeModel().eval(), backend=backend)
+
 
 class TestDim(TorchBaseTest):
     @pytest.mark.parametrize("shape, backend",
@@ -2913,9 +2933,6 @@ class TestZeros(TorchBaseTest):
         ),
     )
     def test_zeros_like_static(self, backend, rank):
-        if backend[0] == 'mlprogram':
-            pytest.xfail("Not supported with ML Program backend")
-
         class ZerosLikeStaticModel(nn.Module):
             def __init__(self):
                 super(ZerosLikeStaticModel, self).__init__()
@@ -2936,9 +2953,6 @@ class TestZeros(TorchBaseTest):
         ),
     )
     def test_zeros_like_dynamic(self, backend, rank):
-        if backend[0] == 'mlprogram':
-            pytest.xfail("Not supported with ML Program backend")
-
         class ZerosLikeDynamicModel(nn.Module):
             def __init__(self):
                 super(ZerosLikeDynamicModel, self).__init__()
@@ -2967,9 +2981,6 @@ class TestZeros(TorchBaseTest):
         ),
     )
     def test_zeros_static(self, backend, rank):
-        if backend[0] == 'mlprogram':
-            pytest.xfail("Not supported with ML Program backend")
-
         class ZerosStaticModel(nn.Module):
             def __init__(self):
                 super(ZerosStaticModel, self).__init__()
@@ -2993,9 +3004,6 @@ class TestZeros(TorchBaseTest):
         ),
     )
     def test_zeros_dynamic(self, backend, rank):
-        if backend[0] == 'mlprogram':
-            pytest.xfail("Not supported with ML Program backend")
-
         class ZerosDynamicModel(nn.Module):
             def __init__(self):
                 super(ZerosDynamicModel, self).__init__()
