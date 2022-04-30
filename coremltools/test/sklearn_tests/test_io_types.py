@@ -123,7 +123,7 @@ class TestIODataTypes(unittest.TestCase):
                         dtype,
                     ),
                 )
-            except ValueError:
+            except RuntimeError:
                 print("{} not supported. ".format(dtype))
 
     def test_random_forest_classifier(self):
@@ -148,7 +148,7 @@ class TestIODataTypes(unittest.TestCase):
                         dtype,
                     ),
                 )
-            except ValueError:
+            except RuntimeError:
                 print("{} not supported. ".format(dtype))
 
     def test_random_forest_regressor(self):
@@ -174,7 +174,7 @@ class TestIODataTypes(unittest.TestCase):
                         dtype,
                     ),
                 )
-            except ValueError:
+            except RuntimeError:
                 print("{} not supported. ".format(dtype))
 
     def test_support_vector_classifier(self):
@@ -201,7 +201,7 @@ class TestIODataTypes(unittest.TestCase):
                             dtype,
                         ),
                     )
-                except ValueError:
+                except RuntimeError:
                     print("{} not supported. ".format(dtype))
 
     def test_support_vector_regressor(self):
@@ -222,7 +222,7 @@ class TestIODataTypes(unittest.TestCase):
                         dtype,
                     ),
                 )
-            except ValueError:
+            except RuntimeError:
                 print("{} not supported. ".format(dtype))
 
     def test_linear_regressor(self):
@@ -247,7 +247,7 @@ class TestIODataTypes(unittest.TestCase):
                         dtype,
                     ),
                 )
-            except ValueError:
+            except RuntimeError:
                 print("{} not supported. ".format(dtype))
 
     @unittest.skipIf(not _HAS_KERAS2_TF, MSG_KERAS2_NOT_FOUND)

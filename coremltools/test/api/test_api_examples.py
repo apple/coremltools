@@ -732,55 +732,10 @@ class TestInputs:
         assert "does not match any of the model input" in error_str
 
     @staticmethod
+    @pytest.mark.parametrize(
+        "to_tensor", [torch.tensor, tf.convert_to_tensor, lambda x: x.tolist()])
     @pytest.mark.skipif(not ct.utils._is_macos(), reason="Platform is not Mac OS")
-    def test_unsanitized_input_dtype_during_prediction():
-        prog = Program()
-        func_inputs = {"x": mb.placeholder(shape=[2, 3]),
-                       "y": mb.placeholder(shape=[2, 3])}
-        with Function(func_inputs) as ssa_fun:
-            x, y = ssa_fun.inputs["x"], ssa_fun.inputs["y"]
-            x = mb.relu(x=x, name="relu")
-            z = mb.add(x=x, y=y, name="out")
-            ssa_fun.set_outputs([z])
-        prog.add_function("main", ssa_fun)
-
-        mlmodel = ct.convert(prog)
-
-        with pytest.raises(ValueError) as error_info:
-            mlmodel.predict(
-                {"x": np.random.rand(2, 3).astype(np.float32),
-                 "y": np.random.rand(2, 3).astype(np.int64)}  # int64 is not supported
-            )
-        error_str = str(error_info.value)
-        assert "dtype of y is " in error_str
-
-    @staticmethod
-    @pytest.mark.skipif(not ct.utils._is_macos(), reason="Platform is not Mac OS")
-    def test_unsanitized_input_type_during_prediction():
-        prog = Program()
-        func_inputs = {"x": mb.placeholder(shape=[2, 3]),
-                       "y": mb.placeholder(shape=[2, 3])}
-        with Function(func_inputs) as ssa_fun:
-            x, y = ssa_fun.inputs["x"], ssa_fun.inputs["y"]
-            x = mb.relu(x=x, name="relu")
-            z = mb.add(x=x, y=y, name="out")
-            ssa_fun.set_outputs([z])
-        prog.add_function("main", ssa_fun)
-
-        mlmodel = ct.convert(prog)
-
-        with pytest.raises(ValueError) as error_info:
-            mlmodel.predict(
-                {"x": None,  # invalid
-                 "y": np.random.rand(2, 3).astype(np.int64)}
-            )
-        error_str = str(error_info.value)
-        assert "Expected type for x is numpy.ndarray" in error_str
-
-
-    @staticmethod
-    @pytest.mark.skipif(not ct.utils._is_macos(), reason="Platform is not Mac OS")
-    def test_torch_tensor_input_during_prediction():
+    def test_torch_tensor_input_during_prediction(to_tensor):
         prog = Program()
         func_inputs = {"x": mb.placeholder(shape=[2, 3]),
                        "y": mb.placeholder(shape=[2, 3])}
@@ -798,63 +753,11 @@ class TestInputs:
             {"x": x_numpy,
              "y": y_numpy}
         )
-        out_by_torch = mlmodel.predict(
-            {"x": torch.tensor(x_numpy),
-             "y": torch.tensor(y_numpy)}
+        out_by_tensor = mlmodel.predict(
+            {"x": to_tensor(x_numpy),
+             "y": to_tensor(y_numpy)}
         )
-        np.allclose(out_by_numpy["out"], out_by_torch["out"])
-
-    @staticmethod
-    @pytest.mark.skipif(not ct.utils._is_macos(), reason="Platform is not Mac OS")
-    def test_tf_tensor_input_during_prediction():
-        prog = Program()
-        func_inputs = {"x": mb.placeholder(shape=[2, 3]),
-                       "y": mb.placeholder(shape=[2, 3])}
-        with Function(func_inputs) as ssa_fun:
-            x, y = ssa_fun.inputs["x"], ssa_fun.inputs["y"]
-            x = mb.relu(x=x, name="relu")
-            z = mb.add(x=x, y=y, name="out")
-            ssa_fun.set_outputs([z])
-        prog.add_function("main", ssa_fun)
-
-        mlmodel = ct.convert(prog)
-        x_numpy = np.random.rand(2, 3)
-        y_numpy = np.random.rand(2, 3)
-        out_by_numpy = mlmodel.predict(
-            {"x": x_numpy,
-             "y": y_numpy}
-        )
-        out_by_tf = mlmodel.predict(
-            {"x": tf.convert_to_tensor(x_numpy),
-             "y": tf.convert_to_tensor(y_numpy)}
-        )
-        np.allclose(out_by_numpy["out"], out_by_tf["out"])
-
-    @staticmethod
-    @pytest.mark.skipif(not ct.utils._is_macos(), reason="Platform is not Mac OS")
-    def test_list_input_during_prediction():
-        prog = Program()
-        func_inputs = {"x": mb.placeholder(shape=[2, 3]),
-                       "y": mb.placeholder(shape=[2, 3])}
-        with Function(func_inputs) as ssa_fun:
-            x, y = ssa_fun.inputs["x"], ssa_fun.inputs["y"]
-            x = mb.relu(x=x, name="relu")
-            z = mb.add(x=x, y=y, name="out")
-            ssa_fun.set_outputs([z])
-        prog.add_function("main", ssa_fun)
-
-        mlmodel = ct.convert(prog)
-        x_numpy = np.random.rand(2, 3)
-        y_numpy = np.random.rand(2, 3)
-        out_by_numpy = mlmodel.predict(
-            {"x": x_numpy,
-             "y": y_numpy}
-        )
-        out_by_list = mlmodel.predict(
-            {"x": x_numpy.tolist(),
-             "y": x_numpy.tolist()}
-        )
-        np.allclose(out_by_numpy["out"], out_by_list["out"])
+        np.allclose(out_by_numpy["out"], out_by_tensor["out"])
 
 class TestFlexibleShape:
     @staticmethod
