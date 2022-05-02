@@ -2098,6 +2098,25 @@ class TestReduction(TorchBaseTest):
             backend=backend,
         )
 
+    @pytest.mark.parametrize(
+        "input_shape, mode, backend",
+        itertools.product([(2, 2), (1, 1)], ["min", "max"], backends)
+    )
+    def test_min_max_with_no_arguments(self, input_shape, mode, backend):
+        class TestModel(nn.Module):
+            def __init__(self):
+                super().__init__()
+
+            def forward(self, x):
+                if mode == "min":
+                    return torch.min(x)
+                elif mode == "max":
+                    return torch.max(x)
+                else:
+                    raise ValueError("Unsupported mode: {mode}".format(mode=mode))
+
+        self.run_compare_torch(input_shape, TestModel(), backend=backend)
+
 
 class TestLayerNorm(TorchBaseTest):
     @pytest.mark.parametrize(
