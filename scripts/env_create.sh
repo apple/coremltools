@@ -110,12 +110,6 @@ if [[ $include_docs_deps == 1 ]]; then
   python -m pip install -r $COREMLTOOLS_HOME/reqs/docs.pip --upgrade
 fi
 
-# Install doc requirements (upgrades packages if required)
-if [[ $include_docs_deps == 1 ]]; then
-  echo "Installing additional document requirements."
-  python -m pip install -r $COREMLTOOLS_HOME/reqs/docs.pip --upgrade
-fi
-
 if [[ $DEV == 1 ]]; then
   echo "Setting up environment for development."
   python -m pip install -e "$COREMLTOOLS_HOME/../coremltools" --upgrade
