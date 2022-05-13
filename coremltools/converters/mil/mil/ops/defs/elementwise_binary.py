@@ -324,8 +324,6 @@ class logical_and(elementwise_binary):
     """
     Return the truth value of ``x AND y`` element-wise with
     `broadcasting <https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html>`_
-    (``1`` for true, ``0`` for false in numeric domain). A numeric value ``t`` is
-    evaluated to true if ``t != 0``.
 
     Parameters
     ----------
@@ -361,8 +359,6 @@ class logical_or(elementwise_binary):
     """
     Return the truth value of ``x OR y`` element-wise with
     `broadcasting <https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html>`_
-    (``1`` for true, ``0`` for false in numeric domain). A numeric value ``t`` is
-    evaluated to true if ``t != 0``.
     
     Parameters
     ----------
@@ -398,8 +394,6 @@ class logical_xor(elementwise_binary):
     """
     Return the truth value of ``x XOR y`` element-wise with
     `broadcasting <https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html>`_
-    (``1`` for true, ``0`` for false in numeric domain). A numeric value ``t`` is
-    evaluated to true if ``t != 0``.
     
     Parameters
     ----------
