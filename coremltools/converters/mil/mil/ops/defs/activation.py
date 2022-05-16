@@ -348,7 +348,7 @@ class relu(elementwise_unary):
 @register_op(doc_str="")
 class relu6(elementwise_unary):
     """
-    Return elementwise-applied rectified linear activation: ``max(min(x, 0), 6)``.
+    Return elementwise-applied rectified linear activation: ``min(max(x, 0), 6)``.
 
     Parameters
     ----------

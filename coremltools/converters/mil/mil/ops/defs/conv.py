@@ -281,9 +281,9 @@ class conv_transpose(Operation):
           dimension ``i``, where ``0 <= i < len(D_in)``.
 
     output_shape: const tensor<[P],i32> (Optional, default None)
-        * Expected output shape. The first two dim must be ``[n, C_out]``.
-        * The output shape of conv_transpose is underdetermined in general,
-        * Because conv can map multiple input shape to a single output shape.
+        * Expected output shape. The first two dimensions must be ``[n, C_out]``.
+        * The output shape of ``conv_transpose`` is underdetermined in general,
+          because ``conv`` can map multiple input shapes to a single output shape.
           For example, for ``same`` padding mode, ``conv_out = ceil(conv_in/stride)``.
           Hence we need ``output_shape`` when this occurs.
 
@@ -306,8 +306,22 @@ class conv_transpose(Operation):
     Returns
     -------
     tensor<[n,C_out,*D_out],T>
-        * ``D_out[i] = (D_in[i]-1) * strides[i] + pad[2*i] + pad[2*i+1] -
-          (K[i] - 1) * dilations[i] + 1)] for i = 0, 1``.
+		* If ``output_shape`` is not ``None``:
+		  
+		     ``Dout = output_shape``
+
+		* If ``pad_type == "custom"``:
+		  
+		     ``Dout[i] = (D_in[i]-1)*stride[i] + (K[i]-1) * dilation[i] + 1 - pad[2*i] - pad[2*i-1]``
+
+		* If ``pad_type == "valid"``:
+		  
+		     ``Dout[i] = (D_in[i]-1)*stride[i] + (K[i]-1) * dilation[i] + 1``
+
+		* If ``pad_type == "same"``:
+		  
+		     ``Dout[i] = D_in[i] * stride[i]``
+    
 
     Attributes
     ----------
