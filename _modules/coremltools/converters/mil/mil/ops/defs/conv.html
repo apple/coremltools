@@ -358,9 +358,9 @@
 <span class="sd">          dimension ``i``, where ``0 &lt;= i &lt; len(D_in)``.</span>
 
 <span class="sd">    output_shape: const tensor&lt;[P],i32&gt; (Optional, default None)</span>
-<span class="sd">        * Expected output shape. The first two dim must be ``[n, C_out]``.</span>
-<span class="sd">        * The output shape of conv_transpose is underdetermined in general,</span>
-<span class="sd">        * Because conv can map multiple input shape to a single output shape.</span>
+<span class="sd">        * Expected output shape. The first two dimensions must be ``[n, C_out]``.</span>
+<span class="sd">        * The output shape of ``conv_transpose`` is underdetermined in general,</span>
+<span class="sd">          because ``conv`` can map multiple input shapes to a single output shape.</span>
 <span class="sd">          For example, for ``same`` padding mode, ``conv_out = ceil(conv_in/stride)``.</span>
 <span class="sd">          Hence we need ``output_shape`` when this occurs.</span>
 
@@ -383,8 +383,22 @@
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    tensor&lt;[n,C_out,*D_out],T&gt;</span>
-<span class="sd">        * ``D_out[i] = (D_in[i]-1) * strides[i] + pad[2*i] + pad[2*i+1] -</span>
-<span class="sd">          (K[i] - 1) * dilations[i] + 1)] for i = 0, 1``.</span>
+<span class="sd">		* If ``output_shape`` is not ``None``:</span>
+<span class="sd">		  </span>
+<span class="sd">		     ``Dout = output_shape``</span>
+
+<span class="sd">		* If ``pad_type == &quot;custom&quot;``:</span>
+<span class="sd">		  </span>
+<span class="sd">		     ``Dout[i] = (D_in[i]-1)*stride[i] + (K[i]-1) * dilation[i] + 1 - pad[2*i] - pad[2*i-1]``</span>
+
+<span class="sd">		* If ``pad_type == &quot;valid&quot;``:</span>
+<span class="sd">		  </span>
+<span class="sd">		     ``Dout[i] = (D_in[i]-1)*stride[i] + (K[i]-1) * dilation[i] + 1``</span>
+
+<span class="sd">		* If ``pad_type == &quot;same&quot;``:</span>
+<span class="sd">		  </span>
+<span class="sd">		     ``Dout[i] = D_in[i] * stride[i]``</span>
+<span class="sd">    </span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>

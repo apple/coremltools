@@ -425,7 +425,7 @@
 <div class="viewcode-block" id="relu6"><a class="viewcode-back" href="../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.activation.relu6">[docs]</a><span class="nd">@register_op</span><span class="p">(</span><span class="n">doc_str</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">relu6</span><span class="p">(</span><span class="n">elementwise_unary</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Return elementwise-applied rectified linear activation: ``max(min(x, 0), 6)``.</span>
+<span class="sd">    Return elementwise-applied rectified linear activation: ``min(max(x, 0), 6)``.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>

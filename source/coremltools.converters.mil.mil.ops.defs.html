@@ -323,7 +323,7 @@ based on the following formulas:</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.activation.relu6">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.activation.</span></span><span class="sig-name descname"><span class="pre">relu6</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/activation.html#relu6"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.activation.relu6" title="Permalink to this definition"></a></dt>
-<dd><p>Return elementwise-applied rectified linear activation: <code class="docutils literal notranslate"><span class="pre">max(min(x,</span> <span class="pre">0),</span> <span class="pre">6)</span></code>.</p>
+<dd><p>Return elementwise-applied rectified linear activation: <code class="docutils literal notranslate"><span class="pre">min(max(x,</span> <span class="pre">0),</span> <span class="pre">6)</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
@@ -772,7 +772,7 @@ The list is similar to an auto-resizing array.</p>
 <code class="docutils literal notranslate"><span class="pre">init_length</span></code> is the fixed length of the list throughout runtime.</p></li>
 </ul>
 </dd>
-<dt><strong>dynamic_length: &lt;bool&gt; (Optional, Default is ``True``)</strong></dt><dd></dd>
+<dt><strong>dynamic_length: &lt;bool&gt; (Optional, Default is True)</strong></dt><dd></dd>
 <dt><strong>elem_shape: &lt;K,T&gt; (Required)</strong></dt><dd><ul class="simple">
 <li><p>Where <code class="docutils literal notranslate"><span class="pre">T</span> <span class="pre">=</span> <span class="pre">&quot;string&quot;,</span> <span class="pre">&quot;int32&quot;</span></code>.</p></li>
 <li><p>Non-symbolic 1-D tensor denoting the shape of elements.</p></li>
@@ -780,7 +780,7 @@ The list is similar to an auto-resizing array.</p>
 info, which may cause backend errors. Remedy this with SSA passes.</p></li>
 </ul>
 </dd>
-<dt><strong>dtype: const (Optional, Default is ``fp32``)</strong></dt><dd><ul class="simple">
+<dt><strong>dtype: const (Optional, Default is fp32)</strong></dt><dd><ul class="simple">
 <li><p>Possible values: <code class="docutils literal notranslate"><span class="pre">{&quot;bool&quot;,</span> <span class="pre">&quot;fp16&quot;,</span> <span class="pre">&quot;fp32&quot;,</span> <span class="pre">&quot;int32&quot;}</span></code></p></li>
 <li><p>Element tensor’s <code class="docutils literal notranslate"><span class="pre">dtype</span></code>.</p></li>
 </ul>
@@ -1086,7 +1086,7 @@ That is, <code class="docutils literal notranslate"><span class="pre">len(d_out)
 <dd><p>Perform transposed convolution (also known as deconvolution and fractionally
 stride convolution) over input. <code class="docutils literal notranslate"><span class="pre">conv_transpose</span></code> can also be used to compute
 the gradient of conv. Supports 1-D, 2-D, and 3-D convolution.</p>
-<dl class="field-list simple">
+<dl class="field-list">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>x: tensor&lt;[n,C_in,*D_in],T&gt; (Required)</strong></dt><dd><ul class="simple">
@@ -1114,9 +1114,9 @@ dimension <code class="docutils literal notranslate"><span class="pre">i</span><
 </ul>
 </dd>
 <dt><strong>output_shape: const tensor&lt;[P],i32&gt; (Optional, default None)</strong></dt><dd><ul class="simple">
-<li><p>Expected output shape. The first two dim must be <code class="docutils literal notranslate"><span class="pre">[n,</span> <span class="pre">C_out]</span></code>.</p></li>
-<li><p>The output shape of conv_transpose is underdetermined in general,</p></li>
-<li><p>Because conv can map multiple input shape to a single output shape.
+<li><p>Expected output shape. The first two dimensions must be <code class="docutils literal notranslate"><span class="pre">[n,</span> <span class="pre">C_out]</span></code>.</p></li>
+<li><p>The output shape of <code class="docutils literal notranslate"><span class="pre">conv_transpose</span></code> is underdetermined in general,
+because <code class="docutils literal notranslate"><span class="pre">conv</span></code> can map multiple input shapes to a single output shape.
 For example, for <code class="docutils literal notranslate"><span class="pre">same</span></code> padding mode, <code class="docutils literal notranslate"><span class="pre">conv_out</span> <span class="pre">=</span> <span class="pre">ceil(conv_in/stride)</span></code>.
 Hence we need <code class="docutils literal notranslate"><span class="pre">output_shape</span></code> when this occurs.</p></li>
 </ul>
@@ -1144,10 +1144,28 @@ See <code class="docutils literal notranslate"><span class="pre">conv</span></co
 </dl>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><dl class="simple">
-<dt>tensor&lt;[n,C_out,*D_out],T&gt;</dt><dd><ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">D_out[i]</span> <span class="pre">=</span> <span class="pre">(D_in[i]-1)</span> <span class="pre">*</span> <span class="pre">strides[i]</span> <span class="pre">+</span> <span class="pre">pad[2*i]</span> <span class="pre">+</span> <span class="pre">pad[2*i+1]</span> <span class="pre">-</span>
-<span class="pre">(K[i]</span> <span class="pre">-</span> <span class="pre">1)</span> <span class="pre">*</span> <span class="pre">dilations[i]</span> <span class="pre">+</span> <span class="pre">1)]</span> <span class="pre">for</span> <span class="pre">i</span> <span class="pre">=</span> <span class="pre">0,</span> <span class="pre">1</span></code>.</p></li>
+<dd class="field-even"><dl>
+<dt>tensor&lt;[n,C_out,*D_out],T&gt;</dt><dd><ul>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">output_shape</span></code> is not <code class="docutils literal notranslate"><span class="pre">None</span></code>:</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">Dout</span> <span class="pre">=</span> <span class="pre">output_shape</span></code></p>
+</div></blockquote>
+</li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">pad_type</span> <span class="pre">==</span> <span class="pre">&quot;custom&quot;</span></code>:</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">Dout[i]</span> <span class="pre">=</span> <span class="pre">(D_in[i]-1)*stride[i]</span> <span class="pre">+</span> <span class="pre">(K[i]-1)</span> <span class="pre">*</span> <span class="pre">dilation[i]</span> <span class="pre">+</span> <span class="pre">1</span> <span class="pre">-</span> <span class="pre">pad[2*i]</span> <span class="pre">-</span> <span class="pre">pad[2*i-1]</span></code></p>
+</div></blockquote>
+</li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">pad_type</span> <span class="pre">==</span> <span class="pre">&quot;valid&quot;</span></code>:</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">Dout[i]</span> <span class="pre">=</span> <span class="pre">(D_in[i]-1)*stride[i]</span> <span class="pre">+</span> <span class="pre">(K[i]-1)</span> <span class="pre">*</span> <span class="pre">dilation[i]</span> <span class="pre">+</span> <span class="pre">1</span></code></p>
+</div></blockquote>
+</li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">pad_type</span> <span class="pre">==</span> <span class="pre">&quot;same&quot;</span></code>:</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">Dout[i]</span> <span class="pre">=</span> <span class="pre">D_in[i]</span> <span class="pre">*</span> <span class="pre">stride[i]</span></code></p>
+</div></blockquote>
+</li>
 </ul>
 </dd>
 </dl>
@@ -1416,9 +1434,7 @@ rounded towards negative infinity.</p>
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.elementwise_binary.logical_and">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.elementwise_binary.</span></span><span class="sig-name descname"><span class="pre">logical_and</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/elementwise_binary.html#logical_and"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.elementwise_binary.logical_and" title="Permalink to this definition"></a></dt>
 <dd><p>Return the truth value of <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">AND</span> <span class="pre">y</span></code> element-wise with
-<a class="reference external" href="https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html">broadcasting</a>
-(<code class="docutils literal notranslate"><span class="pre">1</span></code> for true, <code class="docutils literal notranslate"><span class="pre">0</span></code> for false in numeric domain). A numeric value <code class="docutils literal notranslate"><span class="pre">t</span></code> is
-evaluated to true if <code class="docutils literal notranslate"><span class="pre">t</span> <span class="pre">!=</span> <span class="pre">0</span></code>.</p>
+<a class="reference external" href="https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html">broadcasting</a></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
@@ -1452,9 +1468,7 @@ evaluated to true if <code class="docutils literal notranslate"><span class="pre
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.elementwise_binary.logical_or">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.elementwise_binary.</span></span><span class="sig-name descname"><span class="pre">logical_or</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/elementwise_binary.html#logical_or"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.elementwise_binary.logical_or" title="Permalink to this definition"></a></dt>
 <dd><p>Return the truth value of <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">OR</span> <span class="pre">y</span></code> element-wise with
-<a class="reference external" href="https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html">broadcasting</a>
-(<code class="docutils literal notranslate"><span class="pre">1</span></code> for true, <code class="docutils literal notranslate"><span class="pre">0</span></code> for false in numeric domain). A numeric value <code class="docutils literal notranslate"><span class="pre">t</span></code> is
-evaluated to true if <code class="docutils literal notranslate"><span class="pre">t</span> <span class="pre">!=</span> <span class="pre">0</span></code>.</p>
+<a class="reference external" href="https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html">broadcasting</a></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
@@ -1488,9 +1502,7 @@ evaluated to true if <code class="docutils literal notranslate"><span class="pre
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.elementwise_binary.logical_xor">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.elementwise_binary.</span></span><span class="sig-name descname"><span class="pre">logical_xor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/elementwise_binary.html#logical_xor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.elementwise_binary.logical_xor" title="Permalink to this definition"></a></dt>
 <dd><p>Return the truth value of <code class="docutils literal notranslate"><span class="pre">x</span> <span class="pre">XOR</span> <span class="pre">y</span></code> element-wise with
-<a class="reference external" href="https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html">broadcasting</a>
-(<code class="docutils literal notranslate"><span class="pre">1</span></code> for true, <code class="docutils literal notranslate"><span class="pre">0</span></code> for false in numeric domain). A numeric value <code class="docutils literal notranslate"><span class="pre">t</span></code> is
-evaluated to true if <code class="docutils literal notranslate"><span class="pre">t</span> <span class="pre">!=</span> <span class="pre">0</span></code>.</p>
+<a class="reference external" href="https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html">broadcasting</a></p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">

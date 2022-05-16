@@ -547,7 +547,7 @@
                 <span class="k">if</span> <span class="ow">not</span> <span class="n">while_loop</span><span class="o">.</span><span class="n">_check_equal_value</span><span class="p">(</span><span class="n">v_out</span><span class="o">.</span><span class="n">sym_val</span><span class="p">,</span> <span class="n">v_in</span><span class="o">.</span><span class="n">sym_val</span><span class="p">):</span>
                     <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Block output </span><span class="si">{}</span><span class="s1">: </span><span class="si">{}</span><span class="s1"> is not equal to &#39;</span> <span class="o">+</span>\
                             <span class="s1">&#39;block input </span><span class="si">{}</span><span class="s1">: </span><span class="si">{}</span><span class="s1"> after value changes&#39;</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">v_out</span><span class="o">.</span><span class="n">name</span><span class="o">.</span> <span class="n">v</span><span class="o">.</span><span class="n">sym_val</span><span class="p">,</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">v_out</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">v</span><span class="o">.</span><span class="n">sym_val</span><span class="p">,</span>
                         <span class="n">v_in</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">v_in</span><span class="o">.</span><span class="n">sym_val</span><span class="p">))</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cond_block</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">body_block</span><span class="p">)</span>
@@ -598,7 +598,7 @@
 <span class="sd">        * If ``dynamic_length`` is ``False``,</span>
 <span class="sd">          ``init_length`` is the fixed length of the list throughout runtime.</span>
 
-<span class="sd">    dynamic_length: &lt;bool&gt; (Optional, Default is ``True``)</span>
+<span class="sd">    dynamic_length: &lt;bool&gt; (Optional, Default is True)</span>
 <span class="sd"> </span>
 <span class="sd">    elem_shape: &lt;K,T&gt; (Required)</span>
 <span class="sd">    	* Where ``T = &quot;string&quot;, &quot;int32&quot;``.</span>
@@ -606,7 +606,7 @@
 <span class="sd">        * If not provided, the resulting ``List`` won’t have the elementary shape</span>
 <span class="sd">          info, which may cause backend errors. Remedy this with SSA passes.</span>
 
-<span class="sd">    dtype: const (Optional, Default is ``fp32``)</span>
+<span class="sd">    dtype: const (Optional, Default is fp32)</span>
 <span class="sd">    	* Possible values: ``{&quot;bool&quot;, &quot;fp16&quot;, &quot;fp32&quot;, &quot;int32&quot;}``</span>
 <span class="sd">        * Element tensor’s ``dtype``.</span>
 
