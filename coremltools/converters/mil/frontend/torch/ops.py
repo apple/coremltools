@@ -776,8 +776,6 @@ def flatten(context, node):
     start_val = inputs[1].val
     end_val = inputs[2].val
 
-    total = 1
-
     start = len(dims) + start_val if start_val < 0 else start_val
     end = len(dims) + end_val if end_val < 0 else end_val
 
@@ -789,11 +787,20 @@ def flatten(context, node):
         raise ValueError(
             "Start must be before end. (start, end) == ({}, {})".format(start, end_val)
         )
-    for dim in dims[start : end + 1]:
-        total *= dim
-    dims = dims[:start] + [total] + dims[end + 1 :]
+    x_shape = mb.shape(x=x)
 
-    reshape = mb.reshape(x=x, shape=dims, name=node.name)
+    shape1 = mb.slice_by_index(x=x_shape, begin=[0], end=[start])
+    shape2 = mb.slice_by_index(x=x_shape, begin=[end + 1], end=[len(dims)])
+
+    flatten_dim = -1
+    if not any_symbolic(x.shape):
+        flatten_dim = 1
+        for dim in dims[start: end + 1]:
+            flatten_dim *= dim
+
+    shape = mb.concat(values=(shape1, [flatten_dim], shape2), axis=0)
+    shape = mb.cast(x=shape, dtype="int32")
+    reshape = mb.reshape(x=x, shape=shape, name=node.name)
     context.add(reshape)
 
 
