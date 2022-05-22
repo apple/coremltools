@@ -485,6 +485,7 @@ class MLModel(object):
         data: dict[str, value]
             Dictionary of data to make predictions from where the keys are
             the names of the input features.
+            If value is array type, numpy.ndarray, tensorflow.Tensor and torch.Tensor are acceptable.
 
         useCPUOnly: bool
             This parameter is deprecated and will be removed in 6.0. Instead, use the ``compute_units``
@@ -503,6 +504,12 @@ class MLModel(object):
         Examples
         --------
         >>> data = {'bedroom': 1.0, 'bath': 1.0, 'size': 1240}
+        >>> predictions = model.predict(data)
+        >>> data = {'array': numpy.array([[1.0, 2.0], [3.0, 4.0]])}
+        >>> predictions = model.predict(data)
+        >>> data = {'array': torch.Tensor([[1.0, 2.0], [3.0, 4.0]])}
+        >>> predictions = model.predict(data)
+        >>> data = {'array': tensorflow.Tensor([[1.0, 2.0], [3.0, 4.0]])}
         >>> predictions = model.predict(data)
         """
         if useCPUOnly:
