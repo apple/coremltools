@@ -735,7 +735,7 @@ class TestInputs:
     @pytest.mark.parametrize(
         "to_tensor", [torch.tensor, tf.convert_to_tensor, lambda x: x.tolist()])
     @pytest.mark.skipif(not ct.utils._is_macos(), reason="Platform is not Mac OS")
-    def test_torch_tensor_input_during_prediction(to_tensor):
+    def test_variant_input_type_prediction(to_tensor):
         prog = Program()
         func_inputs = {"x": mb.placeholder(shape=[2, 3]),
                        "y": mb.placeholder(shape=[2, 3])}
