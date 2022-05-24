@@ -3657,35 +3657,45 @@ def dim(context, node):
 
 @register_torch_op
 def min(context, node):
-    inputs = _get_inputs(context, node, expected=3)
-    _input = inputs[0]
-    dim = inputs[1].val
-    keepdim = inputs[2].val
+    inputs = _get_inputs(context, node)
 
-    values = mb.reduce_min(x=_input, axes=[dim], keep_dims=keepdim)
-    indices = mb.reduce_argmin(x=_input, axis=dim, keep_dims=keepdim)
-    assert len(node.outputs) == 2
-    values_name = node.outputs[0]
-    indices_name = node.outputs[1]
-    context.add(values, torch_name=values_name)
-    context.add(indices, torch_name=indices_name)
+    if len(inputs) == 3:
+        _input = inputs[0]
+        dim = inputs[1].val
+        keepdim = inputs[2].val
 
+        values = mb.reduce_min(x=_input, axes=[dim], keep_dims=keepdim)
+        indices = mb.reduce_argmin(x=_input, axis=dim, keep_dims=keepdim)
+        assert len(node.outputs) == 2
+        values_name = node.outputs[0]
+        indices_name = node.outputs[1]
+        context.add(values, torch_name=values_name)
+        context.add(indices, torch_name=indices_name)
+    else:
+        assert(len(inputs) == 1)
+        value = mb.reduce_min(x=inputs[0], axes=None, name=node.name)
+        context.add(value)
 
 @register_torch_op
 def max(context, node):
-    inputs = _get_inputs(context, node, expected=3)
-    _input = inputs[0]
-    dim = inputs[1].val
-    keepdim = inputs[2].val
+    inputs = _get_inputs(context, node)
 
-    values = mb.reduce_max(x=_input, axes=[dim], keep_dims=keepdim)
-    indices = mb.reduce_argmax(x=_input, axis=dim, keep_dims=keepdim)
-    assert len(node.outputs) == 2
-    values_name = node.outputs[0]
-    indices_name = node.outputs[1]
-    context.add(values, torch_name=values_name)
-    context.add(indices, torch_name=indices_name)
+    if len(inputs) == 3:
+        _input = inputs[0]
+        dim = inputs[1].val
+        keepdim = inputs[2].val
 
+        values = mb.reduce_max(x=_input, axes=[dim], keep_dims=keepdim)
+        indices = mb.reduce_argmax(x=_input, axis=dim, keep_dims=keepdim)
+        assert len(node.outputs) == 2
+        values_name = node.outputs[0]
+        indices_name = node.outputs[1]
+        context.add(values, torch_name=values_name)
+        context.add(indices, torch_name=indices_name)
+    else:
+        assert(len(inputs) == 1)
+        value = mb.reduce_max(x=inputs[0], axes=None, name=node.name)
+        context.add(value)
 
 @register_torch_op
 def argsort(context, node):
