@@ -8,6 +8,7 @@ import os as _os
 import shutil as _shutil
 import tempfile as _tempfile
 import warnings as _warnings
+import numpy as _numpy
 
 
 from ..proto import (
@@ -28,6 +29,17 @@ from .utils import (
 )
 from coremltools import ComputeUnit as _ComputeUnit
 from coremltools.converters.mil.mil.program import Program as _Program
+from coremltools._deps import (
+    _HAS_TF_1,
+    _HAS_TF_2,
+    _HAS_TORCH,
+)
+
+if _HAS_TORCH:
+    import torch
+
+if _HAS_TF_1 or _HAS_TF_2:
+    import tensorflow as tf
 
 
 try:
@@ -473,6 +485,7 @@ class MLModel(object):
         data: dict[str, value]
             Dictionary of data to make predictions from where the keys are
             the names of the input features.
+            If value is array type, numpy.ndarray, tensorflow.Tensor and torch.Tensor are acceptable.
 
         useCPUOnly: bool
             This parameter is deprecated and will be removed in 6.0. Instead, use the ``compute_units``
@@ -492,6 +505,12 @@ class MLModel(object):
         --------
         >>> data = {'bedroom': 1.0, 'bath': 1.0, 'size': 1240}
         >>> predictions = model.predict(data)
+        >>> data = {'array': numpy.array([[1.0, 2.0], [3.0, 4.0]])}
+        >>> predictions = model.predict(data)
+        >>> data = {'array': torch.Tensor([[1.0, 2.0], [3.0, 4.0]])}
+        >>> predictions = model.predict(data)
+        >>> data = {'array': tensorflow.Tensor([[1.0, 2.0], [3.0, 4.0]])}
+        >>> predictions = model.predict(data)
         """
         if useCPUOnly:
             _warnings.warn('The "useCPUOnly" parameter is deprecated and will be removed in 6.0. '
@@ -509,6 +528,7 @@ class MLModel(object):
             # we still check it here to return early and
             # return a more verbose error message
             self._verify_input_name_exists(data)
+            self._convert_tensor_to_numpy(data)
             return self.__proxy__.predict(data, useCPUOnly)
         else:
             if _macos_version() < (10, 13):
@@ -602,3 +622,28 @@ class MLModel(object):
                 err_msg = "Provided key \"{}\", in the input dict, " \
                           "does not match any of the model input name(s), which are: {}"
                 raise KeyError(err_msg.format(given_input, ",".join(model_input_names)))
+
+
+    def _convert_tensor_to_numpy(self, input_dict):
+        def convert(given_input):
+            if isinstance(given_input, _numpy.ndarray):
+                sanitized_input = given_input
+            elif _HAS_TORCH and isinstance(given_input, torch.Tensor):
+                sanitized_input = given_input.detach().numpy()
+            elif (_HAS_TF_1 or _HAS_TF_2) and isinstance(given_input, tf.Tensor):
+                sanitized_input = given_input.eval(session=tf.compat.v1.Session())
+            else:
+                sanitized_input = _numpy.array(given_input)
+            return sanitized_input
+
+        model_input_to_types = {}
+        for inp in self._spec.description.input:
+            type_value = inp.type.multiArrayType.dataType
+            type_name = inp.type.multiArrayType.ArrayDataType.Name(type_value)
+            if type_name != "INVALID_ARRAY_DATA_TYPE":
+                model_input_to_types[inp.name] = type_name
+
+        for given_input_name, given_input in input_dict.items():
+            if not given_input_name in model_input_to_types:
+                continue
+            input_dict[given_input_name] = convert(given_input)
