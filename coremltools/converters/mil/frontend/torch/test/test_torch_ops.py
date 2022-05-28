@@ -3342,85 +3342,36 @@ class TestFlip(TorchBaseTest):
         )
 
 
-class TestLogicalAnd(TorchBaseTest):
+class TestBitWiseLogical(TorchBaseTest):
     @pytest.mark.parametrize(
-        "backend, x_y",
+        "backend, x_y, op_string",
         itertools.product(
             backends,
             [
                 ([True, False, True, False], [True, True, False, False]),
                 ([[True, False], [True, False]], [[True, True], [False, False]]),
+                ([[True, False], [True, False]], [[1, 0], [2, 1]]),
                 ([-1.5, 0.0, 1.0, 0.0], [0.1, 2.5, 0.0, 0.0]),
                 ([2, 0, -1, 0, 5], [1, 1, 0, 0, -5]),
             ],
-        ),
-    )
-    def test_logical_and(self, backend, x_y):
-        class TestNet(nn.Module):
-            def __init__(self):
-                super(TestNet, self).__init__()
-
-            def forward(self, x, y):
-                return torch.logical_and(x, y)
-
-        model = TestNet()
-        x = torch.tensor(x_y[0])
-        y = torch.tensor(x_y[1])
-        self.run_compare_torch([x, y], model, backend=backend, input_as_shape=False)
-
-
-class TestLogicalOr(TorchBaseTest):
-    @pytest.mark.parametrize(
-        "backend, x_y",
-        itertools.product(
-            backends,
             [
-                ([True, False, True, False], [True, True, False, False]),
-                ([[True, False], [True, False]], [[True, True], [False, False]]),
-                ([-1.5, 0.0, 1.0, 0.0], [0.1, 2.5, 0.0, 0.0]),
-                ([2, 0, -1, 0, 5], [1, 1, 0, 0, -5]),
+                "eq",
+                "ne",
+                "logical_and",
+                "logical_or",
+                "logical_xor",
             ],
         ),
     )
-    def test_logical_or(self, backend, x_y):
-        class TestNet(nn.Module):
-            def __init__(self):
-                super(TestNet, self).__init__()
-
-            def forward(self, x, y):
-                return torch.logical_or(x, y)
-
-        model = TestNet()
+    def test_bitwise_logical(self, backend, x_y, op_string):
+        if not contains_op(torch, op_string):
+            return
+        op_func = getattr(torch, op_string)
+        model = ModuleWrapper(function=op_func)
         x = torch.tensor(x_y[0])
         y = torch.tensor(x_y[1])
         self.run_compare_torch([x, y], model, backend=backend, input_as_shape=False)
 
-
-class TestLogicalXor(TorchBaseTest):
-    @pytest.mark.parametrize(
-        "backend, x_y",
-        itertools.product(
-            backends,
-            [
-                ([True, False, True, False], [True, True, False, False]),
-                ([[True, False], [True, False]], [[True, True], [False, False]]),
-                ([-1.5, 0.0, 1.0, 0.0], [0.1, 2.5, 0.0, 0.0]),
-                ([2, 0, -1, 0, 5], [1, 1, 0, 0, -5]),
-            ],
-        ),
-    )
-    def test_logical_xor(self, backend, x_y):
-        class TestNet(nn.Module):
-            def __init__(self):
-                super(TestNet, self).__init__()
-
-            def forward(self, x, y):
-                return torch.logical_xor(x, y)
-
-        model = TestNet()
-        x = torch.tensor(x_y[0])
-        y = torch.tensor(x_y[1])
-        self.run_compare_torch([x, y], model, backend=backend, input_as_shape=False)
 
 
 class TestWhere(TorchBaseTest):
