@@ -4,9 +4,10 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import copy
-import logging
+from functools import partial
 import os
 from pathlib import Path
+from PIL import Image
 import re
 
 import numpy as np
@@ -18,14 +19,20 @@ from coremltools.converters.mil.mil import Program, Function
 from coremltools.converters.mil.mil.passes.quantization_passes import AbstractQuantizationPass
 from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
 import coremltools.models.utils as coremltoolsutils
+from coremltools.proto import FeatureTypes_pb2 as ft
 
 
 np.random.seed(10)
 
+DTYPE_TO_FEATURE_TYPE_MAP = {"int32": ft.ArrayFeatureType.INT32,
+                             "fp32": ft.ArrayFeatureType.FLOAT32,
+                             "fp16": ft.ArrayFeatureType.FLOAT16,
+                             }
+
 def _serialize_current_pytest(mlmodel):
     class_name = os.environ.get('PYTEST_CURRENT_TEST').split("::")[1].strip()
     test_name = "::".join(os.environ.get('PYTEST_CURRENT_TEST').split("::")[2:]).split("(call)")[0].strip()
-    mlpackage_path = "/tmp/pytest_failures/{}/{}/model.mlpackage".format(class_name,test_name)
+    mlpackage_path = "/tmp/pytest_failures/{}/{}/model.mlpackage".format(class_name, test_name)
     Path(mlpackage_path).mkdir(parents=True, exist_ok=True)
     mlmodel.save(mlpackage_path)
 
@@ -65,7 +72,8 @@ def assert_model_is_valid(
     for name, shape in inputs.items():
         input_dict[name] = np.random.rand(*shape)
 
-    mlmodel = ct_convert(program, source="milinternal", convert_to=backend, useCPUOnly=True)
+    mlmodel = ct_convert(program, source="milinternal", convert_to=backend,
+                         compute_units=ct.ComputeUnit.CPU_ONLY)
     assert mlmodel is not None
 
     if verbose:
@@ -73,7 +81,7 @@ def assert_model_is_valid(
         print_network_spec(mlmodel.get_spec(), style="coding")
 
     if _IS_MACOS and (not mlmodel.is_package or coremltoolsutils._macos_version() >= (12, 0)):
-        prediction = mlmodel.predict(input_dict, useCPUOnly=True)
+        prediction = mlmodel.predict(input_dict)
         assert prediction is not None
         if expected_output_shapes is not None:
             for out_name, out_shape in expected_output_shapes.items():
@@ -168,7 +176,7 @@ def to_tuple(v):
     return tuple(v)
 
 
-def run_core_ml_predict(mlmodel, input_key_values, use_cpu_only=True):
+def run_core_ml_predict(mlmodel, input_key_values):
     for k, v in input_key_values.items():
         if isinstance(v, PIL.Image.Image):
             continue
@@ -176,7 +184,7 @@ def run_core_ml_predict(mlmodel, input_key_values, use_cpu_only=True):
             input_key_values[k] = v.astype(np.float32)
         else:
             input_key_values[k] = np.array([v], dtype=np.float32)
-    return mlmodel.predict(input_key_values, useCPUOnly=use_cpu_only)
+    return mlmodel.predict(input_key_values)
 
 def _get_coreml_out_from_dict(out_dict, out_name):
     if out_name in out_dict:
@@ -190,7 +198,6 @@ def compare_backend(
     mlmodel,
     input_key_values,
     expected_outputs,
-    use_cpu_only=True,
     dtype = "fp32",
     atol=1e-04,
     rtol=1e-05,
@@ -204,35 +211,42 @@ def compare_backend(
           input_placeholders.
 
         - expected_outputs: dict[str, np.array]. Required iff
-          frontend_only == False
-
-        - use_cpu_only: True/False.
+          frontend_only is False
     """
     if _IS_MACOS and (not mlmodel.is_package or coremltoolsutils._macos_version() >= (12, 0)):
 
         if dtype not in ["fp32", "fp16"]:
             raise ValueError("Unsupported dtype config")
 
-        pred = run_core_ml_predict(mlmodel, input_key_values,
-                                   use_cpu_only=use_cpu_only)
+        pred = run_core_ml_predict(mlmodel, input_key_values)
         if also_compare_shapes:
             compare_shapes(
                 mlmodel,
                 input_key_values,
                 expected_outputs,
-                use_cpu_only=use_cpu_only,
                 pred=pred,
             )
-        if not use_cpu_only or (dtype == "fp16"):
+        if mlmodel.compute_unit != ct.ComputeUnit.CPU_ONLY or (dtype == "fp16"):
             atol = max(atol * 100.0, 5e-1)
             rtol = max(rtol * 100.0, 5e-2)
         for o, expected in expected_outputs.items():
             coreml_out = _get_coreml_out_from_dict(pred, o)
-            np.testing.assert_allclose(coreml_out, expected, atol=atol, rtol=rtol)
+
+            if isinstance(coreml_out, np.ndarray):
+                np.testing.assert_allclose(coreml_out, expected, atol=atol, rtol=rtol)
+            elif isinstance(coreml_out, dict):
+                for k, v in coreml_out.items():
+                    assert k in expected
+                    assert expected[k] == v
+            else:
+                assert coreml_out == expected
+
+        return pred
+    return None
 
 
 def compare_shapes(
-    mlmodel, input_key_values, expected_outputs, use_cpu_only=True, pred=None
+    mlmodel, input_key_values, expected_outputs, pred=None
 ):
     """
     Inputs:
@@ -243,36 +257,47 @@ def compare_shapes(
 
         - expected_outputs: dict[str, np.array].
 
-        - use_cpu_only: True/False.
-
         - pred: Prediction to use, if it has already been computed.
     """
 
     if _IS_MACOS:
         if not pred:
-            pred = run_core_ml_predict(mlmodel, input_key_values,
-                                       use_cpu_only)
+            pred = run_core_ml_predict(mlmodel, input_key_values)
         for o, expected in expected_outputs.items():
             coreml_out = _get_coreml_out_from_dict(pred, o)
-            msg = "Output: {}. expected shape {} != actual shape {}".format(
-                o, expected.shape, coreml_out.shape
-            )
-            # Core ML does not support scalar as output
-            # remove this special case when support is added
-            if expected.shape == () and coreml_out.shape == (1,):
+            
+            # output is dictionary (for classifier)
+            if isinstance(coreml_out, dict) and isinstance(expected, dict):
+                assert len(coreml_out) == len(expected)
                 continue
-            assert coreml_out.shape == expected.shape, msg
+
+            # output is numpy objects
+            np_types = (np.generic, np.ndarray)
+            if isinstance(coreml_out, np_types) and isinstance(expected, np_types):
+                msg = "Output: {}. expected shape {} != actual shape {}".format(
+                    o, expected.shape, coreml_out.shape
+                )
+                # Core ML does not support scalar as output
+                # remove this special case when support is added
+                if expected.shape == () and coreml_out.shape == (1,):
+                    continue
+                assert coreml_out.shape == expected.shape, msg
+                continue
+
+            # output is other types (for classifier)
+            assert type(coreml_out) == type(expected)
 
 def ct_convert(
     program,
-    source = "auto",
-    inputs = None,
-    outputs = None,
-    classifier_config = None,
-    minimum_deployment_target = None,
-    convert_to = None,
-    compute_precision = None,
-    skip_model_load = False,
+    source="auto",
+    inputs=None,
+    outputs=None,
+    classifier_config=None,
+    minimum_deployment_target=None,
+    convert_to=None,
+    compute_precision=None,
+    skip_model_load=False,
+    converter=ct.convert,
     **kwargs,
 ):
 
@@ -281,6 +306,9 @@ def ct_convert(
     which in this overloaded call accepts a tuple of (target, dtype).
     Ex: ("neuralnetwork", "fp32"), ("mlprogram", "fp16")
     """
+
+    if isinstance(converter, partial):
+        raise ValueError("Partial function is not supported for function-parameter 'converter' since its keywords arguments could get overriden.")
 
     target, dtype = convert_to
 
@@ -291,16 +319,16 @@ def ct_convert(
     if target == "neuralnetwork":
         compute_precision = None
 
-    mlmodel = ct.convert(
+    mlmodel = converter(
                 program,
-                source = source,
-                inputs = inputs,
-                outputs = outputs,
-                classifier_config = classifier_config,
-                minimum_deployment_target = minimum_deployment_target,
-                convert_to = target,
-                compute_precision = compute_precision,
-                skip_model_load = skip_model_load,
+                source=source,
+                inputs=inputs,
+                outputs=outputs,
+                classifier_config=classifier_config,
+                minimum_deployment_target=minimum_deployment_target,
+                convert_to=target,
+                compute_precision=compute_precision,
+                skip_model_load=skip_model_load,
                 **kwargs
     )
 
@@ -311,8 +339,8 @@ def ct_convert(
     return mlmodel
 
 def get_core_ml_prediction(
-    build, input_placeholders, input_values, use_cpu_only=True,
-    backend=("neuralnetwork", "fp32")):
+        build, input_placeholders, input_values, use_cpu_only=True,
+        backend=("neuralnetwork", "fp32")):
     """
     Return predictions of the given model.
     """
@@ -326,9 +354,14 @@ def get_core_ml_prediction(
         ssa_func.set_outputs(output_vars)
         program.add_function("main", ssa_func)
 
+    if use_cpu_only:
+        compute_unit = ct.ComputeUnit.CPU_ONLY
+    else:
+        compute_unit = ct.ComputeUnit.ALL
+
     mlmodel = ct_convert(program, source="milinternal",
-                         convert_to=backend, useCPUOnly=use_cpu_only)
-    return mlmodel.predict(input_values, useCPUOnly=use_cpu_only)
+                         convert_to=backend,  compute_units=compute_unit)
+    return mlmodel.predict(input_values)
 
 
 def apply_pass_and_basic_check(prog, pass_name, skip_output_name_check=False):
@@ -344,3 +377,94 @@ def apply_pass_and_basic_check(prog, pass_name, skip_output_name_check=False):
         assert_same_output_names(prev_prog, prog)
     assert_same_output_shapes(prev_prog, prog)
     return prev_prog, prev_block, block
+
+
+def assert_prog_input_type(prog, expected_dtype_str, expected_name=None, index=0):
+    block = prog.functions["main"]
+    if expected_name is None:
+        input_var = list(block.inputs.values())[index]
+        assert input_var.is_tensor_or_scalar_of(dtype=expected_dtype_str)
+    else:
+        for input_var in block.inputs.values():
+            if input_var.name == expected_name:
+                assert input_var.is_tensor_or_scalar_of(dtype=expected_dtype_str)
+
+def assert_spec_input_type(spec, expected_feature_type, expected_name=None, index=0):
+    if expected_name is None:
+        assert spec.description.input[index].type.multiArrayType.dataType == expected_feature_type
+    else:
+        for input in spec.description.input:
+            if input.name == expected_name:
+                assert input.type.multiArrayType.dataType == expected_feature_type
+
+def assert_input_dtype(mlmodel, expected_type_str, expected_name=None, index=0):
+    assert_prog_input_type(mlmodel._mil_program, expected_type_str,
+                           expected_name=expected_name, index=index)
+    assert_spec_input_type(mlmodel._spec, DTYPE_TO_FEATURE_TYPE_MAP[expected_type_str],
+                           expected_name=expected_name, index=index)
+
+def assert_spec_output_type(spec, expected_feature_type, expected_name=None, index=0):
+    assert spec.description.output[index].type.multiArrayType.dataType == expected_feature_type
+    if expected_name is not None:
+        assert spec.description.output[index].name == expected_name
+
+def assert_prog_output_type(prog, expected_dtype_str, expected_name=None, index=0):
+    block = prog.functions["main"]
+    output_var = block.outputs[index]
+    assert output_var.is_tensor_or_scalar_of(dtype=expected_dtype_str)
+    if expected_name is not None:
+        assert output_var.name == expected_name
+
+def assert_output_dtype(mlmodel, expected_type_str, expected_name=None, index=0):
+    assert_prog_output_type(mlmodel._mil_program, expected_type_str,
+                            expected_name=expected_name, index=index)
+    assert_spec_output_type(mlmodel._spec, DTYPE_TO_FEATURE_TYPE_MAP[expected_type_str],
+                            expected_name=expected_name, index=index)
+
+def random_gen_input_feature_type(input_desc):
+    if input_desc.type.WhichOneof("Type") == "multiArrayType":
+        shape = [s for s in input_desc.type.multiArrayType.shape]
+        if input_desc.type.multiArrayType.dataType == ft.ArrayFeatureType.FLOAT32:
+            dtype = np.float32
+        elif input_desc.type.multiArrayType.dataType == ft.ArrayFeatureType.INT32:
+            dtype = np.int32
+        elif input_desc.type.multiArrayType.dataType == ft.ArrayFeatureType.FLOAT16:
+            dtype = np.float16
+        elif input_desc.type.multiArrayType.dataType == ft.ArrayFeatureType.FLOAT64:
+            dtype = np.float64
+        else:
+            raise ValueError("unsupported type")
+        return np.random.rand(*shape).astype(dtype)
+    elif input_desc.type.WhichOneof("Type") == "imageType":
+        if input_desc.type.imageType.colorSpace in (ft.ImageFeatureType.BGR, ft.ImageFeatureType.RGB):
+            shape = [3, input_desc.type.imageType.height, input_desc.type.imageType.width]
+            x = np.random.randint(low=0, high=256, size=shape)
+            return Image.fromarray(np.transpose(x, [1, 2, 0]).astype(np.uint8))
+        else:
+            shape = [input_desc.type.imageType.height, input_desc.type.imageType.width]
+            x = np.random.randint(low=0, high=256, size=shape)
+            return Image.fromarray(x.astype(np.uint8), 'L')
+    else:
+        raise ValueError('unsupported type')
+
+def verify_prediction(mlmodel, multiarray_type=None):
+    spec = mlmodel._spec
+    input_dict = {}
+    for input_desc in spec.description.input:
+        input_dict[input_desc.name] = random_gen_input_feature_type(input_desc)
+        if multiarray_type is not None:
+            input_dict[input_desc.name] = input_dict[input].astype(multiarray_type)
+    mlmodel.predict(input_dict)
+
+def assert_spec_input_image_type(spec, expected_feature_type):
+    assert spec.description.input[0].type.imageType.colorSpace == expected_feature_type
+
+def assert_spec_output_image_type(spec, expected_feature_type):
+    assert spec.description.output[0].type.imageType.colorSpace == expected_feature_type
+
+def assert_cast_ops_count(mlmodel, expected_count):
+    block = mlmodel._mil_program.functions["main"]
+    assert len(block.find_ops(op_type="cast")) == expected_count
+
+def assert_ops_in_mil_program(mlmodel, expected_op_list):
+    assert expected_op_list == get_op_types_in_program(mlmodel._mil_program)

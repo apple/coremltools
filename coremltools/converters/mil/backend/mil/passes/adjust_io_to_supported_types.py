@@ -3,17 +3,18 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import warnings as _warnings
+import logging
 
 from coremltools.converters.mil.mil import Builder as mb, types as types
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
+from coremltools.converters.mil._deployment_compatibility import AvailableTarget as target
 
 
 @register_pass(namespace="mil_backend")
 class adjust_io_to_supported_types(AbstractGraphPass):
     """
-    Converts all dTypes to types that are supported by the CoreML runtime.
+    Converts all dtypes to types that are supported by the CoreML runtime.
     The runtime supports only fp16, fp32, int32, str, and bool variables.
 
     General rules:
@@ -23,9 +24,10 @@ class adjust_io_to_supported_types(AbstractGraphPass):
           types are numerical and can be reasonably replaced with 32 bit float types.
 
     The "main" function has additional rules since its I/O is mapped to CoreML model I/O:
-        * Fp16 I/O is replaced with fp32 I/O.
-          Casts (fp32 input -> fp16) are inserted at the beginning of the program to preserve 16 bit inputs.
-          Casts (fp16 -> fp32 output) are inserted at the end of the program to preserve 16 bit computations.
+        * if minimum_deployment_target <  coremltools.target.iOS16, then:
+            * Fp16 I/O is replaced with fp32 I/O.
+                Casts (fp32 input -> fp16) are inserted at the beginning of the program to preserve 16 bit inputs.
+                Casts (fp16 -> fp32 output) are inserted at the end of the program to preserve 16 bit computations.
 
         * All non-integer I/O that is not fp32 is replaced with fp32 I/O.
           A cast (prev input type -> fp32) is inserted at the beginning of the program to preserve non-fp32 inputs.
@@ -61,7 +63,7 @@ class adjust_io_to_supported_types(AbstractGraphPass):
     def apply(self, prog):
         for name, func in prog.functions.items():
             is_main_funtion = name == "main"
-            _adjust_io_to_supported_types(func, is_main_funtion)
+            _adjust_io_to_supported_types(func, is_main_funtion, self.minimun_deployment_target)
 
 __RUNTIME_SUPPORTED_TYPES = [types.fp16, types.fp32, types.int32, types.str, types.bool]
 
@@ -74,7 +76,7 @@ def _adjust_var_dtype_helper(var, dtype):
     else:
         var._sym_type = types.tensor(dtype, var.sym_type.get_shape())
 
-def _adjust_main_inputs(func):
+def _adjust_main_inputs(func, min_deployment_target):
     first_op = func.operations[0] if len(func.operations) > 0 else None
     for input_name, input_var in func.inputs.items():
        if (types.is_tensor(input_var.sym_type) or types.is_scalar(input_var.sym_type)) \
@@ -83,44 +85,69 @@ def _adjust_main_inputs(func):
             input_dtype_str = types.builtin_to_string(input_var.dtype)
             if types.is_int(input_var.dtype):
                 # Replace non-int32 input type with int32.
-                _warnings.warn("Input" + input_var.name + " is of dType " + input_dtype_str +\
+                logging.warning("Input" + input_var.name + " is of dtype " + input_dtype_str +\
                                ". Only integer variables of bit width 32 are supported by the CoreML runtime. " +\
-                               "This input will be assigned a dType of int32. " +\
+                               "This input will be assigned a dtype of int32. " +\
                                "No cast will be inserted; the previous dtype will be replaced.")
                 _adjust_var_dtype_helper(input_var, types.int32)
             elif input_var.dtype == types.fp64:
                 # Replace float64 input type with fp32.
-                _warnings.warn("Input" + input_var.name + " is of dtype fp64. 64 bit float inputs are " +\
-                               "not supported by ML program models. This input will be assigned a dType " +\
+                logging.warning("Input '" + input_var.name + "' is of dtype fp64. 64 bit float inputs are " +\
+                               "not supported by ML program models. This input will be assigned a dtype " +\
                                "of fp32. No cast will be inserted; the previous dtype will be replaced.")
                 _adjust_var_dtype_helper(input_var, types.fp32)
+            elif input_var.dtype == types.fp16 \
+                 and min_deployment_target.value>= target.iOS16.value:
+                pass # do nothing, since fp16 is a valid input type for CoreML
             else:
-                # This is some other dType. Change the type to fp32 and add a cast.
+                # This is some other dtype. Change the type to fp32 and add a cast.
                 # This is only a limitation of main--other functions do not represent CoreML model inputs
                 # and do not have the same limitation on input types.
-                _warnings.warn("Input" + input_var.name + " is of dType " + input_dtype_str + ". The " +\
-                               "CoreML runtime does not support inputs with this dType (only fp32 and " +\
-                               "int32 inputs are supported). This input will be assigned a dType of " +\
+                supported_dtypes = "{int32, fp32, fp64}" if min_deployment_target < target.iOS16 else \
+                                    "{int32, fp16, fp32, fp64}"
+                msg = "\nInput '{}' is of dtype {}. The " +\
+                               "CoreML runtime does not support inputs with this dtype " +\
+                               "(supported dtypes are: {}). This input will be assigned a dtype of " +\
                                "fp32. A cast will be inserted at the beginning of the program to " +\
-                               "convert the input to the originally defined dType.")
+                               "convert the input to the originally defined dtype.\n"
+                if input_var.dtype == types.fp16:
+                    msg += "fp16 dtype input is supported if the minimum_deployment_target is chosen to be at least " \
+                           "iOS16/macOS13.\n"
+                logging.warning(msg.format(
+                    input_var.name,
+                    input_dtype_str,
+                    supported_dtypes))
+
                 with func:
                     casted_input_var = mb.cast(x=input_var, dtype=input_dtype_str, before_op=first_op)
                     func.replace_uses_of_var_after_op(anchor_op=casted_input_var.op, old_var=input_var, new_var=casted_input_var)
                     _adjust_var_dtype_helper(input_var, types.fp32)
 
-def _adjust_main_outputs(func):
+def _adjust_main_outputs(func, min_deployment_target):
     new_outputs = []
     for output_var in func.outputs:
         output_type = output_var.sym_type
         if (types.is_tensor(output_type) or types.is_scalar(output_type)) \
             and output_var.dtype != types.fp32 \
-            and output_var.dtype != types.int32:
+            and output_var.dtype != types.int32 \
+            and (min_deployment_target < target.iOS16 or output_var.dtype != types.fp16):
+            # since fp16 is a valid output type for coreml from ios16 spec onwards, no need to cast
             output_dtype_str = types.builtin_to_string(output_var.dtype)
-            _warnings.warn("Output" + output_var.name + " is of dType " + output_dtype_str + ". The " +\
-                           "CoreML runtime does not support outputs with this dType (only int32 and " +\
-                           "fp32 are supported for outputs). This output will be assigned a dType " +\
+            supported_dtypes = "{int32, fp32, fp64}" if min_deployment_target < target.iOS16 else \
+                                "{int32, fp16, fp32, fp64}"
+            msg = "\nOutput '{}' is of dtype {}. The " +\
+                           "CoreML runtime does not support outputs with this dtype " +\
+                           "(supported dtypes are: {}). This output will be assigned a dtype " +\
                            "of fp32. A cast will be inserted at the end of the program to convert" +\
-                           "the original output dType to the dType supported by the CoreML runtime.")
+                           "the original output dtype to the dtype supported by the CoreML runtime.\n"
+            if output_var.dtype == types.fp16:
+                msg += "fp16 dtype output is supported if the minimum_deployment_target is chosen to be at least " \
+                       "iOS16/macOS13.\n"
+            logging.warning(msg.format(
+                               output_var.name,
+                               output_dtype_str,
+                               supported_dtypes,
+                           ))
 
             output_var_name = output_var.name
             output_var.set_name(output_var_name + "__pre__output__fp32__cast")
@@ -146,16 +173,16 @@ def _adjust_var(var):
         dtype_str = types.builtin_to_string(var.dtype)
         if types.is_int(var.dtype):
             # Replace non-int32 input type with int32.
-            _warnings.warn("Input" + var.name + " is of dType " + dtype_str +\
+            logging.warning("Input '" + var.name + "' is of dtype " + dtype_str +\
                            ". Only integer variables of bit width 32 are supported by the CoreML runtime. " +\
-                           "This input will be assigned a dType of int32. " +\
+                           "This input will be assigned a dtype of int32. " +\
                            "No cast will be inserted; the previous dtype will be replaced.")
             _adjust_var_dtype_helper(var, types.int32)
         else:
-            # This is some other unsupported dType. Change the input type to fp32.
-            _warnings.warn("Var " + var.name + " is of dType " + dtype_str + ". The CoreML runtime " +\
-                           "does not support this dType (only fp16, fp32, bool, and int32 are supported). " +\
-                           "This input will be assigned a dType of fp32. No cast will be inserted; " +\
+            # This is some other unsupported dtype. Change the input type to fp32.
+            logging.warning("Var " + var.name + " is of dtype " + dtype_str + ". The CoreML runtime " +\
+                           "does not support this dtype (only fp16, fp32, bool, and int32 are supported). " +\
+                           "This input will be assigned a dtype of fp32. No cast will be inserted; " +\
                            "the previous dtype will be replaced.")
             _adjust_var_dtype_helper(var, types.fp32)
 
@@ -227,11 +254,11 @@ def _adjust_ops(block):
 #####
 # The Pass
 #####
-def _adjust_io_to_supported_types(func, is_main):
+def _adjust_io_to_supported_types(func, is_main, min_deployment_target):
     if is_main:
-        _adjust_main_inputs(func)
+        _adjust_main_inputs(func, min_deployment_target)
         _adjust_ops(func)
-        _adjust_main_outputs(func)
+        _adjust_main_outputs(func, min_deployment_target)
     else:
         _adjust_func_inputs(func)
         _adjust_ops(func)

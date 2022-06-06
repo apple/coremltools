@@ -1,20 +1,20 @@
-# -*- coding: utf-8 -*-
-
 #  Copyright (c) 2020, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+from collections import defaultdict
+import copy
+import logging
 
-from coremltools.converters.mil.mil.passes.pass_registry import register_pass
-from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
+import numpy as np
+
 from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
+from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 from coremltools.converters.mil.mil.types.symbolic import any_symbolic
 from coremltools.converters.mil.mil.var import Var
-import logging
-import numpy as np
-import copy
-from collections import defaultdict
+
 
 DEBUG = False  # set to true to plot the block before and after the transformation
 
@@ -243,7 +243,7 @@ def register_axis_update_op(cls=None, similar_ops=[]):
     return class_wrapper
 
 
-class transform_axis_update_ops(object):
+class transform_axis_update_ops:
     """
     Parent class for every axis update op's class
 
@@ -672,7 +672,7 @@ class transform_add(transform_axis_update_ops):
             )
 
 
-class HypotheticalValue(object):
+class HypotheticalValue:
     # A hypothetical value.
     # Simply wraps a Var.
     # Actual Var it wraps doesn't really matter, its mainly for debugging.
@@ -682,7 +682,7 @@ class HypotheticalValue(object):
         self.value = var  # type : Var
 
 
-class LazyTransposeHypotheticalValue(object):
+class LazyTransposeHypotheticalValue:
     # a hypothetical value that represents a transpose op on top of a hypothetical value,
     # or a collection of transpose_ops, which have the same "perm" parameter
 
@@ -712,7 +712,7 @@ class LazyTransposeHypotheticalValue(object):
         self.transpose_ops = transpose_ops  # type : Set(op)
 
 
-class TransposeOptimization(object):
+class TransposeOptimization:
     def __init__(self, block):
         self.block = block
 

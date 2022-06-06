@@ -499,7 +499,6 @@ class TestNotEqual:
             use_cpu_only=use_cpu_for_conversion,
             frontend_only=False,
             backend=backend,
-            use_cpu_for_conversion=use_cpu_for_conversion,
         )
 
     @ssa_fn

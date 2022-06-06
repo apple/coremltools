@@ -3,15 +3,32 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-class AbstractGraphPass():
+from abc import ABC, abstractmethod
+from coremltools.converters.mil._deployment_compatibility import AvailableTarget as target
 
-	def __call__(self, prog):
-		self.apply(prog)
+class AbstractGraphPass(ABC):
 
-	def __str__(self):
-		return type(self).__name__
+    def __init__(self, minimun_deployment_target=target.iOS13):
+        self._minimum_deployment_target = minimun_deployment_target
 
-	def apply(self, prog):
-		raise NotImplementedError(
-			'Graph pass transformation not implemented for "{}".'.format(self)
-		)
+    def __call__(self, prog):
+        if not prog.skip_all_passes:
+            self.apply(prog)
+
+    def __str__(self):
+        return type(self).__name__
+
+    @property
+    def minimun_deployment_target(self):
+        return self._minimum_deployment_target
+
+    @minimun_deployment_target.setter
+    def minimun_deployment_target(self, t):
+        if not isinstance(t, target):
+            raise TypeError("minimun_deployment_target must be an enumeration from Enum class AvailableTarget")
+        self._minimum_deployment_target = t
+
+
+    @abstractmethod
+    def apply(self, prog):
+        pass

@@ -5,6 +5,7 @@
 
 import functools
 import itertools
+
 import numpy as np
 import pytest
 
@@ -291,7 +292,6 @@ class TestUpsampleNearestNeighborFractionalScales:
             expected_outputs,
             use_cpu_only=use_cpu_for_conversion,
             backend=backend,
-            use_cpu_for_conversion=use_cpu_for_conversion,
         )
 
 

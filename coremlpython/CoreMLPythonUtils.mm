@@ -433,6 +433,7 @@ static size_t sizeOfArrayElement(MLMultiArrayDataType type) {
         case MLMultiArrayDataTypeInt32:
             return sizeof(int32_t);
         case MLMultiArrayDataTypeFloat32:
+        case MLMultiArrayDataTypeFloat16:
             return sizeof(float);
         case MLMultiArrayDataTypeDouble:
             return sizeof(double);
@@ -449,7 +450,7 @@ py::object Utils::convertArrayValueToPython(MLMultiArray *value) {
     MLMultiArrayDataType type = value.dataType;
     std::vector<size_t> shape = Utils::convertNSArrayToCpp(value.shape);
     std::vector<size_t> strides = Utils::convertNSArrayToCpp(value.strides);
-    
+
     // convert strides to numpy (bytes) instead of mlkit (elements)
     for (size_t& stride : strides) {
         stride *= sizeOfArrayElement(type);
@@ -460,6 +461,16 @@ py::object Utils::convertArrayValueToPython(MLMultiArray *value) {
             return py::array(shape, strides, static_cast<const int32_t*>(value.dataPointer));
         case MLMultiArrayDataTypeFloat32:
             return py::array(shape, strides, static_cast<const float*>(value.dataPointer));
+        case MLMultiArrayDataTypeFloat16:
+        {
+            // create a float32 array, cast float16 values and copy into it
+            // TODO: rdar://92239209 : return np.float16 instead of np.float32 when multiarray type is Float16
+            std::vector<float> value_fp32(value.count, 0.0);
+            for (size_t i=0; i<value.count; i++) {
+                value_fp32[i] = [value[i] floatValue];
+            }
+            return py::array(shape, strides, value_fp32.data());
+        }
         case MLMultiArrayDataTypeDouble:
             return py::array(shape, strides, static_cast<const double*>(value.dataPointer));
         default:

@@ -10,7 +10,6 @@ Use *coremltools* to convert machine learning models from third-party libraries 
 * [TensorFlow 1.x](https://www.tensorflow.org/versions/r1.15/api_docs/python/tf)
 * [TensorFlow 2.x](https://www.tensorflow.org/api_docs)
 * [PyTorch](https://pytorch.org/)
-* [TensorFlow's Keras APIs](https://keras.io/)
 * Non-neural network frameworks:
 	* [scikit-learn](https://scikit-learn.org/stable/)
 	* [XGBoost](https://xgboost.readthedocs.io/en/latest/)

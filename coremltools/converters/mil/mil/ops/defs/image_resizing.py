@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #  Copyright (c) 2020, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
@@ -20,8 +19,8 @@ from coremltools.converters.mil.mil import (
     TensorInputType,
     types,
 )
-
 from coremltools.converters.mil.mil.types.symbolic import is_symbolic
+
 
 @register_op(doc_str="")
 class affine(Operation):
@@ -104,7 +103,7 @@ class affine(Operation):
     )
 
     def __init__(self, **kwargs):
-        super(affine, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         if self.x.rank != 4:
@@ -200,7 +199,7 @@ class upsample_nearest_neighbor(Operation):
         )
 
     def __init__(self, **kwargs):
-        super(upsample_nearest_neighbor, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         if self.x.rank < 3:
@@ -301,7 +300,7 @@ class resample(Operation):
     )
 
     def __init__(self, **kwargs):
-        super(resample, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         if self.x.rank != 4:
@@ -390,7 +389,7 @@ class resize_nearest_neighbor(Operation):
     )
 
     def __init__(self, **kwargs):
-        super(resize_nearest_neighbor, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         if self.x.rank < 3:
@@ -501,7 +500,7 @@ class upsample_bilinear(Operation):
             )
 
     def __init__(self, **kwargs):
-        super(upsample_bilinear, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         if self.x.rank < 3:
@@ -626,7 +625,7 @@ class resize_bilinear(Operation):
             )
 
     def __init__(self, **kwargs):
-        super(resize_bilinear, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         if self.x.rank < 3:
@@ -763,7 +762,7 @@ class crop_resize(Operation):
             )
 
     def __init__(self, **kwargs):
-        super(crop_resize, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         if self.x.rank != 4:
@@ -834,7 +833,7 @@ class crop(Operation):
     )
 
     def __init__(self, **kwargs):
-        super(crop, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         if self.x.rank < 3:

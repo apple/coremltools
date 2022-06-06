@@ -34,7 +34,7 @@ class elementwise_unary(Operation):
     input_spec = InputSpec(x=ScalarOrTensorInputType(),)
 
     def __init__(self, **kwargs):
-        super(elementwise_unary, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         return self.x.sym_type
@@ -63,7 +63,7 @@ class abs(elementwise_unary):
     """
 
     def __init__(self, **kwargs):
-        super(abs, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -91,7 +91,7 @@ class acos(elementwise_unary):
     """
 
     def __init__(self, **kwargs):
-        super(acos, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -119,7 +119,7 @@ class asin(elementwise_unary):
     """
 
     def __init__(self, **kwargs):
-        super(asin, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -147,7 +147,7 @@ class atan(elementwise_unary):
     """
 
     def __init__(self, **kwargs):
-        super(atan, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -176,7 +176,7 @@ class atanh(elementwise_unary):
     """
 
     def __init__(self, **kwargs):
-        super(atanh, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -204,7 +204,7 @@ class ceil(elementwise_unary):
     """
 
     def __init__(self, **kwargs):
-        super(ceil, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -242,7 +242,7 @@ class clip(Operation):
     )
 
     def __init__(self, **kwargs):
-        super(clip, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         return self.x.sym_type
@@ -272,7 +272,7 @@ class cos(elementwise_unary):
     """
 
     def __init__(self, **kwargs):
-        super(cos, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -300,7 +300,7 @@ class cosh(elementwise_unary):
     """
 
     def __init__(self, **kwargs):
-        super(cosh, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -328,7 +328,7 @@ class erf(elementwise_unary):
     """
 
     def __init__(self, **kwargs):
-        super(erf, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -356,7 +356,7 @@ class exp(elementwise_unary):
     """
 
     def __init__(self, **kwargs):
-        super(exp, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -384,7 +384,7 @@ class exp2(elementwise_unary):
     """
 
     def __init__(self, **kwargs):
-        super(exp2, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -413,7 +413,7 @@ class floor(elementwise_unary):
     """
 
     def __init__(self, **kwargs):
-        super(floor, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -455,7 +455,7 @@ class inverse(Operation):
             )
 
     def __init__(self, **kwargs):
-        super(inverse, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         return self.x.sym_type
@@ -497,7 +497,7 @@ class log(Operation):
             epsilon=1e-45)
 
     def __init__(self, **kwargs):
-        super(log, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         return self.x.sym_type
@@ -529,7 +529,7 @@ class logical_not(elementwise_unary):
     """
 
     def __init__(self, **kwargs):
-        super(logical_not, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -557,7 +557,7 @@ class round(elementwise_unary):
     """
 
     def __init__(self, **kwargs):
-        super(round, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -599,7 +599,7 @@ class rsqrt(Operation):
             )
 
     def __init__(self, **kwargs):
-        super(rsqrt, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         return self.x.sym_type
@@ -632,7 +632,7 @@ class sign(elementwise_unary):
     """
 
     def __init__(self, **kwargs):
-        super(sign, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -660,7 +660,7 @@ class sin(elementwise_unary):
     """
 
     def __init__(self, **kwargs):
-        super(sin, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -688,7 +688,7 @@ class sinh(elementwise_unary):
     """
 
     def __init__(self, **kwargs):
-        super(sinh, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -716,7 +716,7 @@ class sqrt(elementwise_unary):
     """
 
     def __init__(self, **kwargs):
-        super(sqrt, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -744,7 +744,7 @@ class square(elementwise_unary):
     """
 
     def __init__(self, **kwargs):
-        super(square, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -772,7 +772,7 @@ class tan(elementwise_unary):
     """
 
     def __init__(self, **kwargs):
-        super(tan, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -801,7 +801,7 @@ class tanh(elementwise_unary):
     """
 
     def __init__(self, **kwargs):
-        super(tanh, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -835,7 +835,7 @@ class threshold(Operation):
     )
 
     def __init__(self, **kwargs):
-        super(threshold, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         return self.x.sym_type
@@ -871,7 +871,7 @@ class cast(Operation):
     )
 
     def __init__(self, **kwargs):
-        super(cast, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         type_map = {
@@ -897,6 +897,10 @@ class cast(Operation):
 
     @precondition(allow=VALUE | SYMBOL)
     def value_inference(self):
+        return self.get_cast_value(self.x, self.dtype.val)
+
+    @staticmethod
+    def get_cast_value(input_var, dtype_val):
         type_map = {
             "int32": np.int32,
             "int64": np.int64,
@@ -906,19 +910,19 @@ class cast(Operation):
             "bool": np.bool,
         }
 
-        if self.dtype.val not in type_map.keys():
+        if dtype_val not in type_map.keys():
             raise NotImplementedError(
                 "Parameter dtype of the cast operation can be one of the {}. "
-                "Provided {}".format(type_map.keys(), self.dtype.val)
+                "Provided {}".format(type_map.keys(), dtype_val)
             )
 
-        if self.x.val is None:
-            if self.x.sym_val is not None and not is_symbolic(self.x.sym_val) and len(self.x.sym_val.shape) == 1:
-                result = [np.array(val).astype(dtype=type_map[self.dtype.val]).item() if not is_symbolic(val) else val for val in self.x.sym_val]
+        if input_var.val is None:
+            if input_var.sym_val is not None and not is_symbolic(input_var.sym_val) and len(input_var.sym_val.shape) == 1:
+                result = [np.array(val).astype(dtype=type_map[dtype_val]).item() if not is_symbolic(val) else val for val in input_var.sym_val]
                 return np.array(result)
             return None
 
-        if not types.is_tensor(self.x.sym_type):
-            return self.x.val.astype(dtype=type_map[self.dtype.val])
+        if not types.is_tensor(input_var.sym_type):
+            return input_var.val.astype(dtype=type_map[dtype_val])
         else:
-            return np.array(self.x.val).astype(dtype=type_map[self.dtype.val])
+            return np.array(input_var.val).astype(dtype=type_map[dtype_val])

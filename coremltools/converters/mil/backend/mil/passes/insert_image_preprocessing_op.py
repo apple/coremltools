@@ -5,7 +5,7 @@
 
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
-from coremltools.converters.mil.input_types import ImageType
+from coremltools.converters.mil.input_types import ColorLayout, ImageType
 # import mil internal ops to add it to the builder
 from coremltools.converters.mil.mil.ops import defs as _ops
 from coremltools.converters.mil.mil import Builder as mb
@@ -45,7 +45,7 @@ def _insert_image_preprocessing_ops(block, prog):
                                          y=np.array(input_type.scale, dtype=input_nptype),
                                          before_op=first_op, name=input_var.name + "__scaled__")
                 if has_bias:
-                    if input_type.color_layout == "G":
+                    if input_type.color_layout in (ColorLayout.GRAYSCALE, ColorLayout.GRAYSCALE_FLOAT16):
                         last_output = mb.add(x=last_output,
                                              y=np.array(input_type.bias, dtype=input_nptype),
                                              before_op=first_op, name=input_var.name + "__biased__")

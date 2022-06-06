@@ -6,17 +6,20 @@
 """
 Tree ensemble builder class to construct CoreML models.
 """
+import collections as _collections
+
 from .. import SPECIFICATION_VERSION as _SPECIFICATION_VERSION
 from ..proto import Model_pb2 as _Model_pb2
 from ..proto import TreeEnsemble_pb2 as _TreeEnsemble_pb2
 from ..proto import FeatureTypes_pb2 as _FeatureTypes_pb2
 
-from ._interface_management import set_regressor_interface_params
-from ._interface_management import set_classifier_interface_params
-import collections as _collections
+from ._interface_management import (
+    set_classifier_interface_params,
+    set_regressor_interface_params
+)
 
 
-class TreeEnsembleBase(object):
+class TreeEnsembleBase:
     """
     Base class for the tree ensemble builder class.  This should be instantiated
     either through the :py:class:`TreeEnsembleRegressor` or
@@ -329,7 +332,7 @@ class TreeEnsembleRegressor(TreeEnsembleBase):
         target:  (default = None)
            Name of the target feature predicted.
         """
-        super(TreeEnsembleRegressor, self).__init__()
+        super().__init__()
         spec = self.spec
         spec = set_regressor_interface_params(spec, features, target)
         self.tree_spec = spec.treeEnsembleRegressor
@@ -418,7 +421,7 @@ class TreeEnsembleClassifier(TreeEnsembleBase):
             is a string, it specifies the predicted class label and the class
             scores is set to the default value of ``"classProbability"``.
         """
-        super(TreeEnsembleClassifier, self).__init__()
+        super().__init__()
         spec = self.spec
         spec = set_classifier_interface_params(
             spec, features, class_labels, "treeEnsembleClassifier", output_features

@@ -3,8 +3,21 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import copy
+import itertools
+
+import numpy as np
+import pytest
+
 import coremltools as ct
-from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil import (
+    Builder as mb,
+    Function,
+    get_new_symbol,
+    Program,
+    Symbol,
+    types
+)
 from coremltools.converters.mil.testing_utils import (
     assert_op_count_match,
     assert_model_is_valid,
@@ -12,16 +25,10 @@ from coremltools.converters.mil.testing_utils import (
     get_op_types_in_program,
     apply_pass_and_basic_check,
 )
-from coremltools.converters.mil.mil import Function, get_new_symbol, Program, Symbol, types
 from coremltools.converters.mil.experimental.passes.generic_pass_infrastructure import register_generic_pass
 from coremltools.converters.mil.mil.passes.helper import _check_var_scalar_value
 from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
-import copy
-import pytest
-import itertools
-import os
 
-import numpy as np
 
 np.random.seed(1984)
 validate_model = True
@@ -119,7 +126,7 @@ def test_dead_code_elimination():
         bias = mb.const(val=bias_val)
 
         # unused op and its inputs should be eliminated
-        weights_for_matmul = mb.transpose(x=weights, perm=[1,0])
+        weights_for_matmul = mb.transpose(x=weights, perm=[1, 0])
         mb.matmul(x=x, y=weights_for_matmul)
 
         return mb.linear(x=x, weight=weights, bias=bias)
@@ -1564,5 +1571,203 @@ class TestRemoveRedundantOpsPass:
         )
         assert get_op_types_in_program(prev_prog) == ["cast", "random_uniform", "random_uniform", "add"]
         assert get_op_types_in_program(prog) == ["cast", "random_uniform", "random_uniform", "add"]
+
+
+class TestPreluFusion:
+
+    @pytest.mark.parametrize(
+        "swap_input_order, alpha_rank",
+        itertools.product(
+            [True, False],
+            [3, 4],
+        )
+    )
+    def test_channel_first_pattern(self, swap_input_order, alpha_rank):
+        """
+        Input:
+                          | ------------> relu --------------------|
+                          |                                        V
+           x (BCHW) ------|                                       add -----> y (BCHW)
+                          |                                        ^
+                          --------> mul -------> relu -----> mul---|
+                                    ^                         ^
+                                    |                         |
+                                Const(val=-1)               Const(name=a, shape=(1,C,1,1))
+
+        Output:
+            x (BCHW) ------> prelu(alpha=a, shape=(C,)) ---------> y (BCHW)
+        """
+        B, C, H, W = 2, 3, 5, 6
+
+        if alpha_rank == 3:
+            alpha = np.random.rand(C, 1, 1)
+        elif alpha_rank == 4:
+            alpha = np.random.rand(1, C, 1, 1)
+        else:
+            raise NotImplementedError("alpha rank must be 3 or 4")
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(B, C, H, W))])
+        def prog(x):
+            if swap_input_order:
+                neg = mb.mul(x=x, y=-1)
+            else:
+                neg = mb.mul(x=-1, y=x)
+            relu1 = mb.relu(x=neg)
+            if swap_input_order:
+                mul = mb.mul(x=relu1, y=alpha)
+            else:
+                mul = mb.mul(x=alpha, y=relu1)
+            relu2 = mb.relu(x=x)
+            if swap_input_order:
+                out = mb.add(x=relu2, y=mul)
+            else:
+                out = mb.add(x=mul, y=relu2)
+            return out
+
+        prev_prog, _, _ = apply_pass_and_basic_check(
+            prog, "common::fuse_prelu",
+        )
+        assert get_op_types_in_program(prev_prog) == ["mul", "relu", "mul", "relu", "add"]
+        assert get_op_types_in_program(prog) == ["prelu"]
+
+
+    @pytest.mark.parametrize(
+        "swap_input_order, alpha_rank",
+        itertools.product(
+            [True, False],
+            [1, 2, 3],
+        )
+    )
+    def test_channel_last_transpose_pattern(self, swap_input_order, alpha_rank):
+        """
+        Input:
+
+                                                        | ------------> relu --------------------|
+                                                        |                                        V
+        x (shappe=BCHW)-->transpose(out_shape=BHWC)---->|                                       add -----> y (BHWC)
+                                                        |                                        ^
+                                                        --------> mul -------> relu -----> mul---|
+                                                                   ^                        ^
+                                                                   |                        |
+                                                           Const(val=-1)             Const(shape=(1,1,C))
+
+        Output:
+            x (BCHW) ------> prelu ---------> transpose ------> y (BHWC)
+        """
+        B, C, H, W = 2, 3, 5, 6
+        if alpha_rank == 1:
+            alpha = np.random.rand(C)
+        elif alpha_rank == 2:
+            alpha = np.random.rand(1, C)
+        elif alpha_rank == 3:
+            alpha = np.random.rand(1, 1, C)
+        else:
+            raise NotImplementedError("alpha rank must be 1 or 2 or 3")
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(B, C, H, W))])
+        def prog(x):
+            x = mb.transpose(x=x, perm=[0,2,3,1])
+            if swap_input_order:
+                neg = mb.mul(x=x, y=-1)
+            else:
+                neg = mb.mul(x=-1, y=x)
+            relu1 = mb.relu(x=neg)
+            if swap_input_order:
+                mul = mb.mul(x=relu1, y=alpha)
+            else:
+                mul = mb.mul(x=alpha, y=relu1)
+            relu2 = mb.relu(x=x)
+            if swap_input_order:
+                out = mb.add(x=relu2, y=mul)
+            else:
+                out = mb.add(x=mul, y=relu2)
+            return out
+
+        prev_prog, _, block = apply_pass_and_basic_check(
+            prog, "common::fuse_prelu",
+        )
+        assert get_op_types_in_program(prev_prog) == ["transpose", "mul", "relu", "mul", "relu", "add"]
+        assert get_op_types_in_program(prog) == ["prelu", "transpose"]
+        assert_model_is_valid(
+            prog,
+            {"x": (B, C, H, W)},
+            expected_output_shapes={block.outputs[0].name: (B, H, W, C)},
+        )
+
+
+class TestUpdateOutputDtypePass:
+
+    def test_single_output(self):
+        """
+        Given:
+        ------
+        main(%input: (1, 20, int32)(Tensor)) {
+          block0() {
+            %relu: (1, 20, int32)(Tensor) = relu(x=%input, name="relu")
+            %output_relu6: (1, 20, int32)(Tensor) = relu6(x=%input, name="output_relu6")
+          } -> (%output_relu6)
+        }
+        prog.main_output_types = [ct.TensorType(dtype=np.float16)]
+
+        Result:
+        ------
+        main(%input: (1, 20, int32)(Tensor)) {
+          block0() {
+            %relu: (1, 20, int32)(Tensor) = relu(x=%input, name="relu")
+            %output_relu6_type_int32: (1, 20, int32)(Tensor) = relu6(x=%input, name="output_relu6")
+            %output_relu6: (1, 20, fp16)(Tensor) = cast(x=%output_relu6_type_int32, dtype="fp16", name="cast_0")
+          } -> (%output_relu6)
+        }
+        """
+        @mb.program(input_specs=[mb.TensorSpec(shape=(1, 20), dtype=types.int32)])
+        def prog(input):
+            x = mb.relu(x=input, name="relu")
+            x = mb.relu6(x=input, name="output_relu6")
+            return x
+
+        prog.set_main_output_types([ct.TensorType(dtype=np.float16)])
+        prev_prog, prev_block, block = apply_pass_and_basic_check(
+            prog, "common::update_output_dtypes"
+        )
+        assert get_op_types_in_program(prev_prog) == ["relu", "relu6"]
+        assert prev_block.outputs[0].dtype == types.int32
+        assert get_op_types_in_program(prog) == ["relu", "relu6", "cast"]
+        assert block.outputs[0].dtype == types.fp16
+        assert block.outputs[0].name == "output_relu6"
+
+    def test_multiple_outputs(self):
+        """
+        Given:
+        -----
+        main(%input: (1, 20, int32)(Tensor)) {
+          block0() {
+            %split_0: (1, 10, int32)(Tensor), %split_1: (1, 10, int32)(Tensor) = split(x=%input, num_splits=2, axis=1, name="split")
+          } -> (%split_0, %split_1)
+        }
+        prog.main_output_types = [ct.TensorType(), ct.TensorType(dtype=np.float16)]
+
+        Result:
+        ------
+        main(%input: (1, 20, int32)(Tensor)) {
+          block0() {
+            %split_0: (1, 10, int32)(Tensor), %split_1_type_int32: (1, 10, int32)(Tensor) = split(x=%input, num_splits=2, axis=1, name="split")
+            %split_1: (1, 10, fp16)(Tensor) = cast(x=%split_1_type_int32, dtype="fp16", name="cast_0")
+          } -> (%split_0, %split_1)
+        }
+
+        """
+        @mb.program(input_specs=[mb.TensorSpec(shape=(1, 20), dtype=types.int32)])
+        def prog(input):
+            x1, x2 = mb.split(x=input, num_splits=2, axis=1, name="split")
+            return x1, x2
+
+        prog.set_main_output_types([ct.TensorType(), ct.TensorType(dtype=np.float16)])
+        _, _, block = apply_pass_and_basic_check(
+            prog, "common::update_output_dtypes"
+        )
+        assert get_op_types_in_program(prog) == ["split", "cast"]
+        assert block.outputs[1].dtype == types.fp16
+        assert block.outputs[1].name == "split_1"
+
 
 

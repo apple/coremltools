@@ -158,6 +158,35 @@ def _get_MFCC_constants(spectrogram_N,
     return weights, mat_weighted, mat_spec_val, cosines
 
 
+def _reshape_remaining_dimensions_to_canonical_shape(x, remaining_rank):
+    # An utility function that reshape a tensor with shape [batch, spatial_dims, remaining_dim_1, ..., remaining_dim_N]
+    # to [batch, spatial_dims, remaining_dim_1 * ... * remaining_dim_N]
+    # For the special case where there is no remaining dimensions, we expand the last axis
+    assert remaining_rank != 1
+    if remaining_rank == 0:
+        return mb.expand_dims(x=x, axes=[-1])
+    else:
+        x_shape = mb.shape(x=x)
+        batch_and_spatial_shape = mb.slice_by_size(x=x_shape, begin=[0], size=[x.rank-remaining_rank])
+        reshape_shape = mb.concat(values=[batch_and_spatial_shape, [-1]], axis=0)
+        return mb.reshape(x=x, shape=reshape_shape)
+
+
+def _reshape_remaining_dimension_to_original_shape(x, original_shape, remaining_rank):
+    # An utility function that reshape the tensor with shape [batch_new, spatial_dims_new, remaining_dims] to the original
+    # form, which is [batch_new, spatial_dims_new, remaining_dim_1, ..., remaining_dim_N]
+    assert remaining_rank != 1
+    if remaining_rank == 0:
+        return mb.squeeze(x=x, axes=[-1])
+    else:
+        x_shape = mb.shape(x=x)
+        spatial_rank = original_shape.shape[0] - remaining_rank - 1
+        batch_and_spatial_shape = mb.slice_by_size(x=x_shape, begin=[0], size=[1+spatial_rank])
+        remaining_shape = mb.slice_by_size(x=original_shape, begin=[1+spatial_rank], size=[-1])
+        reshape_shape = mb.concat(values=[batch_and_spatial_shape, remaining_shape], axis=0)
+        return mb.reshape(x=x, shape=reshape_shape)
+
+
 @register_tf_op(tf_alias=["BiasAdd", "AddV2"])
 def Add(context, node):
     x = context[node.inputs[0]]
@@ -324,98 +353,86 @@ def AvgPool3D(context, node):
 
 @register_tf_op
 def BatchToSpaceND(context, node):
+    # In tensorflow, the input tensor has the shape of (batch,) + spatial_shape + remaining_shape.
+    # The shape is treated as a combination of 3 components:
+    # 1. A single batch dimension
+    # 2. Spatial dimensions, with a length spatial_rank, which could be neither 1 or 2. Also, spatial_rank
+    #    is equal to the length of block_shape
+    # 3. Remaining dimensions, with a length remaining_rank 
+
+    # The logic of translating this op is as followed:
+    # 1. We first reshape the input to a canonical shape (rolling the remaining shape dimensions into a 
+    #    single dimension): (batch,) + spatial_shape + (R), where R = remaining_dim_1 * ... * remaining_dim_n
+    # 2. We support rank 1 and rank 2 spatial shape:
+    #    (i) rank 1: We decompose the BatchToSpace into small basic ops.
+    #    (ii) rank 2: We directly use the built in batch_to_space op.
+    #    The output would have shape (batch_new,) + spatial_shape_new + (R)
+    # 3. We transform the tensor back, by unrolling the remaining shape: (B_new,) + spatial_shape_new + remaining_shape
+
     x = context[node.inputs[0]]
     block_shape = context[node.inputs[1]].val
     crops = context[node.inputs[2]].val
+    original_shape = mb.shape(x=x)
 
-    if x.rank != 3 and x.rank != 4:
-        raise NotImplementedError("rank of input must be 3 or 4!")
+    input_rank = x.rank
+    spatial_rank = len(block_shape)
+    remaining_rank = x.rank - 1 - spatial_rank
+    has_non_unity_remaining_dims = remaining_rank != 1
 
     if block_shape is None or crops is None:
         raise NotImplementedError(
-            "Not support dynamic block_shape and paddings for BatchToSpaceND!"
+            "Not support dynamic block_shape and crops for BatchToSpaceND!"
         )
 
-    if len(block_shape.flatten()) > 2:
-        raise NotImplementedError("rank of spatial shape > 2 is not yet supported")
+    if has_non_unity_remaining_dims:
+        # Reshape the input tensor to shape [batch, spatial_shape, remaining_dim_1 * ... * remaining_dim_N]
+        x = _reshape_remaining_dimensions_to_canonical_shape(x, remaining_rank)
 
-    if x.rank == 3 or (x.rank == 4 and len(block_shape) == 1):
+    if spatial_rank >= 3:
+        raise NotImplementedError("Rank of spatial shape > 2 is not supported.")
 
+    if spatial_rank == 2:
+        # Tensor has shape [B, H, W, C], we can directly use the batch_to_space op by doing
+        # [B, H, W, C] -> transpose -> [B, C, H, W] -> batch_to_space -> [B_new, C, H_new, W_new] ->
+        # transpose -> [B_new, H_new, W_new, C]
+        x = mb.transpose(x=x, perm=[0, 3, 1, 2])  
+        x = mb.batch_to_space(x=x, block_shape=block_shape, crops=crops, name=node.name)
+        x = mb.transpose(x=x, perm=[0, 2, 3, 1])
+
+    if spatial_rank == 1:
+        # In this case, we decompose space_to_batch into small basic ops
+        # [B, H, C] -> decomposite ops -> [B_new, H_new, C]
+
+        # reshape input to [block_shape, B/block_shape, H, C]
         input_shape = mb.shape(x=x)
-        rank = x.rank
-        spatial_rank = len(block_shape)
-
-        # reshape input to [block_shape] + [batch_size/prod(block_shape)] + x.shape[1:]
+        block_shape = block_shape[0]
         batch_size = _value_at(input_shape, 0)
-        block_shape_prod = _np.prod(block_shape)
-        resize_batch_size = mb.real_div(x=batch_size, y=block_shape_prod)
-        resize_batch_size = [mb.cast(x=resize_batch_size, dtype="int32")]
-        remain_dims = [_value_at(input_shape, i) for i in range(1, rank)]
-        block_dims = [dim for dim in block_shape]
-        reshape_values = block_dims + resize_batch_size + remain_dims
+        spatial_size = _value_at(input_shape, 1)
+        channel_size = _value_at(input_shape, 2)
+        new_batch_size = mb.cast(x=mb.real_div(x=batch_size, y=block_shape), dtype="int32")
+        reshape_values = [block_shape, new_batch_size, spatial_size, channel_size]
         reshape_shape = mb.concat(values=reshape_values, axis=0)
-        reshaped = mb.reshape(x=x, shape=reshape_shape)
+        x = mb.reshape(x=x, shape=reshape_shape, name=node.name)
 
-        # permute the tensor to shape [batch / prod(block_shape)] +
-        #                             [input_shape[1], block_shape[0], ..., input_shape[M], block_shape[M-1]] +
-        #                             [input_shape[M+1], ..., input_shape[N-1]]
-        block_shape_dims = list(range(spatial_rank))
-        batch_dim = [spatial_rank]
-        input_shape_dims = list(range(spatial_rank + 1, reshaped.rank))
-        perm = [batch_dim[0]]
-        for i in range(spatial_rank):
-            perm += [input_shape_dims[i], block_shape_dims[i]]
-        perm += input_shape_dims[spatial_rank:]
-        permuted = mb.transpose(x=reshaped, perm=perm)
+        # permute the tensor to [B/block_shape, H, block_shape, C]
+        x = mb.transpose(x=x, perm=[1, 2, 0, 3])
 
-        # reshape tensor to shape [batch / prod(block_shape)] +
-        #                         [input_shape[1] * block_shape[0], ..., input_shape[M] * block_shape[M-1]] +
-        #                         [input_shape[M+1], ..., input_shape[N-1]]
-        spatial_dims = []
-        for i in range(spatial_rank):
-            spatial_dims.append(
-                mb.mul(x=_value_at(input_shape, i + 1), y=block_shape[i])
-            )
-        remain_dims = [_value_at(input_shape, i) for i in range(spatial_rank + 1, rank)]
-        reshape_values = resize_batch_size + spatial_dims + remain_dims
+        # reshape the tensor to [B/block_shape, H*block_shape, C]
+        new_spatial_size = mb.cast(x=mb.mul(x=spatial_size, y=block_shape), dtype="int32")
+        reshape_values = [new_batch_size, new_spatial_size, channel_size]
         reshape_shape = mb.concat(values=reshape_values, axis=0)
-        reshape_permuted = mb.reshape(x=permuted, shape=reshape_shape)
+        x = mb.reshape(x=x, shape=reshape_shape)
 
-        # crop the tensor using stride slice
-        begin = [0]
-        for i in range(spatial_rank):
-            begin.append(crops[i][0])
-        for i in range(spatial_rank + 1, rank):
-            begin.append(0)
-        end = [resize_batch_size[0]]
-        for i in range(spatial_rank):
-            end.append(mb.sub(x=spatial_dims[i], y=crops[i][1]))
-        end += remain_dims
-        end = mb.concat(values=end, axis=0)
-        x = mb.slice_by_index(x=reshape_permuted, begin=begin, end=end, name=node.name)
-    else:
-        if len(block_shape.flatten()) != 2:
-            raise NotImplementedError(
-                "rank of spatial shape != 2 is not yet supported for 4d input."
-            )
-        if block_shape[0] != block_shape[1]:
-            raise NotImplementedError("non-equal block shape is not yet supported")
+        # crop the tensor to [B/block_shape, H - crops[0][0] - crops[0][1], C]
+        x = mb.crop(x=x, crop_height=crops[0], crop_width=[0, 0])
 
-        needs_cropping = any(crops.flatten())
+    if has_non_unity_remaining_dims:
+        # Reshape the tensor from shape [batch_new, spatial_shape_new, remaining_dim_1 * ... * remaining_dim_N] back to 
+        # shape [batch_new, spatial_shape_new, remaining_shape]
+        x = _reshape_remaining_dimension_to_original_shape(x, original_shape, remaining_rank)
 
-        x = mb.transpose(x=x, perm=[3, 0, 1, 2])
-
-        x = mb.depth_to_space(x=x, block_size=block_shape[0])
-        if needs_cropping:
-            x = mb.crop(
-                x=x,
-                crop_height=[crops[0][0], crops[0][1]],
-                crop_width=[crops[1][0], crops[1][1]],
-            )
-
-        x = mb.transpose(x=x, perm=[1, 2, 3, 0], name=node.name)
-    context.add(node.name, x)
-
+    context.add(node.name, mb.identity(x=x, name=node.name))
+    
 
 @register_tf_op
 def Ceil(context, node):
@@ -1043,6 +1060,11 @@ def EuclideanNorm(context, node):
     x = mb.reduce_l2_norm(x=x, axes=axes, keep_dims=keep_dims, name=node.name)
     context.add(node.name, x)
 
+@register_tf_op
+def IdentityN(context, node):
+    res = [mb.identity(x=context[x]) for x in node.inputs]
+    context.add(node.name, res)
+
 
 @register_tf_op
 def ExpandDims(context, node):
@@ -1426,6 +1448,17 @@ def Square(context, node):
     x = mb.mul(x=x, y=x, name=node.name)
     context.add(node.name, x)
 
+
+def _softmax_cross_entropy_with_logits(feats, labels, name):
+    # compute the log softmax
+    y = mb.reduce_log_sum_exp(x=feats, axes=[-1], keep_dims=True)
+    log_softmax = mb.sub(x=feats, y=y)
+    loss = mb.mul(x=labels, y=log_softmax)
+    loss = mb.mul(x=-1, y=loss)
+    loss = mb.reduce_sum(x=loss, axes=[-1], name=name)
+    return loss
+
+
 @register_tf_op
 def SparseSoftmaxCrossEntropyWithLogits(context, node):
     feats = context[node.inputs[0]]
@@ -1435,14 +1468,17 @@ def SparseSoftmaxCrossEntropyWithLogits(context, node):
         indices=labels, 
         one_hot_vector_size=class_nums,
         )
-
-    # compute the log softmax
-    y = mb.reduce_log_sum_exp(x=feats, axes=[-1], keep_dims=True)
-    log_softmax = mb.sub(x=feats, y=y)
-    loss = mb.mul(x=labels, y=log_softmax)
-    loss = mb.mul(x=-1, y=loss)
-    loss = mb.reduce_sum(x=loss, axes=[-1], name=node.name)
+    loss = _softmax_cross_entropy_with_logits(feats, labels, node.name)
     context.add(node.name, loss)
+
+
+@register_tf_op
+def SoftmaxCrossEntropyWithLogits(context, node):
+    feats = context[node.inputs[0]]
+    labels = context[node.inputs[1]]
+    loss = _softmax_cross_entropy_with_logits(feats, labels, node.name)
+    context.add(node.name, loss)
+
 
 @register_tf_op
 def StridedSlice(context, node):
@@ -1942,98 +1978,93 @@ def Softmax(context, node):
 
 
 @register_tf_op
-def SpaceToBatchND(context, node):
+def SpaceToBatchND(context, node):    
+    # In tensorflow, the input tensor has the shape of (batch,) + spatial_shape + remaining_shape.
+    # The shape is treated as a combination of 3 components:
+    # 1. A single batch dimension
+    # 2. Spatial dimensions, with a length spatial_rank, which could be neither 1 or 2. Also, spatial_rank
+    #    is equal to the length of block_shape
+    # 3. Remaining dimensions, with a length remaining_rank 
+
+    # The logic of translating this op is as followed:
+    # 1. We first reshape the input to a canonical shape (rolling the remaining shape dimensions into a 
+    #    single dimension): (batch,) + spatial_shape + (R), where R = remaining_dim_1 * ... * remaining_dim_n
+    # 2. We support rank 1 and rank 2 spatial shape:
+    #    (i) rank 1: We decompose the SpaceToBatch into small basic ops.
+    #    (ii) rank 2: We directly use the built in space_to_batch op.
+    #    The output would have shape (batch_new,) + spatial_shape_new + (R)
+    # 3. We transform the tensor back, by unrolling the remaining shape: (B_new,) + spatial_shape_new + remaining_shape
+  
     x = context[node.inputs[0]]
     block_shape = context[node.inputs[1]].val
     paddings = context[node.inputs[2]].val
+    original_shape = mb.shape(x=x)
 
-    if x.rank != 3 and x.rank != 4:
-        raise NotImplementedError("rank of input must be 3 or 4!")
+    input_rank = x.rank
+    spatial_rank = len(block_shape)
+    remaining_rank = x.rank - 1 - spatial_rank
+    has_non_unity_remaining_dims = remaining_rank != 1
 
     if block_shape is None or paddings is None:
         raise NotImplementedError(
             "Not support dynamic block_shape and paddings for SpaceToBatchND!"
         )
 
-    if len(block_shape.flatten()) > 2:
-        raise NotImplementedError("rank of spatial shape > 2 is not yet supported")
+    if has_non_unity_remaining_dims:
+        # Reshape the input tensor to shape [batch, spatial_shape, remaining_dim_1 * ... * remaining_dim_N]
+        x = _reshape_remaining_dimensions_to_canonical_shape(x, remaining_rank)
 
-    # use sequence of ops to implement spacetobatch for cases:
-    # (1) x.rank == 3
-    # (2) x.rank == 4 and len(block_shape) == 1
-    if x.rank == 3 or (x.rank == 4 and len(block_shape) == 1):
+    if spatial_rank >= 3:
+        raise NotImplementedError("Rank of spatial shape > 2 is not supported.")
 
-        rank = x.rank
-        spatial_rank = len(block_shape)
+    if spatial_rank == 2:
+        # Tensor has shape [B, H, W, C], we can directly use the space_to_batch op by doing
+        # [B, H, W, C] -> transpose -> [B, C, H, W] -> space_to_batch -> [B_new, C, H_new, W_new] ->
+        # transpose -> [B_new, H_new, W_new, C]
+        x = mb.transpose(x=x, perm=[0, 3, 1, 2])
+        x = mb.space_to_batch(x=x, block_shape=block_shape, paddings=paddings)
+        x = mb.transpose(x=x, perm=[0, 2, 3, 1])
 
-        # expand padding to have shape [x.rank, 2]
-        paddings = _np.concatenate(
-            [[[0, 0]], paddings, _np.zeros(shape=(3, 2), dtype=_np.int32)], axis=0
-        )
-        paddings = paddings[: x.rank, :]
+    if spatial_rank == 1:
+        # In this case, we decompose space_to_batch into small basic ops
+        # [B, H, C] -> decomposite ops -> [B_new, H_new, C]
+        
+        # expand padding to shape [3, 2]
+        new_paddings = _np.zeros(shape=(3, 2), dtype=_np.int32)
+        new_paddings[1] = paddings
+        paddings = new_paddings
         needs_paddings = any(paddings.flatten())
         if needs_paddings:
             padded = mb.pad(x=x, pad=paddings.flatten(), mode="constant")
         else:
             padded = x
+
+        # padded_shape = [B, H_padded, C]
         padded_shape = mb.shape(x=padded)
 
-        # padded_shape = [batch_size] + [spatial_dims] + [remaining_dims]
-        batch_size = [_value_at(padded_shape, 0)]
-        spatial_dims = [_value_at(padded_shape, i) for i in range(1, spatial_rank + 1)]
-        remaining_dims = [
-            _value_at(padded_shape, i) for i in range(spatial_rank + 1, rank)
-        ]
-
-        # padded_shape = [batch_size] + [s0, s1, ..., sm] + [remaining_dims]
-        # reshape_shape = [batch_size] +
-        #                 [s0/block_shape[0],block_shape[0],...,sm/block_shape[m],block_shape[m]] +
-        #                 [remaining_dims]
-        values = []
-        for i in range(spatial_rank):
-            dim = mb.real_div(x=spatial_dims[i], y=block_shape[i])
-            values.append(mb.cast(x=dim, dtype="int32"))
-            values.append(block_shape[i])
-        values = batch_size + values + remaining_dims
-        reshape_shape = mb.concat(values=values, axis=0)
+        # reshape to [B, H_padded/block_shape, block_shape, C]
+        block_shape = block_shape[0]
+        batch_size = _value_at(padded_shape, 0)
+        spatial_dim = mb.real_div(x=_value_at(padded_shape, 1), y=block_shape)
+        spatial_dim = mb.cast(x=spatial_dim, dtype="int32")
+        remain_dim = _value_at(padded_shape, 2)
+        reshape_shape = mb.concat(values=[batch_size, spatial_dim, block_shape, remain_dim], axis=0)
         reshaped_padded = mb.reshape(x=padded, shape=reshape_shape)
 
-        # permute the shape to : [block_shape] + [batch_size] +
-        #                        [s0/block_shape[0],...,sm/block_shape[m]] +
-        #                        [remaining_dims]
-        batch_axis = [0]
-        block_shape_axis = [2 + 2 * i for i in range(spatial_rank)]
-        spatial_axis = [1 + 2 * i for i in range(spatial_rank)]
-        remaining_axis = list(range(block_shape_axis[-1] + 1, len(values)))
-        perm = block_shape_axis + batch_axis + spatial_axis + remaining_axis
-        permuted_reshaped_padded = mb.transpose(x=reshaped_padded, perm=perm)
+        # permute the shape to: [block_shape, B, H_padded/block_shape, C]
+        permuted_reshaped_padded = mb.transpose(x=reshaped_padded, perm=[2, 0, 1, 3])
 
-        # reshape the tensor to [prod(block_shape)*batch_size] +
-        #                       [s0/block_shape[0],...,sm/block_shape[m],block_shape[m]] +
-        #                       [remaining_dims]
-        prod_block_shape = _np.prod(block_shape.flatten())
-        resize_batch_size = [mb.mul(x=values[0], y=prod_block_shape)]
-        resize_spatial_dims = [values[1 + 2 * i] for i in range(spatial_rank)]
-        final_reshape_values = resize_batch_size + resize_spatial_dims + remaining_dims
+        # reshape the tensor to [block_shape * B, H_padded/block_shape, C]
+        final_reshape_values = [mb.mul(x=batch_size, y=block_shape), spatial_dim, remain_dim]
         final_shape = mb.concat(values=final_reshape_values, axis=0)
-        x = mb.reshape(x=permuted_reshaped_padded, shape=final_shape, name=node.name)
-    else:
+        x = mb.reshape(x=permuted_reshaped_padded, shape=final_shape)
 
-        if block_shape[0] != block_shape[1]:
-            raise NotImplementedError(
-                "non-equal block shape is not yet supported for 4d input."
-            )
-        needs_paddings = any(paddings.flatten())
+    if has_non_unity_remaining_dims:
+        # Reshape the tensor from shape [batch_new, spatial_shape_new, remaining_dim_1 * ... * remaining_dim_N] back to 
+        # shape [batch_new, spatial_shape_new, remaining_shape]
+        x = _reshape_remaining_dimension_to_original_shape(x, original_shape, remaining_rank)
 
-        x = mb.transpose(x=x, perm=[3, 0, 1, 2])
-
-        if needs_paddings:
-            x = mb.pad(x=x, pad=paddings.flatten(), mode="constant")
-
-        x = mb.space_to_depth(x=x, block_size=block_shape[0])
-        x = mb.transpose(x=x, perm=[1, 2, 3, 0], name=node.name)
-
-    context.add(node.name, x)
+    context.add(node.name, mb.identity(x=x, name=node.name))
 
 
 @register_tf_op
@@ -2062,6 +2093,25 @@ def TopK(context, node):
     x = context[node.inputs[0]]
     k = context[node.inputs[1]]
     x = mb.topk(x=x, k=k.val, axis=-1, name=node.name)
+    context.add(node.name, x)
+
+
+@register_tf_op(tf_alias=["InTopKV2"])
+def InTopK(context, node):
+    x = context[node.inputs[0]]
+    target = context[node.inputs[1]]
+    k = context[node.inputs[2]].val
+
+    _, class_num = x.shape
+    if not is_symbolic(class_num):
+        k = min(k, class_num)
+
+    _, indices = mb.topk(x=x, k=k, axis=-1)
+    target = mb.expand_dims(x=target, axes=[-1])
+    x = mb.equal(x=target, y=indices)
+    x = mb.cast(x=x, dtype="fp32")
+    x = mb.reduce_sum(x=x, axes=[-1], keep_dims=False)
+    x = mb.cast(x=x, dtype="bool", name=node.name)
     context.add(node.name, x)
 
 
@@ -2224,9 +2274,11 @@ def OneHot(context, node):
     )
     context.add(node.name, x)
 
-
-@register_tf_op(tf_alias=["NonMaxSuppressionV3"])
-def NonMaxSuppression(context, node):
+def _get_non_maximum_supression(context, node):
+    """
+    The helper function returns the outputs from mb.non_maximum_suppression,
+    along with the number of boxes and the maximum number of boxes.
+    """
     boxes = context[node.inputs[0]]
     scores = context[node.inputs[1]]
     max_boxes = context[node.inputs[2]]
@@ -2238,7 +2290,7 @@ def NonMaxSuppression(context, node):
         score_threshold = -3.4e38
     boxes = mb.expand_dims(x=boxes, axes=[0])
     scores = mb.expand_dims(x=scores, axes=[0, -1])
-    _, _, x, _ = mb.non_maximum_suppression(
+    coordinates, scores, indices, valid_outputs = mb.non_maximum_suppression(
         boxes=boxes,
         scores=scores,
         max_boxes=max_boxes,
@@ -2246,12 +2298,39 @@ def NonMaxSuppression(context, node):
         score_threshold=score_threshold,
     )
     num_boxes = boxes.shape[1]
-    if not is_symbolic(num_boxes) and num_boxes < max_boxes.val:
-        x = mb.squeeze(x=x, axes=[0])
-        x = mb.slice_by_index(x=x, begin=[0], end=[num_boxes], name=node.name)
+
+    return coordinates, scores, indices, valid_outputs, num_boxes, max_boxes.val
+
+@register_tf_op(tf_alias=["NonMaxSuppressionV3"])
+def NonMaxSuppression(context, node):
+    _, _, indices, _, num_boxes, max_boxes = _get_non_maximum_supression(context, node)
+
+    if not is_symbolic(num_boxes) and num_boxes < max_boxes:
+        indices = mb.squeeze(x=indices, axes=[0])
+        indices = mb.slice_by_index(x=indices, begin=[0], end=[num_boxes], name=node.name)
     else:
-        x = mb.squeeze(x=x, axes=[0], name=node.name)
-    context.add(node.name, x)
+        indices = mb.squeeze(x=indices, axes=[0], name=node.name)
+    context.add(node.name, indices)
+
+
+@register_tf_op
+def NonMaxSuppressionV5(context, node):
+    """
+    Different from NonMaxSuppression/NonMaxSuppressionV3, which only returns the indices of the selected boxes,
+    NonMaxSuppressionV5 returns all indices, scores and number of the selected boxes.
+    """
+    _, scores, indices, valid_outputs, num_boxes, max_boxes = _get_non_maximum_supression(context, node)
+    soft_nms_sigma = context[node.inputs[5]].val
+    if soft_nms_sigma != 0:
+        raise NotImplementedError("NonMaxSuppressionV5 with soft_nms_sigma != 0 not supported.")
+    scores = mb.squeeze(x=scores, axes=[0, -1])
+    indices = mb.squeeze(x=indices, axes=[0])
+    valid_outputs = mb.squeeze(x=valid_outputs, axes=[0])
+    if not is_symbolic(num_boxes) and num_boxes < max_boxes:
+        scores = mb.slice_by_index(x=scores, begin=[0], end=[num_boxes])
+        indices = mb.slice_by_index(x=indices, begin=[0], end=[num_boxes])
+    res = [indices, scores, valid_outputs]
+    context.add(node.name, res)
 
 
 @register_tf_op
@@ -2935,13 +3014,15 @@ def LSTMBlockCell(context, node):
     )
     context.add(node.name, res)
 
-
-@register_tf_op()
+@register_tf_op(tf_alias=["BlockLSTMV2"])
 def BlockLSTM(context, node):
+    # BlockLSTM: https://www.tensorflow.org/api_docs/python/tf/raw_ops/BlockLSTM
+    # BlockLSTMV2: https://www.tensorflow.org/api_docs/python/tf/raw_ops/BlockLSTMV2
     seq_len = context[node.inputs[0]]  # int
     x = context[node.inputs[1]]  # [padded_len, batch, input_dim]
     init_c = context[node.inputs[2]]  # [1, hidden_dim]
     init_h = context[node.inputs[3]]  # [1, hidden_dim]
+    # BlockLSTM: icfo format, BlockLSTMV2: ifco format
     weight = context[node.inputs[4]]  # [input_dim + hidden_dim, 4*hidden_dim]
 
     kwargs = {}
@@ -2954,12 +3035,23 @@ def BlockLSTM(context, node):
         kwargs["weight_peep_f"] = peep_f
         kwargs["weight_peep_o"] = peep_o
 
+    # BlockLSTM: icfo format, BlockLSTMV2: ifco format
     bias = context[node.inputs[8]]  # [4*hidden_dim,]
 
-    forget_bias = node.attr["forget_bias"]
+    # forget bias is always 0 for BlockLSTMV2
+    forget_bias = 0.0 if node.op == "BlockLSTMV2" else node.attr["forget_bias"]
     cell_clip = None
     if node.attr["cell_clip"] is not None and node.attr["cell_clip"] > 0:
         cell_clip = node.attr["cell_clip"]
+
+    if node.op == "BlockLSTMV2":
+        # mb.tf_lstm_block takes weights and bias in icfo format
+        # BlockLSTMV2's weights and bias are in ifco format
+        # convert from ifco to icfo format
+        w_i, w_f, w_c, w_o = mb.split(x=weight, num_splits=4, axis=-1)
+        weight = mb.concat(values=(w_i, w_c, w_f, w_o), axis=1, name=weight.name)
+        b_i, b_f, b_c, b_o = mb.split(x=bias, num_splits=4, axis=-1)
+        bias = mb.concat(values=(b_i, b_c, b_f, b_o), axis=0, name=bias.name)
 
     res = mb.tf_lstm_block(
         seq_len=seq_len,

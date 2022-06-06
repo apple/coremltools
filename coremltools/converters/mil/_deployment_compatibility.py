@@ -3,20 +3,22 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from enum import Enum
+from enum import IntEnum
 
 from coremltools import (
     _SPECIFICATION_VERSION_IOS_13,
     _SPECIFICATION_VERSION_IOS_14,
-    _SPECIFICATION_VERSION_IOS_15
+    _SPECIFICATION_VERSION_IOS_15,
+    _SPECIFICATION_VERSION_IOS_16,
 )
 
 
-class AvailableTarget(Enum):
+class AvailableTarget(IntEnum):
     # iOS versions
     iOS13 = _SPECIFICATION_VERSION_IOS_13
     iOS14 = _SPECIFICATION_VERSION_IOS_14
     iOS15 = _SPECIFICATION_VERSION_IOS_15
+    iOS16 = _SPECIFICATION_VERSION_IOS_16
 
     # macOS versions (aliases of iOS versions)
     macOS15 = _SPECIFICATION_VERSION_IOS_13
@@ -25,16 +27,19 @@ class AvailableTarget(Enum):
     macOS10_16 = _SPECIFICATION_VERSION_IOS_14
     macOS11 = _SPECIFICATION_VERSION_IOS_14
     macOS12 = _SPECIFICATION_VERSION_IOS_15
+    macOS13 = _SPECIFICATION_VERSION_IOS_16
 
     # watchOS versions (aliases of iOS versions)
     watchOS6 = _SPECIFICATION_VERSION_IOS_13
     watchOS7 = _SPECIFICATION_VERSION_IOS_14
     watchOS8 = _SPECIFICATION_VERSION_IOS_15
+    watchOS9 = _SPECIFICATION_VERSION_IOS_16
 
     # tvOS versions (aliases of iOS versions)
     tvOS13 = _SPECIFICATION_VERSION_IOS_13
     tvOS14 = _SPECIFICATION_VERSION_IOS_14
     tvOS15 = _SPECIFICATION_VERSION_IOS_15
+    tvOS16 = _SPECIFICATION_VERSION_IOS_16
 
 
 _get_features_associated_with = {}

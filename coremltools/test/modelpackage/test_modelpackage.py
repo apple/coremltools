@@ -10,7 +10,7 @@ import shutil
 import tempfile
 
 import coremltools
-from coremltools import utils
+from coremltools import ComputeUnit, utils
 from coremltools.converters.mil import Builder as mb
 from coremltools.libmodelpackage import ModelPackage
 from coremltools.models import MLModel
@@ -254,7 +254,7 @@ class TestMLModel:
             assert os.path.exists(ModelPackage(package_path).getRootModel().path())
 
             # Read back the saved bundle and compile
-            mlmodel2 = MLModel(package_path, useCPUOnly=True)
+            mlmodel2 = MLModel(package_path, compute_units=ComputeUnit.CPU_ONLY)
 
             if utils._macos_version() >= (12, 0):
                 result = mlmodel2.predict(

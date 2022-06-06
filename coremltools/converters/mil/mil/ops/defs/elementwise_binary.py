@@ -24,7 +24,7 @@ class elementwise_binary(Operation):
     input_spec = InputSpec(x=ScalarOrTensorInputType(), y=ScalarOrTensorInputType(),)
 
     def __init__(self, **kwargs):
-        super(elementwise_binary, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         typea = self.x.sym_type
@@ -106,7 +106,7 @@ class add(elementwise_binary):
     """
     
     def __init__(self, **kwargs):
-        super(add, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def get_operator(self):
         return operator.add
@@ -138,7 +138,7 @@ class equal(elementwise_binary):
     """
 
     def __init__(self, **kwargs):
-        super(equal, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def get_operator(self):
         return np.equal

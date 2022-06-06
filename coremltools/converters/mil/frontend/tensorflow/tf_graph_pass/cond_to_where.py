@@ -1,14 +1,12 @@
-# -*- coding: utf-8 -*-
-
 #  Copyright (c) 2020, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import logging
+
 from ..basic_graph_ops import delete_node, disconnect_edge
 from .visitors import FindAllUpstreamTerminals
-
-import logging
 from coremltools._deps import _HAS_TF_2
 
 
@@ -34,7 +32,7 @@ def compute_max_rank(graph):
     return ret
 
 
-class CondToWhere(object):
+class CondToWhere:
     @staticmethod
     def _search(g, node_name):
         """

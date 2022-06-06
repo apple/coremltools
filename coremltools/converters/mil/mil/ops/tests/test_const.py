@@ -2,14 +2,16 @@
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
+
 import itertools
+
 import numpy as np
 import pytest
 
+from .testing_utils import run_compare_builder
 from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.mil import Builder as mb, types
 
-from .testing_utils import run_compare_builder
 
 backends = testing_reqs.backends
 
@@ -36,6 +38,8 @@ class TestConst:
     def test_builder_to_backend_smoke(self, use_cpu_for_conversion, backend, dtype):
         if backend[0] == "mlprogram" and not use_cpu_for_conversion:
             pytest.xfail("rdar://78343191 ((MIL GPU) Core ML Tools Unit Test failures [failure to load or Seg fault])")
+        if backend[0] == "mlprogram" and dtype in [np.uint8, np.int8, np.uint32]:
+            pytest.xfail("Data type not supported")
 
         t = np.random.randint(0, 5, (4, 2)).astype(np.float32)
         constant = np.random.randint(0, 5, (4, 2)).astype(dtype)
@@ -62,5 +66,4 @@ class TestConst:
             use_cpu_only=use_cpu_for_conversion,
             frontend_only=False,
             backend=backend,
-            use_cpu_for_conversion=use_cpu_for_conversion,
         )

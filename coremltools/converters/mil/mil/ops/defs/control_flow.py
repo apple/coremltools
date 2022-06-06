@@ -2,9 +2,11 @@
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
+
 import copy
-import numpy as np
 import logging
+
+import numpy as np
 
 from coremltools.converters.mil.mil import (
     Block,
@@ -26,6 +28,7 @@ from coremltools.converters.mil.mil.input_type import (
     TensorInputType,
     TupleInputType,
     StringInputType,
+    InternalInputType,
 )
 from coremltools.converters.mil.mil.operation import (
     mil_list,
@@ -37,6 +40,8 @@ from coremltools.converters.mil.mil.operation import (
 )
 from coremltools.converters.mil.mil.types import is_compatible_type
 from coremltools.converters.mil.mil.types.type_mapping import (
+    builtin_to_string,
+    numpy_type_to_builtin_type,
     numpy_val_to_builtin_val,
     is_subtype,
 )
@@ -64,6 +69,12 @@ class cond(Operation):
         * It must take zero input (i.e. no input), and have return types that match those of the
           ``if`` branch.
 
+    _existing_blocks: list[Block] (Optional)
+        * Python list of ``Block``.
+        * For internal use only. When converting a milproto, we already got existing blocks,
+          and the ``build_nested_blocks`` function can use them directly.
+        * When ``_existing_blocks`` is set, ``_true_fn`` and ``_false_fn`` must be dummy functions which returns ``None``. 
+
     Returns
     -------
     tuple
@@ -74,12 +85,22 @@ class cond(Operation):
         pred=BoolInputType(),
         _true_fn=PyFunctionInputType(),
         _false_fn=PyFunctionInputType(),
+        _existing_blocks=InternalInputType(optional=True),
     )
 
     def __init__(self, **kwargs):
-        super(cond, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def build_nested_blocks(self):
+        # If the front end is milproto, we already have the well constructed cond/body block.
+        # For this case, we set self.blocks directly.
+        # We also check that _cond and _body are both dummy functions (return None).
+        if self._existing_blocks is not None and self._existing_blocks.val is not None:
+            assert self._true_fn.val([]) is None
+            assert self._false_fn.val([]) is None
+            self.blocks = self._existing_blocks.val
+            return
+
         # Cond block
         true_block_name = self.name + "_true"
         with Block(name=true_block_name, outer_op=self) as true_block:
@@ -153,7 +174,7 @@ class Const(Operation):
     )
 
     def __init__(self, **kwargs):
-        super(Const, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         builtin_type, _ = self._get_type_val(self.val.val)
@@ -175,9 +196,9 @@ class Const(Operation):
             value = np.array(value)
 
             # For the int type, we use int32 by default
-            if value.dtype in [np.uint8, np.int8, np.uint16, np.int16, np.uint32, np.uint64, np.int64]:
+            if value.dtype in [np.uint16, np.int16, np.uint64, np.int64]:
                 if value.dtype in [np.uint64, np.int64]:
-                    msg = "Downcast const op {} data int64 as int32".format(self.name)
+                    msg = "Downcast const op {} data".format(self.name) + builtin_to_string(numpy_type_to_builtin_type(value.dtype)) + " as int32"
                     logging.debug(msg)
                 value = value.astype(np.int32)
 
@@ -209,17 +230,18 @@ class Const(Operation):
         _, builtin_type = numpy_val_to_builtin_val(value)
         return builtin_type, value
 
+
 @register_op(doc_str="")
 class const(Const):
     def __init__(self, **kwargs):
-        super(const, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
 
 # Internal const can have symbolic value (for testing purpose)
 @register_op(doc_str="")
 class _const_symbolic(const):
     def __init__(self, **kwargs):
-        super(_const_symbolic, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         builtin_type, _ = self._get_type_val(self.val.sym_val)
@@ -274,7 +296,7 @@ class select(Operation):
     )
 
     def __init__(self, **kwargs):
-        super(select, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         a_type = self.a.sym_type
@@ -315,6 +337,12 @@ class while_loop(Operation):
     loop_vars: tuple (Required)
         * Python tuple of ``Variables``.
 
+    _existing_blocks: list[Block] (Optional)
+        * Python list of ``Block``.
+        * For internal use only. When converting a milproto, we already got existing blocks,
+          and the ``build_nested_blocks`` function can use them directly.
+        * When ``_existing_blocks`` is set, ``_cond`` and ``_body`` must be dummy functions which returns ``None``. 
+
     Returns
     -------
     tuple
@@ -326,10 +354,11 @@ class while_loop(Operation):
         _cond=PyFunctionInputType(),
         _body=PyFunctionInputType(),
         loop_vars=TupleInputType(),
+        _existing_blocks=InternalInputType(optional=True),
     )
 
     def __init__(self, **kwargs):
-        super(while_loop, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @staticmethod
     def _check_equal_value(val1, val2):
@@ -408,6 +437,15 @@ class while_loop(Operation):
         # in which we execute the cond block first to get the loop_cond. Only
         # if `loop_cond` is True do we execute the body block. This is the
         # semantics of tf.while_loop.
+
+        # If the front end is milproto, we already have the well constructed cond/body block.
+        # For this case, we set self.blocks directly.
+        # We also check that _cond and _body are both dummy functions (return None).
+        if self._existing_blocks is not None and self._existing_blocks.val is not None:
+            assert self._cond.val([]) is None
+            assert self._body.val([]) is None
+            self.blocks = self._existing_blocks.val
+            return
 
         block_inputs = tuple(copy.copy(v) for v in self.loop_vars)
         _, visible_vars = self.enclosing_block._visible_vars_in_block()
@@ -553,7 +591,7 @@ class make_list(Operation):
             )
 
     def __init__(self, **kwargs):
-        super(make_list, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         builtin_dtype = types.string_to_builtin(self.dtype.val)
@@ -608,7 +646,7 @@ class list_length(Operation):
     input_spec = InputSpec(ls=ListInputType(),)
 
     def __init__(self, **kwargs):
-        super(list_length, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         return types.int32
@@ -652,7 +690,7 @@ class list_write(Operation):
     )
 
     def __init__(self, **kwargs):
-        super(list_write, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         list_elem_type = self.ls.elem_type
@@ -706,7 +744,7 @@ class list_read(Operation):
         )
 
     def __init__(self, **kwargs):
-        super(list_read, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         list_elem_type = self.ls.elem_type
@@ -748,7 +786,7 @@ class list_gather(Operation):
         )
 
     def __init__(self, **kwargs):
-        super(list_gather, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         list_elem_type = self.ls.elem_type
@@ -800,7 +838,7 @@ class list_scatter(Operation):
     )
 
     def __init__(self, **kwargs):
-        super(list_scatter, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         num_indices = self.indices.shape[0]

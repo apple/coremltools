@@ -25,6 +25,13 @@ from .activation import (
 
 from .classify import classify
 
+from .constexpr_ops import (
+    constexpr_affine_dequantize,
+    constexpr_cast,
+    constexpr_lut_to_dense,
+    constexpr_sparse_to_dense,
+)
+
 from .control_flow import (
     cond,
     const,
@@ -193,6 +200,7 @@ from .tensor_transformation import (
     slice_by_index,
     slice_by_size,
     space_to_depth,
+    space_to_batch,
     squeeze,
     transpose,
     pixel_shuffle,

@@ -1,14 +1,22 @@
+# Copyright (c) 2017, Apple Inc. All rights reserved.
+#
+# Use of this source code is governed by a BSD-3-clause license that can be
+# found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
+
+import itertools
 import unittest
+
 import numpy as np
-import coremltools.models.datatypes as datatypes
-from coremltools.models import neural_network as neural_network
-from coremltools.models import MLModel
-from coremltools.models.utils import _is_macos, _macos_version
+
+from coremltools import ComputeUnit
 from coremltools._deps import _HAS_TF, MSG_TF1_NOT_FOUND
+from coremltools.models import MLModel, neural_network
+import coremltools.models.datatypes as datatypes
+from coremltools.models.utils import _is_macos, _macos_version
 
 if _HAS_TF:
     import tensorflow as tf
-import itertools
+
 
 np.random.seed(10)
 np.set_printoptions(precision=4, suppress=True)
@@ -55,9 +63,8 @@ class CorrectnessTest(unittest.TestCase):
         coreml_model,
         snr_thresh=15,
         psnr_thresh=30,
-        cpu_only=False,
     ):
-        coreml_out_dict = coreml_model.predict(input_dict, useCPUOnly=cpu_only)
+        coreml_out_dict = coreml_model.predict(input_dict)
         for out_ in list(ref_output_dict.keys()):
             ref_out = ref_output_dict[out_].flatten()
             coreml_out = coreml_out_dict[out_].flatten()
@@ -69,9 +76,6 @@ class CorrectnessTest(unittest.TestCase):
 
 @unittest.skipUnless(_is_macos(), "Only supported for MacOS platform.")
 class StressTest(CorrectnessTest):
-    def runTest(self):
-        pass
-
     def test_data_reorganize(self, cpu_only=False):
         def get_coreml_model_reorganize(X, params):
             eval = True
@@ -90,7 +94,12 @@ class StressTest(CorrectnessTest):
                     mode=params["mode"],
                     block_size=params["block_size"],
                 )
-                mlmodel = MLModel(builder.spec)
+
+                if cpu_only:
+                    compute_unit=ComputeUnit.CPU_ONLY
+                else:
+                    compute_unit=ComputeUnit.ALL
+                mlmodel = MLModel(builder.spec, compute_units=compute_unit)
             except RuntimeError as e:
                 print(e)
                 eval = False
@@ -156,9 +165,7 @@ class StressTest(CorrectnessTest):
             else:
                 input_dict = {"data": np.expand_dims(X, axis=0)}
                 ref_output_dict = {"output": tf_preds[0, :, :, :]}
-                self._test_model(
-                    input_dict, ref_output_dict, coreml_model, cpu_only=cpu_only
-                )
+                self._test_model(input_dict, ref_output_dict, coreml_model)
 
         self.assertEqual(failed_tests_compile, [])
 
@@ -210,7 +217,11 @@ class StressTest(CorrectnessTest):
                     output_name="output",
                 )
 
-                mlmodel = MLModel(builder.spec)
+                if cpu_only:
+                    compute_unit=ComputeUnit.CPU_ONLY
+                else:
+                    compute_unit=ComputeUnit.ALL
+                mlmodel = MLModel(builder.spec, compute_units=compute_unit)
             except RuntimeError as e:
                 print(e)
                 eval = False
@@ -286,9 +297,7 @@ class StressTest(CorrectnessTest):
             else:
                 input_dict = {"data": np.expand_dims(X, axis=0)}
                 ref_output_dict = {"output": tf_preds[0, :, :, :]}
-                self._test_model(
-                    input_dict, ref_output_dict, coreml_model, cpu_only=cpu_only
-                )
+                self._test_model(input_dict, ref_output_dict, coreml_model)
 
         self.assertEqual(failed_tests_compile, [])
 
@@ -319,7 +328,13 @@ class StressTest(CorrectnessTest):
                     target_width=params["Wnew"],
                     mode=mode,
                 )
-                mlmodel = MLModel(builder.spec)
+
+                if cpu_only:
+                    compute_unit=ComputeUnit.CPU_ONLY
+                else:
+                    compute_unit=ComputeUnit.ALL
+
+                mlmodel = MLModel(builder.spec, compute_units=compute_unit)
             except RuntimeError as e:
                 print(e)
                 eval = False
@@ -385,9 +400,7 @@ class StressTest(CorrectnessTest):
             else:
                 input_dict = {"data": np.expand_dims(X, axis=0)}
                 ref_output_dict = {"output": np.expand_dims(tf_preds, axis=0)}
-                self._test_model(
-                    input_dict, ref_output_dict, coreml_model, cpu_only=cpu_only
-                )
+                self._test_model(input_dict, ref_output_dict, coreml_model)
 
         self.assertEqual(failed_tests_compile, [])
 
@@ -432,7 +445,12 @@ class StressTest(CorrectnessTest):
                     box_indices_mode="CORNERS_HEIGHT_FIRST",
                     spatial_scale=1.0,
                 )
-                mlmodel = MLModel(builder.spec)
+
+                if cpu_only:
+                    compute_unit=ComputeUnit.CPU_ONLY
+                else:
+                    compute_unit=ComputeUnit.ALL
+                mlmodel = MLModel(builder.spec, compute_units=compute_unit)
             except RuntimeError as e:
                 print(e)
                 eval = False
@@ -509,9 +527,7 @@ class StressTest(CorrectnessTest):
                         box_ind.astype(np.float32), (n_roi, 1, 1, 1, 1)
                     )
                 ref_output_dict = {"output": np.expand_dims(tf_preds, axis=0)}
-                self._test_model(
-                    input_dict, ref_output_dict, coreml_model, cpu_only=cpu_only
-                )
+                self._test_model(input_dict, ref_output_dict, coreml_model)
 
         self.assertEqual(failed_tests_compile, [])
 

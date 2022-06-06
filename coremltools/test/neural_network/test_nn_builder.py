@@ -9,6 +9,8 @@ import numpy as np
 import pytest
 
 import coremltools
+from coremltools import ComputeUnit
+from coremltools.converters.mil.mil.types.type_mapping import np_val_to_py_type
 from coremltools.models import datatypes, MLModel
 from coremltools.models.neural_network import NeuralNetworkBuilder
 from coremltools.models.neural_network.quantization_utils import (
@@ -16,7 +18,7 @@ from coremltools.models.neural_network.quantization_utils import (
     quantize_weights,
 )
 from coremltools.models.utils import _macos_version, _is_macos
-from coremltools.converters.mil.backend.nn.op_mapping import to_py_type
+
 
 MIN_MACOS_VERSION_REQUIRED = (10, 13)
 LAYERS_10_14_MACOS_VERSION = (10, 14)
@@ -169,7 +171,7 @@ class BasicNumericCorrectnessTest_1014NewLayers(unittest.TestCase):
             quant_bias=quant_bias,
             quant_lut=quant_lut,
         )
-        return MLModel(builder.spec)
+        return MLModel(builder.spec, compute_units=ComputeUnit.CPU_ONLY)
 
     def test_linear_quant_convolution_8bit(self):
         W = np.ones((2, 2, 1, 2), dtype=np.uint8)
@@ -183,7 +185,7 @@ class BasicNumericCorrectnessTest_1014NewLayers(unittest.TestCase):
         )
         data = np.ones((1, 2, 2))
         data_dict = {"data": data}
-        out = mlmodel.predict(data_dict, useCPUOnly=True)["out"]
+        out = mlmodel.predict(data_dict)["out"]
         expected_out = np.reshape(np.array([8, 24]), (2, 1, 1))
         self.assertTrue(np.allclose(out, expected_out))
 
@@ -199,7 +201,7 @@ class BasicNumericCorrectnessTest_1014NewLayers(unittest.TestCase):
         )
         data = np.ones((1, 2, 2))
         data_dict = {"data": data}
-        out = mlmodel.predict(data_dict, useCPUOnly=True)["out"]
+        out = mlmodel.predict(data_dict)["out"]
         expected_out = np.reshape(np.array([8, 44]), (2, 1, 1))
         self.assertTrue(np.allclose(out, expected_out))
 
@@ -215,7 +217,7 @@ class BasicNumericCorrectnessTest_1014NewLayers(unittest.TestCase):
         )
         data = np.ones((1, 2, 2))
         data_dict = {"data": data}
-        out = mlmodel.predict(data_dict, useCPUOnly=True)["out"]
+        out = mlmodel.predict(data_dict)["out"]
         # Output should be equal to: (scale*(1+248+248+248)+(4*bias))
         expected_out = np.reshape(np.array([-4477]), (1, 1, 1, 1, 1))
         self.assertTrue(np.allclose(out, expected_out))
@@ -230,7 +232,7 @@ class BasicNumericCorrectnessTest_1014NewLayers(unittest.TestCase):
         )
         data = np.ones((1, 2, 2))
         data_dict = {"data": data}
-        out = mlmodel.predict(data_dict, useCPUOnly=True)["out"]
+        out = mlmodel.predict(data_dict)["out"]
         expected_out = np.reshape(np.array([40, -12]), (2, 1, 1))
         self.assertTrue(np.allclose(out, expected_out))
 
@@ -323,12 +325,12 @@ class BasicNumericCorrectnessTest_1015NewLayers(unittest.TestCase):
             quant_scale=quant_scale.flatten(),
             quant_bias=quant_bias.flatten(),
         )
-        mlmodel = MLModel(builder.spec)
+        mlmodel = MLModel(builder.spec, compute_units=ComputeUnit.CPU_ONLY)
         data = np.zeros((2, 2), dtype=np.float32)
         data[0, :] = [5, 6]
         data[1, :] = [10, 12]
         data_dict = {"data": data}
-        out = mlmodel.predict(data_dict, useCPUOnly=True)["out"]
+        out = mlmodel.predict(data_dict)["out"]
         expected_out = np.matmul(data, W_unquantized) + bias
         self.assertTrue(out.shape == expected_out.shape)
         self.assertTrue(np.allclose(out.flatten(), expected_out.flatten()))
@@ -352,7 +354,7 @@ class BasicNumericCorrectnessTest_1015NewLayers(unittest.TestCase):
             W=W,
             bias=bias,
         )
-        mlmodel = MLModel(builder.spec)
+        mlmodel = MLModel(builder.spec, compute_units=ComputeUnit.CPU_ONLY)
         q_mlmodel = quantize_weights(mlmodel, 8)
         q_spec = q_mlmodel.get_spec()
         q_layer = q_spec.neuralNetwork.layers[0].batchedMatmul
@@ -362,7 +364,7 @@ class BasicNumericCorrectnessTest_1015NewLayers(unittest.TestCase):
 
         data = np.random.rand(2, 32)
         data_dict = {"data": data}
-        out = q_mlmodel.predict(data_dict, useCPUOnly=True)["out"]
+        out = q_mlmodel.predict(data_dict)["out"]
         expected_out = np.matmul(data, W) + bias
         self.assertTrue(out.shape == expected_out.shape)
         self.assertTrue(np.allclose(out.flatten(), expected_out.flatten(), atol=0.1))
@@ -396,10 +398,10 @@ class BasicNumericCorrectnessTest_1015NewLayers(unittest.TestCase):
             quant_lut=quant_lut,
         )
 
-        mlmodel = MLModel(builder.spec)
+        mlmodel = MLModel(builder.spec, compute_units=ComputeUnit.CPU_ONLY)
         data = np.reshape(np.array([2.0, 2.0, 1.0, 0.0]), (4, 1))
         data_dict = {"data": data}
-        out = mlmodel.predict(data_dict, useCPUOnly=True)["out"]
+        out = mlmodel.predict(data_dict)["out"]
         expected_out = np.zeros((4, embed_size), dtype=np.float32)
         expected_out[0, :] = [quant_lut[W[0, 2]], quant_lut[W[1, 2]]] + bias
         expected_out[1, :] = [quant_lut[W[0, 2]], quant_lut[W[1, 2]]] + bias
@@ -441,14 +443,14 @@ class BasicNumericCorrectnessTest_1015NewLayers(unittest.TestCase):
             is_quantized_weight=True,
             quantization_type="linear",
             nbits=7,
-            quant_scale=to_py_type(quant_scale),
-            quant_bias=to_py_type(quant_bias),
+            quant_scale=np_val_to_py_type(quant_scale),
+            quant_bias=np_val_to_py_type(quant_bias),
         )
 
-        mlmodel = MLModel(builder.spec)
+        mlmodel = MLModel(builder.spec, compute_units=ComputeUnit.CPU_ONLY)
         data = np.reshape(np.array([2.0, 2.0, 1.0, 0.0]), (4, 1, 1, 1))
         data_dict = {"data": data}
-        out = mlmodel.predict(data_dict, useCPUOnly=True)["out"]
+        out = mlmodel.predict(data_dict)["out"]
         self.assertTrue(out.shape == (4, embed_size, 1, 1))
         expected_out = np.zeros((4, embed_size), dtype=np.float32)
         expected_out[0, :] = W_unquantized[:, 2].flatten()

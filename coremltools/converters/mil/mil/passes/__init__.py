@@ -31,6 +31,7 @@ from . import (
     noop_elimination,
     onehot_matmul_to_gather,
     pad_conv_connect,
+    prelu_fusion,
     quantization_passes,
     rank0_expand_dims_swap,
     reduce_mean_fusion,
@@ -40,7 +41,8 @@ from . import (
     replace_stack_reshape,
     sanitize_input_output_names,
     topological_reorder,
-    use_reflection_padding
+    use_reflection_padding,
+    update_output_dtypes,
 )
 
 from coremltools.converters.mil.experimental.passes import (

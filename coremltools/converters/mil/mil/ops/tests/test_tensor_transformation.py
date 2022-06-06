@@ -49,6 +49,82 @@ class TestDepthToSpace:
         )
 
 
+class TestSpaceToBatch:
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend", itertools.product([True, False], backends,)
+    )
+    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+        # original input type is (2, 1, 2, 4, fp32)
+        val = np.array([[[[ 1,  2,  3,  4],
+                          [ 5,  6,  7,  8]]],
+                        [[[ 9, 10, 11, 12],
+                          [13, 14, 15, 16]]]], dtype=np.float32)
+        input_placeholders = {"x": mb.placeholder(shape=val.shape)}
+        input_values = {"x": val}
+
+        def build(x):
+            return [mb.space_to_batch(x=x, block_shape=[2, 2], paddings=[[0, 0], [2, 0]])]
+
+        expected_output_types = (8, 1, 1, 3, types.fp32)
+        expected_outputs = np.array([[[[ 0,  1,  3]]],
+                                     [[[ 0,  9, 11]]],
+                                     [[[ 0,  2,  4]]],
+                                     [[[ 0, 10, 12]]],
+                                     [[[ 0,  5,  7]]],
+                                     [[[ 0, 13, 15]]],
+                                     [[[ 0,  6,  8]]],
+                                     [[[ 0, 14, 16]]]], dtype=np.float32)
+
+        run_compare_builder(
+            build,
+            input_placeholders,
+            input_values,
+            expected_output_types,
+            expected_outputs,
+            use_cpu_only=use_cpu_only,
+            frontend_only=False,
+            backend=backend,
+        )
+
+
+class TestBatchToSpace:
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend", itertools.product([True, False], backends,)
+    )    
+    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+        # original input type is (8, 1, 1, 3, fp32)
+        val = np.array([[[[ 0,  1,  3]]],
+                       [[[ 0,  9, 11]]],
+                       [[[ 0,  2,  4]]],
+                       [[[ 0, 10, 12]]],
+                       [[[ 0,  5,  7]]],
+                       [[[ 0, 13, 15]]],
+                       [[[ 0,  6,  8]]],
+                       [[[ 0, 14, 16]]]], dtype=np.float32)
+        input_placeholders = {"x": mb.placeholder(shape=val.shape)}
+        input_values = {"x": val}
+
+        def build(x):
+            return [mb.batch_to_space(x=x, block_shape=[2, 2], crops=[[0, 0], [2, 0]])]
+
+        expected_output_types = (2, 1, 2, 4, types.fp32)
+        expected_outputs = np.array([[[[ 1,  2,  3,  4],
+                                       [ 5,  6,  7,  8]]],
+                                     [[[ 9, 10, 11, 12],
+                                       [13, 14, 15, 16]]]], dtype=np.float32)
+
+        run_compare_builder(
+            build,
+            input_placeholders,
+            input_values,
+            expected_output_types,
+            expected_outputs,
+            use_cpu_only=use_cpu_only,
+            frontend_only=False,
+            backend=backend,
+        )
+
+
 class TestExpandDims:
     @pytest.mark.parametrize(
         "use_cpu_only, backend", itertools.product([True, False], backends,)
@@ -645,7 +721,6 @@ class TestSqueeze:
             expected_outputs,
             use_cpu_only=use_cpu_for_conversion,
             backend=backend,
-            use_cpu_for_conversion=use_cpu_for_conversion,
         )
 
     @ssa_fn

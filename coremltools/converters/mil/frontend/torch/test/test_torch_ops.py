@@ -3,8 +3,9 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import sys
 import itertools
+import sys
+
 import numpy as np
 import pytest
 import torch.nn as nn
@@ -15,13 +16,18 @@ from .testing_utils import (
     ModuleWrapper,
     TorchBaseTest
 )
-from coremltools import RangeDim
-from coremltools.models.utils import _python_version
-from coremltools.models.utils import _macos_version
-from coremltools.converters.mil import testing_reqs
-
-from coremltools import TensorType
+import coremltools as ct
+from coremltools import (
+    RangeDim,
+    Shape,
+    TensorType
+)
 from coremltools._deps import version_lt
+from coremltools.converters.mil import testing_reqs
+from coremltools.models.utils import (
+    _macos_version,
+    _python_version
+)
 
 
 backends = testing_reqs.backends
@@ -36,15 +42,33 @@ COMMON_SHAPES_ALL = [(1, )] + COMMON_SHAPES
 
 class TestScriptedModels(TorchBaseTest):
 
-    @pytest.mark.parametrize(
-        "use_cpu_for_conversion, backend", itertools.product([True, False], backends)
-    )
-    def test_cond(self, use_cpu_for_conversion, backend):
-        if backend[0] == "mlprogram":
-            pytest.skip("rdar://81169758 (Cond tests hang on mlprogram backend)")
-        if backend[0] == "mlprogram" and not use_cpu_for_conversion:
-            pytest.xfail("rdar://78343191 ((MIL GPU) Core ML Tools Unit Test failures [failure to load or Seg fault])")
+    @staticmethod
+    def get_while_loop_model():
+        class TestLayer(nn.Module):
+            def __init__(self):
+                super(TestLayer, self).__init__()
 
+            def forward(self, x):
+                x = 0.5 * x
+                return x
+
+        class TestNet(nn.Module):
+            input_size = (1,)
+
+            def __init__(self):
+                super(TestNet, self).__init__()
+                layer = TestLayer()
+                self.layer = torch.jit.trace(layer, torch.rand(self.input_size))
+
+            def forward(self, x):
+                while x > 0.01:
+                    x = self.layer(x)
+                return x
+
+        return TestNet().eval()
+
+    @staticmethod
+    def get_cond_model():
         class TestNet(nn.Module):
             def forward(self, x):
                 if torch.squeeze(x) < 10.:
@@ -52,7 +76,18 @@ class TestScriptedModels(TorchBaseTest):
                 else:
                     return x*2.
 
-        torch_model = TestNet().eval()
+        return TestNet().eval()
+
+    @pytest.mark.parametrize("backend", backends)
+    def test_while_loop(self, backend):
+        model = TestScriptedModels.get_while_loop_model()
+        self.run_compare_torch(model.input_size, model, backend=backend, use_scripting=True)
+
+    @pytest.mark.parametrize(
+        "use_cpu_for_conversion, backend", itertools.product([True, False], backends)
+    )
+    def test_cond(self, use_cpu_for_conversion, backend):
+        torch_model = TestScriptedModels.get_cond_model()
 
         self.run_compare_torch(torch.tensor([1.]), torch_model,
             input_as_shape=False, backend=backend,
@@ -89,37 +124,7 @@ class TestScriptedModels(TorchBaseTest):
         self.run_compare_torch(model.input_size, model, backend=backend, use_scripting=True)
 
     @pytest.mark.parametrize("backend", backends)
-    def test_while_loop(self, backend):
-        class TestLayer(nn.Module):
-            def __init__(self):
-                super(TestLayer, self).__init__()
-
-            def forward(self, x):
-                x = 0.5 * x
-                return x
-
-        class TestNet(nn.Module):
-            input_size = (1,)
-
-            def __init__(self):
-                super(TestNet, self).__init__()
-                layer = TestLayer()
-                self.layer = torch.jit.trace(layer, torch.rand(self.input_size))
-
-            def forward(self, x):
-                while x > 0.01:
-                    x = self.layer(x)
-                return x
-
-        model = TestNet().eval()
-
-        self.run_compare_torch(model.input_size, model, backend=backend, use_scripting=True)
-
-    @pytest.mark.parametrize("backend", backends)
     def test_if(self, backend):
-        if backend[0] == 'mlprogram':
-            pytest.xfail("Not supported on ML Program backend")
-
         class TestLayer(nn.Module):
             def __init__(self):
                 super(TestLayer, self).__init__()
@@ -180,6 +185,27 @@ class TestScriptedModels(TorchBaseTest):
             backend=backend,
             use_scripting=True,
         )
+
+
+class TestMean(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "backend",
+        backends,
+    )
+    def test_with_flexible_shape(self, backend):
+        class Model(nn.Module):
+            def __init__(self):
+                super().__init__()
+
+            def forward(self, x):
+                return torch.mean(x, dim=(2, 3), keepdim=True)
+
+        model = Model()
+        shape = (1, 3, 256, 256)
+        converter_input_type = [TensorType(shape=Shape(shape=[1, 3, RangeDim(), RangeDim()],
+                                                       default=shape))]
+        self.run_compare_torch(shape, model, backend=backend,
+                               converter_input_type=converter_input_type)
 
 
 class TestAffineGrid(TorchBaseTest):
@@ -1013,7 +1039,143 @@ class TestConvTranspose(TorchBaseTest):
         self.run_compare_torch((1, in_channels, depth, height, width), model,
                            backend=backend)
 
+def _is_float_value(x, threshold=0.001):
+    return x - np.floor(x) > threshold
+
 class TestUpsample(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "output_size, align_corners, backend",
+        itertools.product(
+            [1, 3, 10, 190],
+            [True, False],
+            backends,
+        )
+    )
+    def test_upsample_linear1d_with_output_size(
+        self, output_size, align_corners, backend
+    ):
+        input_shape = (1, 3, 10)
+        output_size = 3
+        model = ModuleWrapper(
+            nn.functional.interpolate,
+            {"size": output_size, "mode": "linear", "align_corners": align_corners,},
+        )
+        self.run_compare_torch(input_shape, model, backend=backend)
+
+    @pytest.mark.parametrize(
+        "scale, align_corners, recompute_scale_factor, backend",
+        itertools.product(
+            [2, 0.5, 5.3], [True, False], [True, False], backends
+        )
+    )
+    def test_upsample_linear1d_with_scales(
+        self, scale, align_corners, recompute_scale_factor, backend
+    ):
+        Height = 8
+        input_shape = (1, 3, Height)
+        output_h = Height * scale
+        is_h_float = _is_float_value(output_h)
+        
+        if is_h_float and not align_corners and not recompute_scale_factor:
+            pytest.xfail("rdar://81124053 (Support recompute_scale_factor)")
+
+        model = ModuleWrapper(
+            nn.functional.interpolate,
+            {
+                "scale_factor": scale,
+                "mode": "linear",
+                "align_corners": align_corners,
+                "recompute_scale_factor": recompute_scale_factor,
+            },
+        )
+        self.run_compare_torch(input_shape, model, backend=backend)
+
+    @pytest.mark.parametrize(
+        "scales, align_corners, recompute_scale_factor, backend",
+        itertools.product(
+           [2, 0.7, 3.6], [True, False], [True, False], backends
+        )
+    )
+    def test_upsample_linear1d_with_scales_dynamic(
+        self, scales, align_corners, recompute_scale_factor, backend
+    ):
+
+        is_float = _is_float_value(scales)
+        input_shape = (1, 3, 22)
+
+        if is_float and not align_corners and not recompute_scale_factor:
+            pytest.xfail("rdar://81124053 (Support recompute_scale_factor)")
+
+        model = ModuleWrapper(
+            nn.functional.interpolate,
+            {
+                "scale_factor": scales,
+                "mode": "linear",
+                "align_corners": align_corners,
+                "recompute_scale_factor": recompute_scale_factor,
+            },
+        )
+        converter_input_type = [TensorType(shape=(1, 3, RangeDim(default=22)), dtype=np.float32)]
+        mlmodel = self.run_compare_torch(input_shape, model,
+                               backend=backend,
+                               converter_input_type=converter_input_type)[1]
+
+        # also check if the scale factor are integers
+        if backend[0] == 'neuralnetwork' and not is_float:
+            for layer in mlmodel._spec.neuralNetwork.layers:
+                if layer.WhichOneof('layer') == "upsample":
+                    assert len(layer.upsample.fractionalScalingFactor) == 0
+
+    @pytest.mark.parametrize(
+        "output_size, backend",
+        itertools.product(
+            [10, 170], backends
+        )
+    )
+    def test_upsample_nearest1d_with_output_size(self, output_size, backend):
+        input_shape = (1, 3, 10)
+        model = ModuleWrapper(
+            nn.functional.interpolate, {"size": output_size, "mode": "nearest"},
+        )
+        self.run_compare_torch(input_shape, model, backend=backend)
+
+    @pytest.mark.parametrize(
+        "scales, backend",
+        itertools.product([2, 3, 4.5], backends),
+    )
+    def test_upsample_nearest1d_with_scales(self, scales, backend):
+        if backend[0] == "neuralnetwork":
+            if isinstance(scales, float):
+                return  # Skip fractional scale factors tests for neuralnetwork
+
+        input_shape = (1, 3, 10)
+        model = ModuleWrapper(
+            nn.functional.interpolate,
+            {"scale_factor": scales, "mode": "nearest"},
+        )
+        self.run_compare_torch(input_shape, model, backend=backend)
+
+    @pytest.mark.parametrize(
+        "scales, backend",
+        itertools.product([2, 3], backends),
+    )
+    def test_upsample_nearest1d_with_scales_dynamic(self, scales, backend):
+        input_shape = (1, 3, 10)
+        model = ModuleWrapper(
+            nn.functional.interpolate,
+            {"scale_factor": scales, "mode": "nearest", "recompute_scale_factor": True,},
+        )
+        converter_input_type = [TensorType(shape=(1, 3, RangeDim()), dtype=np.float32)]
+        mlmodel = self.run_compare_torch(input_shape, model,
+                               backend=backend,
+                               converter_input_type=converter_input_type)[1]
+
+        # also check if the scale factor are integers
+        if backend[0] == 'neuralnetwork':
+            for layer in mlmodel._spec.neuralNetwork.layers:
+                if layer.WhichOneof('layer') == "upsample":
+                    assert len(layer.upsample.fractionalScalingFactor) == 0
+
     @pytest.mark.parametrize(
         "output_size, align_corners, backend",
         itertools.product(
@@ -1045,8 +1207,6 @@ class TestUpsample(TorchBaseTest):
     def test_upsample_bilinear2d_with_scales(
         self, scales_h, scales_w, align_corners, recompute_scale_factor, backend
     ):
-        def _is_float_value(x, threshold=0.001):
-            return x - np.floor(x) > threshold
 
         Height = 8
         Width = 22
@@ -1130,8 +1290,6 @@ class TestUpsample(TorchBaseTest):
     def test_upsample_bilinear2d_with_scales_dynamic(
         self, scales_h, scales_w, align_corners, recompute_scale_factor, backend
     ):
-        def _is_float_value(x, threshold=0.001):
-            return x - np.floor(x) > threshold
 
         is_h_float = _is_float_value(scales_h)
         is_w_float = _is_float_value(scales_w)
@@ -1159,6 +1317,26 @@ class TestUpsample(TorchBaseTest):
             for layer in mlmodel._spec.neuralNetwork.layers:
                 if layer.WhichOneof('layer') == "upsample":
                     assert len(layer.upsample.fractionalScalingFactor) == 0
+
+
+class TestEmptyLike(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "shape, backend",
+        itertools.product(
+            COMMON_SHAPES,
+            backends
+        )
+    )
+    def test_empty_like(self, backend, shape):
+        class TestModel(nn.Module):
+            def __init__(self):
+                super(TestModel, self).__init__()
+
+            def forward(self, x):
+                y = torch.empty_like(x)
+                return torch.Tensor([len(y)])
+
+        self.run_compare_torch(shape, TestModel(), backend=backend)
 
 
 class TestAvgPool(TorchBaseTest):
@@ -2043,7 +2221,7 @@ class TestTypeAs(TorchBaseTest):
     @pytest.mark.parametrize("backend, type",
         itertools.product(
             backends,
-            ["int32", "float16", "float32", "bool"]
+            ["int32", "float32", "bool"]
             )
         )
     def test_type_as(self, backend, type):
@@ -2241,7 +2419,6 @@ class TestLinspace(TorchBaseTest):
         ),
     )
     def test_linspace_dynamic(self, backend, start_end, steps):
-        input_shape = tuple([steps])
         start, end = start_end
         class Model(nn.Module):
             def __init__(self):
@@ -2296,7 +2473,6 @@ class TestArange(TorchBaseTest):
         ),
     )
     def test_arange_dynamic(self, backend, start_end_step):
-        input_shape = tuple([1,])
         start, end, step = start_end_step
         class Model(nn.Module):
             def __init__(self):
@@ -2308,6 +2484,7 @@ class TestArange(TorchBaseTest):
         model = Model()
         inputs = [torch.tensor([start, end, step])]
         self.run_compare_torch(inputs, model, backend=backend, input_as_shape=False)
+
 
 class TestEinsum(TorchBaseTest):
     @pytest.mark.parametrize(
@@ -2470,17 +2647,23 @@ class TestActivation(TorchBaseTest):
         )
 
     @pytest.mark.parametrize(
-        "backend, alpha, shape", 
+        "backend, alpha, shape, single_alpha", 
         itertools.product(
             backends, 
             [0.25, 2.0],
-            [(1, 5, 6, 7), (1, 128)],
+            [(3,), (2, 6), (2, 3, 4), (2, 5, 6, 7), (2, 3, 4, 5, 6)],
+            [True, False],
         ),
     )
-    def test_prelu(self, backend, alpha, shape):
+    def test_prelu(self, backend, alpha, shape, single_alpha):
+        if (backend[0] == "mlprogram" and backend[1] == "fp16"):
+            pytest.xfail("rdar://92175249 ([MIL] TestActivation::test_prelu[backend=(mlprogram, fp16)] CI failure)")
+
         input_shape = shape
-        C = input_shape[1] if len(input_shape) >= 3 else 1
-        model = nn.PReLU(C, alpha).eval()
+        num_parameters = input_shape[1] if len(input_shape) >= 2 else 1
+        if single_alpha:
+            num_parameters = 1
+        model = nn.PReLU(num_parameters, alpha).eval()
         self.run_compare_torch(
             input_shape, model, backend=backend,
         )
@@ -2730,9 +2913,16 @@ class TestElementWiseUnary(TorchBaseTest):
     )
     def test_threshold(self, backend, shape, threshold):
         model = torch.nn.Threshold(threshold[0], threshold[1]).eval()
+        input_value = torch.rand(np.prod(shape))
+        # make sure the values are not too close to the threshold
+        for i in range(len(input_value)):
+            if abs(input_value[i]-threshold[0]) < 0.005:
+                input_value[i] += 0.05
+        input_value = torch.reshape(input_value, shape)
         self.run_compare_torch(
-            shape, model, backend=backend,
+            input_value, model, backend=backend,
             use_cpu_for_conversion=True, # TODO: change this to False (rdar://78343191)
+            input_as_shape=False,
         )
 
     @pytest.mark.parametrize(
@@ -3965,13 +4155,13 @@ class TestIndex(TorchBaseTest):
 
             def forward(self, x):
                 if len(shape) == 3:
-                    index_1 = torch.tensor([0,0,0,0,0,0,0,0]).view(2,4)
-                    index_2 = torch.tensor([1,0,0,2,2,1,1,1]).view(2,4)
-                    return x[index_1, :,index_2]
+                    index_1 = torch.tensor([0, 0, 0, 0, 0, 0, 0, 0]).view(2, 4)
+                    index_2 = torch.tensor([1, 0, 0, 2, 2, 1, 1, 1]).view(2, 4)
+                    return x[index_1, :, index_2]
 
                 elif len(shape) == 4:
-                    index_1 = torch.tensor([0,1,1,1,1,1,0,0]).view(4,2)
-                    index_2 = torch.tensor([0,1,2,3,4,0,1,2]).view(4,2)
+                    index_1 = torch.tensor([0, 1, 1, 1, 1, 1, 0, 0]).view(4,2)
+                    index_2 = torch.tensor([0, 1, 2, 3, 4, 0, 1, 2]).view(4,2)
                     return x[index_1, :, :, index_2]
 
         model = IndexModel()
@@ -4035,6 +4225,7 @@ class TestIndex(TorchBaseTest):
             shape, model, backend=backend,
         )
 
+
 class TestPad(TorchBaseTest):
     @pytest.mark.parametrize(
         "backend, rank, mode",
@@ -4094,6 +4285,7 @@ class TestPad(TorchBaseTest):
         model = torch.nn.ConstantPad3d((5, 6, 3, 8, 2, 4), 3.5).eval()
         self.run_compare_torch(input_shape, model, backend=backend)
 
+
 class TestMeshgrid(TorchBaseTest):
     @pytest.mark.parametrize(
         "rows, cols, dtype, inp_mode, backend",
@@ -4131,7 +4323,66 @@ class TestMeshgrid(TorchBaseTest):
             inputs, model, expected_results, input_as_shape=False, backend=backend,
         )
 
-class TestSacatterAdd(TorchBaseTest):
+
+class TestScatter(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "shapes_dims, backend",
+        itertools.product(
+            [
+                [(10,), (0, -1)],
+                [(2, 3), (1, -1)],
+                [(2, 3, 4, 5), (0, -2)],
+            ],
+            backends
+        ),
+    )
+    def test_scatter(self, shapes_dims, backend):
+        class TestModel(nn.Module):
+            def __init__(self, dim, shapes):
+                super(TestModel, self).__init__()
+                self.dim = dim
+                self.source = torch.rand(*(shapes))
+                self.index = torch.randint(0, shapes[dim], size=shapes)
+                
+            def forward(self, x):
+                return x.scatter_(self.dim, self.index, self.source)
+
+        shapes, dims = shapes_dims
+        for dim in dims:
+            m = TestModel(0, shapes)
+            self.run_compare_torch(shapes, m, backend=backend)
+
+
+    @pytest.mark.parametrize(
+        "shapes_dims, mode, backend",
+        itertools.product(
+            [
+                [(10,), (0, -1)],
+                [(2, 3), (1, -1)],
+                [(2, 3, 4, 5), (0, -2)],
+            ],
+            ['add', 'multiply'],
+            backends
+        ),
+    )
+    def test_scatter_with_reduce(self, shapes_dims, mode, backend):
+        class TestModel(nn.Module):
+            def __init__(self, dim, shapes, mode):
+                super(TestModel, self).__init__()
+                self.dim = dim
+                self.mode = mode
+                self.source = torch.rand(*(shapes))
+                self.index = torch.randint(0, shapes[dim], size=shapes)
+
+            def forward(self, x):
+                return x.scatter_(self.dim, self.index, self.source, reduce=self.mode)
+
+        shapes, dims = shapes_dims
+        for dim in dims:
+            m = TestModel(0, shapes, mode)
+            self.run_compare_torch(shapes, m, backend=backend)
+            
+
     @pytest.mark.parametrize(
         "shapes_dims, backend",
         itertools.product(
@@ -4144,19 +4395,21 @@ class TestSacatterAdd(TorchBaseTest):
         ),
     )
     def test_scatter_add(self, shapes_dims, backend):
+        class TestModel(nn.Module):
+            def __init__(self, dim, shapes):
+                super(TestModel, self).__init__()
+                self.dim = dim
+                self.source = torch.rand(*(shapes))
+                self.index = torch.randint(0, shapes[dim], size=shapes)
+                
+            def forward(self, x):
+                return x.scatter_add_(self.dim, self.index, self.source)
+
         shapes, dims = shapes_dims
         for dim in dims:
+            m = TestModel(dim, shapes)
+            self.run_compare_torch(shapes, m, backend=backend)
 
-            class TestModel(nn.Module):
-                def __init__(self):
-                    super(TestModel, self).__init__()
-                    self.source = torch.rand(*(shapes))
-                    self.index = torch.randint(0, shapes[dim], size=shapes)
-
-                def forward(self, x):
-                    return x.scatter_add_(dim, self.index, self.source)
-
-            self.run_compare_torch(shapes, TestModel().eval(), backend=backend)
 
 class TestBroadcastTensors(TorchBaseTest):
     @pytest.mark.parametrize(
@@ -4215,3 +4468,43 @@ class TestBroadcastTensors(TorchBaseTest):
             def forward(self, a, b, c, d):
                 return torch.broadcast_tensors(a, b, c, d)
         self.run_compare_torch(shapes, TestModel().eval(), backend=backend)
+
+
+class TestEmbedding(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "backend, input_dtype",
+        itertools.product(
+            backends,
+            [np.int32, np.float32],
+        )
+    )
+    def test_embedding(self, backend, input_dtype):
+        num_embeddings = 4
+        embedding_size = 10
+        B = 2
+        dim = 5
+        converter_input_type = [TensorType(shape=(B, dim), dtype=input_dtype)]
+
+        # input shape: (B, dim)
+        # output shape : (B, dim, embedding_size)
+        # shape of weights : (num_embeddings, embedding_size)
+        class EmbeddingModel(nn.Module):
+            def __init__(self):
+                super(EmbeddingModel, self).__init__()
+                self.embedding = torch.nn.Embedding(num_embeddings, embedding_size)
+
+            def forward(self, x):
+                return self.embedding(x)
+
+        input_data = np.random.randint(low=0, high=num_embeddings, size=(B, dim))
+        input_data = torch.from_numpy(input_data)
+        model = EmbeddingModel()
+        expected_results = model(input_data)
+        self.run_compare_torch(
+            input_data,
+            model,
+            expected_results=expected_results,
+            input_as_shape=False,
+            backend=backend,
+            converter_input_type=converter_input_type,
+        )

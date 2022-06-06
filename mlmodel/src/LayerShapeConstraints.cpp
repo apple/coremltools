@@ -568,7 +568,8 @@ void ShapeConstraint::updateConstraint(const Specification::FeatureType& type) {
     if (type.Type_case() == Specification::FeatureType::kImageType) {
 
         // Handle the number of channels first
-        if (type.imagetype().colorspace() == Specification::ImageFeatureType_ColorSpace_GRAYSCALE)
+        if (type.imagetype().colorspace() == Specification::ImageFeatureType_ColorSpace_GRAYSCALE ||
+            type.imagetype().colorspace() == Specification::ImageFeatureType_ColorSpace_GRAYSCALE_FLOAT16 )
             setChannel(1);
         else {
             setChannel(3);

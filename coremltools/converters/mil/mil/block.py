@@ -31,7 +31,7 @@ class InvalidBlockStateError(Exception):
     pass
 
 
-class Block(object):
+class Block:
     __slots__ = [
         "name",
         "_block_inputs",
@@ -507,6 +507,19 @@ class Block(object):
             self._block_inputs = tuple(self._block_inputs)
 
         # If old_var is block's output, replace as well.
+        self.replace_block_output_var(old_var, new_var)
+
+        return num_ops_affected
+
+    def replace_block_output_var(
+            self,
+            old_var,
+            new_var,
+    ):
+        """
+        If old_var is in the list of block's outputs,
+        replace old_var with the new_var.
+        """
         if old_var in self._outputs:
             idx = self._outputs.index(old_var)
             self._outputs[idx] = new_var
@@ -515,11 +528,10 @@ class Block(object):
             # This block no longer uses `old_var` as its outputs
             old_var.consuming_blocks.remove(self)
 
-            # if rename_new_var_if_fn_output:
             # Ensure output name is consistent
             if isinstance(self, Function):
                 new_var.name = old_var.name
-        return num_ops_affected
+
 
     def replace_uses_of_var_after_op(
         self,
@@ -850,7 +862,7 @@ class Function(Block):
                 for s in shapes:
                     if is_symbolic(s):
                         k_used_symbols.add(s)
-        super(Function, self).__init__()
+        super().__init__()
 
     # Override Block's input
     @property

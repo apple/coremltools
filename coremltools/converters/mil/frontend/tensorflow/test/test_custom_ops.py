@@ -86,7 +86,6 @@ class TestCustomMatMul:
             # For illustration purpose, assumming getting valid shape
             # Ideally, should consider transpose_?, ?_is_sparse parameters into consideration
             # for computing output shape
-            ret_shape = [x_shape[0], y_shape[1]]
             return types.tensor(x_type, [x_shape[0], y_shape[1]])
 
     # TensorFlow Sparse Matmul Op

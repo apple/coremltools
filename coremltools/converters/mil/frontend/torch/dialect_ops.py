@@ -42,8 +42,8 @@ class torch_upsample_nearest_neighbor(Operation):
 
     Parameters
     ----------
-    x: tensor<[\*D, H1, W1],T>  (Required)
-        * Must be at least rank ``3``.
+    x: tensor<[b, C, H1, W1],T>  (Required)
+        * Must be rank ``4``.
     output_height: i32
         * Output height for the height dimension.
     output_width: i32
@@ -51,7 +51,7 @@ class torch_upsample_nearest_neighbor(Operation):
 
     Returns
     -------
-    tensor<[\*D, H2, W2],T>
+    tensor<[b, C, H2, W2],T>
         * Tensor with same type as the input.
         * ``H2`` = output_height
         * ``W2`` = output_width
@@ -70,13 +70,13 @@ class torch_upsample_nearest_neighbor(Operation):
         super(torch_upsample_nearest_neighbor, self).__init__(**kwargs)
 
     def type_inference(self):
-        if self.x.rank < 3:
+        if self.x.rank != 4:
             raise ValueError(
-                'input to the "torch_upsample_nearest_neighbor" op must have rank at least 3'
+                'input to the "torch_upsample_nearest_neighbor" op must have rank 4'
             )
         ret_shape = list(self.x.shape)
-        ret_shape[-1] = get_new_symbol()
-        ret_shape[-2] = get_new_symbol()
+        ret_shape[2] = get_new_symbol()
+        ret_shape[3] = get_new_symbol()
         return types.tensor(self.x.dtype, ret_shape)
 
 # torch_upsample_bilinear is dealing with upsample layer which has flexible input shape,
@@ -92,8 +92,8 @@ class torch_upsample_bilinear(Operation):
 
     Parameters
     ----------
-    x: tensor<[\*D, H1, W1],T>  (Required)
-        * Must be rank ``3``.
+    x: tensor<[b, C, H1, W1],T>  (Required)
+        * Must be rank ``4``.
     output_height: i32
         * Output height for the height dimension.
     output_width: i32
@@ -103,7 +103,7 @@ class torch_upsample_bilinear(Operation):
 
     Returns
     -------
-    tensor<[\*D, H2, W2],T>
+    tensor<[b, C, H2, W2],T>
         * Tensor with same type as the input.
         * ``H2`` = output_height
         * ``W2`` = output_width
@@ -128,13 +128,13 @@ class torch_upsample_bilinear(Operation):
         super(torch_upsample_bilinear, self).__init__(**kwargs)
 
     def type_inference(self):
-        if self.x.rank < 3:
+        if self.x.rank != 4:
             raise ValueError(
-                'input to the "torch_upsample_bilinear" op must have rank at least 3'
+                'input to the "torch_upsample_bilinear" op must have rank 4'
             )
         ret_shape = list(self.x.shape)
-        ret_shape[-1] = get_new_symbol()
-        ret_shape[-2] = get_new_symbol()
+        ret_shape[2] = get_new_symbol()
+        ret_shape[3] = get_new_symbol()
         return types.tensor(self.x.dtype, ret_shape)
 
 # torch_tensor_assign is dealing with the tensor assignment operation

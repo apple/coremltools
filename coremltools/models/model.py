@@ -4,12 +4,12 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from copy import deepcopy as _deepcopy
+import numpy as _np
 import os as _os
 import shutil as _shutil
 import tempfile as _tempfile
 import warnings as _warnings
 import numpy as _numpy
-
 
 from ..proto import (
     Model_pb2 as _Model_pb2,
@@ -91,7 +91,7 @@ _METADATA_SOURCE = "com.github.apple.coremltools.source"
 
 
 
-class _FeatureDescription(object):
+class _FeatureDescription:
     def __init__(self, fd_spec):
         self._fd_spec = fd_spec
 
@@ -174,7 +174,7 @@ def _try_get_weights_dir_path(mlpackage_path):
     return weights_dir
 
 
-class MLModel(object):
+class MLModel:
     """
     This class defines the minimal interface to a CoreML object in Python.
 
@@ -233,7 +233,6 @@ class MLModel(object):
     """
 
     def __init__(self, model,
-                 useCPUOnly=False,
                  is_temp_package=False,
                  mil_program=None,
                  skip_model_load=False,
@@ -256,14 +255,6 @@ class MLModel(object):
 
             For non mlprogram model types, the model can be a path string (``.mlmodel``) or type ``Model_pb2``,
             i.e. a spec object.
-
-        useCPUOnly: bool
-            This parameter is deprecated and will be removed in 6.0. Use the ``compute_units``
-            parameter instead.
-
-            The ``compute_units`` parameter overrides any usages of this parameter.
-
-            Set to True to restrict loading of the model to only the CPU. Defaults to False.
 
         is_temp_package: bool
             Set to true if the input model package dir is temporary and can be
@@ -315,10 +306,6 @@ class MLModel(object):
         >>> loaded_model = MLModel('my_model.mlmodel')
         >>> loaded_model = MLModel("my_model.mlpackage")
         """
-        if useCPUOnly:
-            _warnings.warn('The "useCPUOnly" parameter is deprecated and will be removed in 6.0. '
-                           'Use the "compute_units" parameter: "compute_units=coremotools.ComputeUnits.CPUOnly".')
-            compute_units = _ComputeUnit.CPU_ONLY
         if not isinstance(compute_units, _ComputeUnit):
             raise TypeError('"compute_units" parameter must be of type: coremltools.ComputeUnit')
         self.compute_unit = compute_units
@@ -332,6 +319,7 @@ class MLModel(object):
         self._mil_program = mil_program
 
         if isinstance(model, str):
+            model = _os.path.abspath(_os.path.expanduser(_os.path.expandvars(model)))
             if _os.path.isdir(model):
                 self.is_package = True
                 self.package_path = model
@@ -476,7 +464,7 @@ class MLModel(object):
         return _deepcopy(self._spec)
 
 
-    def predict(self, data, useCPUOnly=False):
+    def predict(self, data):
         """
         Return predictions for the model.
 
@@ -486,14 +474,6 @@ class MLModel(object):
             Dictionary of data to make predictions from where the keys are
             the names of the input features.
             If value is array type, numpy.ndarray, tensorflow.Tensor and torch.Tensor are acceptable.
-
-        useCPUOnly: bool
-            This parameter is deprecated and will be removed in 6.0. Instead, use the ``compute_units``
-            parameter at load time or conversion time (that is, in
-            `coremltools.models.MLModel() <https://apple.github.io/coremltools/source/coremltools.models.html#module-coremltools.models.model>`_ or
-            `coremltools.convert() <https://apple.github.io/coremltools/source/coremltools.converters.mil.html#module-coremltools.converters._converters_entry>`_).
-
-            Set to True to restrict computation to use only the CPU. Defaults to False.
 
         Returns
         -------
@@ -512,11 +492,6 @@ class MLModel(object):
         >>> data = {'array': tensorflow.Tensor([[1.0, 2.0], [3.0, 4.0]])}
         >>> predictions = model.predict(data)
         """
-        if useCPUOnly:
-            _warnings.warn('The "useCPUOnly" parameter is deprecated and will be removed in 6.0. '
-                           'Please use the "compute_units" parameter at load time or conversion time, '
-                           'i.e. in "coremltools.models.MLModel()" or "coremltools.convert()".')
-
         if self.is_package and _is_macos() and _macos_version() < (12, 0):
             raise Exception(
                 "predict() for .mlpackage is not supported in macOS version older than 12.0."
@@ -529,7 +504,9 @@ class MLModel(object):
             # return a more verbose error message
             self._verify_input_name_exists(data)
             self._convert_tensor_to_numpy(data)
-            return self.__proxy__.predict(data, useCPUOnly)
+            # TODO: remove the following call when this is fixed: rdar://92239209
+            self._update_float16_multiarray_input_to_float32(data)
+            return self.__proxy__.predict(data)
         else:
             if _macos_version() < (10, 13):
                 raise Exception(
@@ -623,6 +600,10 @@ class MLModel(object):
                           "does not match any of the model input name(s), which are: {}"
                 raise KeyError(err_msg.format(given_input, ",".join(model_input_names)))
 
+    def _update_float16_multiarray_input_to_float32(self, input_data):
+        for k, v in input_data.items():
+            if isinstance(v, _np.ndarray) and v.dtype == _np.float16:
+                input_data[k] = v.astype(_np.float32)
 
     def _convert_tensor_to_numpy(self, input_dict):
         def convert(given_input):
@@ -647,3 +628,4 @@ class MLModel(object):
             if not given_input_name in model_input_to_types:
                 continue
             input_dict[given_input_name] = convert(given_input)
+

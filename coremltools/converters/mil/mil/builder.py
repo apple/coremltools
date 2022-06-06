@@ -4,9 +4,9 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from collections import defaultdict
-import copy
 import logging
 import numbers
+
 import numpy as np
 
 from coremltools.converters.mil.mil.types.symbolic import any_symbolic
@@ -54,7 +54,7 @@ class Builder:
     >>> func_inputs = {"x": mb.placeholder(shape=[2,3]),
     >>>                "y": mb.placeholder(shape=[2,3])}
     >>> with Function(func_inputs) as ssa_fun:
-    >>>   x, y = ssa_fun.inputs['x'], ssa_fun.inputs['x']
+    >>>   x, y = ssa_fun.inputs['x'], ssa_fun.inputs['y']
     >>>   res_var = mb.add(x=x, y=y) # created within ssa_fun block
     >>>   ssa_fun.set_outputs([res_var])
     >>> prog.add_function("main", ssa_fun)

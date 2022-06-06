@@ -3,19 +3,21 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from coremltools.converters.mil.mil import Builder as mb
-from coremltools.converters.mil.mil import get_new_symbol
-from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
-from coremltools.converters.mil.testing_utils import (
-    assert_op_count_match,
-    assert_model_is_valid,
-    get_op_types_in_program,
-    apply_pass_and_basic_check,
-)
 import numpy as np
 import pytest
-from .reduce_transposes import _find_transpose_compliment
 import unittest
+
+from .reduce_transposes import _find_transpose_compliment
+from coremltools.converters.mil.mil import (
+    Builder as mb,
+    get_new_symbol
+)
+from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
+from coremltools.converters.mil.testing_utils import (
+    apply_pass_and_basic_check,
+    assert_model_is_valid,
+    get_op_types_in_program,
+)
 
 
 np.random.seed(1984)
@@ -1723,9 +1725,9 @@ class TransposeOptimizationPass(unittest.TestCase):
     def test_materialized_output_reuse(self):
         @mb.program(input_specs=[mb.TensorSpec(shape=(2, 5))])
         def prog(x):
-            x1 = mb.transpose(x=x, perm=[1,0])
+            x1 = mb.transpose(x=x, perm=[1, 0])
             y1 = mb.relu(x=x1)
-            y2 = mb.transpose(x=y1, perm=[1,0])
+            y2 = mb.transpose(x=y1, perm=[1, 0])
             return y1, y2
 
         prev_prog, prev_block, block = apply_pass_and_basic_check(
@@ -1746,8 +1748,8 @@ class TransposeOptimizationPass(unittest.TestCase):
         assert_model_is_valid(
             prog,
             {'x': (2, 5)},
-            expected_output_shapes={block.outputs[0].name: (5,2),
-                                    block.outputs[1].name: (2,5)}
+            expected_output_shapes={block.outputs[0].name: (5, 2),
+                                    block.outputs[1].name: (2, 5)}
         )
 
     """

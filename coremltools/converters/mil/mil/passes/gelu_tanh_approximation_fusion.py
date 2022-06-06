@@ -18,7 +18,7 @@ def is_var_constraint_satisifed(pattern):
 
     passed = passed and (
                         _check_var_scalar_value(pattern.mul_1.y, 0.044715) or
-                        _check_var_scalar_value(pattern.mul_1.x,  0.044715)
+                        _check_var_scalar_value(pattern.mul_1.x, 0.044715)
                         )
 
     passed = passed and (

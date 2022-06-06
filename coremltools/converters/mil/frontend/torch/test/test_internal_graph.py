@@ -1724,10 +1724,8 @@ class TestTorchOps:
         node = InternalTorchIRNode(
             kind="max", inputs=input_list, outputs=["out1", "out2"],
         )
-        ssa = self._construct_test_graph(context, ops.max, node, constants=constants)
-        index_result = context["out1"].val
-        max_result = context["out2"].val
-        expected_index, expected_max = torch.max(test_input, dim=dim, keepdim=keepdim)
+        self._construct_test_graph(context, ops.max, node, constants=constants)
+        torch.max(test_input, dim=dim, keepdim=keepdim)
 
     @pytest.mark.parametrize(
         "input_size, dim, descending",

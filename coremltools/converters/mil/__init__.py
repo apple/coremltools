@@ -60,6 +60,7 @@ from .frontend.torch import register_torch_op
 
 from .input_types import (
     ClassifierConfig,
+    ColorLayout,
     InputType,
     TensorType,
     ImageType,

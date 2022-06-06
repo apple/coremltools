@@ -4,11 +4,12 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import itertools
+
 import numpy as np
 import pytest
 import scipy
 from scipy import special
-
+from .testing_utils import run_compare_builder
 from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.mil import (
     Builder as mb,
@@ -20,7 +21,6 @@ from coremltools.converters.mil.mil import (
 from coremltools.converters.mil.mil.types.symbolic import is_compatible_symbolic_vector
 from coremltools.converters.mil.testing_utils import ssa_fn
 
-from .testing_utils import run_compare_builder
 
 backends = testing_reqs.backends
 
@@ -285,7 +285,6 @@ class TestElementwiseUnary:
             use_cpu_only=use_cpu_for_conversion,
             frontend_only=False,
             backend=backend,
-            use_cpu_for_conversion=use_cpu_for_conversion,
         )
 
     @ssa_fn
@@ -686,11 +685,10 @@ class TestElementwiseUnary:
             use_cpu_only=use_cpu_for_conversion,
             frontend_only=False,
             backend=backend,
-            use_cpu_for_conversion=use_cpu_for_conversion,
         )
 
     def test_erf_value_inference(self):
-        INPUT_SIZE=(2,3,4)
+        INPUT_SIZE=(2, 3, 4)
         rs = np.random.RandomState(1234)
         x = rs.random(INPUT_SIZE)
 

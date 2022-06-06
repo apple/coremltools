@@ -7,11 +7,10 @@
 from . import libsvm
 from . import sklearn
 from . import xgboost
-from . import keras
-from . import onnx
 from ._converters_entry import convert
 from .mil import (
     ClassifierConfig,
+    ColorLayout,
     TensorType,
     ImageType,
     RangeDim,

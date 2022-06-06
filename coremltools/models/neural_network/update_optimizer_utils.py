@@ -8,7 +8,7 @@ Neural Network optimizer utilities.
 """
 
 
-class AdamParams(object):
+class AdamParams:
     """
     Adam - A Method for Stochastic Optimization.
 
@@ -82,7 +82,7 @@ class AdamParams(object):
         return self._eps
 
 
-class SgdParams(object):
+class SgdParams:
     """
     SGD - Stochastic Gradient Descent optimizer.
 

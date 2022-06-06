@@ -30,6 +30,8 @@ class TestApiVisibilities:
             "SPECIFICATION_VERSION",
             "Shape",
             "TensorType",
+            "colorlayout",
+            "compression_utils",
             "convert",
             "converters",
             "libcoremlpython",
@@ -65,13 +67,14 @@ class TestApiVisibilities:
         expected = [
             "MLModel",
             "datatypes",
+            "feature_vectorizer",
+            "ml_program",
             "model",
+            "nearest_neighbors",
             "neural_network",
             "pipeline",
             "tree_ensemble",
             "utils",
-            "nearest_neighbors",
-            "feature_vectorizer",
         ]
         _check_visible_modules(_get_visible_items(ct.models), expected)
 
@@ -141,42 +144,22 @@ class TestApiVisibilities:
     def test_converters(self):
         expected = [
             "ClassifierConfig",
+            "ColorLayout",
             "EnumeratedShapes",
             "ImageType",
             "RangeDim",
             "Shape",
             "TensorType",
             "convert",
-            "keras",
             "libsvm",
             "mil",
-            "onnx",
             "sklearn",
             "xgboost",
         ]
         _check_visible_modules(_get_visible_items(ct.converters), expected)
 
-    @pytest.mark.skipif(
-        ct.utils._python_version() >= (3, 8, 0),
-        reason="Keras isn't compatible with Python 3.8+.",
-    )
-    @pytest.mark.xfail(
-         condition=not ct.utils._is_macos(),
-         reason="rdar://65138103 (Keras converter not exposed on Linux)",
-         run=False,
-     )
-    def test_converters_keras(self):
-        _check_visible_modules(_get_visible_items(ct.converters.keras), ["convert"])
-
     def test_converters_libsvm(self):
         _check_visible_modules(_get_visible_items(ct.converters.libsvm), ["convert"])
-
-    @pytest.mark.skipif(
-        ct.utils._python_version() >= (3, 8, 0),
-        reason="ONNX isn't compatible with Python 3.8+.",
-    )
-    def test_converters_onnx(self):
-        _check_visible_modules(_get_visible_items(ct.converters.onnx), ["convert"])
 
     def test_converters_sklearn(self):
         _check_visible_modules(_get_visible_items(ct.converters.sklearn), ["convert"])
@@ -199,6 +182,17 @@ class TestApiVisibilities:
         ]
         _check_visible_modules(
             _get_visible_items(ct.models.neural_network.quantization_utils), expected
+        )
+
+    def test_compression_utils(self):
+        expected = [
+            "affine_quantize_weights",
+            "palettize_weights",
+            "sparsify_weights",
+            "decompress_weights",
+        ]
+        _check_visible_modules(
+            _get_visible_items(ct.compression_utils), expected
         )
 
     def test_models_neural_network_flexible_shape_utils(self):

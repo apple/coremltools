@@ -39,7 +39,7 @@ def _match_pattern(block, padding_op):
             return False
     else:
         # if the padding is not constant, then we can't merge if both pads affected the same side of the image
-        if any(i != 0 and j != 0 for (i,j) in zip(first_pad, child_pad)):
+        if any(i != 0 and j != 0 for (i, j) in zip(first_pad, child_pad)):
             return False
 
     return _replace_ops(block, padding_op, child_padding_op, final_pad)
@@ -67,6 +67,7 @@ def _merge_padding_block(block):
         if result:
             return True
     return False
+
 
 @register_pass(namespace="common")
 class merge_consecutive_paddings(AbstractGraphPass):

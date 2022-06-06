@@ -73,7 +73,7 @@ def convert_nodes(context, graph):
             assign node outputs.
         graph: An InternalTorchIRGraph or InternalTorchIRBlock object.
     """
-    for node in _tqdm(graph.nodes, desc="Converting Frontend ==> MIL Ops", unit=" ops"):
+    for node in _tqdm(graph.nodes, desc="Converting PyTorch Frontend ==> MIL Ops", unit=" ops"):
         op_lookup = node.kind
         if op_lookup.endswith("_"):
             # This is an "in place" op.
@@ -832,14 +832,18 @@ def prelu(context, node):
     alpha = inputs[1]
     # In the MIL backend, it assumes that the inputs of prelu should have
     # at least rank 3, i.e. [batch, channel, spatial_dims*].
-    if x.rank < 3:
-        x = mb.expand_dims(x=x, axes=[1])
-        x = mb.prelu(x=x, alpha=alpha)
-        res = mb.squeeze(x=x, axes=[1], name=node.name)
-    else:
+    if x.rank >= 2:
         alpha = alpha.val
-        alpha_vec = _np.ones((x.shape[1],))*alpha
-        res = mb.prelu(x=x, alpha=alpha_vec, name=node.name)
+        alpha = _np.ones((x.shape[1],))*alpha
+
+    if x.rank <= 2:
+        axes = [1, 2] if x.rank == 1 else [2]
+        x = mb.expand_dims(x=x, axes=axes)
+        x = mb.prelu(x=x, alpha=alpha)
+        res = mb.squeeze(x=x, axes=axes, name=node.name)
+    else:
+        res = mb.prelu(x=x, alpha=alpha, name=node.name)
+        
     context.add(res)
 
 @register_torch_op
@@ -1381,7 +1385,6 @@ def batch_norm(context, node):
     running_var = inputs[4]
     training = inputs[5].val
     eps = inputs[7]
-    name = node.name
 
     # If training = True, the mean and variance of the current batch of data are used to normalize the input data.
     # If training = False, data statistics running_mean and running_var are used instead.
@@ -1526,6 +1529,8 @@ def embedding(context, node):
             "inputs besides the weights and indices. Those given "
             "will be ignored."
         )
+
+    indices = mb.cast(x=indices, dtype="int32")
 
     #  Changing the axis from 0 is not an option in torch, so we don't expose it
     gather = mb.gather(x=_input, indices=indices, name=node.name)
@@ -2094,7 +2099,6 @@ def _add_mil_lstm(input, initial_h, initial_c, weights, has_bias, bidirectional,
             f_b = mb.add(x=biases[0], y=biases[1], )
             r_b = mb.add(x=biases[2], y=biases[3], )
 
-
         # (3.)
         f_ih_w = _ifzo_to_ifoz(
             weights[0], name=name + "_lstm_forward_ih_weights_ifoz_to_ifzo",
@@ -2315,37 +2319,108 @@ def lstm(context, node):
 def _get_scales_from_output_size(output_size, input_shape):
     scales = []
     if output_size is not None:
-        # @output_size will be a list if scales was provided or a
-        # single var if output size was provided
+        # output_size will be either 
+        # (1) A list of Var, and each Var indicates the output size for that dimension
+        # (2) A single Var which indicates the whole output size 
+        # (3) A numpy array
+
         if isinstance(output_size, list):
-            output_size = [output_size[0].val, output_size[1].val]
+            output_size = [x.val for x in output_size]
         if isinstance(output_size, Var):
-            output_size = [output_size.val[0], output_size.val[1]]
+            output_size = [x for x in output_size.val]
+        if isinstance(output_size, _np.ndarray):
+            output_size = output_size.tolist()
 
-        # output size is computed using the formula
-        # floor (scale * input_size) in Core ML (and PyTorch)
-        # Thus, when computing the scales from the output size,
-        # add a small positive constant to the output size,
-        # to make sure that the floor formula results in the correct output
-        # size and not 1 unit smaller, due to float precision issues
-        # e.g. if output size = 5 and input size = 2, then scale will be
-        # 2.5, which can get represented as 2.49999, resulting in an output size of 4
-        # instead of 5, without this correction.
-        Hout, Wout = output_size[0], output_size[1]
-        Hin, Win = input_shape[-2], input_shape[-1]
-        scales_h = Hout / Hin if Hout % Hin == 0 else (Hout + 1e-4) / Hin
-        scales_w = Wout / Win if Wout % Win == 0 else (Wout + 1e-4) / Win
+        # output size is computed using the formula floor (scale * input_size) in Core ML (and PyTorch).
+        # Thus, when computing the scales from the output size, we add a small positive constant to the output size
+        # to make sure that the floor formula results in the correct output size and not 1 unit smaller.
+        # For instance, if output size = 5 and input size = 2, then scale will be 2.5, which can get 
+        # represented as 2.49999 due to float precision issues, and this might resultin an output size of 4
+        # instead of 5, without the epsilon correction.
 
-        scales = [scales_h, scales_w]
+        if len(output_size) == 1:
+            # 1d upsampling
+            Hout = output_size[0]
+            Hin = input_shape[-1]
+            scales_h = Hout / Hin if Hout % Hin == 0 else (Hout + 1e-4) / Hin
+            scales = scales_h
+        elif len(output_size) == 2:
+            # 2d upsampling 
+            Hout, Wout = output_size[0], output_size[1]
+            Hin, Win = input_shape[-2], input_shape[-1]
+            scales_h = Hout / Hin if Hout % Hin == 0 else (Hout + 1e-4) / Hin
+            scales_w = Wout / Win if Wout % Win == 0 else (Wout + 1e-4) / Win
+            scales = [scales_h, scales_w]
+        else:
+            msg = "Only 1d and 2d unsampling are supported."
+            raise NotImplementedError(msg)
+
     return scales
 
+def _is_float_value(x, threshold=0.001):
+    return x - _math.floor(x) > threshold
+
+@register_torch_op
+def upsample_linear1d(context, node):
+    inputs = _get_inputs(context, node)
+    x = inputs[0]
+    output_size = inputs[1]
+    align_corners = bool(inputs[2].val)
+    scale = inputs[3]
+
+    scale_factor = None
+
+    if scale is not None and scale.val is not None and scale.shape == (1,):
+        # Get the scale factor from provided inputs
+        # This happens when recompute_scale_factor = False
+        scale_factor = scale.val[0]
+
+        # Currently, we are not supporting recompute_scale_factor = False, align_corners = False with float output size
+        _, _, h = x.shape
+        if not is_symbolic(h):
+            # For the static input shape, we can compute the output size beforehand, and check if it is a float value
+            output_size = h * scale_factor
+            is_float = _is_float_value(output_size)
+        else:
+            # For the dynamic input shape, we check if the scale factor itself is float
+            is_float = _is_float_value(scale_factor)
+
+        if is_float and not align_corners:
+            msg = "recompute_scale_factor = False, align_corners = False with float output size is " + \
+                                            "not supported for the upsample op {}".format(node.name)
+            raise NotImplementedError(msg)
+
+    elif isinstance(output_size, list):
+        # When the input shape is dynamic and recompute_scale_factor = True,
+        # we need to trace the graph to find the scale factor.
+        x = mb.expand_dims(x=x, axes=[3])
+        x = mb.torch_upsample_bilinear(
+            x=x,
+            output_height=output_size[0],
+            output_width=1.,
+            align_corners=align_corners,
+        )
+        x = mb.squeeze(x=x, axes=[3], name=node.name)
+        context.add(x)
+        return
+
+    elif output_size.val is not None:
+        # Infer the scale factor from the provided output size
+        scale_factor = _get_scales_from_output_size(output_size, x.shape)
+
+    # Expand the input to a 4d tensor, and use MIL's upsample_bilinear op
+    x = mb.expand_dims(x=x, axes=[3])
+    x = mb.upsample_bilinear(
+        x=x,
+        scale_factor_height=scale_factor,
+        scale_factor_width=1.,
+        align_corners=align_corners,
+    )
+    x = mb.squeeze(x=x, axes=[3], name=node.name)
+    context.add(x)
 
 @register_torch_op
 def upsample_bilinear2d(context, node):
-
-    def _is_float_value(x, threshold=0.001):
-        return x - _math.floor(x) > threshold
-
     inputs = _get_inputs(context, node)
     _input = inputs[0]
     output_size = inputs[1]
@@ -2418,6 +2493,44 @@ def upsample_bilinear2d(context, node):
     )
     context.add(upsample_bilinear)
 
+@register_torch_op
+def upsample_nearest1d(context, node):
+    inputs = _get_inputs(context, node)
+    x = inputs[0]
+    output_size = inputs[1]
+    scale = inputs[2]
+
+    scale_factor = None
+
+    if scale is not None and scale.val is not None and scale.shape == (1,):
+        # Get the scale factor from provided inputs
+        # This happens when recompute_scale_factor = False
+        scale_factor = scale.val[0]  
+
+    elif isinstance(output_size, list):
+        # When the input shape is dynamic and recompute_scale_factor = True,
+        # we need to trace the graph to find the scale factor.
+        x = mb.expand_dims(x=x, axes=[3])
+        x = mb.torch_upsample_nearest_neighbor(
+            x=x,
+            output_height=output_size[0],
+            output_width=1.,
+        )
+        x = mb.squeeze(x=x, axes=[3], name=node.name)
+        context.add(x)
+        return
+    else:
+        # Infer scale factors from output sizes
+        scale_factor = _get_scales_from_output_size(output_size, x.shape)
+    
+    x = mb.expand_dims(x=x, axes=[3])
+    x = mb.upsample_nearest_neighbor(
+        x=x,
+        scale_factor_height=scale_factor,
+        scale_factor_width=1.,
+    )
+    x = mb.squeeze(x=x, axes=[3], name=node.name)
+    context.add(x)
 
 @register_torch_op
 def upsample_nearest2d(context, node):
@@ -3592,7 +3705,7 @@ def argmax(context, node):
     res = mb.reduce_argmax(x=x, axis=axis, keep_dims=keep_dims, name=node.name)
     context.add(res)
 
-@register_torch_op
+@register_torch_op(torch_alias=["empty_like"])
 def zeros_like(context, node):
     inputs = _get_inputs(context, node, expected=6)
     x = inputs[0]
@@ -4348,12 +4461,36 @@ def broadcast_tensors(context, node):
     inputs = _get_inputs(context, node)
     context.add(_broadcast_tensors(inputs[0]), node.name)
 
-@register_torch_op
-def scatter_add(context, node):
-    inputs = _get_inputs(context, node)
+
+def _scatter(context, inputs, mode, name):
     data = inputs[0]
     axis = inputs[1].val
     indices = inputs[2]
     updates = inputs[3]
-    result = mb.scatter_along_axis(data=data, indices=indices, updates=updates, axis=axis, mode="add", name=node.name)
+    result = mb.scatter_along_axis(data=data, indices=indices, updates=updates,
+                                   axis=axis, mode=mode, name=name)
     context.add(result)
+
+
+@register_torch_op
+def scatter(context, node):
+    inputs = _get_inputs(context, node)
+    assert len(inputs) in (4, 5)
+
+    # Determine reduce/mode parameter
+    if len(inputs) == 5:
+        mode = inputs[4].val
+        if mode == 'multiply':
+            mode = 'mul'
+        else:
+            assert mode == 'add'
+    else:
+        mode = 'update'
+
+    _scatter(context, inputs, mode, node.name)
+
+
+@register_torch_op
+def scatter_add(context, node):
+    inputs = _get_inputs(context, node)
+    _scatter(context, inputs, 'add', node.name)

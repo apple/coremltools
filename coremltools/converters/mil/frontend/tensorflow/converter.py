@@ -8,6 +8,7 @@ import logging
 from .basic_graph_ops import simple_topsort
 from .convert_utils import convert_graph
 from .ssa_passes.tf_passes import tensorflow_passes
+from .._utils import get_output_names
 from coremltools.converters.mil.input_types import (
     _get_shaping_class,
     InputType,
@@ -22,7 +23,8 @@ from coremltools.converters.mil.mil import (
     Builder as mb,
     Function,
     get_new_symbol,
-    Program
+    Program,
+    types,
 )
 from coremltools.converters._profile_utils import _profile
 
@@ -119,14 +121,15 @@ class TFConverter:
         """
         tfssa: TensorFlow IR.
         inputs: list of TensorType or ImageType, optional, defaults to None.
-        outputs: list of str or str, optional, defaults to None.
-            A list of names of the output nodes or a str for single output name.
-            If None, the converter will try to extract the output information from
-            TensorFlow model.
+        outputs: list[ct.InputType] or None
+            list of either ct.TensorTypes or ct.ImageTypes (both of which are child classes of InputType)
+            This is the value of the "outputs" argument, passed on by the user in "coremltools.convert" API.
         """
         self.tfssa = tfssa
         self.global_type = {}
         self.inputs = None
+        self.main_output_types = outputs
+        output_names = get_output_names(outputs)
 
         main_func = tfssa.functions["main"]
         graph = main_func.graph
@@ -219,11 +222,11 @@ class TFConverter:
             node.attr["_output_shapes"] = [shape]  # list of length 1
 
         # infer outputs if not provided
-        self._validate_outputs(tfssa, outputs)
-        outputs = main_func.outputs if outputs is None else outputs
-        outputs = outputs if isinstance(outputs, (tuple, list)) else [outputs]
-        outputs = [x if isinstance(x, str) else x.name for x in outputs]
-        self.outputs = outputs
+        self._validate_outputs(tfssa, output_names)
+        output_names = main_func.outputs if output_names is None else output_names
+        output_names = output_names if isinstance(output_names, (tuple, list)) else [output_names]
+        output_names = [x if isinstance(x, str) else x.name for x in output_names]
+        self.output_names = output_names
 
         # We would like a stack so that we run conversion sequentially.
         self.graph_stack = self._get_stack(tfssa, root="main")
@@ -293,6 +296,58 @@ class TFConverter:
             if self._get_tensor_name(n) not in output_nodes + all_nodes:
                 raise KeyError('Output node name "{}" does exist.'.format(n))
 
+    def _validate_and_update_main_output_types(self, prog):
+        assert isinstance(self.main_output_types, list)
+        assert len(self.main_output_types) > 0
+        output_vars = prog.functions["main"].outputs
+        output_vars_names = set([var.name for var in output_vars])
+
+        # validation
+        if get_output_names(self.main_output_types) is None:
+            # this is the case, where the user did not provide names for the outputs.
+            # In this case, the outputs were inferred from the TF graph autmatically.
+            # There are two scenarios here: number of inferred outputs equal to 1 or greater than 1
+            if len(output_vars) == 1:
+                if len(self.main_output_types) > 1:
+                    msg = "The list of ct.TensorType()/ct.ImageType() provided in the 'outputs' argument, does not " \
+                          "have names. When more than 1 output is provided for tensorflow conversion, " \
+                          "each entry in the outputs list must have the name specified as well, " \
+                          "via the 'name' argument in ct.TensorType/ct.ImageType"
+                    raise ValueError(msg)
+            else: # len(output_vars) > 1
+                # if there are more than 1 sink nodes (i.e. inferred outputs), the user must provide names
+                # so that the output types can be correctly mapped.
+                msg = "The list of ct.TensorType()/ct.ImageType() provided in the 'outputs' argument, does not " \
+                      "have names. When names are not provided, the outputs are automatically inferred " \
+                      "from the TF graph. There are {} outputs detected which are more than 1. " \
+                      "In this case, to map the output types correctly, " \
+                      "please provide names for each of the " \
+                      "outputs. The output names inferred from the TF graph are: {} "
+                raise ValueError(msg.format(
+                    len(output_vars),
+                    output_vars_names,
+                ))
+        else:
+            # user provided output names. In this case, the appropriate tensors must have
+            # been selected from the TF graph bases on the output names.
+            # Verify that the names present in self.main_output_types match the output_vars_names (it should match).
+            # Also, reconstruct the self.main_output_types list, in the same order of outputs as
+            # present in the output_vars_names
+            assert len(output_vars) == len(self.main_output_types), \
+                "this should match if the outputs were picked correctly from the TF graph"
+            for out in self.main_output_types:
+                if out.name not in output_vars_names:
+                    msg = "output name, '{}', not found in Tensorflow Graph. Available output names are: {}"
+                    raise KeyError(msg.format(out.name, output_vars_names))
+            name_to_input_type_map = {}
+            for out in self.main_output_types:
+                name_to_input_type_map[out.name] = out
+            main_output_types = []
+            for out_var in output_vars:
+                main_output_types.append(name_to_input_type_map[out_var.name])
+            self.main_output_types = main_output_types
+
+
     def check_placeholder_output(self, prog, outputs_name):
         """
         Handle the cases where placeholder is output.
@@ -301,7 +356,7 @@ class TFConverter:
                 block3() {
                 } -> (%Placeholder)
             }
-        But self.outputs = ["Placeholder:0"]
+        But self.output_names = ["Placeholder:0"]
         We need to change the block output to Placeholder:0 by inserting an identity
         """
         block = prog["main"]
@@ -326,8 +381,19 @@ class TFConverter:
         with Function(func_inputs) as ssa_func:
             # Get the input Var
             for name in func_inputs.keys():
-                self.context.add(name, ssa_func.inputs[name])
-            outputs = convert_graph(self.context, graph, self.outputs)
+                input_var = ssa_func.inputs[name]
+                if (types.is_tensor(input_var.sym_type) or types.is_scalar(input_var.sym_type)) \
+                        and (input_var.dtype == types.fp16 or input_var.dtype == types.fp64):
+                    # cast the input var to float32
+                    # We need to do this because the type inference is very buggy when started from
+                    # float16/float64 typed inputs. Until that is fixed in the following radar
+                    # we cast all inputs of type float16/float64 to float32 as the first step.
+                    # These casts will later get removed, if compute_precision=Float16 is
+                    # provided, which will cause the FP16ComputePrecision pass to run.
+                    # TODO: remove this when this radar is fixed: rdar://93731970
+                    input_var = mb.cast(x=input_var, dtype="fp32", name=name)
+                self.context.add(name, input_var)
+            outputs = convert_graph(self.context, graph, self.output_names)
             ssa_func.set_outputs(outputs)
             prog.add_function("main", ssa_func)
         # check duplicate output
@@ -379,13 +445,19 @@ class TFConverter:
         # Note: only rename the output if the output is not Placeholder.
 
         input_names = [x.name for x in self.inputs]
-        for v_o, out_name in zip(prog["main"].outputs, self.outputs):
+        for v_o, out_name in zip(prog["main"].outputs, self.output_names):
             if v_o.name != out_name and v_o.name not in input_names:
                 logging.info(
                     "Renaming output var: '{}' -> '{}'".format(v_o.name, out_name)
                 )
                 v_o.name = out_name
-        self.check_placeholder_output(prog, self.outputs)
+        self.check_placeholder_output(prog, self.output_names)
+
+        # verify that if model output dtypes / names are provided by the user, they are valid
+        if self.main_output_types is not None:
+            self._validate_and_update_main_output_types(prog)
+            prog.set_main_output_types(self.main_output_types)
+
 
     @_profile
     def convert(self):

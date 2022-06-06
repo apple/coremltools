@@ -17,8 +17,10 @@ from coremltools.converters.mil.input_types import InputType
 class Program:
     def __init__(self):
         self.main_input_types = []
+        self.main_output_types = None
         self.functions = {}
         self.parameters = {}
+        self.skip_all_passes = False
 
     def add_function(self, name, ssa_func):
         if not isinstance(ssa_func, Function):
@@ -34,6 +36,13 @@ class Program:
         elif not all([isinstance(inp, InputType) for inp in inputs]):
             raise ValueError("main inputs should be tuple of InputSpec")
         self.main_input_types = inputs
+
+    def set_main_output_types(self, outputs=None):
+        if outputs is not None:
+            if not (isinstance(outputs, list) and all([isinstance(out, InputType) for out in outputs])):
+                raise TypeError("main outputs should be a list of type ct.TensorType or ct.ImageType")
+        self.main_output_types = outputs
+
 
     def find_ops(self, prefix=None, op_type=None, exactly_one=False):
         """

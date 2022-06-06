@@ -30,6 +30,7 @@ namespace CoreML {
             MilStoragePythonWriter(const std::string& filePath, bool truncateFile);
             ~MilStoragePythonWriter();
 
+            u_int64_t write_int8_data(const std::vector<int8_t>& data);
             u_int64_t write_uint8_data(const std::vector<uint8_t>& data);
             u_int64_t write_fp16_data(const std::vector<uint16_t>& data);
             u_int64_t write_float_data(const std::vector<float>& data);
@@ -48,6 +49,7 @@ namespace CoreML {
             MilStoragePythonReader(std::string filePath);
             ~MilStoragePythonReader();
 
+            const std::vector<int8_t> read_int8_data(uint64_t offset);
             const std::vector<uint8_t> read_uint8_data(uint64_t offset);
             const std::vector<uint16_t> read_fp16_data(uint64_t offset);
             const std::vector<float> read_float_data(uint64_t offset);

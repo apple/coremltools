@@ -38,12 +38,6 @@ check_python_flake8:
     paths:
       - build/dist/
 
-build_wheel_linux_py35:
-  <<: *build_linux
-  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-18.04:1.0.0
-  variables:
-    PYTHON: "3.5"
-
 build_wheel_linux_py36:
   <<: *build_linux
   image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-18.04:1.0.0
@@ -84,11 +78,6 @@ build_wheel_linux_py39:
       expire_in: 2 weeks
       paths:
         - build/dist/
-
-build_wheel_macos_py35:
-  <<: *build_macos
-  variables:
-    PYTHON: "3.5"
 
 build_wheel_macos_py36:
   <<: *build_macos

@@ -10,21 +10,21 @@ from coremltools.converters.mil.mil.var import InternalVar
 
 
 SUPPORT_INT_TYPES = [
-                        types.uint8,
-                        types.int8,
-                        types.uint16,
-                        types.int16,
-                        types.uint32,
-                        types.int32,
-                        types.uint64,
-                        types.int64,
-                    ]
+    types.uint8,
+    types.int8,
+    types.uint16,
+    types.int16,
+    types.uint32,
+    types.int32,
+    types.uint64,
+    types.int64,
+]
 
 SUPPORT_FLOAT_TYPES = [
-                        types.fp16,
-                        types.fp32,
-                        types.fp64,
-                    ]
+    types.fp16,
+    types.fp32,
+    types.fp64,
+]
 
 
 class DefaultInputs:
@@ -113,9 +113,13 @@ class InputSpec:
             if input_type.const and \
                 not isinstance(input_type, InternalInputType) \
                 and var.val is None:
-                msg = msg_prefix + \
-                    'Input {} must be const at compile time'
-                raise ValueError(msg.format(name), name, var.name)
+
+                if var.op and var.op.op_type.startswith("constexpr_"):
+                    pass  # Output of constexprs qualifies as const but gets materialized after load time
+                else:
+                    msg = msg_prefix + \
+                        'Input {} must be const at compile time'
+                    raise ValueError(msg.format(name), name, var.name)
 
             if not isinstance(var, InternalVar) and \
                 not input_type.is_compatible(var):
@@ -123,7 +127,6 @@ class InputSpec:
                         "{} but got {}"
                 raise ValueError(msg.format(name, var.name, input_type.type_str,
                             var.sym_type.__type_info__()))
-
 
 
 class _InputType:
@@ -184,7 +187,7 @@ class _InputType:
 
 class ListInputType(_InputType):
     def __init__(self, **kwargs):
-        super(ListInputType, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def _is_compatible(self, v):
         return types.is_list(v.sym_type)
@@ -195,20 +198,29 @@ class ListInputType(_InputType):
 
 
 class ScalarOrTensorInputType(_InputType):
-    def __init__(self, **kwargs):
-        super(ScalarOrTensorInputType, self).__init__(**kwargs)
+    def __init__(self, type_domain=None, **kwargs):
+        self.type_domain = []
+        if type_domain is not None:
+            for dtype in type_domain:
+                if not isinstance(type, type(dtype)):
+                    raise ValueError("Type domain should be an iterable of numpy dtypes.")
+                self.type_domain.append(types.type_to_builtin_type(dtype))
+        super().__init__(**kwargs)
 
     def _is_compatible(self, v):
-        return types.is_scalar(v.dtype) or types.is_tensor(v.dtype)
+        result = types.is_scalar(v.dtype) or types.is_tensor(v.dtype)
+        if self.type_domain:
+            result = result and (v.dtype in self.type_domain)
+        return result
 
     @property
     def type_str(self):
-        return 'tensor or scalar'
+        return 'tensor or scalar of dtype from type domain ' + str([types.builtin_to_string(v) for v in self.type_domain])
 
 
 class ListOrScalarOrTensorInputType(_InputType):
     def __init__(self, **kwargs):
-        super(ListOrScalarOrTensorInputType, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def _is_compatible(self, v):
         return (
@@ -233,7 +245,7 @@ class IntInputType(ScalarOrTensorInputType):
     """
 
     def __init__(self, **kwargs):
-        super(IntInputType, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def _is_compatible(self, v):
         return v.dtype in SUPPORT_INT_TYPES
@@ -254,7 +266,7 @@ class BoolInputType(ScalarOrTensorInputType):
     """
 
     def __init__(self, **kwargs):
-        super(BoolInputType, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def _is_compatible(self, v):
         return v.dtype == types.bool
@@ -275,7 +287,7 @@ class FloatInputType(ScalarOrTensorInputType):
     """
 
     def __init__(self, **kwargs):
-        super(FloatInputType, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def _is_compatible(self, v):
         return v.dtype in SUPPORT_FLOAT_TYPES
@@ -296,7 +308,7 @@ class IntOrFloatInputType(ScalarOrTensorInputType):
     """
 
     def __init__(self, **kwargs):
-        super(IntOrFloatInputType, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def _is_compatible(self, v):
         return v.dtype in SUPPORT_INT_TYPES + SUPPORT_FLOAT_TYPES
@@ -318,7 +330,7 @@ class IntOrFloatOrBoolInputType(ScalarOrTensorInputType):
     """
 
     def __init__(self, **kwargs):
-        super(IntOrFloatOrBoolInputType, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def _is_compatible(self, v):
         return v.dtype in SUPPORT_INT_TYPES + SUPPORT_FLOAT_TYPES + [types.bool]
@@ -337,7 +349,7 @@ class TensorInputType(ScalarOrTensorInputType):
     """
 
     def __init__(self, **kwargs):
-        super(TensorInputType, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def _is_compatible(self, v):
         # We only support scalar string type.
@@ -357,7 +369,7 @@ class FloatTensorInputType(ScalarOrTensorInputType):
     """
 
     def __init__(self, **kwargs):
-        super(FloatTensorInputType, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def _is_compatible(self, v):
         return types.is_tensor(v.sym_type) and v.dtype in SUPPORT_FLOAT_TYPES
@@ -375,7 +387,7 @@ class IntTensorInputType(ScalarOrTensorInputType):
     """
 
     def __init__(self, **kwargs):
-        super(IntTensorInputType, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def _is_compatible(self, v):
         return types.is_tensor(v.sym_type) and v.dtype in SUPPORT_INT_TYPES
@@ -385,7 +397,7 @@ class IntTensorInputType(ScalarOrTensorInputType):
 
 class BoolTensorInputType(ScalarOrTensorInputType):
     def __init__(self, **kwargs):
-        super(BoolTensorInputType, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def _is_compatible(self, v):
         return types.is_tensor(v.sym_type) and v.dtype == types.bool
@@ -396,7 +408,7 @@ class BoolTensorInputType(ScalarOrTensorInputType):
 
 class StringInputType(ScalarOrTensorInputType):
     def __init__(self, **kwargs):
-        super(StringInputType, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def _is_compatible(self, v):
         return types.is_str(v.sym_type)
@@ -407,7 +419,7 @@ class StringInputType(ScalarOrTensorInputType):
 
 class TupleInputType(_InputType):
     def __init__(self, **kwargs):
-        super(TupleInputType, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def _is_compatible(self, v):
         # We don't check the detail types within the tuple.
@@ -426,7 +438,7 @@ class InternalInputType(_InputType):
     """
 
     def __init__(self, **kwargs):
-        super(InternalInputType, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def _is_compatible(self, v):
         return True  # skip type check by default for InternalInputType.
@@ -438,7 +450,7 @@ class PyFunctionInputType(InternalInputType):
     """
 
     def __init__(self, **kwargs):
-        super(PyFunctionInputType, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     # def _is_compatible(self, v):
     #    return callable(v.val)
@@ -446,7 +458,7 @@ class PyFunctionInputType(InternalInputType):
 
 class InternalStringInputType(InternalInputType):
     def __init__(self, **kwargs):
-        super(InternalStringInputType, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     # def _is_compatible(self, v):
     #    return types.is_str(v.sym_type)
@@ -454,7 +466,7 @@ class InternalStringInputType(InternalInputType):
 
 class InternalScalarOrTensorInputType(InternalInputType):
     def __init__(self, **kwargs):
-        super(InternalScalarOrTensorInputType, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     # def _is_compatible(self, v):
     #    return types.is_scalar(v.dtype) or types.is_tensor(v.dtype)

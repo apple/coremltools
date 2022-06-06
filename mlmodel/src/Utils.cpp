@@ -122,6 +122,10 @@ void CoreML::downgradeSpecificationVersion(Specification::Model *pModel) {
         pModel->set_specificationversion(MLMODEL_SPECIFICATION_VERSION_NEWEST);
     }
 
+    if (pModel->specificationversion() == MLMODEL_SPECIFICATION_VERSION_IOS16 && !hasIOS16Features(*pModel)) {
+        pModel->set_specificationversion(MLMODEL_SPECIFICATION_VERSION_IOS15);
+    }
+
     if (pModel->specificationversion() == MLMODEL_SPECIFICATION_VERSION_IOS15 && !hasIOS15Features(*pModel)) {
         pModel->set_specificationversion(MLMODEL_SPECIFICATION_VERSION_IOS14);
     }
@@ -301,6 +305,59 @@ bool CoreML::hasFlexibleShapes(const Specification::Model& model) {
             }
         }
     }
+    return false;
+}
+
+bool CoreML::hasFloat16MultiArray(const Specification::Model& model) {
+    for (const auto& input: model.description().input()) {
+        if (input.type().Type_case() == Specification::FeatureType::kMultiArrayType) {
+            if (input.type().multiarraytype().datatype() == Specification::ArrayFeatureType_ArrayDataType_FLOAT16) {
+                return true;
+            }
+        }
+    }
+
+    for (const auto& output: model.description().output()) {
+        if (output.type().Type_case() == Specification::FeatureType::kMultiArrayType) {
+            if (output.type().multiarraytype().datatype() == Specification::ArrayFeatureType_ArrayDataType_FLOAT16) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+bool CoreML::hasCoreML6Opsets(const Specification::Model& model) {
+    if (model.Type_case() == Specification::Model::kMlProgram) {
+        auto main_iter = model.mlprogram().functions().find("main");
+        if (main_iter != model.mlprogram().functions().end()) {
+            const auto& main = main_iter->second;
+            if (main.opset() == "CoreML6") {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool CoreML::hasGrayscaleFloat16Image(const Specification::Model& model) {
+    for (const auto& input: model.description().input()) {
+        if (input.type().Type_case() == Specification::FeatureType::kImageType) {
+            if (input.type().imagetype().colorspace() == Specification::ImageFeatureType_ColorSpace_GRAYSCALE_FLOAT16) {
+                return true;
+            }
+        }
+    }
+
+    for (const auto& output: model.description().output()) {
+        if (output.type().Type_case() == Specification::FeatureType::kMultiArrayType) {
+            if (output.type().imagetype().colorspace() == Specification::ImageFeatureType_ColorSpace_GRAYSCALE_FLOAT16) {
+                return true;
+            }
+        }
+    }
+
     return false;
 }
 
@@ -566,6 +623,20 @@ bool CoreML::hasIOS15Features(const Specification::Model& model) {
             return (hasSoundPrint(model));
     }
     return false;
+}
+
+bool CoreML::hasIOS16Features(const Specification::Model& model) {
+    // New in IOS16 features:
+    //  - FLOAT16 array data type
+    //  - GRAYSCALE_FLOAT16 image color space.
+    //  - CoreML6 Opsets for mlProgram models
+    
+    bool result = false;
+    result = result || hasFloat16MultiArray(model);
+    result = result || hasGrayscaleFloat16Image(model);
+    result = result || hasCoreML6Opsets(model);
+
+    return result;
 }
 
 bool CoreML::hasCustomModel(const Specification::Model& model) {

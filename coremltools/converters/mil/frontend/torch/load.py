@@ -3,7 +3,9 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import logging as _logging
 import os.path as _os_path
+
 import torch as _torch
 
 from .converter import TorchConverter, torch_to_mil_types
@@ -31,15 +33,18 @@ def load(model_spec, debug=False, **kwargs):
         If names are not specified: input keys for calling predict on the converted model
         will be internal symbols of the input to the graph.
         User can specify a subset of names.
-    outputs (optional): List of output name strings. If specified: keys of output dictionary
-        will be these names in order of flattened returned outputs. If not specified:
-        output dictionary keys will be the internal output symbols in the graph.
-        User can specify a subset of names.
+    outputs (optional): list[ct.InputType] or None
+        list of either ct.TensorTypes or ct.ImageTypes (both of which are child classes of InputType)
+        This is the value of the "outputs" argument, passed on by the user in "coremltools.convert" API.
     cut_at_symbols (optional): List of internal symbol name strings. Graph conversion will
         terminate once these symbols have been generated. For debugging use
         only.
     """
     torchscript = _torchscript_from_model(model_spec)
+
+    if type(torchscript) == _torch.jit._script.RecursiveScriptModule:
+        _logging.warning("Support for converting Torch Script Models is experimental. "
+                         "If possible you should use a traced model for conversion.")
     inputs = _convert_to_torch_inputtype(kwargs["inputs"])
     outputs = kwargs.get("outputs", None)
     cut_at_symbols = kwargs.get("cut_at_symbols", None)
@@ -66,6 +71,8 @@ def _convert_to_torch_inputtype(inputs):
         if isinstance(_input, (list, tuple)):
             input_type.append(_convert_to_torch_inputtype(_input))
         elif isinstance(_input, InputType):
+            if _input.shape is None:
+                raise ValueError("'shape' must be provided in the 'inputs' argument for pytorch conversion")
             input_type.append(_input)
         elif isinstance(_input, _torch.Tensor):
             input_type.append(

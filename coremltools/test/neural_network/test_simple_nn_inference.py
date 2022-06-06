@@ -8,7 +8,7 @@ import os
 import numpy as np
 
 import coremltools
-from coremltools import utils
+from coremltools import ComputeUnit, utils
 from coremltools.models import neural_network as neural_network
 import coremltools.models.datatypes as datatypes
 
@@ -39,9 +39,9 @@ class TestNeuralNetworkPrediction:
         coremltools.models.utils.save_spec(builder.spec, model_path)
 
         try:
-            model = coremltools.models.MLModel(model_path)
+            model = coremltools.models.MLModel(model_path, compute_units=ComputeUnit.CPU_ONLY)
             if utils._macos_version() >= (10, 13):
-                out = model.predict(input, useCPUOnly=True)
+                out = model.predict(input)
         except RuntimeError as e:
             print(e)
             assert str(e) == "Error compiling model: \"The file couldn’t be saved.\"."

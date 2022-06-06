@@ -54,7 +54,12 @@ namespace CoreML {
     // - Sound Print of Audio Feature Print
     static const int32_t MLMODEL_SPECIFICATION_VERSION_IOS15 = 6;
 
-    static const int32_t MLMODEL_SPECIFICATION_VERSION_NEWEST = MLMODEL_SPECIFICATION_VERSION_IOS15;
+    // version 7:
+    // - FLOAT16 array data type
+    // - GRAYSCALE_FLOAT16 image color space.
+    static const int32_t MLMODEL_SPECIFICATION_VERSION_IOS16 = 7;
+
+    static const int32_t MLMODEL_SPECIFICATION_VERSION_NEWEST = MLMODEL_SPECIFICATION_VERSION_IOS16;
 
 }
 

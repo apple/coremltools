@@ -12,7 +12,7 @@ from ..proto import FeatureTypes_pb2 as _FeatureTypes_pb2
 from ..proto import Model_pb2
 
 
-class _DatatypeBase(object):
+class _DatatypeBase:
     def __init__(self, type_tag, full_tag, num_elements):
         self.type_tag, self.full_tag = type_tag, full_tag
         self.num_elements = num_elements

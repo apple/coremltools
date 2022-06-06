@@ -10,7 +10,7 @@ import warnings
 from coremltools.converters.mil.mil import Function
 
 
-class NameSanitizer(object):
+class NameSanitizer:
 
     def __init__(self, prefix=None):
         # to hold all names encountered,

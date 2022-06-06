@@ -78,15 +78,12 @@ Model::Model(const std::string& urlStr, const std::string& computeUnits) {
     }
 }
 
-py::dict Model::predict(const py::dict& input, bool useCPUOnly) {
+py::dict Model::predict(const py::dict& input) {
     @autoreleasepool {
         NSError *error = nil;
         MLDictionaryFeatureProvider *inFeatures = Utils::dictToFeatures(input, &error);
         Utils::handleError(error);
-        MLPredictionOptions *options = [[MLPredictionOptions alloc] init];
-        options.usesCPUOnly = useCPUOnly;
         id<MLFeatureProvider> outFeatures = [m_model predictionFromFeatures:static_cast<MLDictionaryFeatureProvider * _Nonnull>(inFeatures)
-                                                                    options:options
                                                                       error:&error];
         Utils::handleError(error);
         return Utils::featuresToDict(outFeatures);

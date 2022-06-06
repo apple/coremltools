@@ -3,7 +3,6 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-
 import os
 import tempfile
 import shutil
@@ -12,8 +11,8 @@ import numpy as np
 import pytest
 
 import coremltools as ct
-import coremltools.converters as converter
 from coremltools._deps import _IS_MACOS
+import coremltools.converters as converter
 import coremltools.proto.FeatureTypes_pb2 as ft
 from coremltools import TensorType, ImageType, RangeDim, EnumeratedShapes
 from coremltools.converters.mil.testing_utils import random_gen
@@ -151,11 +150,11 @@ class TestTf1ModelInputsOutputs(TensorFlowBaseTest):
 
         with pytest.raises(ValueError) as e:
             converter.convert(model, minimum_deployment_target=target)
-        e.match(
-            r"Provided minimum deployment target requires model to be of version 4 but converted model "
-            r"uses following features which are available from version 5 onwards. "
-            r"Please use a higher minimum deployment target to convert. \n    1. Cumsum operation\n"
-        )
+            e.match(
+                r"Provided minimum deployment target requires model to be of version 4 but converted model "
+                r"uses following features which are available from version 5 onwards. "
+                r"Please use a higher minimum deployment target to convert. \n    1. Cumsum operation\n"
+            )
 
     @pytest.mark.parametrize(
         "target",
@@ -261,7 +260,7 @@ class TestTf1ModelInputsOutputs(TensorFlowBaseTest):
             np.allclose(ret[output_name], np.maximum(input_values[0], 0.0))
 
         if _IS_MACOS:
-            with pytest.raises(RuntimeError) as e:
+            with pytest.raises(RuntimeError):
                 input_values = [random_gen((5, 4, 5), -10.0, 10.0)]
                 input_dict = {input_name: input_values[0]}
                 ret = mlmodel.predict(input_dict)
@@ -323,18 +322,18 @@ class TestTf1ModelFormats:
         with tf.Graph().as_default() as graph:
             x = tf.placeholder(tf.float32, shape=(3, 4, 5))
             out = tf.nn.relu(x)
-        mlmodel = converter.convert(
-            graph, inputs=[TensorType(x.op.name, (3, 4, 5))], outputs=[out.op.name]
-        )
-        assert mlmodel is not None
+            mlmodel = converter.convert(
+                graph, inputs=[TensorType(x.op.name, (3, 4, 5))], outputs=[out.op.name]
+            )
+            assert mlmodel is not None
 
     def test_graph_def_file(self):
         with tf.Graph().as_default() as graph:
             x = tf.placeholder(tf.float32, shape=(3, 4, 5))
             out = tf.nn.relu(x)
-        tf.io.write_graph(
-            graph, self.saved_model_dir, self.model_path_pb, as_text=False
-        )
+            tf.io.write_graph(
+                graph, self.saved_model_dir, self.model_path_pb, as_text=False
+            )
         mlmodel = converter.convert(
             self.model_path_pb,
             inputs=[TensorType(x.op.name, (3, 4, 5))],
@@ -385,18 +384,18 @@ class TestTf1ModelFormats:
         with tf.Graph().as_default() as graph:
             x = tf.placeholder(tf.float32, shape=(3, 4, 5))
             out = tf.nn.relu(x)
-        mlmodel = converter.convert(
-            graph, inputs=[TensorType(x.op.name, (3, 4, 5))], outputs=[out.op.name]
-        )
-        metadata_keys = mlmodel.get_spec().description.metadata.userDefined
-        assert "com.github.apple.coremltools.version" in metadata_keys
-        assert "com.github.apple.coremltools.source" in metadata_keys
-        assert "tensorflow==1." in metadata_keys["com.github.apple.coremltools.source"]
+            mlmodel = converter.convert(
+                graph, inputs=[TensorType(x.op.name, (3, 4, 5))], outputs=[out.op.name]
+            )
+            metadata_keys = mlmodel.get_spec().description.metadata.userDefined
+            assert "com.github.apple.coremltools.version" in metadata_keys
+            assert "com.github.apple.coremltools.source" in metadata_keys
+            assert "tensorflow==1." in metadata_keys["com.github.apple.coremltools.source"]
 
     def test_invalid_format_none(self):
         with pytest.raises(NotImplementedError) as e:
             converter.convert(None, source="tensorflow")
-        e.match(r"Expected model format: .* .pb")
+            e.match(r"Expected model format: .* .pb")
 
     def test_invalid_format_invalid_extension(self):
         _, invalid_filename = tempfile.mkstemp(
@@ -404,35 +403,35 @@ class TestTf1ModelFormats:
         )
         with pytest.raises(NotImplementedError) as e:
             converter.convert(invalid_filename, source="tensorflow")
-        e.match(r"Expected model format: .* .pb")
+            e.match(r"Expected model format: .* .pb")
 
     def test_invalid_converter_source(self):
         with pytest.raises(ValueError) as e:
             converter.convert(None, source="invalid")
-        expected_msg = r'Unrecognized value of argument "source": .*'
-        e.match(expected_msg)
+            expected_msg = r'Unrecognized value of argument "source": .*'
+            e.match(expected_msg)
 
     def test_invalid_converter_minimum_deployment_flag(self):
         with pytest.raises(TypeError) as e:
             converter.convert(
                 None, source="tensorflow", minimum_deployment_target="iOs14"
             )
-        expected_msg = (
-            "Unrecognized value of argument 'minimum_deployment_target': iOs14. "
-            "It needs to be a member of 'coremltools.target' enumeration"
-        )
+            expected_msg = (
+                "Unrecognized value of argument 'minimum_deployment_target': iOs14. "
+                "It needs to be a member of 'coremltools.target' enumeration"
+            )
 
-        e.match(expected_msg)
+            e.match(expected_msg)
 
     def test_invalid_converter_target(self):
         with tf.Graph().as_default() as graph:
             x = tf.placeholder(tf.float32, shape=(3, 4, 5))
         with pytest.raises(NotImplementedError) as e:
             converter.convert(graph, convert_to="invalid", source="tensorflow")
-        e.match(r"Backend converter .* not implemented")
+            e.match(r"Backend converter .* not implemented")
 
     def test_invalid_format_non_exist(self):
         non_exist_filename = self.model_path_pb.replace(".pb", "_non_exist.pb")
         with pytest.raises(ValueError) as e:
             converter.convert(non_exist_filename, source="tensorflow")
-        e.match(r"Input model .* does not exist")
+            e.match(r"Input model .* does not exist")
