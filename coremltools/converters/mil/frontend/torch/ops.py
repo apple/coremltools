@@ -2473,6 +2473,10 @@ def upsample_nearest2d(context, node):
 def tupleunpack(context, node):
     inputs = _get_inputs(context, node, expected=1)
     values = inputs[0]
+
+    if len(node.outputs) == 1:
+        values = [values]
+
     # Node input could have been turned into constant array in @tupleconstruct
     if not isinstance(values, tuple) and not isinstance(values, list):
         values = values.val
