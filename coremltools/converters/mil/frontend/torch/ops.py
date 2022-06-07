@@ -3939,8 +3939,20 @@ def ceil(context, node):
 @register_torch_op
 def clamp(context, node):
     inputs = _get_inputs(context, node, expected=3)
-    min_val = inputs[1] if inputs[1] else _np.finfo(_np.float32).min
-    max_val = inputs[2] if inputs[2] else _np.finfo(_np.float32).max
+    if not inputs[1]:
+        min_val = _np.finfo(_np.float32).min
+    else:
+        min_val = inputs[1]
+        if types.builtin_to_string(min_val.dtype).startswith('int'):
+            min_val = mb.cast(x=min_val, dtype='fp32')
+
+    if not inputs[2]:
+        max_val = _np.finfo(_np.float32).max
+    else:
+        max_val = inputs[2]
+        if types.builtin_to_string(max_val.dtype).startswith('int'):
+            max_val = mb.cast(x=max_val, dtype='fp32')
+
     context.add(mb.clip(x=inputs[0], alpha=min_val, beta=max_val, name=node.name))
 
 @register_torch_op
