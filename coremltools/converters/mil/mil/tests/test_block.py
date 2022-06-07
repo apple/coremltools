@@ -1,18 +1,17 @@
-# -*- coding: utf-8 -*-
-
 #  Copyright (c) 2020, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import copy
 
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.testing_utils import (
-    get_op_types_in_program,
-    assert_same_output_shapes,
     assert_same_output_names,
+    assert_same_output_shapes,
+    get_op_types_in_program,
 )
-import copy
+
 
 """
 Test manipulating variable and operations in the Block.

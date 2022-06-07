@@ -26,6 +26,7 @@ from coremltools.converters.mil.mil.input_type import (
     InputSpec,
     IntInputType,
     IntTensorInputType,
+    FloatTensorInputType,
     ScalarOrTensorInputType,
     TensorInputType
 )
@@ -137,7 +138,7 @@ class depth_to_space(Operation):
         )
 
     def __init__(self, **kwargs):
-        super(depth_to_space, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         x_type = self.x.dtype
@@ -178,7 +179,7 @@ class expand_dims(Operation):
     )
 
     def __init__(self, **kwargs):
-        super(expand_dims, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         x_rank = self.x.rank
@@ -276,7 +277,7 @@ class reshape(Operation):
         )
 
     def __init__(self, **kwargs):
-        super(reshape, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         if any_symbolic(self.shape.shape):
@@ -404,7 +405,7 @@ class reverse(Operation):
             )
 
     def __init__(self, **kwargs):
-        super(reverse, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         return self.x.sym_type
@@ -469,7 +470,7 @@ class reverse_sequence(Operation):
             batch_axis=0)
 
     def __init__(self, **kwargs):
-        super(reverse_sequence, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         return self.x.sym_type
@@ -541,7 +542,7 @@ class slice_by_index(Operation):
             )
 
     def __init__(self, **kwargs):
-        super(slice_by_index, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
 
@@ -660,7 +661,7 @@ class slice_by_size(Operation):
     )
 
     def __init__(self, **kwargs):
-        super(slice_by_size, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         if self.begin.rank != 1:
@@ -756,7 +757,7 @@ class space_to_depth(Operation):
         block_size=IntInputType(const=True),)
 
     def __init__(self, **kwargs):
-        super(space_to_depth, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         x_type = self.x.dtype
@@ -765,6 +766,161 @@ class space_to_depth(Operation):
         ret_shape = (n, c * (bs * bs), h // bs, w // bs)
         return types.tensor(x_type, ret_shape)
 
+@register_op(doc_str="")
+class space_to_batch(Operation):
+    """
+    Rearrange elements in a tensor from spatial into batch dimension.
+
+    Parameters
+    ----------
+    x: tensor<[n, C, H, W], T> (Required)
+        * Input tensor must have rank 4.
+        * The first and the second dimension are batch, channel, respectively
+        * The remaining dimensions (H, W) are treated as "spatial dimensions"
+    block_shape: const tensor<[2], i32> (Required)
+        * The length of the block_shape must be `2`
+        * It defines the shapes of the block in which the spatial dimensions are divided
+    paddings: const tensor<[2, 2], i32> (Required)
+        * It must have shape `(2, 2)`
+        * It defines the padding for each spatial dimensions
+
+    Returns
+    -------
+    tensor<[new_n, C, new_H, new_W], T>
+        * new_n = n * block_shape[0] * block_shape[1]
+        * new_H = (H + paddings[0][0] + padding[0][1])/block_shape[0]
+        * new_W = (W + paddings[1][0] + padding[1][1])/block_shape[1]
+        * The output has the same rank as the input
+
+    Attributes
+    ----------
+    T: fp16, fp32
+    """
+
+    input_spec = InputSpec(
+        x=FloatTensorInputType(),
+        block_shape=IntInputType(const=True),
+        paddings=IntInputType(const=True),
+        )
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    def type_inference(self):
+        x_shape = self.x.shape
+        block_shape = self.block_shape.val
+        paddings = self.paddings.val
+
+        if self.x.rank != 4:
+            msg = "Input to space_to_batch op must be rank 4. Instead got an input with rank {}".format(self.x.rank)
+            raise ValueError(msg)
+
+        if paddings.shape != (block_shape.shape[0], 2):
+            msg = "block_shape and paddings must have shape [2], [2, 2] accordingly in the space_to_batch op. "\
+            "Got {}, {}.".format(block_shape.shape, paddings.shape)
+            raise ValueError(msg)
+
+        m = block_shape.shape[0]
+        if m != 2:
+            msg = "space_to_batch op only supports spatial dimensions = 2. Got {}".format(m)
+            raise ValueError(msg)
+
+        b = x_shape[0]
+        c = x_shape[1]
+        spatial_shape = x_shape[2:2+m]
+
+        if self.x.rank != m + 2:
+            raise ValueError("The input rank of space_to_batch op must exactly be " \
+                             "len(block_shape){} + 2! Got {}".format(self.block_shape.val, self.x.rank))
+
+        padded_spatial_shape = [x + paddings[i][0] + paddings[i][1] for i, x in enumerate(spatial_shape)]
+        new_b = b * np.prod(block_shape)
+        new_spatial_shape = [padded_spatial_shape[i]/block_shape[i] for i in range(m)]
+        ret_shape = [new_b, c] + new_spatial_shape
+        x_type = self.x.dtype
+
+        return types.tensor(x_type, ret_shape)
+
+
+@register_op(doc_str="")
+class batch_to_space(Operation):
+    """
+    Rearrange elements in a tensor from batch into spatial dimension.
+
+    Parameters
+    ----------
+    x: tensor<[n, C, H, W], T> (Required)
+        * Input tensor must have rank 4.
+        * The first and the second dimension are batch, channel, respectively
+        * The remaining dimensions (H, W) are treated as "spatial dimensions"
+    block_shape: const tensor<[2], i32> (Required)
+        * The length of the block_shape must be `2`
+        * It defines the shapes of the block in which the spatial dimensions are multiplied
+    crops: const tensor<[2, 2], i32> (Required)
+        * It must have shape `(2, 2)`
+        * It defines the amount to crop from each spatial dimensions
+
+    Returns
+    -------
+    tensor<[new_n, C, new_H, new_W], T>
+        * new_n = n / (block_shape[0] * block_shape[1])
+        * new_H = (H * block_shape[0]) - paddings[0][0] - padding[0][1]
+        * new_W = (W * block_shape[1]) - paddings[1][0] - padding[1][1]
+        * The output has the same rank as the input
+
+    Attributes
+    ----------
+    T: fp16, fp32
+    """
+
+    input_spec = InputSpec(
+        x=FloatTensorInputType(),
+        block_shape=IntInputType(const=True),
+        crops=IntInputType(const=True),
+        )
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    def type_inference(self):
+        x_shape = self.x.shape
+        block_shape = self.block_shape.val
+        crops = self.crops.val
+
+        if self.x.rank != 4:
+            msg = "Input to batch_to_space op must be rank 4. Instead got an input with rank {}".format(self.x.rank)
+            raise ValueError(msg)
+
+        if crops.shape != (block_shape.shape[0], 2):
+            msg = "block_shape and crops must have shape [2], [2, 2] accordingly in the batch_to_space op. "\
+            "Got {}, {}.".format(block_shape.shape, crops.shape)
+            raise ValueError(msg)
+
+        m = block_shape.shape[0]
+        if m != 2:
+            msg = "batch_to_space op only supports spatial dimensions = 2. Got {}".format(m)
+            raise ValueError(msg)
+
+        b = x_shape[0]
+        c = x_shape[1]
+        spatial_shape = x_shape[2:2+m]
+
+        if self.x.rank != m + 2:
+            raise ValueError("The input rank of batch_to_space op must exactly be " \
+                             "len(block_shape){} + 2! Got {}".format(self.block_shape.val, self.x.rank))
+
+        if not is_symbolic(b) and  b % np.prod(block_shape) != 0:
+            msg = ("Batch size must be perfectly divided by the product of block_shape. Got batch size {}, and block_shape"
+            ).format(b, block_shape)
+            raise ValueError(msg)
+            
+        new_b = b / np.prod(block_shape)
+        new_spatial_shape = [spatial_shape[i] * block_shape[i] for i in range(m)]
+        cropped_spatial_shape = [x - crops[i][0] - crops[i][1] for i, x in enumerate(new_spatial_shape)]
+        ret_shape = [new_b, c] + cropped_spatial_shape
+        x_type = self.x.dtype
+
+        return types.tensor(x_type, ret_shape)
 
 @register_op(doc_str="")
 class squeeze(Operation):
@@ -800,7 +956,7 @@ class squeeze(Operation):
             )
 
     def __init__(self, **kwargs):
-        super(squeeze, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         x_type = self.x.dtype
@@ -862,7 +1018,7 @@ class transpose(Operation):
         perm=IntTensorInputType(const=True),)
 
     def __init__(self, **kwargs):
-        super(transpose, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         x_type = self.x.dtype
@@ -916,7 +1072,7 @@ class pixel_shuffle(Operation):
     )
 
     def __init__(self, **kwargs):
-        super(pixel_shuffle, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         x_type = self.x.dtype
@@ -969,7 +1125,7 @@ class sliding_windows(Operation):
         return DefaultInputs(stride=1)
 
     def __init__(self, **kwargs):
-        super(sliding_windows, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         x_shape = self.x.shape

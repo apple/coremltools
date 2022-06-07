@@ -17,7 +17,7 @@ np.random.seed(1984)
 
 
 class TestUseReflectionPadding:
-    
+
     def test_success_w_axis(self):
         @mb.program(input_specs=[mb.TensorSpec(shape=(1, 2, 6, 8))])
         def prog(x1):
@@ -86,7 +86,7 @@ class TestUseReflectionPadding:
             prog,
             inputs,
             expected_output_shapes={block.outputs[0].name: (1, 2, 8, 8)},
-        )        
+        )
 
 
     def test_failure_wrong_concat_order(self):
@@ -94,7 +94,7 @@ class TestUseReflectionPadding:
         def prog(x1):
             left = mb.slice_by_index(x=x1, begin=[0, 0, 1, 0], end=[0, 0, 2, 0], end_mask=[True, True, False, True])
             right = mb.slice_by_index(x=x1, begin=[0, 0, -2, 0], end=[0, 0, -1, 0], end_mask=[True, True, False, True])
-            # Concat is not in correct order 
+            # Concat is not in correct order
             x = mb.concat(values=[left, right, x1], axis=2)
 
             return x
@@ -110,7 +110,7 @@ class TestUseReflectionPadding:
             prog,
             inputs,
             expected_output_shapes={block.outputs[0].name: (1, 2, 8, 8)},
-        )        
+        )
 
 
     def test_failure_wrong_concat_order_2(self):
@@ -160,7 +160,7 @@ class TestUseReflectionPadding:
             prog,
             inputs,
             expected_output_shapes={block.outputs[0].name: (1, 2, 9, 8)},
-        )        
+        )
 
 
     def test_failure_not_all_same_input(self):

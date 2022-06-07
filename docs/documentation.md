@@ -184,11 +184,9 @@ You need to do this only once. Follow these steps:
 
 	```
 	coremltools.converters.rst
-	coremltools.converters.keras.rst
 	coremltools.converters.libsvm.rst
 	coremltools.converters.mil.rst
 	coremltools.converters.mil.mil.ops.defs.rst
-	coremltools.converters.onnx.rst
 	coremltools.converters.sklearn.rst
 	coremltools.converters.xgboost.rst
 	coremltools.models.neural_network.rst
@@ -202,12 +200,10 @@ You need to do this only once. Follow these steps:
 3. Delete all other `.rst` files in your `source` folder. You should now have the following files in your `source` folder, along with any additional modules you may have added:
 
 	```
-	coremltools.converters.keras.rst
 	coremltools.converters.libsvm.rst
 	coremltools.converters.mil.input_types.rst
 	coremltools.converters.mil.mil.ops.defs.rst
 	coremltools.converters.mil.rst
-	coremltools.converters.onnx.rst
 	coremltools.converters.rst
 	coremltools.converters.sklearn.rst
 	coremltools.converters.xgboost.rst

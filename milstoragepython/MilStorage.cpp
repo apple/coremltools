@@ -45,6 +45,10 @@ namespace {
 // These methods are needed in addition to the above template methods
 // because pybind does not allow us to expose template methods to
 // Python with gcc on Linux.
+u_int64_t MilStoragePythonWriter::write_int8_data(const std::vector<int8_t>& data) {
+    return writeData<int8_t>(*m_writer, data);
+}
+
 u_int64_t MilStoragePythonWriter::write_uint8_data(const std::vector<uint8_t>& data) {
     return writeData<uint8_t>(*m_writer, data);
 }
@@ -90,6 +94,10 @@ namespace {
 // These methods are needed in addition to the above template methods
 // because pybind does not allow us to expose template methods to
 // Python with gcc on Linux.
+const std::vector<int8_t> MilStoragePythonReader::read_int8_data(uint64_t offset) {
+    return readData<int8_t>(*m_reader, offset);
+}
+
 const std::vector<uint8_t> MilStoragePythonReader::read_uint8_data(uint64_t offset) {
     return readData<uint8_t>(*m_reader, offset);
 }

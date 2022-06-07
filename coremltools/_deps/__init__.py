@@ -100,7 +100,7 @@ _HAS_TF_2 = False
 _TF_1_MIN_VERSION = "1.12.0"
 _TF_1_MAX_VERSION = "1.15.0"
 _TF_2_MIN_VERSION = "2.1.0"
-_TF_2_MAX_VERSION = "2.6.2"
+_TF_2_MAX_VERSION = "2.8.0"
 
 try:
     import tensorflow
@@ -144,81 +144,8 @@ MSG_TF1_NOT_FOUND = "TensorFlow 1.x not found."
 MSG_TF2_NOT_FOUND = "TensorFlow 2.x not found."
 
 # ---------------------------------------------------------------------------------------
-_HAS_KERAS_TF = True
-_HAS_KERAS2_TF = True
-_KERAS_MIN_VERSION = "1.2.2"
-_KERAS_MAX_VERSION = "2.6.0"
-MSG_KERAS1_NOT_FOUND = "Keras 1 not found."
-MSG_KERAS2_NOT_FOUND = "Keras 2 not found."
-
-try:
-    # Prevent keras from printing things that are not errors to standard error.
-    import sys
-
-    import io
-
-    temp = io.StringIO()
-    stderr = sys.stderr
-    try:
-        sys.stderr = temp
-        import keras
-    except:
-        # Print out any actual error message and re-raise.
-        sys.stderr = stderr
-        sys.stderr.write(temp.getvalue())
-        raise
-    finally:
-        sys.stderr = stderr
-    import tensorflow
-
-    k_ver = _get_version(keras.__version__)
-
-    # keras 1 version too old
-    if k_ver < _StrictVersion(_KERAS_MIN_VERSION):
-        _HAS_KERAS_TF = False
-        _HAS_KERAS2_TF = False
-        _logging.warning(
-            (
-                "Keras version %s is not supported. Minimum required version: %s ."
-                "Keras conversion will be disabled."
-            )
-            % (keras.__version__, _KERAS_MIN_VERSION)
-        )
-    # keras version too new
-    if k_ver > _StrictVersion(_KERAS_MAX_VERSION):
-        _HAS_KERAS_TF = False
-        _logging.warning(
-            (
-                "Keras version %s has not been tested with coremltools. You may run into unexpected errors. "
-                "Keras %s is the most recent version that has been tested."
-            )
-            % (keras.__version__, _KERAS_MAX_VERSION)
-        )
-    # Using Keras 2 rather than 1
-    if k_ver >= _StrictVersion("2.0.0"):
-        _HAS_KERAS_TF = False
-        _HAS_KERAS2_TF = True
-    # Using Keras 1 rather than 2
-    else:
-        _HAS_KERAS_TF = True
-        _HAS_KERAS2_TF = False
-    if keras.backend.backend() != "tensorflow":
-        _HAS_KERAS_TF = False
-        _HAS_KERAS2_TF = False
-        _logging.warning(
-            (
-                "Unsupported Keras backend (only TensorFlow is currently supported). "
-                "Keras conversion will be disabled."
-            )
-        )
-
-except:
-    _HAS_KERAS_TF = False
-    _HAS_KERAS2_TF = False
-
-# ---------------------------------------------------------------------------------------
 _HAS_TORCH = True
-_TORCH_MAX_VERSION = "1.10.2"
+_TORCH_MAX_VERSION = "1.11.0"
 try:
     import torch
     _warn_if_above_max_supported_version("Torch", torch.__version__, _TORCH_MAX_VERSION)
@@ -228,13 +155,6 @@ MSG_TORCH_NOT_FOUND = "PyTorch not found."
 
 
 # ---------------------------------------------------------------------------------------
-_HAS_ONNX = True
-try:
-    import onnx
-except:
-    _HAS_ONNX = False
-MSG_ONNX_NOT_FOUND = "ONNX not found."
-
 try:
     import scipy
 except:

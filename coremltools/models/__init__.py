@@ -32,3 +32,4 @@ from .model import (
 )
 
 from . import neural_network
+from . import ml_program

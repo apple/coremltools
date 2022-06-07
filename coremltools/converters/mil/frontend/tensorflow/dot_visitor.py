@@ -6,7 +6,7 @@
 from coremltools.converters.mil.mil import types
 
 
-class DotVisitor(object):
+class DotVisitor:
     """
     Generates a dot description of a graph in dictionary form.
     """

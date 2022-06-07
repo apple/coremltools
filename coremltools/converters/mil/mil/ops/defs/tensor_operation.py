@@ -88,7 +88,7 @@ class band_part(Operation):
             upper=-1)
 
     def __init__(self, **kwargs):
-        super(band_part, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         return self.x.sym_type
@@ -140,7 +140,7 @@ class cumsum(Operation):
             reverse=False)
 
     def __init__(self, **kwargs):
-        super(cumsum, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -203,7 +203,7 @@ class fill(Operation):
             value=0.)
 
     def __init__(self, **kwargs):
-        super(fill, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         if any_symbolic(self.shape.shape):
@@ -283,7 +283,7 @@ class non_maximum_suppression(Operation):
             per_class_suppression=False)
 
     def __init__(self, **kwargs):
-        super(non_maximum_suppression, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         boxes_dtype = self.boxes.dtype
@@ -324,7 +324,7 @@ class non_zero(Operation):
     input_spec = InputSpec(x=TensorInputType())
 
     def __init__(self, **kwargs):
-        super(non_zero, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         shape = tuple([get_new_symbol(), self.x.rank])
@@ -380,10 +380,10 @@ class one_hot(Operation):
             axis=-1,
             on_value=1,
             off_value=0,
-            )
+        )
 
     def __init__(self, **kwargs):
-        super(one_hot, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         on_type = self.on_value.dtype
@@ -474,7 +474,7 @@ class pad(Operation):
             )
 
     def __init__(self, **kwargs):
-        super(pad, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         in_shape = self.x.shape
@@ -486,8 +486,8 @@ class pad(Operation):
             raise ValueError("Pad mode should be one of {'constant', 'reflect', 'replicate'}")
 
         if pad.val is None:
-            for i in range(self.pad.shape[0]//2):
-                ret_shape[-self.pad.shape[0]//2+i] = get_new_symbol()
+            for i in range(self.pad.shape[0] // 2):
+                ret_shape[-self.pad.shape[0] // 2 + i] = get_new_symbol()
         else:
             pad = pad.val
             pad = pad.copy()
@@ -558,7 +558,7 @@ class range_1d(Operation):
     )
 
     def __init__(self, **kwargs):
-        super(range_1d, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -622,7 +622,7 @@ class tile(Operation):
     input_spec = InputSpec(x=TensorInputType(), reps=TensorInputType(),)
 
     def __init__(self, **kwargs):
-        super(tile, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         x_type = self.x.dtype
@@ -704,7 +704,7 @@ class argsort(Operation):
             )
 
     def __init__(self, **kwargs):
-        super(argsort, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         return types.tensor(types.int32, self.x.shape)
@@ -764,7 +764,7 @@ class topk(Operation):
             )
 
     def __init__(self, **kwargs):
-        super(topk, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         x_type = self.x.dtype
@@ -880,7 +880,7 @@ class shape(Operation):
     input_spec = InputSpec(x = ScalarOrTensorInputType())
 
     def __init__(self, **kwargs):
-        super(shape, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         input_rank = self.x.rank
@@ -953,10 +953,10 @@ class concat(Operation):
     def default_inputs(self):
         return DefaultInputs(
             interleave=False,
-            )
+        )
 
     def __init__(self, **kwargs):
-        super(concat, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         concat_dim_len = 0
@@ -1111,7 +1111,7 @@ class split(Operation):
     )
 
     def __init__(self, **kwargs):
-        super(split, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         num_splits, sizes = self._get_num_splits_and_sizes()
@@ -1214,7 +1214,7 @@ class stack(Operation):
                            axis=IntInputType(const=True),)
 
     def __init__(self, **kwargs):
-        super(stack, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
 
@@ -1279,7 +1279,7 @@ class identity(Operation):
     input_spec = InputSpec(x=ListOrScalarOrTensorInputType())
 
     def __init__(self, **kwargs):
-        super(identity, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         return self.x.sym_type

@@ -27,6 +27,7 @@ from .torchir_passes import (
     remove_getattr_nodes
 )
 from .ssa_passes.torch_passes import torch_passes
+from .._utils import get_output_names
 
 torch_to_mil_types = {
     _torch.bool: types.bool,
@@ -139,7 +140,7 @@ class TorchConverter:
         Arguments:
             torchscript: torch.jit.ScriptModule object representing the model to convert.
             inputs: Input values and optional names. See kwarg in load.py for full description.
-            outputs: Names of the graph's outputs. See kwarg in load.py for full description.
+            outputs: List of outputs as ct.InputType. See kwarg in load.py for full description.
             cut_at_symbols: A list of internal symbol name strings. Graph conversion will
                 terminate once these symbols have been generated. For debugging use
                 only. See kwarg in load.py.
@@ -151,7 +152,8 @@ class TorchConverter:
             if isinstance(inp, ImageType) and self.inputs[idx].channel_first is None:
                 self.inputs[idx].channel_first = True
         self.torchscript = torchscript
-        self.output_names = outputs
+        self.outputs = outputs
+        self.output_names = get_output_names(self.outputs)
         self.context = TranscriptionContext()
         raw_graph, params_dict = self._expand_and_optimize_ir(self.torchscript)
         self.params_dict = params_dict
@@ -242,7 +244,18 @@ class TorchConverter:
             for internal_name, users_name in zip(
                 self.graph.inputs.keys(), ssa_func_inputs.keys()
             ):
-                self.context.add(ssa_func.inputs[users_name], torch_name=internal_name)
+                input_var = ssa_func.inputs[users_name]
+                if (types.is_tensor(input_var.sym_type) or types.is_scalar(input_var.sym_type)) \
+                    and (input_var.dtype == types.fp16 or input_var.dtype == types.fp64):
+                    # cast the input var to float32
+                    # We need to do this because the type inference is very buggy when started from
+                    # float16/float64 typed inputs. Until that is fixed in the following radar
+                    # we cast all inputs of type float16/float64 to float32 as the first step.
+                    # These casts will later get removed, if compute_precision=Float16 is
+                    # provided, which will cause the FP16ComputePrecision pass to run.
+                    # TODO: remove this when this radar is fixed: rdar://93731970
+                    input_var = mb.cast(x=input_var, dtype="fp32")
+                self.context.add(input_var, torch_name=internal_name)
 
             self.convert_const()
 
@@ -260,13 +273,23 @@ class TorchConverter:
             graph_outputs = [g for g in graph_outputs if g is not None]
 
             # Output renaming occurs
+            if self.outputs is not None:
+                if len(self.outputs) != len(graph_outputs):
+                    msg = "Number of outputs provided, {}, do not match the number of outputs detected in the model, {}."
+                    raise ValueError(msg.format(
+                        len(self.outputs),
+                        len(graph_outputs),
+                    ))
             if self.output_names:
                 for index, var in enumerate(graph_outputs):
-                    output_rename = self.output_names[index]
-                    var.name = output_rename
+                    if self.output_names[index] is not None:
+                        output_rename = self.output_names[index]
+                        var.name = output_rename
 
             ssa_func.set_outputs(graph_outputs)
             prog.add_function("main", ssa_func)
+            if self.outputs is not None:
+                prog.set_main_output_types(self.outputs)
         self.torch_passes(prog)
         return prog
 
@@ -400,7 +423,6 @@ class TorchConverter:
         _lower_graph_block(graph)
 
         return graph, params_dict
-
 
     @staticmethod
     def _expand_and_optimize_ir(torchscript):

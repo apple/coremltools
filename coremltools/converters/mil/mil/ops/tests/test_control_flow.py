@@ -2,7 +2,9 @@
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
+
 import itertools
+
 import pytest
 import numpy as np
 
@@ -150,7 +152,6 @@ class TestCond:
             use_cpu_only=use_cpu_for_conversion,
             frontend_only=False,
             backend=backend,
-            use_cpu_for_conversion=use_cpu_for_conversion,
         )
 
 

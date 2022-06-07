@@ -50,7 +50,7 @@ class clamped_relu(Operation):
     )
 
     def __init__(self, **kwargs):
-        super(clamped_relu, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -94,7 +94,7 @@ class elu(Operation):
             )
 
     def __init__(self, **kwargs):
-        super(elu, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -159,7 +159,7 @@ class gelu(Operation):
             )
 
     def __init__(self, **kwargs):
-        super(gelu, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -213,7 +213,7 @@ class leaky_relu(Operation):
             )
 
     def __init__(self, **kwargs):
-        super(leaky_relu, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -259,7 +259,7 @@ class linear_activation(Operation):
             )
 
     def __init__(self, **kwargs):
-        super(linear_activation, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -276,17 +276,19 @@ class prelu(Operation):
 
     Parameters
     ----------
-    x: tensor<[b, C, n, m], T> (Required)
+    x: tensor<[B, C, 1..3], T> (Required)
+        * x must have rank 4 or rank 3 or rank 5, i.e. a shape of (B,C,H) or (B,C,H,W) or (B,C,D,H,W)
     alpha: const tensor<[C], T>, (Required)
+        * The length of alpha must match the second dimension of x (channel dimension)
 
     Returns
     -------
-    tensor<[b, C, n, m], fp32>
+    tensor<[B, C, 1..3], T>
         * A tensor of the same shape as ``x``.
 
     Attributes
     ----------
-    T: fp16, fp32
+    T: fp32, fp16
     """
 
     input_spec = InputSpec(
@@ -294,7 +296,7 @@ class prelu(Operation):
         alpha=TensorInputType(const=True),)
 
     def __init__(self, **kwargs):
-        super(prelu, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -306,8 +308,8 @@ class prelu(Operation):
         return x_pos + b * alpha_br
 
     def type_inference(self):
-        if len(self.x.shape) < 3:
-            raise ValueError("x should be at least rank 3")
+        if self.x.rank not in (3, 4, 5):
+            raise ValueError("prelu op: x must be rank 3 or 4 or 5, instead it is of rank {}".format(len(self.x.shape)))
         if len(self.alpha.val.shape) != 1:
             raise ValueError("alpha should be rank 1")
         if self.x.shape[1] != self.alpha.val.shape[0]:
@@ -315,6 +317,12 @@ class prelu(Operation):
                 "Size of dimension 1 of alpha should be the same as "
                 + "the size of dimension 1 of x."
             )
+        if self.x.rank in (3, 5):
+            # check whether all alpha values are the same or not
+            are_values_same = np.where(np.abs(self.alpha.val - self.alpha.val[0]) > 1e-5)[0].size == 0
+            if not are_values_same:
+                raise ValueError("prelu op: rank 3 or rank 5 input is only supported when all the values of alpha are same,"
+                                 "which is not the case here")
         return self.x.sym_type
 
 
@@ -338,7 +346,7 @@ class relu(elementwise_unary):
     """
 
     def __init__(self, **kwargs):
-        super(relu, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -365,7 +373,7 @@ class relu6(elementwise_unary):
     """
 
     def __init__(self, **kwargs):
-        super(relu6, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -409,7 +417,7 @@ class scaled_tanh(Operation):
             )
 
     def __init__(self, **kwargs):
-        super(scaled_tanh, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -439,7 +447,7 @@ class sigmoid(elementwise_unary):
     """
 
     def __init__(self, **kwargs):
-        super(sigmoid, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -482,7 +490,7 @@ class sigmoid_hard(Operation):
             )
 
     def __init__(self, **kwargs):
-        super(sigmoid_hard, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -492,6 +500,7 @@ class sigmoid_hard(Operation):
 
     def type_inference(self):
         return self.x.sym_type
+
 
 @register_op(doc_str="")
 class silu(Operation):
@@ -514,10 +523,11 @@ class silu(Operation):
     input_spec = InputSpec(x=TensorInputType(),)
 
     def __init__(self, **kwargs):
-        super(silu, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         return types.tensor(self.x.dtype, tuple(self.x.shape))
+
 
 @register_op(doc_str="")
 class softplus(elementwise_unary):
@@ -539,7 +549,7 @@ class softplus(elementwise_unary):
     """
 
     def __init__(self, **kwargs):
-        super(softplus, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -574,7 +584,7 @@ class softplus_parametric(Operation):
     )
 
     def __init__(self, **kwargs):
-        super(softplus_parametric, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -637,7 +647,7 @@ class softmax(Operation):
             )
 
     def __init__(self, **kwargs):
-        super(softmax, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         return self.x.sym_type
@@ -649,6 +659,7 @@ class softmax(Operation):
         max_vals = np.max(x, axis=axis, keepdims=True)
         temp = np.exp(x - max_vals)
         return temp / np.sum(temp, axis=axis, keepdims=True)
+
 
 @register_op(doc_str="")
 class softsign(elementwise_unary):
@@ -670,7 +681,7 @@ class softsign(elementwise_unary):
     """
 
     def __init__(self, **kwargs):
-        super(softsign, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -709,7 +720,7 @@ class thresholded_relu(Operation):
             )
 
     def __init__(self, **kwargs):
-        super(thresholded_relu, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         return self.x.sym_type

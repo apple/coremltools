@@ -325,20 +325,48 @@ class TestLinearActivation:
 
 class TestPReLU:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "rank, alpha_values, use_cpu_only, backend", itertools.product(
+            [3, 4, 5],
+            [[1.0, 2.0, 3.0], [4.0, 4.0, 4.0]],
+            [True, False],
+            backends,
+        )
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
-        t = np.array([[[[-1, 3, 6]], [[-1, 2, -3]], [[4, -5, 6]]]], dtype=np.float32)
+    def test_builder_to_backend_smoke(self, rank, alpha_values, use_cpu_only, backend):
+        if (backend[0] == "mlprogram" and backend[1] == "fp16"):
+            pytest.xfail("rdar://92175249 ([MIL] TestActivation::test_prelu[backend=(mlprogram, fp16)] CI failure)")
+
+        alpha = np.array(alpha_values, dtype=np.float32)
+
+        if rank == 3 or rank == 5:
+            are_alpha_values_same = np.where(np.abs(alpha - alpha[0]) > 1e-5)[0].size == 0
+            if not are_alpha_values_same:
+                pytest.xfail("rdar://91442339")
+
+        t = np.array([[[[-1, 3]], [[-1, 2]], [[4, -5]]]], dtype=np.float32)
+        expected_outputs = np.array(
+            [[[[-1 * alpha[0], 3]], [[-1 * alpha[1], 2]], [[4, -5 * alpha[2]]]]], dtype=np.float32
+        )
+
+        shape = None
+        if rank == 3:
+            shape = (1, 3, 2)
+        elif rank == 4:
+            shape = (1, 3, 1, 2)
+        elif rank == 5:
+            shape = (1, 3, 1, 1, 2)
+        else:
+            raise ValueError("rank not supported")
+
+        t = np.reshape(t, shape)
+        expected_outputs = np.reshape(expected_outputs, shape)
+        expected_output_types = tuple([s for s in shape]) + (types.fp32,)
+
         input_placeholders = {"x": mb.placeholder(shape=t.shape)}
         input_values = {"x": t}
 
         def build(x):
-            return mb.prelu(x=x, alpha=np.array([1, 2, 3], dtype=np.float32))
-
-        expected_output_types = (1, 3, 1, 3, types.fp32)
-        expected_outputs = np.array(
-            [[[[-1, 3, 6]], [[-2, 2, -6]], [[4, -15, 6]]]], dtype=np.float32
-        )
+            return mb.prelu(x=x, alpha=alpha)
 
         run_compare_builder(
             build,
@@ -371,19 +399,18 @@ class TestPReLU:
     def test_builder_eval1(self):
         x_val = np.array([[[-1, 3, 6]], [[-1, 2, -3]], [[4, -5, 6]]], dtype=np.float32)
         with pytest.raises(ValueError, match=r".* dimension 1 .*"):
-            v = mb.prelu(x=x_val, alpha=np.array([1, 2], dtype=np.float32))
+            mb.prelu(x=x_val, alpha=np.array([1, 2], dtype=np.float32))
 
     @ssa_fn
     def test_builder_eval2(self):
         x_val = np.array([[[-1, 3, 6]], [[-1, 2, -3]], [[4, -5, 6]]], dtype=np.float32)
         with pytest.raises(ValueError, match=r"alpha .* rank 1"):
-            v = mb.prelu(x=x_val, alpha=np.array([[1, 2, 3]], dtype=np.float32))
+            mb.prelu(x=x_val, alpha=np.array([[1, 2, 3]], dtype=np.float32))
 
     @ssa_fn
     def test_builder_eval3(self):
-        x_val = np.array([[[-1, 3, 6]], [[-1, 2, -3]], [[4, -5, 6]]], dtype=np.float32)
         with pytest.raises(ValueError, match=r"x .* rank 3"):
-            v = mb.prelu(x=[1], alpha=np.array([[1, 2, 3]], dtype=np.float32))
+            mb.prelu(x=[1], alpha=np.array([[1, 2, 3]], dtype=np.float32))
 
     @pytest.mark.parametrize(
         "use_cpu_only, backend, dim, chan",
@@ -782,7 +809,7 @@ class TestSoftplusParametric:
     def test_builder_eval2(self):
         x_val = np.array([[[-1, 3, 6]], [[-1, 2, -3]], [[4, -5, 6]]], dtype=np.float32)
         with pytest.raises(ValueError, match=r".* dimension 1 .*"):
-            v = mb.softplus_parametric(
+            mb.softplus_parametric(
                 x=x_val,
                 alpha=np.array([1, 2], dtype=np.float32),
                 beta=np.array([4, 5, 6], dtype=np.float32),
@@ -792,7 +819,7 @@ class TestSoftplusParametric:
     def test_builder_eval3(self):
         x_val = np.array([[[-1, 3, 6]], [[-1, 2, -3]], [[4, -5, 6]]], dtype=np.float32)
         with pytest.raises(ValueError, match=r"alpha .* rank 1"):
-            v = mb.softplus_parametric(
+            mb.softplus_parametric(
                 x=x_val,
                 alpha=np.array([[1, 2, 3]], dtype=np.float32),
                 beta=np.array([4, 5, 6], dtype=np.float32),
@@ -801,7 +828,7 @@ class TestSoftplusParametric:
     @ssa_fn
     def test_builder_eval4(self):
         with pytest.raises(ValueError, match=r"x .* rank 3"):
-            v = mb.softplus_parametric(
+            mb.softplus_parametric(
                 x=[1],
                 alpha=np.array([[1, 2, 3]], dtype=np.float32),
                 beta=np.array([4, 5, 6], dtype=np.float32),
@@ -811,7 +838,7 @@ class TestSoftplusParametric:
     def test_builder_eval5(self):
         x_val = np.array([[[-1, 3, 6]], [[-1, 2, -3]], [[4, -5, 6]]], dtype=np.float32)
         with pytest.raises(ValueError, match=r".* dimension 1 .*"):
-            v = mb.softplus_parametric(
+            mb.softplus_parametric(
                 x=x_val,
                 alpha=np.array([1, 2, 3], dtype=np.float32),
                 beta=np.array([5, 6], dtype=np.float32),
@@ -821,7 +848,7 @@ class TestSoftplusParametric:
     def test_builder_eval6(self):
         x_val = np.array([[[[-1, 3, 6]], [[-1, 2, -3]], [[4, -5, 6]]]], dtype=np.float32)
         with pytest.raises(ValueError, match=r"beta .* rank 1"):
-            v = mb.softplus_parametric(
+            mb.softplus_parametric(
                 x=x_val,
                 alpha=np.array([1, 2, 3], dtype=np.float32),
                 beta=np.array([[4, 5, 6]], dtype=np.float32),

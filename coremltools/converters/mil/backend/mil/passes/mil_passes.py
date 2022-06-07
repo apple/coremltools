@@ -7,9 +7,11 @@ import logging as _logging
 
 from coremltools.converters.mil.backend.nn.passes.nn_passes import nn_backend_passes
 from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
+from coremltools.converters.mil._deployment_compatibility import AvailableTarget
 
 
-def mil_backend_passes(prog):
+def mil_backend_passes(prog, minimum_spec_version):
+    min_deployment_target = AvailableTarget(minimum_spec_version)
     passes = [
         "common::const_elimination",
         "mil_backend::adjust_io_to_supported_types",
@@ -27,7 +29,6 @@ def mil_backend_passes(prog):
         "mil_backend::sanitize_name_strings",
         "common::dedup_op_and_var_names",
         "nn_backend::handle_unused_inputs",  # must come after dce.
-        "nn_backend::alert_return_type_cast",  # must be at the end.
     ]
 
     _logging.debug("Program before common passes:\n{}".format(prog))
@@ -35,6 +36,7 @@ def mil_backend_passes(prog):
     prog.validate()
     for p in passes:
         _logging.info('Performing passes for mil backend: "{}"'.format(p))
+        PASS_REGISTRY[p].minimun_deployment_target = min_deployment_target
         PASS_REGISTRY[p](prog)
         # No more validation from this point on as prog is not SSA anymore.
 

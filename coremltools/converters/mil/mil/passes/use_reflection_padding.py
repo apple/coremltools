@@ -18,12 +18,12 @@ def _match_pattern(concat_op, block):
         return False
 
     # The original input will need to be in the middle of the concatenated inputs
-    original_input = concat_inputs[len(concat_inputs)//2]
+    original_input = concat_inputs[len(concat_inputs) // 2]
 
     axis = None
     slice_ops_out = []
     end_mask = None
-    begin_index = len(concat_inputs)//2
+    begin_index = len(concat_inputs) // 2
 
     for slice_op in concat_inputs:
 

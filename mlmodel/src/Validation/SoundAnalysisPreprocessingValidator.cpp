@@ -27,6 +27,8 @@ namespace CoreML {
                 return "MLArrayDataTypeDOUBLE";
             case MLArrayDataTypeINT32:
                 return "MLArrayDataTypeINT32";
+            case MLArrayDataTypeFLOAT16:
+                return "MLArrayDataTypeFLOAT16";
         }
     }
 

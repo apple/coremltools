@@ -7,6 +7,12 @@ MLModel
 .. automodule:: coremltools.models.model
    :members:
 
+compression\_utils 
+---------------------------------------------------
+
+.. automodule:: coremltools.models.ml_program.compression_utils
+   :members:
+
 
 array\_feature\_extractor 
 ---------------------------------------------------
@@ -57,4 +63,3 @@ utils
 
 .. automodule:: coremltools.models.utils
    :members:
-

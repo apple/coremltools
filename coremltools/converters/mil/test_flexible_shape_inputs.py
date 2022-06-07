@@ -23,6 +23,7 @@ if _HAS_TORCH:
         def forward(self, x):
             return self.conv(x)
 
+
 def _numpy_array_to_pil_image(x):
     """
     convert x of shape (1, 3, H, W) to PIL image

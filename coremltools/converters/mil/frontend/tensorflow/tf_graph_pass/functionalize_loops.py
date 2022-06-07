@@ -3,6 +3,8 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import logging
+
 from ..parsed_tf_node import ParsedTFNode
 from ..basic_graph_ops import (
     connect_dests,
@@ -20,10 +22,9 @@ from .visitors import (
     FindImmediateUpstreamNodes,
     FindSubgraph,
 )
-import logging
 
 
-class FunctionalizeLoops(object):
+class FunctionalizeLoops:
     """
     Turns while loops in TensorFlow dataflow graph into the functional form:
     while(cond_function, body_function)

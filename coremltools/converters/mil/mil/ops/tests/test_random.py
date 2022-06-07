@@ -4,9 +4,10 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import itertools
+import unittest
+
 import numpy as np
 import pytest
-import unittest
 
 from .testing_utils import UNK_SYM, run_compare_builder
 from coremltools.converters.mil.mil import Builder as mb, types

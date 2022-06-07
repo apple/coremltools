@@ -5,7 +5,6 @@
 
 import itertools
 import numpy as np
-from numpy import linalg as la
 import pytest
 
 from .testing_utils import UNK_SYM, run_compare_builder
@@ -250,6 +249,23 @@ class TestNormalizationInstanceNorm:
 
 
 class TestNormalizationL2Norm:
+
+    @staticmethod
+    def _compute_l2_norm(val, eps):
+        shape = val.shape
+        rank = len(shape)
+        batch_dims = rank - 3
+        if batch_dims == 0:
+            square_sum = np.sum(val**2)
+            output = val/np.power(square_sum + eps, 0.5)
+        else:
+            batch_dim_prod = np.prod(shape[:batch_dims])
+            reshape_val = np.reshape(val, (batch_dim_prod, -1))
+            square_sum = np.sum(reshape_val * reshape_val, axis=1, keepdims=True) + eps
+            output = reshape_val/np.power(square_sum, 0.5)
+            output = np.reshape(output, shape)
+        return output
+
     @pytest.mark.parametrize(
         "use_cpu_only, backend", itertools.product([True, False], backends,)
     )
@@ -286,29 +302,18 @@ class TestNormalizationL2Norm:
         )
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, rank", itertools.product([True, False], backends, [3, 4, 5])
+        "use_cpu_only, backend, rank, epsilon", itertools.product([True, False], backends, [3, 4, 5], [1e-4, 5.7])
     )
-    def test_builder_to_backend_stress(self, use_cpu_only, backend, rank):
+    def test_builder_to_backend_stress(self, use_cpu_only, backend, rank, epsilon):
         shape = np.random.randint(low=2, high=6, size=rank)
-        x_val = random_gen(shape=shape, rand_min=-10.0, rand_max=10.0)
+        x_val = random_gen(shape=shape, rand_min=-1.0, rand_max=1.0)
         input_placeholders = {"x": mb.placeholder(shape=shape)}
         input_values = {"x": x_val}
 
         def build(x):
-            return [mb.l2_norm(x=x, epsilon=1e-12)]
+            return [mb.l2_norm(x=x, epsilon=epsilon)]
 
-        # compute for the answer
-        batch_dims = rank - 3
-        if batch_dims == 0:
-            norm = la.norm(x_val)
-            output = x_val/norm
-        else:
-            batch_dim_prod = np.prod(shape[:batch_dims])
-            reshape_x_val = np.reshape(x_val, (batch_dim_prod, -1))
-            norm = la.norm(reshape_x_val, axis=1, keepdims=True)
-            output = reshape_x_val/norm
-            output = np.reshape(output, shape)
-
+        output = TestNormalizationL2Norm._compute_l2_norm(x_val, epsilon)
         expected_output_types = [list(output.shape) + [types.fp32]]
         expected_outputs = [
             output
@@ -324,11 +329,25 @@ class TestNormalizationL2Norm:
             backend=backend,
         )
 
+    @pytest.mark.parametrize("rank, epsilon",
+        itertools.product(
+            [3, 4, 5],
+            [1e-4, 11.2],
+        ),
+    )
+    def test_builder_eval_stress(self, rank, epsilon):
+        shape = np.random.randint(low=2, high=6, size=rank)
+        x_val = random_gen(shape=shape, rand_min=-1, rand_max=1)
+        with Function({}):
+            res = mb.l2_norm(x=x_val, epsilon=epsilon)
+            ref = TestNormalizationL2Norm._compute_l2_norm(x_val, epsilon)
+            np.testing.assert_allclose(ref, res.val, atol=1e-6, rtol=1e-5)
+
 
 class TestNormalizationLayerNorm:
 
     @staticmethod
-    def _keras_layer_norm( x, axes, epsilon):
+    def _keras_layer_norm(x, axes, epsilon):
         layer = tf.keras.layers.LayerNormalization(axis=axes, epsilon=epsilon)
         data = tf.constant(x, dtype=tf.float32)
         output = layer(data)
@@ -377,9 +396,9 @@ class TestNormalizationLayerNorm:
             np.array(
                 [
                     [
-                        [ 0.9999969,  -0.9999969 ],
-                        [ 0.99999833, -0.99999833],
-                        [ 0.99995005, -0.99995005],
+                        [0.9999969,  -0.9999969 ],
+                        [0.99999833, -0.99999833],
+                        [0.99995005, -0.99995005],
                     ]
                 ],
                 dtype=np.float32,
@@ -387,8 +406,8 @@ class TestNormalizationLayerNorm:
             np.array(
                 [
                     [
-                        [ 0.82687193, -1.06312108],
-                        [ 1.77186835, -0.82687193],
+                        [0.82687193, -1.06312108],
+                        [1.77186835, -0.82687193],
                         [-0.11812456, -0.59062278],
                     ]
                 ],
@@ -397,9 +416,9 @@ class TestNormalizationLayerNorm:
             np.array(
                 [
                     [
-                        [ 1.9999969,  -0.9999969 ],
-                        [ 1.99999833, -0.99999833],
-                        [ 1.99995005, -0.99995005],
+                        [1.9999969,  -0.9999969 ],
+                        [1.99999833, -0.99999833],
+                        [1.99995005, -0.99995005],
                     ]
                 ],
                 dtype=np.float32,

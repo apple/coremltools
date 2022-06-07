@@ -55,7 +55,7 @@ class const_elimination(AbstractGraphPass):
                         anchor_op=op, old_var=o, new_var=res
                     )
                     # rename the const output
-                    o.set_name(o.name+'_ignored')
+                    o.set_name(o.name + '_ignored')
                 else:
                     all_outputs_are_const = False
 

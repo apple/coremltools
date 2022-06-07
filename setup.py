@@ -70,7 +70,7 @@ setup(
     },
     install_requires=[
         "numpy >= 1.14.5",
-        "protobuf >= 3.1.0",
+        "protobuf >= 3.1.0, <= 3.20.1",
         "sympy",
         "tqdm",
         "packaging",
@@ -80,7 +80,6 @@ setup(
         "Intended Audience :: Developers",
         "Operating System :: MacOS :: MacOS X",
         "Operating System :: POSIX :: Linux",
-        "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",

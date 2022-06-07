@@ -316,8 +316,6 @@ ignore-on-opaque-inference=yes
 ignored-classes=
   optparse.Values,
   sympy.core.mul.Mul,
-  test.model_zoo.onnx.test_latham_lstm.TestLathamLSTM,
-  test.model_zoo.onnx.test_transformer.TestMT,
   thread._local,
   _thread._local
 
@@ -328,7 +326,6 @@ ignored-classes=
 ignored-modules=
   LazyLoader,
   matplotlib.cm,
-  onnx.onnx_*_ml_pb2,
   tensorflow,
   tensorflow.core.framework.*_pb2,
   tensorflow.tools.api.generator.api.contrib,

@@ -1,14 +1,12 @@
-# -*- coding: utf-8 -*-
-
 #  Copyright (c) 2020, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-
-import numpy as np
-import math
 import logging
+
+import math
+import numpy as np
 
 from .annotate import class_annotate, annotate, delay_type
 from .type_bool import bool
@@ -38,13 +36,18 @@ def make_float(width):
             )
 
             if not isinstance(v, np.generic):
-                raise ValueError(
-                    "types should have value of numpy type, got {} instead".format(
-                        type(v)
-                    )
-                )
 
-            if isinstance(v, np.floating):
+                if isinstance(v, np.ndarray) and v.ndim == 0:
+                    # Rank zero tensor case. Use as a scalar.
+                    self._val = v.item()
+                else:
+                    raise ValueError(
+                        "types should have value of numpy type, got {} instead".format(
+                            type(v)
+                        )
+                    )
+
+            elif isinstance(v, np.floating):
                 v_type = numpy_type_to_builtin_type(v.dtype)
                 if v_type.get_bitwidth() <= self.get_bitwidth():
                     self._val = v

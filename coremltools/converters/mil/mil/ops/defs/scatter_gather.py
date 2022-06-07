@@ -92,7 +92,7 @@ class gather(Operation):
             )
 
     def __init__(self, **kwargs):
-        super(gather, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @precondition(allow=VALUE | SYMBOL)
     def value_inference(self):
@@ -195,7 +195,17 @@ class scatter(Operation):
 
     Attributes
     ----------
-    T: fp16, fp32, i32
+    T: fp32
+
+    For example:
+        data = [[1, 2, 3], [4, 5, 6]]
+        indices = [1, 0]
+        updates = [[5, 6, 7], [8, 9, 10]]
+        axis = 0
+        mode = "update"
+
+    produces:
+       [[9, 11, 13], [9, 11, 13]]
     """
 
     input_spec = InputSpec(
@@ -213,7 +223,7 @@ class scatter(Operation):
             )
 
     def __init__(self, **kwargs):
-        super(scatter, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         if self.axis.val < -self.data.rank or self.axis.val >= self.data.rank:
@@ -262,7 +272,7 @@ class gather_along_axis(Operation):
 
     Attributes
     ----------
-    U: fp16, fp32, i32
+    T: fp16, fp32, i32
     """
 
     input_spec = InputSpec(
@@ -277,7 +287,7 @@ class gather_along_axis(Operation):
             )
 
     def __init__(self, **kwargs):
-        super(gather_along_axis, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -316,8 +326,8 @@ class gather_along_axis(Operation):
 @register_op(doc_str="")
 class scatter_along_axis(Operation):
     """
-    Scatter ``updates`` to ``data`` at locations ``indices`` at dimension ``axis``
-    by operation ``mode``.
+    Scatter ``updates`` to ``data`` at locations ``indices`` along ``axis`` dimension
+    using ``mode`` operation.
 
     Example: ``mode == update``.
 
@@ -378,7 +388,7 @@ class scatter_along_axis(Operation):
 
     Attributes
     ----------
-    T: fp16, fp32, i32
+    U: fp16, fp32, i32
     """
 
     input_spec = InputSpec(
@@ -396,7 +406,7 @@ class scatter_along_axis(Operation):
             )
 
     def __init__(self, **kwargs):
-        super(scatter_along_axis, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -469,7 +479,7 @@ class gather_nd(Operation):
         )
 
     def __init__(self, **kwargs):
-        super(gather_nd, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         assert self.indices.shape[-1] <= self.x.rank
@@ -532,7 +542,7 @@ class scatter_nd(Operation):
             )
 
     def __init__(self, **kwargs):
-        super(scatter_nd, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         assert self.indices.shape[-1] <= self.data.rank

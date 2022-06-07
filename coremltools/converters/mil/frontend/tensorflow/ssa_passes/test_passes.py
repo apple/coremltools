@@ -13,7 +13,7 @@ from coremltools.converters.mil.testing_utils import (
 import copy
 import pytest
 
-pytest.importorskip("tensorflow", minversion="1.14.0")
+pytest.importorskip("tensorflow", minversion="1.15.0")
 
 
 def test_backfill_make_list_elem_type():

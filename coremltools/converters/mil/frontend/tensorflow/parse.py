@@ -1,17 +1,15 @@
-# -*- coding: utf-8 -*-
-
 #  Copyright (c) 2020, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import logging as _logging
+
+import numpy as _np
 
 from coremltools.converters.mil.mil import types
 from tensorflow.core.framework.types_pb2 import DataType
 from tensorflow.python.framework.dtypes import _TF_TO_NP
-
-import logging as _logging
-import numpy as _np
 
 
 def parse_type(t):

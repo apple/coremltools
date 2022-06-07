@@ -72,7 +72,7 @@ class TestTf2ModelFormats:
         )
         keras_model.save(self.saved_model_dir, save_format="tf")
         mlmodel = converter.convert(
-            self.saved_model_dir, outputs="Identity", source=frontend
+            self.saved_model_dir, outputs=["Identity"], source=frontend
         )
         assert mlmodel is not None
 
@@ -105,7 +105,7 @@ class TestTf2ModelFormats:
             tf.saved_model.DEFAULT_SERVING_SIGNATURE_DEF_KEY
         ]
         mlmodel = converter.convert(
-            [concrete_func], outputs="Identity", source=frontend
+            [concrete_func], outputs=["Identity"], source=frontend
         )
         assert mlmodel is not None
 
