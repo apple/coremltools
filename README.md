@@ -5,7 +5,7 @@
 [Core ML Tools](https://coremltools.readme.io/docs)
 =======================
 
-Use *coremltools* to convert machine learning models from third-party libraries to the Core ML format. The Python package contains the supporting tools for converting models from training libraries such as the following:
+Use *coremltools* to convert machine learning models from third-party libraries to the Core ML format. This Python package contains the supporting tools for converting models from training libraries such as the following:
 
 * [TensorFlow 1.x](https://www.tensorflow.org/versions/r1.15/api_docs/python/tf)
 * [TensorFlow 2.x](https://www.tensorflow.org/api_docs)
@@ -30,7 +30,7 @@ The coremltools 5 package offers several performance improvements over previous 
 * [Core ML model package](https://coremltools.readme.io/docs/new-in-coremltools#save-a-core-ml-model-package): A new model container format that separates the model into components and offers more flexible metadata editing and better source control.
 * [ML program](https://coremltools.readme.io/docs/ml-programs): A new model type that represents computation as programmatic instructions, offers more control over the precision of its intermediate tensors and better performance. 
 
-To install coremltools, use the following command:
+To install coremltools, use the following command in your terminal:
 
 ```shell
 pip install coremltools
@@ -38,7 +38,7 @@ pip install coremltools
 
 ## Version 6
 
-To install [the first beta of coremltools 6.0](https://github.com/apple/coremltools/releases/tag/6.0b1) use the following command:
+To install [the first beta of coremltools 6.0](https://github.com/apple/coremltools/releases/tag/6.0b1) use the following command in your terminal:
 
 ```shell
 pip install coremltools==6.0b1
