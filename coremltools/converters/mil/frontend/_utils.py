@@ -3,6 +3,7 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+from coremltools.converters.mil.input_types import InputType
 from coremltools.converters.mil.mil import Builder as mb, types
 from coremltools.converters.mil.mil.ops.defs._utils import parse_einsum_equation
 from coremltools.converters.mil.mil.types.symbolic import any_symbolic, is_symbolic
@@ -143,3 +144,18 @@ def is_symbolic_dim_in_prog(prog):
         if _does_block_contain_symbolic_shape(f):
             return True
     return False
+
+
+def get_output_names(outputs):
+    """
+    :param: list[ct.TensorType/ct.ImageType]
+    :return: list[str]
+    """
+    output_names = None
+    if outputs is not None:
+        assert all([isinstance(t, InputType) for t in outputs]), \
+            "outputs must be a list of ct.ImageType or ct.TensorType"
+        output_names = [t.name for t in outputs]
+        if all([name is None for name in output_names]):
+            output_names = None
+    return output_names

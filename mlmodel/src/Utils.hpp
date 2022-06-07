@@ -110,6 +110,7 @@ namespace CoreML {
     bool hasIOS13Features(const Specification::Model& model);
     bool hasIOS14Features(const Specification::Model& model);
     bool hasIOS15Features(const Specification::Model& model);
+    bool hasIOS16Features(const Specification::Model& model);
 
     typedef std::pair<std::string,std::string> StringPair;
     // Returns a vector of pairs of strings, one pair per custom layer instance
@@ -143,6 +144,9 @@ namespace CoreML {
     bool hasIOS14NeuralNetworkFeatures(const Specification::Model& model);
     bool hasDefaultValueForOptionalInputs(const Specification::Model& model);
     bool hasFloat32InputsOrOutputsForNonmaxSuppression(const Specification::Model& model);
+    bool hasFloat16MultiArray(const Specification::Model& model);
+    bool hasGrayscaleFloat16Image(const Specification::Model& model);
+    bool hasCoreML6Opsets(const Specification::Model& model);
 
     bool hasModelOrSubModelProperty(const Specification::Model& model, const std::function<bool(const Specification::Model&)> &boolFunc);
 

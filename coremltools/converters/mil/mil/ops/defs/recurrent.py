@@ -117,7 +117,7 @@ class gru(Operation):
         )
 
     def __init__(self, **kwargs):
-        super(gru, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         if self.x.rank != 3:
@@ -345,7 +345,7 @@ class lstm(Operation):
             clip=None)
 
     def __init__(self, **kwargs):
-        super(lstm, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         if self.x.rank != 3:
@@ -474,7 +474,7 @@ class rnn(Operation):
             activation="tanh")
 
     def __init__(self, **kwargs):
-        super(rnn, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         if self.x.rank != 3:

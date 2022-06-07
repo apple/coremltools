@@ -251,6 +251,9 @@ message SerializedModel {
  * - Core ML Audio Feature Print
  * - new type of model: mlprogram (MILSpec.Program)
  *
+ * 7 : iOS 16, macOS 13, tvOS 16, watchOS 9 (Core ML 6)
+ * - FLOAT16 array data type
+ * - GRAYSCALE_FLOAT16 image color space.
  */
 message Model {
     int32 specificationVersion = 1;

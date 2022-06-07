@@ -196,7 +196,7 @@ def fill_outputs(gd):
             gd[i].outputs.append(v.name)
         for i in v.control_inputs:
             gd[i].control_outputs.append(v.name)
-    get_tuple_ops = ["Split", "SplitV", "LSTMBlock"]
+    get_tuple_ops = ["Split", "SplitV", "LSTMBlock", "NonMaxSuppressionV5"]
     for k, v in gd.items():
         if v.op in get_tuple_ops:
             outputs = [[out, int(gd[out].attr["index"])] for out in v.outputs]

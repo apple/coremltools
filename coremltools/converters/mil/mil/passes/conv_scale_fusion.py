@@ -5,8 +5,8 @@
 
 import numpy as np
 
-from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
+from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 from coremltools.converters.mil.mil import Builder as mb
 
 
@@ -68,7 +68,7 @@ def _try_to_transform(conv_op, scale_op, block):
 
     # transform the scale to 1./scale for the real_div case
     if scale_op.op_type == "real_div":
-        scale = 1./scale
+        scale = 1. / scale
 
     # get the type of the conv weight
     conv_weight_type = conv_weight.dtype

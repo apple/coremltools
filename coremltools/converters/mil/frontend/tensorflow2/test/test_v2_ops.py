@@ -70,6 +70,7 @@ from coremltools.converters.mil.frontend.tensorflow.test.test_ops import (
     TestFill,
     TestGather,
     TestIdentity,
+    TestIdentityN,
     TestImageResizing,
     TestIsFinite,
     TestL2Normalization,
@@ -100,6 +101,7 @@ from coremltools.converters.mil.frontend.tensorflow.test.test_ops import (
     TestSize,
     TestSliceByIndex,
     TestSliceBySize,
+    TestSoftmaxCrossEntropyWithLogits,
     TestSpaceToBatchND,
     TestSpaceToDepth,
     TestSplit,
@@ -156,7 +158,7 @@ class TestImageResample(TensorFlow2BaseTest):
         ]
         input_dict = dict(zip(inputs, input_values))
         self.run_compare_tf2(
-            model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend,
+            model, input_dict, outputs, use_cpu_for_conversion=use_cpu_only, backend=backend,
         )
 
 
@@ -206,7 +208,7 @@ class TestImageTransform(TensorFlow2BaseTest):
         ]
         input_dict = dict(zip(inputs, input_values))
         self.run_compare_tf2(
-            model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend,
+            model, input_dict, outputs, use_cpu_for_conversion=use_cpu_only, backend=backend,
         )
 
 
@@ -239,7 +241,7 @@ class TestActivationSiLU(TensorFlow2BaseTest):
         ]
         input_dict = dict(zip(inputs, input_values))
         self.run_compare_tf2(
-            model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend,
+            model, input_dict, outputs, use_cpu_for_conversion=use_cpu_only, backend=backend,
         )
 
 
@@ -293,7 +295,7 @@ class TestResizeNearestNeighbor(TensorFlow2BaseTest):
         input_values = [random_gen(input_shape, -100, 100)]
         input_dict = dict(zip(inputs, input_values))
         self.run_compare_tf2(
-            model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend,
+            model, input_dict, outputs, use_cpu_for_conversion=use_cpu_only, backend=backend,
         )
 
     @pytest.mark.parametrize(
@@ -316,7 +318,7 @@ class TestResizeNearestNeighbor(TensorFlow2BaseTest):
         input_values = [random_gen(x_shape, -100, 100)]
         input_dict = dict(zip(inputs, input_values))
         self.run_compare_tf2(
-            model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend,
+            model, input_dict, outputs, use_cpu_for_conversion=use_cpu_only, backend=backend,
         )
 
     @pytest.mark.parametrize(
@@ -350,7 +352,7 @@ class TestResizeNearestNeighbor(TensorFlow2BaseTest):
         ]
         input_dict = dict(zip(inputs, input_values))
         self.run_compare_tf2(
-            model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend,
+            model, input_dict, outputs, use_cpu_for_conversion=use_cpu_only, backend=backend,
         )
 
 
@@ -393,7 +395,7 @@ class TestNormalizationTF2(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             backend=backend,
             atol=1e-2,
             rtol=1e-3,
@@ -433,7 +435,7 @@ class TestElementWiseBinaryTF2(TensorFlowBaseTest):
         input_dict = dict(zip(inputs, input_values))
 
         TensorFlowBaseTest.run_compare_tf(
-            model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend
+            model, input_dict, outputs, use_cpu_for_conversion=use_cpu_only, backend=backend
         )
 
 
@@ -454,7 +456,7 @@ class TestControlFlowFromAutoGraph(TensorFlowBaseTest):
         input_values = [np.array([0.7], dtype=np.float32)]
         input_dict = dict(zip(inputs, input_values))
         TensorFlowBaseTest.run_compare_tf(
-            model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend
+            model, input_dict, outputs, use_cpu_for_conversion=use_cpu_only, backend=backend
         )
 
     @pytest.mark.parametrize(
@@ -473,7 +475,7 @@ class TestControlFlowFromAutoGraph(TensorFlowBaseTest):
         input_values = [np.array([2], dtype=np.float32)]
         input_dict = dict(zip(inputs, input_values))
         TensorFlowBaseTest.run_compare_tf(
-            model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend
+            model, input_dict, outputs, use_cpu_for_conversion=use_cpu_only, backend=backend
         )
 
     @pytest.mark.parametrize(
@@ -498,7 +500,7 @@ class TestControlFlowFromAutoGraph(TensorFlowBaseTest):
         ]
         input_dict = dict(zip(inputs, input_values))
         TensorFlowBaseTest.run_compare_tf(
-            model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend
+            model, input_dict, outputs, use_cpu_for_conversion=use_cpu_only, backend=backend
         )
 
     @pytest.mark.parametrize(
@@ -517,7 +519,7 @@ class TestControlFlowFromAutoGraph(TensorFlowBaseTest):
         input_values = [np.array([2.0], dtype=np.float32)]
         input_dict = dict(zip(inputs, input_values))
         TensorFlowBaseTest.run_compare_tf(
-            model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend
+            model, input_dict, outputs, use_cpu_for_conversion=use_cpu_only, backend=backend
         )
 
     @pytest.mark.parametrize(
@@ -536,7 +538,7 @@ class TestControlFlowFromAutoGraph(TensorFlowBaseTest):
         input_values = [np.array([2.0], dtype=np.float32)]
         input_dict = dict(zip(inputs, input_values))
         TensorFlowBaseTest.run_compare_tf(
-            model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend
+            model, input_dict, outputs, use_cpu_for_conversion=use_cpu_only, backend=backend
         )
 
     @pytest.mark.parametrize(
@@ -558,7 +560,7 @@ class TestControlFlowFromAutoGraph(TensorFlowBaseTest):
         input_values = [np.array([9.0], dtype=np.float32)]
         input_dict = dict(zip(inputs, input_values))
         TensorFlowBaseTest.run_compare_tf(
-            model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend
+            model, input_dict, outputs, use_cpu_for_conversion=use_cpu_only, backend=backend
         )
 
 @pytest.mark.xfail(reason="rdar://76293949 (TF2 unit test InvalidArgumentError)", run=False)
@@ -593,7 +595,7 @@ class TestTensorList(TensorFlowBaseTest):
         ]
         input_dict = dict(zip(inputs, input_values))
         TensorFlowBaseTest.run_compare_tf(
-            model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend
+            model, input_dict, outputs, use_cpu_for_conversion=use_cpu_only, backend=backend
         )
 
     @pytest.mark.parametrize(
@@ -622,7 +624,7 @@ class TestTensorList(TensorFlowBaseTest):
         input_values = [np.array([[3.14], [6.17], [12.14]], dtype=np.float32)]
         input_dict = dict(zip(inputs, input_values))
         TensorFlowBaseTest.run_compare_tf(
-            model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend
+            model, input_dict, outputs, use_cpu_for_conversion=use_cpu_only, backend=backend
         )
 
     @pytest.mark.parametrize(
@@ -655,7 +657,7 @@ class TestTensorList(TensorFlowBaseTest):
         ]
         input_dict = dict(zip(inputs, input_values))
         TensorFlowBaseTest.run_compare_tf(
-            model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend
+            model, input_dict, outputs, use_cpu_for_conversion=use_cpu_only, backend=backend
         )
 
     @pytest.mark.parametrize(
@@ -684,7 +686,7 @@ class TestTensorList(TensorFlowBaseTest):
         input_values = [np.array([[3.14], [6.17], [12.14]], dtype=np.float32)]
         input_dict = dict(zip(inputs, input_values))
         TensorFlowBaseTest.run_compare_tf(
-            model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend
+            model, input_dict, outputs, use_cpu_for_conversion=use_cpu_only, backend=backend
         )
 
     @pytest.mark.parametrize(
@@ -709,5 +711,5 @@ class TestTensorList(TensorFlowBaseTest):
         input_values = [np.random.rand(3, 1, 8).astype(np.float32)]
         input_dict = dict(zip(inputs, input_values))
         TensorFlowBaseTest.run_compare_tf(
-            model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend
+            model, input_dict, outputs, use_cpu_for_conversion=use_cpu_only, backend=backend
         )

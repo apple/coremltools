@@ -24,34 +24,46 @@ class WeightTest(unittest.TestCase):
         if os.path.exists(self.working_dir):
             shutil.rmtree(self.working_dir)
 
+    def test_weight_blob_int8(self):
+        writer = BlobWriter(self.working_dir + "/net.wt")
+        input_arr = np.array([-5, -2, 0, 2, 5], dtype=np.int8)
+        offset = writer.write_int8_data(input_arr)
+        writer = None
+
+        reader = BlobReader(self.working_dir + "/net.wt")
+        output_arr = np.array(reader.read_int8_data(offset), np.int8)
+        np.testing.assert_equal(input_arr, output_arr)
+
     def test_weight_blob_uint8(self):
         writer = BlobWriter(self.working_dir + "/net.wt")
-        input_arr = np.array([1.0, 2, 3, 4, 5], dtype=np.uint8)
+        input_arr = np.array([1, 2, 3, 4, 5], dtype=np.uint8)
         offset = writer.write_uint8_data(input_arr)
         writer = None
 
         reader = BlobReader(self.working_dir + "/net.wt")
-        output_arr = np.array(reader.read_uint8_data(offset))
+        output_arr = np.array(reader.read_uint8_data(offset), np.uint8)
         np.testing.assert_almost_equal(input_arr, output_arr)
 
     def test_weight_blob_fp16(self):
         writer = BlobWriter(self.working_dir + "/net.wt")
-        input_arr = np.array([1.0, 2, 3, 4, 5], dtype=np.float16)
-        offset = writer.write_fp16_data(input_arr)
+        input_arr = np.array([2.3, 4.6, 7.9], dtype=np.float16)
+        input_arr_to_bytes_uint16 = np.frombuffer(input_arr.tobytes(), np.uint16)
+        offset = writer.write_fp16_data(input_arr_to_bytes_uint16)
         writer = None
 
         reader = BlobReader(self.working_dir + "/net.wt")
-        output_arr = np.array(reader.read_fp16_data(offset))
+        output_arr_uint16 = np.array(reader.read_fp16_data(offset), np.uint16)
+        output_arr = np.frombuffer(output_arr_uint16.tobytes(), np.float16)
         np.testing.assert_almost_equal(input_arr, output_arr)
 
     def test_weight_blob_fp32(self):
         writer = BlobWriter(self.working_dir + "/net.wt")
-        input_arr = np.array([1.0, 2, 3, 4, 5], dtype=np.float32)
+        input_arr = np.array([1.0, 2.4, 3.9, -4.8, 5.2], dtype=np.float32)
         offset = writer.write_float_data(input_arr)
         writer = None
 
         reader = BlobReader(self.working_dir + "/net.wt")
-        output_arr = np.array(reader.read_float_data(offset))
+        output_arr = np.array(reader.read_float_data(offset), np.float32)
         np.testing.assert_almost_equal(input_arr, output_arr)
 
 if __name__ == "__main__":

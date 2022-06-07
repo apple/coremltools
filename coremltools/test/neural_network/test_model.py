@@ -10,6 +10,7 @@ import os
 import tempfile
 import unittest
 
+from coremltools import ComputeUnit
 from coremltools._deps import _HAS_TORCH
 from coremltools.converters.mil import Builder as mb
 from coremltools.models.utils import (
@@ -330,7 +331,7 @@ class MLModelTest(unittest.TestCase):
         )
         builder.add_activation("linear", "LINEAR", "data", "out")
         spec = builder.spec
-        mlmodel = MLModel(spec)
+        mlmodel = MLModel(spec, compute_units=ComputeUnit.CPU_ONLY)
         mlmodel = make_image_input(
             mlmodel,
             "data",
@@ -343,7 +344,7 @@ class MLModelTest(unittest.TestCase):
         x = np.array([4, 2, 5], dtype=np.uint8)
         x = np.reshape(x, (H, W, C))
         pil_img = PIL.Image.fromarray(x)
-        y = mlmodel.predict({"data": pil_img}, useCPUOnly=True)["out"]
+        y = mlmodel.predict({"data": pil_img})["out"]
         self.assertEqual(y.shape, (C, H, W))
         np.testing.assert_almost_equal(y.flatten(), [35.0, 14.0, 47.5])
 
@@ -360,7 +361,7 @@ class MLModelTest(unittest.TestCase):
         builder.add_transpose("transpose", [2, 0, 1], "data", "transpose")
         builder.add_activation("linear", "LINEAR", "transpose", "out")
         spec = builder.spec
-        mlmodel = MLModel(spec)
+        mlmodel = MLModel(spec, compute_units=ComputeUnit.CPU_ONLY)
         mlmodel = make_image_input(
             mlmodel,
             "data",
@@ -373,7 +374,7 @@ class MLModelTest(unittest.TestCase):
         x = np.array([4, 2, 5], dtype=np.uint8)
         x = np.reshape(x, (H, W, C))
         pil_img = PIL.Image.fromarray(x)
-        y = mlmodel.predict({"data": pil_img}, useCPUOnly=True)["out"]
+        y = mlmodel.predict({"data": pil_img})["out"]
         self.assertEqual(y.shape, (H, W, C))
         np.testing.assert_almost_equal(y.flatten(), [35.0, 14.0, 47.5])
 
@@ -389,7 +390,7 @@ class MLModelTest(unittest.TestCase):
         )
         builder.add_activation("linear", "LINEAR", "data", "out")
         spec = builder.spec
-        mlmodel = MLModel(spec)
+        mlmodel = MLModel(spec, compute_units=ComputeUnit.CPU_ONLY)
         mlmodel = make_image_input(
             mlmodel,
             "data",
@@ -402,7 +403,7 @@ class MLModelTest(unittest.TestCase):
         x = np.array([4, 2, 5], dtype=np.uint8)
         x = np.reshape(x, (H, W, C))
         pil_img = PIL.Image.fromarray(x)
-        y = mlmodel.predict({"data": pil_img}, useCPUOnly=True)["out"]
+        y = mlmodel.predict({"data": pil_img})["out"]
         self.assertEqual(y.shape, (H, W, C))
         np.testing.assert_almost_equal(y.flatten(), [35.0, 14.0, 47.5])
 
@@ -417,14 +418,14 @@ class MLModelTest(unittest.TestCase):
         )
         builder.add_activation("linear", "LINEAR", "data", "out")
         spec = builder.spec
-        mlmodel = MLModel(spec)
+        mlmodel = MLModel(spec, compute_units=ComputeUnit.CPU_ONLY)
         mlmodel = make_nn_classifier(
             mlmodel,
             class_labels=["a", "b", "c"],
             predicted_feature_name="out_confidence",
             predicted_probabilities_output="out",
         )
-        out_dict = mlmodel.predict({"data": np.array([4.0, 5.5, 6.0])}, useCPUOnly=True)
+        out_dict = mlmodel.predict({"data": np.array([4.0, 5.5, 6.0])})
         self.assertEqual(out_dict["out_confidence"], "c")
         self.assertEqual(
             mlmodel.get_spec().WhichOneof("Type"), "neuralNetworkClassifier"
@@ -441,7 +442,7 @@ class MLModelTest(unittest.TestCase):
         )
         builder.add_activation("linear", "LINEAR", "data", "out")
         spec = builder.spec
-        mlmodel = MLModel(spec)
+        mlmodel = MLModel(spec, compute_units=ComputeUnit.CPU_ONLY)
 
         class_labels = ["a", "b", "c"]
         with tempfile.NamedTemporaryFile(mode="w", suffix=".txt") as f:
@@ -453,7 +454,7 @@ class MLModelTest(unittest.TestCase):
                 predicted_feature_name="out_confidence",
                 predicted_probabilities_output="out",
             )
-        out_dict = mlmodel.predict({"data": np.array([4.0, 5.5, 6.0])}, useCPUOnly=True)
+        out_dict = mlmodel.predict({"data": np.array([4.0, 5.5, 6.0])})
         self.assertEqual(out_dict["out_confidence"], "c")
         self.assertEqual(
             mlmodel.get_spec().WhichOneof("Type"), "neuralNetworkClassifier"
@@ -478,9 +479,9 @@ class MLModelTest(unittest.TestCase):
         # rename output
         spec = mlmodel.get_spec()
         rename_feature(spec, "out", "new_out_name")
-        mlmodel = MLModel(spec)
+        mlmodel = MLModel(spec, compute_units=ComputeUnit.CPU_ONLY)
 
-        out_dict = mlmodel.predict({"data": np.array([4.0, 5.5, 6.0])}, useCPUOnly=True)
+        out_dict = mlmodel.predict({"data": np.array([4.0, 5.5, 6.0])})
         self.assertEqual(out_dict["classLabel"], "c")
         self.assertTrue("new_out_name" in out_dict)
         self.assertTrue(isinstance(out_dict["new_out_name"], dict))
@@ -501,11 +502,12 @@ class MLModelTest(unittest.TestCase):
         # rename the input
         spec = mlmodel.get_spec()
         rename_feature(spec, "data", "new_input_name")
-        mlmodel = MLModel(spec)
+        mlmodel = MLModel(spec, compute_units=ComputeUnit.CPU_ONLY)
+
         # test
         x = np.array([4, 5, 6], dtype=np.uint8).reshape(1, 1, 3)
         pil_img = PIL.Image.fromarray(x)
-        out = mlmodel.predict({"new_input_name": pil_img}, useCPUOnly=True)['out']
+        out = mlmodel.predict({"new_input_name": pil_img})['out']
         np.testing.assert_equal(out, np.array([8.0, 10.0, 12.0]).reshape(3, 1, 1))
 
     @unittest.skipUnless(

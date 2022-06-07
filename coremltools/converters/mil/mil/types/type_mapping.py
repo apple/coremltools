@@ -2,6 +2,8 @@
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
+import numpy as _np
+
 import coremltools.proto.MIL_pb2 as _mil_pm
 from coremltools.converters.mil.mil import types as _mil_types
 
@@ -70,8 +72,6 @@ def np_dtype_to_py_type(np_dtype):
         return bool
     if np_dtype in [np.float32, np.float64]:
         return float
-    if np_dtype == np.float16:
-        return bytes
     raise NotImplementedError('{} is not supported'.format(np_dtype))
 
 _STRINGS_TO_types = {v: k for k, v in _types_TO_STRINGS.items()}
@@ -172,9 +172,9 @@ def is_primitive(btype):
 
 def is_scalar(btype):
     """
-    Is the given builtin type a scalar integer, float, or boolean?
+    Is the given builtin type a scalar integer, float, boolean or string?
     """
-    return is_bool(btype) or is_int(btype) or is_float(btype)
+    return is_bool(btype) or is_int(btype) or is_float(btype) or is_str(btype)
 
 
 def is_tensor(tensor_type):
@@ -376,3 +376,24 @@ builtin_to_proto_types = {
 }
 
 proto_to_builtin_types = {v: k for k, v in builtin_to_proto_types.items()}
+
+
+def np_val_to_py_type(val):
+    """Convert numpy val to python primitive equivalent. Ex:
+
+    Given: val = np.array([True, False])
+    Returns: [True, False]
+
+    Given: val = np.array(32, dtype=np.int)
+    Returns 32
+    """
+    if not isinstance(val, (_np.ndarray, _np.generic)):
+        return val
+
+    if val.dtype in [_np.float16, _np.uint8, _np.int8, _np.uint32]:
+        return val.tobytes()
+    else:
+        # val is np.ndarray or np.generic
+        is_np_scalar = isinstance(val, _np.generic) or val.shape == ()
+        py_type = np_dtype_to_py_type(val.dtype)
+        return py_type(val) if is_np_scalar else tuple(py_type(v) for v in val.flatten())

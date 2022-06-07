@@ -36,6 +36,7 @@ def apply_common_pass_pipeline(prog, passes):
         return
 
     common_passes = [
+        "common::update_output_dtypes",
         "common::cast_optimization",
         "common::const_elimination",
         "common::sanitize_input_output_names",
@@ -66,8 +67,10 @@ def apply_common_pass_pipeline(prog, passes):
         "common::fuse_conv_batchnorm", # should come after fuse_elementwise_to_batchnorm
         "common::fuse_conv_scale", # Re-run the fuse conv scale pass after the conv and batch_norm are fused
         "common::fuse_conv_bias", # Re-run the fuse conv bias pass after the conv and batch_norm are fused
+        "common::fuse_conv_batchnorm", # In some cases, we need to run conv / batch_norm fusion again after the fuse_conv_scale and fuse_conv_bias passes
         "common::detect_concat_interleave",
         "common::concat_to_pixel_shuffle", # should come after detect_concat_interleave and after replace_stack_reshape
+        "common::fuse_prelu", # reduce_transpose pass should run before and after this pass (the one after will be run during the cleanup passes stage)
         # "remove_redundant_ops" pass should be applied towards the end, once other graph passes have done their optimizations.
         # For instance, it should come after passes such as "reduce_transpose" that can introduce redundant transposes
         # in the network (while reducing the total number of transposes), and after passes such as "fuse_layernorm_or_instancenorm"

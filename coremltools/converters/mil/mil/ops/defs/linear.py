@@ -20,6 +20,7 @@ from coremltools.converters.mil.mil.types.symbolic import is_symbolic
 from ._op_reqs import register_op
 from ._utils import broadcast_shapes, parse_einsum_equation
 
+
 @register_op(doc_str="")
 class linear(Operation):
     """
@@ -54,10 +55,10 @@ class linear(Operation):
         Dout = self.weight.shape[0]
         return DefaultInputs(
             bias=[0.]*Dout,
-            )
+        )
 
     def __init__(self, **kwargs):
-        super(linear, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         x_type = self.x.dtype
@@ -174,10 +175,10 @@ class matmul(Operation):
         return DefaultInputs(
             transpose_x=False,
             transpose_y=False,
-            )
+        )
 
     def __init__(self, **kwargs):
-        super(matmul, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         x_type = self.x.dtype

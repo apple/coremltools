@@ -32,7 +32,7 @@ def _get_input_vars(op, only_nonconst_vars=False):
     return input_vars
 
 
-class DotVisitor(object):
+class DotVisitor:
     """
     Generates a dot description of a ssa block
     """

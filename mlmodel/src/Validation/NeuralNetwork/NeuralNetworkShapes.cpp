@@ -1931,7 +1931,9 @@ NeuralNetworkShaper::NeuralNetworkShaper(const Specification::ModelDescription& 
                 // sequence constraint here is unbounded
                 // batch is unbounded
                 // other three read from the constraint as is -- later to be updated with flexibility
-                if (desc.type().imagetype().colorspace() == Specification::ImageFeatureType_ColorSpace_GRAYSCALE)
+                auto colorspace = desc.type().imagetype().colorspace();
+                if (colorspace == Specification::ImageFeatureType_ColorSpace_GRAYSCALE ||
+                    colorspace == Specification::ImageFeatureType_ColorSpace_GRAYSCALE_FLOAT16)
                     constraint.setChannel(1);
                 else {
                     constraint.setChannel(3);

@@ -4,12 +4,12 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import logging
-import os
-import pytest
 
-from coremltools.converters.mil.mil.types.symbolic import is_symbolic
+import coremltools as ct
 from coremltools.converters.mil.mil import Program, Function
+from coremltools.converters.mil.mil.types.symbolic import is_symbolic
 from coremltools.converters.mil.testing_utils import compare_backend, ct_convert
+
 
 UNK_VARIADIC = "*s_unk"
 UNK_SYM = "s_unk"
@@ -28,7 +28,8 @@ def run_compare_builder(
     rtol=1e-05,
     inputs=None,
     also_compare_shapes=False,
-    use_cpu_for_conversion=False,
+    converter=ct.convert,
+    minimum_deployment_target=None,
 ):
     """
     Inputs:
@@ -53,10 +54,12 @@ def run_compare_builder(
 
         - inputs: type of inputs (either None (defaults to tensor) or [ct.ImageType])
 
-        - use_cpu_for_conversion: bool
-            Argument which is passed as is to the unified converter API.
-            That is, "ct.convert(...., useCPUOnly=use_cpu_for_conversion)"
-            It forces the model to be loaded on the CPU context, post conversion.
+        - converter: function
+            Reference to convert function to be used.
+            Default: ct.convert
+
+        - minimum_deployment_target : coremltools.target enumeration (optional)
+            A member of the ``coremltools.target`` enum.
 
     Returns:
         The converted mlmodel
@@ -118,8 +121,19 @@ def run_compare_builder(
         if output_shape != expected_shape:
             raise ValueError(msg)
 
-    mlmodel = ct_convert(prog, source="milinternal", convert_to=backend, inputs=inputs,
-                         useCPUOnly=use_cpu_for_conversion)
+    if use_cpu_only:
+        compute_unit = ct.ComputeUnit.CPU_ONLY
+    else:
+        compute_unit = ct.ComputeUnit.ALL
+
+    mlmodel = ct_convert(prog,
+                         converter=converter,
+                         source="milinternal",
+                         convert_to=backend,
+                         inputs=inputs,
+                         compute_units=compute_unit,
+                         minimum_deployment_target=minimum_deployment_target
+    )
 
     if frontend_only:
         return mlmodel
@@ -139,7 +153,6 @@ def run_compare_builder(
         mlmodel=mlmodel,
         input_key_values=input_values,
         expected_outputs=expected_outputs,
-        use_cpu_only=use_cpu_only,
         atol=atol,
         rtol=rtol,
         also_compare_shapes=also_compare_shapes,

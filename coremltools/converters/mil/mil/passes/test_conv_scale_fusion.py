@@ -205,9 +205,6 @@ class TestConvScaleOptimizationPasses:
         assert get_op_types_in_program(prog) == ["conv"]
 
         # validate graph pass
-        input_dict = {
-            "x": np.random.rand(*input_shape),
-        }
         output_shape = (2, Cout, 19) if rank == 3 else (2, Cout, 19, 22)
         assert_model_is_valid(
             prog,

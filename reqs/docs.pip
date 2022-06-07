@@ -10,7 +10,11 @@ idna
 imagesize
 numpy
 numpydoc
-protobuf
+
+# rdar://93977023
+protobuf<=3.20.1; python_version < "3.7"
+protobuf==3.20.1; python_version >= "3.7"
+
 pytz
 six
 snowballstemmer

@@ -4,7 +4,6 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import os as _os
-import shutil as _shutil
 import stat as _stat
 import tempfile as _tempfile
 import warnings as _warnings

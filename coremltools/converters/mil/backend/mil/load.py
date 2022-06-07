@@ -8,7 +8,9 @@ import numpy as np
 import os
 
 from .passes import mil_passes
+from ..backend_helper import _get_colorspace_enum, _validate_image_input_output_shapes
 from coremltools import _SPECIFICATION_VERSION_IOS_15
+from coremltools import _OPSET
 from coremltools.converters.mil.backend.mil.helper import (
     cast_to_framework_io_dtype,
     create_file_value,
@@ -25,7 +27,7 @@ from coremltools.converters.mil.mil import (
     types
 )
 from coremltools.converters.mil.backend.nn.load import _set_optional_inputs
-from coremltools.converters.mil.input_types import ImageType, TensorType, EnumeratedShapes, RangeDim
+from coremltools.converters.mil.input_types import ColorLayout, ImageType, TensorType, EnumeratedShapes, RangeDim
 from coremltools.converters.mil.mil.ops.registry import SSAOpRegistry
 from coremltools.converters.mil.mil.types.symbolic import (
     any_symbolic,
@@ -54,8 +56,9 @@ def should_use_weight_file(val):
         val is not None
         and isinstance(val, (np.ndarray, np.generic))
         and val.size >= 10
-        and val.dtype in ['float16', 'float32']
+        and val.dtype in ['float16', 'float32', 'uint8', 'int8']
     )
+
 
 def translate_const(op, blob_writer):
     output_var = op.outputs[0]
@@ -68,6 +71,32 @@ def translate_const(op, blob_writer):
     return pm.Operation(
         type="const",
         attributes={"name": create_scalar_value(op.name), "val": value},
+        outputs=[
+            pm.NamedValueType(
+                name=output_var.name, type=types_to_proto(output_var.sym_type)
+            )
+        ],
+    )
+
+
+def translate_constexpr(op, blob_writer):
+
+    def get_value(var):
+        if should_use_weight_file(var.val):
+            value = create_file_value(var, blob_writer)
+        else:
+            value = create_immediate_value(var)
+
+        return value
+
+    output_var = op.outputs[0]
+
+    attributes = {"name": create_scalar_value(op.name)}
+    attributes.update({k: get_value(v) for k, v in op.inputs.items()})
+
+    return pm.Operation(
+        type=op.op_type,
+        attributes=attributes,
         outputs=[
             pm.NamedValueType(
                 name=output_var.name, type=types_to_proto(output_var.sym_type)
@@ -131,8 +160,13 @@ def translate_generic_op(op, parameters, blob_writer, literal_params=[]):
         outputs=outputs,
     )
 
-
 def create_block(block, parameters, blob_writer):
+
+    def feeds_to_only_constexprs(op):
+        return (op.op_type == 'const') \
+               and len(op.outputs[0].child_ops) > 0 \
+               and all((child_op.op_type.startswith("constexpr_")) for child_op in op.outputs[0].child_ops)
+
     proto_ops = []
 
     # Find the const op that generates classify's "label" / "class" string vec.
@@ -150,10 +184,14 @@ def create_block(block, parameters, blob_writer):
     for op in block.operations:
         op_cls_name = type(op).__name__
         if op_cls_name == "const":
+            if feeds_to_only_constexprs(op):
+                continue
             # Do not serialize the const op that creates the var bound to the classifier's "classes" param.
             # The variable's value will be bound directly to classify's "classes" param instead.
             if op != classify_const_classes_op:
                 proto_ops.append(translate_const(op, blob_writer))
+        elif op_cls_name.startswith("constexpr_"):
+            proto_ops.append(translate_constexpr(op, blob_writer))
         elif op_cls_name == "classify":
             # Classify's "classes" param should be serialized as a value literal bound
             # directly to the param, rather than as a const-generated variable.
@@ -172,7 +210,7 @@ def create_block(block, parameters, blob_writer):
     return pm.Block(inputs=inputs, outputs=output_names, operations=proto_ops)
 
 
-def convert_function(function, parameters, blob_writer):
+def convert_function(function, parameters, blob_writer, opset):
     block = create_block(function, parameters, blob_writer)
 
     inputs = []
@@ -180,8 +218,7 @@ def convert_function(function, parameters, blob_writer):
         proto_type = types_to_proto(var.sym_type)
         inputs.append(pm.NamedValueType(name=name, type=proto_type))
 
-    return pm.Function(inputs=inputs, opset="CoreML5", block_specializations={"CoreML5": block})
-
+    return pm.Function(inputs=inputs, opset=opset, block_specializations={opset: block})
 
 # Add a classify op to the output.
 # Replaces the original probabilites output (in the containing MIL block)
@@ -191,6 +228,12 @@ def _add_classify_op(prog, classifier_config):
     '''
     Add a "classify" op to the program, at the end of the main block
     '''
+    def remove_output(block, prob_var):
+        for i in range(len(block.outputs)):
+            if block.outputs[i] is prob_var:
+                block.outputs.pop(i)
+                break
+
     block = prog.functions["main"]
 
     message = "Class labels must be a list of integers / strings or a file path"
@@ -217,7 +260,12 @@ def _add_classify_op(prog, classifier_config):
         if isinstance(classes[0], int):
             classes = [np.int64(x) for x in classes]
         classes_var = mb.const(val=mil_list(classes))
-        out = mb.classify(probabilities=probability_var, classes=classes_var)
+        if probability_var.dtype != types.fp32:
+            remove_output(block, probability_var)
+            probability_var = mb.cast(x=probability_var, dtype="fp32", name=probability_var.name + "_cast_to_fp32")
+        out = mb.classify(probabilities=probability_var,
+                          classes=classes_var
+                          )
 
         predicted_feature_name = "classLabel" if classifier_config.predicted_feature_name is None \
                                               else classifier_config.predicted_feature_name
@@ -225,18 +273,15 @@ def _add_classify_op(prog, classifier_config):
         out[1].name = predicted_feature_name + "_probs"
 
         # Remove probabilities from block outputs, replace with classify's outputs
-        for i in range(0, len(block.outputs)):
-            if block.outputs[i] is probability_var:
-                block.outputs.pop(i)
-                break
+        remove_output(block, probability_var)
         block.outputs[:0] = out
         return out[0].name, out[1].name
 
-def load(prog, weights_dir, resume_on_errors=False, **kwargs):
+def load(prog, weights_dir, resume_on_errors=False, specification_version=_SPECIFICATION_VERSION_IOS_15, **kwargs):
     if "main" not in prog.functions:
         raise ValueError("main function not found in program")
 
-    mil_passes.mil_backend_passes(prog)
+    mil_passes.mil_backend_passes(prog, specification_version)
 
     # if user has specified "ClassifierConfig", then add the "classify" op to the prog
     classifier_config = kwargs.get("classifier_config", None)
@@ -246,17 +291,31 @@ def load(prog, weights_dir, resume_on_errors=False, **kwargs):
         predicted_feature_name, predicted_probabilities_name = _add_classify_op(prog, classifier_config)
 
     input_types = prog.main_input_types
+    output_types = prog.main_output_types
     weight_path = os.path.join(weights_dir, _WEIGHTS_FILE_NAME)
     blob_writer = BlobWriter(weight_path)
 
+    opset = _OPSET[specification_version]
+
     function_protos = {}
     for func_name, func in prog.functions.items():
-        function_protos[func_name] = convert_function(func, prog.parameters, blob_writer)
+        function_protos[func_name] = convert_function(func, prog.parameters, blob_writer, opset)
 
     proto = pm.Program(
         version=1,
         functions=function_protos,
     )
+
+    desc = kwargs.get("model_description", None)
+    if desc and not isinstance(desc, ml.ModelDescription):
+        raise ValueError("Invalid model descriptor")
+
+    if desc:
+        if classifier_config is not None:
+            raise AssertionError("Both model_description and classifier_config can't be provided")
+        model = ml.Model(description=desc, specificationVersion=specification_version)
+        model.mlProgram.CopyFrom(proto)
+        return model
 
     input_features = []
     output_features = []
@@ -303,22 +362,13 @@ def load(prog, weights_dir, resume_on_errors=False, **kwargs):
                 array_type = ft.ArrayFeatureType(shape=shape, dataType=cast_to_framework_io_dtype(var, False))
                 input_feature_type.multiArrayType.CopyFrom(array_type)
             else:
-                if len(shape) < 3:
-                    raise ValueError("Image input, '{}', must have rank at least 3. Instead it has rank {}".
-                                     format(name, len(shape)))
                 # make a feature type of Type "imageType"
                 input_type = image_input_names[name]
+                _validate_image_input_output_shapes(input_type.color_layout, shape, name, is_input=True)
                 if not input_type.channel_first:
                     raise ValueError("Image input, '{}', must be in the channel_first format".
                                      format(name))
-
-                if input_type.color_layout == "G":
-                    clr_space = ft.ImageFeatureType.ColorSpace.GRAYSCALE
-                elif input_type.color_layout == "BGR":
-                    clr_space = ft.ImageFeatureType.ColorSpace.BGR
-                else:
-                    clr_space = ft.ImageFeatureType.ColorSpace.RGB
-
+                clr_space = _get_colorspace_enum(input_type.color_layout)
                 image_type = ft.ImageFeatureType(width=shape[-1],
                                                  height=shape[-2],
                                                  colorSpace=clr_space)
@@ -334,20 +384,44 @@ def load(prog, weights_dir, resume_on_errors=False, **kwargs):
         else:
             raise NotImplementedError()
 
-    for var in prog.functions["main"].outputs:
+    if output_types is not None and classifier_config is None:
+        assert len(output_types) == len(prog.functions["main"].outputs), \
+                "number of mil program outputs do not match the number of outputs provided by the user"
+
+    for i, var in enumerate(prog.functions["main"].outputs):
         output_feature_type = ft.FeatureType()
         if types.is_tensor(var.sym_type) or types.is_primitive(var.sym_type):
-            dataType = None
-            if classifier_config is None or var.name != predicted_feature_name:
-                # Not a classifier output, make sure model output type matches with ML Program type.
-                dataType = cast_to_framework_io_dtype(var, True)
+            if output_types is not None and isinstance(output_types[i], ImageType):
+                if not types.is_tensor(var.sym_type):
+                    raise ValueError("Image output, '{}', is a scalar, but it should be a tensor of rank 4".format(
+                                      var.name))
+                shape = var.sym_type.get_shape()
+                if any_variadic(shape):
+                    raise ValueError("Variable rank model outputs, that are ImageTypes, are not supported")
+                if any([is_symbolic(d) for d in shape]):
+                    raise NotImplementedError("Image output '{}' has symbolic dimensions in its shape".
+                                              format(var.name))
+                _validate_image_input_output_shapes(output_types[i].color_layout, shape, var.name, is_input=False)
+                clr_space = _get_colorspace_enum(output_types[i].color_layout)
+                image_type = ft.ImageFeatureType(width=shape[-1],
+                                                 height=shape[-2],
+                                                 colorSpace=clr_space)
+                output_feature_type.imageType.CopyFrom(image_type)
+                output_features.append(
+                    ml.FeatureDescription(name=var.name, type=output_feature_type)
+                )
             else:
-                # Classifier outputs are set up separately, so default to fp32 for now.
-                dataType = ft.ArrayFeatureType.ArrayDataType.FLOAT32
+                dataType = None
+                if classifier_config is None or var.name != predicted_feature_name:
+                    # Not a classifier output, make sure model output type matches with ML Program type.
+                    dataType = cast_to_framework_io_dtype(var, True)
+                else:
+                    # Classifier outputs are set up separately, so default to fp32 for now.
+                    dataType = ft.ArrayFeatureType.ArrayDataType.FLOAT32
 
-            array_type = ft.ArrayFeatureType(shape=None, dataType=dataType)
-            output_feature_type.multiArrayType.CopyFrom(array_type)
-            output_features.append(ml.FeatureDescription(name=var.name, type=output_feature_type))
+                array_type = ft.ArrayFeatureType(shape=None, dataType=dataType)
+                output_feature_type.multiArrayType.CopyFrom(array_type)
+                output_features.append(ml.FeatureDescription(name=var.name, type=output_feature_type))
         elif (types.is_dict(var.sym_type)):
             output_feature_type.dictionaryType.MergeFromString(b"")
             keytype, valtype = var.sym_type.T
@@ -378,7 +452,7 @@ def load(prog, weights_dir, resume_on_errors=False, **kwargs):
                 break
 
     # Create ML Model
-    model = ml.Model(description=desc, specificationVersion=_SPECIFICATION_VERSION_IOS_15)
+    model = ml.Model(description=desc, specificationVersion=specification_version)
     model.mlProgram.CopyFrom(proto)
 
     # Set symbolic shapes

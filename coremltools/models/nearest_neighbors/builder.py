@@ -10,7 +10,7 @@ from .. import datatypes
 import coremltools
 
 
-class KNearestNeighborsClassifierBuilder(object):
+class KNearestNeighborsClassifierBuilder:
     """
     Construct a CoreML KNearestNeighborsClassifier specification.
 
@@ -97,8 +97,6 @@ class KNearestNeighborsClassifierBuilder(object):
         leaf_size
         	Leaf size for the kd-tree. Ignored if index type is ``'linear'``. Default = 30.
         """
-        super(KNearestNeighborsClassifierBuilder, self).__init__()
-
         self.spec = coremltools.proto.Model_pb2.Model()
         self.spec.specificationVersion = (
             coremltools._MINIMUM_NEAREST_NEIGHBORS_SPEC_VERSION

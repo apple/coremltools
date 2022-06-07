@@ -16,6 +16,7 @@ class ComputePrecision(_Enum):
     FLOAT16 = "float16"
     FLOAT32 = "float32"
 
+
 type_eps = {}
 type_min = {}
 type_negmin = {}

@@ -16,9 +16,9 @@ from coremltools.converters.mil.mil.types.symbolic import (
     any_symbolic,
     is_symbolic,
 )
-from coremltools.converters.mil.mil.types import np_dtype_to_py_type
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.ops.registry import SSAOpRegistry
+from coremltools.converters.mil.mil.types.type_mapping import np_val_to_py_type
 from coremltools.models.neural_network.quantization_utils import (
     _convert_array_to_nbit_quantized_bytes,
 )
@@ -78,26 +78,6 @@ def make_input(const_context, builder, variables):
         add_const(const_context, builder, v.name, v.val)
     return v.name
 
-def to_py_type(val):
-    """Convert numpy val to python primitive equivalent. Ex:
-
-    Given: val = np.array([True, False])
-    Returns: [True, False]
-
-    Given: val = np.array(32, dtype=np.int)
-    Returns 32
-    """
-    if not isinstance(val, (_np.ndarray, _np.generic)):
-        return val
-
-    # val is np.ndarray or np.generic
-    is_np_scalar = isinstance(val, _np.generic) or val.shape == ()
-    py_type = np_dtype_to_py_type(val.dtype)
-    if is_np_scalar:
-        return py_type(val)
-    # flatten them to 1D array
-    val = val.flatten()
-    return tuple(py_type(v) for v in val)
 
 def _convert_pool(const_context, builder, op, mode, exclude_padding_from_average=True):
     num_spatial_dimensions = len(op.kernel_sizes.val)
@@ -706,13 +686,13 @@ def _add_elementwise_binary(
         if op.x.val is not None and op.x.rank == 0 and _np.isfinite(op.x.val):
             params["input_names"] = make_input(const_context, builder, [op.y])
             val = op.x.val if not isinstance(op.x.val, _np.float16) else op.x.val.astype(_np.float32)
-            params["alpha"] = to_py_type(val)
+            params["alpha"] = np_val_to_py_type(val)
             builder.add_elementwise(**params)
             return
         elif op.y.val is not None and op.y.rank == 0 and _np.isfinite(op.y.val):
             params["input_names"] = make_input(const_context, builder, [op.x])
             val = op.y.val if not isinstance(op.y.val, _np.float16) else op.y.val.astype(_np.float32)
-            params["alpha"] = to_py_type(val)
+            params["alpha"] = np_val_to_py_type(val)
             builder.add_elementwise(**params)
             return
     elif mode in ["equal", "not_equal"]:
@@ -721,13 +701,13 @@ def _add_elementwise_binary(
         if op.x.val is not None and op.x.rank == 0 and _np.isfinite(op.x.val):
             params["input_names"] = make_input(const_context, builder, [op.y])
             val = op.x.val if not isinstance(op.x.val, _np.float16) else op.x.val.astype(_np.float32)
-            params["alpha"] = to_py_type(val)
+            params["alpha"] = np_val_to_py_type(val)
             add_func(**params)
             return
         elif op.y.val is not None and op.y.rank == 0 and _np.isfinite(op.y.val):
             params["input_names"] = make_input(const_context, builder, [op.x])
             val = op.y.val if not isinstance(op.y.val, _np.float16) else op.y.val.astype(_np.float32)
-            params["alpha"] = to_py_type(val)
+            params["alpha"] = np_val_to_py_type(val)
             add_func(**params)
             return
     elif mode in ["greater_than", "greater_equal", "less_than", "less_equal"]:
@@ -735,7 +715,7 @@ def _add_elementwise_binary(
         if op.x.val is not None and op.x.rank == 0 and _np.isfinite(op.x.val):
             params["input_names"] = make_input(const_context, builder, [op.y])
             val = op.x.val if not isinstance(op.x.val, _np.float16) else op.x.val.astype(_np.float32)
-            params["alpha"] = to_py_type(val)
+            params["alpha"] = np_val_to_py_type(val)
             if "less" in mode:
                 params["use_greater_than_equal"] = mode.endswith("_equal")
                 builder.add_greater_than(**params)
@@ -746,7 +726,7 @@ def _add_elementwise_binary(
         elif op.y.val is not None and op.y.rank == 0 and _np.isfinite(op.y.val):
             params["input_names"] = make_input(const_context, builder, [op.x])
             val = op.y.val if not isinstance(op.y.val, _np.float16) else op.y.val.astype(_np.float32)
-            params["alpha"] = to_py_type(val)
+            params["alpha"] = np_val_to_py_type(val)
             if "greater" in mode:
                 params["use_greater_than_equal"] = mode.endswith("_equal")
                 builder.add_greater_than(**params)
@@ -1215,20 +1195,20 @@ def slice_by_index(const_context, builder, op):
             output_name=op.outputs[0].name,
             begin_ids=op.begin.val,
             end_ids=op.end.val,
-            strides=to_py_type(stride),
-            begin_masks=to_py_type(begin_mask),
-            end_masks=to_py_type(end_mask),
-            squeeze_masks=to_py_type(squeeze_mask),
+            strides=np_val_to_py_type(stride),
+            begin_masks=np_val_to_py_type(begin_mask),
+            end_masks=np_val_to_py_type(end_mask),
+            squeeze_masks=np_val_to_py_type(squeeze_mask),
         )
     else:
         builder.add_slice_dynamic(
             name=op.name,
             input_names=make_input(const_context, builder, [op.x, op.begin, op.end]),
             output_name=op.outputs[0].name,
-            strides=to_py_type(stride),
-            begin_masks=to_py_type(begin_mask),
-            end_masks=to_py_type(end_mask),
-            squeeze_masks=to_py_type(squeeze_mask),
+            strides=np_val_to_py_type(stride),
+            begin_masks=np_val_to_py_type(begin_mask),
+            end_masks=np_val_to_py_type(end_mask),
+            squeeze_masks=np_val_to_py_type(squeeze_mask),
         )
 
 
@@ -2118,6 +2098,101 @@ def space_to_depth(const_context, builder, op):
         output_name=op.outputs[0].name,
         mode="SPACE_TO_DEPTH",
         block_size=op.block_size.val,
+    )
+
+
+@register_mil_to_nn_mapping
+def batch_to_space(const_context, builder, op):
+    block_size = op.block_shape.val
+    if block_size[0] != block_size[1]:
+        raise ValueError("batch_to_space non-equal block shape is not supported in 'neuralnetwork' backend! Please change the convert_to to 'mlprogram'.")
+    block_size = block_size[0]
+    if block_size == 1:
+        raise ValueError("batch_to_space block shape == 1 not supported in 'neuralnetwork' backend! Please change the convert_to to 'mlprogram'.")
+
+    transpose_1_name = op.name + "_transpose_1"
+    builder.add_transpose(
+        name=transpose_1_name,
+        input_name=make_input(const_context, builder, op.x),
+        axes=[1, 0, 2, 3],
+        output_name=transpose_1_name,
+    )
+    depth_to_space_name = op.name + "_depth_to_space"
+    builder.add_reorganize_data(
+        name=depth_to_space_name,
+        input_name=transpose_1_name,
+        output_name=depth_to_space_name,
+        mode="DEPTH_TO_SPACE",
+        block_size=block_size,
+    )
+    crop_name = op.name + "_crop"
+    crops = op.crops.val
+    builder.add_crop(
+        name=crop_name,
+        input_names=[depth_to_space_name],
+        output_name=crop_name,
+        offset=0,
+        top=crops[0][0],
+        bottom=crops[0][1],
+        left=crops[1][0],
+        right=crops[1][1],
+    )
+    transpose_2_name = op.name + "_transpose_2"
+    builder.add_transpose(
+        name=transpose_2_name,
+        input_name=crop_name,
+        axes=[1, 0, 2, 3],
+        output_name=op.outputs[0].name,
+    )
+
+
+@register_mil_to_nn_mapping
+def space_to_batch(const_context, builder, op):
+    block_size = op.block_shape.val
+    if block_size[0] != block_size[1]:
+        raise ValueError("space_to_batch non-equal block shape is not supported in 'neuralnetwork' backend! Please change the convert_to to 'mlprogram'.")
+    block_size = block_size[0]
+    if block_size == 1:
+        raise ValueError("space_to_batch block shape == 1 not supported in 'neuralnetwork' backend! Please change the convert_to to 'mlprogram'.")
+
+    pad = op.paddings.val.flatten()
+    left, right = pad[2], pad[3]
+    top, bottom = pad[0], pad[1]
+
+    pad_name = op.name + "_pad"
+    builder.add_padding(
+        name=pad_name,
+        left=left,
+        right=right,
+        top=top,
+        bottom=bottom,
+        input_name=make_input(const_context, builder, op.x),
+        output_name=pad_name,
+        padding_type="constant",
+        value=0.,
+    )
+
+    transpose_1_name = op.name + "_transpose_1"
+    builder.add_transpose(
+        name=transpose_1_name,
+        input_name=pad_name,
+        axes=[1, 0, 2, 3],
+        output_name=transpose_1_name,
+    )
+    space_to_depth_name = op.name + "_space_to_depth"
+    builder.add_reorganize_data(
+        name=space_to_depth_name,
+        input_name=transpose_1_name,
+        output_name=space_to_depth_name,
+        mode="SPACE_TO_DEPTH",
+        block_size=block_size,
+    )
+    transpose_2_name = op.name + "_transpose_2"
+    builder.add_transpose(
+        name=transpose_2_name,
+        input_name=space_to_depth_name,
+        axes=[1, 0, 2, 3],
+        output_name=op.outputs[0].name,
     )
 
 

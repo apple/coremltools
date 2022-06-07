@@ -67,7 +67,7 @@ class TestCompositeOp(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             frontend_only=False,
             backend=backend,
         )

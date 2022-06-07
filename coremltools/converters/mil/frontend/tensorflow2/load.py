@@ -132,10 +132,10 @@ class TF2Loader(TFLoader):
         
         return cfs, graph_def
 
-    def _graph_def_from_model(self, outputs=None):
+    def _graph_def_from_model(self, output_names=None):
         """Overwrites TFLoader._graph_def_from_model()"""
         _, graph_def = self._get_concrete_functions_and_graph_def()
-        return self.extract_sub_graph(graph_def, outputs)
+        return self.extract_sub_graph(graph_def, output_names)
 
     def _tf_ssa_from_graph_def(self, fn_name="main"):
         """Overwrites TFLoader._tf_ssa_from_graph_def()"""

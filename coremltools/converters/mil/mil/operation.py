@@ -117,7 +117,7 @@ def is_internal_input(arg_name):
     return arg_name[0] == "_"
 
 
-class mil_list(object):
+class mil_list:
     '''
     A wrapper around python list
     '''
@@ -128,7 +128,7 @@ class mil_list(object):
             raise TypeError("Type of 'ls' must be list in the 'mil_list' class")
 
 
-class Operation(object):
+class Operation:
     """
     Represents Operation in MIL.
 
@@ -165,8 +165,8 @@ class Operation(object):
         self._check_expected_inputs(kwargs)
 
         # Set inputs from kwargs
-        input_kv = {k: v for k, v in kwargs.items() \
-            if k in self._input_types and v is not None}
+        input_kv = {k: v for k, v in kwargs.items()
+                    if k in self._input_types and v is not None}
         self._validate_and_set_inputs(input_kv)
         self._ensure_required_inputs()
 
@@ -193,12 +193,13 @@ class Operation(object):
                 raise ValueError(
                     "Unknown input '{}' for op '{}'".format(
                       k, self.op_type)
-                    )
+                )
 
     def set_inputs(self,
-        no_check_var_types=False,
-        type_inference=False,
-        **input_kvs):
+                   no_check_var_types=False,
+                   type_inference=False,
+                   **input_kvs
+    ):
         """
         Parameters
         ----------
@@ -245,7 +246,7 @@ class Operation(object):
             output_names = self.output_names()
             if not isinstance(output_names, tuple):
                 output_names = (output_names,)
-        except NotImplementedError as e:
+        except NotImplementedError:
             if len(output_types) > 1:
                 output_names = tuple(str(i) for i, _ in enumerate(output_types))
             else:
@@ -328,7 +329,7 @@ class Operation(object):
             # Is self.value_inference implemented for corresponding input?
             try:
                 vals = self.value_inference()
-            except NotImplementedError as e:
+            except NotImplementedError:
                 do_auto_val = False
 
         if not do_auto_val:

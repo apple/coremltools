@@ -149,7 +149,7 @@ class conv(Operation):
             )
 
     def __init__(self, **kwargs):
-        super(conv, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         inshape = self.x.shape
@@ -247,7 +247,7 @@ class conv_quantized(conv):
                 )
 
     def __init__(self, **kwargs):
-        super(conv_quantized, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
 
 @register_op(doc_str="")
@@ -357,7 +357,7 @@ class conv_transpose(Operation):
             )
 
     def __init__(self, **kwargs):
-        super(conv_transpose, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         # Input shape is [n, C_in, spatial_dims]

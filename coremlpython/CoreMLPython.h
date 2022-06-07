@@ -26,7 +26,7 @@ namespace CoreML {
             Model& operator=(const Model&) = delete;
             ~Model();
             explicit Model(const std::string& urlStr, const std::string& computeUnits);
-            py::dict predict(const py::dict& input, bool useCPUOnly);
+            py::dict predict(const py::dict& input);
             static py::bytes autoSetSpecificationVersion(const py::bytes& modelBytes);
             static int32_t maximumSupportedSpecificationVersion();
             std::string toString() const;

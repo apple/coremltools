@@ -52,13 +52,18 @@ class classify(Operation):
     )
 
     def __init__(self, **kwargs):
-        super(classify, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         # check the type of "classes"
         if not types.is_list(self.classes.sym_type):
             msg = "'classes' in the op 'classify' must be of type list. Instead it is {}."
             raise ValueError(msg.format(self.classes.sym_type.__type_info__()))
+
+        # check the type of "probabilities"
+        if self.probabilities.dtype != types.fp32:
+            msg = "classify op: input probabilities must be of type fp32. Instead it is of type {}"
+            raise TypeError(msg.format(self.probabilities.sym_type.get_primitive().__type_info__()))
 
         classes_elem_type = self.classes.elem_type
         if classes_elem_type not in {types.str, types.int64}:

@@ -11,23 +11,23 @@ import shutil
 import tempfile
 import unittest
 import uuid
-import pytest
-from packaging import version
 
 import numpy as np
-from coremltools._deps import _HAS_TF, MSG_TF1_NOT_FOUND
+import pytest
 
+from coremltools._deps import _HAS_TF, MSG_TF1_NOT_FOUND
 if _HAS_TF:
     import tensorflow as tf
 import torch
 
 import coremltools
+from coremltools import ComputeUnit
 import coremltools.models.datatypes as datatypes
 from coremltools.converters.mil.mil.ops.defs._utils import aggregated_pad
-from coremltools.models import _MLMODEL_FULL_PRECISION, _MLMODEL_HALF_PRECISION
-from coremltools.models import neural_network as neural_network
+from coremltools.models import _MLMODEL_FULL_PRECISION, _MLMODEL_HALF_PRECISION, neural_network
 from coremltools.models.neural_network import flexible_shape_utils
 from coremltools.models.utils import _macos_version, _is_macos
+
 
 np.random.seed(10)
 
@@ -125,8 +125,13 @@ class CorrectnessTest(unittest.TestCase):
         if isinstance(model, str):
             model = coremltools.models.MLModel(model)
 
-        model = coremltools.models.MLModel(model, useCPUOnly=use_cpu_only)
-        prediction = model.predict(inputs, useCPUOnly=use_cpu_only)
+        if use_cpu_only:
+            compute_unit=ComputeUnit.CPU_ONLY
+        else:
+            compute_unit=ComputeUnit.ALL
+
+        model = coremltools.models.MLModel(model, compute_units=compute_unit)
+        prediction = model.predict(inputs)
 
         for output_name in expected:
             np_preds = expected[output_name]
@@ -157,11 +162,15 @@ class CorrectnessTest(unittest.TestCase):
         SNR=30,
     ):
 
+        if useCPUOnly:
+            compute_unit=ComputeUnit.CPU_ONLY
+        else:
+            compute_unit=ComputeUnit.ALL
+
         model_dir = None
         # if we're given a path to a model
         if isinstance(model, str):
-            model = coremltools.models.MLModel(model)
-
+            model = coremltools.models.MLModel(model, compute_units=compute_unit)
         # If we're passed in a specification, save out the model
         # and then load it back up
         elif isinstance(model, coremltools.proto.Model_pb2.Model):
@@ -169,14 +178,14 @@ class CorrectnessTest(unittest.TestCase):
             model_name = str(uuid.uuid4()) + ".mlmodel"
             model_path = os.path.join(model_dir, model_name)
             coremltools.utils.save_spec(model, model_path)
-            model = coremltools.models.MLModel(model, useCPUOnly=useCPUOnly)
+            model = coremltools.models.MLModel(model, compute_units=compute_unit)
 
         # If we want to test the half precision case
         if model_precision == _MLMODEL_HALF_PRECISION:
             model = coremltools.utils._convert_neural_network_weights_to_fp16(model)
 
         try:
-            prediction = model.predict(input, useCPUOnly=useCPUOnly)
+            prediction = model.predict(input)
             for output_name in expected:
                 if self.__class__.__name__ == "SimpleTest":
                     self._test_shape_equality(
@@ -1745,6 +1754,7 @@ class NewLayersSimpleTest(CorrectnessTest):
                 expected = {"output": func(a, b, dtype=np.float32)}
                 self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
+    @pytest.mark.xfail(reason="rdar://93912621")
     def test_elementwise_binary_gpu(self):
         self.test_elementwise_binary_cpu(cpu_only=False)
 
@@ -3075,6 +3085,7 @@ class NewLayersSimpleTest(CorrectnessTest):
                                         iou_threshold = (
                                             np.percentile(iou_matrix, iou_thresh) + 0.01
                                         )
+                                    iou_threshold = np.maximum(iou_threshold, 1e-8)
 
                                     number_of_test += 1
 

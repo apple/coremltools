@@ -78,7 +78,7 @@ class batch_norm(Operation):
         )
 
     def __init__(self, **kwargs):
-        super(batch_norm, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         x_shape = self.x.shape
@@ -130,7 +130,7 @@ class instance_norm(Operation):
         )
 
     def __init__(self, **kwargs):
-        super(instance_norm, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         x_shape = self.x.shape
@@ -149,19 +149,22 @@ class l2_norm(Operation):
 
     Parameters
     ----------
-    x: tensor<[*D,C,H,W], T> (Required)
+    x: tensor<[\*B, \*D], T> (Required)
         * Input tensor, ``rank(x) >= 3``.
-        * ``*D`` refers to the spatial dimensions, ``rank(*D) >= 0``.
-        * ``n`` is the batch dimension.
-        * For ranks greater than 3, the leading dimensions, starting from ``0`` to ``-4`` (inclusive),
-          are all treated as batch.
+        * ``*B`` refers to the leading dimensions.
+        * ``*D`` refers to the spatial dimensions to be normalized. Must be rank 3: ``rank(*D) == 3``.
+        * When ``rank(x) == 3``, in which ``rank(*B) == 0 and rank(*D) == 3``, the input is divided by
+          the square root of the sum of squares of all elements.
+        * For ranks greater than 3, in which ``rank(*B) >= 1 and rank(*D) == 3``,
+          the leading dimensions \*B, starting from ``0`` to ``-4`` (inclusive),
+          are all treated as batch. The L2 normalization are done batch-wise.
     epsilon: const fp32 (Optional)
         * Small constant to avoid division by ``0``.
         * Optional, defaults to ``1e-6``.
 
     Returns
     -------
-    tensor<[\*D,C,H,W], T>
+    tensor<[\*B, \*D], T>
         * Same type and shape as the input tensor ``x``.
 
     Attributes
@@ -180,11 +183,32 @@ class l2_norm(Operation):
             )
 
     def __init__(self, **kwargs):
-        super(l2_norm, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
+        if self.x.rank < 3:
+            msg = "Input rank of l2_norm must be at least 3. Got {}".format(self.x.rank)
+            raise ValueError(msg)
         x_shape = self.x.shape
         return types.tensor(self.x.dtype, tuple(x_shape))
+
+    @precondition(allow=VALUE)
+    def value_inference(self):
+        val = self.x.val
+        eps = self.epsilon.val
+        shape = self.x.shape
+        rank = self.x.rank
+        batch_dims = rank - 3
+        if batch_dims == 0:
+            square_sum = np.sum(val**2)
+            output = val/np.power(square_sum + eps, 0.5)
+        else:
+            batch_dim_prod = np.prod(shape[:batch_dims])
+            reshape_val = np.reshape(val, (batch_dim_prod, -1))
+            square_sum = np.sum(reshape_val * reshape_val, axis=1, keepdims=True) + eps
+            output = reshape_val/np.power(square_sum, 0.5)
+            output = np.reshape(output, shape)
+        return output
 
 
 @register_op(doc_str="")
@@ -247,7 +271,7 @@ class layer_norm(Operation):
             )
 
     def __init__(self, **kwargs):
-        super(layer_norm, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     @staticmethod
     def _is_compatible_shape(shapea, shapeb):
@@ -355,7 +379,7 @@ class local_response_norm(Operation):
             )
 
     def __init__(self, **kwargs):
-        super(local_response_norm, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         x_shape = self.x.shape

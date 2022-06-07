@@ -168,7 +168,7 @@ def convert_graph(context, graph, outputs=None):
     # Translate the non-placeholder ops.
     num_nodes = len(nodes)
     for i, node_name in enumerate(
-        _tqdm(nodes, desc="Converting Frontend ==> MIL Ops", unit=" ops")
+        _tqdm(nodes, desc="Converting TF Frontend ==> MIL Ops", unit=" ops")
     ):
         node = graph[node_name]
         if node.op == "return":
