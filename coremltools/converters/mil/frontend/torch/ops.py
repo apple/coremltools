@@ -3384,6 +3384,13 @@ def to(context, node):
             "Received invalid arguments for PyTorch conversion of op {}".format(node)
         )
 
+    # We have to handle the case where the dtype is not set, this should be inferred from the Tensor dtype
+    # see, https://pytorch.org/docs/stable/generated/torch.Tensor.to.html?highlight=#torch.Tensor.to
+    if dtype is None:
+        out = mb.identity(x=_input, name=node.name)
+        context.add(out, node.name)
+        return = 0 # TODO: infer from Tensor (spoiler in this case we care about its f32 => 6)
+
     torch_dtype = NUM_TO_TORCH_DTYPE[dtype]
     if isinstance(_input, Var) and _input.val is not None:
         _input = _input.val
