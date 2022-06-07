@@ -3089,8 +3089,11 @@ def index(context, node):
     # For multiple index axes case, we now assume that all the index have equal shape
     for index in valid_indices:
         if not is_compatible_symbolic_vector(index.shape, valid_indices[0].shape):
-            raise NotImplementedError("Broadcasable tensor index not supported.")
-
+            broadcast_inputs = _broadcast_tensors([valid_indices[0], index])
+            index = broadcast_inputs[1]
+            valid_indices[0] = broadcast_inputs[0]
+            valid_indices.append(index)
+    
     # First stack the index together
     indices_rank = valid_indices[0].rank
     indices = mb.stack(values=valid_indices, axis=indices_rank)
