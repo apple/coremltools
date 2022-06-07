@@ -4441,3 +4441,35 @@ def roi_align(context, node):
 def numel(context, node):
     inputs = _get_inputs(context, node, expected=1)
     context.add(mb.reduce_prod(x=inputs[0], name=node.name), torch_name=node.outputs[0])
+
+@register_torch_op()
+def nms(context, node):
+    inputs = _get_inputs(context, node)
+    boxes = inputs[0]
+
+    num_boxes = boxes.shape[1]
+    max_boxes = num_boxes  # we set the max_boxes just to be # input boxes
+
+    scores = inputs[1]
+    iou_threshold = inputs[2]
+    boxes = mb.expand_dims(x=boxes, axes=[0])
+    scores = mb.expand_dims(x=scores, axes=[0, -1])
+
+    # Follow tensorflow op example: TensorFlow's default value for score_threshold, Core ML does not
+    # have float('-inf') support, converted to minimum float32 instead
+    score_threshold = -3.4e38
+
+    _, _, x, _ = mb.non_maximum_suppression(
+        boxes=boxes,
+        scores=scores,
+        iou_threshold=iou_threshold,
+        score_threshold=score_threshold,
+        max_boxes=max_boxes
+    )
+
+    if not is_symbolic(num_boxes):
+        x = mb.squeeze(x=x, axes=[0])
+        x = mb.slice_by_index(x=x, begin=[0], end=[max_boxes], name=node.name)
+    else:
+        x = mb.squeeze(x=x, axes=[0], name=node.name)
+    context.add(x, torch_name=node.name)
