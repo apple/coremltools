@@ -3386,6 +3386,18 @@ def _slice(context, node):
     context.add(res)
 
 
+def _num_splits_and_sizes(split_sizes):
+    if split_sizes.sym_val is not None:
+        return len(split_sizes.sym_val), split_sizes.sym_val
+
+    if any_symbolic(split_sizes.shape):
+        raise ValueError("Unable to determine number of splits")
+
+    num_splits = len(split_sizes.shape)
+    sizes = [get_new_symbol() for _ in range(num_splits)]
+    return num_splits, sizes
+
+
 @register_torch_op(torch_alias=["split_with_sizes"])
 def split(context, node):
     inputs = _get_inputs(context, node, expected=3)
@@ -3413,6 +3425,14 @@ def split(context, node):
         else:
             partial_size = mb.mul(x=tmp, y=remainder)
             split_sizes = mb.concat(values=[whole_sizes, partial_size], axis=0)
+    
+
+    num_splits, sizes = _num_splits_and_sizes(split_sizes=split_sizes)
+    if num_splits == 1:
+        out = mb.identity(x=x, name=node.name)
+        context.add(out, node.name)
+        return
+
     res = mb.split(x=x, split_sizes=split_sizes, axis=dim, name=node.name)
     context.add(res, torch_name=node.name)
 
