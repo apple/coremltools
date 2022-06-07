@@ -4152,6 +4152,11 @@ def tensor(context, node):
         context.add(mb.identity(x=val, name=node.name))
         return
 
+    if inputs[2] is None:
+        res = mb.const(val=[val.val], name=node.name)
+        context.add(res, torch_name=node.name)
+        return
+
     # Case 2: Create a tensor filled with a single value
     val = val.val # element val to fill
     msg_prefix = 'torch::tensor {} '.format(node.name)
@@ -4522,3 +4527,13 @@ def repeat_interleave(context, node):
 
     context.add(reshape, node.name)
 
+@register_torch_op(override=True)
+def narrow(context, node):
+    data, dim, start, length = _get_inputs(context, node, expected=4)
+    data_shape = mb.shape(x=data).val
+    begin = [0]*len(data_shape)
+    end = [x for x in data_shape]
+    begin[dim.val] = start.val
+    end[dim.val] = start.val+length.val
+    out = mb.slice_by_index(x=data, begin=begin, end=end)
+    context.add(out, torch_name=node.name)
