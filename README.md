@@ -36,6 +36,14 @@ To install coremltools, use the following command:
 pip install coremltools
 ```
 
+## Version 6
+
+To install [the first beta of coremltools 6.0](https://github.com/apple/coremltools/releases/tag/6.0b1) use the following command:
+
+```shell
+pip install coremltools==6.0b1
+```
+
 
 ## Core ML
 
