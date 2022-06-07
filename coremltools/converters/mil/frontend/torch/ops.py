@@ -4436,3 +4436,8 @@ def roi_align(context, node):
     x = mb.squeeze(x=x, axes=[1])
 
     context.add(x, torch_name=node.outputs[0])
+
+@register_torch_op()
+def numel(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+    context.add(mb.reduce_prod(x=inputs[0], name=node.name), torch_name=node.outputs[0])
