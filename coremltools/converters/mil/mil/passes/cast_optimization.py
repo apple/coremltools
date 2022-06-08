@@ -58,7 +58,14 @@ class cast_optimization(AbstractGraphPass):
             while block_changed:
                 block_changed = _fuse_or_cancel_consecutive_casts_block(f, cached_vars)
 
-class Node(object):
+        # main function's output_vars are treated differently, which are not handled by the method
+        # above, "_fuse_or_cancel_consecutive_casts_block".
+        # For that, we invoke another method
+        block_changed = True
+        while block_changed:
+            block_changed = _cancel_consecutive_casts_connected_to_outputs(prog.functions["main"])
+
+class Node:
     def __init__(self, op_type, match_criterion=None):
         """
 
@@ -189,3 +196,47 @@ def _fuse_or_cancel_consecutive_casts_block(block, cached_vars):
             if block_changed:
                 return block_changed
     return block_changed
+
+
+def _cancel_consecutive_casts_connected_to_outputs(block):
+    """
+    Lets say the ops in the block have the following pattern
+    "some_op"---->{var1}---->"cast_op1"---->"cast_op2"--->{var2}
+    , where var2 is one of the outputs in block.outputs
+
+    If cast_op1 and cast_op2 can be cancelled, this means, var1 and var2 are duplicates
+    of each other. The program can then be updated to
+    "some_op"---->{var1}
+    where var1 replaces var2 in block.outputs
+    This also requires replacing var1's name with var2's so that the model output names remain unchanged
+    """
+    new_output_vars = []
+    block_changed = False
+    for output_var in block.outputs:
+        cast_op2 = output_var.op
+        if cast_op2 is None:
+            continue
+        if cast_op2.op_type != "cast":
+            new_output_vars.append(output_var)
+            continue
+        cast_op1 = cast_op2.x.op
+        if cast_op1 is None:
+            new_output_vars.append(output_var)
+            continue
+        if cast_op1.op_type != "cast":
+            new_output_vars.append(output_var)
+            continue
+        var1 = cast_op1.x
+        if var1.op is None or var1.dtype != output_var.dtype :
+            new_output_vars.append(output_var)
+            continue
+        var1.set_name(output_var.name)
+        new_output_vars.append(var1)
+        block_changed = True
+
+    if block_changed:
+        block.set_outputs(new_output_vars)
+
+    return block_changed
+
+

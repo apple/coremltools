@@ -5,6 +5,7 @@
 
 import coremltools as ct
 from coremltools.converters.mil.input_types import (
+    ColorLayout,
     ImageType,
     EnumeratedShapes,
     Shape,
@@ -31,25 +32,25 @@ from coremltools.models.neural_network.flexible_shape_utils import (
 )
 from .op_mapping import convert_ops
 from .passes.nn_passes import nn_backend_passes
-
+from ..backend_helper import _get_colorspace_enum, _validate_image_input_output_shapes
 
 def _convert_to_image_input(proto, inputs, skip_model_load=False):
     tmp_model = MLModel(proto, skip_model_load=skip_model_load)
     for input_type in inputs:
         if isinstance(input_type, ImageType):
-            if input_type.color_layout == "G":
+            if input_type.color_layout in (ColorLayout.GRAYSCALE, ColorLayout.GRAYSCALE_FLOAT16):
                 gray_bias = input_type.bias
                 red_bias, green_bias, blue_bias = 0.0, 0.0, 0.0
-            elif input_type.color_layout == "RGB":
+            elif input_type.color_layout == ColorLayout.RGB:
                 gray_bias = 0.0
                 red_bias, green_bias, blue_bias = input_type.bias
-            elif input_type.color_layout == "BGR":
+            elif input_type.color_layout == ColorLayout.BGR:
                 gray_bias = 0.0
                 blue_bias, green_bias, red_bias = input_type.bias
             tmp_model = neural_network.utils.make_image_input(
                 tmp_model,
                 input_type.name,
-                is_bgr=input_type.color_layout == "BGR",
+                is_bgr=input_type.color_layout == ColorLayout.BGR,
                 image_format="NCHW" if input_type.channel_first else "NHWC",
                 red_bias=red_bias,
                 green_bias=green_bias,
@@ -210,6 +211,7 @@ def load(prog, **kwargs):
 
     nn_backend_passes(prog)
     input_types = prog.main_input_types
+    output_types = prog.main_output_types
 
     v1_inputs = []
     symbolic_inputs = {}
@@ -274,6 +276,28 @@ def load(prog, **kwargs):
     if has_image_input:
         proto = _convert_to_image_input(proto, input_types,
                                         skip_model_load=kwargs.get("skip_model_load", False))
+
+    # image output
+    if output_types is not None:
+        assert len(output_types) == len(prog.functions["main"].outputs), \
+                "number of mil program outputs do not match the number of outputs provided by the user"
+        for i, output_proto_desc in enumerate(proto.description.output):
+            output_var = prog.functions["main"].outputs[i]
+            if isinstance(output_types[i], ImageType):
+                if not types.is_tensor(var.sym_type):
+                    raise ValueError("Image output, '{}', is a scalar, but it should be a tensor of rank 4".format(
+                        var.name))
+                shape = var.sym_type.get_shape()
+                if any_variadic(shape):
+                    raise ValueError("Variable rank model outputs, that are ImageTypes, are not supported")
+                if any([is_symbolic(d) for d in shape]):
+                    raise NotImplementedError("Image output '{}' has symbolic dimensions in its shape".
+                                              format(var.name))
+                _validate_image_input_output_shapes(output_types[i].color_layout, shape, var.name, is_input=False)
+                clr_space = _get_colorspace_enum(output_types[i].color_layout)
+                output_proto_desc.type.imageType.colorSpace = clr_space
+                output_proto_desc.type.imageType.width = shape[-1]
+                output_proto_desc.type.imageType.height = shape[-2]
 
     # classifier flag
     classifier_config = kwargs.get("classifier_config", None)

@@ -170,43 +170,43 @@ class TestCumSum:
     def test_invalid_reverse2(self):
         x_val = random_gen(shape=(1, 2, 3, 4, 5), rand_min=-100, rand_max=100)
         with pytest.raises(ValueError):
-            pred = mb.cumsum(x=x_val, reverse=0)
+            mb.cumsum(x=x_val, reverse=0)
 
     @ssa_fn
     def test_invalid_reverse3(self):
         x_val = random_gen(shape=(1, 2, 3, 4, 5), rand_min=-100, rand_max=100)
         with pytest.raises(ValueError):
-            pred = mb.cumsum(x=x_val, reverse=1)
+            mb.cumsum(x=x_val, reverse=1)
 
     @ssa_fn
     def test_invalid_exclusive1(self):
         x_val = random_gen(shape=(1, 2, 3, 4, 5), rand_min=-100, rand_max=100)
         with pytest.raises(ValueError):
-            pred = mb.cumsum(x=x_val, exclusive="")
+            mb.cumsum(x=x_val, exclusive="")
 
     @ssa_fn
     def test_invalid_exclusive2(self):
         x_val = random_gen(shape=(1, 2, 3, 4, 5), rand_min=-100, rand_max=100)
         with pytest.raises(ValueError):
-            pred = mb.cumsum(x=x_val, exclusive=0)
+            mb.cumsum(x=x_val, exclusive=0)
 
     @ssa_fn
     def test_invalid_exclusive3(self):
         x_val = random_gen(shape=(1, 2, 3, 4, 5), rand_min=-100, rand_max=100)
         with pytest.raises(ValueError):
-            pred = mb.cumsum(x=x_val, exclusive=1)
+            mb.cumsum(x=x_val, exclusive=1)
 
     @ssa_fn
     def test_invalid_input1(self):
         x_val = 1
         with pytest.raises(ValueError):
-            pred = mb.cumsum(x=x_val)
+            mb.cumsum(x=x_val)
 
     @ssa_fn
     def test_invalid_input2(self):
         x_val = ["1"]
         with pytest.raises(ValueError):
-            pred = mb.cumsum(x=x_val)
+            mb.cumsum(x=x_val)
 
 
 class TestFill:
@@ -562,6 +562,7 @@ class TestNonMaximumSuppression:
             iou_threshold = np.maximum(np.min(iou_matrix) - 0.01, 0.0)
         else:
             iou_threshold = np.percentile(iou_matrix, iou_threshold_percentile) + 0.01
+        iou_threshold = np.maximum(iou_threshold, 1e-8)
 
         (
             tf_boxes,
@@ -984,7 +985,6 @@ class TestRange1d:
         "use_cpu_only, backend", itertools.product([True, False], backends,)
     )
     def test_large_array(self, use_cpu_only, backend):
-        
         input_placeholders = {
             "x": mb.placeholder(shape=(1,)), # dummpy input
         }

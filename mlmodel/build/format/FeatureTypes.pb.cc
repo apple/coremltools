@@ -176,6 +176,7 @@ bool ImageFeatureType_ColorSpace_IsValid(int value) {
     case 10:
     case 20:
     case 30:
+    case 40:
       return true;
     default:
       return false;
@@ -187,6 +188,7 @@ const ImageFeatureType_ColorSpace ImageFeatureType::INVALID_COLOR_SPACE;
 const ImageFeatureType_ColorSpace ImageFeatureType::GRAYSCALE;
 const ImageFeatureType_ColorSpace ImageFeatureType::RGB;
 const ImageFeatureType_ColorSpace ImageFeatureType::BGR;
+const ImageFeatureType_ColorSpace ImageFeatureType::GRAYSCALE_FLOAT16;
 const ImageFeatureType_ColorSpace ImageFeatureType::ColorSpace_MIN;
 const ImageFeatureType_ColorSpace ImageFeatureType::ColorSpace_MAX;
 const int ImageFeatureType::ColorSpace_ARRAYSIZE;
@@ -194,6 +196,7 @@ const int ImageFeatureType::ColorSpace_ARRAYSIZE;
 bool ArrayFeatureType_ArrayDataType_IsValid(int value) {
   switch (value) {
     case 0:
+    case 65552:
     case 65568:
     case 65600:
     case 131104:
@@ -208,6 +211,7 @@ const ArrayFeatureType_ArrayDataType ArrayFeatureType::INVALID_ARRAY_DATA_TYPE;
 const ArrayFeatureType_ArrayDataType ArrayFeatureType::FLOAT32;
 const ArrayFeatureType_ArrayDataType ArrayFeatureType::DOUBLE;
 const ArrayFeatureType_ArrayDataType ArrayFeatureType::INT32;
+const ArrayFeatureType_ArrayDataType ArrayFeatureType::FLOAT16;
 const ArrayFeatureType_ArrayDataType ArrayFeatureType::ArrayDataType_MIN;
 const ArrayFeatureType_ArrayDataType ArrayFeatureType::ArrayDataType_MAX;
 const int ArrayFeatureType::ArrayDataType_ARRAYSIZE;

@@ -1,15 +1,15 @@
-# -*- coding: utf-8 -*-
-
 #  Copyright (c) 2021, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from coremltools.converters.mil.mil.ops.defs import elementwise_binary, matmul
-from coremltools.converters.mil.mil.passes.pass_registry import register_pass
-from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
-from coremltools.converters.mil.mil.types import promote_dtypes, builtin_to_string
 from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil.ops.defs import elementwise_binary, matmul
+from coremltools.converters.mil.mil.ops.defs.elementwise_unary import cast as cast_op_class
+from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
+from coremltools.converters.mil.mil.passes.pass_registry import register_pass
+from coremltools.converters.mil.mil.types import promote_dtypes, builtin_to_string
+
 
 _SUPPORTED_OPS = {
     # Mapping from op_class --> list of those params which needs to be of the same dtype
@@ -28,9 +28,13 @@ def _is_same_dtype(dtype1, dtype2):
     return (dtype1 is dtype2) or (builtin_to_string(dtype1) == builtin_to_string(dtype2))
 
 def _promoted_var(op, var, promoted_dtype):
-    x = mb.cast(
-        x=var, dtype=builtin_to_string(promoted_dtype), name=var.name + "_promoted", before_op=op
-    )
+    if var.val is None:
+        x = mb.cast(
+            x=var, dtype=builtin_to_string(promoted_dtype), name=var.name + "_promoted", before_op=op
+        )
+    else:
+        const_value_after_cast = cast_op_class.get_cast_value(var, builtin_to_string(promoted_dtype))
+        x = mb.const(val=const_value_after_cast, name=var.name + "_promoted", before_op=op)
     return x
 
 def _homogenize_input_dtypes_block(block):

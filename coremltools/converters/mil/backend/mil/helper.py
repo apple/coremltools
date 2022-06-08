@@ -17,7 +17,7 @@ from coremltools.converters.mil.mil.types import (
     numpy_type_to_builtin_type,
     builtin_to_string
 )
-from coremltools.converters.mil.backend.nn.op_mapping import to_py_type
+from coremltools.converters.mil.mil.types.type_mapping import np_val_to_py_type
 
 
 def create_valuetype_scalar(data_type):
@@ -98,6 +98,8 @@ def _tensor_field_by_type(tensor_val, builtin_type):
     elif types.is_int(builtin_type):
         if (builtin_type == types.int64 or builtin_type == types.uint64):
             return tensor_val.longInts.values
+        if builtin_type in (types.int8, types.uint8, types.uint32):
+            return tensor_val.bytes.values
         return tensor_val.ints.values
     elif types.is_float(builtin_type):
         if (builtin_type == types.fp64):
@@ -120,6 +122,8 @@ def _set_empty_tensor_field_by_type(tensor_val, builtin_type):
     elif types.is_int(builtin_type):
         if (builtin_type == types.int64 or builtin_type == types.uint64):
             tensor_val.longInts.SetInParent()
+        elif builtin_type in (types.int8, types.uint8, types.uint32):
+            tensor_val.bytes.SetInParent()
         else:
             tensor_val.ints.SetInParent()
     elif types.is_float(builtin_type):
@@ -153,14 +157,11 @@ def create_tensor_value(np_tensor):
         if builtin_type == types.str:
             for x in np.nditer(np_tensor):
                 t_field.append(x.encode("utf-8"))
-        elif builtin_type == types.fp16:
-            bytevals = bytes()
-            for x in np_tensor.flatten():
-                bytevals += to_py_type(x)
-            val.immediateValue.tensor.bytes.values = bytevals
+        elif builtin_type in (types.fp16, types.int8, types.uint8, types.uint32):
+            val.immediateValue.tensor.bytes.values = np_val_to_py_type(np_tensor)
         else:
             for x in np_tensor.flatten():
-                t_field.append(to_py_type(x))
+                t_field.append(np_val_to_py_type(x))
     else:  # This is an "empty" tensor (tensor with a dimension being size 0)
         _set_empty_tensor_field_by_type(t_val, builtin_type)
     return val
@@ -178,12 +179,12 @@ def create_scalar_value(py_scalar):
 
     # Set the tensor value
     t_field = _tensor_field_by_type(t_val, builtin_type)
-    if builtin_type == types.fp16:
-        val.immediateValue.tensor.bytes.values = to_py_type(py_scalar)
+    if builtin_type in (types.fp16, types.int8, types.uint8, types.uint32):
+        val.immediateValue.tensor.bytes.values = np_val_to_py_type(py_scalar)
     else:
         if builtin_type == types.str:
             py_scalar = py_scalar.encode("utf-8")
-        t_field.append(to_py_type(py_scalar))
+        t_field.append(np_val_to_py_type(py_scalar))
 
     return val
 
@@ -284,6 +285,10 @@ def create_file_value(output_var, blob_writer):
     elif output_var.val.dtype.kind == 'f' and output_var.val.dtype.itemsize == 2:
         output_var_fp16_to_bytes_to_uint16 = np.frombuffer(output_var.val.flatten().tobytes(), np.uint16)
         offset = blob_writer.write_fp16_data(output_var_fp16_to_bytes_to_uint16)
+    elif output_var.val.dtype.kind == "u" and output_var.val.dtype.itemsize == 1:
+        offset = blob_writer.write_uint8_data(output_var.val.flatten())
+    elif output_var.val.dtype.kind == "i" and output_var.val.dtype.itemsize == 1:
+        offset = blob_writer.write_int8_data(output_var.val.flatten())
     else:
         raise TypeError("Unsupported type, {}, for net buffer serialization.".format(output_var.val.dtype))
 
@@ -312,6 +317,8 @@ def cast_to_framework_io_dtype(var, is_output):
         return ft.ArrayFeatureType.ArrayDataType.FLOAT32
     elif var.dtype == types.int32:
         return ft.ArrayFeatureType.ArrayDataType.INT32
+    elif var.dtype == types.fp16:
+        return ft.ArrayFeatureType.ArrayDataType.FLOAT16
     else:
         ioname = "Output " if is_output else "Input "
         ioname2 = "outputs" if is_output else "inputs"

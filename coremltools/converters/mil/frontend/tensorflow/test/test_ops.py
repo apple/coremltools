@@ -4,13 +4,15 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import itertools
-import numpy as np
 import math
 import os
-import pytest
 import shutil
 import tempfile
 
+import numpy as np
+import pytest
+
+from coremltools import TensorType, RangeDim
 from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.testing_utils import random_gen
 from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import (
@@ -64,7 +66,7 @@ class TestContribResampler(TensorFlowBaseTest):
         ]
         input_dict = dict(zip(inputs, input_values))
         self.run_compare_tf(
-            model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend,
+            model, input_dict, outputs, use_cpu_for_conversion=use_cpu_only, backend=backend,
         )
 
 
@@ -94,7 +96,7 @@ class TestDebugging(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             backend=backend,
         )
 
@@ -117,7 +119,7 @@ class TestDebugging(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             backend=backend,
         )
 
@@ -140,7 +142,7 @@ class TestDebugging(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             backend=backend,
         )
 
@@ -166,7 +168,7 @@ class TestPlaceholderAsOutput(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             frontend_only=False,
             backend=backend,
         )
@@ -196,7 +198,7 @@ class TestDuplicateOutputs(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             frontend_only=False,
             backend=backend,
         )
@@ -224,7 +226,7 @@ class TestIdentity(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             frontend_only=False,
             backend=backend,
         )
@@ -250,7 +252,7 @@ class TestActivationElu(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             frontend_only=False,
             backend=backend,
         )
@@ -279,7 +281,7 @@ class TestAddN(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             frontend_only=False,
             backend=backend,
         )
@@ -330,7 +332,7 @@ class TestActivationLeakyReLU(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             frontend_only=False,
             backend=backend,
         )
@@ -356,7 +358,7 @@ class TestActivationReLU(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             frontend_only=False,
             backend=backend,
         )
@@ -382,7 +384,7 @@ class TestActivationReLU6(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             frontend_only=False,
             backend=backend,
         )
@@ -414,7 +416,7 @@ class TestGeluTanhApproximation(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             frontend_only=False,
             backend=backend,
         )
@@ -442,7 +444,7 @@ class TestActivationSigmoid(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             frontend_only=False,
             backend=backend,
         )
@@ -468,7 +470,7 @@ class TestActivationSoftPlus(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             frontend_only=False,
             backend=backend,
         )
@@ -499,7 +501,7 @@ class TestActivationSoftmax(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             frontend_only=False,
             backend=backend,
         )
@@ -525,7 +527,7 @@ class TestActivationSoftSign(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             frontend_only=False,
             backend=backend,
         )
@@ -551,7 +553,7 @@ class TestActivationSelu(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             frontend_only=False,
             backend=backend,
         )
@@ -577,7 +579,7 @@ class Testlog1p(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             frontend_only=False,
             backend=backend,
         )
@@ -622,7 +624,7 @@ class TestSelect(TensorFlowBaseTest):
         model, inputs, outputs = build_model_select
         inputs_dic = dict(zip(inputs, [cond_val, a_val, b_val]))
         TensorFlowBaseTest.run_compare_tf(
-            model, inputs_dic, outputs, use_cpu_only=use_cpu_for_conversion, backend=backend,
+            model, inputs_dic, outputs, backend=backend,
             use_cpu_for_conversion=use_cpu_for_conversion,
         )
 
@@ -641,7 +643,7 @@ class TestWhere(TensorFlowBaseTest):
                 graph,
                 {x: x_val},
                 tf.where(x),
-                use_cpu_only=use_cpu_only,
+                use_cpu_for_conversion=use_cpu_only,
                 backend=backend,
             )
 
@@ -663,7 +665,7 @@ class TestWhere(TensorFlowBaseTest):
                 graph,
                 {cond: cond_val, a: a_val, b: b_val},
                 ref,
-                use_cpu_only=use_cpu_only,
+                use_cpu_for_conversion=use_cpu_only,
                 backend=backend,
             )
 
@@ -689,10 +691,25 @@ class TestCast(TensorFlowBaseTest):
             return y
 
         model, inputs, outputs = build_model
-        input_values = [random_gen(shape, -100, 100)]
+        min_range, max_range = -100, 100
+        input_values = [random_gen(shape, min_range, max_range)]
+
+        # When using GPU with neuralnetwork backend, that uses FP16 precision, we make sure that 
+        # the input is not too close to its ceiling / floor,
+        # for instance, 24.993 or -13.985 will not be allowed.
+        if not use_cpu_only and dtype == "int32":
+            TOR_THRESHOLD = 0.03
+            value = input_values[0].flatten()
+            for i, v in enumerate(value):
+                while abs(math.ceil(v) - v) < TOR_THRESHOLD or abs(math.floor(v) - v) < TOR_THRESHOLD:
+                    v = random_gen((1,), min_range, max_range)[0]
+                value[i] = v
+            value = np.reshape(value, shape)
+            input_values = [value]
+
         input_dict = dict(zip(inputs, input_values))
         TensorFlowBaseTest.run_compare_tf(model, input_dict, outputs,
-                       use_cpu_only=use_cpu_only,
+                       use_cpu_for_conversion=use_cpu_only,
                        backend=backend)
 
 
@@ -715,16 +732,13 @@ class TestCond(TensorFlowBaseTest):
         input_dict = dict(zip(inputs, input_values))
 
         TensorFlowBaseTest.run_compare_tf(
-            model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend
+            model, input_dict, outputs, use_cpu_for_conversion=use_cpu_only, backend=backend
         )
 
     @pytest.mark.parametrize(
         "use_cpu_for_conversion, backend", itertools.product([True, False], backends,)
     )
     def test_cond(self, use_cpu_for_conversion, backend):
-        if backend[0] == "mlprogram" and not use_cpu_for_conversion:
-            pytest.xfail("rdar://77441664")
-
         @make_tf_graph([(1,), (1,)])
         def build_model(x, y):
             z = tf.multiply(x, y)
@@ -738,17 +752,13 @@ class TestCond(TensorFlowBaseTest):
         ]
         input_dict = dict(zip(inputs, input_values))
         TensorFlowBaseTest.run_compare_tf(
-            model, input_dict, outputs, use_cpu_only=use_cpu_for_conversion, backend=backend,
-            use_cpu_for_conversion=use_cpu_for_conversion,
+            model, input_dict, outputs, use_cpu_for_conversion=use_cpu_for_conversion, backend=backend,
         )
 
     @pytest.mark.parametrize(
         "use_cpu_for_conversion, backend", itertools.product([True, False], backends,)
     )
     def test_cond_multi_returns(self, use_cpu_for_conversion, backend):
-        if backend[0] == "mlprogram" and not use_cpu_for_conversion:
-            pytest.xfail("rdar://77441664")
-
         @make_tf_graph([(1,), (1,)])
         def build_model(x, y):
             z = tf.multiply(x, y)
@@ -769,17 +779,13 @@ class TestCond(TensorFlowBaseTest):
         ]
         input_dict = dict(zip(inputs, input_values))
         TensorFlowBaseTest.run_compare_tf(
-            model, input_dict, outputs, use_cpu_only=use_cpu_for_conversion, backend=backend,
-            use_cpu_for_conversion=use_cpu_for_conversion,
+            model, input_dict, outputs, use_cpu_for_conversion=use_cpu_for_conversion, backend=backend,
         )
 
     @pytest.mark.parametrize(
         "use_cpu_for_conversion, backend", itertools.product([True, False], backends,)
     )
     def test_cond_with_identity(self, use_cpu_for_conversion, backend):
-        if backend[0] == "mlprogram" and not use_cpu_for_conversion:
-            pytest.xfail("rdar://77441664")
-
         @make_tf_graph([(1,), (1,)])
         def build_model(x, y):
             z = tf.multiply(x, y)
@@ -793,17 +799,13 @@ class TestCond(TensorFlowBaseTest):
         ]
         input_dict = dict(zip(inputs, input_values))
         TensorFlowBaseTest.run_compare_tf(
-            model, input_dict, outputs, use_cpu_only=use_cpu_for_conversion, backend=backend,
-            use_cpu_for_conversion=use_cpu_for_conversion,
+            model, input_dict, outputs, use_cpu_for_conversion=use_cpu_for_conversion, backend=backend,
         )
 
     @pytest.mark.parametrize(
         "use_cpu_for_conversion, backend", itertools.product([True, False], backends,)
     )
     def test_cond_multi_returns_with_identity(self, use_cpu_for_conversion, backend):
-        if backend[0] == "mlprogram" and not use_cpu_for_conversion:
-            pytest.xfail("rdar://77441664")
-
         @make_tf_graph([(1,), (1,)])
         def build_model(x, y):
             z = tf.multiply(x, y)
@@ -824,17 +826,13 @@ class TestCond(TensorFlowBaseTest):
         ]
         input_dict = dict(zip(inputs, input_values))
         TensorFlowBaseTest.run_compare_tf(
-            model, input_dict, outputs, use_cpu_only=use_cpu_for_conversion, backend=backend,
-            use_cpu_for_conversion=use_cpu_for_conversion,
+            model, input_dict, outputs, use_cpu_for_conversion=use_cpu_for_conversion, backend=backend
         )
 
     @pytest.mark.parametrize(
         "use_cpu_for_conversion, backend", itertools.product([True, False], backends,)
     )
     def test_cond_nested_0(self, use_cpu_for_conversion, backend):
-        if backend[0] == "mlprogram" and not use_cpu_for_conversion:
-            pytest.xfail("rdar://77441664")
-
         if backend == ("mlprogram", "fp16"):
             pytest.xfail("rdar://80660074 (Cond mlprogram FP16 tests falling in TF1 converter with numerical errors)")
 
@@ -856,17 +854,13 @@ class TestCond(TensorFlowBaseTest):
         ]
         input_dict = dict(zip(inputs, input_values))
         TensorFlowBaseTest.run_compare_tf(
-            model, input_dict, outputs, use_cpu_only=use_cpu_for_conversion, backend=backend,
-            use_cpu_for_conversion=use_cpu_for_conversion,
+            model, input_dict, outputs, use_cpu_for_conversion=use_cpu_for_conversion, backend=backend,
         )
 
     @pytest.mark.parametrize(
         "use_cpu_for_conversion, backend", itertools.product([True, False], backends,)
     )
     def test_cond_nested_1(self, use_cpu_for_conversion, backend):
-        if backend[0] == "mlprogram" and not use_cpu_for_conversion:
-            pytest.xfail("rdar://77441664")
-
         if backend == ("mlprogram", "fp16"):
             pytest.xfail("rdar://80660074 (Cond mlprogram FP16 tests falling in TF1 converter with numerical errors)")
 
@@ -888,26 +882,26 @@ class TestCond(TensorFlowBaseTest):
         ]
         input_dict = dict(zip(inputs, input_values))
         TensorFlowBaseTest.run_compare_tf(
-            model, input_dict, outputs, use_cpu_only=use_cpu_for_conversion, backend=backend,
-            use_cpu_for_conversion=use_cpu_for_conversion,
+            model, input_dict, outputs, use_cpu_for_conversion=use_cpu_for_conversion, backend=backend,
         )
 
 
 class TestWhileLoop(TensorFlowBaseTest):
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends))
+        "use_cpu_only, backend", itertools.product([True, False], backends)
+    )
     def test_while_loop_with_changing_shape(self, use_cpu_only, backend):
-        @make_tf_graph([(2,1),(2,1)])
-        def build_model(x,y):
-            c = lambda i,j: tf.less(tf.shape(j)[1], 5)
-            b = lambda i,j: (i, tf.concat([i,j], axis=1))
-            return tf.while_loop(c, b, [x,y], shape_invariants=[x.get_shape(), tf.TensorShape([2, None])])
+        @make_tf_graph([(2, 1), (2, 1)])
+        def build_model(x, y):
+            c = lambda i, j: tf.less(tf.shape(j)[1], 5)
+            b = lambda i, j: (i, tf.concat([i, j], axis=1))
+            return tf.while_loop(c, b, [x, y], shape_invariants=[x.get_shape(), tf.TensorShape([2, None])])
 
         model, inputs, outputs = build_model
-        input_values = [np.array([[1],[2]], dtype=np.float32),np.array([[1],[2]], dtype=np.float32)]
+        input_values = [np.array([[1], [2]], dtype=np.float32), np.array([[1], [2]], dtype=np.float32)]
         input_dict = dict(zip(inputs, input_values))
         TensorFlowBaseTest.run_compare_tf(model, input_dict, outputs,
-                                          use_cpu_only=use_cpu_only,
+                                          use_cpu_for_conversion=use_cpu_only,
                                           backend=backend)
 
     @pytest.mark.parametrize(
@@ -924,7 +918,7 @@ class TestWhileLoop(TensorFlowBaseTest):
         input_values = [np.array([5], dtype=np.float32)]
         input_dict = dict(zip(inputs, input_values))
         TensorFlowBaseTest.run_compare_tf(
-            model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend
+            model, input_dict, outputs, use_cpu_for_conversion=use_cpu_only, backend=backend
         )
 
     @pytest.mark.parametrize(
@@ -941,7 +935,7 @@ class TestWhileLoop(TensorFlowBaseTest):
         input_values = [np.array([10], dtype=np.float32)]
         input_dict = dict(zip(inputs, input_values))
         TensorFlowBaseTest.run_compare_tf(
-            model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend
+            model, input_dict, outputs, use_cpu_for_conversion=use_cpu_only, backend=backend
         )
 
     @pytest.mark.parametrize(
@@ -962,7 +956,7 @@ class TestWhileLoop(TensorFlowBaseTest):
         input_dict = dict(zip(inputs, input_values))
 
         TensorFlowBaseTest.run_compare_tf(
-            model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend
+            model, input_dict, outputs, use_cpu_for_conversion=use_cpu_only, backend=backend
         )
 
     @pytest.mark.parametrize(
@@ -982,7 +976,7 @@ class TestWhileLoop(TensorFlowBaseTest):
         ]
         input_dict = dict(zip(inputs, input_values))
         TensorFlowBaseTest.run_compare_tf(
-            model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend
+            model, input_dict, outputs, use_cpu_for_conversion=use_cpu_only, backend=backend
         )
 
     @pytest.mark.parametrize(
@@ -1005,7 +999,7 @@ class TestWhileLoop(TensorFlowBaseTest):
         ]
         input_dict = dict(zip(inputs, input_values))
         TensorFlowBaseTest.run_compare_tf(
-            model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend
+            model, input_dict, outputs, use_cpu_for_conversion=use_cpu_only, backend=backend
         )
 
     @pytest.mark.parametrize(
@@ -1029,7 +1023,7 @@ class TestWhileLoop(TensorFlowBaseTest):
         ]
         input_dict = dict(zip(inputs, input_values))
         TensorFlowBaseTest.run_compare_tf(
-            model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend
+            model, input_dict, outputs, use_cpu_for_conversion=use_cpu_only, backend=backend
         )
 
     @pytest.mark.parametrize(
@@ -1068,7 +1062,7 @@ class TestWhileLoop(TensorFlowBaseTest):
         ]
         input_dict = dict(zip(inputs, input_values))
         TensorFlowBaseTest.run_compare_tf(
-            model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend
+            model, input_dict, outputs, use_cpu_for_conversion=use_cpu_only, backend=backend
         )
 
     @pytest.mark.parametrize(
@@ -1111,7 +1105,7 @@ class TestWhileLoop(TensorFlowBaseTest):
         ]
         input_dict = dict(zip(inputs, input_values))
         TensorFlowBaseTest.run_compare_tf(
-            model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend
+            model, input_dict, outputs, use_cpu_for_conversion=use_cpu_only, backend=backend
         )
 
 
@@ -1246,7 +1240,7 @@ class TestConv(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             frontend_only=False,
             backend=backend,
         )
@@ -1321,7 +1315,7 @@ class TestConv3d(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             backend=backend,
             frontend_only=False,
             atol=1e-03,  # default 1e-04
@@ -1406,14 +1400,13 @@ class TestDepthwiseConv(TensorFlowBaseTest):
             input_values = [(np.random.rand(*input_shape).astype(np.float32))]
             input_dict = dict(zip(inputs, input_values))
 
-            proto,_,_,_,_,_ = TensorFlowBaseTest.run_compare_tf(
+            proto, _, _, _, _, _ = TensorFlowBaseTest.run_compare_tf(
                 model,
                 input_dict,
                 outputs,
-                use_cpu_only=use_cpu_only,
+                use_cpu_for_conversion=use_cpu_only,
                 backend=backend,
                 frontend_only=False,
-                use_cpu_for_conversion=use_cpu_for_conversion,
             )
 
             if backend[0] == 'nnv1_proto':
@@ -1443,14 +1436,13 @@ class TestDepthwiseConv(TensorFlowBaseTest):
                 model,
                 input_dict,
                 outputs,
-                use_cpu_only=use_cpu_only,
+                use_cpu_for_conversion=use_cpu_only,
                 backend=backend,
                 frontend_only=False,
-                use_cpu_for_conversion=use_cpu_for_conversion,
             )
 
         if backend[0] == "neuralnetwork" and dynamic_weights:
-            pytest.xfail("dynamic conv with groups > 1 is not supported on the neuralnetwork backend")
+             pytest.xfail("dynamic conv with groups > 1 is not supported on the neuralnetwork backend")
 
         # We do not support dynamic weight when dilations != 1.
         test_dynamic_W() if dynamic_weights and dilations == (1, 1) else test_static_W()
@@ -1537,10 +1529,9 @@ class TestSeparableConv(TensorFlowBaseTest):
                 model,
                 input_dict,
                 outputs,
-                use_cpu_only=use_cpu_only,
+                use_cpu_for_conversion=use_cpu_only,
                 backend=backend,
                 frontend_only=False,
-                use_cpu_for_conversion=use_cpu_for_conversion,
             )
 
         def test_static_W():
@@ -1572,10 +1563,9 @@ class TestSeparableConv(TensorFlowBaseTest):
                 model,
                 input_dict,
                 outputs,
-                use_cpu_only=use_cpu_only,
+                use_cpu_for_conversion=use_cpu_only,
                 backend=backend,
                 frontend_only=False,
-                use_cpu_for_conversion=use_cpu_for_conversion,
             )
 
         test_static_W()
@@ -1706,7 +1696,7 @@ class TestConvTranspose(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             backend=backend,
             frontend_only=False,
         )
@@ -1818,7 +1808,7 @@ class TestConvTranspose(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             backend=backend,
             frontend_only=False,
         )
@@ -1902,7 +1892,7 @@ class TestElementWiseBinary(TensorFlowBaseTest):
         input_values = [x_val, y_val]
         input_dict = dict(zip(inputs, input_values))
         TensorFlowBaseTest.run_compare_tf(
-            model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend
+            model, input_dict, outputs, use_cpu_for_conversion=use_cpu_only, backend=backend
         )
 
     @pytest.mark.parametrize(
@@ -1963,8 +1953,7 @@ class TestElementWiseBinary(TensorFlowBaseTest):
         ]
         input_dict = dict(zip(inputs, input_values))
         TensorFlowBaseTest.run_compare_tf(
-            model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend,
-            use_cpu_for_conversion=use_cpu_for_conversion,
+            model, input_dict, outputs, use_cpu_for_conversion=use_cpu_only, backend=backend,
         )
 
     @pytest.mark.parametrize(
@@ -2019,8 +2008,7 @@ class TestElementWiseBinary(TensorFlowBaseTest):
         ]
         input_dict = dict(zip(inputs, input_values))
         TensorFlowBaseTest.run_compare_tf(
-            model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend,
-            use_cpu_for_conversion=use_cpu_for_conversion,
+            model, input_dict, outputs, use_cpu_for_conversion=use_cpu_only, backend=backend,
         )
 
 class TestEinsum(TensorFlowBaseTest):
@@ -2082,8 +2070,7 @@ class TestEinsum(TensorFlowBaseTest):
 
         input_dict = dict(zip(inputs, input_values))
         TensorFlowBaseTest.run_compare_tf(
-            model, input_dict, outputs, use_cpu_only=use_cpu_for_conversion, backend=backend,
-            use_cpu_for_conversion=use_cpu_for_conversion,
+            model, input_dict, outputs, use_cpu_for_conversion=use_cpu_for_conversion, backend=backend,
         )
 
 
@@ -2288,11 +2275,10 @@ class TestElementWiseUnary(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=True,
+            use_cpu_for_conversion=True,
             backend=backend,
             atol=atol,
             rtol=rtol,
-            use_cpu_for_conversion=use_cpu_for_conversion,
         )
 
 
@@ -2336,7 +2322,7 @@ class TestImageResizing(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             backend=backend,
         )
 
@@ -2374,7 +2360,7 @@ class TestImageResizing(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             backend=backend,
         )[0]
         # also check if the scale factor are integers
@@ -2439,9 +2425,8 @@ class TestImageResizing(TensorFlowBaseTest):
                 model,
                 input_dict,
                 outputs,
-                use_cpu_only=use_cpu_only,
+                use_cpu_for_conversion=use_cpu_only,
                 backend=backend,
-                use_cpu_for_conversion=use_cpu_for_conversion,
             )
 
         def test_dynamic():
@@ -2461,9 +2446,8 @@ class TestImageResizing(TensorFlowBaseTest):
                 model,
                 input_dict,
                 outputs,
-                use_cpu_only=use_cpu_only,
+                use_cpu_for_conversion=use_cpu_only,
                 backend=backend,
-                use_cpu_for_conversion=use_cpu_for_conversion,
             )
 
         test_dynamic() if dynamic else test_static()
@@ -2513,7 +2497,7 @@ class TestImageResizing(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             backend=backend,
         )
 
@@ -2566,8 +2550,8 @@ class TestLinear(TensorFlowBaseTest):
 
         input_dict = dict(zip(inputs, input_values))
 
-        proto,_,_,_,_,_ = TensorFlowBaseTest.run_compare_tf(
-            model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend
+        proto, _, _, _, _, _ = TensorFlowBaseTest.run_compare_tf(
+            model, input_dict, outputs, use_cpu_for_conversion=use_cpu_only, backend=backend
         )
 
         for layer in proto.neuralNetwork.layers:
@@ -2622,7 +2606,7 @@ class TestBatchNormalization(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             backend=backend,
             atol=.2,
             rtol=1e-4,
@@ -2707,7 +2691,7 @@ class TestBatchNormalization(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             backend=backend,
             atol=0.2,
             rtol=1e-4,
@@ -2751,7 +2735,7 @@ class TestNormalization(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             backend=backend,
             atol=1e-2,
             rtol=1e-3,
@@ -2785,7 +2769,7 @@ class TestL2Normalization(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             backend=backend,
             atol=0.05,
             rtol=1e-4,
@@ -2820,7 +2804,7 @@ class TestLocalResponseNormalization(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             backend=backend,
             atol=1e-2,
             rtol=1e-3,
@@ -2848,7 +2832,7 @@ class TestPool1d(TensorFlowBaseTest):
         input_dict = dict(zip(inputs, input_values))
 
         TensorFlowBaseTest.run_compare_tf(
-            model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend
+            model, input_dict, outputs, use_cpu_for_conversion=use_cpu_only, backend=backend
         )
 
     @pytest.mark.parametrize(
@@ -2871,7 +2855,7 @@ class TestPool1d(TensorFlowBaseTest):
         input_dict = dict(zip(inputs, input_values))
 
         TensorFlowBaseTest.run_compare_tf(
-            model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend
+            model, input_dict, outputs, use_cpu_for_conversion=use_cpu_only, backend=backend
         )
 
 
@@ -2900,7 +2884,7 @@ class TestPool2d(TensorFlowBaseTest):
         input_dict = dict(zip(inputs, input_values))
 
         TensorFlowBaseTest.run_compare_tf(
-            model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend
+            model, input_dict, outputs, use_cpu_for_conversion=use_cpu_only, backend=backend
         )
 
     @pytest.mark.parametrize(
@@ -2927,7 +2911,7 @@ class TestPool2d(TensorFlowBaseTest):
         input_dict = dict(zip(inputs, input_values))
 
         TensorFlowBaseTest.run_compare_tf(
-            model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend
+            model, input_dict, outputs, use_cpu_for_conversion=use_cpu_only, backend=backend
         )
 
 
@@ -2959,7 +2943,7 @@ class TestPool3d(TensorFlowBaseTest):
         input_dict = dict(zip(inputs, input_values))
 
         TensorFlowBaseTest.run_compare_tf(
-            model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend
+            model, input_dict, outputs, use_cpu_for_conversion=use_cpu_only, backend=backend
         )
 
     @pytest.mark.parametrize(
@@ -2989,7 +2973,7 @@ class TestPool3d(TensorFlowBaseTest):
         input_dict = dict(zip(inputs, input_values))
 
         TensorFlowBaseTest.run_compare_tf(
-            model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend
+            model, input_dict, outputs, use_cpu_for_conversion=use_cpu_only, backend=backend
         )
 
 
@@ -3012,7 +2996,7 @@ class TestPrint(TensorFlowBaseTest):
         input_dict = dict(zip(inputs, input_value))
 
         TensorFlowBaseTest.run_compare_tf(
-            model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend
+            model, input_dict, outputs, use_cpu_for_conversion=use_cpu_only, backend=backend
         )
 
 
@@ -3047,7 +3031,7 @@ class TestRandom(TensorFlowBaseTest):
                 graph,
                 {x: np.random.rand(*shape)},
                 ref,
-                use_cpu_only=use_cpu_only,
+                use_cpu_for_conversion=use_cpu_only,
                 backend=backend,
             )
 
@@ -3065,7 +3049,7 @@ class TestRandom(TensorFlowBaseTest):
                 graph,
                 {x: np.random.rand(*shape)},
                 ref,
-                use_cpu_only=use_cpu_only,
+                use_cpu_for_conversion=use_cpu_only,
                 validate_shapes_only=True,
                 backend=backend,
             )
@@ -3100,7 +3084,7 @@ class TestRandom(TensorFlowBaseTest):
                 graph,
                 {x: np.random.rand(*shape)},
                 ref,
-                use_cpu_only=use_cpu_only,
+                use_cpu_for_conversion=use_cpu_only,
                 backend=backend,
             )
 
@@ -3137,7 +3121,7 @@ class TestRandom(TensorFlowBaseTest):
                 graph,
                 {x: np.random.rand(*shape)},
                 ref,
-                use_cpu_only=use_cpu_only,
+                use_cpu_for_conversion=use_cpu_only,
                 backend=backend,
             )
 
@@ -3172,7 +3156,7 @@ class TestRandom(TensorFlowBaseTest):
                 graph,
                 {x: np.random.rand(*shape)},
                 ref,
-                use_cpu_only=use_cpu_only,
+                use_cpu_for_conversion=use_cpu_only,
                 backend=backend,
             )
 
@@ -3213,7 +3197,7 @@ class TestRandom(TensorFlowBaseTest):
                 graph,
                 {x: np.random.rand(*shape)},
                 ref,
-                use_cpu_only=use_cpu_only,
+                use_cpu_for_conversion=use_cpu_only,
                 backend=backend,
             )
 
@@ -3287,9 +3271,8 @@ class TestReduction(TensorFlowBaseTest):
                 model,
                 input_dict,
                 outputs,
-                use_cpu_only=use_cpu_for_conversion,
-                backend=backend,
                 use_cpu_for_conversion=use_cpu_for_conversion,
+                backend=backend,
             )
 
         def test_tf_argmin():
@@ -3304,9 +3287,8 @@ class TestReduction(TensorFlowBaseTest):
                 model,
                 input_dict,
                 outputs,
-                use_cpu_only=use_cpu_for_conversion,
-                backend=backend,
                 use_cpu_for_conversion=use_cpu_for_conversion,
+                backend=backend,
             )
 
         def test_tf_reduction():
@@ -3340,9 +3322,8 @@ class TestReduction(TensorFlowBaseTest):
                 model,
                 input_dict,
                 outputs,
-                use_cpu_only=use_cpu_for_conversion,
-                backend=backend,
                 use_cpu_for_conversion=use_cpu_for_conversion,
+                backend=backend,
             )
 
         if tf_op in {tf.math.argmax}:
@@ -3401,7 +3382,7 @@ class TestGather(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             frontend_only=False,
             backend=backend,
         )
@@ -3455,7 +3436,7 @@ class TestGather(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             frontend_only=False,
             backend=backend,
         )
@@ -3497,7 +3478,7 @@ class TestScatter(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             frontend_only=False,
             backend=backend,
         )
@@ -3638,7 +3619,7 @@ class TestSliceByIndex(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             frontend_only=False,
             backend=backend,
         )
@@ -3704,7 +3685,7 @@ class TestSliceByIndex(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             frontend_only=False,
             backend=backend,
         )
@@ -3741,7 +3722,7 @@ class TestSliceByIndex(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             frontend_only=False,
             backend=backend,
         )
@@ -3768,7 +3749,7 @@ class TestSliceByIndex(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             frontend_only=False,
             backend=backend,
         )
@@ -3813,7 +3794,7 @@ class TestSliceByIndex(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             frontend_only=False,
             backend=backend,
         )
@@ -3880,7 +3861,7 @@ class TestSliceBySize(TensorFlowBaseTest):
                     model,
                     input_dict,
                     outputs,
-                    use_cpu_only=use_cpu_only,
+                    use_cpu_for_conversion=use_cpu_only,
                     frontend_only=False,
                     backend=backend,
                 )
@@ -3922,7 +3903,7 @@ class TestSliceBySize(TensorFlowBaseTest):
                 model,
                 input_dict,
                 outputs,
-                use_cpu_only=use_cpu_only,
+                use_cpu_for_conversion=use_cpu_only,
                 frontend_only=False,
                 backend=backend,
             )
@@ -3970,7 +3951,7 @@ class TestSliceBySize(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             frontend_only=False,
             backend=backend,
         )
@@ -4000,7 +3981,7 @@ class TestMatrixBandPart(TensorFlowBaseTest):
             model,
             {inputs[0]: random_gen(shape, rand_min=-100, rand_max=100)},
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             backend=backend,
         )
 
@@ -4030,7 +4011,7 @@ class TestCumSum(TensorFlowBaseTest):
             TensorFlowBaseTest.run_compare_tf(model,
                            input_dict,
                            outputs,
-                           use_cpu_only=use_cpu_only,
+                           use_cpu_for_conversion=use_cpu_only,
                            frontend_only=False,
                            backend=backend)
 
@@ -4135,7 +4116,7 @@ class TestFakeQuant(TensorFlowBaseTest):
             graph,
             input_dict,
             ["quantize/quantized_model/conv2d/Conv2D"],
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             frontend_only=False,
             backend=backend,
             tf_outputs=tf_outs,
@@ -4167,7 +4148,7 @@ class TestFill(TensorFlowBaseTest):
             TensorFlowBaseTest.run_compare_tf(model,
                            input_dict,
                            outputs,
-                           use_cpu_only=use_cpu_only,
+                           use_cpu_for_conversion=use_cpu_only,
                            frontend_only=False,
                            backend=backend)
 
@@ -4184,7 +4165,7 @@ class TestFill(TensorFlowBaseTest):
             TensorFlowBaseTest.run_compare_tf(model,
                            input_dict,
                            outputs,
-                           use_cpu_only=use_cpu_only,
+                           use_cpu_for_conversion=use_cpu_only,
                            frontend_only=False,
                            backend=backend)
 
@@ -4201,6 +4182,7 @@ class TestNonMaximumSuppression(TensorFlowBaseTest):
                 "max_boxes",
                 "iou_threshold",
                 "score_threshold",
+                "use_V5",
             ]
         ),
         itertools.product(
@@ -4210,6 +4192,7 @@ class TestNonMaximumSuppression(TensorFlowBaseTest):
             [5, 20, 100],
             [1.0, 0.99],
             [float("-inf"), -200.0],
+            [True, False],
         ),
     )
     def test_non_max_suppression(
@@ -4220,6 +4203,7 @@ class TestNonMaximumSuppression(TensorFlowBaseTest):
         max_boxes,
         iou_threshold,
         score_threshold,
+        use_V5,
     ):
         if backend == ("mlprogram", "fp16") and not use_cpu_only:
             pytest.xfail("rdar://80661262 ([GPU failures ] NonMaximumSuppression FP16 coremltools unit tests)")
@@ -4231,13 +4215,23 @@ class TestNonMaximumSuppression(TensorFlowBaseTest):
 
         @make_tf_graph([boxes_val.shape, scores_val.shape])
         def build_model(boxes, scores):
-            ret = tf.image.non_max_suppression(
-                boxes=boxes,
-                scores=scores,
-                max_output_size=max_boxes,
-                iou_threshold=iou_threshold,
-                score_threshold=score_threshold,
-            )
+            if use_V5:
+                ret = tf.raw_ops.NonMaxSuppressionV5(
+                    boxes=boxes,
+                    scores=scores,
+                    max_output_size=max_boxes,
+                    iou_threshold=iou_threshold,
+                    score_threshold=score_threshold,
+                    soft_nms_sigma=0.,
+                )
+            else:
+                ret = tf.image.non_max_suppression(
+                    boxes=boxes,
+                    scores=scores,
+                    max_output_size=max_boxes,
+                    iou_threshold=iou_threshold,
+                    score_threshold=score_threshold,
+                )
             return ret
 
         model, inputs, outputs = build_model
@@ -4246,7 +4240,7 @@ class TestNonMaximumSuppression(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             backend=backend,
         )
 
@@ -4296,14 +4290,15 @@ class TestOneHot(TensorFlowBaseTest):
 
             model, inputs, outputs = build_model
             input_values = [np.random.randint(0, depth, size=x_shape).astype(np.int32),
-                    np.array([depth]).astype(np.int32)]
+                            np.array([depth]).astype(np.int32)]
             input_dict = dict(zip(inputs, input_values))
 
         TensorFlowBaseTest.run_compare_tf(model, input_dict, outputs,
-               use_cpu_only=use_cpu_only,
-               frontend_only=False, backend=backend)
+                                          use_cpu_for_conversion=use_cpu_only,
+                                          frontend_only=False, backend=backend)
 
-class TestSparseSoftmaxCrossEntropyWithLogits(TensorFlowBaseTest):
+
+class TestSoftmaxCrossEntropyWithLogits(TensorFlowBaseTest):
     
     @pytest.mark.parametrize("use_cpu_only, backend, class_num",
                              itertools.product(
@@ -4312,7 +4307,7 @@ class TestSparseSoftmaxCrossEntropyWithLogits(TensorFlowBaseTest):
                                  [1, 3],
                              )
                              )   
-    def test(self, use_cpu_only, backend, class_num):
+    def test_sparse_softmax_cross_entropy_with_logits(self, use_cpu_only, backend, class_num):
         batch_size = 2
         feature_shape = [batch_size, class_num]
         label_shape = [batch_size, tf.int32]
@@ -4322,13 +4317,66 @@ class TestSparseSoftmaxCrossEntropyWithLogits(TensorFlowBaseTest):
             return tf.raw_ops.SparseSoftmaxCrossEntropyWithLogits(features=feat, labels=label)[0]
             
         model, inputs, outputs = build_model
-        features = np.random.rand(batch_size, class_num)
+        features = random_gen(feature_shape, rand_min=0, rand_max=1)
         labels = np.random.randint(low=0, high=class_num, size=(batch_size,), dtype=np.int32)
         input_values = [features, labels]
         input_dict = dict(zip(inputs, input_values))
         TensorFlowBaseTest.run_compare_tf(model, input_dict, outputs,
-                       use_cpu_only=use_cpu_only,
+                       use_cpu_for_conversion=use_cpu_only,
                        frontend_only=False, backend=backend)
+
+    @pytest.mark.parametrize("use_cpu_only, backend, class_num",
+                             itertools.product(
+                                 [True, False],
+                                 backends,
+                                 [1, 3],
+                             )
+                             )   
+    def test_softmax_cross_entropy_with_logits(self, use_cpu_only, backend, class_num):
+        batch_size = 2
+        feature_shape = [batch_size, class_num]
+        label_shape = [batch_size, class_num]
+
+        @make_tf_graph([feature_shape, label_shape])
+        def build_model(feat, label):
+            return tf.raw_ops.SoftmaxCrossEntropyWithLogits(features=feat, labels=label)[0]
+            
+        model, inputs, outputs = build_model
+        input_values = [
+            random_gen(feature_shape, rand_min=0, rand_max=1),
+            random_gen(label_shape, rand_min=0, rand_max=1),
+        ]
+        input_dict = dict(zip(inputs, input_values))
+        TensorFlowBaseTest.run_compare_tf(model, input_dict, outputs,
+                                          use_cpu_for_conversion=use_cpu_only,
+                                          frontend_only=False, backend=backend)
+
+
+class TestIdentityN(TensorFlowBaseTest):
+    
+    @pytest.mark.parametrize("use_cpu_only, backend",
+                             itertools.product([True, False],backends,)
+                             )   
+    def test(self, use_cpu_only, backend):
+        shape_1 = [1,]
+        shape_2 = [3, 4]
+        shape_3 = [5, 6, 7]
+
+        @make_tf_graph([shape_1, shape_2, shape_3])
+        def build_model(x, y ,z):
+            return tf.raw_ops.IdentityN(input=[x, y, z])
+            
+        model, inputs, outputs = build_model
+        input_values = [
+            random_gen(shape_1, rand_min=0, rand_max=1), 
+            random_gen(shape_2, rand_min=0, rand_max=1), 
+            random_gen(shape_3, rand_min=0, rand_max=1),
+        ]
+        input_dict = dict(zip(inputs, input_values))
+        TensorFlowBaseTest.run_compare_tf(model, input_dict, outputs,
+                                          use_cpu_for_conversion=use_cpu_only,
+                                          frontend_only=False, backend=backend)
+
 
 class TestPad(TensorFlowBaseTest):
     @pytest.mark.parametrize("use_cpu_only, backend, rank, mode, dynamic, trial",
@@ -4377,7 +4425,7 @@ class TestPad(TensorFlowBaseTest):
             input_dict = dict(zip(inputs, input_values))
 
         TensorFlowBaseTest.run_compare_tf(model, input_dict, outputs,
-                       use_cpu_only=use_cpu_only,
+                       use_cpu_for_conversion=use_cpu_only,
                        frontend_only=False, backend=backend)
 
 
@@ -4417,7 +4465,7 @@ class TestPadV2(TensorFlowBaseTest):
             input_values = [random_gen(input_shape, rand_min=0.2, rand_max=1000)]
             input_dict = dict(zip(inputs, input_values))
         TensorFlowBaseTest.run_compare_tf(model, input_dict, outputs,
-                       use_cpu_only=use_cpu_only,
+                       use_cpu_for_conversion=use_cpu_only,
                        frontend_only=False, backend=backend)
 
 
@@ -4454,7 +4502,7 @@ class TestRange(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             backend=backend,
         )
 
@@ -4470,7 +4518,7 @@ class TestRange(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             backend=backend,
         )
 
@@ -4486,7 +4534,7 @@ class TestRange(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             backend=backend,
         )
 
@@ -4526,7 +4574,7 @@ class TestTile(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             backend=backend,
         )
 
@@ -4546,7 +4594,7 @@ class TestDynamicTile(TensorFlowBaseTest):
                 graph,
                 {x: np.random.rand(*x_shape), reps: reps_val},
                 res,
-                use_cpu_only=use_cpu_only,
+                use_cpu_for_conversion=use_cpu_only,
                 frontend_only=False,
                 backend=backend,
             )
@@ -4578,10 +4626,40 @@ class TestTopK(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             backend=backend,
         )
 
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend, shape, k",
+        itertools.product(
+            [True, False], 
+            backends, 
+            [(1, 3), (1, 10), (3, 50)], 
+            [1, 3, 20],
+        ),
+    )
+    def test_in_top_k(self, use_cpu_only, backend, shape, k):
+        # TensorFlow only supports last dimension (axis = -1).
+        batch_size, class_num = shape
+
+        @make_tf_graph([shape, (batch_size, tf.int32)])
+        def build_model(predictions, targets):
+            return tf.math.in_top_k(predictions=predictions, targets=targets, k=k)
+
+        model, inputs, outputs = build_model
+        pred_values = random_gen(shape, rand_min=-2, rand_max=2)
+        target_values = np.random.randint(class_num, size=batch_size).astype(np.int32)
+        input_values = [pred_values, target_values]
+
+        input_dict = dict(zip(inputs, input_values))
+        TensorFlowBaseTest.run_compare_tf(
+            model,
+            input_dict,
+            outputs,
+            use_cpu_for_conversion=use_cpu_only,
+            backend=backend,
+        )
 
 class TestConcat(TensorFlowBaseTest):
     @pytest.mark.parametrize("use_cpu_only, backend, op_version, rank, num_inputs",
@@ -4626,8 +4704,8 @@ class TestConcat(TensorFlowBaseTest):
             input_values = [random_gen(shape) for shape in input_shapes]
             input_dict = dict(zip(inputs, input_values))
             TensorFlowBaseTest.run_compare_tf(model, input_dict, outputs,
-                           use_cpu_only=use_cpu_only,
-                           frontend_only=False, backend=backend)
+                                              use_cpu_for_conversion=use_cpu_only,
+                                              frontend_only=False, backend=backend)
 
 
 class TestSplit(TensorFlowBaseTest):
@@ -4676,9 +4754,8 @@ class TestSplit(TensorFlowBaseTest):
                     model,
                     input_dict,
                     outputs,
-                    use_cpu_only=use_cpu_for_conversion,
-                    backend=backend,
                     use_cpu_for_conversion=use_cpu_for_conversion,
+                    backend=backend,
                 )
 
     @pytest.mark.parametrize(
@@ -4702,7 +4779,7 @@ class TestSplit(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             backend=backend,
         )
 
@@ -4724,7 +4801,7 @@ class TestSplit(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             backend=backend,
         )
 
@@ -4748,7 +4825,7 @@ class TestStack(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             backend=backend,
         )
 
@@ -4768,7 +4845,7 @@ class TestUnstack(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             backend=backend,
         )
 
@@ -4788,7 +4865,7 @@ class TestUnstack(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             backend=backend,
         )
 
@@ -4818,7 +4895,7 @@ class TestPack(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             frontend_only=False,
             backend=backend,
         )
@@ -4837,12 +4914,8 @@ class TestArgSort(TensorFlowBaseTest):
     )
     def test_argsort(self, use_cpu_only, backend, rank, axis, direction):
         shape = np.random.randint(low=1, high=4, size=rank)
-        if use_cpu_only:
-            dtype = np.float32
-            tf_dtype = tf.float32
-        else:
-            dtype = np.float16
-            tf_dtype = tf.float16
+        dtype = np.float32
+        tf_dtype = tf.float32
 
         @make_tf_graph([list(shape) + [tf_dtype]])
         def build_model(x):
@@ -4855,7 +4928,7 @@ class TestArgSort(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             backend=backend
         )
 
@@ -4884,7 +4957,7 @@ class TestDepthToSpace(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             backend=backend,
         )
 
@@ -4918,7 +4991,7 @@ class TestExpandDims(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             frontend_only=False,
             backend=backend,
         )
@@ -4944,7 +5017,7 @@ class TestReshape(TensorFlowBaseTest):
                 model,
                 input_dict,
                 outputs,
-                use_cpu_only=use_cpu_only,
+                use_cpu_for_conversion=use_cpu_only,
                 frontend_only=False,
                 backend=backend,
             )
@@ -4974,7 +5047,7 @@ class TestReshape(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             frontend_only=False,
             backend=backend,
         )
@@ -5008,7 +5081,7 @@ class TestReshape(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             frontend_only=False,
             backend=backend,
         )
@@ -5034,7 +5107,7 @@ class TestReshape(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             frontend_only=False,
             backend=backend,
         )
@@ -5060,7 +5133,7 @@ class TestShape(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             frontend_only=False,
             backend=backend,
         )
@@ -5100,8 +5173,8 @@ class TestMatrixDiag(TensorFlowBaseTest):
 
         input_dict = dict(zip(inputs, input_values))
         TensorFlowBaseTest.run_compare_tf(model, input_dict, outputs,
-                       use_cpu_only=use_cpu_only,
-                       frontend_only=False, backend=backend)
+                                          use_cpu_for_conversion=use_cpu_only,
+                                          frontend_only=False, backend=backend)
 
 
 class TestReverse(TensorFlowBaseTest):
@@ -5144,7 +5217,7 @@ class TestReverse(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             backend=backend,
         )
 
@@ -5174,7 +5247,7 @@ class TestReverseSequence(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             backend=backend,
         )
 
@@ -5202,7 +5275,7 @@ class TestSpaceToDepth(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             backend=backend,
         )
 
@@ -5244,7 +5317,7 @@ class TestSqueeze(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             frontend_only=False,
             backend=backend,
         )
@@ -5286,7 +5359,7 @@ class TestTranspose(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             backend=backend,
         )
 
@@ -5311,7 +5384,7 @@ class TestTranspose(TensorFlowBaseTest):
                 model,
                 input_dict,
                 outputs,
-                use_cpu_only=use_cpu_only,
+                use_cpu_for_conversion=use_cpu_only,
                 backend=backend,
             )
 
@@ -5327,7 +5400,7 @@ class TestTranspose(TensorFlowBaseTest):
                 model,
                 input_dict,
                 outputs,
-                use_cpu_only=use_cpu_only,
+                use_cpu_for_conversion=use_cpu_only,
                 backend=backend,
             )
 
@@ -5369,7 +5442,7 @@ class TestTranspose(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             frontend_only=False,
             backend=backend,
         )
@@ -5401,7 +5474,47 @@ class TestSpaceToBatchND(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
+            frontend_only=False,
+            backend=backend,
+        )
+
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend, shape_block_paddings, dynamic",
+        itertools.product(
+            [True, False],
+            backends,
+            [
+                [(1, 4, 6, 2, 2), [2, 3], [[2, 0],[3, 6]]], 
+                [(2, 4, 6, 1), [1, 2], [[2, 1], [3, 3]]],
+                [(2, 4, 6, 1, 2), [2, 1], [[0, 0],[0, 0]]],
+                [(2, 4, 6, 1, 2), [2], [[0, 0]]],
+            ],
+            [True, False],
+        ),
+    )
+    def test_smoke_new_op(self, use_cpu_only, backend, shape_block_paddings, dynamic):
+        input_shape, block_shape, paddings = shape_block_paddings
+        
+        # The neuralnetwork backend doesn't support these tests
+        if backend[0] == "neuralnetwork":
+            return
+
+        tf_input_shape = input_shape if not dynamic else [None] * len(input_shape)
+        @make_tf_graph([tf_input_shape])
+        def build_model(x):
+            return tf.raw_ops.SpaceToBatchND(
+                input=x, block_shape=block_shape, paddings=paddings
+            )
+
+        model, inputs, outputs = build_model
+        input_values = [random_gen(input_shape)]
+        input_dict = dict(zip(inputs, input_values))
+        TensorFlowBaseTest.run_compare_tf(
+            model,
+            input_dict,
+            outputs,
+            use_cpu_for_conversion=use_cpu_only,
             frontend_only=False,
             backend=backend,
         )
@@ -5424,6 +5537,13 @@ class TestSpaceToBatchND(TensorFlowBaseTest):
         # generate data
         input_shape = np.random.randint(low=1, high=4, size=input_rank)
         block_shape = np.random.randint(low=1, high=3, size=block_rank)
+
+        if backend[0] == "neuralnetwork":
+            if block_rank == 2 and block_shape[0] != block_shape[1]:
+                pytest.xfail("neuralnetwork backend doesn't support unequal block shape.")
+            if block_shape[0] == 1:
+                pytest.xfail("neuralnetwork backend doesn't support unity block shape.")
+
         paddings = []
         for i in range(block_rank):
             while True:
@@ -5456,7 +5576,7 @@ class TestSpaceToBatchND(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             frontend_only=False,
             backend=backend,
         )
@@ -5488,7 +5608,7 @@ class TestBatchToSpaceND(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             frontend_only=False,
             backend=backend,
         )
@@ -5510,6 +5630,13 @@ class TestBatchToSpaceND(TensorFlowBaseTest):
         # generate data
         input_shape = np.random.randint(low=1, high=4, size=input_rank)
         block_shape = np.random.randint(low=1, high=3, size=block_rank)
+
+        if backend[0] == "neuralnetwork":
+            if block_rank == 2 and block_shape[0] != block_shape[1]:
+                pytest.xfail("neuralnetwork backend doesn't support unequal block shape.")
+            if block_shape[0] == 1:
+                pytest.xfail("neuralnetwork backend doesn't support unity block shape.")
+        
         input_shape[0] = input_shape[0] * np.prod(block_shape)
         crops = []
         for i in range(block_rank):
@@ -5539,17 +5666,91 @@ class TestBatchToSpaceND(TensorFlowBaseTest):
         model, inputs, outputs = build_model
         input_values = [random_gen(input_shape)]
         input_dict = dict(zip(inputs, input_values))
+
+        # Before rdar://93071454 (batch_to_space is error out in espresso for dynamic inputs cormel model) is fixed,
+        # we need to specify the default shape for the dynamic model by setting inputs_for_conversion
+        if dynamic:
+            shape = tuple([RangeDim(default=dim) for dim in input_shape])
+            inputs_for_conversion = [TensorType(shape=shape, dtype=np.float32)]
+        else:
+            inputs_for_conversion = None
+
         TensorFlowBaseTest.run_compare_tf(
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            inputs_for_conversion=inputs_for_conversion,
+            use_cpu_for_conversion=use_cpu_only,
+            frontend_only=False,
+            backend=backend,
+        )
+
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend, shape_block_crops, dynamic",
+        itertools.product(
+            [True, False],
+            backends,
+            [
+                [(6, 4, 6, 2, 2), [2, 3], [[2, 0],[3, 6]]], 
+                [(4, 4, 6, 1), [1, 2], [[2, 1], [3, 3]]],
+                [(4, 4, 6, 1, 2), [2, 1], [[0, 0],[0, 0]]],
+                [(4, 4, 6, 1, 2), [2], [[0, 0]]],
+            ],
+            [True, False],
+        ),
+    )
+    def test_smoke_new_op(self, use_cpu_only, backend, shape_block_crops, dynamic):
+        input_shape, block_shape, crops = shape_block_crops
+        
+        # The neuralnetwork backend doesn't support these tests
+        if backend[0] == "neuralnetwork":
+            return
+
+        tf_input_shape = input_shape if not dynamic else [None] * len(input_shape)
+        @make_tf_graph([tf_input_shape])
+        def build_model(x):
+            return tf.raw_ops.BatchToSpaceND(
+                input=x, block_shape=block_shape, crops=crops
+            )
+
+        # Before rdar://93071454 (batch_to_space is error out in espresso for dynamic inputs cormel model) is fixed,
+        # we need to specify the default shape for the dynamic model by setting inputs_for_conversion
+        if dynamic:
+            shape = tuple([RangeDim(default=dim) for dim in input_shape])
+            inputs_for_conversion = [TensorType(shape=shape, dtype=np.float32)]
+        else:
+                        inputs_for_conversion = None
+
+        model, inputs, outputs = build_model
+        input_values = [random_gen(input_shape)]
+        input_dict = dict(zip(inputs, input_values))
+        TensorFlowBaseTest.run_compare_tf(
+            model,
+            input_dict,
+            outputs,
+            use_cpu_for_conversion=use_cpu_only,
+            inputs_for_conversion=inputs_for_conversion,
             frontend_only=False,
             backend=backend,
         )
 
 
 class TestTensorArray(TensorFlowBaseTest):
+
+    @staticmethod
+    def get_dynamic_elem_shape_model():
+        elem_shape = (None, None)
+        @make_tf_graph([elem_shape])
+        def build_model(x):
+            ta = tf.TensorArray(dtype=tf.float32, size=0, dynamic_size=True)
+            ta = ta.write(10, x)
+            ta = ta.write(9, x)
+            ta = ta.scatter([3], tf.expand_dims(x, 0))
+            ta = ta.scatter([8], tf.expand_dims(x, 0))
+
+            return ta.stack()
+        return build_model
+
     @pytest.mark.parametrize(
         "use_cpu_only, backend", itertools.product([True, False], backends,)
     )
@@ -5586,7 +5787,7 @@ class TestTensorArray(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             frontend_only=False,
             backend=backend,
         )
@@ -5601,25 +5802,13 @@ class TestTensorArray(TensorFlowBaseTest):
         # TF2: TensorListReserve, TensorListLength, TensorListSetItem,
         #      TensorListScatterIntoExistingList, TensorListStack,
         #      TensorListResize
-        elem_shape = (None, None)
-
-        @make_tf_graph([elem_shape])
-        def build_model(x):
-            ta = tf.TensorArray(dtype=tf.float32, size=0, dynamic_size=True)
-            ta = ta.write(10, x)
-            ta = ta.write(9, x)
-            ta = ta.scatter([3], tf.expand_dims(x, 0))
-            ta = ta.scatter([8], tf.expand_dims(x, 0))
-
-            return ta.stack()
-
-        model, inputs, outputs = build_model
+        model, inputs, outputs = TestTensorArray.get_dynamic_elem_shape_model()
         input_values = [random_gen((2,3))]
         input_dict = dict(zip(inputs, input_values))
         TensorFlowBaseTest.run_compare_tf(
             model,
             input_dict, outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             frontend_only=False, backend=backend)
 
     @pytest.mark.skip(
@@ -5649,7 +5838,7 @@ class TestTensorArray(TensorFlowBaseTest):
         input_values = [random_gen(shape=(3, 2))]
         input_dict = dict(zip(inputs, input_values))
         TensorFlowBaseTest.run_compare_tf(
-            model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend
+            model, input_dict, outputs, use_cpu_for_conversion=use_cpu_only, backend=backend
         )
 
 
@@ -5700,7 +5889,7 @@ class TestBroadcastTo(TensorFlowBaseTest):
 
         input_dict = dict(zip(inputs, input_values))
         TensorFlowBaseTest.run_compare_tf(
-            model, input_dict, outputs, use_cpu_only=use_cpu_only, backend=backend
+            model, input_dict, outputs, use_cpu_for_conversion=use_cpu_only, backend=backend
         )
 
 
@@ -5757,7 +5946,7 @@ class TestLSTMBlockCell(TensorFlowBaseTest):
                 graph,
                 {x: np.random.rand(*x_shape).astype(np.float32),},
                 res,
-                use_cpu_only=use_cpu_only,
+                use_cpu_for_conversion=use_cpu_only,
                 frontend_only=False,
                 backend=backend,
             )
@@ -5787,7 +5976,7 @@ class TestLSTMBlockCell(TensorFlowBaseTest):
                 graph,
                 {x: np.random.rand(*x_shape).astype(np.float32),},
                 res,
-                use_cpu_only=use_cpu_only,
+                use_cpu_for_conversion=use_cpu_only,
                 frontend_only=False,
                 backend=backend,
                 # variable needs to be frozen
@@ -5826,7 +6015,7 @@ class TestLSTMBlockCell(TensorFlowBaseTest):
                 graph,
                 {x: np.random.rand(*x_shape).astype(np.float32),},
                 output,
-                use_cpu_only=use_cpu_only,
+                use_cpu_for_conversion=use_cpu_only,
                 frontend_only=False,
                 backend=backend,
                 # variable needs to be frozen
@@ -5873,7 +6062,7 @@ class TestLSTMBlockCell(TensorFlowBaseTest):
                 graph,
                 {x: np.random.rand(*x_shape).astype(np.float32),},
                 x5,
-                use_cpu_only=use_cpu_only,
+                use_cpu_for_conversion=use_cpu_only,
                 frontend_only=False,
                 backend=backend,
                 # variable needs to be frozen
@@ -5906,7 +6095,7 @@ class TestVariable(TensorFlowBaseTest):
                 graph,
                 {x: np.random.rand(1).astype(np.float32),},
                 res,
-                use_cpu_only=use_cpu_only,
+                use_cpu_for_conversion=use_cpu_only,
                 frontend_only=False,
                 backend=backend,
             )
@@ -5949,7 +6138,7 @@ class TestZerosLike(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             frontend_only=False,
             backend=backend,
         )
@@ -6017,7 +6206,6 @@ class TestIsFinite(TensorFlowBaseTest):
             frontend_only=False,
             backend=backend,
             use_cpu_for_conversion=use_cpu_for_conversion,
-            use_cpu_only=use_cpu_for_conversion,
         )
 
 class TestLogSoftMax(TensorFlowBaseTest):
@@ -6040,7 +6228,7 @@ class TestLogSoftMax(TensorFlowBaseTest):
         input_values = [input_value]
         input_dict = dict(zip(inputs, input_values))
         TensorFlowBaseTest.run_compare_tf(model, input_dict, outputs,
-                       use_cpu_only=use_cpu_only,
+                       use_cpu_for_conversion=use_cpu_only,
                        frontend_only=False, backend=backend)
 
 
@@ -6068,8 +6256,8 @@ class TestClipByValue(TensorFlowBaseTest):
         input_values = [input_value]
         input_dict = dict(zip(inputs, input_values))
         TensorFlowBaseTest.run_compare_tf(model, input_dict, outputs,
-                       use_cpu_only=use_cpu_only,
-                       frontend_only=False, backend=backend)
+                                          use_cpu_for_conversion=use_cpu_only,
+                                          frontend_only=False, backend=backend)
 
 
 class TestSize(TensorFlowBaseTest):
@@ -6107,8 +6295,8 @@ class TestSize(TensorFlowBaseTest):
             input_values = [input_value]
         input_dict = dict(zip(inputs, input_values))
         TensorFlowBaseTest.run_compare_tf(model, input_dict, outputs,
-                       use_cpu_only=use_cpu_only,
-                       frontend_only=False, backend=backend)
+                                          use_cpu_for_conversion=use_cpu_only,
+                                          frontend_only=False, backend=backend)
 
 class TestAudioSpectrogram(TensorFlowBaseTest):
     @pytest.mark.parametrize(
@@ -6144,7 +6332,7 @@ class TestAudioSpectrogram(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             frontend_only=False,
             backend=backend,
         )
@@ -6195,7 +6383,7 @@ class TestMfcc(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_only=use_cpu_only,
+            use_cpu_for_conversion=use_cpu_only,
             frontend_only=False,
             backend=backend,
         )

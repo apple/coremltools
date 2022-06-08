@@ -5,6 +5,7 @@ enum MLColorSpace: int {
     MLColorSpaceGRAYSCALE = 10,
     MLColorSpaceRGB = 20,
     MLColorSpaceBGR = 30,
+    MLColorSpaceGRAYSCALE_FLOAT16 = 40,
 };
 
 enum MLImageFeatureTypeSizeFlexibility: int {
@@ -31,6 +32,7 @@ enum MLArrayDataType: int {
     MLArrayDataTypeFLOAT32 = 65568,
     MLArrayDataTypeDOUBLE = 65600,
     MLArrayDataTypeINT32 = 131104,
+    MLArrayDataTypeFLOAT16 = 65552,
 };
 
 enum MLArrayFeatureTypeShapeFlexibility: int {

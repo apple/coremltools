@@ -3,17 +3,18 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import pytest
+import unittest
+
 import coremltools
 from coremltools._deps import (
-    _HAS_KERAS2_TF,
-    MSG_KERAS2_NOT_FOUND,
     _HAS_SKLEARN,
     MSG_SKLEARN_NOT_FOUND,
 )
 from coremltools.models.utils import _macos_version, _is_macos
 
-if _HAS_KERAS2_TF:
-    import keras
+import numpy as np
+import PIL.Image
 if _HAS_SKLEARN:
     import sklearn
     from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
@@ -21,10 +22,6 @@ if _HAS_SKLEARN:
     from sklearn.linear_model import LinearRegression
     from sklearn.svm import SVC, SVR
     from sklearn.datasets import load_boston
-import unittest
-import numpy as np
-import pytest
-import PIL.Image
 
 
 def create_model(spec):
@@ -248,94 +245,6 @@ class TestIODataTypes(unittest.TestCase):
                     ),
                 )
             except RuntimeError:
-                print("{} not supported. ".format(dtype))
-
-    @unittest.skipIf(not _HAS_KERAS2_TF, MSG_KERAS2_NOT_FOUND)
-    @pytest.mark.keras2
-    def test_keras_dense_model(self):
-        model = keras.models.Sequential()
-        model.add(
-            keras.layers.Dense(
-                3,
-                activation="sigmoid",
-                kernel_initializer="random_uniform",
-                bias_initializer="random_uniform",
-                input_dim=3,
-            )
-        )
-        for key, dtype in self.number_data_type.items():
-            try:
-                input_data = np.random.rand(1, 3).astype(key)
-                keras_out = model.predict(input_data)
-                coreml_model = coremltools.converters.keras.convert(
-                    model, input_names=["data"], output_names=["target"]
-                )
-                spec = coreml_model.get_spec()
-                spec.description.output[
-                    0
-                ].type.multiArrayType.dataType = coremltools.proto.FeatureTypes_pb2.ArrayFeatureType.ArrayDataType.Value(
-                    self._feature_data_type(dtype)
-                )
-                spec.description.input[
-                    0
-                ].type.multiArrayType.dataType = coremltools.proto.FeatureTypes_pb2.ArrayFeatureType.ArrayDataType.Value(
-                    self._feature_data_type(dtype)
-                )
-                coreml_model = coremltools.models.MLModel(spec)
-                coreml_out = coreml_model.predict(
-                    {"data": np.expand_dims(input_data, 0)}
-                )["target"]
-                self.assertEqual(dtype, coreml_out.dtype)
-                if dtype != np.int32:
-                    for idx in range(0, len(keras_out)):
-                        self.assertAlmostEqual(
-                            keras_out[0][idx],
-                            coreml_out[idx],
-                            msg="{}\n{} != {}".format(dtype, keras_out, coreml_out),
-                            places=2,
-                        )
-            except KeyError:
-                print("{} not supported. ".format(dtype))
-
-    def test_keras_embedding_model(self):
-
-        model = keras.models.Sequential()
-        model.add(keras.layers.Embedding(100, 3, input_length=5, input_dtype="float32"))
-        for key, dtype in self.number_data_type.items():
-            try:
-                input_data = np.random.randint(0, 100, size=(1, 5)).astype(key)
-                keras_out = np.squeeze(model.predict(input_data)).flatten()
-                coreml_model = coremltools.converters.keras.convert(
-                    model, input_names=["data"], output_names=["target"]
-                )
-
-                spec = coreml_model.get_spec()
-                spec.description.output[
-                    0
-                ].type.multiArrayType.dataType = coremltools.proto.FeatureTypes_pb2.ArrayFeatureType.ArrayDataType.Value(
-                    self._feature_data_type(dtype)
-                )
-                spec.description.input[
-                    0
-                ].type.multiArrayType.dataType = coremltools.proto.FeatureTypes_pb2.ArrayFeatureType.ArrayDataType.Value(
-                    self._feature_data_type(dtype)
-                )
-                coreml_model = coremltools.models.MLModel(spec)
-                coreml_out = np.squeeze(
-                    coreml_model.predict({"data": np.expand_dims(input_data, 0).T})[
-                        "target"
-                    ]
-                ).flatten()
-                self.assertEqual(dtype, coreml_out.dtype)
-                if dtype != np.int32:
-                    for idx in range(0, len(keras_out)):
-                        self.assertAlmostEqual(
-                            keras_out[idx],
-                            coreml_out[idx],
-                            msg="{}\n{} != {}".format(dtype, keras_out, coreml_out),
-                            places=2,
-                        )
-            except KeyError:
                 print("{} not supported. ".format(dtype))
 
     def test_image_output_rgb(self):

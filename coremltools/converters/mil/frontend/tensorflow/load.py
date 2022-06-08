@@ -28,6 +28,7 @@ from .tf_graph_pass import (
 )
 from .tfssa import NetworkEnsemble, SSAFunction
 from .parsed_tf_node import ParsedTFNode
+from .._utils import get_output_names
 from coremltools.converters._profile_utils import _profile
 from coremltools._deps import _get_version
 
@@ -60,7 +61,8 @@ class TFLoader:
 
         logging.info("Loading TensorFlow model '{}'".format(self.model))
         outputs = self.kwargs.get("outputs", None)
-        self._graph_def = self._graph_def_from_model(outputs)
+        output_names = get_output_names(outputs)
+        self._graph_def = self._graph_def_from_model(output_names)
 
         if self._graph_def is not None and len(self._graph_def.node) == 0:
             msg = "tf.Graph should have at least 1 node, Got empty graph."
@@ -86,7 +88,7 @@ class TFLoader:
         return program
 
     # @abstractmethod
-    def _graph_def_from_model(self, outputs=None):
+    def _graph_def_from_model(self, output_names=None):
         """Load TensorFlow model into GraphDef. Overwrite for different TF versions."""
         pass
 
@@ -137,15 +139,15 @@ class TF1Loader(TFLoader):
         """
         TFLoader.__init__(self, model, debug, **kwargs)
 
-    def _graph_def_from_model(self, outputs=None):
+    def _graph_def_from_model(self, output_names=None):
         """Overwrites TFLoader._graph_def_from_model()"""
         msg = "Expected model format: [tf.Graph | .pb | SavedModel | tf.keras.Model | .h5], got {}"
         if isinstance(self.model, tf.Graph) and hasattr(self.model, "as_graph_def"):
             graph_def = self.model.as_graph_def(add_shapes=True)
-            return self.extract_sub_graph(graph_def, outputs)
+            return self.extract_sub_graph(graph_def, output_names)
         elif isinstance(self.model, tf.keras.Model):
             graph_def = self._from_tf_keras_model(self.model)
-            return self.extract_sub_graph(graph_def, outputs)
+            return self.extract_sub_graph(graph_def, output_names)
         elif isinstance(self.model, str):
             if not os.path.exists(str(self.model)):
                 raise ValueError('Input model "{}" does not exist'.format(self.model))
@@ -163,13 +165,13 @@ class TF1Loader(TFLoader):
                     with tf.Graph().as_default() as graph:
                         tf.graph_util.import_graph_def(gd, name="")
                 graph_def = graph.as_graph_def(add_shapes=True)
-                return self.extract_sub_graph(graph_def, outputs)
+                return self.extract_sub_graph(graph_def, output_names)
             elif os.path.isfile(str(self.model)) and self.model.endswith(".h5"):
                 graph_def = self._from_tf_keras_model(self.model)
-                return self.extract_sub_graph(graph_def, outputs)
+                return self.extract_sub_graph(graph_def, output_names)
             elif os.path.isdir(str(self.model)):
                 graph_def = self._from_saved_model(self.model)
-                return self.extract_sub_graph(graph_def, outputs)
+                return self.extract_sub_graph(graph_def, output_names)
             else:
                 raise NotImplementedError(msg.format(self.model))
         else:

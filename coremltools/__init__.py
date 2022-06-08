@@ -14,8 +14,8 @@ through Xcode.
 Core MLTools in a python package for creating, examining, and testing models in the .mlmodel
 format. In particular, it can be used to:
 
-* Convert existing models to .mlmodel format from popular machine learning tools including:
-     Keras, scikit-learn, libsvm, and XGBoost.
+* Convert existing models to .mlpackage or .mlmodel formats from popular machine learning tools including:
+     PyTorch, TensorFlow, scikit-learn, XGBoost and libsvm.
 * Express models in .mlmodel format through a simple API.
 * Make predictions with an .mlmodel (on select platforms for testing purposes).
 
@@ -60,6 +60,9 @@ _SPECIFICATION_VERSION_IOS_14 = 5
 # New versions for iOS 15.0
 _SPECIFICATION_VERSION_IOS_15 = 6
 
+# New versions for iOS 16.0
+_SPECIFICATION_VERSION_IOS_16 = 7
+
 class ComputeUnit(_Enum):
     '''
     The set of processing-unit configurations the model can use to make predictions.
@@ -68,16 +71,29 @@ class ComputeUnit(_Enum):
     CPU_AND_GPU = 2 # Allows the model to use both the CPU and GPU, but not the neural engine
     CPU_ONLY = 3 # Limit the model to only use the CPU
 
+# A dictionary that maps the CoreML model specification version to the MLProgram/MIL opset string
+_OPSET = {
+    _SPECIFICATION_VERSION_IOS_15: "CoreML5",
+    _SPECIFICATION_VERSION_IOS_16: "CoreML6",
+}
+
+# Default specification version for each backend
+_LOWEST_ALLOWED_SPECIFICATION_VERSION_FOR_NEURALNETWORK = _SPECIFICATION_VERSION_IOS_13
+_LOWEST_ALLOWED_SPECIFICATION_VERSION_FOR_MILPROGRAM = _SPECIFICATION_VERSION_IOS_15
+
+
 # expose sub packages as directories
 from . import converters
 from . import proto
 from . import models
 from .models import utils
+from .models.ml_program import compression_utils
 
 # expose unified converter in coremltools package level
 from .converters import convert
 from .converters import (
     ClassifierConfig,
+    ColorLayout as colorlayout,
     TensorType,
     ImageType,
     RangeDim,

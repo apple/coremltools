@@ -45,11 +45,9 @@ def test_mlmodel_demo(tmpdir):
                 dtype=example_input.numpy().dtype,
             )
         ],
-        compute_precision=ct.precision.FLOAT32
+        compute_precision=ct.precision.FLOAT32,
+        compute_units=ct.ComputeUnit.CPU_ONLY
     )
-    # `coremltools_internal.convert` returns
-    # `coremltools_internal.models.MLModel` for `mlprogram` and `neuralnetwork`
-    # backend
     assert isinstance(mlmodel, MLModel)
 
     # mlpackage_path is a model package
@@ -66,7 +64,6 @@ def test_mlmodel_demo(tmpdir):
 
     result = mlmodel2.predict(
         {"input": example_input.cpu().detach().numpy().astype(np.float32)},
-        useCPUOnly=True,
     )
 
     # Verify outputs

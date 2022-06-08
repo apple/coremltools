@@ -21,7 +21,7 @@ _WIDTH_KEY = "W"
 _CONSTRAINED_KEYS = [_CHANNEL_KEY, _HEIGHT_KEY, _WIDTH_KEY]
 
 
-class Shape(object):
+class Shape:
     def __init__(self, shape_value):
         if shape_value < 1:
             raise Exception("Invalid value. Size/Shape values must be > 0")
@@ -112,7 +112,7 @@ class NeuralNetworkImageSize:
         return self._height.value
 
 
-class ShapeRange(object):
+class ShapeRange:
     def __init__(self, lowerBound, upperBound):
         unBounded = False
 

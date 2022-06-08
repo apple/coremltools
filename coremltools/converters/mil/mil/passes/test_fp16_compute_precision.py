@@ -3,6 +3,11 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import unittest
+
+import numpy as np
+
+import coremltools as ct
 from coremltools._deps import _IS_MACOS
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil.passes import quantization_passes as transform
@@ -11,9 +16,7 @@ from coremltools.converters.mil.testing_utils import (
     get_op_types_in_program,
     apply_pass_and_basic_check,
 )
-import unittest
-import numpy as np
-import coremltools as ct
+
 
 np.random.seed(1984)
 
@@ -84,11 +87,11 @@ class FP16CastTransform(unittest.TestCase):
             prog, transform.FP16ComputePrecision(op_selector=lambda op: True)
         )
 
-        mlmodel = ct.convert(prog, source="milinternal")
+        mlmodel = ct.convert(prog, source="milinternal", compute_units=ct.ComputeUnit.CPU_ONLY)
         input_dict = {"x": np.random.rand(10, 20)}
 
         if _IS_MACOS:
-            prediction = mlmodel.predict(input_dict, useCPUOnly=True)
+            prediction = mlmodel.predict(input_dict)
             assert(not np.isnan(prediction['real_div_0']).any())
             assert(np.isfinite(prediction['real_div_0']).all())
 

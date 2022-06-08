@@ -6,7 +6,7 @@
 import numpy as np
 import unittest
 
-from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil import Builder as mb, types as types
 from coremltools.converters.mil.testing_utils import (
     assert_model_is_valid,
     get_op_types_in_program,
@@ -180,7 +180,7 @@ class CastOptimizationPass(unittest.TestCase):
 
         assert_model_is_valid(
             prog,
-            {"x": (10,20)},
+            {"x": (10, 20)},
             expected_output_shapes={
                 block.outputs[0].name: (10, 20),
                 block.outputs[1].name: (10, 20),
@@ -364,3 +364,43 @@ class CastOptimizationPass(unittest.TestCase):
                 block.outputs[2].name: (10, 20),
             },
         )
+
+    """
+    Input graph:
+    input(dtype="fp16")---->relu----->relu
+                                      |
+                              --------|
+                              |
+                              V 
+                             cast(dtype="fp32")---->cast(dtype="fp16")
+                                                      |
+                                ----------------------|
+                                |
+                                V 
+                             cast(dtype="fp32")---->cast(dtype="fp16")---->output(dtype="fp16")
+    
+    Output graph:
+    input(dtype="fp16")---->relu----->relu---->output(dtype="fp16")
+    """
+    def test_two_casts_at_the_end(self):
+        @mb.program(input_specs=[mb.TensorSpec(shape=(10, 20), dtype=types.fp16)])
+        def prog(x):
+            x = mb.relu(x=x)
+            x = mb.relu(x=x)
+            x = mb.cast(x=x, dtype="fp32")
+            x = mb.cast(x=x, dtype="fp16")
+            x = mb.cast(x=x, dtype="fp32")
+            x = mb.cast(x=x, dtype="fp16", name="original_output_name")
+            return x
+
+        self.assertEqual(get_op_types_in_program(prog),
+                         ['relu', 'relu', 'cast', 'cast', 'cast', 'cast'])
+        apply_pass_and_basic_check(prog, "common::cast_optimization")
+        _, prev_block, block = apply_pass_and_basic_check(prog, "common::dead_code_elimination")
+        self.assertEqual(get_op_types_in_program(prog),
+                         ['relu', 'relu'])
+        self.assertEqual(prev_block.outputs[0].name, "original_output_name")
+        self.assertEqual(block.outputs[0].name, "original_output_name")
+        self.assertEqual(block.outputs[0].dtype, types.fp16)
+
+

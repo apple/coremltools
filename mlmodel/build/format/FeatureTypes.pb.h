@@ -102,12 +102,13 @@ enum ImageFeatureType_ColorSpace {
   ImageFeatureType_ColorSpace_GRAYSCALE = 10,
   ImageFeatureType_ColorSpace_RGB = 20,
   ImageFeatureType_ColorSpace_BGR = 30,
+  ImageFeatureType_ColorSpace_GRAYSCALE_FLOAT16 = 40,
   ImageFeatureType_ColorSpace_ImageFeatureType_ColorSpace_INT_MIN_SENTINEL_DO_NOT_USE_ = ::google::protobuf::kint32min,
   ImageFeatureType_ColorSpace_ImageFeatureType_ColorSpace_INT_MAX_SENTINEL_DO_NOT_USE_ = ::google::protobuf::kint32max
 };
 bool ImageFeatureType_ColorSpace_IsValid(int value);
 const ImageFeatureType_ColorSpace ImageFeatureType_ColorSpace_ColorSpace_MIN = ImageFeatureType_ColorSpace_INVALID_COLOR_SPACE;
-const ImageFeatureType_ColorSpace ImageFeatureType_ColorSpace_ColorSpace_MAX = ImageFeatureType_ColorSpace_BGR;
+const ImageFeatureType_ColorSpace ImageFeatureType_ColorSpace_ColorSpace_MAX = ImageFeatureType_ColorSpace_GRAYSCALE_FLOAT16;
 const int ImageFeatureType_ColorSpace_ColorSpace_ARRAYSIZE = ImageFeatureType_ColorSpace_ColorSpace_MAX + 1;
 
 enum ArrayFeatureType_ArrayDataType {
@@ -115,6 +116,7 @@ enum ArrayFeatureType_ArrayDataType {
   ArrayFeatureType_ArrayDataType_FLOAT32 = 65568,
   ArrayFeatureType_ArrayDataType_DOUBLE = 65600,
   ArrayFeatureType_ArrayDataType_INT32 = 131104,
+  ArrayFeatureType_ArrayDataType_FLOAT16 = 65552,
   ArrayFeatureType_ArrayDataType_ArrayFeatureType_ArrayDataType_INT_MIN_SENTINEL_DO_NOT_USE_ = ::google::protobuf::kint32min,
   ArrayFeatureType_ArrayDataType_ArrayFeatureType_ArrayDataType_INT_MAX_SENTINEL_DO_NOT_USE_ = ::google::protobuf::kint32max
 };
@@ -762,6 +764,8 @@ class ImageFeatureType : public ::google::protobuf::MessageLite /* @@protoc_inse
     ImageFeatureType_ColorSpace_RGB;
   static const ColorSpace BGR =
     ImageFeatureType_ColorSpace_BGR;
+  static const ColorSpace GRAYSCALE_FLOAT16 =
+    ImageFeatureType_ColorSpace_GRAYSCALE_FLOAT16;
   static inline bool ColorSpace_IsValid(int value) {
     return ImageFeatureType_ColorSpace_IsValid(value);
   }
@@ -1175,6 +1179,8 @@ class ArrayFeatureType : public ::google::protobuf::MessageLite /* @@protoc_inse
     ArrayFeatureType_ArrayDataType_DOUBLE;
   static const ArrayDataType INT32 =
     ArrayFeatureType_ArrayDataType_INT32;
+  static const ArrayDataType FLOAT16 =
+    ArrayFeatureType_ArrayDataType_FLOAT16;
   static inline bool ArrayDataType_IsValid(int value) {
     return ArrayFeatureType_ArrayDataType_IsValid(value);
   }

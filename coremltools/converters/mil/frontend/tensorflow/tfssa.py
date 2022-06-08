@@ -12,7 +12,7 @@ from .dot_visitor import DotVisitor
 from .naming_utils import escape_fn_name
 
 
-class ParsedNode(object):
+class ParsedNode:
     """
     Node class for the tfssa graph.
 
@@ -69,7 +69,7 @@ class ParsedNode(object):
         return self.__copy__()
 
 
-class SSAFunction(object):
+class SSAFunction:
     __slots__ = ["graph", "inputs", "input_types", "outputs", "output_types", "ret"]
 
     def __init__(self, gdict=None, inputs=None, outputs=None, ret=None):
@@ -179,7 +179,7 @@ class SSAFunction(object):
         return self.__copy__()
 
 
-class NetworkEnsemble(object):
+class NetworkEnsemble:
     __slots__ = ["functions", "variables", "global_resource"]
 
     def __init__(self, instance=None):

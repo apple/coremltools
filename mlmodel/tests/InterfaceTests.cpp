@@ -144,6 +144,8 @@ int testFeatureDescriptions() {
     ML_ASSERT_GOOD(validateFeatureDescription(*feature,true));
     feature->mutable_type()->mutable_imagetype()->set_colorspace(::CoreML::Specification::ImageFeatureType_ColorSpace_GRAYSCALE);
     ML_ASSERT_GOOD(validateFeatureDescription(*feature,true));
+    feature->mutable_type()->mutable_imagetype()->set_colorspace(::CoreML::Specification::ImageFeatureType_ColorSpace_GRAYSCALE_FLOAT16);
+    ML_ASSERT_GOOD(validateFeatureDescription(*feature, MLMODEL_SPECIFICATION_VERSION_IOS16, true));
     feature->mutable_type()->mutable_imagetype()->set_colorspace(::CoreML::Specification::ImageFeatureType_ColorSpace_INVALID_COLOR_SPACE);
     ML_ASSERT_BAD(validateFeatureDescription(*feature,true));
 

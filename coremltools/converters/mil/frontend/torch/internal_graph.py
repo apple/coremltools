@@ -239,7 +239,7 @@ class InternalTorchIRGraph:
                 their numpy value.
             inputs: If @raw_graph is None, the OrderedDict mapping input names
                 to their example values.
-            outputs: If @raw_graph is None, the list of outputs from the graph.
+            outputs: list[str], If @raw_graph is None, the list of outputs from the graph.
         """
 
         self.nodes = []

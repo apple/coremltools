@@ -2,10 +2,12 @@
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
-import numpy as np
+
 import os
 import pytest
 import tempfile
+
+import numpy as np
 
 from coremltools import TensorType
 import coremltools.models.utils as coremltoolsutils
@@ -13,7 +15,7 @@ from coremltools.converters.mil.testing_utils import compare_shapes, \
     compare_backend, run_core_ml_predict, ct_convert
 from coremltools.converters.mil.testing_reqs import ct
 
-tf = pytest.importorskip("tensorflow", minversion="1.14.0")
+tf = pytest.importorskip("tensorflow", minversion="1.15.0")
 
 from tensorflow.python.framework import dtypes
 from tensorflow.python.tools.freeze_graph import freeze_graph as freeze_g
@@ -112,8 +114,9 @@ def get_tf_node_names(tf_nodes, mode="inputs"):
 
 
 def tf_graph_to_mlmodel(
-    graph, feed_dict, output_nodes, frontend="tensorflow", backend=("neuralnetwork", "fp32"),
-    use_cpu_for_conversion=False,
+    graph, feed_dict, output_nodes, frontend="tensorflow",
+    backend=("neuralnetwork", "fp32"), use_cpu_for_conversion=False,
+    inputs_for_conversion=None,
 ):
     """
     Parameters
@@ -130,8 +133,9 @@ def tf_graph_to_mlmodel(
         Backend to convert to.
     use_cpu_for_conversion: bool
         Argument which is passed as is to the unified converter API.
-        That is, "ct.convert(...., useCPUOnly=use_cpu_for_conversion)"
         It forces the model to be loaded on the CPU context, post conversion.
+    inputs_for_conversion: list of coremltools.TensorType() or coremltools.ImageType() objects
+        Defaults to None. It is passed as is to the "inputs" argument of the converter.
     -----------
     Returns MLModel, Input Values, Output Names
     """
@@ -145,9 +149,16 @@ def tf_graph_to_mlmodel(
     output_names = get_tf_node_names(output_nodes, mode="outputs")
     input_values = {name: val for name, val in zip(input_names, feed_dict.values())}
 
+    if use_cpu_for_conversion:
+        compute_unit = ct.ComputeUnit.CPU_ONLY
+    else:
+        compute_unit = ct.ComputeUnit.ALL
+        
+    inputs = inputs_for_conversion if inputs_for_conversion is not None else None
+
     mlmodel = ct_convert(
-        graph, inputs=None, outputs=output_names, source=frontend, convert_to=backend,
-        useCPUOnly=use_cpu_for_conversion,
+        graph, inputs=inputs, outputs=output_names, source=frontend, convert_to=backend,
+        compute_units=compute_unit,
     )
 
     return mlmodel, input_values, output_names, output_nodes
@@ -175,7 +186,7 @@ def run_compare_tf(
     graph,
     feed_dict,
     output_nodes,
-    use_cpu_only=False,
+    inputs_for_conversion=None,
     use_cpu_for_conversion=False,
     frontend_only=False,
     frontend="tensorflow",
@@ -197,21 +208,10 @@ def run_compare_tf(
         Dict of placeholder and value pairs representing inputs.
     output_nodes: tf.node or list[tf.node]
         List of names representing outputs.
-    use_cpu_only: bool
-        If true, use CPU only for prediction, otherwise, use GPU also.
+    inputs_for_conversion: list of coremltools.TensorType() or coremltools.ImageType() objects
+        Defaults to None. It is passed as is to the "inputs" argument of the converter.
     use_cpu_for_conversion: bool
-        If true, the converter is invoked using "ct.convert(...., useCPUOnly=True)",
-        which in turn forces the model to be loaded with the CPU context, which happens
-        when the converter loads the ML model object from the proto spec
-        using "ct.models.MLModel(proto_spec, useCPUOnly=True)".
-        The other argument, i.e., "use_cpu_only" on the other hand refers to only the compute engine
-        for prediction purposes. For a model that is loaded on a non-CPU context, it can still be forced
-        to execute on the CPU at the time of prediction. Hence,
-        "use_cpu_for_conversion = False && use_cpu_only = True" is valid and results in a case when a model is
-        loaded for GPU but executed on the CPU.
-        The scenario, "use_cpu_for_conversion = True && use_cpu_only = False" is invalid though,
-        since once a model is loaded on a CPU context its context cannot be changed to a non CPU device
-        at the time of prediction.
+        If True, the model to be loaded with the CPU context.
     frontend_only: bool
         If true, skip the prediction call, only validate conversion.
     frontend: str
@@ -223,7 +223,7 @@ def run_compare_tf(
     rtol: float
         The relative tolerance parameter.
     validate_shapes_only: bool
-        If true, skip element-wise value comparision.
+        If True, skip element-wise value comparision.
     freeze_graph: bool
         If True, use the "tensorflow.python.tools.freeze_graph" function
         to freeze the TF graph prior to conversion. This will ensure that
@@ -234,10 +234,6 @@ def run_compare_tf(
     Return:
         Proto, mlmodel, input dictionay, prediction(if possible)
     """
-    if use_cpu_for_conversion and not use_cpu_only:
-        # use_cpu_for_conversion = True && use_cpu_only = False
-        raise ValueError("use_cpu_for_conversion = True && use_cpu_only = False is an invalid test case")
-
     if not isinstance(output_nodes, (tuple, list)):
         output_nodes = [output_nodes]
 
@@ -272,7 +268,8 @@ def run_compare_tf(
             graph = load_tf_pb(static_model_file)
 
     mlmodel, input_key_values, output_names, output_nodes = tf_graph_to_mlmodel(
-        graph, feed_dict, output_nodes, frontend, backend, use_cpu_for_conversion=use_cpu_for_conversion,
+        graph, feed_dict, output_nodes, frontend, backend,
+        use_cpu_for_conversion=use_cpu_for_conversion, inputs_for_conversion=inputs_for_conversion,
     )
 
     if frontend_only or coremltoolsutils._macos_version() < (10, 13) \
@@ -290,22 +287,19 @@ def run_compare_tf(
         if isinstance(v, np.ndarray) and issubclass(v.dtype.type, np.integer):
             input_key_values[k] = v.astype(np.float) # Core ML only accepts floats
 
+    pred = None
     if validate_shapes_only:
-        compare_shapes(mlmodel, input_key_values, expected_outputs, use_cpu_only)
-    else:
-        compare_backend(
-            mlmodel,
-            input_key_values,
-            expected_outputs,
-            use_cpu_only,
-            atol=atol,
-            rtol=rtol,
-            also_compare_shapes=True,
-            dtype=backend[1],
+        compare_shapes(mlmodel, input_key_values, expected_outputs)
+    elif not coremltoolsutils._has_custom_layer(mlmodel._spec):
+        pred = compare_backend(
+                mlmodel,
+                input_key_values,
+                expected_outputs,
+                atol=atol,
+                rtol=rtol,
+                also_compare_shapes=True,
+                dtype=backend[1],
         )
-    pred=None
-    if not coremltoolsutils._has_custom_layer(mlmodel.get_spec()):
-        pred = run_core_ml_predict(mlmodel, input_key_values, use_cpu_only)
     else:
         print('Skipping model prediction as it has a custom nn layer!')
     return mlmodel._spec, mlmodel, input_key_values, pred
@@ -328,35 +322,42 @@ def layer_counts(spec, layer_type):
     return n
 
 
-class TensorFlowBaseTest(object):
+class TensorFlowBaseTest:
     testclassname=''
     testmodelname=''
+
     @pytest.fixture(autouse=True)
     def store_testname_with_args(self, request):
         TensorFlowBaseTest.testclassname = type(self).__name__
         TensorFlowBaseTest.testmodelname = request.node.name
 
-    def teardown_method(self, method):
-        pass
-
     @staticmethod
-    def run_compare_tf(graph, feed_dict, output_nodes, use_cpu_only=False,
+    def run_compare_tf(graph, feed_dict, output_nodes,
+                       inputs_for_conversion=None,
                        use_cpu_for_conversion=False,
                        frontend_only=False, frontend="tensorflow",
                        backend=("neuralnetwork", "fp32"), atol=1e-04, rtol=1e-05,
                        validate_shapes_only=False, freeze_graph=False,
                        tf_outputs=None):
-        res = run_compare_tf(graph, feed_dict, output_nodes,
-                             use_cpu_only=use_cpu_only,
+
+        res = run_compare_tf(graph,
+                             feed_dict,
+                             output_nodes,
+                             inputs_for_conversion=inputs_for_conversion,
                              use_cpu_for_conversion=use_cpu_for_conversion,
-                             frontend_only=frontend_only, frontend=frontend,
+                             frontend_only=frontend_only,
+                             frontend=frontend,
                              backend=backend, atol=atol,
                              rtol=rtol,
                              validate_shapes_only=validate_shapes_only,
-                             freeze_graph=freeze_graph, tf_outputs=tf_outputs)
+                             freeze_graph=freeze_graph,
+                             tf_outputs=tf_outputs
+        )
+
         alist = []
         if res is not None:
             alist = list(res)
         alist.append(TensorFlowBaseTest.testclassname)
         alist.append(TensorFlowBaseTest.testmodelname)
+
         return tuple(alist)

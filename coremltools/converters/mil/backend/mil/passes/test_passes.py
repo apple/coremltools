@@ -14,6 +14,7 @@ from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
 from coremltools.converters.mil import types
 from coremltools.converters.mil.mil.types import string_to_builtin, builtin_to_string, promote_types
+from coremltools.converters.mil._deployment_compatibility import AvailableTarget as target
 
 # Set the testing backend
 import coremltools.converters.mil.testing_reqs as testing_reqs
@@ -147,6 +148,60 @@ class TestAdjustToSupportedTypes:
         inputs = list(prog.functions['main'].inputs.items())
         assert prev_inputs[0][1].name == inputs[0][1].name
         assert inputs[0][1].dtype == types.fp32
+
+
+    @pytest.mark.parametrize(
+        "use_ios16_deployment_target",
+        [False, True],
+    )
+    def test_float16_input_output(self, use_ios16_deployment_target):
+        """
+        Input graph:
+
+        main(%x: (1, 1, 1, 1, fp16)(Tensor)) {
+            block0() {
+                %relu_0: (1, 1, 1, 1, fp16)(Tensor) = relu(x=%x, name="relu_0")
+            } -> (%relu_0)
+        }
+
+        Output graph (if deployment_target < ios16):
+
+        main(%x: (1, 1, 1, 1, fp32)(Tensor)) {
+            block0() {
+                %cast_0: (1, 1, 1, 1, fp16)(Tensor) = cast(x=%x, dtype="fp16", name="cast_0")
+                %relu_0__pre__output__fp32__cast: (1, 1, 1, 1, fp16)(Tensor) = relu(x=%cast_0, name="relu_0")
+                %relu_0: (1, 1, 1, 1, fp32)(Tensor) = cast(x=%relu_0__pre__output__fp32__cast, dtype="fp32", name="cast_1")
+            } -> (%relu_0)
+        }
+
+        Output graph (if deployment_target >= ios16): same as the input graph
+        """
+        @mb.program(input_specs=[mb.TensorSpec(shape=(1, 1, 1, 1), dtype=types.fp16)])
+        def prog(x):
+            return mb.relu(x=x)
+
+        if use_ios16_deployment_target:
+            PASS_REGISTRY["mil_backend::adjust_io_to_supported_types"].minimun_deployment_target = target.iOS16
+
+        prev_prog, prev_block, block = apply_pass_and_basic_check(
+            prog, "mil_backend::adjust_io_to_supported_types"
+        )
+
+        prev_inputs = list(prev_block.inputs.items())
+        inputs = list(block.inputs.items())
+        prev_outputs = prev_block.outputs
+        outputs = block.outputs
+        assert prev_inputs[0][1].name == inputs[0][1].name
+        assert outputs[0].name == prev_outputs[0].name
+        if not use_ios16_deployment_target:
+            assert get_op_types_in_program(prog) == ['cast', 'relu', 'cast']
+            assert inputs[0][1].dtype == types.fp32
+            assert outputs[0].dtype == types.fp32
+        else:
+            assert get_op_types_in_program(prog) == ['relu']
+            assert inputs[0][1].dtype == types.fp16
+            assert block.outputs[0].dtype == types.fp16
+
 
     def test_int8_input(self):
         """
@@ -846,3 +901,20 @@ class TestHomogenizeInputDtypes:
         assert len(cast.outputs) == 1
         assert len(cast.outputs[0].child_ops) == 1
         assert cast.outputs[0].child_ops[0].op_type == op
+
+    def test_mul_op_fp32_int32_inputs(self):
+        @mb.program(input_specs=[mb.TensorSpec(shape=(4,), dtype=types.fp32)])
+        def prog(x):
+            const = mb.const(val=5)
+            out = mb.mul(x=x, y=const)
+            return out
+
+        assert get_op_types_in_program(prog) == ["mul"]
+        print(prog)
+        apply_pass_and_basic_check(prog, "mil_backend::homogenize_input_dtypes")
+        print(prog)
+        # verify that there is no cast op in the program, since the
+        # const input (int32) should have been promoted to a float32 and replaced with a new const
+        assert get_op_types_in_program(prog) == ["mul"]
+
+

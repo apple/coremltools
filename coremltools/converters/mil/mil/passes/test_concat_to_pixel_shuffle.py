@@ -3,6 +3,11 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import unittest
+
+import numpy as np
+
+import coremltools as ct
 from coremltools._deps import _IS_MACOS
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.testing_utils import (
@@ -10,11 +15,7 @@ from coremltools.converters.mil.testing_utils import (
     get_op_types_in_program,
     apply_pass_and_basic_check,
 )
-from coremltools.converters.mil.testing_reqs import ct
 
-import unittest
-
-import numpy as np
 
 np.random.seed(1984)
 
@@ -67,7 +68,11 @@ class ConcatToPixelShuffleTests(unittest.TestCase):
             expected_output_shapes={block.outputs[0].name: (1, 2, 6, 8)},
         )
 
-        mlmodel = ct.convert(prog, source="milinternal", convert_to="neuralnetwork")
+        mlmodel = ct.convert(prog,
+                             source="milinternal",
+                             convert_to="neuralnetwork",
+                             compute_units=ct.ComputeUnit.CPU_ONLY
+        )
 
         if not _IS_MACOS:
             # Can not get predictions unless on macOS.
@@ -85,7 +90,7 @@ class ConcatToPixelShuffleTests(unittest.TestCase):
         cd = np.reshape(np.stack((input_dict["x3"], input_dict["x4"]), axis=3), newshape=[1, 2, 6, 4])
         old_prediction = np.reshape(np.stack((ab, cd), axis=4), newshape=[1, 2, 6, 8])        
 
-        prediction = mlmodel.predict(input_dict, useCPUOnly=True)
+        prediction = mlmodel.predict(input_dict)
         np.testing.assert_allclose(old_prediction, prediction[output_name], atol=1e-04, rtol=1e-05)
 
     def test_nested(self):
@@ -141,10 +146,14 @@ class ConcatToPixelShuffleTests(unittest.TestCase):
 
         old_prediction = np.concatenate((x, y), axis=1)
 
-        mlmodel = ct.convert(prog, source="milinternal", convert_to="neuralnetwork")
+        mlmodel = ct.convert(prog,
+                             source="milinternal",
+                             convert_to="neuralnetwork",
+                             compute_units=ct.ComputeUnit.CPU_ONLY
+        )
 
         if _IS_MACOS:
-            prediction = mlmodel.predict(input_dict, useCPUOnly=True)
+            prediction = mlmodel.predict(input_dict)
             np.testing.assert_allclose(old_prediction, prediction[output_name], atol=1e-04, rtol=1e-05)
 
     def test_failure_0(self):

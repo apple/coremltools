@@ -38,7 +38,7 @@ class Pooling(Operation):
             )
 
     def __init__(self, **kwargs):
-        super(Pooling, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         ksize = self.kernel_sizes.val
@@ -170,7 +170,7 @@ class avg_pool(Pooling):
                 )
 
     def __init__(self, **kwargs):
-        super(avg_pool, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
 
 @register_op(doc_str="")
@@ -210,7 +210,7 @@ class l2_pool(Pooling):
     """
     
     def __init__(self, **kwargs):
-        super(l2_pool, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
 
 @register_op(doc_str="")
@@ -253,4 +253,4 @@ class max_pool(Pooling):
     """
     
     def __init__(self, **kwargs):
-        super(max_pool, self).__init__(**kwargs)
+        super().__init__(**kwargs)

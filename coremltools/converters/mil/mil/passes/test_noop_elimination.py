@@ -4,18 +4,25 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import itertools
+
 import numpy as np
 import pytest
 
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.testing_utils import (
+    apply_pass_and_basic_check,
     assert_model_is_valid,
     get_op_types_in_program,
-    apply_pass_and_basic_check,
 )
 
 
-@pytest.mark.parametrize("op_type, pos, val", itertools.product(['add', 'mul', 'floor_div', 'pow', 'real_div', 'sub'], ['x', 'y'], [0, 1, [0, 0, 0, 0], [1, 1, 1, 1]]))
+@pytest.mark.parametrize(
+    "op_type, pos, val", itertools.product(
+        ['add', 'mul', 'floor_div', 'pow', 'real_div', 'sub'],
+        ['x', 'y'],
+        [0, 1, [0, 0, 0, 0], [1, 1, 1, 1]]
+    )
+)
 def test_elementwise_elimination(op_type, pos, val):
     if 'div' in op_type and np.prod(val) == 0:
         return
@@ -89,7 +96,7 @@ def test_reshape_elimination():
     @mb.program(input_specs=[mb.TensorSpec(shape=(2, 4))])
     def prog(x):
         r1 = mb.reshape(x=x, shape=[1, 8])
-        r2 = mb.reshape(x=r1, shape=[1, 8])
+        mb.reshape(x=r1, shape=[1, 8])
         return mb.relu(x=r1)
 
     prev_prog, prev_block, block = apply_pass_and_basic_check(
@@ -400,5 +407,3 @@ def test_transpose_elimination():
         {"x": (2, 3, 4)},
         expected_output_shapes={block.outputs[0].name: (2, 3, 4)},
     )
-
-

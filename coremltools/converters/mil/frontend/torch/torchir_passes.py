@@ -8,6 +8,7 @@ import logging as _logging
 
 from .internal_graph import InternalTorchIRNode, InternalTorchIRGraph
 
+
 def generate_tensor_assignment_ops(graph):
     """
     This graph pass handles inplace tensor assignements, specifically it handles:
@@ -88,7 +89,7 @@ def generate_tensor_assignment_ops(graph):
         return inputs
 
     tensor_to_node_sequence_mapping = {}
-    updated_tensor_count = defaultdict(lambda : 0)
+    updated_tensor_count = defaultdict(lambda: 0)
 
     for i in range(len(graph.nodes)):
         node = graph.nodes[i]

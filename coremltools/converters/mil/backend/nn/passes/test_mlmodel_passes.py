@@ -9,6 +9,7 @@ import unittest
 
 import numpy as np
 
+from coremltools import ComputeUnit
 from coremltools._deps import _IS_MACOS
 import coremltools.models.datatypes as datatypes
 from coremltools.models.utils import _macos_version
@@ -105,11 +106,11 @@ class MLModelPassesTest(unittest.TestCase):
         )
         builder.add_squeeze("out", "input", "out", squeeze_all=True)
 
-        mlmodel = MLModel(builder.spec)
+        mlmodel = MLModel(builder.spec, compute_units=ComputeUnit.CPU_ONLY)
         data = np.random.rand(2,)
         data_dict = {"input": data}
         if _IS_MACOS:
-            before_pass_out = mlmodel.predict(data_dict, useCPUOnly=True)["out"]
+            before_pass_out = mlmodel.predict(data_dict)["out"]
             if DEBUG:
                 print(
                     "\n mlmodel description before remove disconnected layers pass: \n"
@@ -121,8 +122,8 @@ class MLModelPassesTest(unittest.TestCase):
                     "\n mlmodel description after remove disconnected layers pass: \n"
                 )
                 print_network_spec(builder.spec, style="coding")
-            mlmodel = MLModel(builder.spec)
-            after_pass_out = mlmodel.predict(data_dict, useCPUOnly=True)["out"]
+            mlmodel = MLModel(builder.spec, compute_units=ComputeUnit.CPU_ONLY)
+            after_pass_out = mlmodel.predict(data_dict)["out"]
 
             np.testing.assert_almost_equal(before_pass_out, after_pass_out, decimal=2)
             np.testing.assert_equal(len(builder.spec.neuralNetwork.layers), 1)
@@ -159,7 +160,7 @@ class MLModelPassesTest(unittest.TestCase):
         )
         builder.add_squeeze("out", "relu2_out", "out", squeeze_all=True)
 
-        mlmodel = MLModel(builder.spec)
+        mlmodel = MLModel(builder.spec, compute_units=ComputeUnit.CPU_ONLY)
 
         if not _IS_MACOS:
             # Can not get predictions unless on macOS.
@@ -167,7 +168,7 @@ class MLModelPassesTest(unittest.TestCase):
 
         data = np.random.rand(2,)
         data_dict = {"input": data}
-        before_pass_out = mlmodel.predict(data_dict, useCPUOnly=True)["out"]
+        before_pass_out = mlmodel.predict(data_dict)["out"]
         if DEBUG:
             print("\n mlmodel description before remove disconnected layers pass: \n")
             print_network_spec(builder.spec, style="coding")
@@ -176,8 +177,8 @@ class MLModelPassesTest(unittest.TestCase):
         if DEBUG:
             print("\n mlmodel description after remove disconnected layers pass: \n")
             print_network_spec(builder.spec, style="coding")
-        mlmodel = MLModel(builder.spec)
-        after_pass_out = mlmodel.predict(data_dict, useCPUOnly=True)["out"]
+        mlmodel = MLModel(builder.spec, compute_units=ComputeUnit.CPU_ONLY)
+        after_pass_out = mlmodel.predict(data_dict)["out"]
 
         np.testing.assert_almost_equal(before_pass_out, after_pass_out, decimal=2)
         np.testing.assert_equal(
@@ -236,10 +237,10 @@ class MLModelPassesTest(unittest.TestCase):
 
         # Predict
         if _IS_MACOS:
-            mlmodel = MLModel(builder.spec)
+            mlmodel = MLModel(builder.spec, dict, compute_units=ComputeUnit.CPU_ONLY)
             data = np.random.rand(1, 10, 10)
             data_dict = {"data": data}
-            before_pass_out = mlmodel.predict(data_dict, useCPUOnly=True)["out"]
+            before_pass_out = mlmodel.predict(data_dict)["out"]
 
         # transform the pattern
         transform_conv_crop(builder.spec)
@@ -249,8 +250,8 @@ class MLModelPassesTest(unittest.TestCase):
 
         if _IS_MACOS:
             # Predict
-            mlmodel = MLModel(builder.spec)
-            after_pass_out = mlmodel.predict(data_dict, useCPUOnly=True)["out"]
+            mlmodel = MLModel(builder.spec, compute_units=ComputeUnit.CPU_ONLY)
+            after_pass_out = mlmodel.predict(data_dict)["out"]
             np.testing.assert_almost_equal(before_pass_out, after_pass_out, decimal=3)
 
     def test_conv_crop_bn_relu_to_conv_bn_relu_crop(self):
@@ -306,10 +307,10 @@ class MLModelPassesTest(unittest.TestCase):
 
         # Predict
         if _IS_MACOS:
-            mlmodel = MLModel(builder.spec)
+            mlmodel = MLModel(builder.spec, compute_units=ComputeUnit.CPU_ONLY)
             data = np.random.rand(1, 10, 10)
             data_dict = {"data": data}
-            before_pass_out = mlmodel.predict(data_dict, useCPUOnly=True)["out"]
+            before_pass_out = mlmodel.predict(data_dict)["out"]
 
         # transform the pattern
         transform_conv_crop(builder.spec)
@@ -319,9 +320,9 @@ class MLModelPassesTest(unittest.TestCase):
         np.testing.assert_equal("crop", spec.layers[3].WhichOneof("layer"))
 
         # Predict
-        mlmodel = MLModel(builder.spec)
+        mlmodel = MLModel(builder.spec, compute_units=ComputeUnit.CPU_ONLY)
         if _IS_MACOS:
-            after_pass_out = mlmodel.predict(data_dict, useCPUOnly=True)["out"]
+            after_pass_out = mlmodel.predict(data_dict)["out"]
             np.testing.assert_almost_equal(before_pass_out, after_pass_out, decimal=3)
 
 
@@ -334,8 +335,8 @@ class Redundant_Transposees_Test(unittest.TestCase):
         data = np.random.rand(*input_shape)
 
         # Mlmodel before
-        mlmodel = MLModel(builder.spec)
-        output_before = mlmodel.predict({"data": data}, useCPUOnly=True)["out"]
+        mlmodel = MLModel(builder.spec, compute_units=ComputeUnit.CPU_ONLY)
+        output_before = mlmodel.predict({"data": data})["out"]
         num_layers_before = len(builder.spec.neuralNetwork.layers)
 
         remove_redundant_transposes(builder.spec)
@@ -347,8 +348,8 @@ class Redundant_Transposees_Test(unittest.TestCase):
             self.assertEqual(len(layers), expected_layer_num)
 
         # Mlmodel after
-        mlmodel = MLModel(builder.spec)
-        output_after = mlmodel.predict({"data": data}, useCPUOnly=True)["out"]
+        mlmodel = MLModel(builder.spec, compute_units=ComputeUnit.CPU_ONLY)
+        output_after = mlmodel.predict({"data": data})["out"]
 
         np.testing.assert_almost_equal(output_before, output_after, decimal=3)
 

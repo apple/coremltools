@@ -26,7 +26,7 @@ class RandomDistribution(Operation):
     out_dtype = types.fp32
 
     def __init__(self, **kwargs):
-        super(RandomDistribution, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         if any_symbolic(self.shape.shape):
@@ -100,7 +100,7 @@ class random_bernoulli(RandomDistribution):
             )
 
     def __init__(self, **kwargs):
-        super(random_bernoulli, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         self.out_dtype = self.prob.dtype
@@ -157,7 +157,7 @@ class random_categorical(Operation):
         )
 
     def __init__(self, **kwargs):
-        super(random_categorical, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         self.out_dtype = self.x.dtype
@@ -217,7 +217,7 @@ class random_normal(RandomDistribution):
             )
 
     def __init__(self, **kwargs):
-        super(random_normal, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         if self.mean.dtype != self.stddev.dtype:
@@ -287,7 +287,7 @@ class random_uniform(RandomDistribution):
             )
 
     def __init__(self, **kwargs):
-        super(random_uniform, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def type_inference(self):
         if self.low.dtype != self.high.dtype:

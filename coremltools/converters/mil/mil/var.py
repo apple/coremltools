@@ -8,7 +8,7 @@ from coremltools.converters.mil.mil.types import builtin_to_string
 from coremltools.converters.mil.mil.types.symbolic import any_symbolic
 
 
-class Var(object):
+class Var:
     """
     Var represents the outputs of an Operation. Most Vars are derived from an
     Operation (including const), and all Vars must have `sym_type`.
@@ -206,7 +206,7 @@ class ListVar(Var):
 
         sym_val: value of the list, if available
         """
-        super(ListVar, self).__init__(
+        super().__init__(
             name=name,
             sym_type=types.list(elem_type, init_length, dynamic_length),
             sym_val=sym_val,
@@ -268,6 +268,6 @@ class InternalVar(Var):
     """
 
     def __init__(self, val, name=None):
-        super(InternalVar, self).__init__(
+        super().__init__(
             name=name, sym_type=types.unknown, sym_val=types.unknown(val)
         )

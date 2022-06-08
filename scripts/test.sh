@@ -77,10 +77,10 @@ echo
 
 if [[ $WHEEL_PATH == "" ]]; then
     cd ..
-    $PIP_EXECUTABLE install -e ${COREMLTOOLS_NAME} --upgrade
+    $PIP_EXECUTABLE install -e ${COREMLTOOLS_NAME}  --upgrade --no-deps
     cd ${COREMLTOOLS_NAME}
 else
-    $PIP_EXECUTABLE install $~WHEEL_PATH --upgrade --force-reinstall
+    $PIP_EXECUTABLE install $~WHEEL_PATH --upgrade --no-deps --force-reinstall
 fi
 
 # Install dependencies if specified

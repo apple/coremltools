@@ -19,7 +19,10 @@ from coremltools.converters.mil.frontend.tensorflow2.test.testing_utils import (
 from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import (
     TensorFlowBaseTest
 )
-from coremltools.converters.mil.testing_utils import random_gen
+from coremltools.converters.mil.testing_utils import (
+    get_op_types_in_program,
+    random_gen,
+)
 from ..._utils import is_symbolic_dim_in_prog
 
 TensorFlowBaseTest.run_compare_tf_keras = \
@@ -100,6 +103,29 @@ class TestActivation(TensorFlowBaseTest):
             backend=backend,
             **kwargs
         )
+
+    @pytest.mark.parametrize("backend", backends)
+    def test_conv2d_prelu_fusion(self, backend):
+        x_shape = (1, 10, 10, 32)
+        x = tf.keras.Input(batch_input_shape=x_shape)  # (B, H, W, C)
+        x1 = tf.keras.layers.Conv2D(16, kernel_size=1)(x)
+        x1 =  tf.keras.layers.PReLU(alpha_initializer='glorot_uniform', shared_axes=[1, 2])(x1)
+        x1 = tf.keras.layers.Conv2D(16, kernel_size=1)(x1)
+        x1 = tf.keras.layers.PReLU(alpha_initializer='glorot_uniform', shared_axes=[1, 2])(x1)
+        keras_model = tf.keras.Model(inputs=x, outputs=x1)
+
+        res = TensorFlowBaseTest.run_compare_tf_keras(
+            keras_model,
+            [random_gen(x_shape, -1, 1)],
+            use_cpu_only=True,
+            backend=backend,
+        )
+        coreml_model = res[1]
+        mil_prog = coreml_model._get_mil_internal()
+        # assert that "prelu" ops are present in the mil program,
+        # which should be if "fuse_prelu" pass worked correctly
+        assert len(mil_prog.find_ops(op_type="prelu")) == 2
+        assert "relu" not in get_op_types_in_program(mil_prog)
 
 
 class TestBinary(TensorFlowBaseTest):
@@ -1323,13 +1349,13 @@ class TestRecurrent(TensorFlowBaseTest):
                                       are_symbols_expected=True)
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend",
-        itertools.product([True, False], backends,),
+        "use_cpu_only, tf_raw_lstm_op, backend",
+        itertools.product([True, False], [tf.raw_ops.BlockLSTM, tf.raw_ops.BlockLSTMV2], backends,),
     )
-    def test_lstm_block_fused_op(self, use_cpu_only, backend):
+    def test_lstm_block_fused_op(self, use_cpu_only, tf_raw_lstm_op, backend):
         '''
-        Define a model with custom LSTM ops that uses tf.raw_ops.BlockLSTM and
-        verify that it converts to a fused lstm op.
+        Define a model with custom LSTM ops that uses tf.raw_ops.BlockLSTM / tf.raw_ops.BlockLSTMV2
+        and verify that it converts to a fused lstm op.
 
         %x (shape: (Seq, Batch, idim) == (5, 2, 4))
         %x1 = LSTM(h=10) (%input) # shape = (5, 2, 10)
@@ -1357,7 +1383,7 @@ class TestRecurrent(TensorFlowBaseTest):
                 self.init_c = tf.constant(np.zeros((self.batch_size, self.hidden_dim)).astype(np.float32))
 
             def call(self, inputs):
-                _, output_state, _, _, _, _, output = tf.raw_ops.BlockLSTM(
+                _, output_state, _, _, _, _, output = tf_raw_lstm_op(
                     seq_len_max=self.seq_length,
                     x=inputs,
                     cs_prev=self.init_c,

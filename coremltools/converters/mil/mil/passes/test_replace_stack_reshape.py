@@ -3,9 +3,11 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import numpy as np
 import unittest
 
+import numpy as np
+
+import coremltools as ct
 from coremltools._deps import _IS_MACOS
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.testing_utils import (
@@ -13,7 +15,6 @@ from coremltools.converters.mil.testing_utils import (
     get_op_types_in_program,
     apply_pass_and_basic_check,
 )
-from coremltools.converters.mil.testing_reqs import ct
 
 
 np.random.seed(1984)
@@ -59,7 +60,11 @@ class ReplaceStackReshapePass(unittest.TestCase):
 
         output_name = block.outputs[0].name
 
-        mlmodel = ct.convert(prog, source="milinternal", convert_to="neuralnetwork")
+        mlmodel = ct.convert(prog,
+                             source="milinternal",
+                             convert_to="neuralnetwork",
+                             compute_units=ct.ComputeUnit.CPU_ONLY
+        )
 
         if not _IS_MACOS:
             # Can not get predictions unless on macOS.
@@ -71,7 +76,7 @@ class ReplaceStackReshapePass(unittest.TestCase):
 
         old_prediction = np.reshape(np.stack([input_dict["x1"], input_dict["x2"]], axis=2), newshape=[1, 10, 3, 4])
 
-        prediction = mlmodel.predict(input_dict, useCPUOnly=True)
+        prediction = mlmodel.predict(input_dict)
 
         np.testing.assert_allclose(old_prediction, prediction[output_name], atol=1e-04, rtol=1e-05)
 
@@ -113,7 +118,11 @@ class ReplaceStackReshapePass(unittest.TestCase):
 
         output_name = block.outputs[0].name
 
-        mlmodel = ct.convert(prog, source="milinternal", convert_to="neuralnetwork")
+        mlmodel = ct.convert(prog,
+                             source="milinternal",
+                             convert_to="neuralnetwork",
+                             compute_units=ct.ComputeUnit.CPU_ONLY
+        )
 
         if not _IS_MACOS:
             # Can not get predictions unless on macOS.
@@ -125,7 +134,7 @@ class ReplaceStackReshapePass(unittest.TestCase):
 
         old_prediction = np.reshape(np.stack([input_dict["x1"], input_dict["x2"]], axis=1), newshape=[1, 10, 3, 4])
 
-        prediction = mlmodel.predict(input_dict, useCPUOnly=True)
+        prediction = mlmodel.predict(input_dict)
         np.testing.assert_allclose(old_prediction, prediction[output_name], atol=1e-04, rtol=1e-05)
 
     def test_multiple(self):
@@ -160,7 +169,11 @@ class ReplaceStackReshapePass(unittest.TestCase):
 
         output_name = block.outputs[0].name
 
-        mlmodel = ct.convert(prog, source="milinternal", convert_to="neuralnetwork")
+        mlmodel = ct.convert(prog,
+                             source="milinternal",
+                             convert_to="neuralnetwork",
+                             compute_units=ct.ComputeUnit.CPU_ONLY
+        )
 
         if not _IS_MACOS:
             # Can not get predictions unless on macOS.
@@ -174,7 +187,7 @@ class ReplaceStackReshapePass(unittest.TestCase):
         branch_2 = np.reshape(np.stack([input_dict['x3'], input_dict['x4']], axis=1), newshape=[1, 4, 3, 4])
         old_prediction = np.reshape(np.stack([branch_1, branch_2], axis=2), newshape=[1, 4, 6, 4])
 
-        prediction = mlmodel.predict(input_dict, useCPUOnly=True)
+        prediction = mlmodel.predict(input_dict)
 
         np.testing.assert_allclose(old_prediction, prediction[output_name], atol=1e-04, rtol=1e-05)
 

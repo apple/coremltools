@@ -10,13 +10,15 @@ from .. import SPECIFICATION_VERSION as _SPECIFICATION_VERSION
 from ..proto import Model_pb2 as _Model_pb2
 from . import _feature_management
 from . import model as _model
+from ._interface_management import (
+    set_classifier_interface_params,
+    set_regressor_interface_params,
+    set_training_features,
+    set_transform_interface_params,
+)
 
-from ._interface_management import set_regressor_interface_params
-from ._interface_management import set_classifier_interface_params
-from ._interface_management import set_transform_interface_params, set_training_features
 
-
-class Pipeline(object):
+class Pipeline:
     """
     A pipeline model that exposes a sequence of models as a single model,
     It requires a set of inputs, a sequence of other models and a set of outputs.
@@ -181,9 +183,7 @@ class PipelineRegressor(Pipeline):
             A protobuf spec or MLModel instance containing a model.
         """
 
-        super(PipelineRegressor, self)._validate_updatable_pipeline_on_add_model(
-            self.spec
-        )
+        super()._validate_updatable_pipeline_on_add_model(self.spec)
 
         if isinstance(spec, _model.MLModel):
             spec = spec._spec
@@ -193,7 +193,7 @@ class PipelineRegressor(Pipeline):
         step_spec.CopyFrom(spec)
 
     def make_updatable(self):
-        super(PipelineRegressor, self)._validate_sub_models_and_make_updatable(
+        super()._validate_sub_models_and_make_updatable(
             self.spec.pipelineRegressor.pipeline, self.spec
         )
 
@@ -281,9 +281,7 @@ class PipelineClassifier(Pipeline):
             A protobuf spec or MLModel instance containing a model.
         """
 
-        super(PipelineClassifier, self)._validate_updatable_pipeline_on_add_model(
-            self.spec
-        )
+        super()._validate_updatable_pipeline_on_add_model(self.spec)
 
         if isinstance(spec, _model.MLModel):
             spec = spec._spec

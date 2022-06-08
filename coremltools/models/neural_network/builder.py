@@ -214,7 +214,7 @@ def _fill_tensor_fields(tensor_field, ranks=None, shapes=None):
                 tensor_field[i].dimValue.append(s)
 
 
-class NeuralNetworkBuilder(object):
+class NeuralNetworkBuilder:
     """
     Neural network builder class to construct Core ML models.
 
