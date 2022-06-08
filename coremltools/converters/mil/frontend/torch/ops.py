@@ -4108,7 +4108,7 @@ def is_floating_point(context, node):
     is_float = types.is_float(inputs[0].dtype)
     context.add(mb.const(val=is_float, name=node.name))
 
-@register_torch_op(torch_alias=["__and_", '__and__'])
+@register_torch_op(torch_alias=["__and_", "__and__"])
 def logical_and(context, node):
     inputs = _get_inputs(context, node, expected=2)
     x, y = inputs
