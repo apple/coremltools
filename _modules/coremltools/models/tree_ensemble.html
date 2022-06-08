@@ -14,6 +14,7 @@
         <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
         <script src="../../../_static/jquery.js"></script>
         <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../../_static/doctools.js"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
@@ -83,17 +84,20 @@
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Tree ensemble builder class to construct CoreML models.</span>
 <span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">collections</span> <span class="k">as</span> <span class="nn">_collections</span>
+
 <span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">SPECIFICATION_VERSION</span> <span class="k">as</span> <span class="n">_SPECIFICATION_VERSION</span>
 <span class="kn">from</span> <span class="nn">..proto</span> <span class="kn">import</span> <span class="n">Model_pb2</span> <span class="k">as</span> <span class="n">_Model_pb2</span>
 <span class="kn">from</span> <span class="nn">..proto</span> <span class="kn">import</span> <span class="n">TreeEnsemble_pb2</span> <span class="k">as</span> <span class="n">_TreeEnsemble_pb2</span>
 <span class="kn">from</span> <span class="nn">..proto</span> <span class="kn">import</span> <span class="n">FeatureTypes_pb2</span> <span class="k">as</span> <span class="n">_FeatureTypes_pb2</span>
 
-<span class="kn">from</span> <span class="nn">._interface_management</span> <span class="kn">import</span> <span class="n">set_regressor_interface_params</span>
-<span class="kn">from</span> <span class="nn">._interface_management</span> <span class="kn">import</span> <span class="n">set_classifier_interface_params</span>
-<span class="kn">import</span> <span class="nn">collections</span> <span class="k">as</span> <span class="nn">_collections</span>
+<span class="kn">from</span> <span class="nn">._interface_management</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">set_classifier_interface_params</span><span class="p">,</span>
+    <span class="n">set_regressor_interface_params</span>
+<span class="p">)</span>
 
 
-<div class="viewcode-block" id="TreeEnsembleBase"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.tree_ensemble.TreeEnsembleBase">[docs]</a><span class="k">class</span> <span class="nc">TreeEnsembleBase</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="TreeEnsembleBase"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.tree_ensemble.TreeEnsembleBase">[docs]</a><span class="k">class</span> <span class="nc">TreeEnsembleBase</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Base class for the tree ensemble builder class.  This should be instantiated</span>
 <span class="sd">    either through the :py:class:`TreeEnsembleRegressor` or</span>
@@ -406,7 +410,7 @@
 <span class="sd">        target:  (default = None)</span>
 <span class="sd">           Name of the target feature predicted.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">TreeEnsembleRegressor</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="n">spec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span>
         <span class="n">spec</span> <span class="o">=</span> <span class="n">set_regressor_interface_params</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">features</span><span class="p">,</span> <span class="n">target</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">tree_spec</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">treeEnsembleRegressor</span>
@@ -495,7 +499,7 @@
 <span class="sd">            is a string, it specifies the predicted class label and the class</span>
 <span class="sd">            scores is set to the default value of ``&quot;classProbability&quot;``.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">TreeEnsembleClassifier</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="n">spec</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span>
         <span class="n">spec</span> <span class="o">=</span> <span class="n">set_classifier_interface_params</span><span class="p">(</span>
             <span class="n">spec</span><span class="p">,</span> <span class="n">features</span><span class="p">,</span> <span class="n">class_labels</span><span class="p">,</span> <span class="s2">&quot;treeEnsembleClassifier&quot;</span><span class="p">,</span> <span class="n">output_features</span>

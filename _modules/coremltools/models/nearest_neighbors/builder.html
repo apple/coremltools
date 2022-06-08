@@ -14,6 +14,7 @@
         <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
         <script src="../../../../_static/jquery.js"></script>
         <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../../../_static/doctools.js"></script>
     <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
@@ -87,7 +88,7 @@
 <span class="kn">import</span> <span class="nn">coremltools</span>
 
 
-<div class="viewcode-block" id="KNearestNeighborsClassifierBuilder"><a class="viewcode-back" href="../../../../source/coremltools.models.html#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder">[docs]</a><span class="k">class</span> <span class="nc">KNearestNeighborsClassifierBuilder</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="KNearestNeighborsClassifierBuilder"><a class="viewcode-back" href="../../../../source/coremltools.models.html#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder">[docs]</a><span class="k">class</span> <span class="nc">KNearestNeighborsClassifierBuilder</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Construct a CoreML KNearestNeighborsClassifier specification.</span>
 
@@ -174,8 +175,6 @@
 <span class="sd">        leaf_size</span>
 <span class="sd">        	Leaf size for the kd-tree. Ignored if index type is ``&#39;linear&#39;``. Default = 30.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">KNearestNeighborsClassifierBuilder</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">spec</span> <span class="o">=</span> <span class="n">coremltools</span><span class="o">.</span><span class="n">proto</span><span class="o">.</span><span class="n">Model_pb2</span><span class="o">.</span><span class="n">Model</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">specificationVersion</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">coremltools</span><span class="o">.</span><span class="n">_MINIMUM_NEAREST_NEIGHBORS_SPEC_VERSION</span>

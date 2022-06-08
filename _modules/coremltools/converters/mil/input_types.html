@@ -14,6 +14,7 @@
         <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
         <script src="../../../../_static/jquery.js"></script>
         <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../../../_static/doctools.js"></script>
     <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
@@ -80,6 +81,7 @@
 <span class="c1">#  Use of this source code is governed by a BSD-3-clause license that can be</span>
 <span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
 
+<span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.types.symbolic</span> <span class="kn">import</span> <span class="n">is_symbolic</span>
@@ -89,8 +91,13 @@
     <span class="n">is_builtin</span><span class="p">,</span>
 <span class="p">)</span>
 
+<span class="k">class</span> <span class="nc">ColorLayout</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="n">RGB</span> <span class="o">=</span> <span class="s2">&quot;RGB&quot;</span>
+    <span class="n">BGR</span> <span class="o">=</span> <span class="s2">&quot;BGR&quot;</span>
+    <span class="n">GRAYSCALE</span> <span class="o">=</span> <span class="s2">&quot;G&quot;</span>
+    <span class="n">GRAYSCALE_FLOAT16</span> <span class="o">=</span> <span class="s2">&quot;G_FLOAT16&quot;</span>
 
-<div class="viewcode-block" id="ClassifierConfig"><a class="viewcode-back" href="../../../../source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.ClassifierConfig">[docs]</a><span class="k">class</span> <span class="nc">ClassifierConfig</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="ClassifierConfig"><a class="viewcode-back" href="../../../../source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.ClassifierConfig">[docs]</a><span class="k">class</span> <span class="nc">ClassifierConfig</span><span class="p">:</span>
 <div class="viewcode-block" id="ClassifierConfig.__init__"><a class="viewcode-back" href="../../../../source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.ClassifierConfig.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">class_labels</span><span class="p">,</span>
@@ -125,8 +132,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">predicted_probabilities_output</span> <span class="o">=</span> <span class="n">predicted_probabilities_output</span></div></div>
 
 
-<span class="k">class</span> <span class="nc">InputType</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">InputType</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The Input Type for inputs fed into the model.</span>
 
@@ -156,7 +163,7 @@
         <span class="n">shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
         <span class="n">bias</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">color_layout</span><span class="o">=</span><span class="s2">&quot;RGB&quot;</span><span class="p">,</span>
+        <span class="n">color_layout</span><span class="o">=</span><span class="n">ColorLayout</span><span class="o">.</span><span class="n">RGB</span><span class="p">,</span>
         <span class="n">channel_first</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -172,13 +179,20 @@
 
 <span class="sd">            If `color_layout` is ``&#39;RGB&#39;`` or ``&#39;BGR&#39;``, bias would be a list of ``float``.</span>
 
-<span class="sd">        color_layout: string</span>
+<span class="sd">        color_layout: string or of type ct.colorlayout enumeration</span>
 <span class="sd">            Color layout of the image.</span>
 
 <span class="sd">            Valid values:</span>
-<span class="sd">                * ``&#39;G&#39;``: Grayscale</span>
-<span class="sd">                * ``&#39;RGB&#39;``: [Red, Green, Blue]</span>
-<span class="sd">                * ``&#39;BGR&#39;``: [Blue, Green, Red]</span>
+<span class="sd">            enumeration (recommended):</span>
+<span class="sd">                * ct.colorlayout.RGB</span>
+<span class="sd">                * ct.colorlayout.BGR</span>
+<span class="sd">                * ct.colorlayout.GRAYSCALE</span>
+<span class="sd">                * ct.colorlayout.GRAYSCALE_FLOAT16</span>
+
+<span class="sd">            string values (older way to specify):</span>
+<span class="sd">                * ``&#39;G&#39;``: Grayscale (maps to ct.colorlayout.GRAYSCALE)</span>
+<span class="sd">                * ``&#39;RGB&#39;``: [Red, Green, Blue] (maps to ct.colorlayout.BGR)</span>
+<span class="sd">                * ``&#39;BGR&#39;``: [Blue, Green, Red] (maps to ct.colorlayout.RGB)</span>
 
 <span class="sd">        channel_first: (bool) or None</span>
 <span class="sd">            Set to ``True`` if input format is channel first.</span>
@@ -190,16 +204,24 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">ImageType</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">shape</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">scale</span> <span class="o">=</span> <span class="n">scale</span>
-        <span class="k">if</span> <span class="n">color_layout</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;G&quot;</span><span class="p">,</span> <span class="s2">&quot;RGB&quot;</span><span class="p">,</span> <span class="s2">&quot;BGR&quot;</span><span class="p">]:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;color_layout should be one of [&#39;G&#39;, &#39;RGB&#39;, &#39;BGR&#39;], got &#39;</span><span class="si">{}</span><span class="s2">&#39; instead&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                    <span class="n">color_layout</span>
-                <span class="p">)</span>
-            <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">color_layout</span> <span class="o">=</span> <span class="n">color_layout</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;color_layout should be an enum of type ct.colorlayout, i.e. one of: &quot;</span> \
+              <span class="s2">&quot;{ct.colorlayout.RGB, ct.colorlayout.BGR, &quot;</span> \
+              <span class="s2">&quot;ct.colorlayout.GRAYSCALE, ct.colorlayout.GRAYSCALE_FLOAT16}&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">color_layout</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">color_layout</span><span class="p">,</span> <span class="n">ColorLayout</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">color_layout</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">color_layout</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;G&quot;</span><span class="p">,</span> <span class="s2">&quot;RGB&quot;</span><span class="p">,</span> <span class="s2">&quot;BGR&quot;</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="n">color_layout</span> <span class="o">=</span> <span class="n">ColorLayout</span><span class="p">(</span><span class="n">color_layout</span><span class="p">)</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">color_layout</span> <span class="o">=</span> <span class="n">color_layout</span>
+        <span class="k">if</span> <span class="n">color_layout</span> <span class="o">==</span> <span class="n">ColorLayout</span><span class="o">.</span><span class="n">GRAYSCALE_FLOAT16</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">types</span><span class="o">.</span><span class="n">fp16</span>
         <span class="k">if</span> <span class="n">bias</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">bias</span> <span class="o">=</span> <span class="mf">0.0</span> <span class="k">if</span> <span class="n">color_layout</span> <span class="o">==</span> <span class="s2">&quot;G&quot;</span> <span class="k">else</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">color_layout</span> <span class="ow">in</span> <span class="p">(</span><span class="n">ColorLayout</span><span class="o">.</span><span class="n">GRAYSCALE</span><span class="p">,</span> <span class="n">ColorLayout</span><span class="o">.</span><span class="n">GRAYSCALE_FLOAT16</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bias</span> <span class="o">=</span> <span class="mf">0.0</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bias</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">bias</span> <span class="o">=</span> <span class="n">bias</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">channel_first</span> <span class="o">=</span> <span class="n">channel_first</span></div>
@@ -211,12 +233,11 @@
         <span class="n">str_repr</span> <span class="o">=</span> <span class="s1">&#39;ImageType[name=</span><span class="si">{}</span><span class="s1">, shape=</span><span class="si">{}</span><span class="s1">, scale=</span><span class="si">{}</span><span class="s1">, bias=</span><span class="si">{}</span><span class="s1">, &#39;</span> <span class="o">+</span>\
                 <span class="s1">&#39;color_layout=</span><span class="si">{}</span><span class="s1">, channel_first=</span><span class="si">{}</span><span class="s1">]&#39;</span>
         <span class="k">return</span> <span class="n">str_repr</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">bias</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">color_layout</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">channel_first</span><span class="p">)</span></div>
+                               <span class="bp">self</span><span class="o">.</span><span class="n">color_layout</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">channel_first</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="TensorType"><a class="viewcode-back" href="../../../../source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.TensorType">[docs]</a><span class="k">class</span> <span class="nc">TensorType</span><span class="p">(</span><span class="n">InputType</span><span class="p">):</span>
-<div class="viewcode-block" id="TensorType.__init__"><a class="viewcode-back" href="../../../../source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.TensorType.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-        <span class="n">default_value</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="TensorType.__init__"><a class="viewcode-back" href="../../../../source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.TensorType.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">default_value</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Specify a (dense) tensor input.</span>
 
@@ -240,7 +261,7 @@
 <span class="sd">              * The ``shape`` is required.</span>
 
 <span class="sd">        dtype: np.generic or mil.type type</span>
-<span class="sd">            Numpy ``dtype`` (for example, ``np.int32``). Default is ``np.float32``.</span>
+<span class="sd">            For example, ``np.int32`` or ``coremltools.converters.mil.mil.types.fp32``</span>
 
 <span class="sd">        default_value: np.ndarray</span>
 <span class="sd">            If provided, the input is considered optional. At runtime, if the</span>
@@ -264,16 +285,21 @@
 <span class="sd">          dtype=ct.converters.mil.types.fp32)``</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">TensorType</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">shape</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">dtype</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span>
-        <span class="k">elif</span> <span class="n">is_builtin</span><span class="p">(</span><span class="n">dtype</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">dtype</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="c1"># Assume dtype is numpy type</span>
-            <span class="k">try</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">numpy_type_to_builtin_type</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
-            <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;dtype=</span><span class="si">{}</span><span class="s2"> is unsupported&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dtype</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">dtype</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">is_builtin</span><span class="p">(</span><span class="n">dtype</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">dtype</span>
+                <span class="k">if</span> <span class="n">dtype</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp64</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">int64</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">bool</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;dtype=</span><span class="si">{}</span><span class="s2"> is unsupported for inputs/outputs of the model&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dtype</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Assume dtype is numpy type</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">numpy_type_to_builtin_type</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;dtype=</span><span class="si">{}</span><span class="s2"> is unsupported&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dtype</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">dtype</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float16</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">,</span>
+                                 <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">,</span>
+                                 <span class="n">np</span><span class="o">.</span><span class="n">bool</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">bool_</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;dtype=</span><span class="si">{}</span><span class="s2"> is unsupported for inputs/outputs of the model&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dtype</span><span class="p">))</span>
 
         <span class="k">if</span> <span class="n">default_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">EnumeratedShapes</span><span class="p">):</span>
@@ -294,11 +320,14 @@
                     <span class="s1">&#39;TensorType.shape </span><span class="si">{}</span><span class="s1">&#39;</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">default_value</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">to_list</span><span class="p">()))</span>
-            <span class="k">if</span> <span class="n">numpy_type_to_builtin_type</span><span class="p">(</span><span class="n">default_value</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> \
+                    <span class="n">numpy_type_to_builtin_type</span><span class="p">(</span><span class="n">default_value</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">:</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;TensorType </span><span class="si">{}</span><span class="s1"> default_value dtype </span><span class="si">{}</span><span class="s1"> != &#39;</span> <span class="o">+</span>\
                     <span class="s1">&#39;TensorType.dtype </span><span class="si">{}</span><span class="s1">&#39;</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">default_value</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">__type_info__</span><span class="p">()))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">numpy_type_to_builtin_type</span><span class="p">(</span><span class="n">default_value</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">default_value</span> <span class="o">=</span> <span class="n">default_value</span></div>
 
@@ -307,10 +336,11 @@
 
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="s1">&#39;TensorType[name=</span><span class="si">{}</span><span class="s1">, shape=</span><span class="si">{}</span><span class="s1">, dtype=</span><span class="si">{}</span><span class="s1">]&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span></div>
+                                                                <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+                                                                <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="RangeDim"><a class="viewcode-back" href="../../../../source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.RangeDim">[docs]</a><span class="k">class</span> <span class="nc">RangeDim</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="RangeDim"><a class="viewcode-back" href="../../../../source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.RangeDim">[docs]</a><span class="k">class</span> <span class="nc">RangeDim</span><span class="p">:</span>
 <div class="viewcode-block" id="RangeDim.__init__"><a class="viewcode-back" href="../../../../source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.RangeDim.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lower_bound</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">upper_bound</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
             <span class="n">symbol</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -370,7 +400,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">lower_bound</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">upper_bound</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">default</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbol</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="Shape"><a class="viewcode-back" href="../../../../source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.Shape">[docs]</a><span class="k">class</span> <span class="nc">Shape</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="Shape"><a class="viewcode-back" href="../../../../source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.Shape">[docs]</a><span class="k">class</span> <span class="nc">Shape</span><span class="p">:</span>
 <div class="viewcode-block" id="Shape.__init__"><a class="viewcode-back" href="../../../../source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.Shape.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        The basic shape class to be set in InputType.</span>
@@ -448,7 +478,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbolic_shape</span></div>
 
 
-<div class="viewcode-block" id="EnumeratedShapes"><a class="viewcode-back" href="../../../../source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.EnumeratedShapes">[docs]</a><span class="k">class</span> <span class="nc">EnumeratedShapes</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="EnumeratedShapes"><a class="viewcode-back" href="../../../../source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.EnumeratedShapes">[docs]</a><span class="k">class</span> <span class="nc">EnumeratedShapes</span><span class="p">:</span>
 <div class="viewcode-block" id="EnumeratedShapes.__init__"><a class="viewcode-back" href="../../../../source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.EnumeratedShapes.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shapes</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        A shape class that is used for setting multiple valid shape in InputType.</span>

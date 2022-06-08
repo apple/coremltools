@@ -14,6 +14,7 @@
         <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
         <script src="../../../_static/jquery.js"></script>
         <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../../_static/doctools.js"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
@@ -81,11 +82,12 @@
 <span class="c1"># found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
 
 <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span> <span class="k">as</span> <span class="n">_deepcopy</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">_np</span>
 <span class="kn">import</span> <span class="nn">os</span> <span class="k">as</span> <span class="nn">_os</span>
 <span class="kn">import</span> <span class="nn">shutil</span> <span class="k">as</span> <span class="nn">_shutil</span>
 <span class="kn">import</span> <span class="nn">tempfile</span> <span class="k">as</span> <span class="nn">_tempfile</span>
 <span class="kn">import</span> <span class="nn">warnings</span> <span class="k">as</span> <span class="nn">_warnings</span>
-
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">_numpy</span>
 
 <span class="kn">from</span> <span class="nn">..proto</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">Model_pb2</span> <span class="k">as</span> <span class="n">_Model_pb2</span><span class="p">,</span>
@@ -105,6 +107,17 @@
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">ComputeUnit</span> <span class="k">as</span> <span class="n">_ComputeUnit</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.program</span> <span class="kn">import</span> <span class="n">Program</span> <span class="k">as</span> <span class="n">_Program</span>
+<span class="kn">from</span> <span class="nn">coremltools._deps</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_HAS_TF_1</span><span class="p">,</span>
+    <span class="n">_HAS_TF_2</span><span class="p">,</span>
+    <span class="n">_HAS_TORCH</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="k">if</span> <span class="n">_HAS_TORCH</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">torch</span>
+
+<span class="k">if</span> <span class="n">_HAS_TF_1</span> <span class="ow">or</span> <span class="n">_HAS_TF_2</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
 
 
 <span class="k">try</span><span class="p">:</span>
@@ -156,7 +169,7 @@
 
 
 
-<span class="k">class</span> <span class="nc">_FeatureDescription</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">_FeatureDescription</span><span class="p">:</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fd_spec</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_fd_spec</span> <span class="o">=</span> <span class="n">fd_spec</span>
 
@@ -239,7 +252,7 @@
     <span class="k">return</span> <span class="n">weights_dir</span>
 
 
-<div class="viewcode-block" id="MLModel"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.model.MLModel">[docs]</a><span class="k">class</span> <span class="nc">MLModel</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<div class="viewcode-block" id="MLModel"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.model.MLModel">[docs]</a><span class="k">class</span> <span class="nc">MLModel</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This class defines the minimal interface to a CoreML object in Python.</span>
 
@@ -298,7 +311,6 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="MLModel.__init__"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.model.MLModel.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span>
-                 <span class="n">useCPUOnly</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">is_temp_package</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">mil_program</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">skip_model_load</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
@@ -321,14 +333,6 @@
 
 <span class="sd">            For non mlprogram model types, the model can be a path string (``.mlmodel``) or type ``Model_pb2``,</span>
 <span class="sd">            i.e. a spec object.</span>
-
-<span class="sd">        useCPUOnly: bool</span>
-<span class="sd">            This parameter is deprecated and will be removed in 6.0. Use the ``compute_units``</span>
-<span class="sd">            parameter instead.</span>
-
-<span class="sd">            The ``compute_units`` parameter overrides any usages of this parameter.</span>
-
-<span class="sd">            Set to True to restrict loading of the model to only the CPU. Defaults to False.</span>
 
 <span class="sd">        is_temp_package: bool</span>
 <span class="sd">            Set to true if the input model package dir is temporary and can be</span>
@@ -380,10 +384,6 @@
 <span class="sd">        &gt;&gt;&gt; loaded_model = MLModel(&#39;my_model.mlmodel&#39;)</span>
 <span class="sd">        &gt;&gt;&gt; loaded_model = MLModel(&quot;my_model.mlpackage&quot;)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">useCPUOnly</span><span class="p">:</span>
-            <span class="n">_warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;The &quot;useCPUOnly&quot; parameter is deprecated and will be removed in 6.0. &#39;</span>
-                           <span class="s1">&#39;Use the &quot;compute_units&quot; parameter: &quot;compute_units=coremotools.ComputeUnits.CPUOnly&quot;.&#39;</span><span class="p">)</span>
-            <span class="n">compute_units</span> <span class="o">=</span> <span class="n">_ComputeUnit</span><span class="o">.</span><span class="n">CPU_ONLY</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">compute_units</span><span class="p">,</span> <span class="n">_ComputeUnit</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;&quot;compute_units&quot; parameter must be of type: coremltools.ComputeUnit&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">compute_unit</span> <span class="o">=</span> <span class="n">compute_units</span>
@@ -397,6 +397,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_mil_program</span> <span class="o">=</span> <span class="n">mil_program</span>
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">model</span> <span class="o">=</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expandvars</span><span class="p">(</span><span class="n">model</span><span class="p">)))</span>
             <span class="k">if</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">is_package</span> <span class="o">=</span> <span class="kc">True</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">package_path</span> <span class="o">=</span> <span class="n">model</span>
@@ -541,7 +542,7 @@
         <span class="k">return</span> <span class="n">_deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_spec</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="MLModel.predict"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.model.MLModel.predict">[docs]</a>    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">useCPUOnly</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="MLModel.predict"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.model.MLModel.predict">[docs]</a>    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return predictions for the model.</span>
 
@@ -550,14 +551,7 @@
 <span class="sd">        data: dict[str, value]</span>
 <span class="sd">            Dictionary of data to make predictions from where the keys are</span>
 <span class="sd">            the names of the input features.</span>
-
-<span class="sd">        useCPUOnly: bool</span>
-<span class="sd">            This parameter is deprecated and will be removed in 6.0. Instead, use the ``compute_units``</span>
-<span class="sd">            parameter at load time or conversion time (that is, in</span>
-<span class="sd">            `coremltools.models.MLModel() &lt;https://apple.github.io/coremltools/source/coremltools.models.html#module-coremltools.models.model&gt;`_ or</span>
-<span class="sd">            `coremltools.convert() &lt;https://apple.github.io/coremltools/source/coremltools.converters.mil.html#module-coremltools.converters._converters_entry&gt;`_).</span>
-
-<span class="sd">            Set to True to restrict computation to use only the CPU. Defaults to False.</span>
+<span class="sd">            If value is array type, numpy.ndarray, tensorflow.Tensor and torch.Tensor are acceptable.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -569,12 +563,13 @@
 <span class="sd">        --------</span>
 <span class="sd">        &gt;&gt;&gt; data = {&#39;bedroom&#39;: 1.0, &#39;bath&#39;: 1.0, &#39;size&#39;: 1240}</span>
 <span class="sd">        &gt;&gt;&gt; predictions = model.predict(data)</span>
+<span class="sd">        &gt;&gt;&gt; data = {&#39;array&#39;: numpy.array([[1.0, 2.0], [3.0, 4.0]])}</span>
+<span class="sd">        &gt;&gt;&gt; predictions = model.predict(data)</span>
+<span class="sd">        &gt;&gt;&gt; data = {&#39;array&#39;: torch.Tensor([[1.0, 2.0], [3.0, 4.0]])}</span>
+<span class="sd">        &gt;&gt;&gt; predictions = model.predict(data)</span>
+<span class="sd">        &gt;&gt;&gt; data = {&#39;array&#39;: tensorflow.Tensor([[1.0, 2.0], [3.0, 4.0]])}</span>
+<span class="sd">        &gt;&gt;&gt; predictions = model.predict(data)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">useCPUOnly</span><span class="p">:</span>
-            <span class="n">_warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;The &quot;useCPUOnly&quot; parameter is deprecated and will be removed in 6.0. &#39;</span>
-                           <span class="s1">&#39;Please use the &quot;compute_units&quot; parameter at load time or conversion time, &#39;</span>
-                           <span class="s1">&#39;i.e. in &quot;coremltools.models.MLModel()&quot; or &quot;coremltools.convert()&quot;.&#39;</span><span class="p">)</span>
-
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_package</span> <span class="ow">and</span> <span class="n">_is_macos</span><span class="p">()</span> <span class="ow">and</span> <span class="n">_macos_version</span><span class="p">()</span> <span class="o">&lt;</span> <span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">0</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
                 <span class="s2">&quot;predict() for .mlpackage is not supported in macOS version older than 12.0.&quot;</span>
@@ -586,7 +581,10 @@
             <span class="c1"># we still check it here to return early and</span>
             <span class="c1"># return a more verbose error message</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_verify_input_name_exists</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__proxy__</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">useCPUOnly</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_convert_tensor_to_numpy</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="c1"># TODO: remove the following call when this is fixed: rdar://92239209</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_update_float16_multiarray_input_to_float32</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__proxy__</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">_macos_version</span><span class="p">()</span> <span class="o">&lt;</span> <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">13</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
@@ -678,7 +676,37 @@
             <span class="k">if</span> <span class="n">given_input</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">model_input_names_set</span><span class="p">:</span>
                 <span class="n">err_msg</span> <span class="o">=</span> <span class="s2">&quot;Provided key </span><span class="se">\&quot;</span><span class="si">{}</span><span class="se">\&quot;</span><span class="s2">, in the input dict, &quot;</span> \
                           <span class="s2">&quot;does not match any of the model input name(s), which are: </span><span class="si">{}</span><span class="s2">&quot;</span>
-                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">err_msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">given_input</span><span class="p">,</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">model_input_names</span><span class="p">)))</span></div>
+                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">err_msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">given_input</span><span class="p">,</span> <span class="s2">&quot;,&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">model_input_names</span><span class="p">)))</span>
+
+    <span class="k">def</span> <span class="nf">_update_float16_multiarray_input_to_float32</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_data</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">input_data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">_np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">and</span> <span class="n">v</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">_np</span><span class="o">.</span><span class="n">float16</span><span class="p">:</span>
+                <span class="n">input_data</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">_np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_convert_tensor_to_numpy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_dict</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">convert</span><span class="p">(</span><span class="n">given_input</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">given_input</span><span class="p">,</span> <span class="n">_numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+                <span class="n">sanitized_input</span> <span class="o">=</span> <span class="n">given_input</span>
+            <span class="k">elif</span> <span class="n">_HAS_TORCH</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">given_input</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
+                <span class="n">sanitized_input</span> <span class="o">=</span> <span class="n">given_input</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+            <span class="k">elif</span> <span class="p">(</span><span class="n">_HAS_TF_1</span> <span class="ow">or</span> <span class="n">_HAS_TF_2</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">given_input</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
+                <span class="n">sanitized_input</span> <span class="o">=</span> <span class="n">given_input</span><span class="o">.</span><span class="n">eval</span><span class="p">(</span><span class="n">session</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">compat</span><span class="o">.</span><span class="n">v1</span><span class="o">.</span><span class="n">Session</span><span class="p">())</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">sanitized_input</span> <span class="o">=</span> <span class="n">_numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">given_input</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">sanitized_input</span>
+
+        <span class="n">model_input_to_types</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">inp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">input</span><span class="p">:</span>
+            <span class="n">type_value</span> <span class="o">=</span> <span class="n">inp</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">multiArrayType</span><span class="o">.</span><span class="n">dataType</span>
+            <span class="n">type_name</span> <span class="o">=</span> <span class="n">inp</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">multiArrayType</span><span class="o">.</span><span class="n">ArrayDataType</span><span class="o">.</span><span class="n">Name</span><span class="p">(</span><span class="n">type_value</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">type_name</span> <span class="o">!=</span> <span class="s2">&quot;INVALID_ARRAY_DATA_TYPE&quot;</span><span class="p">:</span>
+                <span class="n">model_input_to_types</span><span class="p">[</span><span class="n">inp</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">type_name</span>
+
+        <span class="k">for</span> <span class="n">given_input_name</span><span class="p">,</span> <span class="n">given_input</span> <span class="ow">in</span> <span class="n">input_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">given_input_name</span> <span class="ow">in</span> <span class="n">model_input_to_types</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">input_dict</span><span class="p">[</span><span class="n">given_input_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">convert</span><span class="p">(</span><span class="n">given_input</span><span class="p">)</span></div>
+
 </pre></div>
 
            </div>

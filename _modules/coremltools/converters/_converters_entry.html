@@ -14,6 +14,7 @@
         <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
         <script src="../../../_static/jquery.js"></script>
         <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../../_static/doctools.js"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
@@ -87,16 +88,23 @@
 
 <span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">ComputeUnit</span> <span class="k">as</span> <span class="n">_ComputeUnit</span><span class="p">,</span>
-    <span class="n">__version__</span> <span class="k">as</span> <span class="n">_ct_version</span>
+    <span class="n">__version__</span> <span class="k">as</span> <span class="n">_ct_version</span><span class="p">,</span>
+    <span class="n">_LOWEST_ALLOWED_SPECIFICATION_VERSION_FOR_NEURALNETWORK</span><span class="p">,</span>
+    <span class="n">_LOWEST_ALLOWED_SPECIFICATION_VERSION_FOR_MILPROGRAM</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.quantization_passes</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">AbstractQuantizationPass</span><span class="p">,</span>
     <span class="n">ComputePrecision</span> <span class="k">as</span> <span class="n">precision</span><span class="p">,</span>
     <span class="n">FP16ComputePrecision</span>
 <span class="p">)</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.input_types</span> <span class="kn">import</span> <span class="n">InputType</span><span class="p">,</span> <span class="n">ClassifierConfig</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.input_types</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ClassifierConfig</span><span class="p">,</span>
+    <span class="n">ImageType</span><span class="p">,</span>
+    <span class="n">InputType</span><span class="p">,</span>
+    <span class="n">TensorType</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.converter</span> <span class="kn">import</span> <span class="n">mil_convert</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Program</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Program</span><span class="p">,</span> <span class="n">types</span>
 <span class="kn">from</span> <span class="nn">coremltools._deps</span> <span class="kn">import</span> <span class="n">_HAS_TORCH</span><span class="p">,</span> <span class="n">_HAS_TF_1</span><span class="p">,</span> <span class="n">_HAS_TF_2</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters._profile_utils</span> <span class="kn">import</span> <span class="n">_profile</span>
 
@@ -132,7 +140,6 @@
     <span class="n">compute_precision</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">skip_model_load</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="n">compute_units</span><span class="o">=</span><span class="n">_ComputeUnit</span><span class="o">.</span><span class="n">ALL</span><span class="p">,</span>
-    <span class="n">useCPUOnly</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="n">package_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">debug</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
 <span class="p">):</span>
@@ -178,39 +185,79 @@
 
 <span class="sd">    inputs : list of ``TensorType`` or ``ImageType``</span>
 
-<span class="sd">        * TensorFlow 1 and 2</span>
+<span class="sd">        * If &quot;dtype&quot; is specified in ``TensorType`` / ``ImageType``,</span>
+<span class="sd">          it will be applied to the input of the converted model.</span>
+
+<span class="sd">          e.g.: The following code snippet will produce a CoreML model with Float16 typed inputs.</span>
+<span class="sd">          &gt;&gt;&gt; import coremltools as ct</span>
+<span class="sd">          &gt;&gt;&gt; mlmodel = ct.convert(keras_model,</span>
+<span class="sd">          &gt;&gt;&gt;                      inputs=[ct.TensorType(dtype=np.float16)],</span>
+<span class="sd">          &gt;&gt;&gt;                      minimum_deployment_target=ct.target.macOS13)</span>
+
+<span class="sd">          e.g.: The following code snippet will produce a CoreML model with Grayscale 16 bit input image type</span>
+<span class="sd">          &gt;&gt;&gt; import coremltools as ct</span>
+<span class="sd">          &gt;&gt;&gt; # H : image height, W: image width</span>
+<span class="sd">          &gt;&gt;&gt; mlmodel = ct.convert(torch_model,</span>
+<span class="sd">          &gt;&gt;&gt;                      inputs=[ct.ImageType(shape=(1, 1, H, W),</span>
+<span class="sd">          &gt;&gt;&gt;                              color_layout=ct.colorlayout.GRAYSCALE_FLOAT16)],</span>
+<span class="sd">          &gt;&gt;&gt;                      minimum_deployment_target=ct.target.macOS13)</span>
+
+<span class="sd">        * TensorFlow 1 and 2 (including tf.keras)</span>
 
 <span class="sd">            - The ``inputs`` parameter is optional. If not provided, the inputs</span>
 <span class="sd">              are placeholder nodes in the model (if the model is frozen graph)</span>
 <span class="sd">              or function inputs (if the model is a ``tf.function``).</span>
-<span class="sd">            - The inputs must correspond to all or some of the placeholder nodes</span>
-<span class="sd">              in the TF model.</span>
-<span class="sd">            - ``TensorType`` and ``ImageType`` in ``inputs`` must have the ``name``</span>
-<span class="sd">              specified. ``shape`` is optional.</span>
 <span class="sd">            - If ``inputs`` is provided, it must be a flat list.</span>
+<span class="sd">            - The ``inputs`` must correspond to all or some of the placeholder nodes</span>
+<span class="sd">              in the TF model.</span>
+<span class="sd">            - If ``name`` is specified in ``TensorType`` and ``ImageType``, it</span>
+<span class="sd">              must correspond to a placeholder op in the TF graph. The input names</span>
+<span class="sd">              in the converted CoreML model can later be modifed using ``ct.utils.rename_feature`` API.</span>
+<span class="sd">            - If ``dtype`` is not specified, it defaults to the dtype of the inputs in the TF model.</span>
 
 <span class="sd">        * PyTorch</span>
 
 <span class="sd">            - The ``inputs`` parameter is required.</span>
+<span class="sd">            - Number of elements in the ``inputs`` must match the number of inputs of the pytorch model.</span>
 <span class="sd">            - ``inputs`` may be a nested list or tuple.</span>
-<span class="sd">            - ``TensorType`` and ``ImageType`` in ``inputs`` must have the ``name``</span>
-<span class="sd">              and ``shape`` specified.</span>
+<span class="sd">            - ``TensorType`` and ``ImageType`` must have the ``shape`` specified.</span>
+<span class="sd">            - If ``name`` argument is specified in ``TensorType`` / ``ImageType``, the converted</span>
+<span class="sd">                CoreML model will have inputs with the same name.</span>
+<span class="sd">            - If ``dtype`` is missing, it defaults to float32</span>
 
-<span class="sd">    outputs : list[str] (optional)</span>
+<span class="sd">    outputs : list of ``TensorType`` or ``ImageType`` (optional)</span>
 
-<span class="sd">        * TensorFlow 1 and 2</span>
+<span class="sd">        * If &quot;dtype&quot; is specified in ``TensorType`` / ``ImageType``,</span>
+<span class="sd">          it will be applied to the output of the converted model.</span>
 
-<span class="sd">            - The ``outputs`` parameter is optional.</span>
+<span class="sd">          e.g.: to produce float 16 typed inputs and outputs:</span>
+<span class="sd">          &gt;&gt;&gt; import coremltools as ct</span>
+<span class="sd">          &gt;&gt;&gt; mlmodel = ct.convert(keras_model,</span>
+<span class="sd">          &gt;&gt;&gt;                      inputs=[ct.TensorType(dtype=np.float16)],</span>
+<span class="sd">          &gt;&gt;&gt;                      outputs=[ct.TensorType(dtype=np.float16)],</span>
+<span class="sd">          &gt;&gt;&gt;                      minimum_deployment_target=ct.target.macOS13)</span>
 
-<span class="sd">            - If specified, ``outputs`` is a list of string representing node</span>
-<span class="sd">              names.</span>
+<span class="sd">          e.g.: to produce Image inputs and outputs:</span>
+<span class="sd">          &gt;&gt;&gt; import coremltools as ct</span>
+<span class="sd">          &gt;&gt;&gt; # H: image height, W: image width</span>
+<span class="sd">          &gt;&gt;&gt; mlmodel = ct.convert(torch_model,</span>
+<span class="sd">          &gt;&gt;&gt;                      inputs=[ct.ImageType(shape=(1, 3, H, W), color_layout=ct.colorlayout.RGB)],</span>
+<span class="sd">          &gt;&gt;&gt;                      outputs=[ct.ImageType(color_layout=ct.colorlayout.RGB)],</span>
+<span class="sd">          &gt;&gt;&gt;                      minimum_deployment_target=ct.target.macOS13)</span>
 
-<span class="sd">            - If ``outputs`` is not specified, the converter infers outputs to</span>
-<span class="sd">              all be terminal identity nodes.</span>
+<span class="sd">        * TensorFlow 1 and 2 (including tf.keras)</span>
+
+<span class="sd">            - If ``outputs`` is not specified, the converter infers outputs from the</span>
+<span class="sd">              sink nodes in the graph.</span>
+<span class="sd">            - If specified, the ``name`` in ``TensorType`` / ``ImageType`` must correspond</span>
+<span class="sd">              to a node in the TF graph. In this case, the model will be converted up to</span>
+<span class="sd">              that node.</span>
 
 <span class="sd">        * PyTorch</span>
 
-<span class="sd">            - ``outputs`` must not be specified.</span>
+<span class="sd">            - If specified, the length of the list must match the number of outputs returned by the</span>
+<span class="sd">              torch model</span>
+<span class="sd">            - If ``name`` is specified it is applied to the output names of the converted coreml model.</span>
 
 <span class="sd">    classifier_config : ClassifierConfig class (optional)</span>
 <span class="sd">        The configuration if the MLModel is intended to be a classifier.</span>
@@ -278,33 +325,62 @@
 
 <span class="sd">    compute_precision : coremltools.precision enumeration or ct.transform.FP16ComputePrecision() (optional)</span>
 
+<span class="sd">        Use this argument to control the storage precision of the tensors in the mlprogram.</span>
+
 <span class="sd">        Must be one of the following.</span>
-<span class="sd">        </span>
-<span class="sd">        - ``coremltools.precision.FLOAT16``</span>
-<span class="sd">            - The following transform is applied:</span>
+
+<span class="sd">        - ``coremltools.precision.FLOAT16`` enum</span>
+<span class="sd">            - In this case the following transform is applied to produce a float16 typed program,</span>
+<span class="sd">                i.e. a program where all the intermediate float tensors have type float16</span>
+<span class="sd">                (for ops that support that type).</span>
+
 <span class="sd">              ::</span>
 <span class="sd">                 coremltools.transform.FP16ComputePrecision(op_selector=</span>
 <span class="sd">                                                         lambda op:True)</span>
 
-<span class="sd">              The above transform injects ``cast`` ops to convert the</span>
-<span class="sd">              float32 dtypes of intermediate tensors to float16.</span>
-<span class="sd">        - ``coremltools.precision.FLOAT32``</span>
+<span class="sd">              The above transform itertes over all the ops. For each op,</span>
+<span class="sd">              it looks at its inputs and outputs, and if they are of type float32, ``cast``</span>
+<span class="sd">              ops are injected to convert those tensors (aka vars) to float16 type.</span>
+
+<span class="sd">        - ``coremltools.precision.FLOAT32`` enum</span>
 <span class="sd">            - No transform is applied. The original float32 tensor dtype in</span>
-<span class="sd">              the source model is preserved.</span>
+<span class="sd">              the source model is preserved. Opt into this option if the default converted model</span>
+<span class="sd">              is displaying numerical precision issues.</span>
+
 <span class="sd">        - ``coremltools.transform.FP16ComputePrecision(op_selector=...)``</span>
-<span class="sd">            - Use the above to control which tensors are cast to float16.</span>
+<span class="sd">            - Use this option to control which tensors are cast to float16.</span>
+<span class="sd">              Before casting the inputs/outputs of any op from float32 to float16,</span>
+<span class="sd">              the op_selector function is invoked on the op object. This function</span>
+<span class="sd">              must return a boolean value. By default its set to return True for every op,</span>
+<span class="sd">              however, this can be customized.</span>
 <span class="sd">            - For example:</span>
 <span class="sd">              ::</span>
 <span class="sd">                 coremltools.transform.FP16ComputePrecision(op_selector=</span>
 <span class="sd">                                         lambda op: op.op_type != &quot;linear&quot;)</span>
 
 <span class="sd">              The above casts all the float32 tensors to be float16, except</span>
-<span class="sd">              the input/output tensors to any ``linear`` op.</span>
+<span class="sd">              the input/output tensors to any ``linear`` op. See more examples</span>
+<span class="sd">              on this below.</span>
+
 <span class="sd">        - ``None``</span>
+<span class="sd">            - This is the default.</span>
 <span class="sd">            - When ``convert_to=&quot;mlprogram&quot;``, compute_precision parameter</span>
 <span class="sd">              defaults to ``coremltools.precision.FLOAT16``.</span>
 <span class="sd">            - When ``convert_to=&quot;neuralnetwork&quot;``, compute_precision parameter</span>
 <span class="sd">              needs to be ``None`` and has no meaning.</span>
+
+<span class="sd">            e.g.: Customize the float16 precision transform to prevent from casting all the &quot;real_div&quot;</span>
+<span class="sd">                  ops in the program to float16 precision:</span>
+
+<span class="sd">            &gt;&gt;&gt; def skip_real_div_ops(op):</span>
+<span class="sd">            &gt;&gt;&gt;     if op.op_type == &quot;real_div&quot;:</span>
+<span class="sd">            &gt;&gt;&gt;         return False</span>
+<span class="sd">            &gt;&gt;&gt;     return True</span>
+<span class="sd">            &gt;&gt;&gt;</span>
+<span class="sd">            &gt;&gt;&gt; model = ct.convert(source_model,</span>
+<span class="sd">            &gt;&gt;&gt;                    compute_precision=ct.transform.FP16ComputePrecision(op_selector=skip_real_div_ops),</span>
+<span class="sd">            &gt;&gt;&gt;                    minimum_deployment_target=ct.target.iOS15</span>
+<span class="sd">            &gt;&gt;&gt;                    )</span>
 
 <span class="sd">    skip_model_load : bool</span>
 <span class="sd">        Set to True to prevent coremltools from calling into the Core ML framework</span>
@@ -329,11 +405,6 @@
 <span class="sd">            - ``coremltools.ComputeUnit.CPU_ONLY``: Limit the model to only use the CPU.</span>
 <span class="sd">            - ``coremltools.ComputeUnit.CPU_AND_GPU``: Use both the CPU and GPU, but not the</span>
 <span class="sd">              neural engine.</span>
-
-<span class="sd">    useCPUOnly: bool</span>
-<span class="sd">        Deprecated, to be removed in coremltools 6.0. Please use `compute_units` instead.</span>
-<span class="sd">        - if True, identical to setting compute_units to `coremltools.ComputeUnit.CPU_ONLY``</span>
-<span class="sd">        - if False, identical to setting compute_units to `coremltools.ComputeUnit.ALL``</span>
 
 <span class="sd">    package_dir : str</span>
 <span class="sd">        Post conversion, the model is saved at a temporary location and</span>
@@ -399,16 +470,15 @@
 <span class="sd">    more advanced options.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">_check_deployment_target</span><span class="p">(</span><span class="n">minimum_deployment_target</span><span class="p">)</span>
-    <span class="n">exact_source</span> <span class="o">=</span> <span class="n">_determine_source</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">outputs</span><span class="p">)</span>
+    <span class="n">outputs_as_strings</span><span class="p">,</span> <span class="n">outputs_as_tensor_or_image_types</span> <span class="o">=</span> <span class="n">_validate_outputs_argument</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span>
+    <span class="n">exact_source</span> <span class="o">=</span> <span class="n">_determine_source</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span>
+                                     <span class="n">outputs_as_strings</span><span class="p">,</span>
+                                     <span class="n">outputs_as_tensor_or_image_types</span><span class="p">,</span>
+                                     <span class="n">outputs</span><span class="p">)</span>
     <span class="n">exact_target</span> <span class="o">=</span> <span class="n">_determine_target</span><span class="p">(</span><span class="n">convert_to</span><span class="p">,</span> <span class="n">minimum_deployment_target</span><span class="p">)</span>
-    <span class="n">_validate_inputs</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">exact_source</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">outputs</span><span class="p">,</span> <span class="n">classifier_config</span><span class="p">,</span> <span class="n">compute_precision</span><span class="p">,</span>
-                     <span class="n">exact_target</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">useCPUOnly</span><span class="p">:</span>
-        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s1">&#39;The &quot;useCPUOnly&quot; parameter is deprecated and will be removed in 6.0. &#39;</span>
-                      <span class="s1">&#39;Use the compute_units parameter: &quot;compute_units=coremotools.ComputeUnits.CPU_ONLY&quot;.&#39;</span><span class="p">)</span>
-        <span class="n">compute_units</span> <span class="o">=</span> <span class="n">_ComputeUnit</span><span class="o">.</span><span class="n">CPU_ONLY</span>
-
+    <span class="n">_validate_conversion_arguments</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">exact_source</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">outputs_as_tensor_or_image_types</span><span class="p">,</span>
+                                   <span class="n">classifier_config</span><span class="p">,</span> <span class="n">compute_precision</span><span class="p">,</span>
+                                   <span class="n">exact_target</span><span class="p">,</span> <span class="n">minimum_deployment_target</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">compute_precision</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">transforms</span> <span class="o">=</span> <span class="p">[</span><span class="n">FP16ComputePrecision</span><span class="p">(</span><span class="n">op_selector</span><span class="o">=</span><span class="k">lambda</span> <span class="n">op</span><span class="p">:</span> <span class="kc">True</span><span class="p">)]</span> <span class="k">if</span> <span class="n">convert_to</span> <span class="o">!=</span> <span class="s2">&quot;neuralnetwork&quot;</span> <span class="k">else</span> <span class="nb">list</span><span class="p">()</span>
@@ -426,18 +496,24 @@
         <span class="k">if</span> <span class="n">ext</span> <span class="o">!=</span> <span class="n">_MLPACKAGE_EXTENSION</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;If package_dir is provided, it must have extension </span><span class="si">{}</span><span class="s2"> (not </span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">_MLPACKAGE_EXTENSION</span><span class="p">,</span> <span class="n">ext</span><span class="p">))</span>
 
+    <span class="n">specification_version</span> <span class="o">=</span> <span class="n">minimum_deployment_target</span><span class="o">.</span><span class="n">value</span> <span class="k">if</span> <span class="n">minimum_deployment_target</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+    
+    <span class="k">if</span> <span class="n">specification_version</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">specification_version</span> <span class="o">=</span> <span class="n">_set_default_specification_version</span><span class="p">(</span><span class="n">exact_target</span><span class="p">)</span>
+
     <span class="n">mlmodel</span> <span class="o">=</span> <span class="n">mil_convert</span><span class="p">(</span>
         <span class="n">model</span><span class="p">,</span>
         <span class="n">convert_from</span><span class="o">=</span><span class="n">exact_source</span><span class="p">,</span>
         <span class="n">convert_to</span><span class="o">=</span><span class="n">exact_target</span><span class="p">,</span>
         <span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">,</span>
-        <span class="n">outputs</span><span class="o">=</span><span class="n">outputs</span><span class="p">,</span>
+        <span class="n">outputs</span><span class="o">=</span><span class="n">outputs_as_tensor_or_image_types</span><span class="p">,</span> <span class="c1"># None or list[ct.ImageType/ct.TensorType]</span>
         <span class="n">classifier_config</span><span class="o">=</span><span class="n">classifier_config</span><span class="p">,</span>
         <span class="n">transforms</span><span class="o">=</span><span class="nb">tuple</span><span class="p">(</span><span class="n">transforms</span><span class="p">),</span>
         <span class="n">skip_model_load</span><span class="o">=</span><span class="n">skip_model_load</span><span class="p">,</span>
         <span class="n">compute_units</span><span class="o">=</span><span class="n">compute_units</span><span class="p">,</span>
         <span class="n">package_dir</span><span class="o">=</span><span class="n">package_dir</span><span class="p">,</span>
         <span class="n">debug</span><span class="o">=</span><span class="n">debug</span><span class="p">,</span>
+        <span class="n">specification_version</span><span class="o">=</span><span class="n">specification_version</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="k">if</span> <span class="n">exact_target</span> <span class="o">==</span> <span class="s1">&#39;milinternal&#39;</span><span class="p">:</span>
@@ -456,6 +532,16 @@
 
     <span class="k">return</span> <span class="n">mlmodel</span></div>
 
+<span class="k">def</span> <span class="nf">_set_default_specification_version</span><span class="p">(</span><span class="n">target</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">target</span> <span class="o">==</span> <span class="s2">&quot;neuralnetwork&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_LOWEST_ALLOWED_SPECIFICATION_VERSION_FOR_NEURALNETWORK</span>
+    <span class="k">elif</span> <span class="n">target</span> <span class="o">==</span> <span class="s2">&quot;mlprogram&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_LOWEST_ALLOWED_SPECIFICATION_VERSION_FOR_MILPROGRAM</span>
+    <span class="k">elif</span> <span class="n">target</span> <span class="o">==</span> <span class="s2">&quot;milinternal&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Backend converter </span><span class="si">{}</span><span class="s2"> not implemented&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">target</span><span class="p">))</span>
+
 
 <span class="k">def</span> <span class="nf">_check_deployment_target</span><span class="p">(</span><span class="n">minimum_deployment_target</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">minimum_deployment_target</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> \
@@ -467,9 +553,79 @@
         <span class="p">)</span>
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">minimum_deployment_target</span><span class="p">))</span>
 
-<span class="k">def</span> <span class="nf">_validate_inputs</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">exact_source</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">outputs</span><span class="p">,</span> <span class="n">classifier_config</span><span class="p">,</span> <span class="n">compute_precision</span><span class="p">,</span> <span class="n">convert_to</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_validate_outputs_argument</span><span class="p">(</span><span class="n">outputs</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Validate and process model, inputs, outputs, classifier_config based on</span>
+<span class="sd">    - validate properties that the &quot;outputs&quot; argument must satisfy, for instance, it should either be a list</span>
+<span class="sd">      of ct.ImageType/ct.TensorType or a list of strings, etc.</span>
+<span class="sd">    - return : tuple</span>
+<span class="sd">        - (outputs_as_strings, outputs_as_tensor_or_image_types)</span>
+<span class="sd">        - outputs_as_strings: list[str]</span>
+<span class="sd">        - outputs_as_tensor_or_image_types : list[ct.ImageType] or list[ct.TensorType]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">outputs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;&quot;outputs&quot; must be of type list&#39;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">([</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">TensorType</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">ImageType</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">]):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;&quot;outputs&quot; must be a list of type ct.TensorType or ct.ImageType or strings&#39;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="n">msg_inconsistent_types</span> <span class="o">=</span> <span class="s1">&#39;all elements of &quot;outputs&quot; must either be of type str &#39;</span> \
+                                 <span class="s1">&#39;or of types ct.ImageType/ct.TensorType&#39;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="c1"># if one of the elements is a string, all elements must be strings</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">([</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">]):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg_inconsistent_types</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">outputs</span><span class="p">,</span> <span class="p">[</span><span class="n">TensorType</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">outputs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">InputType</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">([</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">TensorType</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">ImageType</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">]):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg_inconsistent_types</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">any</span><span class="p">([</span><span class="n">t</span><span class="o">.</span><span class="n">shape</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">]):</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;The &#39;shape&#39; argument must not be specified for the outputs, since it is &quot;</span> \
+                      <span class="s2">&quot;automatically inferred from the input shapes and the ops in the model&quot;</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">out_</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">out_</span><span class="p">,</span> <span class="n">TensorType</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">out_</span><span class="o">.</span><span class="n">default_value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The &#39;default_value&#39; argument must not be specified for the outputs&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">out_</span><span class="p">,</span> <span class="n">ImageType</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">out_</span><span class="o">.</span><span class="n">scale</span> <span class="o">!=</span> <span class="mf">1.0</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;scale&#39; must be 1.0 for a output of ImageType&quot;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">out_</span><span class="o">.</span><span class="n">bias</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">out_</span><span class="o">.</span><span class="n">bias</span> <span class="o">==</span> <span class="mf">0.0</span> <span class="ow">or</span> <span class="n">out_</span><span class="o">.</span><span class="n">bias</span> <span class="o">==</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]):</span>
+                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;bias&#39; must be None or 0 for an output of ImageType&quot;</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">out_</span><span class="o">.</span><span class="n">channel_first</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;channel_first&#39; must be None for an output of ImageType&quot;</span><span class="p">)</span>
+            <span class="n">output_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">]</span>
+            <span class="c1"># verify that either all of the entries in output_names is &quot;None&quot; or none of them is &quot;None&quot;</span>
+            <span class="n">msg_consistent_names</span> <span class="o">=</span> <span class="s1">&#39;Either none or all the outputs must have the &quot;name&quot; argument specified&#39;</span>
+            <span class="k">if</span> <span class="n">output_names</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">([</span><span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">output_names</span><span class="p">]):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg_consistent_names</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">output_names</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">([</span><span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">output_names</span><span class="p">]):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg_consistent_names</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">output_names</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">output_names</span><span class="p">))</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">output_names</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Duplicate names provided in &#39;outputs&#39;&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">output_names</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="n">outputs</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">output_names</span><span class="p">,</span> <span class="n">outputs</span>
+
+<span class="k">def</span> <span class="nf">_validate_conversion_arguments</span><span class="p">(</span><span class="n">model</span><span class="p">,</span>
+                                   <span class="n">exact_source</span><span class="p">,</span>
+                                   <span class="n">inputs</span><span class="p">,</span>
+                                   <span class="n">outputs</span><span class="p">,</span>
+                                   <span class="n">classifier_config</span><span class="p">,</span>
+                                   <span class="n">compute_precision</span><span class="p">,</span>
+                                   <span class="n">convert_to</span><span class="p">,</span>
+                                   <span class="n">minimum_deployment_target</span><span class="p">,</span>
+                                   <span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Validate and process model, inputs, classifier_config based on</span>
 <span class="sd">    `exact_source` (which cannot be `auto`)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">raise_if_duplicated</span><span class="p">(</span><span class="n">input_list</span><span class="p">):</span>
@@ -483,10 +639,46 @@
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">dups</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Duplicated inputs: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dups</span><span class="p">))</span>
 
+    <span class="k">def</span> <span class="nf">_flatten_list</span><span class="p">(</span><span class="n">_inputs</span><span class="p">):</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">_input</span> <span class="ow">in</span> <span class="n">_inputs</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">_input</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+                <span class="n">ret</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">_flatten_list</span><span class="p">(</span><span class="n">_input</span><span class="p">))</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">_input</span><span class="p">,</span> <span class="n">InputType</span><span class="p">):</span>
+                <span class="n">ret</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_input</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;Unknown type </span><span class="si">{}</span><span class="s2"> for flattening into InputType.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="nb">type</span><span class="p">(</span><span class="n">_input</span><span class="p">)</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+        <span class="k">return</span> <span class="n">ret</span>
+
+    <span class="n">flat_inputs</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="k">if</span> <span class="n">inputs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;&quot;inputs&quot; must be of type list&#39;</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="c1"># get flattened inputs</span>
+        <span class="n">flat_inputs</span> <span class="o">=</span> <span class="n">_flatten_list</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">flat_inputs</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">InputType</span><span class="p">):</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;inputs must be a list of type ct.TensorType or ct.ImageType&#39;</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">t</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">minimum_deployment_target</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> \
+                    <span class="n">minimum_deployment_target</span> <span class="o">&gt;=</span> <span class="n">AvailableTarget</span><span class="o">.</span><span class="n">iOS16</span><span class="p">):</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;float16 dtype for inputs is only supported for deployment target &gt;= iOS16/macOS13/watchOS9/tvOS16&quot;</span>
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">outputs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">t</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">minimum_deployment_target</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> \
+                    <span class="n">minimum_deployment_target</span> <span class="o">&gt;=</span> <span class="n">AvailableTarget</span><span class="o">.</span><span class="n">iOS16</span><span class="p">):</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;float16 dtype for outputs is only supported for deployment target &gt;= iOS16/macOS13/watchOS9/tvOS16&quot;</span>
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">classifier_config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">classifier_config</span><span class="p">,</span> <span class="n">ClassifierConfig</span><span class="p">):</span>
@@ -525,22 +717,6 @@
             <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Expected argument for pytorch &quot;inputs&quot; not provided&#39;</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
-        <span class="k">def</span> <span class="nf">_flatten_list</span><span class="p">(</span><span class="n">_inputs</span><span class="p">):</span>
-            <span class="n">ret</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="k">for</span> <span class="n">_input</span> <span class="ow">in</span> <span class="n">_inputs</span><span class="p">:</span>
-                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">_input</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
-                    <span class="n">ret</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">_flatten_list</span><span class="p">(</span><span class="n">_input</span><span class="p">))</span>
-                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">_input</span><span class="p">,</span> <span class="n">InputType</span><span class="p">):</span>
-                    <span class="n">ret</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_input</span><span class="p">)</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                        <span class="s2">&quot;Unknown type </span><span class="si">{}</span><span class="s2"> for flattening into InputType.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                            <span class="nb">type</span><span class="p">(</span><span class="n">_input</span><span class="p">)</span>
-                        <span class="p">)</span>
-                    <span class="p">)</span>
-            <span class="k">return</span> <span class="n">ret</span>
-
-        <span class="n">flat_inputs</span> <span class="o">=</span> <span class="n">_flatten_list</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
         <span class="n">raise_if_duplicated</span><span class="p">(</span><span class="n">flat_inputs</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">inputs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span>
             <span class="p">[</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">_input</span><span class="p">,</span> <span class="n">InputType</span><span class="p">)</span> <span class="k">for</span> <span class="n">_input</span> <span class="ow">in</span> <span class="n">flat_inputs</span><span class="p">]</span>
@@ -548,8 +724,6 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="s2">&quot;Input should be a list/tuple (or nested lists/tuples) of TensorType or ImageType&quot;</span>
             <span class="p">)</span>
-        <span class="k">if</span> <span class="n">outputs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;outputs must not be specified for PyTorch&quot;</span><span class="p">)</span>
 
     <span class="k">elif</span> <span class="n">exact_source</span> <span class="o">==</span> <span class="s2">&quot;milinternal&quot;</span><span class="p">:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">Program</span><span class="p">):</span>
@@ -557,7 +731,10 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">_determine_source</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span> <span class="n">outputs</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">_determine_source</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">source</span><span class="p">,</span>
+                      <span class="n">output_names</span><span class="p">,</span>
+                      <span class="n">outputs_as_tensor_or_image_types</span><span class="p">,</span>
+                      <span class="n">output_argument_as_specified_by_user</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Infer source (which can be auto) to the precise framework.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -580,26 +757,36 @@
     <span class="c1"># Determine `auto` source</span>
     <span class="k">if</span> <span class="n">source</span> <span class="o">==</span> <span class="s2">&quot;auto&quot;</span> <span class="ow">and</span> <span class="n">_HAS_TF_1</span><span class="p">:</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">loader</span> <span class="o">=</span> <span class="n">TF1Loader</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">outputs</span><span class="o">=</span><span class="n">outputs</span><span class="p">)</span>
-            <span class="n">loader</span><span class="o">.</span><span class="n">_graph_def_from_model</span><span class="p">(</span><span class="n">outputs</span><span class="o">=</span><span class="n">outputs</span><span class="p">)</span>
+            <span class="n">loader</span> <span class="o">=</span> <span class="n">TF1Loader</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">outputs</span><span class="o">=</span><span class="n">outputs_as_tensor_or_image_types</span><span class="p">)</span>
+            <span class="n">loader</span><span class="o">.</span><span class="n">_graph_def_from_model</span><span class="p">(</span><span class="n">output_names</span><span class="o">=</span><span class="n">output_names</span><span class="p">)</span>
             <span class="k">return</span> <span class="s2">&quot;tensorflow&quot;</span>
         <span class="k">except</span><span class="p">:</span>
             <span class="k">pass</span>
 
     <span class="k">if</span> <span class="n">source</span> <span class="o">==</span> <span class="s2">&quot;auto&quot;</span> <span class="ow">and</span> <span class="n">_HAS_TF_2</span><span class="p">:</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">loader</span> <span class="o">=</span> <span class="n">TF2Loader</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">outputs</span><span class="o">=</span><span class="n">outputs</span><span class="p">)</span>
-            <span class="n">loader</span><span class="o">.</span><span class="n">_graph_def_from_model</span><span class="p">(</span><span class="n">outputs</span><span class="o">=</span><span class="n">outputs</span><span class="p">)</span>
+            <span class="n">loader</span> <span class="o">=</span> <span class="n">TF2Loader</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">outputs</span><span class="o">=</span><span class="n">outputs_as_tensor_or_image_types</span><span class="p">)</span>
+            <span class="n">loader</span><span class="o">.</span><span class="n">_graph_def_from_model</span><span class="p">(</span><span class="n">output_names</span><span class="o">=</span><span class="n">output_names</span><span class="p">)</span>
             <span class="k">return</span> <span class="s2">&quot;tensorflow2&quot;</span>
         <span class="k">except</span><span class="p">:</span>
             <span class="k">pass</span>
 
     <span class="k">if</span> <span class="n">source</span> <span class="o">==</span> <span class="s2">&quot;auto&quot;</span> <span class="ow">and</span> <span class="n">_HAS_TORCH</span><span class="p">:</span>
+        <span class="n">is_torch_load_successful</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">pytorch_load</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
-            <span class="k">return</span> <span class="s2">&quot;pytorch&quot;</span>
+            <span class="n">is_torch_load_successful</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="k">except</span><span class="p">:</span>
             <span class="k">pass</span>
+        <span class="k">if</span> <span class="n">is_torch_load_successful</span><span class="p">:</span>
+            <span class="c1"># validate that the outputs passed by the user are of type ImageType/TensorType</span>
+            <span class="k">if</span> <span class="n">output_argument_as_specified_by_user</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> \
+                <span class="ow">not</span> <span class="nb">all</span><span class="p">([</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">TensorType</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">ImageType</span><span class="p">)</span> \
+                        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">output_argument_as_specified_by_user</span><span class="p">]):</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;&quot;outputs&quot; must be a list of type ct.TensorType or ct.ImageType for pytorch conversion&#39;</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">return</span> <span class="s2">&quot;pytorch&quot;</span>
+
 
     <span class="k">if</span> <span class="n">source</span> <span class="o">==</span> <span class="s2">&quot;auto&quot;</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">Program</span><span class="p">):</span>
         <span class="k">return</span> <span class="s2">&quot;milinternal&quot;</span>
@@ -621,12 +808,12 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">minimum_deployment_target</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">convert_to</span> <span class="o">==</span> <span class="s2">&quot;mlprogram&quot;</span> <span class="ow">and</span> \
-            <span class="n">minimum_deployment_target</span><span class="o">.</span><span class="n">value</span> <span class="o">&lt;</span> <span class="n">AvailableTarget</span><span class="o">.</span><span class="n">iOS15</span><span class="o">.</span><span class="n">value</span><span class="p">:</span>
+            <span class="n">minimum_deployment_target</span> <span class="o">&lt;</span> <span class="n">AvailableTarget</span><span class="o">.</span><span class="n">iOS15</span><span class="p">:</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;When &#39;convert_to&#39; is </span><span class="si">{}</span><span class="s2">, the minimum deployment target must be at least iOS15/macOS12/watchOS8/tvOS15&quot;</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">convert_to</span><span class="p">))</span>
 
         <span class="k">if</span> <span class="n">convert_to</span> <span class="o">==</span> <span class="s2">&quot;neuralnetwork&quot;</span> <span class="ow">and</span> \
-            <span class="n">minimum_deployment_target</span><span class="o">.</span><span class="n">value</span> <span class="o">&gt;=</span> <span class="n">AvailableTarget</span><span class="o">.</span><span class="n">iOS15</span><span class="o">.</span><span class="n">value</span><span class="p">:</span>
+            <span class="n">minimum_deployment_target</span> <span class="o">&gt;=</span> <span class="n">AvailableTarget</span><span class="o">.</span><span class="n">iOS15</span><span class="p">:</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;If minimum deployment target is iOS15/macOS12/watchOS8/tvOS15 or higher, then &quot;</span> \
                   <span class="s2">&quot;&#39;convert_to&#39; cannot be </span><span class="si">{}</span><span class="s2">. It must be &#39;mlprogram&#39;&quot;</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">convert_to</span><span class="p">))</span>
@@ -636,22 +823,41 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">minimum_deployment_target</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="s2">&quot;neuralnetwork&quot;</span>
-        <span class="k">elif</span> <span class="n">minimum_deployment_target</span><span class="o">.</span><span class="n">value</span> <span class="o">&lt;=</span> <span class="n">AvailableTarget</span><span class="o">.</span><span class="n">iOS14</span><span class="o">.</span><span class="n">value</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="n">minimum_deployment_target</span> <span class="o">&lt;=</span> <span class="n">AvailableTarget</span><span class="o">.</span><span class="n">iOS14</span><span class="p">:</span>
             <span class="k">return</span> <span class="s2">&quot;neuralnetwork&quot;</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="s2">&quot;mlprogram&quot;</span>
 
+
+<span class="k">def</span> <span class="nf">_get_metadata_from_mlmodel</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">):</span>
+    <span class="c1"># Copy from source mlmodel if metadata info exists</span>
+    <span class="n">src_pkg_version</span> <span class="o">=</span> <span class="n">mlmodel</span><span class="o">.</span><span class="n">user_defined_metadata</span><span class="p">[</span><span class="n">_METADATA_SOURCE</span><span class="p">]</span>
+    <span class="n">coremltools_version</span> <span class="o">=</span> <span class="n">mlmodel</span><span class="o">.</span><span class="n">user_defined_metadata</span><span class="p">[</span><span class="n">_METADATA_VERSION</span><span class="p">]</span>
+
+    <span class="n">src_pkg_version_list</span> <span class="o">=</span> <span class="n">src_pkg_version</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;==&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">src_pkg_version_list</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">src_pkg</span><span class="p">,</span> <span class="n">pkg_ver</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">src_pkg_version_list</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">src_pkg</span><span class="p">,</span> <span class="n">pkg_ver</span> <span class="o">=</span> <span class="n">src_pkg_version_list</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;&quot;</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">src_pkg_version_list</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="n">src_pkg</span><span class="p">,</span> <span class="n">pkg_ver</span> <span class="o">=</span> <span class="n">src_pkg_version_list</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s2">&quot;Unable to parse src_pkg_version&quot;</span><span class="p">)</span>
+
+    <span class="n">build_info</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;coremltools-version&#39;</span><span class="p">:</span> <span class="n">_ct_version</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">coremltools_version</span> <span class="k">else</span> <span class="n">coremltools_version</span><span class="p">}</span>
+    <span class="k">if</span> <span class="n">src_pkg</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">pkg_ver</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">build_info</span><span class="p">[</span><span class="s1">&#39;coremltools-component-&#39;</span> <span class="o">+</span> <span class="n">src_pkg</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">pkg_ver</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">build_info</span>
+
+
 <span class="k">def</span> <span class="nf">_record_build_metadata</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> <span class="n">exact_source</span><span class="p">):</span>
     <span class="c1"># recording metadata: coremltools version, source framework and version</span>
-    <span class="n">src_pkg</span><span class="p">,</span> <span class="n">pkg_ver</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
     <span class="k">if</span> <span class="n">exact_source</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;tensorflow&quot;</span><span class="p">,</span> <span class="s2">&quot;tensorflow2&quot;</span><span class="p">}</span> <span class="ow">and</span> <span class="p">(</span><span class="n">_HAS_TF_1</span> <span class="ow">or</span> <span class="n">_HAS_TF_2</span><span class="p">):</span>
-        <span class="n">src_pkg</span><span class="p">,</span> <span class="n">pkg_ver</span> <span class="o">=</span> <span class="s2">&quot;tensorflow&quot;</span><span class="p">,</span> <span class="n">tf</span><span class="o">.</span><span class="n">__version__</span>
         <span class="n">src_pkg_version</span> <span class="o">=</span> <span class="s2">&quot;tensorflow==</span><span class="si">{0}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tf</span><span class="o">.</span><span class="n">__version__</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">exact_source</span> <span class="o">==</span> <span class="s2">&quot;pytorch&quot;</span> <span class="ow">and</span> <span class="n">_HAS_TORCH</span><span class="p">:</span>
-        <span class="n">src_pkg</span><span class="p">,</span> <span class="n">pkg_ver</span> <span class="o">=</span> <span class="s2">&quot;pytorch&quot;</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">__version__</span>
         <span class="n">src_pkg_version</span> <span class="o">=</span> <span class="s2">&quot;torch==</span><span class="si">{0}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">__version__</span><span class="p">)</span>
     <span class="k">elif</span> <span class="n">exact_source</span> <span class="o">==</span> <span class="s1">&#39;milinternal&#39;</span><span class="p">:</span>
-        <span class="n">src_pkg</span><span class="p">,</span> <span class="n">pkg_ver</span> <span class="o">=</span> <span class="s2">&quot;milinternal&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span>
         <span class="n">src_pkg_version</span> <span class="o">=</span> <span class="s2">&quot;milinternal&quot;</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Unsupported source </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">exact_source</span><span class="p">))</span>
@@ -659,9 +865,8 @@
     <span class="n">mlmodel</span><span class="o">.</span><span class="n">user_defined_metadata</span><span class="p">[</span><span class="n">_METADATA_SOURCE</span><span class="p">]</span> <span class="o">=</span> <span class="n">src_pkg_version</span>
     <span class="n">mlmodel</span><span class="o">.</span><span class="n">user_defined_metadata</span><span class="p">[</span><span class="n">_METADATA_VERSION</span><span class="p">]</span> <span class="o">=</span> <span class="n">_ct_version</span>
 
-    <span class="n">build_info</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;coremltools-version&#39;</span><span class="p">:</span> <span class="n">_ct_version</span><span class="p">}</span>
-    <span class="k">if</span> <span class="n">src_pkg</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">pkg_ver</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">build_info</span><span class="p">[</span><span class="s1">&#39;coremltools-component-&#39;</span> <span class="o">+</span> <span class="n">src_pkg</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">pkg_ver</span><span class="p">)</span>
+    <span class="n">build_info</span> <span class="o">=</span> <span class="n">_get_metadata_from_mlmodel</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">)</span>
+
     <span class="n">mlmodel</span><span class="o">.</span><span class="n">_set_build_info_mil_attributes</span><span class="p">(</span><span class="n">build_info</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">mlmodel</span>

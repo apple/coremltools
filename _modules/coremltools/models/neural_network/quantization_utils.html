@@ -14,6 +14,7 @@
         <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
         <script src="../../../../_static/jquery.js"></script>
         <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../../../_static/doctools.js"></script>
     <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
@@ -84,13 +85,15 @@
 <span class="sd">Utilities to compress Neural Network Models.</span>
 <span class="sd">Only available in coremltools 2.0b1 and onwards</span>
 <span class="sd">&quot;&quot;&quot;</span>
-
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">_np</span>
 <span class="kn">from</span> <span class="nn">sys</span> <span class="kn">import</span> <span class="n">stdout</span> <span class="k">as</span> <span class="n">_stdout</span>
 <span class="kn">from</span> <span class="nn">os</span> <span class="kn">import</span> <span class="n">listdir</span> <span class="k">as</span> <span class="n">_listdir</span>
-<span class="kn">from</span> <span class="nn">.optimization_utils</span> <span class="kn">import</span> <span class="n">_optimize_nn</span>
 
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">_np</span>
+
+<span class="kn">from</span> <span class="nn">.optimization_utils</span> <span class="kn">import</span> <span class="n">_optimize_nn</span>
+<span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">ComputeUnit</span> <span class="k">as</span> <span class="n">_ComputeUnit</span>
 <span class="kn">from</span> <span class="nn">coremltools.models</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_LUT_BASED_QUANTIZATION</span><span class="p">,</span>
     <span class="n">_SUPPORTED_QUANTIZATION_MODES</span><span class="p">,</span>
     <span class="n">_QUANTIZATION_MODE_DEQUANTIZE</span><span class="p">,</span>
     <span class="n">_QUANTIZATION_MODE_LOOKUP_TABLE_LINEAR</span><span class="p">,</span>
@@ -98,7 +101,7 @@
     <span class="n">_QUANTIZATION_MODE_CUSTOM_LOOKUP_TABLE</span><span class="p">,</span>
     <span class="n">_QUANTIZATION_MODE_LINEAR_QUANTIZATION</span><span class="p">,</span>
     <span class="n">_QUANTIZATION_MODE_LINEAR_SYMMETRIC</span><span class="p">,</span>
-    <span class="n">_LUT_BASED_QUANTIZATION</span><span class="p">,</span>
+    <span class="n">MLModel</span> <span class="k">as</span> <span class="n">_MLModel</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="kn">from</span> <span class="nn">..utils</span> <span class="kn">import</span> <span class="n">_get_nn_layers</span><span class="p">,</span> <span class="n">_wp_to_fp16wp</span><span class="p">,</span> <span class="n">_get_model</span><span class="p">,</span> <span class="n">_macos_version</span>
@@ -110,8 +113,9 @@
 <span class="p">)</span>
 
 
-<div class="viewcode-block" id="QuantizedLayerSelector"><a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.quantization_utils.QuantizedLayerSelector">[docs]</a><span class="k">class</span> <span class="nc">QuantizedLayerSelector</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; This is the base class to implement custom selectors to skip certain</span>
+<div class="viewcode-block" id="QuantizedLayerSelector"><a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.quantization_utils.QuantizedLayerSelector">[docs]</a><span class="k">class</span> <span class="nc">QuantizedLayerSelector</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This is the base class to implement custom selectors to skip certain</span>
 <span class="sd">    layers during quantization. To implement a custom selector, create a class</span>
 <span class="sd">    that inherits this class and override `do_quantize()` method.</span>
 
@@ -122,10 +126,10 @@
 
 <span class="sd">        class MyLayerSelector(QuantizedLayerSelector):</span>
 <span class="sd">            def __init__(self):</span>
-<span class="sd">                super(MyLayerSelector, self).__init__()</span>
+<span class="sd">                super().__init__()</span>
 
 <span class="sd">            def do_quantize(self, layer, **kwargs):</span>
-<span class="sd">                ret = super(MyLayerSelector, self).do_quantize(layer)</span>
+<span class="sd">                ret = super().do_quantize(layer)</span>
 <span class="sd">                if not ret or layer.name == &#39;dense_2&#39;:</span>
 <span class="sd">                    return False</span>
 <span class="sd">                return True</span>
@@ -185,7 +189,7 @@
         <span class="n">minimum_conv_weight_count</span><span class="o">=</span><span class="mi">4096</span><span class="p">,</span>
     <span class="p">):</span>
 
-        <span class="nb">super</span><span class="p">(</span><span class="n">AdvancedQuantizedLayerSelector</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">skip_layer_types</span> <span class="o">=</span> <span class="n">skip_layer_types</span>
 
         <span class="c1"># Error checking</span>
@@ -208,7 +212,7 @@
 <div class="viewcode-block" id="AdvancedQuantizedLayerSelector.do_quantize"><a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.quantization_utils.AdvancedQuantizedLayerSelector.do_quantize">[docs]</a>    <span class="k">def</span> <span class="nf">do_quantize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">weight_param</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; weight_param - should be name of the WeightParam field</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">ret</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">AdvancedQuantizedLayerSelector</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">do_quantize</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">do_quantize</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">ret</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">False</span>
 
@@ -257,11 +261,11 @@
 
 <div class="viewcode-block" id="MatrixMultiplyLayerSelector"><a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.quantization_utils.MatrixMultiplyLayerSelector">[docs]</a><span class="k">class</span> <span class="nc">MatrixMultiplyLayerSelector</span><span class="p">(</span><span class="n">QuantizedLayerSelector</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Layer selector object that allows users to select matrix multiplication layers</span>
-<span class="sd">        with one of the matrices being constant, based on some criterions like total</span>
-<span class="sd">        numbers of parameters/weights, number of input or output channels and/or layer</span>
-<span class="sd">        names. If any of the criterion is not valid, the corresponding layer is not</span>
-<span class="sd">        selected.</span>
+<span class="sd">    Layer selector object that allows users to select matrix multiplication layers</span>
+<span class="sd">    with one of the matrices being constant, based on some criterions like total</span>
+<span class="sd">    numbers of parameters/weights, number of input or output channels and/or layer</span>
+<span class="sd">    names. If any of the criterion is not valid, the corresponding layer is not</span>
+<span class="sd">    selected.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
@@ -274,7 +278,7 @@
         <span class="n">include_layers_with_names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="p">):</span>
 
-        <span class="nb">super</span><span class="p">(</span><span class="n">MatrixMultiplyLayerSelector</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
 
         <span class="c1"># weight count refers to number of parameters/weights and is equal to product of input &amp; output channels</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">minimum_weight_count</span> <span class="o">=</span> <span class="n">minimum_weight_count</span>
@@ -296,9 +300,10 @@
             <span class="p">)</span>
 
 <div class="viewcode-block" id="MatrixMultiplyLayerSelector.do_quantize"><a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.quantization_utils.MatrixMultiplyLayerSelector.do_quantize">[docs]</a>    <span class="k">def</span> <span class="nf">do_quantize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">weight_param</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; weight_param - should be name of the WeightParam field</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        weight_param - should be name of the WeightParam field</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">ret</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">MatrixMultiplyLayerSelector</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">do_quantize</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">do_quantize</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">ret</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">False</span>
 
@@ -767,13 +772,15 @@
 
 
 <span class="k">def</span> <span class="nf">_dequantize_nn_spec</span><span class="p">(</span><span class="n">spec</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; Dequantize weights in NeuralNetwork type mlmodel specifications.</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Dequantize weights in NeuralNetwork type mlmodel specifications.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">_quantize_nn_spec</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">_QUANTIZATION_MODE_DEQUANTIZE</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">_quantize_nn_spec</span><span class="p">(</span><span class="n">nn_spec</span><span class="p">,</span> <span class="n">nbits</span><span class="p">,</span> <span class="n">qm</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; Quantize weights in NeuralNetwork type mlmodel specifications.</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Quantize weights in NeuralNetwork type mlmodel specifications.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">selector</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;selector&quot;</span><span class="p">,</span> <span class="n">QuantizedLayerSelector</span><span class="p">())</span>
 
@@ -1365,7 +1372,7 @@
             <span class="p">)</span>
         <span class="p">)</span>
 
-    <span class="n">qmodel</span> <span class="o">=</span> <span class="n">_get_model</span><span class="p">(</span><span class="n">qspec</span><span class="p">)</span>
+    <span class="n">qmodel</span> <span class="o">=</span> <span class="n">_get_model</span><span class="p">(</span><span class="n">qspec</span><span class="p">,</span> <span class="n">compute_units</span><span class="o">=</span><span class="n">_ComputeUnit</span><span class="o">.</span><span class="n">CPU_ONLY</span><span class="p">)</span>
     <span class="n">model_metrics</span> <span class="o">=</span> <span class="n">ModelMetrics</span><span class="p">(</span><span class="n">qspec</span><span class="p">)</span>
 
     <span class="n">input_name</span> <span class="o">=</span> <span class="n">qspec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">input</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span>
@@ -1381,11 +1388,13 @@
 
     <span class="n">analyzed</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="n">tried</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">if</span> <span class="n">fpmodel</span><span class="o">.</span><span class="n">compute_unit</span> <span class="o">!=</span> <span class="n">_ComputeUnit</span><span class="o">.</span><span class="n">CPU_ONLY</span><span class="p">:</span>
+        <span class="n">fpmodel</span> <span class="o">=</span> <span class="n">_MLModel</span><span class="p">(</span><span class="n">fpmodel</span><span class="o">.</span><span class="n">get_spec</span><span class="p">(),</span> <span class="n">compute_units</span><span class="o">=</span><span class="n">_ComputeUnit</span><span class="o">.</span><span class="n">CPU_ONLY</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">image</span> <span class="ow">in</span> <span class="n">test_image_paths</span><span class="p">:</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="nb">input</span> <span class="o">=</span> <span class="p">{</span><span class="n">input_name</span><span class="p">:</span> <span class="n">_load_and_resize_image</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">input_size</span><span class="p">)}</span>
-            <span class="n">fp_pred</span> <span class="o">=</span> <span class="n">fpmodel</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">useCPUOnly</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-            <span class="n">q_pred</span> <span class="o">=</span> <span class="n">qmodel</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">useCPUOnly</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">fp_pred</span> <span class="o">=</span> <span class="n">fpmodel</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+            <span class="n">q_pred</span> <span class="o">=</span> <span class="n">qmodel</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
             <span class="n">analyzed</span> <span class="o">+=</span> <span class="mi">1</span>
             <span class="n">model_metrics</span><span class="o">.</span><span class="n">add_metrics</span><span class="p">(</span><span class="n">fp_pred</span><span class="p">,</span> <span class="n">q_pred</span><span class="p">)</span>
 
@@ -1415,10 +1424,12 @@
 
     <span class="n">analyzed</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="n">tried</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">fpmodel</span> <span class="o">=</span> <span class="n">_MLModel</span><span class="p">(</span><span class="n">fpmodel</span><span class="o">.</span><span class="n">get_spec</span><span class="p">(),</span> <span class="n">compute_units</span><span class="o">=</span><span class="n">_ComputeUnit</span><span class="o">.</span><span class="n">CPU_ONLY</span><span class="p">)</span>
+    <span class="n">qmodel</span> <span class="o">=</span>  <span class="n">_MLModel</span><span class="p">(</span><span class="n">qmodel</span><span class="o">.</span><span class="n">get_spec</span><span class="p">(),</span> <span class="n">compute_units</span><span class="o">=</span><span class="n">_ComputeUnit</span><span class="o">.</span><span class="n">CPU_ONLY</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">sample_data</span><span class="p">:</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">fp_pred</span> <span class="o">=</span> <span class="n">fpmodel</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">useCPUOnly</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-            <span class="n">q_pred</span> <span class="o">=</span> <span class="n">qmodel</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">useCPUOnly</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">fp_pred</span> <span class="o">=</span> <span class="n">fpmodel</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="n">q_pred</span> <span class="o">=</span> <span class="n">qmodel</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
             <span class="n">analyzed</span> <span class="o">+=</span> <span class="mi">1</span>
             <span class="n">model_metrics</span><span class="o">.</span><span class="n">add_metrics</span><span class="p">(</span><span class="n">fp_pred</span><span class="p">,</span> <span class="n">q_pred</span><span class="p">)</span>
 
