@@ -4108,7 +4108,7 @@ def is_floating_point(context, node):
     is_float = types.is_float(inputs[0].dtype)
     context.add(mb.const(val=is_float, name=node.name))
 
-@register_torch_op()
+@register_torch_op(torch_alias=["__and_", '__and__'])
 def logical_and(context, node):
     inputs = _get_inputs(context, node, expected=2)
     x, y = inputs
@@ -4544,7 +4544,7 @@ def scatter_add(context, node):
     inputs = _get_inputs(context, node)
     _scatter(context, inputs, 'add', node.name)
     
-@register_torch_op()
+@register_torch_op
 def roi_align(context, node):
     """
     https://github.com/apple/coremltools/blob/655b3be5cc0d42c3c4fa49f0f0e4a93a26b3e492/mlmodel/format/NeuralNetwork.proto#L2239
@@ -4599,12 +4599,12 @@ def roi_align(context, node):
 
     context.add(x, torch_name=node.outputs[0])
 
-@register_torch_op()
+@register_torch_op
 def numel(context, node):
     inputs = _get_inputs(context, node, expected=1)
     context.add(mb.reduce_prod(x=inputs[0], name=node.name), torch_name=node.outputs[0])
 
-@register_torch_op()
+@register_torch_op
 def nms(context, node):
     inputs = _get_inputs(context, node)
     boxes = inputs[0]
@@ -4684,7 +4684,7 @@ def repeat_interleave(context, node):
 
     context.add(reshape, node.name)
 
-@register_torch_op(override=True)
+@register_torch_op
 def narrow(context, node):
     data, dim, start, length = _get_inputs(context, node, expected=4)
     data_shape = mb.shape(x=data).val
@@ -4694,11 +4694,3 @@ def narrow(context, node):
     end[dim.val] = start.val+length.val
     out = mb.slice_by_index(x=data, begin=begin, end=end)
     context.add(out, torch_name=node.name)
-
-@register_torch_op(torch_alias=["__and_", '__and__'])
-def logicaland(context, node):
-    inputs = _get_inputs(context, node, expected=2)
-    x, y = inputs
-    x = mb.cast(x=x, dtype="bool")
-    y = mb.cast(x=y, dtype="bool")
-    context.add(mb.logical_and(x=x, y=y, name=node.name))
