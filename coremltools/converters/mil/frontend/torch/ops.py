@@ -4546,9 +4546,6 @@ def scatter_add(context, node):
     
 @register_torch_op
 def roi_align(context, node):
-    """
-    https://github.com/apple/coremltools/blob/655b3be5cc0d42c3c4fa49f0f0e4a93a26b3e492/mlmodel/format/NeuralNetwork.proto#L2239
-    """
     inputs = _get_inputs(context, node)
 
     x = context[node.inputs[0]]
