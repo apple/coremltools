@@ -3389,7 +3389,7 @@ def to(context, node):
     if dtype is None:
         out = mb.identity(x=_input, name=node.name)
         context.add(out, node.name)
-        return = 0 # TODO: infer from Tensor (spoiler in this case we care about its f32 => 6)
+        return
 
     torch_dtype = NUM_TO_TORCH_DTYPE[dtype]
     if isinstance(_input, Var) and _input.val is not None:
