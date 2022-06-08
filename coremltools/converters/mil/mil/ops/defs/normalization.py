@@ -229,13 +229,13 @@ class layer_norm(Operation):
         * Dimensions to perform layer normalization.
         * Default is ``None`` (all dimensions).
 
-    gamma: const tensor<[K], T> (Optional)
+    gamma: const tensor<\*?, T>, T> (Optional)
         * if provided, the shape must be be ``x.shape[axes]``. For instance, if
           input ``x`` with shape ``(3,4,5,6)`` and ``axes = [2,3]``, gamma must have
           shape ``(5,6)``.
         * Default is all ones.
 
-    beta: const tensor<[K], T> (Optional)
+    beta: const tensor<\*?, T>, T> (Optional)
         * Same shape as gamma.
         * Default is all zeros.
 
