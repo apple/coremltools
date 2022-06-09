@@ -14,6 +14,7 @@
         <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js"></script>
         <script src="../../../../_static/jquery.js"></script>
         <script src="../../../../_static/underscore.js"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../../../_static/doctools.js"></script>
     <script src="../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
@@ -98,7 +99,7 @@
 <span class="n">_CONSTRAINED_KEYS</span> <span class="o">=</span> <span class="p">[</span><span class="n">_CHANNEL_KEY</span><span class="p">,</span> <span class="n">_HEIGHT_KEY</span><span class="p">,</span> <span class="n">_WIDTH_KEY</span><span class="p">]</span>
 
 
-<span class="k">class</span> <span class="nc">Shape</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">Shape</span><span class="p">:</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shape_value</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">shape_value</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Invalid value. Size/Shape values must be &gt; 0&quot;</span><span class="p">)</span>
@@ -189,7 +190,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_height</span><span class="o">.</span><span class="n">value</span></div>
 
 
-<span class="k">class</span> <span class="nc">ShapeRange</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">ShapeRange</span><span class="p">:</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lowerBound</span><span class="p">,</span> <span class="n">upperBound</span><span class="p">):</span>
         <span class="n">unBounded</span> <span class="o">=</span> <span class="kc">False</span>
 

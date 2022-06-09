@@ -15,6 +15,7 @@
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
         <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="../_static/js/theme.js"></script>
@@ -44,9 +45,10 @@
 <li class="toctree-l1"><a class="reference internal" href="coremltools.converters.html">Converters</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="coremltools.models.html">Models</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="coremltools.models.html#module-coremltools.models.model">MLModel</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coremltools.models.html#module-coremltools.models.array_feature_extractor">array_feature_extractor</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coremltools.models.html#module-coremltools.models.feature_vectorizer">feature_vectorizer</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coremltools.models.html#module-coremltools.models.nearest_neighbors.builder">nearest_neighbors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.html#compression-utils">compression_utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.html#array-feature-extractor">array_feature_extractor</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.html#feature-vectorizer">feature_vectorizer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="coremltools.models.html#nearest-neighbors">nearest_neighbors</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="coremltools.models.html#neural-network">neural_network</a><ul class="current">
 <li class="toctree-l3 current"><a class="current reference internal" href="#">neural_network.builder</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#module-coremltools.models.neural_network.flexible_shape_utils">neural_network.flexible_shape_utils</a></li>
@@ -96,7 +98,7 @@
            <div itemprop="articleBody">
              
   <section id="module-coremltools.models.neural_network.builder">
-<span id="neural-network-builder"></span><h1>neural_network.builder<a class="headerlink" href="#module-coremltools.models.neural_network.builder" title="Permalink to this headline"></a></h1>
+<span id="neural-network-builder"></span><h1>neural_network.builder<a class="headerlink" href="#module-coremltools.models.neural_network.builder" title="Permalink to this heading"></a></h1>
 <p>Neural network builder class to construct Core ML models.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.models.neural_network.builder.NeuralNetworkBuilder">
@@ -5505,7 +5507,7 @@ provide a dictionary with input names as keys.</p>
 
 </section>
 <section id="module-coremltools.models.neural_network.flexible_shape_utils">
-<span id="neural-network-flexible-shape-utils"></span><h1>neural_network.flexible_shape_utils<a class="headerlink" href="#module-coremltools.models.neural_network.flexible_shape_utils" title="Permalink to this headline"></a></h1>
+<span id="neural-network-flexible-shape-utils"></span><h1>neural_network.flexible_shape_utils<a class="headerlink" href="#module-coremltools.models.neural_network.flexible_shape_utils" title="Permalink to this heading"></a></h1>
 <p>Utilities to annotate Neural Network Features with flexible shape information.
 Only available in coremltools 2.0b1 and onwards</p>
 <dl class="py class">
@@ -5780,7 +5782,7 @@ the object is invalid then an exception is thrown</p></li>
 
 </section>
 <section id="module-coremltools.models.neural_network.quantization_utils">
-<span id="neural-network-quantization-utils"></span><h1>neural_network.quantization_utils<a class="headerlink" href="#module-coremltools.models.neural_network.quantization_utils" title="Permalink to this headline"></a></h1>
+<span id="neural-network-quantization-utils"></span><h1>neural_network.quantization_utils<a class="headerlink" href="#module-coremltools.models.neural_network.quantization_utils" title="Permalink to this heading"></a></h1>
 <p>Utilities to compress Neural Network Models.
 Only available in coremltools 2.0b1 and onwards</p>
 <dl class="py class">
@@ -5844,10 +5846,10 @@ that inherits this class and override <cite>do_quantize()</cite> method.</p>
 <p class="rubric">Examples</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyLayerSelector</span><span class="p">(</span><span class="n">QuantizedLayerSelector</span><span class="p">):</span>
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">MyLayerSelector</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">do_quantize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="n">ret</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">MyLayerSelector</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">do_quantize</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">do_quantize</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">ret</span> <span class="ow">or</span> <span class="n">layer</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;dense_2&#39;</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">False</span>
         <span class="k">return</span> <span class="kc">True</span>
@@ -5979,7 +5981,7 @@ otherwise the quantized model specification is returned</p>
 
 </section>
 <section id="module-coremltools.models.neural_network.update_optimizer_utils">
-<span id="neural-network-update-optimizer-utils"></span><h1>neural_network.update_optimizer_utils<a class="headerlink" href="#module-coremltools.models.neural_network.update_optimizer_utils" title="Permalink to this headline"></a></h1>
+<span id="neural-network-update-optimizer-utils"></span><h1>neural_network.update_optimizer_utils<a class="headerlink" href="#module-coremltools.models.neural_network.update_optimizer_utils" title="Permalink to this heading"></a></h1>
 <p>Neural Network optimizer utilities.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.models.neural_network.update_optimizer_utils.AdamParams">

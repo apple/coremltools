@@ -15,6 +15,7 @@
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -78,7 +79,7 @@
            <div itemprop="articleBody">
              
   <section id="module-coremltools.converters.mil.mil">
-<span id="mil-builder"></span><h1>MIL Builder<a class="headerlink" href="#module-coremltools.converters.mil.mil" title="Permalink to this headline"></a></h1>
+<span id="mil-builder"></span><h1>MIL Builder<a class="headerlink" href="#module-coremltools.converters.mil.mil" title="Permalink to this heading"></a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.Builder">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.</span></span><span class="sig-name descname"><span class="pre">Builder</span></span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/builder.html#Builder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.Builder" title="Permalink to this definition"></a></dt>
@@ -95,7 +96,7 @@ For details on each op, see <a class="reference external" href="https://apple.gi
 <span class="gp">&gt;&gt;&gt; </span><span class="n">func_inputs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">mb</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">]),</span>
 <span class="gp">&gt;&gt;&gt; </span>               <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">mb</span><span class="o">.</span><span class="n">placeholder</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">])}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">Function</span><span class="p">(</span><span class="n">func_inputs</span><span class="p">)</span> <span class="k">as</span> <span class="n">ssa_fun</span><span class="p">:</span>
-<span class="gp">&gt;&gt;&gt; </span>  <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">ssa_fun</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">],</span> <span class="n">ssa_fun</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span>  <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">ssa_fun</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">],</span> <span class="n">ssa_fun</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]</span>
 <span class="gp">&gt;&gt;&gt; </span>  <span class="n">res_var</span> <span class="o">=</span> <span class="n">mb</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">y</span><span class="p">)</span> <span class="c1"># created within ssa_fun block</span>
 <span class="gp">&gt;&gt;&gt; </span>  <span class="n">ssa_fun</span><span class="o">.</span><span class="n">set_outputs</span><span class="p">([</span><span class="n">res_var</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">prog</span><span class="o">.</span><span class="n">add_function</span><span class="p">(</span><span class="s2">&quot;main&quot;</span><span class="p">,</span> <span class="n">ssa_fun</span><span class="p">)</span>
