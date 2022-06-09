@@ -89,7 +89,7 @@ class ImageType(InputType):
         channel_first=None,
     ):
         """
-        Configuration class used for image inputs in CoreML.
+        Configuration class used for image inputs in Core ML.
 
         Parameters
         ----------
@@ -97,32 +97,31 @@ class ImageType(InputType):
             The scaling factor for all values in the image channels.
 
         bias: float or list of float
-            If ``color_layout`` is ``'G'``, bias would be a ``float``.
+            * If ``color_layout`` is ``ct.colorlayout.GRAYSCALE`` or
+              ``ct.colorlayout.GRAYSCALE_FLOAT16``, bias would be a ``float``.
+            * If ``color_layout`` is ``ct.colorlayout.RGB`` or ``ct.colorlayout.BGR``,
+              bias would be a list of ``float``.
 
-            If `color_layout` is ``'RGB'`` or ``'BGR'``, bias would be a list of ``float``.
+        color_layout: string or enumeration of type ``ct.colorlayout``
+            Color layout of the image. Valid values are as follows:
+            
+            Enumeration (recommended):
+                * ``ct.colorlayout.RGB``
+                * ``ct.colorlayout.BGR``
+                * ``ct.colorlayout.GRAYSCALE``
+                * ``ct.colorlayout.GRAYSCALE_FLOAT16``
 
-        color_layout: string or of type ct.colorlayout enumeration
-            Color layout of the image.
-
-            Valid values:
-            enumeration (recommended):
-                * ct.colorlayout.RGB
-                * ct.colorlayout.BGR
-                * ct.colorlayout.GRAYSCALE
-                * ct.colorlayout.GRAYSCALE_FLOAT16
-
-            string values (older way to specify):
-                * ``'G'``: Grayscale (maps to ct.colorlayout.GRAYSCALE)
-                * ``'RGB'``: [Red, Green, Blue] (maps to ct.colorlayout.BGR)
-                * ``'BGR'``: [Blue, Green, Red] (maps to ct.colorlayout.RGB)
+            String values (older way to specify):
+                * ``'G'``: Grayscale (maps to ``ct.colorlayout.GRAYSCALE``)
+                * ``'RGB'``: [Red, Green, Blue] (maps to ``ct.colorlayout.BGR``)
+                * ``'BGR'``: [Blue, Green, Red] (maps to ``ct.colorlayout.RGB``)
 
         channel_first: (bool) or None
             Set to ``True`` if input format is channel first.
 
             Default format:
-                For TensorFlow: channel last (``channel_first=False``).
-
-                For PyTorch: channel first (``channel_first=True``).
+                * For TensorFlow: channel last (``channel_first=False``).
+                * For PyTorch: channel first (``channel_first=True``).
         """
         super(ImageType, self).__init__(name, shape)
         self.scale = scale

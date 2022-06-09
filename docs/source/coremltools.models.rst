@@ -7,11 +7,13 @@ MLModel
 .. automodule:: coremltools.models.model
    :members:
 
-compression\_utils 
----------------------------------------------------
+compression\_utils
+-------------------------------------------------
 
-.. automodule:: coremltools.models.ml_program.compression_utils
-   :members:
+.. toctree::
+   :maxdepth: 1
+   
+   coremltools.models.ml_program
 
 
 array\_feature\_extractor 
