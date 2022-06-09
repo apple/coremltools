@@ -14,6 +14,7 @@
         <script data-url_root="../../../../../../../" id="documentation_options" src="../../../../../../../_static/documentation_options.js"></script>
         <script src="../../../../../../../_static/jquery.js"></script>
         <script src="../../../../../../../_static/underscore.js"></script>
+        <script src="../../../../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../../../../../../_static/doctools.js"></script>
     <script src="../../../../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../../../../genindex.html" />
@@ -111,7 +112,7 @@
     <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">ScalarOrTensorInputType</span><span class="p">(),)</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">elementwise_unary</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">sym_type</span>
@@ -140,7 +141,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="nb">abs</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -168,7 +169,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">acos</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -196,7 +197,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">asin</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -224,7 +225,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">atan</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -253,7 +254,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">atanh</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -281,7 +282,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">ceil</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -319,7 +320,7 @@
     <span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">clip</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">sym_type</span>
@@ -349,7 +350,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">cos</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -377,7 +378,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">cosh</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -405,7 +406,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">erf</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -433,7 +434,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">exp</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -461,7 +462,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">exp2</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -490,7 +491,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">floor</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -532,7 +533,7 @@
             <span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">inverse</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">sym_type</span>
@@ -574,7 +575,7 @@
             <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-45</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">log</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">sym_type</span>
@@ -606,7 +607,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">logical_not</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -634,7 +635,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="nb">round</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -676,7 +677,7 @@
             <span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">rsqrt</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">sym_type</span>
@@ -709,7 +710,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">sign</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -737,7 +738,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">sin</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -765,7 +766,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">sinh</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -793,7 +794,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">sqrt</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -821,7 +822,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">square</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -849,7 +850,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">tan</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -878,7 +879,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">tanh</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -912,7 +913,7 @@
     <span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">threshold</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">sym_type</span>
@@ -948,7 +949,7 @@
     <span class="p">)</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">(</span><span class="n">cast</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">type_map</span> <span class="o">=</span> <span class="p">{</span>
@@ -974,6 +975,10 @@
 
     <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span> <span class="o">|</span> <span class="n">SYMBOL</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_cast_value</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">val</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_cast_value</span><span class="p">(</span><span class="n">input_var</span><span class="p">,</span> <span class="n">dtype_val</span><span class="p">):</span>
         <span class="n">type_map</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;int32&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span>
             <span class="s2">&quot;int64&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">,</span>
@@ -983,22 +988,22 @@
             <span class="s2">&quot;bool&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">bool</span><span class="p">,</span>
         <span class="p">}</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">val</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">type_map</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">dtype_val</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">type_map</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
             <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
                 <span class="s2">&quot;Parameter dtype of the cast operation can be one of the </span><span class="si">{}</span><span class="s2">. &quot;</span>
-                <span class="s2">&quot;Provided </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">type_map</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">val</span><span class="p">)</span>
+                <span class="s2">&quot;Provided </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">type_map</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">dtype_val</span><span class="p">)</span>
             <span class="p">)</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">val</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">sym_val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_symbolic</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">sym_val</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">sym_val</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="n">result</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">val</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">type_map</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">val</span><span class="p">])</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">is_symbolic</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="k">else</span> <span class="n">val</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">sym_val</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">input_var</span><span class="o">.</span><span class="n">val</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">input_var</span><span class="o">.</span><span class="n">sym_val</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_symbolic</span><span class="p">(</span><span class="n">input_var</span><span class="o">.</span><span class="n">sym_val</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">input_var</span><span class="o">.</span><span class="n">sym_val</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">val</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">type_map</span><span class="p">[</span><span class="n">dtype_val</span><span class="p">])</span><span class="o">.</span><span class="n">item</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">is_symbolic</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="k">else</span> <span class="n">val</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">input_var</span><span class="o">.</span><span class="n">sym_val</span><span class="p">]</span>
                 <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
             <span class="k">return</span> <span class="kc">None</span>
 
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">types</span><span class="o">.</span><span class="n">is_tensor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">sym_type</span><span class="p">):</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">type_map</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">val</span><span class="p">])</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">types</span><span class="o">.</span><span class="n">is_tensor</span><span class="p">(</span><span class="n">input_var</span><span class="o">.</span><span class="n">sym_type</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">input_var</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">type_map</span><span class="p">[</span><span class="n">dtype_val</span><span class="p">])</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">val</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">type_map</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">val</span><span class="p">])</span></div>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">input_var</span><span class="o">.</span><span class="n">val</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">type_map</span><span class="p">[</span><span class="n">dtype_val</span><span class="p">])</span></div>
 </pre></div>
 
            </div>

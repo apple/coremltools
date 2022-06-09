@@ -15,6 +15,7 @@
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
         <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="../_static/js/theme.js"></script>
@@ -95,10 +96,10 @@
            <div itemprop="articleBody">
              
   <section id="mil-ops">
-<h1>MIL Ops<a class="headerlink" href="#mil-ops" title="Permalink to this headline"></a></h1>
+<h1>MIL Ops<a class="headerlink" href="#mil-ops" title="Permalink to this heading"></a></h1>
 <p>Operators supported by the Model Intermediate Language (MIL):</p>
 <section id="module-coremltools.converters.mil.mil.ops.defs.activation">
-<span id="activation"></span><h2>activation<a class="headerlink" href="#module-coremltools.converters.mil.mil.ops.defs.activation" title="Permalink to this headline"></a></h2>
+<span id="activation"></span><h2>activation<a class="headerlink" href="#module-coremltools.converters.mil.mil.ops.defs.activation" title="Permalink to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.activation.clamped_relu">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.activation.</span></span><span class="sig-name descname"><span class="pre">clamped_relu</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/activation.html#clamped_relu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.activation.clamped_relu" title="Permalink to this definition"></a></dt>
@@ -274,13 +275,19 @@ based on the following formulas:</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>x: tensor&lt;[b, C, n, m], T&gt; (Required)</strong></dt><dd></dd>
-<dt><strong>alpha: const tensor&lt;[C], T&gt;, (Required)</strong></dt><dd></dd>
+<dt><strong>x: tensor&lt;[B, C, 1..3], T&gt; (Required)</strong></dt><dd><ul class="simple">
+<li><p>x must have rank 4 or rank 3 or rank 5, i.e. a shape of (B,C,H) or (B,C,H,W) or (B,C,D,H,W)</p></li>
+</ul>
+</dd>
+<dt><strong>alpha: const tensor&lt;[C], T&gt;, (Required)</strong></dt><dd><ul class="simple">
+<li><p>The length of alpha must match the second dimension of x (channel dimension)</p></li>
+</ul>
+</dd>
 </dl>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><dl class="simple">
-<dt>tensor&lt;[b, C, n, m], fp32&gt;</dt><dd><ul class="simple">
+<dt>tensor&lt;[B, C, 1..3], T&gt;</dt><dd><ul class="simple">
 <li><p>A tensor of the same shape as <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p></li>
 </ul>
 </dd>
@@ -288,7 +295,7 @@ based on the following formulas:</p>
 </dd>
 <dt class="field-odd">Attributes</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>T: fp16, fp32</strong></dt><dd></dd>
+<dt><strong>T: fp32, fp16</strong></dt><dd></dd>
 </dl>
 </dd>
 </dl>
@@ -608,7 +615,7 @@ based on the following formulas:</p>
 
 </section>
 <section id="module-coremltools.converters.mil.mil.ops.defs.control_flow">
-<span id="control-flow"></span><h2>control_flow<a class="headerlink" href="#module-coremltools.converters.mil.mil.ops.defs.control_flow" title="Permalink to this headline"></a></h2>
+<span id="control-flow"></span><h2>control_flow<a class="headerlink" href="#module-coremltools.converters.mil.mil.ops.defs.control_flow" title="Permalink to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.control_flow.cond">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.control_flow.</span></span><span class="sig-name descname"><span class="pre">cond</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/control_flow.html#cond"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.control_flow.cond" title="Permalink to this definition"></a></dt>
@@ -631,6 +638,13 @@ the operation’s return type.</p></li>
 <li><p>A Python function that executes if <code class="docutils literal notranslate"><span class="pre">pred</span></code> evaluates to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
 <li><p>It must take zero input (i.e. no input), and have return types that match those of the
 <code class="docutils literal notranslate"><span class="pre">if</span></code> branch.</p></li>
+</ul>
+</dd>
+<dt><strong>_existing_blocks: list[Block] (Optional)</strong></dt><dd><ul class="simple">
+<li><p>Python list of <code class="docutils literal notranslate"><span class="pre">Block</span></code>.</p></li>
+<li><p>For internal use only. When converting a milproto, we already got existing blocks,
+and the <code class="docutils literal notranslate"><span class="pre">build_nested_blocks</span></code> function can use them directly.</p></li>
+<li><p>When <code class="docutils literal notranslate"><span class="pre">_existing_blocks</span></code> is set, <code class="docutils literal notranslate"><span class="pre">_true_fn</span></code> and <code class="docutils literal notranslate"><span class="pre">_false_fn</span></code> must be dummy functions which returns <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
 </ul>
 </dd>
 </dl>
@@ -743,6 +757,13 @@ with the same types.</p></li>
 </dd>
 <dt><strong>loop_vars: tuple (Required)</strong></dt><dd><ul class="simple">
 <li><p>Python tuple of <code class="docutils literal notranslate"><span class="pre">Variables</span></code>.</p></li>
+</ul>
+</dd>
+<dt><strong>_existing_blocks: list[Block] (Optional)</strong></dt><dd><ul class="simple">
+<li><p>Python list of <code class="docutils literal notranslate"><span class="pre">Block</span></code>.</p></li>
+<li><p>For internal use only. When converting a milproto, we already got existing blocks,
+and the <code class="docutils literal notranslate"><span class="pre">build_nested_blocks</span></code> function can use them directly.</p></li>
+<li><p>When <code class="docutils literal notranslate"><span class="pre">_existing_blocks</span></code> is set, <code class="docutils literal notranslate"><span class="pre">_cond</span></code> and <code class="docutils literal notranslate"><span class="pre">_body</span></code> must be dummy functions which returns <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
 </ul>
 </dd>
 </dl>
@@ -954,7 +975,7 @@ dynamically resized.</p></li>
 
 </section>
 <section id="module-coremltools.converters.mil.mil.ops.defs.conv">
-<span id="conv"></span><h2>conv<a class="headerlink" href="#module-coremltools.converters.mil.mil.ops.defs.conv" title="Permalink to this headline"></a></h2>
+<span id="conv"></span><h2>conv<a class="headerlink" href="#module-coremltools.converters.mil.mil.ops.defs.conv" title="Permalink to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.conv.conv">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.conv.</span></span><span class="sig-name descname"><span class="pre">conv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/conv.html#conv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.conv.conv" title="Permalink to this definition"></a></dt>
@@ -1188,7 +1209,7 @@ See <code class="docutils literal notranslate"><span class="pre">conv</span></co
 
 </section>
 <section id="module-coremltools.converters.mil.mil.ops.defs.elementwise_binary">
-<span id="elementwise-binary"></span><h2>elementwise_binary<a class="headerlink" href="#module-coremltools.converters.mil.mil.ops.defs.elementwise_binary" title="Permalink to this headline"></a></h2>
+<span id="elementwise-binary"></span><h2>elementwise_binary<a class="headerlink" href="#module-coremltools.converters.mil.mil.ops.defs.elementwise_binary" title="Permalink to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.elementwise_binary.add">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.elementwise_binary.</span></span><span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/elementwise_binary.html#add"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.elementwise_binary.add" title="Permalink to this definition"></a></dt>
@@ -1807,7 +1828,7 @@ rounded towards negative infinity.</p>
 
 </section>
 <section id="module-coremltools.converters.mil.mil.ops.defs.elementwise_unary">
-<span id="elementwise-unary"></span><h2>elementwise_unary<a class="headerlink" href="#module-coremltools.converters.mil.mil.ops.defs.elementwise_unary" title="Permalink to this headline"></a></h2>
+<span id="elementwise-unary"></span><h2>elementwise_unary<a class="headerlink" href="#module-coremltools.converters.mil.mil.ops.defs.elementwise_unary" title="Permalink to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.elementwise_unary.abs">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.elementwise_unary.</span></span><span class="sig-name descname"><span class="pre">abs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/elementwise_unary.html#abs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.elementwise_unary.abs" title="Permalink to this definition"></a></dt>
@@ -2545,7 +2566,7 @@ Any values less than <code class="docutils literal notranslate"><span class="pre
 
 </section>
 <section id="module-coremltools.converters.mil.mil.ops.defs.image_resizing">
-<span id="image-resizing"></span><h2>image_resizing<a class="headerlink" href="#module-coremltools.converters.mil.mil.ops.defs.image_resizing" title="Permalink to this headline"></a></h2>
+<span id="image-resizing"></span><h2>image_resizing<a class="headerlink" href="#module-coremltools.converters.mil.mil.ops.defs.image_resizing" title="Permalink to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.image_resizing.affine">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.image_resizing.</span></span><span class="sig-name descname"><span class="pre">affine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/image_resizing.html#affine"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.image_resizing.affine" title="Permalink to this definition"></a></dt>
@@ -3209,7 +3230,7 @@ specified amounts.</p>
 
 </section>
 <section id="module-coremltools.converters.mil.mil.ops.defs.linear">
-<span id="linear"></span><h2>linear<a class="headerlink" href="#module-coremltools.converters.mil.mil.ops.defs.linear" title="Permalink to this headline"></a></h2>
+<span id="linear"></span><h2>linear<a class="headerlink" href="#module-coremltools.converters.mil.mil.ops.defs.linear" title="Permalink to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.linear.linear">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.linear.</span></span><span class="sig-name descname"><span class="pre">linear</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/linear.html#linear"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.linear.linear" title="Permalink to this definition"></a></dt>
@@ -3408,7 +3429,7 @@ In particular, the inputs must be of the following shapes:</p>
 
 </section>
 <section id="module-coremltools.converters.mil.mil.ops.defs.normalization">
-<span id="normalization"></span><h2>normalization<a class="headerlink" href="#module-coremltools.converters.mil.mil.ops.defs.normalization" title="Permalink to this headline"></a></h2>
+<span id="normalization"></span><h2>normalization<a class="headerlink" href="#module-coremltools.converters.mil.mil.ops.defs.normalization" title="Permalink to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.normalization.batch_norm">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.normalization.</span></span><span class="sig-name descname"><span class="pre">batch_norm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/normalization.html#batch_norm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.normalization.batch_norm" title="Permalink to this definition"></a></dt>
@@ -3517,12 +3538,15 @@ tensor by the square root of the sum of squares of all elements of the input.</p
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>x: tensor&lt;[*D,C,H,W], T&gt; (Required)</strong></dt><dd><ul class="simple">
+<dt><strong>x: tensor&lt;[*B, *D], T&gt; (Required)</strong></dt><dd><ul class="simple">
 <li><p>Input tensor, <code class="docutils literal notranslate"><span class="pre">rank(x)</span> <span class="pre">&gt;=</span> <span class="pre">3</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">*D</span></code> refers to the spatial dimensions, <code class="docutils literal notranslate"><span class="pre">rank(*D)</span> <span class="pre">&gt;=</span> <span class="pre">0</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">n</span></code> is the batch dimension.</p></li>
-<li><p>For ranks greater than 3, the leading dimensions, starting from <code class="docutils literal notranslate"><span class="pre">0</span></code> to <code class="docutils literal notranslate"><span class="pre">-4</span></code> (inclusive),
-are all treated as batch.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">*B</span></code> refers to the leading dimensions.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">*D</span></code> refers to the spatial dimensions to be normalized. Must be rank 3: <code class="docutils literal notranslate"><span class="pre">rank(*D)</span> <span class="pre">==</span> <span class="pre">3</span></code>.</p></li>
+<li><p>When <code class="docutils literal notranslate"><span class="pre">rank(x)</span> <span class="pre">==</span> <span class="pre">3</span></code>, in which <code class="docutils literal notranslate"><span class="pre">rank(*B)</span> <span class="pre">==</span> <span class="pre">0</span> <span class="pre">and</span> <span class="pre">rank(*D)</span> <span class="pre">==</span> <span class="pre">3</span></code>, the input is divided by
+the square root of the sum of squares of all elements.</p></li>
+<li><p>For ranks greater than 3, in which <code class="docutils literal notranslate"><span class="pre">rank(*B)</span> <span class="pre">&gt;=</span> <span class="pre">1</span> <span class="pre">and</span> <span class="pre">rank(*D)</span> <span class="pre">==</span> <span class="pre">3</span></code>,
+the leading dimensions *B, starting from <code class="docutils literal notranslate"><span class="pre">0</span></code> to <code class="docutils literal notranslate"><span class="pre">-4</span></code> (inclusive),
+are all treated as batch. The L2 normalization are done batch-wise.</p></li>
 </ul>
 </dd>
 <dt><strong>epsilon: const fp32 (Optional)</strong></dt><dd><ul class="simple">
@@ -3534,7 +3558,7 @@ are all treated as batch.</p></li>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><dl class="simple">
-<dt>tensor&lt;[*D,C,H,W], T&gt;</dt><dd><ul class="simple">
+<dt>tensor&lt;[*B, *D], T&gt;</dt><dd><ul class="simple">
 <li><p>Same type and shape as the input tensor <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p></li>
 </ul>
 </dd>
@@ -3566,14 +3590,14 @@ are all treated as batch.</p></li>
 <li><p>Default is <code class="docutils literal notranslate"><span class="pre">None</span></code> (all dimensions).</p></li>
 </ul>
 </dd>
-<dt><strong>gamma: const tensor&lt;[K], T&gt; (Optional)</strong></dt><dd><ul class="simple">
+<dt><strong>gamma: const tensor&lt;*?, T&gt;, T&gt; (Optional)</strong></dt><dd><ul class="simple">
 <li><p>if provided, the shape must be be <code class="docutils literal notranslate"><span class="pre">x.shape[axes]</span></code>. For instance, if
 input <code class="docutils literal notranslate"><span class="pre">x</span></code> with shape <code class="docutils literal notranslate"><span class="pre">(3,4,5,6)</span></code> and <code class="docutils literal notranslate"><span class="pre">axes</span> <span class="pre">=</span> <span class="pre">[2,3]</span></code>, gamma must have
 shape <code class="docutils literal notranslate"><span class="pre">(5,6)</span></code>.</p></li>
 <li><p>Default is all ones.</p></li>
 </ul>
 </dd>
-<dt><strong>beta: const tensor&lt;[K], T&gt; (Optional)</strong></dt><dd><ul class="simple">
+<dt><strong>beta: const tensor&lt;*?, T&gt;, T&gt; (Optional)</strong></dt><dd><ul class="simple">
 <li><p>Same shape as gamma.</p></li>
 <li><p>Default is all zeros.</p></li>
 </ul>
@@ -3655,7 +3679,7 @@ shape <code class="docutils literal notranslate"><span class="pre">(5,6)</span><
 
 </section>
 <section id="module-coremltools.converters.mil.mil.ops.defs.pool">
-<span id="pool"></span><h2>pool<a class="headerlink" href="#module-coremltools.converters.mil.mil.ops.defs.pool" title="Permalink to this headline"></a></h2>
+<span id="pool"></span><h2>pool<a class="headerlink" href="#module-coremltools.converters.mil.mil.ops.defs.pool" title="Permalink to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.pool.avg_pool">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.pool.</span></span><span class="sig-name descname"><span class="pre">avg_pool</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/pool.html#avg_pool"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.pool.avg_pool" title="Permalink to this definition"></a></dt>
@@ -3888,7 +3912,7 @@ then <code class="docutils literal notranslate"><span class="pre">D_out[i]</span
 
 </section>
 <section id="module-coremltools.converters.mil.mil.ops.defs.random">
-<span id="random"></span><h2>random<a class="headerlink" href="#module-coremltools.converters.mil.mil.ops.defs.random" title="Permalink to this headline"></a></h2>
+<span id="random"></span><h2>random<a class="headerlink" href="#module-coremltools.converters.mil.mil.ops.defs.random" title="Permalink to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.random.random_bernoulli">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.random.</span></span><span class="sig-name descname"><span class="pre">random_bernoulli</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/random.html#random_bernoulli"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.random.random_bernoulli" title="Permalink to this definition"></a></dt>
@@ -4092,7 +4116,7 @@ the results are officially undefined and may eventually raise an error.</p>
 
 </section>
 <section id="module-coremltools.converters.mil.mil.ops.defs.recurrent">
-<span id="recurrent"></span><h2>recurrent<a class="headerlink" href="#module-coremltools.converters.mil.mil.ops.defs.recurrent" title="Permalink to this headline"></a></h2>
+<span id="recurrent"></span><h2>recurrent<a class="headerlink" href="#module-coremltools.converters.mil.mil.ops.defs.recurrent" title="Permalink to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.recurrent.gru">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.recurrent.</span></span><span class="sig-name descname"><span class="pre">gru</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/recurrent.html#gru"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.recurrent.gru" title="Permalink to this definition"></a></dt>
@@ -4426,7 +4450,7 @@ input dimension.</p></li>
 
 </section>
 <section id="module-coremltools.converters.mil.mil.ops.defs.reduction">
-<span id="reduction"></span><h2>reduction<a class="headerlink" href="#module-coremltools.converters.mil.mil.ops.defs.reduction" title="Permalink to this headline"></a></h2>
+<span id="reduction"></span><h2>reduction<a class="headerlink" href="#module-coremltools.converters.mil.mil.ops.defs.reduction" title="Permalink to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.reduction.reduce_argmax">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.reduction.</span></span><span class="sig-name descname"><span class="pre">reduce_argmax</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/reduction.html#reduce_argmax"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.reduction.reduce_argmax" title="Permalink to this definition"></a></dt>
@@ -4461,7 +4485,7 @@ specified in <code class="docutils literal notranslate"><span class="pre">axis</
 <dl class="field-list simple">
 <dt class="field-odd">Attributes</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>T: i32, fp16, fp32</strong></dt><dd></dd>
+<dt><strong>T: f32, int32</strong></dt><dd></dd>
 </dl>
 </dd>
 </dl>
@@ -4501,7 +4525,7 @@ in <code class="docutils literal notranslate"><span class="pre">axis</span></cod
 <dl class="field-list simple">
 <dt class="field-odd">Attributes</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>T: i32, fp16, fp32</strong></dt><dd></dd>
+<dt><strong>T: f32, int32</strong></dt><dd></dd>
 </dl>
 </dd>
 </dl>
@@ -4906,7 +4930,7 @@ otherwise retain reduced axes with length <code class="docutils literal notransl
 
 </section>
 <section id="module-coremltools.converters.mil.mil.ops.defs.scatter_gather">
-<span id="scatter-gather"></span><h2>scatter_gather<a class="headerlink" href="#module-coremltools.converters.mil.mil.ops.defs.scatter_gather" title="Permalink to this headline"></a></h2>
+<span id="scatter-gather"></span><h2>scatter_gather<a class="headerlink" href="#module-coremltools.converters.mil.mil.ops.defs.scatter_gather" title="Permalink to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.scatter_gather.gather">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.scatter_gather.</span></span><span class="sig-name descname"><span class="pre">gather</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/scatter_gather.html#gather"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.scatter_gather.gather" title="Permalink to this definition"></a></dt>
@@ -5041,7 +5065,15 @@ by operation <code class="docutils literal notranslate"><span class="pre">mode</
 </dd>
 <dt class="field-odd">Attributes</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>T: fp16, fp32, i32</strong></dt><dd></dd>
+<dt><strong>T: fp32</strong></dt><dd></dd>
+<dt><strong>For example:</strong></dt><dd><p>data = [[1, 2, 3], [4, 5, 6]]
+indices = [1, 0]
+updates = [[5, 6, 7], [8, 9, 10]]
+axis = 0
+mode = “update”</p>
+</dd>
+<dt><strong>produces:</strong></dt><dd><p>[[9, 11, 13], [9, 11, 13]]</p>
+</dd>
 </dl>
 </dd>
 </dl>
@@ -5079,7 +5111,7 @@ by operation <code class="docutils literal notranslate"><span class="pre">mode</
 </dd>
 <dt class="field-odd">Attributes</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>U: fp16, fp32, i32</strong></dt><dd></dd>
+<dt><strong>T: fp16, fp32, i32</strong></dt><dd></dd>
 </dl>
 </dd>
 </dl>
@@ -5088,8 +5120,8 @@ by operation <code class="docutils literal notranslate"><span class="pre">mode</
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.scatter_gather.scatter_along_axis">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.scatter_gather.</span></span><span class="sig-name descname"><span class="pre">scatter_along_axis</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/scatter_gather.html#scatter_along_axis"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.scatter_gather.scatter_along_axis" title="Permalink to this definition"></a></dt>
-<dd><p>Scatter <code class="docutils literal notranslate"><span class="pre">updates</span></code> to <code class="docutils literal notranslate"><span class="pre">data</span></code> at locations <code class="docutils literal notranslate"><span class="pre">indices</span></code> at dimension <code class="docutils literal notranslate"><span class="pre">axis</span></code>
-by operation <code class="docutils literal notranslate"><span class="pre">mode</span></code>.</p>
+<dd><p>Scatter <code class="docutils literal notranslate"><span class="pre">updates</span></code> to <code class="docutils literal notranslate"><span class="pre">data</span></code> at locations <code class="docutils literal notranslate"><span class="pre">indices</span></code> along <code class="docutils literal notranslate"><span class="pre">axis</span></code> dimension
+using <code class="docutils literal notranslate"><span class="pre">mode</span></code> operation.</p>
 <p>Example: <code class="docutils literal notranslate"><span class="pre">mode</span> <span class="pre">==</span> <span class="pre">update</span></code>.</p>
 <ul class="simple">
 <li><p>For <code class="docutils literal notranslate"><span class="pre">i</span></code> in <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">len(indices)]</span></code>:</p></li>
@@ -5160,7 +5192,7 @@ by operation <code class="docutils literal notranslate"><span class="pre">mode</
 </dd>
 <dt class="field-odd">Attributes</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>T: fp16, fp32, i32</strong></dt><dd></dd>
+<dt><strong>U: fp16, fp32, i32</strong></dt><dd></dd>
 </dl>
 </dd>
 </dl>
@@ -5256,7 +5288,7 @@ the op updates <code class="docutils literal notranslate"><span class="pre">outp
 
 </section>
 <section id="module-coremltools.converters.mil.mil.ops.defs.tensor_operation">
-<span id="tensor-operation"></span><h2>tensor_operation<a class="headerlink" href="#module-coremltools.converters.mil.mil.ops.defs.tensor_operation" title="Permalink to this headline"></a></h2>
+<span id="tensor-operation"></span><h2>tensor_operation<a class="headerlink" href="#module-coremltools.converters.mil.mil.ops.defs.tensor_operation" title="Permalink to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.tensor_operation.band_part">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.tensor_operation.</span></span><span class="sig-name descname"><span class="pre">band_part</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/tensor_operation.html#band_part"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.tensor_operation.band_part" title="Permalink to this definition"></a></dt>
@@ -6006,7 +6038,7 @@ from <code class="docutils literal notranslate"><span class="pre">num_splits</sp
 
 </section>
 <section id="module-coremltools.converters.mil.mil.ops.defs.tensor_transformation">
-<span id="tensor-transformation"></span><h2>tensor_transformation<a class="headerlink" href="#module-coremltools.converters.mil.mil.ops.defs.tensor_transformation" title="Permalink to this headline"></a></h2>
+<span id="tensor-transformation"></span><h2>tensor_transformation<a class="headerlink" href="#module-coremltools.converters.mil.mil.ops.defs.tensor_transformation" title="Permalink to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.tensor_transformation.depth_to_space">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.tensor_transformation.</span></span><span class="sig-name descname"><span class="pre">depth_to_space</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/tensor_transformation.html#depth_to_space"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.tensor_transformation.depth_to_space" title="Permalink to this definition"></a></dt>
