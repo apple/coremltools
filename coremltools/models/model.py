@@ -363,6 +363,8 @@ class MLModel:
         # Cleanup temporary package upon destruction
         if hasattr(self, 'is_package') and self.is_package \
            and hasattr(self, 'is_temp_package') and self.is_temp_package:
+            if _shutil is None:
+                import shutil as _shutil
             _shutil.rmtree(self.package_path)
 
     @property
