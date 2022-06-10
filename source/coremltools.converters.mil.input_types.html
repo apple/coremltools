@@ -15,6 +15,7 @@
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -86,10 +87,10 @@
            <div itemprop="articleBody">
              
   <section id="mil-input-types">
-<h1>MIL Input Types<a class="headerlink" href="#mil-input-types" title="Permalink to this headline"></a></h1>
+<h1>MIL Input Types<a class="headerlink" href="#mil-input-types" title="Permalink to this heading"></a></h1>
 <p>Input types supported by the Model Intermediate Language (MIL):</p>
 <span class="target" id="module-coremltools.converters.mil.input_types"></span><section id="classifierconfig">
-<h2>ClassifierConfig<a class="headerlink" href="#classifierconfig" title="Permalink to this headline"></a></h2>
+<h2>ClassifierConfig<a class="headerlink" href="#classifierconfig" title="Permalink to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.input_types.ClassifierConfig">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.input_types.</span></span><span class="sig-name descname"><span class="pre">ClassifierConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">class_labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">predicted_feature_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'classLabel'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">predicted_probabilities_output</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/input_types.html#ClassifierConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.input_types.ClassifierConfig" title="Permalink to this definition"></a></dt>
@@ -122,7 +123,7 @@ of a softmax layer).</p>
 
 </section>
 <section id="enumeratedshapes">
-<h2>EnumeratedShapes<a class="headerlink" href="#enumeratedshapes" title="Permalink to this headline"></a></h2>
+<h2>EnumeratedShapes<a class="headerlink" href="#enumeratedshapes" title="Permalink to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.input_types.EnumeratedShapes">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.input_types.</span></span><span class="sig-name descname"><span class="pre">EnumeratedShapes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shapes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/input_types.html#EnumeratedShapes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.input_types.EnumeratedShapes" title="Permalink to this definition"></a></dt>
@@ -150,36 +151,49 @@ the metadata of the model file.</p>
 
 </section>
 <section id="imagetype">
-<h2>ImageType<a class="headerlink" href="#imagetype" title="Permalink to this headline"></a></h2>
+<h2>ImageType<a class="headerlink" href="#imagetype" title="Permalink to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.input_types.ImageType">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.input_types.</span></span><span class="sig-name descname"><span class="pre">ImageType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bias</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color_layout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'RGB'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channel_first</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/input_types.html#ImageType"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.input_types.ImageType" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.input_types.</span></span><span class="sig-name descname"><span class="pre">ImageType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bias</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color_layout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">ColorLayout.RGB</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channel_first</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/input_types.html#ImageType"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.input_types.ImageType" title="Permalink to this definition"></a></dt>
 <dd><dl class="py method">
 <dt class="sig sig-object py" id="coremltools.converters.mil.input_types.ImageType.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bias</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color_layout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'RGB'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channel_first</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/input_types.html#ImageType.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.input_types.ImageType.__init__" title="Permalink to this definition"></a></dt>
-<dd><p>Configuration class used for image inputs in CoreML.</p>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bias</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color_layout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">ColorLayout.RGB</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">channel_first</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/input_types.html#ImageType.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.input_types.ImageType.__init__" title="Permalink to this definition"></a></dt>
+<dd><p>Configuration class used for image inputs in Core ML.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl>
 <dt><strong>scale: (float)</strong></dt><dd><p>The scaling factor for all values in the image channels.</p>
 </dd>
-<dt><strong>bias: float or list of float</strong></dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">color_layout</span></code> is <code class="docutils literal notranslate"><span class="pre">'G'</span></code>, bias would be a <code class="docutils literal notranslate"><span class="pre">float</span></code>.</p>
-<p>If <cite>color_layout</cite> is <code class="docutils literal notranslate"><span class="pre">'RGB'</span></code> or <code class="docutils literal notranslate"><span class="pre">'BGR'</span></code>, bias would be a list of <code class="docutils literal notranslate"><span class="pre">float</span></code>.</p>
+<dt><strong>bias: float or list of float</strong></dt><dd><ul class="simple">
+<li><p>If <code class="docutils literal notranslate"><span class="pre">color_layout</span></code> is <code class="docutils literal notranslate"><span class="pre">ct.colorlayout.GRAYSCALE</span></code> or
+<code class="docutils literal notranslate"><span class="pre">ct.colorlayout.GRAYSCALE_FLOAT16</span></code>, bias would be a <code class="docutils literal notranslate"><span class="pre">float</span></code>.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">color_layout</span></code> is <code class="docutils literal notranslate"><span class="pre">ct.colorlayout.RGB</span></code> or <code class="docutils literal notranslate"><span class="pre">ct.colorlayout.BGR</span></code>,
+bias would be a list of <code class="docutils literal notranslate"><span class="pre">float</span></code>.</p></li>
+</ul>
 </dd>
-<dt><strong>color_layout: string</strong></dt><dd><p>Color layout of the image.</p>
+<dt><strong>color_layout: string or enumeration of type ``ct.colorlayout``</strong></dt><dd><p>Color layout of the image. Valid values are as follows:</p>
 <dl class="simple">
-<dt>Valid values:</dt><dd><ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">'G'</span></code>: Grayscale</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">'RGB'</span></code>: [Red, Green, Blue]</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">'BGR'</span></code>: [Blue, Green, Red]</p></li>
+<dt>Enumeration (recommended):</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ct.colorlayout.RGB</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ct.colorlayout.BGR</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ct.colorlayout.GRAYSCALE</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ct.colorlayout.GRAYSCALE_FLOAT16</span></code></p></li>
+</ul>
+</dd>
+<dt>String values (older way to specify):</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">'G'</span></code>: Grayscale (maps to <code class="docutils literal notranslate"><span class="pre">ct.colorlayout.GRAYSCALE</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'RGB'</span></code>: [Red, Green, Blue] (maps to <code class="docutils literal notranslate"><span class="pre">ct.colorlayout.BGR</span></code>)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'BGR'</span></code>: [Blue, Green, Red] (maps to <code class="docutils literal notranslate"><span class="pre">ct.colorlayout.RGB</span></code>)</p></li>
 </ul>
 </dd>
 </dl>
 </dd>
 <dt><strong>channel_first: (bool) or None</strong></dt><dd><p>Set to <code class="docutils literal notranslate"><span class="pre">True</span></code> if input format is channel first.</p>
-<dl>
-<dt>Default format:</dt><dd><p>For TensorFlow: channel last (<code class="docutils literal notranslate"><span class="pre">channel_first=False</span></code>).</p>
-<p>For PyTorch: channel first (<code class="docutils literal notranslate"><span class="pre">channel_first=True</span></code>).</p>
+<dl class="simple">
+<dt>Default format:</dt><dd><ul class="simple">
+<li><p>For TensorFlow: channel last (<code class="docutils literal notranslate"><span class="pre">channel_first=False</span></code>).</p></li>
+<li><p>For PyTorch: channel first (<code class="docutils literal notranslate"><span class="pre">channel_first=True</span></code>).</p></li>
+</ul>
 </dd>
 </dl>
 </dd>
@@ -192,7 +206,7 @@ the metadata of the model file.</p>
 
 </section>
 <section id="rangedim">
-<h2>RangeDim<a class="headerlink" href="#rangedim" title="Permalink to this headline"></a></h2>
+<h2>RangeDim<a class="headerlink" href="#rangedim" title="Permalink to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.input_types.RangeDim">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.input_types.</span></span><span class="sig-name descname"><span class="pre">RangeDim</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lower_bound</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">upper_bound</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-</span> <span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symbol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/input_types.html#RangeDim"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.input_types.RangeDim" title="Permalink to this definition"></a></dt>
@@ -224,7 +238,7 @@ not specified.</p>
 
 </section>
 <section id="shape">
-<h2>Shape<a class="headerlink" href="#shape" title="Permalink to this headline"></a></h2>
+<h2>Shape<a class="headerlink" href="#shape" title="Permalink to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.input_types.Shape">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.input_types.</span></span><span class="sig-name descname"><span class="pre">Shape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shape</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/input_types.html#Shape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.input_types.Shape" title="Permalink to this definition"></a></dt>
@@ -250,7 +264,7 @@ the metadata of the model file.</p>
 
 </section>
 <section id="tensortype">
-<h2>TensorType<a class="headerlink" href="#tensortype" title="Permalink to this headline"></a></h2>
+<h2>TensorType<a class="headerlink" href="#tensortype" title="Permalink to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.input_types.TensorType">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.input_types.</span></span><span class="sig-name descname"><span class="pre">TensorType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/input_types.html#TensorType"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.input_types.TensorType" title="Permalink to this definition"></a></dt>
@@ -279,7 +293,7 @@ TensorFlow graph’s Placeholder shape.</p></li>
 </dd>
 </dl>
 </dd>
-<dt><strong>dtype: np.generic or mil.type type</strong></dt><dd><p>Numpy <code class="docutils literal notranslate"><span class="pre">dtype</span></code> (for example, <code class="docutils literal notranslate"><span class="pre">np.int32</span></code>). Default is <code class="docutils literal notranslate"><span class="pre">np.float32</span></code>.</p>
+<dt><strong>dtype: np.generic or mil.type type</strong></dt><dd><p>For example, <code class="docutils literal notranslate"><span class="pre">np.int32</span></code> or <code class="docutils literal notranslate"><span class="pre">coremltools.converters.mil.mil.types.fp32</span></code></p>
 </dd>
 <dt><strong>default_value: np.ndarray</strong></dt><dd><p>If provided, the input is considered optional. At runtime, if the
 input is not provided, <code class="docutils literal notranslate"><span class="pre">default_value</span></code> is used.</p>

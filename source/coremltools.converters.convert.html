@@ -15,11 +15,12 @@
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Keras" href="coremltools.converters.keras.html" />
+    <link rel="next" title="LibSVM" href="coremltools.converters.libsvm.html" />
     <link rel="prev" title="Converters" href="coremltools.converters.html" /> 
 </head>
 
@@ -42,9 +43,7 @@
 <ul class="current">
 <li class="toctree-l1 current"><a class="reference internal" href="coremltools.converters.html">Converters</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Unified (TensorFlow and Pytorch)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.keras.html">Keras</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coremltools.converters.libsvm.html">LibSVM</a></li>
-<li class="toctree-l2"><a class="reference internal" href="coremltools.converters.onnx.html">ONNX</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coremltools.converters.sklearn.html">SKLearn</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coremltools.converters.xgboost.html">XGBoost</a></li>
 </ul>
@@ -87,19 +86,19 @@
            <div itemprop="articleBody">
              
   <section id="module-coremltools.converters._converters_entry">
-<span id="unified-tensorflow-and-pytorch"></span><h1>Unified (TensorFlow and Pytorch)<a class="headerlink" href="#module-coremltools.converters._converters_entry" title="Permalink to this headline"></a></h1>
+<span id="unified-tensorflow-and-pytorch"></span><h1>Unified (TensorFlow and Pytorch)<a class="headerlink" href="#module-coremltools.converters._converters_entry" title="Permalink to this heading"></a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="coremltools.converters._converters_entry.convert">
-<span class="sig-prename descclassname"><span class="pre">coremltools.converters._converters_entry.</span></span><span class="sig-name descname"><span class="pre">convert</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">classifier_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minimum_deployment_target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">convert_to</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_precision</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_model_load</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">ComputeUnit.ALL</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">useCPUOnly</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">package_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/_converters_entry.html#convert"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters._converters_entry.convert" title="Permalink to this definition"></a></dt>
-<dd><p>Convert a TensorFlow or PyTorch model to the Core ML model format as either a neural network or an ML program.
-To learn about the differences, see
-<a class="reference external" href="https://coremltools.readme.io/docs/ml-programs">ML Programs</a>.
-Some parameters and requirements differ by TensorFlow and PyTorch frameworks.</p>
+<span class="sig-prename descclassname"><span class="pre">coremltools.converters._converters_entry.</span></span><span class="sig-name descname"><span class="pre">convert</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">classifier_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minimum_deployment_target</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">convert_to</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_precision</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_model_load</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">ComputeUnit.ALL</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">package_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/_converters_entry.html#convert"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters._converters_entry.convert" title="Permalink to this definition"></a></dt>
+<dd><p>Convert a TensorFlow or PyTorch model to the Core ML model format as either
+a neural network or an <a class="reference external" href="https://coremltools.readme.io/docs/ml-programs">ML program</a>.
+Some parameters and requirements differ for TensorFlow and PyTorch
+conversions.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl>
 <dt><strong>model</strong></dt><dd><p>TensorFlow 1, TensorFlow 2, or PyTorch model in one of the following
-formats.</p>
+formats:</p>
 <ul>
 <li><p>TensorFlow versions 1.x</p>
 <blockquote>
@@ -137,48 +136,103 @@ determines the framework automatically for most cases. Raises
 <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> if it fails to determine the source framework.</p>
 </dd>
 <dt><strong>inputs</strong><span class="classifier">list of <code class="docutils literal notranslate"><span class="pre">TensorType</span></code> or <code class="docutils literal notranslate"><span class="pre">ImageType</span></code></span></dt><dd><ul>
-<li><p>TensorFlow 1 and 2</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>The <code class="docutils literal notranslate"><span class="pre">inputs</span></code> parameter is optional. If not provided, the inputs
-are placeholder nodes in the model (if the model is frozen graph)
-or function inputs (if the model is a <code class="docutils literal notranslate"><span class="pre">tf.function</span></code>).</p></li>
-<li><p>The inputs must correspond to all or some of the placeholder nodes
-in the TF model.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TensorType</span></code> and <code class="docutils literal notranslate"><span class="pre">ImageType</span></code> in <code class="docutils literal notranslate"><span class="pre">inputs</span></code> must have the <code class="docutils literal notranslate"><span class="pre">name</span></code>
-specified. <code class="docutils literal notranslate"><span class="pre">shape</span></code> is optional.</p></li>
-<li><p>If <code class="docutils literal notranslate"><span class="pre">inputs</span></code> is provided, it must be a flat list.</p></li>
-</ul>
-</div></blockquote>
+<li><p>If you specify <code class="docutils literal notranslate"><span class="pre">dtype</span></code> with <code class="docutils literal notranslate"><span class="pre">TensorType</span></code> or <code class="docutils literal notranslate"><span class="pre">ImageType</span></code>, it will
+be applied to the input of the converted model. For example, the
+following code snippet will produce a Core ML model with float 16 typed
+inputs.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+<span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">keras_model</span><span class="p">,</span>
+                     <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">TensorType</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float16</span><span class="p">)],</span>
+                     <span class="n">minimum_deployment_target</span><span class="o">=</span><span class="n">ct</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">macOS13</span><span class="p">)</span>
+</pre></div>
+</div>
 </li>
-<li><p>PyTorch</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>The <code class="docutils literal notranslate"><span class="pre">inputs</span></code> parameter is required.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">inputs</span></code> may be a nested list or tuple.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">TensorType</span></code> and <code class="docutils literal notranslate"><span class="pre">ImageType</span></code> in <code class="docutils literal notranslate"><span class="pre">inputs</span></code> must have the <code class="docutils literal notranslate"><span class="pre">name</span></code>
-and <code class="docutils literal notranslate"><span class="pre">shape</span></code> specified.</p></li>
+<li><p>The following code snippet will produce a Core ML model with the
+<code class="docutils literal notranslate"><span class="pre">GRAYSCALE_FLOAT16</span></code> input image type:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+<span class="c1"># H : image height, W: image width</span>
+<span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">torch_model</span><span class="p">,</span>
+                 <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">ImageType</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">W</span><span class="p">),</span>
+                         <span class="n">color_layout</span><span class="o">=</span><span class="n">ct</span><span class="o">.</span><span class="n">colorlayout</span><span class="o">.</span><span class="n">GRAYSCALE_FLOAT16</span><span class="p">)],</span>
+                 <span class="n">minimum_deployment_target</span><span class="o">=</span><span class="n">ct</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">macOS13</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><dl class="simple">
+<dt>TensorFlow 1 and 2 (including tf.keras):</dt><dd><ul class="simple">
+<li><p>The <code class="docutils literal notranslate"><span class="pre">inputs</span></code> parameter is optional. If not provided, the inputs
+are placeholder nodes in the model (if the model is a frozen graph)
+or function inputs (if the model is a <code class="docutils literal notranslate"><span class="pre">tf.function</span></code>).</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">inputs</span></code> is provided, it must be a flat list.</p></li>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">inputs</span></code> must correspond to all or some of the placeholder nodes
+in the TF model.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">name</span></code> is specified with <code class="docutils literal notranslate"><span class="pre">TensorType</span></code> and <code class="docutils literal notranslate"><span class="pre">ImageType</span></code>, it
+must correspond to a placeholder op in the TF graph. The input names
+in the converted Core ML model can later be modifed using the
+<code class="docutils literal notranslate"><span class="pre">ct.utils.rename_feature</span></code> API.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">dtype</span></code> is not specified, it defaults to the <code class="docutils literal notranslate"><span class="pre">dtype</span></code> of the
+inputs in the TF model.</p></li>
 </ul>
-</div></blockquote>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>PyTorch:</dt><dd><ul class="simple">
+<li><p>The <code class="docutils literal notranslate"><span class="pre">inputs</span></code> parameter is required.</p></li>
+<li><p>Number of elements in <code class="docutils literal notranslate"><span class="pre">inputs</span></code> must match the number of inputs
+of the PyTorch model.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">inputs</span></code> may be a nested list or tuple.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TensorType</span></code> and <code class="docutils literal notranslate"><span class="pre">ImageType</span></code> must have the <code class="docutils literal notranslate"><span class="pre">shape</span></code> specified.</p></li>
+<li><p>If the <code class="docutils literal notranslate"><span class="pre">name</span></code> argument is specified with <code class="docutils literal notranslate"><span class="pre">TensorType</span></code> or
+<code class="docutils literal notranslate"><span class="pre">ImageType</span></code>, the converted Core ML model will have inputs with
+the same name.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">dtype</span></code> is missing, it defaults to float 32.</p></li>
+</ul>
+</dd>
+</dl>
 </li>
 </ul>
 </dd>
-<dt><strong>outputs</strong><span class="classifier">list[str] (optional)</span></dt><dd><ul>
-<li><p>TensorFlow 1 and 2</p>
+<dt><strong>outputs</strong><span class="classifier">list of <code class="docutils literal notranslate"><span class="pre">TensorType</span></code> or <code class="docutils literal notranslate"><span class="pre">ImageType</span></code> (optional)</span></dt><dd><ul>
+<li><p>If you specify <code class="docutils literal notranslate"><span class="pre">dtype</span></code> with <code class="docutils literal notranslate"><span class="pre">TensorType</span></code> or <code class="docutils literal notranslate"><span class="pre">ImageType</span></code>,
+it will be applied to the output of the converted model. For example,
+to produce float 16 typed inputs and outputs:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+<span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">keras_model</span><span class="p">,</span>
+                     <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">TensorType</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float16</span><span class="p">)],</span>
+                     <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">TensorType</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float16</span><span class="p">)],</span>
+                     <span class="n">minimum_deployment_target</span><span class="o">=</span><span class="n">ct</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">macOS13</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p>To produce image inputs and outputs:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">coremltools</span> <span class="k">as</span> <span class="nn">ct</span>
+<span class="c1"># H: image height, W: image width</span>
+<span class="n">mlmodel</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">torch_model</span><span class="p">,</span>
+                     <span class="n">inputs</span><span class="o">=</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">ImageType</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">H</span><span class="p">,</span> <span class="n">W</span><span class="p">),</span> <span class="n">color_layout</span><span class="o">=</span><span class="n">ct</span><span class="o">.</span><span class="n">colorlayout</span><span class="o">.</span><span class="n">RGB</span><span class="p">)],</span>
+                     <span class="n">outputs</span><span class="o">=</span><span class="p">[</span><span class="n">ct</span><span class="o">.</span><span class="n">ImageType</span><span class="p">(</span><span class="n">color_layout</span><span class="o">=</span><span class="n">ct</span><span class="o">.</span><span class="n">colorlayout</span><span class="o">.</span><span class="n">RGB</span><span class="p">)],</span>
+                     <span class="n">minimum_deployment_target</span><span class="o">=</span><span class="n">ct</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">macOS13</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p>TensorFlow 1 and 2 (including tf.keras):</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>The <code class="docutils literal notranslate"><span class="pre">outputs</span></code> parameter is optional.</p></li>
-<li><p>If specified, <code class="docutils literal notranslate"><span class="pre">outputs</span></code> is a list of string representing node
-names.</p></li>
-<li><p>If <code class="docutils literal notranslate"><span class="pre">outputs</span></code> is not specified, the converter infers outputs to
-all be terminal identity nodes.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">outputs</span></code> is not specified, the converter infers outputs from
+the sink nodes in the graph.</p></li>
+<li><p>If specified, the <code class="docutils literal notranslate"><span class="pre">name</span></code> with <code class="docutils literal notranslate"><span class="pre">TensorType</span></code> or <code class="docutils literal notranslate"><span class="pre">ImageType</span></code>
+must correspond to a node in the TF graph. In this case, the model
+will be converted up to that node.</p></li>
 </ul>
 </div></blockquote>
 </li>
-<li><p>PyTorch</p>
+<li><p>PyTorch:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">outputs</span></code> must not be specified.</p></li>
+<li><p>If specified, the length of the list must match the number of
+outputs returned by the PyTorch model.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">name</span></code> is specified, it is applied to the output names of the
+converted Core ML model.</p></li>
 </ul>
 </div></blockquote>
 </li>
@@ -188,8 +242,8 @@ all be terminal identity nodes.</p></li>
 </dd>
 <dt><strong>minimum_deployment_target</strong><span class="classifier">coremltools.target enumeration (optional)</span></dt><dd><p>A member of the <code class="docutils literal notranslate"><span class="pre">coremltools.target</span></code> enum.
 The value of this parameter determines the type of the model
-representation produced by the converter. To learn about the differences between
-neural networks and ML programs, see
+representation produced by the converter. To learn about the differences
+between neural networks and ML programs, see
 <a class="reference external" href="https://coremltools.readme.io/docs/ml-programs">ML Programs</a>.</p>
 <ul>
 <li><p>The converter produces a neural network (<code class="docutils literal notranslate"><span class="pre">neuralnetwork</span></code>) if:</p>
@@ -231,8 +285,8 @@ differences between neural networks and ML programs, see
 <li><p><code class="docutils literal notranslate"><span class="pre">'neuralnetwork'</span></code>: Returns an MLModel (<code class="docutils literal notranslate"><span class="pre">coremltools.models.MLModel</span></code>)
 containing a NeuralNetwork proto, which is the original Core ML format.
 The model saved from this returned object is executable either on
-iOS13/macOS10.15/watchOS6/tvOS13 and above, or on
-iOS14/macOS11/watchOS7/tvOS14 and above, depending on the layers used
+iOS13/macOS10.15/watchOS6/tvOS13 and newer, or on
+iOS14/macOS11/watchOS7/tvOS14 and newer, depending on the layers used
 in the model.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">'mlprogram'</span></code> : Returns an MLModel (<code class="docutils literal notranslate"><span class="pre">coremltools.models.MLModel</span></code>)
 containing a MILSpec.Program proto, which is the Core ML program format.
@@ -252,69 +306,81 @@ parameter is specified, the converter produces the neural network
 model type with as minimum of a deployment target as possible.</p></li>
 </ul>
 </dd>
-<dt><strong>compute_precision</strong><span class="classifier">coremltools.precision enumeration or ct.transform.FP16ComputePrecision() (optional)</span></dt><dd><p>Must be one of the following.</p>
+<dt><strong>compute_precision</strong><span class="classifier">coremltools.precision enumeration or ct.transform.FP16ComputePrecision() (optional)</span></dt><dd><p>Use this argument to control the storage precision of the tensors in the
+ML program. Must be one of the following.</p>
 <ul>
-<li><dl>
-<dt><code class="docutils literal notranslate"><span class="pre">coremltools.precision.FLOAT16</span></code></dt><dd><ul>
-<li><p>The following transform is applied:</p>
+<li><p><code class="docutils literal notranslate"><span class="pre">coremltools.precision.FLOAT16</span></code> enum: The following transform is
+applied to produce a float 16 program; that is, a program in which all
+the intermediate float tensors are of type float 16 (for ops that
+support that type).</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">coremltools</span><span class="o">.</span><span class="n">transform</span><span class="o">.</span><span class="n">FP16ComputePrecision</span><span class="p">(</span><span class="n">op_selector</span><span class="o">=</span>
-                                        <span class="k">lambda</span> <span class="n">op</span><span class="p">:</span><span class="kc">True</span><span class="p">)</span>
+                                           <span class="k">lambda</span> <span class="n">op</span><span class="p">:</span><span class="kc">True</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>The above transform injects <code class="docutils literal notranslate"><span class="pre">cast</span></code> ops to convert the
-float32 dtypes of intermediate tensors to float16.</p>
+<p>The above transform iterates through all the ops, looking at each op’s
+inputs and outputs. If they are of type float 32, <code class="docutils literal notranslate"><span class="pre">cast</span></code>
+ops are injected to convert those tensors (also known as <cite>vars</cite>) to
+type float 16.</p>
 </li>
-</ul>
-</dd>
-</dl>
+<li><p><code class="docutils literal notranslate"><span class="pre">coremltools.precision.FLOAT32</span></code> enum: No transform is applied.</p>
+<p>The original float32 tensor dtype in the source model is preserved.
+Opt into this option if the default converted model is displaying
+numerical precision issues.</p>
 </li>
-<li><dl class="simple">
-<dt><code class="docutils literal notranslate"><span class="pre">coremltools.precision.FLOAT32</span></code></dt><dd><ul class="simple">
-<li><p>No transform is applied. The original float32 tensor dtype in
-the source model is preserved.</p></li>
-</ul>
-</dd>
-</dl>
-</li>
-<li><dl>
-<dt><code class="docutils literal notranslate"><span class="pre">coremltools.transform.FP16ComputePrecision(op_selector=...)</span></code></dt><dd><ul>
-<li><p>Use the above to control which tensors are cast to float16.</p></li>
-<li><p>For example:</p>
+<li><p><code class="docutils literal notranslate"><span class="pre">coremltools.transform.FP16ComputePrecision(op_selector=...)</span></code></p>
+<p>Use this option to control which tensors are cast to float 16.
+Before casting the inputs/outputs of any op from float32 to float 16,
+the op_selector function is invoked on the op object. This function
+must return a boolean value. By default it returns <code class="docutils literal notranslate"><span class="pre">True</span></code> for every op,
+but you can customize this.</p>
+<p>For example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">coremltools</span><span class="o">.</span><span class="n">transform</span><span class="o">.</span><span class="n">FP16ComputePrecision</span><span class="p">(</span><span class="n">op_selector</span><span class="o">=</span>
-                        <span class="k">lambda</span> <span class="n">op</span><span class="p">:</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">!=</span> <span class="s2">&quot;linear&quot;</span><span class="p">)</span>
+                            <span class="k">lambda</span> <span class="n">op</span><span class="p">:</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">!=</span> <span class="s2">&quot;linear&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>The above casts all the float32 tensors to be float16, except
-the input/output tensors to any <code class="docutils literal notranslate"><span class="pre">linear</span></code> op.</p>
+<p>The above casts all the float32 tensors to be float 16, except
+the input/output tensors to any <code class="docutils literal notranslate"><span class="pre">linear</span></code> op. See more examples
+below.</p>
 </li>
-</ul>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt><code class="docutils literal notranslate"><span class="pre">None</span></code></dt><dd><ul class="simple">
-<li><p>When <code class="docutils literal notranslate"><span class="pre">convert_to=&quot;mlprogram&quot;</span></code>, compute_precision parameter
+<li><dl>
+<dt><code class="docutils literal notranslate"><span class="pre">None</span></code>: The default</dt><dd><ul>
+<li><p>When <code class="docutils literal notranslate"><span class="pre">convert_to=&quot;mlprogram&quot;</span></code>, the <code class="docutils literal notranslate"><span class="pre">compute_precision</span></code> parameter
 defaults to <code class="docutils literal notranslate"><span class="pre">coremltools.precision.FLOAT16</span></code>.</p></li>
-<li><p>When <code class="docutils literal notranslate"><span class="pre">convert_to=&quot;neuralnetwork&quot;</span></code>, compute_precision parameter
+<li><p>When <code class="docutils literal notranslate"><span class="pre">convert_to=&quot;neuralnetwork&quot;</span></code>, the <code class="docutils literal notranslate"><span class="pre">compute_precision</span></code> parameter
 needs to be <code class="docutils literal notranslate"><span class="pre">None</span></code> and has no meaning.</p></li>
+<li><p>For example, you can customize the float 16 precision transform to prevent
+casting all the <code class="docutils literal notranslate"><span class="pre">real_div</span></code> ops in the program to float 16
+precision:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">skip_real_div_ops</span><span class="p">(</span><span class="n">op</span><span class="p">):</span>
+     <span class="k">if</span> <span class="n">op</span><span class="o">.</span><span class="n">op_type</span> <span class="o">==</span> <span class="s2">&quot;real_div&quot;</span><span class="p">:</span>
+         <span class="k">return</span> <span class="kc">False</span>
+     <span class="k">return</span> <span class="kc">True</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">ct</span><span class="o">.</span><span class="n">convert</span><span class="p">(</span><span class="n">source_model</span><span class="p">,</span>
+                   <span class="n">compute_precision</span><span class="o">=</span><span class="n">ct</span><span class="o">.</span><span class="n">transform</span><span class="o">.</span><span class="n">FP16ComputePrecision</span><span class="p">(</span><span class="n">op_selector</span><span class="o">=</span><span class="n">skip_real_div_ops</span><span class="p">),</span>
+                   <span class="n">minimum_deployment_target</span><span class="o">=</span><span class="n">ct</span><span class="o">.</span><span class="n">target</span><span class="o">.</span><span class="n">iOS15</span>
+                  <span class="p">)</span>
+</pre></div>
+</div>
+</li>
 </ul>
 </dd>
 </dl>
 </li>
 </ul>
 </dd>
-<dt><strong>skip_model_load</strong><span class="classifier">bool</span></dt><dd><p>Set to True to prevent coremltools from calling into the Core ML framework
+<dt><strong>skip_model_load</strong><span class="classifier">bool</span></dt><dd><p>Set to <code class="docutils literal notranslate"><span class="pre">True</span></code> to prevent coremltools from calling into the Core ML framework
 to compile and load the model, post-conversion. In that case, the returned
 model object cannot be used to make a prediction, but can be used to save
-via <code class="docutils literal notranslate"><span class="pre">&quot;model.save()&quot;</span></code>. This flag may be used to convert to a newer model type
-on an older Mac, which if done without turning this flag on, may raise a
-runtime warning.</p>
-<p>Example: Use this flag to suppress runtime warning when converting to
-ML program model type on a macOS 11, since ML program
-can only be compiled and loaded from macOS12+.</p>
-<p>Defaults to False.</p>
+with <code class="docutils literal notranslate"><span class="pre">model.save()</span></code>. This flag may be used to convert to a newer model type
+on an older Mac, which may raise a runtime warning if done without
+turning this flag on.</p>
+<p>Example: Use this flag to suppress a runtime warning when converting to an
+ML program model on macOS 11, since an ML program can only be compiled and
+loaded from macOS12+.</p>
+<p>Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
 </dd>
-<dt><strong>compute_units: coremltools.ComputeUnit</strong></dt><dd><p>An enum with three possible values.</p>
+<dt><strong>compute_units: coremltools.ComputeUnit</strong></dt><dd><p>An enum with the following possible values.</p>
 <blockquote>
 <div><ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">coremltools.ComputeUnit.ALL</span></code>: Use all compute units available, including the
@@ -325,22 +391,24 @@ neural engine.</p></li>
 </ul>
 </div></blockquote>
 </dd>
-<dt><strong>useCPUOnly: bool</strong></dt><dd><p>Deprecated, to be removed in coremltools 6.0. Please use <cite>compute_units</cite> instead.
-- if True, identical to setting compute_units to <cite>coremltools.ComputeUnit.CPU_ONLY`</cite>
-- if False, identical to setting compute_units to <cite>coremltools.ComputeUnit.ALL`</cite></p>
-</dd>
 <dt><strong>package_dir</strong><span class="classifier">str</span></dt><dd><p>Post conversion, the model is saved at a temporary location and
-loaded to form the MLModel object ready for prediction.
-If package_dir is provided, model will be saved at this location instead of creating a temporary directory.
-- if not None, must be a path to a directory with extension .mlpackage</p>
+loaded to form the MLModel object ready for prediction.</p>
+<ul class="simple">
+<li><p>If <code class="docutils literal notranslate"><span class="pre">package_dir</span></code> is provided, model will be saved at this location
+rather than creating a temporary directory.</p></li>
+<li><p>If not <code class="docutils literal notranslate"><span class="pre">None</span></code>, this must be a path to a directory with the extension
+<code class="docutils literal notranslate"><span class="pre">.mlpackage</span></code>.</p></li>
+</ul>
 </dd>
-<dt><strong>debug</strong><span class="classifier">bool</span></dt><dd><p>This flag should generally be False except for debugging purposes
-Setting this flag to True:</p>
+<dt><strong>debug</strong><span class="classifier">bool</span></dt><dd><p>This flag should generally be <code class="docutils literal notranslate"><span class="pre">False</span></code> except for debugging purposes.
+Setting this flag to <code class="docutils literal notranslate"><span class="pre">True</span></code> produces the following behavior:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p>For Torch conversion, it will print the list of supported and unsupported ops
-found in the model if conversion fails due to an unsupported op.</p></li>
-<li><p>For Tensorflow conversion, it will cause to display extra logging and visualizations</p></li>
+<li><p>For Torch conversion, it will print the list of supported and
+unsupported ops found in the model if conversion fails due to an
+unsupported op.</p></li>
+<li><p>For Tensorflow conversion, it will cause to display extra logging
+and visualizations.</p></li>
 </ul>
 </div></blockquote>
 </dd>
@@ -348,7 +416,7 @@ found in the model if conversion fails due to an unsupported op.</p></li>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><dl>
-<dt><strong>model</strong><span class="classifier"><code class="docutils literal notranslate"><span class="pre">coremltools.models.MLModel</span></code> or <code class="docutils literal notranslate"><span class="pre">coremltools.converters.mil.Program</span></code></span></dt><dd><p>A Core ML MLModel object or MIL Program object (see <code class="docutils literal notranslate"><span class="pre">convert_to</span></code>).</p>
+<dt><strong>model</strong><span class="classifier"><code class="docutils literal notranslate"><span class="pre">coremltools.models.MLModel</span></code> or <code class="docutils literal notranslate"><span class="pre">coremltools.converters.mil.Program</span></code></span></dt><dd><p>A Core ML MLModel object or MIL program object (see <code class="docutils literal notranslate"><span class="pre">convert_to</span></code>).</p>
 </dd>
 </dl>
 </dd>
@@ -367,7 +435,7 @@ found in the model if conversion fails due to an unsupported op.</p></li>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="s1">&#39;output&#39;</span><span class="p">])</span>
 </pre></div>
 </div>
-<p>TensorFlow 2 (<code class="docutils literal notranslate"><span class="pre">model</span></code> is tf.Keras model path):</p>
+<p>TensorFlow 2 (<code class="docutils literal notranslate"><span class="pre">model</span></code> is a tf.Keras model path):</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">Input</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">32</span><span class="p">,),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;input&#39;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">y</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">layers</span><span class="o">.</span><span class="n">Dense</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s1">&#39;softmax&#39;</span><span class="p">)(</span><span class="n">x</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">keras_model</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">keras</span><span class="o">.</span><span class="n">Model</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
@@ -395,7 +463,7 @@ found in the model if conversion fails due to an unsupported op.</p></li>
 <span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">results</span><span class="p">[</span><span class="s1">&#39;1651&#39;</span><span class="p">])</span> <span class="c1"># 1651 is the node name given by PyTorch&#39;s JIT</span>
 </pre></div>
 </div>
-<p>See <a class="reference external" href="https://coremltools.readme.io/docs/neural-network-conversion">neural-network-conversion</a> for
+<p>See <a class="reference external" href="https://coremltools.readme.io/docs/neural-network-conversion">Conversion Options</a> for
 more advanced options.</p>
 </dd></dl>
 
@@ -406,7 +474,7 @@ more advanced options.</p>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="coremltools.converters.html" class="btn btn-neutral float-left" title="Converters" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="coremltools.converters.keras.html" class="btn btn-neutral float-right" title="Keras" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="coremltools.converters.libsvm.html" class="btn btn-neutral float-right" title="LibSVM" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

@@ -15,12 +15,13 @@
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
         <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="neural_network.builder" href="coremltools.models.neural_network.html" />
+    <link rel="next" title="affine_quantize_weights" href="coremltools.models.ml_program.html" />
     <link rel="prev" title="XGBoost" href="coremltools.converters.xgboost.html" /> 
 </head>
 
@@ -44,6 +45,12 @@
 <li class="toctree-l1"><a class="reference internal" href="coremltools.converters.html">Converters</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Models</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#module-coremltools.models.model">MLModel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#compression-utils">compression_utils</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="coremltools.models.ml_program.html">affine_quantize_weights</a></li>
+<li class="toctree-l3"><a class="reference internal" href="coremltools.models.ml_program.html#module-0">palettize_weights</a></li>
+<li class="toctree-l3"><a class="reference internal" href="coremltools.models.ml_program.html#module-1">sparsify_weights</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#module-coremltools.models.array_feature_extractor">array_feature_extractor</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-coremltools.models.feature_vectorizer">feature_vectorizer</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-coremltools.models.nearest_neighbors.builder">nearest_neighbors</a></li>
@@ -95,12 +102,12 @@
            <div itemprop="articleBody">
              
   <section id="models">
-<h1>Models<a class="headerlink" href="#models" title="Permalink to this headline"></a></h1>
+<h1>Models<a class="headerlink" href="#models" title="Permalink to this heading"></a></h1>
 <section id="module-coremltools.models.model">
-<span id="mlmodel"></span><h2>MLModel<a class="headerlink" href="#module-coremltools.models.model" title="Permalink to this headline"></a></h2>
+<span id="mlmodel"></span><h2>MLModel<a class="headerlink" href="#module-coremltools.models.model" title="Permalink to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.models.model.MLModel">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.models.model.</span></span><span class="sig-name descname"><span class="pre">MLModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">useCPUOnly</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_temp_package</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mil_program</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_model_load</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">ComputeUnit.ALL</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/model.html#MLModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.model.MLModel" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.models.model.</span></span><span class="sig-name descname"><span class="pre">MLModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_temp_package</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mil_program</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_model_load</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">ComputeUnit.ALL</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/model.html#MLModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.model.MLModel" title="Permalink to this definition"></a></dt>
 <dd><p>This class defines the minimal interface to a CoreML object in Python.</p>
 <p>At a high level, the protobuf specification consists of:</p>
 <ul class="simple">
@@ -156,7 +163,7 @@ predictions for the purposes of testing (on select platforms).</p>
 </div>
 <dl class="py method">
 <dt class="sig sig-object py" id="coremltools.models.model.MLModel.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">useCPUOnly</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_temp_package</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mil_program</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_model_load</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">ComputeUnit.ALL</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/model.html#MLModel.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.model.MLModel.__init__" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_temp_package</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mil_program</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_model_load</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_units</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">ComputeUnit.ALL</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/model.html#MLModel.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.model.MLModel.__init__" title="Permalink to this definition"></a></dt>
 <dd><p>Construct an MLModel from an <code class="docutils literal notranslate"><span class="pre">.mlmodel</span></code>.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
@@ -170,11 +177,6 @@ required. Proto spec for an MLProgram, unlike the NeuralNetwork, does not contai
 they are stored separately. If the model does not have weights, an empty weights_dir can be provided.</p>
 <p>For non mlprogram model types, the model can be a path string (<code class="docutils literal notranslate"><span class="pre">.mlmodel</span></code>) or type <code class="docutils literal notranslate"><span class="pre">Model_pb2</span></code>,
 i.e. a spec object.</p>
-</dd>
-<dt><strong>useCPUOnly: bool</strong></dt><dd><p>This parameter is deprecated and will be removed in 6.0. Use the <code class="docutils literal notranslate"><span class="pre">compute_units</span></code>
-parameter instead.</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">compute_units</span></code> parameter overrides any usages of this parameter.</p>
-<p>Set to True to restrict loading of the model to only the CPU. Defaults to False.</p>
 </dd>
 <dt><strong>is_temp_package: bool</strong></dt><dd><p>Set to true if the input model package dir is temporary and can be
 deleted upon destruction of this class.</p>
@@ -245,19 +247,14 @@ weights, and so on).</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="coremltools.models.model.MLModel.predict">
-<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">useCPUOnly</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/model.html#MLModel.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.model.MLModel.predict" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/model.html#MLModel.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.model.MLModel.predict" title="Permalink to this definition"></a></dt>
 <dd><p>Return predictions for the model.</p>
-<dl class="field-list">
+<dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><dl>
+<dd class="field-odd"><dl class="simple">
 <dt><strong>data: dict[str, value]</strong></dt><dd><p>Dictionary of data to make predictions from where the keys are
-the names of the input features.</p>
-</dd>
-<dt><strong>useCPUOnly: bool</strong></dt><dd><p>This parameter is deprecated and will be removed in 6.0. Instead, use the <code class="docutils literal notranslate"><span class="pre">compute_units</span></code>
-parameter at load time or conversion time (that is, in
-<a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.models.html#module-coremltools.models.model">coremltools.models.MLModel()</a> or
-<a class="reference external" href="https://apple.github.io/coremltools/source/coremltools.converters.mil.html#module-coremltools.converters._converters_entry">coremltools.convert()</a>).</p>
-<p>Set to True to restrict computation to use only the CPU. Defaults to False.</p>
+the names of the input features.
+If value is array type, numpy.ndarray, tensorflow.Tensor and torch.Tensor are acceptable.</p>
 </dd>
 </dl>
 </dd>
@@ -271,6 +268,12 @@ name.</p>
 </dl>
 <p class="rubric">Examples</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;bedroom&#39;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s1">&#39;bath&#39;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span> <span class="s1">&#39;size&#39;</span><span class="p">:</span> <span class="mi">1240</span><span class="p">}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">predictions</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;array&#39;</span><span class="p">:</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">3.0</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">]])}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">predictions</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;array&#39;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">([[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">3.0</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">]])}</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">predictions</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;array&#39;</span><span class="p">:</span> <span class="n">tensorflow</span><span class="o">.</span><span class="n">Tensor</span><span class="p">([[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">3.0</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">]])}</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">predictions</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -300,8 +303,18 @@ a package directory containing the <code class="docutils literal notranslate"><s
 </dd></dl>
 
 </section>
+<section id="compression-utils">
+<h2>compression_utils<a class="headerlink" href="#compression-utils" title="Permalink to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.models.ml_program.html">affine_quantize_weights</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.models.ml_program.html#module-0">palettize_weights</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coremltools.models.ml_program.html#module-1">sparsify_weights</a></li>
+</ul>
+</div>
+</section>
 <section id="module-coremltools.models.array_feature_extractor">
-<span id="array-feature-extractor"></span><h2>array_feature_extractor<a class="headerlink" href="#module-coremltools.models.array_feature_extractor" title="Permalink to this headline"></a></h2>
+<span id="array-feature-extractor"></span><h2>array_feature_extractor<a class="headerlink" href="#module-coremltools.models.array_feature_extractor" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="coremltools.models.array_feature_extractor.create_array_feature_extractor">
 <span class="sig-prename descclassname"><span class="pre">coremltools.models.array_feature_extractor.</span></span><span class="sig-name descname"><span class="pre">create_array_feature_extractor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extract_indices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/array_feature_extractor.html#create_array_feature_extractor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.array_feature_extractor.create_array_feature_extractor" title="Permalink to this definition"></a></dt>
@@ -314,7 +327,7 @@ If a list, the output type is an array.</p>
 
 </section>
 <section id="module-coremltools.models.feature_vectorizer">
-<span id="feature-vectorizer"></span><h2>feature_vectorizer<a class="headerlink" href="#module-coremltools.models.feature_vectorizer" title="Permalink to this headline"></a></h2>
+<span id="feature-vectorizer"></span><h2>feature_vectorizer<a class="headerlink" href="#module-coremltools.models.feature_vectorizer" title="Permalink to this heading"></a></h2>
 <dl class="py function">
 <dt class="sig sig-object py" id="coremltools.models.feature_vectorizer.create_feature_vectorizer">
 <span class="sig-prename descclassname"><span class="pre">coremltools.models.feature_vectorizer.</span></span><span class="sig-name descname"><span class="pre">create_feature_vectorizer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_feature_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">known_size_map</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/feature_vectorizer.html#create_feature_vectorizer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.feature_vectorizer.create_feature_vectorizer" title="Permalink to this definition"></a></dt>
@@ -348,7 +361,7 @@ given as dictionaries of index to value.</p>
 
 </section>
 <section id="module-coremltools.models.nearest_neighbors.builder">
-<span id="nearest-neighbors"></span><h2>nearest_neighbors<a class="headerlink" href="#module-coremltools.models.nearest_neighbors.builder" title="Permalink to this headline"></a></h2>
+<span id="nearest-neighbors"></span><h2>nearest_neighbors<a class="headerlink" href="#module-coremltools.models.nearest_neighbors.builder" title="Permalink to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.models.nearest_neighbors.builder.</span></span><span class="sig-name descname"><span class="pre">KNearestNeighborsClassifierBuilder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">number_of_dimensions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_class_label</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/nearest_neighbors/builder.html#KNearestNeighborsClassifierBuilder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder" title="Permalink to this definition"></a></dt>
@@ -613,7 +626,7 @@ KNearestNeighborsClassifier model.</p>
 
 </section>
 <section id="neural-network">
-<h2>neural_network<a class="headerlink" href="#neural-network" title="Permalink to this headline"></a></h2>
+<h2>neural_network<a class="headerlink" href="#neural-network" title="Permalink to this heading"></a></h2>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="coremltools.models.neural_network.html">neural_network.builder</a></li>
@@ -624,7 +637,7 @@ KNearestNeighborsClassifier model.</p>
 </div>
 </section>
 <section id="module-coremltools.models.pipeline">
-<span id="pipeline"></span><h2>pipeline<a class="headerlink" href="#module-coremltools.models.pipeline" title="Permalink to this headline"></a></h2>
+<span id="pipeline"></span><h2>pipeline<a class="headerlink" href="#module-coremltools.models.pipeline" title="Permalink to this heading"></a></h2>
 <p>Pipeline utils for this package.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.models.pipeline.Pipeline">
@@ -820,7 +833,7 @@ of the pipeline, or match the outputs of a previous model.</p>
 
 </section>
 <section id="module-coremltools.models.tree_ensemble">
-<span id="tree-ensemble"></span><h2>tree_ensemble<a class="headerlink" href="#module-coremltools.models.tree_ensemble" title="Permalink to this headline"></a></h2>
+<span id="tree-ensemble"></span><h2>tree_ensemble<a class="headerlink" href="#module-coremltools.models.tree_ensemble" title="Permalink to this heading"></a></h2>
 <p>Tree ensemble builder class to construct CoreML models.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.models.tree_ensemble.TreeEnsembleBase">
@@ -1141,7 +1154,7 @@ the features.</p>
 
 </section>
 <section id="module-coremltools.models.utils">
-<span id="utils"></span><h2>utils<a class="headerlink" href="#module-coremltools.models.utils" title="Permalink to this headline"></a></h2>
+<span id="utils"></span><h2>utils<a class="headerlink" href="#module-coremltools.models.utils" title="Permalink to this heading"></a></h2>
 <p>Utilities for the entire package.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="coremltools.models.utils.convert_double_to_float_multiarray_type">
@@ -1409,7 +1422,7 @@ any weights, this path can be an empty directory.</p>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="coremltools.converters.xgboost.html" class="btn btn-neutral float-left" title="XGBoost" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="coremltools.models.neural_network.html" class="btn btn-neutral float-right" title="neural_network.builder" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="coremltools.models.ml_program.html" class="btn btn-neutral float-right" title="affine_quantize_weights" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
