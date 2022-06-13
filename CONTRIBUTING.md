@@ -2,7 +2,7 @@
 Contribution Guidelines
 =======================
 
-The Core ML `.mlmodel` file format is a publicly documented specification. The Core ML Tools source code is 100% open source under the [BSD license](https://github.com/apple/coremltools/blob/master/LICENSE.txt). We welcome all contributions and ideas to grow the product. We ask that you follow the [contributing guidelines and code of conduct](#guidelines-and-code-of-conduct)  in this document, which are typical of open source communities.
+The Core ML `.mlmodel` file format is a publicly documented specification. The Core ML Tools source code is 100% open source under the [BSD-3 Clause license](https://github.com/apple/coremltools/blob/master/LICENSE.txt). We welcome all contributions and ideas to grow the product. We ask that you follow the [contributing guidelines and code of conduct](#guidelines-and-code-of-conduct), which are typical of open source communities.
 
 There are many ways to contribute to coremltools. [**Use these templates**](https://github.com/apple/coremltools/issues/new/choose) to report issues, make feature requests, or ask questions. We welcome even minor improvements to code, testing, and documentation, as well as requests for new features and enhancements. Don’t hesitate to do the following:
 
@@ -25,7 +25,7 @@ To ensure that issues and pull requests can be addressed quickly, please do the 
 
 * Check [open issues](https://github.com/apple/coremltools/issues) and [current pull requests](https://github.com/apple/coremltools/pulls) in the repository to see if your issue, feature request, or question already exists or has already been addressed.
 * Fill in the appropriate [template](https://github.com/apple/coremltools/issues/new/choose) with as much detail as possible as well as code snippets, so that we are able to reproduce the issue.
-* Promptly reply to any requests or questions posed by others within the community on your issue or pull request.
+* Promptly reply to any requests or questions asked by others within the community on your issue or pull request.
 
 ## Resources
 
