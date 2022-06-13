@@ -1,7 +1,7 @@
 Building from Source
 ====================
 
-This page describes building Core ML Tools (coremltools) from the source repository.
+This page describes how to build Core ML Tools (coremltools) from the source repository.
 
 ## Requirements
 
@@ -24,7 +24,7 @@ Follow these steps:
 	
 3. Run the [test.sh](scripts/test.sh) script to test the build.
 
-**Under the hood**: If an Anaconda or Miniconda environment doesn't already exists or is not up-to-date, the `build.sh` script automatically runs the [`env_create.sh`](scripts/env_create.sh) script to create the environment. It then uses [`env_activate.sh`](scripts/env_activate.sh) to activate the environment and set up the appropriate version of Python. The new environment is located at `<repo root>/coremltoos/envs` and is named after the `py` parameter. For example, a development environment with py 3.7 is named `coremltools-dev-py37`.
+**Under the hood**: If an Anaconda or Miniconda environment doesn't already exist or is not up-to-date, the `build.sh` script automatically runs the [`env_create.sh`](scripts/env_create.sh) script to create the environment. It then uses [`env_activate.sh`](scripts/env_activate.sh) to activate the environment and set up the appropriate version of Python. The new environment is located at `<repo root>/coremltoos/envs` and is named after the `py` parameter. For example, a development environment with py 3.7 is named `coremltools-dev-py37`.
 
 
 ## Build targets
@@ -53,8 +53,8 @@ For more information, see the following:
 
 * Core ML Tools [README](README.md) file for this repository
 * [Release Notes](https://github.com/apple/coremltools/releases/) for the current release and previous releases
-* [Guides and examples](https://coremltools.readme.io/) with installation and troubleshooting
+* [Guides and examples](https://coremltools.readme.io/) with installation and troubleshooting help
 * [API Reference](https://apple.github.io/coremltools/index.html)
 * [Core ML Specification](https://apple.github.io/coremltools/mlmodel/index.html)
-* [Contribution Guidelines](CONTRIBUTING.md) for reporting issues and making requests
+* [Contribution Guidelines](CONTRIBUTING.md) for reporting issues and making pull requests
 
