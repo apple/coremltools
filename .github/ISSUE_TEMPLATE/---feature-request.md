@@ -16,7 +16,7 @@ https://developer.apple.com/bug-reporting/
 Please provide some examples where this feature can be used.
 
 ## Describe alternatives you've considered
-Tell us some alternatives that you have considered instead of the feature.
+Tell us some alternatives that you have considered instead of this feature.
 
 ## Additional context
 Do you have anything else to say?
