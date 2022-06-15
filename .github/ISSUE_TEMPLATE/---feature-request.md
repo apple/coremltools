@@ -8,16 +8,15 @@ assignees: ''
 ---
 
 ## 🌱 Describe your Feature Request
-- A clear and concise description of the feature request.
+- Please provide a description of your feature request, clear and consise.
 - If this is a feature request for the Core ML Framework or Xcode, please instead submit your feature request using the Feedback Assistant for Developers:
 https://developer.apple.com/bug-reporting/
 
-## Use cases
-- Please describe the use cases.
-- Please provide examples.
+## How can this feature be used?
+Please provide some examples where this feature can be used.
 
 ## Describe alternatives you've considered
-A clear and concise description of any alternative solutions or features you've considered.
+Tell us some alternatives that you have considered instead of this feature.
 
 ## Additional context
-Add any other context or screenshots about the feature request here.
+Do you have anything else to say?
