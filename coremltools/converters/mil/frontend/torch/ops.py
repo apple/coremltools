@@ -472,14 +472,26 @@ def listconstruct(context, node):
 @register_torch_op
 def eq(context, node):
     inputs = _get_inputs(context, node, expected=2)
-    equal_to = mb.equal(x=inputs[0], y=inputs[1], name=node.name)
+    x = inputs[0]
+    y = inputs[1]
+    if is_bool(x.dtype):
+        x = mb.cast(x=x, dtype='int32')
+    if is_bool(y.dtype):
+        y = mb.cast(x=y, dtype='int32')
+    equal_to = mb.equal(x=x, y=y, name=node.name)
     context.add(equal_to)
 
 
 @register_torch_op
 def ne(context, node):
     inputs = _get_inputs(context, node, expected=2)
-    equal_to = mb.not_equal(x=inputs[0], y=inputs[1], name=node.name)
+    x = inputs[0]
+    y = inputs[1]
+    if is_bool(x.dtype):
+        x = mb.cast(x=x, dtype='int32')
+    if is_bool(y.dtype):
+        y = mb.cast(x=y, dtype='int32')
+    equal_to = mb.not_equal(x=x, y=y, name=node.name)
     context.add(equal_to)
 
 
