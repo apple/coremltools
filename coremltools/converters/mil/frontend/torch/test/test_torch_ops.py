@@ -154,6 +154,12 @@ class TestScriptedModels(TorchBaseTest):
 
         self.run_compare_torch(model.input_size, model, backend=backend, use_scripting=True)
 
+
+
+
+    
+
+
     @pytest.mark.parametrize("backend", backends)
     def test_linear(self, backend):
         class Model(torch.nn.Module):
@@ -396,6 +402,30 @@ class TestMv(TorchBaseTest):
         TorchBaseTest.run_compare_torch((matrix, vector), model, backend=backend, input_as_shape=False)
 
 
+class TestCossim(TorchBaseTest):
+    
+    @pytest.mark.parametrize("backend", backends)
+    def test_cosine_similarity(self, backend):
+        class CosineSimilarity(nn.Module):
+            def __init__(self):
+                super(CosineSimilarity, self).__init__()
+                # self.flatten = nn.Flatten()
+                self.cossim = torch.nn.CosineSimilarity()
+
+            def forward(self, x,y):
+                out = self.cossim(x,y)
+                return out
+        model = CosineSimilarity()
+        input1 = generate_input_data((2,3))
+        input2 = generate_input_data((2,3))
+        model_spec= TorchBaseTest.run_compare_torch(
+            [input1,input2], 
+            model,
+            input_as_shape=False, 
+            backend=backend,
+        )
+        print(model_spec)
+
 class TestDot(TorchBaseTest):
     @pytest.mark.parametrize("vector_length, backend",
                              itertools.product([1, 5, 11], backends)
@@ -406,8 +436,8 @@ class TestDot(TorchBaseTest):
         vector1 = generate_input_data((vector_length, ))
         vector2 = generate_input_data((vector_length, ))
 
-        TorchBaseTest.run_compare_torch((vector1, vector2), model, backend=backend, input_as_shape=False)
-
+        spec = TorchBaseTest.run_compare_torch((vector1, vector2), model, backend=backend, input_as_shape=False)
+        print("Specs",spec)
 
 class TestOuter(TorchBaseTest):
     @pytest.mark.parametrize("x_vector_length, y_vector_length, backend",
