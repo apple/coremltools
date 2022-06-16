@@ -424,7 +424,7 @@ class TestCossim(TorchBaseTest):
             input_as_shape=False, 
             backend=backend,
         )
-        print(model_spec)
+        
 
 class TestDot(TorchBaseTest):
     @pytest.mark.parametrize("vector_length, backend",
@@ -436,9 +436,8 @@ class TestDot(TorchBaseTest):
         vector1 = generate_input_data((vector_length, ))
         vector2 = generate_input_data((vector_length, ))
 
-        spec = TorchBaseTest.run_compare_torch((vector1, vector2), model, backend=backend, input_as_shape=False)
-        print("Specs",spec)
-
+        TorchBaseTest.run_compare_torch((vector1, vector2), model, backend=backend, input_as_shape=False)
+        
 class TestOuter(TorchBaseTest):
     @pytest.mark.parametrize("x_vector_length, y_vector_length, backend",
                              itertools.product([1, 5], [1, 3], backends)
