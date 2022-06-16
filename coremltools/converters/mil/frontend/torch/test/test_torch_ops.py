@@ -1451,7 +1451,7 @@ class TestAdaptiveMaxPool(TorchBaseTest):
     @pytest.mark.parametrize(
         "output_size, magnification, delta, depth, backend",
         itertools.product(
-            [(1,1), (3,2)],
+            [(1, 1), (3, 2)],
             [1, 2, 7],
             [0, 11],
             [1, 2, 3],
@@ -1466,11 +1466,39 @@ class TestAdaptiveMaxPool(TorchBaseTest):
         # since coremltools reproduces PyTorch's kernel sizes and
         # offsets for adaptive pooling layers only when input_size is
         # a multiple of output_size, we expect failures otherwise
-        if not (input_size[0] % output_size[0]  == 0 and input_size[1] % output_size[1] == 0):
+        if not (input_size[0] % output_size[0] == 0 and input_size[1] % output_size[1] == 0):
             pytest.xfail("Test should fail because input_size is not a multiple of output_size")
         n = 1
-        in_shape = (n,depth) + input_size
+        in_shape = (n, depth) + input_size
         model = nn.AdaptiveMaxPool2d(
+            output_size
+        )
+        self.run_compare_torch(in_shape, model, backend=backend)
+
+class TestAdaptiveAvgPool(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "output_size, magnification, delta, depth, backend",
+        itertools.product(
+            [(1, 1), (3, 2)],
+            [1, 2, 7],
+            [0, 11],
+            [1, 2, 3],
+            backends,
+        ),
+    )
+    def test_adaptive_avg_pool2d(
+            self, output_size, magnification, delta, depth, backend
+    ):
+        # input_size = output_size * magnification + delta
+        input_size = (delta + magnification * output_size[0], delta + magnification * output_size[1])
+        # since coremltools reproduces PyTorch's kernel sizes and
+        # offsets for adaptive pooling layers only when input_size is
+        # a multiple of output_size, we expect failures otherwise
+        if not (input_size[0] % output_size[0] == 0 and input_size[1] % output_size[1] == 0):
+            pytest.xfail("Test should fail because input_size is not a multiple of output_size")
+        n = 1
+        in_shape = (n, depth) + input_size
+        model = nn.AdaptiveAvgPool2d(
             output_size
         )
         self.run_compare_torch(in_shape, model, backend=backend)
