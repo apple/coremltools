@@ -304,7 +304,6 @@ class TestTensorFlow2ConverterExamples:
 
     @staticmethod
     def test_convert_from_two_tags_saved_model_dir(tmpdir):
-
         import tensorflow as tf
         from tensorflow.compat.v1.saved_model import build_tensor_info
         from tensorflow.compat.v1.saved_model import signature_constants

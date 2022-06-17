@@ -64,6 +64,7 @@ def convert(
     compute_units=_ComputeUnit.ALL,
     package_dir=None,
     debug=False,
+    **kwargs
 ):
     """
     Convert a TensorFlow or PyTorch model to the Core ML model format as either
@@ -461,6 +462,7 @@ def convert(
         package_dir=package_dir,
         debug=debug,
         specification_version=specification_version,
+        **kwargs
     )
 
     if exact_target == 'milinternal':
