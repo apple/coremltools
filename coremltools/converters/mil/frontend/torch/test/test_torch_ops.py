@@ -155,11 +155,6 @@ class TestScriptedModels(TorchBaseTest):
         self.run_compare_torch(model.input_size, model, backend=backend, use_scripting=True)
 
 
-
-
-    
-
-
     @pytest.mark.parametrize("backend", backends)
     def test_linear(self, backend):
         class Model(torch.nn.Module):
@@ -403,28 +398,28 @@ class TestMv(TorchBaseTest):
 
 
 class TestCossim(TorchBaseTest):
-    
-    @pytest.mark.parametrize("backend", backends)
-    def test_cosine_similarity(self, backend):
+    @pytest.mark.parametrize("dim,eps,shape,backend",itertools.product([0,1,-1],[0.1,1e-5,1e-8],COMMON_SHAPES,[("mlprogram","fp32"),("neuralnetwork","fp16"),("neuralnetwork","fp32")]))
+    def test_cosine_similarity(self, backend,dim,eps,shape):
         class CosineSimilarity(nn.Module):
-            def __init__(self):
+            def __init__(self,dim,eps):
                 super(CosineSimilarity, self).__init__()
-                # self.flatten = nn.Flatten()
-                self.cossim = torch.nn.CosineSimilarity()
+                self.cossim = torch.nn.CosineSimilarity(dim=dim,eps=eps)
 
             def forward(self, x,y):
                 out = self.cossim(x,y)
                 return out
-        model = CosineSimilarity()
-        input1 = generate_input_data((2,3))
-        input2 = generate_input_data((2,3))
+
+
+        model = CosineSimilarity(dim,eps)
+        input1 = generate_input_data(shape)
+        input2 = generate_input_data(shape)
         model_spec= TorchBaseTest.run_compare_torch(
-            [input1,input2], 
+            [input1, input2], 
             model,
             input_as_shape=False, 
             backend=backend,
         )
-        
+
 
 class TestDot(TorchBaseTest):
     @pytest.mark.parametrize("vector_length, backend",
@@ -438,6 +433,7 @@ class TestDot(TorchBaseTest):
 
         TorchBaseTest.run_compare_torch((vector1, vector2), model, backend=backend, input_as_shape=False)
         
+
 class TestOuter(TorchBaseTest):
     @pytest.mark.parametrize("x_vector_length, y_vector_length, backend",
                              itertools.product([1, 5], [1, 3], backends)

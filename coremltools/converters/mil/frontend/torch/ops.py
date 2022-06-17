@@ -361,8 +361,7 @@ def constant(context, node):
     context.add(const, torch_name=name)
 
 
-
-@register_torch_op(override=True)
+@register_torch_op
 def cosine_similarity(context, node):
     inputs = _get_inputs(context, node, expected=4)
     dim = inputs[-2].val
@@ -380,10 +379,7 @@ def cosine_similarity(context, node):
     div_sqrt = mb.sqrt(x=div_12)
 
     cs = mb.real_div(x=sum_xy, y=div_sqrt, name=node.name)
-    print("Answer",cs)
     context.add(cs)
-
-
 
 
 @register_torch_op
