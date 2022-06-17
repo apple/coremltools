@@ -19,7 +19,7 @@ Follow these steps:
 1. Fork and clone the GitHub [coremltools repository](https://github.com/apple/coremltools).
 
 2. Run the [build.sh](scripts/build.sh) script to build `coremltools`. 
-	* By default this script uses Python 3.7, but you can include `--python=3.6` (or `3.7`, `3.8`, `3.9`) as a argument to change the Python version.
+	* By default this script uses Python 3.7, but you can include `--python=3.6` (or `3.7`, `3.8`, `3.9`, `3.10`) as an argument to change the Python version.
 	* The script creates a new `build` folder with the coremltools distribution, and a `dist` folder with Python wheel files.
 	
 3. Run the [test.sh](scripts/test.sh) script to test the build.
@@ -45,7 +45,7 @@ The following build targets help you configure the development environment. If y
 * `test_slow` | Run all non-fast tests.
 * `wheel` | Build wheels in release mode.
 
-The script uses Python 3.7, but you can include `--python=3.6` (or `3.7`, `3.8`, `3.9`) as a argument to change the Python version.
+The script uses Python 3.7, but you can include `--python=3.6` (or `3.7`, `3.8`, `3.9`, `3.10`) as an argument to change the Python version.
 
 ## Resources
 

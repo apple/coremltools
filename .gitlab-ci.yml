@@ -62,6 +62,12 @@ build_wheel_linux_py39:
   variables:
     PYTHON: "3.9"
 
+build_wheel_linux_py310:
+  <<: *build_linux
+  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-18.04:1.0.0
+  variables:
+    PYTHON: "3.10"
+
 #########################################################################
 ##
 ##                         macOS - Build
@@ -98,6 +104,11 @@ build_wheel_macos_py39:
   <<: *build_macos
   variables:
     PYTHON: "3.9"
+
+build_wheel_macos_py310:
+  <<: *build_macos
+  variables:
+    PYTHON: "3.10"
 
 #########################################################################
 ##
