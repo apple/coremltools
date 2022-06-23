@@ -398,23 +398,23 @@ class TestMv(TorchBaseTest):
 
 
 class TestCosineSimilarity(TorchBaseTest):
-    @pytest.mark.parametrize("dim,eps,shape,backend",
+    @pytest.mark.parametrize("dim, eps, shape, backend",
                              itertools.product([0, 1, -1], [0.1, 1e-5, 1e-8], COMMON_SHAPES, backends)
                             )
-    @pytest.mark.xfail(backend = ("mlprogram","fp16"),
+    @pytest.mark.xfail(backend = ("mlprogram", "fp16"),
                        reason = "Known precision error with mlprogram fp16 backend"
                        )
     def test_cosine_similarity(self, backend, dim, eps, shape):
         class CosineSimilarity(nn.Module):
-            def __init__(self,dim,eps):
+            def __init__(self, dim, eps):
                 super(CosineSimilarity, self).__init__()
-                self.cossim = torch.nn.CosineSimilarity(dim=dim,eps=eps)
+                self.cossim = torch.nn.CosineSimilarity(dim=dim, eps=eps)
 
-            def forward(self, x,y):
-                out = self.cossim(x,y)
+            def forward(self, x, y):
+                out = self.cossim(x, y)
                 return out
 
-        model = CosineSimilarity(dim,eps)
+        model = CosineSimilarity(dim, eps)
         input1 = generate_input_data(shape)
         input2 = generate_input_data(shape)
 

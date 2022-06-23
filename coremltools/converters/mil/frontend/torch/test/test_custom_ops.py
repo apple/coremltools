@@ -39,7 +39,7 @@ default_cosine_similarity = _TORCH_OPS_REG.get("cosine_similarity", None)
 
 @register_torch_op(override=True)
 def cosine_similarity(context, node):
-    cosine_similarity_main(context,node)
+    cosine_similarity_main(context, node)
 
 
 # Log custom Cosine Similarity conversion function
