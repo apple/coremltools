@@ -397,9 +397,14 @@ class TestMv(TorchBaseTest):
         TorchBaseTest.run_compare_torch((matrix, vector), model, backend=backend, input_as_shape=False)
 
 
-class TestCossim(TorchBaseTest):
-    @pytest.mark.parametrize("dim,eps,shape,backend",itertools.product([0,1,-1],[0.1,1e-5,1e-8],COMMON_SHAPES,[("mlprogram","fp32"),("neuralnetwork","fp16"),("neuralnetwork","fp32")]))
-    def test_cosine_similarity(self, backend,dim,eps,shape):
+class TestCosineSimilarity(TorchBaseTest):
+    @pytest.mark.parametrize("dim,eps,shape,backend",
+                             itertools.product([0, 1, -1], [0.1, 1e-5, 1e-8], COMMON_SHAPES, backends)
+                            )
+    @pytest.mark.xfail(backend = ("mlprogram","fp16"),
+                       reason = "Known precision error with mlprogram fp16 backend"
+                       )
+    def test_cosine_similarity(self, backend, dim, eps, shape):
         class CosineSimilarity(nn.Module):
             def __init__(self,dim,eps):
                 super(CosineSimilarity, self).__init__()
@@ -409,11 +414,11 @@ class TestCossim(TorchBaseTest):
                 out = self.cossim(x,y)
                 return out
 
-
         model = CosineSimilarity(dim,eps)
         input1 = generate_input_data(shape)
         input2 = generate_input_data(shape)
-        model_spec= TorchBaseTest.run_compare_torch(
+
+        TorchBaseTest.run_compare_torch(
             [input1, input2], 
             model,
             input_as_shape=False, 
