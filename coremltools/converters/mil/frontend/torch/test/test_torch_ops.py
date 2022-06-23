@@ -154,6 +154,7 @@ class TestScriptedModels(TorchBaseTest):
 
         self.run_compare_torch(model.input_size, model, backend=backend, use_scripting=True)
 
+
     @pytest.mark.parametrize("backend", backends)
     def test_linear(self, backend):
         class Model(torch.nn.Module):
@@ -396,6 +397,35 @@ class TestMv(TorchBaseTest):
         TorchBaseTest.run_compare_torch((matrix, vector), model, backend=backend, input_as_shape=False)
 
 
+class TestCosineSimilarity(TorchBaseTest):
+    @pytest.mark.parametrize("dim, eps, shape, backend",
+                             itertools.product([0, 1, -1], [0.1, 1e-5, 1e-8], COMMON_SHAPES, backends)
+                            )
+    @pytest.mark.xfail(backend = ("mlprogram", "fp16"),
+                       reason = "Known precision error with mlprogram fp16 backend"
+                       )
+    def test_cosine_similarity(self, backend, dim, eps, shape):
+        class CosineSimilarity(nn.Module):
+            def __init__(self, dim, eps):
+                super(CosineSimilarity, self).__init__()
+                self.cossim = torch.nn.CosineSimilarity(dim=dim, eps=eps)
+
+            def forward(self, x, y):
+                out = self.cossim(x, y)
+                return out
+
+        model = CosineSimilarity(dim, eps)
+        input1 = generate_input_data(shape)
+        input2 = generate_input_data(shape)
+
+        TorchBaseTest.run_compare_torch(
+            [input1, input2], 
+            model,
+            input_as_shape=False, 
+            backend=backend,
+        )
+
+
 class TestDot(TorchBaseTest):
     @pytest.mark.parametrize("vector_length, backend",
                              itertools.product([1, 5, 11], backends)
@@ -407,7 +437,7 @@ class TestDot(TorchBaseTest):
         vector2 = generate_input_data((vector_length, ))
 
         TorchBaseTest.run_compare_torch((vector1, vector2), model, backend=backend, input_as_shape=False)
-
+        
 
 class TestOuter(TorchBaseTest):
     @pytest.mark.parametrize("x_vector_length, y_vector_length, backend",

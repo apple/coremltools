@@ -19,6 +19,7 @@ from coremltools.converters.mil.frontend.torch.torch_op_registry import (
     _TORCH_OPS_REGISTRY as _TORCH_OPS_REG,
 )
 from coremltools.converters.mil.frontend.torch.ops import _get_inputs
+from coremltools.converters.mil.frontend.torch.ops import cosine_similarity as cosine_similarity_main
 from coremltools.converters.mil.mil import (
     Builder as mb,
     Operation,
@@ -38,23 +39,7 @@ default_cosine_similarity = _TORCH_OPS_REG.get("cosine_similarity", None)
 
 @register_torch_op(override=True)
 def cosine_similarity(context, node):
-    inputs = _get_inputs(context, node, expected=4)
-    dim = inputs[-2].val
-    eps = inputs[-1].val
-    xy = mb.mul(x=inputs[0], y=inputs[1])
-    sum_xy = mb.reduce_sum(x=xy, axes=[dim])
-
-    xx = mb.mul(x=inputs[0], y=inputs[0])
-    sum_xx = mb.reduce_sum(x=xx, axes=[dim])
-    yy = mb.mul(x=inputs[1], y=inputs[1])
-    sum_yy = mb.reduce_sum(x=yy, axes=[dim])
-
-    mul_sum_xy = mb.mul(x=sum_xx, y=sum_yy)
-    div_12 = mb.maximum(x=mul_sum_xy, y=eps * eps)
-    div_sqrt = mb.sqrt(x=div_12)
-
-    cs = mb.real_div(x=sum_xy, y=div_sqrt, name=node.name)
-    context.add(cs)
+    cosine_similarity_main(context, node)
 
 
 # Log custom Cosine Similarity conversion function
