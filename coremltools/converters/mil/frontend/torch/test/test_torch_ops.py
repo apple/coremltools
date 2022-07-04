@@ -4555,6 +4555,49 @@ class TestBroadcastTensors(TorchBaseTest):
                 return torch.broadcast_tensors(a, b, c, d)
         self.run_compare_torch(shapes, TestModel().eval(), backend=backend)
 
+class TestEinsum:
+
+    @pytest.mark.parametrize(
+        "backend, equation",
+        itertools.product(
+            backends,
+            [
+                "bnqd,bnkd->bnqk",
+                "abc,cd->abd",
+                "abc,cde->abde",
+                "BTNH,BFNH->BNFT",
+                "BNFT,BTNH->BFNH",
+                "abcd,cde->abe",
+            ],
+        )
+    )
+    def test(self, backend, equation):
+        if equation == "bnqd,bnkd->bnqk":
+            shape_a, shape_b = (3,4,5,6), (3,4,7,6)
+        elif equation == "abc,cd->abd":
+            shape_a, shape_b = (3,4,5), (5,6)
+        elif equation == "abc,cde->abde":
+            shape_a, shape_b = (3,4,5), (5,6,7)
+        elif equation == "BTNH,BFNH->BNFT":
+            shape_a, shape_b = (3,4,5,6), (3,2,5,6)
+        elif equation == "BNFT,BTNH->BFNH":
+            shape_a, shape_b = (3,4,5,6), (3,5,4,7)
+        elif equation == "abcd,cde->abe":
+            shape_a, shape_b = (3,4,5,6), (5,6,7)
+        else:
+            raise NotImplementedError
+
+        class EinSum(nn.Module):
+            def forward(self, *operands):
+                return torch.einsum(equation, *operands)
+
+        input_tensors = generate_input_data([shape_a, shape_b])
+        model = EinSum()
+
+        run_compare_torch(
+            input_tensors, model, input_as_shape=False, backend=backend,
+        )
+
 
 class TestEmbedding(TorchBaseTest):
     @pytest.mark.parametrize(
