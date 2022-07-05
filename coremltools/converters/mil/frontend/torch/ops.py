@@ -2379,7 +2379,6 @@ def upsample_linear1d(context, node):
     output_size = inputs[1]
     align_corners = bool(inputs[2].val)
     scale = inputs[3]
-<<<<<<< HEAD
 
     scale_factor = None
 
@@ -2432,60 +2431,6 @@ def upsample_linear1d(context, node):
     x = mb.squeeze(x=x, axes=[3], name=node.name)
     context.add(x)
 
-=======
-
-    scale_factor = None
-
-    if scale is not None and scale.val is not None and scale.shape == (1,):
-        # Get the scale factor from provided inputs
-        # This happens when recompute_scale_factor = False
-        scale_factor = scale.val[0]
-
-        # Currently, we are not supporting recompute_scale_factor = False, align_corners = False with float output size
-        _, _, h = x.shape
-        if not is_symbolic(h):
-            # For the static input shape, we can compute the output size beforehand, and check if it is a float value
-            output_size = h * scale_factor
-            is_float = _is_float_value(output_size)
-        else:
-            # For the dynamic input shape, we check if the scale factor itself is float
-            is_float = _is_float_value(scale_factor)
-
-        if is_float and not align_corners:
-            msg = "recompute_scale_factor = False, align_corners = False with float output size is " + \
-                                            "not supported for the upsample op {}".format(node.name)
-            raise NotImplementedError(msg)
-
-    elif isinstance(output_size, list):
-        # When the input shape is dynamic and recompute_scale_factor = True,
-        # we need to trace the graph to find the scale factor.
-        x = mb.expand_dims(x=x, axes=[3])
-        x = mb.torch_upsample_bilinear(
-            x=x,
-            output_height=output_size[0],
-            output_width=1.,
-            align_corners=align_corners,
-        )
-        x = mb.squeeze(x=x, axes=[3], name=node.name)
-        context.add(x)
-        return
-
-    elif output_size.val is not None:
-        # Infer the scale factor from the provided output size
-        scale_factor = _get_scales_from_output_size(output_size, x.shape)
-
-    # Expand the input to a 4d tensor, and use MIL's upsample_bilinear op
-    x = mb.expand_dims(x=x, axes=[3])
-    x = mb.upsample_bilinear(
-        x=x,
-        scale_factor_height=scale_factor,
-        scale_factor_width=1.,
-        align_corners=align_corners,
-    )
-    x = mb.squeeze(x=x, axes=[3], name=node.name)
-    context.add(x)
-
->>>>>>> 12662ddcce4b486494b55d7d25ac0dac3835abb7
 @register_torch_op
 def upsample_bilinear2d(context, node):
     inputs = _get_inputs(context, node)
