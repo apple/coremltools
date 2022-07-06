@@ -4618,7 +4618,7 @@ def nms(context, node):
     inputs = _get_inputs(context, node)
     boxes = inputs[0]
 
-    num_boxes = boxes.shape[1]
+    num_boxes = boxes.shape[0]
     max_boxes = num_boxes  # we set the max_boxes just to be # input boxes
 
     scores = inputs[1]
@@ -4656,7 +4656,7 @@ def repeat_interleave(context, node):
     perm = [] + [axis for axis in range(x.rank) if axis not in []]
 
     x = mb.transpose(x=x, perm=perm)  # torch.transpose(x, 0, 1)
-    x = mb.tile(x=x, reps=reps.val[0], name=node.name)  # torch.repeat(x, size)
+    x = mb.tile(x=x, reps=reps, name=node.name)  # torch.repeat(x, size)
     x = mb.reshape(x=x, shape=(-1, x.shape[0]))  # x.view(-1, 2)
     x = mb.transpose(x=x, perm=(-1, 0))  # torch.transpose(x, 0, 1)
     dims = list(x.shape)
