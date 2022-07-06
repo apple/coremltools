@@ -10,6 +10,8 @@ import numpy as np
 import pytest
 import torch.nn as nn
 
+import torchvision
+
 from .testing_utils import (
     contains_op,
     generate_input_data,
@@ -4630,6 +4632,35 @@ class TestNarrow(TorchBaseTest):
 
             def forward(self, x):
                 return torch.narrow(x, dim, start, length)
+
+        model = Model()
+        self.run_compare_torch(shapes, model, backend=backend)
+
+
+class TestNonMaximalSuppression(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "shapes, scores, iou_threshold, backend",
+        itertools.product(
+            [
+                [(2, 4)],
+            ],
+            [
+                (2,)
+            ],
+            [1]
+            ,
+            backends
+        ),
+    )
+    def test_non_maximal_supression(self, shapes, scores, iou_threshold, backend):
+        # scores = torch.rand((2,))
+        scores = torch.rand(scores)
+        class Model(nn.Module):
+            def __init__(self):
+                super().__init__()
+
+            def forward(self, x):
+                return torchvision.ops.nms(x, scores, iou_threshold=0.7)
 
         model = Model()
         self.run_compare_torch(shapes, model, backend=backend)
