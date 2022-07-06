@@ -4639,21 +4639,14 @@ class TestNarrow(TorchBaseTest):
 
 class TestNonMaximalSuppression(TorchBaseTest):
     @pytest.mark.parametrize(
-        "shapes, scores, iou_threshold, backend",
+        "shapes, scores, backend",
         itertools.product(
-            [
-                [(2, 4)],
-            ],
-            [
-                (2,)
-            ],
-            [1]
-            ,
+            [[(2, 4)]],
+            [(2,)],
             backends
         ),
     )
-    def test_non_maximal_supression(self, shapes, scores, iou_threshold, backend):
-        # scores = torch.rand((2,))
+    def test_non_maximal_supression(self, shapes, scores, backend):
         scores = torch.rand(scores)
         class Model(nn.Module):
             def __init__(self):
