@@ -265,11 +265,9 @@ collect_artifacts:
   script:
     echo "Collect artifacts (wheels and documentation)"
   dependencies:
-    - build_wheel_linux_py35
     - build_wheel_linux_py36
     - build_wheel_linux_py37
     - build_wheel_linux_py38
-    - build_wheel_macos_py35
     - build_wheel_macos_py36
     - build_wheel_macos_py37
     - build_wheel_macos_py38
