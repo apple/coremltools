@@ -1,7 +1,7 @@
-# Copyright (c) 2022, Apple Inc. All rights reserved.
+#  Copyright (c) 2022, Apple Inc. All rights reserved.
 #
-# Use of this source code is governed by a BSD-3-clause license that can be
-# found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
+#  Use of this source code is governed by a BSD-3-clause license that can be
+#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from enum import Enum
 import logging as _logging
@@ -164,7 +164,7 @@ class WeightPalettizer(AbstractQuantizationPass):
             raise ValueError(msg)
 
         if self.nbits is not None and self.nbits not in (1, 2, 4, 6, 8):
-            raise ValueError("Invalid value of nbits ({}) for palettization. Supported bits are {1, 2, 4, 6, 8}".format(nbits))
+            raise ValueError("Invalid value of nbits ({}) for palettization. Supported bits are {{1, 2, 4, 6, 8}}".format(nbits))
 
         if (self.mode == "CUSTOM") ^ (lut_function is not None):
             msg = "lut_function must be None if mode is not custom, and that it cannot be None when the mode is custom."
