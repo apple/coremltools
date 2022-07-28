@@ -964,7 +964,7 @@ class transpose(Operation):
             ret_shape = x_shape[perm]
         return types.tensor(x_type, tuple(ret_shape))
 
-    @precondition(allow=VALUE | SYMBOL)
+    @precondition(allow=VALUE)
     def value_inference(self):
         return np.transpose(self.x.val, axes=self.perm.val)
 

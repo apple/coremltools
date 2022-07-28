@@ -5417,6 +5417,40 @@ class TestTranspose(TensorFlowBaseTest):
             dynamic_perm()
 
     @pytest.mark.parametrize(
+        "use_cpu_only, backend, rank_and_perm",
+        itertools.product(
+            [True, False],
+            backends,
+            [
+                (2, (0, 1)),
+                (3, (0, 2, 1)),
+            ],
+        ),
+    )
+    def test_transpose_after_another_op(self, use_cpu_only, backend, rank_and_perm):
+
+        rank, perm = rank_and_perm
+        x_shape = np.random.randint(low=1, high=4, size=rank)
+
+        @make_tf_graph([x_shape])
+        def build_model(x):
+            # Test transpose operations after another operation that may return symbolic value
+            # in value_inference implementation (e.g. concat) - see issue #1556
+            x = tf.concat([x, x], axis=-1)
+            return tf.transpose(x, perm=perm)
+
+        model, inputs, outputs = build_model
+        input_values = [random_gen(x_shape)]
+        input_dict = dict(zip(inputs, input_values))
+        TensorFlowBaseTest.run_compare_tf(
+            model,
+            input_dict,
+            outputs,
+            use_cpu_for_conversion=use_cpu_only,
+            backend=backend,
+        )
+
+    @pytest.mark.parametrize(
         "use_cpu_only, backend, rank",
         itertools.product(
             [True, False],
