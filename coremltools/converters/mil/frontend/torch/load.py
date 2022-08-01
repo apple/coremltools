@@ -48,7 +48,8 @@ def load(model_spec, debug=False, **kwargs):
     inputs = _convert_to_torch_inputtype(kwargs["inputs"])
     outputs = kwargs.get("outputs", None)
     cut_at_symbols = kwargs.get("cut_at_symbols", None)
-    converter = TorchConverter(torchscript, inputs, outputs, cut_at_symbols)
+    opset_version = kwargs["specification_version"]
+    converter = TorchConverter(torchscript, inputs, outputs, cut_at_symbols, opset_version)
     return _perform_torch_convert(converter, debug)
 
 

@@ -7,6 +7,7 @@ import numpy as np
 
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
+from coremltools.converters.mil.mil.passes.helper import block_context_manager
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 
 
@@ -55,6 +56,10 @@ def _try_to_transform(matmul_op, add_op, block):
         weight, linear_x = matmul_op.y, matmul_op.x
         transpose_weight = matmul_op.transpose_y.val
         transpose_x = matmul_op.transpose_x.val
+    
+    # We potentially are going to transpose the weight, so if the weight itself is not removable, we skip this path
+    if len(weight.nonreplaceable_vars_upstream) > 0:
+        return False
 
     if linear_x.rank < 2 or weight.rank != 2:
         # We don't support these cases yet.
@@ -114,12 +119,35 @@ def _try_to_transform(matmul_op, add_op, block):
             name=out_name,
         )
 
-    add_op.enclosing_block.replace_uses_of_var_after_op(
-        anchor_op=add_op, old_var=add_op.outputs[0], new_var=x
-    )
-    # Remove all the ops at once
-    block.remove_ops([matmul_op, add_op])
-    return True
+    if add_op.enclosing_block.try_replace_uses_of_var_after_op(
+        anchor_op=add_op,
+        old_var=add_op.outputs[0],
+        new_var=x,
+    ):
+        add_op.enclosing_block.remove_ops([matmul_op, add_op])
+        return True
+    return False
+
+@block_context_manager
+def _fuse_matmul_weight_bias_block(block):
+    fusion_status = False
+    for op in list(block.operations):
+        for b in op.blocks:
+            block_changed = True
+            while block_changed:
+                block_changed = _fuse_matmul_weight_bias_block(b)
+        if len(op.blocks) > 0:
+            # This op can't be matmul
+            continue
+
+        add_op = _find_candidate_op(op)
+
+        if add_op is not None:
+            fusion_status = _try_to_transform(op, add_op, block)
+            # has to break as the downstream iterator is affected.
+            if fusion_status:
+                return fusion_status
+    return fusion_status
 
 @register_pass(namespace="common")
 class fuse_matmul_weight_bias(AbstractGraphPass):
@@ -140,41 +168,9 @@ class fuse_matmul_weight_bias(AbstractGraphPass):
 
         prog: Program
     """
-    def __init__(self):
-        self.ops_to_skip = set()
-
-    def set_ops_to_skip(self, prog):
-        pass
 
     def apply(self, prog):
-        self.set_ops_to_skip(prog)
         for f in prog.functions.values():
             block_changed = True
             while block_changed:
-                block_changed = self._fuse_matmul_weight_bias_block(f)
-
-    def _fuse_matmul_weight_bias_block(self, block):
-        fusion_status = False
-        for op in list(block.operations):
-            for b in op.blocks:
-                block_changed = True
-                while block_changed:
-                    block_changed = self._fuse_matmul_weight_bias_block(b)
-            if len(op.blocks) > 0:
-                # This op can't be matmul
-                continue
-
-            if op in self.ops_to_skip:
-                continue
-
-            add_op = _find_candidate_op(op)
-            if add_op in self.ops_to_skip:
-                continue
-
-            if add_op is not None:
-                with block:
-                    fusion_status = _try_to_transform(op, add_op, block)
-                # has to break as the downstream iterator is affected.
-                if fusion_status:
-                    return fusion_status
-        return fusion_status
+                block_changed = _fuse_matmul_weight_bias_block(f)

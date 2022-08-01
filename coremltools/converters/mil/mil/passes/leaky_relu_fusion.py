@@ -3,11 +3,14 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-
-from coremltools.converters.mil.mil.passes.pass_registry import register_pass
-from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil import Builder as mb
-from .helper import _check_var_scalar_value_in_interval, _check_child_op_type
+from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
+from coremltools.converters.mil.mil.passes.helper import (
+    _check_child_op_type,
+    _check_var_scalar_value_in_interval,
+    block_context_manager,
+)
+from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 
 def _try_to_transform(mul_op, block):
 
@@ -50,7 +53,7 @@ def _try_to_transform(mul_op, block):
     block.remove_ops(ops_to_remove)
     return True
 
-
+@block_context_manager
 def _fuse_leaky_relu_block(block):
     fusion_status = False
     for i, op in enumerate(list(block.operations)):
@@ -63,8 +66,7 @@ def _fuse_leaky_relu_block(block):
 
         # start pattern match if mul op is encountered
         if op.op_type == "mul":
-            with block:
-                fusion_status = _try_to_transform(op, block)
+            fusion_status = _try_to_transform(op, block)
             # has to break as the downstream iterator is affected.
             if fusion_status:
                 return fusion_status

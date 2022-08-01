@@ -7,6 +7,7 @@ from functools import partial
 import itertools
 
 from ...mil.passes import pass_registry
+from coremltools.converters.mil.mil.passes.helper import block_context_manager
 
 # IMPORTANT: List of assumptions we are making about the problem
 # 1) The user defined pattern has exactly one root variable, and one final output operation. As such, we will be searching for a singlular
@@ -163,7 +164,7 @@ def _detect_pattern(program_op, ops_arrangement_root_var, block):
 
     return False, None
 
-
+@block_context_manager
 def _fuse_one_block(block, ops_arrangement, var_constraints, transform_pattern):
     fusion_status = False
     for op in list(block.operations):
@@ -172,16 +173,15 @@ def _fuse_one_block(block, ops_arrangement, var_constraints, transform_pattern):
             while block_changed:
                 block_changed = _fuse_one_block(b, ops_arrangement, var_constraints, transform_pattern)
 
-        with block:
-            ops_arrangement_root_var = list(ops_arrangement.functions.values())[0].function_inputs[0]
-            fusion_status, pattern = _detect_pattern(op, ops_arrangement_root_var, block)
+        ops_arrangement_root_var = list(ops_arrangement.functions.values())[0].function_inputs[0]
+        fusion_status, pattern = _detect_pattern(op, ops_arrangement_root_var, block)
 
-            if fusion_status:
-                fusion_status &= var_constraints(pattern)
+        if fusion_status:
+            fusion_status &= var_constraints(pattern)
 
-            if fusion_status:
-                transform_pattern(pattern)
-                return fusion_status
+        if fusion_status:
+            transform_pattern(pattern)
+            return fusion_status
 
     return fusion_status
 

@@ -4,7 +4,6 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 import numpy as np
 
-from ._op_reqs import register_op
 from coremltools.converters.mil.mil import (
     DefaultInputs,
     FloatInputType,
@@ -17,11 +16,12 @@ from coremltools.converters.mil.mil import (
     types,
 )
 from coremltools.converters.mil.mil.operation import VALUE
+from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
 from coremltools.converters.mil.mil.types.symbolic import (
     any_symbolic,
 )
 
-@register_op(doc_str="")
+@register_op
 class batch_norm(Operation):
     """
     Normalize input tensor ``x`` by ``mean`` and ``variance``, and optionally apply a
@@ -85,7 +85,7 @@ class batch_norm(Operation):
         return types.tensor(self.x.dtype, tuple(x_shape))
 
 
-@register_op(doc_str="")
+@register_op
 class instance_norm(Operation):
     """
     Apply instance normalization to the n-dimensional input tensor.
@@ -137,7 +137,7 @@ class instance_norm(Operation):
         return types.tensor(self.x.dtype, tuple(x_shape))
 
 
-@register_op(doc_str="")
+@register_op
 class l2_norm(Operation):
     """
     Apply L2 normalization to the n-dimensional input tensor. That is, divide the input
@@ -210,8 +210,7 @@ class l2_norm(Operation):
             output = np.reshape(output, shape)
         return output
 
-
-@register_op(doc_str="")
+@register_op
 class layer_norm(Operation):
     """
     Apply layer normalization to the n-dimensional input tensor:
@@ -326,7 +325,7 @@ class layer_norm(Operation):
         return np_layer_norm(self.x.val, _axes, _gamma, _beta, self.epsilon.val)
 
 
-@register_op(doc_str="")
+@register_op
 class local_response_norm(Operation):
     """
     Apply local response normalization to the n-dimensional input tensor:

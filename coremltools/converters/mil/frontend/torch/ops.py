@@ -19,7 +19,9 @@ from coremltools.converters.mil.mil import (
     types,
     Symbol
 )
-from coremltools.converters.mil.mil.ops.defs.tensor_transformation import _solve_slice_by_index_shape
+from coremltools.converters.mil._deployment_compatibility import AvailableTarget as target
+from coremltools.converters.mil.mil.block import curr_opset_version, is_current_opset_version_compatible_with
+from coremltools.converters.mil.mil.ops.defs._utils import solve_slice_by_index_shape
 from coremltools.converters.mil.mil.types import is_bool
 from coremltools.converters.mil.mil.types.symbolic import any_symbolic, is_symbolic, is_compatible_symbolic_vector
 from coremltools.converters.mil.mil.var import Var, ListVar
@@ -32,6 +34,7 @@ from coremltools.converters.mil.mil.ops.defs._utils import MAX_SIZE_CONSTANT_FOL
 # This is a magic number in PyTorch. It's used as a default value in many
 # functions.
 PYTORCH_MAGIC_DEFAULT = 9223372036854775807
+VALUE_CLOSE_TO_INFINITY = 1e+38
 
 
 def _all_outputs_present(context, graph):
@@ -423,29 +426,97 @@ def frobenius_norm(context, node):
 
 @register_torch_op
 def norm(context, node):
-    VALUE_CLOSE_TO_INFINITY = 1e+38
-
     x, num, dim, keep_dims = _get_inputs(context, node, expected=4)
-    assert x is not None and num is not None and dim is not None and keep_dims is not None
-    if num.val is None:
-        raise RuntimeError("Dynamic 'p' values for 'norm' layers are not supported.")
-    assert num.val != 0
-
-    if num.val == 1:
-        temp = mb.reduce_l1_norm(x=x, axes=dim, keep_dims=keep_dims, name=node.name)
-    elif num.val == 2:
-        temp = mb.reduce_l2_norm(x=x, axes=dim, keep_dims=keep_dims, name=node.name)
-    elif num.val > VALUE_CLOSE_TO_INFINITY:
-        temp = mb.reduce_max(x=x, axes=dim, keep_dims=keep_dims, name=node.name)
-    elif num.val < -VALUE_CLOSE_TO_INFINITY:
-        temp = mb.reduce_min(x=x, axes=dim, keep_dims=keep_dims, name=node.name)
-    else:
-        # sum(abs(x)**num)**(1./num)
-        temp = mb.abs(x=x)
-        temp = mb.pow(x=temp, y=num)
-        temp = mb.reduce_sum(x=temp, axes=dim, keep_dims=keep_dims)
-        temp = mb.pow(x=temp, y=1./num.val, name=node.name)
+    assert x is not None and keep_dims is not None and num is not None and dim is not None
+    temp = _vector_norm(x=x, order=num, dim=dim, keep_dims=keep_dims, name=node.name)
     context.add(temp)
+
+
+def _vector_norm(x, order, dim, keep_dims, name):
+    if order.val == 0:
+        # sum(x!=0)
+        temp = mb.not_equal(x=x, y=0)
+        temp = mb.cast(x=temp, dtype='int32')
+        temp = mb.reduce_sum(x=temp, axes=dim, keep_dims=keep_dims, name=name)
+    elif order.val > VALUE_CLOSE_TO_INFINITY:
+        # max(abs(x))
+        temp = mb.abs(x=x)
+        temp = mb.reduce_max(x=temp, axes=dim, keep_dims=keep_dims, name=name)
+    elif order.val < -VALUE_CLOSE_TO_INFINITY:
+        # min(abs(x))
+        temp = mb.abs(x=x)
+        temp = mb.reduce_min(x=temp, axes=dim, keep_dims=keep_dims, name=name)
+    else:
+        # sum(abs(x)^{ord})^{(1 / ord)}
+        temp = mb.abs(x=x)
+        temp = mb.pow(x=temp, y=order.val)
+        temp = mb.reduce_sum(x=temp, axes=dim, keep_dims=keep_dims)
+        temp = mb.pow(x=temp, y=1./order.val, name=name)
+    return temp
+
+
+def _matrix_norm(x, order, dim, keep_dims, name):
+    if order.val == 1:
+        # min(sum(abs(x), dim=0))
+        temp = mb.abs(x=x)
+        temp = mb.reduce_sum(x=temp, axes=[dim[0]], keep_dims=True)
+        temp = mb.reduce_max(x=temp, axes=dim, keep_dims=keep_dims, name=name)
+    elif order.val == -1:
+        # min(sum(abs(x), dim=0))
+        temp = mb.abs(x=x)
+        temp = mb.reduce_sum(x=temp, axes=[dim[0]], keep_dims=True)
+        temp = mb.reduce_min(x=temp, axes=dim, keep_dims=keep_dims, name=name)
+    elif order.val == "fro":
+        # sum(x**2)**1/2
+        temp = mb.reduce_l2_norm(x=x, axes=dim, keep_dims=keep_dims, name=name)
+    elif order.val > VALUE_CLOSE_TO_INFINITY:
+        # max(sum(abs(x), dim=1))
+        temp = mb.abs(x=x)
+        temp = mb.reduce_sum(x=temp, axes=[dim[1]], keep_dims=True)
+        temp = mb.reduce_max(x=temp, axes=dim, keep_dims=keep_dims, name=name)
+    elif order.val < -VALUE_CLOSE_TO_INFINITY:
+        # min(sum(abs(x), dim=1))
+        temp = mb.abs(x=x)
+        temp = mb.reduce_sum(x=temp, axes=[dim[1]], keep_dims=True)
+        temp = mb.reduce_min(x=temp, axes=dim, keep_dims=keep_dims, name=name)
+    else:
+        raise RuntimeError("Matrix norm is not defined for the current inputs")
+    return temp
+
+
+@register_torch_op
+def linalg_vector_norm(context, node):
+    x, order, dim, keep_dims, _ = _get_inputs(context, node, expected=5)
+    assert x is not None and keep_dims is not None and order is not None
+    temp = _vector_norm(x=x, order=order, dim=dim, keep_dims=keep_dims, name=node.name)
+    context.add(temp)
+
+
+@register_torch_op
+def linalg_matrix_norm(context, node):
+    x, order, dim, keep_dims, _ = _get_inputs(context, node, expected=5)
+    assert x is not None and keep_dims is not None and order is not None and dim is not None
+    assert len(dim.val) == 2
+    temp = _matrix_norm(x=x, order=order, dim=dim.val, keep_dims=keep_dims, name=node.name)
+    context.add(temp)
+
+
+@register_torch_op
+def linalg_norm(context, node):
+    x, order, dim, keep_dims, _ = _get_inputs(context, node, expected=5)
+    assert x is not None and keep_dims is not None
+    if dim is None:
+        dim = _np.arange(x.rank)
+    else:
+        dim = dim.val
+    if order is None:
+        temp = mb.reduce_l2_norm(x=x, axes=dim, keep_dims=keep_dims, name=node.name)
+    elif len(dim)==2:
+        temp = _matrix_norm(x=x, order=order, dim=dim, keep_dims=keep_dims, name=node.name)  
+    else:
+        temp = _vector_norm(x=x, order=order, dim=dim, keep_dims=keep_dims, name=node.name)
+    context.add(temp)
+
 
 @register_torch_op
 def hardswish(context, node):
@@ -582,6 +653,12 @@ def pixel_shuffle(context, node):
     perm = mb.pixel_shuffle(x=inputs[0], upscale_factor=inputs[1], name=node.name)
     context.add(perm)
 
+@register_torch_op
+def pixel_unshuffle(context, node):
+    inputs = _get_inputs(context, node, expected=2)
+    downscale_factor = _np.uint32(inputs[1].val)
+    perm = mb.pixel_unshuffle(x=inputs[0], downscale_factor=downscale_factor, name=node.name)
+    context.add(perm)
 
 @register_torch_op(torch_alias=["bmm"])
 def matmul(context, node):
@@ -2946,7 +3023,7 @@ def _internal_op_tensor_inplace_fill(context, node):
     fill_scalar = context[node.inputs[1]]
 
     begin, end, stride, begin_mask, end_mask, squeeze_mask = _get_slice_params(context, data, node.inputs[2:])
-    fill_shape = _solve_slice_by_index_shape(data.shape, begin, end, stride, begin_mask, end_mask, squeeze_mask)
+    fill_shape = solve_slice_by_index_shape(data.shape, begin, end, stride, begin_mask, end_mask, squeeze_mask)
     update_values = _np.full(fill_shape, fill_scalar.val)
 
     updated_x = mb.torch_tensor_assign(
@@ -4158,14 +4235,19 @@ def topk(context, node):
         kwargs["ascending"] = not largest
 
     # last inputs to topk are optional - sorted and out.
+    sort = True
     if len(inputs) > 4:
-        if inputs[4].val is False:
-            raise Exception("Unsupported value for argument 'sorted' in topk. Supported values: True, but input "
-                            "is {}".format(inputs[4].val))
+        if inputs[4].val is False and curr_opset_version() < target.iOS16:
+            raise Exception("For opset <= iOS16, only sorted=True supported for the topk")
+        sort = inputs[4].val
+
     if len(inputs) > 5:
         if inputs[5] is not None:
             raise Exception("Unsupported value for argument 'out' in topk. Supported values: None, but input "
                             "is {}".format(inputs[5].val))
+
+    if is_current_opset_version_compatible_with(target.iOS16):
+        kwargs["sort"] = sort
 
     res = mb.topk(**kwargs)
     values_name = node.outputs[0]

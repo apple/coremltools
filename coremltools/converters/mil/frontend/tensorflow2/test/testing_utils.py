@@ -81,6 +81,7 @@ def run_compare_tf2(
     debug=False,
     atol=1e-04,
     rtol=1e-05,
+    minimum_deployment_target=None,
 ):
     """
     Parameters
@@ -107,6 +108,8 @@ def run_compare_tf2(
         The absolute tolerance parameter.
     rtol: float
         The relative tolerance parameter.
+    minimum_deployment_target: coremltools.target enumeration
+        The spec version for the mlmodel
     """
     inputs = []
     if inputs_for_conversion is None:
@@ -147,6 +150,7 @@ def run_compare_tf2(
         convert_to=backend,
         debug=debug,
         compute_units=compute_unit,
+        minimum_deployment_target=minimum_deployment_target,
     )
 
     for k,v in input_dict.items():
@@ -260,8 +264,8 @@ class TensorFlow2BaseTest(TensorFlowBaseTest):
                         backend=("neuralnetwork", "fp32"),
                         debug=False,
                         atol=1e-04,
-                        rtol=1e-05):
-
+                        rtol=1e-05,
+                        minimum_deployment_target=None):
         res = run_compare_tf2(model,
                               input_dict,
                               output_names,
@@ -272,7 +276,8 @@ class TensorFlow2BaseTest(TensorFlowBaseTest):
                               backend=backend,
                               debug=debug,
                               atol=atol,
-                              rtol=rtol)
+                              rtol=rtol,
+                              minimum_deployment_target=minimum_deployment_target,)
         alist = list(res)
         alist.append(TensorFlow2BaseTest.testclassname)
         alist.append(TensorFlow2BaseTest.testmodelname)

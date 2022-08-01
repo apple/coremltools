@@ -74,7 +74,7 @@ class Pooling(Operation):
         return types.tensor(self.x.dtype, tuple(ret_shape))
 
 
-@register_op(doc_str="")
+@register_op
 class avg_pool(Pooling):
     """
     Perform average pooling. Supports 1-D, 2-D, and 3-D pool (1, 2, or 3 spatial dimensions).
@@ -173,7 +173,7 @@ class avg_pool(Pooling):
         super().__init__(**kwargs)
 
 
-@register_op(doc_str="")
+@register_op
 class l2_pool(Pooling):
     """
     Perform L2 pooling. Supports 1-D, 2-D, and 3-D pool.
@@ -213,7 +213,7 @@ class l2_pool(Pooling):
         super().__init__(**kwargs)
 
 
-@register_op(doc_str="")
+@register_op
 class max_pool(Pooling):
     """
     Perform max pooling. Supports 1-D, 2-D, and 3-D pool.

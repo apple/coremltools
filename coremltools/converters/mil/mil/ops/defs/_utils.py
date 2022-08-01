@@ -4,6 +4,7 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import math
+import numpy as np
 
 from coremltools.converters.mil.mil import get_new_symbol, types
 from coremltools.converters.mil.mil.types.symbolic import is_symbolic
@@ -303,3 +304,74 @@ def parse_einsum_equation(equation):
     index = _update_vec(output_str, output_vec, map_char_to_int, index)
 
     return input1_vec, input2_vec, output_vec
+    
+def solve_slice_by_index_shape(x_shape, begin, end, stride, begin_mask, end_mask, squeeze_mask):
+    """
+    Helper function to solve the shape of tensor slicing.
+    """
+    ret_shape = []
+
+    if begin is None or len(begin) == 0:
+        begin = [None] * len(x_shape)
+    if end is None or len(end) == 0:
+        end = [None] * len(x_shape)
+
+    # solve for shape inference
+    for idx in range(len(x_shape)):
+        # skip if we want to squeeze the dimension
+        if squeeze_mask[idx]:
+            continue
+
+        # for those a[:] cases
+        if begin_mask[idx] and end_mask[idx]:
+            if is_symbolic(x_shape[idx]):
+                if stride[idx] == -1 or stride[idx] == 1:
+                    ret_shape.append(x_shape[idx])
+                else:
+                    ret_shape.append(get_new_symbol())
+            else:
+                num = np.ceil(float(x_shape[idx]) / abs(stride[idx])).astype(
+                    np.int32
+                )
+                ret_shape.append(num)
+            continue
+
+        # for symbolic case
+        if is_symbolic(x_shape[idx]):
+            ret_shape.append(get_new_symbol())
+            continue
+
+        # when begin and end are not determined
+        if begin[idx] is None and not begin_mask[idx]:
+            ret_shape.append(get_new_symbol())
+            continue
+        if end[idx] is None and not end_mask[idx]:
+            ret_shape.append(get_new_symbol())
+            continue
+
+        # parse negative dimention
+        if begin[idx] is not None and begin[idx] < 0:
+            begin[idx] = max(0, begin[idx] + x_shape[idx])
+        if end[idx] is not None and end[idx] < 0:
+            end[idx] = max(0, end[idx] + x_shape[idx])
+
+        # compute shape
+        low, high = [0, x_shape[idx]] if stride[idx] > 0 else [-1, x_shape[idx] - 1]
+        begin_idx, end_idx = (
+            [begin[idx], end[idx]] if stride[idx] > 0 else [end[idx], begin[idx]]
+        )
+        is_begin_mask, is_end_mask = (
+            [begin_mask[idx], end_mask[idx]]
+            if stride[idx] > 0
+            else [end_mask[idx], begin_mask[idx]]
+        )
+        if is_begin_mask:
+            begin_idx = low
+        end_idx = high if is_end_mask else min(end_idx, high)
+        num = np.ceil(float(end_idx - begin_idx) / abs(stride[idx])).astype(
+            np.int32
+        )
+        ret_shape.append(max(0, num))
+
+    return ret_shape
+

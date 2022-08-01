@@ -5,6 +5,7 @@
 
 from coremltools.converters.mil.mil import Builder as mb, types
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
+from coremltools.converters.mil.mil.passes.helper import block_context_manager
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 from coremltools.converters.mil.mil.types.symbolic import is_symbolic
 from coremltools.converters.mil.mil.var import ListVar
@@ -25,7 +26,7 @@ class backfill_make_list_elem_type(AbstractGraphPass):
         for f in prog.functions.values():
             _backfill_make_list_elem_type_block(f)
 
-
+@block_context_manager
 def _backfill_make_list_elem_type_block(block):
     # shallow copy hides changes on f.operations during the loop
     for op in block.operations:
@@ -48,18 +49,17 @@ def _backfill_make_list_elem_type_block(block):
             )
             raise ValueError(msg.format(op.name, op.enclosing_block))
 
-        with block:
-            # elem_shape can be runtime-detemrined, which cannot be inferred here at this point,
-            # so we add an internal _const_symbolic node to cover both static and dynamic cases.
-            elem_shape = [dim.name if is_symbolic(dim) else dim for dim in elem_type.get_shape()]
-            new_list = mb.make_list(
-                init_length=op.init_length,
-                dynamic_length=op.dynamic_length,
-                elem_shape=tuple(elem_shape),
-                dtype=op.inputs["dtype"],
-                before_op=op,
-                name=op.name,
-            )
+        # elem_shape can be runtime-detemrined, which cannot be inferred here at this point,
+        # so we add an internal _const_symbolic node to cover both static and dynamic cases.
+        elem_shape = [dim.name if is_symbolic(dim) else dim for dim in elem_type.get_shape()]
+        new_list = mb.make_list(
+            init_length=op.init_length,
+            dynamic_length=op.dynamic_length,
+            elem_shape=tuple(elem_shape),
+            dtype=op.inputs["dtype"],
+            before_op=op,
+            name=op.name,
+        )
 
         block.replace_uses_of_var_after_op(
             anchor_op=op, old_var=op.outputs[0], new_var=new_list

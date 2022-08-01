@@ -5,6 +5,7 @@
 
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
+from coremltools.converters.mil.mil.passes.helper import block_context_manager
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 
 
@@ -80,7 +81,7 @@ def _try_to_transform(op, block):
     block.remove_ops(ops_to_remove)
     return True
 
-
+@block_context_manager
 def _rank0_expand_dims_swap(block):
     fusion_occurred = False
     for op in list(block.operations):
@@ -93,11 +94,10 @@ def _rank0_expand_dims_swap(block):
             continue
 
         if op.op_type in ["add", "sub", "mul", "real_div", "floor_div"]:
-            with block:
-                fusion_occurred = _try_to_transform(op, block)
-                # has to break as the downstream iterator is affected.
-                if fusion_occurred:
-                    return fusion_occurred
+            fusion_occurred = _try_to_transform(op, block)
+            # has to break as the downstream iterator is affected.
+            if fusion_occurred:
+                return fusion_occurred
     return fusion_occurred
 
 @register_pass(namespace="common")

@@ -764,14 +764,13 @@ class TransposeOptimization:
         new_outputs = []
         output_sinks_var = {}
         for out_var in self.block.outputs:
-            with self.block:
-                if out_var not in output_sinks_var:
-                    out_sink = mb.identity(x=out_var)
-                    output_sinks_var[out_var] = out_sink
-                else:
-                    out_sink = output_sinks_var[out_var]
-                new_outputs.append(out_sink)
-                self.output_sink_ops.append(out_sink.op)
+            if out_var not in output_sinks_var:
+                out_sink = mb.identity(x=out_var)
+                output_sinks_var[out_var] = out_sink
+            else:
+                out_sink = output_sinks_var[out_var]
+            new_outputs.append(out_sink)
+            self.output_sink_ops.append(out_sink.op)
         self.block.set_outputs(new_outputs)
 
     def _visit_unary_like_op(self, op, input_var=None):
@@ -1103,17 +1102,15 @@ class TransposeOptimization:
                 # If the same input_var is in output twice, we can't rename it twice, therefore we initiate an
                 # Identity op to match the name
                 if input_var in self.block.inputs.values():
-                    with self.block:
-                        input_var = mb.identity(x=input_var, before_op=op, name=output_var.name)
-                        parent_op = None  # set anchor op as None.
+                    input_var = mb.identity(x=input_var, before_op=op, name=output_var.name)
+                    parent_op = None  # set anchor op as None.
                 elif input_var not in name_changed_vars:
                     input_var.name = output_var.name
                     input_var.op.name = output_var.op.name
                     name_changed_vars.update([input_var])
                 else:
-                    with self.block:
-                        input_var = mb.identity(x=input_var, before_op=op, name=output_var.name)
-                        parent_op = input_var.op
+                    input_var = mb.identity(x=input_var, before_op=op, name=output_var.name)
+                    parent_op = input_var.op
 
             # connect all the child ops of the output_var to the parent of the transpose op.
             self.block.replace_uses_of_var_after_op(
@@ -1144,28 +1141,27 @@ class TransposeOptimization:
                 continue
 
             self.materialized_ops_handled.add((op, input_var))
-            with self.block:
-                if input_var == starting_transpose_op_out_var:
-                    # materialize op is connected to the starting transpose op
-                    # in this case, connect to its parent
-                    if op in self.output_sink_ops:
-                        continue
-                    i1 = starting_transpose_op_input_var
-                else:
-                    i1 = input_var
-
+            if input_var == starting_transpose_op_out_var:
+                # materialize op is connected to the starting transpose op
+                # in this case, connect to its parent
                 if op in self.output_sink_ops:
-                    # The input_var of output sink is itself a output. We can safely
-                    # modify the name of the input_var since it should only be consumed
-                    # by block output here.
-                    if i1 not in name_changed_vars:
-                        x = mb.transpose(x=i1, perm=perm, before_op=op, name=i1.name)
-                        i1.name = '_before_transpose_op_' + x.op.name
-                        i1.op.name = '_before_transpose_op_' + x.op.name
-                    else:
-                        x = mb.transpose(x=i1, perm=perm, before_op=op, name=self.old_output_vars[i1])
+                    continue
+                i1 = starting_transpose_op_input_var
+            else:
+                i1 = input_var
+
+            if op in self.output_sink_ops:
+                # The input_var of output sink is itself a output. We can safely
+                # modify the name of the input_var since it should only be consumed
+                # by block output here.
+                if i1 not in name_changed_vars:
+                    x = mb.transpose(x=i1, perm=perm, before_op=op, name=i1.name)
+                    i1.name = '_before_transpose_op_' + x.op.name
+                    i1.op.name = '_before_transpose_op_' + x.op.name
                 else:
-                    x = mb.transpose(x=i1, perm=perm, before_op=op)
+                    x = mb.transpose(x=i1, perm=perm, before_op=op, name=self.old_output_vars[i1])
+            else:
+                x = mb.transpose(x=i1, perm=perm, before_op=op)
 
             self.block.replace_uses_of_var_after_op(
                 anchor_op=x.op,
@@ -1241,10 +1237,11 @@ def _reduce_transposes_block(block):
     for op in list(block.operations):
         if len(op.blocks) > 0:
             return
-
-    opt_transposes = TransposeOptimization(block)
-    opt_transposes.block_traversal()
-    opt_transposes.apply_transform()
+    
+    with block:
+        opt_transposes = TransposeOptimization(block)
+        opt_transposes.block_traversal()
+        opt_transposes.apply_transform()
 
 
 @register_pass(namespace="common")

@@ -48,7 +48,7 @@ from coremltools.converters.mil.mil.types.type_mapping import (
 from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
 
 
-@register_op(doc_str="")
+@register_op
 class cond(Operation):
     """
     Perform a conditional execution. The return types must be identical
@@ -231,14 +231,14 @@ class Const(Operation):
         return builtin_type, value
 
 
-@register_op(doc_str="")
+@register_op
 class const(Const):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
 
 # Internal const can have symbolic value (for testing purpose)
-@register_op(doc_str="")
+@register_op
 class _const_symbolic(const):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -253,7 +253,7 @@ class _const_symbolic(const):
         return val
 
 
-@register_op(doc_str="")
+@register_op
 class select(Operation):
     """
     Return the elements selected from either ``a`` or ``b`` depending on the ``cond``.
@@ -318,7 +318,7 @@ class select(Operation):
         return np.where(self.cond.val, self.a.val, self.b.val)
 
 
-@register_op(doc_str="")
+@register_op
 class while_loop(Operation):
     """
     Perform the body repeatedly while the condition ``cond`` is true.
@@ -448,26 +448,20 @@ class while_loop(Operation):
             return
 
         block_inputs = tuple(copy.copy(v) for v in self.loop_vars)
-        _, visible_vars = self.enclosing_block._visible_vars_in_block()
-        name_count = {v.name: 1 for v in visible_vars}
-        seen = set() # Avoid using same name among block inputs
+        name_count = {v.name: 0 for v in block_inputs}
         for v in block_inputs:
             v._op = None
             v.op_output_idx = None
             v._child_ops = list()
 
             # Get unique name
+
             old_v_name = v.name
-            if v.name in name_count:
-                v.name = v.name + "_x" + str(name_count[v.name])
-                name_count[old_v_name] += 1
-            else:
-                v.name = v.name + "_x0"
-                name_count[old_v_name] = 0
+            v.name = v.name + "_x" + str(name_count[v.name])
+            name_count[old_v_name] += 1
 
             v._sym_val = v._sym_val
             v.consuming_blocks = list()
-            seen.add(v.name)
 
         cond_block, body_block, exit_vars = self._build_block(block_inputs)
 
@@ -546,7 +540,7 @@ class while_loop(Operation):
         return tuple(v.sym_type for v in self.blocks[1].outputs)
 
 
-@register_op(doc_str="")
+@register_op
 class make_list(Operation):
     """
     Create a list of tensor elements. The elements should have the same shape.
@@ -624,7 +618,7 @@ class make_list(Operation):
         )
 
 
-@register_op(doc_str="")
+@register_op
 class list_length(Operation):
     """
     Return the length of ``ls``.
@@ -658,7 +652,7 @@ class list_length(Operation):
         raise NotImplementedError()
 
 
-@register_op(doc_str="")
+@register_op
 class list_write(Operation):
     """
     Write a value into index ``index`` of ``ls``.
@@ -716,7 +710,7 @@ class list_write(Operation):
         return self.ls.sym_type
 
 
-@register_op(doc_str="")
+@register_op
 class list_read(Operation):
     """
     Read the value at location ``index`` of ``ls``.
@@ -757,7 +751,7 @@ class list_read(Operation):
         return list_elem_type
 
 
-@register_op(doc_str="")
+@register_op
 class list_gather(Operation):
     """
     Return selected values in ``ls`` as a packed ``Tensor``.
@@ -802,7 +796,7 @@ class list_gather(Operation):
         return types.tensor(dtype, tuple(ret_shape))
 
 
-@register_op(doc_str="")
+@register_op
 class list_scatter(Operation):
     """
     Scatter ``values`` to ``ls`` at locations ``indices``.

@@ -99,18 +99,21 @@ class TF2Loader(TFLoader):
     def _get_concrete_functions_and_graph_def(self):
         msg = (
             "Expected model format: [SavedModel | [concrete_function] | "
-            "tf.keras.Model | .h5], got {}"
+            "tf.keras.Model | .h5 | GraphDef], got {}"
         )
         if (
             isinstance(self.model, list)
             or isinstance(self.model, _tf.keras.Model)
             or isinstance(self.model, str)
+            or isinstance(self.model, _tf.compat.v1.GraphDef)
         ):
             cfs = []
             if isinstance(self.model, list):
                 cfs = self.model
             if isinstance(self.model, _tf.keras.Model):
                 cfs = self._concrete_fn_from_tf_keras_or_h5(self.model)
+            elif isinstance(self.model, _tf.compat.v1.GraphDef):
+                return None, self.model
             elif isinstance(self.model, str):
                 if not _os_path.exists(self.model):
                     raise ValueError(
@@ -196,7 +199,12 @@ class TF2Loader(TFLoader):
 
     def _program_from_tf_ssa(self):
         self._run_tf_ssa_passes()
-        converter = TF2Converter(self._tf_ssa, **self.kwargs)
+        converter = TF2Converter(
+            tf_ssa=self._tf_ssa,
+            inputs=self.kwargs["inputs"],
+            outputs=self.kwargs["outputs"],
+            opset_version=self.kwargs["specification_version"]
+        )
         return converter.convert()
 
     def _populate_sub_graph_input_shapes(self, graph, graph_fns):

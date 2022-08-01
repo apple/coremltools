@@ -70,6 +70,9 @@ class Var:
 
     child_ops [_child_ops]: list[Operation]
         Ops that take this Var as an input.
+        
+    nonreplaceable_vars_upstream: set[Var]
+        Set that consists of nonreplaceable vars upstream
     """
 
     __slots__ = [
@@ -80,6 +83,7 @@ class Var:
         "op_output_idx",
         "_child_ops",
         "consuming_blocks",
+        "_nonreplaceable_vars_upstream",
     ]
 
     def __init__(self, name, sym_type, sym_val=None, op=None, op_output_idx=None):
@@ -102,6 +106,52 @@ class Var:
         # == 0) but is still used as block output. A var can be output of
         # multiple blocks (e.g., both current block and nested blocks)
         self.consuming_blocks = list()
+        
+        # replaceability
+        self._nonreplaceable_vars_upstream = set()
+        self._set_nonreplaceable_vars_upstream()
+
+    @property
+    def nonreplaceable_vars_upstream(self):
+        return self._nonreplaceable_vars_upstream
+
+    @nonreplaceable_vars_upstream.setter
+    def nonreplaceable_vars_upstream(self, val):
+        assert isinstance(val, set)
+        self._nonreplaceable_vars_upstream = val
+
+    @staticmethod
+    def _is_nonreplaceable_var(var):
+        op = var.op
+        if op is None:
+            return False
+        return op.op_type.startswith("constexpr_")
+    
+    def _set_nonreplaceable_vars_upstream(self):
+        """
+        A utility function to set the value of the "nonreplaceable_vars_upstream" property.
+        If the var is an output of the constexpr op, then "nonreplaceable_vars_upstream" is a single element set, containing this var.
+        Otherwise, its a union of the "nonreplaceable_vars_upstream" sets of all the input vars of its parent op.
+        """
+        op = self.op
+        if op is None:
+            return
+        if Var._is_nonreplaceable_var(self):
+            self.nonreplaceable_vars_upstream = set([self])
+        else:
+            flattened_inputs = op.get_flattened_inputs()
+            inputs_nonreplaceable_vars_upstream = [p.nonreplaceable_vars_upstream for p in flattened_inputs]
+            if len(inputs_nonreplaceable_vars_upstream) > 0:
+                self.nonreplaceable_vars_upstream = set.union(*inputs_nonreplaceable_vars_upstream)
+            
+    def _reset_nonreplaceable_vars_upstream(self):
+        self.nonreplaceable_vars_upstream = set()
+
+    def can_be_replaced_by_var(self, new_var):
+        """
+        A var can be replaced by a new var only if the new var's nonreplaceable_vars_upstream is the super set of the old one
+        """
+        return self.nonreplaceable_vars_upstream.issubset(new_var.nonreplaceable_vars_upstream)
 
     @property
     def sym_type(self):

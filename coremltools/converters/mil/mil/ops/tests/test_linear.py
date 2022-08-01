@@ -57,9 +57,8 @@ class TestLinear:
         itertools.product([True, False], backends, [2, 3, 5]),
     )
     def test_builder_to_backend_stress(self, use_cpu_only, backend, rank):
-        if backend[0] == "mlprogram" and rank == 5 and not use_cpu_only:
-            pytest.xfail("rdar://94199353 (TestLinear.test_builder_to_backend_stress failing on the CI)")
-
+        if backend[0] == "mlprogram" and not use_cpu_only:
+            pytest.xfail("rdar://97398733 (TestLinear failing on mlprogram + GPU)")
         x_shape = np.random.randint(low=1, high=3, size=(rank,))
         x_val = np.random.rand(*x_shape)
         out_channels = 3

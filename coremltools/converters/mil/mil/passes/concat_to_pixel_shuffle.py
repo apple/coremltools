@@ -4,8 +4,9 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from coremltools.converters.mil.mil import Builder as mb
-from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
+from coremltools.converters.mil.mil.passes.helper import block_context_manager
+from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 
 def _match_pattern(op):
 
@@ -57,27 +58,25 @@ def _match_pattern(op):
 
 def _replace_ops(block, w_concat, h_concat_0, h_concat_1):
 
-    with block:
-        h_concat_0_inputs = list(h_concat_0.inputs["values"])
-        h_concat_1_inputs = list(h_concat_1.inputs["values"])
+    h_concat_0_inputs = list(h_concat_0.inputs["values"])
+    h_concat_1_inputs = list(h_concat_1.inputs["values"])
 
-        all_inputs = [h_concat_0_inputs[0], h_concat_1_inputs[0], h_concat_0_inputs[1], h_concat_1_inputs[1]]
+    all_inputs = [h_concat_0_inputs[0], h_concat_1_inputs[0], h_concat_0_inputs[1], h_concat_1_inputs[1]]
 
-        # Concatenate all 4 inputs on the channel axis
-        x = mb.concat(values=all_inputs, axis=1, before_op=h_concat_0, interleave=True)
-        # Shuffle into place
-        x = mb.pixel_shuffle(x=x, upscale_factor=2, before_op=h_concat_0)
+    # Concatenate all 4 inputs on the channel axis
+    x = mb.concat(values=all_inputs, axis=1, before_op=h_concat_0, interleave=True)
+    # Shuffle into place
+    x = mb.pixel_shuffle(x=x, upscale_factor=2, before_op=h_concat_0)
 
-        w_concat.enclosing_block.replace_uses_of_var_after_op(
-            anchor_op=h_concat_0, old_var=w_concat.outputs[0], new_var=x
-        )
+    w_concat.enclosing_block.replace_uses_of_var_after_op(
+        anchor_op=h_concat_0, old_var=w_concat.outputs[0], new_var=x
+    )
 
-        block.remove_ops([w_concat, h_concat_0, h_concat_1])
-
-
+    block.remove_ops([w_concat, h_concat_0, h_concat_1])
+    
+@block_context_manager
 def _concat_to_pixel_shuffle_block(block):
     for op in list(block.operations):
-
         layers = _match_pattern(op)
         if layers:
             _replace_ops(block, layers[0], layers[1], layers[2])

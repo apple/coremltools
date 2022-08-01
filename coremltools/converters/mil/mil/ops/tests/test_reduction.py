@@ -137,6 +137,35 @@ class TestReduction:
         "use_cpu_only, backend, mode",
         itertools.product([True, False], backends, ["max", "mean"]),
     )
+    def test_builder_to_backend_global_pool_none(self, use_cpu_only, backend, mode):
+        # test lowering to spatial reduction to global_pool path for axis = None
+        val = np.array([[[[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]], [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]]]], dtype=np.float32)
+        input_placeholders = {"x": mb.placeholder(shape=val.shape)}
+        input_values = {"x": val}
+
+        expected_output_types = (1, 1, 1, 1, types.fp32)
+
+        if mode == "max":
+            build = lambda x: mb.reduce_max(x=x, axes=None, keep_dims=True)
+            expected_outputs = np.array([[[[6.0]]]], dtype=np.float32)
+        elif mode == "mean":
+            build = lambda x: mb.reduce_mean(x=x, axes=None, keep_dims=True)
+            expected_outputs = np.array([[[[3.5]]]], dtype=np.float32)
+
+        run_compare_builder(
+            build,
+            input_placeholders,
+            input_values,
+            expected_output_types,
+            expected_outputs,
+            use_cpu_only=use_cpu_only,
+            backend=backend,
+        )
+
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend, mode",
+        itertools.product([True, False], backends, ["max", "mean"]),
+    )
     def test_builder_to_backend_global_pool_3d(self, use_cpu_only, backend, mode):
         # test lowering to spatial reduction to global_pool path
         val = np.array([[[[[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]]]]], dtype=np.float32)
@@ -161,6 +190,7 @@ class TestReduction:
             use_cpu_only=use_cpu_only,
             backend=backend,
         )
+
 
     @pytest.mark.parametrize(
         ["axis", "keep_dims"], itertools.product([1, -3], [True, False])

@@ -7,6 +7,7 @@ import numpy as np
 
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
+from coremltools.converters.mil.mil.passes.helper import block_context_manager
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 
 
@@ -54,13 +55,49 @@ def _try_to_transform(linear_op, add_or_sub_op, block):
         linear_kargs[k] = v
 
     x = mb.linear(**linear_kargs)
+    
+    if add_or_sub_op.enclosing_block.try_replace_uses_of_var_after_op(
+        anchor_op=add_or_sub_op,
+        old_var=add_or_sub_op.outputs[0],
+        new_var=x,
+    ):
+        add_or_sub_op.enclosing_block.remove_ops([linear_op, add_or_sub_op])
+        return True
+    return False
 
-    add_or_sub_op.enclosing_block.replace_uses_of_var_after_op(
-        anchor_op=add_or_sub_op, old_var=add_or_sub_op.outputs[0], new_var=x
-    )
-    # Remove all the ops at once
-    block.remove_ops([linear_op, add_or_sub_op])
-    return True
+@block_context_manager
+def _fuse_linear_bias_block(block):
+
+    def _find_candicate_op(op):
+        if op.op_type != "linear":
+            return None
+        # abort fusion if op output is also a block output
+        if op.outputs[0] in op.enclosing_block.outputs:
+            return None
+        # find add/sub op
+        child_ops = op.outputs[0].child_ops
+        if len(child_ops) == 1:
+            op_candidate = list(child_ops)[0]
+            if op_candidate.op_type in ["add", "sub"]:
+                return op_candidate
+
+    fusion_occurred = False
+    for op in list(block.operations):
+        for b in op.blocks:
+            block_changed = True
+            while block_changed:
+                block_changed = _fuse_linear_bias_block(b)
+        if len(op.blocks) > 0:
+            # This op can't be conv or conv_transpose
+            continue
+
+        add_or_sub_op = _find_candicate_op(op)
+        if add_or_sub_op is not None:
+            fusion_occurred = _try_to_transform(op, add_or_sub_op, block)
+            # has to break as the downstream iterator is affected.
+            if fusion_occurred:
+                return fusion_occurred
+    return fusion_occurred
 
 @register_pass(namespace="common")
 class fuse_linear_bias(AbstractGraphPass):
@@ -93,51 +130,9 @@ class fuse_linear_bias(AbstractGraphPass):
 
         prog: Program
     """
-    def __init__(self):
-        self.ops_to_skip = set()
-
-    def set_ops_to_skip(self, prog):
-        pass
 
     def apply(self, prog):
-        self.set_ops_to_skip(prog)
         for f in prog.functions.values():
             block_changed = True
             while block_changed:
-                block_changed = self._fuse_linear_bias_block(f)
-
-    def _fuse_linear_bias_block(self, block):
-
-        def _find_candicate_op(op):
-            if op.op_type != "linear":
-                return None
-            # abort fusion if op output is also a block output
-            if op.outputs[0] in op.enclosing_block.outputs:
-                return None
-            # find add/sub op
-            child_ops = op.outputs[0].child_ops
-            if len(child_ops) == 1:
-                op_candidate = list(child_ops)[0]
-                if op_candidate.op_type in ["add", "sub"]:
-                    return op_candidate
-
-        fusion_occurred = False
-        for op in list(block.operations):
-            for b in op.blocks:
-                block_changed = True
-                while block_changed:
-                    block_changed = self._fuse_linear_bias_block(b)
-            if len(op.blocks) > 0:
-                # This op can't be conv or conv_transpose
-                continue
-            if op in self.ops_to_skip:
-                continue
-
-            add_or_sub_op = _find_candicate_op(op)
-            if add_or_sub_op is not None and add_or_sub_op not in self.ops_to_skip:
-                with block:
-                    fusion_occurred = _try_to_transform(op, add_or_sub_op, block)
-                # has to break as the downstream iterator is affected.
-                if fusion_occurred:
-                    return fusion_occurred
-        return fusion_occurred
+                block_changed = _fuse_linear_bias_block(f)

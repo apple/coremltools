@@ -11,10 +11,12 @@ from coremltools.converters.mil.mil.types.symbolic import (
     num_symbolic,
 )
 from coremltools.converters.mil.mil import Builder as mb
-from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
+from coremltools.converters.mil.mil.passes.helper import block_context_manager
+from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 
 
+@block_context_manager
 def _remove_symbolic_reshape_block(block):
     num_changes = 0
     for op in list(block.operations):
@@ -44,18 +46,17 @@ def _remove_symbolic_reshape_block(block):
             continue
         # Convert the one symbol to -1
         integer_shape = [-1 if is_symbolic(i) else i for i in shape]
-        with block:
-            shape_const = mb.const(
-                val=integer_shape,
-                name=op.shape.name + "x",
-                before_op=op,
-            )
-            reshaped = mb.reshape(x=op.x, shape=shape_const, name=op.name, before_op=op)
-            op.enclosing_block.replace_uses_of_var_after_op(
-                anchor_op=op, old_var=op.outputs[0], new_var=reshaped
-            )
-            # Remove all the ops at once
-            block.remove_ops([op, op.shape.op])
+        shape_const = mb.const(
+            val=integer_shape,
+            name=op.shape.name + "x",
+            before_op=op,
+        )
+        reshaped = mb.reshape(x=op.x, shape=shape_const, name=op.name, before_op=op)
+        op.enclosing_block.replace_uses_of_var_after_op(
+            anchor_op=op, old_var=op.outputs[0], new_var=reshaped
+        )
+        # Remove all the ops at once
+        block.remove_ops([op, op.shape.op])
         num_changes += 1
     return num_changes
 

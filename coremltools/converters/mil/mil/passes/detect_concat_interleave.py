@@ -6,8 +6,9 @@
 import numpy as np
 
 from coremltools.converters.mil.mil import Builder as mb
-from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
+from coremltools.converters.mil.mil.passes.helper import block_context_manager
+from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 from coremltools.converters.mil.mil.types.symbolic import any_symbolic
 
 
@@ -118,7 +119,7 @@ def _try_to_transform(concat_op, add_op, block):
     block.remove_ops(all_ops)
     return True
 
-
+@block_context_manager
 def _fuse_concat_interleave(block):
     fusion_status = False
     for op in list(block.operations):
@@ -131,8 +132,7 @@ def _fuse_concat_interleave(block):
 
         concat_op = _match_pattern(op)
         if concat_op is not None:
-            with block:
-                fusion_status = _try_to_transform(op, concat_op, block)
+            fusion_status = _try_to_transform(op, concat_op, block)
             # has to break as the downstream iterator is affected.
             if fusion_status:
                 return fusion_status

@@ -116,7 +116,7 @@ def get_tf_node_names(tf_nodes, mode="inputs"):
 def tf_graph_to_mlmodel(
     graph, feed_dict, output_nodes, frontend="tensorflow",
     backend=("neuralnetwork", "fp32"), use_cpu_for_conversion=False,
-    inputs_for_conversion=None,
+    inputs_for_conversion=None, minimum_deployment_target=None,
 ):
     """
     Parameters
@@ -136,6 +136,8 @@ def tf_graph_to_mlmodel(
         It forces the model to be loaded on the CPU context, post conversion.
     inputs_for_conversion: list of coremltools.TensorType() or coremltools.ImageType() objects
         Defaults to None. It is passed as is to the "inputs" argument of the converter.
+    minimum_deployment_target : coremltools.target enumeration
+        It set the minimum_deployment_target argument in the coremltools.convert functino.
     -----------
     Returns MLModel, Input Values, Output Names
     """
@@ -159,6 +161,7 @@ def tf_graph_to_mlmodel(
     mlmodel = ct_convert(
         graph, inputs=inputs, outputs=output_names, source=frontend, convert_to=backend,
         compute_units=compute_unit,
+        minimum_deployment_target=minimum_deployment_target,
     )
 
     return mlmodel, input_values, output_names, output_nodes
@@ -196,6 +199,7 @@ def run_compare_tf(
     validate_shapes_only=False,
     freeze_graph=False,
     tf_outputs=None,
+    minimum_deployment_target=None,
 ):
     """
     Utility function to convert and compare a given TensorFlow 1.x model.
@@ -230,6 +234,8 @@ def run_compare_tf(
         all the variables in the graph have been converted to constants.
     tf_outputs: float or list[float]
         If present, use it as TensorFlow predictions
+    minimum_deployment_target : coremltools.target enumeration
+        It set the minimum_deployment_target argument in the coremltools.convert functino.
 
     Return:
         Proto, mlmodel, input dictionay, prediction(if possible)
@@ -269,7 +275,9 @@ def run_compare_tf(
 
     mlmodel, input_key_values, output_names, output_nodes = tf_graph_to_mlmodel(
         graph, feed_dict, output_nodes, frontend, backend,
-        use_cpu_for_conversion=use_cpu_for_conversion, inputs_for_conversion=inputs_for_conversion,
+        use_cpu_for_conversion=use_cpu_for_conversion,
+        inputs_for_conversion=inputs_for_conversion,
+        minimum_deployment_target=minimum_deployment_target
     )
 
     if frontend_only or coremltoolsutils._macos_version() < (10, 13) \
@@ -338,7 +346,7 @@ class TensorFlowBaseTest:
                        frontend_only=False, frontend="tensorflow",
                        backend=("neuralnetwork", "fp32"), atol=1e-04, rtol=1e-05,
                        validate_shapes_only=False, freeze_graph=False,
-                       tf_outputs=None):
+                       tf_outputs=None, minimum_deployment_target=None):
 
         res = run_compare_tf(graph,
                              feed_dict,
@@ -351,9 +359,10 @@ class TensorFlowBaseTest:
                              rtol=rtol,
                              validate_shapes_only=validate_shapes_only,
                              freeze_graph=freeze_graph,
-                             tf_outputs=tf_outputs
+                             tf_outputs=tf_outputs,
+                             minimum_deployment_target=minimum_deployment_target
         )
-
+        
         alist = []
         if res is not None:
             alist = list(res)

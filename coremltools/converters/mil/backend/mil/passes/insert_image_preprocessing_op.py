@@ -3,9 +3,11 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
+from coremltools.converters.mil.mil.passes.helper import block_context_manager
+from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 from coremltools.converters.mil.input_types import ColorLayout, ImageType
+
 # import mil internal ops to add it to the builder
 from coremltools.converters.mil.mil.ops import defs as _ops
 from coremltools.converters.mil.mil import Builder as mb
@@ -23,7 +25,7 @@ class insert_image_preprocessing_ops(AbstractGraphPass):
             if f_name == 'main':
                 _insert_image_preprocessing_ops(f, prog)
 
-
+@block_context_manager
 def _insert_image_preprocessing_ops(block, prog):
     input_types = list(prog.main_input_types)
 
@@ -37,29 +39,28 @@ def _insert_image_preprocessing_ops(block, prog):
             first_op = block.operations[0]
             old_var = placeholder_op.outputs[0]
             has_bias = np.any(np.array(input_type.bias) != 0)
-            with block:
-                last_output = input_var
-                input_nptype = nptype_from_builtin(type(last_output.dtype()))
-                if input_type.scale != 1:
-                    last_output = mb.mul(x=last_output,
-                                         y=np.array(input_type.scale, dtype=input_nptype),
-                                         before_op=first_op, name=input_var.name + "__scaled__")
-                if has_bias:
-                    if input_type.color_layout in (ColorLayout.GRAYSCALE, ColorLayout.GRAYSCALE_FLOAT16):
+            last_output = input_var
+            input_nptype = nptype_from_builtin(type(last_output.dtype()))
+            if input_type.scale != 1:
+                last_output = mb.mul(x=last_output,
+                                     y=np.array(input_type.scale, dtype=input_nptype),
+                                     before_op=first_op, name=input_var.name + "__scaled__")
+            if has_bias:
+                if input_type.color_layout in (ColorLayout.GRAYSCALE, ColorLayout.GRAYSCALE_FLOAT16):
+                    last_output = mb.add(x=last_output,
+                                         y=np.array(input_type.bias, dtype=input_nptype),
+                                         before_op=first_op, name=input_var.name + "__biased__")
+                else:
+                    if len(last_output.shape) == 3:
                         last_output = mb.add(x=last_output,
-                                             y=np.array(input_type.bias, dtype=input_nptype),
+                                             y=np.array(input_type.bias, dtype=input_nptype).reshape([3, 1, 1]),
+                                             before_op=first_op, name=input_var.name + "__biased__")
+                    elif len(last_output.shape) == 4:
+                        last_output = mb.add(x=last_output,
+                                             y=np.array(input_type.bias, dtype=input_nptype).reshape([1, 3, 1, 1]),
                                              before_op=first_op, name=input_var.name + "__biased__")
                     else:
-                        if len(last_output.shape) == 3:
-                            last_output = mb.add(x=last_output,
-                                                 y=np.array(input_type.bias, dtype=input_nptype).reshape([3, 1, 1]),
-                                                 before_op=first_op, name=input_var.name + "__biased__")
-                        elif len(last_output.shape) == 4:
-                            last_output = mb.add(x=last_output,
-                                                 y=np.array(input_type.bias, dtype=input_nptype).reshape([1, 3, 1, 1]),
-                                                 before_op=first_op, name=input_var.name + "__biased__")
-                        else:
-                            raise TypeError("Unsupported rank for image input type.")
+                        raise TypeError("Unsupported rank for image input type.")
 
             if last_output != input_var:
                 block.replace_uses_of_var_after_op(anchor_op=last_output.op,

@@ -151,10 +151,10 @@ class TestAdjustToSupportedTypes:
 
 
     @pytest.mark.parametrize(
-        "use_ios16_deployment_target",
-        [False, True],
+        "opset_version",
+        [None, target.iOS13, target.iOS16],
     )
-    def test_float16_input_output(self, use_ios16_deployment_target):
+    def test_float16_input_output(self, opset_version):
         """
         Input graph:
 
@@ -164,7 +164,7 @@ class TestAdjustToSupportedTypes:
             } -> (%relu_0)
         }
 
-        Output graph (if deployment_target < ios16):
+        Output graph (if opset_version < ios16):
 
         main(%x: (1, 1, 1, 1, fp32)(Tensor)) {
             block0() {
@@ -174,14 +174,11 @@ class TestAdjustToSupportedTypes:
             } -> (%relu_0)
         }
 
-        Output graph (if deployment_target >= ios16): same as the input graph
+        Output graph (if opset_version >= ios16): same as the input graph
         """
-        @mb.program(input_specs=[mb.TensorSpec(shape=(1, 1, 1, 1), dtype=types.fp16)])
+        @mb.program(input_specs=[mb.TensorSpec(shape=(1, 1, 1, 1), dtype=types.fp16)], opset_version=opset_version)
         def prog(x):
             return mb.relu(x=x)
-
-        if use_ios16_deployment_target:
-            PASS_REGISTRY["mil_backend::adjust_io_to_supported_types"].minimun_deployment_target = target.iOS16
 
         prev_prog, prev_block, block = apply_pass_and_basic_check(
             prog, "mil_backend::adjust_io_to_supported_types"
@@ -193,7 +190,7 @@ class TestAdjustToSupportedTypes:
         outputs = block.outputs
         assert prev_inputs[0][1].name == inputs[0][1].name
         assert outputs[0].name == prev_outputs[0].name
-        if not use_ios16_deployment_target:
+        if opset_version is None or opset_version < target.iOS16:
             assert get_op_types_in_program(prog) == ['cast', 'relu', 'cast']
             assert inputs[0][1].dtype == types.fp32
             assert outputs[0].dtype == types.fp32
@@ -201,7 +198,37 @@ class TestAdjustToSupportedTypes:
             assert get_op_types_in_program(prog) == ['relu']
             assert inputs[0][1].dtype == types.fp16
             assert block.outputs[0].dtype == types.fp16
+            
+    def test_float16_input_output_with_opset_version_inference(self):
+        """
+        Input graph:
 
+        main(%x: (1, 1, 4, 4, fp16)(Tensor)) {
+          block0() {
+            %pixel_unshuffle_0: (1, 4, 2, 2, fp16)(Tensor) = pixel_unshuffle(x=%x, downscale_factor=2, name="pixel_unshuffle_0")
+          } -> (%pixel_unshuffle_0)
+        }
+        
+        This function would be inferred as an iOS16 function, and the graph pass should behave properly
+        """
+        @mb.program(input_specs=[mb.TensorSpec(shape=(1, 1, 4, 4), dtype=types.fp16)])
+        def prog(x):
+            x = mb.pixel_unshuffle(x=x, downscale_factor=np.uint32(2))
+            return x
+            
+        prev_prog, prev_block, block = apply_pass_and_basic_check(
+            prog, "mil_backend::adjust_io_to_supported_types"
+        )
+
+        prev_inputs = list(prev_block.inputs.items())
+        inputs = list(block.inputs.items())
+        prev_outputs = prev_block.outputs
+        outputs = block.outputs
+        assert prev_inputs[0][1].name == inputs[0][1].name
+        assert outputs[0].name == prev_outputs[0].name
+        assert get_op_types_in_program(prog) == ['pixel_unshuffle']
+        assert inputs[0][1].dtype == types.fp16
+        assert block.outputs[0].dtype == types.fp16
 
     def test_int8_input(self):
         """
@@ -910,9 +937,7 @@ class TestHomogenizeInputDtypes:
             return out
 
         assert get_op_types_in_program(prog) == ["mul"]
-        print(prog)
         apply_pass_and_basic_check(prog, "mil_backend::homogenize_input_dtypes")
-        print(prog)
         # verify that there is no cast op in the program, since the
         # const input (int32) should have been promoted to a float32 and replaced with a new const
         assert get_op_types_in_program(prog) == ["mul"]

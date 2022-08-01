@@ -4,7 +4,6 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 import numpy as np
 
-from ._op_reqs import register_op
 from coremltools.converters.mil.mil import (
     Operation,
     precondition,
@@ -19,6 +18,7 @@ from coremltools.converters.mil.mil.input_type import (
     TensorInputType
 )
 from coremltools.converters.mil.mil.operation import VALUE
+from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
 
 
 class ReductionAxes(Operation):
@@ -116,7 +116,7 @@ class ReductionAxis(Operation):
         raise NotImplementedError()
 
 
-@register_op(doc_str="")
+@register_op
 class reduce_arg(ReductionAxis):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -139,7 +139,7 @@ class reduce_arg(ReductionAxis):
 Reduction op implementations
 """
 
-@register_op(doc_str="")
+@register_op
 class reduce_argmax(reduce_arg):
     """
     Computes the indices of the maximum value across dimensions of a tensor.
@@ -177,7 +177,7 @@ class reduce_argmax(reduce_arg):
         return np.argmax
 
 
-@register_op(doc_str="")
+@register_op
 class reduce_argmin(reduce_arg):
     """
     Computes the indices of the minimum value across dimensions of a tensor.
@@ -216,7 +216,7 @@ class reduce_argmin(reduce_arg):
         return np.argmin
 
 
-@register_op(doc_str="")
+@register_op
 class reduce_l1_norm(ReductionAxes):
     """
     Computes the L1 normalization of elements across given dimensions of the input tensor.
@@ -258,7 +258,7 @@ class reduce_l1_norm(ReductionAxes):
         return l1_norm
 
 
-@register_op(doc_str="")
+@register_op
 class reduce_l2_norm(ReductionAxes):
     """
     Computes the L2 normalization of elements across given dimensions of the input tensor.
@@ -295,7 +295,7 @@ class reduce_l2_norm(ReductionAxes):
         return l2_norm
 
 
-@register_op(doc_str="")
+@register_op
 class reduce_log_sum(ReductionAxes):
     """
     Computes the natural logarithm of the sum of all the elements across given dimensions
@@ -333,7 +333,7 @@ class reduce_log_sum(ReductionAxes):
         return log_sum
 
 
-@register_op(doc_str="")
+@register_op
 class reduce_log_sum_exp(ReductionAxes):
     """
     Computes the natural logarithm of the sum of the exponentials of the elements across
@@ -387,7 +387,7 @@ class reduce_log_sum_exp(ReductionAxes):
         return operator
 
 
-@register_op(doc_str="")
+@register_op
 class reduce_max(ReductionAxes):
     """
     Computes the maximum of elements across given dimensions of the input tensor.
@@ -421,7 +421,7 @@ class reduce_max(ReductionAxes):
         return np.max
 
 
-@register_op(doc_str="")
+@register_op
 class reduce_mean(ReductionAxes):
     """
     Computes the mean of elements across given dimensions of the input tensor.
@@ -459,7 +459,7 @@ class reduce_mean(ReductionAxes):
         return np.mean
 
 
-@register_op(doc_str="")
+@register_op
 class reduce_min(ReductionAxes):
     """
     Computes the minimum of elements across given dimensions of the input tensor.
@@ -493,7 +493,7 @@ class reduce_min(ReductionAxes):
         return np.min
 
 
-@register_op(doc_str="")
+@register_op
 class reduce_prod(ReductionAxes):
     """
     Computes the product of elements across given dimensions of the input tensor.
@@ -528,7 +528,7 @@ class reduce_prod(ReductionAxes):
         return np.prod
 
 
-@register_op(doc_str="")
+@register_op
 class reduce_sum(ReductionAxes):
     """
     Computes the sum of elements across given dimensions of the input tensor.
@@ -562,7 +562,7 @@ class reduce_sum(ReductionAxes):
         return np.sum
 
 
-@register_op(doc_str="")
+@register_op
 class reduce_sum_square(ReductionAxes):
     """
     Computes the sum of squares of elements across given dimensions of the input tensor.

@@ -24,7 +24,7 @@ from coremltools.converters.mil.mil.operation import (
 )
 
 
-@register_op(doc_str="")
+@register_op
 class gather(Operation):
     """
     Gather slices from input ``x`` along dimension ``axis`` according to ``indices``,
@@ -134,7 +134,7 @@ class gather(Operation):
         return types.tensor(out_type, out_shape)
 
 
-@register_op(doc_str="")
+@register_op
 class scatter(Operation):
     """
     Scatter ``updates`` to ``data`` at locations ``indices`` at dimension ``axis``
@@ -247,7 +247,7 @@ class scatter(Operation):
         return self.data.sym_type
 
 
-@register_op(doc_str="")
+@register_op
 class gather_along_axis(Operation):
     """
     Take the values along ``axis`` at locations ``indices``.
@@ -323,7 +323,7 @@ class gather_along_axis(Operation):
         return types.tensor(self.x.dtype, self.indices.shape)
 
 
-@register_op(doc_str="")
+@register_op
 class scatter_along_axis(Operation):
     """
     Scatter ``updates`` to ``data`` at locations ``indices`` along ``axis`` dimension
@@ -440,7 +440,7 @@ class scatter_along_axis(Operation):
         return self.data.sym_type
 
 
-@register_op(doc_str="")
+@register_op
 class gather_nd(Operation):
     """
     Gather slices from ``x`` according to ``indices``, similar to `tf.gather_nd <https://www.tensorflow.org/api_docs/python/tf/gather_nd>`_.
@@ -488,7 +488,7 @@ class gather_nd(Operation):
         return types.tensor(out_type, out_shape)
 
 
-@register_op(doc_str="")
+@register_op
 class scatter_nd(Operation):
     """
     Scatter ``updates`` to ``data`` at locations ``indices``.

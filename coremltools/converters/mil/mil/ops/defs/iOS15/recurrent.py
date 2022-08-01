@@ -3,7 +3,6 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from ._op_reqs import register_op
 from coremltools.converters.mil.mil import Operation, types
 from coremltools.converters.mil.mil.input_type import (
     BoolInputType,
@@ -13,9 +12,10 @@ from coremltools.converters.mil.mil.input_type import (
     TensorInputType,
     StringInputType
 )
+from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
 
 
-@register_op(doc_str="")
+@register_op
 class gru(Operation):
     r"""
     Gated recurrent unit (GRU).
@@ -170,7 +170,7 @@ class gru(Operation):
         )
 
 
-@register_op(doc_str="")
+@register_op
 class lstm(Operation):
     r"""
     Single long short-term memory (LSTM) sequence.
@@ -398,7 +398,7 @@ class lstm(Operation):
         )
 
 
-@register_op(doc_str="")
+@register_op
 class rnn(Operation):
     """
     Recurrent neural network (RNN).

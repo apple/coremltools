@@ -5,9 +5,11 @@
 
 from collections import OrderedDict
 import logging as _logging
+import numpy as _np
 import torch as _torch
 
 from coremltools._deps import version_lt
+from coremltools.converters.mil._deployment_compatibility import AvailableTarget as _target
 from coremltools.converters.mil.input_types import ImageType
 from coremltools.converters.mil.mil import (
     Builder as mb,
@@ -134,7 +136,7 @@ class TorchConverter:
     """
 
     def __init__(
-        self, torchscript, inputs, outputs=None, cut_at_symbols=None,
+        self, torchscript, inputs, outputs=None, cut_at_symbols=None, opset_version=None
     ):
         """
         Arguments:
@@ -144,6 +146,7 @@ class TorchConverter:
             cut_at_symbols: A list of internal symbol name strings. Graph conversion will
                 terminate once these symbols have been generated. For debugging use
                 only. See kwarg in load.py.
+            opset_version: An int represents the coreml opset version
         """
 
         assert isinstance(torchscript, _torch.jit.ScriptModule)
@@ -154,6 +157,7 @@ class TorchConverter:
         self.torchscript = torchscript
         self.outputs = outputs
         self.output_names = get_output_names(self.outputs)
+        self.opset_version = _target(opset_version) if opset_version is not None else None
         self.context = TranscriptionContext()
         raw_graph, params_dict = self._expand_and_optimize_ir(self.torchscript)
         self.params_dict = params_dict
@@ -214,6 +218,8 @@ class TorchConverter:
 
     def convert_const(self):
         for name, val in self.graph.params.items():
+            if val.dtype == _np.uint8:
+                val = val.astype(_np.int32)
             const = mb.const(val=val, name=name)
             self.context.add(const)
 
@@ -236,7 +242,7 @@ class TorchConverter:
         prog.set_main_input_types(tuple(self.inputs))
 
         # Initialize the SSA for conversion
-        with Function(ssa_func_inputs) as ssa_func:
+        with Function(ssa_func_inputs, opset_version=self.opset_version) as ssa_func:
 
             # Map internal @self.graph.inputs to user specified @ssa_func_inputs
             # If @self.graph.inputs == @ssa_func_inputs this just adds the inputs

@@ -40,6 +40,12 @@ class AvailableTarget(IntEnum):
     tvOS14 = _SPECIFICATION_VERSION_IOS_14
     tvOS15 = _SPECIFICATION_VERSION_IOS_15
     tvOS16 = _SPECIFICATION_VERSION_IOS_16
+    
+    # customized __str__
+    def __str__(self):
+        original_str = super().__str__()
+        new_str = original_str.replace(type(self).__name__, "coremltools.target")
+        return new_str
 
 
 _get_features_associated_with = {}
@@ -133,7 +139,7 @@ def check_deployment_compatibility(spec, representation, deployment_target):
 
     for any_target in AvailableTarget:
 
-        if any_target.value > deployment_target.value and any_target in _get_features_associated_with:
+        if any_target > deployment_target and any_target in _get_features_associated_with:
             missing_features = _get_features_associated_with[any_target](spec)
 
             if missing_features:

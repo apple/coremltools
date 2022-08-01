@@ -6,9 +6,12 @@
 import numpy as np
 
 from coremltools.converters.mil.mil import Builder as mb
-from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
-from .helper import _check_child_op_type
+from coremltools.converters.mil.mil.passes.helper import (
+    _check_child_op_type,
+    block_context_manager,
+)
+from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 
 
 def _match_pattern(block, padding_op):
@@ -47,20 +50,18 @@ def _match_pattern(block, padding_op):
 
 def _replace_ops(block, padding_op, child_padding_op, final_pad):
 
-    with block:
+    mode = padding_op.inputs["mode"].val
+    x = mb.pad(x=padding_op.inputs["x"], pad=final_pad, mode=mode, constant_val=padding_op.inputs["constant_val"].val,
+               before_op=padding_op)
+    padding_op.enclosing_block.replace_uses_of_var_after_op(
+        anchor_op=padding_op, old_var=child_padding_op.outputs[0], new_var=x
+    )
 
-        mode = padding_op.inputs["mode"].val
-        x = mb.pad(x=padding_op.inputs["x"], pad=final_pad, mode=mode, constant_val=padding_op.inputs["constant_val"].val,
-                   before_op=padding_op)
-        padding_op.enclosing_block.replace_uses_of_var_after_op(
-            anchor_op=padding_op, old_var=child_padding_op.outputs[0], new_var=x
-        )
-
-        block.remove_ops([padding_op, child_padding_op])
+    block.remove_ops([padding_op, child_padding_op])
 
     return True
 
-
+@block_context_manager
 def _merge_padding_block(block):
     for op in list(block.operations):
         result = _match_pattern(block, op)

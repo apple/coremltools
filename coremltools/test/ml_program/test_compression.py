@@ -4,13 +4,16 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import logging
-import pytest
+import unittest
+
 import numpy as np
+import pytest
 import torch
 
 import coremltools as ct
-
+from coremltools._deps import _HAS_SKLEARN
 from coremltools.converters.mil.testing_utils import get_op_types_in_program
+
 
 def create_unique_weight(weight, nbits):
     shape = weight.detach().numpy().shape
@@ -92,6 +95,7 @@ class TestCompressionUtils:
         assert get_op_types_in_program(mlmodel_no_quantized._mil_program) == expected_ops
 
     @staticmethod
+    @unittest.skipIf(not _HAS_SKLEARN, "Missing scikit-learn. Skipping tests.")
     def test_weight_decompression():
         """
         This test is doing the following steps
@@ -158,12 +162,12 @@ class TestCompressionUtils:
         mlmodel = ct.convert(torchmodel, inputs=inputs, convert_to="mlprogram")
 
         # Test invalid mode for affine quantization
-        expected_err_str = "supported for weight affine quantization. Got mode invalid_mode."
+        expected_err_str = "supported for weight affine quantization. Got mode"
         with pytest.raises(ValueError, match=expected_err_str):
             ct.compression_utils.affine_quantize_weights(mlmodel, mode="invalid_mode")
 
         # Test invalid mode for weight sparsification
-        expected_err_str = "supported for weight sparsification. Got mode invalid_mode."
+        expected_err_str = "supported for weight sparsification. Got mode"
         with pytest.raises(ValueError, match=expected_err_str):
             ct.compression_utils.sparsify_weights(mlmodel, mode="invalid_mode")
 
@@ -178,7 +182,7 @@ class TestCompressionUtils:
            ct.compression_utils.sparsify_weights(mlmodel, mode="percentile_based", target_percentile=1.2)
 
         # Test invalid mode for weight palettization
-        expected_err_str = "supported for weight palettization. Got mode invalid_mode."
+        expected_err_str = "supported for weight palettization. Got mode"
         with pytest.raises(ValueError, match=expected_err_str):
             ct.compression_utils.palettize_weights(mlmodel, mode="invalid_mode")
 
@@ -298,7 +302,7 @@ class TestCompressionUtils:
     @staticmethod
     @pytest.mark.parametrize(
         "mode",
-        ("uniform", "kmeans")
+        ("uniform", "kmeans") if _HAS_SKLEARN else ("uniform",)
     )
     def test_weight_palettization(mode):
         model, inputs, torch_input_values, coreml_input_values = get_test_model_and_data()

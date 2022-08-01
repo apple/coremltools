@@ -5,8 +5,6 @@
 import numpy as np
 import operator
 
-from ._op_reqs import register_op
-from ._utils import promoted_primitive_type, broadcast_shapes
 from coremltools.converters.mil.mil import (
     InputSpec,
     Operation,
@@ -15,6 +13,8 @@ from coremltools.converters.mil.mil import (
     types
 )
 from coremltools.converters.mil.mil.operation import VALUE
+from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
+from coremltools.converters.mil.mil.ops.defs._utils import promoted_primitive_type, broadcast_shapes
 
 
 class elementwise_binary(Operation):
@@ -82,7 +82,7 @@ Elementwise Binary Op Implementation(s)
 """
 
 
-@register_op(doc_str="")
+@register_op
 class add(elementwise_binary):
     """
     Return ``x + y`` element-wise with
@@ -112,7 +112,7 @@ class add(elementwise_binary):
         return operator.add
 
 
-@register_op(doc_str="")
+@register_op
 class equal(elementwise_binary):
     """
     Return the truth value of ``x == y`` element-wise with
@@ -147,7 +147,7 @@ class equal(elementwise_binary):
         return types.bool
 
 
-@register_op(doc_str="")
+@register_op
 class floor_div(elementwise_binary):
     """
     Return ``x / y`` element-wise with
@@ -179,7 +179,7 @@ class floor_div(elementwise_binary):
         return operator.floordiv
 
 
-@register_op(doc_str="")
+@register_op
 class greater(elementwise_binary):
     """
     Return the truth value of ``x > y`` element-wise with
@@ -214,7 +214,7 @@ class greater(elementwise_binary):
         return types.bool
 
 
-@register_op(doc_str="")
+@register_op
 class greater_equal(elementwise_binary):
     """
     Return the truth value of ``x >= y`` element-wise with
@@ -249,7 +249,7 @@ class greater_equal(elementwise_binary):
         return types.bool
 
 
-@register_op(doc_str="")
+@register_op
 class less(elementwise_binary):
     """
     Return the truth value of ``x < y`` element-wise with
@@ -284,7 +284,7 @@ class less(elementwise_binary):
         return types.bool
 
 
-@register_op(doc_str="")
+@register_op
 class less_equal(elementwise_binary):
     """
     Return the truth value of ``x <= y`` element-wise with
@@ -319,7 +319,7 @@ class less_equal(elementwise_binary):
         return types.bool
 
 
-@register_op(doc_str="")
+@register_op
 class logical_and(elementwise_binary):
     """
     Return the truth value of ``x AND y`` element-wise with
@@ -354,7 +354,7 @@ class logical_and(elementwise_binary):
         return types.bool
 
 
-@register_op(doc_str="")
+@register_op
 class logical_or(elementwise_binary):
     """
     Return the truth value of ``x OR y`` element-wise with
@@ -389,7 +389,7 @@ class logical_or(elementwise_binary):
         return types.bool
 
 
-@register_op(doc_str="")
+@register_op
 class logical_xor(elementwise_binary):
     """
     Return the truth value of ``x XOR y`` element-wise with
@@ -424,7 +424,7 @@ class logical_xor(elementwise_binary):
         return types.bool
 
 
-@register_op(doc_str="")
+@register_op
 class maximum(elementwise_binary):
     """
     Return ``x > y ? x : y`` element-wise with
@@ -455,7 +455,7 @@ class maximum(elementwise_binary):
         return np.maximum
 
 
-@register_op(doc_str="")
+@register_op
 class minimum(elementwise_binary):
     """
     Return ``x > y ? y : x`` element-wise with
@@ -486,7 +486,7 @@ class minimum(elementwise_binary):
         return np.minimum
 
 
-@register_op(doc_str="")
+@register_op
 class mod(elementwise_binary):
     """
     Return ``x % y`` element-wise with
@@ -517,7 +517,7 @@ class mod(elementwise_binary):
         return operator.mod
 
 
-@register_op(doc_str="")
+@register_op
 class mul(elementwise_binary):
     """
     Return ``x * y`` element-wise with
@@ -548,7 +548,7 @@ class mul(elementwise_binary):
         return operator.mul
 
 
-@register_op(doc_str="")
+@register_op
 class not_equal(elementwise_binary):
     """
     Return the truth value of ``x != y`` element-wise with
@@ -583,7 +583,7 @@ class not_equal(elementwise_binary):
         return types.bool
 
 
-@register_op(doc_str="")
+@register_op
 class real_div(elementwise_binary):
     """
     Return ``x / y`` element-wise with
@@ -621,7 +621,7 @@ class real_div(elementwise_binary):
         return operator.truediv
 
 
-@register_op(doc_str="")
+@register_op
 class pow(elementwise_binary):
     """
     Return ``x ^ y`` element-wise with
@@ -652,7 +652,7 @@ class pow(elementwise_binary):
         return operator.pow
 
 
-@register_op(doc_str="")
+@register_op
 class sub(elementwise_binary):
     """
     Return ``x - y`` element-wise with

@@ -7,6 +7,7 @@ import pytest
 import numpy as np
 
 from .testing_utils import UNK_SYM, UNK_VARIADIC, run_compare_builder
+import coremltools as ct
 from coremltools._deps import _HAS_TORCH
 from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.mil import (
@@ -683,9 +684,6 @@ class TestSqueeze:
         "use_cpu_for_conversion, backend", itertools.product([True, False], backends,)
     )
     def test_builder_to_backend_smoke(self, use_cpu_for_conversion, backend):
-        if backend[0] == "mlprogram" and not use_cpu_for_conversion:
-            pytest.xfail("rdar://78343225 ((MIL GPU) Core ML Tools Unit Test failures [numerical error])")
-
         x = np.array([[[[1], [2], [3]]]], dtype=np.float32)
         input_placeholders = {"x": mb.placeholder(shape=x.shape)}
 
@@ -884,6 +882,72 @@ class TestPixelShuffle:
             expected_outputs,
             use_cpu_only=use_cpu_only,
             backend=backend,
+        )
+
+class TestPixelUnshuffle:
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend", itertools.product([True, False], backends,)
+    )
+    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+        if backend[0] == "neuralnetwork":
+            pytest.skip("nn backend not supported")
+
+        val = np.array([[[[9.0, 5.0], [1.0, 3.0]]]], dtype=np.float32)
+        input_placeholders = {"x": mb.placeholder(shape=val.shape)}
+        input_values = {"x": val}
+
+        def build(x):
+            return [mb.pixel_unshuffle(x=x, downscale_factor=np.uint32(2))]
+
+        expected_output_types = (1, 4, 1, 1, types.fp32)
+        expected_outputs = np.array([[[[9.0]], [[5.0]], [[1.0]], [[3.0]]]], dtype=np.float32)
+
+        run_compare_builder(
+            build,
+            input_placeholders,
+            input_values,
+            expected_output_types,
+            expected_outputs,
+            use_cpu_only=use_cpu_only,
+            backend=backend,
+            minimum_deployment_target=ct.target.iOS16,
+        )
+
+    @pytest.mark.skipif(not testing_reqs._HAS_TORCH, reason="PyTorch not found.")
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend, shape, downscale_factor",
+        itertools.product(
+            [True, False],
+            backends,
+            [(1, 2, 4, 4), (2, 1, 8, 4)],
+            [2, 4],
+        ),
+    )
+    def test_builder_to_backend_stress(
+        self, use_cpu_only, backend, shape, downscale_factor,
+    ):
+        if backend[0] == "neuralnetwork":
+            pytest.skip("nn backend not supported")
+            
+        val = np.random.rand(*shape)
+        input_placeholders = {"x": mb.placeholder(shape=val.shape)}
+        input_values = {"x": val}
+
+        def build(x):
+            return [mb.pixel_unshuffle(x=x, downscale_factor=np.uint32(downscale_factor))]
+
+        torch_pixel_unshuffle = torch.nn.PixelUnshuffle(downscale_factor)
+        expected_outputs = [torch_pixel_unshuffle(torch.Tensor(val)).numpy()]
+        expected_output_types = [o.shape[:] + (types.fp32,) for o in expected_outputs]
+        run_compare_builder(
+            build,
+            input_placeholders,
+            input_values,
+            expected_output_types,
+            expected_outputs,
+            use_cpu_only=use_cpu_only,
+            backend=backend,
+            minimum_deployment_target=ct.target.iOS16,
         )
 
 

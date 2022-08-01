@@ -8,26 +8,12 @@ from coremltools.converters.mil._deployment_compatibility import AvailableTarget
 
 class AbstractGraphPass(ABC):
 
-    def __init__(self, minimun_deployment_target=target.iOS13):
-        self._minimum_deployment_target = minimun_deployment_target
-
     def __call__(self, prog):
         if not prog.skip_all_passes:
             self.apply(prog)
 
     def __str__(self):
         return type(self).__name__
-
-    @property
-    def minimun_deployment_target(self):
-        return self._minimum_deployment_target
-
-    @minimun_deployment_target.setter
-    def minimun_deployment_target(self, t):
-        if not isinstance(t, target):
-            raise TypeError("minimun_deployment_target must be an enumeration from Enum class AvailableTarget")
-        self._minimum_deployment_target = t
-
 
     @abstractmethod
     def apply(self, prog):

@@ -3,7 +3,6 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from ._op_reqs import register_op
 from coremltools.converters.mil.mil import get_new_symbol, get_new_variadic_symbol, types
 from coremltools.converters.mil.mil.input_type import (
     DefaultInputs,
@@ -15,6 +14,7 @@ from coremltools.converters.mil.mil.input_type import (
     StringInputType
 )
 from coremltools.converters.mil.mil.operation import Operation
+from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
 from coremltools.converters.mil.mil.types.symbolic import any_symbolic
 
 
@@ -46,7 +46,7 @@ Random Op Implementation(s)
 """
 
 
-@register_op(doc_str="")
+@register_op
 class random_bernoulli(RandomDistribution):
     r"""
     Returns a tensor with the specified shape, with random values from a Bernoulli
@@ -107,7 +107,7 @@ class random_bernoulli(RandomDistribution):
         return super().type_inference()
 
 
-@register_op(doc_str="")
+@register_op
 class random_categorical(Operation):
     """
     Returns random values from a categorical distribution.
@@ -165,7 +165,7 @@ class random_categorical(Operation):
         return types.tensor(self.out_dtype, output_shape)
 
 
-@register_op(doc_str="")
+@register_op
 class random_normal(RandomDistribution):
     r"""
     Returns a tensor with the specified shape, with random values from a normal
@@ -226,7 +226,7 @@ class random_normal(RandomDistribution):
         return super().type_inference()
 
 
-@register_op(doc_str="")
+@register_op
 class random_uniform(RandomDistribution):
     r"""
     Returns a tensor with the specified shape with random values from a uniform

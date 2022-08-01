@@ -202,7 +202,7 @@ class Builder:
         return Placeholder(shape, dtype)
 
     @staticmethod
-    def program(input_specs=None):
+    def program(input_specs=None, opset_version=None):
         """
         
         The ``mb.program`` decorator creates a MIL program with a single 
@@ -212,13 +212,16 @@ class Builder:
         ----------
         
         input_specs: TensorSpec
-             Describes a tensor.
+            Describes a tensor.
+             
+        opset_version: AvailableTarget enum
+            Describes the opset version of the program
         
         
         Examples
         --------
-
-        >>> @mb.program(input_specs=[mb.TensorSpec(shape=(1,2))])
+        >>> import coremltools as ct
+        >>> @mb.program(input_specs=[mb.TensorSpec(shape=(1,2))], opset_version=ct.target.iOS16)
         >>> def prog(a):
         >>>     return mb.add(x=a, y=2)
 
@@ -238,7 +241,7 @@ class Builder:
                     )
                 )
             input_spec_dict = {k: v for k, v in zip(arg_names, input_specs)}
-            with Function(input_spec_dict) as func:
+            with Function(input_spec_dict, opset_version) as func:
                 input_vars = [func.inputs[a] for a in arg_names]
                 outputs = main_block(*input_vars)
                 if isinstance(outputs, tuple):
@@ -250,7 +253,3 @@ class Builder:
             return program
 
         return wrapper
-
-
-# importing ops triggers installation of all ops into Builder
-from .ops import defs as _ops

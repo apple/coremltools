@@ -10,6 +10,8 @@ import numpy as np
 import pytest
 
 from .testing_utils import run_compare_builder
+
+import coremltools as ct
 from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.mil import (
     Builder as mb,
@@ -29,11 +31,7 @@ class TestAffine:
     )
     def test_builder_to_backend_smoke(self, use_cpu_only, backend):
         if backend[0] == "neuralnetwork":
-            pytest.xfail("nn backend not supported")
-        if backend[0] == "mlprogram" and backend[1] == "fp16":
-            pytest.xfail("rdar://86653285 ([ MIL ] TestAffine::test_builder_to_backend_smoke[[use_cpu_only=False]-mlprogram-fp16] CI Failure)")
-        if backend[0] == "mlprogram" and backend[1] == "fp32":
-            pytest.xfail("rdar://88039548 (test_image_resizing.py::TestAffine::test_builder_to_backend_smoke is failing)")
+            pytest.skip("nn backend not supported")
 
         x_val = np.array([11.0, 22.0, 33.0, 44.0], dtype=np.float32).reshape(
             [1, 1, 2, 2]
@@ -102,11 +100,16 @@ class TestAffine:
 
 class TestResample:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "use_cpu_only, backend, minimum_deployment_target",
+        itertools.product(
+            [True, False],
+            backends,
+            [ct.target.iOS15, ct.target.iOS16],
+        )
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+    def test_builder_to_backend_smoke(self, use_cpu_only, backend, minimum_deployment_target):
         if backend[0] == "neuralnetwork":
-            pytest.xfail("nn backend not supported")
+            pytest.skip("nn backend not supported")
 
         x_ = np.array([11.0, 22.0, 33.0, 44.0], dtype=np.float32).reshape([1, 1, 2, 2])
         coordinates_ = np.array(
@@ -189,7 +192,7 @@ class TestResample:
                 expected_output_3,
             ],
         ):
-            run_compare_builder(
+            mlmodel = run_compare_builder(
                 build,
                 input_placeholder_dict,
                 input_value_dict,
@@ -197,7 +200,17 @@ class TestResample:
                 expected_output,
                 use_cpu_only=use_cpu_only,
                 backend=backend,
+                minimum_deployment_target=minimum_deployment_target,
             )
+            prog = mlmodel._mil_program
+            number_of_cast = len(prog["main"].find_ops(op_type="cast"))
+            # for the new iOS16 resample op, the coordinates is cast to fp16
+            if minimum_deployment_target == ct.target.iOS15:
+                assert number_of_cast == 2
+            elif minimum_deployment_target == ct.target.iOS16:
+                assert number_of_cast == 3
+            else:
+                raise ValueError("Unrecognized target {}".format(minimum_deployment_target))
 
 
 class TestResizeNearestNeighbor:
@@ -247,10 +260,10 @@ class TestUpsampleNearestNeighborFractionalScales:
     )
     def test_builder_to_backend_smoke(self, use_cpu_for_conversion, backend):
         if backend[0] == "neuralnetwork":
-            pytest.xfail("nn backend not supported")
-
+            pytest.skip("nn backend not supported")
+        
         if backend[0] == "mlprogram" and not use_cpu_for_conversion:
-            pytest.xfail("rdar://78343225 ((MIL GPU) Core ML Tools Unit Test failures [numerical error])")
+            pytest.xfail("rdar://97398448 (TestUpsampleNearestNeighborFractionalScales failing on GPU)")
 
         x_val = np.array([1.5, -2.5, 3.5], dtype=np.float32).reshape([1, 1, 1, 3])
         input_placeholder_dict = {"x": mb.placeholder(shape=x_val.shape)}
@@ -303,7 +316,7 @@ class TestResizeBilinear:
         if backend[0] == "mlprogram":
             pytest.xfail("Seg fault: rdar://78343191 ((MIL GPU) Core ML Tools Unit Test failures [failure to load or Seg fault])")
 
-        if backend[0] == "neuralnetwork":
+        if backend[0] == "neuralnetwork" and use_cpu_only:
             pytest.xfail("rdar://85318710 (Coremltools Smoke test on ResizeBilinear failing on NNv1 backend.)")
 
         x = np.array([0, 1], dtype=np.float32).reshape(1, 1, 2)
@@ -407,9 +420,6 @@ class TestUpsampleBilinear:
         "use_cpu_only, backend", itertools.product([True, False], backends,)
     )
     def test_builder_to_backend_smoke(self, use_cpu_only, backend):
-        if backend[0] == "mlprogram" and not use_cpu_only:
-            pytest.xfail("test failing on gpu with nan output")
-
         x = np.array([0, 1], dtype=np.float32).reshape(1, 1, 2)
         input_placeholder_dict = {"x": mb.placeholder(shape=x.shape)}
         input_value_dict = {"x": x}
@@ -653,10 +663,8 @@ class TestCropResize:
         itertools.product([True, False], backends, [True, False]),
     )
     def test_builder_to_backend_smoke(self, use_cpu_only, backend, is_symbolic):
-
-        if backend[0] == "mlprogram":
-            pytest.xfail("rdar://78343191 ((MIL GPU) Core ML Tools Unit Test failures [failure to load or Seg fault])")
-
+        if backend[0] == "mlprogram" and not use_cpu_only:
+            pytest.xfail("rdar://97398582 (TestCropResize failing on mlprogram + GPU)")
         x = np.array(
             [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 16]],
             dtype=np.float32,

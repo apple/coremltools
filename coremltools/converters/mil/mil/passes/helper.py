@@ -5,7 +5,41 @@
 
 import numpy as np
 
-from coremltools.converters.mil.mil import Var
+from coremltools.converters.mil.mil import Block, Var
+
+def block_context_manager(func):
+    """
+    This decorator executes a function under the context manager `with block`.
+    For instance, given a function `func` with an input block and other arguments:
+    
+    def func(block, *args):
+        ...
+        with block:
+            op_1 = mb.add(...)
+        ...
+        with block:
+            op_2 = mb.relu...()
+            
+    It can be be streamlined as:
+
+    @block_context_manager
+    def func(block, *args):
+        ...
+        op_1 = mb.add(...)
+        ...
+        op_2 = mb.relu...()
+    
+    Note that, the first argument of the function must have type Block.
+    It is highly recommended to decorate a function with block_context_manager if it is calling `with block` multiple times,
+    since when the code exit `block`, an expensive _propagate_nonreplaceable_vars() is invoked.
+    The decorator reduces the amount of calling `with block` overally.
+    """
+    def wrapper(*args):
+        if not isinstance(args[0], Block):
+            raise ValueError("The function decorated with block_context_manager must have a Block type argument as the first input.")
+        with args[0]:
+            return func(*args)
+    return wrapper
 
 def _check_child_op_type(op, child_op_type):
     """

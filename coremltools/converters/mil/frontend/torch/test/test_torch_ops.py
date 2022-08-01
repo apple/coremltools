@@ -235,7 +235,7 @@ class TestAffineGrid(TorchBaseTest):
         align_corners,
     ):
         if backend[0] == "neuralnetwork":
-            pytest.xfail("nn backend not supported")
+            pytest.skip("nn backend not supported")
 
         x_shape, target_size = x_shape_and_target_size
         theta = torch.rand((x_shape[0], 2, 3))
@@ -289,7 +289,7 @@ class TestGridSample(TorchBaseTest):
         align_corners,
     ):
         if backend[0] == "neuralnetwork":
-            pytest.xfail("nn backend not supported")
+            pytest.skip("nn backend not supported")
 
         params = {
             "mode": mode,
@@ -474,7 +474,7 @@ class TestNorms(TorchBaseTest):
         itertools.product(
             COMMON_SHAPES,
             backends,
-            [1, 2, -1, 3, np.inf, -np.inf],
+            [-1, 0, 1, 2, 3, np.inf, -np.inf],
             [True, False]
         )
     )
@@ -482,6 +482,87 @@ class TestNorms(TorchBaseTest):
         for dim in (-1, 0, 1):
             model = ModuleWrapper(
                 function=torch.norm, kwargs={'p': p, 'keepdim': keepdim, 'dim': dim}
+            )
+            TorchBaseTest.run_compare_torch(shape, model, backend=backend, places=2)
+
+
+class TestLinAlgNorms(TorchBaseTest):
+    def _is_valid_config(self, shape, order, dim):
+        if isinstance(dim, tuple):
+            if isinstance(order, int) and (order == 0 or order > 2):
+                return False
+        elif isinstance(dim, int):
+            if order == "fro":
+                return False
+        elif dim is None:
+            if order is not None:
+                if len(shape) > 2:
+                    return False 
+                elif len(shape) == 2 and not isinstance(order, str) and (order == 0 or order > 2):
+                    return False
+                elif len(shape) == 1 and isinstance(order, str):
+                    return False
+        return True
+
+    @pytest.mark.parametrize(
+        "shape, backend, order, keepdim, dim",
+        itertools.product(
+            COMMON_SHAPES,
+            backends,
+            [-2, -1, 0, 1, 2, 3, np.inf, -np.inf, "fro", "nuc", None],
+            [True, False],
+            [-1, 0, 1, (0, 1), (0, -1), None]
+        )
+    )   
+    def test_norm(self, shape, backend, order, keepdim, dim):
+            if not self._is_valid_config(shape, order, dim): 
+                pytest.skip()
+            if isinstance(order, int) and abs(order) == 2 and ((dim is None and len(shape) == 2) or isinstance(dim, tuple)) :
+                pytest.xfail("Matrix norm for order 2 and -2 is not implemented")
+            if (order == "nuc"):
+                pytest.xfail("Nucleus norm not implemented")
+            model = ModuleWrapper(
+                function=torch.linalg.norm, kwargs={'ord': order, 'keepdim': keepdim, 'dim': dim}
+            )
+            TorchBaseTest.run_compare_torch(shape, model, backend=backend, places=2)
+
+
+class TestLinAlgMatrixNorms(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "shape, backend, order, keepdim, dim",
+        itertools.product(
+            COMMON_SHAPES,
+            backends,
+            [-2, -1, 1, 2, np.inf, -np.inf, "fro", "nuc"],
+            [True, False],
+            [(0, 1), (0, -1), (1, 2), (0, 2), (2, 3)]
+        )
+    )   
+    def test_norm(self, shape, backend, order, keepdim, dim):
+            if dim[-1] > len(shape) - 1: 
+                pytest.skip()
+            if order == "nuc" or (type(order) != str and abs(order) == 2):
+                pytest.xfail("Matrix norm for order 2, -2 and nuc is not implemented")
+            model = ModuleWrapper(
+                function=torch.linalg.matrix_norm, kwargs={'ord': order, 'keepdim': keepdim, 'dim': dim}
+            )
+            TorchBaseTest.run_compare_torch(shape, model, backend=backend, places=2)
+
+
+class TestLinAlgVectorNorms(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "shape, backend, order, keepdim, dim",
+        itertools.product(
+            COMMON_SHAPES,
+            backends,
+            [-2, -1, 0, 1, 2, np.inf, -np.inf],
+            [True, False],
+            [-1, 0, 1, (0, 1), (0, -1), None]
+        )
+    )   
+    def test_norm(self, shape, backend, order, keepdim, dim):
+            model = ModuleWrapper(
+                function=torch.linalg.vector_norm, kwargs={'ord': order, 'keepdim': keepdim, 'dim': dim}
             )
             TorchBaseTest.run_compare_torch(shape, model, backend=backend, places=2)
 
@@ -794,8 +875,6 @@ class TestDynamicConv(TorchBaseTest):
         backend,
         groups=1,
     ):
-        if backend[0] == 'mlprogram':
-            pytest.xfail("Not supported on ML Program backend")
 
         class DynamicConv(nn.Module):
             def __init__(self):
@@ -1392,9 +1471,6 @@ class TestAvgPool(TorchBaseTest):
     ):
         if padding > kernel_size / 2:
             return
-        if kernel_size == 1 and stride == 2 and padding == 0 and ceil_mode and input_shape[-1] % 2 == 0:
-            pytest.xfail(reason="rdar://73894185 (CoreML sometimes returns 'nan's "
-                                "for avg_pool when ceil_mode is True and kernel=1,stride=2,pad=0)")
 
         model = nn.AvgPool1d(
             kernel_size,
@@ -1426,10 +1502,7 @@ class TestAvgPool(TorchBaseTest):
     ):
         if padding > kernel_size / 2:
             return
-        if kernel_size == 1 and stride == 2 and padding == 0 and ceil_mode and \
-                (input_shape[-2] % 2 == 0 or input_shape[-1] % 2 == 0):
-            pytest.xfail(reason="rdar://73894185 (CoreML sometimes returns 'nan's "
-                                "for avg_pool when ceil_mode is True and kernel=1,stride=2,pad=0)")
+        
         model = nn.AvgPool2d(
             kernel_size,
             stride,
@@ -1460,14 +1533,10 @@ class TestAvgPool(TorchBaseTest):
     ):
         if padding > kernel_size / 2:
             return
-        if kernel_size == 1 and stride == 2 and padding == 0 and ceil_mode and \
-                (input_shape[-3] % 2 == 0 or input_shape[-2] % 2 == 0 or input_shape[-1] % 2 == 0):
-            pytest.xfail(reason="rdar://73894185 (CoreML sometimes returns 'nan's "
-                                "for avg_pool when ceil_mode is True and kernel=1,stride=2,pad=0)")
+        
         if include_pad and ceil_mode and stride > 1:
             # skip: MIL/CoreML does not support this configuration
-            # rdar://73723194
-            return
+            pytest.xfail("rdar://73723194 (Support 3D Avg pooling with ceil_mode=True and include_pad = True, in MIL)")
         model = nn.AvgPool3d(
             kernel_size,
             stride,
@@ -2375,6 +2444,20 @@ class TestPixelShuffle(TorchBaseTest):
         model = nn.PixelShuffle(upscale_factor=r)
         self.run_compare_torch(input_shape, model, backend=backend)
 
+class TestPixelUnshuffle(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "batch_size, CHW, r, backend",
+        itertools.product([1, 3], [(1, 4, 4), (3, 2, 3)], [2, 4], backends),
+    )
+    def test_pixel_shuffle(self, batch_size, CHW, r, backend):
+        if backend[0] == "neuralnetwork":
+            pytest.skip("pixel_unshuffle only supported in mlprogram backend.")
+
+        C, H, W = CHW
+        input_shape = (batch_size, C, H * r, W * r)
+        model = nn.PixelUnshuffle(downscale_factor=r)
+        self.run_compare_torch(input_shape, model, backend=backend, minimum_deployment_target=ct.target.iOS16)   
+
 
 class TestExpand(TorchBaseTest):
     @pytest.mark.parametrize(
@@ -2714,9 +2797,8 @@ class TestActivation(TorchBaseTest):
         ),
     )
     def test_prelu(self, backend, alpha, shape, single_alpha):
-        if (backend[0] == "mlprogram" and backend[1] == "fp16"):
+        if (backend[0] == "mlprogram" and backend[1] == "fp16" or (len(shape) == 5)):
             pytest.xfail("rdar://92175249 ([MIL] TestActivation::test_prelu[backend=(mlprogram, fp16)] CI failure)")
-
         input_shape = shape
         num_parameters = input_shape[1] if len(input_shape) >= 2 else 1
         if single_alpha:
@@ -3111,15 +3193,13 @@ class TestTranspose(TorchBaseTest):
 
 class TestTo(TorchBaseTest):
     @pytest.mark.parametrize(
-        "use_cpu_for_conversion, backend", itertools.product([True, False], backends,)
+        "use_cpu_for_conversion, backend",
+        itertools.product(
+            [True, False],
+            backends
+        )
     )
     def test_cast_bug(self, use_cpu_for_conversion, backend):
-        if backend[0] == "mlprogram" and not use_cpu_for_conversion:
-            pytest.xfail("rdar://78343191 ((MIL GPU) Core ML Tools Unit Test failures [failure to load or Seg fault])")
-
-        if backend[0] == "mlprogram" and use_cpu_for_conversion:
-            pytest.xfail("numerical mismatch : rdar://78952850")
-
         class TestModel(torch.nn.Module):
             def forward(self, spans, embedding):
                 spans = spans.float().relu().int()
@@ -3132,8 +3212,12 @@ class TestTo(TorchBaseTest):
                 return sigmoided_scores
 
         model = TestModel()
-        self.run_compare_torch([(1, 21, 2), (1, 6, 384)], model, backend=backend,
-                               use_cpu_for_conversion=use_cpu_for_conversion)# [spans.shape, embedding.shape]
+        self.run_compare_torch(
+            [(1, 4, 2), (1, 6, 3)],
+            model,
+            backend=backend,
+            use_cpu_for_conversion=use_cpu_for_conversion,
+        )
 
 class TestSlice(TorchBaseTest):
     @pytest.mark.skipif(_python_version() < (3, 6), reason="requires python 3.6")
@@ -3316,9 +3400,10 @@ class TestZeros(TorchBaseTest):
 
 class TestTopk(TorchBaseTest):
     @pytest.mark.parametrize(
-        "backend, largest, shape_dim_k",
+        "backend, largest, sort, shape_dim_k",
         itertools.product(
             backends,
+            [True, False],
             [True, False],
             [
              ((4, 6, 7, 3), -1, 2),
@@ -3327,7 +3412,9 @@ class TestTopk(TorchBaseTest):
              ],
         ),
     )
-    def test_topk(self, backend, largest, shape_dim_k):
+    def test_topk(self, backend, largest, sort, shape_dim_k):
+        if not sort and backend[0] == "neuralnetwork":
+            pytest.xfail("iOS16 version topk needed for sort = False")
         input_shape = shape_dim_k[0]
         dim = shape_dim_k[1]
         k = shape_dim_k[2]
@@ -3337,18 +3424,23 @@ class TestTopk(TorchBaseTest):
                 super(TopkModel, self).__init__()
 
             def forward(self, x):
-                return torch.topk(x, k, dim=dim, largest=largest)
+                topk = torch.topk(x, k, dim=dim, largest=largest, sorted=sort)
+                values, indices = topk.values, topk.indices
+                if not sort:
+                    values, _ = torch.sort(values, dim=dim)
+                    indices, _ = torch.sort(indices, dim=dim)
+                return values, indices
 
         input_data = torch.rand(input_shape)
         model = TopkModel()
         expected_results = model(input_data)
-        expected_results = [expected_results.values, expected_results.indices]
         self.run_compare_torch(
             input_data,
             model,
             expected_results=expected_results,
             input_as_shape=False,
             backend=backend,
+            minimum_deployment_target=ct.target.iOS16 if not sort else None,
         )
 
 class TestLog10(TorchBaseTest):
@@ -3926,7 +4018,6 @@ class TestIndexPut(TorchBaseTest):
         backends,
     )
     def test_index_put_case_3(self, backend):
-        pytest.xfail("rdar://84892125 (Empty tensors handling for non_zero, tile and scatter_nd)")
         class IndexPutModel(torch.nn.Module):
             def __init__(self):
                 super(IndexPutModel, self).__init__()

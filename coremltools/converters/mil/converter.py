@@ -48,6 +48,17 @@ class MILFrontend:
     name = "milinternal"
 
     def __call__(self, model, *args, **kwargs):
+        specification_version = kwargs.get("specification_version", None)
+        if specification_version is not None:
+            max_opset_version, op = model._get_max_opset_version_and_op()
+            if max_opset_version > specification_version:
+                msg = (
+                    "Please update the minimum_deployment_target to {!s},"
+                    " since op {} is only available in opset {!s} or newer."
+                
+                ).format(max_opset_version, op.op_type, max_opset_version)
+                raise ValueError(msg)
+                
         if "inputs" in kwargs and kwargs["inputs"] is not None:
             inputs = kwargs["inputs"]
             if not isinstance(inputs, (list, tuple)):

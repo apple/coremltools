@@ -11,7 +11,9 @@ from . import types
 from .block import Function
 from .var import Var
 from .types.symbolic import k_used_symbols, k_num_internal_syms
+from coremltools.converters.mil._deployment_compatibility import AvailableTarget as _target
 from coremltools.converters.mil.input_types import InputType
+from coremltools.converters.mil.mil.ops.helper import _get_version_of_op
 
 
 class Program:
@@ -22,10 +24,65 @@ class Program:
         self.parameters = {}
         self.skip_all_passes = False
 
+    def _get_max_opset_version_and_op(self):
+        max_opset_version = _target.iOS13
+        op_with_max_opset_version = None
+        def update_max_opset_version_block(block):
+            nonlocal max_opset_version
+            nonlocal op_with_max_opset_version
+            for op in list(block.operations):
+                for b in op.blocks:
+                    update_max_opset_version_block(b)
+                if not hasattr(op, "_op_variants") or not isinstance(op._op_variants, dict):
+                    continue
+                if op.opset_version > max_opset_version:
+                    max_opset_version = op.opset_version
+                    op_with_max_opset_version = op
+        for func in self.functions.values():
+            update_max_opset_version_block(func)
+        return max_opset_version, op_with_max_opset_version
+        
+    def _check_ops_version_compatibility(self, max_opset_version):
+        def check_version_compatibility_block(block):
+            for op in list(block.operations):
+                for b in op.blocks:
+                    check_version_compatibility_block(b)
+                if not hasattr(op, "_op_variants") or not isinstance(op._op_variants, dict):
+                    continue
+                expected_op_cls = _get_version_of_op(op._op_variants, max_opset_version)
+                if type(op) is not expected_op_cls:
+                    msg = (
+                        "Op {} with an out of date version {!s} is detected. Please use @mb.program(input_specs=..., "
+                        "opset_version={!s})"
+                    ).format(op.op_type, op.opset_version, max_opset_version)
+                    raise ValueError(msg)
+        for func in self.functions.values():
+            check_version_compatibility_block(func)
+            
+    def _check_or_set_functions_opset_version(self, max_opset_version):
+        funcs = list(self.functions.values())
+        for func in funcs:
+            if func.opset_version is None:
+                func.opset_version = max_opset_version
+            else:
+                if func.opset_version < max_opset_version:
+                    msg = "function should have at least opset_version {!s}. Got {!s}".format(max_opset_version, func.opset_version)
+                    raise ValueError(msg)
+        for func in funcs:
+            if func.opset_version != funcs[0].opset_version:
+                msg = "all functions must have the same opset_version. Got {!s} and {!s}.".format(func.opset_version, funcs[0].opset_version)
+                raise ValueError(msg)
+
+    def _check_program_opset_version(self):
+        max_opset_version, _ = self._get_max_opset_version_and_op()
+        self._check_ops_version_compatibility(max_opset_version)
+        self._check_or_set_functions_opset_version(max_opset_version)
+
     def add_function(self, name, ssa_func):
         if not isinstance(ssa_func, Function):
             raise ValueError("Only Function can be added to Program.")
         self.functions[name] = ssa_func
+        self._check_program_opset_version()
 
     def add_parameters(self, name, ssa_val):
         raise NotImplementedError()

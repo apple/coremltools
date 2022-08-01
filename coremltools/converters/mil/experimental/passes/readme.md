@@ -34,7 +34,6 @@ def prog(x):
     x = mb.reduce_mean(x=x, axes=[2, 3], keep_dims=False, name='reduce') 
     x = mb.log(x=x, name='log') 
     return x 
-print(prog)
 ```
 
 * It is important that the user follows these constraints when writing their MIL program:

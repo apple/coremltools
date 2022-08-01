@@ -3,19 +3,22 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import unittest
-import tempfile
 import json
+import tempfile
+import unittest
 
-from sklearn.ensemble import GradientBoostingClassifier
 from coremltools.converters import sklearn as skl_converter
 from coremltools.models.utils import _macos_version
 from coremltools.proto import FeatureTypes_pb2, Model_pb2
 from coremltools._deps import _HAS_SKLEARN, _HAS_XGBOOST
 
+if _HAS_SKLEARN:
+    from sklearn.ensemble import GradientBoostingClassifier
+
 if _HAS_XGBOOST:
     import xgboost
     from coremltools.converters import xgboost as xgb_converter
+
 
 @unittest.skipIf(not _HAS_SKLEARN, "Missing sklearn. Skipping tests.")
 class GradientBoostingBinaryClassifierScikitTest(unittest.TestCase):

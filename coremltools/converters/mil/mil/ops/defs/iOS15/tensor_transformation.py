@@ -36,80 +36,9 @@ from coremltools.converters.mil.mil.operation import (
 )
 
 from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
+from coremltools.converters.mil.mil.ops.defs._utils import solve_slice_by_index_shape
 
-def _solve_slice_by_index_shape(x_shape, begin, end, stride, begin_mask, end_mask, squeeze_mask):
-    """
-    Helper function to solve the shape of tensor slicing.
-    """
-    ret_shape = []
-
-    if begin is None or len(begin) == 0:
-        begin = [None] * len(x_shape)
-    if end is None or len(end) == 0:
-        end = [None] * len(x_shape)
-
-    # solve for shape inference
-    for idx in range(len(x_shape)):
-        # skip if we want to squeeze the dimension
-        if squeeze_mask[idx]:
-            continue
-
-        # for those a[:] cases
-        if begin_mask[idx] and end_mask[idx]:
-            if is_symbolic(x_shape[idx]):
-                if stride[idx] == -1 or stride[idx] == 1:
-                    ret_shape.append(x_shape[idx])
-                else:
-                    ret_shape.append(get_new_symbol())
-                continue
-            else:
-                num = np.ceil(float(x_shape[idx]) / abs(stride[idx])).astype(
-                    np.int32
-                )
-                ret_shape.append(num)
-                continue
-
-        # for symbolic case
-        if is_symbolic(x_shape[idx]):
-            ret_shape.append(get_new_symbol())
-            continue
-
-        # when begin and end are not determined
-        if begin[idx] is None and not begin_mask[idx]:
-            ret_shape.append(get_new_symbol())
-            continue
-        if end[idx] is None and not end_mask[idx]:
-            ret_shape.append(get_new_symbol())
-            continue
-
-        # parse negative dimention
-        if begin[idx] is not None and begin[idx] < 0:
-            begin[idx] = max(0, begin[idx] + x_shape[idx])
-        if end[idx] is not None and end[idx] < 0:
-            end[idx] = max(0, end[idx] + x_shape[idx])
-
-        # compute shape
-        low, high = [0, x_shape[idx]] if stride[idx] > 0 else [-1, x_shape[idx] - 1]
-        begin_idx, end_idx = (
-            [begin[idx], end[idx]] if stride[idx] > 0 else [end[idx], begin[idx]]
-        )
-        is_begin_mask, is_end_mask = (
-            [begin_mask[idx], end_mask[idx]]
-            if stride[idx] > 0
-            else [end_mask[idx], begin_mask[idx]]
-        )
-        if is_begin_mask:
-            begin_idx = low
-        end_idx = high if is_end_mask else min(end_idx, high)
-        num = np.ceil(float(end_idx - begin_idx) / abs(stride[idx])).astype(
-            np.int32
-        )
-        ret_shape.append(max(0, num))
-
-    return ret_shape
-
-
-@register_op(doc_str="")
+@register_op
 class depth_to_space(Operation):
     """
     Rearrange elements in a tensor from depth (channel) into spatial dimensions.
@@ -148,7 +77,7 @@ class depth_to_space(Operation):
         return types.tensor(x_type, ret_shape)
 
 
-@register_op(doc_str="")
+@register_op
 class expand_dims(Operation):
     """
     Insert a single-dimension in a 1-D or higher tensor at each axis in axes.
@@ -231,7 +160,7 @@ def reshape_with_symbol(v, shape):
     return v.reshape(shape)
 
 
-@register_op(doc_str="")
+@register_op
 class reshape(Operation):
     """
     Return a tensor that has the same values as ``x`` with shape ``shape``.
@@ -365,7 +294,7 @@ class reshape(Operation):
         return shape
 
 
-@register_op(doc_str="")
+@register_op
 class reverse(Operation):
     """
     Reverse the order of the input tensor ``x`` along specified ``axes`` (dimensions).
@@ -419,7 +348,7 @@ class reverse(Operation):
         return res
 
 
-@register_op(doc_str="")
+@register_op
 class reverse_sequence(Operation):
     """
     Reverse variable length slices for specified axes / dimensions of the input
@@ -480,7 +409,7 @@ class reverse_sequence(Operation):
         raise NotImplementedError("TODO")
 
 
-@register_op(doc_str="")
+@register_op
 class slice_by_index(Operation):
     """
     Method for numpy style indexing and slicing.
@@ -561,7 +490,7 @@ class slice_by_index(Operation):
 
         # solve shape
         x_shape = self.x.shape
-        ret_shape = _solve_slice_by_index_shape(x_shape, begin, end, stride, begin_mask, end_mask, squeeze_mask)
+        ret_shape = solve_slice_by_index_shape(x_shape, begin, end, stride, begin_mask, end_mask, squeeze_mask)
 
         if len(ret_shape) == 0:
             # Scalar case.
@@ -628,7 +557,7 @@ class slice_by_index(Operation):
         return res
 
 
-@register_op(doc_str="")
+@register_op
 class slice_by_size(Operation):
     """
     Slice input tensor starting from the given ``begin`` index and by
@@ -729,7 +658,7 @@ class slice_by_size(Operation):
         return self.x.val[tuple(slices)]
 
 
-@register_op(doc_str="")
+@register_op
 class space_to_depth(Operation):
     """
     Rearrange elements in a tensor from spatial into depth (channel) dimension.
@@ -766,7 +695,7 @@ class space_to_depth(Operation):
         ret_shape = (n, c * (bs * bs), h // bs, w // bs)
         return types.tensor(x_type, ret_shape)
 
-@register_op(doc_str="")
+@register_op
 class space_to_batch(Operation):
     """
     Rearrange elements in a tensor from spatial into batch dimension.
@@ -841,8 +770,7 @@ class space_to_batch(Operation):
 
         return types.tensor(x_type, ret_shape)
 
-
-@register_op(doc_str="")
+@register_op()
 class batch_to_space(Operation):
     """
     Rearrange elements in a tensor from batch into spatial dimension.
@@ -922,7 +850,7 @@ class batch_to_space(Operation):
 
         return types.tensor(x_type, ret_shape)
 
-@register_op(doc_str="")
+@register_op
 class squeeze(Operation):
     """
     Remove single-dimension dimensions in a 1-D or higher tensor.
@@ -987,7 +915,7 @@ class squeeze(Operation):
             val = np.squeeze(self.x.val, axis=tuple(self.axes.val))
         return val if val.shape != () else self.x.val[0]
 
-@register_op(doc_str="")
+@register_op
 class transpose(Operation):
     """
     Permute tensor ``x`` dimensions according to ``perm``.
@@ -1040,7 +968,7 @@ class transpose(Operation):
         return np.transpose(self.x.val, axes=self.perm.val)
 
 
-@register_op(doc_str="")
+@register_op
 class pixel_shuffle(Operation):
     """
     Rearrange elements in a tensor from depth (channel) into spatial dimensions.
@@ -1082,7 +1010,7 @@ class pixel_shuffle(Operation):
         return types.tensor(x_type, ret_shape)
 
 
-@register_op(doc_str="")
+@register_op
 class sliding_windows(Operation):
     """
     Return a tensor containing all windows of ``size``, separated by stride along the

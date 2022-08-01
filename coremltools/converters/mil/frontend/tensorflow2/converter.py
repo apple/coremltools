@@ -12,8 +12,8 @@ from .ssa_passes.tf_passes import tensorflow_passes as tensorflow2_passes
 
 
 class TF2Converter(TFConverter):
-    def __init__(self, tf_ssa, inputs=None, outputs=None, **kwargs):
-        TFConverter.__init__(self, tf_ssa, inputs, outputs, **kwargs)
+    def __init__(self, tf_ssa, inputs=None, outputs=None, opset_version=None):
+        TFConverter.__init__(self, tf_ssa, inputs, outputs, opset_version)
 
         # Overwrite tensorflow_passes
         # TF 2.x uses different set of graph passes

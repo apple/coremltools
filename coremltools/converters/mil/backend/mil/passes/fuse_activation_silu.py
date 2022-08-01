@@ -5,6 +5,7 @@
 
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
+from coremltools.converters.mil.mil.passes.helper import block_context_manager
 from coremltools.converters.mil.mil import Builder as mb
 
 def _match_pattern(op):
@@ -39,6 +40,7 @@ def _try_to_transform(sigmoid_op, mul_op, block):
     return True
 
 
+@block_context_manager
 def _fuse_activation_silu_block(block):
     fusion_status = False
     for op in list(block.operations):
@@ -51,8 +53,7 @@ def _fuse_activation_silu_block(block):
 
         mul_op = _match_pattern(op)
         if mul_op is not None:
-            with block:
-                fusion_status = _try_to_transform(op, mul_op, block)
+            fusion_status = _try_to_transform(op, mul_op, block)
             # has to break as the downstream iterator is affected.
             if fusion_status:
                 return fusion_status

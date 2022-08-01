@@ -372,9 +372,6 @@ class TestNormalizationLayerNorm:
         "use_cpu_only, backend", itertools.product([True, False], backends,)
     )
     def test_builder_to_backend_smoke(self, use_cpu_only, backend):
-        if backend[0] == "mlprogram" and backend[1] == "fp32":
-            pytest.xfail("rdar://88039548 (test_image_resizing.py::TestAffine::test_builder_to_backend_smoke is failing)")
-
         x_val = np.array([[[1.0, -7.0], [5.0, -6.0], [-3.0, -5.0]]], dtype=np.float32)
         input_placeholders = {"x": mb.placeholder(shape=x_val.shape)}
         input_values = {"x": x_val}
@@ -439,9 +436,6 @@ class TestNormalizationLayerNorm:
         "use_cpu_only, backend", itertools.product([True, False], backends,)
     )
     def test_builder_to_backend_smoke_rank_2(self, use_cpu_only, backend):
-        if backend[0] == "mlprogram" and backend[1] == "fp32":
-            pytest.xfail("rdar://88039548 (test_image_resizing.py::TestAffine::test_builder_to_backend_smoke is failing)")
-
         x_val = np.array([[1.0, -7.0], [5.0, -6.0], [-3.0, -5.0]], dtype=np.float32)
         gamma_val = np.array([1.0, 1.0], dtype=np.float32)
         beta_val = np.array([1.0, 0.0], dtype=np.float32)

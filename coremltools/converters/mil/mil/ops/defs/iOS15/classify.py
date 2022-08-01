@@ -15,7 +15,7 @@ from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
 from coremltools.converters.mil.mil.types.symbolic import any_symbolic
 
 
-@register_op(doc_str="")
+@register_op
 class classify(Operation):
     """
     Presence of this op indicates that the model is of type classifier,

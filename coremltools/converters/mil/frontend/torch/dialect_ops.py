@@ -13,7 +13,7 @@ from coremltools.converters.mil.mil.input_type import (
     IntTensorInputType,
     TensorInputType
 )
-from coremltools.converters.mil.mil.ops.defs.tensor_transformation import _solve_slice_by_index_shape
+from coremltools.converters.mil.mil.ops.defs._utils import solve_slice_by_index_shape
 from coremltools.converters.mil.mil.ops.registry import SSAOpRegistry
 from coremltools.converters.mil.mil.types.symbolic import is_compatible_symbolic_vector
 
@@ -31,7 +31,7 @@ register_op = SSAOpRegistry.register_op
 
 # torch_upsample_nearest_neighbor is dealing with upsample layer which has flexible input shape,
 # and recompute_scale_factor is set to True in the original torch layer.
-@register_op(doc_str="", namespace="torch")
+@register_op(namespace="torch")
 class torch_upsample_nearest_neighbor(Operation):
     """
     Upsample the spatial dimensions (last two dimensions) of the input by
@@ -81,7 +81,7 @@ class torch_upsample_nearest_neighbor(Operation):
 
 # torch_upsample_bilinear is dealing with upsample layer which has flexible input shape,
 # and recompute_scale_factor is set to True in the original torch layer.
-@register_op(doc_str="", namespace="torch")
+@register_op(namespace="torch")
 class torch_upsample_bilinear(Operation):
     """
     Upsample the spatial dimensions (last two dimensions) of the input by
@@ -138,7 +138,7 @@ class torch_upsample_bilinear(Operation):
         return types.tensor(self.x.dtype, ret_shape)
 
 # torch_tensor_assign is dealing with the tensor assignment operation
-@register_op(doc_str="", namespace="torch")
+@register_op(namespace="torch")
 class torch_tensor_assign(Operation):
     """
     Method for tensor value assignment via indexing and slicing.
@@ -215,7 +215,7 @@ class torch_tensor_assign(Operation):
             self.squeeze_mask.val if self.squeeze_mask is not None else [False] * data_rank
         )
         data_shape = self.data.shape
-        expected_updates_shape = tuple(_solve_slice_by_index_shape(data_shape, begin, end, stride, begin_mask, end_mask, squeeze_mask))
+        expected_updates_shape = tuple(solve_slice_by_index_shape(data_shape, begin, end, stride, begin_mask, end_mask, squeeze_mask))
         if not is_compatible_symbolic_vector(expected_updates_shape, self.updates.shape):
             raise ValueError("The updates tensor should have shape {}. Got {}".format(expected_updates_shape, self.updates.shape))
         return self.data.sym_type

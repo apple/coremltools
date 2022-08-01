@@ -96,7 +96,7 @@ def rank4_input_model():
 def rank4_grayscale_input_model():
     class Model(torch.nn.Module):
         def forward(self, x):
-            return x + 5.5
+            return x + 10
     example_input = torch.randint(0, 100, (1, 1, 10, 20), dtype=torch.float32)
     return torch.jit.trace(Model().eval(), example_input)
 
@@ -394,17 +394,17 @@ class TestInputOutputConversionAPI:
 
     def test_grayscale_input(self, rank4_input_model, rank3_input_model, rank4_grayscale_input_model):
         with pytest.raises(ValueError, match="must have rank 4"):
-            mlmodel = ct.convert(rank3_input_model,
-                                 inputs=[ct.ImageType(shape=(1, 10, 20), color_layout=ct.colorlayout.GRAYSCALE)],
-                                 minimum_deployment_target=ct.target.macOS13,
-                                 )
+            ct.convert(rank3_input_model,
+                       inputs=[ct.ImageType(shape=(1, 10, 20), color_layout=ct.colorlayout.GRAYSCALE)],
+                       minimum_deployment_target=ct.target.macOS13,
+                      )
 
         # invalid shape
         with pytest.raises(ValueError):
-            mlmodel = ct.convert(rank4_input_model,
-                                 inputs=[ct.ImageType(shape=(1, 3, 10, 20), color_layout=ct.colorlayout.GRAYSCALE)],
-                                 minimum_deployment_target=ct.target.macOS13,
-                                 )
+            ct.convert(rank4_input_model,
+                       inputs=[ct.ImageType(shape=(1, 3, 10, 20), color_layout=ct.colorlayout.GRAYSCALE)],
+                       minimum_deployment_target=ct.target.macOS13,
+                       )
 
         mlmodel = ct.convert(rank4_grayscale_input_model,
                              inputs=[ct.ImageType(shape=(1, 1, 10, 20), color_layout=ct.colorlayout.GRAYSCALE)],
@@ -417,18 +417,18 @@ class TestInputOutputConversionAPI:
         verify_prediction(mlmodel)
 
         with pytest.raises(TypeError, match="float16 dtype for inputs is only supported for deployment target >= iOS16/macOS13"):
-            mlmodel = ct.convert(rank4_grayscale_input_model,
-                                 inputs=[ct.ImageType(shape=(1, 1, 10, 20),
-                                                      color_layout=ct.colorlayout.GRAYSCALE_FLOAT16)],
-                                 minimum_deployment_target=ct.target.macOS12,
-                                 )
+            ct.convert(rank4_grayscale_input_model,
+                       inputs=[ct.ImageType(shape=(1, 1, 10, 20),
+                                            color_layout=ct.colorlayout.GRAYSCALE_FLOAT16)],
+                       minimum_deployment_target=ct.target.macOS12,
+                       )
 
         # test that grayscale_16 raises error when used with neural network
         with pytest.raises(TypeError, match="float16 dtype for inputs is only supported for deployment target >= iOS16/macOS13"):
-            mlmodel = ct.convert(rank4_grayscale_input_model,
-                                 inputs=[ct.ImageType(shape=(1, 1, 10, 20),
-                                                      color_layout=ct.colorlayout.GRAYSCALE_FLOAT16)],
-                                 )
+            ct.convert(rank4_grayscale_input_model,
+                       inputs=[ct.ImageType(shape=(1, 1, 10, 20),
+                                            color_layout=ct.colorlayout.GRAYSCALE_FLOAT16)],
+                      )
 
         mlmodel = ct.convert(rank4_grayscale_input_model,
                              inputs=[ct.ImageType(shape=(1, 1, 10, 20),
@@ -440,8 +440,7 @@ class TestInputOutputConversionAPI:
         assert_spec_input_image_type(mlmodel._spec, expected_feature_type=ft.ImageFeatureType.GRAYSCALE_FLOAT16)
         assert_prog_input_type(mlmodel._mil_program, expected_dtype_str="fp16")
         assert_output_dtype(mlmodel, expected_type_str="fp16")
-        # TODO: uncomment the following when rdar://92239179 is fixed
-        # verify_prediction(mlmodel)
+        verify_prediction(mlmodel)
 
     def test_color_output(self, rank4_input_model, float32_input_model_add_op):
         # check that an error is raised if the output shape is not of form (1, 3, H, W)
@@ -477,11 +476,11 @@ class TestInputOutputConversionAPI:
 
     def test_grayscale_output(self, rank4_grayscale_input_model):
         with pytest.raises(TypeError, match="float16 dtype for outputs is only supported for deployment target >= iOS16/macOS13"):
-            mlmodel = ct.convert(rank4_grayscale_input_model,
-                                 inputs=[ct.TensorType(shape=(1, 1, 10, 20))],
-                                 outputs=[ct.ImageType(color_layout=ct.colorlayout.GRAYSCALE_FLOAT16)],
-                                 minimum_deployment_target=ct.target.macOS12,
-                                 )
+            ct.convert(rank4_grayscale_input_model,
+                       inputs=[ct.TensorType(shape=(1, 1, 10, 20))],
+                       outputs=[ct.ImageType(color_layout=ct.colorlayout.GRAYSCALE_FLOAT16)],
+                       minimum_deployment_target=ct.target.macOS12,
+                      )
 
         mlmodel = ct.convert(rank4_grayscale_input_model,
                              inputs=[ct.ImageType(shape=(1, 1, 10, 20),
@@ -504,8 +503,7 @@ class TestInputOutputConversionAPI:
         assert_spec_output_image_type(mlmodel._spec, expected_feature_type=ft.ImageFeatureType.GRAYSCALE_FLOAT16)
         assert_prog_input_type(mlmodel._mil_program, expected_dtype_str="fp16")
         assert_prog_output_type(mlmodel._mil_program, expected_dtype_str="fp16")
-        # TODO: uncomment the following when rdar://92239179 is fixed
-        # verify_prediction(mlmodel)
+        verify_prediction(mlmodel)
 
         mlmodel = ct.convert(rank4_grayscale_input_model,
                              inputs=[ct.ImageType(shape=(1, 1, 10, 20),
@@ -518,8 +516,7 @@ class TestInputOutputConversionAPI:
         assert_spec_output_image_type(mlmodel._spec, expected_feature_type=ft.ImageFeatureType.GRAYSCALE_FLOAT16)
         assert_prog_input_type(mlmodel._mil_program, expected_dtype_str="fp32")
         assert_prog_output_type(mlmodel._mil_program, expected_dtype_str="fp16")
-        # TODO: uncomment the following when rdar://92239179 is fixed
-        # verify_prediction(mlmodel)
+        verify_prediction(mlmodel)
 
     def test_linear_model(self, linear_model):
         # this will test the fuse_linear_bias pass, when the inputs are of type float16
@@ -570,4 +567,83 @@ class TestInputOutputConversionAPI:
         model_output = mlmodel.predict({"input": sample_input})[mlmodel._spec.description.output[0].name]
         reference_output = traced_model(torch.from_numpy(sample_input)).detach().numpy()
         np.testing.assert_allclose(reference_output, model_output, rtol=1e-2, atol=1e-2)
+
+
+@pytest.mark.skipif(ct.utils._macos_version() < (13, 0), reason='Tests are for deployment target ios16/macos13')
+class TestGrayscaleImagePredictions:
+
+    def test_grayscale_input_image(self, rank4_grayscale_input_model):
+        mlmodel = ct.convert(rank4_grayscale_input_model,
+                             inputs=[ct.ImageType(name="input_image",
+                                                  shape=(1, 1, 10, 20),
+                                                  color_layout=ct.colorlayout.GRAYSCALE)],
+                             outputs=[ct.TensorType(name="output")],
+                             minimum_deployment_target=ct.target.macOS13,
+                             )
+        sample_input = np.random.randint(low=0, high=246, size=(1, 1, 10, 20))
+        img_input = Image.fromarray(sample_input[0, 0, :, :].astype(np.uint8), 'L')
+        model_output = mlmodel.predict({"input_image": img_input})['output']
+        reference_output = rank4_grayscale_input_model(torch.from_numpy(sample_input.astype(np.float32))).detach().numpy()
+        np.testing.assert_allclose(reference_output, model_output, rtol=1e-2, atol=1e-2)
+
+    def test_grayscale_fp16_input_image(self, rank4_grayscale_input_model):
+        mlmodel = ct.convert(rank4_grayscale_input_model,
+                             inputs=[ct.ImageType(name="input_image",
+                                                  shape=(1, 1, 10, 20),
+                                                  color_layout=ct.colorlayout.GRAYSCALE_FLOAT16)],
+                             outputs=[ct.TensorType(name="output")],
+                             minimum_deployment_target=ct.target.macOS13,
+                             )
+
+        # incorrect way to do prediction
+        with pytest.raises(TypeError,
+                           match="must be of type PIL.Image.Image with mode=='F'",
+                           ):
+            sample_input = np.random.randint(low=0, high=246, size=(1, 1, 10, 20))
+            img_input = Image.fromarray(sample_input[0, 0, :, :].astype(np.uint8), 'L')
+            mlmodel.predict({"input_image": img_input})
+
+        # correct way to do prediction
+        sample_input = np.random.rand(1, 1, 10, 20) # in between [0, 1]
+        img_input = Image.fromarray(sample_input[0, 0, :, :].astype(np.float32), 'F')
+        model_output = mlmodel.predict({"input_image": img_input})['output']
+        reference_output = rank4_grayscale_input_model(torch.from_numpy(sample_input.astype(np.float32))).detach().numpy()
+        np.testing.assert_allclose(reference_output, model_output, rtol=1e-2, atol=1e-2)
+
+    def test_grayscale_output_image(self, rank4_grayscale_input_model):
+        mlmodel = ct.convert(rank4_grayscale_input_model,
+                             inputs=[ct.TensorType(name="input",
+                                                  shape=(1, 1, 10, 20))],
+                             outputs=[ct.ImageType(name="output_image",
+                                                   color_layout=ct.colorlayout.GRAYSCALE)],
+                             minimum_deployment_target=ct.target.macOS13,
+                             compute_precision=ct.precision.FLOAT32,
+                             )
+        sample_input = np.random.randint(low=0, high=200, size=(1, 1, 10, 20)).astype(np.float32)
+        model_output_pil_image = mlmodel.predict({"input": sample_input})['output_image']
+        assert isinstance(model_output_pil_image, Image.Image)
+        assert model_output_pil_image.mode == "L"
+        model_output_as_numpy = np.array(model_output_pil_image)
+        reference_output = rank4_grayscale_input_model(torch.from_numpy(sample_input)).detach().numpy()
+        reference_output = np.squeeze(reference_output)
+        np.testing.assert_allclose(reference_output, model_output_as_numpy, rtol=1e-2, atol=1e-2)
+
+    def test_grayscale_fp16_output_image(self, rank4_grayscale_input_model):
+        mlmodel = ct.convert(rank4_grayscale_input_model,
+                             inputs=[ct.TensorType(name="input",
+                                                  shape=(1, 1, 10, 20))],
+                             outputs=[ct.ImageType(name="output_image",
+                                                   color_layout=ct.colorlayout.GRAYSCALE_FLOAT16)],
+                             minimum_deployment_target=ct.target.macOS13,
+                             compute_precision=ct.precision.FLOAT32,
+                             )
+        sample_input = np.random.randint(low=0, high=200, size=(1, 1, 10, 20)).astype(np.float32)
+        model_output_pil_image = mlmodel.predict({"input": sample_input})['output_image']
+        assert isinstance(model_output_pil_image, Image.Image)
+        assert model_output_pil_image.mode == "F"
+        model_output_as_numpy = np.array(model_output_pil_image)
+        reference_output = rank4_grayscale_input_model(torch.from_numpy(sample_input)).detach().numpy()
+        reference_output = np.squeeze(reference_output)
+        np.testing.assert_allclose(reference_output, model_output_as_numpy, rtol=1e-2, atol=1e-2)
+
 

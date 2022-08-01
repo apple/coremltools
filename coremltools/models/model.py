@@ -12,8 +12,9 @@ import warnings as _warnings
 import numpy as _numpy
 
 from ..proto import (
+    FeatureTypes_pb2 as _ft,
     Model_pb2 as _Model_pb2,
-    MIL_pb2 as _MIL_pb2
+    MIL_pb2 as _MIL_pb2,
 )
 from .utils import (
     _create_mlpackage,
@@ -46,6 +47,12 @@ try:
     from ..libmodelpackage import ModelPackage as _ModelPackage
 except:
     _ModelPackage = None
+
+_HAS_PIL = True
+try:
+    from PIL import Image as _PIL_IMAGE
+except:
+    _HAS_PIL = False
 
 
 _MLMODEL_FULL_PRECISION = "float32"
@@ -308,6 +315,13 @@ class MLModel:
         """
         if not isinstance(compute_units, _ComputeUnit):
             raise TypeError('"compute_units" parameter must be of type: coremltools.ComputeUnit')
+        elif (compute_units == _ComputeUnit.CPU_AND_NE
+              and _is_macos()
+              and _macos_version() < (13, 0)
+        ):
+            raise ValueError(
+                'coremltools.ComputeUnit.CPU_AND_NE is only available on macOS >= 13.0'
+            )
         self.compute_unit = compute_units
 
         self.is_package = False
@@ -500,11 +514,7 @@ class MLModel:
             )
 
         if self.__proxy__:
-            # Check if the input name given by the user is valid.
-            # Although this is checked during prediction inside CoreML Framework,
-            # we still check it here to return early and
-            # return a more verbose error message
-            self._verify_input_name_exists(data)
+            self._verify_input_dict(data)
             self._convert_tensor_to_numpy(data)
             # TODO: remove the following call when this is fixed: rdar://92239209
             self._update_float16_multiarray_input_to_float32(data)
@@ -592,6 +602,37 @@ class MLModel:
         """
         return _deepcopy(self._mil_program)
 
+    def _verify_input_dict(self, input_dict):
+        # Check if the input name given by the user is valid.
+        # Although this is checked during prediction inside CoreML Framework,
+        # we still check it here to return early and
+        # return a more verbose error message
+        self._verify_input_name_exists(input_dict)
+
+        # verify that the pillow image modes are correct, for image inputs
+        self._verify_pil_image_modes(input_dict)
+
+    def _verify_pil_image_modes(self, input_dict):
+        if not _HAS_PIL:
+            return
+        for input_desc in self._spec.description.input:
+            if input_desc.type.WhichOneof("Type") == "imageType":
+                input_val = input_dict.get(input_desc.name, None)
+                if not isinstance(input_val, _PIL_IMAGE.Image):
+                    msg = "Image input, '{}' must be of type PIL.Image.Image in the input dict"
+                    raise TypeError(msg.format(input_desc.name))
+                if input_desc.type.imageType.colorSpace in (_ft.ImageFeatureType.BGR, _ft.ImageFeatureType.RGB):
+                    if input_val.mode != 'RGB':
+                        msg = "RGB/BGR image input, '{}', must be of type PIL.Image.Image with mode=='RGB'"
+                        raise TypeError(msg.format(input_desc.name))
+                elif input_desc.type.imageType.colorSpace == _ft.ImageFeatureType.GRAYSCALE:
+                    if input_val.mode != 'L':
+                        msg = "GRAYSCALE image input, '{}', must be of type PIL.Image.Image with mode=='L'"
+                        raise TypeError(msg.format(input_desc.name))
+                elif input_desc.type.imageType.colorSpace == _ft.ImageFeatureType.GRAYSCALE_FLOAT16:
+                    if input_val.mode != 'F':
+                        msg = "GRAYSCALE_FLOAT16 image input, '{}', must be of type PIL.Image.Image with mode=='F'"
+                        raise TypeError(msg.format(input_desc.name))
 
     def _verify_input_name_exists(self, input_dict):
         model_input_names = [inp.name for inp in self._spec.description.input]

@@ -4,8 +4,11 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import copy
+import numpy as _np
+import pytest
 
 from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil.passes.test_passes import CONSTEXPR_FUNCS
 from coremltools.converters.mil.testing_utils import (
     assert_same_output_names,
     assert_same_output_shapes,
@@ -38,7 +41,6 @@ def test_empty_block():
     assert len(block.inputs) == 1
     assert len(block.outputs) == 1
     assert block.inputs["x0"] == block.outputs[0]
-    print(prog)
 
 
 def test_add_op():
@@ -193,6 +195,59 @@ def test_op_removal_and_insertion():
     assert_same_output_names(prev_prog, prog)
     assert_same_output_shapes(prev_prog, prog)
 
+
+def test_replace_nonreplaceable_vars():
+    """
+    The conversion should error out if an invalid replacement is invoked with nonreplaceable vars
+    """
+    constexpr_op = "constexpr_sparse_to_dense"
+    @mb.program(input_specs=[mb.TensorSpec(shape=(4, 2))])
+    def prog(x):
+        constexpr = CONSTEXPR_FUNCS[constexpr_op]((4, 2))
+        return mb.add(x=x, y=constexpr)
+
+    block = prog.functions["main"]
+    constexpr_op = block.find_ops(op_type=constexpr_op)[0]
+    
+    with block:
+        const = mb.const(val=_np.random.rand(4, 2), before_op=constexpr_op)
+        expected_err_str = "might potentially be removed during the replacement of those vars."
+        with pytest.raises(ValueError, match=expected_err_str):
+            block.replace_uses_of_var_after_op(
+                anchor_op=constexpr_op,
+                old_var=constexpr_op.outputs[0],
+                new_var=const
+            )
+            
+def test_replace_nonreplaceable_vars_force():
+    """
+    The conversion should not error out if the replace_uses_of_vars_after_op is executed with force_replace=True
+    Also we test that, the new nonreplaceable_vars_upstream is propagated after the code exist `with block`.
+    """
+    constexpr_op = "constexpr_sparse_to_dense"
+    @mb.program(input_specs=[mb.TensorSpec(shape=(4, 2))])
+    def prog(x):
+        constexpr = CONSTEXPR_FUNCS[constexpr_op]((4, 2))
+        return mb.add(x=x, y=constexpr)
+
+    block = prog.functions["main"]
+    constexpr_op = block.find_ops(op_type=constexpr_op)[0]
+    add_op = block.find_ops(op_type="add")[0]
+
+    assert len(add_op.outputs[0].nonreplaceable_vars_upstream) == 1
+
+    with block:
+        const = mb.const(val=_np.random.rand(4, 2), before_op=constexpr_op)
+        block.replace_uses_of_var_after_op(
+            anchor_op=constexpr_op,
+            old_var=constexpr_op.outputs[0],
+            new_var=const,
+            force_replace=True,
+        )
+        block.remove_ops([constexpr_op])
+        
+    assert len(add_op.outputs[0].nonreplaceable_vars_upstream) == 0
+    
 
 def test_simple_substituion():
     """Replace log(x+y) with log(x*y)

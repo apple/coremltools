@@ -5,12 +5,13 @@
 
 import numpy as np
 
-from coremltools.converters.mil.mil.passes.pass_registry import register_pass
-from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
+from coremltools.converters.mil.mil.passes.helper import block_context_manager
+from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 from coremltools.converters.mil.mil import types as _types
 
-
+@block_context_manager
 def _divide_to_multiply_block(block):
     for op in list(block.operations):
         for b in op.blocks:
@@ -25,18 +26,17 @@ def _divide_to_multiply_block(block):
         # a floating point number, then the original type
         # signature (with integer output) would not be preserved.
         if op.op_type == "real_div" and op.y.val is not None and _types.is_float(op.x.dtype):
-            with block:
-                new_y_val = np.array(1.0, dtype=op.y.val.dtype) / op.y.val
-                if not np.isfinite(new_y_val).all():
-                    continue
+            new_y_val = np.array(1.0, dtype=op.y.val.dtype) / op.y.val
+            if not np.isfinite(new_y_val).all():
+                continue
 
-                x = mb.mul(
-                    x=op.x, y=new_y_val, name="_inversed_" + op.name, before_op=op
-                )
-                op.enclosing_block.replace_uses_of_var_after_op(
-                    anchor_op=op, old_var=op.outputs[0], new_var=x
-                )
-                block.remove_ops([op])
+            x = mb.mul(
+                x=op.x, y=new_y_val, name="_inversed_" + op.name, before_op=op
+            )
+            op.enclosing_block.replace_uses_of_var_after_op(
+                anchor_op=op, old_var=op.outputs[0], new_var=x
+            )
+            block.remove_ops([op])
 
 
 @register_pass(namespace="common")

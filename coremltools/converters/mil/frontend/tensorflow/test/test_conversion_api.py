@@ -420,8 +420,7 @@ class TestInputOutputConversionAPI:
         assert_spec_input_image_type(mlmodel._spec, expected_feature_type=ft.ImageFeatureType.GRAYSCALE_FLOAT16)
         assert_prog_input_type(mlmodel._mil_program, expected_dtype_str="fp16")
         assert_output_dtype(mlmodel, expected_type_str="fp16")
-        # TODO: uncomment the following when rdar://92239179 is fixed
-        # verify_prediction(mlmodel)
+        verify_prediction(mlmodel)
 
     def test_color_output(self, rank4_input_model, rank4_input_model_with_channel_first_output):
         # check that an error is raised if the output shape is not of form (1, 3, H, W)
@@ -487,8 +486,7 @@ class TestInputOutputConversionAPI:
         assert_spec_output_image_type(mlmodel._spec, expected_feature_type=ft.ImageFeatureType.GRAYSCALE_FLOAT16)
         assert_prog_input_type(mlmodel._mil_program, expected_dtype_str="fp16")
         assert_prog_output_type(mlmodel._mil_program, expected_dtype_str="fp16")
-        # TODO: uncomment the following when rdar://92239179 is fixed
-        # verify_prediction(mlmodel)
+        verify_prediction(mlmodel)
 
         mlmodel = ct.convert(rank4_grayscale_input_model_with_channel_first_output,
                              inputs=[ct.ImageType(color_layout=ct.colorlayout.GRAYSCALE)],
@@ -500,8 +498,7 @@ class TestInputOutputConversionAPI:
         assert_spec_output_image_type(mlmodel._spec, expected_feature_type=ft.ImageFeatureType.GRAYSCALE_FLOAT16)
         assert_prog_input_type(mlmodel._mil_program, expected_dtype_str="fp32")
         assert_prog_output_type(mlmodel._mil_program, expected_dtype_str="fp16")
-        # TODO: uncomment the following when rdar://92239179 is fixed
-        # verify_prediction(mlmodel)
+        verify_prediction(mlmodel)
 
 
     def test_linear_model(self, linear_model):

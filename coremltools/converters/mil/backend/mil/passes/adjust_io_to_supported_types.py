@@ -5,10 +5,11 @@
 
 import logging
 
-from coremltools.converters.mil.mil import Builder as mb, types as types
-from coremltools.converters.mil.mil.passes.pass_registry import register_pass
-from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil._deployment_compatibility import AvailableTarget as target
+from coremltools.converters.mil.mil import Builder as mb, types as types
+from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
+from coremltools.converters.mil.mil.passes.helper import block_context_manager
+from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 
 
 @register_pass(namespace="mil_backend")
@@ -24,7 +25,7 @@ class adjust_io_to_supported_types(AbstractGraphPass):
           types are numerical and can be reasonably replaced with 32 bit float types.
 
     The "main" function has additional rules since its I/O is mapped to CoreML model I/O:
-        * if minimum_deployment_target <  coremltools.target.iOS16, then:
+        * if function.opset_version <  coremltools.target.iOS16, then:
             * Fp16 I/O is replaced with fp32 I/O.
                 Casts (fp32 input -> fp16) are inserted at the beginning of the program to preserve 16 bit inputs.
                 Casts (fp16 -> fp32 output) are inserted at the end of the program to preserve 16 bit computations.
@@ -63,7 +64,7 @@ class adjust_io_to_supported_types(AbstractGraphPass):
     def apply(self, prog):
         for name, func in prog.functions.items():
             is_main_funtion = name == "main"
-            _adjust_io_to_supported_types(func, is_main_funtion, self.minimun_deployment_target)
+            _adjust_io_to_supported_types(func, is_main_funtion)
 
 __RUNTIME_SUPPORTED_TYPES = [types.fp16, types.fp32, types.int32, types.str, types.bool]
 
@@ -76,7 +77,8 @@ def _adjust_var_dtype_helper(var, dtype):
     else:
         var._sym_type = types.tensor(dtype, var.sym_type.get_shape())
 
-def _adjust_main_inputs(func, min_deployment_target):
+@block_context_manager
+def _adjust_main_inputs(func):
     first_op = func.operations[0] if len(func.operations) > 0 else None
     for input_name, input_var in func.inputs.items():
        if (types.is_tensor(input_var.sym_type) or types.is_scalar(input_var.sym_type)) \
@@ -97,13 +99,13 @@ def _adjust_main_inputs(func, min_deployment_target):
                                "of fp32. No cast will be inserted; the previous dtype will be replaced.")
                 _adjust_var_dtype_helper(input_var, types.fp32)
             elif input_var.dtype == types.fp16 \
-                 and min_deployment_target.value>= target.iOS16.value:
+                 and func.opset_version >= target.iOS16:
                 pass # do nothing, since fp16 is a valid input type for CoreML
             else:
                 # This is some other dtype. Change the type to fp32 and add a cast.
                 # This is only a limitation of main--other functions do not represent CoreML model inputs
                 # and do not have the same limitation on input types.
-                supported_dtypes = "{int32, fp32, fp64}" if min_deployment_target < target.iOS16 else \
+                supported_dtypes = "{int32, fp32, fp64}" if func.opset_version < target.iOS16 else \
                                     "{int32, fp16, fp32, fp64}"
                 msg = "\nInput '{}' is of dtype {}. The " +\
                                "CoreML runtime does not support inputs with this dtype " +\
@@ -111,29 +113,29 @@ def _adjust_main_inputs(func, min_deployment_target):
                                "fp32. A cast will be inserted at the beginning of the program to " +\
                                "convert the input to the originally defined dtype.\n"
                 if input_var.dtype == types.fp16:
-                    msg += "fp16 dtype input is supported if the minimum_deployment_target is chosen to be at least " \
+                    msg += "fp16 dtype input is supported if the function.opset_version is chosen to be at least " \
                            "iOS16/macOS13.\n"
                 logging.warning(msg.format(
                     input_var.name,
                     input_dtype_str,
                     supported_dtypes))
 
-                with func:
-                    casted_input_var = mb.cast(x=input_var, dtype=input_dtype_str, before_op=first_op)
-                    func.replace_uses_of_var_after_op(anchor_op=casted_input_var.op, old_var=input_var, new_var=casted_input_var)
-                    _adjust_var_dtype_helper(input_var, types.fp32)
+                casted_input_var = mb.cast(x=input_var, dtype=input_dtype_str, before_op=first_op)
+                func.replace_uses_of_var_after_op(anchor_op=casted_input_var.op, old_var=input_var, new_var=casted_input_var)
+                _adjust_var_dtype_helper(input_var, types.fp32)
 
-def _adjust_main_outputs(func, min_deployment_target):
+@block_context_manager
+def _adjust_main_outputs(func):
     new_outputs = []
     for output_var in func.outputs:
         output_type = output_var.sym_type
         if (types.is_tensor(output_type) or types.is_scalar(output_type)) \
             and output_var.dtype != types.fp32 \
             and output_var.dtype != types.int32 \
-            and (min_deployment_target < target.iOS16 or output_var.dtype != types.fp16):
+            and (func.opset_version < target.iOS16 or output_var.dtype != types.fp16):
             # since fp16 is a valid output type for coreml from ios16 spec onwards, no need to cast
             output_dtype_str = types.builtin_to_string(output_var.dtype)
-            supported_dtypes = "{int32, fp32, fp64}" if min_deployment_target < target.iOS16 else \
+            supported_dtypes = "{int32, fp32, fp64}" if func.opset_version < target.iOS16 else \
                                 "{int32, fp16, fp32, fp64}"
             msg = "\nOutput '{}' is of dtype {}. The " +\
                            "CoreML runtime does not support outputs with this dtype " +\
@@ -141,7 +143,7 @@ def _adjust_main_outputs(func, min_deployment_target):
                            "of fp32. A cast will be inserted at the end of the program to convert" +\
                            "the original output dtype to the dtype supported by the CoreML runtime.\n"
             if output_var.dtype == types.fp16:
-                msg += "fp16 dtype output is supported if the minimum_deployment_target is chosen to be at least " \
+                msg += "fp16 dtype output is supported if function.opset_version is chosen to be at least " \
                        "iOS16/macOS13.\n"
             logging.warning(msg.format(
                                output_var.name,
@@ -152,9 +154,8 @@ def _adjust_main_outputs(func, min_deployment_target):
             output_var_name = output_var.name
             output_var.set_name(output_var_name + "__pre__output__fp32__cast")
             # Convert the output to fp32, and add a cast.
-            with func:
-                output_var = mb.cast(x=output_var, dtype="fp32")
-                output_var.set_name(output_var_name)
+            output_var = mb.cast(x=output_var, dtype="fp32")
+            output_var.set_name(output_var_name)
         new_outputs.append(output_var)
     func.set_outputs(new_outputs)
 
@@ -195,6 +196,7 @@ def _adjust_block_inputs(block):
     for input_var in block.inputs:
         _adjust_var(input_var)
 
+@block_context_manager
 def _adjust_ops(block):
     len_block = len(block.operations)
     i = 0
@@ -241,11 +243,10 @@ def _adjust_ops(block):
                 #
                 # This cast is meaningful, and the "dtype" param now differs from the output
                 # type. Replace the dtype cast with a new cast op with a matching dtype param.
-                with block:
-                    new_cast_out = mb.cast(x=op.x, dtype=output_type_str, before_op=op)
-                    block.replace_uses_of_var_after_op(
-                        anchor_op=op, old_var=op.outputs[0], new_var=new_cast_out
-                    )
+                new_cast_out = mb.cast(x=op.x, dtype=output_type_str, before_op=op)
+                block.replace_uses_of_var_after_op(
+                    anchor_op=op, old_var=op.outputs[0], new_var=new_cast_out
+                )
                 block.remove_ops([op])
                 len_block = len(block.operations)
         i = i + 1
@@ -254,11 +255,11 @@ def _adjust_ops(block):
 #####
 # The Pass
 #####
-def _adjust_io_to_supported_types(func, is_main, min_deployment_target):
+def _adjust_io_to_supported_types(func, is_main):
     if is_main:
-        _adjust_main_inputs(func, min_deployment_target)
+        _adjust_main_inputs(func)
         _adjust_ops(func)
-        _adjust_main_outputs(func, min_deployment_target)
+        _adjust_main_outputs(func)
     else:
         _adjust_func_inputs(func)
         _adjust_ops(func)

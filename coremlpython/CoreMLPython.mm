@@ -2,12 +2,14 @@
 //
 // Use of this source code is governed by a BSD-3-clause license that can be
 // found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
+
 #import <CoreML/CoreML.h>
 #import "CoreMLPythonArray.h"
 #import "CoreMLPython.h"
 #import "CoreMLPythonUtils.h"
 #import "Globals.hpp"
 #import "Utils.hpp"
+#import <AvailabilityMacros.h>
 #import <fstream>
 #import <vector>
 
@@ -18,9 +20,18 @@
 #error "ARC is off"
 #endif
 
+#ifndef BUILT_WITH_MACOS13_SDK
+#define BUILT_WITH_MACOS13_SDK (MAC_OS_X_VERSION_MAX_ALLOWED >= 130000)
+#endif
+
 namespace py = pybind11;
 
 using namespace CoreML::Python;
+
+bool usingMacOS13OrHigher() {
+    // MLProgram class was introduced in macOS 13.
+    return (NSProtocolFromString(@"MLProgram") != nil);
+}
 
 Model::~Model() {
     @autoreleasepool {
@@ -60,20 +71,27 @@ Model::Model(const std::string& urlStr, const std::string& computeUnits) {
             throw std::runtime_error(errmsg.str());
         }
 
-        if (@available(macOS 10.14, *)) {
-            MLModelConfiguration *configuration = [MLModelConfiguration new];
-            if (computeUnits == "CPU_ONLY") {
-                configuration.computeUnits = MLComputeUnitsCPUOnly;
-            } else if (computeUnits == "CPU_AND_GPU") {
-                configuration.computeUnits = MLComputeUnitsCPUAndGPU;
+        // Set compute unit
+        MLModelConfiguration *configuration = [MLModelConfiguration new];
+        if (computeUnits == "CPU_ONLY") {
+            configuration.computeUnits = MLComputeUnitsCPUOnly;
+        } else if (computeUnits == "CPU_AND_GPU") {
+            configuration.computeUnits = MLComputeUnitsCPUAndGPU;
+        } else if (computeUnits == "CPU_AND_NE") {
+            if (usingMacOS13OrHigher()) {
+#if BUILT_WITH_MACOS13_SDK
+                configuration.computeUnits = MLComputeUnitsCPUAndNeuralEngine;
+#endif // BUILT_WITH_MACOS13_SDK
             } else {
-                assert(computeUnits == "ALL");
-                configuration.computeUnits = MLComputeUnitsAll;
+                throw std::runtime_error("CPU_AND_NE is only available on macOS >= 13.0");
             }
-            m_model = [MLModel modelWithContentsOfURL:compiledUrl configuration:configuration error:&error];
         } else {
-            m_model = [MLModel modelWithContentsOfURL:compiledUrl error:&error];
+            assert(computeUnits == "ALL");
+            configuration.computeUnits = MLComputeUnitsAll;
         }
+
+        // Create MLModel
+        m_model = [MLModel modelWithContentsOfURL:compiledUrl configuration:configuration error:&error];
         Utils::handleError(error);
     }
 }

@@ -71,7 +71,7 @@ def run_compare_builder(
         expected_outputs = [expected_outputs]
 
     prog = Program()
-    with Function(input_placeholders) as ssa_func:
+    with Function(input_placeholders, opset_version=minimum_deployment_target) as ssa_func:
         output_vars = build(**ssa_func.inputs)
         if isinstance(output_vars, tuple):
             output_vars = list(output_vars)

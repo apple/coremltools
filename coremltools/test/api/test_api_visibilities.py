@@ -17,11 +17,7 @@ def _check_visible_modules(actual, expected):
     )
 
 
-class TestApiVisibilities:
-    """Test public coremltools API visibilities."""
-
-    def test_top_level(self):
-        expected = [
+EXPECTED_MODULES = [
             "ClassifierConfig",
             "ComputeUnit",
             "EnumeratedShapes",
@@ -46,9 +42,15 @@ class TestApiVisibilities:
             "libmodelpackage",
             "libmilstoragepython",
         ]
+
+
+class TestApiVisibilities:
+    """Test public coremltools API visibilities."""
+
+    def test_top_level(self):
         if not ct.utils._is_macos():
-             expected.remove("libcoremlpython")
-        _check_visible_modules(_get_visible_items(ct), expected)
+             EXPECTED_MODULES.remove("libcoremlpython")
+        _check_visible_modules(_get_visible_items(ct), EXPECTED_MODULES)
 
     def test_utils(self):
         expected = [

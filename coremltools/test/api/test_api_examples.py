@@ -732,10 +732,7 @@ class TestInputs:
         assert "does not match any of the model input" in error_str
 
     @staticmethod
-    @pytest.mark.parametrize(
-        "to_tensor", [torch.tensor, tf.convert_to_tensor, lambda x: x.tolist()])
-    @pytest.mark.skipif(not ct.utils._is_macos(), reason="Platform is not Mac OS")
-    def test_variant_input_type_prediction(to_tensor):
+    def _test_variant_input_type_prediction(to_tensor):
         prog = Program()
         func_inputs = {"x": mb.placeholder(shape=[2, 3]),
                        "y": mb.placeholder(shape=[2, 3])}
@@ -758,6 +755,24 @@ class TestInputs:
              "y": to_tensor(y_numpy)}
         )
         np.allclose(out_by_numpy["out"], out_by_tensor["out"])
+
+    @staticmethod
+    @pytest.mark.skipif(not ct.utils._is_macos(), reason="test needs predictions")
+    def test_list_predict_input():
+        TestInputs._test_variant_input_type_prediction(lambda x: x.tolist())
+
+    @staticmethod
+    @pytest.mark.skipif(not _HAS_TF_1, reason="requires TensorFlow")
+    @pytest.mark.skipif(not ct.utils._is_macos(), reason="test needs predictions")
+    def test_tf_predict_input():
+        TestInputs._test_variant_input_type_prediction(tf.convert_to_tensor)
+
+    @staticmethod
+    @pytest.mark.skipif(not _HAS_TORCH, reason="requires Torch")
+    @pytest.mark.skipif(not ct.utils._is_macos(), reason="test needs predictions")
+    def test_torch_predict_input():
+        TestInputs._test_variant_input_type_prediction(torch.tensor)
+
 
 class TestFlexibleShape:
     @staticmethod
@@ -1210,6 +1225,29 @@ class TestFlexibleShape:
         spec = model.get_spec()
         assert len(spec.description.input[0].type.imageType.enumeratedSizes.sizes) == 2
 
+    @staticmethod
+    @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
+    def test_mean_op():
+        # test for bug reported in https://github.com/apple/coremltools/issues/1420
+        class Network(torch.nn.Module):
+            def forward(self, x):
+                return torch.mean(x, dim=(2, 3), keepdim=True)
+
+        model = Network()
+        x = torch.rand(1, 3, 256, 256)
+        traced_model = torch.jit.trace(model, x)
+        input_x = ct.TensorType(shape=(1, 3, ct.RangeDim(default=256), ct.RangeDim(default=256)),
+                                name="input")
+        cml = ct.convert(traced_model,
+                         inputs=[input_x],
+                         outputs=[ct.TensorType(name="out")],
+                         convert_to="mlprogram",
+                         compute_units=ct.ComputeUnit.CPU_ONLY)
+        input_dict = {"input": np.random.rand(1, 3, 112, 112)}
+        if ct.utils._is_macos():
+            out = cml.predict(input_dict)["out"]
+            assert out.shape == (1, 3, 1, 1)
+
 
 class TestOptionalInput:
     @staticmethod
@@ -1330,6 +1368,9 @@ class TestOptionalInput:
             default_value=default_value)
 
         for compute_units in ct.ComputeUnit:
+            if compute_units == ct.ComputeUnit.CPU_AND_NE and ct.utils._macos_version() < (13, 0):
+                continue
+
             mlmodel = ct.convert(
                 traced_model,
                 inputs=[required_input, optional_input],

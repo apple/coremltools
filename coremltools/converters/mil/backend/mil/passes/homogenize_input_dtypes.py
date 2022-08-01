@@ -4,9 +4,10 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from coremltools.converters.mil.mil import Builder as mb
-from coremltools.converters.mil.mil.ops.defs import elementwise_binary, matmul
-from coremltools.converters.mil.mil.ops.defs.elementwise_unary import cast as cast_op_class
+from coremltools.converters.mil.mil.ops.defs.iOS15  import elementwise_binary, matmul
+from coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary import cast as cast_op_class
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
+from coremltools.converters.mil.mil.passes.helper import block_context_manager
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 from coremltools.converters.mil.mil.types import promote_dtypes, builtin_to_string
 
@@ -37,6 +38,7 @@ def _promoted_var(op, var, promoted_dtype):
         x = mb.const(val=const_value_after_cast, name=var.name + "_promoted", before_op=op)
     return x
 
+@block_context_manager
 def _homogenize_input_dtypes_block(block):
     for op in list(block.operations):
         for b in op.blocks:
@@ -51,8 +53,7 @@ def _homogenize_input_dtypes_block(block):
             for i,var in enumerate(input_vars):
                 if not _is_same_dtype(var.dtype, promoted_dtype):
                     has_mixed_dtypes = True
-                    with block:
-                        input_vars[i] = _promoted_var(op, var, promoted_dtype)
+                    input_vars[i] = _promoted_var(op, var, promoted_dtype)
 
             if has_mixed_dtypes:
                 new_inputs = dict(zip(params, input_vars))
@@ -60,17 +61,16 @@ def _homogenize_input_dtypes_block(block):
                 new_inputs.update(
                     {k: v for k, v in op.inputs.items() if k not in new_inputs}
                 )
-                with block:
-                    # create a new op with the promoted input vars
-                    new_op_class = getattr(mb,op.op_type)
-                    new_output = new_op_class(**new_inputs)
+                # create a new op with the promoted input vars
+                new_op_class = getattr(mb,op.op_type)
+                new_output = new_op_class(**new_inputs)
 
-                    op.enclosing_block.replace_uses_of_var_after_op(
-                        anchor_op=op, old_var=op.outputs[0], new_var=new_output, no_check_var_types=True,
-                        # Has to set no_check_var_types=True because Matmul PyMIL type inference doesn't enforce same dtypes for x & y
-                        # but for output dtype assumes them to be same and chooses one of the two.
-                    )
-                    block.remove_ops([op])
+                op.enclosing_block.replace_uses_of_var_after_op(
+                    anchor_op=op, old_var=op.outputs[0], new_var=new_output, no_check_var_types=True,
+                    # Has to set no_check_var_types=True because Matmul PyMIL type inference doesn't enforce same dtypes for x & y
+                    # but for output dtype assumes them to be same and chooses one of the two.
+                )
+                block.remove_ops([op])
 
 @register_pass(namespace="mil_backend")
 class homogenize_input_dtypes(AbstractGraphPass):
