@@ -29,6 +29,12 @@ from coremltools.converters.mil.experimental.passes.generic_pass_infrastructure 
 from coremltools.converters.mil.mil.passes.helper import _check_var_scalar_value
 from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
 
+from .compression_passes import (
+    WeightSparsifier,
+    WeightPalettizer,
+    WeightAffineQuantizer,
+)
+
 
 np.random.seed(1984)
 validate_model = True
@@ -204,8 +210,8 @@ def test_loop_invariant_elimination1():
     assert len(while_op.blocks[0].inputs) == 2
     assert len(while_op.outputs) == 2
     assert len(while_op.loop_vars) == 2
-    assert while_op.blocks[0].inputs[0].name == "a_x1"
-    assert while_op.blocks[0].inputs[1].name == "b_x1"
+    assert while_op.blocks[0].inputs[0].name == "a_x0"
+    assert while_op.blocks[0].inputs[1].name == "b_x0"
 
     prev_prog = copy.deepcopy(prog)
     PASS_REGISTRY["common::loop_invariant_elimination"](prog)
@@ -215,7 +221,7 @@ def test_loop_invariant_elimination1():
     assert len(while_op.blocks[0].inputs) == 1
     assert len(while_op.outputs) == 1
     assert len(while_op.loop_vars) == 1
-    assert while_op.blocks[0].inputs[0].name == "a_x1"
+    assert while_op.blocks[0].inputs[0].name == "a_x0"
 
     if validate_model:
         assert_model_is_valid(prog, {"a": (1, 2), "b": (1, 2)})
@@ -245,8 +251,8 @@ def test_loop_invariant_elimination2():
     assert len(while_op.blocks[0].inputs) == 2
     assert len(while_op.outputs) == 2
     assert len(while_op.loop_vars) == 2
-    assert while_op.blocks[0].inputs[0].name == "a_x1"
-    assert while_op.blocks[0].inputs[1].name == "b_x1"
+    assert while_op.blocks[0].inputs[0].name == "a_x0"
+    assert while_op.blocks[0].inputs[1].name == "b_x0"
 
     prev_prog = copy.deepcopy(prog)
     PASS_REGISTRY["common::loop_invariant_elimination"](prog)
@@ -256,7 +262,7 @@ def test_loop_invariant_elimination2():
     assert len(while_op.blocks[0].inputs) == 1
     assert len(while_op.outputs) == 1
     assert len(while_op.loop_vars) == 1
-    assert while_op.blocks[0].inputs[0].name == "a_x1"
+    assert while_op.blocks[0].inputs[0].name == "a_x0"
 
     if validate_model:
         assert_model_is_valid(prog, {"a": (1, 2), "b": (1, 2)})
@@ -1694,7 +1700,6 @@ class TestPreluFusion:
             expected_output_shapes={block.outputs[0].name: (B, H, W, C)},
         )
 
-
 class TestUpdateOutputDtypePass:
 
     def test_single_output(self):
@@ -1770,4 +1775,295 @@ class TestUpdateOutputDtypePass:
         assert block.outputs[1].name == "split_1"
 
 
+def _get_constexpr_cast(shape):
+    val = np.random.rand(*shape).astype(np.float16)
+    return mb.constexpr_cast(source_val=val, output_dtype="fp32")
 
+def _get_constexpr_sparse_to_dense(shape):
+    val = np.random.rand(*shape)
+    sparse_params = WeightSparsifier.compress(val=val, mode="PERCENTILE_MODE", target_percentile=0.4)
+    return mb.constexpr_sparse_to_dense(
+            nonzero_data=sparse_params.nonzero_data,
+            mask=sparse_params.mask,
+            shape=np.uint32(sparse_params.shape),)
+
+def _get_constexpr_lut_to_dense(shape):
+    val = np.random.rand(*shape)
+    lut_params = WeightPalettizer.compress(val=val, nbits=4, mode="UNIFORM")
+    return mb.constexpr_lut_to_dense(
+            indices=lut_params.indices,
+            lut=lut_params.lut,
+            shape=np.uint32(lut_params.shape),)
+
+def _get_constexpr_affine_dequantize(shape):
+    val = np.random.rand(*shape)
+    quant_params = WeightAffineQuantizer.compress(val=val, axis=0, mode="LINEAR_SYMMETRIC")
+    return mb.constexpr_affine_dequantize(
+            quantized_data=quant_params.quantized_data,
+            zero_point=quant_params.zero_point,
+            scale=quant_params.scale,
+            axis=quant_params.axis,)
+
+CONSTEXPR_FUNCS = {
+    "constexpr_cast": _get_constexpr_cast,
+    "constexpr_sparse_to_dense": _get_constexpr_sparse_to_dense,
+    "constexpr_lut_to_dense": _get_constexpr_lut_to_dense,
+    "constexpr_affine_dequantize": _get_constexpr_affine_dequantize,
+}
+
+CONSTEXPR_OPS = [
+    "constexpr_cast",
+    "constexpr_sparse_to_dense",
+    "constexpr_lut_to_dense",
+    "constexpr_affine_dequantize"
+]
+
+class TestSkipConstexprOps:
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "constexpr_op",
+        CONSTEXPR_OPS,
+    )
+    def test_skip_const_elimination(constexpr_op):
+        """
+                           constexpr_op
+                                 |
+                                 v
+                      const -> linear 
+                                 |
+                                 v
+          input --------------> add -> output 
+        
+        We are testing that:
+        1. constexpr_op can serve as a const input weight for linear op
+        2. linear op shoudn't be removed by the const_elimination pass
+        """
+        @mb.program(input_specs=[mb.TensorSpec(shape=(4,))])
+        def prog(x):
+            a = np.random.rand(2,)
+            constexpr = CONSTEXPR_FUNCS[constexpr_op]((4, 2))
+            linear = mb.linear(x=a, weight=constexpr)
+            return mb.add(x=x, y=linear)
+
+        PASS_REGISTRY["common::const_elimination"](prog)
+        assert get_op_types_in_program(prog) == [constexpr_op, "linear", "add"]
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "constexpr_op, weight_constexpr, bias_constexpr",
+        itertools.product(
+            CONSTEXPR_OPS,
+            [True, False],
+            [True, False],
+        )
+    )
+    def test_skip_fuse_matmul_weight_bias(constexpr_op, weight_constexpr, bias_constexpr):
+        """
+                    const_1       const_2
+                       |            |
+                       v            v
+        input -----> matmul -----> add ---> out
+
+        In this case, if either const_1 or const_2 is constexpr op, they should be not fused into a single linear op
+        """
+
+        def get_matmul(x, weight_constexpr):
+            weight = CONSTEXPR_FUNCS[constexpr_op]((3, 2))
+            if not weight_constexpr:
+                weight = weight.val
+            return mb.matmul(x=x, y=weight)
+
+        def get_add(x, bias_constexpr):
+            bias = CONSTEXPR_FUNCS[constexpr_op]((2,))
+            if not bias_constexpr:
+                bias = bias.val
+            return mb.add(x=x, y=bias)
+        
+        @mb.program(input_specs=[mb.TensorSpec(shape=(1, 3))])
+        def prog(x):
+            x = get_matmul(x, weight_constexpr)
+            x = get_add(x, bias_constexpr)
+            return x
+        
+        apply_pass_and_basic_check(prog, "common::fuse_matmul_weight_bias")
+        apply_pass_and_basic_check(prog, "common::const_elimination")
+        apply_pass_and_basic_check(prog, "common::dead_code_elimination")
+        
+        if not weight_constexpr and not bias_constexpr:
+            expected_ops = ["linear"]
+        else:
+            expected_ops = []
+            if weight_constexpr:
+                expected_ops.append(constexpr_op)
+            expected_ops.append("matmul")
+            if bias_constexpr:
+                expected_ops.append(constexpr_op)
+            expected_ops.append("add")
+        
+        assert get_op_types_in_program(prog) == expected_ops
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "constexpr_op, op, weight_constexpr, const_constexpr",
+        itertools.product(
+            CONSTEXPR_OPS,
+            ["mul", "add"],
+            [True, False],
+            [True, False],
+        )
+    )
+    def test_skip_fuse_conv(constexpr_op, op, weight_constexpr, const_constexpr):
+
+        """
+                    const_1       const_2
+                       |            |
+                       v            v
+        input -----> conv -----> mul/add ---> out
+
+        This pattern shouldn't be fused into a single conv layer if one of const_1 or const_2 is a constexpr op.
+        """
+        Cin, Cout = 3, 3
+        input_shape = (2, Cin, 5, 5)
+        @mb.program(input_specs=[mb.TensorSpec(shape=input_shape)])
+        def prog(x):
+            conv_weight = CONSTEXPR_FUNCS[constexpr_op]((Cout, Cin, 2, 2)) 
+            if not weight_constexpr:
+                conv_weight = conv_weight.val
+            x =  mb.conv(x=x, weight=conv_weight)
+            const = CONSTEXPR_FUNCS[constexpr_op]((Cout, 1, 1))
+            if not const_constexpr:
+                const = const.val
+            return getattr(mb, op)(x=x, y=const)
+            
+        apply_pass_and_basic_check(prog, "common::fuse_conv_scale")
+        apply_pass_and_basic_check(prog, "common::fuse_conv_bias")
+        apply_pass_and_basic_check(prog, "common::const_elimination")
+        apply_pass_and_basic_check(prog, "common::dead_code_elimination")
+
+        expected_ops = []
+        if not weight_constexpr and not const_constexpr:
+            expected_ops = ["conv"]
+        else:
+            if weight_constexpr:
+                expected_ops.append(constexpr_op)
+            expected_ops.append("conv")
+            if const_constexpr:
+                expected_ops.append(constexpr_op)
+            if op != "add" or const_constexpr:
+                expected_ops.append(op)
+
+        assert get_op_types_in_program(prog) == expected_ops
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "constexpr_op, weight_constexpr, bias_constexpr",
+        itertools.product(
+            CONSTEXPR_OPS,
+            [True, False],
+            [True, False],
+        )
+    )
+    def test_skip_fuse_linear_bias(constexpr_op, weight_constexpr, bias_constexpr):
+        """
+                     const_1      const_2
+                       |            |
+                       v            V
+        input -----> linear -----> add ---> out
+
+        This pattern shouldn't be fused into a single linear layer if one of const_1 or const_2 is a constexpr op.
+        """
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2,))])
+        def prog(x):
+            weight = CONSTEXPR_FUNCS[constexpr_op]((4, 2))
+            if not weight_constexpr:
+                weight = weight.val
+            linear = mb.linear(x=x, weight=weight)
+            bias = CONSTEXPR_FUNCS[constexpr_op]((4,))
+            if not bias_constexpr:
+                bias = bias.val
+            return mb.add(x=linear, y=bias)
+
+        apply_pass_and_basic_check(prog, "common::fuse_linear_bias")
+        apply_pass_and_basic_check(prog, "common::const_elimination")
+        apply_pass_and_basic_check(prog, "common::dead_code_elimination")
+
+        expected_ops = []
+        if not weight_constexpr and not bias_constexpr:
+            expected_ops = ["linear"]
+        else:
+            if weight_constexpr:
+                expected_ops.append(constexpr_op)
+            expected_ops.append("linear")
+            if bias_constexpr:
+                expected_ops.append(constexpr_op)
+            expected_ops.append("add")
+
+        assert get_op_types_in_program(prog) == expected_ops
+
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "constexpr_op, weight_constexpr, bias_constexpr",
+        itertools.product(
+            CONSTEXPR_OPS,
+            [True, False],
+            [True, False],
+        )
+    )
+    def test_skip_fuse_conv_batchnorm(constexpr_op, weight_constexpr, bias_constexpr):
+        """
+              weight        bias
+                |            |
+                |_____   ____|
+                      | |
+                      v v
+        input -----> conv -----> batch_norm ---> out
+
+        This pattern shouldn't be fused into a single conv layer if one of the weight / bias is a constexpr op.
+        """
+        Cin, Cout = 2, 3
+        input_shape = (2, Cin, 5, 5)
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=input_shape)])
+        def prog(x):
+            # conv layer
+            weight = CONSTEXPR_FUNCS[constexpr_op]((Cout, Cin, 2, 2))
+            if not weight_constexpr:
+                weight = weight.val
+            bias = CONSTEXPR_FUNCS[constexpr_op]((Cout, ))
+            if not bias_constexpr:
+                bias = bias.val
+
+            x = mb.conv(
+                    x=x,
+                    weight=weight,
+                    bias=bias,
+                )
+
+            # batch_norm layer
+            gamma = np.random.rand(Cout)
+            beta = np.random.rand(Cout)
+            mean = np.random.rand(Cout)
+            variance = np.random.rand(Cout)
+            epsilon = 1e-2
+            return mb.batch_norm(
+                    x=x,
+                    mean=mean,
+                    variance=variance,
+                    gamma=gamma,
+                    beta=beta,
+                    epsilon=epsilon,
+                    )
+
+        apply_pass_and_basic_check(prog, "common::fuse_conv_batchnorm")
+        apply_pass_and_basic_check(prog, "common::const_elimination")
+        apply_pass_and_basic_check(prog, "common::dead_code_elimination")
+
+        expected_ops = []
+        if not weight_constexpr and not bias_constexpr:
+            expected_ops = ["conv"]
+        else:
+            expected_ops = [constexpr_op] * sum([weight_constexpr, bias_constexpr]) + ["conv", "batch_norm"]
+
+        assert get_op_types_in_program(prog) == expected_ops

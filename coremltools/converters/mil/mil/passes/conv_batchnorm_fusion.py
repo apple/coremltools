@@ -7,6 +7,7 @@ import numpy as np
 
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
+from coremltools.converters.mil.mil.passes.helper import block_context_manager
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 
 
@@ -105,12 +106,49 @@ def _try_to_transform(conv_op, bn_op, block):
     else:
         x = mb.conv(**conv_kargs)
 
-    bn_op.enclosing_block.replace_uses_of_var_after_op(
-        anchor_op=bn_op, old_var=bn_op.outputs[0], new_var=x
-    )
-    # Remove all the ops at once
-    block.remove_ops([conv_op, bn_op])
-    return True
+    if bn_op.enclosing_block.try_replace_uses_of_var_after_op(
+        anchor_op=bn_op,
+        old_var=bn_op.outputs[0],
+        new_var=x,
+    ):
+        bn_op.enclosing_block.remove_ops([conv_op, bn_op])
+        return True
+    return False
+
+@block_context_manager
+def _fuse_conv_batchnorm_block(block):
+
+    def _match_pattern(op):
+        if op.op_type == "conv" or op.op_type == "conv_transpose":
+            # abort fusion if op output is also a block output
+            if op.outputs[0] in op.enclosing_block.outputs:
+                return None
+            # find batch_norm op
+            child_ops = op.outputs[0].child_ops
+            if len(child_ops) == 1:
+                bn_op_candidate = list(child_ops)[0]
+                if bn_op_candidate.op_type == "batch_norm":
+                    return bn_op_candidate
+        return None
+
+    fusion_occurred = False
+    for op in list(block.operations):
+        for b in op.blocks:
+            block_changed = True
+            while block_changed:
+                block_changed = _fuse_conv_batchnorm_block(b)
+        if len(op.blocks) > 0:
+            # This op can't be conv or conv_transpose
+            continue
+
+        bn_op = _match_pattern(op)
+        if bn_op is not None:
+            fusion_occurred = _try_to_transform(op, bn_op, block)
+            # has to break as the downstream iterator is affected.
+            if fusion_occurred:
+                return fusion_occurred
+    return fusion_occurred
+
 
 @register_pass(namespace="common")
 class fuse_conv_batchnorm(AbstractGraphPass):
@@ -128,50 +166,9 @@ class fuse_conv_batchnorm(AbstractGraphPass):
         ...
 
     """
-    def __init__(self):
-        self.ops_to_skip = set()
-
-    def set_ops_to_skip(self, prog):
-        pass
-
-    def _fuse_conv_batchnorm_block(self, block):
-
-        def _match_pattern(op):
-            if op.op_type == "conv" or op.op_type == "conv_transpose":
-                # abort fusion if op output is also a block output
-                if op.outputs[0] in op.enclosing_block.outputs:
-                    return None
-                # find batch_norm op
-                child_ops = op.outputs[0].child_ops
-                if len(child_ops) == 1:
-                    bn_op_candidate = list(child_ops)[0]
-                    if bn_op_candidate.op_type == "batch_norm":
-                        return bn_op_candidate
-            return None
-
-        fusion_occurred = False
-        for op in list(block.operations):
-            for b in op.blocks:
-                block_changed = True
-                while block_changed:
-                    block_changed = self._fuse_conv_batchnorm_block(b)
-            if len(op.blocks) > 0:
-                # This op can't be conv or conv_transpose
-                continue
-            if op in self.ops_to_skip:
-                continue
-            bn_op = _match_pattern(op)
-            if bn_op is not None:
-                with block:
-                    fusion_occurred = _try_to_transform(op, bn_op, block)
-                # has to break as the downstream iterator is affected.
-                if fusion_occurred:
-                    return fusion_occurred
-        return fusion_occurred
 
     def apply(self, prog):
-        self.set_ops_to_skip(prog)
         for f in prog.functions.values():
             block_changed = True
             while block_changed:
-                block_changed = self._fuse_conv_batchnorm_block(f)
+                block_changed = _fuse_conv_batchnorm_block(f)

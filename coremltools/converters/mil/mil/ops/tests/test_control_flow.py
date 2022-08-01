@@ -109,11 +109,6 @@ class TestCond:
         "use_cpu_for_conversion, backend", itertools.product([True, False], backends,)
     )
     def test_builder_to_backend_smoke(self, use_cpu_for_conversion, backend):
-        if backend[0] == "mlprogram":
-            pytest.skip("rdar://81169758 (TestCond hangs on mlprogram backend)")
-        if backend[0] == "mlprogram" and not use_cpu_for_conversion:
-            pytest.xfail("rdar://78343191 ((MIL GPU) Core ML Tools Unit Test failures [failure to load or Seg fault])")
-
         input_placeholders = {
             "a": mb.placeholder(shape=(1,), dtype=types.bool),
             "b": mb.placeholder(shape=(1,)),
@@ -249,7 +244,7 @@ class TestWhileLoop:
     )
     def test_builder_to_backend_nested(self, use_cpu_only, backend):
         if backend[0] == 'neuralnetwork':
-            pytest.xfail("neuralnetwork backend add const has issue")
+            pytest.xfail("rdar://96862073 (test_control_folw::TestWhileLoop::test_builder_to_backend_nested failing on nnv1)")
 
         input_placeholders = {
             "x": mb.placeholder(shape=(1,)),

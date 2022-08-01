@@ -7,6 +7,7 @@ import logging
 
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
+from coremltools.converters.mil.mil.passes.helper import block_context_manager
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 
 target_ops = [
@@ -30,7 +31,7 @@ class torch_upsample_to_core_upsample(AbstractGraphPass):
         for f in prog.functions.values():
             _torch_upsample_to_core_upsample_block(f)
 
-
+@block_context_manager
 def _torch_upsample_to_core_upsample_block(block):
     for op in block.operations[:]:
         for b in op.blocks:
@@ -108,25 +109,24 @@ def _try_replace_with_core_upsample(op):
         old_upsample = op.outputs[0]
         block = op.enclosing_block
 
-        with block:
-            if op.op_type == "torch_upsample_nearest_neighbor":
-                new_upsample = mb.upsample_nearest_neighbor(
-                    x=op.x,
-                    scale_factor_height=scales_h,
-                    scale_factor_width=scales_w,
-                    name=op.name,
-                    before_op=op,
-                )
-            elif op.op_type == "torch_upsample_bilinear":
-                new_upsample = mb.upsample_bilinear(
-                    x=op.x,
-                    scale_factor_height=scales_h,
-                    scale_factor_width=scales_w,
-                    align_corners=op.align_corners,
-                    name=op.name,
-                    before_op=op,
-                )
-            block.replace_uses_of_var_after_op(anchor_op=op, old_var=old_upsample, new_var=new_upsample)
+        if op.op_type == "torch_upsample_nearest_neighbor":
+            new_upsample = mb.upsample_nearest_neighbor(
+                x=op.x,
+                scale_factor_height=scales_h,
+                scale_factor_width=scales_w,
+                name=op.name,
+                before_op=op,
+            )
+        elif op.op_type == "torch_upsample_bilinear":
+            new_upsample = mb.upsample_bilinear(
+                x=op.x,
+                scale_factor_height=scales_h,
+                scale_factor_width=scales_w,
+                align_corners=op.align_corners,
+                name=op.name,
+                before_op=op,
+            )
+        block.replace_uses_of_var_after_op(anchor_op=op, old_var=old_upsample, new_var=new_upsample)
         block.remove_ops([op])
 
     return True

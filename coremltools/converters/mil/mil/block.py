@@ -16,6 +16,8 @@ from .types.symbolic import (
 from .var import Var, InternalVar
 from .visitors.dot_visitor import DotVisitor
 
+from coremltools import _OPSET
+from coremltools.converters.mil._deployment_compatibility import AvailableTarget as _target
 
 # BLOCK_STACK[-1] is the current block
 BLOCK_STACK = []
@@ -25,6 +27,17 @@ def curr_block():
     if len(BLOCK_STACK) == 0:
         raise ValueError("Must call Builder inside an Function" + " or Block")
     return BLOCK_STACK[-1]
+
+def curr_opset_version():
+    block = curr_block()
+    while not isinstance(block, Function):
+        block = block.outer_op.enclosing_block
+    return block.opset_version
+
+def is_current_opset_version_compatible_with(opset_version):
+    if curr_opset_version() is None:
+        return opset_version <= _target.iOS13
+    return curr_opset_version() >= opset_version
 
 
 class InvalidBlockStateError(Exception):
@@ -225,6 +238,48 @@ class Block:
     def outputs(self):
         return self._outputs
 
+    def is_var_visible_in_block(self, var, upto_op_with_id=None):
+        """
+        Checks if a var is visible to ops starting from id=`upto_op_with_id` inside the block.
+
+        Var is visible if
+        - It is the output of a const op, or
+        - It is the output of "preceding" operations in that block, or
+        - It is visible in the enclosing block, or
+        - It is either a block or a function input
+
+        If upto_op_with_id is None, outputs of all operations inside the block are visible to that block.
+        """
+
+        if var in self._internal_vars:
+            return True
+
+        inputs = self.function_inputs if isinstance(self, Function) else self.inputs
+        if var in inputs:
+            return True
+
+        idx = len(self.operations) if upto_op_with_id is None else upto_op_with_id
+
+        for i in range(idx-1, -1, -1):
+            op_outputs = self.operations[i].outputs
+            if op_outputs is not None and var in op_outputs:
+                return True
+
+        if self.outer_op is not None:
+            enclosing_block = self.outer_op.enclosing_block
+            outer_op_id = enclosing_block.find_op_id_in_block(self.outer_op)
+            if enclosing_block.is_var_visible_in_block(var, upto_op_with_id=outer_op_id):
+                return True
+
+        return False
+
+    def find_op_id_in_block(self, target_op):
+        try:
+            idx = self.operations.index(target_op)
+        except ValueError:
+            raise ValueError("Op {} not found in {}: {}".format(target_op.name, self.name, self))
+        return idx
+
     def set_outputs(self, outputs):
         """
         outputs: list[Var]
@@ -233,11 +288,8 @@ class Block:
             raise ValueError("Outputs must be list of Vars")
 
         self.validate()
-        visible_vars = self._visible_vars_from_enclosing_block()
-        _, visible_vars_in_block = self._visible_vars_in_block()
-        visible_vars.update(visible_vars_in_block)
         for ov in outputs:
-            if ov not in visible_vars:
+            if not self.is_var_visible_in_block(ov):
                 msg = (
                     "Var {} is not visible in block {} and thus cannot "
                     + "be a block output.\n{}"
@@ -260,140 +312,9 @@ class Block:
         return self
 
     def __exit__(self, type, value, traceback):
+        self._propagate_nonreplaceable_vars()
         global BLOCK_STACK
         BLOCK_STACK = BLOCK_STACK[:-1]
-
-    def _visible_vars_in_block(self, target_op=None, inclusive=True):
-        """
-        Returns
-        -------
-        - index (int) of target_op in self.operations if target_op not None,
-        undefined otherwise.
-
-        - visible_vars: set[Var]
-            Vars returned by ops in the block (self) visible (and equal to
-            if inclusive==True) target_op.  If target_op is not found or None,
-            include all vars output by self.operations. Examples:
-
-        Raises
-        ------
-        - ValueError if target_op not None and not found in self.operations.
-
-        #    main(%a: (1, 2, fp32),
-        #         %b: (1, 2, fp32),
-        #         %c: (1, 2, fp32)) {
-        #      block0() {
-        #        %const1: (1, fp32) = const(...)
-        #        %loop:0: (1, 2, fp32), %loop:1: (1, 2, fp32) = \
-        #        while_loop(loop_vars=(%a, %b))
-        #          loop_cond(%a.x, %b.x) {
-        #            %blah: (bool) = some_op(x=%a.x, y=%b.x)
-        #            %cond_var: (bool) = some_op2(x=%a.x, y=%blah)
-        #          } -> (%cond_var)
-        #          loop_body(%a.x, %b.x) {
-        #            %add_0: (1, 2, fp32) = add(x=%a.x, y=%b.x)
-        #          } -> (%add_0, %b.x)
-        #        %linear: (1, fp32) = linear(...)
-        #      } -> (%loop:0, %loop:1)
-        #    }
-        #
-
-        Let V0 and V1 be the set of internal_vars of block0 and loop_cond
-        block that supplies const vals (for const).
-
-        Ex1: self = block0, target_op = linear.
-        idx = 2
-        visible_vars = {%const1, %loop:0, %loop:1, %linear, V0}
-
-        Ex2: self = loop_cond, target_op = None.
-        idx = undefined
-        visible_vars = {%a.x, %b.x, %blah, %cond_var, V1}
-
-        Ex3: self = loop_cond, target_op = some_op.
-        idx = 0
-        visible_vars = {%a.x, %b.x, %blah, V1}
-
-        Ex4: self = loop_cond, target_op = linear.
-        raises ValueError (linear not found in loop_cond block)
-        """
-        visible_vars = set(self._internal_vars)
-        if isinstance(self, Function):
-            # Function inputs
-            visible_vars.update(tuple(self.inputs.values()))
-        else:
-            # Block inputs
-            visible_vars.update(self.inputs)
-
-        idx = -1
-        # find the location of target_op
-        for i, op in enumerate(self.operations):
-            if op == target_op:
-                if inclusive and op.outputs is not None:
-                    visible_vars.update(op.outputs)
-                return i, visible_vars
-            # When op is being constructed (e.g.,type_inference), op.outputs
-            # is None
-            if op.outputs is not None:
-                visible_vars.update(op.outputs)
-        if target_op is not None:
-            msg = "Op {} not found in {}: {}"
-            raise ValueError(msg.format(target_op.name, self.name, self))
-        return idx, visible_vars
-
-    def _visible_vars_from_enclosing_block(self):
-        """
-        Returns:
-
-        visible_vars: Vars from lexical scopes visible at the beginning of the
-        block, up to but not including outputs from before_op. Given program:
-
-        #    main(%a: (1, 2, fp32),
-        #         %b: (1, 2, fp32),
-        #         %c: (1, 2, fp32)) {
-        #      block0() {
-        #        %const1: (1, fp32) = const(...)
-        #        %loop:0: (1, 2, fp32), %loop:1: (1, 2, fp32) = \
-        #        while_loop(loop_vars=(%a, %b))
-        #          loop_cond(%a.x, %b.x) {
-        #            %blah: (bool) = some_op(x=%a.x, y=%b.x)
-        #            %cond_var: (bool) = some_op2(x=%a.x, y=%blah)
-        #          } -> (%cond_var)
-        #          loop_body(%a.x, %b.x) {
-        #            %add_0: (1, 2, fp32) = add(x=%a.x, y=%b.x)
-        #          } -> (%add_0, %b.x)
-        #        %const2: (1, fp32) = const(...)
-        #      } -> (%loop:0, %loop:1)
-        #    }
-
-        Let V0 be the set of internal_vars of block0 block that supplies const
-        vals (for const).
-
-        Ex1: self = block0
-            visible_vars = {%a, %b, %c} (function input)
-
-        Ex2: self = loop_cond.
-            visible_vars = {%a, %b, %c, %const1, V0} (Note that %const2 is not
-            part of the set)
-        """
-        visible_vars = set()
-
-        # function inputs are considered external to the block.
-        if isinstance(self, Function):
-            # block in function only has function_inputs as from enclosing
-            # block (Ex1 above).
-            visible_vars.update(self.function_inputs)
-            return visible_vars
-
-        if self.outer_op is not None:
-            enclosing_block = self.outer_op.enclosing_block
-            vars_at_start = enclosing_block._visible_vars_from_enclosing_block()
-            visible_vars.update(vars_at_start)
-            _, visible_vars_in_block = enclosing_block._visible_vars_in_block(
-                self.outer_op, inclusive=False
-            )
-            visible_vars.update(visible_vars_in_block)
-
-        return visible_vars
 
     def _insert_op_before(self, new_op, before_op=None):
         """
@@ -428,26 +349,16 @@ class Block:
         is not visible before op0.
         """
         self.validate()
-        visible_vars = self._visible_vars_from_enclosing_block()
-        if before_op is not None:
-            idx, visible_vars_in_block = self._visible_vars_in_block(
-                before_op, inclusive=True
-            )
-            visible_vars.update(visible_vars_in_block)
-        else:
-            _, visible_vars_in_block = self._visible_vars_in_block()
-            visible_vars.update(visible_vars_in_block)
+
+        idx = len(self.operations) if before_op is None else self.find_op_id_in_block(before_op)
 
         # check inputs are visible
         for k, v in new_op.inputs.items():
             if not isinstance(v, (Var, tuple)):
                 continue
-            if isinstance(v, Var):
-                vs = [v]
-            else:
-                vs = v
+            vs = [v] if isinstance(v, Var) else v
             for s in vs:
-                if s not in visible_vars:
+                if not self.is_var_visible_in_block(s, upto_op_with_id=idx):
                     before_op_name = before_op.name if before_op is not None else "None"
                     msg = "Op '{}' input {}={} is not in scope of {} before {}"
                     raise ValueError(
@@ -532,6 +443,36 @@ class Block:
             if isinstance(self, Function):
                 new_var.name = old_var.name
 
+    def try_replace_uses_of_var_after_op(
+        self,
+        anchor_op,
+        old_var,
+        new_var,
+        no_check_var_types=False
+    ):
+        """
+        :param anchor_op: Operation
+        :param old_var: Var
+        :param new_var: Var
+        :param no_check_var_types: bool
+        :return: True if the old_var can be replaced by new_var. False otherwsie.
+        
+        This helper function guards the replace_uses_of_var_after_op function,
+        by first checking if the old_var could be replaced by the new_var.
+        
+        1. If old_var can be replaced by new_var, the replace_uses_of_var_after_op is called, and returns True.
+        2. Return False if the replacement is not allow.
+        """
+        if not old_var.can_be_replaced_by_var(new_var):
+            return False
+
+        self.replace_uses_of_var_after_op(
+            anchor_op=anchor_op,
+            old_var=old_var,
+            new_var=new_var,
+            no_check_var_types=no_check_var_types,
+        )
+        return True
 
     def replace_uses_of_var_after_op(
         self,
@@ -541,6 +482,7 @@ class Block:
         no_check_var_visibility=False,
         end_op=None,
         no_check_var_types=False,
+        force_replace=False,
     ):
         """
         Replace all uses of `old_var` with `new_var` after `anchor_op`,
@@ -618,39 +560,35 @@ class Block:
                  %5 = op3(%2)               # will continue using %2
 
         """
+        if not force_replace and old_var.op is not None and new_var.op is not None:
+            if not old_var.can_be_replaced_by_var(new_var):
+                old_nonreplaceable_vars = old_var.nonreplaceable_vars_upstream
+                new_nonreplaceable_vars = new_var.nonreplaceable_vars_upstream
+                err_var = None
+                for _var in old_nonreplaceable_vars:
+                    if _var not in new_nonreplaceable_vars:
+                        err_var = _var
+                        break
+                msg = (
+                    "var {} cannot be replaced by {}. Since the nonreplaceable var {} might potentially "
+                    "be removed during the replacement of those vars."
+                ).format(old_var, new_var, err_var)
+                raise ValueError(msg)
+
+        start = self.find_op_id_in_block(anchor_op) + 1 if anchor_op is not None else 0
+        end_id = self.find_op_id_in_block(end_op) if end_op is not None else -1
+
         if not no_check_var_visibility:
             self.validate()
-        # Get visible vars from enclosing block
-        visible_vars = self._visible_vars_from_enclosing_block()
 
-        if anchor_op is not None:
-            # Get visible vars from the current block
-            idx, block_vars = self._visible_vars_in_block(anchor_op, inclusive=True)
-            visible_vars.update(block_vars)
-
-            # start from the next op, excluding `anchor_op`
-            start = idx + 1
-        else:
-            _, block_vars = self._visible_vars_in_block()
-            visible_vars.update(block_vars)
-
-            visible_vars.update(self._block_inputs)
-            visible_vars.update(self._internal_vars)
-            # Perform replacement from beginning
-            start = 0
-
-        if not no_check_var_visibility and new_var not in visible_vars:
-            msg = (
-                "new_var '{}' is not visible in block '{}' at or before "
-                + "anchor_op '{}'"
-            )
-            anchor_op_name = "None" if anchor_op is None else anchor_op.name
-            raise ValueError(msg.format(new_var.name, self.name, anchor_op_name))
-
-        if end_op is not None:
-            end_id, _ = self._visible_vars_in_block(end_op, inclusive=True)
-        else:
-            end_id = -1
+            idx = start if anchor_op is not None else len(self.operations)
+            if not self.is_var_visible_in_block(new_var, upto_op_with_id=idx):
+                msg = (
+                    "new_var '{}' is not visible in block '{}' at or before "
+                    + "anchor_op '{}'"
+                )
+                anchor_op_name = "None" if anchor_op is None else anchor_op.name
+                raise ValueError(msg.format(new_var.name, self.name, anchor_op_name))
 
         if end_id != -1 and end_id < start:
             msg = "end_op '{}' comes before the anchor_op '{}'"
@@ -760,6 +698,18 @@ class Block:
                         used_vars.add(input_var)
 
         return used_ops[::-1]
+        
+    def _propagate_nonreplaceable_vars(self):
+        def propagate_nonreplaceable_vars_block(block):
+            for op in list(block.operations):
+                for b in op.blocks:
+                    propagate_nonreplaceable_vars_block(b)
+                if op.outputs is None:
+                    continue
+                for o in op.outputs:
+                    o._reset_nonreplaceable_vars_upstream()
+                    o._set_nonreplaceable_vars_upstream()
+        propagate_nonreplaceable_vars_block(self)
 
     def indented_str(self, indent=None):
         if indent is None:
@@ -842,11 +792,14 @@ class Function(Block):
     """
     """
 
-    def __init__(self, inputs):
+    def __init__(self, inputs, opset_version=None):
         """
         inputs: str -> placeholder
+        opset_version: AvailableTarget enum. Describes the opset version of the function
         """
         self.placeholder_inputs = inputs
+        self.opset_version = opset_version
+
         # str -> Var
         self._input_dict = OrderedDict()
         for k, v in self.placeholder_inputs.items():
@@ -868,6 +821,19 @@ class Function(Block):
     @property
     def inputs(self):
         return self._input_dict
+        
+    @property
+    def opset_version(self):
+        return self._opset_version
+        
+    @opset_version.setter
+    def opset_version(self, version):
+        if not (
+            isinstance(version, _target) or
+            version is None
+        ):
+            raise ValueError("opset_version must be type of coremltools.AvailableTarget")
+        self._opset_version = version
 
     def __repr__(self):
         return self.__str__()
@@ -876,8 +842,9 @@ class Function(Block):
         return self.to_str("function")
 
     def to_str(self, func_name="function"):
+        func_name = func_name + "[{}]".format(_OPSET[self.opset_version])
         if len(self._input_dict) == 0:
-            s = func_name + "() {"
+            s = func_name + "()"
         else:
             inputs = [(in_name, ph) for in_name, ph in self._input_dict.items()]
             s = func_name + "(" + str(inputs[0][1])

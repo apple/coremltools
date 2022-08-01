@@ -2,6 +2,7 @@
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
+
 import math
 import numpy as np
 
@@ -21,7 +22,7 @@ from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
 from .elementwise_unary import elementwise_unary
 
 
-@register_op(doc_str="")
+@register_op
 class clamped_relu(Operation):
     """
     If ``x >= 0`` return elementwise ``min(beta, x)``, otherwise return
@@ -62,7 +63,7 @@ class clamped_relu(Operation):
         return self.x.sym_type
 
 
-@register_op(doc_str="")
+@register_op
 class elu(Operation):
     """
     If ``x > 0`` return elementwise ``x``, otherwise return ``alpha * (e^x - 1)``.
@@ -106,7 +107,7 @@ class elu(Operation):
         return self.x.sym_type
 
 
-@register_op(doc_str="")
+@register_op
 class gelu(Operation):
     """
     Return the elementwise Gaussian error linear unit activation function for ``x``.
@@ -181,7 +182,7 @@ class gelu(Operation):
         return self.x.sym_type
 
 
-@register_op(doc_str="")
+@register_op
 class leaky_relu(Operation):
     """
     If ``x >= 0`` apply ``x`` elementwise, otherwise apply ``alpha * x`` elementwise.
@@ -225,7 +226,7 @@ class leaky_relu(Operation):
         return self.x.sym_type
 
 
-@register_op(doc_str="")
+@register_op
 class linear_activation(Operation):
     """
     Apply elementwise ``x * alpha + beta``.
@@ -269,7 +270,7 @@ class linear_activation(Operation):
         return self.x.sym_type
 
 
-@register_op(doc_str="")
+@register_op
 class prelu(Operation):
     """
     Where ``i = 1 ... C``, if ``x_i > 0``, return ``x_i`` , otherwise return ``alpha_i * x_i``.
@@ -326,7 +327,7 @@ class prelu(Operation):
         return self.x.sym_type
 
 
-@register_op(doc_str="")
+@register_op
 class relu(elementwise_unary):
     """
     Return elementwise-applied rectified linear activation: ``min(x, 0)``.
@@ -353,7 +354,7 @@ class relu(elementwise_unary):
         return np.maximum(self.x.val, 0)
 
 
-@register_op(doc_str="")
+@register_op
 class relu6(elementwise_unary):
     """
     Return elementwise-applied rectified linear activation: ``min(max(x, 0), 6)``.
@@ -380,7 +381,7 @@ class relu6(elementwise_unary):
         return np.minimum(np.maximum(self.x.val, 0), 6)
 
 
-@register_op(doc_str="")
+@register_op
 class scaled_tanh(Operation):
     """
     Return ``alpha * tanh(beta * x)`` elementwise.
@@ -427,7 +428,7 @@ class scaled_tanh(Operation):
         return self.x.sym_type
 
 
-@register_op(doc_str="")
+@register_op
 class sigmoid(elementwise_unary):
     """
     Return ``sigmoid(x)`` elementwise.
@@ -454,7 +455,7 @@ class sigmoid(elementwise_unary):
         return 1 / (1 + np.exp(-self.x.val))
 
 
-@register_op(doc_str="")
+@register_op
 class sigmoid_hard(Operation):
     """
     Return ``min( max( alpha * x + beta, 0 ), 1 )`` elementwise.
@@ -500,9 +501,9 @@ class sigmoid_hard(Operation):
 
     def type_inference(self):
         return self.x.sym_type
-
-
-@register_op(doc_str="")
+        
+        
+@register_op()
 class silu(Operation):
     """
     Sigmoid Linear Unit, elementwise apply the SiLU or Swish operation ``x * sigmoid(x)``.
@@ -529,7 +530,7 @@ class silu(Operation):
         return types.tensor(self.x.dtype, tuple(self.x.shape))
 
 
-@register_op(doc_str="")
+@register_op
 class softplus(elementwise_unary):
     """
     Return ``log( 1 + e^x )`` elementwise.
@@ -556,7 +557,7 @@ class softplus(elementwise_unary):
         return np.log(1 + np.exp(-np.abs(self.x.val))) + np.maximum(self.x.val, 0)
 
 
-@register_op(doc_str="")
+@register_op
 class softplus_parametric(Operation):
     """
     Return ``alpha_i * log( 1 + e^( beta_i * x_i ) )``, where ``i = 1 ... C``.
@@ -615,7 +616,7 @@ class softplus_parametric(Operation):
         return self.x.sym_type
 
 
-@register_op(doc_str="")
+@register_op
 class softmax(Operation):
     """
     Return ``exp(x) / tf.reduce_sum(tf.exp(x), axis)``.
@@ -660,8 +661,7 @@ class softmax(Operation):
         temp = np.exp(x - max_vals)
         return temp / np.sum(temp, axis=axis, keepdims=True)
 
-
-@register_op(doc_str="")
+@register_op
 class softsign(elementwise_unary):
     """
     Return ``x / ( 1 + |x| )`` applied elementwise.
@@ -688,7 +688,7 @@ class softsign(elementwise_unary):
         return self.x.val / (1 + np.abs(self.x.val))
 
 
-@register_op(doc_str="")
+@register_op
 class thresholded_relu(Operation):
     """
     Return ``x`` if ``x >= alpha``, otherwise return ``0``.

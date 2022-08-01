@@ -4,8 +4,9 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from coremltools.converters.mil.mil import Builder as mb
-from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
+from coremltools.converters.mil.mil.passes.helper import block_context_manager
+from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 from coremltools.converters.mil.mil.types.symbolic import any_symbolic
 
 
@@ -33,6 +34,7 @@ def _match_pattern(op):
         and op.output_shape is None \
         and not any_symbolic(op.outputs[0].shape)
 
+@block_context_manager
 def _handle_block(block):
     for op in list(block.operations):
         for b in op.blocks:
@@ -42,12 +44,11 @@ def _handle_block(block):
             continue
 
         # matched pattern
-        with block:
-            x = mb.conv_transpose(
-                **op.inputs, output_shape=op.outputs[0].shape, \
-                name=op.name+'_has_output_shape', before_op=op
-            )
-            op.enclosing_block.replace_uses_of_var_after_op(
-                anchor_op=op, old_var=op.outputs[0], new_var=x
-            )
-            block.remove_ops([op])
+        x = mb.conv_transpose(
+            **op.inputs, output_shape=op.outputs[0].shape, \
+            name=op.name+'_has_output_shape', before_op=op
+        )
+        op.enclosing_block.replace_uses_of_var_after_op(
+            anchor_op=op, old_var=op.outputs[0], new_var=x
+        )
+        block.remove_ops([op])

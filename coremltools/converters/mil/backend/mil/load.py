@@ -281,7 +281,7 @@ def load(prog, weights_dir, resume_on_errors=False, specification_version=_SPECI
     if "main" not in prog.functions:
         raise ValueError("main function not found in program")
 
-    mil_passes.mil_backend_passes(prog, specification_version)
+    mil_passes.mil_backend_passes(prog)
 
     # if user has specified "ClassifierConfig", then add the "classify" op to the prog
     classifier_config = kwargs.get("classifier_config", None)

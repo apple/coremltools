@@ -200,6 +200,30 @@ def test_slicebyindex_full_elimination():
         expected_output_shapes={block.outputs[0].name: (2, 4)},
     )
 
+def test_slicebyindex_negative_stride():
+    @mb.program(input_specs=[mb.TensorSpec(shape=(2, 4))])
+    def prog(x):
+        r1 = mb.slice_by_index(
+            x=x, 
+            begin=[0, 0],
+            end=[0, 0],
+            stride=[1, -1],
+            begin_mask=[True, True], 
+            end_mask=[True, True]
+        ) 
+        return mb.relu(x=r1)
+
+    prev_prog, prev_block, block = apply_pass_and_basic_check(
+        prog, "common::noop_elimination"
+    )
+    assert get_op_types_in_program(prev_prog) == ["slice_by_index", "relu"]
+    assert get_op_types_in_program(prog) == ["slice_by_index", "relu"]
+    assert_model_is_valid(
+        prog,
+        {"x": (2, 4)},
+        expected_output_shapes={block.outputs[0].name: (2, 4)},
+    )
+
 
 @pytest.mark.parametrize("begin_mask, end_mask",
                          itertools.product(itertools.product([True, False],[True, False]),

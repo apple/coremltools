@@ -117,6 +117,10 @@ class TestMLModel:
 
         if utils._macos_version() >= (12, 0):
             for compute_units in coremltools.ComputeUnit:
+                if (compute_units == coremltools.ComputeUnit.CPU_AND_NE
+                    and utils._macos_version() < (13, 0)):
+                    continue
+
                 loaded_model = MLModel(package.name, compute_units=compute_units)
 
                 preds = loaded_model.predict({"feature_1": 1.0, "feature_2": 1.0})

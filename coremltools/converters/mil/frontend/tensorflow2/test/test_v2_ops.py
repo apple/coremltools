@@ -140,7 +140,7 @@ class TestImageResample(TensorFlow2BaseTest):
         self, use_cpu_only, backend, data_warp_shapes,
     ):
         if backend[0] == "neuralnetwork":
-            pytest.xfail("nn backend not supported")
+            pytest.skip("nn backend not supported")
 
         tfa = pytest.importorskip("tensorflow_addons")
 
@@ -189,7 +189,7 @@ class TestImageTransform(TensorFlow2BaseTest):
     def test(self, use_cpu_only, backend, transforms, interpolation, shapes):
         x_shape, output_shape = shapes
         if backend[0] == "neuralnetwork":
-            pytest.xfail("nn backend not supported")
+            pytest.skip("nn backend not supported")
 
         tfa = pytest.importorskip("tensorflow_addons")
 
@@ -227,7 +227,7 @@ class TestActivationSiLU(TensorFlow2BaseTest):
     )
     def test(self, use_cpu_only, backend, rank, tf_op):
         if backend[0] == "neuralnetwork":
-            pytest.xfail("nn backend not supported")
+            pytest.skip("nn backend not supported")
 
         x_shape = tuple(np.random.randint(low=1, high=4, size=rank))
 
@@ -275,12 +275,9 @@ class TestResizeNearestNeighbor(TensorFlow2BaseTest):
                 return
             if target_shape[-2] % input_shape[-2] != 0:
                 return
-
-        if not use_cpu_only and not half_pixel_centers and backend[0] == "mlprogram":
-            # use_cpu_only == False & half_pixel_centers == False, & backend[0] == mlprogram
-            # then there are numerical errors
-            pytest.xfail("rdar://78321005")
-
+                
+        if backend[0] == "mlprogram" and not use_cpu_only and not half_pixel_centers:
+            pytest.xfail("rdar://97399545 (TestResizeNearestNeighbor failing on mlprogram + GPU + half_pixel_centers=False)")
 
         @make_tf_graph([input_shape])
         def build_model(x):
@@ -304,7 +301,7 @@ class TestResizeNearestNeighbor(TensorFlow2BaseTest):
     )
     def test_keras_layer(self, use_cpu_only, backend, size):
         if backend[0] == "neuralnetwork":
-            pytest.xfail("nn backend not supported")
+            pytest.skip("nn backend not supported")
 
         x_shape = tuple(np.random.randint(low=1, high=4, size=4))
 
@@ -331,14 +328,11 @@ class TestResizeNearestNeighbor(TensorFlow2BaseTest):
         ),
     )
     def test_tf_image_resize(self, use_cpu_only, backend, size, method):
-        if backend[0] == "mlprogram" and not use_cpu_only:
-            pytest.xfail("rdar://78343225 ((MIL GPU) Core ML Tools Unit Test failures [numerical error])")
-
         if backend[0] == "mlprogram" and size == (1, 1):
             pytest.xfail("rdar://79699954 (Nearest neighbor resize numerical mismatch when output size is (1,1))")
 
         if backend[0] == "neuralnetwork":
-            pytest.xfail("nn backend not supported")
+            pytest.skip("nn backend not supported")
 
         x_shape = tuple(np.random.randint(low=1, high=3, size=4))
 
@@ -482,9 +476,6 @@ class TestControlFlowFromAutoGraph(TensorFlowBaseTest):
         "use_cpu_only, backend", itertools.product([True, False], backends)
     )
     def test_if_binary_add_if_else_mul(self, use_cpu_only, backend):
-        if backend[0] == "mlprogram":
-            pytest.xfail("rdar://81983176 (MLProgram Failure: Mismatched elements)")
-
         @make_tf_graph([(1,), (1,)])
         def build_model(x, y):
             if x > y:

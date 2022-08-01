@@ -495,10 +495,6 @@ class TestConvolution(TensorFlowBaseTest):
         backend,
         padding,
     ):
-
-        if backend[0] == "mlprogram" and ct.utils._macos_version() > (12, 0):
-            pytest.xfail("rdar://88857567")
-
         # Test same padding
         input_layer = Input(batch_size=1, shape=(None, None, 1))
         layer = Conv2D(
@@ -1609,7 +1605,10 @@ class TestUpSampling(TensorFlowBaseTest):
                     assert len(layer.upsample.fractionalScalingFactor) == 0
 
 class TestGelu(TensorFlowBaseTest):
-    @pytest.mark.xfail(_get_version(_tf.__version__) < _StrictVersion("2.4.0"), reason="Gelu is a new layer for tf 2.4.0 and above.")
+    @pytest.mark.skipif(
+        _get_version(_tf.__version__) < _StrictVersion("2.4.0"),
+        reason="Gelu is a new layer for tf 2.4.0 and above."
+    )
     @pytest.mark.parametrize(
         "use_cpu_only, backend, rank, approximate",
         itertools.product(

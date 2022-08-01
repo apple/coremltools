@@ -4,10 +4,11 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from coremltools.converters.mil.mil import Builder as mb
-from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
+from coremltools.converters.mil.mil.passes.helper import block_context_manager
+from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 
-
+@block_context_manager
 def _move_operations_to_the_end_block(block, op_type_to_move):
     # Moves ops with `op_type_to_move` in `block.operations` (list) to the end of the program.
     # Note: ops with `op_type_to_move` and is dead code are moved toward end, which can be eliminated
@@ -40,20 +41,19 @@ def _move_operations_to_the_end_block(block, op_type_to_move):
                 first_use_indices = [block.operations.index(first_use_op) for first_use_op in first_consumers]
                 before_op = block.operations[min(first_use_indices)]
 
-            with block:
-                # Create new copy of current operation
-                new_var = getattr(mb, op.op_type)(**op.inputs, before_op=before_op)
+            # Create new copy of current operation
+            new_var = getattr(mb, op.op_type)(**op.inputs, before_op=before_op)
 
-                if not isinstance(new_var, (list, tuple)):
-                    new_var = [new_var]
+            if not isinstance(new_var, (list, tuple)):
+                new_var = [new_var]
 
-                # Override current_op to be newly created op to ensure `first_use`
-                # points to newly created op instead of old one.
-                current_op = new_var[0].op
+            # Override current_op to be newly created op to ensure `first_use`
+            # points to newly created op instead of old one.
+            current_op = new_var[0].op
 
-                for old_output_var, new_output_var in zip(op.outputs, new_var):
-                    block.replace_uses_of_var_after_op(
-                        anchor_op=None, old_var=old_output_var, new_var=new_output_var)
+            for old_output_var, new_output_var in zip(op.outputs, new_var):
+                block.replace_uses_of_var_after_op(
+                    anchor_op=None, old_var=old_output_var, new_var=new_output_var)
 
         # Collect input vars from sub-block if present
         relevant_inputs = set()

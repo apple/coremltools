@@ -5,4 +5,4 @@ keras==2.8.0
 
 tensorflow-addons==0.16.1
 tensorflow-hub==0.12.0
-transformers==2.10.0; python_version > '3.6'
+transformers==4.17.0; python_version > '3.6'

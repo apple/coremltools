@@ -4,7 +4,7 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import unittest
-from sklearn.ensemble import RandomForestRegressor
+
 from coremltools._deps import _HAS_SKLEARN
 from coremltools.proto import Model_pb2
 from coremltools.proto import FeatureTypes_pb2

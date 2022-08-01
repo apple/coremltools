@@ -917,52 +917,6 @@ class NewLayersSimpleTest(CorrectnessTest):
         self._test_model(builder.spec, feed_dict, expected, useCPUOnly=True)
         self._test_model(builder.spec, feed_dict, expected, useCPUOnly=False)
 
-    @pytest.mark.xfail
-    def test_dynamic_weight_deconv(self):
-        # Expect to fail in Core ML 3
-        input_dim = (1, 1, 16, 16)
-        # weight layout: (output_channels, kernel_channels, height, width)
-        weight_dim = (1, 1, 3, 3)
-        output_dim = (1, 1, 18, 18)
-        output_channels, kernel_channels, height, width = weight_dim
-
-        input_features = [
-            ("data", datatypes.Array(*input_dim)),
-            ("weight", datatypes.Array(*weight_dim)),
-        ]
-        output_features = [("output", None)]
-
-        builder = neural_network.NeuralNetworkBuilder(
-            input_features, output_features, disable_rank5_shape_mapping=True
-        )
-
-        builder.add_convolution(
-            name="deconv",
-            kernel_channels=kernel_channels,
-            output_channels=output_channels,
-            height=height,
-            width=width,
-            stride_height=1,
-            stride_width=1,
-            border_mode="valid",
-            groups=1,
-            W=None,
-            b=None,
-            has_bias=False,
-            is_deconv=True,
-            input_name=["data", "weight"],
-            output_name="output",
-        )
-
-        input_val = np.ones(input_dim)
-        weight_val = np.ones(weight_dim)
-        expected = np.ones(output_dim) * 27
-
-        feed_dict = {"data": input_val, "weight": weight_val}
-        expected = {"output": expected}
-
-        self._test_model(builder.spec, feed_dict, expected)
-
     def test_batched_mat_mul_cpu(self, cpu_only=True):
         a_shapes = [
             (10,),
@@ -1754,7 +1708,6 @@ class NewLayersSimpleTest(CorrectnessTest):
                 expected = {"output": func(a, b, dtype=np.float32)}
                 self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
-    @pytest.mark.xfail(reason="rdar://93912621")
     def test_elementwise_binary_gpu(self):
         self.test_elementwise_binary_cpu(cpu_only=False)
 
@@ -4048,8 +4001,8 @@ class NewLayersSimpleTest(CorrectnessTest):
             if isinstance(model, str):
                 model = coremltools.models.MLModel(model)
 
-            model = coremltools.models.MLModel(model, useCPUOnly=True)
-            prediction = model.predict(inputs, useCPUOnly=True)
+            model = coremltools.models.MLModel(model)
+            prediction = model.predict(inputs)
 
             # validate each distribution separately
             logits = x.reshape(2, num_class)
@@ -4324,7 +4277,6 @@ class NewLayersSimpleTest(CorrectnessTest):
                 self._test_model(builder.spec, inputs, expected, useCPUOnly=cpu_only)
                 self.assertEqual(target_rank, builder._get_rank("output"))
 
-    @pytest.mark.xfail(reason="Fixed in https://github.com/apple/coremltools/pull/634")
     def test_reshape_like_gpu(self):
         self.test_reshape_like_cpu(cpu_only=False)
 
@@ -6744,6 +6696,7 @@ class IOS14SingleLayerTests(CorrectnessTest):
                         slices.append(slice(None, None, None))
                     else:
                         slices.append(slice(begin, begin + size, 1))
+                slices = tuple(slices)
                 expected = {"output": x[slices]}
 
                 input_features = [

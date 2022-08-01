@@ -47,7 +47,7 @@ class TestCustomMatMul:
     # Define SSA Custom Op for Sparse MatMul
     # This will map to `custom_op` in SSA with binding information
     # to bind input spec to the custom implementation
-    @register_op(doc_str="Sparse MatMul Layer", is_custom_op=True)
+    @register_op(is_custom_op=True)
     class custom_sparse_matmul(Operation):
         # Defining input spec for current op
         input_spec = InputSpec(
@@ -120,7 +120,7 @@ class TestCustomMatMul:
         self, use_cpu_only, backend, transpose_a, transpose_b, a_is_sparse, b_is_sparse, b_is_const,
     ):
         if backend[0] == 'mlprogram':
-            pytest.xfail("Custom layer not supported with ML Program backend")
+            pytest.skip("Custom layer not supported with ML Program backend")
 
         rank = 2
         shape = list(np.random.randint(low=3, high=100, size=1)) * rank
@@ -177,7 +177,7 @@ class TestCustomTopK:
     @pytest.fixture(scope="class")
     def create_custom_TopK(self):
         # Defining SSA TopK Op
-        @register_op(doc_str="Custom TopK Layer", is_custom_op=True)
+        @register_op(is_custom_op=True)
         class custom_topk(Operation):
             input_spec = InputSpec(
                 x=TensorInputType(),
@@ -243,7 +243,7 @@ class TestCustomTopK:
     @pytest.mark.usefixtures("create_custom_TopK")
     def test_tf(self, use_cpu_only, backend, rank, k):
         if backend[0] == 'mlprogram':
-            pytest.xfail("Custom layer not supported with ML Program backend")
+            pytest.skip("Custom layer not supported with ML Program backend")
 
         shape = np.random.randint(low=3, high=6, size=rank)
         with tf.Graph().as_default() as graph:

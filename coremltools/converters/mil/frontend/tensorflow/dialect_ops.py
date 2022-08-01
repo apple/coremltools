@@ -28,7 +28,7 @@ register_op = SSAOpRegistry.register_op
 #
 # tf_make_list allows elem_shape to be unspecified. core op make_list does
 # not allow that.
-@register_op(doc_str="TODO", namespace="tf")
+@register_op(namespace="tf")
 class tf_make_list(Operation):
     input_spec = InputSpec(
         init_length=IntInputType(optional=True),
@@ -104,25 +104,24 @@ class TfLSTMBase(Operation):
                 )
 
 
-@register_op(
-    doc_str="""
-                     xh = [x, h_prev]
-                     [i, ci, f, o] = xh * w + b
-                     f = f + forget_bias
-                     if not use_peephole:
-                       wci = wcf = wco = 0
-                     i = sigmoid(cs_prev .* wci + i)
-                     f = sigmoid(cs_prev .* wcf + f)
-                     ci = tanh(ci)
-                     cs = ci .* i + cs_prev .* f
-                     cs = clip(cs, cell_clip)
-                     o = sigmoid(cs * wco + o)
-                     co = tanh(cs)
-                     h = co .* o
-                     """,
-    namespace="tf",
-)
+@register_op(namespace="tf")
 class tf_lstm_block_cell(TfLSTMBase):
+    """
+    xh = [x, h_prev]
+    [i, ci, f, o] = xh * w + b
+    f = f + forget_bias
+    
+    if not use_peephole:
+        wci = wcf = wco = 0
+        i = sigmoid(cs_prev .* wci + i)
+        f = sigmoid(cs_prev .* wcf + f)
+        ci = tanh(ci)
+        cs = ci .* i + cs_prev .* f
+        cs = clip(cs, cell_clip)
+        o = sigmoid(cs * wco + o)
+        co = tanh(cs)
+        h = co .* o
+    """
     input_spec = (
         InputSpec(x=TensorInputType(),) + TfLSTMBase.input_spec  # [batch, input_dim]
     )
@@ -149,13 +148,11 @@ class tf_lstm_block_cell(TfLSTMBase):
         )  # h
 
 
-@register_op(
-    doc_str="""
-                     Apply LSTM to an input sequence
-                     """,
-    namespace="tf",
-)
+@register_op(namespace="tf")
 class tf_lstm_block(TfLSTMBase):
+    """
+    Apply LSTM to an input sequence
+    """
     input_spec = (
         InputSpec(
             seq_len=IntInputType(),  # int

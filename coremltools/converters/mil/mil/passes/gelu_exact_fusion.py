@@ -3,10 +3,14 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from coremltools.converters.mil.mil.passes.pass_registry import register_pass
-from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil import Builder as mb
-from .helper import _check_child_op_type, _check_var_scalar_value
+from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
+from coremltools.converters.mil.mil.passes.helper import (
+    _check_child_op_type,
+    _check_var_scalar_value,
+    block_context_manager,
+)
+from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 
 def _try_to_transform(op, block):
     ops_to_remove = []
@@ -84,7 +88,7 @@ def _try_to_transform(op, block):
     block.remove_ops(ops_to_remove)
     return True
 
-
+@block_context_manager
 def _fuse_gelu_exact_block(block):
     fusion_occurred = False
     for op in list(block.operations):
@@ -97,11 +101,10 @@ def _fuse_gelu_exact_block(block):
             continue
 
         if op.op_type in ["mul", "real_div"]:
-            with block:
-                fusion_occurred = _try_to_transform(op, block)
-                # has to break as the downstream iterator is affected.
-                if fusion_occurred:
-                    return fusion_occurred
+            fusion_occurred = _try_to_transform(op, block)
+            # has to break as the downstream iterator is affected.
+            if fusion_occurred:
+                return fusion_occurred
     return fusion_occurred
 
 @register_pass(namespace="common")

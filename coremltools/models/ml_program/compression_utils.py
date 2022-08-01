@@ -43,27 +43,22 @@ def _apply_graph_pass(mlmodel, graph_pass):
        raise TypeError("weight compression not applicable for model type {}".format(model_type))
 
     assert isinstance(graph_pass, _AbstractQuantizationPass), "compression pass must be an AbstractQuantizationPass instance"
-    
-    program_spec = model_spec.mlProgram
-    model_specification_version = model_spec.specificationVersion
-    prog =  _milproto_to_pymil(
-        program_spec=program_spec,
-        specification_version=model_specification_version,
+    specification_version = max(model_spec.specificationVersion, _DEFAULT_SPECIFICATION_VERSION_FOR_COMPRESSION)
+    prog = _milproto_to_pymil(
+        model_spec=model_spec,
+        specification_version=specification_version,
         file_weights_dir=mlmodel.weights_dir,
     )
-
-    prog.skip_all_passes = True
 
     # apply compression graph pass
     graph_pass.apply(prog)
 
     # convert the pymil program back to mlmodel
-    compress_model_specification_version = max(model_specification_version, _DEFAULT_SPECIFICATION_VERSION_FOR_COMPRESSION)
     compressed_mlmodel = _mil_convert(
         prog,
         convert_to="mlprogram",
         convert_from="milinternal",
-        specification_version=compress_model_specification_version,
+        specification_version=specification_version,
         compute_units=mlmodel.compute_unit,
         model_description=model_spec.description,
     )

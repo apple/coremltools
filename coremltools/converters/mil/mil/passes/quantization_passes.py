@@ -7,8 +7,12 @@ from enum import Enum as _Enum
 
 import numpy as np
 
-from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil import (
+    Builder as mb,
+    types
+)
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
+from coremltools.converters.mil.mil.passes.helper import block_context_manager
 from coremltools.converters.mil.mil.program import Program
 
 
@@ -61,7 +65,8 @@ class AbstractQuantizationPass(AbstractGraphPass):
             raise TypeError(
                 'Transform "{}" can only be applied on PyMIL programs.'.format(self)
             )
-
+            
+        @block_context_manager
         def apply_block(block):
             for op in list(block.operations):
                 for b in op.blocks:
@@ -149,19 +154,11 @@ class FP16ComputePrecision(AbstractQuantizationPass):
         return True
 
     def is_valid_parameter(self, op, param_name):
-
-        if op.op_type in ["resample"] and param_name == "coordinates":
-            return False
-
-        if op.op_type in ["crop_resize"] and param_name == "spatial_scale":
-            return False
-
-        if op.op_type in ["upsample_nearest_neighbor"] and param_name in ["scale_factor_height", "scale_factor_width"]:
-            return False
-
-        if op.op_type in ["upsample_bilinear"] and param_name in ["scale_factor_height", "scale_factor_width"]:
-            return False
-
+        type_domain = getattr(op.input_spec.input_types[param_name], "type_domain", None)
+        if type_domain is not None:
+            if len(type_domain) == 0:
+                return True
+            return types.fp16 in type_domain
         return True
 
     def _check_underflow_to_zero(self, new_var, var):
@@ -207,19 +204,19 @@ class FP16ComputePrecision(AbstractQuantizationPass):
                     continue
 
                 inputs_modified = True
-                with block:
-                    casted_var_name = var.name + "_to_fp16"
-                    if len(var._child_ops) > 1 and casted_var_name in self.cache_vars and (self.cache_vars[casted_var_name] in block._visible_vars_in_block()[1]):
-                        casted_inputs[param][i] = self.cache_vars[casted_var_name]
-                    else:
-                        x = mb.cast(
-                            x=var, dtype="fp16", name=casted_var_name, before_op= op
-                        )
-                        self._check_underflow_to_zero(x, var)
+                casted_var_name = var.name + "_to_fp16"
+                if len(var._child_ops) > 1 and casted_var_name in self.cache_vars and (
+                        block.is_var_visible_in_block(self.cache_vars[casted_var_name])):
+                    casted_inputs[param][i] = self.cache_vars[casted_var_name]
+                else:
+                    x = mb.cast(
+                        x=var, dtype="fp16", name=casted_var_name, before_op= op
+                    )
+                    self._check_underflow_to_zero(x, var)
 
-                        casted_inputs[param][i] = x
-                        if len(var._child_ops) > 1:
-                            self.cache_vars[casted_var_name] = casted_inputs[param][i]
+                    casted_inputs[param][i] = x
+                    if len(var._child_ops) > 1:
+                        self.cache_vars[casted_var_name] = casted_inputs[param][i]
 
             if not is_list_input:
                 casted_inputs[param] = casted_inputs[param][0]
@@ -230,8 +227,7 @@ class FP16ComputePrecision(AbstractQuantizationPass):
             )
             casted_inputs["name"] = op.name + "_cast"
             casted_inputs["before_op"] = op
-            with block:
-                quant_output = getattr(mb, op.op_type)(**casted_inputs)
+            quant_output = getattr(mb, op.op_type)(**casted_inputs)
 
             if not isinstance(quant_output, (list, tuple)):
                 quant_output = [quant_output]
@@ -240,19 +236,24 @@ class FP16ComputePrecision(AbstractQuantizationPass):
                 if old_output_var.is_tensor_or_scalar_of(dtype="fp32") and (
                     not new_output_var.is_tensor_or_scalar_of(dtype="fp32")
                 ):
-                    with block:
-                        x = mb.cast(
-                            x=new_output_var,
-                            dtype="fp32",
-                            name=new_output_var.name + "_to_fp32",
-                            before_op=op,
-                        )
-                        op.enclosing_block.replace_uses_of_var_after_op(
-                            anchor_op=op, old_var=old_output_var, new_var=x
-                        )
+                    x = mb.cast(
+                        x=new_output_var,
+                        dtype="fp32",
+                        name=new_output_var.name + "_to_fp32",
+                        before_op=op,
+                    )
+                    op.enclosing_block.replace_uses_of_var_after_op(
+                        anchor_op=op,
+                        old_var=old_output_var,
+                        new_var=x,
+                        force_replace=True,
+                    )
                 else:
                     op.enclosing_block.replace_uses_of_var_after_op(
-                        anchor_op=op, old_var=old_output_var, new_var=new_output_var
+                        anchor_op=op,
+                        old_var=old_output_var,
+                        new_var=new_output_var,
+                        force_replace=True,
                     )
 
             block.remove_ops([op])

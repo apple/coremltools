@@ -1,10 +1,10 @@
-#  Copyright (c) 2020, Apple Inc. All rights reserved.
+#  Copyright (c) 2022, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
+
 import numpy as np
 
-from ._op_reqs import register_op
 from coremltools.converters.mil.mil import (
     BoolInputType,
     DefaultInputs,
@@ -15,148 +15,17 @@ from coremltools.converters.mil.mil import (
     IntTensorInputType,
     IntOrFloatInputType,
     Operation,
+    ScalarOrTensorInputType,
     StringInputType,
     TensorInputType,
     types,
 )
+from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
+from coremltools.converters.mil.mil.ops.defs.iOS15 import _IOS15_TARGET
 from coremltools.converters.mil.mil.types.symbolic import is_symbolic
 
 
-@register_op(doc_str="")
-class affine(Operation):
-    """
-    Apply a linear affine transform to the input 2D image tensor. The value at the
-    ``(x, y)`` (i.e., ``(w, h)``) coordinate of the output is computed by first computing
-    the coordinates ``x’`` and ``y’`` with the following equation, and then computing the
-    value at the coordinate ``(x’,y’)`` in the input image using either bilinear or
-    nearest neighbor interpolation. If the ``(x’, y’)`` point falls outside the input
-    image, then padding information is used to compute the value.
-    
-    .. sourcecode:: python
-
-    	* x’ = a0 * x + a1 * y + a2
-    	* y’ = b0 * x + b1 * y + b2
-
-
-    Parameters
-    ----------
-    x: tensor<[B, C, H1, W1], T>
-        * Must be rank ``4``.
-    transform_matrix: tensor<[D, 6], T>
-        * Must be rank ``2``.
-        * ``D`` can be either ``B`` or 1.
-            * If ``D == B``, there is a separate transform matrix for each batch.
-            * If ``D == 1``, the same matrix is used for all input batches.
-            * For each batch: ``[a0, a1, a2, b0, b1, b2]``.
-    output_height: const<i32>
-        * Target output height
-    output_width: const<i32>
-        * Target output width
-    sampling_mode: const<str>
-        * Allowed values: ``"bilinear"``
-    padding_mode: const<str>
-        * Allowed values: ``"constant"``.
-        * Note that the following example is 1D case for brevity. 
-          The op supports only 2D image input.
-        * If ``padding_mode == "constant"``:
-            * The input image is assumed to be padded with the padding_value.
-            * For example, ``|1, 2, 3| -> |0, 0, 0, 1, 2, 3, 0, 0, 0|``.
-    padding_value: const<T>
-        * Currently non-zero values are not supported.
-        * To be used only when ``padding_mode == "constant"``, ignored in other cases.
-    coordinates_mode: const<str>
-        * Allowed values: ``"normalized_minus_one_to_one"``
-        * If ``coordinates_mode == "normalized_minus_one_to_one"``, in-image values are ``[-1, 1]``.
-        * For example, if ``coordinates_mode == "normalized_minus_one_to_one"``,
-          the in range values are ``[-1, 1]``. That is:
-            * ``(-1, -1)``, i.e. ``(w=-1, h=-1)``, corresponds to the top-left pixel.
-            * ``(1, -1)``, i.e. ``(w=1, h=-1)``, corresponds to the top-right pixel.
-            * ``(-1, 1)``, i.e. ``(w=-1, h=1)``, corresponds to the bottom-left pixel.
-            * ``(1, 1)``, i.e. ``(w=1, h=1)``, corresponds to the bottom-right pixel.
-    align_corners: const<bool>
-        * Currently ``align_corners=False`` is not supported.
-        * To be used only when ``coordinates_mode != unnormalized``, ignored otherwise.
-        * if ``align_corners == True``, the extrema coordinates correspond
-          to the center of the first and last corner pixels.
-        * if ``align_corners == False``, the extrema coordinates correspond
-          to the edge of the first and last corner pixels.
-
-    Returns
-    -------
-    tensor<[B, C, output_height, output_width], T>
-
-    Attributes
-    ----------
-    T: fp16, fp32
-    """
-
-    input_spec = InputSpec(
-        x=TensorInputType(),
-        transform_matrix=TensorInputType(),
-        output_height=IntInputType(const=True),
-        output_width=IntInputType(const=True),
-        sampling_mode=StringInputType(const=True),
-        padding_mode=StringInputType(const=True),
-        padding_value=FloatInputType(const=True),
-        coordinates_mode=StringInputType(const=True),
-        align_corners=BoolInputType(const=True),
-    )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
-    def type_inference(self):
-        if self.x.rank != 4:
-            raise ValueError(
-                'input "x" to the "affine" op must be a rank 4 tensor. '
-                "Got rank {} tensor of shape {}".format(
-                    self.x.rank, self.x.shape
-                )
-            )
-        if self.transform_matrix.rank != 2:
-            raise ValueError(
-                'input "transform_matrix" to the "affine" op must be a rank 2 tensor. '
-                "Got rank {} tensor of shape {}".format(
-                   self.transform_matrix.rank,  self.transform_matrix.shape
-                )
-            )
-        if self.sampling_mode.val.lower() != "bilinear":
-            raise NotImplementedError(
-                'input "sampling_mode" to the "affine" not implemented. '
-                'Got "{}"'.format(self.sampling_mode.val)
-            )
-        if self.coordinates_mode.val.lower() != "normalized_minus_one_to_one":
-            raise NotImplementedError(
-                'input "coordinates_mode" to the "affine" not implemented. '
-                'Got "{}"'.format(self.coordinates_mode.val)
-            )
-        if self.padding_mode.val.lower() != "constant" or self.padding_value.val != 0.0:
-            raise NotImplementedError(
-                'input "padding_mode" to the "affine" not implemented. '
-                'Got "{}" with "padding_value={}"'.format(
-                    self.padding_mode.val, self.padding_value.val
-                )
-            )
-
-        input_shape = self.x.shape
-        transform_matrix_shape = self.transform_matrix.shape
-        if (
-            not is_symbolic(transform_matrix_shape[-1])
-            and transform_matrix_shape[-1] != 6
-        ):
-            raise ValueError(
-                'input "transform_matrix" to the "affine" op last dimension must be 6 '
-                "[a0, a1, a2, b0, b1, b2], "
-                "Got {} for last dimension".format(transform_matrix_shape[-1])
-            )
-
-        ret_shape = list(input_shape)
-        ret_shape[2] = self.output_height.val
-        ret_shape[3] = self.output_width.val
-        return types.tensor(self.x.dtype, tuple(ret_shape))
-
-
-@register_op(doc_str="")
+@register_op
 class upsample_nearest_neighbor(Operation):
     """
     Upsample the spatial dimensions (last two dimensions) of the input
@@ -188,8 +57,16 @@ class upsample_nearest_neighbor(Operation):
 
     input_spec = InputSpec(
         x=TensorInputType(),
-        scale_factor_height=IntOrFloatInputType(const=True, optional=True),
-        scale_factor_width=IntOrFloatInputType(const=True, optional=True),
+        scale_factor_height=ScalarOrTensorInputType(
+            const=True,
+            optional=True,
+            type_domain=(np.int32, np.float32)
+        ),
+        scale_factor_width=ScalarOrTensorInputType(
+            const=True,
+            optional=True,
+            type_domain=(np.int32, np.float32)
+        ),
     )
 
     def default_inputs(self):
@@ -213,139 +90,7 @@ class upsample_nearest_neighbor(Operation):
         return types.tensor(self.x.dtype, ret_shape)
 
 
-@register_op(doc_str="")
-class resample(Operation):
-    """
-    Resample the input image tensor ``x`` at the ``coordinates``.
-    Resampling is required if the coordinates do not correspond to exact
-    pixels in the input image. The ``sampling_mode ``determines
-    the algorithm used for resampling and computing the values.
-
-    Parameters
-    ----------
-    x: tensor<[B, C, H1, W1], T>
-        * Must be rank ``4``.
-    coordinates: tensor<[B, H2, W2, 2], U>
-        * Must be rank ``4``.
-        * Coordinates are provided in the order ``(x, y)`` (i.e. ``(w, h)``).
-        * The value of each output location ``output[b, c, h, w]`` is calculated
-          by sampling from the input image ``x[b, c, :, :]``.
-        * The pixel at the ``(x, y)`` location corresponds to the length-2
-          vector: ``coordinates[b, h, w, :]``.
-        * Coordinate (normalized or unnormalized) should be specified according
-          to ``coordinates_mode``.
-    sampling_mode: const<str>
-        * Allowed values: ``"bilinear" , "nearest"``
-    padding_mode: const<str>
-        * Allowed values: ``"constant"``, ``"border"``, ``"reflection"``, ``"symmetric"``
-        * Note that the following example is 1D case for brevity.
-          The op supports only 2D image input.
-        * If ``padding_mode == "constant"``:
-            * The input image is assumed to be padded with the ``padding_value``.
-            * For example: ``|1, 2, 3| -> |0, 0, 0, 1, 2, 3, 0, 0, 0|``
-        * if ``padding_mode == "border"``:
-            * The input image is assumed to be padded with the values replicated
-              from the values at the edge. This is also referred to as the
-              "clamped" or "replication" mode, since the padded values are
-              clamped to the border values.
-            * For example: ``|1, 2, 3| -> |1, 1, 1, 1, 2, 3, 3, 3, 3|``
-        * If ``padding_mode == "reflection"``:
-            * The border values are reflected, *not* including the values at the edge/border.
-            * For example: ``|1, 2, 3| -> |2, 3, 2, 1, 2, 3, 2, 1, 2|``
-        * If ``padding_mode == "symmetric"``:
-            * Values are reflected, including the border/edge values.
-            * For example: ``|1, 2, 3| -> |3, 2, 1 , 1, 2, 3, 3, 2, 1|``
-    padding_value: const<T>
-        * To be used only when ``padding_mode == "constant"``, ignored in other cases.
-    coordinates_mode: const<str>
-        * Allowed values: ``"unnormalized"``, ``"normalized_minus_one_to_one"``,
-          ``"normalized_zero_to_one"``
-        * If ``coordinates_mode == "unnormalized"``, the coordinates input values
-          are interpreted to be in range ``[0, W - 1] / [0, H - 1]``, which
-          corresponds to the in-image point.
-        * If ``coordinates_mode == "normalized_minus_one_to_one"``,
-          the in-image values are ``[-1, 1]``.
-        * If ``coordinates_mode == "normalized_zero_to_one"``,
-          in-image values are ``[0, 1]``.
-        * For example, if ``coordinates_mode == "normalized_minus_one_to_one"``,
-          the in range values are [-1, 1]. That is:
-            * ``(-1, -1)``, i.e. ``(w=-1, h=-1)``, corresponds to the top-left pixel.
-            * ``(1, -1)``, i.e. ``(w=1, h=-1)``, corresponds to the top-right pixel.
-            * ``(-1, 1)``, i.e. ``(w=-1, h=1)``, corresponds to the bottom-left pixel.
-            * ``(1, 1)``, i.e. ``(w=1, h=1)``, corresponds to the bottom-right pixel.
-    align_corners: const<bool>
-        * If ``align_corners == True``, the extrema coordinates correspond
-          to the center of the first and last corner pixels.
-        * If ``align_corners == False``, the extrema coordinates correspond
-          to the edge of the first and last corner pixels.
-
-    Returns
-    -------
-    tensor<[B, C, H2, W2], T>
-
-    Attributes
-    ----------
-    T: fp16, fp32
-    U: fp32, i32
-    """
-
-    input_spec = InputSpec(
-        x=TensorInputType(),
-        coordinates=TensorInputType(),
-        sampling_mode=StringInputType(const=True),
-        padding_mode=StringInputType(const=True),
-        padding_value=FloatInputType(const=True),
-        coordinates_mode=StringInputType(const=True),
-        align_corners=BoolInputType(const=True),
-    )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
-    def type_inference(self):
-        if self.x.rank != 4:
-            raise ValueError(
-                'input "x" to the "resample" op must be a rank 4 tensor. '
-                "Got rank {} tensor of shape {}".format(
-                    self.x.rank, self.x.shape
-                )
-            )
-        if self.coordinates.rank != 4:
-            raise ValueError(
-                'input "coordinates" to the "resample" op must be a rank 4 tensor. '
-                "Got rank {} tensor of shape {}".format(
-                    self.coordinates.rank, self.coordinates.shape
-                )
-            )
-
-        input_shape = self.x.shape
-        coord_shape = self.coordinates.shape
-        if (
-            not is_symbolic(input_shape[0])
-            and not is_symbolic(coord_shape[0])
-            and input_shape[0] != coord_shape[0]
-        ):
-            raise ValueError(
-                'input "x" and "coordinates" to the "resample" must agree on '
-                "dimension of batch size: {} vs. {}".format(
-                    input_shape[0], coord_shape[0]
-                )
-            )
-        if not is_symbolic(coord_shape[-1]) and coord_shape[-1] != 2:
-            raise ValueError(
-                'input "coordinates" to the "resample" op last dimension must be 2. '
-                "Got {} for last dimension".format(
-                    coord_shape[-1]
-                )
-            )
-
-        ret_shape = list(input_shape)
-        ret_shape[2] = coord_shape[1]  # Output height
-        ret_shape[3] = coord_shape[2]  # Output width
-        return types.tensor(self.x.dtype, tuple(ret_shape))
-
-
-@register_op(doc_str="")
+@register_op
 class resize_nearest_neighbor(Operation):
     """
     Resize the spatial (last two) dimensions to the specified target size
@@ -403,7 +148,7 @@ class resize_nearest_neighbor(Operation):
         return types.tensor(self.x.dtype, ret_shape)
 
 
-@register_op(doc_str="")
+@register_op
 class upsample_bilinear(Operation):
     """
     Upsample the spatial dimensions (last two dimensions) of the input
@@ -485,10 +230,16 @@ class upsample_bilinear(Operation):
 
     input_spec = InputSpec(
         x=TensorInputType(),
-        scale_factor_height=IntOrFloatInputType(const=True,
-          optional=True),
-        scale_factor_width=IntOrFloatInputType(const=True,
-          optional=True),
+        scale_factor_height=ScalarOrTensorInputType(
+            const=True,
+            optional=True,
+            type_domain=(np.int32, np.float32)
+        ),
+        scale_factor_width=ScalarOrTensorInputType(
+            const=True,
+            optional=True,
+            type_domain=(np.int32, np.float32)
+        ),
         align_corners=BoolInputType(const=True, optional=True),
     )
 
@@ -514,7 +265,7 @@ class upsample_bilinear(Operation):
         return types.tensor(self.x.dtype, ret_shape)
 
 
-@register_op(doc_str="")
+@register_op
 class resize_bilinear(Operation):
     """
     Resize the spatial (last two) dimensions to the specified target size
@@ -652,7 +403,7 @@ class resize_bilinear(Operation):
         return types.tensor(self.x.dtype, ret_shape)
 
 
-@register_op(doc_str="")
+@register_op
 class crop_resize(Operation):
     """
     Resize the spatial dimensions (last two dimensions) of the first input
@@ -746,7 +497,7 @@ class crop_resize(Operation):
         target_height=IntInputType(const=True, optional=True),
         target_width=IntInputType(const=True, optional=True),
         normalized_coordinates=BoolInputType(const=True, optional=True),
-        spatial_scale=FloatInputType(const=True, optional=True),
+        spatial_scale=ScalarOrTensorInputType(const=True, optional=True, type_domain=(np.float32,)),
         box_coordinate_mode=StringInputType(const=True, optional=True),
         sampling_mode=StringInputType(const=True, optional=True),
     )
@@ -798,7 +549,7 @@ class crop_resize(Operation):
         return types.tensor(self.x.dtype, ret_shape)
 
 
-@register_op(doc_str="")
+@register_op
 class crop(Operation):
     """
     Crop the spatial dimensions (last two dimensions) of the input by the
@@ -867,3 +618,268 @@ class crop(Operation):
             + [input_shape[-1] - crop_width[0] - crop_width[1]]
         )
         return types.tensor(self.x.dtype, ret_shape)
+
+@register_op(opset_version=_IOS15_TARGET)
+class affine(Operation):
+    """
+    Apply a linear affine transform to the input 2D image tensor. The value at the
+    ``(x, y)`` (i.e., ``(w, h)``) coordinate of the output is computed by first computing
+    the coordinates ``x’`` and ``y’`` with the following equation, and then computing the
+    value at the coordinate ``(x’,y’)`` in the input image using either bilinear or
+    nearest neighbor interpolation. If the ``(x’, y’)`` point falls outside the input
+    image, then padding information is used to compute the value.
+    
+    .. sourcecode:: python
+
+        * x’ = a0 * x + a1 * y + a2
+        * y’ = b0 * x + b1 * y + b2
+
+
+    Parameters
+    ----------
+    x: tensor<[B, C, H1, W1], T>
+        * Must be rank ``4``.
+    transform_matrix: tensor<[D, 6], T>
+        * Must be rank ``2``.
+        * ``D`` can be either ``B`` or 1.
+            * If ``D == B``, there is a separate transform matrix for each batch.
+            * If ``D == 1``, the same matrix is used for all input batches.
+            * For each batch: ``[a0, a1, a2, b0, b1, b2]``.
+    output_height: const<i32>
+        * Target output height
+    output_width: const<i32>
+        * Target output width
+    sampling_mode: const<str>
+        * Allowed values: ``"bilinear"``
+    padding_mode: const<str>
+        * Allowed values: ``"constant"``.
+        * Note that the following example is 1D case for brevity.
+          The op supports only 2D image input.
+        * If ``padding_mode == "constant"``:
+            * The input image is assumed to be padded with the padding_value.
+            * For example, ``|1, 2, 3| -> |0, 0, 0, 1, 2, 3, 0, 0, 0|``.
+    padding_value: const<T>
+        * Currently non-zero values are not supported.
+        * To be used only when ``padding_mode == "constant"``, ignored in other cases.
+    coordinates_mode: const<str>
+        * Allowed values: ``"normalized_minus_one_to_one"``
+        * If ``coordinates_mode == "normalized_minus_one_to_one"``, in-image values are ``[-1, 1]``.
+        * For example, if ``coordinates_mode == "normalized_minus_one_to_one"``,
+          the in range values are ``[-1, 1]``. That is:
+            * ``(-1, -1)``, i.e. ``(w=-1, h=-1)``, corresponds to the top-left pixel.
+            * ``(1, -1)``, i.e. ``(w=1, h=-1)``, corresponds to the top-right pixel.
+            * ``(-1, 1)``, i.e. ``(w=-1, h=1)``, corresponds to the bottom-left pixel.
+            * ``(1, 1)``, i.e. ``(w=1, h=1)``, corresponds to the bottom-right pixel.
+    align_corners: const<bool>
+        * Currently ``align_corners=False`` is not supported.
+        * To be used only when ``coordinates_mode != unnormalized``, ignored otherwise.
+        * if ``align_corners == True``, the extrema coordinates correspond
+          to the center of the first and last corner pixels.
+        * if ``align_corners == False``, the extrema coordinates correspond
+          to the edge of the first and last corner pixels.
+
+    Returns
+    -------
+    tensor<[B, C, output_height, output_width], T>
+
+    Attributes
+    ----------
+    T: fp16, fp32
+    """
+
+    input_spec = InputSpec(
+        x=TensorInputType(),
+        transform_matrix=TensorInputType(),
+        output_height=IntInputType(const=True),
+        output_width=IntInputType(const=True),
+        sampling_mode=StringInputType(const=True),
+        padding_mode=StringInputType(const=True),
+        padding_value=FloatInputType(const=True),
+        coordinates_mode=StringInputType(const=True),
+        align_corners=BoolInputType(const=True),
+    )
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    def type_inference(self):
+        if self.x.rank != 4:
+            raise ValueError(
+                'input "x" to the "affine" op must be a rank 4 tensor. '
+                "Got rank {} tensor of shape {}".format(
+                    self.x.rank, self.x.shape
+                )
+            )
+        if self.transform_matrix.rank != 2:
+            raise ValueError(
+                'input "transform_matrix" to the "affine" op must be a rank 2 tensor. '
+                "Got rank {} tensor of shape {}".format(
+                   self.transform_matrix.rank,  self.transform_matrix.shape
+                )
+            )
+        if self.sampling_mode.val.lower() != "bilinear":
+            raise NotImplementedError(
+                'input "sampling_mode" to the "affine" not implemented. '
+                'Got "{}"'.format(self.sampling_mode.val)
+            )
+        if self.coordinates_mode.val.lower() != "normalized_minus_one_to_one":
+            raise NotImplementedError(
+                'input "coordinates_mode" to the "affine" not implemented. '
+                'Got "{}"'.format(self.coordinates_mode.val)
+            )
+        if self.padding_mode.val.lower() != "constant" or self.padding_value.val != 0.0:
+            raise NotImplementedError(
+                'input "padding_mode" to the "affine" not implemented. '
+                'Got "{}" with "padding_value={}"'.format(
+                    self.padding_mode.val, self.padding_value.val
+                )
+            )
+
+        input_shape = self.x.shape
+        transform_matrix_shape = self.transform_matrix.shape
+        if (
+            not is_symbolic(transform_matrix_shape[-1])
+            and transform_matrix_shape[-1] != 6
+        ):
+            raise ValueError(
+                'input "transform_matrix" to the "affine" op last dimension must be 6 '
+                "[a0, a1, a2, b0, b1, b2], "
+                "Got {} for last dimension".format(transform_matrix_shape[-1])
+            )
+
+        ret_shape = list(input_shape)
+        ret_shape[2] = self.output_height.val
+        ret_shape[3] = self.output_width.val
+        return types.tensor(self.x.dtype, tuple(ret_shape))
+
+
+@register_op(opset_version=_IOS15_TARGET)
+class resample(Operation):
+    """
+    Resample the input image tensor ``x`` at the ``coordinates``.
+    Resampling is required if the coordinates do not correspond to exact
+    pixels in the input image. The ``sampling_mode ``determines
+    the algorithm used for resampling and computing the values.
+
+    Parameters
+    ----------
+    x: tensor<[B, C, H1, W1], T>
+        * Must be rank ``4``.
+    coordinates: tensor<[B, H2, W2, 2], U>
+        * Must be rank ``4``.
+        * Coordinates are provided in the order ``(x, y)`` (i.e. ``(w, h)``).
+        * The value of each output location ``output[b, c, h, w]`` is calculated
+          by sampling from the input image ``x[b, c, :, :]``.
+        * The pixel at the ``(x, y)`` location corresponds to the length-2
+          vector: ``coordinates[b, h, w, :]``.
+        * Coordinate (normalized or unnormalized) should be specified according
+          to ``coordinates_mode``.
+    sampling_mode: const<str>
+        * Allowed values: ``"bilinear" , "nearest"``
+    padding_mode: const<str>
+        * Allowed values: ``"constant"``, ``"border"``, ``"reflection"``, ``"symmetric"``
+        * Note that the following example is 1D case for brevity.
+          The op supports only 2D image input.
+        * If ``padding_mode == "constant"``:
+            * The input image is assumed to be padded with the ``padding_value``.
+            * For example: ``|1, 2, 3| -> |0, 0, 0, 1, 2, 3, 0, 0, 0|``
+        * if ``padding_mode == "border"``:
+            * The input image is assumed to be padded with the values replicated
+              from the values at the edge. This is also referred to as the
+              "clamped" or "replication" mode, since the padded values are
+              clamped to the border values.
+            * For example: ``|1, 2, 3| -> |1, 1, 1, 1, 2, 3, 3, 3, 3|``
+        * If ``padding_mode == "reflection"``:
+            * The border values are reflected, *not* including the values at the edge/border.
+            * For example: ``|1, 2, 3| -> |2, 3, 2, 1, 2, 3, 2, 1, 2|``
+        * If ``padding_mode == "symmetric"``:
+            * Values are reflected, including the border/edge values.
+            * For example: ``|1, 2, 3| -> |3, 2, 1 , 1, 2, 3, 3, 2, 1|``
+    padding_value: const<T>
+        * To be used only when ``padding_mode == "constant"``, ignored in other cases.
+    coordinates_mode: const<str>
+        * Allowed values: ``"unnormalized"``, ``"normalized_minus_one_to_one"``,
+          ``"normalized_zero_to_one"``
+        * If ``coordinates_mode == "unnormalized"``, the coordinates input values
+          are interpreted to be in range ``[0, W - 1] / [0, H - 1]``, which
+          corresponds to the in-image point.
+        * If ``coordinates_mode == "normalized_minus_one_to_one"``,
+          the in-image values are ``[-1, 1]``.
+        * If ``coordinates_mode == "normalized_zero_to_one"``,
+          in-image values are ``[0, 1]``.
+        * For example, if ``coordinates_mode == "normalized_minus_one_to_one"``,
+          the in range values are [-1, 1]. That is:
+            * ``(-1, -1)``, i.e. ``(w=-1, h=-1)``, corresponds to the top-left pixel.
+            * ``(1, -1)``, i.e. ``(w=1, h=-1)``, corresponds to the top-right pixel.
+            * ``(-1, 1)``, i.e. ``(w=-1, h=1)``, corresponds to the bottom-left pixel.
+            * ``(1, 1)``, i.e. ``(w=1, h=1)``, corresponds to the bottom-right pixel.
+    align_corners: const<bool>
+        * If ``align_corners == True``, the extrema coordinates correspond
+          to the center of the first and last corner pixels.
+        * If ``align_corners == False``, the extrema coordinates correspond
+          to the edge of the first and last corner pixels.
+
+    Returns
+    -------
+    tensor<[B, C, H2, W2], T>
+
+    Attributes
+    ----------
+    T: fp16, fp32
+    U: fp32, i32
+    """
+
+    input_spec = InputSpec(
+        x=TensorInputType(),
+        coordinates=ScalarOrTensorInputType(type_domain=(np.int32, np.float32)),
+        sampling_mode=StringInputType(const=True),
+        padding_mode=StringInputType(const=True),
+        padding_value=FloatInputType(const=True),
+        coordinates_mode=StringInputType(const=True),
+        align_corners=BoolInputType(const=True),
+    )
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+    def type_inference(self):
+        if self.x.rank != 4:
+            raise ValueError(
+                'input "x" to the "resample" op must be a rank 4 tensor. '
+                "Got rank {} tensor of shape {}".format(
+                    self.x.rank, self.x.shape
+                )
+            )
+        if self.coordinates.rank != 4:
+            raise ValueError(
+                'input "coordinates" to the "resample" op must be a rank 4 tensor. '
+                "Got rank {} tensor of shape {}".format(
+                    self.coordinates.rank, self.coordinates.shape
+                )
+            )
+
+        input_shape = self.x.shape
+        coord_shape = self.coordinates.shape
+        if (
+            not is_symbolic(input_shape[0])
+            and not is_symbolic(coord_shape[0])
+            and input_shape[0] != coord_shape[0]
+        ):
+            raise ValueError(
+                'input "x" and "coordinates" to the "resample" must agree on '
+                "dimension of batch size: {} vs. {}".format(
+                    input_shape[0], coord_shape[0]
+                )
+            )
+        if not is_symbolic(coord_shape[-1]) and coord_shape[-1] != 2:
+            raise ValueError(
+                'input "coordinates" to the "resample" op last dimension must be 2. '
+                "Got {} for last dimension".format(
+                    coord_shape[-1]
+                )
+            )
+
+        ret_shape = list(input_shape)
+        ret_shape[2] = coord_shape[1]  # Output height
+        ret_shape[3] = coord_shape[2]  # Output width
+        return types.tensor(self.x.dtype, tuple(ret_shape))

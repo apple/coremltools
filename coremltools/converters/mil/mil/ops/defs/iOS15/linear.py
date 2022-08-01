@@ -16,12 +16,12 @@ from coremltools.converters.mil.mil import (
     types,
 )
 from coremltools.converters.mil.mil.operation import VALUE
+from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
+from coremltools.converters.mil.mil.ops.defs._utils import broadcast_shapes, parse_einsum_equation
 from coremltools.converters.mil.mil.types.symbolic import is_symbolic
-from ._op_reqs import register_op
-from ._utils import broadcast_shapes, parse_einsum_equation
 
 
-@register_op(doc_str="")
+@register_op
 class linear(Operation):
     """
     Perform  ``x * weight.T + bias`` where ``weight`` and ``bias`` are constant at
@@ -91,7 +91,7 @@ class linear(Operation):
         return res
 
 
-@register_op(doc_str="")
+@register_op
 class matmul(Operation):
     """
     Perform N-D batch matrix multiplication with NumPy-style broadcasting
@@ -228,7 +228,7 @@ class matmul(Operation):
         return np.matmul(x, y)
 
 
-@register_op(doc_str="")
+@register_op
 class einsum(Operation):
     """
     Perform tensor multiplication expressed according to the einsum notation.

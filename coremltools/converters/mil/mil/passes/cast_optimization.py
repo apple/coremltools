@@ -3,9 +3,10 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from coremltools.converters.mil.mil.passes.pass_registry import register_pass
-from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
+from coremltools.converters.mil.mil.passes.helper import block_context_manager
+from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 
 @register_pass(namespace="common")
 class cast_optimization(AbstractGraphPass):
@@ -31,32 +32,7 @@ class cast_optimization(AbstractGraphPass):
     """
     def apply(self, prog):
         for f in prog.functions.values():
-            block_changed = True
-            cached_vars = {}
-            """
-            Cached vars is used when all the following conditions are met:
-            1. When the output of a cast gets fed into multiple casts of same configuration
-            2. And, these 2 consecutive casts can be fused into a single cast.
-            When above conditions are satisfied, we create a NEW fused cast op ONLY once and
-            the output of all these consecutive casts gets replaced with the ouptut of this fused cast.
-
-            Input graph:
-                                        |---->cast(dtype="fp16")---->square--->out_1
-                                        |
-            input---->cast(dtype="int32")---->cast(dtype="fp16")---->relu--->out_2
-                                        |
-                                        |---->cast(dtype="fp16")---->log--->out_3
-
-            Output graph:
-
-                                                 |---->square--->out_1
-                                                 |
-            input---->new_fused_cast(dtype="fp16")---->relu--->out_2
-                                                 |
-                                                 |---->log--->out_3
-            """
-            while block_changed:
-                block_changed = _fuse_or_cancel_consecutive_casts_block(f, cached_vars)
+            _fuse_or_cancel_consecutive_casts_block_wrapper(f)
 
         # main function's output_vars are treated differently, which are not handled by the method
         # above, "_fuse_or_cancel_consecutive_casts_block".
@@ -64,6 +40,7 @@ class cast_optimization(AbstractGraphPass):
         block_changed = True
         while block_changed:
             block_changed = _cancel_consecutive_casts_connected_to_outputs(prog.functions["main"])
+
 
 class Node:
     def __init__(self, op_type, match_criterion=None):
@@ -174,28 +151,56 @@ def _try_to_transform(root_op, cached_vars):
     cast_2.enclosing_block.remove_ops([cast_2])
     return True
 
+@block_context_manager
+def _fuse_or_cancel_consecutive_casts_block_wrapper(block):
 
-def _fuse_or_cancel_consecutive_casts_block(block, cached_vars):
-    block_changed = False
-    for i, op in enumerate(list(block.operations)):
-        for b in op.blocks:
-            nested_block_changed = True
-            nested_block_cached_vars = {}
-            nested_block_cached_vars.update(cached_vars)
-            while nested_block_changed:
-                nested_block_changed = _fuse_or_cancel_consecutive_casts_block(b, nested_block_cached_vars)
+    def _fuse_or_cancel_consecutive_casts_block(block, cached_vars):
+        block_changed = False
+        for i, op in enumerate(list(block.operations)):
+            for b in op.blocks:
+                nested_block_changed = True
+                nested_block_cached_vars = {}
+                nested_block_cached_vars.update(cached_vars)
+                while nested_block_changed:
+                    nested_block_changed = _fuse_or_cancel_consecutive_casts_block(b, nested_block_cached_vars)
 
-        if len(op.blocks) > 0:
-            continue
+            if len(op.blocks) > 0:
+                continue
 
-        # start pattern match if cast op is encountered
-        if op.op_type == "cast":
-            with block:
+            # start pattern match if cast op is encountered
+            if op.op_type == "cast":
                 block_changed = _try_to_transform(op, cached_vars)
-            # has to break as the downstream iterator is affected.
-            if block_changed:
-                return block_changed
-    return block_changed
+                # has to break as the downstream iterator is affected.
+                if block_changed:
+                    return block_changed
+        return block_changed
+
+    block_changed = True
+    cached_vars = {}
+    """
+    Cached vars is used when all the following conditions are met:
+    1. When the output of a cast gets fed into multiple casts of same configuration
+    2. And, these 2 consecutive casts can be fused into a single cast.
+    When above conditions are satisfied, we create a NEW fused cast op ONLY once and
+    the output of all these consecutive casts gets replaced with the ouptut of this fused cast.
+
+    Input graph:
+                                |---->cast(dtype="fp16")---->square--->out_1
+                                |
+    input---->cast(dtype="int32")---->cast(dtype="fp16")---->relu--->out_2
+                                |
+                                |---->cast(dtype="fp16")---->log--->out_3
+
+    Output graph:
+
+                                         |---->square--->out_1
+                                         |
+    input---->new_fused_cast(dtype="fp16")---->relu--->out_2
+                                         |
+                                         |---->log--->out_3
+    """
+    while block_changed:
+        block_changed = _fuse_or_cancel_consecutive_casts_block(block, cached_vars)
 
 
 def _cancel_consecutive_casts_connected_to_outputs(block):

@@ -6,11 +6,12 @@ from coremltools.converters.mil.mil.input_type import (
     InputSpec,
     ScalarOrTensorInputType,
 )
+from coremltools.converters.mil._deployment_compatibility import AvailableTarget as target
 from coremltools.converters.mil.mil.operation import Operation
 from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
+from coremltools.converters.mil.mil.ops.defs.iOS16 import _IOS16_TARGET
 
-
-@register_op(doc_str="")
+@register_op(opset_version=_IOS16_TARGET)
 class constexpr_affine_dequantize(Operation):
     """
     A compile-time operation that returns a constant output value upon dequantizing its constant inputs.
@@ -113,9 +114,6 @@ class constexpr_affine_dequantize(Operation):
         return types.tensor(dtype, shape)
 
     def value_inference(self):
-        return None  # Needs to be None to avoid decompression
-
-    def get_decompressed_value(self):
         return self.decompress(
             self.quantized_data.val, 
             self.zero_point.val, 
@@ -125,16 +123,21 @@ class constexpr_affine_dequantize(Operation):
 
     @staticmethod
     def decompress(quantized_data, zero_point, scale, axis):
-        axes = tuple(
-            [i for i in range(len(quantized_data.shape)) if i != axis]
-        )
-        sc = np.expand_dims(scale, axis=axes)
-        zp = np.expand_dims(zero_point, axis=axes)
+
+        def rank_promoted_to_same_as_quantized_data(param):
+            if len(param.shape) == 0:
+                return np.reshape(param, np.ones(len(quantized_data.shape), np.int32))
+            else:
+                axes = [i for i in range(len(quantized_data.shape)) if i != axis]
+                return np.expand_dims(param, axis=tuple(axes))
+
+        sc = rank_promoted_to_same_as_quantized_data(scale)
+        zp = rank_promoted_to_same_as_quantized_data(zero_point)
         val = sc * (quantized_data.astype(np.float32) - zp.astype(np.float32))
         return val.astype(scale.dtype)
 
 
-@register_op(doc_str="")
+@register_op(opset_version=_IOS16_TARGET)
 class constexpr_cast(Operation):
     """
     A compile-time operation that returns a constant output value upon casting its constant input.
@@ -175,10 +178,10 @@ class constexpr_cast(Operation):
         return types.tensor(dtype, shape)
 
     def value_inference(self):
-        return None  # Needs to be None to avoid decompression
+        return np.float32(self.source_val.val)
 
 
-@register_op(doc_str="")
+@register_op(opset_version=_IOS16_TARGET)
 class constexpr_lut_to_dense(Operation):
     """
     A compile-time operation that returns a constant output value upon decompressing look-up-table to a dense tensor.
@@ -259,9 +262,6 @@ class constexpr_lut_to_dense(Operation):
         return types.tensor(dtype, shape)
 
     def value_inference(self):
-        return None  # Needs to be None to avoid decompression
-
-    def get_decompressed_value(self):
         return self.decompress(
                 self.lut.val,
                 self.indices.val,
@@ -287,7 +287,7 @@ class constexpr_lut_to_dense(Operation):
         return flatten_val.reshape(shape)
 
 
-@register_op(doc_str="")
+@register_op(opset_version=_IOS16_TARGET)
 class constexpr_sparse_to_dense(Operation):
     """
     A compile-time operation that returns a constant output value upon de-sparsification of its constant inputs.
@@ -363,9 +363,6 @@ class constexpr_sparse_to_dense(Operation):
         return types.tensor(dtype, shape)
 
     def value_inference(self):
-        return None  # Needs to be None to avoid decompression
-
-    def get_decompressed_value(self):
         return self.decompress(self.nonzero_data.val, self.mask.val, self.shape.val)
 
     @staticmethod

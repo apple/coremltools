@@ -62,9 +62,6 @@ class TestElementwiseUnary:
         ),
     )
     def test_builder_to_backend_smoke(self, use_cpu_for_conversion, backend, mode):
-        if backend[0] == "mlprogram" and not use_cpu_for_conversion and mode == "cast":
-            pytest.xfail("rdar://78343191 ((MIL GPU) Core ML Tools Unit Test failures [failure to load or Seg fault])")
-
         if mode == "abs":
             val = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.float32)
             expected_outputs = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
@@ -622,9 +619,6 @@ class TestElementwiseUnary:
     def test_builder_to_backend_stress_log(
             self, use_cpu_only, backend, epsilon
     ):
-        if backend[0] == "mlprogram" and not use_cpu_only:
-            pytest.xfail("rdar://78343225 ((MIL GPU) Core ML Tools Unit Test failures [numerical error])")
-
         x = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
         numpy_pred = np.log(x + epsilon)
 
@@ -657,9 +651,6 @@ class TestElementwiseUnary:
     def test_builder_to_backend_stress_cast(
             self, use_cpu_for_conversion, backend, src_dst
     ):
-        if backend[0] == "mlprogram" and not use_cpu_for_conversion:
-            pytest.xfail("rdar://78343191 ((MIL GPU) Core ML Tools Unit Test failures [failure to load or Seg fault])")
-
         src_dtype, dst_dtype = src_dst
         x = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
         numpy_pred = x.astype(dtype=np.float16)

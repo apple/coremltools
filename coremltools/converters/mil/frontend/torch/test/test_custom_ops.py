@@ -64,7 +64,7 @@ class TestCustomOp:
     # Define SSA Custom Op for Sparse MatMul
     # This will map to `custom_op` in SSA with binding information
     # to bind input spec to the custom implementation
-    @register_op(doc_str="Sparse MatMul Layer", is_custom_op=True)
+    @register_op(is_custom_op=True)
     class custom_torch_sparse_matmul(Operation):
         # Defining input spec for current op
         input_spec = InputSpec(

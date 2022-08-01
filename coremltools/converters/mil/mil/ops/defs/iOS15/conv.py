@@ -19,7 +19,7 @@ from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
 from coremltools.converters.mil.mil.ops.defs._utils import spatial_dimensions_out_shape
 
 
-@register_op(doc_str="")
+@register_op
 class conv(Operation):
     """
     Perform convolution over input. Supports 1-D, 2-D, and 3-D convolution.
@@ -191,7 +191,7 @@ class conv(Operation):
         return types.tensor(self.x.dtype, tuple(retshape))
 
 
-@register_op(doc_str="")
+@register_op
 class conv_quantized(conv):
     """
     Note: This is experimental and may change in the future.
@@ -250,7 +250,7 @@ class conv_quantized(conv):
         super().__init__(**kwargs)
 
 
-@register_op(doc_str="")
+@register_op
 class conv_transpose(Operation):
     """
     Perform transposed convolution (also known as deconvolution and fractionally

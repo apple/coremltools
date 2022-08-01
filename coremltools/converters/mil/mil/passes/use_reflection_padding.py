@@ -5,6 +5,7 @@
 
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
+from coremltools.converters.mil.mil.passes.helper import block_context_manager
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 
 
@@ -80,25 +81,23 @@ def _match_pattern(concat_op, block):
 
 def _replace_ops(block, concat_op, slice_ops, axis):
 
-    with block:
+    pad_size = len(slice_ops) // 2
+    if axis == -1:
+        pad = [pad_size, pad_size]
+    elif axis == -2:
+        pad = [pad_size, pad_size, 0, 0]
+    else:
+        return False
 
-        pad_size = len(slice_ops) // 2
-        if axis == -1:
-            pad = [pad_size, pad_size]
-        elif axis == -2:
-            pad = [pad_size, pad_size, 0, 0]
-        else:
-            return False
+    x = mb.pad(x=slice_ops[0].inputs["x"], pad=pad, mode='reflect', before_op=concat_op)
+    concat_op.enclosing_block.replace_uses_of_var_after_op(
+        anchor_op=concat_op, old_var=concat_op.outputs[0], new_var=x
+    )
 
-        x = mb.pad(x=slice_ops[0].inputs["x"], pad=pad, mode='reflect', before_op=concat_op)
-        concat_op.enclosing_block.replace_uses_of_var_after_op(
-            anchor_op=concat_op, old_var=concat_op.outputs[0], new_var=x
-        )
+    block.remove_ops([concat_op] + slice_ops)
+    return True
 
-        block.remove_ops([concat_op] + slice_ops)
-        return True
-
-
+@block_context_manager
 def _reflection_padding_block(block):
     for op in list(block.operations):
         _match_pattern(op, block)

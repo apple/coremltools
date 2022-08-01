@@ -183,14 +183,17 @@ def _try_convert_global_pool(const_context, builder, op, mode):
     if keep_dims is False:
         return False
 
-    if op.axes is not None:
+    axes = None
+    if op.axes is not None and op.axes.val is not None:
         axes = op.axes.val
-        axes = sorted([rank + axis if axis < 0 else axis for axis in axes])
+    else:
+        axes = list(range(rank))
 
-        if tuple(op.outputs[0].shape[:-2]) != tuple(op.inputs["x"].shape[:-2]):
-            return False
-        if not all([s == 1 for s in op.outputs[0].shape[-2:]]):
-            return False
+    if tuple(op.outputs[0].shape[:-2]) != tuple(op.inputs["x"].shape[:-2]):
+        return False
+    if not all([s == 1 for s in op.outputs[0].shape[-2:]]):
+        return False
+
     builder.add_pooling(
         name=op.name,
         height=0,

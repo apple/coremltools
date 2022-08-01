@@ -2,11 +2,15 @@
 #
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
-"""Module containing unit tests for verifying various quantization."""
+
+"""
+Module containing unit tests for verifying various quantizations.
+"""
+
+import unittest
 
 import numpy as np
 import pytest
-import unittest
 
 import coremltools
 from coremltools import ComputeUnit
@@ -557,3 +561,9 @@ class TestQuantizeWeightsAPI:
         assert len(spec_uint5.neuralNetwork.layers[0].embeddingND.weights.floatValue) == 0
         assert len(spec_uint5.neuralNetwork.layers[0].embeddingND.weights.float16Value) == 0
         assert len(spec_uint5.neuralNetwork.layers[0].embeddingND.weights.rawValue) == 3750  # 3750 = 5*6000/8
+
+    @unittest.skipIf(coremltools.utils._macos_version() < (13, 0),
+                     'ComputeUnit.CPU_AND_NE is only available on macOS >= 13.0'
+    )
+    def test_embeddingND_quantize_CPU_and_NE(self):
+        self.test_embeddingND_quantize(ComputeUnit.CPU_AND_NE)

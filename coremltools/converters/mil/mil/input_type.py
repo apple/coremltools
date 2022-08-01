@@ -40,10 +40,10 @@ class DefaultInputs:
         return self._ordered_dict.items()
 
     def __add__(self, default_inputs):
-        self._default_inputs.extend(default_inputs._default_inputs)
+        new_order_dict = {k: v for k, v in self._ordered_dict.items()}
         for k, v in default_inputs._default_inputs:
-            self._ordered_dict[k] = v
-        return self
+            new_order_dict[k] = v
+        return DefaultInputs(**new_order_dict)
 
 
 class InputSpec:
@@ -56,10 +56,11 @@ class InputSpec:
             self._ordered_dict[k] = v
 
     def __add__(self, input_spec):
-        self._input_types.extend(input_spec._input_types)
+        new_order_dict = {k: v for k, v in self._ordered_dict.items()}
         for k, v in input_spec._input_types:
-            self._ordered_dict[k] = v
-        return self
+            new_order_dict[k] = v
+        return InputSpec(**new_order_dict)
+
 
     @property
     def input_types(self):
@@ -113,13 +114,9 @@ class InputSpec:
             if input_type.const and \
                 not isinstance(input_type, InternalInputType) \
                 and var.val is None:
-
-                if var.op and var.op.op_type.startswith("constexpr_"):
-                    pass  # Output of constexprs qualifies as const but gets materialized after load time
-                else:
-                    msg = msg_prefix + \
-                        'Input {} must be const at compile time'
-                    raise ValueError(msg.format(name), name, var.name)
+                msg = msg_prefix + \
+                    'Input {} must be const at compile time'
+                raise ValueError(msg.format(name), name, var.name)
 
             if not isinstance(var, InternalVar) and \
                 not input_type.is_compatible(var):

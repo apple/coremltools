@@ -36,10 +36,8 @@ class TestConst:
         )
     )
     def test_builder_to_backend_smoke(self, use_cpu_for_conversion, backend, dtype):
-        if backend[0] == "mlprogram" and not use_cpu_for_conversion:
-            pytest.xfail("rdar://78343191 ((MIL GPU) Core ML Tools Unit Test failures [failure to load or Seg fault])")
         if backend[0] == "mlprogram" and dtype in [np.uint8, np.int8, np.uint32]:
-            pytest.xfail("Data type not supported")
+            pytest.skip("Data type not supported")
 
         t = np.random.randint(0, 5, (4, 2)).astype(np.float32)
         constant = np.random.randint(0, 5, (4, 2)).astype(dtype)

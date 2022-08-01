@@ -9,6 +9,7 @@ import torch
 
 import coremltools as ct
 from coremltools import ComputeUnit
+from coremltools.converters.mil import Builder as mb
 from coremltools.converters.mil.converter import mil_convert
 from coremltools.converters.mil.frontend.milproto.load import load as milproto_to_pymil
 from coremltools.converters.mil.frontend.torch.test.test_torch_ops import TestScriptedModels as _TestScriptedModels
@@ -18,40 +19,46 @@ from coremltools.converters.mil.mil.ops.tests.testing_utils import compare_backe
 from coremltools.converters.mil.testing_utils import get_op_types_in_program
 from coremltools.converters._converters_entry import _get_metadata_from_mlmodel
 
-
-def roundtrip_and_compare_mlmodel(mlmodel, input_dict):
+def get_pymil_prog_from_mlmodel(mlmodel):
     model_spec = mlmodel.get_spec()
-    if model_spec.WhichOneof("Type") != "mlProgram":
-        raise ValueError("Only MIL proto based mlmodels can be loaded")
-
-    program_spec = model_spec.mlProgram
-    model_description = model_spec.description
-
-    pymil_prog = milproto_to_pymil(
-        program_spec=program_spec,
+    return milproto_to_pymil(
+        model_spec=model_spec,
         specification_version=model_spec.specificationVersion,
         file_weights_dir=mlmodel.weights_dir,
-    )
+    )  
+
+def get_roundtrip_mlmodel(mlmodel):
+    """
+    This utility function does the following roundtrip conversion:
+
+    mlprogram proto -> pymil program -> mlprogram model
+    """
+    pymil_prog = get_pymil_prog_from_mlmodel(mlmodel)
+
+    # convert the pymil program to mlmodel
+    model_spec = mlmodel.get_spec()
     roundtripped_mlmodel = mil_convert(
         pymil_prog,
         convert_to="mlprogram",
         convert_from="milinternal",
-        compute_units=ComputeUnit.ALL,
-        model_description=model_description,
+        compute_units=mlmodel.compute_unit,
+        model_description=model_spec.description,
+        specification_version=model_spec.specificationVersion,
     )
 
     # set MIL program attributes
     build_info = _get_metadata_from_mlmodel(mlmodel)
     roundtripped_mlmodel._set_build_info_mil_attributes(build_info)
+    return roundtripped_mlmodel
 
+def roundtrip_and_compare_mlmodel(mlmodel, input_dict):
+    roundtripped_mlmodel =  get_roundtrip_mlmodel(mlmodel)
     expected_outputs = mlmodel.predict(input_dict)
     compare_backend(roundtripped_mlmodel, input_dict, expected_outputs)
 
 
 class TestLoadAPIUsage:
     def test_mil_proto_to_pymil(self):
-        from coremltools.converters.mil import Builder as mb
-
         # Define a PyMIL program
         @mb.program(input_specs=[mb.TensorSpec(shape=(1, 3, 100, 100)), ])
         def prog(x):
@@ -65,26 +72,39 @@ class TestLoadAPIUsage:
             return x
 
         # Convert it to MIL proto backed MLModel
-        mlmodel = mil_convert(
-            prog,
-            convert_to="mlprogram",
-            convert_from="milinternal",
-            compute_units=ComputeUnit.ALL,
-        )
+        mlmodel = ct.convert(prog, convert_to="mlprogram")
 
         # Load MLModel back to PyMIL
-        model_spec = mlmodel.get_spec()
-        program_spec = model_spec.mlProgram
-        loaded_pymil_prog = milproto_to_pymil(
-            program_spec=program_spec,
-            specification_version=model_spec.specificationVersion,
-            file_weights_dir=mlmodel.weights_dir,
-        )
+        loaded_pymil_prog = get_pymil_prog_from_mlmodel(mlmodel)
 
         # Assert that loaded PyMIL prog matches with defined PyMIL prog
         if get_op_types_in_program(loaded_pymil_prog) != get_op_types_in_program(prog):
             raise AssertionError("Mismatch between defined PyMIL prog and loaded PyMIL prog")
 
+    def test_mil_proto_to_pymil_with_version_handling(self):
+        # This test makes sure the correct version of the op is picked up during mil_proto -> pymil conversion
+        
+        # iOS15 version program with iOS13 version topk
+        @mb.program(input_specs=[mb.TensorSpec(shape=(1, 1, 4, 4))], opset_version=ct.target.iOS15)
+        def prog(x):
+            x = mb.topk(x=x, k=1, axis=-1, ascending=True)
+            return x
+
+        iOS15_mlmodel = ct.convert(prog, convert_to="mlprogram", minimum_deployment_target=ct.target.iOS15)
+        iOS15_pymil_prog = get_pymil_prog_from_mlmodel(iOS15_mlmodel)
+        topk_op = iOS15_pymil_prog.functions["main"].find_ops(op_type="topk")[0]
+        assert not hasattr(topk_op, "sort")
+
+        # iOS16 version program with iOS16 version topk
+        @mb.program(input_specs=[mb.TensorSpec(shape=(1, 1, 4, 4))], opset_version=ct.target.iOS16)
+        def prog(x):
+            x = mb.topk(x=x, k=1, axis=-1, ascending=True)
+            return x
+
+        iOS16_mlmodel = ct.convert(prog, convert_to="mlprogram", minimum_deployment_target=ct.target.iOS16)
+        iOS16_pymil_prog = get_pymil_prog_from_mlmodel(iOS16_mlmodel)
+        topk_op = iOS16_pymil_prog.functions["main"].find_ops(op_type="topk")[0]
+        assert hasattr(topk_op, "sort")
 
 @pytest.mark.skipif(ct.utils._macos_version() < (12, 0), reason="mlprogram predict available only on macOS12+")
 class TestE2ENumericalCorrectness:

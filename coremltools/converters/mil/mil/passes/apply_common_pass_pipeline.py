@@ -86,6 +86,8 @@ def apply_common_pass_pipeline(prog, passes):
             _apply([p], type(p).__name__)
 
     cleanup_passes = [
+        "common::dead_code_elimination",
+        "common::const_elimination",
         "common::cast_optimization",
         "common::const_elimination",
         "common::loop_invariant_elimination",

@@ -473,9 +473,6 @@ class TestNotEqual:
         "use_cpu_for_conversion, backend", itertools.product([True, False], backends,)
     )
     def test_builder_to_backend_smoke(self, use_cpu_for_conversion, backend):
-        if backend[0] == "mlprogram" and not use_cpu_for_conversion:
-            pytest.xfail("rdar://78343191 ((MIL GPU) Core ML Tools Unit Test failures [failure to load or Seg fault])")
-
         x = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
         y = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.float32)
         input_placeholders = {

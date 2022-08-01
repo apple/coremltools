@@ -9,6 +9,7 @@ import logging
 import numpy as np
 
 from coremltools import _OPSET
+from coremltools.converters.mil._deployment_compatibility import AvailableTarget as _target
 from coremltools.converters.mil.mil import (
     Block,
     Builder as mb,
@@ -21,10 +22,14 @@ from coremltools.converters.mil.mil import (
     types,
     Var,
 )
-from coremltools.converters.mil.mil.block import curr_block
+from coremltools.converters.mil.mil.block import curr_block, curr_opset_version
+from coremltools.converters.mil.mil.ops.registry import SSAOpRegistry as _SSAOpRegistry
 from coremltools.libmilstoragepython import _BlobStorageReader as BlobReader
-from coremltools.proto import MIL_pb2 as pm
-from .helper import proto_to_types, opstr_to_opcls
+from coremltools.proto import (
+    MIL_pb2 as pm,
+    Model_pb2 as ml
+)
+from .helper import proto_to_types
 
 
 class TranscriptionContext:
@@ -304,10 +309,7 @@ def _load_operation(context, op_spec):
                     vars.append(var)
                 else:
                     raise NotImplementedError("Binding {} not yet implemented".format(binding_type))
-
-            # TODO: rdar://92930138 (Milproto -> Pymil op translation should take account of the op version)
-            # we need to use the spec version of the function to pick up the correct version of op
-            op_cls = opstr_to_opcls(op_type)
+            op_cls = _SSAOpRegistry._get_core_op_cls(op_type)
             if len(vars) == 1 and not isinstance(
                 op_cls.input_spec.input_types[param_name], TupleInputType
             ):
@@ -368,12 +370,6 @@ def _load_function(context, func_spec, spec_version):
     if not isinstance(func_spec, pm.Function):
         raise TypeError("Invalid Function spec object")
 
-    opset = func_spec.opset
-    if opset != _OPSET[spec_version]:
-        raise AssertionError(
-            "Mismatch between provide specification version vs version implied by opset field"
-        )
-
     if func_spec.attributes:
         raise ValueError("Attributes on functions not supported")
 
@@ -388,17 +384,28 @@ def _load_function(context, func_spec, spec_version):
             sym_shape=valuetype.get_shape(), dtype=valuetype.get_primitive(), name=name
         )
         context.register_var_with_name(name, func_inputs[name].outputs[0])
-
+        
+    opset = func_spec.opset
     if opset not in func_spec.block_specializations:
         raise ValueError("Missing block specialization for opset {}".format(opset))
 
-    with Function(func_inputs) as pymil_func:
+    with Function(func_inputs, opset_version=_target(spec_version)) as pymil_func:
         _load_block(context, func_spec.block_specializations[opset])
 
     return pymil_func
 
 
-def load(program_spec, specification_version, file_weights_dir="", **kwargs):
+def load(model_spec, specification_version, file_weights_dir="", **kwargs):
+    if not isinstance(model_spec, ml.Model):
+        raise TypeError("Invalid Model sepc object")
+    
+    if specification_version < model_spec.specificationVersion:
+        raise ValueError("specification_version must be greater or equal to the input model spec version")
+        
+    if model_spec.WhichOneof("Type") != "mlProgram":
+        raise ValueError("Only MIL proto based mlmodels can be loaded")
+
+    program_spec = model_spec.mlProgram
     if not isinstance(program_spec, pm.Program):
         raise TypeError("Invalid Program spec object")
 

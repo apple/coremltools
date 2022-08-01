@@ -5,8 +5,9 @@
 
 from .helper import _check_child_op_type, _check_var_scalar_value
 from coremltools.converters.mil.mil import Builder as mb
-from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
+from coremltools.converters.mil.mil.passes.helper import block_context_manager
+from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 
 
 def _try_to_transform(onehot_op, block):
@@ -60,7 +61,7 @@ def _try_to_transform(onehot_op, block):
     block.remove_ops([onehot_op, matmul_op])
     return True
 
-
+@block_context_manager
 def _fuse_onehot_matmul_to_gather_block(block):
     fusion_status = False
     for i, op in enumerate(list(block.operations)):
@@ -74,8 +75,7 @@ def _fuse_onehot_matmul_to_gather_block(block):
 
         # start pattern match if one_hot op is encountered
         if op.op_type == "one_hot":
-            with block:
-                fusion_status = _try_to_transform(op, block)
+            fusion_status = _try_to_transform(op, block)
             # has to break as the downstream iterator is affected.
             if fusion_status:
                 return fusion_status

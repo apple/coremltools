@@ -9,10 +9,6 @@ from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.program import get_new_symbol
 
 
-def opstr_to_opcls(op_str):
-    return getattr(sys.modules["coremltools.converters.mil.mil.ops.defs"], op_str)
-
-
 def get_proto_dim(dim):
     if dim.WhichOneof("dimension") == "constant":
         return dim.constant.size

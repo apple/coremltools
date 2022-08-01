@@ -6,6 +6,7 @@ import itertools
 import numpy as np
 import pytest
 
+import coremltools as ct
 from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.mil import (
     Builder as mb,
@@ -1151,6 +1152,53 @@ class TestTopK:
             expected_outputs,
             use_cpu_only=use_cpu_only,
             backend=backend,
+        )
+
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend, return_indices, sort", 
+        itertools.product(
+            [True, False], 
+            backends,
+            [True, False],
+            [True, False],
+        )
+    )
+    def test_builder_to_backend_smoke_iOS16(self, use_cpu_only, backend, return_indices, sort):
+        if backend[0] == "neuralnetwork":
+            pytest.skip("nn backend not supported")
+
+        if not return_indices:
+            pytest.xfail("rdar://92880117 (Topk with return_indices = False error out at the MIL->EIR stage)")
+
+        val = np.array([[-1.0, 2.0, -3.0], [4.0, -5.0, 6.0]], dtype=np.float32)
+        input_placeholders = {"x": mb.placeholder(shape=val.shape)}
+        input_values = {"x": val}
+        
+        def build(x):
+            return mb.topk(x=x, k=2, axis=1, return_indices=return_indices, sort=sort)
+
+        expected_output_types = [
+            (2, 2, types.fp32),
+            (2, 2, types.int32),
+        ]
+        expected_outputs = [
+            np.array([[2.0, -1.0], [6.0, 4.0]], dtype=np.float32),
+            np.array([[1, 0], [2, 0]], dtype=np.float32),
+        ]
+
+        if not return_indices:
+            expected_output_types = expected_output_types[:1]
+            expected_outputs = expected_outputs[:1]
+
+        run_compare_builder(
+            build,
+            input_placeholders,
+            input_values,
+            expected_output_types,
+            expected_outputs,
+            use_cpu_only=use_cpu_only,
+            backend=backend,
+            minimum_deployment_target=ct.target.iOS16,
         )
 
     @ssa_fn

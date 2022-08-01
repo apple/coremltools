@@ -4,8 +4,10 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from coremltools.converters.mil.mil import Builder as mb
-from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
+from coremltools.converters.mil.mil.passes.helper import block_context_manager
+from coremltools.converters.mil.mil.passes.pass_registry import register_pass
+
 
 def _detect_loop_invariants(while_op):
     block = while_op.blocks[1]  # body block
@@ -14,8 +16,11 @@ def _detect_loop_invariants(while_op):
         vx_out = block.outputs[i]  # first output is cond var.
         return_input_as_output = vx_in == vx_out
         # this block output is a var from outside of the block
+
+        enclosing_block = while_op.enclosing_block
+        while_op_id = enclosing_block.find_op_id_in_block(while_op)
         output_from_outside_of_block = (
-            vx_out in block._visible_vars_from_enclosing_block()
+            True if enclosing_block.is_var_visible_in_block(vx_out, upto_op_with_id=while_op_id) else False
         )
         if return_input_as_output or output_from_outside_of_block:
             loop_invariant_ids.append(i)
@@ -24,7 +29,7 @@ def _detect_loop_invariants(while_op):
     # need to move computation out of while loop.
     return loop_invariant_ids
 
-
+@block_context_manager
 def _loop_invariant_elimination_block(block):
     # Phase 1: Find vars needed to be renamed.
     #
@@ -58,11 +63,10 @@ def _loop_invariant_elimination_block(block):
     for v_src, v_tgt, op in output_rename:
         if v_tgt in block.outputs:
             # rename the loop output to existing block output names
-            with block:
-                res = mb.identity(x=v_src, before_op=op, name=v_tgt.name)
-                op.enclosing_block.replace_uses_of_var_after_op(
-                    anchor_op=op, old_var=v_tgt, new_var=res
-                )
+            res = mb.identity(x=v_src, before_op=op, name=v_tgt.name)
+            op.enclosing_block.replace_uses_of_var_after_op(
+                anchor_op=op, old_var=v_tgt, new_var=res
+            )
 
     # Phase 3: Perform loop invariant elimination without fear!
     for op in list(block.operations):

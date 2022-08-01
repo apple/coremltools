@@ -9,6 +9,7 @@ from .basic_graph_ops import simple_topsort
 from .convert_utils import convert_graph
 from .ssa_passes.tf_passes import tensorflow_passes
 from .._utils import get_output_names
+from coremltools.converters.mil._deployment_compatibility import AvailableTarget as _target
 from coremltools.converters.mil.input_types import (
     _get_shaping_class,
     InputType,
@@ -117,7 +118,7 @@ class TranscriptionContext:
 
 
 class TFConverter:
-    def __init__(self, tfssa, inputs=None, outputs=None, **kwargs):
+    def __init__(self, tfssa, inputs=None, outputs=None, opset_version=None):
         """
         tfssa: TensorFlow IR.
         inputs: list of TensorType or ImageType, optional, defaults to None.
@@ -129,6 +130,7 @@ class TFConverter:
         self.global_type = {}
         self.inputs = None
         self.main_output_types = outputs
+        self.opset_version = _target(opset_version) if opset_version is not None else None
         output_names = get_output_names(outputs)
 
         main_func = tfssa.functions["main"]
@@ -378,7 +380,7 @@ class TFConverter:
                     input_type.shape.symbolic_shape, dtype=input_type.dtype)
         prog.set_main_input_types(self.inputs)
 
-        with Function(func_inputs) as ssa_func:
+        with Function(func_inputs, opset_version=self.opset_version) as ssa_func:
             # Get the input Var
             for name in func_inputs.keys():
                 input_var = ssa_func.inputs[name]

@@ -3,10 +3,10 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-
-from coremltools.converters.mil.mil.passes.pass_registry import register_pass
-from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
+from coremltools.converters.mil.mil.passes.helper import block_context_manager
+from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 
 @register_pass(namespace="torch")
 class torch_tensor_assign_to_core(AbstractGraphPass):
@@ -37,15 +37,14 @@ class torch_tensor_assign_to_core(AbstractGraphPass):
         for f in prog.functions.values():
             _torch_tensor_assign_to_core_block(f)
 
-
+@block_context_manager
 def _torch_tensor_assign_to_core_block(block):
     for op in block.operations[:]:
         for b in op.blocks:
             _torch_tensor_assign_to_core_block(b)
 
         if op.op_type in ["torch_tensor_assign"]:
-            with block:
-                _transform_tensor_assign(op, block)
+            _transform_tensor_assign(op, block)
 
 
 def _transform_tensor_assign(op, block):

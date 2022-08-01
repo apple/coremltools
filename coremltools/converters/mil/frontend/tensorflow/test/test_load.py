@@ -200,7 +200,7 @@ class TestTf1ModelInputsOutputs(TensorFlowBaseTest):
                                     inputs=[ct.TensorType(shape=(1,))])
         assert mlmodel is not None
 
-    @pytest.mark.xfail(reason="Rank-0 input is not supported", run=True)
+    @pytest.mark.skip(reason="Rank-0 input is not supported", run=True)
     def test_scalar_placeholder_shape(self):
         x_shape = ()  # Scalar Placeholder Shape
 

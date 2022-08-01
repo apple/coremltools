@@ -7,6 +7,7 @@ from collections import OrderedDict
 
 from .helper import _are_ops_identical
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
+from coremltools.converters.mil.mil.passes.helper import block_context_manager
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 
 
@@ -106,42 +107,46 @@ def _try_to_transform(parent_var):
             block_changed = True
     return block_changed
 
+@block_context_manager
+def _remove_redundant_ops_in_block_wrapper(block):
 
-def _remove_redundant_ops_in_block(block):
+    def _remove_redundant_ops_in_block(block):
 
-    if isinstance(block.inputs, dict):
-        block_input_var_list = list(block.inputs.values())
-    elif isinstance(block.inputs, (list, tuple)):
-        block_input_var_list = block.inputs
-    else:
-        raise ValueError("Unrecognized type of block.inputs, its neither a list nor dict.")
+        if isinstance(block.inputs, dict):
+            block_input_var_list = list(block.inputs.values())
+        elif isinstance(block.inputs, (list, tuple)):
+            block_input_var_list = block.inputs
+        else:
+            raise ValueError("Unrecognized type of block.inputs, its neither a list nor dict.")
 
-    # iterate over the block inputs
-    for input_var in block_input_var_list:
-        if len(input_var.child_ops) > 1:
-            with block:
+        # iterate over the block inputs
+        for input_var in block_input_var_list:
+            if len(input_var.child_ops) > 1:
                 _try_to_transform(input_var)
 
-    # iterate over the ops in the block
-    graph_updated = False
-    for op in block.operations:
-        if op.op_type == "const":
-            continue
+        # iterate over the ops in the block
+        graph_updated = False
+        for op in block.operations:
+            if op.op_type == "const":
+                continue
 
-        for b in op.blocks:
-            block_changed = True
-            while block_changed:
-                block_changed = _remove_redundant_ops_in_block(b)
+            for b in op.blocks:
+                block_changed = True
+                while block_changed:
+                    block_changed = _remove_redundant_ops_in_block(b)
 
-        if len(op.outputs) > 0 and len(op.outputs[0].child_ops) > 1:
-            with block:
+            if len(op.outputs) > 0 and len(op.outputs[0].child_ops) > 1:
                 # currently, we only check the first output of the op
                 # this can be extended, if required, to check for other outputs.
                 graph_updated = _try_to_transform(op.outputs[0])
-            # has to break as the downstream iterator is affected.
-            if graph_updated:
-                return graph_updated
-    return graph_updated
+                # has to break as the downstream iterator is affected.
+                if graph_updated:
+                    return graph_updated
+        return graph_updated
+
+    block_changed = True
+    while block_changed:
+        block_changed = _remove_redundant_ops_in_block(block)
 
 
 @register_pass(namespace="common")
@@ -183,6 +188,4 @@ class remove_redundant_ops(AbstractGraphPass):
     """
     def apply(self, prog):
         for f in prog.functions.values():
-            block_changed = True
-            while block_changed:
-                block_changed = _remove_redundant_ops_in_block(f)
+            _remove_redundant_ops_in_block_wrapper(f)

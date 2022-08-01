@@ -71,7 +71,8 @@ def convert_to_coreml_inputs(input_description, inputs):
 
 
 def convert_to_mlmodel(model_spec, tensor_inputs, backend=("neuralnetwork", "fp32"),
-                       converter_input_type=None, use_cpu_for_conversion=False):
+                       converter_input_type=None, use_cpu_for_conversion=False,
+                       minimum_deployment_target=None):
     def _convert_to_inputtype(inputs):
         if isinstance(inputs, list):
             return [_convert_to_inputtype(x) for x in inputs]
@@ -97,7 +98,8 @@ def convert_to_mlmodel(model_spec, tensor_inputs, backend=("neuralnetwork", "fp3
         compute_unit = ComputeUnit.ALL
         
     return ct_convert(model_spec, inputs=inputs, convert_to=backend,
-                      source="pytorch", compute_units=compute_unit)
+                      source="pytorch", compute_units=compute_unit,
+                      minimum_deployment_target=minimum_deployment_target)
 
 
 def generate_input_data(input_size, rand_range=(0, 1)):
@@ -143,7 +145,9 @@ def convert_and_compare(input_data, model_spec,
                         expected_results=None, atol=1e-4,
                         backend=("neuralnetwork", "fp32"),
                         converter_input_type=None,
-                        use_cpu_for_conversion=True):
+                        use_cpu_for_conversion=True,
+                        minimum_deployment_target=None
+                        ):
     """
     If expected results is not set, it will by default
     be set to the flattened output of the torch model.
@@ -169,7 +173,8 @@ def convert_and_compare(input_data, model_spec,
     expected_results = flatten_and_detach_torch_results(expected_results)
     mlmodel = convert_to_mlmodel(model_spec, input_data, backend=backend,
                                  converter_input_type=converter_input_type,
-                                 use_cpu_for_conversion=use_cpu_for_conversion)
+                                 use_cpu_for_conversion=use_cpu_for_conversion,
+                                 minimum_deployment_target=minimum_deployment_target,)
 
     coreml_inputs = convert_to_coreml_inputs(mlmodel.input_description, input_data)
 
@@ -208,9 +213,10 @@ class TorchBaseTest:
     def run_compare_torch(
             input_data, model, expected_results=None, places=5,
             input_as_shape=True, backend=("neuralnetwork", "fp32"),
-            rand_range=(0.0, 1.0), use_scripting=False,
+            rand_range=(-1.0, 1.0), use_scripting=False,
             converter_input_type=None,
             use_cpu_for_conversion=True,
+            minimum_deployment_target=None,
     ):
         """
         Traces a model and runs a numerical test.
@@ -235,6 +241,7 @@ class TorchBaseTest:
                 atol=10.0 ** -places, backend=backend,
                 converter_input_type=converter_input_type,
                 use_cpu_for_conversion=use_cpu_for_conversion,
+                minimum_deployment_target=minimum_deployment_target,
             )
 
         return model_spec, mlmodel, coreml_inputs, coreml_results, \

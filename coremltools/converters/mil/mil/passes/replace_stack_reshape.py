@@ -4,9 +4,9 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from coremltools.converters.mil.mil import Builder as mb
-from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
-
+from coremltools.converters.mil.mil.passes.helper import block_context_manager
+from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 
 def _match_operation(stack_op):
 
@@ -72,15 +72,14 @@ def _replace_stack_reshape_ops(block, stack_op, reshape_op):
 
     interleave = (concat_axis == stack_axis_val - 1)
 
-    with block:
-        x = mb.concat(values=stack_op.values, axis=concat_axis, before_op=stack_op, interleave=interleave)
+    x = mb.concat(values=stack_op.values, axis=concat_axis, before_op=stack_op, interleave=interleave)
 
-        reshape_op.enclosing_block.replace_uses_of_var_after_op(
-            anchor_op=stack_op, old_var=reshape_op.outputs[0], new_var=x
-        )
-        block.remove_ops([stack_op, reshape_op])
+    reshape_op.enclosing_block.replace_uses_of_var_after_op(
+        anchor_op=stack_op, old_var=reshape_op.outputs[0], new_var=x
+    )
+    block.remove_ops([stack_op, reshape_op])
 
-
+@block_context_manager
 def _replace_stack_reshape_block(block):
     for op in list(block.operations):
 

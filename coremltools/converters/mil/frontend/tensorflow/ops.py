@@ -9,7 +9,9 @@ import numpy as _np
 from .._utils import build_einsum_mil
 from .convert_utils import convert_graph
 from .tf_op_registry import register_tf_op
+from coremltools.converters.mil._deployment_compatibility import AvailableTarget as target
 from coremltools.converters.mil.mil import Builder as mb, types
+from coremltools.converters.mil.mil.block import is_current_opset_version_compatible_with
 from coremltools.converters.mil.mil.ops.defs._utils import broadcast_shapes
 from coremltools.converters.mil.mil.types.symbolic import is_symbolic, any_symbolic
 
@@ -2091,10 +2093,22 @@ def Tanh(context, node):
 @register_tf_op(tf_alias=["TopKV2"])
 def TopK(context, node):
     x = context[node.inputs[0]]
-    k = context[node.inputs[1]]
-    x = mb.topk(x=x, k=k.val, axis=-1, name=node.name)
-    context.add(node.name, x)
+    k = context[node.inputs[1]].val
+    sort = node.attr["sorted"]
 
+    kwargs = {
+        "x": x,
+        "k": k,
+        "axis": -1,
+        "name": node.name
+    }
+
+    if is_current_opset_version_compatible_with(target.iOS16):
+        kwargs["sort"] = sort
+    elif not sort:
+        raise ValueError("For opset <= iOS16, only sorted=True supported for the topk")
+
+    context.add(node.name, mb.topk(**kwargs))
 
 @register_tf_op(tf_alias=["InTopKV2"])
 def InTopK(context, node):
@@ -2165,10 +2179,7 @@ def Where(context, node):
         raise NotImplementedError('tf.where with x,y will be supported by '
                                   'MIL::select in the future')
     x = context[node.inputs[0]]
-    # rdar://78409794 (Remove cast in tf Where op lowering after rdar://77514629
-    # goes into MIL build)
-    x_fp32 = mb.cast(x=x, dtype="fp32")
-    x = mb.non_zero(x=x_fp32, name=node.name)
+    x = mb.non_zero(x=x, name=node.name)
     context.add(node.name, x)
 
 

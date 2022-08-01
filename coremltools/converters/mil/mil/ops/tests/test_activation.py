@@ -682,8 +682,6 @@ class TestSiLU:
         "use_cpu_only, backend", itertools.product([True, False], backends,)
     )
     def test_builder_to_backend_smoke(self, use_cpu_only, backend):
-        if backend[0] == "neuralnetwork":
-            pytest.xfail("nn backend not supported")
 
         x_val = np.array([-1.1, 2.2, -3.3, 4.4], dtype=np.float32).reshape((1, 2, 1, 2))
 

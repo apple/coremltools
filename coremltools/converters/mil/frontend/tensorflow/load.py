@@ -232,7 +232,12 @@ class TF1Loader(TFLoader):
                 filename="/tmp/ssa_after_tf_passes", cleanup=True
             )
 
-        converter = TFConverter(self._tf_ssa, **self.kwargs)
+        converter = TFConverter(
+            tfssa=self._tf_ssa,
+            inputs=self.kwargs["inputs"],
+            outputs=self.kwargs["outputs"],
+            opset_version=self.kwargs["specification_version"]
+        )
         return converter.convert()
 
     @staticmethod

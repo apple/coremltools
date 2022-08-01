@@ -464,10 +464,10 @@ class TestConv:
         symbolic = config["symbolic"]
 
         if backend[0] == "neuralnetwork" and groups > 1:
-            pytest.xfail("dynamic conv with groups > 1 is not supported on the neuralnetwork backend")
-
-        if backend[0] == "mlprogram" and conv_dim == "conv1d" and not use_cpu_only:
-            pytest.xfail("rdar://90819258, mlprogram fails with dynamic weights conv1d on the GPU")
+            pytest.skip("dynamic conv with groups > 1 is not supported on the neuralnetwork backend")
+            
+        if backend[0] == "mlprogram" and not use_cpu_only:
+            pytest.xfail("rdar://97398343 (test_builder_to_backend_stress_weights_input is failing on mlprogram + GPU)")
 
         D, H, W, Kd, Kh, Kw = DHWKdKhKw
         N, C_in, C_out = 1, 1 * groups, 2 * groups

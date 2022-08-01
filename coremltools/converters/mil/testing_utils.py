@@ -7,11 +7,10 @@ import copy
 from functools import partial
 import os
 from pathlib import Path
-from PIL import Image
 import re
 
 import numpy as np
-import PIL.Image
+from PIL import Image
 
 import coremltools as ct
 from coremltools._deps import _IS_MACOS
@@ -178,7 +177,7 @@ def to_tuple(v):
 
 def run_core_ml_predict(mlmodel, input_key_values):
     for k, v in input_key_values.items():
-        if isinstance(v, PIL.Image.Image):
+        if isinstance(v, Image.Image):
             continue
         elif not np.isscalar(v) and not v.shape == ():
             input_key_values[k] = v.astype(np.float32)
@@ -440,10 +439,16 @@ def random_gen_input_feature_type(input_desc):
             shape = [3, input_desc.type.imageType.height, input_desc.type.imageType.width]
             x = np.random.randint(low=0, high=256, size=shape)
             return Image.fromarray(np.transpose(x, [1, 2, 0]).astype(np.uint8))
-        else:
+        elif input_desc.type.imageType.colorSpace == ft.ImageFeatureType.GRAYSCALE:
             shape = [input_desc.type.imageType.height, input_desc.type.imageType.width]
             x = np.random.randint(low=0, high=256, size=shape)
             return Image.fromarray(x.astype(np.uint8), 'L')
+        elif input_desc.type.imageType.colorSpace == ft.ImageFeatureType.GRAYSCALE_FLOAT16:
+            shape = (input_desc.type.imageType.height, input_desc.type.imageType.width)
+            x = np.random.rand(*shape)
+            return Image.fromarray(x.astype(np.float32), 'F')
+        else:
+            raise ValueError("unrecognized image type")
     else:
         raise ValueError('unsupported type')
 

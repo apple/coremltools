@@ -298,6 +298,9 @@ class Operation:
                             msg = 'value_inference differs for var {} in op {}'
                             if not _is_compatible_symbolic_array(sym_val.val, out_var.sym_val):
                                 raise ValueError(msg.format(out_var.name, self.name))
+                                
+                for o in self.outputs:
+                    o._set_nonreplaceable_vars_upstream()
 
     def _auto_val(self, output_types):
         """
@@ -499,6 +502,14 @@ class Operation:
     @property
     def op_type(self):
         return type(self).__name__
+        
+    @property
+    def opset_version(self):
+        op_variants = type(self)._op_variants
+        opset_versions = sorted(list(op_variants.keys()))
+        for i in opset_versions:
+            if op_variants[i] == type(self):
+                return i
 
     def remove_from_block(self):
         """

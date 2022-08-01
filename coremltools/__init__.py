@@ -70,9 +70,13 @@ class ComputeUnit(_Enum):
     ALL = 1  # Allows the model to use all compute units available, including the neural engine
     CPU_AND_GPU = 2 # Allows the model to use both the CPU and GPU, but not the neural engine
     CPU_ONLY = 3 # Limit the model to only use the CPU
+    CPU_AND_NE = 4 # Allows the model to use both the CPU and neural engine, but not the GPU.
+                   # Only available on macOS >= 13.0
 
 # A dictionary that maps the CoreML model specification version to the MLProgram/MIL opset string
 _OPSET = {
+    _SPECIFICATION_VERSION_IOS_13: "CoreML3",
+    _SPECIFICATION_VERSION_IOS_14: "CoreML4",
     _SPECIFICATION_VERSION_IOS_15: "CoreML5",
     _SPECIFICATION_VERSION_IOS_16: "CoreML6",
 }

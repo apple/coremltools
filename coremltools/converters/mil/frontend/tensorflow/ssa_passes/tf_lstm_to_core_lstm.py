@@ -9,6 +9,7 @@ import numpy as np
 
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
+from coremltools.converters.mil.mil.passes.helper import block_context_manager
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 
 
@@ -37,7 +38,7 @@ class tf_lstm_to_core_lstm(AbstractGraphPass):
         for f in prog.functions.values():
             _tf_lstm_to_core_lstm_block(f)
 
-
+@block_context_manager
 def _tf_lstm_to_core_lstm_block(block):
     # shallow copy hides changes on f.operations during the loop
     for op in block.operations:
@@ -109,30 +110,29 @@ def _try_replace_with_core_lstm(op):
     cell_clip = None if op.cell_clip is None else op.cell_clip.val
 
     output_sequence = op.op_type == "tf_lstm_block"
-
+    
     block = op.enclosing_block
-    with block:
-        # x: [seq_len, batch, input_dim]
-        if op.op_type == "tf_lstm_block_cell":
-            x = mb.expand_dims(x=op.x, axes=[0], before_op=op)
-        else:  # tf_lstm_block
-            x = op.x
-        new_h_all, new_h, new_cs = mb.lstm(
-            x=x,
-            initial_c=op.c_prev,
-            initial_h=op.h_prev,
-            weight_ih=w_ih,
-            weight_hh=w_hh,
-            bias=bias,
-            recurrent_activation="sigmoid",
-            cell_activation="tanh",
-            activation="tanh",
-            peephole=mb_peep,
-            clip=cell_clip,
-            output_sequence=output_sequence,
-            name=op.name,
-            before_op=op,
-        )
+    # x: [seq_len, batch, input_dim]
+    if op.op_type == "tf_lstm_block_cell":
+        x = mb.expand_dims(x=op.x, axes=[0], before_op=op)
+    else:  # tf_lstm_block
+        x = op.x
+    new_h_all, new_h, new_cs = mb.lstm(
+        x=x,
+        initial_c=op.c_prev,
+        initial_h=op.h_prev,
+        weight_ih=w_ih,
+        weight_hh=w_hh,
+        bias=bias,
+        recurrent_activation="sigmoid",
+        cell_activation="tanh",
+        activation="tanh",
+        peephole=mb_peep,
+        clip=cell_clip,
+        output_sequence=output_sequence,
+        name=op.name,
+        before_op=op,
+    )
 
     if op.op_type == "tf_lstm_block_cell":
         block.replace_uses_of_var_after_op(anchor_op=op, old_var=cs, new_var=new_cs)

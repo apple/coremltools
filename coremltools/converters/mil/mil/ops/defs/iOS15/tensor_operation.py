@@ -38,12 +38,11 @@ from coremltools.converters.mil.mil.operation import (
     SYMBOL,
     VALUE
 )
+from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
+from coremltools.converters.mil.mil.ops.defs._utils import promoted_primitive_type, MAX_SIZE_CONSTANT_FOLDING
 
-from ._op_reqs import register_op
-from ._utils import promoted_primitive_type, MAX_SIZE_CONSTANT_FOLDING
 
-
-@register_op(doc_str="")
+@register_op
 class band_part(Operation):
     """
     Returns a tensor setting everything outside a center band to zeros for the innermost
@@ -94,7 +93,7 @@ class band_part(Operation):
         return self.x.sym_type
 
 
-@register_op(doc_str="")
+@register_op
 class cumsum(Operation):
     """
     Returns the cumulative sum of the input along the given axis.
@@ -169,7 +168,7 @@ class cumsum(Operation):
         return self.x.sym_type
 
 
-@register_op(doc_str="")
+@register_op
 class fill(Operation):
     """
     Returns a tensor with a given shape filled with a constant value.
@@ -222,7 +221,7 @@ class fill(Operation):
         return np.full(shape=self.shape.val, fill_value=self.value.val)
 
 
-@register_op(doc_str="")
+@register_op
 class non_maximum_suppression(Operation):
     """
     Applies non-maximum suppression (NMS) on the input box coordinates according
@@ -299,7 +298,7 @@ class non_maximum_suppression(Operation):
         )
 
 
-@register_op(doc_str="")
+@register_op
 class non_zero(Operation):
     """
     Returns the indices of the elements in the given tensor that are non-zero.
@@ -335,7 +334,7 @@ class non_zero(Operation):
         return np.transpose(np.nonzero(self.x.val))
 
 
-@register_op(doc_str="")
+@register_op
 class one_hot(Operation):
     """
     Returns one-hot vectors whose locations represented in ``indices`` take the ``on_value``,
@@ -420,7 +419,7 @@ class one_hot(Operation):
         return types.tensor(on_type, retshape)
 
 
-@register_op(doc_str="")
+@register_op
 class pad(Operation):
     """
     Pad a tensor.
@@ -527,7 +526,7 @@ class pad(Operation):
         return np.pad(self.x.val, pad_val, mode)
 
 
-@register_op(doc_str="")
+@register_op
 class range_1d(Operation):
     """
     Returns a numpy-like 1- range sequence.
@@ -596,7 +595,7 @@ class range_1d(Operation):
         return types.tensor(self.start.dtype, shape)
 
 
-@register_op(doc_str="")
+@register_op
 class tile(Operation):
     """
     Returns a new tensor by replicating input ``x`` multiples times.
@@ -664,7 +663,7 @@ class tile(Operation):
         return np.tile(self.x.val, reps=self.reps.val)
 
 
-@register_op(doc_str="")
+@register_op
 class argsort(Operation):
     """
     Returns a tensor containing the indices of the sorted values along a given axis
@@ -717,7 +716,7 @@ class argsort(Operation):
         return np.argsort(-self.x.val, axis=self.axis.val)
 
 
-@register_op(doc_str="")
+@register_op
 class topk(Operation):
     """
     Returns a tensor containing top or bottom ``k`` values and the corresponding
@@ -792,7 +791,7 @@ class topk(Operation):
         return values, indices
 
 
-@register_op(doc_str="")
+@register_op
 class flatten2d(Operation):
     """
     Flattens input tensor into 2d tensor by flattening dimensions before and
@@ -856,7 +855,7 @@ class flatten2d(Operation):
         return self.x.val.reshape(dim_pre_axis, dim_post_axis)
 
 
-@register_op(doc_str="")
+@register_op
 class shape(Operation):
     """
     Returns a 1-dimensional tensor with the shape of the input tensor
@@ -895,7 +894,7 @@ class shape(Operation):
             return np.array(self.x.shape).astype(np.int32)
 
 
-@register_op(doc_str="")
+@register_op
 class concat(Operation):
     """
     Concatenates tensors along a dimension.
@@ -1059,7 +1058,7 @@ class concat(Operation):
         return np.concatenate(values, axis=self.axis.val)
 
 
-@register_op(doc_str="")
+@register_op
 class split(Operation):
     """
     Split tensors into a tuple
@@ -1188,7 +1187,7 @@ class split(Operation):
         return tuple(np.split(self.x.sym_val, split_indices[:-1], axis=self.axis.val))
 
 
-@register_op(doc_str="")
+@register_op
 class stack(Operation):
     """
     Concatenates tensors along a dimension.
@@ -1256,7 +1255,7 @@ class stack(Operation):
 
 # identity is used for renaming and is rarely necessary. See
 # `loop_invariant_elimination` pass for a rare use case.
-@register_op(doc_str="")
+@register_op
 class identity(Operation):
     """
     Returns a tensor with the same shape and contents as input.
