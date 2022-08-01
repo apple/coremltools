@@ -38,10 +38,10 @@ pip install coremltools
 
 ## Version 6
 
-To install [the first beta of coremltools 6.0](https://github.com/apple/coremltools/releases/tag/6.0b1) use the following command in your terminal:
+To install [the second beta of coremltools 6.0](https://github.com/apple/coremltools/releases/tag/6.0b2) use the following command in your terminal:
 
 ```shell
-pip install coremltools==6.0b1
+pip install coremltools==6.0b2
 ```
 
 
