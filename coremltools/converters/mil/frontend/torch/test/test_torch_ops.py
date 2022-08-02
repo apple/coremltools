@@ -3370,6 +3370,25 @@ class TestLog10(TorchBaseTest):
             input_shape, model, backend=backend,
         )
 
+class TestLog2(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "backend, rank", itertools.product(backends, range(1, 6)),
+    )
+    def test_log2(self, backend, rank):
+
+        class Log2Model(nn.Module):
+            def __init__(self):
+                super(Log2Model, self).__init__()
+
+            def forward(self, x):
+                return torch.log2(x)
+
+        input_shape = tuple(np.random.randint(low=1, high=10, size=rank))
+        model = Log2Model()
+        self.run_compare_torch(
+            input_shape, model, backend=backend,
+        )
+
 class TestFlip(TorchBaseTest):
     @pytest.mark.parametrize(
         "backend, rank_dim",

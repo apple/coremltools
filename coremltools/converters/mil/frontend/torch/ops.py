@@ -4438,6 +4438,13 @@ def log10(context, node):
     context.add(mb.mul(x=log_x, y=1/_np.log(10.0)), node.name)
 
 @register_torch_op
+def log2(context, node):
+    inputs = _get_inputs(context, node)
+    x = inputs[0]
+    log_x = mb.log(x=x)
+    context.add(mb.mul(x=log_x, y=1/_np.log(2.0)), node.name)
+
+@register_torch_op
 def flip(context, node):
     inputs = _get_inputs(context, node, expected=2)
     x = mb.reverse(x=inputs[0], axes=inputs[1], name=node.name)
