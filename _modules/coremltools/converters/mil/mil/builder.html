@@ -281,7 +281,7 @@
         <span class="k">return</span> <span class="n">Placeholder</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Builder.program"><a class="viewcode-back" href="../../../../../source/coremltools.converters.mil.html#coremltools.converters.mil.mil.Builder.program">[docs]</a>    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">program</span><span class="p">(</span><span class="n">input_specs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">program</span><span class="p">(</span><span class="n">input_specs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">opset_version</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        </span>
 <span class="sd">        The ``mb.program`` decorator creates a MIL program with a single </span>
@@ -291,13 +291,16 @@
 <span class="sd">        ----------</span>
 <span class="sd">        </span>
 <span class="sd">        input_specs: TensorSpec</span>
-<span class="sd">             Describes a tensor.</span>
+<span class="sd">            Describes a tensor.</span>
+<span class="sd">             </span>
+<span class="sd">        opset_version: AvailableTarget enum</span>
+<span class="sd">            Describes the opset version of the program</span>
 <span class="sd">        </span>
 <span class="sd">        </span>
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
-
-<span class="sd">        &gt;&gt;&gt; @mb.program(input_specs=[mb.TensorSpec(shape=(1,2))])</span>
+<span class="sd">        &gt;&gt;&gt; import coremltools as ct</span>
+<span class="sd">        &gt;&gt;&gt; @mb.program(input_specs=[mb.TensorSpec(shape=(1,2))], opset_version=ct.target.iOS16)</span>
 <span class="sd">        &gt;&gt;&gt; def prog(a):</span>
 <span class="sd">        &gt;&gt;&gt;     return mb.add(x=a, y=2)</span>
 
@@ -317,7 +320,7 @@
                     <span class="p">)</span>
                 <span class="p">)</span>
             <span class="n">input_spec_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">arg_names</span><span class="p">,</span> <span class="n">input_specs</span><span class="p">)}</span>
-            <span class="k">with</span> <span class="n">Function</span><span class="p">(</span><span class="n">input_spec_dict</span><span class="p">)</span> <span class="k">as</span> <span class="n">func</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">Function</span><span class="p">(</span><span class="n">input_spec_dict</span><span class="p">,</span> <span class="n">opset_version</span><span class="p">)</span> <span class="k">as</span> <span class="n">func</span><span class="p">:</span>
                 <span class="n">input_vars</span> <span class="o">=</span> <span class="p">[</span><span class="n">func</span><span class="o">.</span><span class="n">inputs</span><span class="p">[</span><span class="n">a</span><span class="p">]</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">arg_names</span><span class="p">]</span>
                 <span class="n">outputs</span> <span class="o">=</span> <span class="n">main_block</span><span class="p">(</span><span class="o">*</span><span class="n">input_vars</span><span class="p">)</span>
                 <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">outputs</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
@@ -329,10 +332,6 @@
             <span class="k">return</span> <span class="n">program</span>
 
         <span class="k">return</span> <span class="n">wrapper</span></div></div>
-
-
-<span class="c1"># importing ops triggers installation of all ops into Builder</span>
-<span class="kn">from</span> <span class="nn">.ops</span> <span class="kn">import</span> <span class="n">defs</span> <span class="k">as</span> <span class="n">_ops</span>
 </pre></div>
 
            </div>

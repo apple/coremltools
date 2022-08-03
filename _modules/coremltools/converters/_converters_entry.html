@@ -171,6 +171,7 @@
 <span class="sd">            - `HDF5 file path &lt;https://keras.io/api/models/model_saving_apis/&gt;`_ (``.h5``)</span>
 <span class="sd">            - `SavedModel &lt;https://www.tensorflow.org/guide/saved_model&gt;`_ directory path</span>
 <span class="sd">            - A `concrete function &lt;https://www.tensorflow.org/guide/concrete_function&gt;`_</span>
+<span class="sd">            - A `GraphDef &lt;https://www.tensorflow.org/api_docs/python/tf/compat/v1/GraphDef&gt;`_</span>
 
 <span class="sd">        * PyTorch</span>
 <span class="sd">        </span>
@@ -423,6 +424,8 @@
 <span class="sd">            - ``coremltools.ComputeUnit.CPU_ONLY``: Limit the model to only use the CPU.</span>
 <span class="sd">            - ``coremltools.ComputeUnit.CPU_AND_GPU``: Use both the CPU and GPU, but not the</span>
 <span class="sd">              neural engine.</span>
+<span class="sd">            - ``coremltools.ComputeUnit.CPU_AND_NE``: Use both the CPU and neural engine, but</span>
+<span class="sd">              not the GPU. Available only for macOS &gt;= 13.0.</span>
 
 <span class="sd">    package_dir : str</span>
 <span class="sd">        Post conversion, the model is saved at a temporary location and</span>

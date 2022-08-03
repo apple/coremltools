@@ -461,7 +461,7 @@
     <span class="k">if</span> <span class="n">_HAS_SKLEARN</span><span class="p">:</span>
         <span class="kn">from</span> <span class="nn">sklearn.cluster</span> <span class="kn">import</span> <span class="n">KMeans</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;sklearn package required for k-means quantization&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;scikit-learn package required for k-means quantization&quot;</span><span class="p">)</span>
     <span class="n">units</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
     <span class="n">lut_len</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="n">nbits</span>
     <span class="n">n_clusters</span> <span class="o">=</span> <span class="n">units</span> <span class="k">if</span> <span class="p">(</span><span class="n">units</span> <span class="o">&lt;</span> <span class="n">lut_len</span><span class="p">)</span> <span class="k">else</span> <span class="n">lut_len</span>
