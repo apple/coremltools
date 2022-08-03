@@ -1039,7 +1039,7 @@ class sliding_windows(Operation):
 
     Attributes
     ----------
-    T: fp16, fp32, i32
+    T: fp16, fp32, int32
     """
 
     input_spec = InputSpec(

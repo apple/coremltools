@@ -6,7 +6,7 @@ Operators supported by the Model Intermediate Language (MIL):
 activation
 ---------------------------------------------------------
 
-.. automodule:: coremltools.converters.mil.mil.ops.defs.activation
+.. automodule:: coremltools.converters.mil.mil.ops.defs.iOS15.activation
 
    .. autoclass:: clamped_relu
    .. autoclass:: elu
@@ -27,10 +27,29 @@ activation
    .. autoclass:: thresholded_relu
 
 
+classify
+---------------------------------------------------
+
+.. automodule:: coremltools.converters.mil.mil.ops.defs.iOS15.classify
+
+   .. autoclass:: classify
+
+
+constexpr_ops
+---------------------------------------------------
+
+.. automodule:: coremltools.converters.mil.mil.ops.defs.iOS16.constexpr_ops
+
+   .. autoclass:: constexpr_affine_dequantize
+   .. autoclass:: constexpr_cast
+   .. autoclass:: constexpr_lut_to_dense
+   .. autoclass:: constexpr_sparse_to_dense
+
+
 control\_flow
 ------------------------------------------------------------
 
-.. automodule:: coremltools.converters.mil.mil.ops.defs.control_flow
+.. automodule:: coremltools.converters.mil.mil.ops.defs.iOS15.control_flow
 
    .. autoclass:: cond
    .. autoclass:: Const
@@ -47,7 +66,7 @@ control\_flow
 conv
 ---------------------------------------------------
 
-.. automodule:: coremltools.converters.mil.mil.ops.defs.conv
+.. automodule:: coremltools.converters.mil.mil.ops.defs.iOS15.conv
 
    .. autoclass:: conv
    .. autoclass:: conv_transpose
@@ -56,7 +75,7 @@ conv
 elementwise\_binary
 ------------------------------------------------------------------
 
-.. automodule:: coremltools.converters.mil.mil.ops.defs.elementwise_binary
+.. automodule:: coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary
 
    .. autoclass:: add
    .. autoclass:: equal
@@ -81,7 +100,7 @@ elementwise\_binary
 elementwise\_unary
 -----------------------------------------------------------------
 
-.. automodule:: coremltools.converters.mil.mil.ops.defs.elementwise_unary
+.. automodule:: coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary
 
    .. autoclass:: abs
    .. autoclass:: acos
@@ -112,10 +131,10 @@ elementwise\_unary
    .. autoclass:: cast
 
 
-image\_resizing
+image\_resizing (iOS 15)
 --------------------------------------------------------------
 
-.. automodule:: coremltools.converters.mil.mil.ops.defs.image_resizing
+.. automodule:: coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing
 
    .. autoclass:: affine
    .. autoclass:: upsample_nearest_neighbor
@@ -126,11 +145,18 @@ image\_resizing
    .. autoclass:: crop_resize
    .. autoclass:: crop
 
+image\_resizing (iOS 16+)
+--------------------------------------------------------------
+
+.. automodule:: coremltools.converters.mil.mil.ops.defs.iOS16.image_resizing
+
+   .. autoclass:: resample
+
 
 linear
 -----------------------------------------------------
 
-.. automodule:: coremltools.converters.mil.mil.ops.defs.linear
+.. automodule:: coremltools.converters.mil.mil.ops.defs.iOS15.linear
 
    .. autoclass:: linear
    .. autoclass:: matmul
@@ -140,7 +166,7 @@ linear
 normalization
 ------------------------------------------------------------
 
-.. automodule:: coremltools.converters.mil.mil.ops.defs.normalization
+.. automodule:: coremltools.converters.mil.mil.ops.defs.iOS15.normalization
 
    .. autoclass:: batch_norm
    .. autoclass:: instance_norm
@@ -152,7 +178,7 @@ normalization
 pool
 ---------------------------------------------------
 
-.. automodule:: coremltools.converters.mil.mil.ops.defs.pool
+.. automodule:: coremltools.converters.mil.mil.ops.defs.iOS15.pool
 
    .. autoclass:: avg_pool
    .. autoclass:: l2_pool
@@ -162,7 +188,7 @@ pool
 random
 -----------------------------------------------------
 
-.. automodule:: coremltools.converters.mil.mil.ops.defs.random
+.. automodule:: coremltools.converters.mil.mil.ops.defs.iOS15.random
 
    .. autoclass:: random_bernoulli
    .. autoclass:: random_categorical
@@ -173,7 +199,7 @@ random
 recurrent
 --------------------------------------------------------
 
-.. automodule:: coremltools.converters.mil.mil.ops.defs.recurrent
+.. automodule:: coremltools.converters.mil.mil.ops.defs.iOS15.recurrent
 
    .. autoclass:: gru
    .. autoclass:: lstm
@@ -183,7 +209,7 @@ recurrent
 reduction
 --------------------------------------------------------
 
-.. automodule:: coremltools.converters.mil.mil.ops.defs.reduction
+.. automodule:: coremltools.converters.mil.mil.ops.defs.iOS15.reduction
 
    .. autoclass:: reduce_argmax
    .. autoclass:: reduce_argmin
@@ -202,7 +228,7 @@ reduction
 scatter\_gather
 --------------------------------------------------------------
 
-.. automodule:: coremltools.converters.mil.mil.ops.defs.scatter_gather
+.. automodule:: coremltools.converters.mil.mil.ops.defs.iOS15.scatter_gather
 
    .. autoclass:: gather
    .. autoclass:: scatter
@@ -212,10 +238,10 @@ scatter\_gather
    .. autoclass:: scatter_nd
 
 
-tensor\_operation
+tensor\_operation (iOS 15)
 ----------------------------------------------------------------
 
-.. automodule:: coremltools.converters.mil.mil.ops.defs.tensor_operation
+.. automodule:: coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation
 
    .. autoclass:: band_part
    .. autoclass:: cumsum
@@ -236,10 +262,18 @@ tensor\_operation
    .. autoclass:: identity
 
 
-tensor\_transformation
+tensor\_operation (iOS 16+)
+----------------------------------------------------------------
+
+.. automodule:: coremltools.converters.mil.mil.ops.defs.iOS16.tensor_operation
+
+   .. autoclass:: topk
+
+
+tensor\_transformation (iOS 15)
 ---------------------------------------------------------------------
 
-.. automodule:: coremltools.converters.mil.mil.ops.defs.tensor_transformation
+.. automodule:: coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation
 
    .. autoclass:: depth_to_space
    .. autoclass:: expand_dims
@@ -253,4 +287,12 @@ tensor\_transformation
    .. autoclass:: transpose
    .. autoclass:: pixel_shuffle
    .. autoclass:: sliding_windows
+
+
+tensor\_transformation (iOS 16+)
+---------------------------------------------------------------------
+
+.. automodule:: coremltools.converters.mil.mil.ops.defs.iOS16.tensor_transformation
+
+   .. autoclass:: pixel_unshuffle
 

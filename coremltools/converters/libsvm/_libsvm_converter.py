@@ -23,9 +23,10 @@ def _infer_min_num_features(model):
 
 
 def convert(libsvm_model, feature_names, target, input_length, probability):
-    """Convert a svm model to the protobuf spec.
+    """
+    Convert a support vector machine (SVM) model to the protobuf spec.
 
-    This currently supports:
+    Supports:
       * C-SVC
       * nu-SVC
       * Epsilon-SVR

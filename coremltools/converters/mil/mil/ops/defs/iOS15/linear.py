@@ -236,34 +236,34 @@ class einsum(Operation):
     dimensions -1 and -3, treating all the other dimensions as batch. Broadcasting is supported along batch dimensions.
     In particular, the inputs must be of the following shapes:
 
-    * Rank 4 input case
-        * Input 1: ``[B, C, H, W1]``
-        * Input 2: ``[B, W1, H, W2]``
-        * Output: ``[B, C, H, W2]``
+    * Rank 4 input case:
+        * Input 1: ``[B, C, H, W1]``.
+        * Input 2: ``[B, W1, H, W2]``.
+        * Output: ``[B, C, H, W2]``.
         * If, for one of the inputs, the dimensions ``"B"`` or ``"H"`` is 1, they are broadcast to match the other input.
 
-    * Rank 3 input case
-        * Input 1: ``[C, H, W1]``
-        * Input 2: ``[W1, H, W2]``
-        * Output: ``[C, H, W2]``
+    * Rank 3 input case:
+        * Input 1: ``[C, H, W1]``.
+        * Input 2: ``[W1, H, W2]``.
+        * Output: ``[C, H, W2]``.
         * If, for one of the inputs, the dimension ``"H"`` is 1, it is broadcast to match the other input.
 
     Parameters
     ----------
     values : Tuple(tensor_1, tensor_2)
         * Where:
-            * ``tensor_1``: ``tensor<[*D, C, H, W1], T>``
+            * ``tensor_1``: ``tensor<[*D, C, H, W1], T>``.
             * Must be of rank 3 or 4.
-            * ``tensor_2``: ``tensor<[*D, W1, H, W2], T>``
+            * ``tensor_2``: ``tensor<[*D, W1, H, W2], T>``.
             * Must be of rank 3 or 4.
     equation: const<str>
         * Supported equations are:
-            * ``"nchw,nwhu->nchu"`` and its equivalent equation strings
-            * ``"chw,whr->chr"`` and its equivalent equation strings
+            * ``"nchw,nwhu->nchu"`` and its equivalent equation strings.
+            * ``"chw,whr->chr"`` and its equivalent equation strings.
 
     Returns
     -------
-    tensor<[*D, C, H, W2], T>
+    tensor<[\*D, C, H, W2], T>
         * Same ranks as the inputs.
 
     Attributes

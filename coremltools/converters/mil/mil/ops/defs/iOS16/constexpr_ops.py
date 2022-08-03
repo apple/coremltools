@@ -16,45 +16,42 @@ class constexpr_affine_dequantize(Operation):
     """
     A compile-time operation that returns a constant output value upon dequantizing its constant inputs.
 
-    This operation is used to represent constant 8 bit quantized data with affine/linear quantization.
-    The quantized data is stored in the parameter "quantized_data".
-    The other parameters, scale, zero_point and axis describe how unquantized values can be extracted from it,
-    using the equation for affine/linear quantization:
-
+    This operation is used to represent constant 8-bit quantized data with affine/linear quantization.
+    The quantized data is stored in the parameter ``quantized_data``.
+    The other parameters -- ``scale``, ``zero_point``, and ``axis`` -- describe how
+    unquantized values can be extracted from it, using the equation for affine/linear quantization:
+    ::
                 unquantized_data = scale * (quantized_data - zero_point)
 
-    Although all the parameters of this op are constants, this op is not constant folded to a single const op, at the time of model serialization.
-    The unquantized output will be decompressed later, based on the implementation detail (either at model load time or runtime)
+    Although all of the parameters of this op are constants, this op is not constant folded
+    to a single const op at the time of model serialization. The unquantized output will
+    be decompressed later, based on the implementation detail (either at model load time or runtime).
 
     Parameters
     ----------
     quantized_data: const tensor<SrcT, [1..]> (Required)
 
     zero_point: const tensor<SrcT, [0..1]> (Required)
+ 	   * ``zero_point`` can be either a scalar or a vector. 
+ 	   * ``zero_point`` follows similar broadcasting rules and size constraints as ``scale``.
 
     scale: const tensor<DstT, [0..1]> (Required)
+       * ``scale`` can be either a scalar or a vector. If ``scale`` is a vector,
+         for implementation it is broadcast to the following shape:
+           * The rank of ``scale`` becomes the same as the rank of ``quantized_data``.
+           * The constraint: ``size(scale-vector) == quantized_data.shape[axis]``.
+           * For ``i == axis``, ``scale.shape[i] == quantized_data.shape[i]``.
+           * For ``i != axis``, ``scale.shape == 1``.
+         For example, assume ``quantized_data.shape = (2, 3, 4, 5)`` and ``axis = 1``.
+         If ``scale`` is a vector, then ``scale.size`` needs to be equal to
+         ``quantized_data.shape[axis] i.e = 3``, which would be broadcast to ``(1, 3, 1, 1)``.
 
     axis: const tensor<int32, []> (Required)
-
-    scale can be either a scalar or a vector
-    zero_point can be either a scalar or a vector
-    If scale is a vector, for implementation, it gets broadcasted to following shape
-        - Rank of scale becomes same as the rank of quantized_data
-        - Constraint: size(scale-vector) == quantized_data.shape[axis]
-        - For i == axis, scale.shape[i] == quantized_data.shape[i]
-        - For i != axis, scale.shape == 1
-
-    For example:
-        Let's say quantized_data.shape = (2, 3, 4, 5) and axis = 1
-        if scale is a vector, then scale.size needs to be equals to quantized_data.shape[axis] i.e = 3,
-        which we would get broadcasted to (1, 3, 1, 1)
-
-    zero_point follows similar broadcasting rules and size constraints as scale
 
     Returns
     -------
     const tensor<DstT, [1..]>
-
+  
     Attributes
     ----------
     SrcT: uint8, int8
@@ -141,8 +138,8 @@ class constexpr_affine_dequantize(Operation):
 class constexpr_cast(Operation):
     """
     A compile-time operation that returns a constant output value upon casting its constant input.
-
-    Expression: output = constexpr_cast(source_val, output_dtype="fp32")
+    ::
+                Expression: output = constexpr_cast(source_val, output_dtype="fp32")
 
     Parameters
     ----------
@@ -184,12 +181,13 @@ class constexpr_cast(Operation):
 @register_op(opset_version=_IOS16_TARGET)
 class constexpr_lut_to_dense(Operation):
     """
-    A compile-time operation that returns a constant output value upon decompressing look-up-table to a dense tensor.
+    A compile-time operation that returns a constant output value upon decompressing 
+    a look-up table (LUT) to a dense tensor.
 
-    This operation is used to store constant weights in a look up table format (aka palettized weights).
-    Look up table (LUT) is a mapping from index to values.
-    Weights are quantized and stored as indices (or keys) into LUT.
-    Before computation, these keys are mapped to corresponding values in LUT.
+    This operation is used to store constant weights in a LUT format (also known as
+    `palettized` weights). A LUT is a mapping from index to values.
+    Weights are quantized and stored as indices (or keys) into the LUT.
+    Before computation, these keys are mapped to corresponding values in the LUT.
 
     Parameters
     ----------
@@ -199,16 +197,21 @@ class constexpr_lut_to_dense(Operation):
 
     shape: const tensor<uint32, [K]> (Required)
 
-    Any data is packed and read in a row-major order
-    NUM_PALETTES can be one of {2, 4, 16, 64 or 256}
-    n_bits = log2(NUM_PALETTES) can thus be one of {1, 2, 4, 6, 8}
-    indices are packed in bytes of size M, where M = ceil(n_bits * product(shape) / 8)
-    The bit fields are packed one byte at a time, starting with the least significant bit and
-    moving upwards towards the most significant bit. It follows naturally, if an index is split
-    across two bytes, LSB bits of that index gets filled over MSB bits of current byte and the remaining
-    bits of the same index gets filled in the LSB bits of the next byte.
+	Notes
+	-----
+
+    * Any data is packed and read in a row-major order.
+    * ``NUM_PALETTES`` can be one of ``{2, 4, 16, 64 or 256}``.
+    * ``n_bits = log2(NUM_PALETTES)`` can thus be one of ``{1, 2, 4, 6, 8}``.
+    * Indices are packed in bytes of size ``M``, where ``M = ceil(n_bits * product(shape) / 8)``.
+    
+    The bit fields are packed one byte at a time, starting with the least significant bit (LSB) and
+    moving upward to the most significant bit (MSB). It follows, naturally, that if an index is split
+    across two bytes, the LSBs of that index is filled over the MSBs of current byte, and the remaining
+    bits of the same index are filled in the LSBs of the next byte.
 
     For example:
+    ::
         if n_bits = 2, shape = (5,) => M = 2 bytes
 
                     MSB             LSB
@@ -293,8 +296,9 @@ class constexpr_sparse_to_dense(Operation):
     A compile-time operation that returns a constant output value upon de-sparsification of its constant inputs.
 
     This operation represents unstructured sparsity and uses bit mask binary representation.
-    If a bit is set, then the corresponding element in output tensor is non-zero and the value is read from `nonzero_data` attribute.
-    Likewise, if bit is not set, then the corresponding element in output tensor is zero.
+    If a bit is set, then the corresponding element in the output tensor is non-zero and the
+    value is read from the ``nonzero_data`` attribute. Likewise, if the bit is not set,
+    then the corresponding element in the output tensor is zero.
 
     Parameters
     ----------
@@ -304,13 +308,18 @@ class constexpr_sparse_to_dense(Operation):
 
     shape: const tensor<uint32, [K]> (Required)
 
-    Any data is packed and read in a row-major order
-    Mask contains M bytes where M = ceil( product(shape) / 8) i.e each bit field corresponds to one element in output tensor
-    D == total number of set bits in Mask
+	Notes
+	-----
+    * Any data is packed and read in a row-major order.
+    * ``mask`` contains ``M`` bytes, where ``M = ceil( product(shape) / 8)``. That is, each bit
+      field corresponds to one element in the output tensor.
+    * ``D ==`` the total number of set bits in ``mask``.
+
     The bit fields are packed one byte at a time, starting with the least significant bit and
-    moving upwards towards the most significant bit.
+    moving up to the most significant bit.
 
     For example:
+    ::
         shape = (5,) => M = 1 bytes
 
                    MSB                  LSB

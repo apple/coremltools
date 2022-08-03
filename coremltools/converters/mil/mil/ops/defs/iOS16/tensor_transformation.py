@@ -20,7 +20,7 @@ from coremltools.converters.mil.mil.ops.defs.iOS16 import _IOS16_TARGET
 class pixel_unshuffle(Operation):
     """
     Rearrange elements in a tensor from spatial dimensions into depth (channel).
-    It is basically the inverse operation of pixel_shuffle.
+    It is basically the inverse operation of `pixel_shuffle <#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.pixel_shuffle>`_.
     Equivalent to PyTorch's ``PixelUnshuffle``.
 
     Parameters

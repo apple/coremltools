@@ -18,26 +18,27 @@ from coremltools.converters.mil.mil.types.symbolic import any_symbolic
 @register_op
 class classify(Operation):
     """
-    Presence of this op indicates that the model is of type classifier,
-    which accordingly constructs the model output, that is, the predicted class label
+    The presence of this op indicates that the model is of type classifier. The op
+    constructs the model output accordingly; that is, the predicted class label
     and the output probability dictionary. The parameters of this op are set
-    based on the attributes set for the class "coremltools.ClassifierConfig" by the user.
-    The outputs of this op cannot be used by another op.
+    based on the attributes set for the 
+    `coremltools.ClassifierConfig <https://apple.github.io/coremltools/source/coremltools.converters.mil.input_types.html#classifierconfig>`_ class
+    by the user. The outputs of this op cannot be used by another op.
 
     Parameters
     ----------
-    * probabilities: tensor<[* , ProbT]> (Required)
-        * a tensor in the graph, which is used to compute the classifier output(s)
-        * This is the tensor whose values are mapped to the class labels and used for
-        * constructing the predicted class label and the output dictionary of class names
-        *  and values
-    * classes: list<*, ClassT> (Required)
-        * list of classes
+    probabilities: tensor<[\* , ProbT]> (Required)
+        A tensor in the graph, which is used to compute the classifier output(s). This
+        is the tensor whose values are mapped to the class labels and used for constructing
+        the predicted class label and the output dictionary of class names and values.
+
+    classes: list<\*, ClassT> (Required)
+        List of classes.
 
     Returns
     -------
-    * <classT>
-    * Dict[classT, probT]
+    <classT>
+    Dict[classT, probT]
 
 
     Attributes

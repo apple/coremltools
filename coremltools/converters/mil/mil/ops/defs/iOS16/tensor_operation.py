@@ -23,17 +23,21 @@ from coremltools.converters.mil.mil.ops.defs.iOS16 import _IOS16_TARGET
 @register_op(opset_version=_IOS16_TARGET)
 class topk(_topk_iOS15):
     """
-    An iOS16 version of topk
+    A version of ``topk`` for iOS 16+. This section documents the differences. For the
+    rest of the documentation, see `the iOS 15 version of topk <#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.topk>`_.
 
-    Additional Parameters
+    Parameters
     ----------
-    * sort: const<bool> (Optional)
-        * Default to ``True``
-        * If true, top-k elements are themselves sorted. 
+       * The following are additional parameters for the iOS 16+ version. (For more parameters, see
+         `the iOS 15 version of topk <#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.topk>`_.)
+    
+    sort: const<bool> (Optional)
+        * Default to ``True``.
+        * If ``True``, ``top-k`` elements are themselves sorted.
           Otherwise, no particular ordering is guaranteed.
-    * return_indices: const<bool> (Optional)
-        # Default to ``True``
-        # If true, returns both values and indices. Otherwise, returns only the top-k values.
+    return_indices: const<bool> (Optional)
+        # Default to ``True``.
+        # If ``True`, returns both values and indices. Otherwise, returns only the ``top-k`` values.
 
     Returns
     -------

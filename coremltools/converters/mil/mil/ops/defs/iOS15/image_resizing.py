@@ -758,7 +758,7 @@ class resample(Operation):
     """
     Resample the input image tensor ``x`` at the ``coordinates``.
     Resampling is required if the coordinates do not correspond to exact
-    pixels in the input image. The ``sampling_mode ``determines
+    pixels in the input image. The ``sampling_mode`` determines
     the algorithm used for resampling and computing the values.
 
     Parameters
@@ -826,7 +826,7 @@ class resample(Operation):
     Attributes
     ----------
     T: fp16, fp32
-    U: fp32, i32
+    U: fp32, int32
     """
 
     input_spec = InputSpec(
