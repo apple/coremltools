@@ -3,23 +3,26 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import unittest
-import tempfile
+import copy
 import os
-import pandas as pd
 import random
-import pytest
-import numpy as np
+import tempfile
+import unittest
 
+import numpy as np
+import pandas as pd
+import pytest
+
+from coremltools._deps import _HAS_LIBSVM, _HAS_SKLEARN
 from coremltools.models.utils import (
     evaluate_classifier,
     evaluate_classifier_with_probabilities,
     _macos_version,
     _is_macos,
 )
-from coremltools._deps import _HAS_LIBSVM, _HAS_SKLEARN
 
 if _HAS_SKLEARN:
+    from sklearn.preprocessing import OneHotEncoder
     from sklearn.svm import SVC
     from coremltools.converters import sklearn as scikit_converter
 
@@ -85,7 +88,6 @@ class SvcScikitTest(unittest.TestCase):
                 cur_params.update(param2)
                 cur_params["probability"] = use_probability_estimates
                 cur_params["max_iter"] = 10  # Don't want test to take too long
-                print("cur_params=" + str(cur_params))
 
                 cur_model = SVC(**cur_params)
                 cur_model.fit(x, y)
@@ -107,7 +109,7 @@ class SvcScikitTest(unittest.TestCase):
                             metrics["max_probability_error"], allowed_prob_delta
                         )
                     else:
-                        df["prediction"] = cur_model.predict(x)
+                        df["target"] = cur_model.predict(x)
                         metrics = evaluate_classifier(spec, df, verbose=False)
                         self.assertEqual(metrics["num_errors"], 0)
 
@@ -154,8 +156,6 @@ class SvcScikitTest(unittest.TestCase):
         self._evaluation_test_helper([1, 2, 3], True, allow_slow=False)
 
     def test_conversion_bad_inputs(self):
-        from sklearn.preprocessing import OneHotEncoder
-
         # Error on converting an untrained model
         with self.assertRaises(TypeError):
             model = SVC()
@@ -245,7 +245,7 @@ class CSVCLibSVMTest(unittest.TestCase):
         self.assertEqual(len(spec.description.output), 1)
         self.assertEqual(spec.description.output[0].name, u"target")
         if _is_macos() and _macos_version() >= (10, 13):
-            (df["prediction"], _, _) = svm_predict(
+            (df["target"], _, _) = svm_predict(
                 self.y, self.x, no_probability_model, " -q"
             )
             metrics = evaluate_classifier(spec, df, verbose=False)
@@ -282,8 +282,6 @@ class CSVCLibSVMTest(unittest.TestCase):
         self._evaluation_test_helper_with_probability([1, 2, 3], allow_slow=False)
 
     def _evaluation_test_helper_with_probability(self, labels, allow_slow):
-        import copy
-
         df = pd.DataFrame(self.x, columns=self.column_names)
         y = copy.copy(self.y)
         for i, val in enumerate(labels):
@@ -295,13 +293,12 @@ class CSVCLibSVMTest(unittest.TestCase):
                 param_str = " ".join(
                     [self.base_param, param1, param2, probability_param]
                 )
-                # print("PARAMS: ", param_str)
                 param = svm_parameter(param_str)
 
                 model = svm_train(self.prob, param)
 
                 # Get predictions with probabilities as dictionaries
-                (df["prediction"], _, probability_lists) = svm_predict(
+                (df["target"], _, probability_lists) = svm_predict(
                     y, self.x, model, probability_param + " -q"
                 )
                 probability_dicts = [
@@ -347,13 +344,12 @@ class CSVCLibSVMTest(unittest.TestCase):
         for param1 in self.non_kernel_parameters:
             for param2 in self.kernel_parameters:
                 param_str = " ".join([self.base_param, param1, param2])
-                print("PARAMS: ", param_str)
                 param = svm_parameter(param_str)
 
                 model = svm_train(prob, param)
 
                 # Get predictions with probabilities as dictionaries
-                (df["prediction"], _, _) = svm_predict(y, x, model, " -q")
+                (df["target"], _, _) = svm_predict(y, x, model, " -q")
 
                 spec = libsvm.convert(model, column_names, "target")
 

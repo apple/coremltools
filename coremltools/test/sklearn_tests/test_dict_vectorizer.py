@@ -3,17 +3,24 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import unittest
-from coremltools._deps import _HAS_SKLEARN
 from copy import copy
+import unittest
+
 import numpy as np
-from coremltools.models.utils import evaluate_transformer
-from coremltools.models.utils import evaluate_classifier
-from coremltools.models.utils import _macos_version, _is_macos
+import numpy.random as rn
+import pandas as pd
+
+import coremltools
+from coremltools._deps import _HAS_SKLEARN
+from coremltools.models.utils import (
+    _macos_version, _is_macos, evaluate_classifier, evaluate_transformer,
+)
 
 if _HAS_SKLEARN:
     from coremltools.converters import sklearn
     from sklearn.feature_extraction import DictVectorizer
+    from sklearn.pipeline import Pipeline
+    from sklearn.linear_model import LogisticRegression
 
 
 @unittest.skipIf(not _HAS_SKLEARN, "Missing sklearn. Skipping tests.")
@@ -41,8 +48,8 @@ class DictVectorizerScikitTest(unittest.TestCase):
             )
             assert ret["num_errors"] == 0
 
-    def test_dictvectorizer(self):
 
+    def test_dictvectorizer(self):
         D = [
             {"foo": 1, "bar": 3},
             {"bar": 4, "baz": 2},
@@ -56,6 +63,7 @@ class DictVectorizerScikitTest(unittest.TestCase):
                     v = v.fit(D)
                     self._test_conversion(D, v)
 
+
     def test_unseen_or_no_features(self):
         D1 = [{"camelot": 0, "spamalot": 1}]
         D2 = [{}, {"nothing": 21}]
@@ -67,11 +75,8 @@ class DictVectorizerScikitTest(unittest.TestCase):
                     v = v.fit(D1)
                     self._test_conversion(D2, v)
 
+
     def test_int_features_in_pipeline(self):
-
-        import numpy.random as rn
-        import pandas as pd
-
         rn.seed(0)
 
         x_train_dict = [
@@ -79,14 +84,8 @@ class DictVectorizerScikitTest(unittest.TestCase):
         ]
         y_train = [0, 1] * 50
 
-        from sklearn.pipeline import Pipeline
-        from sklearn.feature_extraction import DictVectorizer
-        from sklearn.linear_model import LogisticRegression
-
         pl = Pipeline([("dv", DictVectorizer()), ("lm", LogisticRegression())])
         pl.fit(x_train_dict, y_train)
-
-        import coremltools
 
         model = coremltools.converters.sklearn.convert(
             pl, input_features="features", output_feature_names="target"
@@ -94,7 +93,7 @@ class DictVectorizerScikitTest(unittest.TestCase):
 
         if _is_macos() and _macos_version() >= (10, 13):
             x = pd.DataFrame(
-                {"features": x_train_dict, "prediction": pl.predict(x_train_dict)}
+                {"features": x_train_dict, "target": pl.predict(x_train_dict)}
             )
 
             cur_eval_metics = evaluate_classifier(model, x)

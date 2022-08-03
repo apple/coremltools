@@ -3,10 +3,11 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import pandas as pd
 import itertools
-import pytest
 import unittest
+
+import pandas as pd
+import pytest
 
 from coremltools._deps import _HAS_SKLEARN, _HAS_XGBOOST
 from coremltools.models.utils import evaluate_regressor, _macos_version, _is_macos
@@ -20,6 +21,7 @@ if _HAS_SKLEARN:
     from sklearn.ensemble import GradientBoostingRegressor
     from coremltools.converters import sklearn as skl_converter
     from sklearn.tree import DecisionTreeRegressor
+
 
 @unittest.skipIf(not _HAS_SKLEARN, "Missing sklearn. Skipping tests.")
 class GradientBoostingRegressorBostonHousingScikitNumericTest(unittest.TestCase):
@@ -57,7 +59,7 @@ class GradientBoostingRegressorBostonHousingScikitNumericTest(unittest.TestCase)
         if _is_macos() and _macos_version() >= (10, 13):
             # Get predictions
             df = pd.DataFrame(self.X, columns=self.feature_names)
-            df["prediction"] = scikit_model.predict(self.X)
+            df["target"] = scikit_model.predict(self.X)
 
             # Evaluate it
             metrics = evaluate_regressor(spec, df, "target", verbose=False)
@@ -141,7 +143,7 @@ class XgboostBoosterBostonHousingNumericTest(unittest.TestCase):
         if _is_macos() and _macos_version() >= (10, 13):
             # Get predictions
             df = pd.DataFrame(self.X, columns=self.feature_names)
-            df["prediction"] = xgb_model.predict(self.dtrain)
+            df["target"] = xgb_model.predict(self.dtrain)
 
             # Evaluate it
             metrics = evaluate_regressor(spec, df, target="target", verbose=False)
@@ -247,7 +249,7 @@ class XGboostRegressorBostonHousingNumericTest(unittest.TestCase):
         if _is_macos() and _macos_version() >= (10, 13):
             # Get predictions
             df = pd.DataFrame(self.X, columns=self.feature_names)
-            df["prediction"] = xgb_model.predict(self.X)
+            df["target"] = xgb_model.predict(self.X)
 
             # Evaluate it
             metrics = evaluate_regressor(spec, df, target="target", verbose=False)

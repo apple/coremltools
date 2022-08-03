@@ -3,10 +3,11 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import pandas as pd
 import tempfile
 import random
 import unittest
+
+import pandas as pd
 import pytest
 
 from coremltools._deps import (
@@ -18,8 +19,13 @@ from coremltools._deps import (
 from coremltools.models.utils import evaluate_regressor, _macos_version, _is_macos
 
 if _HAS_LIBSVM:
-    from libsvm import svmutil
-    from libsvm import svm
+    from libsvm import (
+        svm,
+        svm_parameter,
+        svm_problem,
+        svmutil,
+    )
+    from svmutil import svm_train, svm_predict
     from coremltools.converters import libsvm
 
 if _HAS_SKLEARN:
@@ -109,7 +115,7 @@ class NuSVRScikitTest(unittest.TestCase):
 
                 cur_model = NuSVR(**cur_params)
                 cur_model.fit(x, y)
-                df["prediction"] = cur_model.predict(x)
+                df["target"] = cur_model.predict(x)
 
                 spec = scikit_converter.convert(cur_model, input_names, "target")
 
@@ -175,9 +181,6 @@ class NuSVRLibSVMTest(unittest.TestCase):
         """
         Test that the same predictions are made
         """
-        from svm import svm_parameter, svm_problem
-        from svmutil import svm_train, svm_predict
-
         # Generate some smallish (poly kernels take too long on anything else) random data
         x, y = [], []
         for _ in range(50):
@@ -212,7 +215,7 @@ class NuSVRLibSVMTest(unittest.TestCase):
                 param = svm_parameter(param_str)
 
                 model = svm_train(prob, param)
-                (df["prediction"], _, _) = svm_predict(y, x, model)
+                (df["target"], _, _) = svm_predict(y, x, model)
 
                 spec = libsvm.convert(model, input_names, "target")
 

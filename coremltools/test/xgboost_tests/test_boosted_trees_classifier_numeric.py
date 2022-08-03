@@ -4,9 +4,11 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import itertools
-import pytest
-import pandas as pd
 import unittest
+
+import numpy as np
+import pandas as pd
+import pytest
 
 from coremltools._deps import _HAS_SKLEARN, _HAS_XGBOOST
 from coremltools.models.utils import (
@@ -25,6 +27,7 @@ if _HAS_XGBOOST:
     import xgboost
     from coremltools.converters import xgboost as xgb_converter
 
+
 @unittest.skipIf(not _HAS_SKLEARN, "Missing sklearn. Skipping tests.")
 class BoostedTreeClassificationBostonHousingScikitNumericTest(unittest.TestCase):
     """
@@ -36,8 +39,6 @@ class BoostedTreeClassificationBostonHousingScikitNumericTest(unittest.TestCase)
         """
         Set up the unit test by loading the dataset and training a model.
         """
-        from sklearn.datasets import load_boston
-
         # Load data and train model
         scikit_data = load_boston()
         self.scikit_data = scikit_data
@@ -66,7 +67,6 @@ class BoostedTreeClassificationBostonHousingScikitNumericTest(unittest.TestCase)
         spec = skl_converter.convert(scikit_model, self.feature_names, self.output_name)
 
         if hasattr(scikit_model, '_init_decision_function') and scikit_model.n_classes_ > 2:
-            import numpy as np
             # fix initial default prediction for multiclass classification
             # https://github.com/scikit-learn/scikit-learn/pull/12983
             assert hasattr(scikit_model, 'init_')
@@ -76,7 +76,7 @@ class BoostedTreeClassificationBostonHousingScikitNumericTest(unittest.TestCase)
         if _is_macos() and _macos_version() >= (10, 13):
             # Get predictions
             df = pd.DataFrame(self.X, columns=self.feature_names)
-            df["prediction"] = scikit_model.predict(self.X)
+            df["target"] = scikit_model.predict(self.X)
 
             # Evaluate it
             metrics = evaluate_classifier(spec, df)
@@ -116,11 +116,7 @@ class BoostedTreeMultiClassClassificationBostonHousingScikitNumericTest(
 ):
     @classmethod
     def setUpClass(self):
-        from sklearn.datasets import load_boston
-
         # Load data and train model
-        import numpy as np
-
         scikit_data = load_boston()
         num_classes = 3
         self.X = scikit_data.data.astype("f").astype(
@@ -221,8 +217,6 @@ class BoostedTreeBinaryClassificationBostonHousingXGboostNumericTest(
         """
         Set up the unit test by loading the dataset and training a model.
         """
-        from sklearn.datasets import load_boston
-
         # Load data and train model
         scikit_data = load_boston()
         self.scikit_data = scikit_data
@@ -249,11 +243,6 @@ class BoostedTreeMultiClassClassificationBostonHousingXGboostNumericTest(
 ):
     @classmethod
     def setUpClass(self):
-        from sklearn.datasets import load_boston
-
-        # Load data and train model
-        import numpy as np
-
         scikit_data = load_boston()
         num_classes = 3
         self.X = scikit_data.data.astype("f").astype(

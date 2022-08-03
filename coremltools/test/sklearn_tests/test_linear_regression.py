@@ -4,13 +4,17 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import os
-import pandas as pd
 import unittest
+
+import pandas as pd
+
 from coremltools._deps import _HAS_SKLEARN
 from coremltools.models.utils import evaluate_regressor, _macos_version, _is_macos
 
 if _HAS_SKLEARN:
+    from sklearn.datasets import load_boston
     from sklearn.linear_model import LinearRegression
+    from sklearn.preprocessing import OneHotEncoder
     from sklearn.svm import LinearSVR
     from coremltools.converters.sklearn import convert
 
@@ -26,9 +30,6 @@ class LinearRegressionScikitTest(unittest.TestCase):
         """
         Set up the unit test by loading the dataset and training a model.
         """
-        from sklearn.datasets import load_boston
-        from sklearn.linear_model import LinearRegression
-
         scikit_data = load_boston()
         scikit_model = LinearRegression()
         scikit_model.fit(scikit_data["data"], scikit_data["target"])
@@ -80,8 +81,6 @@ class LinearRegressionScikitTest(unittest.TestCase):
             spec = convert(model, "data", "out")
 
         # Check the expected class during covnersion.
-        from sklearn.preprocessing import OneHotEncoder
-
         with self.assertRaises(TypeError):
             model = OneHotEncoder()
             spec = convert(model, "data", "out")
@@ -101,7 +100,7 @@ class LinearRegressionScikitTest(unittest.TestCase):
             cur_model.fit(self.scikit_data["data"], self.scikit_data["target"])
             spec = convert(cur_model, input_names, "target")
 
-            df["prediction"] = cur_model.predict(self.scikit_data.data)
+            df["target"] = cur_model.predict(self.scikit_data.data)
 
             metrics = evaluate_regressor(spec, df)
             self.assertAlmostEqual(metrics["max_error"], 0)
@@ -126,12 +125,11 @@ class LinearRegressionScikitTest(unittest.TestCase):
         df = pd.DataFrame(self.scikit_data.data, columns=input_names)
 
         for cur_args in ARGS:
-            print(cur_args)
             cur_model = LinearSVR(**cur_args)
             cur_model.fit(self.scikit_data["data"], self.scikit_data["target"])
             spec = convert(cur_model, input_names, "target")
 
-            df["prediction"] = cur_model.predict(self.scikit_data.data)
+            df["target"] = cur_model.predict(self.scikit_data.data)
 
             metrics = evaluate_regressor(spec, df)
             self.assertAlmostEqual(metrics["max_error"], 0)

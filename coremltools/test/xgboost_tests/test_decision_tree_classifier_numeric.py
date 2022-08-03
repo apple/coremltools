@@ -3,16 +3,20 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import os
 import itertools
-import pandas as pd
+import os
 import unittest
+
+import numpy as np
+import pandas as pd
+import pytest
+
 from coremltools._deps import _HAS_SKLEARN
 from coremltools.models.utils import evaluate_classifier, _macos_version, _is_macos
-import pytest
 
 if _HAS_SKLEARN:
     from coremltools.converters import sklearn as skl_converter
+    from sklearn.datasets import load_boston
     from sklearn.tree import DecisionTreeClassifier
 
 
@@ -35,7 +39,7 @@ class DecisionTreeClassificationBostonHousingScikitNumericTest(unittest.TestCase
         if _is_macos() and _macos_version() >= (10, 13):
             # Get predictions
             df = pd.DataFrame(self.X, columns=self.feature_names)
-            df["prediction"] = scikit_model.predict(self.X)
+            df["target"] = scikit_model.predict(self.X)
 
             # Evaluate it
             metrics = evaluate_classifier(spec, df)
@@ -48,9 +52,6 @@ class DecisionTreeBinaryClassificationBostonHousingScikitNumericTest(
 ):
     @classmethod
     def setUpClass(self):
-        from sklearn.datasets import load_boston
-        from sklearn.tree import DecisionTreeClassifier
-
         # Load data and train model
         scikit_data = load_boston()
         self.scikit_data = scikit_data
@@ -78,8 +79,6 @@ class DecisionTreeBinaryClassificationBostonHousingScikitNumericTest(
         )
 
         # Make a cartesian product of all options
-        import itertools
-
         product = itertools.product(*options.values())
         args = [dict(zip(options.keys(), p)) for p in product]
 
@@ -94,9 +93,6 @@ class DecisionTreeMultiClassClassificationBostonHousingScikitNumericTest(
 ):
     @classmethod
     def setUpClass(self):
-        from sklearn.datasets import load_boston
-        import numpy as np
-
         # Load data and train model
         scikit_data = load_boston()
         num_classes = 3
