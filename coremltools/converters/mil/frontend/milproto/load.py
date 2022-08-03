@@ -3,8 +3,8 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import os
 import logging
+import os
 
 import numpy as np
 
@@ -294,9 +294,10 @@ def _load_operation(context, op_spec):
         for param_name, argument in op_spec.inputs.items():
             vars = []
             for binding in argument.arguments:
-                if binding.WhichOneof("binding") == "name":
+                binding_type = binding.WhichOneof("binding")
+                if binding_type == "name":
                     vars.append(context.get_var_from_name(binding.name))
-                elif binding.WhichOneof("binding") == "value":
+                elif binding_type == "value":
                     # We only support the list value for now (for the classifier use case)
                     value_spec = binding.value
                     assert value_spec.WhichOneof("value") == "immediateValue"

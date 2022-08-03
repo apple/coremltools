@@ -194,6 +194,9 @@ class TestMean(TorchBaseTest):
         backends,
     )
     def test_with_flexible_shape(self, backend):
+        if backend[0] == 'mlprogram' and _macos_version() < (13, 0):
+            pytest.xfail("Issue fixed in iOS16/macOS13: https://github.com/apple/coremltools/issues/1420")
+
         class Model(nn.Module):
             def __init__(self):
                 super().__init__()

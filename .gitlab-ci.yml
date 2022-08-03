@@ -12,65 +12,22 @@ stages:
 
 check_python_flake8:
   tags:
-    - docker
-  image: "python:3.7"
+    - macos12
   stage: check
   script:
     - python -m pip install --upgrade pip
     - pip install flake8
     - flake8 ./coremltools --count --select=E9,F5,F63,F7,F82 --show-source --statistics
 
-########################################################################
-#
-#                         linux - Build
-#
-########################################################################
-
-.build_linux: &build_linux
-  tags:
-    - docker
-  stage: build
-  script:
-    - export PATH=$PATH:/opt/anaconda/bin/
-    - zsh -e scripts/build.sh --num-procs=4 --python=$PYTHON --dist
-  artifacts:
-    expire_in: 2 weeks
-    paths:
-      - build/dist/
-
-build_wheel_linux_py36:
-  <<: *build_linux
-  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-18.04:1.0.0
-  variables:
-    PYTHON: "3.6"
-
-build_wheel_linux_py37:
-  <<: *build_linux
-  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-18.04:1.0.0
-  variables:
-    PYTHON: "3.7"
-
-build_wheel_linux_py38:
-  <<: *build_linux
-  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-18.04:1.0.0
-  variables:
-    PYTHON: "3.8"
-
-build_wheel_linux_py39:
-  <<: *build_linux
-  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-18.04:1.0.0
-  variables:
-    PYTHON: "3.9"
-
 #########################################################################
 ##
-##                         macOS - Build
+##                         Build
 ##
 #########################################################################
 
 .build_macos: &build_macos
     tags:
-       - macos10.15
+       - macos12
     stage: build
     script:
       - zsh -e scripts/build.sh --num-procs=4 --python=$PYTHON --dist
@@ -101,43 +58,7 @@ build_wheel_macos_py39:
 
 #########################################################################
 ##
-##                         linux - Test
-##
-#########################################################################
-.test_linux_pkg: &test_linux_pkg
-  stage: test
-  script:
-    - export PATH=$PATH:/opt/anaconda/bin/
-    - zsh -e scripts/test.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON}
-      --test-package=${TEST_PACKAGE} --fast
-
-test_linux_py37_coremltools_test:
-  <<: *test_linux_pkg
-  tags:
-    - docker
-  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-18.04:1.0.0
-  dependencies:
-    - build_wheel_linux_py37
-  variables:
-    WHEEL_PATH: build/dist/coremltools-*-none-manylinux1_x86_64.whl
-    TEST_PACKAGE: coremltools.test
-    PYTHON: "3.7"
-
-test_linux_py37_pytorch:
-  <<: *test_linux_pkg
-  tags:
-    - docker
-  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-18.04:1.0.0
-  dependencies:
-    - build_wheel_linux_py37
-  variables:
-    PYTHON: "3.7"
-    TEST_PACKAGE: coremltools.converters.mil.frontend.torch
-    WHEEL_PATH: build/dist/coremltools-*-none-manylinux1_x86_64.whl
-
-#########################################################################
-##
-##                         macOS - Test
+##                         Test
 ##
 #########################################################################
 .test_macos_pkg: &test_macos_pkg
@@ -154,10 +75,10 @@ test_linux_py37_pytorch:
      - zsh -e scripts/test.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON}
        --test-package=${TEST_PACKAGE} --requirements=${REQUIREMENTS} --fast
 
-test_macos11_py37_coremltools_test:
+test_py37_coremltools_test:
   <<: *test_macos_pkg
   tags:
-    - macos11
+    - macos12
   dependencies:
     - build_wheel_macos_py37
   variables:
@@ -165,10 +86,10 @@ test_macos11_py37_coremltools_test:
     TEST_PACKAGE: coremltools.test
     PYTHON: "3.7"
 
-test_macos11_py37_pytorch:
+test_py37_pytorch:
   <<: *test_macos_pkg
   tags:
-    - macos11
+    - macos12
   dependencies:
     - build_wheel_macos_py37
   variables:
@@ -176,10 +97,10 @@ test_macos11_py37_pytorch:
     TEST_PACKAGE: coremltools.converters.mil.frontend.torch
     WHEEL_PATH: build/dist/*cp37*10_15*
 
-test_macos11_py37_tf1:
+test_py37_tf1:
   <<: *test_macos_pkg
   tags:
-    - macos11
+    - macos12
   dependencies:
     - build_wheel_macos_py37
   variables:
@@ -187,10 +108,10 @@ test_macos11_py37_tf1:
     TEST_PACKAGE: coremltools.converters.mil.frontend.tensorflow
     WHEEL_PATH: build/dist/*cp37*10_15*
 
-test_macos11_py37_mil:
+test_py37_mil:
   <<: *test_macos_pkg
   tags:
-    - macos11
+    - macos12
   dependencies:
     - build_wheel_macos_py37
   variables:
@@ -200,55 +121,26 @@ test_macos11_py37_mil:
 
 #########################################################################
 ##
-##                macOS - Smoke Test on older versions
-##
-#########################################################################
-
-test_macos11_py38_coremltools_smoke_test:
-  <<: *test_macos_pkg
-  tags:
-    - macos11
-  dependencies:
-    - build_wheel_macos_py38
-  variables:
-    WHEEL_PATH: build/dist/*cp38*10_15*
-    TEST_PACKAGE: coremltools.test.neural_network.test_simple_nn_inference
-    PYTHON: "3.8"
-
-test_macos10_15_py38_coremltools_smoke_test:
-  <<: *test_macos_pkg
-  tags:
-    - macos10.15
-  dependencies:
-    - build_wheel_macos_py38
-  variables:
-    WHEEL_PATH: build/dist/*cp38*10_15*
-    TEST_PACKAGE: coremltools.test.neural_network.test_simple_nn_inference
-    PYTHON: "3.8"
-
-#########################################################################
-##
 ##                        Make docs
 ##
 #########################################################################
 build_documentation:
   tags:
-    - docker
+    - macos12
   stage: test
-  image: registry.gitlab.com/zach_nation/coremltools/build-image-ubuntu-18.04:1.0.0
   script:
     - export PATH=$PATH:/opt/anaconda/bin/
     - bash -e scripts/build_docs.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON}
   dependencies:
-    - build_wheel_linux_py37
+    - build_wheel_macos_py39
   artifacts:
     when: always
     expire_in: 2 weeks
     paths:
       - _build/html/
   variables:
-    WHEEL_PATH: build/dist/coremltools*cp37-none-manylinux1_x86_64.whl
-    PYTHON: "3.7"
+    WHEEL_PATH: build/dist/coremltools*cp39-none-macosx_10_15_x86_64.whl
+    PYTHON: "3.9"
 
 #########################################################################
 ##
@@ -257,22 +149,16 @@ build_documentation:
 #########################################################################
 collect_artifacts:
   tags:
-    - docker
-  services:
-    - docker:18.09-dind
-  image: alpine:latest
+    - macos12
   stage: collect
   script:
     echo "Collect artifacts (wheels and documentation)"
   dependencies:
-    - build_wheel_linux_py35
-    - build_wheel_linux_py36
-    - build_wheel_linux_py37
-    - build_wheel_linux_py38
-    - build_wheel_macos_py35
     - build_wheel_macos_py36
     - build_wheel_macos_py37
     - build_wheel_macos_py38
+    - build_wheel_macos_py39
+    - build_documentation
   artifacts:
     expire_in: 2 weeks
     paths:

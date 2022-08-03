@@ -4,6 +4,7 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import logging
+
 import numpy as np
 import sympy as sm
 
@@ -34,9 +35,9 @@ from coremltools.converters.mil.mil.operation import (
     SYMBOL,
     VALUE
 )
-
 from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
 from coremltools.converters.mil.mil.ops.defs._utils import solve_slice_by_index_shape
+
 
 @register_op
 class depth_to_space(Operation):
@@ -838,7 +839,7 @@ class batch_to_space(Operation):
                              "len(block_shape){} + 2! Got {}".format(self.block_shape.val, self.x.rank))
 
         if not is_symbolic(b) and  b % np.prod(block_shape) != 0:
-            msg = ("Batch size must be perfectly divided by the product of block_shape. Got batch size {}, and block_shape"
+            msg = ("Batch size must be perfectly divided by the product of block_shape. Got batch size {}, and block_shape {}."
             ).format(b, block_shape)
             raise ValueError(msg)
             
