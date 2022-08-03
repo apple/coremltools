@@ -284,9 +284,7 @@ def _fp32_to_fp16_byte_array(fp32_arr):
             "half precision.\n"
         )
 
-    import sys
-
-    if sys.byteorder == "little":
+    if _sys.byteorder == "little":
         return _np.float16(fp32_arr).tobytes()
     else:
         return _fp32_to_reversed_fp16_byte_array(fp32_arr)
@@ -359,8 +357,7 @@ def evaluate_regressor(model, data, target="target", verbose=False):
         Test data on which to evaluate the models
 
     target: str
-       Name of the column in the dataframe that must be interpreted
-       as the target column.
+       Name of the column in the dataframe to be compared against the prediction
 
     verbose: bool
        Set to true for a more verbose output.
@@ -386,11 +383,11 @@ def evaluate_regressor(model, data, target="target", verbose=False):
     max_error = 0
     error_squared = 0
 
-    for index, row in data.iterrows():
+    for _, row in data.iterrows():
         input_dict = dict(row)
         _remove_invalid_keys(input_dict, model)
         predicted = model.predict(input_dict)[_to_unicode(target)]
-        other_framework = row["prediction"]
+        other_framework = row[target]
         delta = predicted - other_framework
 
         if verbose:
@@ -451,11 +448,11 @@ def evaluate_classifier(model, data, target="target", verbose=False):
 
     num_errors = 0
 
-    for index, row in data.iterrows():
+    for _, row in data.iterrows():
         input_dict = dict(row)
         _remove_invalid_keys(input_dict, model)
         predicted = model.predict(input_dict)[_to_unicode(target)]
-        other_framework = row["prediction"]
+        other_framework = row[target]
         if predicted != other_framework:
             num_errors += 1
 
