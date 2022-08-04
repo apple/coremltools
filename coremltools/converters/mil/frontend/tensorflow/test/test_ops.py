@@ -2105,6 +2105,13 @@ class TestElementWiseUnary(TensorFlowBaseTest):
         if not use_cpu_only and mode in self._FP16_UNSUPPORTED:
             return
 
+        if _macos_version() < (13, 0):
+            if not use_cpu_for_conversion:
+                pytest.xfail("GPU issue fixed in iOS16/macOS13")
+            else:
+                dtype = np.float32
+                tf_dtype = tf.float32
+
         atol, rtol = 1e-4, 1e-5
         input_shape = np.random.randint(low=2, high=4, size=rank)
         
@@ -2259,6 +2266,10 @@ class TestElementWiseUnary(TensorFlowBaseTest):
         if mode == "inverse" or mode == "rsqrt":
             atol, rtol = 1e-2, 1e-3
 
+        minimum_deployment_target = None
+        if _macos_version() >= (13, 0) and backend == ("mlprogram", "fp16"):
+            minimum_deployment_target = ct.target.iOS16
+
         TensorFlowBaseTest.run_compare_tf(
             model,
             input_dict,
@@ -2267,7 +2278,7 @@ class TestElementWiseUnary(TensorFlowBaseTest):
             backend=backend,
             atol=atol,
             rtol=rtol,
-            minimum_deployment_target=ct.target.iOS16 if backend == ("mlprogram", "fp16") else None,
+            minimum_deployment_target=minimum_deployment_target,
         )
 
 
@@ -4604,11 +4615,13 @@ class TestTopK(TensorFlowBaseTest):
         ),
     )
     def test_top_k(self, use_cpu_only, backend, rank, k, sort):
-        # TensorFlow only supports last dimension (axis = -1).
-        shape = np.random.randint(low=3, high=4, size=rank)
-
         if not sort and backend[0] == "neuralnetwork":
             pytest.skip("iOS16 version topk needed for sort = False")
+        if not sort and _macos_version() < (13, 0):
+            pytest.skip("New functionality in macOS13/iOS16")
+
+        # TensorFlow only supports last dimension (axis = -1).
+        shape = np.random.randint(low=3, high=4, size=rank)
 
         @make_tf_graph([shape])
         def build_model(x):
@@ -4712,6 +4725,8 @@ class TestSplit(TensorFlowBaseTest):
     def test_split(self, use_cpu_for_conversion, backend, rank, dynamic):
         if backend[0] == "mlprogram" and not use_cpu_for_conversion and dynamic:
             pytest.xfail("rdar://97398133 (TestSplit::test_split is failing on mlprogram + GPU + dynamic combination)")
+        if _macos_version() < (13, 0) and (dynamic or (backend[0] == "mlprogram" and not use_cpu_for_conversion)):
+            pytest.xfail("Issue fixed in iOS16/macOS13")
             
         input_shape1 = np.random.randint(low=1, high=3, size=rank)
         for axis in range(-rank, rank, 2):

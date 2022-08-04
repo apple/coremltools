@@ -20,6 +20,7 @@ from coremltools.converters.mil.mil import (
 )
 from coremltools.converters.mil.testing_reqs import backends
 from coremltools.converters.mil.testing_utils import random_gen
+from coremltools.models.utils import _macos_version
 
 if testing_reqs._HAS_TORCH:
     import torch
@@ -110,6 +111,8 @@ class TestResample:
     def test_builder_to_backend_smoke(self, use_cpu_only, backend, minimum_deployment_target):
         if backend[0] == "neuralnetwork":
             pytest.skip("nn backend not supported")
+        if minimum_deployment_target == ct.target.iOS16 and _macos_version() < (13, 0):
+            pytest.skip("New functionality in macOS13/iOS16")
 
         x_ = np.array([11.0, 22.0, 33.0, 44.0], dtype=np.float32).reshape([1, 1, 2, 2])
         coordinates_ = np.array(
