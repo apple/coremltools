@@ -23,7 +23,11 @@ from coremltools.converters.mil.mil.ops.defs.iOS16 import _IOS16_TARGET
 @register_op(opset_version=_IOS16_TARGET)
 class resample(_resample_iOS15):
     """
-    iOS16 version of resample supports float16 coordinates
+    The iOS 16 version of ``resample`` supports float 16 coordinates.
+    
+    For the complete documentation, see the 
+    `iOS 15 version <#module-coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing>`_.
+
     """
     input_spec = InputSpec(
         x=TensorInputType(),

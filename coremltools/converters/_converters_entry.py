@@ -346,7 +346,7 @@ def convert(
             - ``coremltools.ComputeUnit.CPU_AND_GPU``: Use both the CPU and GPU, but not the
               neural engine.
             - ``coremltools.ComputeUnit.CPU_AND_NE``: Use both the CPU and neural engine, but
-              not the GPU. Only available on macOS >= 13.0.
+              not the GPU. Available only for macOS >= 13.0.
 
     package_dir : str
         Post conversion, the model is saved at a temporary location and
