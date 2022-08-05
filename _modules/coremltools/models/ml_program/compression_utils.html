@@ -122,27 +122,22 @@
        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;weight compression not applicable for model type </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">model_type</span><span class="p">))</span>
 
     <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">graph_pass</span><span class="p">,</span> <span class="n">_AbstractQuantizationPass</span><span class="p">),</span> <span class="s2">&quot;compression pass must be an AbstractQuantizationPass instance&quot;</span>
-    
-    <span class="n">program_spec</span> <span class="o">=</span> <span class="n">model_spec</span><span class="o">.</span><span class="n">mlProgram</span>
-    <span class="n">model_specification_version</span> <span class="o">=</span> <span class="n">model_spec</span><span class="o">.</span><span class="n">specificationVersion</span>
-    <span class="n">prog</span> <span class="o">=</span>  <span class="n">_milproto_to_pymil</span><span class="p">(</span>
-        <span class="n">program_spec</span><span class="o">=</span><span class="n">program_spec</span><span class="p">,</span>
-        <span class="n">specification_version</span><span class="o">=</span><span class="n">model_specification_version</span><span class="p">,</span>
+    <span class="n">specification_version</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">model_spec</span><span class="o">.</span><span class="n">specificationVersion</span><span class="p">,</span> <span class="n">_DEFAULT_SPECIFICATION_VERSION_FOR_COMPRESSION</span><span class="p">)</span>
+    <span class="n">prog</span> <span class="o">=</span> <span class="n">_milproto_to_pymil</span><span class="p">(</span>
+        <span class="n">model_spec</span><span class="o">=</span><span class="n">model_spec</span><span class="p">,</span>
+        <span class="n">specification_version</span><span class="o">=</span><span class="n">specification_version</span><span class="p">,</span>
         <span class="n">file_weights_dir</span><span class="o">=</span><span class="n">mlmodel</span><span class="o">.</span><span class="n">weights_dir</span><span class="p">,</span>
     <span class="p">)</span>
-
-    <span class="n">prog</span><span class="o">.</span><span class="n">skip_all_passes</span> <span class="o">=</span> <span class="kc">True</span>
 
     <span class="c1"># apply compression graph pass</span>
     <span class="n">graph_pass</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">prog</span><span class="p">)</span>
 
     <span class="c1"># convert the pymil program back to mlmodel</span>
-    <span class="n">compress_model_specification_version</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">model_specification_version</span><span class="p">,</span> <span class="n">_DEFAULT_SPECIFICATION_VERSION_FOR_COMPRESSION</span><span class="p">)</span>
     <span class="n">compressed_mlmodel</span> <span class="o">=</span> <span class="n">_mil_convert</span><span class="p">(</span>
         <span class="n">prog</span><span class="p">,</span>
         <span class="n">convert_to</span><span class="o">=</span><span class="s2">&quot;mlprogram&quot;</span><span class="p">,</span>
         <span class="n">convert_from</span><span class="o">=</span><span class="s2">&quot;milinternal&quot;</span><span class="p">,</span>
-        <span class="n">specification_version</span><span class="o">=</span><span class="n">compress_model_specification_version</span><span class="p">,</span>
+        <span class="n">specification_version</span><span class="o">=</span><span class="n">specification_version</span><span class="p">,</span>
         <span class="n">compute_units</span><span class="o">=</span><span class="n">mlmodel</span><span class="o">.</span><span class="n">compute_unit</span><span class="p">,</span>
         <span class="n">model_description</span><span class="o">=</span><span class="n">model_spec</span><span class="o">.</span><span class="n">description</span><span class="p">,</span>
     <span class="p">)</span>
@@ -304,7 +299,7 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Utility function to convert a float precision MLModel of type ``mlprogram`` to a</span>
 <span class="sd">    compressed MLModel by reducing the overall number of weights using a lookup table</span>
-<span class="sd">    (LUT). A LUT contains a list float values. An `nbit` LUT has 2\ :sup:`nbits` entries.</span>
+<span class="sd">    (LUT). A LUT contains a list of float values. An `nbit` LUT has 2\ :sup:`nbits` entries.</span>
 <span class="sd">    </span>
 <span class="sd">    For example, a float weight vector such as ``{0.3, 0.3, 0.5, 0.5}`` can be compressed</span>
 <span class="sd">    using a 1-bit LUT: ``{0.3, 0.5}``. In this case the float vector can be replaced</span>

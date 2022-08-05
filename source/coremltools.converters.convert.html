@@ -119,6 +119,7 @@ formats:</p>
 <li><p><a class="reference external" href="https://keras.io/api/models/model_saving_apis/">HDF5 file path</a> (<code class="docutils literal notranslate"><span class="pre">.h5</span></code>)</p></li>
 <li><p><a class="reference external" href="https://www.tensorflow.org/guide/saved_model">SavedModel</a> directory path</p></li>
 <li><p>A <a class="reference external" href="https://www.tensorflow.org/guide/concrete_function">concrete function</a></p></li>
+<li><p>A <a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/compat/v1/GraphDef">GraphDef</a></p></li>
 </ul>
 </div></blockquote>
 </li>
@@ -389,6 +390,8 @@ neural engine.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">coremltools.ComputeUnit.CPU_ONLY</span></code>: Limit the model to only use the CPU.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">coremltools.ComputeUnit.CPU_AND_GPU</span></code>: Use both the CPU and GPU, but not the
 neural engine.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">coremltools.ComputeUnit.CPU_AND_NE</span></code>: Use both the CPU and neural engine, but
+not the GPU. Available only for macOS &gt;= 13.0.</p></li>
 </ul>
 </div></blockquote>
 </dd>

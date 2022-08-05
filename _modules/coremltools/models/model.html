@@ -91,8 +91,9 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">_numpy</span>
 
 <span class="kn">from</span> <span class="nn">..proto</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">FeatureTypes_pb2</span> <span class="k">as</span> <span class="n">_ft</span><span class="p">,</span>
     <span class="n">Model_pb2</span> <span class="k">as</span> <span class="n">_Model_pb2</span><span class="p">,</span>
-    <span class="n">MIL_pb2</span> <span class="k">as</span> <span class="n">_MIL_pb2</span>
+    <span class="n">MIL_pb2</span> <span class="k">as</span> <span class="n">_MIL_pb2</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">_create_mlpackage</span><span class="p">,</span>
@@ -125,6 +126,12 @@
     <span class="kn">from</span> <span class="nn">..libmodelpackage</span> <span class="kn">import</span> <span class="n">ModelPackage</span> <span class="k">as</span> <span class="n">_ModelPackage</span>
 <span class="k">except</span><span class="p">:</span>
     <span class="n">_ModelPackage</span> <span class="o">=</span> <span class="kc">None</span>
+
+<span class="n">_HAS_PIL</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span> <span class="k">as</span> <span class="n">_PIL_IMAGE</span>
+<span class="k">except</span><span class="p">:</span>
+    <span class="n">_HAS_PIL</span> <span class="o">=</span> <span class="kc">False</span>
 
 
 <span class="n">_MLMODEL_FULL_PRECISION</span> <span class="o">=</span> <span class="s2">&quot;float32&quot;</span>
@@ -387,6 +394,13 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">compute_units</span><span class="p">,</span> <span class="n">_ComputeUnit</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;&quot;compute_units&quot; parameter must be of type: coremltools.ComputeUnit&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="p">(</span><span class="n">compute_units</span> <span class="o">==</span> <span class="n">_ComputeUnit</span><span class="o">.</span><span class="n">CPU_AND_NE</span>
+              <span class="ow">and</span> <span class="n">_is_macos</span><span class="p">()</span>
+              <span class="ow">and</span> <span class="n">_macos_version</span><span class="p">()</span> <span class="o">&lt;</span> <span class="p">(</span><span class="mi">13</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s1">&#39;coremltools.ComputeUnit.CPU_AND_NE is only available on macOS &gt;= 13.0&#39;</span>
+            <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">compute_unit</span> <span class="o">=</span> <span class="n">compute_units</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">is_package</span> <span class="o">=</span> <span class="kc">False</span>
@@ -579,11 +593,7 @@
             <span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__proxy__</span><span class="p">:</span>
-            <span class="c1"># Check if the input name given by the user is valid.</span>
-            <span class="c1"># Although this is checked during prediction inside CoreML Framework,</span>
-            <span class="c1"># we still check it here to return early and</span>
-            <span class="c1"># return a more verbose error message</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_verify_input_name_exists</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_verify_input_dict</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_convert_tensor_to_numpy</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
             <span class="c1"># TODO: remove the following call when this is fixed: rdar://92239209</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_update_float16_multiarray_input_to_float32</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
@@ -671,6 +681,37 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">_deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mil_program</span><span class="p">)</span>
 
+    <span class="k">def</span> <span class="nf">_verify_input_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_dict</span><span class="p">):</span>
+        <span class="c1"># Check if the input name given by the user is valid.</span>
+        <span class="c1"># Although this is checked during prediction inside CoreML Framework,</span>
+        <span class="c1"># we still check it here to return early and</span>
+        <span class="c1"># return a more verbose error message</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_verify_input_name_exists</span><span class="p">(</span><span class="n">input_dict</span><span class="p">)</span>
+
+        <span class="c1"># verify that the pillow image modes are correct, for image inputs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_verify_pil_image_modes</span><span class="p">(</span><span class="n">input_dict</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_verify_pil_image_modes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_dict</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">_HAS_PIL</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="k">for</span> <span class="n">input_desc</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">input</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">input_desc</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">WhichOneof</span><span class="p">(</span><span class="s2">&quot;Type&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;imageType&quot;</span><span class="p">:</span>
+                <span class="n">input_val</span> <span class="o">=</span> <span class="n">input_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">input_desc</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">input_val</span><span class="p">,</span> <span class="n">_PIL_IMAGE</span><span class="o">.</span><span class="n">Image</span><span class="p">):</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Image input, &#39;</span><span class="si">{}</span><span class="s2">&#39; must be of type PIL.Image.Image in the input dict&quot;</span>
+                    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">input_desc</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+                <span class="k">if</span> <span class="n">input_desc</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">imageType</span><span class="o">.</span><span class="n">colorSpace</span> <span class="ow">in</span> <span class="p">(</span><span class="n">_ft</span><span class="o">.</span><span class="n">ImageFeatureType</span><span class="o">.</span><span class="n">BGR</span><span class="p">,</span> <span class="n">_ft</span><span class="o">.</span><span class="n">ImageFeatureType</span><span class="o">.</span><span class="n">RGB</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="n">input_val</span><span class="o">.</span><span class="n">mode</span> <span class="o">!=</span> <span class="s1">&#39;RGB&#39;</span><span class="p">:</span>
+                        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;RGB/BGR image input, &#39;</span><span class="si">{}</span><span class="s2">&#39;, must be of type PIL.Image.Image with mode==&#39;RGB&#39;&quot;</span>
+                        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">input_desc</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+                <span class="k">elif</span> <span class="n">input_desc</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">imageType</span><span class="o">.</span><span class="n">colorSpace</span> <span class="o">==</span> <span class="n">_ft</span><span class="o">.</span><span class="n">ImageFeatureType</span><span class="o">.</span><span class="n">GRAYSCALE</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">input_val</span><span class="o">.</span><span class="n">mode</span> <span class="o">!=</span> <span class="s1">&#39;L&#39;</span><span class="p">:</span>
+                        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;GRAYSCALE image input, &#39;</span><span class="si">{}</span><span class="s2">&#39;, must be of type PIL.Image.Image with mode==&#39;L&#39;&quot;</span>
+                        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">input_desc</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+                <span class="k">elif</span> <span class="n">input_desc</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">imageType</span><span class="o">.</span><span class="n">colorSpace</span> <span class="o">==</span> <span class="n">_ft</span><span class="o">.</span><span class="n">ImageFeatureType</span><span class="o">.</span><span class="n">GRAYSCALE_FLOAT16</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">input_val</span><span class="o">.</span><span class="n">mode</span> <span class="o">!=</span> <span class="s1">&#39;F&#39;</span><span class="p">:</span>
+                        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;GRAYSCALE_FLOAT16 image input, &#39;</span><span class="si">{}</span><span class="s2">&#39;, must be of type PIL.Image.Image with mode==&#39;F&#39;&quot;</span>
+                        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">input_desc</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="nf">_verify_input_name_exists</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_dict</span><span class="p">):</span>
         <span class="n">model_input_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">inp</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">inp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">input</span><span class="p">]</span>
