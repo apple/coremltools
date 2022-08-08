@@ -108,6 +108,10 @@ from .converters.mil._deployment_compatibility import AvailableTarget as target
 from .converters.mil.mil.passes import quantization_passes as transform
 from .converters.mil.mil.passes.quantization_passes import ComputePrecision as precision
 
+try:
+    from . import libcoremlpython
+except:
+    pass
 
 # Time profiling for functions in coremltools package, decorated with @profile
 import os as _os
