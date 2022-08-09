@@ -2,9 +2,11 @@
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
+
 import itertools
-import pytest
+
 import numpy as np
+import pytest
 
 from .testing_utils import UNK_SYM, UNK_VARIADIC, run_compare_builder
 import coremltools as ct
@@ -17,6 +19,7 @@ from coremltools.converters.mil.mil import (
 )
 from coremltools.converters.mil.testing_reqs import backends
 from coremltools.converters.mil.testing_utils import ssa_fn
+from coremltools.models.utils import _macos_version
 
 if _HAS_TORCH:
     import torch
@@ -884,6 +887,8 @@ class TestPixelShuffle:
             backend=backend,
         )
 
+
+@pytest.mark.skipif(_macos_version() < (13, 0), reason="New functionality in macOS13/iOS16")
 class TestPixelUnshuffle:
     @pytest.mark.parametrize(
         "use_cpu_only, backend", itertools.product([True, False], backends,)

@@ -2447,6 +2447,8 @@ class TestPixelShuffle(TorchBaseTest):
         model = nn.PixelShuffle(upscale_factor=r)
         self.run_compare_torch(input_shape, model, backend=backend)
 
+
+@pytest.mark.skipif(_macos_version() < (13, 0), reason="New functionality in macOS13/iOS16")
 class TestPixelUnshuffle(TorchBaseTest):
     @pytest.mark.parametrize(
         "batch_size, CHW, r, backend",
@@ -3203,6 +3205,9 @@ class TestTo(TorchBaseTest):
         )
     )
     def test_cast_bug(self, use_cpu_for_conversion, backend):
+        if _macos_version() < (13, 0) and backend[0] == "mlprogram":
+            pytest.xfail("Issue fixed in iOS16/macOS13")
+
         class TestModel(torch.nn.Module):
             def forward(self, spans, embedding):
                 spans = spans.float().relu().int()
@@ -3401,6 +3406,7 @@ class TestZeros(TorchBaseTest):
         self.run_compare_torch(torch_in, model, expected_results=torch_out,
                            input_as_shape=False, backend=backend)
 
+
 class TestTopk(TorchBaseTest):
     @pytest.mark.parametrize(
         "backend, largest, sort, shape_dim_k",
@@ -3418,6 +3424,9 @@ class TestTopk(TorchBaseTest):
     def test_topk(self, backend, largest, sort, shape_dim_k):
         if not sort and backend[0] == "neuralnetwork":
             pytest.xfail("iOS16 version topk needed for sort = False")
+        if not sort and _macos_version() < (13, 0):
+            pytest.skip("New functionality in macOS13/iOS16")
+
         input_shape = shape_dim_k[0]
         dim = shape_dim_k[1]
         k = shape_dim_k[2]
@@ -4040,6 +4049,9 @@ class TestIndexPut(TorchBaseTest):
         backends,
     )
     def test_index_put_case_3(self, backend):
+        if _macos_version() < (13, 0):
+             pytest.skip("Issue fixed in iOS16/macOS13")
+
         class IndexPutModel(torch.nn.Module):
             def __init__(self):
                 super(IndexPutModel, self).__init__()

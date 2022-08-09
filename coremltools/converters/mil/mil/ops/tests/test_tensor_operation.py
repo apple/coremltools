@@ -2,7 +2,9 @@
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
+
 import itertools
+
 import numpy as np
 import pytest
 
@@ -14,6 +16,7 @@ from coremltools.converters.mil.mil import (
     types
 )
 from coremltools.converters.mil.testing_utils import random_gen, ssa_fn, get_op_types_in_program
+from coremltools.models.utils import _macos_version
 from .testing_utils import UNK_SYM, UNK_VARIADIC, run_compare_builder
 
 if testing_reqs._HAS_TF_1 or testing_reqs._HAS_TF_2:
@@ -1166,6 +1169,8 @@ class TestTopK:
     def test_builder_to_backend_smoke_iOS16(self, use_cpu_only, backend, return_indices, sort):
         if backend[0] == "neuralnetwork":
             pytest.skip("nn backend not supported")
+        if _macos_version() < (13, 0):
+            pytest.skip("New functionality in macOS13/iOS16")
 
         if not return_indices:
             pytest.xfail("rdar://92880117 (Topk with return_indices = False error out at the MIL->EIR stage)")

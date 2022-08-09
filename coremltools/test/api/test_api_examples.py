@@ -1226,6 +1226,7 @@ class TestFlexibleShape:
         assert len(spec.description.input[0].type.imageType.enumeratedSizes.sizes) == 2
 
     @staticmethod
+    @pytest.mark.skipif(ct.utils._macos_version() < (13, 0), reason='Bug fixed in macOS13/iOS16')
     @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
     def test_mean_op():
         # test for bug reported in https://github.com/apple/coremltools/issues/1420
