@@ -4050,7 +4050,7 @@ class TestIndexPut(TorchBaseTest):
     )
     def test_index_put_case_3(self, backend):
         if _macos_version() < (13, 0):
-             pytest.xfail("Issue fixed in iOS16/macOS13")
+             pytest.skip("Issue fixed in iOS16/macOS13")
 
         class IndexPutModel(torch.nn.Module):
             def __init__(self):

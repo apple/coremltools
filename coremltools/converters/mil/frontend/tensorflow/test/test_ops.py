@@ -2107,7 +2107,7 @@ class TestElementWiseUnary(TensorFlowBaseTest):
 
         if _macos_version() < (13, 0):
             if not use_cpu_for_conversion:
-                pytest.xfail("GPU issue fixed in iOS16/macOS13")
+                pytest.skip("GPU issue fixed in iOS16/macOS13")
             else:
                 dtype = np.float32
                 tf_dtype = tf.float32
@@ -4726,7 +4726,7 @@ class TestSplit(TensorFlowBaseTest):
         if backend[0] == "mlprogram" and not use_cpu_for_conversion and dynamic:
             pytest.xfail("rdar://97398133 (TestSplit::test_split is failing on mlprogram + GPU + dynamic combination)")
         if _macos_version() < (13, 0) and (dynamic or (backend[0] == "mlprogram" and not use_cpu_for_conversion)):
-            pytest.xfail("Issue fixed in iOS16/macOS13")
+            pytest.skip("Issue fixed in iOS16/macOS13")
             
         input_shape1 = np.random.randint(low=1, high=3, size=rank)
         for axis in range(-rank, rank, 2):
