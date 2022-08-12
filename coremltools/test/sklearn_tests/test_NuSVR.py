@@ -19,12 +19,7 @@ from coremltools._deps import (
 from coremltools.models.utils import evaluate_regressor, _macos_version, _is_macos
 
 if _HAS_LIBSVM:
-    from libsvm import (
-        svm,
-        svm_parameter,
-        svm_problem,
-        svmutil,
-    )
+    from libsvm import svm, svmutil
     from svmutil import svm_train, svm_predict
     from coremltools.converters import libsvm
 
@@ -190,7 +185,7 @@ class NuSVRLibSVMTest(unittest.TestCase):
 
         input_names = ["x1", "x2"]
         df = pd.DataFrame(x, columns=input_names)
-        prob = svm_problem(y, x)
+        prob = svmutil.svm_problem(y, x)
 
         # Parameters
         base_param = "-s 4"  # model type is nu-SVR
@@ -212,7 +207,7 @@ class NuSVRLibSVMTest(unittest.TestCase):
         for param1 in non_kernel_parameters:
             for param2 in kernel_parameters:
                 param_str = " ".join([base_param, param1, param2])
-                param = svm_parameter(param_str)
+                param = svmutil.svm_parameter(param_str)
 
                 model = svm_train(prob, param)
                 (df["target"], _, _) = svm_predict(y, x, model)
