@@ -3,11 +3,12 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import unittest
-import tempfile
 import os
-import pandas as pd
+import tempfile
 import random
+import unittest
+
+import pandas as pd
 import pytest
 
 from coremltools.models.utils import (
@@ -90,7 +91,6 @@ class NuSvcScikitTest(unittest.TestCase):
                 cur_params.update(param2)
                 cur_params["probability"] = use_probability_estimates
                 cur_params["max_iter"] = 10  # Don't want test to take too long
-                # print("cur_params=" + str(cur_params))
 
                 cur_model = NuSVC(**cur_params)
                 cur_model.fit(x, y)
@@ -112,7 +112,7 @@ class NuSvcScikitTest(unittest.TestCase):
                             metrics["max_probability_error"], allowed_prob_delta
                         )
                     else:
-                        df["prediction"] = cur_model.predict(x)
+                        df["target"] = cur_model.predict(x)
                         metrics = evaluate_classifier(spec, df, verbose=False)
                         self.assertEqual(metrics["num_errors"], 0)
 
@@ -159,8 +159,6 @@ class NuSvcScikitTest(unittest.TestCase):
         self._evaluation_test_helper(["X", "Y", "z"], True, allow_slow=False)
 
     def test_conversion_bad_inputs(self):
-        from sklearn.preprocessing import OneHotEncoder
-
         # Error on converting an untrained model
         with self.assertRaises(TypeError):
             model = NuSVC()

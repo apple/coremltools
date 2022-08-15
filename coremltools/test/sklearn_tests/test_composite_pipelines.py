@@ -3,12 +3,12 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import unittest
-import os
-
-import pandas as pd
 import itertools
+import os
+import unittest
+
 import numpy as np
+import pandas as pd
 
 from coremltools._deps import _HAS_SKLEARN
 from coremltools.models.utils import evaluate_transformer
@@ -27,7 +27,6 @@ if _HAS_SKLEARN:
 @unittest.skipIf(not _HAS_SKLEARN, "Missing sklearn. Skipping tests.")
 class GradientBoostingRegressorBostonHousingScikitNumericTest(unittest.TestCase):
     def test_boston_OHE_plus_normalizer(self):
-
         data = load_boston()
 
         pl = Pipeline(
@@ -68,7 +67,7 @@ class GradientBoostingRegressorBostonHousingScikitNumericTest(unittest.TestCase)
         if _is_macos() and _macos_version() >= (10, 13):
             # Get predictions
             df = pd.DataFrame(data.data, columns=data.feature_names)
-            df["prediction"] = pl.predict(data.data)
+            df["target"] = pl.predict(data.data)
 
             # Evaluate it
             result = evaluate_regressor(spec, df, "target", verbose=False)

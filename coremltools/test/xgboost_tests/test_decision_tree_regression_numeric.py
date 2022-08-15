@@ -3,8 +3,10 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import pandas as pd
+import itertools
 import pytest
+
+import pandas as pd
 import unittest
 
 from coremltools.models.utils import evaluate_regressor, _macos_version, _is_macos
@@ -65,7 +67,7 @@ class DecisionTreeRegressorBostonHousingScikitNumericTest(unittest.TestCase):
         if _is_macos() and _macos_version() >= (10, 13):
             # Get predictions
             df = pd.DataFrame(self.X, columns=self.feature_names)
-            df["prediction"] = scikit_model.predict(self.X)
+            df["target"] = scikit_model.predict(self.X)
 
             # Evaluate it
             metrics = evaluate_regressor(spec, df, target="target", verbose=False)
@@ -92,8 +94,6 @@ class DecisionTreeRegressorBostonHousingScikitNumericTest(unittest.TestCase):
         )
 
         # Make a cartesian product of all options
-        import itertools
-
         product = itertools.product(*options.values())
         args = [dict(zip(options.keys(), p)) for p in product]
 

@@ -3,18 +3,22 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import unittest
 import itertools
 import os
-import pandas as pd
-import numpy as np
-from coremltools._deps import _HAS_SKLEARN, _SKLEARN_VERSION
-from coremltools.models.utils import evaluate_classifier, _macos_version, _is_macos
+import unittest
+
 from distutils.version import StrictVersion
+import numpy as np
+import pandas as pd
 import pytest
 
+from coremltools._deps import _HAS_SKLEARN, _SKLEARN_VERSION
+from coremltools.models.utils import evaluate_classifier, _macos_version, _is_macos
+
 if _HAS_SKLEARN:
+    from sklearn.datasets import load_boston
     from sklearn.ensemble import RandomForestClassifier
+    from sklearn.tree import DecisionTreeClassifier
     from coremltools.converters import sklearn as skl_converter
 
 
@@ -37,7 +41,7 @@ class RandomForestClassificationBostonHousingScikitNumericTest(unittest.TestCase
         if _is_macos() and _macos_version() >= (10, 13):
             # Get predictions
             df = pd.DataFrame(self.X, columns=self.feature_names)
-            df["prediction"] = scikit_model.predict(self.X)
+            df["target"] = scikit_model.predict(self.X)
 
             # Evaluate it
             metrics = evaluate_classifier(spec, df, verbose=False)
@@ -53,8 +57,6 @@ class RandomForestBinaryClassifierBostonHousingScikitNumericTest(
         """
         Set up the unit test by loading the dataset and training a model.
         """
-        from sklearn.datasets import load_boston
-
         # Load data and train model
         scikit_data = load_boston()
         self.X = scikit_data.data.astype("f").astype(
@@ -98,12 +100,7 @@ class RandomForestMultiClassClassificationBostonHousingScikitNumericTest(
 ):
     @classmethod
     def setUpClass(self):
-        from sklearn.datasets import load_boston
-        from sklearn.tree import DecisionTreeClassifier
-
         # Load data and train model
-        import numpy as np
-
         scikit_data = load_boston()
         self.X = scikit_data.data.astype("f").astype(
             "d"
