@@ -2000,6 +2000,35 @@ class TestElementWiseBinary(TensorFlowBaseTest):
             model, input_dict, outputs, use_cpu_for_conversion=use_cpu_only, backend=backend,
         )
 
+
+class TestCross(TensorFlowBaseTest):
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend, rank",
+        itertools.product(
+            [True, False],
+            backends,
+            [2, 3, 4],
+        )
+    )
+    def test(self, use_cpu_only, backend, rank):
+        input_shape = list(np.random.randint(low=2, high=4, size=rank)) + [3]
+        input_shapes = [input_shape, input_shape]
+
+        @make_tf_graph(input_shapes)
+        def build_model(x, y):
+            return tf.cross(x, y)
+
+        model, inputs, outputs = build_model
+
+        input_values = [random_gen(shape, -1, 1) for shape in input_shapes]
+
+        input_dict = dict(zip(inputs, input_values))
+        TensorFlowBaseTest.run_compare_tf(
+            model, input_dict, outputs,
+            use_cpu_for_conversion=use_cpu_only, backend=backend,
+        )
+
+
 class TestEinsum(TensorFlowBaseTest):
     @pytest.mark.parametrize(
         "use_cpu_for_conversion, backend, equation, reverse_input_order",
