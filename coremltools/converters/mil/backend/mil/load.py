@@ -4,8 +4,9 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import logging
-import numpy as np
 import os
+
+import numpy as np
 
 from .passes import mil_passes
 from ..backend_helper import _get_colorspace_enum, _validate_image_input_output_shapes
