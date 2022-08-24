@@ -455,6 +455,19 @@ class TestOuter(TorchBaseTest):
         TorchBaseTest.run_compare_torch((vector1, vector2), model, backend=backend, input_as_shape=False)
 
 
+class TestNormalize(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "shape, backend",
+        itertools.product(
+            COMMON_SHAPES,
+            backends,
+        )
+    )
+    def test_normalize(self, shape, backend):
+        model = ModuleWrapper(function=nn.functional.normalize)
+        TorchBaseTest.run_compare_torch(shape, model, backend=backend)
+
+
 class TestNorms(TorchBaseTest):
     @pytest.mark.parametrize(
         "shape, backend, keepdim",
