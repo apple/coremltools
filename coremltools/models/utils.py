@@ -206,16 +206,31 @@ def load_spec(filename):
     --------
     save_spec
     """
-    if _ModelPackage is None:
-        raise Exception(
-            "Unable to load libmodelpackage. Cannot make save spec."
-        )
+    name, ext = _os.path.splitext(filename)
+    
+    is_package = False
+
+    if not ext:
+        filename = "{}{}".format(filename, _MLMODEL_EXTENSION)
+    elif ext == _MLPACKAGE_EXTENSION:
+        is_package = True
+    elif ext == _MLMODEL_EXTENSION:
+        is_package = False
+    else:
+        raise Exception("Extension must be {} or {} (not {})".format(_MLMODEL_EXTENSION, _MLPACKAGE_EXTENSION, ext))
+    
+    if is_package:
+        if _ModelPackage is None:
+            raise Exception(
+                "Unable to load libmodelpackage. Cannot make save spec."
+            )
 
     spec = _Model_pb2.Model()
 
     specfile = filename
-    if _ModelPackage.isValid(filename):
-        specfile = _ModelPackage(filename).getRootModel().path()
+    if is_package:
+        if _ModelPackage.isValid(filename):
+            specfile = _ModelPackage(filename).getRootModel().path()
 
     with open(specfile, "rb") as f:
         contents = f.read()
