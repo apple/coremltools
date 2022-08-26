@@ -1431,7 +1431,7 @@ class TestUpsample(TorchBaseTest):
                     assert len(layer.upsample.fractionalScalingFactor) == 0
 
 
-class TestEmptyLike(TorchBaseTest):
+class TestEmpty(TorchBaseTest):
     @pytest.mark.parametrize(
         "shape, backend",
         itertools.product(
@@ -1441,14 +1441,22 @@ class TestEmptyLike(TorchBaseTest):
     )
     def test_empty_like(self, backend, shape):
         class TestModel(nn.Module):
-            def __init__(self):
-                super(TestModel, self).__init__()
-
             def forward(self, x):
                 y = torch.empty_like(x)
                 return torch.Tensor([len(y)])
 
         self.run_compare_torch(shape, TestModel(), backend=backend)
+
+    @pytest.mark.parametrize(
+        "shape, backend",
+        itertools.product(
+            COMMON_SHAPES,
+            backends,
+        )
+    )
+    def test_new_empty(self, shape, backend):
+        model = ModuleWrapper(torch.Tensor.new_empty, {'size': shape})
+        TorchBaseTest.run_compare_torch(shape, model, backend=backend)
 
 
 class TestAvgPool(TorchBaseTest):
