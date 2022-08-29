@@ -1173,6 +1173,11 @@ def minimum(context, node):
     out = mb.minimum(x=x, y=y, name=node.name)
     context.add(out)
 
+@register_torch_op
+def clamp_min(context, node):
+    x = _get_inputs(context, node, expected=2)
+    x = mb.clip(x=x[0], alpha=x[1], beta=_np.inf, name=node.name)
+    context.add(x)
 
 @register_torch_op
 def maximum(context, node):
