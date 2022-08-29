@@ -63,6 +63,11 @@ while [ $# -gt 0 ]
   shift
 done
 
+if [[ $TEST_PACKAGE == "" ]]; then
+    echo "\"--test-package\" is a required paramter."
+    exit 1
+fi
+
 # First configure
 cd ${COREMLTOOLS_HOME}
 if [[ $CHECK_ENV == 1 ]]; then
