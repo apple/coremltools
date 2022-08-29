@@ -3866,7 +3866,7 @@ def zeros(context, node):
     context.add(zeros)
 
 
-@register_torch_op
+@register_torch_op(torch_alias=["new_empty"])
 def new_zeros(context, node):
     inputs = _get_inputs(context, node)
     shape = inputs[1]
@@ -3875,6 +3875,7 @@ def new_zeros(context, node):
         # we need to concat them first to get a shape.
         shape = mb.concat(values=shape, axis=0)
     context.add(mb.fill(shape=shape, value=0., name=node.name))
+
 
 @register_torch_op
 def dim(context, node):
