@@ -1443,6 +1443,7 @@ class TestEmpty(TorchBaseTest):
         class TestModel(nn.Module):
             def forward(self, x):
                 y = torch.empty_like(x)
+                # Value of y is Nondeterministic, so return length
                 return torch.Tensor([len(y)])
 
         self.run_compare_torch(shape, TestModel(), backend=backend)
@@ -1455,8 +1456,14 @@ class TestEmpty(TorchBaseTest):
         )
     )
     def test_new_empty(self, shape, backend):
-        model = ModuleWrapper(torch.Tensor.new_empty, {'size': shape})
-        TorchBaseTest.run_compare_torch(shape, model, backend=backend)
+        class TestModel(nn.Module):
+            def forward(self, _):
+                tensor = torch.ones(())
+                y = tensor.new_empty(shape)
+                # Value of y is Nondeterministic, so return length
+                return torch.Tensor([len(y)])
+
+        self.run_compare_torch(shape, TestModel(), backend=backend)
 
 
 class TestAvgPool(TorchBaseTest):
