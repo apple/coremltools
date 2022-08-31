@@ -647,6 +647,18 @@ def permute(context, node):
     perm = mb.transpose(x=inputs[0], perm=inputs[1], name=node.name)
     context.add(perm)
 
+
+@register_torch_op
+def frac(context, node):
+    # Frac(x) = x - floor(abs(x)) * sign(x)
+
+    x = _get_inputs(context, node, expected=1)[0]
+    floor_abs = mb.floor(x=mb.abs(x=x))
+    sign_abs_floor = mb.mul(x=floor_abs, y=mb.sign(x=x))
+    res = mb.sub(x=x, y=sign_abs_floor)
+    context.add(res, torch_name=node.name)
+
+
 @register_torch_op
 def pixel_shuffle(context, node):
     inputs = _get_inputs(context, node, expected=2)
