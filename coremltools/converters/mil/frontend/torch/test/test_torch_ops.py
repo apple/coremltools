@@ -305,6 +305,18 @@ class TestGridSample(TorchBaseTest):
         self.run_compare_torch(data_grid_shapes, model, backend=backend)
 
 
+class TestFrac(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "shape, backend",
+        itertools.product(
+            COMMON_SHAPES, backends,
+        ),
+    )
+    def test_frac(self, shape, backend):
+        model = ModuleWrapper(function=torch.frac)
+        TorchBaseTest.run_compare_torch(shape, model, backend=backend, rand_range=(-10.0, 10.0))
+
+
 class TestNLLLoss(TorchBaseTest):
     @pytest.mark.parametrize(
         "reduction, backend",
