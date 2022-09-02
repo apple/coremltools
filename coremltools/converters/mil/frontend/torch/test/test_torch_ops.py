@@ -5188,4 +5188,4 @@ class TestCopy:
         input_shape = tuple(np.random.randint(low=2, high=6, size=rank))
 
         model = ModuleWrapper(function=lambda x: x.copy_())
-        run_compare_torch(input_shape, model, backend=backend)
+        self.run_compare_torch(input_shape, model, backend=backend)
