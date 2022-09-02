@@ -508,6 +508,21 @@ def Cosh(context, node):
 
 
 @register_tf_op
+def Cross(context, node):
+    x = context[node.inputs[0]]
+    y = context[node.inputs[1]]
+    # last dim must be 3; other dims must match
+    assert x.shape[1:] == y.shape[1:]
+    assert x.shape[-1] == 3
+    x1 = mb.gather(x=x, indices=[1, 2, 0], axis=-1)
+    x2 = mb.gather(x=x, indices=[2, 0, 1], axis=-1)
+    y1 = mb.gather(x=y, indices=[1, 2, 0], axis=-1)
+    y2 = mb.gather(x=y, indices=[2, 0, 1], axis=-1)
+    z = mb.sub(x=mb.mul(x=x1, y=y2), y=mb.mul(x=x2, y=y1), name=node.name)
+    context.add(node.name, z)
+
+
+@register_tf_op
 def Einsum(context, node):
     equation = node.attr["equation"]
     a = context[node.inputs[0]]
