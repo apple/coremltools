@@ -225,7 +225,7 @@ def _list_select(shape_var, index):
 def _construct_constant(val, name):
     # Converter cannot handle torch tensors.
     if isinstance(val, torch.Tensor):
-        val = val.numpy()
+        val = val.cpu().numpy()
 
     # MIL casts ints to int32, which can't represent the 64 bit magic number.
     # So we instead represent it with None, and any ops that might get the
