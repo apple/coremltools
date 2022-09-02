@@ -2909,7 +2909,7 @@ def _if(context, node):
         pred=condition, _true_fn=_true_path, _false_fn=_false_path, name=name
     )
     # If the condition only returns one item, wrap it in a tuple.
-    if not isinstance(cond, tuple):
+    if not isinstance(cond, (tuple, list)):
         cond = (cond,)
 
     # Make sure the condition returned the expected number of outputs.
