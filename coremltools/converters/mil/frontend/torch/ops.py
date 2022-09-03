@@ -75,11 +75,12 @@ def convert_nodes(context, graph):
     """
     for node in _tqdm(graph.nodes, desc="Converting PyTorch Frontend ==> MIL Ops", unit=" ops"):
         op_lookup = node.kind
-        if op_lookup.endswith("_"):
+        add_op = _TORCH_OPS_REGISTRY.get(op_lookup, None)
+        if add_op is None and op_lookup.endswith("_"):
             # This is an "in place" op.
             # Look up the standard op instead by removing underscore.
             op_lookup = op_lookup[:-1]
-        add_op = _TORCH_OPS_REGISTRY.get(op_lookup, None)
+            add_op = _TORCH_OPS_REGISTRY.get(op_lookup, None)
 
         _logging.info("Converting op {} : {}".format(node.name, node.kind))
         if add_op is None:
