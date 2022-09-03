@@ -4567,31 +4567,13 @@ class TestEmbedding(TorchBaseTest):
             converter_input_type=converter_input_type,
         )
 
-# class TestRoiAlign(TorchBaseTest):
-#     @pytest.mark.parametrize(
-#         "shapes, backend",
-#         itertools.product(
-#             [(1,), (1, 2)],
-#             backends
-#         ),
-#     )
-#     def test_roi_align(self, shapes, backend):
-#         class TestModel(nn.Module):
-#             def __init__(self):
-#                 super(TestModel, self).__init__()
-
-#             def forward(self, a):
-#                 return torch.roi_align
-#         self.run_compare_torch(shapes, TestModel().eval(), backend=backend)
-
-
 class TestNumel(TorchBaseTest):
     @pytest.mark.parametrize(
         "shapes, backend",
         itertools.product(
             [
-                [(2,1)],
-                [(5,1,4,1)],
+                [(2, 1)],
+                [(5, 1, 4, 1)],
                 [(1,)],
             ],
             backends
