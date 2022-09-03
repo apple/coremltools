@@ -4566,7 +4566,6 @@ def roi_align(context, node):
         raise ValueError(
             '"CropResize" op: expected input rank 4, got {}'.format(x.rank)
         )
-    Hin, Win = input_shape[1:3]
 
     const_box_info = True
     if context[node.inputs[1]].val is None or context[node.inputs[2]].val is None:
@@ -4644,54 +4643,6 @@ def nms(context, node):
     else:
         x = mb.squeeze(x=x, axes=[0], name=node.name)
     context.add(x, torch_name=node.name)
-
-@register_torch_op
-def repeat_interleave(context, node):
-    inputs = _get_inputs(context, node)
-
-    x = inputs[0]
-    reps = inputs[1]
-    dim = inputs[2] if inputs[2] else 0
-
-    perm = [] + [axis for axis in range(x.rank) if axis not in []]
-
-    x = mb.transpose(x=x, perm=perm)  # torch.transpose(x, 0, 1)
-    x = mb.tile(x=x, reps=reps, name=node.name)  # torch.repeat(x, size)
-    x = mb.reshape(x=x, shape=(-1, x.shape[0]))  # x.view(-1, 2)
-    x = mb.transpose(x=x, perm=(-1, 0))  # torch.transpose(x, 0, 1)
-    dims = list(x.shape)
-
-    # Implementation of flatten
-    total = 1
-    start_val = dim
-    end_val = -1
-    start = len(dims) + start_val if start_val < 0 else start_val
-    end = len(dims) + end_val if end_val < 0 else end_val
-
-    if start > len(dims) or end > len(dims) or start < 0 or end < 0:
-        raise ValueError(
-            "Invalid start and end. (start, end) == ({}, {})".format(start, end_val)
-        )
-    if start > end:
-        raise ValueError(
-            "Start must be before end. (start, end) == ({}, {})".format(start, end_val)
-        )
-    x_shape = mb.shape(x=x)
-
-    shape1 = mb.slice_by_index(x=x_shape, begin=[0], end=[start])
-    shape2 = mb.slice_by_index(x=x_shape, begin=[end + 1], end=[len(dims)])
-
-    flatten_dim = -1
-    if not any_symbolic(x.shape):
-        flatten_dim = 1
-        for dim in dims[start: end + 1]:
-            flatten_dim *= dim
-
-    shape = mb.concat(values=(shape1, [flatten_dim], shape2), axis=0)
-    shape = mb.cast(x=shape, dtype="int32")
-    reshape = mb.reshape(x=x, shape=shape, name=node.name)
-
-    context.add(reshape, node.name)
 
 @register_torch_op
 def narrow(context, node):
