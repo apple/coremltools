@@ -4603,6 +4603,33 @@ class TestScatter(TorchBaseTest):
             m = TestModel(0, shapes)
             self.run_compare_torch(shapes, m, backend=backend)
 
+    @pytest.mark.parametrize(
+        "shapes_dims, backend",
+        itertools.product(
+            [
+                [(10,), (0, -1)],
+                [(2, 3), (1, -1)],
+                [(2, 3, 4, 5), (0, -2)],
+            ],
+            backends
+        ),
+    )
+    def test_scatter_with_scalar_source(self, shapes_dims, backend):
+        class TestModel(nn.Module):
+            def __init__(self, dim, shapes):
+                super(TestModel, self).__init__()
+                self.dim = dim
+                self.source = 1.0
+                self.index = torch.randint(0, shapes[dim], size=shapes)
+                
+            def forward(self, x):
+                return x.scatter_(self.dim, self.index, self.source)
+
+        shapes, dims = shapes_dims
+        for dim in dims:
+            m = TestModel(0, shapes)
+            self.run_compare_torch(shapes, m, backend=backend)
+
 
     @pytest.mark.parametrize(
         "shapes_dims, mode, backend",
