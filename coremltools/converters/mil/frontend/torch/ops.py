@@ -4607,9 +4607,7 @@ def _scatter(context, inputs, mode, name):
     axis = inputs[1].val
     indices = inputs[2]
     updates = inputs[3]
-    if not types.is_tensor(updates.sym_type):
-        # torch.scatter allows for src (updates) argument to be either tensor or scalar
-        # while coremltools requires updates to be a tensor
+    if types.is_scalar(updates.sym_type):
         updates = mb.fill(shape=indices.shape, value=updates.val, name=name)
     result = mb.scatter_along_axis(data=data, indices=indices, updates=updates,
                                    axis=axis, mode=mode, name=name)
