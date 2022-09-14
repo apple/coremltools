@@ -38,6 +38,12 @@ class GradientBoostingBinaryClassifierScikitTest(unittest.TestCase):
         target = scikit_data["target"] > scikit_data["target"].mean()
         scikit_model.fit(scikit_data["data"], target)
 
+        s = 0
+        for est in scikit_model.estimators_:
+            for e in est:
+                s = s + e.tree_.node_count
+        self.scikit_model_node_count = s
+
         # Save the data and the model
         self.scikit_data = scikit_data
         self.scikit_model = scikit_model
@@ -74,7 +80,7 @@ class GradientBoostingBinaryClassifierScikitTest(unittest.TestCase):
             1
         ].treeEnsembleClassifier.treeEnsemble
         self.assertIsNotNone(tr)
-        self.assertEqual(len(tr.nodes), 1416)
+        self.assertEqual(len(tr.nodes), self.scikit_model_node_count)
 
     def test_conversion_bad_inputs(self):
         # Error on converting an untrained model
@@ -89,8 +95,6 @@ class GradientBoostingBinaryClassifierScikitTest(unittest.TestCase):
             model = OneHotEncoder()
             spec = skl_converter.convert(model, "data", "out")
 
-
-@unittest.skipIf(not _HAS_SKLEARN, "Missing sklearn. Skipping tests.")
 class GradientBoostingMulticlassClassifierScikitTest(unittest.TestCase):
     """
     Unit test class for testing scikit-learn converter.
@@ -111,6 +115,12 @@ class GradientBoostingMulticlassClassifierScikitTest(unittest.TestCase):
         scikit_model.fit(scikit_data.data, target)
         self.target = target
 
+        s = 0
+        for est in scikit_model.estimators_:
+            for e in est:
+                s = s + e.tree_.node_count
+        self.scikit_model_node_count = s
+        
         # Save the data and the model
         self.scikit_data = scikit_data
         self.scikit_model = scikit_model
@@ -145,7 +155,7 @@ class GradientBoostingMulticlassClassifierScikitTest(unittest.TestCase):
             -1
         ].treeEnsembleClassifier.treeEnsemble
         self.assertIsNotNone(tr)
-        self.assertEqual(len(tr.nodes), 15056)
+        self.assertEqual(len(tr.nodes), self.scikit_model_node_count)
 
     def test_conversion_bad_inputs(self):
         # Error on converting an untrained model

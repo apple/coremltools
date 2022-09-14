@@ -6,17 +6,10 @@
 import numpy as np
 
 from coremltools.converters.mil.mil import (
-    BoolInputType,
     DefaultInputs,
-    FloatInputType,
     get_new_symbol,
     InputSpec,
-    IntInputType,
-    IntTensorInputType,
-    IntOrFloatInputType,
     Operation,
-    ScalarOrTensorInputType,
-    StringInputType,
     TensorInputType,
     types,
 )
@@ -56,27 +49,29 @@ class upsample_nearest_neighbor(Operation):
     """
 
     input_spec = InputSpec(
-        x=TensorInputType(),
-        scale_factor_height=ScalarOrTensorInputType(
+        x=TensorInputType(type_domain="T"),
+        scale_factor_height=TensorInputType(
             const=True,
             optional=True,
-            type_domain=(np.int32, np.float32)
+            type_domain="U"
         ),
-        scale_factor_width=ScalarOrTensorInputType(
+        scale_factor_width=TensorInputType(
             const=True,
             optional=True,
-            type_domain=(np.int32, np.float32)
+            type_domain="U"
         ),
     )
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32),
+        "U": (types.fp32, types.int32),
+    }
 
     def default_inputs(self):
         return DefaultInputs(
             scale_factor_height=1,
             scale_factor_width=1,
         )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     def type_inference(self):
         if self.x.rank < 3:
@@ -128,13 +123,14 @@ class resize_nearest_neighbor(Operation):
     """
 
     input_spec = InputSpec(
-        x=TensorInputType(),
-        target_size_height=IntInputType(const=True),
-        target_size_width=IntInputType(const=True),
+        x=TensorInputType(type_domain="T"),
+        target_size_height=TensorInputType(const=True, type_domain=types.int32),
+        target_size_width=TensorInputType(const=True, type_domain=types.int32),
     )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32),
+    }
 
     def type_inference(self):
         if self.x.rank < 3:
@@ -161,11 +157,11 @@ class upsample_bilinear(Operation):
 
     Parameters
     ----------
-    x: tensor<[\*D, H1, W1],T>  (Required)
+    x: tensor<[\*D, H1, W1], T>  (Required)
         * Must be at least rank ``3``.
-    scale_factor_height: const<T2> (Optional, default=1)
+    scale_factor_height: const<U> (Optional, default=1)
         * Scale factor for the height dimension (``axis=-2``).
-    scale_factor_width: const<T2> (Optional, default=1)
+    scale_factor_width: const<U> (Optional, default=1)
         * Scale factor for the width dimension (``axis=-1``).
     align_corners: const<bool> (Optional, default=True)
         * This parameter determines how samples are chosen for bilinear
@@ -217,7 +213,7 @@ class upsample_bilinear(Operation):
 
     Returns
     -------
-    tensor<[\*D, H2, W2],T>
+    tensor<[\*D, H2, W2], T>
         * Tensor with same type as the input.
         * ``H2`` = floor(``H1`` * ``scale_factor_height``).
         * ``W2`` = floor(``W1`` * ``scale_factor_width``).
@@ -225,23 +221,31 @@ class upsample_bilinear(Operation):
     Attributes
     ----------
     T: fp16, fp32
-    T2 : fp32, i32
+    U : fp32, i32
     """
 
     input_spec = InputSpec(
-        x=TensorInputType(),
-        scale_factor_height=ScalarOrTensorInputType(
+        x=TensorInputType(type_domain="T"),
+        scale_factor_height=TensorInputType(
             const=True,
             optional=True,
-            type_domain=(np.int32, np.float32)
+            type_domain="U",
         ),
-        scale_factor_width=ScalarOrTensorInputType(
+        scale_factor_width=TensorInputType(
             const=True,
             optional=True,
-            type_domain=(np.int32, np.float32)
+            type_domain="U",
         ),
-        align_corners=BoolInputType(const=True, optional=True),
+        align_corners=TensorInputType(
+            const=True,
+            optional=True,
+            type_domain=types.bool),
     )
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32),
+        "U": (types.int32, types.fp32),
+    }
 
     def default_inputs(self):
         return DefaultInputs(
@@ -249,9 +253,6 @@ class upsample_bilinear(Operation):
             scale_factor_width=1,
             align_corners=True,
             )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     def type_inference(self):
         if self.x.rank < 3:
@@ -362,11 +363,27 @@ class resize_bilinear(Operation):
     """
 
     input_spec = InputSpec(
-        x=TensorInputType(),
-        target_size_height=IntInputType(const=True, optional=True),
-        target_size_width=IntInputType(const=True, optional=True),
-        sampling_mode=StringInputType(const=True, optional=True),
+        x=TensorInputType(type_domain="T"),
+        target_size_height=TensorInputType(
+            const=True,
+            optional=True,
+            type_domain=types.int32
+        ),
+        target_size_width=TensorInputType(
+            const=True,
+            optional=True,
+            type_domain=types.int32
+        ),
+        sampling_mode=TensorInputType(
+            const=True,
+            optional=True,
+            type_domain=types.str
+        ),
     )
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32),
+    }
 
     def default_inputs(self):
         return DefaultInputs(
@@ -374,9 +391,6 @@ class resize_bilinear(Operation):
             target_size_width=1,
             sampling_mode="DEFAULT",
             )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     def type_inference(self):
         if self.x.rank < 3:
@@ -492,15 +506,19 @@ class crop_resize(Operation):
     """
 
     input_spec = InputSpec(
-        x=TensorInputType(),
-        roi=TensorInputType(),
-        target_height=IntInputType(const=True, optional=True),
-        target_width=IntInputType(const=True, optional=True),
-        normalized_coordinates=BoolInputType(const=True, optional=True),
-        spatial_scale=ScalarOrTensorInputType(const=True, optional=True, type_domain=(np.float32,)),
-        box_coordinate_mode=StringInputType(const=True, optional=True),
-        sampling_mode=StringInputType(const=True, optional=True),
+        x=TensorInputType(type_domain="T"),
+        roi=TensorInputType(type_domain="T"),
+        target_height=TensorInputType(const=True, optional=True, type_domain=types.int32),
+        target_width=TensorInputType(const=True, optional=True, type_domain=types.int32),
+        normalized_coordinates=TensorInputType(const=True, optional=True, type_domain=types.bool),
+        spatial_scale=TensorInputType(const=True, optional=True, type_domain=types.fp32),
+        box_coordinate_mode=TensorInputType(const=True, optional=True, type_domain=types.str),
+        sampling_mode=TensorInputType(const=True, optional=True, type_domain=types.str),
     )
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32),
+    }
 
     def default_inputs(self):
         return DefaultInputs(
@@ -510,10 +528,7 @@ class crop_resize(Operation):
             spatial_scale=1.,
             box_coordinate_mode="CONRNERS_HEIGHT_FIRST",
             sampling_mode="DEFAULT",
-            )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+        )
 
     def type_inference(self):
         if self.x.rank != 4:
@@ -578,13 +593,14 @@ class crop(Operation):
     """
 
     input_spec = InputSpec(
-        x=TensorInputType(),
-        crop_height=IntTensorInputType(const=True),
-        crop_width=IntTensorInputType(const=True),
+        x=TensorInputType(type_domain="T"),
+        crop_height=TensorInputType(const=True, type_domain=types.int32),
+        crop_width=TensorInputType(const=True, type_domain=types.int32),
     )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32),
+    }
 
     def type_inference(self):
         if self.x.rank < 3:
@@ -688,19 +704,20 @@ class affine(Operation):
     """
 
     input_spec = InputSpec(
-        x=TensorInputType(),
-        transform_matrix=TensorInputType(),
-        output_height=IntInputType(const=True),
-        output_width=IntInputType(const=True),
-        sampling_mode=StringInputType(const=True),
-        padding_mode=StringInputType(const=True),
-        padding_value=FloatInputType(const=True),
-        coordinates_mode=StringInputType(const=True),
-        align_corners=BoolInputType(const=True),
+        x=TensorInputType(type_domain="T"),
+        transform_matrix=TensorInputType(type_domain="T"),
+        output_height=TensorInputType(const=True, type_domain=types.int32),
+        output_width=TensorInputType(const=True, type_domain=types.int32),
+        sampling_mode=TensorInputType(const=True, type_domain=types.str),
+        padding_mode=TensorInputType(const=True, type_domain=types.str),
+        padding_value=TensorInputType(const=True, type_domain="T"),
+        coordinates_mode=TensorInputType(const=True, type_domain=types.str),
+        align_corners=TensorInputType(const=True, type_domain=types.bool),
     )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32),
+    }
 
     def type_inference(self):
         if self.x.rank != 4:
@@ -830,17 +847,19 @@ class resample(Operation):
     """
 
     input_spec = InputSpec(
-        x=TensorInputType(),
-        coordinates=ScalarOrTensorInputType(type_domain=(np.int32, np.float32)),
-        sampling_mode=StringInputType(const=True),
-        padding_mode=StringInputType(const=True),
-        padding_value=FloatInputType(const=True),
-        coordinates_mode=StringInputType(const=True),
-        align_corners=BoolInputType(const=True),
+        x=TensorInputType(type_domain="T"),
+        coordinates=TensorInputType(type_domain="U"),
+        sampling_mode=TensorInputType(const=True, type_domain=types.str),
+        padding_mode=TensorInputType(const=True, type_domain=types.str),
+        padding_value=TensorInputType(const=True, type_domain="T"),
+        coordinates_mode=TensorInputType(const=True, type_domain=types.str),
+        align_corners=TensorInputType(const=True, type_domain=types.bool),
     )
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    type_domains = {
+        "T": (types.fp16, types.fp32),
+        "U": (types.int32, types.fp32),
+    }
 
     def type_inference(self):
         if self.x.rank != 4:

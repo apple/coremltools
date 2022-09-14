@@ -45,7 +45,7 @@ def apply_common_pass_pipeline(prog, passes):
         "common::const_elimination",
         "common::loop_invariant_elimination",
         "common::remove_symbolic_reshape",
-        'common::noop_elimination',
+        "common::noop_elimination",
         "common::fuse_matmul_weight_bias",
         "common::fuse_linear_bias",
         "common::fuse_gelu_tanh_approximation",
@@ -55,7 +55,7 @@ def apply_common_pass_pipeline(prog, passes):
         "common::use_reflection_padding",
         "common::merge_consecutive_paddings", # Should come after use_reflection_padding, which will introduce new padding layers
         "common::pad_conv_connect", # Should come after merge_consecutive_paddings
-        'common::image_input_preprocess',
+        "common::image_input_preprocess",
         "common::replace_stack_reshape", # should come before detect_concat_interleave since it may add concat
         "common::reduce_transposes",
         "common::fuse_conv_scale",
@@ -71,7 +71,8 @@ def apply_common_pass_pipeline(prog, passes):
         "common::detect_concat_interleave",
         "common::concat_to_pixel_shuffle", # should come after detect_concat_interleave and after replace_stack_reshape
         "common::fuse_prelu", # reduce_transpose pass should run before and after this pass (the one after will be run during the cleanup passes stage)
-        # "remove_redundant_ops" pass should be applied towards the end, once other graph passes have done their optimizations.
+        "common::prelu_to_lrelu",
+        #  "remove_redundant_ops" pass should be applied towards the end, once other graph passes have done their optimizations.
         # For instance, it should come after passes such as "reduce_transpose" that can introduce redundant transposes
         # in the network (while reducing the total number of transposes), and after passes such as "fuse_layernorm_or_instancenorm"
         # which detects patterns that involve redundant ops ("sub") etc.

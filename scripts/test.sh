@@ -90,7 +90,7 @@ fi
 
 # Install dependencies if specified
 if [ ! -z "${REQUIREMENTS}" ]; then
-   $PIP_EXECUTABLE install -r "${REQUIREMENTS}"
+   $PIP_EXECUTABLE install --prefer-binary -r "${REQUIREMENTS}"
 fi
 
 if [[ ! -z "${WHEEL_PATH}" ]]; then

@@ -67,6 +67,11 @@ public:
         return metadata.sizeInBytes;
     }
 
+    bool IsEncrypted() const
+    {
+        return m_reader->IsEncrypted();
+    }
+
 private:
     void EnsureLoaded() const
     {
@@ -147,4 +152,9 @@ uint64_t StorageReader::GetDataOffset(uint64_t metadataOffset) const
 uint64_t StorageReader::GetDataSize(uint64_t metadataOffset) const
 {
     return m_impl->GetDataSize(metadataOffset);
+}
+
+bool StorageReader::IsEncrypted() const
+{
+    return m_impl->IsEncrypted();
 }

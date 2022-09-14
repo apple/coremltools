@@ -206,32 +206,25 @@ def load_spec(filename):
     --------
     save_spec
     """
-    name, ext = _os.path.splitext(filename)
+    _, file_extension = _os.path.splitext(filename)
     
-    is_package = False
+    has_mlmodel_file_extension = False
+    if file_extension:
+        if file_extension == _MLMODEL_EXTENSION:
+            has_mlmodel_file_extension = True
+        elif file_extension != _MLPACKAGE_EXTENSION:
+            raise Exception("File extension must be {} or {} (not {})".format(
+                _MLMODEL_EXTENSION, _MLPACKAGE_EXTENSION, file_extension))
 
-    if not ext:
-        filename = "{}{}".format(filename, _MLMODEL_EXTENSION)
-    elif ext == _MLPACKAGE_EXTENSION:
-        is_package = True
-    elif ext == _MLMODEL_EXTENSION:
-        is_package = False
+    if not has_mlmodel_file_extension and _ModelPackage is None:
+        raise Exception("Unable to load libmodelpackage. Cannot make save spec.")
+
+    if not has_mlmodel_file_extension and _ModelPackage.isValid(filename):
+        specfile = _ModelPackage(filename).getRootModel().path()
     else:
-        raise Exception("Extension must be {} or {} (not {})".format(_MLMODEL_EXTENSION, _MLPACKAGE_EXTENSION, ext))
-    
-    if is_package:
-        if _ModelPackage is None:
-            raise Exception(
-                "Unable to load libmodelpackage. Cannot make save spec."
-            )
+        specfile = filename
 
     spec = _Model_pb2.Model()
-
-    specfile = filename
-    if is_package:
-        if _ModelPackage.isValid(filename):
-            specfile = _ModelPackage(filename).getRootModel().path()
-
     with open(specfile, "rb") as f:
         contents = f.read()
         spec.ParseFromString(contents)

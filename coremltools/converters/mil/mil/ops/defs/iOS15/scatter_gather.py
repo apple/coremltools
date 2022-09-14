@@ -4,19 +4,16 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import numpy as np
-import numbers
 
 from coremltools.converters.mil.mil import Operation, types
 from coremltools.converters.mil.mil.input_type import (
     DefaultInputs,
     InputSpec,
-    IntInputType,
-    IntTensorInputType,
     TensorInputType,
-    StringInputType,
 )
 from coremltools.converters.mil.mil.operation import precondition
 from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
+from coremltools.converters.mil.mil.ops.defs._utils import compute_gather
 from coremltools.converters.mil.mil.types.symbolic import is_compatible_symbolic_vector, is_symbolic
 from coremltools.converters.mil.mil.operation import (
     SYMBOL,
@@ -59,20 +56,20 @@ class gather(Operation):
 
     Parameters
     ----------
-    x: tensor<\*D,T> (Required)
-    indices: tensor<\*N,i32> (Required)
+    x: tensor<\*D, T> (Required)
+    indices: tensor<\*N, i32> (Required)
         * Indices values may be negative. More precisely, ``-D[axis]<= v < D[axis]`` for ``v`` in ``indices``.
     axis: const i32 (Optional. Default=``0``)
         * Negative axis is supported.
 
     Returns
     -------
-    tensor<\*K,T>
+    tensor<\*K, T>
         * Where ``K = D[:axis] + N + D[axis+1:]``.
 
     Attributes
     ----------
-    U: fp16, fp32, i32
+    T: fp16, fp32, i32
 
     References
     ----------
@@ -81,18 +78,19 @@ class gather(Operation):
     """
 
     input_spec = InputSpec(
-        x=TensorInputType(),
-        indices=IntInputType(),
-        axis=IntInputType(const=True, optional=True),
+        x=TensorInputType(type_domain="T"),
+        indices=TensorInputType(type_domain=types.int32),
+        axis=TensorInputType(const=True, optional=True, type_domain=types.int32),
     )
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32, types.int32),
+    }
 
     def default_inputs(self):
         return DefaultInputs(
             axis=0,
             )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     @precondition(allow=VALUE | SYMBOL)
     def value_inference(self):
@@ -101,17 +99,12 @@ class gather(Operation):
         if indices is None:
             # only allow x to be symbolic. indices cannot.
             return None
-        scalar_indices = isinstance(indices, numbers.Integral)
-        axis = self.axis.val
-        if scalar_indices:
-            res = np.take(x, [indices], axis)
-            res2 = np.squeeze(res, axis=axis)
-            if isinstance(res2, np.ndarray) and len(res2.shape) == 0:
-                # res2 is a scalar, but represented as np.array(symbol,
-                # dtype=np.object) which np.squeeze can't remove.
-                return res2.item()
-            return res2
-        return np.take(x, indices, axis)
+        return compute_gather(
+                params=self.x.sym_val, 
+                indices=self.indices.val, 
+                axis=self.axis.val,
+                batch_dims=0
+            )
 
     def type_inference(self):
         out_type = self.x.dtype
@@ -177,7 +170,7 @@ class scatter(Operation):
     Parameters
     ----------
     data: tensor<\*D, T> (Required)
-    indices: tensor<[C],T> (Required)
+    indices: tensor<[C], i32> (Required)
         * 1-D tensor.
     updates: tensor<\*K, T> (Required)
         * ``K = data.shape[:axis] + [len(indices)] + data.shape[axis+1:]``.
@@ -195,7 +188,7 @@ class scatter(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32, i32
 
     For example:
         data = [[1, 2, 3], [4, 5, 6]]
@@ -209,21 +202,22 @@ class scatter(Operation):
     """
 
     input_spec = InputSpec(
-        data=TensorInputType(),
-        indices=IntTensorInputType(),
-        updates=TensorInputType(),
-        axis=IntInputType(const=True, optional=True),
-        mode=StringInputType(const=True, optional=True),
+        data=TensorInputType(type_domain="T"),
+        indices=TensorInputType(type_domain=types.int32),
+        updates=TensorInputType(type_domain="T"),
+        axis=TensorInputType(const=True, optional=True, type_domain=types.int32),
+        mode=TensorInputType(const=True, optional=True, type_domain=types.str),
     )
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32, types.int32),
+    }
 
     def default_inputs(self):
         return DefaultInputs(
             axis=0,
             mode="add",
             )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     def type_inference(self):
         if self.axis.val < -self.data.rank or self.axis.val >= self.data.rank:
@@ -260,7 +254,7 @@ class gather_along_axis(Operation):
     Parameters
     ----------
     x: tensor<\*D, T> (Required)
-    indices: tensor<\*K, T> (Required)
+    indices: tensor<\*K, i32> (Required)
         * ``rank(indices) == rank(x)``.
     axis: const i32 (Optional):
         * Default to ``0``.
@@ -276,18 +270,19 @@ class gather_along_axis(Operation):
     """
 
     input_spec = InputSpec(
-        x=TensorInputType(),
-        indices=IntTensorInputType(),
-        axis=IntInputType(const=True, optional=True),
+        x=TensorInputType(type_domain="T"),
+        indices=TensorInputType(type_domain=types.int32),
+        axis=TensorInputType(const=True, optional=True, type_domain=types.int32),
     )
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32, types.int32),
+    }
 
     def default_inputs(self):
         return DefaultInputs(
             axis=0,
             )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -370,7 +365,7 @@ class scatter_along_axis(Operation):
     Parameters
     ----------
     data: tensor<\*D, T> (Required)
-    indices: tensor<\*K,T> (Required)
+    indices: tensor<\*K, i32> (Required)
         * ``rank(indices) == rank(data)``.
     updates: tensor<\*K, T> (Required)
         * Must be the same shape as ``indices``.
@@ -388,25 +383,26 @@ class scatter_along_axis(Operation):
 
     Attributes
     ----------
-    U: fp16, fp32, i32
+    T: fp16, fp32, i32
     """
 
     input_spec = InputSpec(
-        data=TensorInputType(),
-        indices=IntTensorInputType(),
-        updates=TensorInputType(),
-        axis=IntInputType(const=True, optional=True),
-        mode=StringInputType(const=True, optional=True),
+        data=TensorInputType(type_domain="T"),
+        indices=TensorInputType(type_domain=types.int32),
+        updates=TensorInputType(type_domain="T"),
+        axis=TensorInputType(const=True, optional=True, type_domain=types.int32),
+        mode=TensorInputType(const=True, optional=True, type_domain=types.str),
     )
+
+    type_domains = {
+        "T": (types.fp16, types.fp32, types.int32),
+    }
 
     def default_inputs(self):
         return DefaultInputs(
             axis=0,
             mode="add",
             )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -456,17 +452,17 @@ class gather_nd(Operation):
 
     Parameters
     ----------
-    x: tensor<\*D,T> (Required)
-    indices: tensor<\*K,i32> (Required)
+    x: tensor<\*D, T> (Required)
+    indices: tensor<\*K, i32> (Required)
 
     Returns
     -------
-    tensor<\*V,T>
+    tensor<\*V, T>
         * ``V = K[:-1] + D[K[-1]:]``, where ``D = x.shape`` and ``K = indices.shape``.
 
     Attributes
     ----------
-    U: fp16, fp32, i32
+    T: fp16, fp32, i32
 
     References
     ----------
@@ -474,12 +470,13 @@ class gather_nd(Operation):
     """
 
     input_spec = InputSpec(
-        x=TensorInputType(),
-        indices=IntTensorInputType(),
+        x=TensorInputType(type_domain="T"),
+        indices=TensorInputType(type_domain=types.int32),
         )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+        
+    type_domains = {
+        "T": (types.fp16, types.fp32, types.int32),
+    }
 
     def type_inference(self):
         assert self.indices.shape[-1] <= self.x.rank
@@ -510,8 +507,8 @@ class scatter_nd(Operation):
 
     Parameters
     ----------
-    data: tensor<\*D,T> (Required)
-    indices: tensor<\*K,i32> (Required)
+    data: tensor<\*D, T> (Required)
+    indices: tensor<\*K, i32> (Required)
     updates: tensor<\*K, T> (Required)
         * Must be the shape as ``K[:-1]+data.shape[K[-1]:]``.
     mode: const string (Optional)
@@ -521,7 +518,7 @@ class scatter_nd(Operation):
 
     Returns
     -------
-    tensor<\*D,T>
+    tensor<\*D, T>
         * A tensor with the same shape and type as ``data``.
 
     Attributes
@@ -530,19 +527,20 @@ class scatter_nd(Operation):
     """
 
     input_spec = InputSpec(
-        data=TensorInputType(),
-        indices=IntTensorInputType(),
-        updates=TensorInputType(),
-        mode=StringInputType(const=True, optional=True),
+        data=TensorInputType(type_domain="T"),
+        indices=TensorInputType(type_domain=types.int32),
+        updates=TensorInputType(type_domain="T"),
+        mode=TensorInputType(const=True, optional=True, type_domain=types.str),
     )
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32, types.int32),
+    }
 
     def default_inputs(self):
         return DefaultInputs(
             mode="add",
             )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     def type_inference(self):
         assert self.indices.shape[-1] <= self.data.rank

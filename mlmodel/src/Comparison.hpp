@@ -216,13 +216,112 @@ namespace CoreML {
             }
             return true;
         }
-        
-        // generically express != in terms of ==
-        template<typename T>
-        bool operator!=(const T& a,
-                        const T& b) {
-            return !(a == b);
-        }
+
+ //
+ // Type-specific operator!= overloads necessitated by rdar://98724060 ([libcxx release blocker] Failed to build CoreML_tests (unconstrained operator!=))
+ //
+        bool operator!=(const ::CoreML::Specification::StringVector& a,
+                        const ::CoreML::Specification::StringVector& b);
+
+        bool operator!=(const ::CoreML::Specification::Int64Vector& a,
+                        const ::CoreML::Specification::Int64Vector& b);
+
+        bool operator!=(const ::google::protobuf::RepeatedField<::google::protobuf::int32>& a,
+                        const ::google::protobuf::RepeatedField<::google::protobuf::int32>& b);
+
+        bool operator!=(const ::google::protobuf::RepeatedField<float>& a,
+                        const ::google::protobuf::RepeatedField<float>& b);
+
+        bool operator!=(const ::google::protobuf::RepeatedField<double>& a,
+                        const ::google::protobuf::RepeatedField<double>& b);
+
+        bool operator!=(const ::CoreML::Specification::Model& a,
+                        const ::CoreML::Specification::Model& b);
+
+        bool operator!=(const ::CoreML::Specification::ModelDescription& a,
+                        const ::CoreML::Specification::ModelDescription& b);
+
+        bool operator!=(const ::CoreML::Specification::Metadata& a,
+                        const ::CoreML::Specification::Metadata& b);
+
+        bool operator!=(const ::CoreML::Specification::FeatureType& a,
+                        const ::CoreML::Specification::FeatureType& b);
+
+        bool operator!=(const ::CoreML::Specification::Kernel& a,
+                        const ::CoreML::Specification::Kernel& b);
+
+        bool operator!=(const ::CoreML::Specification::Coefficients& a,
+                        const ::CoreML::Specification::Coefficients& b);
+
+        bool operator!=(const ::CoreML::Specification::TreeEnsembleParameters& a,
+                        const ::CoreML::Specification::TreeEnsembleParameters& b);
+
+        bool operator!=(const ::google::protobuf::RepeatedPtrField<::CoreML::Specification::FeatureDescription>& a,
+                        const ::google::protobuf::RepeatedPtrField<::CoreML::Specification::FeatureDescription>& b);
+
+        bool operator!=(const ::google::protobuf::RepeatedPtrField<::CoreML::Specification::GLMRegressor_DoubleArray>& a,
+                        const ::google::protobuf::RepeatedPtrField<::CoreML::Specification::GLMRegressor_DoubleArray>& b);
+
+        bool operator!=(const ::google::protobuf::RepeatedPtrField<::CoreML::Specification::GLMClassifier_DoubleArray>& a,
+                        const ::google::protobuf::RepeatedPtrField<::CoreML::Specification::GLMClassifier_DoubleArray>& b);
+
+        bool operator!=(const ::google::protobuf::RepeatedPtrField<::CoreML::Specification::TreeEnsembleParameters_TreeNode>& a,
+                        const ::google::protobuf::RepeatedPtrField<::CoreML::Specification::TreeEnsembleParameters_TreeNode>& b);
+
+        bool operator!=(const ::google::protobuf::RepeatedPtrField<::CoreML::Specification::NeuralNetworkLayer>& a,
+                        const ::google::protobuf::RepeatedPtrField<::CoreML::Specification::NeuralNetworkLayer>& b);
+
+        bool operator!=(const ::google::protobuf::RepeatedPtrField<::CoreML::Specification::TreeEnsembleParameters_TreeNode_EvaluationInfo>& a,
+                        const ::google::protobuf::RepeatedPtrField<::CoreML::Specification::TreeEnsembleParameters_TreeNode_EvaluationInfo>& b);
+
+        bool operator!=(const ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::NeuralNetworkPreprocessing>& a,
+                        const ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::NeuralNetworkPreprocessing>& b);
+
+        bool operator!=(const ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::Coefficients>& a,
+                        const ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::Coefficients>& b);
+
+        bool operator!=(const ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::SparseVector>& a,
+                        const ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::SparseVector>& b);
+
+        bool operator!=(const ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::DenseVector>& a,
+                        const ::google::protobuf::RepeatedPtrField< ::CoreML::Specification::DenseVector>& b);
+
+        bool operator!=(const ::google::protobuf::Map<::std::string, ::std::string>& a,
+                        const ::google::protobuf::Map<::std::string, ::std::string>& b);
+
+        bool operator!=(const CoreML::Specification::SparseVector& a,
+                        const CoreML::Specification::SparseVector& b);
+
+        bool operator!=(const CoreML::Specification::SparseNode& a,
+                        const CoreML::Specification::SparseNode& b);
+
+        bool operator!=(const CoreML::Specification::DenseVector& a,
+                        const CoreML::Specification::DenseVector& b);
+
+        bool operator!=(const CoreML::Specification::FeatureVectorizer_InputColumn& a,
+                        const CoreML::Specification::FeatureVectorizer_InputColumn& b);
+
+        bool operator!=(const CoreML::Specification::FeatureDescription& a,
+                        const CoreML::Specification::FeatureDescription& b);
+
+        bool operator!=(const CoreML::Specification::GLMRegressor_DoubleArray& a,
+                        const CoreML::Specification::GLMRegressor_DoubleArray& b);
+
+        bool operator!=(const CoreML::Specification::GLMClassifier_DoubleArray& a,
+                        const CoreML::Specification::GLMClassifier_DoubleArray& b);
+
+        bool operator!=(const CoreML::Specification::TreeEnsembleParameters_TreeNode& a,
+                        const CoreML::Specification::TreeEnsembleParameters_TreeNode& b);
+
+        bool operator!=(const CoreML::Specification::TreeEnsembleParameters_TreeNode_EvaluationInfo& a,
+                        const CoreML::Specification::TreeEnsembleParameters_TreeNode_EvaluationInfo& b);
+
+        bool operator!=(const CoreML::Specification::NeuralNetworkLayer& a,
+                        const CoreML::Specification::NeuralNetworkLayer& b);
+
+        bool operator!=(const CoreML::Specification::NeuralNetworkPreprocessing& a,
+                        const CoreML::Specification::NeuralNetworkPreprocessing& b);
+
     }
 }
 

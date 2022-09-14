@@ -229,6 +229,8 @@ def _mil_convert(
 
     if convert_to == 'milinternal':
         return mil_program # mil program
+    elif convert_to == 'milpython':
+        return proto # internal mil data structure
 
     elif convert_to == 'mlprogram':
         package_path = _create_mlpackage(proto, weights_dir, kwargs.get("package_dir"))

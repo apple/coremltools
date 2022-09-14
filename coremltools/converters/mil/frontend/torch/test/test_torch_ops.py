@@ -7,6 +7,7 @@ import itertools
 import sys
 
 import numpy as np
+import platform
 import pytest
 import torch.nn as nn
 
@@ -45,9 +46,6 @@ class TestScriptedModels(TorchBaseTest):
     @staticmethod
     def get_while_loop_model():
         class TestLayer(nn.Module):
-            def __init__(self):
-                super(TestLayer, self).__init__()
-
             def forward(self, x):
                 x = 0.5 * x
                 return x
@@ -99,9 +97,6 @@ class TestScriptedModels(TorchBaseTest):
     @pytest.mark.parametrize("backend", backends)
     def test_for_loop(self, backend):
         class TestLayer(nn.Module):
-            def __init__(self):
-                super(TestLayer, self).__init__()
-
             def forward(self, x):
                 x = 2.0 * x
                 return x
@@ -126,9 +121,6 @@ class TestScriptedModels(TorchBaseTest):
     @pytest.mark.parametrize("backend", backends)
     def test_if(self, backend):
         class TestLayer(nn.Module):
-            def __init__(self):
-                super(TestLayer, self).__init__()
-
             def forward(self, x):
                 x = torch.mean(x)
                 return x
@@ -198,9 +190,6 @@ class TestMean(TorchBaseTest):
             pytest.xfail("Issue fixed in iOS16/macOS13: https://github.com/apple/coremltools/issues/1420")
 
         class Model(nn.Module):
-            def __init__(self):
-                super().__init__()
-
             def forward(self, x):
                 return torch.mean(x, dim=(2, 3), keepdim=True)
 
@@ -905,9 +894,6 @@ class TestDynamicConv(TorchBaseTest):
     ):
 
         class DynamicConv(nn.Module):
-            def __init__(self):
-                super(DynamicConv, self).__init__()
-
             def forward(self, input_data, weights):
                 return nn.functional.conv1d(
                     input_data,
@@ -949,9 +935,6 @@ class TestDynamicConv(TorchBaseTest):
     ):
 
         class DynamicConv(nn.Module):
-            def __init__(self):
-                super(DynamicConv, self).__init__()
-
             def forward(self, input_data, weights):
                 return nn.functional.conv2d(
                     input_data,
@@ -1909,16 +1892,16 @@ class TestRNN(TorchBaseTest):
 
 class TestGRU(TorchBaseTest):
     @pytest.mark.parametrize(
-        "input_size, hidden_size, num_layers, bias, batch_first, dropout, bidirectional, backend",
+        "input_size, hidden_size, num_layers, bias, batch_first, sequence_length, bidirectional, backend",
         [ (*param, bend) for param, bend in itertools.product([
-             (1, 1, 1, True, True, 0.3, True),
-             (1, 1, 1, False, True, 0.3, True),
-             (1, 1, 1, False, True, 0.3, False),
-             (3, 1, 5, True, False, 0.3, False),
-             (3, 1, 5, True, True, 0.3, True),
-             (3, 7, 5, True, False, 0.3, False),
-             (3, 7, 5, False, True, 0.3, False),
-             (3, 7, 5, False, True, 0.3, True),
+             (1, 1, 1, True, True, 10, True),
+             (1, 1, 1, False, True, 10, True),
+             (1, 1, 1, False, True, 1, False),
+             (3, 1, 5, True, False, 10, False),
+             (3, 1, 5, True, True, 10, True),
+             (3, 7, 5, True, True, 10, False),
+             (3, 7, 5, False, True, 10, True),
+             (3, 7, 5, False, True, 1, True),
            ], backends)
         ],
     )
@@ -1929,11 +1912,11 @@ class TestGRU(TorchBaseTest):
         num_layers,
         bias,
         batch_first,
-        dropout,
+        sequence_length,
         bidirectional,
         backend,
     ):
-        SEQUENCE_LENGTH = 10
+        DROPOUT = 0.3
         BATCH_SIZE = 3
         model = nn.GRU(
                     input_size=input_size,
@@ -1941,16 +1924,16 @@ class TestGRU(TorchBaseTest):
                     num_layers=num_layers,
                     bias=bias,
                     batch_first=batch_first,
-                    dropout=dropout,
+                    dropout=DROPOUT,
                     bidirectional=bidirectional,
                 )
         model.eval()
         num_directions = int(bidirectional) + 1
 
         if batch_first:
-            _input = torch.randn(BATCH_SIZE, SEQUENCE_LENGTH, input_size)
+            _input = torch.randn(BATCH_SIZE, sequence_length, input_size)
         else:
-            _input = torch.randn(SEQUENCE_LENGTH, BATCH_SIZE, input_size)
+            _input = torch.randn(sequence_length, BATCH_SIZE, input_size)
 
         h0 = torch.randn(num_layers * num_directions, BATCH_SIZE, hidden_size)
 
@@ -2009,7 +1992,7 @@ class TestLSTMWithPackedSequence(TorchBaseTest):
         else:
             _input = torch.randn(SEQUENCE_LENGTH, BATCH_SIZE, input_size)
 
-        seq_lengths = torch.tensor([10, 5, 1], dtype=int)
+        seq_lengths = torch.tensor([10, 5, 1], dtype=torch.int32)
 
         inputs = (_input, seq_lengths)
         expected_results = model(*inputs)
@@ -2091,9 +2074,6 @@ class TestConcat(TorchBaseTest):
     @pytest.mark.parametrize("backend", backends)
     def test_cat(self, backend):
         class TestNet(nn.Module):
-            def __init__(self):
-                super(TestNet, self).__init__()
-
             def forward(self, x):
                 x = torch.cat((x,), axis=1)
                 return x
@@ -2111,9 +2091,6 @@ class TestBitwiseNot(TorchBaseTest):
     )
     def test_bitwise_not(self, backend, input_type):
         class TestNet(nn.Module):
-            def __init__(self):
-                super(TestNet, self).__init__()
-
             def forward(self, x):
                 return torch.bitwise_not(x)
 
@@ -2135,9 +2112,6 @@ class TestFull(TorchBaseTest):
     )
     def test_full_dynamic(self, backend, rank):
         class FullDynamicModel(nn.Module):
-            def __init__(self):
-                super().__init__()
-
             def forward(self, x):
                 if rank == 1:
                     h = x[0]
@@ -2148,7 +2122,7 @@ class TestFull(TorchBaseTest):
                 return torch.full(x.shape, fill_value=3.14)
 
         input_shape = np.random.randint(low=2, high=6, size=rank)
-        torch_in = torch.tensor(input_shape)
+        torch_in = torch.tensor(input_shape, dtype=torch.int32)
         model = FullDynamicModel().eval()
         torch_out = model(torch_in)
         self.run_compare_torch(torch_in, model, expected_results=torch_out,
@@ -2167,9 +2141,6 @@ class TestFull(TorchBaseTest):
     def test_full_static(self, shape_val, backend):
         shape, val = shape_val
         class FullStaticModel(nn.Module):
-            def __init__(self):
-                super().__init__()
-
             def forward(self, x):
                 return torch.full(x.shape, fill_value=val)
 
@@ -2182,7 +2153,13 @@ class TestFull(TorchBaseTest):
                 [(2, 3), 3.1415],
                 [(1, 1, 2, 5, 1), -2.],
             ],
-            backends,
+            [
+                ["neuralnetwork", "fp32", ct.target.iOS14],
+                ["mlprogram", "fp16", ct.target.iOS15],
+                ["mlprogram", "fp32", ct.target.iOS15],
+                ["mlprogram", "fp16", ct.target.iOS16],
+                ["mlprogram", "fp32", ct.target.iOS16],
+            ],
             )
         )
     def test_full_like(self, shape_val, backend):
@@ -2191,7 +2168,12 @@ class TestFull(TorchBaseTest):
             def forward(self, x):
                 return torch.full_like(x, fill_value=val)
 
-        self.run_compare_torch(shape, FullLikeModel().eval(), backend=backend)
+        self.run_compare_torch(
+            shape,
+            FullLikeModel().eval(),
+            backend=backend[:2],
+            minimum_deployment_target=backend[2]
+        )
 
 
 class TestDim(TorchBaseTest):
@@ -2207,9 +2189,6 @@ class TestDim(TorchBaseTest):
         )
     def test_dim(self, shape, backend):
         class DimModel(nn.Module):
-            def __init__(self):
-                super(DimModel, self).__init__()
-
             def forward(self, x):
                 return torch.tensor([x.dim()])
 
@@ -2226,9 +2205,6 @@ class TestNewZeros(TorchBaseTest):
     )
     def test_new_zeros_dynamic(self, backend, rank):
         class ZerosDynamicModel(nn.Module):
-            def __init__(self):
-                super(ZerosDynamicModel, self).__init__()
-
             def forward(self, x):
                 if rank == 1:
                     h = x[0]
@@ -2239,7 +2215,7 @@ class TestNewZeros(TorchBaseTest):
                 return x.new_zeros(x.shape)
 
         input_shape = np.random.randint(low=2, high=6, size=rank)
-        torch_in = torch.tensor(input_shape)
+        torch_in = torch.tensor(input_shape, dtype=torch.int32)
         model = ZerosDynamicModel().eval()
         torch_out = model(torch_in)
         self.run_compare_torch(torch_in, model, expected_results=torch_out,
@@ -2276,9 +2252,6 @@ class TestNewFull(TorchBaseTest):
     )
     def test_new_full_dynamic(self, backend, rank):
         class FullDynamicModel(nn.Module):
-            def __init__(self):
-                super(FullDynamicModel, self).__init__()
-
             def forward(self, x):
                 if rank == 1:
                     h = x[0]
@@ -2289,7 +2262,7 @@ class TestNewFull(TorchBaseTest):
                 return x.new_full(x.shape, fill_value=3.14)
 
         input_shape = np.random.randint(low=2, high=6, size=rank)
-        torch_in = torch.tensor(input_shape)
+        torch_in = torch.tensor(input_shape, dtype=torch.int32)
         model = FullDynamicModel().eval()
         torch_out = model(torch_in)
         self.run_compare_torch(torch_in, model, expected_results=torch_out,
@@ -2308,9 +2281,6 @@ class TestNewFull(TorchBaseTest):
     def test_new_full_static(self, shape_val, backend):
         shape, val = shape_val
         class FullStaticModel(nn.Module):
-            def __init__(self):
-                super(FullStaticModel, self).__init__()
-
             def forward(self, x):
                 return x.new_full(x.shape, fill_value=val)
 
@@ -2326,9 +2296,6 @@ class TestEye(TorchBaseTest):
     )
     def test(self, backend, eye_type):
         class Model(nn.Module):
-            def __init__(self):
-                super(Model, self).__init__()
-
             def forward(self, x):
                 if eye_type == "single":
                     eye = torch.eye(3)
@@ -2352,9 +2319,6 @@ class TestOnes(TorchBaseTest):
     )
     def test_ones_dynamic(self, backend, rank):
         class OnesDynamicModel(nn.Module):
-            def __init__(self):
-                super(OnesDynamicModel, self).__init__()
-
             def forward(self, x):
                 if rank == 1:
                     h = x[0]
@@ -2365,7 +2329,7 @@ class TestOnes(TorchBaseTest):
                 return torch.ones(x.shape)
 
         input_shape = np.random.randint(low=2, high=6, size=rank)
-        torch_in = torch.tensor(input_shape)
+        torch_in = torch.tensor(input_shape, dtype=torch.int32)
         model = OnesDynamicModel().eval()
         torch_out = model(torch_in)
         self.run_compare_torch(torch_in, model, expected_results=torch_out,
@@ -2379,9 +2343,6 @@ class TestOnes(TorchBaseTest):
         )
     def test_ones_static(self, shape, backend):
         class OnesStaticModel(nn.Module):
-            def __init__(self):
-                super(OnesStaticModel, self).__init__()
-
             def forward(self, x):
                 return torch.ones(x.shape)
 
@@ -2396,9 +2357,6 @@ class TestTypeAs(TorchBaseTest):
         )
     def test_type_as(self, backend, type):
         class TestNet(nn.Module):
-            def __init__(self):
-                super(TestNet, self).__init__()
-
             def forward(self, x, y):
                 return x.type_as(y)
 
@@ -2423,9 +2381,6 @@ class TestReduction(TorchBaseTest):
     )
     def test_min_max(self, input_shape, dim, keepdim, mode, backend):
         class TestModel(nn.Module):
-            def __init__(self):
-                super(TestModel, self).__init__()
-
             def forward(self, x):
                 if mode == "min":
                     return torch.min(x, dim=dim, keepdim=keepdim)
@@ -2452,9 +2407,6 @@ class TestReduction(TorchBaseTest):
     )
     def test_min_max_with_no_arguments(self, input_shape, mode, backend):
         class TestModel(nn.Module):
-            def __init__(self):
-                super().__init__()
-
             def forward(self, x):
                 if mode == "min":
                     return torch.min(x)
@@ -2571,9 +2523,6 @@ class TestLinspace(TorchBaseTest):
         input_shape = tuple([steps])
         start, end = start_end
         class Model(nn.Module):
-            def __init__(self):
-                super(Model, self).__init__()
-
             def forward(self, x):
                 return torch.linspace(start, end, steps)
                 
@@ -2587,9 +2536,6 @@ class TestLinspace(TorchBaseTest):
     def test_linspace_static_large(self, backend):
         input_shape = tuple([1])
         class Model(nn.Module):
-            def __init__(self):
-                super(Model, self).__init__()
-
             def forward(self, x):
                 return torch.linspace(1, 2_000_000, 2_000_000)
                 
@@ -2607,9 +2553,6 @@ class TestLinspace(TorchBaseTest):
     def test_linspace_dynamic(self, backend, start_end, steps):
         start, end = start_end
         class Model(nn.Module):
-            def __init__(self):
-                super(Model, self).__init__()
-
             def forward(self, x):
                 return torch.linspace(x[0], x[1], steps)
                 
@@ -2637,9 +2580,6 @@ class TestArange(TorchBaseTest):
         input_shape = tuple([1,])
         start, end, step = start_end_step
         class Model(nn.Module):
-            def __init__(self):
-                super(Model, self).__init__()
-
             def forward(self, x):
                 return torch.arange(start, end, step)
                 
@@ -2661,9 +2601,6 @@ class TestArange(TorchBaseTest):
     def test_arange_dynamic(self, backend, start_end_step):
         start, end, step = start_end_step
         class Model(nn.Module):
-            def __init__(self):
-                super(Model, self).__init__()
-
             def forward(self, x):
                 return torch.arange(x[0], x[1], x[2])
                 
@@ -2690,9 +2627,6 @@ class TestEinsum(TorchBaseTest):
     )
     def test_einsum(self, backend, equation, reverse_input_order):
         class TestEinsum(nn.Module):
-            def __init__(self):
-                super(TestEinsum, self).__init__()
-
             def forward(self, x, y):
                 return torch.einsum(equation, x, y)
 
@@ -2849,9 +2783,14 @@ class TestActivation(TorchBaseTest):
         if single_alpha:
             num_parameters = 1
         model = nn.PReLU(num_parameters, alpha).eval()
-        self.run_compare_torch(
+        mlmodel = self.run_compare_torch(
             input_shape, model, backend=backend,
         )
+        prog = mlmodel[1]._mil_program
+        # Unfortunately since all these tests result in a prelu with a common leakage factor, the
+        # prelu_to_lrelu pass optimizes them to contain leaky_relu instead.
+        assert len(prog.find_ops(op_type="leaky_relu")) == 1
+        assert len(prog.find_ops(op_type="prelu")) == 0
 
     @pytest.mark.parametrize(
         "backend, shape, alpha",
@@ -2943,9 +2882,6 @@ class TestActivation(TorchBaseTest):
     def test_erf(self, backend, shape):
 
         class ERFActivation(nn.Module):
-            def __init__(self):
-                super().__init__()
-
             def forward(self, x):
                 return torch.erf(x)
 
@@ -3258,6 +3194,11 @@ class TestTo(TorchBaseTest):
                 max2, _ = torch.max(max2, dim=1, keepdim=False)
                 sigmoided_scores = max1 + max2
                 return sigmoided_scores
+                
+        if platform.machine() == "arm64" and \
+           not use_cpu_for_conversion and \
+           backend[0] == "neuralnetwork":
+            pytest.xfail("rdar://98015195 ([M1 native tests] Some MIL unittests are failing on M1 native)")
 
         model = TestModel()
         self.run_compare_torch(
@@ -3274,9 +3215,6 @@ class TestSlice(TorchBaseTest):
     )
     def test_dynamic_slice(self, backend):
         class DynamicSlicer(torch.nn.Module):
-            def __init__(self):
-                super(DynamicSlicer, self).__init__()
-
             def forward(self, x, context_length):
                 return x[context_length:, :, :]
 
@@ -3312,7 +3250,7 @@ class TestSlice(TorchBaseTest):
 class TestRepeat(TorchBaseTest):
     @pytest.mark.parametrize(
         "backend, rank",
-        itertools.product(backends, list(range(1, 6))),
+        itertools.product(backends, range(1, 6)),
     )
     def test_repeat(self, backend, rank):
         input_shape = np.random.randint(low=2, high=6, size=rank)
@@ -3321,6 +3259,19 @@ class TestRepeat(TorchBaseTest):
 
         model = ModuleWrapper(function=lambda x: x.repeat(*repeats))
         self.run_compare_torch(input_shape, model, backend=backend)
+
+    @pytest.mark.parametrize(
+        "backend, rank",
+        itertools.product(backends, (1, 2)),
+    )
+    def test_repeats_with_extra_dimensions(self, backend, rank):
+        input_shape = np.random.randint(low=2, high=6, size=rank)
+
+        for num_extra_dims in (1, 2):
+            repeats = np.random.randint(low=2, high=4, size=rank + num_extra_dims)
+            model = ModuleWrapper(function=lambda x: x.repeat(*repeats))
+            self.run_compare_torch(input_shape, model, backend=backend)
+
 
 class TestStd(TorchBaseTest):
     @pytest.mark.parametrize(
@@ -3346,6 +3297,61 @@ class TestStd(TorchBaseTest):
         input_shape = (2, 5, 10)
         self.run_compare_torch(input_shape, model, backend=backend)
 
+class TestOnesLike(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "backend, rank",
+        itertools.product(
+            backends,
+            [1, 3],
+        ),
+    )
+    def test_ones_like_static(self, backend, rank):
+        class OnesLikeStaticModel(nn.Module):
+            def forward(self, x):
+                return torch.ones_like(x)
+
+        input_shape = np.random.randint(low=2, high=6, size=rank)
+        input_shape = tuple(input_shape)
+        model = OnesLikeStaticModel()
+        self.run_compare_torch(input_shape, model, backend=backend)
+
+    @pytest.mark.parametrize(
+        "backend, rank",
+        itertools.product(
+            [
+                ["neuralnetwork", "fp32", ct.target.iOS14],
+                ["mlprogram", "fp16", ct.target.iOS15],
+                ["mlprogram", "fp32", ct.target.iOS15],
+                ["mlprogram", "fp16", ct.target.iOS16],
+                ["mlprogram", "fp32", ct.target.iOS16],
+            ],
+            [1, 3],
+        ),
+    )
+    def test_ones_like_dynamic(self, backend, rank):
+        class OnesLikeDynamicModel(nn.Module):
+            def forward(self, x):
+                if rank == 1:
+                    h = x[0]
+                    x = torch.zeros(h)
+                elif rank == 3:
+                    h, w, d = x[0], x[1], x[2]
+                    x = torch.zeros(h, w, d)
+                return torch.ones_like(x)
+
+        input_shape = np.random.randint(low=2, high=6, size=rank)
+        torch_in = torch.tensor(input_shape)
+        model = OnesLikeDynamicModel()
+        torch_out = model(torch_in)
+        self.run_compare_torch(
+            torch_in,
+            model,
+            expected_results=torch_out,
+            input_as_shape=False,
+            backend=backend[:2],
+            minimum_deployment_target=backend[2],
+        )
+
 class TestZeros(TorchBaseTest):
     @pytest.mark.parametrize(
         "backend, rank",
@@ -3356,9 +3362,6 @@ class TestZeros(TorchBaseTest):
     )
     def test_zeros_like_static(self, backend, rank):
         class ZerosLikeStaticModel(nn.Module):
-            def __init__(self):
-                super(ZerosLikeStaticModel, self).__init__()
-
             def forward(self, x):
                 return torch.zeros_like(x)
 
@@ -3370,15 +3373,18 @@ class TestZeros(TorchBaseTest):
     @pytest.mark.parametrize(
         "backend, rank",
         itertools.product(
-            backends,
+            [
+                ["neuralnetwork", "fp32", ct.target.iOS14],
+                ["mlprogram", "fp16", ct.target.iOS15],
+                ["mlprogram", "fp32", ct.target.iOS15],
+                ["mlprogram", "fp16", ct.target.iOS16],
+                ["mlprogram", "fp32", ct.target.iOS16],
+            ],
             [1, 3],
         ),
     )
     def test_zeros_like_dynamic(self, backend, rank):
         class ZerosLikeDynamicModel(nn.Module):
-            def __init__(self):
-                super(ZerosLikeDynamicModel, self).__init__()
-
             def forward(self, x):
                 if rank == 1:
                     h = x[0]
@@ -3389,11 +3395,17 @@ class TestZeros(TorchBaseTest):
                 return torch.zeros_like(x)
 
         input_shape = np.random.randint(low=2, high=6, size=rank)
-        torch_in = torch.tensor(input_shape)
+        torch_in = torch.tensor(input_shape, dtype=torch.int32)
         model = ZerosLikeDynamicModel()
         torch_out = model(torch_in)
-        self.run_compare_torch(torch_in, model, expected_results=torch_out,
-                           input_as_shape=False, backend=backend)
+        self.run_compare_torch(
+            torch_in,
+            model,
+            expected_results=torch_out,
+            input_as_shape=False,
+            backend=backend[:2],
+            minimum_deployment_target=backend[2],
+        )
 
     @pytest.mark.parametrize(
         "backend, rank",
@@ -3404,9 +3416,6 @@ class TestZeros(TorchBaseTest):
     )
     def test_zeros_static(self, backend, rank):
         class ZerosStaticModel(nn.Module):
-            def __init__(self):
-                super(ZerosStaticModel, self).__init__()
-
             def forward(self, x):
                 if rank == 1:
                     return torch.zeros(1)
@@ -3427,9 +3436,6 @@ class TestZeros(TorchBaseTest):
     )
     def test_zeros_dynamic(self, backend, rank):
         class ZerosDynamicModel(nn.Module):
-            def __init__(self):
-                super(ZerosDynamicModel, self).__init__()
-
             def forward(self, x):
                 if rank == 1:
                     h = x[0]
@@ -3440,7 +3446,7 @@ class TestZeros(TorchBaseTest):
                 return x
 
         input_shape = np.random.randint(low=2, high=6, size=rank)
-        torch_in = torch.tensor(input_shape)
+        torch_in = torch.tensor(input_shape, dtype=torch.int32)
         model = ZerosDynamicModel()
         torch_out = model(torch_in)
         self.run_compare_torch(torch_in, model, expected_results=torch_out,
@@ -3472,9 +3478,6 @@ class TestTopk(TorchBaseTest):
         k = shape_dim_k[2]
 
         class TopkModel(nn.Module):
-            def __init__(self):
-                super(TopkModel, self).__init__()
-
             def forward(self, x):
                 topk = torch.topk(x, k, dim=dim, largest=largest, sorted=sort)
                 values, indices = topk.values, topk.indices
@@ -3502,9 +3505,6 @@ class TestLog10(TorchBaseTest):
     def test_log10(self, backend, rank):
 
         class Log10Model(nn.Module):
-            def __init__(self):
-                super(Log10Model, self).__init__()
-
             def forward(self, x):
                 return torch.log10(x)
 
@@ -3550,9 +3550,6 @@ class TestFlip(TorchBaseTest):
 
         rank, dim = rank_dim
         class FlipModel(nn.Module):
-            def __init__(self):
-                super(FlipModel, self).__init__()
-
             def forward(self, x):
                 return torch.flip(x, dim)
 
@@ -3606,9 +3603,6 @@ class TestLogicalAnd(TorchBaseTest):
     )
     def test_logical_and(self, backend, x_y):
         class TestNet(nn.Module):
-            def __init__(self):
-                super(TestNet, self).__init__()
-
             def forward(self, x, y):
                 return torch.logical_and(x, y)
 
@@ -3633,9 +3627,6 @@ class TestLogicalOr(TorchBaseTest):
     )
     def test_logical_or(self, backend, x_y):
         class TestNet(nn.Module):
-            def __init__(self):
-                super(TestNet, self).__init__()
-
             def forward(self, x, y):
                 return torch.logical_or(x, y)
 
@@ -3660,9 +3651,6 @@ class TestLogicalXor(TorchBaseTest):
     )
     def test_logical_xor(self, backend, x_y):
         class TestNet(nn.Module):
-            def __init__(self):
-                super(TestNet, self).__init__()
-
             def forward(self, x, y):
                 return torch.logical_xor(x, y)
 
@@ -3683,9 +3671,6 @@ class TestWhere(TorchBaseTest):
     def test_where_test1(self, backend, shape):
 
         class WhereModel(nn.Module):
-            def __init__(self):
-                super(WhereModel, self).__init__()
-
             def forward(self, x, y):
                 return torch.where(x > 0.5, x, y)
 
@@ -3705,9 +3690,6 @@ class TestWhere(TorchBaseTest):
     def test_where_test2(self, backend, shape):
 
         class WhereModel(nn.Module):
-            def __init__(self):
-                super(WhereModel, self).__init__()
-
             def forward(self, cond, x, y):
                 return torch.where(cond, x, y)
 
@@ -3736,9 +3718,6 @@ class TestWhere(TorchBaseTest):
     def test_where_test3(self, backend, shapes):
 
         class WhereModel(nn.Module):
-            def __init__(self):
-                super(WhereModel, self).__init__()
-
             def forward(self, cond, x, y):
                 return torch.where(cond, x, y)
         cond_shape, x_shape, y_shape = shapes
@@ -3771,9 +3750,6 @@ class TestSelect(TorchBaseTest):
         dim, index = dim_index
 
         class SelectModel(nn.Module):
-            def __init__(self):
-                super(SelectModel, self).__init__()
-
             def forward(self, x):
                 return x.select(dim, index)
 
@@ -3904,9 +3880,6 @@ class TestTensorAssign(TorchBaseTest):
     def test_tensor_assign_case_1(self, backend):
         # single dimension assignment for a 1D tensor
         class TensorAssignModel(torch.nn.Module):
-            def __init__(self):
-                super(TensorAssignModel, self).__init__()
-
             def forward(self, x):
                 x[0] = 0
                 x[1] = 1
@@ -3927,9 +3900,6 @@ class TestTensorAssign(TorchBaseTest):
     def test_tensor_assign_case_2(self, backend):
         # single dimension assignment for two 1D tensors
         class TensorAssignModel(torch.nn.Module):
-            def __init__(self):
-                super(TensorAssignModel, self).__init__()
-
             def forward(self, x, y):
                 x[0] = 0
                 y[1] = 2
@@ -3980,9 +3950,6 @@ class TestTensorAssign(TorchBaseTest):
     def test_itensor_assign_case_4(self, backend):
         # single dimension assignment for two n-D tensors
         class TensorAssignModel(torch.nn.Module):
-            def __init__(self):
-                super(TensorAssignModel, self).__init__()
-
             def forward(self, x, y):
                 x[0] = torch.tensor([1., 2., 3., 4.])
                 x[3] = 1
@@ -4003,9 +3970,6 @@ class TestTensorAssign(TorchBaseTest):
     def test_tensor_assign_case_5(self, backend):
         # slice dimension assigment
         class TensorAssignModel(torch.nn.Module):
-            def __init__(self):
-                super(TensorAssignModel, self).__init__()
-
             def forward(self, x):
                 x[:,1] = torch.tensor([1., 2.])
                 return x
@@ -4023,9 +3987,6 @@ class TestTensorAssign(TorchBaseTest):
     def test_tensor_assign_case_6(self, backend):
         # a more complicated slice dimension assigment
         class TensorAssignModel(torch.nn.Module):
-            def __init__(self):
-                super(TensorAssignModel, self).__init__()
-
             def forward(self, x):
                 x[:,1,:] = torch.tensor([1., 2., 3., 4., 5., 6.]).view(2,3)
                 return x
@@ -4043,9 +4004,6 @@ class TestIndexPut(TorchBaseTest):
     )
     def test_index_put_case_1(self, backend):
         class IndexPutModel(torch.nn.Module):
-            def __init__(self):
-                super(IndexPutModel, self).__init__()
-
             def forward(self, x, y):
                 y = x + 1
                 mask = torch.tensor([True, False, False, False, True, True]).view(3,2)
@@ -4067,9 +4025,6 @@ class TestIndexPut(TorchBaseTest):
     )
     def test_index_put_case_2(self, backend, rank):
         class IndexPutModel(torch.nn.Module):
-            def __init__(self):
-                super(IndexPutModel, self).__init__()
-
             def forward(self, x):
                 mask = torch.tensor([True, False, False, False, True, True]).view(3,2)
                 if rank == 0:
@@ -4093,9 +4048,6 @@ class TestIndexPut(TorchBaseTest):
              pytest.skip("Issue fixed in iOS16/macOS13")
 
         class IndexPutModel(torch.nn.Module):
-            def __init__(self):
-                super(IndexPutModel, self).__init__()
-
             def forward(self, x, y):
                 mask = y > 1
                 x[y > 1] = 0.
@@ -4120,9 +4072,6 @@ class TestIndexPut(TorchBaseTest):
     )
     def test_index_put_case_4(self, backend, rank, accumulate):
         class IndexPutModel(torch.nn.Module):
-            def __init__(self):
-                super(IndexPutModel, self).__init__()
-
             def forward(self, x, indices, values):
                 x.index_put_(tuple(indices.t()), values, accumulate=accumulate)
                 return x
@@ -4159,15 +4108,13 @@ class TestIndex(TorchBaseTest):
     )
     def test_index_bool_index(self, backend, shape):
         class IndexModel(torch.nn.Module):
-            def __init__(self):
-                super(IndexModel, self).__init__()
-
             def forward(self, x):
                 return x[x > 0.5]
-
+        input_data = torch.randn(*shape, dtype=torch.float32)
+        input_data[0] = 0.6 # make sure the result is not an empty tensor
         model = IndexModel()
         self.run_compare_torch(
-            shape, model, backend=backend,
+            input_data, model, backend=backend, input_as_shape=False,
         )
 
     @pytest.mark.parametrize(
@@ -4183,9 +4130,6 @@ class TestIndex(TorchBaseTest):
     def test_index_int_index_case_1(self, backend, shape):
         # all elements are selected
         class IndexModel(torch.nn.Module):
-            def __init__(self):
-                super(IndexModel, self).__init__()
-
             def forward(self, x):
                 if len(shape) == 2:
                     return x[:, :]
@@ -4210,9 +4154,6 @@ class TestIndex(TorchBaseTest):
     def test_index_int_index_case_2(self, backend, shape):
         # only one axis is sliced
         class IndexModel(torch.nn.Module):
-            def __init__(self):
-                super(IndexModel, self).__init__()
-
             def forward(self, x):
                 if len(shape) == 2:
                     index = torch.tensor([0])
@@ -4239,9 +4180,6 @@ class TestIndex(TorchBaseTest):
     def test_index_int_index_case_3(self, backend, shape):
         # only two axes are sliced, and connected
         class IndexModel(torch.nn.Module):
-            def __init__(self):
-                super(IndexModel, self).__init__()
-
             def forward(self, x):
                 if len(shape) == 3:
                     index_1 = torch.tensor([0])
@@ -4271,9 +4209,6 @@ class TestIndex(TorchBaseTest):
     def test_index_int_index_case_4(self, backend, shape):
         # only two axes are sliced, and not connected
         class IndexModel(torch.nn.Module):
-            def __init__(self):
-                super(IndexModel, self).__init__()
-
             def forward(self, x):
                 if len(shape) == 3:
                     index_1 = torch.tensor([0])
@@ -4303,9 +4238,6 @@ class TestIndex(TorchBaseTest):
     def test_index_int_index_case_5(self, backend, shape):
         # all axes are sliced
         class IndexModel(torch.nn.Module):
-            def __init__(self):
-                super(IndexModel, self).__init__()
-
             def forward(self, x):
                 if len(shape) == 3:
                     index_1 = torch.tensor([0])
@@ -4338,9 +4270,6 @@ class TestIndex(TorchBaseTest):
     def test_index_int_index_case_6(self, backend, shape):
         # only one axis is sliced + nd mode
         class IndexModel(torch.nn.Module):
-            def __init__(self):
-                super(IndexModel, self).__init__()
-
             def forward(self, x):
                 if len(shape) == 2:
                     index = torch.tensor([0,0,0,0,0,0])
@@ -4369,9 +4298,6 @@ class TestIndex(TorchBaseTest):
     def test_index_int_index_case_7(self, backend, shape):
         # two axes are sliced, and connected + nd mode
         class IndexModel(torch.nn.Module):
-            def __init__(self):
-                super(IndexModel, self).__init__()
-
             def forward(self, x):
                 if len(shape) == 3:
                     index_1 = torch.tensor([0,0,0,0,0,0,0,0]).view(4,2)
@@ -4401,9 +4327,6 @@ class TestIndex(TorchBaseTest):
     def test_index_int_index_case_8(self, backend, shape):
         # two axes are sliced, and not connected + nd mode
         class IndexModel(torch.nn.Module):
-            def __init__(self):
-                super(IndexModel, self).__init__()
-
             def forward(self, x):
                 if len(shape) == 3:
                     index_1 = torch.tensor([0, 0, 0, 0, 0, 0, 0, 0]).view(2, 4)
@@ -4433,9 +4356,6 @@ class TestIndex(TorchBaseTest):
     def test_index_int_index_case_9(self, backend, shape):
         # one axis is sliced through bool mask
         class IndexModel(torch.nn.Module):
-            def __init__(self):
-                super(IndexModel, self).__init__()
-
             def forward(self, x):
                 if len(shape) == 3:
                     return x[:, [True, False], :]
@@ -4461,9 +4381,6 @@ class TestIndex(TorchBaseTest):
     def test_index_int_index_case_10(self, backend, shape):
         # multiple axes are sliced through bool masks
         class IndexModel(torch.nn.Module):
-            def __init__(self):
-                super(IndexModel, self).__init__()
-
             def forward(self, x):
                 if len(shape) == 3:
                     return x[[True], [True, False], [False, True, False]]
@@ -4553,9 +4470,6 @@ class TestMeshgrid(TorchBaseTest):
         backend,
     ):
         class TestModel(nn.Module):
-            def __init__(self):
-                super(TestModel, self).__init__()
-
             def forward(self, rows, cols):
                 if inp_mode == "norm":
                     return torch.meshgrid(rows, cols)
@@ -4672,9 +4586,6 @@ class TestBroadcastTensors(TorchBaseTest):
     )
     def test_one_tensor(self, shapes, backend):
         class TestModel(nn.Module):
-            def __init__(self):
-                super(TestModel, self).__init__()
-
             def forward(self, a):
                 return torch.broadcast_tensors(a)
         self.run_compare_torch(shapes, TestModel().eval(), backend=backend)
@@ -4693,9 +4604,6 @@ class TestBroadcastTensors(TorchBaseTest):
     )
     def test_two_tensors(self, shapes, backend):
         class TestModel(nn.Module):
-            def __init__(self):
-                super(TestModel, self).__init__()
-
             def forward(self, a, b):
                 return torch.broadcast_tensors(a, b)
         self.run_compare_torch(shapes, TestModel().eval(), backend=backend)
@@ -4713,9 +4621,6 @@ class TestBroadcastTensors(TorchBaseTest):
     )
     def test_four_tensors(self, shapes, backend):
         class TestModel(nn.Module):
-            def __init__(self):
-                super(TestModel, self).__init__()
-
             def forward(self, a, b, c, d):
                 return torch.broadcast_tensors(a, b, c, d)
         self.run_compare_torch(shapes, TestModel().eval(), backend=backend)

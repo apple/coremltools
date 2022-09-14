@@ -511,14 +511,11 @@ class DynamicQuantizedInt8Int8MatMul(unittest.TestCase):
         self.compare()
 
 
-@pytest.mark.skipif(
-    not coremltools.utils._is_macos() or coremltools.utils._macos_version() < (10, 15),
-    reason="Missing macOS 10.15+. Skipping tests.",
-)
 class TestQuantizeWeightsAPI:
     @staticmethod
     @pytest.mark.parametrize(
-        "compute_units", [ComputeUnit.ALL, ComputeUnit.CPU_AND_GPU, ComputeUnit.CPU_ONLY])
+        "compute_units", [ComputeUnit.ALL, ComputeUnit.CPU_AND_GPU, ComputeUnit.CPU_ONLY]
+    )
     def test_embeddingND_quantize(compute_units):
         input_features = [("data", datatypes.Array(10, 1))]
         output_features = [("output", None)]

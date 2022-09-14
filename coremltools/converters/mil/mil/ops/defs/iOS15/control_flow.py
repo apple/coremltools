@@ -16,19 +16,13 @@ from coremltools.converters.mil.mil import (
 
 )
 from coremltools.converters.mil.mil.input_type import (
-    BoolInputType,
-    BoolTensorInputType,
     DefaultInputs,
     InputSpec,
-    InternalScalarOrTensorInputType,
-    IntTensorInputType,
-    IntInputType,
+    InternalInputType,
     ListInputType,
     PyFunctionInputType,
     TensorInputType,
     TupleInputType,
-    StringInputType,
-    InternalInputType,
 )
 from coremltools.converters.mil.mil.operation import (
     mil_list,
@@ -82,14 +76,11 @@ class cond(Operation):
     """
 
     input_spec = InputSpec(
-        pred=BoolInputType(),
+        pred=TensorInputType(type_domain=types.bool),
         _true_fn=PyFunctionInputType(),
         _false_fn=PyFunctionInputType(),
         _existing_blocks=InternalInputType(optional=True),
     )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     def build_nested_blocks(self):
         # If the front end is milproto, we already have the well constructed cond/body block.
@@ -170,11 +161,8 @@ class Const(Operation):
     """
 
     input_spec = InputSpec(
-        val=InternalScalarOrTensorInputType(const=True),
+        val=InternalInputType(const=True),
     )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     def type_inference(self):
         builtin_type, _ = self._get_type_val(self.val.val)
@@ -288,15 +276,18 @@ class select(Operation):
     Attributes
     ----------
     B: bool
-    T: fp16, fp32, i32
+    T: fp16, fp32, i32, bool
     """
 
     input_spec = InputSpec(
-        cond=BoolTensorInputType(), a=TensorInputType(), b=TensorInputType()
+        cond=TensorInputType(type_domain=types.bool),
+        a=TensorInputType(type_domain="T"),
+        b=TensorInputType(type_domain="T")
     )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32, types.bool, types.int32),
+    }
 
     def type_inference(self):
         a_type = self.a.sym_type
@@ -356,9 +347,6 @@ class while_loop(Operation):
         loop_vars=TupleInputType(),
         _existing_blocks=InternalInputType(optional=True),
     )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     @staticmethod
     def _check_equal_value(val1, val2):
@@ -571,10 +559,10 @@ class make_list(Operation):
     """
 
     input_spec = InputSpec(
-        init_length=IntInputType(optional=True),
-        dynamic_length=BoolInputType(const=True, optional=True),
+        init_length=TensorInputType(optional=True, type_domain=types.int32),
+        dynamic_length=TensorInputType(const=True, optional=True, type_domain=types.bool),
         elem_shape=TupleInputType(),
-        dtype=StringInputType(const=True, optional=True),
+        dtype=TensorInputType(const=True, optional=True, type_domain=types.str),
     )
 
     def default_inputs(self):
@@ -583,9 +571,6 @@ class make_list(Operation):
             dynamic_length=True,
             dtype="fp32",
             )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     def type_inference(self):
         builtin_dtype = types.string_to_builtin(self.dtype.val)
@@ -639,9 +624,6 @@ class list_length(Operation):
 
     input_spec = InputSpec(ls=ListInputType(),)
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
     def type_inference(self):
         return types.int32
 
@@ -679,12 +661,13 @@ class list_write(Operation):
 
     input_spec = InputSpec(
         ls=ListInputType(),
-        index=IntInputType(),
-        value=TensorInputType(),
+        index=TensorInputType(type_domain=types.int32),
+        value=TensorInputType(type_domain="T"),
     )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32, types.bool, types.int32),
+    }
 
     def type_inference(self):
         list_elem_type = self.ls.elem_type
@@ -734,11 +717,8 @@ class list_read(Operation):
 
     input_spec = InputSpec(
         ls=ListInputType(),
-        index=IntInputType(),
+        index=TensorInputType(type_domain=types.int32),
         )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     def type_inference(self):
         list_elem_type = self.ls.elem_type
@@ -776,11 +756,8 @@ class list_gather(Operation):
 
     input_spec = InputSpec(
         ls=ListInputType(),
-        indices=IntTensorInputType(),
+        indices=TensorInputType(type_domain=types.int32),
         )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     def type_inference(self):
         list_elem_type = self.ls.elem_type
@@ -827,12 +804,13 @@ class list_scatter(Operation):
 
     input_spec = InputSpec(
         ls=ListInputType(),
-        indices=IntTensorInputType(),
-        value=TensorInputType(),
+        indices=TensorInputType(type_domain=types.int32),
+        value=TensorInputType(type_domain="T"),
     )
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    type_domains = {
+        "T": (types.fp16, types.fp32, types.bool, types.int32),
+    }
 
     def type_inference(self):
         num_indices = self.indices.shape[0]

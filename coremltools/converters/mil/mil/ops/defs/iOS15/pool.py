@@ -4,16 +4,15 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from coremltools.converters.mil.mil import Operation, types
+from coremltools.converters.mil.mil.block import curr_opset_version
 from coremltools.converters.mil.mil.input_type import (
-    BoolInputType,
     DefaultInputs,
     InputSpec,
-    IntTensorInputType,
     TensorInputType,
-    StringInputType
 )
 from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
 from coremltools.converters.mil.mil.ops.defs._utils import spatial_dimensions_out_shape
+from coremltools.converters.mil.mil.ops.defs.iOS15 import _IOS15_TARGET
 
 
 class Pooling(Operation):
@@ -21,13 +20,17 @@ class Pooling(Operation):
     Pooling Op Superclass
     """
     input_spec = InputSpec(
-        x=TensorInputType(),
-        kernel_sizes=IntTensorInputType(const=True),
-        strides=IntTensorInputType(const=True, optional=True),
-        pad_type=StringInputType(const=True),
-        pad=IntTensorInputType(const=True, optional=True),
-        ceil_mode=BoolInputType(const=True, optional=True),
+        x=TensorInputType(type_domain="T"),
+        kernel_sizes=TensorInputType(const=True, type_domain=types.int32),
+        strides=TensorInputType(const=True, optional=True, type_domain=types.int32),
+        pad_type=TensorInputType(const=True, type_domain=types.str),
+        pad=TensorInputType(const=True, optional=True, type_domain=types.int32),
+        ceil_mode=TensorInputType(const=True, optional=True, type_domain=types.bool),
     )
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32),
+    }
 
     def default_inputs(self):
         num_spatial_dims = self.x.rank - 2
@@ -37,9 +40,6 @@ class Pooling(Operation):
             ceil_mode=False,
             )
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
     def type_inference(self):
         ksize = self.kernel_sizes.val
         x_shape = self.x.shape
@@ -47,7 +47,7 @@ class Pooling(Operation):
 
         strides = [1] * D_in_rank if self.strides is None else self.strides.val
         pad_type = "valid" if self.pad_type is None else self.pad_type.val.lower()
-        if pad_type not in ["valid", "same", "custom"]:
+        if pad_type not in ["valid", "same", "custom", "same_lower"]:
             raise ValueError("Unrecognized value of pad_type : {}".format(pad_type))
         pad = None if self.pad is None else self.pad.val
         D_in = x_shape[2:]  # spatial dimensions
@@ -61,6 +61,11 @@ class Pooling(Operation):
                 for i in range(D_in_rank):
                     if pad[2*i] != pad[2*i+1]:
                         raise ValueError("Padding must be symmetric if ceil_mode is True")
+        
+        # The same_lower padding is not supported in iOS15
+        if curr_opset_version() == _IOS15_TARGET and self.pad_type.val == "same_lower":
+            msg = "iOS15 version of pooling layers do not support pad_type = `same_lower`"
+            raise ValueError(msg)
 
         D_out_shape = spatial_dimensions_out_shape(
             pad_type=pad_type,
@@ -105,6 +110,8 @@ class avg_pool(Pooling):
         * ``custom``: Specify custom padding in the parameter pad. note that ``same``
           padding is equivalent to custom padding with
           ``pad[2*i] + pad[2*i+1] = kernel_size[i]``.
+        * ``same_lower``: Similar to ``same`` but the padding
+          will place extra rows/cols on the top/left if the padding amount is odd.
     
     pad: const<[P],i32> (Optional. Default to all 0s)
         * ``pad`` represents the number of elements to pad before and after each 
@@ -158,8 +165,7 @@ class avg_pool(Pooling):
     
     input_spec = (
         InputSpec(
-          exclude_padding_from_average=BoolInputType(const=True,
-                                                     optional=True))
+          exclude_padding_from_average=TensorInputType(const=True, optional=True, type_domain=types.bool))
         + Pooling.input_spec
     )
 
@@ -167,20 +173,17 @@ class avg_pool(Pooling):
         return super().default_inputs() + \
             DefaultInputs(
                 exclude_padding_from_average=False,
-                )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
+            )
 
 @register_op
 class l2_pool(Pooling):
     """
-    Perform L2 pooling. Supports 1-D, 2-D, and 3-D pool.
+    Perform L2 pooling. Supports 1-D and 2-D pool.
     
     Parameters
     ----------
     x: tensor<[n,C_in,*D_in],T> (Required)
+        * Only support 1d and 2d pooling.
         * See ``avg_pool``.
     
     kernel_sizes: const tensor<[K],T> (Required)
@@ -208,9 +211,12 @@ class l2_pool(Pooling):
     --------
     avg_pool, max_pool
     """
-    
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+        
+    def type_inference(self):
+        if self.x.rank - 2 > 2:
+            msg = "l2_pool only supports rank 1 or 2. Got rank: {}".format(self.x.rank - 2)
+            raise ValueError(msg)
+        return super().type_inference()
 
 
 @register_op
@@ -251,6 +257,5 @@ class max_pool(Pooling):
     --------
     avg_pool, l2_pool
     """
-    
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+
+    pass

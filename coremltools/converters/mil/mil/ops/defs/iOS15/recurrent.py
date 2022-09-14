@@ -5,12 +5,9 @@
 
 from coremltools.converters.mil.mil import Operation, types
 from coremltools.converters.mil.mil.input_type import (
-    BoolInputType,
     DefaultInputs,
-    FloatInputType,
     InputSpec,
     TensorInputType,
-    StringInputType
 )
 from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
 
@@ -96,16 +93,20 @@ class gru(Operation):
     """
 
     input_spec = InputSpec(
-        x=TensorInputType(),
-        initial_h=TensorInputType(),
-        weight_ih=TensorInputType(const=True),
-        weight_hh=TensorInputType(const=True),
-        bias=TensorInputType(const=True, optional=True),
-        direction=StringInputType(const=True, optional=True),
-        output_sequence=BoolInputType(const=True, optional=True),
-        recurrent_activation=StringInputType(const=True, optional=True),
-        activation=StringInputType(const=True, optional=True)
+        x=TensorInputType(type_domain="T"),
+        initial_h=TensorInputType(type_domain="T"),
+        weight_ih=TensorInputType(const=True, type_domain="T"),
+        weight_hh=TensorInputType(const=True, type_domain="T"),
+        bias=TensorInputType(const=True, optional=True, type_domain="T"),
+        direction=TensorInputType(const=True, optional=True, type_domain=types.str),
+        output_sequence=TensorInputType(const=True, optional=True, type_domain=types.bool),
+        recurrent_activation=TensorInputType(const=True, optional=True, type_domain=types.str),
+        activation=TensorInputType(const=True, optional=True, type_domain=types.str)
     )
+    
+    type_domains = {
+        "T": (types.fp32,),
+    }
 
     def default_inputs(self):
         return DefaultInputs(
@@ -115,9 +116,6 @@ class gru(Operation):
             recurrent_activation="sigmoid",
             activation="tanh",
         )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     def type_inference(self):
         if self.x.rank != 3:
@@ -294,7 +292,7 @@ class lstm(Operation):
     activation: const<str> (Optional) [Default=tanh]
         * Activation applied on output gate.
 
-    clip: const<fp32> (optional) [Default=None]
+    clip: const<T> (optional) [Default=None]
         * Cell gate is clipped to ``[-clip, +clip]``.
 
     Returns
@@ -314,24 +312,28 @@ class lstm(Operation):
     """
 
     input_spec = InputSpec(
-        x=TensorInputType(),
-        initial_h=TensorInputType(),
-        initial_c=TensorInputType(),
-        weight_ih=TensorInputType(const=True),  # ifoz layout,
-        weight_hh=TensorInputType(const=True),  # ifoz layout
-        bias=TensorInputType(const=True, optional=True),  # ifoz layout
-        peephole=TensorInputType(const=True, optional=True),  # ifo layout
-        weight_ih_back=TensorInputType(const=True, optional=True),  # ifoz layout,
-        weight_hh_back=TensorInputType(const=True, optional=True),  # ifoz layout
-        bias_back=TensorInputType(const=True, optional=True),  # ifoz layout
-        peephole_back=TensorInputType(const=True, optional=True),  # ifo layout
-        direction=StringInputType(const=True, optional=True),
-        output_sequence=BoolInputType(const=True, optional=True),
-        recurrent_activation=StringInputType(const=True, optional=True),
-        cell_activation=StringInputType(const=True, optional=True),
-        activation=StringInputType(const=True, optional=True),
-        clip=FloatInputType(const=True, optional=True),
+        x=TensorInputType(type_domain="T"),
+        initial_h=TensorInputType(type_domain="T"),
+        initial_c=TensorInputType(type_domain="T"),
+        weight_ih=TensorInputType(const=True, type_domain="T"),  # ifoz layout,
+        weight_hh=TensorInputType(const=True, type_domain="T"),  # ifoz layout
+        bias=TensorInputType(const=True, optional=True, type_domain="T"),  # ifoz layout
+        peephole=TensorInputType(const=True, optional=True, type_domain="T"),  # ifo layout
+        weight_ih_back=TensorInputType(const=True, optional=True, type_domain="T"),  # ifoz layout,
+        weight_hh_back=TensorInputType(const=True, optional=True, type_domain="T"),  # ifoz layout
+        bias_back=TensorInputType(const=True, optional=True, type_domain="T"),  # ifoz layout
+        peephole_back=TensorInputType(const=True, optional=True, type_domain="T"),  # ifo layout
+        direction=TensorInputType(const=True, optional=True, type_domain=types.str),
+        output_sequence=TensorInputType(const=True, optional=True, type_domain=types.bool),
+        recurrent_activation=TensorInputType(const=True, optional=True, type_domain=types.str),
+        cell_activation=TensorInputType(const=True, optional=True, type_domain=types.str),
+        activation=TensorInputType(const=True, optional=True, type_domain=types.str),
+        clip=TensorInputType(const=True, optional=True, type_domain="T"),
     )
+    
+    type_domains = {
+        "T": (types.fp32,),
+    }
 
     def default_inputs(self):
         return DefaultInputs(
@@ -343,9 +345,6 @@ class lstm(Operation):
             activation="tanh",
             peephole=None,
             clip=None)
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     def type_inference(self):
         if self.x.rank != 3:
@@ -456,15 +455,19 @@ class rnn(Operation):
     """
 
     input_spec = InputSpec(
-        x=TensorInputType(),
-        initial_h=TensorInputType(),
-        weight_ih=TensorInputType(const=True),
-        weight_hh=TensorInputType(const=True),
-        bias=TensorInputType(const=True, optional=True),
-        direction=StringInputType(const=True, optional=True),
-        output_sequence=BoolInputType(const=True, optional=True),
-        activation=StringInputType(const=True, optional=True),
+        x=TensorInputType(type_domain="T"),
+        initial_h=TensorInputType(type_domain="T"),
+        weight_ih=TensorInputType(const=True, type_domain="T"),
+        weight_hh=TensorInputType(const=True, type_domain="T"),
+        bias=TensorInputType(const=True, optional=True, type_domain="T"),
+        direction=TensorInputType(const=True, optional=True, type_domain=types.str),
+        output_sequence=TensorInputType(const=True, optional=True, type_domain=types.bool),
+        activation=TensorInputType(const=True, optional=True, type_domain=types.str),
     )
+    
+    type_domains = {
+        "T": (types.fp32,),
+    }
 
     def default_inputs(self):
         return DefaultInputs(
@@ -472,9 +475,6 @@ class rnn(Operation):
             direction="forward",
             output_sequence=False,
             activation="tanh")
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     def type_inference(self):
         if self.x.rank != 3:

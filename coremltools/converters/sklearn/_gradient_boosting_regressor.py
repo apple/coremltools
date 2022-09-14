@@ -6,8 +6,10 @@
 from ._tree_ensemble import convert_tree_ensemble as _convert_tree_ensemble
 from ._tree_ensemble import get_input_dimension
 
-from ..._deps import _HAS_SKLEARN
+from ..._deps import _HAS_SKLEARN, _SKLEARN_VERSION
 from ...models import MLModel as _MLModel
+
+from distutils.version import StrictVersion
 
 if _HAS_SKLEARN:
     import sklearn.ensemble as _ensemble
@@ -60,7 +62,11 @@ def convert(model, input_features, output_features):
     if model.loss == "huber":
         base_prediction = model.init_.quantile
     else:
-        base_prediction = model.init_.mean
+        # >= 0.22 GradientBoostingRegressor deprecated "mean" in favor of "constant_" attribute
+        if _SKLEARN_VERSION < StrictVersion("0.22"):
+            base_prediction = model.init_.mean
+        else:
+            base_prediction = model.init_.constant_
 
     return _MLModel(
         _convert_tree_ensemble(

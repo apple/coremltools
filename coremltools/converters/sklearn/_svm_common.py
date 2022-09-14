@@ -14,11 +14,7 @@ def _set_kernel(model, spec):
     """
 
     def gamma_value(model):
-        if model.gamma == "auto" or model.gamma == "auto_deprecated":
-            # auto gamma value is 1/num_features
-            return 1 / float(len(model.support_vectors_[0]))
-        else:
-            return model.gamma
+        return model._gamma
 
     result = None
     if model.kernel == "linear":

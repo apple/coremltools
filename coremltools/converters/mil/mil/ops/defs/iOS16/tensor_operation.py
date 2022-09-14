@@ -1,14 +1,16 @@
 #  Copyright (c) 2022, Apple Inc. All rights reserved.
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
-#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clausefrom coremltools.converters.mil.mil import types
+#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clausefrom
 
+import numpy as np
+
+from coremltools.converters.mil.mil import types
+from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.input_type import (
-    InputSpec,
-    TensorInputType, 
-    ScalarOrTensorInputType,
-    BoolInputType,
     DefaultInputs,
+    InputSpec,
+    TensorInputType,
 )
 from coremltools.converters.mil.mil.operation import (
     Operation,
@@ -21,11 +23,56 @@ from coremltools.converters.mil.mil.ops.defs.iOS16 import _IOS16_TARGET
 
 
 @register_op(opset_version=_IOS16_TARGET)
+class fill_like(Operation):
+    """
+    Returns a tensor with the same size as the input tensor filled with a constant value
+
+    Parameters
+    ----------
+    ref_tensor: tensor<\*?, T> (Required)
+        * Input tensor.
+    value: const<U> (Optional)
+        * Default to ``0.0``.
+        * Constant value to fill in.
+
+    Returns
+    -------
+    tensor<\*?, T>
+        * Tensor with shape determined by the input tensor.
+
+    Attributes
+    ----------
+    T: fp16, fp32, int32, bool
+    U: fp16, fp32, int32, bool
+    """
+
+    input_spec = InputSpec(
+        ref_tensor=TensorInputType(type_domain="T"),
+        value=TensorInputType(const=True, optional=True, type_domain="U"),
+    )
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32, types.int32, types.bool),
+        "U": (types.fp16, types.fp32, types.int32, types.bool),
+    }
+
+    def default_inputs(self):
+        return DefaultInputs(
+            value=0.
+        )
+
+    def type_inference(self):
+        return types.tensor(self.value.dtype, self.ref_tensor.shape)
+
+    @precondition(allow=VALUE)
+    def value_inference(self):
+        return np.full(shape=self.ref_tensor.shape, fill_value=self.value.val)
+
+@register_op(opset_version=_IOS16_TARGET)
 class topk(_topk_iOS15):
     """
     A version of ``topk`` for iOS 16+. This section documents the differences. For the
     rest of the documentation, see `the iOS 15 version of topk <#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.topk>`_.
-
     Parameters
     ----------
        * The following are additional parameters for the iOS 16+ version. (For more parameters, see
@@ -36,8 +83,8 @@ class topk(_topk_iOS15):
         * If ``True``, ``top-k`` elements are themselves sorted.
           Otherwise, no particular ordering is guaranteed.
     return_indices: const<bool> (Optional)
-        # Default to ``True``.
-        # If ``True`, returns both values and indices. Otherwise, returns only the ``top-k`` values.
+        * Default to ``True``.
+        * If ``True`, returns both values and indices. Otherwise, returns only the ``top-k`` values.
 
     Returns
     -------
@@ -54,12 +101,9 @@ class topk(_topk_iOS15):
     """
 
     input_spec = _topk_iOS15.input_spec + InputSpec(
-        sort=BoolInputType(const=True, optional=True),
-        return_indices=BoolInputType(const=True, optional=True),
+        sort=TensorInputType(const=True, optional=True, type_domain=types.bool),
+        return_indices=TensorInputType(const=True, optional=True, type_domain=types.bool),
     )
-    
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     def default_inputs(self):
         return super().default_inputs() + DefaultInputs(sort=True, return_indices=True)

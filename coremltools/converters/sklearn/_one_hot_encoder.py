@@ -18,11 +18,12 @@ from ...models.array_feature_extractor import create_array_feature_extractor
 
 from ...models.pipeline import Pipeline
 
-from ..._deps import _HAS_SKLEARN as _HAS_SKLEARN
+from ..._deps import _HAS_SKLEARN, _SKLEARN_VERSION
 
 if _HAS_SKLEARN:
     import sklearn
     from sklearn.preprocessing import OneHotEncoder
+    from distutils.version import StrictVersion
 
     sklearn_class = OneHotEncoder
 
@@ -56,8 +57,12 @@ def convert(model, input_features, output_features):
 
     # Make sure the model is fitted.
     _sklearn_util.check_expected_type(model, OneHotEncoder)
-    _sklearn_util.check_fitted(model, lambda m: hasattr(m, "active_features_"))
-    _sklearn_util.check_fitted(model, lambda m: hasattr(m, "n_values_"))
+    if _SKLEARN_VERSION >= StrictVersion("0.22"):
+        _sklearn_util.check_fitted(model, lambda m: hasattr(m, "categories_"))
+        _sklearn_util.check_fitted(model, lambda m: hasattr(m, "n_features_in_"))
+    else:
+        _sklearn_util.check_fitted(model, lambda m: hasattr(m, "active_features_"))
+        _sklearn_util.check_fitted(model, lambda m: hasattr(m, "n_values_"))
 
     input_dimension = get_input_dimension(model)
 
@@ -71,6 +76,15 @@ def convert(model, input_features, output_features):
     expected_output_dimension = update_dimension(model, input_dimension)
     assert output_features[0][1] == datatypes.Array(expected_output_dimension)
 
+    if _SKLEARN_VERSION >= StrictVersion("0.22"):
+        model.categorical_features = "all"
+        model.active_features_ = range(expected_output_dimension)
+        model.feature_indices_ = [0]
+        t = 0
+        for i in model._n_features_outs:
+            t = t + i
+            model.feature_indices_.append(t)
+        
     # Create a pipeline that can do all of the subsequent feature extraction.
     feature_vectorizer_input_features = []
     feature_vectorizer_size_map = {}
@@ -141,7 +155,7 @@ def convert(model, input_features, output_features):
 
                 return lb
 
-            # Here are the indices we are looking fo
+            # Here are the indices we are looking for
             f_idx_bottom = model.feature_indices_[_cat_feature_idx]
             f_idx_top = model.feature_indices_[_cat_feature_idx + 1]
 
@@ -215,17 +229,22 @@ def update_dimension(model, input_dimension):
             "scikit-learn not found. scikit-learn conversion API is disabled."
         )
 
-    _sklearn_util.check_fitted(model, lambda m: hasattr(m, "active_features_"))
-    _sklearn_util.check_fitted(model, lambda m: hasattr(m, "n_values_"))
-
-    if model.categorical_features == "all":
-        return len(model.active_features_)
+    if _SKLEARN_VERSION >= StrictVersion("0.22"):
+        _sklearn_util.check_fitted(model, lambda m: hasattr(m, "categories_"))
+        _sklearn_util.check_fitted(model, lambda m: hasattr(m, "n_features_in_"))
+        return sum(model._n_features_outs)
     else:
-        out_dimension = len(model.active_features_) + (
-            input_dimension - len(model.n_values_)
-        )
+        _sklearn_util.check_fitted(model, lambda m: hasattr(m, "active_features_"))
+        _sklearn_util.check_fitted(model, lambda m: hasattr(m, "n_values_"))
 
-    return out_dimension
+        if model.categorical_features == "all":
+            return len(model.active_features_)
+        else:
+            out_dimension = len(model.active_features_) + (
+                input_dimension - len(model.n_values_)
+            )
+
+            return out_dimension
 
 
 def get_input_dimension(model):
@@ -234,12 +253,17 @@ def get_input_dimension(model):
             "scikit-learn not found. scikit-learn conversion API is disabled."
         )
 
-    _sklearn_util.check_fitted(model, lambda m: hasattr(m, "active_features_"))
-    _sklearn_util.check_fitted(model, lambda m: hasattr(m, "n_values_"))
-
-    if model.categorical_features == "all":
-        return len(model.feature_indices_) - 1
+    if _SKLEARN_VERSION >= StrictVersion("0.22"):
+        _sklearn_util.check_fitted(model, lambda m: hasattr(m, "categories_"))
+        _sklearn_util.check_fitted(model, lambda m: hasattr(m, "n_features_in_"))
+        return model.n_features_in_
     else:
-        # This can't actually be determined from the model as indices after the
-        # rest of the categorical values don't seem to be tracked
-        return None
+        _sklearn_util.check_fitted(model, lambda m: hasattr(m, "active_features_"))
+        _sklearn_util.check_fitted(model, lambda m: hasattr(m, "n_values_"))
+
+        if model.categorical_features == "all":
+            return len(model.feature_indices_) - 1
+        else:
+            # This can't actually be determined from the model as indices after the
+            # rest of the categorical values don't seem to be tracked
+            return None

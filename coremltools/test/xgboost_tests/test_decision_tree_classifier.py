@@ -68,7 +68,7 @@ class DecisionTreeBinaryClassifierScikitTest(unittest.TestCase):
         # Test the linear regression parameters.
         tr = spec.treeEnsembleClassifier.treeEnsemble
         self.assertIsNotNone(tr)
-        self.assertEqual(len(tr.nodes), 111)
+        self.assertEqual(len(tr.nodes), self.scikit_model.tree_.node_count)
 
     def test_conversion_bad_inputs(self):
         # Error on converting an untrained model
@@ -136,7 +136,7 @@ class DecisionTreeMultiClassClassifierScikitTest(unittest.TestCase):
 
         tr = spec.treeEnsembleClassifier.treeEnsemble
         self.assertIsNotNone(tr)
-        self.assertEqual(len(tr.nodes), 315)
+        self.assertEqual(len(tr.nodes), self.scikit_model.tree_.node_count)
 
     def test_conversion_bad_inputs(self):
         # Error on converting an untrained model

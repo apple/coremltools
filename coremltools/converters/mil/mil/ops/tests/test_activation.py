@@ -410,7 +410,7 @@ class TestPReLU:
     @ssa_fn
     def test_builder_eval3(self):
         with pytest.raises(ValueError, match=r"x .* rank 3"):
-            mb.prelu(x=[1], alpha=np.array([[1, 2, 3]], dtype=np.float32))
+            mb.prelu(x=np.array([1], dtype=np.float32), alpha=np.array([[1, 2, 3]], dtype=np.float32))
 
     @pytest.mark.parametrize(
         "use_cpu_only, backend, dim, chan",
@@ -827,7 +827,7 @@ class TestSoftplusParametric:
     def test_builder_eval4(self):
         with pytest.raises(ValueError, match=r"x .* rank 3"):
             mb.softplus_parametric(
-                x=[1],
+                x=np.array([1], dtype=np.float32),
                 alpha=np.array([[1, 2, 3]], dtype=np.float32),
                 beta=np.array([4, 5, 6], dtype=np.float32),
             )

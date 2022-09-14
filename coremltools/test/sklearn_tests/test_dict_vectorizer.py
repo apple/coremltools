@@ -84,7 +84,9 @@ class DictVectorizerScikitTest(unittest.TestCase):
         ]
         y_train = [0, 1] * 50
 
-        pl = Pipeline([("dv", DictVectorizer()), ("lm", LogisticRegression())])
+        # multi_class default changed in version >= 0.22 from ‘ovr’ to ‘auto’.
+        # Specify explicitly to match < 0.22 behavior.
+        pl = Pipeline([("dv", DictVectorizer()), ("lm", LogisticRegression(multi_class='ovr'))])
         pl.fit(x_train_dict, y_train)
 
         model = coremltools.converters.sklearn.convert(

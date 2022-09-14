@@ -105,8 +105,8 @@ def _adjust_main_inputs(func):
                 # This is some other dtype. Change the type to fp32 and add a cast.
                 # This is only a limitation of main--other functions do not represent CoreML model inputs
                 # and do not have the same limitation on input types.
-                supported_dtypes = "{int32, fp32, fp64}" if func.opset_version < target.iOS16 else \
-                                    "{int32, fp16, fp32, fp64}"
+                supported_dtypes = "{int32, fp32}" if func.opset_version < target.iOS16 else \
+                                    "{int32, fp16, fp32}"
                 msg = "\nInput '{}' is of dtype {}. The " +\
                                "CoreML runtime does not support inputs with this dtype " +\
                                "(supported dtypes are: {}). This input will be assigned a dtype of " +\
@@ -135,8 +135,8 @@ def _adjust_main_outputs(func):
             and (func.opset_version < target.iOS16 or output_var.dtype != types.fp16):
             # since fp16 is a valid output type for coreml from ios16 spec onwards, no need to cast
             output_dtype_str = types.builtin_to_string(output_var.dtype)
-            supported_dtypes = "{int32, fp32, fp64}" if func.opset_version < target.iOS16 else \
-                                "{int32, fp16, fp32, fp64}"
+            supported_dtypes = "{int32, fp32}" if func.opset_version < target.iOS16 else \
+                                "{int32, fp16, fp32}"
             msg = "\nOutput '{}' is of dtype {}. The " +\
                            "CoreML runtime does not support outputs with this dtype " +\
                            "(supported dtypes are: {}). This output will be assigned a dtype " +\
@@ -192,74 +192,12 @@ def _adjust_func_inputs(func):
     for input_name, input_var in func.inputs.items():
         _adjust_var(input_var)
 
-def _adjust_block_inputs(block):
-    for input_var in block.inputs:
-        _adjust_var(input_var)
-
-@block_context_manager
-def _adjust_ops(block):
-    len_block = len(block.operations)
-    i = 0
-    while i < len_block:
-        op = block.operations[i]
-
-        # Classifier is a special exception to this rule. It can output 64 bit integer labels.
-        # Classifier should be inserted after running this pass.
-        if op.op_type == "classify":
-            raise ValueError("ML Program backend pass adjust_to_supported_types does not support programs" +\
-                             " that have already added a classify op.")
-
-        for subblock in op.blocks:
-            _adjust_block_inputs(subblock)
-            _adjust_ops(subblock)
-
-        for var in op.outputs:
-            _adjust_var(var)
-
-        # Cast ops have a param (dtype) that should match the output dtype.
-        # If the output dtype or input dtype was previously adjusted,
-        # the cast op must change or be removed in kind.
-        if op.op_type == "cast":
-            output_type_str = types.builtin_to_string(op.outputs[0].dtype)
-            if op.outputs[0].dtype == op.x.dtype:
-                # The type of the input or output of this cast op was changed per the rules
-                # defined in the top level comment for adjust_io_to_supported_types.
-                #
-                # That changed output type is the same type as the input to the cast
-                # op. Therefore, regardless of whether the user created this cast or
-                # not, it is now redundant (noop), and should be removed.
-                #
-                # The removal isn't covered by the main cast
-                # optimization pass since that pass runs before this pass.
-                block.replace_uses_of_var_after_op(
-                    anchor_op=op, old_var=op.outputs[0], new_var=op.x
-                )
-                block.remove_ops([op])
-                len_block = len(block.operations)
-                i -= 1
-            elif output_type_str != op.dtype.val:
-                # The type of the output of this cast op was changed per the rules
-                # defined in the top level comment for adjust_io_to_supported_types.
-                #
-                # This cast is meaningful, and the "dtype" param now differs from the output
-                # type. Replace the dtype cast with a new cast op with a matching dtype param.
-                new_cast_out = mb.cast(x=op.x, dtype=output_type_str, before_op=op)
-                block.replace_uses_of_var_after_op(
-                    anchor_op=op, old_var=op.outputs[0], new_var=new_cast_out
-                )
-                block.remove_ops([op])
-                len_block = len(block.operations)
-        i = i + 1
-    return block
-
 #####
 # The Pass
 #####
 def _adjust_io_to_supported_types(func, is_main):
     if is_main:
         _adjust_main_inputs(func)
-        _adjust_ops(func)
         _adjust_main_outputs(func)
     else:
         _adjust_func_inputs(func)
-        _adjust_ops(func)

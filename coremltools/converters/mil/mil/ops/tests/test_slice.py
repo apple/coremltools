@@ -48,6 +48,39 @@ class TestSliceByIndex:
             backend=backend,
         )
 
+    @pytest.mark.xfail(reason="rdar://99664032")
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend", itertools.product([True, False], backends,)
+    )
+    def test_single_element_edge_case(self, use_cpu_only, backend):
+        x_val = np.array(list(range(6))).reshape((1, 3, 2)).astype(np.float32)
+        input_placeholders = {
+            "x": mb.placeholder(shape=x_val.shape),
+        }
+        input_values = {"x": x_val}
+
+        def build(x):
+            return mb.slice_by_index(
+                x=x,
+                begin=[-1, 0, 0],
+                end=[-2, 0, 0],
+                stride=[-1, 1, 1],
+                begin_mask=[False, True, True],
+                end_mask=[False, True, True])
+
+        expected_output_types = [(1, 3, 2, types.fp32)]
+        expected_outputs = [np.array([[[0, 1], [2, 3], [4, 5]]], dtype=np.float32)]
+        run_compare_builder(
+            build,
+            input_placeholders,
+            input_values,
+            expected_output_types,
+            expected_outputs,
+            use_cpu_only=use_cpu_only,
+            frontend_only=False,
+            backend=backend,
+        )
+
     @ssa_fn
     def test_builder_eval(self):
         x_val = np.array(list(range(24))).reshape((2, 3, 4))

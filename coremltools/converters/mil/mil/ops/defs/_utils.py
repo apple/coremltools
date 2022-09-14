@@ -4,9 +4,20 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import math
+import numbers
 import numpy as np
 
-from coremltools.converters.mil.mil import get_new_symbol, types
+from coremltools.converters.mil.mil import (
+    Builder as mb,
+    get_new_symbol, 
+    types,
+    Var,
+)
+from coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary import cast as cast_op_class
+from coremltools.converters.mil.mil.types import (
+    builtin_to_string,
+    promote_dtypes,
+)
 from coremltools.converters.mil.mil.types.symbolic import is_symbolic
 
 MAX_SIZE_CONSTANT_FOLDING = 1024 * 1024 / 4 # When a fp32 const takes over 1MB, we won't create a const op for that
@@ -108,15 +119,15 @@ def aggregated_pad(
 ):
     """
     Args
-        pad_type: string. Must be one of ('same', 'valid', 'custom')
+        pad_type: string. Must be one of ('same', 'same_lower', 'valid', 'custom')
 
         kernel_shape: [kH, kW, ...]: spatial kernel dims (excluding channels)
 
         input_shape: [iH, iW, ...]: spatial input dims (excluding channels)
-            Required iff pad_type == 'same'
+            Required iff pad_type in ['same', 'same_lower']
 
         strides: [sH, sW, ...]: spatial strides (excluding channels)
-            Required iff pad_type == 'same'
+            Required iff pad_type in ['same', 'same_lower']
 
         dilations: [dH, dW, ...]: dilations (excluding channels)
             If not provided, defaults to [1, 1, ...], effectively no dilation.
@@ -138,7 +149,7 @@ def aggregated_pad(
                 num_spatial_dims, len(dilations)
             )
         )
-    if pad_type == "same":
+    if pad_type in ["same", "same_lower"]:
         if input_shape is None or len(input_shape) != num_spatial_dims:
             raise ValueError(
                 "For SAME padding input_shape must not be None and must have "
@@ -176,15 +187,15 @@ def spatial_dimensions_out_shape(
 ):
     """
     Args
-        pad_type: string. Must be one of ('same', 'valid', 'custom')
+        pad_type: string. Must be one of ('same', 'same_lower', 'valid', 'custom')
 
         input_shape: [iH, iW, ...]: spatial input dims (excluding channels)
-            Required iff pad_type == 'same'
+            Required iff pad_type in ['same', 'same_lower']
 
         kernel_shape: [kH, kW, ...]: spatial kernel dims (excluding channels)
 
         strides: [sH, sW, ...]: spatial strides (excluding channels)
-            Required iff pad_type == 'same'
+            Required iff pad_type in ['same', 'same_lower']
 
         dilations: [dH, dW, ...]: dilations (excluding channels)
             If not provided, defaults to [1, 1, ...], effectively no dilation.
@@ -304,6 +315,72 @@ def parse_einsum_equation(equation):
     index = _update_vec(output_str, output_vec, map_char_to_int, index)
 
     return input1_vec, input2_vec, output_vec
+
+def compute_gather(params, indices, axis, batch_dims):
+    """
+    This utility function computes the gather operation with batch_dims supported.
+    """
+    def compute_gather_helper(params, indices, axis):
+        scalar_indices = isinstance(indices, numbers.Integral)
+        if scalar_indices:
+            res = np.take(params, [indices], axis)
+            res2 = np.squeeze(res, axis=axis)
+            if isinstance(res2, np.ndarray) and len(res2.shape) == 0:
+                # res2 is a scalar, but represented as np.array(symbol,
+                # dtype=np.object) which np.squeeze can't remove.
+                return res2.item()
+            return res2
+        return np.take(params, indices, axis)
+
+    if batch_dims == 0:
+        return compute_gather_helper(params, indices, axis)
+
+    params_shape = params.shape
+    indices_shape = indices.shape
+    batch_shape = params_shape[:batch_dims]
+
+    params_new_shape = [np.prod(batch_shape)] + list(params_shape[batch_dims:])
+    indices_new_shape = [np.prod(batch_shape)] + list(indices_shape[batch_dims:])
+    params_reshape = np.reshape(params, params_new_shape)
+    indices_reshape = np.reshape(indices, indices_new_shape)
+
+    res = []
+    for p, i in zip(params_reshape, indices_reshape):
+        res.append(compute_gather_helper(p, i, axis - batch_dims))
+    res = np.stack(res)
+    res_new_shape = tuple(batch_shape) + tuple(res.shape[1:])
+    return np.reshape(res, res_new_shape)
+
+def promote_input_dtypes(input_vars):
+    """
+    This utility function promotes all input variables to the same data type.
+    It is used to homogenize inputs to an op such as matmul / elementwise_binary,
+    and not the inputs to a function itself.
+    """
+    def _is_same_dtype(dtype1, dtype2):
+        return builtin_to_string(dtype1) == builtin_to_string(dtype2)
+    
+    def _promoted_var(var, promoted_dtype):
+        if var.val is None:
+            x = mb.cast(
+                x=var, dtype=builtin_to_string(promoted_dtype), name=var.name + "_promoted")
+        else:
+            const_value_after_cast = cast_op_class.get_cast_value(var, builtin_to_string(promoted_dtype))
+            x = mb.const(val=const_value_after_cast, name=var.name + "_promoted")
+        return x
+
+    for i, var in enumerate(input_vars):
+        if not isinstance(var, Var):
+            input_vars[i] = mb.const(val=var)
+            
+    promoted_dtype = promote_dtypes([var.dtype for var in input_vars])
+
+    for i, var in enumerate(input_vars):
+        if not _is_same_dtype(var.dtype, promoted_dtype):
+            input_vars[i] = _promoted_var(var, promoted_dtype)
+
+    return input_vars
+    
     
 def solve_slice_by_index_shape(x_shape, begin, end, stride, begin_mask, end_mask, squeeze_mask):
     """
@@ -339,6 +416,11 @@ def solve_slice_by_index_shape(x_shape, begin, end, stride, begin_mask, end_mask
         # for symbolic case
         if is_symbolic(x_shape[idx]):
             ret_shape.append(get_new_symbol())
+            continue
+
+        # for single-element extraction case
+        if x_shape[idx] == 1:
+            ret_shape.append(1)
             continue
 
         # when begin and end are not determined

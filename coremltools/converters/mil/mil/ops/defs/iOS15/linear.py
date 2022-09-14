@@ -5,12 +5,10 @@
 import numpy as np
 
 from coremltools.converters.mil.mil import (
-    BoolInputType,
     DefaultInputs,
     InputSpec,
     Operation,
     precondition,
-    StringInputType,
     TensorInputType,
     TupleInputType,
     types,
@@ -46,19 +44,20 @@ class linear(Operation):
     T: fp16, fp32, i32
     """
     input_spec = InputSpec(
-        x=TensorInputType(),
-        weight=TensorInputType(const=True),
-        bias=TensorInputType(const=True, optional=True),
+        x=TensorInputType(type_domain="T"),
+        weight=TensorInputType(const=True, type_domain="T"),
+        bias=TensorInputType(const=True, optional=True, type_domain="T"),
     )
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32, types.int32),
+    }
 
     def default_inputs(self):
         Dout = self.weight.shape[0]
         return DefaultInputs(
             bias=[0.]*Dout,
         )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     def type_inference(self):
         x_type = self.x.dtype
@@ -164,21 +163,21 @@ class matmul(Operation):
     T: fp16, fp32, i32
     """
     input_spec = InputSpec(
-        x=TensorInputType(),
-        y=TensorInputType(),
-        transpose_x=BoolInputType(const=True, optional=True),
-        transpose_y=BoolInputType(const=True, optional=True),
+        x=TensorInputType(type_domain="T"),
+        y=TensorInputType(type_domain="T"),
+        transpose_x=TensorInputType(const=True, optional=True, type_domain=types.bool),
+        transpose_y=TensorInputType(const=True, optional=True, type_domain=types.bool),
     )
-
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32, types.int32),
+    }
 
     def default_inputs(self):
         return DefaultInputs(
             transpose_x=False,
             transpose_y=False,
         )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     def type_inference(self):
         x_type = self.x.dtype
@@ -271,11 +270,10 @@ class einsum(Operation):
     T: fp16, fp32
     """
 
-    input_spec = InputSpec(values=TupleInputType(),
-                           equation=StringInputType(const=True))
-
-    def __init__(self, **kwargs):
-        super(einsum, self).__init__(**kwargs)
+    input_spec = InputSpec(
+        values=TupleInputType(),
+        equation=TensorInputType(const=True, type_domain=types.str)
+    )
 
     def type_inference(self):
         if len(self.values) != 2:

@@ -6,12 +6,8 @@
 from coremltools.converters.mil.mil import get_new_symbol, get_new_variadic_symbol, types
 from coremltools.converters.mil.mil.input_type import (
     DefaultInputs,
-    FloatInputType,
     InputSpec,
-    IntInputType,
-    IntTensorInputType,
     TensorInputType,
-    StringInputType
 )
 from coremltools.converters.mil.mil.operation import Operation
 from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
@@ -22,11 +18,10 @@ class RandomDistribution(Operation):
     """
     Random Op Superclass
     """
-    input_spec = InputSpec(shape=IntTensorInputType(),)
+    input_spec = InputSpec(
+        shape=TensorInputType(type_domain=types.int32),
+    )
     out_dtype = types.fp32
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     def type_inference(self):
         if any_symbolic(self.shape.shape):
@@ -64,7 +59,7 @@ class random_bernoulli(RandomDistribution):
         * Target output tensor shape.
         * ``K`` is the rank of the output tensor.
           ``shape[k] > 0`` for ``k = 0,..., K-1``.
-    prob: const<f32> (Optional)
+    prob: const<T> (Optional)
         * The probability of sampling ``1``. Defaults to ``0.5``.
     seed: const<i32> (Optional)
         * Seed to create a reproducible sequence of values across multiple invokes.
@@ -85,12 +80,16 @@ class random_bernoulli(RandomDistribution):
     
     input_spec = (
         InputSpec(
-            shape=IntTensorInputType(),
-            prob=FloatInputType(const=True, optional=True),
-            seed=IntInputType(const=True, optional=True),
+            shape=TensorInputType(type_domain=types.int32),
+            prob=TensorInputType(const=True, optional=True, type_domain="T"),
+            seed=TensorInputType(const=True, optional=True, type_domain=types.int32),
         )
         + RandomDistribution.input_spec
     )
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32),
+    }
 
     def default_inputs(self):
         return super().default_inputs() + \
@@ -98,9 +97,6 @@ class random_bernoulli(RandomDistribution):
                 seed=-1,
                 prob=0.5,
             )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     def type_inference(self):
         self.out_dtype = self.prob.dtype
@@ -143,11 +139,15 @@ class random_categorical(Operation):
     """
     
     input_spec = InputSpec(
-        x=TensorInputType(),
-        mode=StringInputType(const=True, optional=True),
-        size=IntInputType(const=True, optional=True),
-        seed=IntInputType(const=True, optional=True),
+        x=TensorInputType(type_domain="T"),
+        mode=TensorInputType(const=True, optional=True, type_domain=types.str),
+        size=TensorInputType(const=True, optional=True, type_domain=types.int32),
+        seed=TensorInputType(const=True, optional=True, type_domain=types.int32),
     )
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32),
+    }
 
     def default_inputs(self):
         return DefaultInputs(
@@ -155,9 +155,6 @@ class random_categorical(Operation):
             size=1,
             seed=-1,
         )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     def type_inference(self):
         self.out_dtype = self.x.dtype
@@ -177,9 +174,9 @@ class random_normal(RandomDistribution):
         * Target output tensor shape.
         * ``K`` is the rank of the output tensor.
           ``shape[k] > 0`` for ``k = 0,..., K-1``.
-    mean: const<f32> (Optional)
+    mean: const<T> (Optional)
         The mean (center) of the normal distribution. Defaults to 0.0.
-    stddev: const<f32> (Optional)
+    stddev: const<T> (Optional)
         The standard deviation (width) of the normal distribution. Defaults to ``1.0``.
     seed: const<i32> (Optional)
         Seed to create a reproducible sequence of values across multiple invokes.
@@ -200,13 +197,17 @@ class random_normal(RandomDistribution):
     
     input_spec = (
         InputSpec(
-            shape=IntTensorInputType(),
-            mean=FloatInputType(const=True, optional=True),
-            stddev=FloatInputType(const=True, optional=True),
-            seed=IntInputType(const=True, optional=True),
+            shape=TensorInputType(type_domain=types.int32),
+            mean=TensorInputType(const=True, optional=True, type_domain="T"),
+            stddev=TensorInputType(const=True, optional=True, type_domain="T"),
+            seed=TensorInputType(const=True, optional=True, type_domain=types.int32),
         )
         + RandomDistribution.input_spec
     )
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32),
+    }
 
     def default_inputs(self):
         return super().default_inputs() + \
@@ -215,9 +216,6 @@ class random_normal(RandomDistribution):
                 stddev=1.,
                 seed=-1,
             )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     def type_inference(self):
         if self.mean.dtype != self.stddev.dtype:
@@ -247,9 +245,9 @@ class random_uniform(RandomDistribution):
         * Target output tensor shape.
         * ``K`` is the rank of the output tensor.
           ``shape[k] > 0`` for ``k = 0,..., K-1``.
-    low: const<f32> (Optional)
+    low: const<T> (Optional)
         * Lower boundary of the output interval (inclusive). Defaults to ``0.0``.
-    high: const<f32> (Optional)
+    high: const<T> (Optional)
         * Upper boundary of the output interval (exclusive). Defaults to ``1.0``.
     seed: const<i32> (Optional)
         * Seed to create a reproducible sequence of values across multiple invokes.
@@ -270,13 +268,17 @@ class random_uniform(RandomDistribution):
     
     input_spec = (
         InputSpec(
-            shape=IntTensorInputType(),
-            low=FloatInputType(const=True, optional=True),
-            high=FloatInputType(const=True, optional=True),
-            seed=IntInputType(const=True, optional=True),
+            shape=TensorInputType(type_domain=types.int32),
+            low=TensorInputType(const=True, optional=True, type_domain="T"),
+            high=TensorInputType(const=True, optional=True, type_domain="T"),
+            seed=TensorInputType(const=True, optional=True, type_domain=types.int32),
         )
         + RandomDistribution.input_spec
     )
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32),
+    }
 
     def default_inputs(self):
         return super().default_inputs() + \
@@ -285,9 +287,6 @@ class random_uniform(RandomDistribution):
                 high=1.,
                 seed=-1,
             )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     def type_inference(self):
         if self.low.dtype != self.high.dtype:

@@ -4,19 +4,19 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from coremltools.converters.mil.mil import (
-    DefaultInputs,
-    FloatTensorInputType,
-    IntInputType,
-    IntTensorInputType,
     Operation,
-    TensorInputType,
     types,
-    ScalarOrTensorInputType,
-    StringInputType,
 )
+from coremltools.converters.mil.mil.block import curr_opset_version
 from coremltools.converters.mil.mil.input_type import InputSpec
+from coremltools.converters.mil.mil.input_type import (
+    DefaultInputs,
+    InputSpec,
+    TensorInputType,
+)
 from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
 from coremltools.converters.mil.mil.ops.defs._utils import spatial_dimensions_out_shape
+from coremltools.converters.mil.mil.ops.defs.iOS15 import _IOS15_TARGET
 
 
 @register_op
@@ -58,6 +58,8 @@ class conv(Operation):
             * ``custom``: Specify custom padding in the parameter ``pad``.
             * ``same``: Input is padded such that out spatial shapes are
               ``d_out[i] = ceil(d_in[i] / strides[i])``.
+            * ``same_lower``: Similar to ``same`` but the padding
+              will place extra rows/cols on the top/left if the padding amount is odd.
 
         Specifically, for ``i = 0,..,,len(d_in)-1``, the equivalent paddings are
         calculated as follows:
@@ -127,15 +129,19 @@ class conv(Operation):
     """
 
     input_spec = InputSpec(
-        x=FloatTensorInputType(),
-        weight=FloatTensorInputType(),
-        bias=FloatTensorInputType(const=True, optional=True),
-        strides=IntTensorInputType(const=True, optional=True),
-        pad_type=StringInputType(const=True, optional=True),
-        pad=IntTensorInputType(const=True, optional=True),
-        dilations=IntTensorInputType(const=True, optional=True),
-        groups=IntInputType(const=True, optional=True),
+        x=TensorInputType(type_domain="T"),
+        weight=TensorInputType(type_domain="T"),
+        bias=TensorInputType(const=True, optional=True, type_domain="T"),
+        strides=TensorInputType(const=True, optional=True, type_domain=types.int32),
+        pad_type=TensorInputType(const=True, optional=True, type_domain=types.str),
+        pad=TensorInputType(const=True, optional=True, type_domain=types.int32),
+        dilations=TensorInputType(const=True, optional=True, type_domain=types.int32),
+        groups=TensorInputType(const=True, optional=True, type_domain=types.int32),
     )
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32),
+    }
 
     def default_inputs(self):
         num_spatial_dims = self.x.rank - 2
@@ -146,10 +152,7 @@ class conv(Operation):
             pad=[0]*num_spatial_dims*2,
             dilations=[1]*num_spatial_dims,
             groups=1,
-            )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+        )
 
     def type_inference(self):
         inshape = self.x.shape
@@ -170,6 +173,12 @@ class conv(Operation):
 
         strides = self.strides.val
         dilations = self.dilations.val
+        
+        # The same_lower padding is not supported in iOS15
+        if curr_opset_version() == _IOS15_TARGET and self.pad_type.val == "same_lower":
+            msg = "iOS15 version of conv does not support pad_type = `same_lower`"
+            raise ValueError(msg)
+
         # Ignore self.pad if pad_type != custom
         custom_pad = None if self.pad_type.val != 'custom' else self.pad.val
 
@@ -225,30 +234,32 @@ class conv_quantized(conv):
     ----------
     T: fp16, fp32
     """
+
     input_spec = InputSpec(
-        x=TensorInputType(),
-        weight=TensorInputType(),
-        bias=TensorInputType(const=True, optional=True),
-        quantization_type=StringInputType(const=True),
-        nbits=IntInputType(const=True, optional=True),
-        quant_scale=ScalarOrTensorInputType(const=True),
-        quant_bias=ScalarOrTensorInputType(const=True),
-        strides=IntTensorInputType(const=True, optional=True),
-        pad_type=StringInputType(const=True, optional=True),
-        pad=IntTensorInputType(const=True, optional=True),
-        dilations=IntTensorInputType(const=True, optional=True),
-        groups=IntInputType(const=True, optional=True),
+        x=TensorInputType(type_domain="T"),
+        weight=TensorInputType(type_domain="U"),
+        bias=TensorInputType(const=True, optional=True, type_domain="U"),
+        quantization_type=TensorInputType(const=True, type_domain=types.str),
+        nbits=TensorInputType(const=True, optional=True, type_domain=types.int32),
+        quant_scale=TensorInputType(const=True, type_domain="T"),
+        quant_bias=TensorInputType(const=True, type_domain="T"),
+        strides=TensorInputType(const=True, optional=True, type_domain=types.int32),
+        pad_type=TensorInputType(const=True, optional=True, type_domain=types.str),
+        pad=TensorInputType(const=True, optional=True, type_domain=types.int32),
+        dilations=TensorInputType(const=True, optional=True, type_domain=types.int32),
+        groups=TensorInputType(const=True, optional=True, type_domain=types.int32),
         )
+        
+    type_domains = {
+        "T": (types.fp32, types.fp16),
+        "U": (types.uint8,),
+    }
 
     def default_inputs(self):
         return super().default_inputs() + \
             DefaultInputs(
                 nbits=8,
-                )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
+            )
 
 @register_op
 class conv_transpose(Operation):
@@ -333,16 +344,20 @@ class conv_transpose(Operation):
     """
 
     input_spec = InputSpec(
-        x=FloatTensorInputType(),  # [n, C_in, spatial_dims]
-        weight=FloatTensorInputType(const=True),  # [C_out, C_in, spatial_dims]
-        bias=FloatTensorInputType(const=True, optional=True),
-        pad=IntTensorInputType(const=True, optional=True),
-        output_shape=IntTensorInputType(const=True, optional=True),
-        pad_type=StringInputType(const=True, optional=True),
-        strides=TensorInputType(const=True, optional=True),
-        dilations=TensorInputType(const=True, optional=True),
-        groups=IntInputType(const=True, optional=True),
+        x=TensorInputType(type_domain="T"),  # [n, C_in, spatial_dims]
+        weight=TensorInputType(const=True, type_domain="T"),  # [C_out, C_in, spatial_dims]
+        bias=TensorInputType(const=True, optional=True, type_domain="T"),
+        pad=TensorInputType(const=True, optional=True, type_domain=types.int32),
+        output_shape=TensorInputType(const=True, optional=True, type_domain=types.int32),
+        pad_type=TensorInputType(const=True, optional=True, type_domain=types.str),
+        strides=TensorInputType(const=True, optional=True, type_domain=types.int32),
+        dilations=TensorInputType(const=True, optional=True, type_domain=types.int32),
+        groups=TensorInputType(const=True, optional=True, type_domain=types.int32),
     )
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32),
+    }
 
     def default_inputs(self):
         num_spatial_dims = self.x.rank - 2
@@ -354,10 +369,7 @@ class conv_transpose(Operation):
             strides=[1]*num_spatial_dims,
             dilations=[1]*num_spatial_dims,
             groups=1,
-            )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+        )
 
     def type_inference(self):
         # Input shape is [n, C_in, spatial_dims]

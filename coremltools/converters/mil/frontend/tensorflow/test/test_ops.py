@@ -14,6 +14,7 @@ import pytest
 
 import coremltools as ct
 from coremltools import TensorType, RangeDim
+from coremltools._deps import _HAS_TF_2
 from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.testing_utils import random_gen
 from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import (
@@ -24,7 +25,7 @@ from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import (
     TensorFlowBaseTest,
     tf_graph_to_mlmodel
 )
-from coremltools.models.utils import _macos_version
+from coremltools.models.utils import _is_macos, _macos_version
 
 backends = testing_reqs.backends
 
@@ -395,29 +396,50 @@ class TestActivationReLU6(TensorFlowBaseTest):
         )
 
 
-class TestGeluTanhApproximation(TensorFlowBaseTest):
+class TestGelu(TensorFlowBaseTest):
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, rank",
-        itertools.product([True], backends, [rank for rank in range(2, 3)]),
+        "use_cpu_only, backend, rank, mode",
+        itertools.product([True], backends, [rank for rank in range(2, 3)],
+                          ("tanh_approx", "exact_1", "exact_2", "exact_3")),
     )
-    def test(self, use_cpu_only, backend, rank):
-        if backend[0] == 'mlprogram':
-            pytest.skip("Not supported with ML Program backend")
-
+    def test(self, use_cpu_only, backend, rank, mode):
         input_shape = np.random.randint(low=1, high=4, size=rank)
 
         @make_tf_graph([input_shape])
-        def build_model(x):
+        def build_model_tanh_approx(x):
             a = 0.5 * (
                 1.0 + tf.tanh((math.sqrt(2 / math.pi) * (x + 0.044715 * tf.pow(x, 3))))
             )
             return a * x
 
+        @make_tf_graph([input_shape])
+        def build_model_exact_1(x):
+            return x * (0.5 * (1.0 + tf.math.erf(x / tf.math.sqrt(2.0))))
+
+        @make_tf_graph([input_shape])
+        def build_model_exact_2(x):
+            return 0.5 * (x * (1.0 + tf.math.erf(x / tf.math.sqrt(2.0))))
+
+        @make_tf_graph([input_shape])
+        def build_model_exact_3(x):
+            return (x * 0.5) * (1.0 + tf.math.erf(x / tf.math.sqrt(2.0)))
+
+        if mode == "tanh_approx":
+            build_model = build_model_tanh_approx
+        elif mode == "exact_1":
+            build_model = build_model_exact_1
+        elif mode == "exact_2":
+            build_model = build_model_exact_2
+        elif mode == "exact_3":
+            build_model = build_model_exact_3
+        else:
+            raise ValueError("Unexpected mode for Gelu layer")
+
         model, inputs, outputs = build_model
 
         input_values = [random_gen(input_shape, -5, 5)]
         input_dict = dict(zip(inputs, input_values))
-        spec, _, _, _, _, _ = TensorFlowBaseTest.run_compare_tf(
+        spec, mlmodel, _, _, _, _ = TensorFlowBaseTest.run_compare_tf(
             model,
             input_dict,
             outputs,
@@ -425,8 +447,10 @@ class TestGeluTanhApproximation(TensorFlowBaseTest):
             frontend_only=False,
             backend=backend,
         )
-        assert len(spec.neuralNetwork.layers) == 1
-        assert spec.neuralNetwork.layers[0].WhichOneof("layer") == "gelu"
+        assert TestGelu._op_count_in_mil_program(mlmodel, "gelu") == 1
+        assert TestGelu._op_count_in_mil_program(mlmodel, "erf") == 0
+        assert TestGelu._op_count_in_mil_program(mlmodel, "pow") == 0
+        assert TestGelu._op_count_in_mil_program(mlmodel, "tanh") == 0
 
 
 class TestActivationSigmoid(TensorFlowBaseTest):
@@ -1410,7 +1434,7 @@ class TestDepthwiseConv(TensorFlowBaseTest):
                 frontend_only=False,
             )
 
-            if backend[0] == 'nnv1_proto':
+            if backend[0] == 'neuralnetwork':
                 assert layer_counts(proto, "reorganizeData") == 0
 
         def test_dynamic_W():
@@ -2135,7 +2159,9 @@ class TestElementWiseUnary(TensorFlowBaseTest):
             return
 
         if _macos_version() < (13, 0):
-            if not use_cpu_for_conversion:
+            if backend == ("mlprogram", "fp16") and _is_macos():
+                pytest.skip("Requires macOS13 or greater")
+            elif not use_cpu_for_conversion:
                 pytest.skip("GPU issue fixed in iOS16/macOS13")
             else:
                 dtype = np.float32
@@ -2295,10 +2321,6 @@ class TestElementWiseUnary(TensorFlowBaseTest):
         if mode == "inverse" or mode == "rsqrt":
             atol, rtol = 1e-2, 1e-3
 
-        minimum_deployment_target = None
-        if _macos_version() >= (13, 0) and backend == ("mlprogram", "fp16"):
-            minimum_deployment_target = ct.target.iOS16
-
         TensorFlowBaseTest.run_compare_tf(
             model,
             input_dict,
@@ -2307,7 +2329,7 @@ class TestElementWiseUnary(TensorFlowBaseTest):
             backend=backend,
             atol=atol,
             rtol=rtol,
-            minimum_deployment_target=minimum_deployment_target,
+            minimum_deployment_target=ct.target.iOS16 if backend == ("mlprogram", "fp16") else None,
         )
 
 
@@ -2354,6 +2376,58 @@ class TestImageResizing(TensorFlowBaseTest):
             use_cpu_for_conversion=use_cpu_only,
             backend=backend,
         )
+        
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend, input_shape, scale_factor, align_corners, half_pixel_centers",
+        itertools.product(
+            [True, False],
+            backends,
+            [(1, 10, 20, 1), (2, 5, 2, 3)],
+            [(2, 3),],
+            [True, False],
+            [True, False],
+        ),
+    )
+    def test_resize_bilinear_dynamic_shape(
+        self,
+        use_cpu_only,
+        backend,
+        input_shape,
+        scale_factor,
+        align_corners,
+        half_pixel_centers,
+    ):
+        if backend[0] == "neuralnetwork" or ct.utils._macos_version() < (13, 0):
+            pytest.skip("half_pixel_centers only support for iOS16 upsample_bilinear layer")
+
+        if half_pixel_centers and align_corners:
+            pytest.skip("half_pixel_centers and align_corners cannot be both True")
+        
+        batch_dim, _, _, channel = input_shape
+        h_factor, w_factor = scale_factor
+    
+        @make_tf_graph([(batch_dim, None, None, channel, tf.float32)])
+        def build_model(x):
+            input_shape = tf.shape(x)
+            target_shape = tf.math.multiply(input_shape[1:3], (h_factor, w_factor))
+            return tf.raw_ops.ResizeBilinear(
+                images=x,
+                size=target_shape,
+                half_pixel_centers=half_pixel_centers,
+                align_corners=align_corners,
+            )
+
+        model, inputs, outputs = build_model
+        input_values = [random_gen(input_shape, -1, 1)]
+        input_dict = dict(zip(inputs, input_values))
+        TensorFlowBaseTest.run_compare_tf(
+            model,
+            input_dict,
+            outputs,
+            use_cpu_for_conversion=use_cpu_only,
+            backend=backend,
+            minimum_deployment_target=ct.target.iOS16,
+        )
 
     @pytest.mark.parametrize(
         "use_cpu_only, backend, input_shape, upsample_factor, data_format",
@@ -2399,7 +2473,7 @@ class TestImageResizing(TensorFlowBaseTest):
                     assert len(layer.upsample.fractionalScalingFactor) == 0
 
     @pytest.mark.parametrize(
-        "use_cpu_for_conversion, backend, input_shape, num_of_crops, crop_size, method, dynamic",
+        "use_cpu_for_conversion, backend, input_shape, num_of_crops, crop_size, method, dynamic, extrapolation_value",
         itertools.product(
             [True, False],
             backends,
@@ -2408,6 +2482,7 @@ class TestImageResizing(TensorFlowBaseTest):
             [(2, 2), (1, 1), (4, 4), (128, 128)],
             ["bilinear"],
             [False, True],
+            [0.0, 1.0],
         ),
     )
     def test_crop_and_resize(
@@ -2419,15 +2494,32 @@ class TestImageResizing(TensorFlowBaseTest):
         crop_size,
         method,
         dynamic,
+        extrapolation_value,
     ):
         use_cpu_only = use_cpu_for_conversion
         if backend[0] == "mlprogram" and not use_cpu_for_conversion and crop_size == (1, 1):
             # in this case, there is a numerical mismatch on the GPU MIL backend. The GPU runtime tests are
             # tracked seprately.
             use_cpu_only = True
+            
+        if extrapolation_value != 0.0:
+            if backend[0] == "neuralnetwork":
+                pytest.xfail("pad_value not availabe in neural network backend.")
+            if ct.utils._macos_version() < (13, 0):
+                pytest.skip("pad_value not supported in macOS12 or older.")
+            minimum_deployment_target = ct.target.iOS16
+        else:
+            minimum_deployment_target = None
+        
+        # rdar://98749492 (crop_resize is unstable for cropping out of bound setting in fp16)
+        if backend[0] == "mlprogram":
+            backend = ("mlprogram", "fp32")
+        
+        # Add 0.5 to boxes in order to test the crop outside the image
+        crop_bias = 0.5
 
         input = np.random.randn(*input_shape).astype(np.float32)
-        boxes = np.random.uniform(size=(num_of_crops, 4)).astype(np.float32)
+        boxes = np.random.uniform(size=(num_of_crops, 4)).astype(np.float32) + crop_bias
         box_indices = np.random.randint(
             size=(num_of_crops,), low=0, high=input_shape[0]
         ).astype(np.int32)
@@ -2441,6 +2533,7 @@ class TestImageResizing(TensorFlowBaseTest):
                     box_ind=box_indices,
                     crop_size=crop_size,
                     method=method,
+                    extrapolation_value=extrapolation_value,
                 )
 
             model, inputs, outputs = build_model
@@ -2452,6 +2545,7 @@ class TestImageResizing(TensorFlowBaseTest):
                 outputs,
                 use_cpu_for_conversion=use_cpu_only,
                 backend=backend,
+                minimum_deployment_target=minimum_deployment_target,
             )
 
         def test_dynamic():
@@ -2463,6 +2557,7 @@ class TestImageResizing(TensorFlowBaseTest):
                     box_ind=box_indices_pl,
                     crop_size=crop_size,
                     method=method,
+                    extrapolation_value=extrapolation_value
                 )
             model, inputs, outputs = build_model
             input_values = [input, boxes, box_indices]
@@ -2473,6 +2568,7 @@ class TestImageResizing(TensorFlowBaseTest):
                 outputs,
                 use_cpu_for_conversion=use_cpu_only,
                 backend=backend,
+                minimum_deployment_target=minimum_deployment_target,
             )
 
         test_dynamic() if dynamic else test_static()
@@ -2525,7 +2621,63 @@ class TestImageResizing(TensorFlowBaseTest):
             use_cpu_for_conversion=use_cpu_only,
             backend=backend,
         )
+        
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend, InputShape_OutputShape, op",
+        itertools.product(
+            [True, False],
+            backends,
+            [
+                [(2, 5, 15, 3), (2, 5, 15, 3)],
+                [(2, 4, 8, 5), (2, 2, 4, 5)],
+                [(2, 4, 8, 3), (2, 9, 13, 3)],
+            ],
+            ["V2", "V3"],
+        ),
+    )
+    def test_affine_transform(self, use_cpu_only, backend, InputShape_OutputShape, op):
+        if backend[0] == "neuralnetwork":
+            pytest.skip("Affine op not available in the neuralnetwork backend")
+        if not _HAS_TF_2:
+            pytest.skip("ImageProjectiveTransformV2/V2 only available in tf2.")
+            
+        input_shape, output_shape = InputShape_OutputShape
+        batch_size = input_shape[0]
+        transforms = np.random.rand(batch_size, 8) - 0.05
+        transforms[:, 6:8] = 0
 
+        @make_tf_graph([input_shape])
+        def build_model(x):
+            if op == "V2":
+                return tf.raw_ops.ImageProjectiveTransformV2(
+                    images=x,
+                    transforms=transforms,
+                    fill_mode="CONSTANT",
+                    output_shape=(output_shape[0], output_shape[1]),
+                    interpolation="BILINEAR",
+                )
+            elif op == "V3":
+                return tf.raw_ops.ImageProjectiveTransformV3(
+                    images=x,
+                    transforms=transforms,
+                    fill_mode="CONSTANT",
+                    output_shape=(output_shape[0], output_shape[1]),
+                    interpolation="BILINEAR",
+                    fill_value=0.0,
+                )
+            else:
+                raise ValueError("tensorflow op {} not supported".format(op))
+                
+        model, inputs, outputs = build_model
+        input_values = [np.random.rand(*input_shape).astype(np.float32)]
+        input_dict = dict(zip(inputs, input_values))
+        TensorFlowBaseTest.run_compare_tf(
+            model,
+            input_dict,
+            outputs,
+            use_cpu_for_conversion=use_cpu_only,
+            backend=backend,
+        )
 
 class TestLinear(TensorFlowBaseTest):
     @pytest.mark.parametrize(
@@ -3409,6 +3561,53 @@ class TestGather(TensorFlowBaseTest):
         )
 
     @pytest.mark.parametrize(
+        "use_cpu_only, backend, rankX_rankIndices_axis_batchdims, mode",
+        itertools.product(
+            [True, False],
+            backends,
+            [
+                (2, 2, 1, 0),
+                (3, 2, 1, 1),
+                (3, 3, 2, 0),
+                (3, 3, 2, 1),
+                (3, 3, 2, 2),
+            ],
+            ["GatherV2", "gather"],
+        ),
+    )
+    def test_gather_with_batch_dims(self, use_cpu_only, backend, rankX_rankIndices_axis_batchdims, mode):
+        x_rank, indices_rank, axis, batch_dims = rankX_rankIndices_axis_batchdims
+        x_shape = np.random.randint(low=2, high=4, size=x_rank)
+        indices_shape = np.random.randint(low=2, high=4, size=indices_rank)
+        indices_shape[:batch_dims] = x_shape[:batch_dims]
+
+        @make_tf_graph([x_shape, list(indices_shape) + [tf.int32]])
+        def build_model(x, indices):
+            if mode == "GatherV2":
+                res = tf.raw_ops.GatherV2(params=x, indices=indices, axis=axis, batch_dims=batch_dims)
+            elif mode == "gather":
+                res = tf.gather(x, indices, axis=axis, batch_dims=batch_dims)
+            else:
+                raise ValueError("Unsupported tf op {}".format(mode))
+            return res
+
+        model, inputs, outputs = build_model
+
+        axis = 0 if mode == "Gather" else axis
+        input_dict = {inputs[0]: np.random.rand(*x_shape).astype(np.float32),
+                      inputs[1]: np.random.randint(0, x_shape[axis], size=indices_shape, dtype=np.int32)}
+
+        TensorFlowBaseTest.run_compare_tf(
+            model,
+            input_dict,
+            outputs,
+            use_cpu_for_conversion=use_cpu_only,
+            frontend_only=False,
+            backend=backend,
+            minimum_deployment_target=ct.target.iOS16 if backend[0] == "mlprogram" else None
+        )
+
+    @pytest.mark.parametrize(
         "use_cpu_only, backend, rankX_rankIndices",
         itertools.product(
             [True, False],
@@ -3461,6 +3660,55 @@ class TestGather(TensorFlowBaseTest):
             frontend_only=False,
             backend=backend,
         )
+
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend, rankX_rankIndices_batchdims",
+        itertools.product(
+            [True, False],
+            backends,
+            [
+                (1, 2, 0),
+                (2, 2, 1),
+                (3, 5, 2),
+                (5, 5, 3),
+            ],
+        ),
+    )
+    def test_gather_nd_with_batch_dims(self, use_cpu_only, backend, rankX_rankIndices_batchdims):
+        x_rank, indices_rank, batch_dims = rankX_rankIndices_batchdims
+        x_shape = np.random.randint(low=2, high=4, size=x_rank)
+        indices_shape = np.random.randint(low=2, high=4, size=indices_rank)
+        x_shape[:batch_dims] = indices_shape[:batch_dims]
+        indices_shape[-1] = np.random.randint(low=1, high=x_rank + 1 - batch_dims)
+
+        @make_tf_graph([x_shape, list(indices_shape) +[tf.int32]])
+        def build_model(x, indices):
+            return tf.gather_nd(x, indices, batch_dims=batch_dims)
+
+        model, inputs, outputs = build_model
+
+        a = np.random.rand(*x_shape).astype(np.float32)
+        indices_list = []
+        for i in range(indices_shape[-1]):
+            indices_list.append(
+                np.random.randint(0, x_shape[i+batch_dims], size=indices_shape[:-1])
+            )
+
+        input_dict = {
+            inputs[0]: a,
+            inputs[1]: np.stack(indices_list, axis=-1).astype(np.int32),
+        }
+
+        TensorFlowBaseTest.run_compare_tf(
+            model,
+            input_dict,
+            outputs,
+            use_cpu_for_conversion=use_cpu_only,
+            frontend_only=False,
+            backend=backend,
+            minimum_deployment_target=ct.target.iOS16 if backend[0] == "mlprogram" else None
+        )
+
 
 class TestScatter(TensorFlowBaseTest):
     @pytest.mark.parametrize(
@@ -6284,6 +6532,26 @@ class TestLogSoftMax(TensorFlowBaseTest):
     def test(self, use_cpu_only, backend):
         input_shape = (5, 20)
         input_value = random_gen(input_shape, rand_min=-1, rand_max=1)
+
+        @make_tf_graph([input_shape])
+        def build_model(x):
+            return tf.math.log_softmax(x)
+
+        model, inputs, outputs = build_model
+        input_values = [input_value]
+        input_dict = dict(zip(inputs, input_values))
+        TensorFlowBaseTest.run_compare_tf(model, input_dict, outputs,
+                       use_cpu_for_conversion=use_cpu_only,
+                       frontend_only=False, backend=backend)
+
+    @pytest.mark.parametrize('use_cpu_only, backend',
+                             itertools.product(
+                                 [True, False],
+                                 backends,
+                             ))
+    def test_numerical_stability(self, use_cpu_only, backend):
+        input_shape = (4,)
+        input_value = np.array([10, 2, 10000, 4], dtype=np.float32)
 
         @make_tf_graph([input_shape])
         def build_model(x):

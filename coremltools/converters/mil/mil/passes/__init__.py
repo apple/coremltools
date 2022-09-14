@@ -32,6 +32,7 @@ from . import (
     onehot_matmul_to_gather,
     pad_conv_connect,
     prelu_fusion,
+    prelu_to_lrelu,
     quantization_passes,
     rank0_expand_dims_swap,
     reduce_mean_fusion,

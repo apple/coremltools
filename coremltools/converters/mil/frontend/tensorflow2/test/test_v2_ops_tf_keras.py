@@ -8,6 +8,7 @@ import itertools
 import random
 
 import numpy as np
+import platform
 import pytest
 
 import coremltools as ct
@@ -627,6 +628,16 @@ class TestConvTranspose(TensorFlowBaseTest):
         dilations,
         batch_size,
     ):
+        if (platform.machine() == "arm64" and
+            backend == ("mlprogram", "fp16") and 
+            op == tf.keras.layers.Conv3DTranspose and
+            padding == "valid" and
+            spatial_dim_and_ks == (7, 11, 12, 1, 2, 2) and
+            strides == (2, 3, 3) and
+            batch_size == 3
+        ):
+           pytest.xfail("rdar://98015195 ([M1 native tests] Some MIL unittests are failing M1 native)")
+
         s1, s2, s3, k1, k2, k3 = spatial_dim_and_ks
         c_in, c_out = 2, 3
         input_shape = None

@@ -28,10 +28,14 @@ class RandomForestBinaryClassifierScikitTest(unittest.TestCase):
         from sklearn.ensemble import RandomForestClassifier
 
         scikit_data = load_boston()
-        scikit_model = RandomForestClassifier(random_state=1)
+        # n_estimators default changed >= 0.22. Specify explicitly to match <0.22 behavior.
+        scikit_model = RandomForestClassifier(random_state=1, n_estimators=10)
         target = 1 * (scikit_data["target"] > scikit_data["target"].mean())
         scikit_model.fit(scikit_data["data"], target)
 
+        self.scikit_model_node_count = sum(map(lambda e: e.tree_.node_count,
+                                                scikit_model.estimators_))
+        
         # Save the data and the model
         self.scikit_data = scikit_data
         self.scikit_model = scikit_model
@@ -67,12 +71,13 @@ class RandomForestBinaryClassifierScikitTest(unittest.TestCase):
             -1
         ].treeEnsembleClassifier.treeEnsemble
         self.assertIsNotNone(tr)
-        self.assertEqual(len(tr.nodes), 1048)
+        self.assertEqual(len(tr.nodes), self.scikit_model_node_count)
 
     def test_conversion_bad_inputs(self):
         # Error on converting an untrained model
         with self.assertRaises(Exception):
-            model = RandomForestClassifier()
+            # n_estimators default changed >= 0.22. Specify explicitly to match <0.22 behavior.
+            model = RandomForestClassifier(n_estimators=10)
             spec = skl_converter.convert(model, "data", "out")
 
         # Check the expected class during covnersion.
@@ -99,11 +104,15 @@ class RandomForestMultiClassClassifierScikitTest(unittest.TestCase):
         import numpy as np
 
         scikit_data = load_boston()
-        scikit_model = RandomForestClassifier(random_state=1)
+        # n_estimators default changed >= 0.22. Specify explicitly to match <0.22 behavior.
+        scikit_model = RandomForestClassifier(random_state=1, n_estimators=10)
         t = scikit_data.target
         target = np.digitize(t, np.histogram(t)[1]) - 1
         scikit_model.fit(scikit_data.data, target)
 
+        self.scikit_model_node_count = sum(map(lambda e: e.tree_.node_count,
+                                                scikit_model.estimators_))
+        
         # Save the data and the model
         self.scikit_data = scikit_data
         self.target = target
@@ -142,12 +151,13 @@ class RandomForestMultiClassClassifierScikitTest(unittest.TestCase):
             -1
         ].treeEnsembleClassifier.treeEnsemble
         self.assertIsNotNone(tr)
-        self.assertEqual(len(tr.nodes), 2970)
+        self.assertEqual(len(tr.nodes), self.scikit_model_node_count)
 
     def test_conversion_bad_inputs(self):
         # Error on converting an untrained model
         with self.assertRaises(Exception):
-            model = RandomForestClassifier()
+            # n_estimators default changed >= 0.22. Specify explicitly to match <0.22 behavior.
+            model = RandomForestClassifier(n_estimators=10)
             spec = skl_converter.convert(model, "data", "out")
 
         # Check the expected class during covnersion.

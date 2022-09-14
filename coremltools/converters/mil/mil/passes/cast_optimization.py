@@ -32,7 +32,7 @@ class cast_optimization(AbstractGraphPass):
     """
     def apply(self, prog):
         for f in prog.functions.values():
-            _fuse_or_cancel_consecutive_casts_block_wrapper(f)
+            _fuse_or_cancel_consecutive_casts_block_wrapper(f, {})
 
         # main function's output_vars are treated differently, which are not handled by the method
         # above, "_fuse_or_cancel_consecutive_casts_block".
@@ -152,7 +152,7 @@ def _try_to_transform(root_op, cached_vars):
     return True
 
 @block_context_manager
-def _fuse_or_cancel_consecutive_casts_block_wrapper(block):
+def _fuse_or_cancel_consecutive_casts_block_wrapper(block, cached_vars):
 
     def _fuse_or_cancel_consecutive_casts_block(block, cached_vars):
         block_changed = False
@@ -161,8 +161,7 @@ def _fuse_or_cancel_consecutive_casts_block_wrapper(block):
                 nested_block_changed = True
                 nested_block_cached_vars = {}
                 nested_block_cached_vars.update(cached_vars)
-                while nested_block_changed:
-                    nested_block_changed = _fuse_or_cancel_consecutive_casts_block(b, nested_block_cached_vars)
+                _fuse_or_cancel_consecutive_casts_block_wrapper(b, nested_block_cached_vars)
 
             if len(op.blocks) > 0:
                 continue
@@ -176,7 +175,6 @@ def _fuse_or_cancel_consecutive_casts_block_wrapper(block):
         return block_changed
 
     block_changed = True
-    cached_vars = {}
     """
     Cached vars is used when all the following conditions are met:
     1. When the output of a cast gets fed into multiple casts of same configuration

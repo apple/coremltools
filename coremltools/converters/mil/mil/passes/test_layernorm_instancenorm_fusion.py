@@ -301,7 +301,7 @@ class TestLayerNormOrInstanceNormFusionPass:
             rsqrt = mb.rsqrt(x=add_eps)
             mul1 = mb.mul(x=rsqrt, y=x)
             mul2 = mb.mul(x=mean0, y=rsqrt)
-            mul_sub = mb.mul(x=mul2, y=-1)
+            mul_sub = mb.mul(x=mul2, y=-1.)
             add = mb.add(x=mul1, y=mul_sub)
             return add
 

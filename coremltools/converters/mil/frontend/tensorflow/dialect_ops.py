@@ -5,12 +5,8 @@
 
 from coremltools.converters.mil.mil import types, Operation
 from coremltools.converters.mil.mil.input_type import (
-    BoolInputType,
     DefaultInputs,
-    FloatInputType,
     InputSpec,
-    IntInputType,
-    StringInputType,
     TensorInputType,
 )
 from coremltools.converters.mil.mil.ops.registry import SSAOpRegistry
@@ -31,10 +27,10 @@ register_op = SSAOpRegistry.register_op
 @register_op(namespace="tf")
 class tf_make_list(Operation):
     input_spec = InputSpec(
-        init_length=IntInputType(optional=True),
-        dynamic_length=BoolInputType(optional=True),
-        elem_shape=TensorInputType(const=True, optional=True),
-        dtype=StringInputType(const=True, optional=True),
+        init_length=TensorInputType(optional=True, type_domain=types.int32),
+        dynamic_length=TensorInputType(optional=True, type_domain=types.bool),
+        elem_shape=TensorInputType(const=True, optional=True, type_domain=types.int32),
+        dtype=TensorInputType(const=True, optional=True, type_domain=types.str),
     )
 
     def default_inputs(self):
@@ -43,9 +39,6 @@ class tf_make_list(Operation):
             dynamic_length=True,
             dtype="fp32",
         )
-
-    def __init__(self, **kwargs):
-        super(tf_make_list, self).__init__(**kwargs)
 
     def type_inference(self):
         init_length = self.init_length.val
@@ -70,20 +63,24 @@ class TfLSTMBase(Operation):
     """
 
     input_spec = InputSpec(
-        c_prev=TensorInputType(),  # [batch, hidden_dim]
-        h_prev=TensorInputType(),  # [batch, hidden_dim]
+        c_prev=TensorInputType(type_domain="T"),  # [batch, hidden_dim]
+        h_prev=TensorInputType(type_domain="T"),  # [batch, hidden_dim]
         # weight: [input_dim + hidden_dim, 4*hidden_dim] (icfo layout)
-        weight=TensorInputType(const=True),
-        forget_bias=FloatInputType(const=True, optional=True),
+        weight=TensorInputType(const=True, type_domain="T"),
+        forget_bias=TensorInputType(const=True, optional=True, type_domain="T"),
         # cell_clip == None implies not using cell clip
-        cell_clip=FloatInputType(const=True, optional=True),
+        cell_clip=TensorInputType(const=True, optional=True, type_domain="T"),
         # If use_peephole == False, weight_peep_* is ignored
-        use_peephole=BoolInputType(const=True, optional=True),
-        weight_peep_i=TensorInputType(const=True, optional=True),  # [hidden_dim,]
-        weight_peep_f=TensorInputType(const=True, optional=True),  # [hidden_dim,]
-        weight_peep_o=TensorInputType(const=True, optional=True),  # [hidden_dim,]
-        bias=TensorInputType(const=True),  # [4*hidden_dim] (icfo layout)
+        use_peephole=TensorInputType(const=True, optional=True, type_domain=types.bool),
+        weight_peep_i=TensorInputType(const=True, optional=True, type_domain="T"),  # [hidden_dim,]
+        weight_peep_f=TensorInputType(const=True, optional=True, type_domain="T"),  # [hidden_dim,]
+        weight_peep_o=TensorInputType(const=True, optional=True, type_domain="T"),  # [hidden_dim,]
+        bias=TensorInputType(const=True, type_domain="T"),  # [4*hidden_dim] (icfo layout)
     )
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32),
+    }
 
     def default_inputs(self):
         return DefaultInputs(
@@ -123,7 +120,7 @@ class tf_lstm_block_cell(TfLSTMBase):
         h = co .* o
     """
     input_spec = (
-        InputSpec(x=TensorInputType(),) + TfLSTMBase.input_spec  # [batch, input_dim]
+        InputSpec(x=TensorInputType(type_domain="T"),) + TfLSTMBase.input_spec  # [batch, input_dim]
     )
 
     def __init__(self, **kwargs):
@@ -155,14 +152,11 @@ class tf_lstm_block(TfLSTMBase):
     """
     input_spec = (
         InputSpec(
-            seq_len=IntInputType(),  # int
-            x=TensorInputType(),  # [padded_len, batch, input_dim]
+            seq_len=TensorInputType(type_domain=types.int32),  # int
+            x=TensorInputType(type_domain="T"),  # [padded_len, batch, input_dim]
         )
         + TfLSTMBase.input_spec
     )
-
-    def __init__(self, **kwargs):
-        super(tf_lstm_block, self).__init__(**kwargs)
 
     def type_inference(self):
         self._check_peephole_weights()

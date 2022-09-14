@@ -6,10 +6,7 @@ import numpy as np
 
 from coremltools.converters.mil.mil import (
     DefaultInputs,
-    FloatInputType,
     InputSpec,
-    IntInputType,
-    IntTensorInputType,
     Operation,
     precondition,
     TensorInputType,
@@ -48,7 +45,7 @@ class batch_norm(Operation):
     beta: const tensor<[C], T> (Optional)
         * Optional offset applied to normalized tensor.
         * Default is all zeros.
-    epsilon: const fp32 (Optional)
+    epsilon: const T (Optional)
         * Default is ``1e-5``.
 
     Returns
@@ -62,13 +59,17 @@ class batch_norm(Operation):
     """
 
     input_spec = InputSpec(
-        x=TensorInputType(),
-        mean=TensorInputType(const=True),
-        variance=TensorInputType(const=True),
-        gamma=TensorInputType(const=True, optional=True),
-        beta=TensorInputType(const=True, optional=True),
-        epsilon=FloatInputType(const=True, optional=True),
+        x=TensorInputType(type_domain="T"),
+        mean=TensorInputType(const=True, type_domain="T"),
+        variance=TensorInputType(const=True, type_domain="T"),
+        gamma=TensorInputType(const=True, optional=True, type_domain="T"),
+        beta=TensorInputType(const=True, optional=True, type_domain="T"),
+        epsilon=TensorInputType(const=True, optional=True, type_domain="T"),
     )
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32),
+    }
 
     def default_inputs(self):
         return DefaultInputs(
@@ -76,9 +77,6 @@ class batch_norm(Operation):
             beta=None,
             epsilon=1e-5,
         )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     def type_inference(self):
         x_shape = self.x.shape
@@ -116,11 +114,15 @@ class instance_norm(Operation):
     """
 
     input_spec = InputSpec(
-        x=TensorInputType(),
-        gamma=TensorInputType(const=True, optional=True),
-        beta=TensorInputType(const=True, optional=True),
-        epsilon=FloatInputType(const=True, optional=True),
+        x=TensorInputType(type_domain="T"),
+        gamma=TensorInputType(const=True, optional=True, type_domain="T"),
+        beta=TensorInputType(const=True, optional=True, type_domain="T"),
+        epsilon=TensorInputType(const=True, optional=True, type_domain="T"),
     )
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32),
+    }
 
     def default_inputs(self):
         return DefaultInputs(
@@ -128,9 +130,6 @@ class instance_norm(Operation):
             beta=None,
             epsilon=1e-5,
         )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     def type_inference(self):
         x_shape = self.x.shape
@@ -158,7 +157,7 @@ class l2_norm(Operation):
         * For ranks greater than 3, in which ``rank(*B) >= 1 and rank(*D) == 3``,
           the leading dimensions \*B, starting from ``0`` to ``-4`` (inclusive),
           are all treated as batch. The L2 normalization are done batch-wise.
-    epsilon: const fp32 (Optional)
+    epsilon: const T (Optional)
         * Small constant to avoid division by ``0``.
         * Optional, defaults to ``1e-6``.
 
@@ -173,17 +172,18 @@ class l2_norm(Operation):
     """
 
     input_spec = InputSpec(
-        x=TensorInputType(),
-        epsilon=FloatInputType(const=True, optional=True),
+        x=TensorInputType(type_domain="T"),
+        epsilon=TensorInputType(const=True, optional=True, type_domain="T"),
     )
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32),
+    }
 
     def default_inputs(self):
         return DefaultInputs(
             epsilon=1e-6,
             )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     def type_inference(self):
         if self.x.rank < 3:
@@ -238,7 +238,7 @@ class layer_norm(Operation):
         * Same shape as gamma.
         * Default is all zeros.
 
-    epsilon: const fp32 (Optional)
+    epsilon: const T (Optional)
         * Small constant to avoid division by ``0``.
         * Default is ``1e-5``.
 
@@ -254,12 +254,16 @@ class layer_norm(Operation):
     """
 
     input_spec = InputSpec(
-        x=TensorInputType(),
-        axes=IntTensorInputType(const=True, optional=True),
-        gamma=TensorInputType(const=True, optional=True),
-        beta=TensorInputType(const=True, optional=True),
-        epsilon=FloatInputType(const=True, optional=True),
+        x=TensorInputType(type_domain="T"),
+        axes=TensorInputType(const=True, optional=True, type_domain=types.int32),
+        gamma=TensorInputType(const=True, optional=True, type_domain="T"),
+        beta=TensorInputType(const=True, optional=True, type_domain="T"),
+        epsilon=TensorInputType(const=True, optional=True, type_domain="T"),
     )
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32),
+    }
 
     def default_inputs(self):
         return DefaultInputs(
@@ -268,9 +272,6 @@ class layer_norm(Operation):
             beta=None,
             epsilon=1e-5,
             )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     @staticmethod
     def _is_compatible_shape(shapea, shapeb):
@@ -342,13 +343,13 @@ class local_response_norm(Operation):
         * ``n`` is the batch dimension.
     size: const i32 (Required)
         * Amount of neighboring channels to normalize.
-    alpha: const fp32 (Optional)
+    alpha: const T (Optional)
         * Scale factor.
         * Default is ``1e-4``.
-    beta: const fp32 (Optional)
+    beta: const T (Optional)
         * An exponent.
         * Default is ``0.75``.
-    k: const fp32 (Optional)
+    k: const T (Optional)
         * Additive factor.
         * Default is ``1.0``.
 
@@ -363,12 +364,16 @@ class local_response_norm(Operation):
     """
 
     input_spec = InputSpec(
-        x=TensorInputType(),
-        size=IntInputType(const=True),
-        alpha=FloatInputType(const=True, optional=True),
-        beta=FloatInputType(const=True, optional=True),
-        k=FloatInputType(const=True, optional=True),
+        x=TensorInputType(type_domain="T"),
+        size=TensorInputType(const=True, type_domain=types.int32),
+        alpha=TensorInputType(const=True, optional=True, type_domain="T"),
+        beta=TensorInputType(const=True, optional=True, type_domain="T"),
+        k=TensorInputType(const=True, optional=True, type_domain="T"),
     )
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32),
+    }
 
     def default_inputs(self):
         return DefaultInputs(
@@ -376,9 +381,6 @@ class local_response_norm(Operation):
             beta=0.75,
             k=1.,
             )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     def type_inference(self):
         x_shape = self.x.shape

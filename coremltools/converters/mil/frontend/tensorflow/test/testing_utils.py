@@ -370,3 +370,8 @@ class TensorFlowBaseTest:
         alist.append(TensorFlowBaseTest.testmodelname)
 
         return tuple(alist)
+
+    @staticmethod
+    def _op_count_in_mil_program(mlmodel, op_type):
+        prog = mlmodel._mil_program
+        return len(prog.find_ops(op_type=op_type))

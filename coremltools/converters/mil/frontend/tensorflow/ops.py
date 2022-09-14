@@ -12,7 +12,10 @@ from .tf_op_registry import register_tf_op
 from coremltools.converters.mil._deployment_compatibility import AvailableTarget as target
 from coremltools.converters.mil.mil import Builder as mb, types
 from coremltools.converters.mil.mil.block import is_current_opset_version_compatible_with
-from coremltools.converters.mil.mil.ops.defs._utils import broadcast_shapes
+from coremltools.converters.mil.mil.ops.defs._utils import (
+    broadcast_shapes,
+    promote_input_dtypes,
+)
 from coremltools.converters.mil.mil.types.symbolic import is_symbolic, any_symbolic
 
 
@@ -193,6 +196,7 @@ def _reshape_remaining_dimension_to_original_shape(x, original_shape, remaining_
 def Add(context, node):
     x = context[node.inputs[0]]
     y = context[node.inputs[1]]
+    x, y = promote_input_dtypes([x, y])
     x = mb.add(x=x, y=y, name=node.name)
     context.add(node.name, x)
 
@@ -764,7 +768,8 @@ def Mul(context, node):
 @register_tf_op
 def Neg(context, node):
     x = context[node.inputs[0]]
-    x = mb.mul(x=x, y=-1, name=node.name)
+    x, y = promote_input_dtypes([x, -1])
+    x = mb.mul(x=x, y=y, name=node.name)
     context.add(node.name, x)
 
 
@@ -887,7 +892,11 @@ def Conv2D(context, node):
         quant_bias = None
         W_hwio = context[node.inputs[1]]
 
-    W_oihw = mb.transpose(x=W_hwio, perm=[3, 2, 0, 1])
+    if quantization_type is not None:
+        W_oihw = _np.transpose(W_hwio, axes=[3, 2, 0, 1])
+    else:
+        W_oihw = mb.transpose(x=W_hwio, perm=[3, 2, 0, 1])
+
     data_format = node.attr.get("data_format", "NHWC")
     HW_dilations = _conv2d3d_strides_or_dilations(
         "dilations", node.attr.get("dilations"), data_format
@@ -1137,7 +1146,7 @@ def Fill(context, node):
     context.add(node.name, x)
 
 
-@register_tf_op
+@register_tf_op(tf_alias=["ImageProjectiveTransformV3"])
 def ImageProjectiveTransformV2(context, node):
     # Data shape format: [batch, height, width, channels]
     x = context[node.inputs[0]]
@@ -1145,16 +1154,38 @@ def ImageProjectiveTransformV2(context, node):
     transforms = context[node.inputs[1]]
     # 1-D Tensor [new_height, new_width]
     output_shape = context[node.inputs[2]]
-
-    if len(node.inputs) > 3:
-        raise NotImplementedError("'interpolation', 'fill_mode' not supported")
+    
+    # For V3, there is an additional fill_value input
+    if len(node.inputs) == 4:
+        fill_value = context[node.inputs[3]].val
+        if fill_value != 0.0:
+            msg = ("fill_value {} not supported for tf ImageProjectiveTransformV2/V3 op {}. "
+                   "Only fill_value = 0.0 is supported.").format(fill_value, node.name)
+            raise ValueError(msg)
+    
+    interpolation = node.attr.get("interpolation")
+    if interpolation != "BILINEAR":
+        msg = ("interpolation {} not supported for tf ImageProjectiveTransformV2/V3 op {}. "
+               "Only interpolation = BILINEAR is supported.").format(interpolation, node.name)
+        raise ValueError(msg)
+        
+    fill_mode = node.attr.get("fill_mode")
+    if fill_mode != "CONSTANT":
+        msg = ("fill_mode {} not supported for tf ImageProjectiveTransformV2/V3 op {}. "
+               "Only fill_mode = CONSTANT is supported.").format(fill_mode, node.name)
+        raise ValueError(msg)
+        
+    h_out = output_shape.val[0]
+    w_out = output_shape.val[1]
+    h_in = x.shape[1]
+    w_in = x.shape[2]
 
     # Don't allow non-zero c0 or c1, check for each batch
     n_batch = transforms.val.shape[0]
-    transform_matrix = _np.empty((n_batch, 6))
-    for b in range(n_batch):
-        c0 = transforms.val[b][6]
-        c1 = transforms.val[b][7]
+    transform_matrix = []
+    for batch in range(n_batch):
+        c0 = transforms.val[batch][6]
+        c1 = transforms.val[batch][7]
         if not (c0 == c1 == 0.0):
             raise NotImplementedError(
                 "'affine' op with 'transforms' contains non-zero " +
@@ -1162,8 +1193,32 @@ def ImageProjectiveTransformV2(context, node):
                     transforms
                 )
             )
-        # drop c0 and c1 values from the transform matrix
-        transform_matrix[b] = _np.delete(transforms.val[b], [6, 7])
+        # In the tensorflow affine transform function, the coordinate is in the original image size range,
+        # i.e., for the input image, x is in range [0, W_in), and y is in range [0, H_in)
+        # For the output image, x is in range [0, W_out), and y is in range [0, H_out)
+        # However, the MIL affine op is in the normalized coordinate, in which x and y are both in range [-1, 1]
+        # So we need to update the affine transformation matrix.
+        # We have the following four equations:
+        # (1) x_original_in = (2 * x_normalized_in + 1) * (W_in - 1)
+        # (2) y_original_in = (2 * y_normalized_in + 1) * (H_in - 1)
+        # (3) x_original_out = (2 * x_normalized_out + 1) * (W_out - 1)
+        # (4) y_original_out = (2 * y_normalized_out + 1) * (H_out - 1)
+        # The original transforms matrix is in the original coordinate:
+        # (i)  x_original_in = a * x_original_out + b * y_original_out + c
+        # (ii) y_original_in = d * x_original_out + e * y_original_out + f
+        # After plugging (1) - (4) into (i) (ii), we could have the new transformation matrix in the normalized coordinate
+        a, b, c, d, e, f = transforms.val[batch].tolist()[:6]
+        new_a = a * (w_out - 1) / (w_in - 1)
+        new_b = b * (h_out - 1) / (w_in - 1)
+        new_c = (2 * c + a * (w_out - 1) + b * (h_out - 1)) / (w_in - 1) - 1
+        new_d = d * (w_out - 1) / (h_in - 1)
+        new_e = e * (h_out - 1) / (h_in - 1)
+        new_f = (2 * f + d * (w_out - 1) + e * (h_out - 1)) / (h_in - 1) - 1
+        transform_matrix.append([new_a, new_b, new_c, new_d, new_e, new_f])
+        
+    transform_matrix = _np.array(transform_matrix)
+        
+        
 
     x = _transpose_NHWC_to_NCHW(x)
     x = mb.affine(
@@ -1174,7 +1229,7 @@ def ImageProjectiveTransformV2(context, node):
         sampling_mode="bilinear",
         padding_mode="constant",
         padding_value=0.0,
-        coordinates_mode="unnormalized",
+        coordinates_mode="normalized_minus_one_to_one",
         align_corners=True,
         name=node.name + "_affine",
     )
@@ -1184,8 +1239,8 @@ def ImageProjectiveTransformV2(context, node):
 
 @register_tf_op(tf_alias=["DivNoNan"])
 def RealDiv(context, node):
-    x = context[node.inputs[0]]
-    y = context[node.inputs[1]]
+    x = mb.cast(x=context[node.inputs[0]], dtype="fp32")
+    y = mb.cast(x=context[node.inputs[1]], dtype="fp32")
     x = mb.real_div(x=x, y=y, name=node.name)
     context.add(node.name, x)
 
@@ -1295,6 +1350,7 @@ def MatMul(context, node):
     b = context[node.inputs[1]]
     transpose_a = node.attr.get("adj_x", False) or node.attr.get("transpose_a", False)
     transpose_b = node.attr.get("adj_y", False) or node.attr.get("transpose_b", False)
+    a, b = promote_input_dtypes([a, b])
     x = mb.matmul(
         x=a, y=b, transpose_x=transpose_a, transpose_y=transpose_b, name=node.name
     )
@@ -1471,7 +1527,7 @@ def _softmax_cross_entropy_with_logits(feats, labels, name):
     y = mb.reduce_log_sum_exp(x=feats, axes=[-1], keep_dims=True)
     log_softmax = mb.sub(x=feats, y=y)
     loss = mb.mul(x=labels, y=log_softmax)
-    loss = mb.mul(x=-1, y=loss)
+    loss = mb.mul(x=loss, y=-1.)
     loss = mb.reduce_sum(x=loss, axes=[-1], name=name)
     return loss
 
@@ -1484,7 +1540,8 @@ def SparseSoftmaxCrossEntropyWithLogits(context, node):
     labels = mb.one_hot(
         indices=labels, 
         one_hot_vector_size=class_nums,
-        )
+    )
+    labels = mb.cast(x=labels, dtype="fp32")
     loss = _softmax_cross_entropy_with_logits(feats, labels, node.name)
     context.add(node.name, loss)
 
@@ -1692,9 +1749,8 @@ def Tan(context, node):
 def get_tuple(context, node):
     x = context[node.inputs[0]]
     if not isinstance(x, (list, tuple)):
-        raise ValueError(
-            "Op '{}' should return multiple output.".format(node.inputs[0])
-        )
+        # In some rare cases, the upstream op produces a single output
+        x = [x]
     idx = node.attr["index"]
     if idx >= len(x):
         msg = "Index {} out of range, op '{}' only has {} outputs: {}"
@@ -2162,13 +2218,73 @@ def Gather(context, node):
     x = mb.gather(x=x, indices=indices, axis=axis, name=node.name)
     context.add(node.name, x)
 
+def _perform_gather_with_batch_dims(x, indices, batch_dims, gather_func, func_args, name):
+    """
+    An utility function to compute gather and gather_nd with batch_dims
+    """
+    # (Step 1)
+    # Reshape x, indices with shape
+    # x: [batch_1, ..., batch_n, *remaining_x_shape]
+    # indices: [batch_1, ..., batch_n, *remaing_indices_shape]
+    # into shape
+    # x_reshape: [prod(batch_1, ..., batch_n), *remaning_x_shape]
+    # indices_reshape: [prod(batch_1, ..., batch_n), *remaning_indices_shape]
+    msg = ("The implementation of gather/gather_nd for iOS15 and older is not efficient. Highly recommend "
+           " set minimum_deployment_target=coremltools.target.iOS16 in the coremltools.convert() function."
+    )
+    _logging.warning(msg)
+    x_shape = mb.shape(x=x)
+    indices_shape = mb.shape(x=indices)
+    batch_shape = mb.gather(x=x_shape, indices=_np.array(range(batch_dims)), axis=0)
+    batch_prod = mb.reduce_prod(x=batch_shape, axes=[0], keep_dims=True)
+    x_remaining_shape = mb.gather(x=x_shape, indices=_np.array(range(batch_dims, x.rank)), axis=0)
+    indices_remaining_shape = mb.gather(x=indices_shape, indices=_np.array(range(batch_dims, indices.rank)), axis=0)
+    new_x_shape = mb.concat(values=[batch_prod, x_remaining_shape], axis=0)
+    new_indices_shape = mb.concat(values=[batch_prod, indices_remaining_shape], axis=0)
+    x_reshape = mb.reshape(x=x, shape=new_x_shape)
+    indices_reshape = mb.reshape(x=indices, shape=new_indices_shape)
+
+    # (Step 2)
+    # We iterate through the batch dimension, and compute the gather individually for each batch
+    # All results are stacked into a tensor with shape [prod(batch_1, ..., batch_n), *remaning_result_shape]
+    res = []
+    if batch_prod.val is None:
+        raise ValueError("batch dimenstion must be known at compile time")
+    for i in range(batch_prod.val[0]):
+        temp_x = mb.gather(x=x_reshape, indices=[i], axis=0)
+        temp_indices = mb.gather(x=indices_reshape, indices=[i], axis=0)
+        temp_x = mb.squeeze(x=temp_x, axes=[0])
+        temp_indices = mb.squeeze(x=temp_indices, axes=[0])
+        func_args.update({"x": temp_x, "indices": temp_indices})
+        temp = gather_func(**func_args)
+        res.append(temp)
+    res = mb.stack(values=res, axis=0)
+
+    # (Step 3)
+    # Finally, we reshape the result to shape [batch_1, ..., batch_n, *remaining_result_shape]
+    res_shape = mb.shape(x=res)
+    res_remaning_shape = mb.gather(x=res_shape, indices=_np.array(range(1, res_shape.shape[0])), axis=0)
+    res_new_shape = mb.concat(values=[batch_shape, res_remaning_shape], axis=0)
+    return mb.reshape(x=res, shape=res_new_shape, name=name)
+
 
 @register_tf_op
 def GatherV2(context, node):
     x = context[node.inputs[0]]
     indices = context[node.inputs[1]]
-    axis = context[node.inputs[2]]
-    x = mb.gather(x=x, indices=indices, axis=axis, name=node.name)
+    axis = context[node.inputs[2]].val
+    batch_dims = node.attr.get("batch_dims", 0)
+    if is_current_opset_version_compatible_with(target.iOS16):
+        # For iOS16 and above, we can directly use the batch_dims argument
+        x = mb.gather(x=x, indices=indices, axis=axis, batch_dims=batch_dims, name=node.name)
+    else:
+        # For iOS15 or below, we have to manually compute it 
+        if batch_dims == 0:
+            x = mb.gather(x=x, indices=indices, axis=axis, name=node.name)
+        else:
+            func_args = {"axis": axis - batch_dims}
+            x = _perform_gather_with_batch_dims(x, indices, batch_dims, mb.gather, func_args, node.name)
+        
     context.add(node.name, x)
 
 
@@ -2176,7 +2292,16 @@ def GatherV2(context, node):
 def GatherNd(context, node):
     x = context[node.inputs[0]]
     indices = context[node.inputs[1]]
-    x = mb.gather_nd(x=x, indices=indices, name=node.name)
+    batch_dims = node.attr.get("batch_dims", 0)
+    if is_current_opset_version_compatible_with(target.iOS16):
+        # For iOS16 and above, we can directly use the batch_dims argument
+        x = mb.gather_nd(x=x, indices=indices, batch_dims=batch_dims, name=node.name)
+    else:
+        if batch_dims == 0:
+            x = mb.gather_nd(x=x, indices=indices, name=node.name)
+        else:
+            x = _perform_gather_with_batch_dims(x, indices, batch_dims, mb.gather_nd, {}, node.name)
+
     context.add(node.name, x)
 
 
@@ -2472,7 +2597,26 @@ def ResizeBilinear(context, node):
         raise ValueError(
             '"ResizeBilinear" op: "align_corners" and "half_pixel_centers" are both True and this mode is not supported'
         )
-
+        
+    # In iOS16, we can support dynamic shape + any combination of aligh_corners and half_pixel_centers,
+    # if the output_shape comes from a pattern of input_shape * (h_scale, w_scale)
+    if is_current_opset_version_compatible_with(target.iOS16) and context[node.inputs[1]].val is None:
+        output_shape = context[node.inputs[1]]
+        if output_shape.op.op_type == "mul":
+            scale_factor_height = context[node.inputs[1]].op.y.val[0]
+            scale_factor_width = context[node.inputs[1]].op.y.val[1]
+            x = _transpose_NHWC_to_NCHW(x)
+            x = mb.upsample_bilinear(
+                x=x,
+                scale_factor_height=scale_factor_height,
+                scale_factor_width=scale_factor_width,
+                align_corners=align_corners,
+                half_pixel_centers=half_pixel_centers,
+            )
+            x = _transpose_NCHW_to_NHWC(x, node.name)
+            context.add(node.name, x)
+            return
+            
     if (align_corners and not half_pixel_centers) or \
        (not align_corners and not half_pixel_centers):
         # output shape needed to be known at compile time
@@ -2518,6 +2662,8 @@ def ResizeBilinear(context, node):
         if context[node.inputs[1]].val is None:
             # for the dynamic input shape case,
             # context[node.inputs[1]] is a mul(x=input_shape, y=scaling_factor) op.
+            if context[node.inputs[1]].op.op_type != "mul":
+                raise NotImplementedError("Cannot determine the scale factor for the bilinear resize layer.")
             scale_factor_height = context[node.inputs[1]].op.y.val[0]
             scale_factor_width = context[node.inputs[1]].op.y.val[1]
         else:
@@ -2816,8 +2962,8 @@ def CropAndResize(context, node):
         const_box_info = False
 
     crop_size = context[node.inputs[3]].val
-    method = "bilinear" if len(node.inputs) < 5 else context[node.inputs[4]].val
-    extrapolation_value = 1.0 if len(node.inputs) < 6 else context[node.inputs[5]].val
+    method = node.attr.get("method", "bilinear")
+    pad_value = node.attr.get("extrapolation_value", 0.0)
 
     # CoreML index information along with boxes
     if const_box_info:
@@ -2856,17 +3002,27 @@ def CropAndResize(context, node):
     x = _transpose_NHWC_to_NCHW(x)
 
     # Crop Resize
-    x = mb.crop_resize(
-        x=x,
-        roi=boxes,
-        target_height=h_out,
-        target_width=w_out,
-        normalized_coordinates=True,
-        spatial_scale=extrapolation_value,
-        box_coordinate_mode="CORNERS_HEIGHT_FIRST",
-        sampling_mode=method,
-    )
-
+    args = {
+        "x": x,
+        "roi": boxes,
+        "target_height": h_out,
+        "target_width": w_out,
+        "normalized_coordinates": True,
+        "spatial_scale": 1.0,
+        "box_coordinate_mode": "CORNERS_HEIGHT_FIRST",
+        "sampling_mode": method,
+    }
+    if is_current_opset_version_compatible_with(target.iOS16):
+        args["pad_value"] = pad_value
+    else:
+        if pad_value != 0.0:
+            msg = (
+                    "For iOS15 or older, only extrapolation_value=0.0 is supported or the tf CropAndResize op. "
+                    "Got {}"
+            ).format(pad_value)
+            raise ValueError(msg)
+    x = mb.crop_resize(**args)
+    
     # CoreML output format: [N, 1, C, h_out, w_out]
     # TF output format: [N, h_out, w_out, C]
     x = mb.squeeze(x=x, axes=[1])
@@ -3113,9 +3269,11 @@ def Size(context, node):
 def LogSoftmax(context, node):
     x = context[node.inputs[0]]
     axis = node.attr.get('axis', -1)
-    y = mb.reduce_log_sum_exp(x=x, axes=[axis], keep_dims=True)
-    x = mb.sub(x=x, y=y, name=node.name)
-    context.add(node.name, x)
+    x_max = mb.reduce_max(x=x, axes=[axis], keep_dims=True)
+    x_off = mb.sub(x=x, y=x_max)
+    y = mb.reduce_log_sum_exp(x=x_off, axes=[axis], keep_dims=True)
+    res = mb.sub(x=x_off, y=y, name=node.name)
+    context.add(node.name, res)
 
 @register_tf_op
 def AudioSpectrogram(context, node):

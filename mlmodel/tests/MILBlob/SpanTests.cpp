@@ -326,6 +326,36 @@ int testSpanTestsIteratorImmutableExplicitCbeginCend()
     return 0;
 }
 
+int testSpanTestsIteratorImmutableExplicitRBeginREnd()
+{
+    const std::vector<int> values = {1, 2, 3, 4};
+    auto span = MakeSpan(values);
+
+    int counter = 4;
+    for (auto itr = span.rbegin(); itr != span.rend(); ++itr) {
+        static_assert(std::is_same<decltype(*itr), const int&>::value, "iterator must be const");
+        ML_ASSERT_EQ(*itr, counter--);
+    }
+    ML_ASSERT_EQ(counter, 0);
+
+    return 0;
+}
+
+int testSpanTestsIteratorImmutableExplicitCRBeginCREnd()
+{
+    const std::vector<int> values = {1, 2, 3, 4};
+    auto span = MakeSpan(values);
+
+    int counter = 4;
+    for (auto itr = span.crbegin(); itr != span.crend(); ++itr) {
+        static_assert(std::is_same<decltype(*itr), const int&>::value, "iterator must be const");
+        ML_ASSERT_EQ(*itr, counter--);
+    }
+    ML_ASSERT_EQ(counter, 0);
+
+    return 0;
+}
+
 //----------------------------------------------------------------------
 // Mutable Iteration
 //----------------------------------------------------------------------
@@ -374,6 +404,37 @@ int testSpanTestsIteratorMutableExplicitCbeginCend()
         ML_ASSERT_EQ(*itr, counter++);
     }
     ML_ASSERT_EQ(counter, 5);
+
+    return 0;
+}
+
+int testSpanTestsIteratorMutableExplicitRbeginRend()
+{
+    std::vector<int> values = {1, 2, 3, 4};
+    auto span = MakeSpan(values);
+
+    int counter = 4;
+    for (auto itr = span.rbegin(); itr != span.rend(); ++itr) {
+        ML_ASSERT_EQ(*itr, counter--);
+        (*itr)--;
+        ML_ASSERT_EQ(*itr, counter);
+    }
+    ML_ASSERT_EQ(counter, 0);
+
+    return 0;
+}
+
+int testSpanTestsIteratorMutableExplicitCRbeginCRend()
+{
+    std::vector<int> values = {1, 2, 3, 4};
+    auto span = MakeSpan(values);
+
+    int counter = 4;
+    for (auto itr = span.crbegin(); itr != span.crend(); ++itr) {
+        static_assert(std::is_same<decltype(*itr), const int&>::value, "iterator must be const");
+        ML_ASSERT_EQ(*itr, counter--);
+    }
+    ML_ASSERT_EQ(counter, 0);
 
     return 0;
 }

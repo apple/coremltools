@@ -469,6 +469,60 @@ class TestUpsampleBilinear:
             backend=backend,
         )
 
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend, align_corners, half_pixel_centers", 
+        itertools.product(
+            [True, False], 
+            backends,
+            [True, False],
+            [True, False],
+        )
+    )
+    def test_builder_to_backend_smoke_iOS16(self, use_cpu_only, backend, align_corners, half_pixel_centers):
+        if backend[0] == "neuralnetwork" or ct.utils._macos_version() < (13, 0):
+            pytest.skip("The new half_pixel_centers argument only available in iOS16")
+
+        if align_corners and half_pixel_centers:
+            pytest.skip("Invalid configuration of align_corners and half_pixel_centers")
+
+        x = np.array([1, 2], dtype=np.float32).reshape(1, 1, 1, 2)
+        input_placeholder_dict = {"x": mb.placeholder(shape=x.shape)}
+        input_value_dict = {"x": x}
+
+        def build_upsample_bilinear(x):
+            return mb.upsample_bilinear(
+                x=x,
+                scale_factor_height=2,
+                scale_factor_width=3,
+                align_corners=align_corners,
+                half_pixel_centers=half_pixel_centers,
+            )
+
+        expected_output_type = (1, 1, 2, 6, types.fp32)
+        
+        if align_corners and not half_pixel_centers:
+            expected_output = [1., 1.2, 1.4, 1.6, 1.8, 2., 1., 1.2, 1.4, 1.6, 1.8, 2.]
+        elif not align_corners and half_pixel_centers:
+            expected_output = [1., 1., 1.33334, 1.66667, 2., 2., 1., 1., 1.33334, 1.66667, 2., 2.]
+        elif not align_corners and not half_pixel_centers:
+            expected_output = [1., 1.33334, 1.66667, 2., 2., 2., 1., 1.33334, 1.66667, 2., 2., 2.]
+        else:
+            raise ValueError("align_corners and half_pixel_centers cannot be both True")
+
+        expected_output = [np.array(expected_output, dtype=np.float32).reshape(1, 1, 2, 6)]
+
+        run_compare_builder(
+            build_upsample_bilinear,
+            input_placeholder_dict,
+            input_value_dict,
+            expected_output_type,
+            expected_output,
+            use_cpu_only=use_cpu_only,
+            frontend_only=False,
+            backend=backend,
+            minimum_deployment_target=ct.target.iOS16,
+        )
+
     @pytest.mark.skipif(not testing_reqs._HAS_TORCH, reason="PyTorch not installed.")
     @pytest.mark.parametrize(
         "use_cpu_only, backend, input_shape, scale_factor, align_corners, recompute_scale_factor",
@@ -661,6 +715,63 @@ class TestCrop:
 
 
 class TestCropResize:
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend",
+        itertools.product([True, False], backends),
+    )
+    def test_builder_to_backend_smoke_pad_value(self, use_cpu_only, backend):
+        if backend[0] == "neuralnetwork":
+            pytest.skip("pad_mode only supported on iOS16 or above")
+            
+        if ct.utils._macos_version() < (13, 0):
+            pytest.skip("pad_value not supported in macOS12 or older.")
+
+        x = np.array(
+            [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 16]],
+            dtype=np.float32,
+        ).reshape(1, 1, 4, 4)
+
+        roi = np.array([
+            [0, 0.1, 0.3, 1.3, 1],
+            [0, 0.5, 1.8, 1., 0.3],
+            [0, 0.0, 0.4, 0.6, 0.7],
+        ], dtype=np.float32).reshape(3, 1, 5, 1, 1)
+        
+        def build(x):
+            return mb.crop_resize(
+                    x=x,
+                    roi=roi,
+                    target_width=2,
+                    target_height=2,
+                    normalized_coordinates=True,
+                    box_coordinate_mode="CORNERS_HEIGHT_FIRST",
+                    sampling_mode="ALIGN_CORNERS",
+                    pad_value=10.0,
+            )
+        
+        expected_output_type = [
+            (3, 1, 1, 2, 2, types.fp32),
+        ]
+        expected_output = [
+            np.array([ 3.1, 5.2, 10, 10, 10, 7.899, 10, 13.9, 2.2, 3.1, 9.4, 10.3], dtype=np.float32).reshape(3, 1, 1, 2, 2),
+        ]
+
+        input_placeholder_dict = {"x": mb.placeholder(shape=(1, 1, 4, 4))}
+        input_value_dict = {"x": x}
+
+        run_compare_builder(
+            build,
+            input_placeholder_dict,
+            input_value_dict,
+            expected_output_type,
+            expected_output,
+            use_cpu_only=use_cpu_only,
+            frontend_only=False,
+            backend=backend,
+            minimum_deployment_target=ct.target.iOS16,
+        )
+        
+        
     @pytest.mark.parametrize(
         "use_cpu_only, backend, is_symbolic",
         itertools.product([True, False], backends, [True, False]),

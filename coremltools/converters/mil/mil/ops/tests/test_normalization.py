@@ -5,6 +5,7 @@
 
 import itertools
 import numpy as np
+import platform
 import pytest
 
 from .testing_utils import UNK_SYM, run_compare_builder
@@ -528,6 +529,9 @@ class TestNormalizationLayerNorm:
 
         if backend == ("mlprogram", "fp16") and not use_cpu_only:
             pytest.xfail("rdar://80662357 ([GPU failures] LayerNorm FP16 tests failing on GPU with numerical errors)")
+            
+        if backend[0] == "neuralnetwork" and not use_cpu_only and platform.machine() == "arm64":
+            pytest.xfail("rdar://98015195 ([M1 native tests] Some MIL unittests are failing on M1 native)")
 
         rank, axes = rank_and_axes
         shape = np.random.randint(low=2, high=6, size=rank)

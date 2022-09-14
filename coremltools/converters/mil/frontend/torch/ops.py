@@ -21,11 +21,14 @@ from coremltools.converters.mil.mil import (
 )
 from coremltools.converters.mil._deployment_compatibility import AvailableTarget as target
 from coremltools.converters.mil.mil.block import curr_opset_version, is_current_opset_version_compatible_with
-from coremltools.converters.mil.mil.ops.defs._utils import solve_slice_by_index_shape
+from coremltools.converters.mil.mil.ops.defs._utils import (
+    MAX_SIZE_CONSTANT_FOLDING,
+    promote_input_dtypes,
+    solve_slice_by_index_shape,
+)
 from coremltools.converters.mil.mil.types import is_bool
 from coremltools.converters.mil.mil.types.symbolic import any_symbolic, is_symbolic, is_compatible_symbolic_vector
 from coremltools.converters.mil.mil.var import Var, ListVar
-from coremltools.converters.mil.mil.ops.defs._utils import MAX_SIZE_CONSTANT_FOLDING
 
 # The pytorch args for many of the below ops were sourced from
 # https://github.com/pytorch/pytorch/blob/d971007c291c0ead1003d12cd553d18ddb582207/torch/csrc/jit/mobile/register_mobile_ops.cpp#L216
@@ -133,10 +136,10 @@ NUM_TO_TORCH_DTYPE = {
     1: torch.int8,
     2: torch.int16,
     3: torch.int32,
-    4: torch.int64,
+    4: torch.int32,
     5: torch.float16,
     6: torch.float32,
-    7: torch.float64,
+    7: torch.float32,
     11: torch.bool,
 }
 
@@ -157,10 +160,10 @@ NUM_TO_NUMPY_DTYPE = {
     1: _np.int8,
     2: _np.int16,
     3: _np.int32,
-    4: _np.int64,
+    4: _np.int32,
     5: _np.float16,
     6: _np.float32,
-    7: _np.float64,
+    7: _np.float32,
     11: _np.bool,
 }
 
@@ -168,9 +171,9 @@ NUM_TO_NUMPY_DTYPE = {
 
 NUM_TO_DTYPE_STRING = {
     3: "int32",
-    4: "int64",
+    4: "int32",
     6: "fp32",
-    7: "fp64",
+    7: "fp32",
     11: "bool",
 }
 
@@ -435,7 +438,8 @@ def norm(context, node):
 def _vector_norm(x, order, dim, keep_dims, name):
     if order.val == 0:
         # sum(x!=0)
-        temp = mb.not_equal(x=x, y=0)
+        x = mb.cast(x=x, dtype="fp32")
+        temp = mb.not_equal(x=x, y=0.)
         temp = mb.cast(x=temp, dtype='int32')
         temp = mb.reduce_sum(x=temp, axes=dim, keep_dims=keep_dims, name=name)
     elif order.val > VALUE_CLOSE_TO_INFINITY:
@@ -449,7 +453,8 @@ def _vector_norm(x, order, dim, keep_dims, name):
     else:
         # sum(abs(x)^{ord})^{(1 / ord)}
         temp = mb.abs(x=x)
-        temp = mb.pow(x=temp, y=order.val)
+        x, y = promote_input_dtypes([temp, order.val])
+        temp = mb.pow(x=x, y=y)
         temp = mb.reduce_sum(x=temp, axes=dim, keep_dims=keep_dims)
         temp = mb.pow(x=temp, y=1./order.val, name=name)
     return temp
@@ -570,6 +575,7 @@ def eq(context, node):
         x = mb.cast(x=x, dtype='int32')
     if is_bool(y.dtype):
         y = mb.cast(x=y, dtype='int32')
+    x, y = promote_input_dtypes([x, y])
     equal_to = mb.equal(x=x, y=y, name=node.name)
     context.add(equal_to)
 
@@ -590,28 +596,32 @@ def ne(context, node):
 @register_torch_op
 def le(context, node):
     inputs = _get_inputs(context, node, expected=2)
-    less_equal = mb.less_equal(x=inputs[0], y=inputs[1], name=node.name)
+    x, y = promote_input_dtypes(inputs)
+    less_equal = mb.less_equal(x=x, y=y, name=node.name)
     context.add(less_equal)
 
 
 @register_torch_op
 def lt(context, node):
     inputs = _get_inputs(context, node, expected=2)
-    less = mb.less(x=inputs[0], y=inputs[1], name=node.name)
+    x, y = promote_input_dtypes(inputs)
+    less = mb.less(x=x, y=y, name=node.name)
     context.add(less)
 
 
 @register_torch_op
 def ge(context, node):
     inputs = _get_inputs(context, node, expected=2)
-    greater_equal = mb.greater_equal(x=inputs[0], y=inputs[1], name=node.name)
+    x, y = promote_input_dtypes(inputs)
+    greater_equal = mb.greater_equal(x=x, y=y, name=node.name)
     context.add(greater_equal)
 
 
 @register_torch_op
 def gt(context, node):
     inputs = _get_inputs(context, node, expected=2)
-    greater = mb.greater(x=inputs[0], y=inputs[1], name=node.name)
+    x, y = promote_input_dtypes(inputs[:2])
+    greater = mb.greater(x=x, y=y, name=node.name)
     context.add(greater)
 
 
@@ -692,8 +702,8 @@ def add(context, node):
     # rdar://60175736
     if len(add_inputs) > 2 and add_inputs[2].val != 1:
         raise ValueError("ADD does not support scale factor param")
-
-    add_node = mb.add(x=add_inputs[0], y=add_inputs[1], name=node.name)
+    x, y = promote_input_dtypes(add_inputs[:2])
+    add_node = mb.add(x=x, y=y, name=node.name)
     context.add(add_node)
 
 @register_torch_op
@@ -997,6 +1007,8 @@ def linspace(context, node):
             # step = (end - start) / (nums - 1)
             x = mb.sub(x=end, y=start)
             y = mb.sub(x=nums, y=1)
+            x = mb.cast(x=x, dtype="fp32")
+            y = mb.cast(x=y, dtype="fp32")
             step = mb.real_div(x=x, y=y)
 
             # Note that the range_1d op excluded the end point,
@@ -1203,7 +1215,7 @@ def maximum(context, node):
 
 @register_torch_op
 def div(context, node):
-    inputs = _get_inputs(context, node, expected=[2,3])
+    inputs = _get_inputs(context, node, expected=[2, 3])
 
     if len(inputs) > 2 and inputs[2] is not None:
         rounding_mode = inputs[2].val
@@ -1218,7 +1230,9 @@ def div(context, node):
             # e.g.:
             # values before trunc: [2.6, -3.4, -3.6]
             # values after trunc: [2, -3, -3]
-            z = mb.real_div(x=inputs[0], y=inputs[1])
+            x = mb.cast(x=inputs[0], dtype="fp32")
+            y = mb.cast(x=inputs[1], dtype="fp32")
+            z = mb.real_div(x=x, y=y)
             s = mb.sign(x=z)
             all_positive = mb.mul(x=z, y=s)
             all_positive_floor = mb.floor(x=all_positive)
@@ -1226,7 +1240,9 @@ def div(context, node):
         else:
             raise NotImplementedError("rounding mode \"{}\" not supported in the \"div\" op".format(rounding_mode))
     else:
-        res = mb.real_div(x=inputs[0], y=inputs[1], name=node.name)
+        x = mb.cast(x=inputs[0], dtype="fp32")
+        y = mb.cast(x=inputs[1], dtype="fp32")
+        res = mb.real_div(x=x, y=y, name=node.name)
     context.add(res)
 
 
@@ -1248,20 +1264,16 @@ def true_divide(context, node):
 @register_torch_op
 def mul(context, node):
     inputs = _get_inputs(context, node, expected=2)
-
-    for i, input in enumerate(inputs):
-        if is_bool(input.dtype):
-            inputs[i] = mb.cast(x=inputs[i], dtype="int32")
-
-    res = mb.mul(x=inputs[0], y=inputs[1], name=node.name)
+    x, y = promote_input_dtypes(inputs)
+    res = mb.mul(x=x, y=y, name=node.name)
     context.add(res)
 
 
 @register_torch_op()
 def pow(context, node):
     inputs = _get_inputs(context, node, expected=2)
-
-    res = mb.pow(x=inputs[0], y=inputs[1], name=node.name)
+    x, y = promote_input_dtypes(inputs)
+    res = mb.pow(x=x, y=y, name=node.name)
     context.add(res)
 
 
@@ -1287,6 +1299,7 @@ def sub(context, node):
         if alpha != 1:
             raise ValueError("SUB does not support scale factor param")
 
+    x, y = promote_input_dtypes([x, y])
     res = mb.sub(x=x, y=y, name=node.name)
     context.add(res)
 
@@ -1430,21 +1443,30 @@ def adaptive_avg_pool2d(context, node):
 
     context.add(avg_pool)
 
-@register_torch_op
-def constant_pad_nd(context, node):
+@register_torch_op(torch_alias=['constant_pad_nd'])
+def pad(context, node):
     inputs = _get_inputs(context, node)
     x = inputs[0]
+
     pad = inputs[1]
-    if pad.op.op_type == "const":
+    if pad.val is not None:
         pad = pad.val.reshape((-1, 2))[::-1].reshape(-1).tolist()
         missing_dims = x.rank - (len(pad) // 2)
         pad = [0, 0] * missing_dims + pad
 
-    scalar_val = inputs[2] if inputs[2] else 0.0
-    if inputs[2] and inputs[2].op.op_type == "const":
+    if len(inputs) == 4:
+        mode = inputs[2].val
+        assert mode in ('constant', 'reflect', 'replicate')
+        val_index = 3
+    else:
+        mode = 'constant'
+        val_index = 2
+
+    scalar_val = inputs[val_index] if inputs[val_index] else 0.0
+    if inputs[val_index] and inputs[val_index].op.op_type == "const":
         scalar_val = float(scalar_val.val)
 
-    res = mb.pad(x=x, pad=pad, mode="constant", constant_val=scalar_val, name=node.name)
+    res = mb.pad(x=x, pad=pad, mode=mode, constant_val=scalar_val, name=node.name)
     context.add(res)
 
 @register_torch_op
@@ -1900,7 +1922,7 @@ def _add_gru_layer(_input, h0, wi, wh, bi, bh, h_list_name, h_name):
 
         # h = (1-zt) * nt + zt* h_prev
         # h : (batch_size, hidden_dim)
-        h_1 = mb.sub(x=1, y=zt)
+        h_1 = mb.sub(x=1., y=zt)
         h_1 = mb.mul(x=h_1, y=nt)
         h_2 = mb.mul(x=zt, y=h_prev)
         h = mb.add(x=h_1, y=h_2)
@@ -1932,16 +1954,18 @@ def _add_gru_layer(_input, h0, wi, wh, bi, bh, h_list_name, h_name):
     )
 
     # get the last state of h_list
-    h = mb.slice_by_index(
-        x = h_list,
-        begin=[-1,0,0],
-        end=[-2,0,0],
-        begin_mask=[False, True, True],
-        end_mask=[False, True, True],
-        stride=[-1, 1, 1],
-        name=h_name,
-
-    )
+    if seq_len.val is None or seq_len.val > 1:
+        h = mb.slice_by_index(
+            x = h_list,
+            begin=[-1, 0, 0],
+            end=[-2, 0, 0],
+            begin_mask=[False, True, True],
+            end_mask=[False, True, True],
+            stride=[-1, 1, 1],
+            name=h_name,
+        )
+    else:
+        h = h_list
 
     return h_list, h
 
@@ -2524,7 +2548,7 @@ def upsample_linear1d(context, node):
         x = mb.torch_upsample_bilinear(
             x=x,
             output_height=output_size[0],
-            output_width=1.,
+            output_width=1,
             align_corners=align_corners,
         )
         x = mb.squeeze(x=x, axes=[3], name=node.name)
@@ -2641,7 +2665,7 @@ def upsample_nearest1d(context, node):
         x = mb.torch_upsample_nearest_neighbor(
             x=x,
             output_height=output_size[0],
-            output_width=1.,
+            output_width=1,
         )
         x = mb.squeeze(x=x, axes=[3], name=node.name)
         context.add(x)
@@ -3069,14 +3093,14 @@ def index_put(context, node):
 
     indices_type = indices[0].sym_type.get_primitive()
 
-    if indices_type == types.bool:
+    if types.is_bool(indices_type):
         assert len(indices) == 1, "Unsupported index_put_ usage."
         indices = indices[0]
         assert indices.shape == x.shape, "indices shape must equal to input shape for index put operation."
         indices = mb.cast(x=indices, dtype="int32")
         indices = mb.non_zero(x=indices)
-
-    if indices_type == types.int:
+    
+    if types.is_int(indices_type):
         if len(indices) > 1:
             indices = mb.stack(values=indices, axis=rank-1)
         else:
@@ -3256,13 +3280,17 @@ def ones(context, node):
 @register_torch_op
 def ones_like(context, node):
     inputs = _get_inputs(context, node, expected=6)
-    size = mb.shape(x=inputs[0])
-    # dtype = NUM_TO_TORCH_DTYPE[inputs[1].val] unused
-    # layout = inputs[2] unused
-    # device = inputs[3] unused
-    # requires_grad = inputs[4] unused
-    # out = inputs[5] unused
-    fill = mb.fill(shape=size, value=1.0, name=node.name)
+    x = inputs[0]
+    if is_current_opset_version_compatible_with(target.iOS16):
+        fill = mb.fill_like(ref_tensor=x, value=1.0, name=node.name)
+    else:
+        size = mb.shape(x=x)
+        # dtype = NUM_TO_TORCH_DTYPE[inputs[1].val] unused
+        # layout = inputs[2] unused
+        # device = inputs[3] unused
+        # requires_grad = inputs[4] unused
+        # out = inputs[5] unused
+        fill = mb.fill(shape=size, value=1.0, name=node.name)
     context.add(fill)
 
 def _make_fill_op(size, val, name):
@@ -3272,7 +3300,7 @@ def _make_fill_op(size, val, name):
     fill = mb.fill(shape=size, value=val, name=name)
     return fill
 
-@register_torch_op()
+@register_torch_op
 def full(context, node):
     inputs = _get_inputs(context, node)
     size = inputs[0]
@@ -3280,15 +3308,19 @@ def full(context, node):
     result = _make_fill_op(size, val, node.name)
     context.add(result)
 
-@register_torch_op()
+@register_torch_op
 def full_like(context, node):
     inputs = _get_inputs(context, node, expected=7)
-    size = mb.shape(x=inputs[0])
+    x = inputs[0]
     val = inputs[1].val
-    result = _make_fill_op(size, val, node.name)
+    if is_current_opset_version_compatible_with(target.iOS16):
+        result = mb.fill_like(ref_tensor=x, value=val, name=node.name)
+    else:
+        size = mb.shape(x=inputs[0])
+        result = _make_fill_op(size, val, node.name)
     context.add(result)
 
-@register_torch_op()
+@register_torch_op
 def new_full(context, node):
     # The difference between "new_full" and "full" is that the "new_full" is called from
     # an existing tensor: tensor.new_full(size, fill_value), while the "full" is called
@@ -3300,13 +3332,13 @@ def new_full(context, node):
     result = _make_fill_op(size, val, node.name)
     context.add(result)
 
-@register_torch_op()
+@register_torch_op
 def bitwise_not(context, node):
     inputs = _get_inputs(context, node)
     x = inputs[0]
     dtype = x.dtype
     if types.is_int(dtype):
-        x = mb.add(x=x, y=1.0)
+        x = mb.add(x=x, y=1)
         x = mb.mul(x=x, y=-1, name=node.name)
     elif types.is_bool(dtype):
         x = mb.logical_not(x=x, name=node.name)
@@ -3415,7 +3447,8 @@ def nll_loss(context, node):
     if ignore_index.val != -100:
         raise NotImplementedError("ignore index not supported for NLLLoss.")
 
-    x = mb.mul(x=x, y=-1)
+    x = mb.cast(x=x, dtype="fp32")
+    x = mb.mul(x=x, y=-1.)
     range_indices = mb.range_1d(end=batch_size, start=0, step=1)
     total_indices = mb.stack(values=[range_indices, target], axis=1)
     loss = mb.gather_nd(x=x, indices=total_indices)
@@ -3426,7 +3459,7 @@ def nll_loss(context, node):
     elif reduction == "sum":
         out = mb.reduce_sum(x=loss, axes=[0], keep_dims=False, name=node.name)
     elif reduction == "mean":
-        out = mb.real_div(x=loss, y=batch_size)
+        out = mb.real_div(x=loss, y=_np.float(batch_size))
         out = mb.reduce_sum(x=out, axes=[0], keep_dims=False, name=node.name)
     else:
         raise NotImplementedError("Unsupported reduction type for NLLLoss.")
@@ -3449,8 +3482,11 @@ def hardsigmoid(context, node):
 
 @register_torch_op
 def gelu(context, node):
-    inputs = _get_inputs(context, node, expected=1)
-
+    inputs = _get_inputs(context, node)
+    assert len(inputs) in (1, 2)
+    if len(inputs) == 2:
+        approximate = inputs[1].val
+        assert approximate == 'none'
     res = mb.gelu(x=inputs[0], name=node.name)
     context.add(res)
 
@@ -3846,7 +3882,10 @@ def zeros_like(context, node):
         zeros_like = mb.const(val=zeros, name=node.name)
     else:
         value = np_type(0)
-        zeros_like = mb.fill(shape=shape, value=value, name=node.name)
+        if is_current_opset_version_compatible_with(target.iOS16):
+            zeros_like = mb.fill_like(ref_tensor=x, value=value, name=node.name)
+        else:
+            zeros_like = mb.fill(shape=shape, value=value, name=node.name)
 
     context.add(zeros_like)
 
@@ -4005,6 +4044,9 @@ def _abs(context, node):
 def repeat(context, node):
     x = context[node.inputs[0]]
     reps = context[node.inputs[1]]
+
+    if len(reps.val) > len(x.shape):
+        x = mb.expand_dims(x=x, axes=list(range(len(reps.val) - x.rank)))
     context.add(mb.tile(x=x, reps=reps, name=node.name))
 
 @register_torch_op
@@ -4172,8 +4214,12 @@ def threshold(context, node):
     context.add(gt_node)
     gt_node_32 = mb.cast(x=gt_node, dtype="fp32", name=node.name + '_ge32')
 
-    mul_node = mb.linear_activation(x=gt_node_32, alpha=float(threshold_val.val - alpha.val),
-                                    name=node.name + '_mul')
+    mul_node = mb.linear_activation(
+        x=gt_node_32,
+        alpha=float(threshold_val.val - alpha.val),
+        beta=0.,
+        name=node.name + '_mul'
+    )
     context.add(mul_node)
 
     final_node = mb.add(x=mul_node, y=threshold_node, name=node.name)
@@ -4232,7 +4278,8 @@ def where(context, node):
 @register_torch_op
 def neg(context, node):
     inputs = _get_inputs(context, node, expected=1)
-    context.add(mb.mul(x=inputs[0], y=-1, name=node.name))
+    x, y = promote_input_dtypes([inputs[0], -1])
+    context.add(mb.mul(x=x, y=y, name=node.name))
 
 
 @register_torch_op

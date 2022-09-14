@@ -68,7 +68,16 @@ def _try_to_transform(op, block):
         ops_to_remove.append(mul_op_2)
 
     else:
-        return False
+        other_parent_op = mul_op.x.op if mul_op.y == add_op.outputs[0] else mul_op.y.op
+        if other_parent_op.op_type != "mul":
+            return False
+        if not (_check_var_scalar_value(other_parent_op.x, 0.5) or _check_var_scalar_value(other_parent_op.y, 0.5)):
+            return False
+        if not (other_parent_op.x == root_var or other_parent_op.y == root_var):
+            return False
+        ops_to_remove.append(other_parent_op)
+        ops_to_remove.append(mul_op)
+        mul_op_2 = mul_op
 
     # check that none of the op in this pattern is connected to the output
     # (except the last mul op)
@@ -127,7 +136,13 @@ class fuse_gelu_exact(AbstractGraphPass):
           |                                                   |
           |----------------------------------------------------
 
-    both result in :
+    (3)
+        [...] ----> div (1.414) ---> erf ---> add (1) -----> mul ------> [...]
+          |                                                   ^
+          |                                                   |
+          |---------------> mul(0.5) --------------------------
+
+    all result in :
         [...] ----> gelu (mode=EXACT) ---> [...]
     """
     def apply(self, prog):

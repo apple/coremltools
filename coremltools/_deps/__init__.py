@@ -46,7 +46,7 @@ MSG_ONLY_MACOS = "Only supported on macOS"
 _HAS_SKLEARN = True
 _SKLEARN_VERSION = None
 _SKLEARN_MIN_VERSION = "0.17"
-_SKLEARN_MAX_VERSION = "0.19.2"
+_SKLEARN_MAX_VERSION = "1.1.2"
 
 
 def __get_sklearn_version(version):
@@ -98,7 +98,7 @@ _HAS_TF = True
 _HAS_TF_1 = False
 _HAS_TF_2 = False
 _TF_1_MIN_VERSION = "1.12.0"
-_TF_1_MAX_VERSION = "1.15.0"
+_TF_1_MAX_VERSION = "1.15.4"
 _TF_2_MIN_VERSION = "2.1.0"
 _TF_2_MAX_VERSION = "2.8.0"
 

@@ -10,11 +10,8 @@ from coremltools.converters.mil.mil import (
     types,
 )
 from coremltools.converters.mil.mil.input_type import (
-    BoolInputType,
     DefaultInputs,
     InputSpec,
-    IntInputType,
-    IntTensorInputType,
     TensorInputType
 )
 from coremltools.converters.mil.mil.operation import VALUE
@@ -26,19 +23,20 @@ class ReductionAxes(Operation):
     Reduction Op Superclasses
     """
     input_spec = InputSpec(
-        x=TensorInputType(),
-        axes=IntTensorInputType(const=True, optional=True),
-        keep_dims=BoolInputType(const=True, optional=True),
+        x=TensorInputType(type_domain="T"),
+        axes=TensorInputType(const=True, optional=True, type_domain=types.int32),
+        keep_dims=TensorInputType(const=True, optional=True, type_domain=types.bool),
     )
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32, types.int32),
+    }
 
     def default_inputs(self):
         return DefaultInputs(
             axes=None,
             keep_dims=False,
             )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     def type_inference(self):
         x_type = self.x.dtype
@@ -73,19 +71,20 @@ class ReductionAxes(Operation):
 
 class ReductionAxis(Operation):
     input_spec = InputSpec(
-        x=TensorInputType(),
-        axis=IntInputType(const=True, optional=True),
-        keep_dims=BoolInputType(const=True, optional=True),
+        x=TensorInputType(type_domain="T"),
+        axis=TensorInputType(const=True, optional=True, type_domain=types.int32),
+        keep_dims=TensorInputType(const=True, optional=True, type_domain=types.bool),
     )
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32, types.int32),
+    }
 
     def default_inputs(self):
         return DefaultInputs(
             axis=-1,
             keep_dims=False,
             )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     def _find_reduced_shape(self):
         x_shape = self.x.shape
@@ -116,7 +115,6 @@ class ReductionAxis(Operation):
         raise NotImplementedError()
 
 
-@register_op
 class reduce_arg(ReductionAxis):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -163,15 +161,12 @@ class reduce_argmax(reduce_arg):
 
     Attributes
     ----------
-    T: f32, int32
+    T: fp16, fp32, i32
 
     References
     ----------
     See `tf.math.argmax <https://www.tensorflow.org/api_docs/python/tf/math/argmax>`_.
     """
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     def get_operator(self):
         return np.argmax
@@ -201,16 +196,13 @@ class reduce_argmin(reduce_arg):
 
     Attributes
     ----------
-    T: f32, int32
+    T: fp16, fp32, i32
 
     References
     ----------
     See `tf.math.argmin <https://www.tensorflow.org/api_docs/python/tf/math/argmin>`_.
 
     """
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     def get_operator(self):
         return np.argmin
@@ -247,9 +239,6 @@ class reduce_l1_norm(ReductionAxes):
     See `reduce_mean <https://www.tensorflow.org/api_docs/python/tf/math/reduce_mean?version=stable>`_.
     
     """
-    
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     def get_operator(self):
         def l1_norm(x, axis=None, keepdims=False):
@@ -284,9 +273,6 @@ class reduce_l2_norm(ReductionAxes):
     ----------
     T: i32, fp16, fp32
     """
-    
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     def get_operator(self):
         def l2_norm(x, axis=None, keepdims=False):
@@ -322,9 +308,6 @@ class reduce_log_sum(ReductionAxes):
     ----------
     T: i32, fp16, fp32
     """
-    
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     def get_operator(self):
         def log_sum(x, axis=None, keepdims=False):
@@ -368,9 +351,6 @@ class reduce_log_sum_exp(ReductionAxes):
     See `tf.math.reduce_logsumexp <https://www.tensorflow.org/api_docs/python/tf/math/reduce_logsumexp>`_.
     
     """
-    
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     def get_operator(self):
         def operator(a, axis=None, keepdims=False):
@@ -451,9 +431,6 @@ class reduce_mean(ReductionAxes):
     ----------
     For an example, see `tf.math.reduce_mean <https://www.tensorflow.org/api_docs/python/tf/math/reduce_mean?version=stable>`_.
     """
-    
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     def get_operator(self):
         return np.mean
@@ -485,9 +462,6 @@ class reduce_min(ReductionAxes):
     ----------
     T: i32, fp16, fp32
     """
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     def get_operator(self):
         return np.min
@@ -521,9 +495,6 @@ class reduce_prod(ReductionAxes):
 
     """
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
     def get_operator(self):
         return np.prod
 
@@ -555,9 +526,6 @@ class reduce_sum(ReductionAxes):
     T: i32, fp16, fp32
     """
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
     def get_operator(self):
         return np.sum
 
@@ -588,9 +556,6 @@ class reduce_sum_square(ReductionAxes):
     ----------
     T: i32, fp16, fp32
     """
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     def get_operator(self):
         def sum_squre(x, axis=None, keepdims=False):

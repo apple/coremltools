@@ -125,7 +125,8 @@ class TestIODataTypes(unittest.TestCase):
 
     def test_random_forest_classifier(self):
         for dtype in self.number_data_type.keys():
-            scikit_model = RandomForestClassifier(random_state=1)
+            # n_estimators default changed >= 0.22. Specify explicitly to match <0.22 behavior.
+            scikit_model = RandomForestClassifier(random_state=1, n_estimators=10)
             data = self.scikit_data["data"].astype(dtype)
             target = (
                 self.scikit_data["target"].astype(dtype)
@@ -150,7 +151,8 @@ class TestIODataTypes(unittest.TestCase):
 
     def test_random_forest_regressor(self):
         for dtype in self.number_data_type.keys():
-            scikit_model = RandomForestRegressor(random_state=1)
+            # n_estimators default changed >= 0.22. Specify explicitly to match <0.22 behavior.
+            scikit_model = RandomForestRegressor(random_state=1, n_estimators=10)
             data = self.scikit_data["data"].astype(dtype)
             target = self.scikit_data["target"].astype(dtype)
             scikit_model, spec = self._sklearn_setup(scikit_model, dtype, data, target)

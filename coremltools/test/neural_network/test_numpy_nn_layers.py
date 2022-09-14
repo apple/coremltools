@@ -1923,6 +1923,7 @@ class NewLayersSimpleTest(CorrectnessTest):
             self._test_model(builder.spec, inputs, expected, useCPUOnly=cpu_only)
 
     def test_round_gpu(self):
+        pytest.xfail("rdar://98010495 (Some old nnv1 test are failing on M1 machine when running on ANE)")
         self.test_round_cpu(cpu_only=False)
 
     def test_sign_cpu(self, cpu_only=True):
@@ -2028,6 +2029,7 @@ class NewLayersSimpleTest(CorrectnessTest):
                     self.assertEqual(rank, builder._get_rank(output_))
 
     def test_split_nd_gpu(self):
+        pytest.xfail("rdar://98010495 (Some old nnv1 test are failing on M1 machine when running on ANE)")
         self.test_split_nd_cpu(cpu_only=False)
 
     def test_split_nd_with_split_sizes_cpu(self, cpu_only=True):
@@ -6539,6 +6541,7 @@ class IOS14SingleLayerTests(CorrectnessTest):
         self._test_pool3d(cpu_only=True)
 
     def test_pool3d_gpu(self):
+        pytest.xfail("rdar://98010495 (Some old nnv1 test are failing on M1 machine when running on ANE)")
         self._test_pool3d(cpu_only=False)
 
     def _test_global_pool3d(self, cpu_only):
@@ -6619,6 +6622,7 @@ class IOS14SingleLayerTests(CorrectnessTest):
         self.upsample_pytorch_test_iter(np.arange(1.0, 3.0, 0.66), True)
 
     def test_upsample_pytorch_gpu(self):
+        pytest.xfail("rdar://98010495 (Some old nnv1 test are failing on M1 machine when running on ANE)")
         self.upsample_pytorch_test_iter(np.arange(1, 4), False)
         self.upsample_pytorch_test_iter(np.arange(1.0, 3.0, 0.66), False)
 

@@ -21,6 +21,7 @@ from coremltools._deps import (
     _HAS_LIBSVM,
     MSG_LIBSVM_NOT_FOUND,
     _HAS_SKLEARN,
+    _SKLEARN_VERSION,
     MSG_SKLEARN_NOT_FOUND,
 )
 
@@ -34,6 +35,7 @@ if _HAS_SKLEARN:
     from sklearn.svm import NuSVC
     from sklearn.preprocessing import OneHotEncoder
     from coremltools.converters import sklearn as scikit_converter
+    from distutils.version import StrictVersion
 
 
 @unittest.skipIf(not _HAS_SKLEARN, MSG_SKLEARN_NOT_FOUND)
@@ -57,12 +59,19 @@ class NuSvcScikitTest(unittest.TestCase):
             {"kernel": "poly"},
             {"kernel": "poly", "degree": 2},
             {"kernel": "poly", "gamma": 0.75},
-            {"kernel": "poly", "degree": 0, "gamma": 0.9, "coef0": 2},
-            {"kernel": "sigmoid"},
-            {"kernel": "sigmoid", "gamma": 1.3},
-            {"kernel": "sigmoid", "coef0": 0.8},
-            {"kernel": "sigmoid", "coef0": 0.8, "gamma": 0.5},
         ]
+        # sklearn version > 0.22 NuSVC introduced finiteness checks that fail for
+        # the 'sigmoid' and one 'poly' kernel test cases. Avoid those.
+        # See https://github.com/scikit-learn/scikit-learn/issues/17925
+        if _SKLEARN_VERSION <= StrictVersion("0.22"):
+            kernel_parameters += [
+                {"kernel": "poly", "degree": 0, "gamma": 0.9, "coef0": 2},
+                {"kernel": "sigmoid"},
+                {"kernel": "sigmoid", "gamma": 1.3},
+                {"kernel": "sigmoid", "coef0": 0.8},
+                {"kernel": "sigmoid", "coef0": 0.8, "gamma": 0.5},
+            ]
+
         non_kernel_parameters = [
             {},
             {"nu": 0.75},

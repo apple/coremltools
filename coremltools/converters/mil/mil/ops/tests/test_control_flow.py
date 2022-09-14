@@ -116,10 +116,10 @@ class TestCond:
 
         def build(a, b):
             def true_fn():
-                return mb.add(x=b, y=1), mb.mul(x=b, y=2)
+                return mb.add(x=b, y=1.), mb.mul(x=b, y=2.)
 
             def false_fn():
-                return mb.add(x=b, y=-1), mb.mul(x=b, y=-2)
+                return mb.add(x=b, y=-1.), mb.mul(x=b, y=-2.)
 
             pred = mb.squeeze(x=a)
             return mb.cond(pred=pred, _true_fn=true_fn, _false_fn=false_fn)
@@ -366,11 +366,11 @@ class TestList:
         "use_cpu_only, backend", itertools.product([True, False], backends,)
     )
     def test_builder_to_backend_while(self, use_cpu_only, backend):
-
         # The while_loop appends [1, 2]*i to `ls` for each iteration
         # i = 0, ... num_iters-1.
         def body(i, num_iters, ls, update):
-            new_elem = mb.mul(x=update, y=i)
+            y = mb.cast(x=i, dtype="fp32")
+            new_elem = mb.mul(x=update, y=y)
             return (
                 mb.add(x=i, y=1),
                 num_iters,
@@ -379,6 +379,7 @@ class TestList:
             )
 
         def cond(i, num_iters, ls, update):
+            i = mb.cast(x=i, dtype="fp32")
             return mb.less(x=i, y=num_iters)
 
         elem_shape = (2,)

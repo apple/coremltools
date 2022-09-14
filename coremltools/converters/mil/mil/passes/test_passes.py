@@ -275,20 +275,20 @@ def test_generic_child_ordering():
 
     @mb.program(input_specs=[mb.TensorSpec(shape=(3, 5, 6))])
     def prog(x):
-        power = mb.pow(x=x, y=3, name="thepowerop")
-        add_0 = mb.add(x=power, y=5, name="add_0")
-        sub_0 = mb.sub(x=power, y=5, name="sub_0")
-        mul_0 = mb.mul(x=power, y=5, name="mul_0")
+        power = mb.pow(x=x, y=3., name="thepowerop")
+        add_0 = mb.add(x=power, y=5., name="add_0")
+        sub_0 = mb.sub(x=power, y=5., name="sub_0")
+        mul_0 = mb.mul(x=power, y=5., name="mul_0")
         add_1 = mb.add(x=add_0, y=mul_0, name="add_1")
         add_2 = mb.add(x=sub_0, y=add_1, name="add_2")
         return add_2
 
     @mb.program(input_specs=[mb.TensorSpec(shape=(3, 5, 6))])
     def ops_arrangement(x):
-        power = mb.pow(x=x, y=3, name="thepowerop")
-        sub_0 = mb.sub(x=power, y=5, name="sub_0")
-        add_0 = mb.add(x=power, y=5, name="add_0")
-        mul_0 = mb.mul(x=power, y=5, name="mul_0")
+        power = mb.pow(x=x, y=3., name="thepowerop")
+        sub_0 = mb.sub(x=power, y=5., name="sub_0")
+        add_0 = mb.add(x=power, y=5., name="add_0")
+        mul_0 = mb.mul(x=power, y=5., name="mul_0")
         add_1 = mb.add(x=add_0, y=mul_0, name="add_1")
         add_2 = mb.add(x=sub_0, y=add_1,name="add_2")
         return add_2
@@ -352,7 +352,7 @@ def test_onehot_matmul_to_gather_fusion(rank):
     @mb.program(input_specs=[mb.TensorSpec(shape=input_shape, dtype=types.int32)])
     def prog(x):
         x = mb.one_hot(
-            indices=x, on_value=1, off_value=0, axis=-1, one_hot_vector_size=vocab_size
+            indices=x, on_value=1., off_value=0., axis=-1, one_hot_vector_size=vocab_size
         )
         x = mb.matmul(x=x, y=np.random.rand(vocab_size, embedding_size))
         return x
@@ -430,6 +430,35 @@ def test_add_conv_transpose_output_shape():
                   prev_conv_transpose_op.outputs[0].shape)
 
 
+def test_prelu_to_lrelu():
+    @mb.program(input_specs=[mb.TensorSpec(shape=(4, 2, 3, 1))])
+    def prog(x):
+        # Not a common leakage factor.
+        alpha_0 = np.array([1.0, 2.0], dtype=np.float32)
+        x = mb.prelu(x=x, alpha=alpha_0)
+
+        add_val = np.random.rand(4, 2, 3, 1).astype(np.float32)
+        x = mb.add(x=x, y=add_val)
+
+        # Common leakage factor.
+        alpha_1 = np.array([1.5, 1.5], dtype=np.float32)
+        x = mb.prelu(x=x, alpha=alpha_1)
+
+        return x
+
+    assert_op_count_match(prog, expect=2, op="prelu")
+    assert_op_count_match(prog, expect=0, op="leaky_relu")
+    prev_prog, _, _ = apply_pass_and_basic_check(
+        prog, "common::prelu_to_lrelu")
+    assert_same_output_names(prev_prog, prog)
+    # The prelu with a common leakage factor becomes leaky_relu.
+    assert_op_count_match(prog, expect=1, op="prelu")
+    assert_op_count_match(prog, expect=1, op="leaky_relu")
+
+    if validate_model:
+        assert_model_is_valid(prog, {"x": (4, 2, 3, 1)})
+
+
 class TestGeluFusionPass:
 
     def test_gelu_tanh_approximation1(self):
@@ -440,12 +469,12 @@ class TestGeluFusionPass:
 
         @mb.program(input_specs=[mb.TensorSpec(shape=(3, 5, 6))])
         def prog(x):
-            x1 = mb.pow(x=x, y=3)
+            x1 = mb.pow(x=x, y=3.)
             x1 = mb.mul(x=0.044715, y=x1)
             x1 = mb.add(x=x1, y=x)
             x1 = mb.mul(x=x1, y=np.sqrt(2 / np.pi))
             x1 = mb.tanh(x=x1)
-            x1 = mb.add(x=1, y=x1)
+            x1 = mb.add(x=1., y=x1)
             x1 = mb.mul(x=0.5, y=x1)
             x1 = mb.mul(x=x, y=x1)
             return x1
@@ -490,12 +519,12 @@ class TestGeluFusionPass:
         @mb.program(input_specs=[mb.TensorSpec(shape=(3, 5, 6))])
         def prog(x):
             firstmul = mb.mul(x=x, y=0.5) if first_op_1 else mb.mul(x=0.5, y=x)
-            x1 = mb.pow(x=x, y=3)
+            x1 = mb.pow(x=x, y=3.)
             x1 = mb.mul(x=0.044715, y=x1) if first_op_2 else mb.mul(x=x1, y=0.044715)
             x1 = mb.add(x=x1, y=x) if first_op_3 else mb.add(x=x, y=x1)
             x1 = mb.mul(x=x1, y=np.sqrt(2 / np.pi)) if first_op_4 else mb.mul(x=np.sqrt(2 / np.pi), y=x1)
             x1 = mb.tanh(x=x1)
-            x1 = mb.add(x=1, y=x1) if first_op_5 else mb.add(x=x1, y=1)
+            x1 = mb.add(x=1., y=x1) if first_op_5 else mb.add(x=x1, y=1.)
             x1 = mb.mul(x=firstmul, y=x1) if first_op_6 else mb.mul(x=x1, y=firstmul)
             return x1
 
@@ -526,7 +555,7 @@ class TestGeluFusionPass:
             ["real_div", "mul"],
             [True, False],
             [True, False],
-            [True ,False],
+            [True, False],
             [True, False],
             [True, False],
             )
@@ -534,7 +563,9 @@ class TestGeluFusionPass:
     def test_gelu_exact(self, op_type, is_first_op1, is_first_op2, is_first_op3, is_first_op4, const_mul_first):
         """
         Detect gelu exact pattern.
-        y = 0.5 * x * ( 1 + erf ( x / srqt(2)))
+        y = 0.5 * (x * ( 1 + erf ( x / srqt(2))))
+         or
+        y = x * (0.5 * ( 1 + erf ( x / srqt(2))))
         """
 
         @mb.program(input_specs=[mb.TensorSpec(shape=(3, 5, 6))])
@@ -545,7 +576,7 @@ class TestGeluFusionPass:
                 x1 = mb.mul(x=x, y=2**-0.5) if is_first_op1 else mb.mul(x=2**-0.5, y=x)
 
             x2 = mb.erf(x=x1)
-            x3 = mb.add(x=x2, y=1) if is_first_op2 else mb.add(x=1, y=x2)
+            x3 = mb.add(x=x2, y=1.) if is_first_op2 else mb.add(x=1., y=x2)
 
             if const_mul_first:
                 y1 = mb.const(val=0.5)
@@ -568,6 +599,46 @@ class TestGeluFusionPass:
             "erf",
             "add",
             "mul",
+            "mul",
+        ]
+        assert get_op_types_in_program(prog) == ["gelu"]
+        assert_model_is_valid(
+            prog,
+            {"x": (3, 5, 6)},
+            expected_output_shapes={block.outputs[0].name: (3, 5, 6)},
+        )
+
+    @pytest.mark.parametrize(
+        "is_first_op0, is_first_op4",
+        itertools.product(
+            [True, False],
+            [True, False],
+            )
+        )
+    def test_gelu_exact_pattern_2(self, is_first_op0, is_first_op4):
+        """
+        Detect gelu exact pattern.
+        y = (0.5 * x) * ( 1 + erf ( x / srqt(2)))
+        """
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=(3, 5, 6))])
+        def prog(x):
+            x0 = mb.mul(x=x, y=0.5) if is_first_op0 else mb.mul(x=0.5, y=x)
+            x1 = mb.mul(x=x, y=2**-0.5)
+            x2 = mb.erf(x=x1)
+            x3 = mb.add(x=x2, y=1.)
+            x4 = mb.mul(x=x0, y=x3) if is_first_op4 else mb.mul(x=x3, y=x0)
+            return x4
+
+        prev_prog, prev_block, block = apply_pass_and_basic_check(
+            prog, "common::fuse_gelu_exact"
+        )
+
+        assert get_op_types_in_program(prev_prog) == [
+            "mul",
+            "mul",
+            "erf",
+            "add",
             "mul",
         ]
         assert get_op_types_in_program(prog) == ["gelu"]
@@ -969,12 +1040,12 @@ class TestTopologicalReorder:
             x1_t = mb.transpose(x=x1, perm=[1, 0])
 
             def true_fn():
-                return mb.add(x=x1_t, y=1, name='x2')
+                return mb.add(x=x1_t, y=np.float16(1), name='x2')
 
             def false_fn():
-                return mb.add(x=x1_t, y=2, name='x2')
+                return mb.add(x=x1_t, y=np.float16(2), name='x2')
 
-            is_one = mb.equal(x=mb.squeeze(x=x), y=1)
+            is_one = mb.equal(x=mb.squeeze(x=x), y=np.float16(1.))
             pred = mb.squeeze(x=is_one)
             x3 = mb.cond(pred=pred, _true_fn=true_fn, _false_fn=false_fn)
             x4 = mb.add(x=x1_t, y=x3)
@@ -1115,8 +1186,8 @@ class TestPassRank0ExpandDimsSwap:
                 x = func(x=x, y=2.0)
 
             expand = mb.expand_dims(x=x, axes=[0])
-            other_1 = mb.add(x=x, y=[1, 2, 3])
-            other_2 = mb.sub(x=x, y=[1, 2, 3])
+            other_1 = mb.add(x=x, y=[1., 2., 3.])
+            other_2 = mb.sub(x=x, y=[1., 2., 3.])
             return expand, other_1, other_2
 
         prev_prog, prev_block, block = apply_pass_and_basic_check(
@@ -1437,14 +1508,14 @@ class TestRemoveRedundantOpsPass:
         def prog(x):
             x1 = mb.cast(x=x, dtype="bool")
             def true_fn():
-                x = mb.relu(x=x1)
+                x = mb.shape(x=x1)
                 x = mb.cast(x=x, dtype="fp32")
-                return mb.add(x=x, y=1)
+                return mb.add(x=x, y=1.)
 
             def false_fn():
-                x = mb.relu(x=x1)
+                x = mb.shape(x=x1)
                 x = mb.cast(x=x, dtype="fp32")
-                return mb.add(x=x, y=-1)
+                return mb.add(x=x, y=-1.)
 
             z1 = mb.cond(pred=x1, _true_fn=true_fn, _false_fn=false_fn)
             z2 = mb.cond(pred=x1, _true_fn=true_fn, _false_fn=false_fn)
@@ -1457,8 +1528,8 @@ class TestRemoveRedundantOpsPass:
         assert get_op_types_in_program(prev_prog) == ["cast", "cond", "cond", "add"]
         assert get_op_types_in_program(prog) == ["cast", "cond", "cond", "add"]
         cond_op = prog.find_ops(op_type="cond")[0]
-        assert cond_op.blocks[0].operations[0].op_type == "relu"
-        assert cond_op.blocks[1].operations[0].op_type == "relu"
+        assert cond_op.blocks[0].operations[0].op_type == "shape"
+        assert cond_op.blocks[1].operations[0].op_type == "shape"
         assert_model_is_valid(
             prog,
             {"x": (1,)},
@@ -1615,9 +1686,9 @@ class TestPreluFusion:
         @mb.program(input_specs=[mb.TensorSpec(shape=(B, C, H, W))])
         def prog(x):
             if swap_input_order:
-                neg = mb.mul(x=x, y=-1)
+                neg = mb.mul(x=x, y=-1.)
             else:
-                neg = mb.mul(x=-1, y=x)
+                neg = mb.mul(x=-1., y=x)
             relu1 = mb.relu(x=neg)
             if swap_input_order:
                 mul = mb.mul(x=relu1, y=alpha)
@@ -1674,9 +1745,9 @@ class TestPreluFusion:
         def prog(x):
             x = mb.transpose(x=x, perm=[0,2,3,1])
             if swap_input_order:
-                neg = mb.mul(x=x, y=-1)
+                neg = mb.mul(x=x, y=-1.)
             else:
-                neg = mb.mul(x=-1, y=x)
+                neg = mb.mul(x=-1., y=x)
             relu1 = mb.relu(x=neg)
             if swap_input_order:
                 mul = mb.mul(x=relu1, y=alpha)
@@ -1708,9 +1779,9 @@ class TestUpdateOutputDtypePass:
         ------
         main(%input: (1, 20, int32)(Tensor)) {
           block0() {
-            %relu: (1, 20, int32)(Tensor) = relu(x=%input, name="relu")
-            %output_relu6: (1, 20, int32)(Tensor) = relu6(x=%input, name="output_relu6")
-          } -> (%output_relu6)
+            %abs: (1, 20, int32)(Tensor) = abs(x=%input, name="abs")
+            %output_square: (1, 20, int32)(Tensor) = square(x=%input, name="output_square")
+          } -> (%output_square)
         }
         prog.main_output_types = [ct.TensorType(dtype=np.float16)]
 
@@ -1718,27 +1789,27 @@ class TestUpdateOutputDtypePass:
         ------
         main(%input: (1, 20, int32)(Tensor)) {
           block0() {
-            %relu: (1, 20, int32)(Tensor) = relu(x=%input, name="relu")
-            %output_relu6_type_int32: (1, 20, int32)(Tensor) = relu6(x=%input, name="output_relu6")
-            %output_relu6: (1, 20, fp16)(Tensor) = cast(x=%output_relu6_type_int32, dtype="fp16", name="cast_0")
-          } -> (%output_relu6)
+            %abs: (1, 20, int32)(Tensor) = abs(x=%input, name="abs")
+            %output_square_type_int32: (1, 20, int32)(Tensor) = square(x=%input, name="output_square")
+            %output_square: (1, 20, fp16)(Tensor) = cast(x=%output_square_type_int32, dtype="fp16", name="cast_0")
+          } -> (%output_square)
         }
         """
         @mb.program(input_specs=[mb.TensorSpec(shape=(1, 20), dtype=types.int32)])
         def prog(input):
-            x = mb.relu(x=input, name="relu")
-            x = mb.relu6(x=input, name="output_relu6")
+            x = mb.abs(x=input, name="abs")
+            x = mb.square(x=input, name="output_square")
             return x
 
         prog.set_main_output_types([ct.TensorType(dtype=np.float16)])
         prev_prog, prev_block, block = apply_pass_and_basic_check(
             prog, "common::update_output_dtypes"
         )
-        assert get_op_types_in_program(prev_prog) == ["relu", "relu6"]
+        assert get_op_types_in_program(prev_prog) == ["abs", "square"]
         assert prev_block.outputs[0].dtype == types.int32
-        assert get_op_types_in_program(prog) == ["relu", "relu6", "cast"]
+        assert get_op_types_in_program(prog) == ["abs", "square", "cast"]
         assert block.outputs[0].dtype == types.fp16
-        assert block.outputs[0].name == "output_relu6"
+        assert block.outputs[0].name == "output_square"
 
     def test_multiple_outputs(self):
         """

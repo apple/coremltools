@@ -69,6 +69,7 @@ from coremltools.converters.mil.frontend.tensorflow.test.test_ops import (
     TestExpandDims,
     TestFill,
     TestGather,
+    TestGelu,
     TestIdentity,
     TestIdentityN,
     TestImageResizing,

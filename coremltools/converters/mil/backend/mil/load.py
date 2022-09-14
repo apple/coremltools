@@ -197,6 +197,12 @@ def create_block(block, parameters, blob_writer):
             # Classify's "classes" param should be serialized as a value literal bound
             # directly to the param, rather than as a const-generated variable.
             proto_ops.append(translate_generic_op(op, parameters, blob_writer, ["classes"]))
+        elif op_cls_name == "reshape_like":
+            # The reshape_like should also be able to take value from a const op
+            # This is a workaround solution
+            # rdar://98689808 (Reshape_like should also accept const value from non literal input)
+            literal_params = ["begins", "ends", "end_masks"]
+            proto_ops.append(translate_generic_op(op, parameters, blob_writer, literal_params))
         else:
             proto_ops.append(translate_generic_op(op, parameters, blob_writer))
 
