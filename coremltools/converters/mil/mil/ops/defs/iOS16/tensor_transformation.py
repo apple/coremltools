@@ -127,7 +127,7 @@ class reshape_like(Operation):
         # Output shape must be consistent with the input shape
         if not any_symbolic(self.x.shape):
             if np.prod(self.x.shape) != np.prod(out_shape):
-                msg = "At reshape_like op {}, input shape {} not consistent with the output shape.".format(
+                msg = "At reshape_like op {}, input shape {} not consistent with the output shape {}.".format(
                     self.name,
                     self.x.shape,
                     out_shape
