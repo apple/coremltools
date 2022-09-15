@@ -2514,9 +2514,8 @@ class TestImageResizing(TensorFlowBaseTest):
         # rdar://98749492 (crop_resize is unstable for cropping out of bound setting in fp16)
         if backend[0] == "mlprogram":
             backend = ("mlprogram", "fp32")
-        
-        # Add 0.5 to boxes in order to test the crop outside the image
-        crop_bias = 0.5
+        # Once rdar://98749492 is resolved, set crop_bias = 0.5 in order to test the crop outside the image
+        crop_bias = 0.0
 
         input = np.random.randn(*input_shape).astype(np.float32)
         boxes = np.random.uniform(size=(num_of_crops, 4)).astype(np.float32) + crop_bias
