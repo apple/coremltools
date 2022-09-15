@@ -2163,6 +2163,8 @@ class TestFull(TorchBaseTest):
             )
         )
     def test_full_like(self, shape_val, backend):
+        if _macos_version() < (13, 0) and backend[2] == ct.target.iOS16:
+            pytest.skip("iOS16 target not available on macOS 13")
         shape, val = shape_val
         class FullLikeModel(nn.Module):
             def forward(self, x):
@@ -3329,6 +3331,9 @@ class TestOnesLike(TorchBaseTest):
         ),
     )
     def test_ones_like_dynamic(self, backend, rank):
+        if _macos_version() < (13, 0) and backend[2] == ct.target.iOS16:
+            pytest.skip("iOS16 target not available on macOS 13")
+
         class OnesLikeDynamicModel(nn.Module):
             def forward(self, x):
                 if rank == 1:
@@ -3384,6 +3389,9 @@ class TestZeros(TorchBaseTest):
         ),
     )
     def test_zeros_like_dynamic(self, backend, rank):
+        if _macos_version() < (13, 0) and backend[2] == ct.target.iOS16:
+            pytest.skip("iOS16 target not available on macOS 13")
+
         class ZerosLikeDynamicModel(nn.Module):
             def forward(self, x):
                 if rank == 1:

@@ -4,6 +4,7 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import itertools
+
 import numpy as np
 import pytest
 
@@ -16,6 +17,7 @@ from coremltools.converters.mil.mil import (
     types
 )
 from coremltools.converters.mil.testing_reqs import backends
+from coremltools.models.utils import _macos_version
 
 
 class TestConvTranspose:
@@ -239,6 +241,9 @@ class TestConv:
             pytest.skip("same_lower pad_type not supported in macOS12 or older.")
 
         minimum_deployment_target = ct.target.iOS16 if backend[0] == "mlprogram" else None
+        if _macos_version() < (13, 0) and minimum_deployment_target == ct.target.iOS16:
+            pytest.skip("iOS16 target not available on macOS 13")
+
         batch, in_channels, out_channels = 1, 1, 1
         input_shape = (batch, in_channels, 4, 5, 6) # batch, channel, height, width
         kernel_size = (2, 4, 3)
