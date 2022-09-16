@@ -2514,7 +2514,8 @@ class TestImageResizing(TensorFlowBaseTest):
         # rdar://98749492 (crop_resize is unstable for cropping out of bound setting in fp16)
         if backend[0] == "mlprogram":
             backend = ("mlprogram", "fp32")
-        # Once rdar://98749492 is resolved, set crop_bias = 0.5 in order to test the crop outside the image
+        
+        # TODO(rdar://98749492): Once resolved, set crop_bias = 0.5 in order to test the crop outside the image
         crop_bias = 0.0
 
         input = np.random.randn(*input_shape).astype(np.float32)
@@ -3575,6 +3576,9 @@ class TestGather(TensorFlowBaseTest):
         ),
     )
     def test_gather_with_batch_dims(self, use_cpu_only, backend, rankX_rankIndices_axis_batchdims, mode):
+        if _macos_version() < (13, 0) and backend[0] == 'mlprogram':
+            pytest.skip("Requires macOS 13 or higher")
+
         x_rank, indices_rank, axis, batch_dims = rankX_rankIndices_axis_batchdims
         x_shape = np.random.randint(low=2, high=4, size=x_rank)
         indices_shape = np.random.randint(low=2, high=4, size=indices_rank)
@@ -3674,6 +3678,9 @@ class TestGather(TensorFlowBaseTest):
         ),
     )
     def test_gather_nd_with_batch_dims(self, use_cpu_only, backend, rankX_rankIndices_batchdims):
+        if _macos_version() < (13, 0) and backend[0] == 'mlprogram':
+            pytest.skip("Requires macOS 13 or higher")
+
         x_rank, indices_rank, batch_dims = rankX_rankIndices_batchdims
         x_shape = np.random.randint(low=2, high=4, size=x_rank)
         indices_shape = np.random.randint(low=2, high=4, size=indices_rank)
