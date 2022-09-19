@@ -524,7 +524,7 @@ void ModelPackageImpl::removeItem(const std::string& identifier)
 bool ModelPackageImpl::isValid(const std::filesystem::path& path)
 {
     try {
-        ModelPackageImpl(path, false);
+        ModelPackageImpl(path, false, true);
     } catch (std::runtime_error& e) {
         return false;
     }

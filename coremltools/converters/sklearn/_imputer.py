@@ -10,7 +10,8 @@ from ...proto import Model_pb2 as _Model_pb2
 from ...models import datatypes
 from ...models import MLModel as _MLModel
 
-from ..._deps import _HAS_SKLEARN
+from ..._deps import _HAS_SKLEARN, _SKLEARN_VERSION
+from distutils.version import StrictVersion
 
 if _HAS_SKLEARN:
     import sklearn
@@ -67,8 +68,11 @@ def convert(model, input_features, output_features):
     _sklearn_util.check_expected_type(model, Imputer)
     _sklearn_util.check_fitted(model, lambda m: hasattr(m, "statistics_"))
 
-    if model.axis != 0:
-        raise ValueError("Imputation is only supported along axis = 0.")
+    # model.axis deprecated in SimpleImputer >= 0.22. which now imputes only
+    # along columns as desired here.
+    if _SKLEARN_VERSION < StrictVersion("0.22"):
+        if model.axis != 0:
+            raise ValueError("Imputation is only supported along axis = 0.")
 
     # The imputer in our framework only works on single columns, so
     # we need to translate that over.  The easiest way to do that is to

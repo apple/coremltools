@@ -9,7 +9,7 @@ from coremltools.converters.mil.mil import (
     InputSpec,
     Operation,
     precondition,
-    ScalarOrTensorInputType,
+    TensorInputType,
     types
 )
 from coremltools.converters.mil.mil.operation import VALUE
@@ -21,10 +21,14 @@ class elementwise_binary(Operation):
     """
     Elementwise Binary Op Superclass
     """
-    input_spec = InputSpec(x=ScalarOrTensorInputType(), y=ScalarOrTensorInputType(),)
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    input_spec = InputSpec(
+        x=TensorInputType(type_domain="T"),
+        y=TensorInputType(type_domain="T"),
+    )
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32, types.int32),
+    }
 
     def type_inference(self):
         typea = self.x.sym_type
@@ -75,6 +79,19 @@ class elementwise_binary(Operation):
         to_cast = any([isinstance(x, np.ndarray) for x in [a, b]])
         result = self.get_operator()(a, b)
         return result if not to_cast else np.array(result)
+        
+class elementwise_binary_logical(elementwise_binary):
+    """
+    Elementwise Binary Logical Op Superclass
+    """
+    input_spec = InputSpec(
+        x=TensorInputType(type_domain="T"),
+        y=TensorInputType(type_domain="T"),
+    )
+    
+    type_domains = {
+        "T": (types.bool,),
+    }
 
 
 """
@@ -104,9 +121,6 @@ class add(elementwise_binary):
     ----------
     T: fp16, fp32, i32
     """
-    
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     def get_operator(self):
         return operator.add
@@ -136,9 +150,6 @@ class equal(elementwise_binary):
     ----------
     T: fp16, fp32, i32
     """
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     def get_operator(self):
         return np.equal
@@ -171,9 +182,6 @@ class floor_div(elementwise_binary):
     ----------
     T: fp16, fp32, i32
     """
-    
-    def __init__(self, **kwargs):
-        super(floor_div, self).__init__(**kwargs)
 
     def get_operator(self):
         return operator.floordiv
@@ -203,9 +211,6 @@ class greater(elementwise_binary):
     ----------
     T: fp16, fp32, i32
     """
-
-    def __init__(self, **kwargs):
-        super(greater, self).__init__(**kwargs)
 
     def get_operator(self):
         return operator.gt
@@ -239,9 +244,6 @@ class greater_equal(elementwise_binary):
     T: fp16, fp32, i32
     """
 
-    def __init__(self, **kwargs):
-        super(greater_equal, self).__init__(**kwargs)
-
     def get_operator(self):
         return operator.ge
 
@@ -274,9 +276,6 @@ class less(elementwise_binary):
     T: fp16, fp32, i32
     """
 
-    def __init__(self, **kwargs):
-        super(less, self).__init__(**kwargs)
-
     def get_operator(self):
         return operator.lt
 
@@ -308,9 +307,6 @@ class less_equal(elementwise_binary):
     ----------
     T: fp16, fp32, i32
     """
-    
-    def __init__(self, **kwargs):
-        super(less_equal, self).__init__(**kwargs)
 
     def get_operator(self):
         return operator.le
@@ -320,7 +316,7 @@ class less_equal(elementwise_binary):
 
 
 @register_op
-class logical_and(elementwise_binary):
+class logical_and(elementwise_binary_logical):
     """
     Return the truth value of ``x AND y`` element-wise with
     `broadcasting <https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html>`_
@@ -343,9 +339,6 @@ class logical_and(elementwise_binary):
     T: bool
     
     """
-    
-    def __init__(self, **kwargs):
-        super(logical_and, self).__init__(**kwargs)
 
     def get_operator(self):
         return np.logical_and
@@ -355,7 +348,7 @@ class logical_and(elementwise_binary):
 
 
 @register_op
-class logical_or(elementwise_binary):
+class logical_or(elementwise_binary_logical):
     """
     Return the truth value of ``x OR y`` element-wise with
     `broadcasting <https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html>`_
@@ -378,9 +371,6 @@ class logical_or(elementwise_binary):
     T: bool
     
     """
-    
-    def __init__(self, **kwargs):
-        super(logical_or, self).__init__(**kwargs)
 
     def get_operator(self):
         return np.logical_or
@@ -390,7 +380,7 @@ class logical_or(elementwise_binary):
 
 
 @register_op
-class logical_xor(elementwise_binary):
+class logical_xor(elementwise_binary_logical):
     """
     Return the truth value of ``x XOR y`` element-wise with
     `broadcasting <https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html>`_
@@ -413,9 +403,6 @@ class logical_xor(elementwise_binary):
     T: bool
     
     """
-    
-    def __init__(self, **kwargs):
-        super(logical_xor, self).__init__(**kwargs)
 
     def get_operator(self):
         return np.logical_xor
@@ -447,9 +434,6 @@ class maximum(elementwise_binary):
     ----------
     T: fp16, fp32, i32
     """
-    
-    def __init__(self, **kwargs):
-        super(maximum, self).__init__(**kwargs)
 
     def get_operator(self):
         return np.maximum
@@ -478,9 +462,6 @@ class minimum(elementwise_binary):
     ----------
     T: fp16, fp32, i32
     """
-    
-    def __init__(self, **kwargs):
-        super(minimum, self).__init__(**kwargs)
 
     def get_operator(self):
         return np.minimum
@@ -509,9 +490,6 @@ class mod(elementwise_binary):
     ----------
     T: fp16, fp32, i32
     """
-    
-    def __init__(self, **kwargs):
-        super(mod, self).__init__(**kwargs)
 
     def get_operator(self):
         return operator.mod
@@ -540,9 +518,6 @@ class mul(elementwise_binary):
     ----------
     T: fp16, fp32, i32
     """
-    
-    def __init__(self, **kwargs):
-        super(mul, self).__init__(**kwargs)
 
     def get_operator(self):
         return operator.mul
@@ -572,9 +547,6 @@ class not_equal(elementwise_binary):
     ----------
     T: fp16, fp32, i32
     """
-    
-    def __init__(self, **kwargs):
-        super(not_equal, self).__init__(**kwargs)
 
     def get_operator(self):
         return operator.ne
@@ -606,16 +578,6 @@ class real_div(elementwise_binary):
     ----------
     T: fp16, fp32, i32
     """
-    
-    def __init__(self, **kwargs):
-        # TODO(rdar://79925291): Allow int32 input to floor_div
-        from coremltools.converters.mil.mil import Builder as mb
-        from coremltools.converters.mil.mil import types
-        accepted_types = [types.fp32, types.fp16]
-        for input_name in ["x", "y"]:
-            if kwargs[input_name].dtype not in accepted_types:
-                kwargs[input_name] = mb.cast(x=kwargs[input_name], dtype="fp32")
-        super(real_div, self).__init__(**kwargs)
 
     def get_operator(self):
         return operator.truediv
@@ -644,9 +606,6 @@ class pow(elementwise_binary):
     ----------
     T: fp16, fp32, i32
     """
-    
-    def __init__(self, **kwargs):
-        super(pow, self).__init__(**kwargs)
 
     def get_operator(self):
         return operator.pow
@@ -675,9 +634,6 @@ class sub(elementwise_binary):
     ----------
     T: fp16, fp32, i32
     """
-    
-    def __init__(self, **kwargs):
-        super(sub, self).__init__(**kwargs)
 
     def get_operator(self):
         return operator.sub

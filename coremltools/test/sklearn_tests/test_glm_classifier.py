@@ -60,7 +60,9 @@ class GlmCassifierTest(unittest.TestCase):
         df = pd.DataFrame(x, columns=column_names)
 
         for cur_args in args:
-            cur_model = LogisticRegression(**cur_args)
+            # multi_class default changed in version 0.22 from ‘ovr’ to ‘auto’ in 0.22.
+            # Specify explicitly to match <0.22 behavior.
+            cur_model = LogisticRegression(**cur_args, multi_class='ovr')
             cur_model.fit(x, y)
 
             spec = convert(

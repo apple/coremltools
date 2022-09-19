@@ -29,8 +29,12 @@ class RandomForestRegressorScikitTest(unittest.TestCase):
         from sklearn.ensemble import RandomForestRegressor
 
         scikit_data = load_boston()
-        scikit_model = RandomForestRegressor(random_state=1)
+        # n_estimators default changed >= 0.22. Specify explicitly to match <0.22 behavior.
+        scikit_model = RandomForestRegressor(random_state=1, n_estimators=10)
         scikit_model.fit(scikit_data["data"], scikit_data["target"])
+
+        self.scikit_model_node_count = sum(map(lambda e: e.tree_.node_count,
+                                                scikit_model.estimators_))
 
         # Save the data and the model
         self.scikit_data = scikit_data
@@ -68,12 +72,13 @@ class RandomForestRegressorScikitTest(unittest.TestCase):
             -1
         ].treeEnsembleRegressor.treeEnsemble
         self.assertIsNotNone(tr)
-        self.assertEqual(len(tr.nodes), 5996)
+        self.assertEqual(len(tr.nodes), self.scikit_model_node_count)
 
     def test_conversion_bad_inputs(self):
         # Error on converting an untrained model
         with self.assertRaises(Exception):
-            model = RandomForestRegressor()
+            # n_estimators default changed >= 0.22. Specify explicitly to match <0.22 behavior.
+            model = RandomForestRegressor(n_estimators=10)
             spec = skl_converter.convert(model, "data", "out")
 
         # Check the expected class during covnersion.

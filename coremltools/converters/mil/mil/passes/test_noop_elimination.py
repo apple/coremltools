@@ -20,7 +20,7 @@ from coremltools.converters.mil.testing_utils import (
     "op_type, pos, val", itertools.product(
         ['add', 'mul', 'floor_div', 'pow', 'real_div', 'sub'],
         ['x', 'y'],
-        [0, 1, [0, 0, 0, 0], [1, 1, 1, 1]]
+        [0., 1., [0., 0., 0., 0.], [1., 1., 1., 1.]]
     )
 )
 def test_elementwise_elimination(op_type, pos, val):
@@ -45,23 +45,19 @@ def test_elementwise_elimination(op_type, pos, val):
     original_program = [op_type, "relu"]
     new_program = original_program
     if op_type in {'add'}:
-        if val == 0 or val == [0, 0, 0, 0]:
+        if val == 0. or val == [0., 0., 0., 0.]:
             new_program = ["relu"]
     elif op_type in {'mul'}:
-        if val == 1 or val == [1, 1, 1, 1]:
+        if val == 1. or val == [1., 1., 1., 1.]:
             new_program = ["relu"]
     elif op_type in {'real_div'}:
-        # TODO(rdar://79925291): Remove this branch and add `real_div` to the
-        # following elif once fp32 casts for `real_div` are no longer required.
-        original_program = ["cast"] + original_program
-        new_program = original_program
-        if pos == 'y' and (val == 1 or val == [1, 1, 1, 1]):
-            new_program = ["cast", "relu"]
+        if pos == 'y' and (val == 1. or val == [1., 1., 1., 1.]):
+            new_program = ["relu"]
     elif op_type in {'pow', 'floor_div'}:
-        if pos == 'y' and (val == 1 or val == [1, 1, 1, 1]):
+        if pos == 'y' and (val == 1. or val == [1., 1., 1., 1.]):
             new_program = ["relu"]
     elif op_type in {'sub'}:
-        if pos == 'y' and (val == 0 or val == [0, 0, 0, 0]):
+        if pos == 'y' and (val == 0. or val == [0., 0., 0., 0.]):
             new_program = ["relu"]
 
     assert get_op_types_in_program(prev_prog) == original_program
@@ -76,7 +72,7 @@ def test_elementwise_broadcast():
 
     @mb.program(input_specs=[mb.TensorSpec(shape=[4])])
     def prog(x):
-        r1 = mb.add(x=x, y=[[0, 0, 0, 0], [0, 0, 0, 0]])
+        r1 = mb.add(x=x, y=[[0., 0., 0., 0.], [0., 0., 0., 0.]])
         return mb.relu(x=r1)
 
     prev_prog, prev_block, block = apply_pass_and_basic_check(

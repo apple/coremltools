@@ -34,10 +34,8 @@ from coremltools.converters.mil.mil import (
     types,
 )
 from coremltools.converters.mil.mil.input_type import (
-    BoolInputType,
     DefaultInputs,
     InputSpec,
-    IntInputType,
     TensorInputType,
 )
 from coremltools.converters.mil.mil.types.symbolic import is_symbolic
@@ -51,13 +49,17 @@ class TestCustomMatMul:
     class custom_sparse_matmul(Operation):
         # Defining input spec for current op
         input_spec = InputSpec(
-            x=TensorInputType(),
-            y=TensorInputType(),
-            transpose_x=BoolInputType(const=True, optional=True),
-            transpose_y=BoolInputType(const=True, optional=True),
-            x_is_sparse=BoolInputType(const=True, optional=True),
-            y_is_sparse=BoolInputType(const=True, optional=True),
+            x=TensorInputType(type_domain="T"),
+            y=TensorInputType(type_domain="T"),
+            transpose_x=TensorInputType(const=True, optional=True, type_domain=types.bool),
+            transpose_y=TensorInputType(const=True, optional=True, type_domain=types.bool),
+            x_is_sparse=TensorInputType(const=True, optional=True, type_domain=types.bool),
+            y_is_sparse=TensorInputType(const=True, optional=True, type_domain=types.bool),
         )
+        
+        type_domains = {
+            "T": (types.fp16, types.fp32),
+        }
 
         # Specifying binding for custom op for specifying inputs,
         # parameters required for creating custom op to be synced with Swift API
@@ -76,9 +78,6 @@ class TestCustomMatMul:
                 y_is_sparse=False,
                 )
 
-        def __init__(self, **kwargs):
-            super(TestCustomMatMul.custom_sparse_matmul, self).__init__(**kwargs)
-
         def type_inference(self):
             x_type = self.x.dtype
             x_shape = self.x.shape
@@ -89,7 +88,7 @@ class TestCustomMatMul:
             return types.tensor(x_type, [x_shape[0], y_shape[1]])
 
     # TensorFlow Sparse Matmul Op
-    @register_tf_op()
+    @register_tf_op
     def SparseMatMul(context, node):
         a = context[node.inputs[0]]
         b = context[node.inputs[1]]
@@ -180,12 +179,16 @@ class TestCustomTopK:
         @register_op(is_custom_op=True)
         class custom_topk(Operation):
             input_spec = InputSpec(
-                x=TensorInputType(),
-                k=IntInputType(const=True, optional=True),
-                axis=IntInputType(const=True, optional=True),
-                sorted=BoolInputType(const=True, optional=True),
+                x=TensorInputType(type_domain="T"),
+                k=TensorInputType(const=True, optional=True, type_domain=types.int32),
+                axis=TensorInputType(const=True, optional=True, type_domain=types.int32),
+                sorted=TensorInputType(const=True, optional=True, type_domain=types.bool),
             )
-
+            
+            type_domains = {
+                "T": (types.fp16, types.fp32),
+            }
+            
             bindings = {
                 "class_name": "TopK",
                 "input_order": ["x"],

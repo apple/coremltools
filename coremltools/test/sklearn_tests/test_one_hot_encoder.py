@@ -7,7 +7,8 @@ from copy import copy
 import unittest
 import numpy as np
 
-from coremltools._deps import _HAS_SKLEARN
+from coremltools._deps import _HAS_SKLEARN, _SKLEARN_VERSION
+from distutils.version import StrictVersion
 from coremltools.models.utils import evaluate_transformer, _macos_version, _is_macos
 
 if _HAS_SKLEARN:
@@ -89,7 +90,11 @@ class OneHotEncoderScikitTest(unittest.TestCase):
         _is_macos() and _macos_version() >= (10, 13), "Only supported on macOS 10.13+"
     )
     def test_conversion_one_column_of_several(self):
-        scikit_model = OneHotEncoder(categorical_features=[0])
+        if _SKLEARN_VERSION >= StrictVersion("0.22"):
+            scikit_model = OneHotEncoder()
+        else:
+            scikit_model = OneHotEncoder(categorical_features=[0])
+
         scikit_model.fit(copy(self.scikit_data_multiple_cols))
         spec = sklearn.convert(
             scikit_model, ["feature_1", "feature_2"], "out"
@@ -112,6 +117,9 @@ class OneHotEncoderScikitTest(unittest.TestCase):
     @unittest.skipUnless(
         _is_macos() and _macos_version() >= (10, 13), "Only supported on macOS 10.13+"
     )
+    @unittest.skipIf(_SKLEARN_VERSION >= StrictVersion("0.22"),
+        "categorical_features parameter to OneHotEncoder() deprecated after SciKit Learn 0.22."
+    )
     def test_boston_OHE(self):
         data = load_boston()
 
@@ -133,6 +141,9 @@ class OneHotEncoderScikitTest(unittest.TestCase):
 
     @unittest.skipUnless(
         _is_macos() and _macos_version() >= (10, 13), "Only supported on macOS 10.13+"
+    )
+    @unittest.skipIf(_SKLEARN_VERSION >= StrictVersion("0.22"),
+        "categorical_features parameter to OneHotEncoder() deprecated after SciKit Learn 0.22."
     )
     def test_boston_OHE_pipeline(self):
         data = load_boston()
@@ -162,6 +173,9 @@ class OneHotEncoderScikitTest(unittest.TestCase):
 
     @unittest.skipUnless(
         _is_macos() and _macos_version() >= (10, 13), "Only supported on macOS 10.13+"
+    )
+    @unittest.skipIf(_SKLEARN_VERSION >= StrictVersion("0.22"),
+        "categorical_features parameter to OneHotEncoder() deprecated after SciKit Learn 0.22."
     )
     def test_random_sparse_data(self):
 

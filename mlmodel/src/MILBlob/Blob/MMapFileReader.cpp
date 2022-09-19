@@ -14,7 +14,7 @@ using namespace MILBlob::Blob;
 
 MMapFileReader::~MMapFileReader() = default;
 
-MMapFileReader::MMapFileReader(const std::string& filename)
+MMapFileReader::MMapFileReader(const std::string& filename) : m_isEncrypted(false)
 {
     // verify file exists and find its length
     struct stat fileInfo;
@@ -54,4 +54,9 @@ uint64_t MMapFileReader::GetLength() const
 Util::Span<const uint8_t> MMapFileReader::ReadData(uint64_t offset, uint64_t length) const
 {
     return m_dataSpan.Slice(static_cast<size_t>(offset), static_cast<size_t>(length));
+}
+
+bool MMapFileReader::IsEncrypted() const
+{
+    return m_isEncrypted;
 }

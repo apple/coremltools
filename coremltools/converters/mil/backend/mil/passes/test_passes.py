@@ -3,16 +3,16 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import pytest
-import itertools
-import numpy as np
 import copy
+import itertools
+
+import numpy as np
+import pytest
 
 # import mil internal ops to add it to the builder
 import coremltools as ct
-from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil import Builder as mb, types
 from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
-from coremltools.converters.mil import types
 from coremltools.converters.mil.mil.types import string_to_builtin, builtin_to_string, promote_types
 from coremltools.converters.mil._deployment_compatibility import AvailableTarget as target
 
@@ -285,6 +285,7 @@ class TestAdjustToSupportedTypes:
             );
         } -> (out_0, out_1)
         """
+        pytest.xfail("fp64 dtype not supported in MIL")
         def body(a, b):
             return mb.add(x=a, y=np.float64(1)), b
 
@@ -333,6 +334,7 @@ class TestAdjustToSupportedTypes:
             fp32 y = cast(x=x, dtype="fp32")
         } -> (y)
         """
+        pytest.xfail("cast operation does not support casting to fp64")
         @mb.program(input_specs=[mb.TensorSpec(shape=(1, 1, 1, 1), dtype=types.int32)])
         def prog(x):
             y = mb.cast(x=x, dtype="fp64")
@@ -367,6 +369,7 @@ class TestAdjustToSupportedTypes:
         func main(int32 x) {
         } -> (x)
         """
+        pytest.xfail("cast not supports dtype=`int64`")
         @mb.program(input_specs=[mb.TensorSpec(shape=(1, 1, 1, 1), dtype=types.int32)])
         def prog(x):
             y = mb.cast(x=x, dtype="int64")
@@ -887,59 +890,4 @@ class TestPassFuseActivationSiLU:
             backend=("mlprogram", "fp32"),
             expected_output_shapes={block.outputs[0].name: tuple(x_shape)},
         )
-
-
-class TestHomogenizeInputDtypes:
-
-    @pytest.mark.parametrize(
-        ["op", "x_dtype", "y_dtype"],
-        [
-            ["add", "int32", "fp32"],
-            ["mul", "fp32", "int32"],
-            ["minimum", "int64", "int32"],
-            ["add", "int32", "fp16"],
-            ["add", "fp16", "int32"],
-            ["equal", "bool", "int32"],
-            ["mod", "int64", "fp16"],
-            ["not_equal", "fp32", "bool"],
-            ["pow", "fp16", "fp32"],
-            ["greater", "fp16", "fp32"],
-            ["matmul", "fp16", "int32"],
-        ]
-    )
-    def test_mixed_input_dtypes(self, op, x_dtype, y_dtype):
-        @mb.program(input_specs=[mb.TensorSpec(shape=(10, 10), dtype=string_to_builtin(x_dtype)),
-                                 mb.TensorSpec(shape=(10, 10), dtype=string_to_builtin(y_dtype))])
-        def prog(x, y):
-            x = getattr(mb, op)(x=x, y=y)
-            return x
-
-        assert get_op_types_in_program(prog) == [op]
-
-        _, _, block = apply_pass_and_basic_check(prog, "mil_backend::homogenize_input_dtypes")
-
-        assert get_op_types_in_program(prog) == ["cast", op]
-
-        promoted_dtype = promote_types(string_to_builtin(x_dtype), string_to_builtin(y_dtype))
-
-        # Asserting cast configuration
-        cast = block.find_ops(op_type="cast")[0]
-        assert cast.dtype.val == builtin_to_string(promoted_dtype)
-        assert len(cast.outputs) == 1
-        assert len(cast.outputs[0].child_ops) == 1
-        assert cast.outputs[0].child_ops[0].op_type == op
-
-    def test_mul_op_fp32_int32_inputs(self):
-        @mb.program(input_specs=[mb.TensorSpec(shape=(4,), dtype=types.fp32)])
-        def prog(x):
-            const = mb.const(val=5)
-            out = mb.mul(x=x, y=const)
-            return out
-
-        assert get_op_types_in_program(prog) == ["mul"]
-        apply_pass_and_basic_check(prog, "mil_backend::homogenize_input_dtypes")
-        # verify that there is no cast op in the program, since the
-        # const input (int32) should have been promoted to a float32 and replaced with a new const
-        assert get_op_types_in_program(prog) == ["mul"]
-
 

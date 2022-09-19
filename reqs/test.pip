@@ -1,24 +1,25 @@
 boto3==1.14.8
 configparser
-h5py==2.10.0; platform_machine != "arm64"
+h5py==2.10.0; platform_machine != "arm64" and python_version < "3.9"
 future
-numpy>1.18.5
+numpy>1.18.4
 libsvm; python_version >= "3.6"
 olefile==0.44
 pandas
 parameterized==0.8.1
 pillow
-pytest; python_version < '3.7'
-pytest==5.3.4; python_version >= '3.7'
+pytest==7.1.2
 pytest-cov
 pytest-sugar
 scikit-learn==0.19.2; python_version < '3.8'
-scipy > 1.4
+scikit-learn==1.1.2; python_version >= '3.8'
+scipy > 1.4 ; python_version < '3.8'
+scipy==1.8.1; python_version >= '3.8'
 six
 sympy > 1.6
-tensorflow==1.15.0; python_version < '3.8'
-torch==1.11.0
-torchvision==0.12.0
+tensorflow==1.15.4; python_version < '3.8'
+torch==1.12.1
+torchvision==0.13.1
 xgboost==1.4.2; platform_machine != "arm64"
 mock
 wrapt

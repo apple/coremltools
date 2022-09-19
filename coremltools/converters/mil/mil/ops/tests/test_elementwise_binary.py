@@ -183,13 +183,12 @@ class TestElementwiseBinary:
     def test_builder_real_div_both_ints(self):
         x = np.array([5], dtype=np.int32)
         y = np.array([2], dtype=np.int32)
-        expected_outputs = np.array([2.5], dtype=np.float32)
+        expected_outputs = np.array([2], dtype=np.int32)
         v = mb.real_div(x=x, y=y)
         np.testing.assert_allclose(expected_outputs, v.val, atol=1e-04, rtol=1e-05)
-        # real_div should produce float values regardless of input type
-        assert isinstance(v.val[0], (float, np.float32))
+        assert isinstance(v.val[0], (float, np.int32))
         # make sure the dtype is float
-        assert types.is_float(v.dtype)
+        assert types.is_int(v.dtype)
         # make sure the symbolic type matches the value type
         assert v._sym_type.get_primitive() == v._sym_val.get_primitive()
 
@@ -200,6 +199,46 @@ class TestElementwiseBinary:
         expected_outputs = np.array([[2, 0, 6], [0, 10, 0]], dtype=np.float32)
         v = mb.sub(x=x, y=y)
         np.testing.assert_allclose(expected_outputs, v.val, atol=1e-04, rtol=1e-05)
+        
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend",
+        itertools.product(
+            [True, False],
+            backends,
+        ),
+    )
+    def test_real_div_int_builder_to_backend(self, use_cpu_only, backend):
+        """
+        For the neuralnetwork backend, the real_div is producing float output even for int inputs,
+        while the mlprogram backend produces int type output.
+        """
+        x = np.array([[10, 20, 30], [40, 50, 60]], dtype=np.float32)
+        y = np.array([[11, 12, 13], [14, 15, 16]], dtype=np.float32)
+        
+        if backend[0] == "neuralnetwork":
+            dtype = np.float32
+        else:
+            dtype = np.int32
+        expected_outputs = np.array(x/y, dtype=dtype)
+
+        build = lambda x, y: mb.real_div(x=x, y=y)
+
+        expected_output_types = (2, 3, types.int32)
+        input_placeholders = {
+            "x": mb.placeholder(shape=x.shape, dtype=types.int32),
+            "y": mb.placeholder(shape=y.shape, dtype=types.int32),
+        }
+        input_values = {"x": x, "y": y}
+        run_compare_builder(
+            build,
+            input_placeholders,
+            input_values,
+            expected_output_types,
+            expected_outputs,
+            use_cpu_only=use_cpu_only,
+            frontend_only=False,
+            backend=backend,
+        )
 
 
 class TestEqual:
@@ -216,7 +255,7 @@ class TestEqual:
         input_values = {"x": x, "y": y}
 
         def build(x, y):
-            return mb.equal(x=x, y=y), mb.equal(x=-3, y=y)
+            return mb.equal(x=x, y=y), mb.equal(x=-3., y=y)
 
         expected_output_types = [
             (2, 3, types.bool),

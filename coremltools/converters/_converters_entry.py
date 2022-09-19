@@ -484,7 +484,7 @@ def _set_default_specification_version(target):
         return _LOWEST_ALLOWED_SPECIFICATION_VERSION_FOR_NEURALNETWORK
     elif target == "mlprogram":
         return _LOWEST_ALLOWED_SPECIFICATION_VERSION_FOR_MILPROGRAM
-    elif target == "milinternal":
+    elif target in ("milinternal", "milpython"):
         return None
     else:
         raise NotImplementedError("Backend converter {} not implemented".format(target))

@@ -318,7 +318,7 @@ class CastOptimizationPass(unittest.TestCase):
          |
          |
          |
-         |---->cast(dtype="int32")---->log--->out_3
+         |---->cast(dtype="int32")---->abs--->out_3
 
     """
 
@@ -330,23 +330,23 @@ class CastOptimizationPass(unittest.TestCase):
             x2 = mb.cast(x=x, dtype="fp16")
             x3 = mb.square(x=x1)
             x4 = mb.relu(x=x2)
-            x5 = mb.log(x=x)
+            x5 = mb.abs(x=x)
             return x3, x4, x5
 
         self.assertEqual(get_op_types_in_program(prog),
-                         ['cast', 'cast', 'cast', 'square', 'relu', 'log'])
+                         ['cast', 'cast', 'cast', 'square', 'relu', 'abs'])
 
         apply_pass_and_basic_check(prog, "common::cast_optimization")
         _, _, block = apply_pass_and_basic_check(prog, "common::dead_code_elimination")
 
-        self.assertEqual(get_op_types_in_program(prog), ['cast', 'cast', 'square', 'relu', 'log'])
+        self.assertEqual(get_op_types_in_program(prog), ['cast', 'cast', 'square', 'relu', 'abs'])
 
         # Asserting first cast configuration
         cast_1 = block.find_ops(op_type="cast")[0]
         self.assertEqual(cast_1.dtype.val, "int32")
         self.assertEqual(len(cast_1.outputs), 1)
         self.assertEqual(len(cast_1.outputs[0].child_ops), 1)
-        self.assertEqual(cast_1.outputs[0].child_ops[0].op_type, "log")
+        self.assertEqual(cast_1.outputs[0].child_ops[0].op_type, "abs")
 
         # Asserting second cast configuration
         cast_2 = block.find_ops(op_type="cast")[1]

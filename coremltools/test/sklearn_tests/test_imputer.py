@@ -4,13 +4,26 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import unittest
-from coremltools._deps import _HAS_SKLEARN
+from coremltools._deps import _HAS_SKLEARN, _SKLEARN_VERSION
+from distutils.version import StrictVersion
 import numpy.random as rn
 import numpy as np
 from coremltools.models.utils import evaluate_transformer, _macos_version, _is_macos
 
 if _HAS_SKLEARN:
-    from sklearn.preprocessing import Imputer
+    import sklearn
+
+    try:
+        # scikit-learn >= 0.21
+        from sklearn.impute import SimpleImputer as Imputer
+
+        sklearn_class = sklearn.impute.SimpleImputer
+    except ImportError:
+        # scikit-learn < 0.21
+        from sklearn.preprocessing import Imputer
+
+        sklearn_class = sklearn.preprocessing.Imputer
+
     from coremltools.converters import sklearn as converter
 
 
@@ -38,6 +51,10 @@ class NumericalImputerTestCase(unittest.TestCase):
 
         for strategy in ["mean", "median", "most_frequent"]:
             for missing_value in [0, "NaN", -999]:
+                # SimpleImputer >=0.22 does not accept missing values encoded as NaN.
+                if _SKLEARN_VERSION >= StrictVersion("0.22"):
+                    if missing_value == "NaN":
+                        continue
 
                 X = np.array(scikit_data.data).copy()
 

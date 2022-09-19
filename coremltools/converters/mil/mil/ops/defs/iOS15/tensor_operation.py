@@ -17,17 +17,9 @@ from coremltools.converters.mil.mil import (
     types
 )
 from coremltools.converters.mil.mil.input_type import (
-    BoolInputType,
     DefaultInputs,
-    FloatInputType,
     InputSpec,
-    IntInputType,
-    IntOrFloatInputType,
-    IntOrFloatOrBoolInputType,
-    IntTensorInputType,
-    ListOrScalarOrTensorInputType,
-    ScalarOrTensorInputType,
-    StringInputType,
+    ListOrTensorInputType,
     TensorInputType,
     TupleInputType,
 )
@@ -76,18 +68,19 @@ class band_part(Operation):
     """
 
     input_spec = InputSpec(
-        x=TensorInputType(),
-        lower=IntInputType(const=True, optional=True),
-        upper=IntInputType(const=True, optional=True),
+        x=TensorInputType(type_domain="T"),
+        lower=TensorInputType(const=True, optional=True, type_domain=types.int32),
+        upper=TensorInputType(const=True, optional=True, type_domain=types.int32),
     )
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32, types.int32, types.bool),
+    }
 
     def default_inputs(self):
         return DefaultInputs(
             lower=-1,
             upper=-1)
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     def type_inference(self):
         return self.x.sym_type
@@ -126,20 +119,21 @@ class cumsum(Operation):
     """
 
     input_spec = InputSpec(
-        x=TensorInputType(),
-        axis=IntInputType(const=True, optional=True),
-        exclusive=BoolInputType(const=True, optional=True),
-        reverse=BoolInputType(const=True, optional=True),
+        x=TensorInputType(type_domain="T"),
+        axis=TensorInputType(const=True, optional=True, type_domain=types.int32),
+        exclusive=TensorInputType(const=True, optional=True, type_domain=types.bool),
+        reverse=TensorInputType(const=True, optional=True, type_domain=types.bool),
     )
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32, types.int32),
+    }
 
     def default_inputs(self):
         return DefaultInputs(
             axis=0,
             exclusive=False,
             reverse=False)
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -193,16 +187,17 @@ class fill(Operation):
     """
 
     input_spec = InputSpec(
-        shape=IntTensorInputType(),
-        value=IntOrFloatOrBoolInputType(const=True, optional=True),
+        shape=TensorInputType(type_domain=types.int32),
+        value=TensorInputType(const=True, optional=True, type_domain="T"),
     )
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32, types.int32, types.bool),
+    }
 
     def default_inputs(self):
         return DefaultInputs(
             value=0.)
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     def type_inference(self):
         if any_symbolic(self.shape.shape):
@@ -269,20 +264,21 @@ class non_maximum_suppression(Operation):
     """
 
     input_spec = InputSpec(
-        boxes=TensorInputType(),
-        scores=TensorInputType(),
-        iou_threshold=FloatInputType(const=True),
-        score_threshold=FloatInputType(const=True),
-        max_boxes=IntInputType(const=True),
-        per_class_suppression=BoolInputType(const=True, optional=True),
+        boxes=TensorInputType(type_domain="T"),
+        scores=TensorInputType(type_domain="T"),
+        iou_threshold=TensorInputType(const=True, type_domain="T"),
+        score_threshold=TensorInputType(const=True, type_domain="T"),
+        max_boxes=TensorInputType(const=True, type_domain=types.int32),
+        per_class_suppression=TensorInputType(const=True, optional=True, type_domain=types.bool),
     )
+
+    type_domains = {
+        "T": (types.fp16, types.fp32),
+    }
 
     def default_inputs(self):
         return DefaultInputs(
             per_class_suppression=False)
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     def type_inference(self):
         boxes_dtype = self.boxes.dtype
@@ -320,10 +316,13 @@ class non_zero(Operation):
     T: fp16, fp32, i32, bool
     """
 
-    input_spec = InputSpec(x=TensorInputType())
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    input_spec = InputSpec(
+        x=TensorInputType(type_domain="T")
+    )
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32, types.int32, types.bool),
+    }
 
     def type_inference(self):
         shape = tuple([get_new_symbol(), self.x.rank])
@@ -342,7 +341,7 @@ class one_hot(Operation):
 
     Parameters
     ----------
-    indices: tensor<[D],T> (Required)
+    indices: tensor<[D], i32> (Required)
         * Tensor, values indicate the locations for each one-hot vector to take the ``on_value``.
     one_got_vector_size: i32 (Required)
         * Indicates the number of returning vectors.
@@ -350,10 +349,10 @@ class one_hot(Operation):
         * Indicates which dimension to append the new axis.
         * If the input indices is rank ``D``, the output tensor will have rank ``D+1``.
         * Default to ``-1`` (the last dimension).
-    on_value: const i32 (Optional)
+    on_value: const T (Optional)
         * Values for locations where defined in ``indices``.
         * Default to ``1``.
-    off_value: const i32 (Optional)
+    off_value: const T (Optional)
         * Default to ``0``.
 
     Returns
@@ -367,12 +366,16 @@ class one_hot(Operation):
     """
 
     input_spec = InputSpec(
-        indices=IntTensorInputType(),
-        one_hot_vector_size=IntInputType(),
-        axis=IntInputType(const=True, optional=True),
-        on_value=IntOrFloatInputType(const=True, optional=True),
-        off_value=IntOrFloatInputType(const=True, optional=True),
+        indices=TensorInputType(type_domain=types.int32),
+        one_hot_vector_size=TensorInputType(type_domain=types.int32),
+        axis=TensorInputType(const=True, optional=True, type_domain=types.int32),
+        on_value=TensorInputType(const=True, optional=True, type_domain="T"),
+        off_value=TensorInputType(const=True, optional=True, type_domain="T"),
     )
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32, types.int32, types.bool),
+    }
 
     def default_inputs(self):
         return DefaultInputs(
@@ -380,9 +383,6 @@ class one_hot(Operation):
             on_value=1,
             off_value=0,
         )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     def type_inference(self):
         on_type = self.on_value.dtype
@@ -427,9 +427,9 @@ class pad(Operation):
     Parameters
     ----------
     
-    x: tensor<[\*D_in],T>  (Required)
+    x: tensor<[\*D_in], T>  (Required)
 
-    pad: tensor<[2\*N],i32> (Required)
+    pad: tensor<[2\*N], i32> (Required)
         ``N <= D_in``. Last ``N`` dimensions of ``x`` are padded as follows:
         
         * For each dimension ``i`` of ``x`` if ``i >= D_in - N``:
@@ -460,20 +460,21 @@ class pad(Operation):
     """
 
     input_spec = InputSpec(
-        x=TensorInputType(),
-        pad=IntTensorInputType(),
-        mode=StringInputType(const=True, optional=True),
-        constant_val=FloatInputType(const=True, optional=True),
+        x=TensorInputType(type_domain="T"),
+        pad=TensorInputType(type_domain=types.int32),
+        mode=TensorInputType(const=True, optional=True, type_domain=types.str),
+        constant_val=TensorInputType(const=True, optional=True, type_domain="T"),
     )
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32),
+    }
 
     def default_inputs(self):
         return DefaultInputs(
             mode="constant",
             constant_val=0.,
             )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     def type_inference(self):
         in_shape = self.x.shape
@@ -551,13 +552,14 @@ class range_1d(Operation):
     """
 
     input_spec = InputSpec(
-        end=IntOrFloatInputType(),
-        start=IntOrFloatInputType(),
-        step=IntOrFloatInputType(),
+        end=TensorInputType(type_domain="T"),
+        start=TensorInputType(type_domain="T"),
+        step=TensorInputType(type_domain="T"),
     )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32, types.int32),
+    }
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -605,7 +607,7 @@ class tile(Operation):
     ----------
     x: tensor<\*?, T> (Required)
         * Input tensor.
-    reps: tensor<[rank(x)], int32> (Required)
+    reps: tensor<[rank(x)], i32> (Required)
         * A 1-D tensor with length ``rank(x)``, which indicates the number to replicate the input along each dimension.
 
     Returns
@@ -618,10 +620,14 @@ class tile(Operation):
     T: fp16, fp32, i32, bool
     """
 
-    input_spec = InputSpec(x=TensorInputType(), reps=TensorInputType(),)
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    input_spec = InputSpec(
+        x=TensorInputType(type_domain="T"),
+        reps=TensorInputType(type_domain=types.int32),
+    )
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32, types.int32, types.bool),
+    }
 
     def type_inference(self):
         x_type = self.x.dtype
@@ -691,19 +697,20 @@ class argsort(Operation):
     """
 
     input_spec = InputSpec(
-        x=TensorInputType(),
-        axis=IntInputType(const=True, optional=True),
-        ascending=BoolInputType(const=True, optional=True),
+        x=TensorInputType(type_domain="T"),
+        axis=TensorInputType(const=True, optional=True, type_domain=types.int32),
+        ascending=TensorInputType(const=True, optional=True, type_domain=types.bool),
     )
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32, types.int32),
+    }
 
     def default_inputs(self):
         return DefaultInputs(
             axis=-1,
             ascending=False,
             )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     def type_inference(self):
         return types.tensor(types.int32, self.x.shape)
@@ -749,11 +756,15 @@ class topk(Operation):
     """
 
     input_spec = InputSpec(
-        x=TensorInputType(),
-        k=IntInputType(const=True, optional=True),
-        axis=IntInputType(const=True, optional=True),
-        ascending=BoolInputType(const=True, optional=True),
+        x=TensorInputType(type_domain="T"),
+        k=TensorInputType(const=True, optional=True, type_domain=types.int32),
+        axis=TensorInputType(const=True, optional=True, type_domain=types.int32),
+        ascending=TensorInputType(const=True, optional=True, type_domain=types.bool),
     )
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32, types.int32),
+    }
 
     def default_inputs(self):
         return DefaultInputs(
@@ -761,9 +772,6 @@ class topk(Operation):
             axis=-1,
             ascending=False,
             )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     def type_inference(self):
         x_type = self.x.dtype
@@ -801,7 +809,7 @@ class flatten2d(Operation):
     ----------
     x: tensor<[*d], T> (Required)
         * Input tensor.
-    * axis: const<f32>  (Optional)
+    * axis: const<i32>  (Optional)
         * Defaults to ``1``.
         * Negative axis is supported.
 
@@ -825,17 +833,18 @@ class flatten2d(Operation):
     """
 
     input_spec = InputSpec(
-        x=TensorInputType(),
-        axis=IntInputType(const=True, optional=True)
+        x=TensorInputType(type_domain="T"),
+        axis=TensorInputType(const=True, optional=True, type_domain=types.int32)
     )
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32, types.int32, types.bool),
+    }
 
     def default_inputs(self):
         return DefaultInputs(
             axis=1,
             )
-
-    def __init__(self, **kwargs):
-        super(flatten2d, self).__init__(**kwargs)
 
     def type_inference(self):
         shape = list(self.x.shape)
@@ -876,10 +885,13 @@ class shape(Operation):
     T: fp16, fp32, i32, bool
     """
 
-    input_spec = InputSpec(x = ScalarOrTensorInputType())
+    input_spec = InputSpec(
+        x = TensorInputType(type_domain="T")
+    )
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    type_domains = {
+        "T": (types.fp16, types.fp32, types.int32, types.bool),
+    }
 
     def type_inference(self):
         input_rank = self.x.rank
@@ -944,18 +956,16 @@ class concat(Operation):
     T: fp16, fp32, i32, bool
     """
 
-    input_spec = InputSpec(values=TupleInputType(),
-                           axis=IntInputType(const=True),
-                           interleave=BoolInputType(const=True,
-                                                    optional=True))
+    input_spec = InputSpec(
+        values=TupleInputType(),
+        axis=TensorInputType(const=True, type_domain=types.int32),
+        interleave=TensorInputType(const=True, optional=True, type_domain=types.bool)
+    )
 
     def default_inputs(self):
         return DefaultInputs(
             interleave=False,
         )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     def type_inference(self):
         concat_dim_len = 0
@@ -1083,7 +1093,7 @@ class split(Operation):
         If ``split_sizes`` length ``S`` cannot be determined at compile time,
         ``num_splits`` must be supplied to determine the number of outputs.
 
-    split_sizes: const<S,i32> (Optional)
+    split_sizes: const<S, i32> (Optional)
         * Sizes to split to. The sum of ``split_sizes`` must equal to
           ``value.shape[axis]``.
 
@@ -1093,7 +1103,7 @@ class split(Operation):
 
     Returns
     -------
-    Tuple[tensor<\*?,T>]
+    Tuple[tensor<\*?, T>]
         * Where the length of the tuple is the number of splits (determined
           from ``num_splits`` or ``split_sizes``).
 
@@ -1103,14 +1113,15 @@ class split(Operation):
     """
 
     input_spec = InputSpec(
-        x=TensorInputType(),
-        num_splits=IntInputType(const=True, optional=True),
-        split_sizes=IntTensorInputType(const=True, optional=True),
-        axis=IntInputType(const=True),
+        x=TensorInputType(type_domain="T"),
+        num_splits=TensorInputType(const=True, optional=True, type_domain=types.int32),
+        split_sizes=TensorInputType(const=True, optional=True, type_domain=types.int32),
+        axis=TensorInputType(const=True, type_domain=types.int32),
     )
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    type_domains = {
+        "T": (types.fp16, types.fp32, types.int32, types.bool),
+    }
 
     def type_inference(self):
         num_splits, sizes = self._get_num_splits_and_sizes()
@@ -1194,14 +1205,14 @@ class stack(Operation):
 
     Parameters
     ----------
-    values: Tuple[tensor<[d0, d1,...d_axis_i, ..., d_n],T>]  (Required)
+    values: Tuple[tensor<[d0, d1,...d_axis_i, ..., d_n], T>]  (Required)
         * All tensors must have identical shape.
     axis: const<i32> (Required)
         * The dimension along which to concatenate. Must be in the range ``[-rank(values[i]), rank(values[i]))`` for all ``i``.
 
     Returns
     -------
-    tenor<[d0, d1,...d_axis_out, ..., d_n],T>
+    tenor<[d0, d1,...d_axis_out, ..., d_n], T>
         * Where ``d_axis_out = sum(d_axis_i)``.
 
     Attributes
@@ -1209,11 +1220,10 @@ class stack(Operation):
     T: fp16, fp32, i32, bool
     """
 
-    input_spec = InputSpec(values=TupleInputType(),
-                           axis=IntInputType(const=True),)
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    input_spec = InputSpec(
+        values=TupleInputType(),
+        axis=TensorInputType(const=True, type_domain=types.int32)
+    )
 
     def type_inference(self):
 
@@ -1275,10 +1285,9 @@ class identity(Operation):
     T: fp16, fp32, i32, bool
     """
 
-    input_spec = InputSpec(x=ListOrScalarOrTensorInputType())
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    input_spec = InputSpec(
+        x=ListOrTensorInputType()
+    )
 
     def type_inference(self):
         return self.x.sym_type

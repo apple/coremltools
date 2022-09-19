@@ -22,14 +22,9 @@ class TestConst:
             [True, False],
             backends,
             [
-                np.uint8,
-                np.int8,
-                np.uint16,
-                np.int16,
-                np.uint32,
                 np.int32,
-                np.uint64,
                 np.int64,
+                np.float16,
                 np.float32,
                 np.float64,
             ]
@@ -48,9 +43,8 @@ class TestConst:
 
         def build(x):
             y = mb.const(val=constant)
-            x = mb.cast(x=x, dtype='int32')
-            z = mb.add(x=x, y=y)
-            return mb.cast(x=z, dtype='fp32')
+            y = mb.cast(x=y, dtype='fp32')
+            return mb.add(x=x, y=y)
 
         expected_output_types = (4, 2, types.fp32)
         expected_outputs = t + constant.astype(np.float32)

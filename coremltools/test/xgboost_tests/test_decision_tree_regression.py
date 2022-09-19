@@ -75,7 +75,7 @@ class DecisionTreeRegressorScikitTest(unittest.TestCase):
             1
         ].treeEnsembleRegressor.treeEnsemble
         self.assertIsNotNone(tr)
-        self.assertEqual(len(tr.nodes), 935)
+        self.assertEqual(len(tr.nodes), self.scikit_model.tree_.node_count)
 
     def test_conversion_bad_inputs(self):
         # Error on converting an untrained model

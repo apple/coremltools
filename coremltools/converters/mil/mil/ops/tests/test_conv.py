@@ -4,10 +4,12 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import itertools
+
 import numpy as np
 import pytest
 
 from .testing_utils import run_compare_builder
+import coremltools as ct
 from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.mil import (
     Builder as mb,
@@ -15,6 +17,7 @@ from coremltools.converters.mil.mil import (
     types
 )
 from coremltools.converters.mil.testing_reqs import backends
+from coremltools.models.utils import _macos_version
 
 
 class TestConvTranspose:
@@ -210,6 +213,127 @@ class TestConvTranspose:
 
 
 class TestConv:
+
+    @pytest.mark.skipif(not testing_reqs._HAS_TORCH, reason="PyTorch not installed.")
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend, padding_mode, conv_dim",
+        itertools.product(
+            [True, False],
+            backends,
+            ["same_lower", "same", "valid"],
+            ["conv1d", "conv2d", "conv3d"],
+        ),
+    )
+    def test_padding_mode_stress(self, use_cpu_only, backend, padding_mode, conv_dim):
+        import torch
+        def rotation_tensor(tensor):
+            assert tensor.shape[0] == tensor.shape[1] == 1
+            tensor = tensor[0][0]
+            rank = len(tensor.shape)
+            new_tensor = np.copy(np.flip(tensor, axis=tuple(range(rank))))
+            return np.expand_dims(new_tensor, axis=(0, 1))
+            
+        if conv_dim == "conv3d" and padding_mode == "same_lower":
+            if backend[0] == "neuralnetwork":
+                pytest.skip("same_lower mode not supported for conv3d in neuralnetwork backend")
+                
+        if padding_mode == "same_lower" and backend[0] == "mlprogram" and ct.utils._macos_version() < (13, 0):
+            pytest.skip("same_lower pad_type not supported in macOS12 or older.")
+
+        minimum_deployment_target = ct.target.iOS16 if backend[0] == "mlprogram" else None
+        if _macos_version() < (13, 0) and minimum_deployment_target == ct.target.iOS16:
+            pytest.skip("iOS16 target not available on macOS 13")
+
+        batch, in_channels, out_channels = 1, 1, 1
+        input_shape = (batch, in_channels, 4, 5, 6) # batch, channel, height, width
+        kernel_size = (2, 4, 3)
+        torch_padding_mode = padding_mode if padding_mode != "same_lower" else "same"
+        
+        # Get the right shape for each conv_dim
+        if conv_dim == "conv1d":
+            input_shape = input_shape[:3]
+            kernel_size = kernel_size[:1]
+        elif conv_dim == "conv2d":
+            input_shape = input_shape[:4]
+            kernel_size = kernel_size[:2]
+        
+        # Get the ground truth answer from torch
+        if conv_dim == "conv1d":
+            m = torch.nn.Conv1d(
+                in_channels,
+                out_channels,
+                kernel_size,
+                stride=1,
+                padding=torch_padding_mode,
+                bias=False,
+            )
+        elif conv_dim == "conv2d":
+            m = torch.nn.Conv2d(
+                in_channels,
+                out_channels,
+                kernel_size,
+                stride=1,
+                padding=torch_padding_mode,
+                bias=False,
+            )
+        elif conv_dim == "conv3d":
+            m = torch.nn.Conv3d(
+                in_channels,
+                out_channels,
+                kernel_size,
+                stride=1,
+                padding=torch_padding_mode,
+                bias=False,
+            )
+        
+        # Original weight / inputs for the torch model
+        weight = torch.clone(m.state_dict()["weight"])
+        input = torch.randn(*input_shape, dtype=torch.float32)
+        
+        # Coreml weights / inputs values
+        coreml_weight = weight.detach().numpy()
+        coreml_input = input.detach().numpy()
+        
+        if padding_mode == "same_lower":
+            # For the same_lower padding mode, we get the ground truth output by doing the following steps
+            # (1) Rotate the input value
+            # (2) Rotate the kernel value
+            # (3) Rotate the torch out
+            rotated_input = torch.tensor(rotation_tensor(input.detach().numpy()), dtype=torch.float32)
+            rotated_weight = torch.tensor(rotation_tensor(weight.detach().numpy()), dtype=torch.float32)
+            m.load_state_dict({'weight': rotated_weight}, strict=False)
+            output = m(rotated_input).detach().numpy()
+            output = rotation_tensor(output)
+        else:
+            output = m(input).detach().numpy()
+            
+        output_shape = list(output.shape)
+        expected_output_types = tuple(output_shape[:]) + (types.fp32,)
+        expected_outputs = [output]
+        input_placeholders = {"x": mb.placeholder(shape=input_shape)}
+        input_values = {"x": coreml_input}
+
+        def build(x):
+            arguments = {
+                "x": x,
+                "weight": coreml_weight,
+                "pad_type": padding_mode,
+            }
+            return mb.conv(**arguments)
+
+        run_compare_builder(
+            build,
+            input_placeholders,
+            input_values,
+            expected_output_types,
+            expected_outputs,
+            use_cpu_only=use_cpu_only,
+            frontend_only=False,
+            backend=backend,
+            minimum_deployment_target=minimum_deployment_target,
+        )
+
+
     @pytest.mark.skipif(not testing_reqs._HAS_TORCH, reason="PyTorch not installed.")
     @pytest.mark.parametrize(
         ",".join(
@@ -561,15 +685,13 @@ class TestConv:
     @pytest.mark.parametrize(
         "use_cpu_only, backend", itertools.product([True], backends, )
     )
-    def test_conv_int_bias_fusion(self, use_cpu_only, backend):
+    def test_conv_bias_fusion(self, use_cpu_only, backend):
         """
-        Test conv bias fusion when const input is of type int.
-        Expected behavior is that the bias const will be cast to the same dtype as the
-        weight during the fuse_conv_bias pass, otherwise mb.conv() will raise an error.
+        Test conv bias fusion when const input.
 
 
         Input graph:
-                                        Const(int type)
+                                        Const
                                           |
                                           V
         input -----> convolution -----> add/sub  ---> out
@@ -581,7 +703,7 @@ class TestConv:
 
         def build(x):
             x = mb.conv(x=x, weight=weight)
-            bias = mb.const(val=[10])
+            bias = mb.const(val=[10.])
             return mb.add(x=x, y=bias)
 
         input = np.array([1, 2, 3, 4], dtype=np.float32).reshape((1, 1, 2, 2))

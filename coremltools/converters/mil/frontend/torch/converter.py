@@ -35,9 +35,9 @@ torch_to_mil_types = {
     _torch.bool: types.bool,
     _torch.float16: types.fp16,
     _torch.float32: types.fp32,
-    _torch.float64: types.fp64,
+    _torch.float64: types.fp32,
     _torch.int32: types.int32,
-    _torch.int64: types.int64,
+    _torch.int64: types.int32,
 }
 
 mil_to_torch_types = {v: k for k, v in torch_to_mil_types.items()}

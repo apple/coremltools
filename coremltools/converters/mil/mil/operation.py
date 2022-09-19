@@ -10,7 +10,7 @@ from coremltools.converters.mil.mil.types import is_compatible_type
 from coremltools.converters.mil.mil.types.symbolic import is_symbolic, any_symbolic
 from . import SPACES
 from .block import curr_block
-from .input_type import TupleInputType, DefaultInputs
+from .input_type import DefaultInputs, TensorInputType, TupleInputType
 from .var import Var, InternalVar, ListVar
 
 VALUE = 1
@@ -150,6 +150,7 @@ class Operation:
 
     def __init__(self, **kwargs):
         self._input_types = self.input_spec.input_types
+        self._type_domains = getattr(self, "type_domains", {})
         self.name = kwargs.get("name", None)
 
         self._output_vars = None
@@ -163,6 +164,15 @@ class Operation:
             self._input_vars[k] = None
 
         self._check_expected_inputs(kwargs)
+        
+        # Populate type_domains into input types
+        for v in self._input_types.values():
+            if not isinstance(v, TensorInputType):
+                continue
+            if len(v.type_domain) == 0:
+                if v.type_domain_id not in self._type_domains:
+                    raise ValueError("type_domain {} not defined.".format(v.type_domain_id))
+                v.type_domain = self._type_domains[v.type_domain_id]
 
         # Set inputs from kwargs
         input_kv = {k: v for k, v in kwargs.items()

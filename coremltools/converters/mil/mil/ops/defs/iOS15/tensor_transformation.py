@@ -22,13 +22,8 @@ from coremltools.converters.mil.mil import (
     types,
 )
 from coremltools.converters.mil.mil.input_type import (
-    BoolTensorInputType,
     DefaultInputs,
     InputSpec,
-    IntInputType,
-    IntTensorInputType,
-    FloatTensorInputType,
-    ScalarOrTensorInputType,
     TensorInputType
 )
 from coremltools.converters.mil.mil.operation import (
@@ -63,12 +58,13 @@ class depth_to_space(Operation):
     """
 
     input_spec = InputSpec(
-        x=TensorInputType(),
-        block_size=IntInputType(const=True),
-        )
+        x=TensorInputType(type_domain="T"),
+        block_size=TensorInputType(const=True, type_domain=types.int32),
+    )
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    type_domains = {
+        "T": (types.fp16, types.fp32),
+    }
 
     def type_inference(self):
         x_type = self.x.dtype
@@ -104,12 +100,13 @@ class expand_dims(Operation):
     """
 
     input_spec = InputSpec(
-        x=ScalarOrTensorInputType(),
-        axes=IntTensorInputType(const=True),
+        x=TensorInputType(type_domain="T"),
+        axes=TensorInputType(const=True, type_domain=types.int32),
     )
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    type_domains = {
+        "T": (types.fp16, types.fp32, types.int32, types.bool),
+    }
 
     def type_inference(self):
         x_rank = self.x.rank
@@ -202,12 +199,13 @@ class reshape(Operation):
     """
 
     input_spec = InputSpec(
-        x=ScalarOrTensorInputType(),
-        shape=IntTensorInputType(),
-        )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+        x=TensorInputType(type_domain="T"),
+        shape=TensorInputType(type_domain=types.int32),
+    )
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32, types.int32, types.bool),
+    }
 
     def type_inference(self):
         if any_symbolic(self.shape.shape):
@@ -325,17 +323,18 @@ class reverse(Operation):
     """
 
     input_spec = InputSpec(
-        x=TensorInputType(),
-        axes=IntTensorInputType(const=True, optional=True),
+        x=TensorInputType(type_domain="T"),
+        axes=TensorInputType(const=True, optional=True, type_domain=types.int32),
     )
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32, types.int32, types.bool),
+    }
 
     def default_inputs(self):
         return DefaultInputs(
             axes=None,
             )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     def type_inference(self):
         return self.x.sym_type
@@ -388,19 +387,20 @@ class reverse_sequence(Operation):
     """
 
     input_spec = InputSpec(
-        x=TensorInputType(),
-        lengths=IntTensorInputType(),
-        seq_axis=IntInputType(const=True, optional=True),
-        batch_axis=IntInputType(const=True, optional=True),
+        x=TensorInputType(type_domain="T"),
+        lengths=TensorInputType(type_domain=types.int32),
+        seq_axis=TensorInputType(const=True, optional=True, type_domain=types.int32),
+        batch_axis=TensorInputType(const=True, optional=True, type_domain=types.int32),
     )
-
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32, types.int32, types.bool),
+    }
+    
     def default_inputs(self):
         return DefaultInputs(
             seq_axis=0,
             batch_axis=0)
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     def type_inference(self):
         return self.x.sym_type
@@ -454,14 +454,18 @@ class slice_by_index(Operation):
     """
 
     input_spec = InputSpec(
-        x=TensorInputType(),
-        begin=IntTensorInputType(),
-        end=IntTensorInputType(),
-        stride=IntTensorInputType(const=True, optional=True),
-        begin_mask=BoolTensorInputType(const=True, optional=True),
-        end_mask=BoolTensorInputType(const=True, optional=True),
-        squeeze_mask=BoolTensorInputType(const=True, optional=True),
+        x=TensorInputType(type_domain="T"),
+        begin=TensorInputType(type_domain=types.int32),
+        end=TensorInputType(type_domain=types.int32),
+        stride=TensorInputType(const=True, optional=True, type_domain=types.int32),
+        begin_mask=TensorInputType(const=True, optional=True, type_domain=types.bool),
+        end_mask=TensorInputType(const=True, optional=True, type_domain=types.bool),
+        squeeze_mask=TensorInputType(const=True, optional=True, type_domain=types.bool),
     )
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32, types.int32, types.bool),
+    }
 
     def default_inputs(self):
         return DefaultInputs(
@@ -470,9 +474,6 @@ class slice_by_index(Operation):
             end_mask=None,
             squeeze_mask=None,
             )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     def type_inference(self):
 
@@ -585,13 +586,14 @@ class slice_by_size(Operation):
     """
 
     input_spec = InputSpec(
-        x=TensorInputType(),
-        begin=IntTensorInputType(),
-        size=IntTensorInputType(),
+        x=TensorInputType(type_domain="T"),
+        begin=TensorInputType(type_domain=types.int32),
+        size=TensorInputType(type_domain=types.int32),
     )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32, types.int32, types.bool),
+    }
 
     def type_inference(self):
         if self.begin.rank != 1:
@@ -683,11 +685,13 @@ class space_to_depth(Operation):
     """
 
     input_spec = InputSpec(
-        x=TensorInputType(),
-        block_size=IntInputType(const=True),)
+        x=TensorInputType(type_domain="T"),
+        block_size=TensorInputType(const=True, type_domain=types.int32)
+    )
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    type_domains = {
+        "T": (types.fp16, types.fp32),
+    }
 
     def type_inference(self):
         x_type = self.x.dtype
@@ -728,13 +732,14 @@ class space_to_batch(Operation):
     """
 
     input_spec = InputSpec(
-        x=FloatTensorInputType(),
-        block_shape=IntInputType(const=True),
-        paddings=IntInputType(const=True),
-        )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+        x=TensorInputType(type_domain="T"),
+        block_shape=TensorInputType(const=True, type_domain=types.int32),
+        paddings=TensorInputType(const=True, type_domain=types.int32),
+    )
+        
+    type_domains = {
+        "T": (types.fp16, types.fp32),
+    }
 
     def type_inference(self):
         x_shape = self.x.shape
@@ -771,7 +776,7 @@ class space_to_batch(Operation):
 
         return types.tensor(x_type, ret_shape)
 
-@register_op()
+@register_op
 class batch_to_space(Operation):
     """
     Rearrange elements in a tensor from batch into spatial dimension.
@@ -803,13 +808,14 @@ class batch_to_space(Operation):
     """
 
     input_spec = InputSpec(
-        x=FloatTensorInputType(),
-        block_shape=IntInputType(const=True),
-        crops=IntInputType(const=True),
-        )
+        x=TensorInputType(type_domain="T"),
+        block_shape=TensorInputType(const=True, type_domain=types.int32),
+        crops=TensorInputType(const=True, type_domain=types.int32),
+    )
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    type_domains = {
+        "T": (types.fp16, types.fp32),
+    }
 
     def type_inference(self):
         x_shape = self.x.shape
@@ -875,17 +881,18 @@ class squeeze(Operation):
     """
 
     input_spec = InputSpec(
-        x=TensorInputType(),
-        axes=IntTensorInputType(const=True, optional=True),
+        x=TensorInputType(type_domain="T"),
+        axes=TensorInputType(const=True, optional=True, type_domain=types.int32),
     )
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32, types.int32, types.bool),
+    }
 
     def default_inputs(self):
         return DefaultInputs(
             axes=None,
             )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     def type_inference(self):
         x_type = self.x.dtype
@@ -943,11 +950,13 @@ class transpose(Operation):
     """
 
     input_spec = InputSpec(
-        x=TensorInputType(),
-        perm=IntTensorInputType(const=True),)
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+        x=TensorInputType(type_domain="T"),
+        perm=TensorInputType(const=True, type_domain=types.int32),
+    )
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32, types.int32, types.bool),
+    }
 
     def type_inference(self):
         x_type = self.x.dtype
@@ -997,11 +1006,13 @@ class pixel_shuffle(Operation):
     """
 
     input_spec = InputSpec(
-        x=TensorInputType(), upscale_factor=IntInputType(const=True),
+        x=TensorInputType(type_domain="T"),
+        upscale_factor=TensorInputType(const=True, type_domain=types.int32),
     )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32),
+    }
 
     def type_inference(self):
         x_type = self.x.dtype
@@ -1044,17 +1055,18 @@ class sliding_windows(Operation):
     """
 
     input_spec = InputSpec(
-        x=TensorInputType(),
-        axis=IntInputType(const=True),
-        size=IntInputType(const=True),
-        stride=IntInputType(const=True, optional=True),
+        x=TensorInputType(type_domain="T"),
+        axis=TensorInputType(const=True, type_domain=types.int32),
+        size=TensorInputType(const=True, type_domain=types.int32),
+        stride=TensorInputType(const=True, optional=True, type_domain=types.int32),
     )
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32, types.int32),
+    }
 
     def default_inputs(self):
         return DefaultInputs(stride=1)
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     def type_inference(self):
         x_shape = self.x.shape

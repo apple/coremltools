@@ -26,10 +26,9 @@ from coremltools.converters.mil.mil import (
     types
 )
 from coremltools.converters.mil.mil.input_type import (
-    BoolInputType,
     DefaultInputs,
     InputSpec,
-    TensorInputType
+    TensorInputType,
 )
 
 
@@ -68,13 +67,17 @@ class TestCustomOp:
     class custom_torch_sparse_matmul(Operation):
         # Defining input spec for current op
         input_spec = InputSpec(
-            x=TensorInputType(),
-            y=TensorInputType(),
-            transpose_x=BoolInputType(const=True, optional=True),
-            transpose_y=BoolInputType(const=True, optional=True),
-            x_is_sparse=BoolInputType(const=True, optional=True),
-            y_is_sparse=BoolInputType(const=True, optional=True),
+            x=TensorInputType(type_domain="T"),
+            y=TensorInputType(type_domain="T"),
+            transpose_x=TensorInputType(const=True, optional=True, type_domain=types.bool),
+            transpose_y=TensorInputType(const=True, optional=True, type_domain=types.bool),
+            x_is_sparse=TensorInputType(const=True, optional=True, type_domain=types.bool),
+            y_is_sparse=TensorInputType(const=True, optional=True, type_domain=types.bool),
         )
+        
+        type_domains = {
+            "T": (types.fp16, types.fp32),
+        }
 
         def default_inputs(self):
             return DefaultInputs(
@@ -92,9 +95,6 @@ class TestCustomOp:
             "parameters": ["transpose_x", "transpose_y", "x_is_sparse", "y_is_sparse"],
             "description": "Custom Sparse MatMul Layer",
         }
-
-        def __init__(self, **kwargs):
-            super(TestCustomOp.custom_torch_sparse_matmul, self).__init__(**kwargs)
 
         def type_inference(self):
             x_type = self.x.dtype

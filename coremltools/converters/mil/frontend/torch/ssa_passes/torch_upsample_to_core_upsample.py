@@ -4,6 +4,7 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import logging
+import numpy as np
 
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
@@ -80,7 +81,7 @@ def _try_get_upsample_factor(output_size):
         return None
 
     # we successfully trace back the original scale factor
-    return op.y.val
+    return np.float32(op.y.val)
 
 
 def _try_replace_with_core_upsample(op):

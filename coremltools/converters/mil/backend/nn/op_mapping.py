@@ -83,6 +83,16 @@ def _convert_pool(const_context, builder, op, mode, exclude_padding_from_average
     num_spatial_dimensions = len(op.kernel_sizes.val)
     op_pad = op.pad.val if op.pad_type.val == 'custom' \
         else [0] * num_spatial_dimensions * 2
+    
+    padding_type = op.pad_type.val.upper()
+    same_padding_asymmetry_mode = "BOTTOM_RIGHT_HEAVY"
+    if padding_type == "SAME_LOWER":
+        if num_spatial_dimensions == 3:
+            msg = "For the neuralnetwork backend, padding_mode ``same_lower`` is not supported for 3d pooling."
+            raise ValueError(msg)
+        padding_type = "SAME"
+        same_padding_asymmetry_mode = "TOP_LEFT_HEAVY"
+    
     if num_spatial_dimensions == 1:
         builder.add_expand_dims(
             name=op.name + "_expanded",
@@ -90,7 +100,6 @@ def _convert_pool(const_context, builder, op, mode, exclude_padding_from_average
             output_name=op.name + "_expanded",
             axes=[-2],
         )
-        padding_type = op.pad_type.val.upper()
         # nn's add_pool function does not support CUSTOM padding,
         # but VALID padding supports user-defined padding amounts.
         # Therefore we map CUSTOM padding to VALID padding.
@@ -111,6 +120,7 @@ def _convert_pool(const_context, builder, op, mode, exclude_padding_from_average
             padding_left=op_pad[0],
             padding_right=op_pad[1],
             is_global=False,
+            same_padding_asymmetry_mode=same_padding_asymmetry_mode,
         )
         builder.add_squeeze(
             name=op.name + "_squeeze",
@@ -119,7 +129,6 @@ def _convert_pool(const_context, builder, op, mode, exclude_padding_from_average
             axes=[-2],
         )
     elif num_spatial_dimensions == 2:
-        padding_type = op.pad_type.val.upper()
         # nn's add_pool function does not support CUSTOM padding,
         # but VALID padding supports user-defined padding amounts.
         # Therefore we map CUSTOM padding to VALID padding.
@@ -140,6 +149,7 @@ def _convert_pool(const_context, builder, op, mode, exclude_padding_from_average
             padding_left=op_pad[2],
             padding_right=op_pad[3],
             is_global=False,
+            same_padding_asymmetry_mode=same_padding_asymmetry_mode,
         )
     elif num_spatial_dimensions == 3:
         builder.add_pooling3d(
@@ -517,6 +527,14 @@ def conv_helper(const_context, builder, op):
             pad["padding_bottom"] = op.pad.val[3]
             pad["padding_left"] = op.pad.val[4]
             pad["padding_right"] = op.pad.val[5]
+            
+    same_padding_asymmetry_mode = "BOTTOM_RIGHT_HEAVY"
+    if padding_mode == "same_lower":
+        if is_conv3d:
+            msg = "For the neuralnetwork backend, padding_mode ``same_lower`` is not supported for conv 3d."
+            raise ValueError(msg)
+        padding_mode = "same"
+        same_padding_asymmetry_mode = "TOP_LEFT_HEAVY"
 
     has_bias = op.bias is not None
     groups = op.groups.val
@@ -560,6 +578,7 @@ def conv_helper(const_context, builder, op):
             stride_height=strides[0],
             stride_width=strides[1],
             border_mode=padding_mode,
+            same_padding_asymmetry_mode=same_padding_asymmetry_mode,
             groups=groups,
             W=weights,
             b=op.bias.val if has_bias and weights is not None else None,

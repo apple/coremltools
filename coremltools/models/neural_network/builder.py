@@ -6,25 +6,31 @@
 """
 Neural network builder class to construct Core ML models.
 """
+from math import floor as _math_floor
 
-from ... import SPECIFICATION_VERSION as _SPECIFICATION_VERSION
-from ... import _MINIMUM_NDARRAY_SPEC_VERSION
+import numpy as _np
 
-from ... import _MINIMUM_UPDATABLE_SPEC_VERSION
-from ... import _SPECIFICATION_VERSION_IOS_14
-from ...proto import Model_pb2 as _Model_pb2
-from ...proto import NeuralNetwork_pb2 as _NeuralNetwork_pb2
-from ...proto import FeatureTypes_pb2 as _FeatureTypes_pb2
+from ... import (
+    _MINIMUM_NDARRAY_SPEC_VERSION,
+    _MINIMUM_UPDATABLE_SPEC_VERSION,
+    SPECIFICATION_VERSION as _SPECIFICATION_VERSION,
+    _SPECIFICATION_VERSION_IOS_14,
+)
+from ...proto import (
+    FeatureTypes_pb2 as _FeatureTypes_pb2,
+    Model_pb2 as _Model_pb2,
+    NeuralNetwork_pb2 as _NeuralNetwork_pb2,
+)
 from .._interface_management import (
     set_transform_interface_params,
     set_training_features,
 )
 from .. import datatypes
-import numpy as _np
+
 from .quantization_utils import _unpack_to_bytes, _convert_array_to_nbit_quantized_bytes
 from .spec_inspection_utils import _summarize_network_layer_info
 from .update_optimizer_utils import AdamParams, SgdParams
-from math import floor as _math_floor
+
 
 _SUPPORTED_UPDATABLE_LAYERS = ["innerProduct", "convolution"]
 

@@ -130,13 +130,13 @@ class OpNameDeduplicationPass(unittest.TestCase):
         def prog(x):
             def true_fn():
                 # returns var with name x shadows input 'x'
-                return mb.add(x=x, y=1, name='x')
+                return mb.add(x=x, y=1., name='x')
 
             def false_fn():
                 # two ops with name "x"
-                return mb.add(x=x, y=-1, name='x')
+                return mb.add(x=x, y=-1., name='x')
 
-            pred = mb.equal(x=mb.squeeze(x=x), y=1)
+            pred = mb.equal(x=mb.squeeze(x=x), y=1.)
             return mb.cond(pred=pred, _true_fn=true_fn, _false_fn=false_fn)
 
         cond_op = prog.functions['main'].operations[-1]

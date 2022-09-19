@@ -10,7 +10,8 @@ import unittest
 import numpy as np
 import pandas as pd
 
-from coremltools._deps import _HAS_SKLEARN
+from coremltools._deps import _HAS_SKLEARN, _SKLEARN_VERSION
+from distutils.version import StrictVersion
 from coremltools.models.utils import evaluate_transformer
 from coremltools.models.utils import evaluate_regressor
 from coremltools.models.utils import _macos_version, _is_macos
@@ -26,6 +27,11 @@ if _HAS_SKLEARN:
 
 @unittest.skipIf(not _HAS_SKLEARN, "Missing sklearn. Skipping tests.")
 class GradientBoostingRegressorBostonHousingScikitNumericTest(unittest.TestCase):
+
+    @unittest.skipIf(not _HAS_SKLEARN, "Missing sklearn. Skipping tests.")
+    @unittest.skipIf(_SKLEARN_VERSION >= StrictVersion("0.22"),
+        "categorical_features parameter to OneHotEncoder() deprecated after SciKit Learn 0.22."
+    )
     def test_boston_OHE_plus_normalizer(self):
         data = load_boston()
 
@@ -48,6 +54,9 @@ class GradientBoostingRegressorBostonHousingScikitNumericTest(unittest.TestCase)
             result = evaluate_transformer(spec, input_data, output_data)
             assert result["num_errors"] == 0
 
+    @unittest.skipIf(_SKLEARN_VERSION >= StrictVersion("0.22"),
+        "categorical_features parameter to OneHotEncoder() deprecated after SciKit Learn 0.22."
+    )
     def _test_boston_OHE_plus_trees(self, loss='ls'):
 
         data = load_boston()

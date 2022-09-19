@@ -5,12 +5,23 @@
 
 import unittest
 import numpy as np
-from coremltools._deps import _HAS_SKLEARN
+from coremltools._deps import _HAS_SKLEARN, _SKLEARN_VERSION
+from distutils.version import StrictVersion
 
 if _HAS_SKLEARN:
     from coremltools.converters import sklearn as converter
-    from sklearn.preprocessing import Imputer
 
+    import sklearn
+    try:
+        # scikit-learn >= 0.21
+        from sklearn.impute import SimpleImputer as Imputer
+
+        sklearn_class = sklearn.impute.SimpleImputer
+    except ImportError:
+        # scikit-learn < 0.21
+        from sklearn.preprocessing import Imputer
+
+        sklearn_class = sklearn.preprocessing.Imputer
 
 @unittest.skipIf(not _HAS_SKLEARN, "Missing sklearn. Skipping tests.")
 class ImputerTestCase(unittest.TestCase):
@@ -26,7 +37,12 @@ class ImputerTestCase(unittest.TestCase):
         from sklearn.datasets import load_boston
 
         scikit_data = load_boston()
-        scikit_model = Imputer(strategy="most_frequent", axis=0)
+        # axis parameter deprecated in SimpleImputer >= 0.22. which now imputes
+        # only along columns as desired here.
+        if _SKLEARN_VERSION >= StrictVersion("0.22"):
+            scikit_model = Imputer(strategy="most_frequent")
+        else:
+            scikit_model = Imputer(strategy="most_frequent", axis=0)
         scikit_data["data"][1, 8] = np.NaN
 
         input_data = scikit_data["data"][:, 8].reshape(-1, 1)

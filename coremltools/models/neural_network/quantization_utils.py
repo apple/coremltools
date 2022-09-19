@@ -1643,18 +1643,11 @@ def quantize_weights(
     spec = full_precision_model.get_spec()
     if nbits == 16 and spec.isUpdatable:
         raise Exception("updatable models cannot get quantized to FP16.")
+
     qspec = _quantize_spec_weights(spec, nbits, qmode, **kwargs)
-
-    if _macos_version() < (10, 14):
-        print(
-            "WARNING - Unable to return a quantized MLModel instance since "
-            "OS is not macOS 10.14 or later. Returning a quantized model "
-            "specification instead.")
-        return qspec
-
     quantized_model = _get_model(qspec, compute_units=full_precision_model.compute_unit)
-    if not sample_data:
-        return quantized_model
 
-    compare_models(full_precision_model, quantized_model, sample_data)
+    if _macos_version() >= (10, 14) and sample_data:
+        compare_models(full_precision_model, quantized_model, sample_data)
+
     return quantized_model

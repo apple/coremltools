@@ -90,19 +90,19 @@ fi
 # Activate and install packages in the environment
 echo "Installing basic build requirements."
 if [[ $include_build_deps == 1 ]]; then
-    python -m pip install -r $COREMLTOOLS_HOME/reqs/build.pip
+    python -m pip install --prefer-binary -r $COREMLTOOLS_HOME/reqs/build.pip
 fi
 
 # Install test requirements (upgrades packages if required)
 if [[ $include_test_deps == 1 ]]; then
   echo "Installing additional test requirements."
-  python -m pip install -r $COREMLTOOLS_HOME/reqs/test.pip --upgrade
+  python -m pip install --prefer-binary -r $COREMLTOOLS_HOME/reqs/test.pip --upgrade
 fi
 
 # Install doc requirements (upgrades packages if required)
 if [[ $include_docs_deps == 1 ]]; then
   echo "Installing additional document requirements."
-  python -m pip install -r $COREMLTOOLS_HOME/reqs/docs.pip --upgrade
+  python -m pip install --prefer-binary -r $COREMLTOOLS_HOME/reqs/docs.pip --upgrade
 fi
 
 if [[ $DEV == 1 ]]; then

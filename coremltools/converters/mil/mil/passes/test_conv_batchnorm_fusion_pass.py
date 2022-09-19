@@ -14,19 +14,20 @@ from coremltools.converters.mil.testing_utils import (
     apply_pass_and_basic_check,
 )
 from coremltools.converters.mil import testing_reqs
+from coremltools.converters.mil.mil.types import numpy_type_to_builtin_type
 
 
 np.random.seed(1984)
 
 backends = testing_reqs.backends
 
-def _apply_weight_transform(inputs, is_deconv):
+def _apply_weight_transform(inputs, is_deconv, dtype=np.float32):
     """
     Utility funtion to test the weight transform function in conv batch_norm fusion pass.
     """
     Cin, _, groups = 10, 20, 10
     input_shape = (1, Cin, 2, 2)
-    @mb.program(input_specs=[mb.TensorSpec(shape=input_shape)])
+    @mb.program(input_specs=[mb.TensorSpec(shape=input_shape, dtype=numpy_type_to_builtin_type(dtype))])
     def prog(x):
 
         if is_deconv:
@@ -86,10 +87,10 @@ class TestConvBatchNormOptimizationPasses:
         conv_bias = np.arange(20).astype(np.float32)
 
         # parameters for batch_norm
-        gamma = np.ones(20)
-        beta = np.zeros(20)
-        mean = np.zeros(20)
-        variance = np.ones(20)
+        gamma = np.ones(20).astype(np.float32)
+        beta = np.zeros(20).astype(np.float32)
+        mean = np.zeros(20).astype(np.float32)
+        variance = np.ones(20).astype(np.float32)
         epsilon = 0.
 
         inputs = {
@@ -123,14 +124,14 @@ class TestConvBatchNormOptimizationPasses:
         is_deconv = conv_type == "conv_type"
         conv_weight = np.arange(20).astype(dtype)
         conv_weight = np.reshape(conv_weight, (10, 2, 1, 1)) if is_deconv else np.reshape(conv_weight, (20, 1, 1, 1))
-        conv_bias = np.arange(20).astype(np.float)
+        conv_bias = np.arange(20).astype(dtype)
 
         # parameters for batch_norm
-        gamma = np.ones(20).astype(np.int)
-        beta = np.zeros(20).astype(np.int)
-        mean = np.zeros(20).astype(np.int)
-        variance = np.ones(20).astype(np.int)
-        epsilon = 0.1
+        gamma = np.ones(20).astype(dtype)
+        beta = np.zeros(20).astype(dtype)
+        mean = np.zeros(20).astype(dtype)
+        variance = np.ones(20).astype(dtype)
+        epsilon = dtype(0.1)
 
         inputs = {
             "conv_weight": conv_weight,
@@ -142,7 +143,7 @@ class TestConvBatchNormOptimizationPasses:
             "epsilon": epsilon,
         }
 
-        new_conv_weight, _ = _apply_weight_transform(inputs, is_deconv)
+        new_conv_weight, _ = _apply_weight_transform(inputs, is_deconv, dtype)
 
         assert new_conv_weight.dtype == dtype, "the weight transform function should retain the weight's original dtype."
 

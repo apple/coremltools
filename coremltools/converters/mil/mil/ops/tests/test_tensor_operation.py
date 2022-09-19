@@ -213,6 +213,40 @@ class TestCumSum:
             mb.cumsum(x=x_val)
 
 
+class TestFillLike:
+    @pytest.mark.parametrize(
+        "use_cpu_only, backend", itertools.product([True, False], backends)
+    )
+    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+        if backend[0] == "neuralnetwork":
+            pytest.xfail("nn backend not supported")
+            
+        if ct.utils._macos_version() < (13, 0):
+            pytest.skip("fill_like not supported in macOS12 or older.")
+
+        shape = (2, 1, 3)
+        x_val = np.zeros(shape=shape, dtype=np.float32)
+        input_placeholders = {"x": mb.placeholder(shape=x_val.shape, dtype=types.int32)}
+
+        input_values = {"x": x_val}
+
+        def build(x):
+            return mb.fill_like(ref_tensor=x, value=1.0)
+
+        expected_output_types = [(2, 1, 3, types.fp32)]
+        expected_outputs = [np.full(shape=shape, fill_value=1.0)]
+
+        mlmodel = run_compare_builder(
+            build,
+            input_placeholders,
+            input_values,
+            expected_output_types,
+            expected_outputs,
+            use_cpu_only=use_cpu_only,
+            backend=backend,
+            minimum_deployment_target=ct.target.iOS16,
+        )
+
 class TestFill:
     @pytest.mark.parametrize(
         "use_cpu_only, backend", itertools.product([True, False], backends)

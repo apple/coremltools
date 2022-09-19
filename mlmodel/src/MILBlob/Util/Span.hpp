@@ -7,6 +7,7 @@
 
 #include "MILBlob/Util/Verify.hpp"
 #include <array>
+#include <iterator>
 #include <limits>
 #include <stdexcept>
 #include <type_traits>
@@ -358,6 +359,26 @@ public:
     const_iterator cend() const
     {
         return Data() + Size();
+    }
+
+    std::reverse_iterator<iterator> rbegin() const
+    {
+        return std::reverse_iterator<iterator>(Data() + Size());
+    }
+
+    std::reverse_iterator<iterator> rend() const
+    {
+        return std::reverse_iterator<iterator>(Data());
+    }
+
+    std::reverse_iterator<const_iterator> crbegin() const
+    {
+        return std::reverse_iterator<const_iterator>(Data() + Size());
+    }
+
+    std::reverse_iterator<const_iterator> crend() const
+    {
+        return std::reverse_iterator<const_iterator>(Data());
     }
 
     //

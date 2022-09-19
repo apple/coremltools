@@ -53,7 +53,7 @@ def test_handle_return_inputs_as_outputs():
         input_specs=[mb.TensorSpec(shape=(1, 2)), mb.TensorSpec(shape=(1, 2)),]
     )
     def prog(a, b):
-        return mb.mul(x=a, y=2), b
+        return mb.mul(x=a, y=2.), b
 
     prev_main_output_names = [o.name for o in prog["main"].outputs]
     assert prog["main"].outputs[1].op is None  # output comes from input

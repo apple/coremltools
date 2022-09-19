@@ -5,12 +5,8 @@
 
 from coremltools.converters.mil.mil import get_new_symbol, Operation, types
 from coremltools.converters.mil.mil.input_type import (
-    BoolInputType,
-    BoolTensorInputType,
     DefaultInputs,
     InputSpec,
-    IntOrFloatInputType,
-    IntTensorInputType,
     TensorInputType
 )
 from coremltools.converters.mil.mil.ops.defs._utils import solve_slice_by_index_shape
@@ -58,16 +54,17 @@ class torch_upsample_nearest_neighbor(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
     """
     input_spec = InputSpec(
-        x=TensorInputType(),
-        output_height=IntOrFloatInputType(),
-        output_width=IntOrFloatInputType(),
+        x=TensorInputType(type_domain="T"),
+        output_height=TensorInputType(type_domain=types.int32),
+        output_width=TensorInputType(type_domain=types.int32),
     )
-
-    def __init__(self, **kwargs):
-        super(torch_upsample_nearest_neighbor, self).__init__(**kwargs)
+ 
+    type_domains = {
+        "T": (types.fp16, types.fp32),
+    }
 
     def type_inference(self):
         if self.x.rank != 4:
@@ -92,7 +89,7 @@ class torch_upsample_bilinear(Operation):
 
     Parameters
     ----------
-    x: tensor<[b, C, H1, W1],T>  (Required)
+    x: tensor<[b, C, H1, W1], T>  (Required)
         * Must be rank ``4``.
     output_height: i32
         * Output height for the height dimension.
@@ -103,29 +100,30 @@ class torch_upsample_bilinear(Operation):
 
     Returns
     -------
-    tensor<[b, C, H2, W2],T>
+    tensor<[b, C, H2, W2], T>
         * Tensor with same type as the input.
         * ``H2`` = output_height
         * ``W2`` = output_width
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32
     """
     input_spec = InputSpec(
-        x=TensorInputType(),
-        output_height=IntOrFloatInputType(),
-        output_width=IntOrFloatInputType(),
-        align_corners=BoolInputType(const=True, optional=True),
+        x=TensorInputType(type_domain="T"),
+        output_height=TensorInputType(type_domain=types.int32),
+        output_width=TensorInputType(type_domain=types.int32),
+        align_corners=TensorInputType(const=True, optional=True, type_domain=types.bool),
     )
+
+    type_domains = {
+        "T": (types.fp16, types.fp32),
+    }
 
     def default_inputs(self):
         return DefaultInputs(
             align_corners=True,
         )
-
-    def __init__(self, **kwargs):
-        super(torch_upsample_bilinear, self).__init__(**kwargs)
 
     def type_inference(self):
         if self.x.rank != 4:
@@ -176,19 +174,23 @@ class torch_tensor_assign(Operation):
 
     Attributes
     ----------
-    T: fp32
+    T: fp16, fp32, i32
     """
 
     input_spec = InputSpec(
-        data=TensorInputType(),
-        updates=IntOrFloatInputType(),
-        begin=IntTensorInputType(const=True),
-        end=IntTensorInputType(const=True),
-        stride=IntTensorInputType(const=True, optional=True),
-        begin_mask=BoolTensorInputType(const=True, optional=True),
-        end_mask=BoolTensorInputType(const=True, optional=True),
-        squeeze_mask=BoolTensorInputType(const=True, optional=True),
+        data=TensorInputType(type_domain="T"),
+        updates=TensorInputType(type_domain="T"),
+        begin=TensorInputType(const=True, type_domain=types.int32),
+        end=TensorInputType(const=True, type_domain=types.int32),
+        stride=TensorInputType(const=True, optional=True, type_domain=types.int32),
+        begin_mask=TensorInputType(const=True, optional=True, type_domain=types.bool),
+        end_mask=TensorInputType(const=True, optional=True, type_domain=types.bool),
+        squeeze_mask=TensorInputType(const=True, optional=True, type_domain=types.bool),
     )
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32, types.int32),
+    }
 
     def default_inputs(self):
         return DefaultInputs(
@@ -197,9 +199,6 @@ class torch_tensor_assign(Operation):
             end_mask=None,
             squeeze_mask=None,
         )
-
-    def __init__(self, **kwargs):
-        super(torch_tensor_assign, self).__init__(**kwargs)
 
     def type_inference(self):
         # Verify the updates and the data slicing have the same shape

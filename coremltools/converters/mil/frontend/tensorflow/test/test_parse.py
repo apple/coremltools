@@ -106,7 +106,7 @@ class TestParse(unittest.TestCase):
         compare(mil_types.int8, types.DataType.DT_INT8)
         compare(mil_types.str, types.DataType.DT_STRING)
         compare(None, types.DataType.DT_COMPLEX64)
-        compare(mil_types.int64, types.DataType.DT_INT64)
+        compare(mil_types.int32, types.DataType.DT_INT64)
         compare(mil_types.bool, types.DataType.DT_BOOL)
         compare(None, types.DataType.DT_QINT8)
         compare(None, types.DataType.DT_QUINT8)

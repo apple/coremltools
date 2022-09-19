@@ -14,19 +14,27 @@ from tensorflow.python.framework.dtypes import _TF_TO_NP
 
 def parse_type(t):
     mapping = {
+        # bool
+        DataType.DT_BOOL: types.bool,
+        
+        # floating point
         DataType.DT_HALF: types.fp16,
         DataType.DT_FLOAT: types.float,
         DataType.DT_DOUBLE: types.double,
-        DataType.DT_INT32: types.int32,
-        DataType.DT_UINT8: types.uint8,
-        DataType.DT_INT16: types.int16,
+        # int
         DataType.DT_INT8: types.int8,
-        DataType.DT_STRING: types.str,
-        DataType.DT_INT64: types.int64,
-        DataType.DT_BOOL: types.bool,
+        DataType.DT_INT16: types.int16,
+        DataType.DT_INT32: types.int32,
+        DataType.DT_INT64: types.int32,
+
+        # unsigned int
+        DataType.DT_UINT8: types.uint8,
         DataType.DT_UINT16: types.uint16,
         DataType.DT_UINT32: types.uint32,
         DataType.DT_UINT64: types.uint64,
+        
+        # string
+        DataType.DT_STRING: types.str,
     }
     t = int(t)
     if t in mapping:

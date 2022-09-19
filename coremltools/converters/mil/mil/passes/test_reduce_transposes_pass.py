@@ -782,7 +782,7 @@ class TransposeOptimizationPass(unittest.TestCase):
         @mb.program(input_specs=[mb.TensorSpec(shape=(1, 2, 5, 5))])
         def prog(x):
             x = mb.transpose(x=x, perm=[0, 2, 3, 1])
-            x = mb.add(x=x, y=np.array([10, 100]))
+            x = mb.add(x=x, y=np.array([10., 100.]))
             x = mb.transpose(x=x, perm=[0, 3, 1, 2])
             return x
 
@@ -818,7 +818,7 @@ class TransposeOptimizationPass(unittest.TestCase):
         @mb.program(input_specs=[mb.TensorSpec(shape=(1, 2, 5, 5))])
         def prog(x):
             x = mb.transpose(x=x, perm=[0, 2, 3, 1])
-            x = mb.add(x=5, y=x)
+            x = mb.add(x=5., y=x)
             x = mb.transpose(x=x, perm=[0, 3, 1, 2])
             return x
 

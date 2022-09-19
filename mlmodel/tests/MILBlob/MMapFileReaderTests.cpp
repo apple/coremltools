@@ -43,6 +43,7 @@ int testMMapFileReaderTestsReadData()
 
     MMapFileReader reader(tempfile.GetFilename());
     ML_ASSERT_EQ(reader.GetLength(), uint64_t(13));
+    ML_ASSERT_NOT(reader.IsEncrypted());
 
     ML_ASSERT_THROWS(reader.ReadData(0, 14), std::range_error);
     ML_ASSERT_THROWS(reader.ReadData(13, 1), std::range_error);
@@ -84,6 +85,7 @@ int testMMapFileReaderTestsReadStruct()
 
     MMapFileReader reader(tempfile.GetFilename());
     ML_ASSERT_EQ(reader.GetLength(), uint64_t(6));
+    ML_ASSERT_NOT(reader.IsEncrypted());
 
     struct Int16Data {
         uint16_t a;

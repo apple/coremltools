@@ -13,8 +13,23 @@ from .constexpr_ops import (
     constexpr_sparse_to_dense,
 )
 
-from .image_resizing import resample
+from .image_resizing import (
+    crop_resize,
+    resample,
+    upsample_bilinear,
+)
 
-from .tensor_operation import topk
+from .scatter_gather import (
+    gather,
+    gather_nd,
+)
 
-from .tensor_transformation import pixel_unshuffle
+from .tensor_operation import (
+    fill_like,
+    topk
+)
+    
+from .tensor_transformation import (
+    pixel_unshuffle,
+    reshape_like,
+)

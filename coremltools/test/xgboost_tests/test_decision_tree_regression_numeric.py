@@ -10,7 +10,8 @@ import pandas as pd
 import unittest
 
 from coremltools.models.utils import evaluate_regressor, _macos_version, _is_macos
-from coremltools._deps import _HAS_SKLEARN
+from coremltools._deps import _HAS_SKLEARN, _SKLEARN_VERSION
+from distutils.version import StrictVersion
 
 
 @unittest.skipIf(not _HAS_SKLEARN, "Missing sklearn. Skipping tests.")
@@ -90,8 +91,9 @@ class DecisionTreeRegressorBostonHousingScikitNumericTest(unittest.TestCase):
             max_features=[None, 1, 5],
             max_leaf_nodes=[None, 20],
             min_impurity_decrease=[0.0, 1e-07, 0.1],
-            presort=[False, True],
         )
+        if _SKLEARN_VERSION < StrictVersion("0.22"): # 'presort' option deprecated >=0.22
+            options["presort"] = [False, True]
 
         # Make a cartesian product of all options
         product = itertools.product(*options.values())

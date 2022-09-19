@@ -16,7 +16,7 @@ from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 def _prelu_pattern(x):
     # MIL operation takes named inputs (instead of positional inputs).
     # Here `name` argument is MANDATORY.
-    neg = mb.mul(x=x, y=-1, name="neg")
+    neg = mb.mul(x=x, y=-1., name="neg")
     relu1 = mb.relu(x=neg, name="relu1")
     # use any constant here to match, rank and shape will be verified in "is_var_constraint_satisifed" method
     mul = mb.mul(x=relu1, y=np.random.rand(2, 2, 2, 2), name="alpha_mul")

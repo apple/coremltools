@@ -3,6 +3,7 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+from distutils.version import StrictVersion
 import itertools
 import os
 import unittest
@@ -11,7 +12,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from coremltools._deps import _HAS_SKLEARN
+from coremltools._deps import _HAS_SKLEARN, _SKLEARN_VERSION
 from coremltools.models.utils import evaluate_classifier, _macos_version, _is_macos
 
 if _HAS_SKLEARN:
@@ -75,8 +76,9 @@ class DecisionTreeBinaryClassificationBostonHousingScikitNumericTest(
             min_weight_fraction_leaf=[0.0, 0.5],
             max_features=[None, 1, 5],
             max_leaf_nodes=[None, 20],
-            presort=[False, True],
         )
+        if _SKLEARN_VERSION < StrictVersion("0.22"): # 'presort' option deprecated >=0.22
+            options["presort"] = [False, True]
 
         # Make a cartesian product of all options
         product = itertools.product(*options.values())
@@ -121,8 +123,9 @@ class DecisionTreeMultiClassClassificationBostonHousingScikitNumericTest(
             min_weight_fraction_leaf=[0.0, 0.5],
             max_features=[None, 1, 5],
             max_leaf_nodes=[None, 20],
-            presort=[False, True],
         )
+        if _SKLEARN_VERSION < StrictVersion("0.22"): # 'presort' option deprecated >=0.22
+            options["presort"] = [False, True]
 
         # Make a cartesian product of all options
         product = itertools.product(*options.values())

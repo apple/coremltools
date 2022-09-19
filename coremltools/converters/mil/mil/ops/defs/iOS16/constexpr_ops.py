@@ -4,7 +4,7 @@ import numpy as np
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.input_type import (
     InputSpec,
-    ScalarOrTensorInputType,
+    TensorInputType,
 )
 from coremltools.converters.mil._deployment_compatibility import AvailableTarget as target
 from coremltools.converters.mil.mil.operation import Operation
@@ -59,16 +59,17 @@ class constexpr_affine_dequantize(Operation):
     """
 
     input_spec = InputSpec(
-        quantized_data=ScalarOrTensorInputType(
-            const=True, type_domain=(np.uint8, np.int8)
-        ),
-        zero_point=ScalarOrTensorInputType(const=True, type_domain=(np.uint8, np.int8)),
-        scale=ScalarOrTensorInputType(const=True, type_domain=(np.float16, np.float32)),
-        axis=ScalarOrTensorInputType(const=True, type_domain=(np.int32,)),
+        quantized_data=TensorInputType(const=True, type_domain="SrcT"),
+        zero_point=TensorInputType(const=True, type_domain="ZeroPointT"),
+        scale=TensorInputType(const=True, type_domain="DstT"),
+        axis=TensorInputType(const=True, type_domain=types.int32),
     )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    
+    type_domains = {
+        "DstT": (types.fp16, types.fp32),
+        "SrcT": (types.uint8, types.int8),
+        "ZeroPointT": (types.uint8, types.int8),
+    }
 
     def type_inference(self):
         def assert_is_scalar_or_vector(param, name):
@@ -158,12 +159,9 @@ class constexpr_cast(Operation):
     """
 
     input_spec = InputSpec(
-        source_val=ScalarOrTensorInputType(const=True, type_domain=(np.float16,)),
-        output_dtype=ScalarOrTensorInputType(const=True, type_domain=(str,)),
+        source_val=TensorInputType(const=True, type_domain=types.fp16),
+        output_dtype=TensorInputType(const=True, type_domain=types.str),
     )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     def type_inference(self):
 
@@ -230,15 +228,14 @@ class constexpr_lut_to_dense(Operation):
     """
 
     input_spec = InputSpec(
-        indices=ScalarOrTensorInputType(const=True, type_domain=(np.uint8,)),
-        lut=ScalarOrTensorInputType(
-            const=True, type_domain=(np.int8, np.uint8, np.float16, np.float32)
-        ),
-        shape=ScalarOrTensorInputType(const=True, type_domain=(np.uint32,)),
+        indices=TensorInputType(const=True, type_domain=types.uint8),
+        lut=TensorInputType(const=True, type_domain="T"),
+        shape=TensorInputType(const=True, type_domain=types.uint32),
     )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    
+    type_domains = {
+        "T": (types.int8, types.uint8, types.fp16, types.fp32)
+    }
 
     def type_inference(self):
         def assert_is_vector(param, name):
@@ -338,15 +335,14 @@ class constexpr_sparse_to_dense(Operation):
     """
 
     input_spec = InputSpec(
-        nonzero_data=ScalarOrTensorInputType(
-            const=True, type_domain=(np.int8, np.uint8, np.float16, np.float32)
-        ),
-        mask=ScalarOrTensorInputType(const=True, type_domain=(np.uint8,)),
-        shape=ScalarOrTensorInputType(const=True, type_domain=(np.uint32,)),
+        nonzero_data=TensorInputType(const=True, type_domain="T"),
+        mask=TensorInputType(const=True, type_domain=types.uint8),
+        shape=TensorInputType(const=True, type_domain=types.uint32),
     )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    
+    type_domains = {
+        "T": (types.int8, types.uint8, types.fp16, types.fp32)
+    }
 
     def type_inference(self):
         def assert_is_vector(param, name):

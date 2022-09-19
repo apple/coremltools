@@ -9,11 +9,7 @@ import numpy as np
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.input_type import (
     DefaultInputs,
-    FloatInputType,
     InputSpec,
-    IntInputType,
-    ScalarOrTensorInputType,
-    StringInputType,
     TensorInputType,
 )
 from coremltools.converters.mil.mil.operation import Operation, precondition, VALUE
@@ -21,9 +17,43 @@ from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
 
 from .elementwise_unary import elementwise_unary
 
+class activation_with_alpha(Operation):
+    """
+    Activation with Alpha Op Superclass
+    """
+    input_spec = InputSpec(
+        x=TensorInputType(type_domain="T"),
+        alpha=TensorInputType(const=True, type_domain="T"),
+    )
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32),
+    }
+        
+    def type_inference(self):
+        return self.x.sym_type
+        
+        
+class activation_with_alpha_and_beta(Operation):
+    """
+    Activation with Alpha Beta Op Superclass
+    """
+    input_spec = InputSpec(
+        x=TensorInputType(type_domain="T"),
+        alpha=TensorInputType(const=True, type_domain="T"),
+        beta=TensorInputType(const=True, type_domain="T"),
+    )
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32),
+    }
+        
+    def type_inference(self):
+        return self.x.sym_type
+
 
 @register_op
-class clamped_relu(Operation):
+class clamped_relu(activation_with_alpha_and_beta):
     """
     If ``x >= 0`` return elementwise ``min(beta, x)``, otherwise return
     ``min(beta, alpha * x)``.
@@ -31,8 +61,8 @@ class clamped_relu(Operation):
     Parameters
     ----------
     x: tensor<\*?, T> (Required)
-    alpha: const fp32 (Required)
-    beta: const fp32 (Required)
+    alpha: const T (Required)
+    beta: const T (Required)
 
     Returns
     -------
@@ -44,35 +74,22 @@ class clamped_relu(Operation):
     T: fp16, fp32
     """
 
-    input_spec = InputSpec(
-        x=ScalarOrTensorInputType(),
-        alpha=FloatInputType(const=True),
-        beta=FloatInputType(const=True),
-    )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
     @precondition(allow=VALUE)
     def value_inference(self):
         x = np.minimum(np.maximum(self.x.val, 0), self.beta.val)
         y = np.minimum(np.minimum(self.x.val, 0) * self.alpha.val, self.beta.val)
         return x + y
 
-    def type_inference(self):
-        return self.x.sym_type
-
 
 @register_op
-class elu(Operation):
+class elu(activation_with_alpha):
     """
     If ``x > 0`` return elementwise ``x``, otherwise return ``alpha * (e^x - 1)``.
 
     Parameters
     ----------
     x: tensor<\*?, T> (Required)
-    alpha: const fp32 (Optional)
-        * Default is ``1``.
+    alpha: const T (Required)
 
     Returns
     -------
@@ -84,27 +101,11 @@ class elu(Operation):
     T: fp16, fp32
     """
 
-    input_spec = InputSpec(
-        x=ScalarOrTensorInputType(),
-        alpha=FloatInputType(const=True, optional=True),
-    )
-
-    def default_inputs(self):
-        return DefaultInputs(
-            alpha=1.,
-            )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
     @precondition(allow=VALUE)
     def value_inference(self):
         b = np.copy(self.x.val)
         b[b < 0] = self.alpha.val * (np.exp(b[b < 0]) - 1)
         return b
-
-    def type_inference(self):
-        return self.x.sym_type
 
 
 @register_op
@@ -150,17 +151,18 @@ class gelu(Operation):
     """
 
     input_spec = InputSpec(
-        x=ScalarOrTensorInputType(),
-        mode=StringInputType(const=True, optional=True),
+        x=TensorInputType(type_domain="T"),
+        mode=TensorInputType(const=True, optional=True, type_domain=types.str),
     )
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32),
+    }
 
     def default_inputs(self):
         return DefaultInputs(
             mode="EXACT",
             )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -183,15 +185,14 @@ class gelu(Operation):
 
 
 @register_op
-class leaky_relu(Operation):
+class leaky_relu(activation_with_alpha):
     """
     If ``x >= 0`` apply ``x`` elementwise, otherwise apply ``alpha * x`` elementwise.
 
     Parameters
     ----------
     x: <*?, T> (Required)
-    alpha: const fp32 (Optional)
-        * Default is ``0.01``.
+    alpha: const T (Required)
 
     Returns
     -------
@@ -203,40 +204,23 @@ class leaky_relu(Operation):
     T: fp16, fp32
     """
 
-    input_spec = InputSpec(
-        x=ScalarOrTensorInputType(),
-        alpha=FloatInputType(const=True, optional=True),
-    )
-
-    def default_inputs(self):
-        return DefaultInputs(
-            alpha=0.01,
-            )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
     @precondition(allow=VALUE)
     def value_inference(self):
         b = np.copy(self.x.val)
         b[b < 0] *= self.alpha.val
         return b
 
-    def type_inference(self):
-        return self.x.sym_type
-
 
 @register_op
-class linear_activation(Operation):
+class linear_activation(activation_with_alpha_and_beta):
     """
     Apply elementwise ``x * alpha + beta``.
 
     Parameters
     ----------
     x: tensor<\*?, T> (Required)
-    alpha: const fp32 (Required)
-    beta: const fp32 (Optional)
-        * Default is ``0``.
+    alpha: const T (Required)
+    beta: const T (Required)
 
     Returns
     -------
@@ -248,30 +232,13 @@ class linear_activation(Operation):
     T: fp16, fp32
     """
 
-    input_spec = InputSpec(
-        x=ScalarOrTensorInputType(),
-        alpha=FloatInputType(const=True),
-        beta=FloatInputType(const=True, optional=True),
-    )
-
-    def default_inputs(self):
-        return DefaultInputs(
-            beta=0.,
-            )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
     @precondition(allow=VALUE)
     def value_inference(self):
         return self.alpha.val * self.x.val + self.beta.val
 
-    def type_inference(self):
-        return self.x.sym_type
-
 
 @register_op
-class prelu(Operation):
+class prelu(activation_with_alpha):
     """
     Where ``i = 1 ... C``, if ``x_i > 0``, return ``x_i`` , otherwise return ``alpha_i * x_i``.
 
@@ -291,13 +258,6 @@ class prelu(Operation):
     ----------
     T: fp32, fp16
     """
-
-    input_spec = InputSpec(
-        x=TensorInputType(), 
-        alpha=TensorInputType(const=True),)
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -346,9 +306,6 @@ class relu(elementwise_unary):
     T: fp16, fp32
     """
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
     @precondition(allow=VALUE)
     def value_inference(self):
         return np.maximum(self.x.val, 0)
@@ -373,16 +330,13 @@ class relu6(elementwise_unary):
     T: fp16, fp32
     """
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
     @precondition(allow=VALUE)
     def value_inference(self):
         return np.minimum(np.maximum(self.x.val, 0), 6)
 
 
 @register_op
-class scaled_tanh(Operation):
+class scaled_tanh(activation_with_alpha_and_beta):
     """
     Return ``alpha * tanh(beta * x)`` elementwise.
 
@@ -390,10 +344,8 @@ class scaled_tanh(Operation):
     ----------
     x: tensor<\*?, T> (Required)
         * Input range is ``(-inf, inf)``.
-    alpha: const fp32 (Optional)
-        * Default is ``1``.
-    beta: const fp32 (Optional)
-        * Default is ``1``.
+    alpha: const T (Required)
+    beta: const T (Required)
 
     Returns
     -------
@@ -405,27 +357,9 @@ class scaled_tanh(Operation):
     T: fp16, fp32
     """
 
-    input_spec = InputSpec(
-        x=ScalarOrTensorInputType(),
-        alpha=FloatInputType(const=True, optional=True),
-        beta=FloatInputType(const=True, optional=True),
-    )
-
-    def default_inputs(self):
-        return DefaultInputs(
-            alpha=1,
-            beta=1,
-            )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
     @precondition(allow=VALUE)
     def value_inference(self):
         return self.alpha.val * np.tanh(self.x.val * self.beta.val)
-
-    def type_inference(self):
-        return self.x.sym_type
 
 
 @register_op
@@ -447,26 +381,21 @@ class sigmoid(elementwise_unary):
     T: fp16, fp32
     """
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
     @precondition(allow=VALUE)
     def value_inference(self):
         return 1 / (1 + np.exp(-self.x.val))
 
 
 @register_op
-class sigmoid_hard(Operation):
+class sigmoid_hard(activation_with_alpha_and_beta):
     """
     Return ``min( max( alpha * x + beta, 0 ), 1 )`` elementwise.
 
     Parameters
     ----------
     x: tensor<\*?, T> (Required)
-    alpha: const fp32 (Optional)
-        * Default is ``0.2``.
-    beta: const fp32 (Optional)
-        * Default is ``0.5``.
+    alpha: const T (Required)
+    beta: const T (Required)
 
     Returns
     -------
@@ -478,33 +407,15 @@ class sigmoid_hard(Operation):
     T: fp16, fp32
     """
 
-    input_spec = InputSpec(
-        x=ScalarOrTensorInputType(),
-        alpha=FloatInputType(const=True, optional=True),
-        beta=FloatInputType(const=True, optional=True),
-    )
-
-    def default_inputs(self):
-        return DefaultInputs(
-            alpha=0.2,
-            beta=0.5,
-            )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
     @precondition(allow=VALUE)
     def value_inference(self):
         return np.minimum(
             np.maximum((self.alpha.val * self.x.val) + self.beta.val, 0), 1
         )
-
-    def type_inference(self):
-        return self.x.sym_type
         
         
-@register_op()
-class silu(Operation):
+@register_op
+class silu(elementwise_unary):
     """
     Sigmoid Linear Unit, elementwise apply the SiLU or Swish operation ``x * sigmoid(x)``.
 
@@ -521,13 +432,7 @@ class silu(Operation):
     T: fp16, fp32
     """
 
-    input_spec = InputSpec(x=TensorInputType(),)
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
-    def type_inference(self):
-        return types.tensor(self.x.dtype, tuple(self.x.shape))
+    pass
 
 
 @register_op
@@ -549,16 +454,13 @@ class softplus(elementwise_unary):
     T: fp16, fp32
     """
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
     @precondition(allow=VALUE)
     def value_inference(self):
         return np.log(1 + np.exp(-np.abs(self.x.val))) + np.maximum(self.x.val, 0)
 
 
 @register_op
-class softplus_parametric(Operation):
+class softplus_parametric(activation_with_alpha_and_beta):
     """
     Return ``alpha_i * log( 1 + e^( beta_i * x_i ) )``, where ``i = 1 ... C``.
 
@@ -577,15 +479,6 @@ class softplus_parametric(Operation):
     ----------
     T: fp16, fp32
     """
-
-    input_spec = InputSpec(
-        x=TensorInputType(),
-        alpha=TensorInputType(const=True),
-        beta=TensorInputType(const=True),
-    )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -638,17 +531,18 @@ class softmax(Operation):
     """
 
     input_spec = InputSpec(
-        x=TensorInputType(),
-        axis=IntInputType(const=True, optional=True),
+        x=TensorInputType(type_domain="T"),
+        axis=TensorInputType(const=True, optional=True, type_domain=types.int32),
     )
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32),
+    }
 
     def default_inputs(self):
         return DefaultInputs(
             axis=-1,
             )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     def type_inference(self):
         return self.x.sym_type
@@ -680,24 +574,20 @@ class softsign(elementwise_unary):
     T: fp16, fp32
     """
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
     @precondition(allow=VALUE)
     def value_inference(self):
         return self.x.val / (1 + np.abs(self.x.val))
 
 
 @register_op
-class thresholded_relu(Operation):
+class thresholded_relu(activation_with_alpha):
     """
     Return ``x`` if ``x >= alpha``, otherwise return ``0``.
 
     Parameters
     ----------
     x: tensor<\*?, T> (Required)
-    alpha: const fp32 (Optional)
-        * Default is ``1``.
+    alpha: const T (Required)
 
     Returns
     -------
@@ -708,22 +598,6 @@ class thresholded_relu(Operation):
     ----------
     T: fp16, fp32
     """
-
-    input_spec = InputSpec(
-        x=ScalarOrTensorInputType(),
-        alpha=FloatInputType(const=True, optional=True),
-    )
-
-    def default_inputs(self):
-        return DefaultInputs(
-            alpha=1.,
-            )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
-    def type_inference(self):
-        return self.x.sym_type
 
     @precondition(allow=VALUE)
     def value_inference(self):

@@ -8,14 +8,13 @@ import numpy as np
 
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.operation import Operation, precondition, SYMBOL, VALUE
+from coremltools.converters.mil.mil.types import nptype_from_builtin
 from coremltools.converters.mil.mil.types.symbolic import is_symbolic
 from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
 from coremltools.converters.mil.mil.input_type import (
     DefaultInputs,
-    FloatInputType,
     InputSpec,
-    ScalarOrTensorInputType,
-    StringInputType
+    TensorInputType,
 )
 
 
@@ -31,10 +30,28 @@ class elementwise_unary(Operation):
     """
     Elementwise Unary Op Superclass
     """
-    input_spec = InputSpec(x=ScalarOrTensorInputType(),)
+    input_spec = InputSpec(
+        x=TensorInputType(type_domain="T"),
+    )
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32),
+    }
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def type_inference(self):
+        return self.x.sym_type
+        
+class elementwise_unary_with_int(Operation):
+    """
+    Elementwise Unary Op Superclass
+    """
+    input_spec = InputSpec(
+        x=TensorInputType(type_domain="T"),
+    )
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32, types.int32),
+    }
 
     def type_inference(self):
         return self.x.sym_type
@@ -44,7 +61,7 @@ Elementwise unary op implementation(s)
 """
 
 @register_op
-class abs(elementwise_unary):
+class abs(elementwise_unary_with_int):
     """
     Return the absolute values of the input ``x``, element-wise.
 
@@ -54,16 +71,13 @@ class abs(elementwise_unary):
 
     Returns
     -------
-    tensor<[\*d], f32>
+    tensor<[\*d], T>
         * A tensor of the same shape as ``x``.
 
     Attributes
     ----------
     T: fp16, fp32, i32
     """
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -82,16 +96,13 @@ class acos(elementwise_unary):
 
     Returns
     -------
-    tensor<[\*d], f32>
+    tensor<[\*d], T>
         * A tensor of the same shape as ``x``.
 
     Attributes
     ----------
     T: fp16, fp32
     """
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -110,16 +121,13 @@ class asin(elementwise_unary):
 
     Returns
     -------
-    tensor<[\*d], f32>
+    tensor<[\*d], T>
         * A tensor of the same shape as ``x``.
 
     Attributes
     ----------
     T: fp16, fp32
     """
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -138,16 +146,13 @@ class atan(elementwise_unary):
 
     Returns
     -------
-    tensor<[\*d], f32>
+    tensor<[\*d], T>
         * A tensor of the same shape as ``x``.
 
     Attributes
     ----------
     T: fp16, fp32
     """
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -167,16 +172,13 @@ class atanh(elementwise_unary):
 
     Returns
     -------
-    tensor<[\*d], f32>
+    tensor<[\*d], T>
         * A tensor of the same shape as ``x``.
 
     Attributes
     ----------
     T: fp16, fp32
     """
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -195,16 +197,13 @@ class ceil(elementwise_unary):
 
     Returns
     -------
-    tensor<[\*d], f32>
+    tensor<[\*d], T>
         * A tensor of the same shape as ``x``.
 
     Attributes
     ----------
     T: fp16, fp32
     """
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -222,12 +221,12 @@ class clip(Operation):
     Parameters
     ----------
     x: tensor<[\*d], T> (Required)
-    alpha: const f32 (Required)
-    beta: const f32 (Required)
+    alpha: const T (Required)
+    beta: const T (Required)
 
     Returns
     -------
-    tensor<[\*d], f32>
+    tensor<[\*d], T>
         * A tensor of the same shape as ``x``.
 
     Attributes
@@ -236,13 +235,14 @@ class clip(Operation):
     """
 
     input_spec = InputSpec(
-        x=ScalarOrTensorInputType(),
-        alpha=FloatInputType(const=True),
-        beta=FloatInputType(const=True),
+        x=TensorInputType(type_domain="T"),
+        alpha=TensorInputType(const=True, type_domain="T"),
+        beta=TensorInputType(const=True, type_domain="T"),
     )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32),
+    }
 
     def type_inference(self):
         return self.x.sym_type
@@ -271,9 +271,6 @@ class cos(elementwise_unary):
     T: fp16, fp32
     """
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
     @precondition(allow=VALUE)
     def value_inference(self):
         result = np.cos(self.x.val)
@@ -299,9 +296,6 @@ class cosh(elementwise_unary):
     T: fp16, fp32
     """
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
     @precondition(allow=VALUE)
     def value_inference(self):
         result = np.cosh(self.x.val)
@@ -319,16 +313,13 @@ class erf(elementwise_unary):
 
     Returns
     -------
-    tensor<[\*d], f32>
+    tensor<[\*d], T>
         * A tensor of the same shape as ``x``.
 
     Attributes
     ----------
     T: fp16, fp32
     """
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -347,16 +338,13 @@ class exp(elementwise_unary):
 
     Returns
     -------
-    tensor<[\*d], f32>
+    tensor<[\*d], T>
         * A tensor of the same shape as ``x``.
 
     Attributes
     ----------
     T: fp16, fp32
     """
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -365,7 +353,7 @@ class exp(elementwise_unary):
 
 
 @register_op
-class exp2(elementwise_unary):
+class exp2(elementwise_unary_with_int):
     """
     Return 2^x, element-wise.
 
@@ -375,16 +363,13 @@ class exp2(elementwise_unary):
 
     Returns
     -------
-    tensor<[\*d], f32>
+    tensor<[\*d], T>
         * A tensor of the same shape as ``x``.
 
     Attributes
     ----------
     T: fp16, fp32, i32
     """
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -404,16 +389,13 @@ class floor(elementwise_unary):
 
     Returns
     -------
-    tensor<[\*d], f32>
+    tensor<[\*d], T>
         * A tensor of the same shape as ``x``.
 
     Attributes
     ----------
     T: fp16, fp32
     """
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -429,14 +411,14 @@ class inverse(Operation):
     Parameters
     ----------
     x: tensor<[\*d], T> (Required)
-    epsilon: const fp32 (Optional, default=1e-4)
+    epsilon: const T (Optional, default=1e-4)
         * This is a small constant that is added to the input, before taking its
           inverse, for stability.
         * ``y = 1 / (x + epsilon)``.
 
     Returns
     -------
-    tensor<[\*d], f32>
+    tensor<[\*d], T>
         * A tensor of the same shape as ``x``.
 
     Attributes
@@ -445,17 +427,18 @@ class inverse(Operation):
     """
 
     input_spec = InputSpec(
-        x=ScalarOrTensorInputType(),
-        epsilon=FloatInputType(const=True, optional=True),
+        x=TensorInputType(type_domain="T"),
+        epsilon=TensorInputType(const=True, optional=True, type_domain="T"),
     )
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32),
+    }
 
     def default_inputs(self):
         return DefaultInputs(
-            epsilon=1e-4,
-            )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+            epsilon=nptype_from_builtin(self.x.dtype)(1e-4),
+        )
 
     def type_inference(self):
         return self.x.sym_type
@@ -473,13 +456,13 @@ class log(Operation):
     Parameters
     ----------
     x: tensor<[\*d], T> (Required)
-    epsilon: const fp32 (Optional, default=1e-45)
+    epsilon: const T (Optional, default=1e-45)
         * This is a small constant that is added to the input, before taking log.
         * ``y = log(x + epsilon)``.
 
     Returns
     -------
-    tensor<[\*d], f32>
+    tensor<[\*d], T>
         * A tensor of the same shape as ``x``.
 
     Attributes
@@ -488,16 +471,18 @@ class log(Operation):
     """
 
     input_spec = InputSpec(
-        x=ScalarOrTensorInputType(),
-        epsilon=FloatInputType(const=True, optional=True),
+        x=TensorInputType(type_domain="T"),
+        epsilon=TensorInputType(const=True, optional=True, type_domain="T"),
     )
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32),
+    }
 
     def default_inputs(self):
         return DefaultInputs(
-            epsilon=1e-45)
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+            epsilon=nptype_from_builtin(self.x.dtype)(1e-45)
+        )
 
     def type_inference(self):
         return self.x.sym_type
@@ -508,7 +493,7 @@ class log(Operation):
 
 
 @register_op
-class logical_not(elementwise_unary):
+class logical_not(Operation):
     """
     Return the value of NOT the input ``x``, element-wise. (``1`` for true, ``0``
     for false in numeric domain.) A numeric value ``t`` is evaluated to true
@@ -516,24 +501,28 @@ class logical_not(elementwise_unary):
 
     Parameters
     ----------
-    x: tensor<[\*d], T> (Required)
+    x: tensor<[\*d], bool> (Required)
 
     Returns
     -------
-    tensor<[\*d], f32>
+    tensor<[\*d], bool>
         * A tensor of the same shape as ``x``.
 
     Attributes
     ----------
     T: bool
     """
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    
+    input_spec = InputSpec(
+        x=TensorInputType(type_domain=types.bool),
+    )
 
     @precondition(allow=VALUE)
     def value_inference(self):
         return np.logical_not(self.x.val)
+        
+    def type_inference(self):
+        return self.x.sym_type
 
 
 @register_op
@@ -548,16 +537,13 @@ class round(elementwise_unary):
 
     Returns
     -------
-    tensor<[\*d], f32>
+    tensor<[\*d], T>
         * A tensor of the same shape as ``x``.
 
     Attributes
     ----------
     T: fp16, fp32
     """
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -573,14 +559,14 @@ class rsqrt(Operation):
     Parameters
     ----------
     x: tensor<[\*d], T> (Required)
-    epsilon: const fp32 (Optional, default=1e-12)
+    epsilon: const T (Optional, default=1e-12)
         * This is a small constant that is added to the input, before applying the
           ``rsqrt`` function, for stability.
         * ``y = 1 / sqrt(x + epsilon)``.
 
     Returns
     -------
-    tensor<[\*d], f32>
+    tensor<[\*d], T>
         * A tensor of the same shape as ``x``.
 
     Attributes
@@ -589,17 +575,18 @@ class rsqrt(Operation):
     """
 
     input_spec = InputSpec(
-        x=ScalarOrTensorInputType(),
-        epsilon=FloatInputType(const=True, optional=True),
+        x=TensorInputType(type_domain="T"),
+        epsilon=TensorInputType(const=True, optional=True, type_domain="T"),
     )
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32),
+    }
 
     def default_inputs(self):
         return DefaultInputs(
-            epsilon=1e-12,
-            )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+            epsilon=nptype_from_builtin(self.x.dtype)(1e-12),
+        )
 
     def type_inference(self):
         return self.x.sym_type
@@ -611,7 +598,7 @@ class rsqrt(Operation):
 
 
 @register_op
-class sign(elementwise_unary):
+class sign(elementwise_unary_with_int):
     """
     Return the sign value of the input ``x``, element-wise.
 
@@ -623,16 +610,13 @@ class sign(elementwise_unary):
 
     Returns
     -------
-    tensor<[\*d], f32>
+    tensor<[\*d], T>
         * A tensor of the same shape as ``x``.
 
     Attributes
     ----------
     T: fp16, fp32, i32
     """
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -651,16 +635,13 @@ class sin(elementwise_unary):
 
     Returns
     -------
-    tensor<[\*d], f32>
+    tensor<[\*d], T>
         * A tensor of the same shape as ``x``.
 
     Attributes
     ----------
     T: fp16, fp32
     """
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -679,16 +660,13 @@ class sinh(elementwise_unary):
 
     Returns
     -------
-    tensor<[\*d], f32>
+    tensor<[\*d], T>
         * A tensor of the same shape as ``x``.
 
     Attributes
     ----------
     T: fp16, fp32
     """
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -707,16 +685,13 @@ class sqrt(elementwise_unary):
 
     Returns
     -------
-    tensor<[\*d], f32>
+    tensor<[\*d], T>
         * A tensor of the same shape as ``x``.
 
     Attributes
     ----------
     T: fp16, fp32
     """
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -725,7 +700,7 @@ class sqrt(elementwise_unary):
 
 
 @register_op
-class square(elementwise_unary):
+class square(elementwise_unary_with_int):
     """
     Return ``x^2``, element-wise.
 
@@ -735,16 +710,13 @@ class square(elementwise_unary):
 
     Returns
     -------
-    tensor<[\*d], f32>
+    tensor<[\*d], T>
         * A tensor of the same shape as ``x``.
 
     Attributes
     ----------
     T: fp16, fp32, i32
     """
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -763,16 +735,13 @@ class tan(elementwise_unary):
 
     Returns
     -------
-    tensor<[\*d], f32>
+    tensor<[\*d], T>
         * A tensor of the same shape as ``x``.
 
     Attributes
     ----------
     T: fp16, fp32
     """
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -792,16 +761,13 @@ class tanh(elementwise_unary):
 
     Returns
     -------
-    tensor<[\*d], f32>
+    tensor<[\*d], T>
         * A tensor of the same shape as ``x``.
 
     Attributes
     ----------
     T: fp16, fp32
     """
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -818,11 +784,11 @@ class threshold(Operation):
     Parameters
     ----------
     x: tensor<[\*d], T> (Required)
-    alpha: const fp32 (Required)
+    alpha: const T (Required)
 
     Returns
     -------
-    tensor<[\*d], f32>
+    tensor<[\*d], T>
         * A tensor of the same shape as ``x``.
 
     Attributes
@@ -831,11 +797,13 @@ class threshold(Operation):
     """
 
     input_spec = InputSpec(
-        x=ScalarOrTensorInputType(), alpha=FloatInputType(const=True),
+        x=TensorInputType(type_domain="T"),
+        alpha=TensorInputType(const=True, type_domain="T"),
     )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    
+    type_domains = {
+        "T": (types.fp16, types.fp32, types.int32),
+    }
 
     def type_inference(self):
         return self.x.sym_type
@@ -867,19 +835,21 @@ class cast(Operation):
     """
 
     input_spec = InputSpec(
-        x=ScalarOrTensorInputType(), dtype=StringInputType(const=True)
+        x=TensorInputType(type_domain="T"),
+        dtype=TensorInputType(const=True, type_domain=types.str)
     )
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    type_domains = {
+        "T": (types.fp16, types.fp32, types.fp64, types.int32, types.int64, types.bool),
+    }
 
     def type_inference(self):
         type_map = {
             "int32": types.int32,
-            "int64": types.int64,
+            "int64": types.int32,
             "fp16": types.fp16,
             "fp32": types.fp32,
-            "fp64": types.fp64,
+            "fp64": types.fp32,
             "bool": types.bool,
         }
 
@@ -903,10 +873,10 @@ class cast(Operation):
     def get_cast_value(input_var, dtype_val):
         type_map = {
             "int32": np.int32,
-            "int64": np.int64,
+            "int64": np.int32,
             "fp16": np.float16,
             "fp32": np.float32,
-            "fp64": np.float64,
+            "fp64": np.float32,
             "bool": np.bool,
         }
 

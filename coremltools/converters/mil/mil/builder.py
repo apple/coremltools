@@ -13,15 +13,10 @@ from coremltools.converters.mil.mil.types.symbolic import any_symbolic
 from .program import Program, Placeholder
 from .block import curr_block, Function
 from .input_type import (
-    _InputType,
-    InternalStringInputType,
-    InternalScalarOrTensorInputType,
-    ScalarOrTensorInputType,
-    ListOrScalarOrTensorInputType,
-    TupleInputType,
-    InputSpec,
     InternalInputType,
-    PyFunctionInputType,
+    ListOrTensorInputType,
+    TensorInputType,
+    TupleInputType,
 )
 from .var import InternalVar, Var
 
@@ -149,8 +144,7 @@ class Builder:
                 update_dict[k] = var
                 continue
 
-            if isinstance(in_type, (ScalarOrTensorInputType,
-              ListOrScalarOrTensorInputType)):
+            if isinstance(in_type, (TensorInputType, ListOrTensorInputType)):
                 var = cls._add_const(val, new_var_name, before_op)
                 update_dict[k] = var
 

@@ -8,7 +8,10 @@ import numpy as np
 import pytest
 
 import coremltools as ct
-from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil import (
+    Builder as mb,
+    types,
+)
 
 
 np.random.seed(0)
@@ -277,4 +280,18 @@ class TestMLProgramVersionHandling:
         )
         with pytest.raises(ValueError, match=expected_err_str):
             get_simple_topk_pixel_unshuffle_program()
+            
+    @staticmethod
+    def test_type_domain_validation():
+        '''
+        The builder should error out early when detecting the input type violation against the defined type_domain
+        '''
+        expected_err_str = (
+            "In op, of type rsqrt, named rsqrt_0, the named input `epsilon` must have the same data type as the named input `x`. However, epsilon has dtype int32 whereas x has dtype fp32"
+        )
+        with pytest.raises(ValueError, match=expected_err_str):
+            @mb.program(input_specs=[mb.TensorSpec(shape=(2,), dtype=types.fp32)])
+            def prog(x):
+                res = mb.rsqrt(x=x, epsilon=1)
+                return res
 

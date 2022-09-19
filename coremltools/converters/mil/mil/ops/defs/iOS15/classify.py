@@ -44,16 +44,13 @@ class classify(Operation):
     Attributes
     ----------
     ProbT: fp32
-    ClassT: int64, str
+    ClassT: i64, str
     """
 
     input_spec = InputSpec(
-        probabilities=TensorInputType(),
+        probabilities=TensorInputType(type_domain=types.fp32),
         classes=ListInputType(const=True),
     )
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
 
     def type_inference(self):
         # check the type of "classes"

@@ -65,6 +65,9 @@ public:
      */
     uint64_t GetDataSize(uint64_t metadataOffset) const;
 
+    /** Returns true if the underlying file is encrypted. */
+    bool IsEncrypted() const;
+
 private:
     class Impl;
     const std::unique_ptr<Impl> m_impl;

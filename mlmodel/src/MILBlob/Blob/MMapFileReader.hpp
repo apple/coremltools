@@ -52,10 +52,15 @@ public:
         return *reinterpret_cast<const T*>(region.Data());
     }
 
+    /** Returns true if the underlying file is encrypted. */
+    bool IsEncrypted() const;
+
 protected:
     std::unique_ptr<void, std::function<void(void*)>> m_mmap;
 
     Util::Span<uint8_t> m_dataSpan;
+
+    bool m_isEncrypted;
 };
 
 }  // namespace Blob
