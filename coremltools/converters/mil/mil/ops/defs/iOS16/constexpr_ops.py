@@ -51,7 +51,7 @@ class constexpr_affine_dequantize(Operation):
     Returns
     -------
     const tensor<DstT, [1..]>
-  
+
     Attributes
     ----------
     SrcT: uint8, int8
@@ -202,7 +202,7 @@ class constexpr_lut_to_dense(Operation):
     * ``NUM_PALETTES`` can be one of ``{2, 4, 16, 64 or 256}``.
     * ``n_bits = log2(NUM_PALETTES)`` can thus be one of ``{1, 2, 4, 6, 8}``.
     * Indices are packed in bytes of size ``M``, where ``M = ceil(n_bits * product(shape) / 8)``.
-    
+
     The bit fields are packed one byte at a time, starting with the least significant bit (LSB) and
     moving upward to the most significant bit (MSB). It follows, naturally, that if an index is split
     across two bytes, the LSBs of that index is filled over the MSBs of current byte, and the remaining

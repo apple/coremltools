@@ -44,7 +44,7 @@ def convert(sk_obj, input_features=None, output_feature_names=None):
         or Classifier.
 
         Note that there may not be a one-to-one correspondence between scikit
-        learn models and which Core ML models are used to represent them.  For
+        learn models and the Core ML models chosen to represent them.  For
         example, many scikit learn models are embedded in a pipeline to handle
         processing of input features.
 
@@ -52,64 +52,64 @@ def convert(sk_obj, input_features=None, output_feature_names=None):
     input_features: str | dict | list
 
         Optional name(s) that can be given to the inputs of the scikit-learn
-        model. Defaults to 'input'.
+        model. Defaults to ``"input"``.
 
         Input features can be specified in a number of forms.
 
         -   Single string: In this case, the input is assumed to be a single
-            array, with the number of dimensions set using num_dimensions.
+            array, with the number of dimensions set using ``num_dimensions``.
 
         -   List of strings: In this case, the overall input dimensions to the
-            scikit-learn model is assumed to be the length of the list.  If
+            scikit-learn model are assumed to be the length of the list. If
             neighboring names are identical, they are assumed to be an input
-            array of that length.  For example:
+            array of that length. For example:
 
-               ["a", "b", "c"]
+               ``["a", "b", "c"]``
 
-            resolves to
+            resolves to:
 
-                [("a", Double), ("b", Double), ("c", Double)].
+                ``[("a", Double), ("b", Double), ("c", Double)]``.
 
-            And:
+            In addition:
 
-                ["a", "a", "b"]
+                ``["a", "a", "b"]``
 
-            resolves to
+            resolves to:
 
-                [("a", Array(2)), ("b", Double)].
+                ``[("a", Array(2)), ("b", Double)]``.
 
         - Dictionary: Where the keys are the names and the indices or ranges of
           feature indices.
 
-            In this case, it's presented as a mapping from keys to indices or
-            ranges of contiguous indices.  For example,
+            In this case, the Dictionary is presented as a mapping from keys to indices or
+            ranges of contiguous indices. For example:
 
-                {"a" : 0, "b" : [2,3], "c" : 1}
+                ``{"a" : 0, "b" : [2,3], "c" : 1}``
 
-            Resolves to
+            resolves to:
 
-                [("a", Double), ("c", Double), ("b", Array(2))].
+                ``[("a", Double), ("c", Double), ("b", Array(2))]``.
 
             Note that the ordering is determined by the indices.
 
-        -   List of tuples of the form `(name, datatype)`.  Here, `name` is the
-            name of the exposed feature, and `datatype` is an instance of
-            `String`, `Double`, `Int64`, `Array`, or `Dictionary`.
+        -   List of tuples of the form ``(name, datatype)``, in which ``name`` is the
+            name of the exposed feature, and ``datatype`` is an instance of
+            ``String``, ``Double``, ``Int64``, ``Array``, or ``Dictionary``.
 
     output_feature_names: string or list of strings
-            Optional name(s) that can be given to the inputs of the scikit-learn
-            model.
+        Optional name(s) that can be given to the inputs of the scikit-learn
+        model.
 
-        The output_feature_names is interpreted according to the model type:
+        The ``output_feature_names`` is interpreted according to the model type:
 
         - If the scikit-learn model is a transformer, it is the name of the
           array feature output by the final sequence of the transformer
-          (defaults to "output").
+          (defaults to ``"output"``).
         - If it is a classifier, it should be a 2-tuple of names giving the top
           class prediction and the array of scores for each class (defaults to
-          "classLabel" and "classScores").
+          ``"classLabel"`` and ``"classScores"``).
         - If it is a regressor, it should give the name of the prediction value
-          (defaults to "prediction").
+          (defaults to ``"prediction"``).
 
     Returns
     -------

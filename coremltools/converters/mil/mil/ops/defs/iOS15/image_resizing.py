@@ -469,13 +469,13 @@ class crop_resize(Operation):
           coordinate corresponds to the top-left corner of the image.
         * This parameter can take one of four values:
 
-          "CORNERS_HEIGHT_FIRST": ``[h_start, w_start, h_end, w_end]``
+          ``"CORNERS_HEIGHT_FIRST"``: ``[h_start, w_start, h_end, w_end]``
 
-          "CORNERS_WIDTH_FIRST": ``[w_start, h_start, w_end, h_end]``
+          ``"CORNERS_WIDTH_FIRST"``: ``[w_start, h_start, w_end, h_end]``
 
-          "CENTER_SIZE_HEIGHT_FIRST": ``[h_center, w_center, box_height, box_width]``
+          ``"CENTER_SIZE_HEIGHT_FIRST"``: ``[h_center, w_center, box_height, box_width]``
 
-          "CENTER_SIZE_WIDTH_FIRST": ``[w_center, h_center, box_width, box_height]``
+          ``"CENTER_SIZE_WIDTH_FIRST"``: ``[w_center, h_center, box_width, box_height]``
 
     sampling_mode : const<str> (Optional, default="DEFAULT")
         * This parameter can take ``"STRICT_ALIGN_CORNERS"``,
@@ -644,7 +644,7 @@ class affine(Operation):
     value at the coordinate ``(x’,y’)`` in the input image using either bilinear or
     nearest neighbor interpolation. If the ``(x’, y’)`` point falls outside the input
     image, then padding information is used to compute the value.
-    
+
     .. sourcecode:: python
 
         * x’ = a0 * x + a1 * y + a2
@@ -792,7 +792,7 @@ class resample(Operation):
         * Coordinate (normalized or unnormalized) should be specified according
           to ``coordinates_mode``.
     sampling_mode: const<str>
-        * Allowed values: ``"bilinear" , "nearest"``
+        * Allowed values: ``"bilinear"`` , ``"nearest"``
     padding_mode: const<str>
         * Allowed values: ``"constant"``, ``"border"``, ``"reflection"``, ``"symmetric"``
         * Note that the following example is 1D case for brevity.

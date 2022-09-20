@@ -20,8 +20,8 @@ from coremltools.converters.mil.mil.types.symbolic import any_symbolic
 @register_op(opset_version=_IOS16_TARGET)
 class reshape_like(Operation):
     """
-    Reshape a tensor to a output shape specified by some or all dimensions of a tuple of reference tensors ``ref_tensors``.
-    
+    Reshape a tensor to an output shape specified by some or all dimensions of a tuple of reference tensors ``ref_tensors``.
+
     Parameters
     ----------
     x: tensor<\*?, T> (Required)
@@ -29,42 +29,48 @@ class reshape_like(Operation):
 
     ref_tensors: Tuple[tensor<\*?, R>] (Required)
         * A tuple of tensors that define the output shape.
-        
+
     begins: Tuple[const<int32>] (Required)
-        * A tuple of integers specifying the begin index into the shape vector of the corresponding ref_tensor.
-        
+        * A tuple of integers specifying the begin index into the shape vector of the corresponding ``ref_tensor``.
+
     ends: Tuple[const<int32>] (Required)
-        * A tuple of integers specifying the end index into the shape vector of the corresponding ref_tensor.
-        
+        * A tuple of integers specifying the end index into the shape vector of the corresponding ``ref_tensor``.
+
     end_masks: Tuple[const<bool>] (Required)
-        * If true, select all axes from begin until the end of the corresponding ref_tensor.
-           i.e. ref_tensors[i].shape[begins[i]:]
-           
-    The output shape is computed by the following way:
-    
-    ```
-    output_shape = []
-    num_of_refs = len(begins)
-    for i in range(num_of_refs):
-        if end_masks[i]:
-            output_shape.append(ref_tensor_i.shape[begins[i]:])
-        else:
-            output_shape.append(ref_tensor_i.shape[begins[i]:ends[i]])
-    output_shape = np.concat(output_shape, axis=0)
-    ```
-           
-    Here is an example:
-    ``ref_tensors=[tensor[2, 3, 4], tensor[1, 5, 6]]``
-    ``begins=[0, 1]``
-    ``ends=[2, 0]``
-    ``end_masks=[False, True]``
-    The output shape would be ``(2, 3, 5, 6)``
+        * If true, select all axes from the begin index until the end of the corresponding ``ref_tensor``, as in
+          ``ref_tensors[i].shape[begins[i]:]``.
+
+    Notes
+    -----
+    The output shape is computed as follows:
+
+    .. sourcecode:: python
+
+        output_shape = []
+        num_of_refs = len(begins)
+        for i in range(num_of_refs):
+            if end_masks[i]:
+                output_shape.append(ref_tensor_i.shape[begins[i]:])
+            else:
+                output_shape.append(ref_tensor_i.shape[begins[i]:ends[i]])
+        output_shape = np.concat(output_shape, axis=0)
+
+    The following is an example:
+
+    .. sourcecode:: python
+
+        ref_tensors=[tensor[2, 3, 4], tensor[1, 5, 6]]
+        begins=[0, 1]``
+        ends=[2, 0]``
+        end_masks=[False, True]
+
+    The output shape would be ``(2, 3, 5, 6)``.
 
     Returns
     -------
     tensor<\*?, T>
-        * Same type as input tensor ``x``
-        * Output shape is computed by ``ref_tensors, begins, ends, and end_masks``
+        * Same type as input tensor ``x``.
+        * Output shape is computed by ``ref_tensors``, ``begins``, ``ends``, and ``end_masks``.
 
     Attributes
     ----------
@@ -147,6 +153,7 @@ class pixel_unshuffle(Operation):
     ----------
     x: tensor<[n, C, H / f , W / f], T> (Required)
         * Input tensor of rank ``4``.
+
     downscale_factor: const<i32>
         * Factor to decrease spatial resolution by.
 
