@@ -96,16 +96,16 @@ class cumsum(Operation):
     x: tensor<\*?, T> (Required)
         * Input tensor.
     axis: const<i32> (Optional)
-        * default to ``0``.
+        * Defaults to ``0``.
         * Axis for which the cumulative sum is computed.
     exclusive: const<bool> (Optional)
-        * Default to ``False``.
+        * Defaults to ``False``.
         * When set to ``False``, inclusive cumsum is computed, that is the first element of
           the output is identical to the first element in the input.
         * When set to ``True``, exclusive cumsum is computed, which makes the first element
           of output to ``0``.
     reverse: const<bool> (Optional)
-        * Default to ``False``.
+        * Defaults to ``False``.
         * When set to ``True``, perform cumsum in the reverse order.
 
     Returns
@@ -173,7 +173,7 @@ class fill(Operation):
         * Target output tensor shape.
         * ``K`` is the rank of the output tensor. ``shape[k] > 0`` for ``k = 0,..., K-1``.
     value: const<T> (Optional)
-        * Default to ``0.0``.
+        * Defaults to ``0.0``.
         * Constant value to fill in.
 
     Returns
@@ -244,7 +244,7 @@ class non_maximum_suppression(Operation):
         * Maximum number of boxes to select. If the number of surviving boxes are
           less, output is padded up to this number.
     per_class_suppression: const<bool> (Optional)
-        * Default to ``False``.
+        * Defaults to ``False``.
         * If ``True``, suppression is performed independently within boxes of each class.
 
     Returns
@@ -348,12 +348,12 @@ class one_hot(Operation):
     axis: const i32 (Optional)
         * Indicates which dimension to append the new axis.
         * If the input indices is rank ``D``, the output tensor will have rank ``D+1``.
-        * Default to ``-1`` (the last dimension).
+        * Defaults to ``-1`` (the last dimension).
     on_value: const T (Optional)
         * Values for locations where defined in ``indices``.
-        * Default to ``1``.
+        * Defaults to ``1``.
     off_value: const T (Optional)
-        * Default to ``0``.
+        * Defaults to ``0``.
 
     Returns
     -------
@@ -433,20 +433,20 @@ class pad(Operation):
         ``N <= D_in``. Last ``N`` dimensions of ``x`` are padded as follows:
         
         * For each dimension ``i`` of ``x`` if ``i >= D_in - N``:
-            * pad ``pad[2*i]`` elements before ``x[..,i,..]``
-            * pad ``pad[2*i+1]`` elements after ``x[..,i,..]``
+            * pad ``pad[2*i]`` elements before ``x[..,i,..]``.
+            * pad ``pad[2*i+1]`` elements after ``x[..,i,..]``.
         * If mode is "reflect" then ``pad[2*i]`` and ``pad[2*i+1]`` can be at
           most ``D[i]-1``.
         * If mode is "replicate" then ``pad[2*i]`` and ``pad[2*i+1]`` can be
           at most ``D[i]``.
 
     mode: const<str> (Optional)
-        * Default to ``constant``.
+        * Defaults to ``constant``.
         * Must be one of the following values:
           ``constant``, ``reflect``, or ``replicate``.
 
     constant_val: const<T> (Optional)
-        * Default to ``0``.
+        * Defaults to ``0``.
         * Constant value to pad. Ignored if ``mode != constant``.
 
     Returns
@@ -680,11 +680,11 @@ class argsort(Operation):
     x: <\*?, T> (Required)
         * Input tensor.
     * axis: const<i32> (Optional)
-        * Default to ``-1`` (the last dimension).
+        * Defaults to ``-1`` (the last dimension).
         * Axis to perform the operation.
     * ascending: const<bool> (Optional)
-        * Default to ``False``, sort in descending order. ``True`` to sort in
-          ascending order.
+        * Defaults to ``False``, sort in descending order.
+        * ``True`` to sort in ascending order.
 
     Returns
     -------
@@ -734,14 +734,14 @@ class topk(Operation):
     x: <\*?, T> (Required)
         * Input tensor.
     k: const<i32> (Optional)
-        * Default to ``1``.
+        * Defaults to ``1``.
         * Number of values/indices to be computed along each axis.
-    * axis: const<i32> (Optional)
+    axis: const<i32> (Optional)
         * Defaults to ``-1`` (last dimension).
         * Axis to perform the operation.
-    * ascending: const<bool> (Optional)
-        * Default to ``False``, sort in descending order. ``True`` to sort in
-          ascending order.
+    ascending: const<bool> (Optional)
+        * Defaults to ``False``, sort in descending order.
+        * ``True`` to sort in ascending order.
 
     Returns
     -------
@@ -809,7 +809,7 @@ class flatten2d(Operation):
     ----------
     x: tensor<[*d], T> (Required)
         * Input tensor.
-    * axis: const<i32>  (Optional)
+    axis: const<i32>  (Optional)
         * Defaults to ``1``.
         * Negative axis is supported.
 
@@ -867,7 +867,7 @@ class flatten2d(Operation):
 @register_op
 class shape(Operation):
     """
-    Returns a 1-dimensional tensor with the shape of the input tensor
+    Returns a 1-dimensional tensor with the shape of the input tensor.
 
     Parameters
     ----------
@@ -922,8 +922,8 @@ class concat(Operation):
         * The dimension along which to concatenate. Must be in the range
           ``[-rank(values[i]), rank(values[i]))`` for all ``i``.
     interleave: const<bool> (Optional, Default=False)
-        * If true, concatenate the inputs by interleaving them.
-        * If true, all the inputs to this op must have the exact same shape.
+        * If True, concatenate the inputs by interleaving them.
+        * If True, all the inputs to this op must have the exact same shape.
 
     Examples
     --------

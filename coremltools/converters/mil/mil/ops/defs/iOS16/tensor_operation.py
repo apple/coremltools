@@ -25,14 +25,14 @@ from coremltools.converters.mil.mil.ops.defs.iOS16 import _IOS16_TARGET
 @register_op(opset_version=_IOS16_TARGET)
 class fill_like(Operation):
     """
-    Returns a tensor with the same size as the input tensor filled with a constant value
+    Returns a tensor with the same size as the input tensor filled with a constant value.
 
     Parameters
     ----------
     ref_tensor: tensor<\*?, T> (Required)
         * Input tensor.
     value: const<U> (Optional)
-        * Default to ``0.0``.
+        * Default is ``0.0``.
         * Constant value to fill in.
 
     Returns
@@ -73,18 +73,19 @@ class topk(_topk_iOS15):
     """
     A version of ``topk`` for iOS 16+. This section documents the differences. For the
     rest of the documentation, see `the iOS 15 version of topk <#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.topk>`_.
+
     Parameters
     ----------
-       * The following are additional parameters for the iOS 16+ version. (For more parameters, see
-         `the iOS 15 version of topk <#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.topk>`_.)
+    The following are additional parameters for the iOS 16+ version. (For more parameters,
+    see `the iOS 15 version of topk <#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.topk>`_.)
     
     sort: const<bool> (Optional)
-        * Default to ``True``.
+        * Defaults to ``True``.
         * If ``True``, ``top-k`` elements are themselves sorted.
           Otherwise, no particular ordering is guaranteed.
     return_indices: const<bool> (Optional)
-        * Default to ``True``.
-        * If ``True`, returns both values and indices. Otherwise, returns only the ``top-k`` values.
+        * Defaults to ``True``.
+        * If ``True``, returns both values and indices. Otherwise, returns only the ``top-k`` values.
 
     Returns
     -------
