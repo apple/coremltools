@@ -101,7 +101,7 @@
 interface.</p>
 <p>Can be set to one of the following:</p>
 <ul class="simple">
-<li><p>None for using the feature names from the model.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">None</span></code> for using the feature names from the model.</p></li>
 <li><p>List of names of the input features that should be exposed in the
 interface to the Core ML model. These input features are in the same
 order as the XGboost model.</p></li>
@@ -109,15 +109,15 @@ order as the XGboost model.</p></li>
 </dd>
 <dt><strong>target: str</strong></dt><dd><p>Name of the output feature name exposed to the Core ML model.</p>
 </dd>
-<dt><strong>force_32bit_float: bool</strong></dt><dd><p>If True, then the resulting CoreML model will use 32 bit floats internally.</p>
+<dt><strong>force_32bit_float: bool</strong></dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, then the resulting CoreML model will use 32 bit floats internally.</p>
 </dd>
 <dt><strong>mode: str in [‘regressor’, ‘classifier’]</strong></dt><dd><p>Mode of the tree model.</p>
 </dd>
 <dt><strong>class_labels: list[int] or None</strong></dt><dd><p>List of classes. When set to None, the class labels are just the range from
-0 to n_classes - 1.</p>
+0 to <code class="docutils literal notranslate"><span class="pre">n_classes</span> <span class="pre">-</span> <span class="pre">1</span></code>.</p>
 </dd>
-<dt><strong>n_classes: int or None</strong></dt><dd><p>Number of classes in classification. When set to None, the number of
-classes is expected from the model or class_labels should be provided.</p>
+<dt><strong>n_classes: int or None</strong></dt><dd><p>Number of classes in classification. When set to <code class="docutils literal notranslate"><span class="pre">None</span></code>, the number of
+classes is expected from the model or <code class="docutils literal notranslate"><span class="pre">class_labels</span></code> should be provided.</p>
 </dd>
 </dl>
 </dd>

@@ -85,12 +85,8 @@
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">get_new_symbol</span><span class="p">,</span> <span class="n">get_new_variadic_symbol</span><span class="p">,</span> <span class="n">types</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.input_type</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">DefaultInputs</span><span class="p">,</span>
-    <span class="n">FloatInputType</span><span class="p">,</span>
     <span class="n">InputSpec</span><span class="p">,</span>
-    <span class="n">IntInputType</span><span class="p">,</span>
-    <span class="n">IntTensorInputType</span><span class="p">,</span>
     <span class="n">TensorInputType</span><span class="p">,</span>
-    <span class="n">StringInputType</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.operation</span> <span class="kn">import</span> <span class="n">Operation</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs._op_reqs</span> <span class="kn">import</span> <span class="n">register_op</span>
@@ -101,11 +97,10 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Random Op Superclass</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">IntTensorInputType</span><span class="p">(),)</span>
+    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
+        <span class="n">shape</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+    <span class="p">)</span>
     <span class="n">out_dtype</span> <span class="o">=</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">any_symbolic</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">shape</span><span class="p">):</span>
@@ -143,7 +138,7 @@
 <span class="sd">        * Target output tensor shape.</span>
 <span class="sd">        * ``K`` is the rank of the output tensor.</span>
 <span class="sd">          ``shape[k] &gt; 0`` for ``k = 0,..., K-1``.</span>
-<span class="sd">    prob: const&lt;f32&gt; (Optional)</span>
+<span class="sd">    prob: const&lt;T&gt; (Optional)</span>
 <span class="sd">        * The probability of sampling ``1``. Defaults to ``0.5``.</span>
 <span class="sd">    seed: const&lt;i32&gt; (Optional)</span>
 <span class="sd">        * Seed to create a reproducible sequence of values across multiple invokes.</span>
@@ -164,12 +159,16 @@
     
     <span class="n">input_spec</span> <span class="o">=</span> <span class="p">(</span>
         <span class="n">InputSpec</span><span class="p">(</span>
-            <span class="n">shape</span><span class="o">=</span><span class="n">IntTensorInputType</span><span class="p">(),</span>
-            <span class="n">prob</span><span class="o">=</span><span class="n">FloatInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-            <span class="n">seed</span><span class="o">=</span><span class="n">IntInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+            <span class="n">shape</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+            <span class="n">prob</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+            <span class="n">seed</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
         <span class="p">)</span>
         <span class="o">+</span> <span class="n">RandomDistribution</span><span class="o">.</span><span class="n">input_spec</span>
     <span class="p">)</span>
+    
+    <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">),</span>
+    <span class="p">}</span>
 
     <span class="k">def</span> <span class="nf">default_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">default_inputs</span><span class="p">()</span> <span class="o">+</span> \
@@ -177,9 +176,6 @@
                 <span class="n">seed</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
                 <span class="n">prob</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
             <span class="p">)</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">out_dtype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prob</span><span class="o">.</span><span class="n">dtype</span>
@@ -222,11 +218,15 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     
     <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
-        <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(),</span>
-        <span class="n">mode</span><span class="o">=</span><span class="n">StringInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-        <span class="n">size</span><span class="o">=</span><span class="n">IntInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-        <span class="n">seed</span><span class="o">=</span><span class="n">IntInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+        <span class="n">mode</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">str</span><span class="p">),</span>
+        <span class="n">size</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+        <span class="n">seed</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
     <span class="p">)</span>
+    
+    <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">),</span>
+    <span class="p">}</span>
 
     <span class="k">def</span> <span class="nf">default_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">DefaultInputs</span><span class="p">(</span>
@@ -234,9 +234,6 @@
             <span class="n">size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
             <span class="n">seed</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
         <span class="p">)</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">out_dtype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span>
@@ -256,9 +253,9 @@
 <span class="sd">        * Target output tensor shape.</span>
 <span class="sd">        * ``K`` is the rank of the output tensor.</span>
 <span class="sd">          ``shape[k] &gt; 0`` for ``k = 0,..., K-1``.</span>
-<span class="sd">    mean: const&lt;f32&gt; (Optional)</span>
+<span class="sd">    mean: const&lt;T&gt; (Optional)</span>
 <span class="sd">        The mean (center) of the normal distribution. Defaults to 0.0.</span>
-<span class="sd">    stddev: const&lt;f32&gt; (Optional)</span>
+<span class="sd">    stddev: const&lt;T&gt; (Optional)</span>
 <span class="sd">        The standard deviation (width) of the normal distribution. Defaults to ``1.0``.</span>
 <span class="sd">    seed: const&lt;i32&gt; (Optional)</span>
 <span class="sd">        Seed to create a reproducible sequence of values across multiple invokes.</span>
@@ -279,13 +276,17 @@
     
     <span class="n">input_spec</span> <span class="o">=</span> <span class="p">(</span>
         <span class="n">InputSpec</span><span class="p">(</span>
-            <span class="n">shape</span><span class="o">=</span><span class="n">IntTensorInputType</span><span class="p">(),</span>
-            <span class="n">mean</span><span class="o">=</span><span class="n">FloatInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-            <span class="n">stddev</span><span class="o">=</span><span class="n">FloatInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-            <span class="n">seed</span><span class="o">=</span><span class="n">IntInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+            <span class="n">shape</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+            <span class="n">mean</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+            <span class="n">stddev</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+            <span class="n">seed</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
         <span class="p">)</span>
         <span class="o">+</span> <span class="n">RandomDistribution</span><span class="o">.</span><span class="n">input_spec</span>
     <span class="p">)</span>
+    
+    <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">),</span>
+    <span class="p">}</span>
 
     <span class="k">def</span> <span class="nf">default_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">default_inputs</span><span class="p">()</span> <span class="o">+</span> \
@@ -294,9 +295,6 @@
                 <span class="n">stddev</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span>
                 <span class="n">seed</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
             <span class="p">)</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean</span><span class="o">.</span><span class="n">dtype</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">stddev</span><span class="o">.</span><span class="n">dtype</span><span class="p">:</span>
@@ -326,9 +324,9 @@
 <span class="sd">        * Target output tensor shape.</span>
 <span class="sd">        * ``K`` is the rank of the output tensor.</span>
 <span class="sd">          ``shape[k] &gt; 0`` for ``k = 0,..., K-1``.</span>
-<span class="sd">    low: const&lt;f32&gt; (Optional)</span>
+<span class="sd">    low: const&lt;T&gt; (Optional)</span>
 <span class="sd">        * Lower boundary of the output interval (inclusive). Defaults to ``0.0``.</span>
-<span class="sd">    high: const&lt;f32&gt; (Optional)</span>
+<span class="sd">    high: const&lt;T&gt; (Optional)</span>
 <span class="sd">        * Upper boundary of the output interval (exclusive). Defaults to ``1.0``.</span>
 <span class="sd">    seed: const&lt;i32&gt; (Optional)</span>
 <span class="sd">        * Seed to create a reproducible sequence of values across multiple invokes.</span>
@@ -349,13 +347,17 @@
     
     <span class="n">input_spec</span> <span class="o">=</span> <span class="p">(</span>
         <span class="n">InputSpec</span><span class="p">(</span>
-            <span class="n">shape</span><span class="o">=</span><span class="n">IntTensorInputType</span><span class="p">(),</span>
-            <span class="n">low</span><span class="o">=</span><span class="n">FloatInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-            <span class="n">high</span><span class="o">=</span><span class="n">FloatInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-            <span class="n">seed</span><span class="o">=</span><span class="n">IntInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+            <span class="n">shape</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+            <span class="n">low</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+            <span class="n">high</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+            <span class="n">seed</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
         <span class="p">)</span>
         <span class="o">+</span> <span class="n">RandomDistribution</span><span class="o">.</span><span class="n">input_spec</span>
     <span class="p">)</span>
+    
+    <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">),</span>
+    <span class="p">}</span>
 
     <span class="k">def</span> <span class="nf">default_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">default_inputs</span><span class="p">()</span> <span class="o">+</span> \
@@ -364,9 +366,6 @@
                 <span class="n">high</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span>
                 <span class="n">seed</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span>
             <span class="p">)</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">low</span><span class="o">.</span><span class="n">dtype</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">high</span><span class="o">.</span><span class="n">dtype</span><span class="p">:</span>

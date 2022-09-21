@@ -115,8 +115,8 @@
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>x: tensor&lt;*?, T&gt; (Required)</strong></dt><dd></dd>
-<dt><strong>alpha: const fp32 (Required)</strong></dt><dd></dd>
-<dt><strong>beta: const fp32 (Required)</strong></dt><dd></dd>
+<dt><strong>alpha: const T (Required)</strong></dt><dd></dd>
+<dt><strong>beta: const T (Required)</strong></dt><dd></dd>
 </dl>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -143,10 +143,7 @@
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>x: tensor&lt;*?, T&gt; (Required)</strong></dt><dd></dd>
-<dt><strong>alpha: const fp32 (Optional)</strong></dt><dd><ul class="simple">
-<li><p>Default is <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p></li>
-</ul>
-</dd>
+<dt><strong>alpha: const T (Required)</strong></dt><dd></dd>
 </dl>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -221,10 +218,7 @@ based on the following formulas:</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>x: &lt;*?, T&gt; (Required)</strong></dt><dd></dd>
-<dt><strong>alpha: const fp32 (Optional)</strong></dt><dd><ul class="simple">
-<li><p>Default is <code class="docutils literal notranslate"><span class="pre">0.01</span></code>.</p></li>
-</ul>
-</dd>
+<dt><strong>alpha: const T (Required)</strong></dt><dd></dd>
 </dl>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -251,11 +245,8 @@ based on the following formulas:</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>x: tensor&lt;*?, T&gt; (Required)</strong></dt><dd></dd>
-<dt><strong>alpha: const fp32 (Required)</strong></dt><dd></dd>
-<dt><strong>beta: const fp32 (Optional)</strong></dt><dd><ul class="simple">
-<li><p>Default is <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p></li>
-</ul>
-</dd>
+<dt><strong>alpha: const T (Required)</strong></dt><dd></dd>
+<dt><strong>beta: const T (Required)</strong></dt><dd></dd>
 </dl>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -370,14 +361,8 @@ based on the following formulas:</p>
 <li><p>Input range is <code class="docutils literal notranslate"><span class="pre">(-inf,</span> <span class="pre">inf)</span></code>.</p></li>
 </ul>
 </dd>
-<dt><strong>alpha: const fp32 (Optional)</strong></dt><dd><ul class="simple">
-<li><p>Default is <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p></li>
-</ul>
-</dd>
-<dt><strong>beta: const fp32 (Optional)</strong></dt><dd><ul class="simple">
-<li><p>Default is <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p></li>
-</ul>
-</dd>
+<dt><strong>alpha: const T (Required)</strong></dt><dd></dd>
+<dt><strong>beta: const T (Required)</strong></dt><dd></dd>
 </dl>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -430,14 +415,8 @@ based on the following formulas:</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>x: tensor&lt;*?, T&gt; (Required)</strong></dt><dd></dd>
-<dt><strong>alpha: const fp32 (Optional)</strong></dt><dd><ul class="simple">
-<li><p>Default is <code class="docutils literal notranslate"><span class="pre">0.2</span></code>.</p></li>
-</ul>
-</dd>
-<dt><strong>beta: const fp32 (Optional)</strong></dt><dd><ul class="simple">
-<li><p>Default is <code class="docutils literal notranslate"><span class="pre">0.5</span></code>.</p></li>
-</ul>
-</dd>
+<dt><strong>alpha: const T (Required)</strong></dt><dd></dd>
+<dt><strong>beta: const T (Required)</strong></dt><dd></dd>
 </dl>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -597,10 +576,7 @@ based on the following formulas:</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>x: tensor&lt;*?, T&gt; (Required)</strong></dt><dd></dd>
-<dt><strong>alpha: const fp32 (Optional)</strong></dt><dd><ul class="simple">
-<li><p>Default is <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p></li>
-</ul>
-</dd>
+<dt><strong>alpha: const T (Required)</strong></dt><dd></dd>
 </dl>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -651,7 +627,7 @@ the predicted class label and the output dictionary of class names and values.</
 <dt class="field-odd">Attributes</dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>ProbT: fp32</strong></dt><dd></dd>
-<dt><strong>ClassT: int64, str</strong></dt><dd></dd>
+<dt><strong>ClassT: i64, str</strong></dt><dd></dd>
 </dl>
 </dd>
 </dl>
@@ -966,7 +942,7 @@ rank of <code class="docutils literal notranslate"><span class="pre">cond</span>
 <dt class="field-odd">Attributes</dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>B: bool</strong></dt><dd></dd>
-<dt><strong>T: fp16, fp32, i32</strong></dt><dd></dd>
+<dt><strong>T: fp16, fp32, i32, bool</strong></dt><dd></dd>
 </dl>
 </dd>
 </dl>
@@ -1249,6 +1225,8 @@ at compile time</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">custom</span></code>: Specify custom padding in the parameter <code class="docutils literal notranslate"><span class="pre">pad</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">same</span></code>: Input is padded such that out spatial shapes are
 <code class="docutils literal notranslate"><span class="pre">d_out[i]</span> <span class="pre">=</span> <span class="pre">ceil(d_in[i]</span> <span class="pre">/</span> <span class="pre">strides[i])</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">same_lower</span></code>: Similar to <code class="docutils literal notranslate"><span class="pre">same</span></code> but the padding
+will place extra rows/cols on the top/left if the padding amount is odd.</p></li>
 </ul>
 </div></blockquote>
 <p>Specifically, for <code class="docutils literal notranslate"><span class="pre">i</span> <span class="pre">=</span> <span class="pre">0,..,,len(d_in)-1</span></code>, the equivalent paddings are
@@ -2076,7 +2054,7 @@ rounded towards negative infinity.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><dl class="simple">
-<dt>tensor&lt;[*d], f32&gt;</dt><dd><ul class="simple">
+<dt>tensor&lt;[*d], T&gt;</dt><dd><ul class="simple">
 <li><p>A tensor of the same shape as <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p></li>
 </ul>
 </dd>
@@ -2102,7 +2080,7 @@ rounded towards negative infinity.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><dl class="simple">
-<dt>tensor&lt;[*d], f32&gt;</dt><dd><ul class="simple">
+<dt>tensor&lt;[*d], T&gt;</dt><dd><ul class="simple">
 <li><p>A tensor of the same shape as <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p></li>
 </ul>
 </dd>
@@ -2128,7 +2106,7 @@ rounded towards negative infinity.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><dl class="simple">
-<dt>tensor&lt;[*d], f32&gt;</dt><dd><ul class="simple">
+<dt>tensor&lt;[*d], T&gt;</dt><dd><ul class="simple">
 <li><p>A tensor of the same shape as <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p></li>
 </ul>
 </dd>
@@ -2154,7 +2132,7 @@ rounded towards negative infinity.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><dl class="simple">
-<dt>tensor&lt;[*d], f32&gt;</dt><dd><ul class="simple">
+<dt>tensor&lt;[*d], T&gt;</dt><dd><ul class="simple">
 <li><p>A tensor of the same shape as <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p></li>
 </ul>
 </dd>
@@ -2181,7 +2159,7 @@ rounded towards negative infinity.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><dl class="simple">
-<dt>tensor&lt;[*d], f32&gt;</dt><dd><ul class="simple">
+<dt>tensor&lt;[*d], T&gt;</dt><dd><ul class="simple">
 <li><p>A tensor of the same shape as <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p></li>
 </ul>
 </dd>
@@ -2207,7 +2185,7 @@ rounded towards negative infinity.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><dl class="simple">
-<dt>tensor&lt;[*d], f32&gt;</dt><dd><ul class="simple">
+<dt>tensor&lt;[*d], T&gt;</dt><dd><ul class="simple">
 <li><p>A tensor of the same shape as <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p></li>
 </ul>
 </dd>
@@ -2231,13 +2209,13 @@ than <code class="docutils literal notranslate"><span class="pre">beta</span></c
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>x: tensor&lt;[*d], T&gt; (Required)</strong></dt><dd></dd>
-<dt><strong>alpha: const f32 (Required)</strong></dt><dd></dd>
-<dt><strong>beta: const f32 (Required)</strong></dt><dd></dd>
+<dt><strong>alpha: const T (Required)</strong></dt><dd></dd>
+<dt><strong>beta: const T (Required)</strong></dt><dd></dd>
 </dl>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><dl class="simple">
-<dt>tensor&lt;[*d], f32&gt;</dt><dd><ul class="simple">
+<dt>tensor&lt;[*d], T&gt;</dt><dd><ul class="simple">
 <li><p>A tensor of the same shape as <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p></li>
 </ul>
 </dd>
@@ -2313,7 +2291,7 @@ output range is <code class="docutils literal notranslate"><span class="pre">[-1
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><dl class="simple">
-<dt>tensor&lt;[*d], f32&gt;</dt><dd><ul class="simple">
+<dt>tensor&lt;[*d], T&gt;</dt><dd><ul class="simple">
 <li><p>A tensor of the same shape as <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p></li>
 </ul>
 </dd>
@@ -2339,7 +2317,7 @@ output range is <code class="docutils literal notranslate"><span class="pre">[-1
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><dl class="simple">
-<dt>tensor&lt;[*d], f32&gt;</dt><dd><ul class="simple">
+<dt>tensor&lt;[*d], T&gt;</dt><dd><ul class="simple">
 <li><p>A tensor of the same shape as <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p></li>
 </ul>
 </dd>
@@ -2365,7 +2343,7 @@ output range is <code class="docutils literal notranslate"><span class="pre">[-1
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><dl class="simple">
-<dt>tensor&lt;[*d], f32&gt;</dt><dd><ul class="simple">
+<dt>tensor&lt;[*d], T&gt;</dt><dd><ul class="simple">
 <li><p>A tensor of the same shape as <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p></li>
 </ul>
 </dd>
@@ -2392,7 +2370,7 @@ towards negative infinity.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><dl class="simple">
-<dt>tensor&lt;[*d], f32&gt;</dt><dd><ul class="simple">
+<dt>tensor&lt;[*d], T&gt;</dt><dd><ul class="simple">
 <li><p>A tensor of the same shape as <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p></li>
 </ul>
 </dd>
@@ -2414,7 +2392,7 @@ towards negative infinity.</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>x: tensor&lt;[*d], T&gt; (Required)</strong></dt><dd></dd>
-<dt><strong>epsilon: const fp32 (Optional, default=1e-4)</strong></dt><dd><ul class="simple">
+<dt><strong>epsilon: const T (Optional, default=1e-4)</strong></dt><dd><ul class="simple">
 <li><p>This is a small constant that is added to the input, before taking its
 inverse, for stability.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">y</span> <span class="pre">=</span> <span class="pre">1</span> <span class="pre">/</span> <span class="pre">(x</span> <span class="pre">+</span> <span class="pre">epsilon)</span></code>.</p></li>
@@ -2424,7 +2402,7 @@ inverse, for stability.</p></li>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><dl class="simple">
-<dt>tensor&lt;[*d], f32&gt;</dt><dd><ul class="simple">
+<dt>tensor&lt;[*d], T&gt;</dt><dd><ul class="simple">
 <li><p>A tensor of the same shape as <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p></li>
 </ul>
 </dd>
@@ -2446,7 +2424,7 @@ inverse, for stability.</p></li>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>x: tensor&lt;[*d], T&gt; (Required)</strong></dt><dd></dd>
-<dt><strong>epsilon: const fp32 (Optional, default=1e-45)</strong></dt><dd><ul class="simple">
+<dt><strong>epsilon: const T (Optional, default=1e-45)</strong></dt><dd><ul class="simple">
 <li><p>This is a small constant that is added to the input, before taking log.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">y</span> <span class="pre">=</span> <span class="pre">log(x</span> <span class="pre">+</span> <span class="pre">epsilon)</span></code>.</p></li>
 </ul>
@@ -2455,7 +2433,7 @@ inverse, for stability.</p></li>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><dl class="simple">
-<dt>tensor&lt;[*d], f32&gt;</dt><dd><ul class="simple">
+<dt>tensor&lt;[*d], T&gt;</dt><dd><ul class="simple">
 <li><p>A tensor of the same shape as <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p></li>
 </ul>
 </dd>
@@ -2478,12 +2456,12 @@ for false in numeric domain.) A numeric value <code class="docutils literal notr
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>x: tensor&lt;[*d], T&gt; (Required)</strong></dt><dd></dd>
+<dt><strong>x: tensor&lt;[*d], bool&gt; (Required)</strong></dt><dd></dd>
 </dl>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><dl class="simple">
-<dt>tensor&lt;[*d], f32&gt;</dt><dd><ul class="simple">
+<dt>tensor&lt;[*d], bool&gt;</dt><dd><ul class="simple">
 <li><p>A tensor of the same shape as <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p></li>
 </ul>
 </dd>
@@ -2510,7 +2488,7 @@ for false in numeric domain.) A numeric value <code class="docutils literal notr
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><dl class="simple">
-<dt>tensor&lt;[*d], f32&gt;</dt><dd><ul class="simple">
+<dt>tensor&lt;[*d], T&gt;</dt><dd><ul class="simple">
 <li><p>A tensor of the same shape as <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p></li>
 </ul>
 </dd>
@@ -2532,7 +2510,7 @@ for false in numeric domain.) A numeric value <code class="docutils literal notr
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>x: tensor&lt;[*d], T&gt; (Required)</strong></dt><dd></dd>
-<dt><strong>epsilon: const fp32 (Optional, default=1e-12)</strong></dt><dd><ul class="simple">
+<dt><strong>epsilon: const T (Optional, default=1e-12)</strong></dt><dd><ul class="simple">
 <li><p>This is a small constant that is added to the input, before applying the
 <code class="docutils literal notranslate"><span class="pre">rsqrt</span></code> function, for stability.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">y</span> <span class="pre">=</span> <span class="pre">1</span> <span class="pre">/</span> <span class="pre">sqrt(x</span> <span class="pre">+</span> <span class="pre">epsilon)</span></code>.</p></li>
@@ -2542,7 +2520,7 @@ for false in numeric domain.) A numeric value <code class="docutils literal notr
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><dl class="simple">
-<dt>tensor&lt;[*d], f32&gt;</dt><dd><ul class="simple">
+<dt>tensor&lt;[*d], T&gt;</dt><dd><ul class="simple">
 <li><p>A tensor of the same shape as <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p></li>
 </ul>
 </dd>
@@ -2569,7 +2547,7 @@ for false in numeric domain.) A numeric value <code class="docutils literal notr
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><dl class="simple">
-<dt>tensor&lt;[*d], f32&gt;</dt><dd><ul class="simple">
+<dt>tensor&lt;[*d], T&gt;</dt><dd><ul class="simple">
 <li><p>A tensor of the same shape as <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p></li>
 </ul>
 </dd>
@@ -2595,7 +2573,7 @@ for false in numeric domain.) A numeric value <code class="docutils literal notr
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><dl class="simple">
-<dt>tensor&lt;[*d], f32&gt;</dt><dd><ul class="simple">
+<dt>tensor&lt;[*d], T&gt;</dt><dd><ul class="simple">
 <li><p>A tensor of the same shape as <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p></li>
 </ul>
 </dd>
@@ -2621,7 +2599,7 @@ for false in numeric domain.) A numeric value <code class="docutils literal notr
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><dl class="simple">
-<dt>tensor&lt;[*d], f32&gt;</dt><dd><ul class="simple">
+<dt>tensor&lt;[*d], T&gt;</dt><dd><ul class="simple">
 <li><p>A tensor of the same shape as <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p></li>
 </ul>
 </dd>
@@ -2647,7 +2625,7 @@ for false in numeric domain.) A numeric value <code class="docutils literal notr
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><dl class="simple">
-<dt>tensor&lt;[*d], f32&gt;</dt><dd><ul class="simple">
+<dt>tensor&lt;[*d], T&gt;</dt><dd><ul class="simple">
 <li><p>A tensor of the same shape as <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p></li>
 </ul>
 </dd>
@@ -2673,7 +2651,7 @@ for false in numeric domain.) A numeric value <code class="docutils literal notr
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><dl class="simple">
-<dt>tensor&lt;[*d], f32&gt;</dt><dd><ul class="simple">
+<dt>tensor&lt;[*d], T&gt;</dt><dd><ul class="simple">
 <li><p>A tensor of the same shape as <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p></li>
 </ul>
 </dd>
@@ -2700,7 +2678,7 @@ ranges are <code class="docutils literal notranslate"><span class="pre">(-inf,</
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><dl class="simple">
-<dt>tensor&lt;[*d], f32&gt;</dt><dd><ul class="simple">
+<dt>tensor&lt;[*d], T&gt;</dt><dd><ul class="simple">
 <li><p>A tensor of the same shape as <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p></li>
 </ul>
 </dd>
@@ -2727,7 +2705,7 @@ and output ranges are <code class="docutils literal notranslate"><span class="pr
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><dl class="simple">
-<dt>tensor&lt;[*d], f32&gt;</dt><dd><ul class="simple">
+<dt>tensor&lt;[*d], T&gt;</dt><dd><ul class="simple">
 <li><p>A tensor of the same shape as <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p></li>
 </ul>
 </dd>
@@ -2750,12 +2728,12 @@ Any values less than <code class="docutils literal notranslate"><span class="pre
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>x: tensor&lt;[*d], T&gt; (Required)</strong></dt><dd></dd>
-<dt><strong>alpha: const fp32 (Required)</strong></dt><dd></dd>
+<dt><strong>alpha: const T (Required)</strong></dt><dd></dd>
 </dl>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><dl class="simple">
-<dt>tensor&lt;[*d], f32&gt;</dt><dd><ul class="simple">
+<dt>tensor&lt;[*d], T&gt;</dt><dd><ul class="simple">
 <li><p>A tensor of the same shape as <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p></li>
 </ul>
 </dd>
@@ -2803,110 +2781,6 @@ Any values less than <code class="docutils literal notranslate"><span class="pre
 <section id="module-coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing">
 <span id="image-resizing-ios-15"></span><h2>image_resizing (iOS 15)<a class="headerlink" href="#module-coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing" title="Permalink to this heading"></a></h2>
 <dl class="py class">
-<dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.affine">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.</span></span><span class="sig-name descname"><span class="pre">affine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS15/image_resizing.html#affine"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.affine" title="Permalink to this definition"></a></dt>
-<dd><p>Apply a linear affine transform to the input 2D image tensor. The value at the
-<code class="docutils literal notranslate"><span class="pre">(x,</span> <span class="pre">y)</span></code> (i.e., <code class="docutils literal notranslate"><span class="pre">(w,</span> <span class="pre">h)</span></code>) coordinate of the output is computed by first computing
-the coordinates <code class="docutils literal notranslate"><span class="pre">x’</span></code> and <code class="docutils literal notranslate"><span class="pre">y’</span></code> with the following equation, and then computing the
-value at the coordinate <code class="docutils literal notranslate"><span class="pre">(x’,y’)</span></code> in the input image using either bilinear or
-nearest neighbor interpolation. If the <code class="docutils literal notranslate"><span class="pre">(x’,</span> <span class="pre">y’)</span></code> point falls outside the input
-image, then padding information is used to compute the value.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>* x’ = a0 * x + a1 * y + a2
-* y’ = b0 * x + b1 * y + b2
-</pre></div>
-</div>
-<dl class="field-list">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><dl>
-<dt><strong>x: tensor&lt;[B, C, H1, W1], T&gt;</strong></dt><dd><ul class="simple">
-<li><p>Must be rank <code class="docutils literal notranslate"><span class="pre">4</span></code>.</p></li>
-</ul>
-</dd>
-<dt><strong>transform_matrix: tensor&lt;[D, 6], T&gt;</strong></dt><dd><ul class="simple">
-<li><p>Must be rank <code class="docutils literal notranslate"><span class="pre">2</span></code>.</p></li>
-<li><dl class="simple">
-<dt><code class="docutils literal notranslate"><span class="pre">D</span></code> can be either <code class="docutils literal notranslate"><span class="pre">B</span></code> or 1.</dt><dd><ul>
-<li><p>If <code class="docutils literal notranslate"><span class="pre">D</span> <span class="pre">==</span> <span class="pre">B</span></code>, there is a separate transform matrix for each batch.</p></li>
-<li><p>If <code class="docutils literal notranslate"><span class="pre">D</span> <span class="pre">==</span> <span class="pre">1</span></code>, the same matrix is used for all input batches.</p></li>
-<li><p>For each batch: <code class="docutils literal notranslate"><span class="pre">[a0,</span> <span class="pre">a1,</span> <span class="pre">a2,</span> <span class="pre">b0,</span> <span class="pre">b1,</span> <span class="pre">b2]</span></code>.</p></li>
-</ul>
-</dd>
-</dl>
-</li>
-</ul>
-</dd>
-<dt><strong>output_height: const&lt;i32&gt;</strong></dt><dd><ul class="simple">
-<li><p>Target output height</p></li>
-</ul>
-</dd>
-<dt><strong>output_width: const&lt;i32&gt;</strong></dt><dd><ul class="simple">
-<li><p>Target output width</p></li>
-</ul>
-</dd>
-<dt><strong>sampling_mode: const&lt;str&gt;</strong></dt><dd><ul class="simple">
-<li><p>Allowed values: <code class="docutils literal notranslate"><span class="pre">&quot;bilinear&quot;</span></code></p></li>
-</ul>
-</dd>
-<dt><strong>padding_mode: const&lt;str&gt;</strong></dt><dd><ul class="simple">
-<li><p>Allowed values: <code class="docutils literal notranslate"><span class="pre">&quot;constant&quot;</span></code>.</p></li>
-<li><p>Note that the following example is 1D case for brevity.
-The op supports only 2D image input.</p></li>
-<li><dl class="simple">
-<dt>If <code class="docutils literal notranslate"><span class="pre">padding_mode</span> <span class="pre">==</span> <span class="pre">&quot;constant&quot;</span></code>:</dt><dd><ul>
-<li><p>The input image is assumed to be padded with the padding_value.</p></li>
-<li><p>For example, <code class="docutils literal notranslate"><span class="pre">|1,</span> <span class="pre">2,</span> <span class="pre">3|</span> <span class="pre">-&gt;</span> <span class="pre">|0,</span> <span class="pre">0,</span> <span class="pre">0,</span> <span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">3,</span> <span class="pre">0,</span> <span class="pre">0,</span> <span class="pre">0|</span></code>.</p></li>
-</ul>
-</dd>
-</dl>
-</li>
-</ul>
-</dd>
-<dt><strong>padding_value: const&lt;T&gt;</strong></dt><dd><ul class="simple">
-<li><p>Currently non-zero values are not supported.</p></li>
-<li><p>To be used only when <code class="docutils literal notranslate"><span class="pre">padding_mode</span> <span class="pre">==</span> <span class="pre">&quot;constant&quot;</span></code>, ignored in other cases.</p></li>
-</ul>
-</dd>
-<dt><strong>coordinates_mode: const&lt;str&gt;</strong></dt><dd><ul>
-<li><p>Allowed values: <code class="docutils literal notranslate"><span class="pre">&quot;normalized_minus_one_to_one&quot;</span></code></p></li>
-<li><p>If <code class="docutils literal notranslate"><span class="pre">coordinates_mode</span> <span class="pre">==</span> <span class="pre">&quot;normalized_minus_one_to_one&quot;</span></code>, in-image values are <code class="docutils literal notranslate"><span class="pre">[-1,</span> <span class="pre">1]</span></code>.</p></li>
-<li><p>For example, if <code class="docutils literal notranslate"><span class="pre">coordinates_mode</span> <span class="pre">==</span> <span class="pre">&quot;normalized_minus_one_to_one&quot;</span></code>,
-the in range values are <code class="docutils literal notranslate"><span class="pre">[-1,</span> <span class="pre">1]</span></code>. That is:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">(-1,</span> <span class="pre">-1)</span></code>, i.e. <code class="docutils literal notranslate"><span class="pre">(w=-1,</span> <span class="pre">h=-1)</span></code>, corresponds to the top-left pixel.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">(1,</span> <span class="pre">-1)</span></code>, i.e. <code class="docutils literal notranslate"><span class="pre">(w=1,</span> <span class="pre">h=-1)</span></code>, corresponds to the top-right pixel.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">(-1,</span> <span class="pre">1)</span></code>, i.e. <code class="docutils literal notranslate"><span class="pre">(w=-1,</span> <span class="pre">h=1)</span></code>, corresponds to the bottom-left pixel.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">(1,</span> <span class="pre">1)</span></code>, i.e. <code class="docutils literal notranslate"><span class="pre">(w=1,</span> <span class="pre">h=1)</span></code>, corresponds to the bottom-right pixel.</p></li>
-</ul>
-</div></blockquote>
-</li>
-</ul>
-</dd>
-<dt><strong>align_corners: const&lt;bool&gt;</strong></dt><dd><ul class="simple">
-<li><p>Currently <code class="docutils literal notranslate"><span class="pre">align_corners=False</span></code> is not supported.</p></li>
-<li><p>To be used only when <code class="docutils literal notranslate"><span class="pre">coordinates_mode</span> <span class="pre">!=</span> <span class="pre">unnormalized</span></code>, ignored otherwise.</p></li>
-<li><p>if <code class="docutils literal notranslate"><span class="pre">align_corners</span> <span class="pre">==</span> <span class="pre">True</span></code>, the extrema coordinates correspond
-to the center of the first and last corner pixels.</p></li>
-<li><p>if <code class="docutils literal notranslate"><span class="pre">align_corners</span> <span class="pre">==</span> <span class="pre">False</span></code>, the extrema coordinates correspond
-to the edge of the first and last corner pixels.</p></li>
-</ul>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><dl class="simple">
-<dt>tensor&lt;[B, C, output_height, output_width], T&gt;</dt><dd></dd>
-</dl>
-</dd>
-<dt class="field-odd">Attributes</dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>T: fp16, fp32</strong></dt><dd></dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.upsample_nearest_neighbor">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.</span></span><span class="sig-name descname"><span class="pre">upsample_nearest_neighbor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS15/image_resizing.html#upsample_nearest_neighbor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.upsample_nearest_neighbor" title="Permalink to this definition"></a></dt>
 <dd><p>Upsample the spatial dimensions (last two dimensions) of the input
@@ -2944,215 +2818,6 @@ by integer scale factors using nearest-neighbor interpolation.</p>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>T: fp16, fp32</strong></dt><dd></dd>
 <dt><strong>U: fp32, i32</strong></dt><dd></dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.upsample_bilinear">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.</span></span><span class="sig-name descname"><span class="pre">upsample_bilinear</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS15/image_resizing.html#upsample_bilinear"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.upsample_bilinear" title="Permalink to this definition"></a></dt>
-<dd><p>Upsample the spatial dimensions (last two dimensions) of the input
-by scale factors using bilinear interpolation.
-The upsample_bilinear operation in MIL corresponds to the recompute_scale_factor=True
-mode in the pyorch bilinear interpolation op. That is,
-the scale factor is recomputed by the output size.
-Note that when the scale_factor_height and scale_factor_width are floating point, this
-could result in a different scale factor due to rounding.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>x: tensor&lt;[*D, H1, W1],T&gt;  (Required)</strong></dt><dd><ul class="simple">
-<li><p>Must be at least rank <code class="docutils literal notranslate"><span class="pre">3</span></code>.</p></li>
-</ul>
-</dd>
-<dt><strong>scale_factor_height: const&lt;T2&gt; (Optional, default=1)</strong></dt><dd><ul class="simple">
-<li><p>Scale factor for the height dimension (<code class="docutils literal notranslate"><span class="pre">axis=-2</span></code>).</p></li>
-</ul>
-</dd>
-<dt><strong>scale_factor_width: const&lt;T2&gt; (Optional, default=1)</strong></dt><dd><ul class="simple">
-<li><p>Scale factor for the width dimension (<code class="docutils literal notranslate"><span class="pre">axis=-1</span></code>).</p></li>
-</ul>
-</dd>
-<dt><strong>align_corners: const&lt;bool&gt; (Optional, default=True)</strong></dt><dd><ul class="simple">
-<li><p>This parameter determines how samples are chosen for bilinear
-interpolation. For details, see the Notes section.</p></li>
-</ul>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><dl class="simple">
-<dt>tensor&lt;[*D, H2, W2],T&gt;</dt><dd><ul class="simple">
-<li><p>Tensor with same type as the input.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">H2</span></code> = floor(<code class="docutils literal notranslate"><span class="pre">H1</span></code> * <code class="docutils literal notranslate"><span class="pre">scale_factor_height</span></code>).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">W2</span></code> = floor(<code class="docutils literal notranslate"><span class="pre">W1</span></code> * <code class="docutils literal notranslate"><span class="pre">scale_factor_width</span></code>).</p></li>
-</ul>
-</dd>
-</dl>
-</dd>
-</dl>
-<p class="rubric">Notes</p>
-<p>To understand the <code class="docutils literal notranslate"><span class="pre">align_corners</span></code> parameter, consider the 1-D case.
-You need to sample a grid of pixels whose values are computed using linear
-interpolation. This parameter controls how the grid is sampled. If the
-input grid is <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">Xin-1]</span></code> (corresponding to an input size of <code class="docutils literal notranslate"><span class="pre">Xin</span></code>),
-and if the output size is <code class="docutils literal notranslate"><span class="pre">Xout</span></code>, then the grid points are sampled in
-the following manner:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># If align_corners == True:</span>
-<span class="n">spacing</span> <span class="o">=</span> <span class="p">(</span><span class="n">Xin</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">Xout</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
-<span class="n">grid_point</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">Xin</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="o">*</span><span class="n">spacing</span><span class="p">)),</span> <span class="k">for</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="o">...</span><span class="p">,</span><span class="n">Xout</span><span class="o">-</span><span class="mi">1</span>
-
-<span class="c1"># If align_corners == False:</span>
-<span class="n">spacing</span> <span class="o">=</span> <span class="n">Xin</span> <span class="o">/</span> <span class="n">Xout</span>
-<span class="n">grid_point</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">Xin</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="o">*</span><span class="n">spacing</span> <span class="o">+</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">spacing</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)),</span>
-<span class="o">...</span>   <span class="k">for</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="o">...</span><span class="p">,</span><span class="n">Xout</span><span class="o">-</span><span class="mi">1</span>
-</pre></div>
-</div>
-<p>For example:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">Xin</span> <span class="o">=</span> <span class="mi">2</span>
-<span class="n">input_interval</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
-</pre></div>
-</div>
-<p>Grid points:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="mf">1.</span><span class="p">]</span> <span class="p">(</span><span class="n">Xout</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span> <span class="n">align_corners</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-<span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">,</span> <span class="mf">1.</span><span class="p">]</span> <span class="p">(</span><span class="n">Xout</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span> <span class="n">align_corners</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.33</span><span class="p">,</span> <span class="mf">0.67</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">]</span> <span class="p">(</span><span class="n">Xout</span> <span class="o">=</span> <span class="mi">6</span><span class="p">,</span> <span class="n">align_corners</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-<span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="mf">1.</span><span class="p">]</span> <span class="p">(</span><span class="n">Xout</span> <span class="o">=</span> <span class="mi">6</span><span class="p">,</span> <span class="n">align_corners</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>Note the following similarities:</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">align_corners=False</span></code> is the same as
-<code class="docutils literal notranslate"><span class="pre">tf.raw_ops.ResizeBilinear(align_corners=False,</span> <span class="pre">half_pixel_centers=True)</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">align_corners=True</span></code> is the same as
-<code class="docutils literal notranslate"><span class="pre">tf.raw_ops.ResizeBilinear(align_corners=True,</span> <span class="pre">half_pixel_centers=False)</span></code>.</p></li>
-</ul>
-<dl class="field-list simple">
-<dt class="field-odd">Attributes</dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>T: fp16, fp32</strong></dt><dd></dd>
-<dt><strong>T2</strong><span class="classifier">fp32, i32</span></dt><dd></dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.resample">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.</span></span><span class="sig-name descname"><span class="pre">resample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS15/image_resizing.html#resample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.resample" title="Permalink to this definition"></a></dt>
-<dd><p>Resample the input image tensor <code class="docutils literal notranslate"><span class="pre">x</span></code> at the <code class="docutils literal notranslate"><span class="pre">coordinates</span></code>.
-Resampling is required if the coordinates do not correspond to exact
-pixels in the input image. The <code class="docutils literal notranslate"><span class="pre">sampling_mode</span></code> determines
-the algorithm used for resampling and computing the values.</p>
-<dl class="field-list">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><dl>
-<dt><strong>x: tensor&lt;[B, C, H1, W1], T&gt;</strong></dt><dd><ul class="simple">
-<li><p>Must be rank <code class="docutils literal notranslate"><span class="pre">4</span></code>.</p></li>
-</ul>
-</dd>
-<dt><strong>coordinates: tensor&lt;[B, H2, W2, 2], U&gt;</strong></dt><dd><ul class="simple">
-<li><p>Must be rank <code class="docutils literal notranslate"><span class="pre">4</span></code>.</p></li>
-<li><p>Coordinates are provided in the order <code class="docutils literal notranslate"><span class="pre">(x,</span> <span class="pre">y)</span></code> (i.e. <code class="docutils literal notranslate"><span class="pre">(w,</span> <span class="pre">h)</span></code>).</p></li>
-<li><p>The value of each output location <code class="docutils literal notranslate"><span class="pre">output[b,</span> <span class="pre">c,</span> <span class="pre">h,</span> <span class="pre">w]</span></code> is calculated
-by sampling from the input image <code class="docutils literal notranslate"><span class="pre">x[b,</span> <span class="pre">c,</span> <span class="pre">:,</span> <span class="pre">:]</span></code>.</p></li>
-<li><p>The pixel at the <code class="docutils literal notranslate"><span class="pre">(x,</span> <span class="pre">y)</span></code> location corresponds to the length-2
-vector: <code class="docutils literal notranslate"><span class="pre">coordinates[b,</span> <span class="pre">h,</span> <span class="pre">w,</span> <span class="pre">:]</span></code>.</p></li>
-<li><p>Coordinate (normalized or unnormalized) should be specified according
-to <code class="docutils literal notranslate"><span class="pre">coordinates_mode</span></code>.</p></li>
-</ul>
-</dd>
-<dt><strong>sampling_mode: const&lt;str&gt;</strong></dt><dd><ul class="simple">
-<li><p>Allowed values: <code class="docutils literal notranslate"><span class="pre">&quot;bilinear&quot;</span> <span class="pre">,</span> <span class="pre">&quot;nearest&quot;</span></code></p></li>
-</ul>
-</dd>
-<dt><strong>padding_mode: const&lt;str&gt;</strong></dt><dd><ul class="simple">
-<li><p>Allowed values: <code class="docutils literal notranslate"><span class="pre">&quot;constant&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;border&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;reflection&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;symmetric&quot;</span></code></p></li>
-<li><p>Note that the following example is 1D case for brevity.
-The op supports only 2D image input.</p></li>
-<li><dl class="simple">
-<dt>If <code class="docutils literal notranslate"><span class="pre">padding_mode</span> <span class="pre">==</span> <span class="pre">&quot;constant&quot;</span></code>:</dt><dd><ul>
-<li><p>The input image is assumed to be padded with the <code class="docutils literal notranslate"><span class="pre">padding_value</span></code>.</p></li>
-<li><p>For example: <code class="docutils literal notranslate"><span class="pre">|1,</span> <span class="pre">2,</span> <span class="pre">3|</span> <span class="pre">-&gt;</span> <span class="pre">|0,</span> <span class="pre">0,</span> <span class="pre">0,</span> <span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">3,</span> <span class="pre">0,</span> <span class="pre">0,</span> <span class="pre">0|</span></code></p></li>
-</ul>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt>if <code class="docutils literal notranslate"><span class="pre">padding_mode</span> <span class="pre">==</span> <span class="pre">&quot;border&quot;</span></code>:</dt><dd><ul>
-<li><p>The input image is assumed to be padded with the values replicated
-from the values at the edge. This is also referred to as the
-“clamped” or “replication” mode, since the padded values are
-clamped to the border values.</p></li>
-<li><p>For example: <code class="docutils literal notranslate"><span class="pre">|1,</span> <span class="pre">2,</span> <span class="pre">3|</span> <span class="pre">-&gt;</span> <span class="pre">|1,</span> <span class="pre">1,</span> <span class="pre">1,</span> <span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">3,</span> <span class="pre">3,</span> <span class="pre">3,</span> <span class="pre">3|</span></code></p></li>
-</ul>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt>If <code class="docutils literal notranslate"><span class="pre">padding_mode</span> <span class="pre">==</span> <span class="pre">&quot;reflection&quot;</span></code>:</dt><dd><ul>
-<li><p>The border values are reflected, <em>not</em> including the values at the edge/border.</p></li>
-<li><p>For example: <code class="docutils literal notranslate"><span class="pre">|1,</span> <span class="pre">2,</span> <span class="pre">3|</span> <span class="pre">-&gt;</span> <span class="pre">|2,</span> <span class="pre">3,</span> <span class="pre">2,</span> <span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">3,</span> <span class="pre">2,</span> <span class="pre">1,</span> <span class="pre">2|</span></code></p></li>
-</ul>
-</dd>
-</dl>
-</li>
-<li><dl class="simple">
-<dt>If <code class="docutils literal notranslate"><span class="pre">padding_mode</span> <span class="pre">==</span> <span class="pre">&quot;symmetric&quot;</span></code>:</dt><dd><ul>
-<li><p>Values are reflected, including the border/edge values.</p></li>
-<li><p>For example: <code class="docutils literal notranslate"><span class="pre">|1,</span> <span class="pre">2,</span> <span class="pre">3|</span> <span class="pre">-&gt;</span> <span class="pre">|3,</span> <span class="pre">2,</span> <span class="pre">1</span> <span class="pre">,</span> <span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">3,</span> <span class="pre">3,</span> <span class="pre">2,</span> <span class="pre">1|</span></code></p></li>
-</ul>
-</dd>
-</dl>
-</li>
-</ul>
-</dd>
-<dt><strong>padding_value: const&lt;T&gt;</strong></dt><dd><ul class="simple">
-<li><p>To be used only when <code class="docutils literal notranslate"><span class="pre">padding_mode</span> <span class="pre">==</span> <span class="pre">&quot;constant&quot;</span></code>, ignored in other cases.</p></li>
-</ul>
-</dd>
-<dt><strong>coordinates_mode: const&lt;str&gt;</strong></dt><dd><ul>
-<li><p>Allowed values: <code class="docutils literal notranslate"><span class="pre">&quot;unnormalized&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;normalized_minus_one_to_one&quot;</span></code>,
-<code class="docutils literal notranslate"><span class="pre">&quot;normalized_zero_to_one&quot;</span></code></p></li>
-<li><p>If <code class="docutils literal notranslate"><span class="pre">coordinates_mode</span> <span class="pre">==</span> <span class="pre">&quot;unnormalized&quot;</span></code>, the coordinates input values
-are interpreted to be in range <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">W</span> <span class="pre">-</span> <span class="pre">1]</span> <span class="pre">/</span> <span class="pre">[0,</span> <span class="pre">H</span> <span class="pre">-</span> <span class="pre">1]</span></code>, which
-corresponds to the in-image point.</p></li>
-<li><p>If <code class="docutils literal notranslate"><span class="pre">coordinates_mode</span> <span class="pre">==</span> <span class="pre">&quot;normalized_minus_one_to_one&quot;</span></code>,
-the in-image values are <code class="docutils literal notranslate"><span class="pre">[-1,</span> <span class="pre">1]</span></code>.</p></li>
-<li><p>If <code class="docutils literal notranslate"><span class="pre">coordinates_mode</span> <span class="pre">==</span> <span class="pre">&quot;normalized_zero_to_one&quot;</span></code>,
-in-image values are <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code>.</p></li>
-<li><p>For example, if <code class="docutils literal notranslate"><span class="pre">coordinates_mode</span> <span class="pre">==</span> <span class="pre">&quot;normalized_minus_one_to_one&quot;</span></code>,
-the in range values are [-1, 1]. That is:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">(-1,</span> <span class="pre">-1)</span></code>, i.e. <code class="docutils literal notranslate"><span class="pre">(w=-1,</span> <span class="pre">h=-1)</span></code>, corresponds to the top-left pixel.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">(1,</span> <span class="pre">-1)</span></code>, i.e. <code class="docutils literal notranslate"><span class="pre">(w=1,</span> <span class="pre">h=-1)</span></code>, corresponds to the top-right pixel.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">(-1,</span> <span class="pre">1)</span></code>, i.e. <code class="docutils literal notranslate"><span class="pre">(w=-1,</span> <span class="pre">h=1)</span></code>, corresponds to the bottom-left pixel.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">(1,</span> <span class="pre">1)</span></code>, i.e. <code class="docutils literal notranslate"><span class="pre">(w=1,</span> <span class="pre">h=1)</span></code>, corresponds to the bottom-right pixel.</p></li>
-</ul>
-</div></blockquote>
-</li>
-</ul>
-</dd>
-<dt><strong>align_corners: const&lt;bool&gt;</strong></dt><dd><ul class="simple">
-<li><p>If <code class="docutils literal notranslate"><span class="pre">align_corners</span> <span class="pre">==</span> <span class="pre">True</span></code>, the extrema coordinates correspond
-to the center of the first and last corner pixels.</p></li>
-<li><p>If <code class="docutils literal notranslate"><span class="pre">align_corners</span> <span class="pre">==</span> <span class="pre">False</span></code>, the extrema coordinates correspond
-to the edge of the first and last corner pixels.</p></li>
-</ul>
-</dd>
-</dl>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><dl class="simple">
-<dt>tensor&lt;[B, C, H2, W2], T&gt;</dt><dd></dd>
-</dl>
-</dd>
-<dt class="field-odd">Attributes</dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>T: fp16, fp32</strong></dt><dd></dd>
-<dt><strong>U: fp32, int32</strong></dt><dd></dd>
 </dl>
 </dd>
 </dl>
@@ -3205,6 +2870,95 @@ a target size rather than with scale factors.</p>
 <dt class="field-odd">Attributes</dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>T: fp16, fp32</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.upsample_bilinear">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.</span></span><span class="sig-name descname"><span class="pre">upsample_bilinear</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS15/image_resizing.html#upsample_bilinear"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.upsample_bilinear" title="Permalink to this definition"></a></dt>
+<dd><p>Upsample the spatial dimensions (last two dimensions) of the input
+by scale factors using bilinear interpolation.
+The upsample_bilinear operation in MIL corresponds to the recompute_scale_factor=True
+mode in the pyorch bilinear interpolation op. That is,
+the scale factor is recomputed by the output size.
+Note that when the scale_factor_height and scale_factor_width are floating point, this
+could result in a different scale factor due to rounding.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x: tensor&lt;[*D, H1, W1], T&gt;  (Required)</strong></dt><dd><ul class="simple">
+<li><p>Must be at least rank <code class="docutils literal notranslate"><span class="pre">3</span></code>.</p></li>
+</ul>
+</dd>
+<dt><strong>scale_factor_height: const&lt;U&gt; (Optional, default=1)</strong></dt><dd><ul class="simple">
+<li><p>Scale factor for the height dimension (<code class="docutils literal notranslate"><span class="pre">axis=-2</span></code>).</p></li>
+</ul>
+</dd>
+<dt><strong>scale_factor_width: const&lt;U&gt; (Optional, default=1)</strong></dt><dd><ul class="simple">
+<li><p>Scale factor for the width dimension (<code class="docutils literal notranslate"><span class="pre">axis=-1</span></code>).</p></li>
+</ul>
+</dd>
+<dt><strong>align_corners: const&lt;bool&gt; (Optional, default=True)</strong></dt><dd><ul class="simple">
+<li><p>This parameter determines how samples are chosen for bilinear
+interpolation. For details, see the Notes section.</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>tensor&lt;[*D, H2, W2], T&gt;</dt><dd><ul class="simple">
+<li><p>Tensor with same type as the input.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">H2</span></code> = floor(<code class="docutils literal notranslate"><span class="pre">H1</span></code> * <code class="docutils literal notranslate"><span class="pre">scale_factor_height</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">W2</span></code> = floor(<code class="docutils literal notranslate"><span class="pre">W1</span></code> * <code class="docutils literal notranslate"><span class="pre">scale_factor_width</span></code>).</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>To understand the <code class="docutils literal notranslate"><span class="pre">align_corners</span></code> parameter, consider the 1-D case.
+You need to sample a grid of pixels whose values are computed using linear
+interpolation. This parameter controls how the grid is sampled. If the
+input grid is <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">Xin-1]</span></code> (corresponding to an input size of <code class="docutils literal notranslate"><span class="pre">Xin</span></code>),
+and if the output size is <code class="docutils literal notranslate"><span class="pre">Xout</span></code>, then the grid points are sampled in
+the following manner:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># If align_corners == True:</span>
+<span class="n">spacing</span> <span class="o">=</span> <span class="p">(</span><span class="n">Xin</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">Xout</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">grid_point</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">Xin</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="o">*</span><span class="n">spacing</span><span class="p">)),</span> <span class="k">for</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="o">...</span><span class="p">,</span><span class="n">Xout</span><span class="o">-</span><span class="mi">1</span>
+
+<span class="c1"># If align_corners == False:</span>
+<span class="n">spacing</span> <span class="o">=</span> <span class="n">Xin</span> <span class="o">/</span> <span class="n">Xout</span>
+<span class="n">grid_point</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">Xin</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">i</span><span class="o">*</span><span class="n">spacing</span> <span class="o">+</span> <span class="mf">0.5</span><span class="o">*</span><span class="n">spacing</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">)),</span>
+<span class="o">...</span>   <span class="k">for</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="o">...</span><span class="p">,</span><span class="n">Xout</span><span class="o">-</span><span class="mi">1</span>
+</pre></div>
+</div>
+<p>For example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">Xin</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">input_interval</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Grid points:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="mf">1.</span><span class="p">]</span> <span class="p">(</span><span class="n">Xout</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span> <span class="n">align_corners</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.25</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.75</span><span class="p">,</span> <span class="mf">1.</span><span class="p">]</span> <span class="p">(</span><span class="n">Xout</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span> <span class="n">align_corners</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.33</span><span class="p">,</span> <span class="mf">0.67</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">]</span> <span class="p">(</span><span class="n">Xout</span> <span class="o">=</span> <span class="mi">6</span><span class="p">,</span> <span class="n">align_corners</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="mf">1.</span><span class="p">]</span> <span class="p">(</span><span class="n">Xout</span> <span class="o">=</span> <span class="mi">6</span><span class="p">,</span> <span class="n">align_corners</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Note the following similarities:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">align_corners=False</span></code> is the same as
+<code class="docutils literal notranslate"><span class="pre">tf.raw_ops.ResizeBilinear(align_corners=False,</span> <span class="pre">half_pixel_centers=True)</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">align_corners=True</span></code> is the same as
+<code class="docutils literal notranslate"><span class="pre">tf.raw_ops.ResizeBilinear(align_corners=True,</span> <span class="pre">half_pixel_centers=False)</span></code>.</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>T: fp16, fp32</strong></dt><dd></dd>
+<dt><strong>U</strong><span class="classifier">fp32, i32</span></dt><dd></dd>
 </dl>
 </dd>
 </dl>
@@ -3374,10 +3128,10 @@ less than or equal to 1.</p></li>
 coordinates for an image of size <code class="docutils literal notranslate"><span class="pre">(Height,</span> <span class="pre">Width)</span></code>. The <code class="docutils literal notranslate"><span class="pre">(0,0)</span></code>
 coordinate corresponds to the top-left corner of the image.</p></li>
 <li><p>This parameter can take one of four values:</p>
-<p>“CORNERS_HEIGHT_FIRST”: <code class="docutils literal notranslate"><span class="pre">[h_start,</span> <span class="pre">w_start,</span> <span class="pre">h_end,</span> <span class="pre">w_end]</span></code></p>
-<p>“CORNERS_WIDTH_FIRST”: <code class="docutils literal notranslate"><span class="pre">[w_start,</span> <span class="pre">h_start,</span> <span class="pre">w_end,</span> <span class="pre">h_end]</span></code></p>
-<p>“CENTER_SIZE_HEIGHT_FIRST”: <code class="docutils literal notranslate"><span class="pre">[h_center,</span> <span class="pre">w_center,</span> <span class="pre">box_height,</span> <span class="pre">box_width]</span></code></p>
-<p>“CENTER_SIZE_WIDTH_FIRST”: <code class="docutils literal notranslate"><span class="pre">[w_center,</span> <span class="pre">h_center,</span> <span class="pre">box_width,</span> <span class="pre">box_height]</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">&quot;CORNERS_HEIGHT_FIRST&quot;</span></code>: <code class="docutils literal notranslate"><span class="pre">[h_start,</span> <span class="pre">w_start,</span> <span class="pre">h_end,</span> <span class="pre">w_end]</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">&quot;CORNERS_WIDTH_FIRST&quot;</span></code>: <code class="docutils literal notranslate"><span class="pre">[w_start,</span> <span class="pre">h_start,</span> <span class="pre">w_end,</span> <span class="pre">h_end]</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">&quot;CENTER_SIZE_HEIGHT_FIRST&quot;</span></code>: <code class="docutils literal notranslate"><span class="pre">[h_center,</span> <span class="pre">w_center,</span> <span class="pre">box_height,</span> <span class="pre">box_width]</span></code></p>
+<p><code class="docutils literal notranslate"><span class="pre">&quot;CENTER_SIZE_WIDTH_FIRST&quot;</span></code>: <code class="docutils literal notranslate"><span class="pre">[w_center,</span> <span class="pre">h_center,</span> <span class="pre">box_width,</span> <span class="pre">box_height]</span></code></p>
 </li>
 </ul>
 </dd>
@@ -3458,6 +3212,230 @@ specified amounts.</p>
 <dt class="field-odd">Attributes</dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>T: fp16, fp32</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.affine">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.</span></span><span class="sig-name descname"><span class="pre">affine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS15/image_resizing.html#affine"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.affine" title="Permalink to this definition"></a></dt>
+<dd><p>Apply a linear affine transform to the input 2D image tensor. The value at the
+<code class="docutils literal notranslate"><span class="pre">(x,</span> <span class="pre">y)</span></code> (i.e., <code class="docutils literal notranslate"><span class="pre">(w,</span> <span class="pre">h)</span></code>) coordinate of the output is computed by first computing
+the coordinates <code class="docutils literal notranslate"><span class="pre">x’</span></code> and <code class="docutils literal notranslate"><span class="pre">y’</span></code> with the following equation, and then computing the
+value at the coordinate <code class="docutils literal notranslate"><span class="pre">(x’,y’)</span></code> in the input image using either bilinear or
+nearest neighbor interpolation. If the <code class="docutils literal notranslate"><span class="pre">(x’,</span> <span class="pre">y’)</span></code> point falls outside the input
+image, then padding information is used to compute the value.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>* x’ = a0 * x + a1 * y + a2
+* y’ = b0 * x + b1 * y + b2
+</pre></div>
+</div>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>x: tensor&lt;[B, C, H1, W1], T&gt;</strong></dt><dd><ul class="simple">
+<li><p>Must be rank <code class="docutils literal notranslate"><span class="pre">4</span></code>.</p></li>
+</ul>
+</dd>
+<dt><strong>transform_matrix: tensor&lt;[D, 6], T&gt;</strong></dt><dd><ul class="simple">
+<li><p>Must be rank <code class="docutils literal notranslate"><span class="pre">2</span></code>.</p></li>
+<li><dl class="simple">
+<dt><code class="docutils literal notranslate"><span class="pre">D</span></code> can be either <code class="docutils literal notranslate"><span class="pre">B</span></code> or 1.</dt><dd><ul>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">D</span> <span class="pre">==</span> <span class="pre">B</span></code>, there is a separate transform matrix for each batch.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">D</span> <span class="pre">==</span> <span class="pre">1</span></code>, the same matrix is used for all input batches.</p></li>
+<li><p>For each batch: <code class="docutils literal notranslate"><span class="pre">[a0,</span> <span class="pre">a1,</span> <span class="pre">a2,</span> <span class="pre">b0,</span> <span class="pre">b1,</span> <span class="pre">b2]</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+<dt><strong>output_height: const&lt;i32&gt;</strong></dt><dd><ul class="simple">
+<li><p>Target output height</p></li>
+</ul>
+</dd>
+<dt><strong>output_width: const&lt;i32&gt;</strong></dt><dd><ul class="simple">
+<li><p>Target output width</p></li>
+</ul>
+</dd>
+<dt><strong>sampling_mode: const&lt;str&gt;</strong></dt><dd><ul class="simple">
+<li><p>Allowed values: <code class="docutils literal notranslate"><span class="pre">&quot;bilinear&quot;</span></code></p></li>
+</ul>
+</dd>
+<dt><strong>padding_mode: const&lt;str&gt;</strong></dt><dd><ul class="simple">
+<li><p>Allowed values: <code class="docutils literal notranslate"><span class="pre">&quot;constant&quot;</span></code>.</p></li>
+<li><p>Note that the following example is 1D case for brevity.
+The op supports only 2D image input.</p></li>
+<li><dl class="simple">
+<dt>If <code class="docutils literal notranslate"><span class="pre">padding_mode</span> <span class="pre">==</span> <span class="pre">&quot;constant&quot;</span></code>:</dt><dd><ul>
+<li><p>The input image is assumed to be padded with the padding_value.</p></li>
+<li><p>For example, <code class="docutils literal notranslate"><span class="pre">|1,</span> <span class="pre">2,</span> <span class="pre">3|</span> <span class="pre">-&gt;</span> <span class="pre">|0,</span> <span class="pre">0,</span> <span class="pre">0,</span> <span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">3,</span> <span class="pre">0,</span> <span class="pre">0,</span> <span class="pre">0|</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+<dt><strong>padding_value: const&lt;T&gt;</strong></dt><dd><ul class="simple">
+<li><p>Currently non-zero values are not supported.</p></li>
+<li><p>To be used only when <code class="docutils literal notranslate"><span class="pre">padding_mode</span> <span class="pre">==</span> <span class="pre">&quot;constant&quot;</span></code>, ignored in other cases.</p></li>
+</ul>
+</dd>
+<dt><strong>coordinates_mode: const&lt;str&gt;</strong></dt><dd><ul>
+<li><p>Allowed values: <code class="docutils literal notranslate"><span class="pre">&quot;normalized_minus_one_to_one&quot;</span></code></p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">coordinates_mode</span> <span class="pre">==</span> <span class="pre">&quot;normalized_minus_one_to_one&quot;</span></code>, in-image values are <code class="docutils literal notranslate"><span class="pre">[-1,</span> <span class="pre">1]</span></code>.</p></li>
+<li><p>For example, if <code class="docutils literal notranslate"><span class="pre">coordinates_mode</span> <span class="pre">==</span> <span class="pre">&quot;normalized_minus_one_to_one&quot;</span></code>,
+the in range values are <code class="docutils literal notranslate"><span class="pre">[-1,</span> <span class="pre">1]</span></code>. That is:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">(-1,</span> <span class="pre">-1)</span></code>, i.e. <code class="docutils literal notranslate"><span class="pre">(w=-1,</span> <span class="pre">h=-1)</span></code>, corresponds to the top-left pixel.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">(1,</span> <span class="pre">-1)</span></code>, i.e. <code class="docutils literal notranslate"><span class="pre">(w=1,</span> <span class="pre">h=-1)</span></code>, corresponds to the top-right pixel.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">(-1,</span> <span class="pre">1)</span></code>, i.e. <code class="docutils literal notranslate"><span class="pre">(w=-1,</span> <span class="pre">h=1)</span></code>, corresponds to the bottom-left pixel.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">(1,</span> <span class="pre">1)</span></code>, i.e. <code class="docutils literal notranslate"><span class="pre">(w=1,</span> <span class="pre">h=1)</span></code>, corresponds to the bottom-right pixel.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</dd>
+<dt><strong>align_corners: const&lt;bool&gt;</strong></dt><dd><ul class="simple">
+<li><p>Currently <code class="docutils literal notranslate"><span class="pre">align_corners=False</span></code> is not supported.</p></li>
+<li><p>To be used only when <code class="docutils literal notranslate"><span class="pre">coordinates_mode</span> <span class="pre">!=</span> <span class="pre">unnormalized</span></code>, ignored otherwise.</p></li>
+<li><p>if <code class="docutils literal notranslate"><span class="pre">align_corners</span> <span class="pre">==</span> <span class="pre">True</span></code>, the extrema coordinates correspond
+to the center of the first and last corner pixels.</p></li>
+<li><p>if <code class="docutils literal notranslate"><span class="pre">align_corners</span> <span class="pre">==</span> <span class="pre">False</span></code>, the extrema coordinates correspond
+to the edge of the first and last corner pixels.</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>tensor&lt;[B, C, output_height, output_width], T&gt;</dt><dd></dd>
+</dl>
+</dd>
+<dt class="field-odd">Attributes</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>T: fp16, fp32</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.resample">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.</span></span><span class="sig-name descname"><span class="pre">resample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS15/image_resizing.html#resample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.resample" title="Permalink to this definition"></a></dt>
+<dd><p>Resample the input image tensor <code class="docutils literal notranslate"><span class="pre">x</span></code> at the <code class="docutils literal notranslate"><span class="pre">coordinates</span></code>.
+Resampling is required if the coordinates do not correspond to exact
+pixels in the input image. The <code class="docutils literal notranslate"><span class="pre">sampling_mode</span></code> determines
+the algorithm used for resampling and computing the values.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>x: tensor&lt;[B, C, H1, W1], T&gt;</strong></dt><dd><ul class="simple">
+<li><p>Must be rank <code class="docutils literal notranslate"><span class="pre">4</span></code>.</p></li>
+</ul>
+</dd>
+<dt><strong>coordinates: tensor&lt;[B, H2, W2, 2], U&gt;</strong></dt><dd><ul class="simple">
+<li><p>Must be rank <code class="docutils literal notranslate"><span class="pre">4</span></code>.</p></li>
+<li><p>Coordinates are provided in the order <code class="docutils literal notranslate"><span class="pre">(x,</span> <span class="pre">y)</span></code> (i.e. <code class="docutils literal notranslate"><span class="pre">(w,</span> <span class="pre">h)</span></code>).</p></li>
+<li><p>The value of each output location <code class="docutils literal notranslate"><span class="pre">output[b,</span> <span class="pre">c,</span> <span class="pre">h,</span> <span class="pre">w]</span></code> is calculated
+by sampling from the input image <code class="docutils literal notranslate"><span class="pre">x[b,</span> <span class="pre">c,</span> <span class="pre">:,</span> <span class="pre">:]</span></code>.</p></li>
+<li><p>The pixel at the <code class="docutils literal notranslate"><span class="pre">(x,</span> <span class="pre">y)</span></code> location corresponds to the length-2
+vector: <code class="docutils literal notranslate"><span class="pre">coordinates[b,</span> <span class="pre">h,</span> <span class="pre">w,</span> <span class="pre">:]</span></code>.</p></li>
+<li><p>Coordinate (normalized or unnormalized) should be specified according
+to <code class="docutils literal notranslate"><span class="pre">coordinates_mode</span></code>.</p></li>
+</ul>
+</dd>
+<dt><strong>sampling_mode: const&lt;str&gt;</strong></dt><dd><ul class="simple">
+<li><p>Allowed values: <code class="docutils literal notranslate"><span class="pre">&quot;bilinear&quot;</span></code> , <code class="docutils literal notranslate"><span class="pre">&quot;nearest&quot;</span></code></p></li>
+</ul>
+</dd>
+<dt><strong>padding_mode: const&lt;str&gt;</strong></dt><dd><ul class="simple">
+<li><p>Allowed values: <code class="docutils literal notranslate"><span class="pre">&quot;constant&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;border&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;reflection&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;symmetric&quot;</span></code></p></li>
+<li><p>Note that the following example is 1D case for brevity.
+The op supports only 2D image input.</p></li>
+<li><dl class="simple">
+<dt>If <code class="docutils literal notranslate"><span class="pre">padding_mode</span> <span class="pre">==</span> <span class="pre">&quot;constant&quot;</span></code>:</dt><dd><ul>
+<li><p>The input image is assumed to be padded with the <code class="docutils literal notranslate"><span class="pre">padding_value</span></code>.</p></li>
+<li><p>For example: <code class="docutils literal notranslate"><span class="pre">|1,</span> <span class="pre">2,</span> <span class="pre">3|</span> <span class="pre">-&gt;</span> <span class="pre">|0,</span> <span class="pre">0,</span> <span class="pre">0,</span> <span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">3,</span> <span class="pre">0,</span> <span class="pre">0,</span> <span class="pre">0|</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>if <code class="docutils literal notranslate"><span class="pre">padding_mode</span> <span class="pre">==</span> <span class="pre">&quot;border&quot;</span></code>:</dt><dd><ul>
+<li><p>The input image is assumed to be padded with the values replicated
+from the values at the edge. This is also referred to as the
+“clamped” or “replication” mode, since the padded values are
+clamped to the border values.</p></li>
+<li><p>For example: <code class="docutils literal notranslate"><span class="pre">|1,</span> <span class="pre">2,</span> <span class="pre">3|</span> <span class="pre">-&gt;</span> <span class="pre">|1,</span> <span class="pre">1,</span> <span class="pre">1,</span> <span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">3,</span> <span class="pre">3,</span> <span class="pre">3,</span> <span class="pre">3|</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>If <code class="docutils literal notranslate"><span class="pre">padding_mode</span> <span class="pre">==</span> <span class="pre">&quot;reflection&quot;</span></code>:</dt><dd><ul>
+<li><p>The border values are reflected, <em>not</em> including the values at the edge/border.</p></li>
+<li><p>For example: <code class="docutils literal notranslate"><span class="pre">|1,</span> <span class="pre">2,</span> <span class="pre">3|</span> <span class="pre">-&gt;</span> <span class="pre">|2,</span> <span class="pre">3,</span> <span class="pre">2,</span> <span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">3,</span> <span class="pre">2,</span> <span class="pre">1,</span> <span class="pre">2|</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>If <code class="docutils literal notranslate"><span class="pre">padding_mode</span> <span class="pre">==</span> <span class="pre">&quot;symmetric&quot;</span></code>:</dt><dd><ul>
+<li><p>Values are reflected, including the border/edge values.</p></li>
+<li><p>For example: <code class="docutils literal notranslate"><span class="pre">|1,</span> <span class="pre">2,</span> <span class="pre">3|</span> <span class="pre">-&gt;</span> <span class="pre">|3,</span> <span class="pre">2,</span> <span class="pre">1</span> <span class="pre">,</span> <span class="pre">1,</span> <span class="pre">2,</span> <span class="pre">3,</span> <span class="pre">3,</span> <span class="pre">2,</span> <span class="pre">1|</span></code></p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</dd>
+<dt><strong>padding_value: const&lt;T&gt;</strong></dt><dd><ul class="simple">
+<li><p>To be used only when <code class="docutils literal notranslate"><span class="pre">padding_mode</span> <span class="pre">==</span> <span class="pre">&quot;constant&quot;</span></code>, ignored in other cases.</p></li>
+</ul>
+</dd>
+<dt><strong>coordinates_mode: const&lt;str&gt;</strong></dt><dd><ul>
+<li><p>Allowed values: <code class="docutils literal notranslate"><span class="pre">&quot;unnormalized&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;normalized_minus_one_to_one&quot;</span></code>,
+<code class="docutils literal notranslate"><span class="pre">&quot;normalized_zero_to_one&quot;</span></code></p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">coordinates_mode</span> <span class="pre">==</span> <span class="pre">&quot;unnormalized&quot;</span></code>, the coordinates input values
+are interpreted to be in range <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">W</span> <span class="pre">-</span> <span class="pre">1]</span> <span class="pre">/</span> <span class="pre">[0,</span> <span class="pre">H</span> <span class="pre">-</span> <span class="pre">1]</span></code>, which
+corresponds to the in-image point.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">coordinates_mode</span> <span class="pre">==</span> <span class="pre">&quot;normalized_minus_one_to_one&quot;</span></code>,
+the in-image values are <code class="docutils literal notranslate"><span class="pre">[-1,</span> <span class="pre">1]</span></code>.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">coordinates_mode</span> <span class="pre">==</span> <span class="pre">&quot;normalized_zero_to_one&quot;</span></code>,
+in-image values are <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code>.</p></li>
+<li><p>For example, if <code class="docutils literal notranslate"><span class="pre">coordinates_mode</span> <span class="pre">==</span> <span class="pre">&quot;normalized_minus_one_to_one&quot;</span></code>,
+the in range values are [-1, 1]. That is:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">(-1,</span> <span class="pre">-1)</span></code>, i.e. <code class="docutils literal notranslate"><span class="pre">(w=-1,</span> <span class="pre">h=-1)</span></code>, corresponds to the top-left pixel.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">(1,</span> <span class="pre">-1)</span></code>, i.e. <code class="docutils literal notranslate"><span class="pre">(w=1,</span> <span class="pre">h=-1)</span></code>, corresponds to the top-right pixel.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">(-1,</span> <span class="pre">1)</span></code>, i.e. <code class="docutils literal notranslate"><span class="pre">(w=-1,</span> <span class="pre">h=1)</span></code>, corresponds to the bottom-left pixel.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">(1,</span> <span class="pre">1)</span></code>, i.e. <code class="docutils literal notranslate"><span class="pre">(w=1,</span> <span class="pre">h=1)</span></code>, corresponds to the bottom-right pixel.</p></li>
+</ul>
+</div></blockquote>
+</li>
+</ul>
+</dd>
+<dt><strong>align_corners: const&lt;bool&gt;</strong></dt><dd><ul class="simple">
+<li><p>If <code class="docutils literal notranslate"><span class="pre">align_corners</span> <span class="pre">==</span> <span class="pre">True</span></code>, the extrema coordinates correspond
+to the center of the first and last corner pixels.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">align_corners</span> <span class="pre">==</span> <span class="pre">False</span></code>, the extrema coordinates correspond
+to the edge of the first and last corner pixels.</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>tensor&lt;[B, C, H2, W2], T&gt;</dt><dd></dd>
+</dl>
+</dd>
+<dt class="field-odd">Attributes</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>T: fp16, fp32</strong></dt><dd></dd>
+<dt><strong>U: fp32, int32</strong></dt><dd></dd>
 </dl>
 </dd>
 </dl>
@@ -3707,7 +3685,7 @@ or “channel” dimension) of <code class="docutils literal notranslate"><span 
 <li><p>Default is all zeros.</p></li>
 </ul>
 </dd>
-<dt><strong>epsilon: const fp32 (Optional)</strong></dt><dd><ul class="simple">
+<dt><strong>epsilon: const T (Optional)</strong></dt><dd><ul class="simple">
 <li><p>Default is <code class="docutils literal notranslate"><span class="pre">1e-5</span></code>.</p></li>
 </ul>
 </dd>
@@ -3795,7 +3773,7 @@ the leading dimensions *B, starting from <code class="docutils literal notransla
 are all treated as batch. The L2 normalization are done batch-wise.</p></li>
 </ul>
 </dd>
-<dt><strong>epsilon: const fp32 (Optional)</strong></dt><dd><ul class="simple">
+<dt><strong>epsilon: const T (Optional)</strong></dt><dd><ul class="simple">
 <li><p>Small constant to avoid division by <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p></li>
 <li><p>Optional, defaults to <code class="docutils literal notranslate"><span class="pre">1e-6</span></code>.</p></li>
 </ul>
@@ -3848,7 +3826,7 @@ shape <code class="docutils literal notranslate"><span class="pre">(5,6)</span><
 <li><p>Default is all zeros.</p></li>
 </ul>
 </dd>
-<dt><strong>epsilon: const fp32 (Optional)</strong></dt><dd><ul class="simple">
+<dt><strong>epsilon: const T (Optional)</strong></dt><dd><ul class="simple">
 <li><p>Small constant to avoid division by <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p></li>
 <li><p>Default is <code class="docutils literal notranslate"><span class="pre">1e-5</span></code>.</p></li>
 </ul>
@@ -3890,17 +3868,17 @@ shape <code class="docutils literal notranslate"><span class="pre">(5,6)</span><
 <li><p>Amount of neighboring channels to normalize.</p></li>
 </ul>
 </dd>
-<dt><strong>alpha: const fp32 (Optional)</strong></dt><dd><ul class="simple">
+<dt><strong>alpha: const T (Optional)</strong></dt><dd><ul class="simple">
 <li><p>Scale factor.</p></li>
 <li><p>Default is <code class="docutils literal notranslate"><span class="pre">1e-4</span></code>.</p></li>
 </ul>
 </dd>
-<dt><strong>beta: const fp32 (Optional)</strong></dt><dd><ul class="simple">
+<dt><strong>beta: const T (Optional)</strong></dt><dd><ul class="simple">
 <li><p>An exponent.</p></li>
 <li><p>Default is <code class="docutils literal notranslate"><span class="pre">0.75</span></code>.</p></li>
 </ul>
 </dd>
-<dt><strong>k: const fp32 (Optional)</strong></dt><dd><ul class="simple">
+<dt><strong>k: const T (Optional)</strong></dt><dd><ul class="simple">
 <li><p>Additive factor.</p></li>
 <li><p>Default is <code class="docutils literal notranslate"><span class="pre">1.0</span></code>.</p></li>
 </ul>
@@ -3959,6 +3937,8 @@ input tensor.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">custom</span></code>: Specify custom padding in the parameter pad. note that <code class="docutils literal notranslate"><span class="pre">same</span></code>
 padding is equivalent to custom padding with
 <code class="docutils literal notranslate"><span class="pre">pad[2*i]</span> <span class="pre">+</span> <span class="pre">pad[2*i+1]</span> <span class="pre">=</span> <span class="pre">kernel_size[i]</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">same_lower</span></code>: Similar to <code class="docutils literal notranslate"><span class="pre">same</span></code> but the padding
+will place extra rows/cols on the top/left if the padding amount is odd.</p></li>
 </ul>
 </dd>
 <dt><strong>pad: const&lt;[P],i32&gt; (Optional. Default to all 0s)</strong></dt><dd><ul class="simple">
@@ -4049,11 +4029,12 @@ then <code class="docutils literal notranslate"><span class="pre">D_out[i]</span
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS15.pool.l2_pool">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS15.pool.</span></span><span class="sig-name descname"><span class="pre">l2_pool</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS15/pool.html#l2_pool"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS15.pool.l2_pool" title="Permalink to this definition"></a></dt>
-<dd><p>Perform L2 pooling. Supports 1-D, 2-D, and 3-D pool.</p>
+<dd><p>Perform L2 pooling. Supports 1-D and 2-D pool.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>x: tensor&lt;[n,C_in,*D_in],T&gt; (Required)</strong></dt><dd><ul class="simple">
+<li><p>Only support 1d and 2d pooling.</p></li>
 <li><p>See <code class="docutils literal notranslate"><span class="pre">avg_pool</span></code>.</p></li>
 </ul>
 </dd>
@@ -4177,7 +4158,7 @@ distribution.</p>
 <code class="docutils literal notranslate"><span class="pre">shape[k]</span> <span class="pre">&gt;</span> <span class="pre">0</span></code> for <code class="docutils literal notranslate"><span class="pre">k</span> <span class="pre">=</span> <span class="pre">0,...,</span> <span class="pre">K-1</span></code>.</p></li>
 </ul>
 </dd>
-<dt><strong>prob: const&lt;f32&gt; (Optional)</strong></dt><dd><ul class="simple">
+<dt><strong>prob: const&lt;T&gt; (Optional)</strong></dt><dd><ul class="simple">
 <li><p>The probability of sampling <code class="docutils literal notranslate"><span class="pre">1</span></code>. Defaults to <code class="docutils literal notranslate"><span class="pre">0.5</span></code>.</p></li>
 </ul>
 </dd>
@@ -4270,9 +4251,9 @@ distribution.</p>
 <code class="docutils literal notranslate"><span class="pre">shape[k]</span> <span class="pre">&gt;</span> <span class="pre">0</span></code> for <code class="docutils literal notranslate"><span class="pre">k</span> <span class="pre">=</span> <span class="pre">0,...,</span> <span class="pre">K-1</span></code>.</p></li>
 </ul>
 </dd>
-<dt><strong>mean: const&lt;f32&gt; (Optional)</strong></dt><dd><p>The mean (center) of the normal distribution. Defaults to 0.0.</p>
+<dt><strong>mean: const&lt;T&gt; (Optional)</strong></dt><dd><p>The mean (center) of the normal distribution. Defaults to 0.0.</p>
 </dd>
-<dt><strong>stddev: const&lt;f32&gt; (Optional)</strong></dt><dd><p>The standard deviation (width) of the normal distribution. Defaults to <code class="docutils literal notranslate"><span class="pre">1.0</span></code>.</p>
+<dt><strong>stddev: const&lt;T&gt; (Optional)</strong></dt><dd><p>The standard deviation (width) of the normal distribution. Defaults to <code class="docutils literal notranslate"><span class="pre">1.0</span></code>.</p>
 </dd>
 <dt><strong>seed: const&lt;i32&gt; (Optional)</strong></dt><dd><p>Seed to create a reproducible sequence of values across multiple invokes.</p>
 </dd>
@@ -4322,11 +4303,11 @@ the results are officially undefined and may eventually raise an error.</p>
 <code class="docutils literal notranslate"><span class="pre">shape[k]</span> <span class="pre">&gt;</span> <span class="pre">0</span></code> for <code class="docutils literal notranslate"><span class="pre">k</span> <span class="pre">=</span> <span class="pre">0,...,</span> <span class="pre">K-1</span></code>.</p></li>
 </ul>
 </dd>
-<dt><strong>low: const&lt;f32&gt; (Optional)</strong></dt><dd><ul class="simple">
+<dt><strong>low: const&lt;T&gt; (Optional)</strong></dt><dd><ul class="simple">
 <li><p>Lower boundary of the output interval (inclusive). Defaults to <code class="docutils literal notranslate"><span class="pre">0.0</span></code>.</p></li>
 </ul>
 </dd>
-<dt><strong>high: const&lt;f32&gt; (Optional)</strong></dt><dd><ul class="simple">
+<dt><strong>high: const&lt;T&gt; (Optional)</strong></dt><dd><ul class="simple">
 <li><p>Upper boundary of the output interval (exclusive). Defaults to <code class="docutils literal notranslate"><span class="pre">1.0</span></code>.</p></li>
 </ul>
 </dd>
@@ -4592,7 +4573,7 @@ values, respectively.</p></li>
 <li><p>Activation applied on output gate.</p></li>
 </ul>
 </dd>
-<dt><strong>clip: const&lt;fp32&gt; (optional) [Default=None]</strong></dt><dd><ul class="simple">
+<dt><strong>clip: const&lt;T&gt; (optional) [Default=None]</strong></dt><dd><ul class="simple">
 <li><p>Cell gate is clipped to <code class="docutils literal notranslate"><span class="pre">[-clip,</span> <span class="pre">+clip]</span></code>.</p></li>
 </ul>
 </dd>
@@ -4731,7 +4712,7 @@ specified in <code class="docutils literal notranslate"><span class="pre">axis</
 <dl class="field-list simple">
 <dt class="field-odd">Attributes</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>T: f32, int32</strong></dt><dd></dd>
+<dt><strong>T: fp16, fp32, i32</strong></dt><dd></dd>
 </dl>
 </dd>
 </dl>
@@ -4771,7 +4752,7 @@ in <code class="docutils literal notranslate"><span class="pre">axis</span></cod
 <dl class="field-list simple">
 <dt class="field-odd">Attributes</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>T: f32, int32</strong></dt><dd></dd>
+<dt><strong>T: fp16, fp32, i32</strong></dt><dd></dd>
 </dl>
 </dd>
 </dl>
@@ -5209,8 +5190,8 @@ similar to <a class="reference external" href="https://www.tensorflow.org/api_do
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>x: tensor&lt;*D,T&gt; (Required)</strong></dt><dd></dd>
-<dt><strong>indices: tensor&lt;*N,i32&gt; (Required)</strong></dt><dd><ul class="simple">
+<dt><strong>x: tensor&lt;*D, T&gt; (Required)</strong></dt><dd></dd>
+<dt><strong>indices: tensor&lt;*N, i32&gt; (Required)</strong></dt><dd><ul class="simple">
 <li><p>Indices values may be negative. More precisely, <code class="docutils literal notranslate"><span class="pre">-D[axis]&lt;=</span> <span class="pre">v</span> <span class="pre">&lt;</span> <span class="pre">D[axis]</span></code> for <code class="docutils literal notranslate"><span class="pre">v</span></code> in <code class="docutils literal notranslate"><span class="pre">indices</span></code>.</p></li>
 </ul>
 </dd>
@@ -5222,7 +5203,7 @@ similar to <a class="reference external" href="https://www.tensorflow.org/api_do
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><dl class="simple">
-<dt>tensor&lt;*K,T&gt;</dt><dd><ul class="simple">
+<dt>tensor&lt;*K, T&gt;</dt><dd><ul class="simple">
 <li><p>Where <code class="docutils literal notranslate"><span class="pre">K</span> <span class="pre">=</span> <span class="pre">D[:axis]</span> <span class="pre">+</span> <span class="pre">N</span> <span class="pre">+</span> <span class="pre">D[axis+1:]</span></code>.</p></li>
 </ul>
 </dd>
@@ -5234,7 +5215,7 @@ similar to <a class="reference external" href="https://www.tensorflow.org/api_do
 <dl class="field-list simple">
 <dt class="field-odd">Attributes</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>U: fp16, fp32, i32</strong></dt><dd></dd>
+<dt><strong>T: fp16, fp32, i32</strong></dt><dd></dd>
 </dl>
 </dd>
 </dl>
@@ -5281,7 +5262,7 @@ by operation <code class="docutils literal notranslate"><span class="pre">mode</
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>data: tensor&lt;*D, T&gt; (Required)</strong></dt><dd></dd>
-<dt><strong>indices: tensor&lt;[C],T&gt; (Required)</strong></dt><dd><ul class="simple">
+<dt><strong>indices: tensor&lt;[C], i32&gt; (Required)</strong></dt><dd><ul class="simple">
 <li><p>1-D tensor.</p></li>
 </ul>
 </dd>
@@ -5311,7 +5292,7 @@ by operation <code class="docutils literal notranslate"><span class="pre">mode</
 </dd>
 <dt class="field-odd">Attributes</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>T: fp32</strong></dt><dd></dd>
+<dt><strong>T: fp16, fp32, i32</strong></dt><dd></dd>
 <dt><strong>For example:</strong></dt><dd><p>data = [[1, 2, 3], [4, 5, 6]]
 indices = [1, 0]
 updates = [[5, 6, 7], [8, 9, 10]]
@@ -5337,7 +5318,7 @@ mode = “update”</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>x: tensor&lt;*D, T&gt; (Required)</strong></dt><dd></dd>
-<dt><strong>indices: tensor&lt;*K, T&gt; (Required)</strong></dt><dd><ul class="simple">
+<dt><strong>indices: tensor&lt;*K, i32&gt; (Required)</strong></dt><dd><ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">rank(indices)</span> <span class="pre">==</span> <span class="pre">rank(x)</span></code>.</p></li>
 </ul>
 </dd>
@@ -5408,7 +5389,7 @@ using <code class="docutils literal notranslate"><span class="pre">mode</span></
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>data: tensor&lt;*D, T&gt; (Required)</strong></dt><dd></dd>
-<dt><strong>indices: tensor&lt;*K,T&gt; (Required)</strong></dt><dd><ul class="simple">
+<dt><strong>indices: tensor&lt;*K, i32&gt; (Required)</strong></dt><dd><ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">rank(indices)</span> <span class="pre">==</span> <span class="pre">rank(data)</span></code>.</p></li>
 </ul>
 </dd>
@@ -5438,7 +5419,7 @@ using <code class="docutils literal notranslate"><span class="pre">mode</span></
 </dd>
 <dt class="field-odd">Attributes</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>U: fp16, fp32, i32</strong></dt><dd></dd>
+<dt><strong>T: fp16, fp32, i32</strong></dt><dd></dd>
 </dl>
 </dd>
 </dl>
@@ -5457,13 +5438,13 @@ of <code class="docutils literal notranslate"><span class="pre">x</span></code>:
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>x: tensor&lt;*D,T&gt; (Required)</strong></dt><dd></dd>
-<dt><strong>indices: tensor&lt;*K,i32&gt; (Required)</strong></dt><dd></dd>
+<dt><strong>x: tensor&lt;*D, T&gt; (Required)</strong></dt><dd></dd>
+<dt><strong>indices: tensor&lt;*K, i32&gt; (Required)</strong></dt><dd></dd>
 </dl>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><dl class="simple">
-<dt>tensor&lt;*V,T&gt;</dt><dd><ul class="simple">
+<dt>tensor&lt;*V, T&gt;</dt><dd><ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">V</span> <span class="pre">=</span> <span class="pre">K[:-1]</span> <span class="pre">+</span> <span class="pre">D[K[-1]:]</span></code>, where <code class="docutils literal notranslate"><span class="pre">D</span> <span class="pre">=</span> <span class="pre">x.shape</span></code> and <code class="docutils literal notranslate"><span class="pre">K</span> <span class="pre">=</span> <span class="pre">indices.shape</span></code>.</p></li>
 </ul>
 </dd>
@@ -5475,7 +5456,7 @@ of <code class="docutils literal notranslate"><span class="pre">x</span></code>:
 <dl class="field-list simple">
 <dt class="field-odd">Attributes</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>U: fp16, fp32, i32</strong></dt><dd></dd>
+<dt><strong>T: fp16, fp32, i32</strong></dt><dd></dd>
 </dl>
 </dd>
 </dl>
@@ -5502,8 +5483,8 @@ the op updates <code class="docutils literal notranslate"><span class="pre">outp
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>data: tensor&lt;*D,T&gt; (Required)</strong></dt><dd></dd>
-<dt><strong>indices: tensor&lt;*K,i32&gt; (Required)</strong></dt><dd></dd>
+<dt><strong>data: tensor&lt;*D, T&gt; (Required)</strong></dt><dd></dd>
+<dt><strong>indices: tensor&lt;*K, i32&gt; (Required)</strong></dt><dd></dd>
 <dt><strong>updates: tensor&lt;*K, T&gt; (Required)</strong></dt><dd><ul class="simple">
 <li><p>Must be the shape as <code class="docutils literal notranslate"><span class="pre">K[:-1]+data.shape[K[-1]:]</span></code>.</p></li>
 </ul>
@@ -5518,7 +5499,7 @@ the op updates <code class="docutils literal notranslate"><span class="pre">outp
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><dl class="simple">
-<dt>tensor&lt;*D,T&gt;</dt><dd><ul class="simple">
+<dt>tensor&lt;*D, T&gt;</dt><dd><ul class="simple">
 <li><p>A tensor with the same shape and type as <code class="docutils literal notranslate"><span class="pre">data</span></code>.</p></li>
 </ul>
 </dd>
@@ -5594,12 +5575,12 @@ lower triangle.</p></li>
 </ul>
 </dd>
 <dt><strong>axis: const&lt;i32&gt; (Optional)</strong></dt><dd><ul class="simple">
-<li><p>default to <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p></li>
+<li><p>Defaults to <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p></li>
 <li><p>Axis for which the cumulative sum is computed.</p></li>
 </ul>
 </dd>
 <dt><strong>exclusive: const&lt;bool&gt; (Optional)</strong></dt><dd><ul class="simple">
-<li><p>Default to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
+<li><p>Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
 <li><p>When set to <code class="docutils literal notranslate"><span class="pre">False</span></code>, inclusive cumsum is computed, that is the first element of
 the output is identical to the first element in the input.</p></li>
 <li><p>When set to <code class="docutils literal notranslate"><span class="pre">True</span></code>, exclusive cumsum is computed, which makes the first element
@@ -5607,7 +5588,7 @@ of output to <code class="docutils literal notranslate"><span class="pre">0</spa
 </ul>
 </dd>
 <dt><strong>reverse: const&lt;bool&gt; (Optional)</strong></dt><dd><ul class="simple">
-<li><p>Default to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
+<li><p>Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
 <li><p>When set to <code class="docutils literal notranslate"><span class="pre">True</span></code>, perform cumsum in the reverse order.</p></li>
 </ul>
 </dd>
@@ -5642,7 +5623,7 @@ of output to <code class="docutils literal notranslate"><span class="pre">0</spa
 </ul>
 </dd>
 <dt><strong>value: const&lt;T&gt; (Optional)</strong></dt><dd><ul class="simple">
-<li><p>Default to <code class="docutils literal notranslate"><span class="pre">0.0</span></code>.</p></li>
+<li><p>Defaults to <code class="docutils literal notranslate"><span class="pre">0.0</span></code>.</p></li>
 <li><p>Constant value to fill in.</p></li>
 </ul>
 </dd>
@@ -5699,7 +5680,7 @@ less, output is padded up to this number.</p></li>
 </ul>
 </dd>
 <dt><strong>per_class_suppression: const&lt;bool&gt; (Optional)</strong></dt><dd><ul class="simple">
-<li><p>Default to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
+<li><p>Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
 <li><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, suppression is performed independently within boxes of each class.</p></li>
 </ul>
 </dd>
@@ -5772,7 +5753,7 @@ while other locations take the <code class="docutils literal notranslate"><span 
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>indices: tensor&lt;[D],T&gt; (Required)</strong></dt><dd><ul class="simple">
+<dt><strong>indices: tensor&lt;[D], i32&gt; (Required)</strong></dt><dd><ul class="simple">
 <li><p>Tensor, values indicate the locations for each one-hot vector to take the <code class="docutils literal notranslate"><span class="pre">on_value</span></code>.</p></li>
 </ul>
 </dd>
@@ -5783,16 +5764,16 @@ while other locations take the <code class="docutils literal notranslate"><span 
 <dt><strong>axis: const i32 (Optional)</strong></dt><dd><ul class="simple">
 <li><p>Indicates which dimension to append the new axis.</p></li>
 <li><p>If the input indices is rank <code class="docutils literal notranslate"><span class="pre">D</span></code>, the output tensor will have rank <code class="docutils literal notranslate"><span class="pre">D+1</span></code>.</p></li>
-<li><p>Default to <code class="docutils literal notranslate"><span class="pre">-1</span></code> (the last dimension).</p></li>
+<li><p>Defaults to <code class="docutils literal notranslate"><span class="pre">-1</span></code> (the last dimension).</p></li>
 </ul>
 </dd>
-<dt><strong>on_value: const i32 (Optional)</strong></dt><dd><ul class="simple">
+<dt><strong>on_value: const T (Optional)</strong></dt><dd><ul class="simple">
 <li><p>Values for locations where defined in <code class="docutils literal notranslate"><span class="pre">indices</span></code>.</p></li>
-<li><p>Default to <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p></li>
+<li><p>Defaults to <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p></li>
 </ul>
 </dd>
-<dt><strong>off_value: const i32 (Optional)</strong></dt><dd><ul class="simple">
-<li><p>Default to <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p></li>
+<dt><strong>off_value: const T (Optional)</strong></dt><dd><ul class="simple">
+<li><p>Defaults to <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p></li>
 </ul>
 </dd>
 </dl>
@@ -5820,13 +5801,13 @@ while other locations take the <code class="docutils literal notranslate"><span 
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>x: tensor&lt;[*D_in],T&gt;  (Required)</strong></dt><dd></dd>
-<dt><strong>pad: tensor&lt;[2*N],i32&gt; (Required)</strong></dt><dd><p><code class="docutils literal notranslate"><span class="pre">N</span> <span class="pre">&lt;=</span> <span class="pre">D_in</span></code>. Last <code class="docutils literal notranslate"><span class="pre">N</span></code> dimensions of <code class="docutils literal notranslate"><span class="pre">x</span></code> are padded as follows:</p>
+<dt><strong>x: tensor&lt;[*D_in], T&gt;  (Required)</strong></dt><dd></dd>
+<dt><strong>pad: tensor&lt;[2*N], i32&gt; (Required)</strong></dt><dd><p><code class="docutils literal notranslate"><span class="pre">N</span> <span class="pre">&lt;=</span> <span class="pre">D_in</span></code>. Last <code class="docutils literal notranslate"><span class="pre">N</span></code> dimensions of <code class="docutils literal notranslate"><span class="pre">x</span></code> are padded as follows:</p>
 <ul class="simple">
 <li><dl class="simple">
 <dt>For each dimension <code class="docutils literal notranslate"><span class="pre">i</span></code> of <code class="docutils literal notranslate"><span class="pre">x</span></code> if <code class="docutils literal notranslate"><span class="pre">i</span> <span class="pre">&gt;=</span> <span class="pre">D_in</span> <span class="pre">-</span> <span class="pre">N</span></code>:</dt><dd><ul>
-<li><p>pad <code class="docutils literal notranslate"><span class="pre">pad[2*i]</span></code> elements before <code class="docutils literal notranslate"><span class="pre">x[..,i,..]</span></code></p></li>
-<li><p>pad <code class="docutils literal notranslate"><span class="pre">pad[2*i+1]</span></code> elements after <code class="docutils literal notranslate"><span class="pre">x[..,i,..]</span></code></p></li>
+<li><p>pad <code class="docutils literal notranslate"><span class="pre">pad[2*i]</span></code> elements before <code class="docutils literal notranslate"><span class="pre">x[..,i,..]</span></code>.</p></li>
+<li><p>pad <code class="docutils literal notranslate"><span class="pre">pad[2*i+1]</span></code> elements after <code class="docutils literal notranslate"><span class="pre">x[..,i,..]</span></code>.</p></li>
 </ul>
 </dd>
 </dl>
@@ -5838,13 +5819,13 @@ at most <code class="docutils literal notranslate"><span class="pre">D[i]</span>
 </ul>
 </dd>
 <dt><strong>mode: const&lt;str&gt; (Optional)</strong></dt><dd><ul class="simple">
-<li><p>Default to <code class="docutils literal notranslate"><span class="pre">constant</span></code>.</p></li>
+<li><p>Defaults to <code class="docutils literal notranslate"><span class="pre">constant</span></code>.</p></li>
 <li><p>Must be one of the following values:
 <code class="docutils literal notranslate"><span class="pre">constant</span></code>, <code class="docutils literal notranslate"><span class="pre">reflect</span></code>, or <code class="docutils literal notranslate"><span class="pre">replicate</span></code>.</p></li>
 </ul>
 </dd>
 <dt><strong>constant_val: const&lt;T&gt; (Optional)</strong></dt><dd><ul class="simple">
-<li><p>Default to <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p></li>
+<li><p>Defaults to <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p></li>
 <li><p>Constant value to pad. Ignored if <code class="docutils literal notranslate"><span class="pre">mode</span> <span class="pre">!=</span> <span class="pre">constant</span></code>.</p></li>
 </ul>
 </dd>
@@ -5915,7 +5896,7 @@ Dimension <code class="docutils literal notranslate"><span class="pre">i</span><
 <li><p>Input tensor.</p></li>
 </ul>
 </dd>
-<dt><strong>reps: tensor&lt;[rank(x)], int32&gt; (Required)</strong></dt><dd><ul class="simple">
+<dt><strong>reps: tensor&lt;[rank(x)], i32&gt; (Required)</strong></dt><dd><ul class="simple">
 <li><p>A 1-D tensor with length <code class="docutils literal notranslate"><span class="pre">rank(x)</span></code>, which indicates the number to replicate the input along each dimension.</p></li>
 </ul>
 </dd>
@@ -5950,13 +5931,13 @@ of the input tensor.</p>
 </ul>
 </dd>
 <dt><strong>* axis: const&lt;i32&gt; (Optional)</strong></dt><dd><ul class="simple">
-<li><p>Default to <code class="docutils literal notranslate"><span class="pre">-1</span></code> (the last dimension).</p></li>
+<li><p>Defaults to <code class="docutils literal notranslate"><span class="pre">-1</span></code> (the last dimension).</p></li>
 <li><p>Axis to perform the operation.</p></li>
 </ul>
 </dd>
 <dt><strong>* ascending: const&lt;bool&gt; (Optional)</strong></dt><dd><ul class="simple">
-<li><p>Default to <code class="docutils literal notranslate"><span class="pre">False</span></code>, sort in descending order. <code class="docutils literal notranslate"><span class="pre">True</span></code> to sort in
-ascending order.</p></li>
+<li><p>Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>, sort in descending order.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code> to sort in ascending order.</p></li>
 </ul>
 </dd>
 </dl>
@@ -5990,18 +5971,18 @@ indices of the input tensor along a given axis.</p>
 </ul>
 </dd>
 <dt><strong>k: const&lt;i32&gt; (Optional)</strong></dt><dd><ul class="simple">
-<li><p>Default to <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p></li>
+<li><p>Defaults to <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p></li>
 <li><p>Number of values/indices to be computed along each axis.</p></li>
 </ul>
 </dd>
-<dt><strong>* axis: const&lt;i32&gt; (Optional)</strong></dt><dd><ul class="simple">
+<dt><strong>axis: const&lt;i32&gt; (Optional)</strong></dt><dd><ul class="simple">
 <li><p>Defaults to <code class="docutils literal notranslate"><span class="pre">-1</span></code> (last dimension).</p></li>
 <li><p>Axis to perform the operation.</p></li>
 </ul>
 </dd>
-<dt><strong>* ascending: const&lt;bool&gt; (Optional)</strong></dt><dd><ul class="simple">
-<li><p>Default to <code class="docutils literal notranslate"><span class="pre">False</span></code>, sort in descending order. <code class="docutils literal notranslate"><span class="pre">True</span></code> to sort in
-ascending order.</p></li>
+<dt><strong>ascending: const&lt;bool&gt; (Optional)</strong></dt><dd><ul class="simple">
+<li><p>Defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code>, sort in descending order.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">True</span></code> to sort in ascending order.</p></li>
 </ul>
 </dd>
 </dl>
@@ -6038,7 +6019,7 @@ after the provided axis.</p>
 <li><p>Input tensor.</p></li>
 </ul>
 </dd>
-<dt><strong>* axis: const&lt;f32&gt;  (Optional)</strong></dt><dd><ul class="simple">
+<dt><strong>axis: const&lt;i32&gt;  (Optional)</strong></dt><dd><ul class="simple">
 <li><p>Defaults to <code class="docutils literal notranslate"><span class="pre">1</span></code>.</p></li>
 <li><p>Negative axis is supported.</p></li>
 </ul>
@@ -6075,7 +6056,7 @@ after the provided axis.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.shape">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.</span></span><span class="sig-name descname"><span class="pre">shape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS15/tensor_operation.html#shape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.shape" title="Permalink to this definition"></a></dt>
-<dd><p>Returns a 1-dimensional tensor with the shape of the input tensor</p>
+<dd><p>Returns a 1-dimensional tensor with the shape of the input tensor.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
@@ -6122,8 +6103,8 @@ determined at compile time (i.e. a tuple).</p></li>
 </ul>
 </dd>
 <dt><strong>interleave: const&lt;bool&gt; (Optional, Default=False)</strong></dt><dd><ul class="simple">
-<li><p>If true, concatenate the inputs by interleaving them.</p></li>
-<li><p>If true, all the inputs to this op must have the exact same shape.</p></li>
+<li><p>If True, concatenate the inputs by interleaving them.</p></li>
+<li><p>If True, all the inputs to this op must have the exact same shape.</p></li>
 </ul>
 </dd>
 </dl>
@@ -6191,7 +6172,7 @@ divisible by <code class="docutils literal notranslate"><span class="pre">num_sp
 If <code class="docutils literal notranslate"><span class="pre">split_sizes</span></code> length <code class="docutils literal notranslate"><span class="pre">S</span></code> cannot be determined at compile time,
 <code class="docutils literal notranslate"><span class="pre">num_splits</span></code> must be supplied to determine the number of outputs.</p>
 </dd>
-<dt><strong>split_sizes: const&lt;S,i32&gt; (Optional)</strong></dt><dd><ul class="simple">
+<dt><strong>split_sizes: const&lt;S, i32&gt; (Optional)</strong></dt><dd><ul class="simple">
 <li><p>Sizes to split to. The sum of <code class="docutils literal notranslate"><span class="pre">split_sizes</span></code> must equal to
 <code class="docutils literal notranslate"><span class="pre">value.shape[axis]</span></code>.</p></li>
 </ul>
@@ -6205,7 +6186,7 @@ range <code class="docutils literal notranslate"><span class="pre">[-rank(x),</s
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><dl class="simple">
-<dt>Tuple[tensor&lt;*?,T&gt;]</dt><dd><ul class="simple">
+<dt>Tuple[tensor&lt;*?, T&gt;]</dt><dd><ul class="simple">
 <li><p>Where the length of the tuple is the number of splits (determined
 from <code class="docutils literal notranslate"><span class="pre">num_splits</span></code> or <code class="docutils literal notranslate"><span class="pre">split_sizes</span></code>).</p></li>
 </ul>
@@ -6227,7 +6208,7 @@ from <code class="docutils literal notranslate"><span class="pre">num_splits</sp
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>values: Tuple[tensor&lt;[d0, d1,…d_axis_i, …, d_n],T&gt;]  (Required)</strong></dt><dd><ul class="simple">
+<dt><strong>values: Tuple[tensor&lt;[d0, d1,…d_axis_i, …, d_n], T&gt;]  (Required)</strong></dt><dd><ul class="simple">
 <li><p>All tensors must have identical shape.</p></li>
 </ul>
 </dd>
@@ -6239,7 +6220,7 @@ from <code class="docutils literal notranslate"><span class="pre">num_splits</sp
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><dl class="simple">
-<dt>tenor&lt;[d0, d1,…d_axis_out, …, d_n],T&gt;</dt><dd><ul class="simple">
+<dt>tenor&lt;[d0, d1,…d_axis_out, …, d_n], T&gt;</dt><dd><ul class="simple">
 <li><p>Where <code class="docutils literal notranslate"><span class="pre">d_axis_out</span> <span class="pre">=</span> <span class="pre">sum(d_axis_i)</span></code>.</p></li>
 </ul>
 </dd>
@@ -6286,6 +6267,41 @@ from <code class="docutils literal notranslate"><span class="pre">num_splits</sp
 <section id="module-coremltools.converters.mil.mil.ops.defs.iOS16.tensor_operation">
 <span id="tensor-operation-ios-16"></span><h2>tensor_operation (iOS 16+)<a class="headerlink" href="#module-coremltools.converters.mil.mil.ops.defs.iOS16.tensor_operation" title="Permalink to this heading"></a></h2>
 <dl class="py class">
+<dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS16.tensor_operation.fill_like">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS16.tensor_operation.</span></span><span class="sig-name descname"><span class="pre">fill_like</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS16/tensor_operation.html#fill_like"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS16.tensor_operation.fill_like" title="Permalink to this definition"></a></dt>
+<dd><p>Returns a tensor with the same size as the input tensor filled with a constant value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>ref_tensor: tensor&lt;*?, T&gt; (Required)</strong></dt><dd><ul class="simple">
+<li><p>Input tensor.</p></li>
+</ul>
+</dd>
+<dt><strong>value: const&lt;U&gt; (Optional)</strong></dt><dd><ul class="simple">
+<li><p>Default is <code class="docutils literal notranslate"><span class="pre">0.0</span></code>.</p></li>
+<li><p>Constant value to fill in.</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>tensor&lt;*?, T&gt;</dt><dd><ul class="simple">
+<li><p>Tensor with shape determined by the input tensor.</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Attributes</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>T: fp16, fp32, int32, bool</strong></dt><dd></dd>
+<dt><strong>U: fp16, fp32, int32, bool</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS16.tensor_operation.topk">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS16.tensor_operation.</span></span><span class="sig-name descname"><span class="pre">topk</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS16/tensor_operation.html#topk"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS16.tensor_operation.topk" title="Permalink to this definition"></a></dt>
 <dd><p>A version of <code class="docutils literal notranslate"><span class="pre">topk</span></code> for iOS 16+. This section documents the differences. For the
@@ -6293,16 +6309,18 @@ rest of the documentation, see <a class="reference external" href="#coremltools.
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>* The following are additional parameters for the iOS 16+ version. (For more parameters, see</strong></dt><dd><p><a class="reference external" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.topk">the iOS 15 version of topk</a>.)</p>
-</dd>
+<dt><strong>The following are additional parameters for the iOS 16+ version. (For more parameters,</strong></dt><dd></dd>
+<dt><strong>see `the iOS 15 version of topk &lt;#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.topk&gt;`_.)</strong></dt><dd></dd>
 <dt><strong>sort: const&lt;bool&gt; (Optional)</strong></dt><dd><ul class="simple">
-<li><p>Default to <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
+<li><p>Defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
 <li><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, <code class="docutils literal notranslate"><span class="pre">top-k</span></code> elements are themselves sorted.
 Otherwise, no particular ordering is guaranteed.</p></li>
 </ul>
 </dd>
-<dt><strong>return_indices: const&lt;bool&gt; (Optional)</strong></dt><dd><p># Default to <code class="docutils literal notranslate"><span class="pre">True</span></code>.
-# If <code class="docutils literal notranslate"><span class="pre">True`,</span> <span class="pre">returns</span> <span class="pre">both</span> <span class="pre">values</span> <span class="pre">and</span> <span class="pre">indices.</span> <span class="pre">Otherwise,</span> <span class="pre">returns</span> <span class="pre">only</span> <span class="pre">the</span> <span class="pre">``top-k</span></code> values.</p>
+<dt><strong>return_indices: const&lt;bool&gt; (Optional)</strong></dt><dd><ul class="simple">
+<li><p>Defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, returns both values and indices. Otherwise, returns only the <code class="docutils literal notranslate"><span class="pre">top-k</span></code> values.</p></li>
+</ul>
 </dd>
 </dl>
 </dd>
@@ -6831,6 +6849,76 @@ rank.</p></li>
 <section id="module-coremltools.converters.mil.mil.ops.defs.iOS16.tensor_transformation">
 <span id="tensor-transformation-ios-16"></span><h2>tensor_transformation (iOS 16+)<a class="headerlink" href="#module-coremltools.converters.mil.mil.ops.defs.iOS16.tensor_transformation" title="Permalink to this heading"></a></h2>
 <dl class="py class">
+<dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS16.tensor_transformation.reshape_like">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS16.tensor_transformation.</span></span><span class="sig-name descname"><span class="pre">reshape_like</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS16/tensor_transformation.html#reshape_like"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS16.tensor_transformation.reshape_like" title="Permalink to this definition"></a></dt>
+<dd><p>Reshape a tensor to an output shape specified by some or all dimensions of a tuple of reference tensors <code class="docutils literal notranslate"><span class="pre">ref_tensors</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x: tensor&lt;*?, T&gt; (Required)</strong></dt><dd><ul class="simple">
+<li><p>The input tensor to be reshaped.</p></li>
+</ul>
+</dd>
+<dt><strong>ref_tensors: Tuple[tensor&lt;*?, R&gt;] (Required)</strong></dt><dd><ul class="simple">
+<li><p>A tuple of tensors that define the output shape.</p></li>
+</ul>
+</dd>
+<dt><strong>begins: Tuple[const&lt;int32&gt;] (Required)</strong></dt><dd><ul class="simple">
+<li><p>A tuple of integers specifying the begin index into the shape vector of the corresponding <code class="docutils literal notranslate"><span class="pre">ref_tensor</span></code>.</p></li>
+</ul>
+</dd>
+<dt><strong>ends: Tuple[const&lt;int32&gt;] (Required)</strong></dt><dd><ul class="simple">
+<li><p>A tuple of integers specifying the end index into the shape vector of the corresponding <code class="docutils literal notranslate"><span class="pre">ref_tensor</span></code>.</p></li>
+</ul>
+</dd>
+<dt><strong>end_masks: Tuple[const&lt;bool&gt;] (Required)</strong></dt><dd><ul class="simple">
+<li><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, select all axes from the begin index until the end of the corresponding <code class="docutils literal notranslate"><span class="pre">ref_tensor</span></code>, as in
+<code class="docutils literal notranslate"><span class="pre">ref_tensors[i].shape[begins[i]:]</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt>tensor&lt;*?, T&gt;</dt><dd><ul class="simple">
+<li><p>Same type as input tensor <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p></li>
+<li><p>Output shape is computed by <code class="docutils literal notranslate"><span class="pre">ref_tensors</span></code>, <code class="docutils literal notranslate"><span class="pre">begins</span></code>, <code class="docutils literal notranslate"><span class="pre">ends</span></code>, and <code class="docutils literal notranslate"><span class="pre">end_masks</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The output shape is computed as follows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">output_shape</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">num_of_refs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">begins</span><span class="p">)</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_of_refs</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">end_masks</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span>
+        <span class="n">output_shape</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ref_tensor_i</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">begins</span><span class="p">[</span><span class="n">i</span><span class="p">]:])</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">output_shape</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ref_tensor_i</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="n">begins</span><span class="p">[</span><span class="n">i</span><span class="p">]:</span><span class="n">ends</span><span class="p">[</span><span class="n">i</span><span class="p">]])</span>
+<span class="n">output_shape</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">output_shape</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The following is an example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>ref_tensors=[tensor[2, 3, 4], tensor[1, 5, 6]]
+begins=[0, 1]``
+ends=[2, 0]``
+end_masks=[False, True]
+</pre></div>
+</div>
+<p>The output shape would be <code class="docutils literal notranslate"><span class="pre">(2,</span> <span class="pre">3,</span> <span class="pre">5,</span> <span class="pre">6)</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>T: fp16, fp32, i32, bool</strong></dt><dd></dd>
+<dt><strong>R: fp16, fp32, i32, bool</strong></dt><dd></dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS16.tensor_transformation.pixel_unshuffle">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS16.tensor_transformation.</span></span><span class="sig-name descname"><span class="pre">pixel_unshuffle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS16/tensor_transformation.html#pixel_unshuffle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS16.tensor_transformation.pixel_unshuffle" title="Permalink to this definition"></a></dt>
 <dd><p>Rearrange elements in a tensor from spatial dimensions into depth (channel).
@@ -6863,7 +6951,7 @@ Equivalent to PyTorch’s <code class="docutils literal notranslate"><span class
 <dl class="field-list simple">
 <dt class="field-odd">Attributes</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>T: fp32</strong></dt><dd></dd>
+<dt><strong>T: fp16, fp32</strong></dt><dd></dd>
 </dl>
 </dd>
 </dl>

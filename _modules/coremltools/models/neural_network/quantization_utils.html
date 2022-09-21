@@ -1722,20 +1722,13 @@
     <span class="n">spec</span> <span class="o">=</span> <span class="n">full_precision_model</span><span class="o">.</span><span class="n">get_spec</span><span class="p">()</span>
     <span class="k">if</span> <span class="n">nbits</span> <span class="o">==</span> <span class="mi">16</span> <span class="ow">and</span> <span class="n">spec</span><span class="o">.</span><span class="n">isUpdatable</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;updatable models cannot get quantized to FP16.&quot;</span><span class="p">)</span>
+
     <span class="n">qspec</span> <span class="o">=</span> <span class="n">_quantize_spec_weights</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">nbits</span><span class="p">,</span> <span class="n">qmode</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">_macos_version</span><span class="p">()</span> <span class="o">&lt;</span> <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">14</span><span class="p">):</span>
-        <span class="nb">print</span><span class="p">(</span>
-            <span class="s2">&quot;WARNING - Unable to return a quantized MLModel instance since &quot;</span>
-            <span class="s2">&quot;OS is not macOS 10.14 or later. Returning a quantized model &quot;</span>
-            <span class="s2">&quot;specification instead.&quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">qspec</span>
-
     <span class="n">quantized_model</span> <span class="o">=</span> <span class="n">_get_model</span><span class="p">(</span><span class="n">qspec</span><span class="p">,</span> <span class="n">compute_units</span><span class="o">=</span><span class="n">full_precision_model</span><span class="o">.</span><span class="n">compute_unit</span><span class="p">)</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">sample_data</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">quantized_model</span>
 
-    <span class="n">compare_models</span><span class="p">(</span><span class="n">full_precision_model</span><span class="p">,</span> <span class="n">quantized_model</span><span class="p">,</span> <span class="n">sample_data</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">_macos_version</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">14</span><span class="p">)</span> <span class="ow">and</span> <span class="n">sample_data</span><span class="p">:</span>
+        <span class="n">compare_models</span><span class="p">(</span><span class="n">full_precision_model</span><span class="p">,</span> <span class="n">quantized_model</span><span class="p">,</span> <span class="n">sample_data</span><span class="p">)</span>
+
     <span class="k">return</span> <span class="n">quantized_model</span></div>
 </pre></div>
 

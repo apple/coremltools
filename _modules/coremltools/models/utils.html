@@ -285,17 +285,25 @@
 <span class="sd">    --------</span>
 <span class="sd">    save_spec</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">_ModelPackage</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
-            <span class="s2">&quot;Unable to load libmodelpackage. Cannot make save spec.&quot;</span>
-        <span class="p">)</span>
+    <span class="n">_</span><span class="p">,</span> <span class="n">file_extension</span> <span class="o">=</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+    
+    <span class="n">has_mlmodel_file_extension</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">file_extension</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">file_extension</span> <span class="o">==</span> <span class="n">_MLMODEL_EXTENSION</span><span class="p">:</span>
+            <span class="n">has_mlmodel_file_extension</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">elif</span> <span class="n">file_extension</span> <span class="o">!=</span> <span class="n">_MLPACKAGE_EXTENSION</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;File extension must be </span><span class="si">{}</span><span class="s2"> or </span><span class="si">{}</span><span class="s2"> (not </span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">_MLMODEL_EXTENSION</span><span class="p">,</span> <span class="n">_MLPACKAGE_EXTENSION</span><span class="p">,</span> <span class="n">file_extension</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">has_mlmodel_file_extension</span> <span class="ow">and</span> <span class="n">_ModelPackage</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Unable to load libmodelpackage. Cannot make save spec.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">has_mlmodel_file_extension</span> <span class="ow">and</span> <span class="n">_ModelPackage</span><span class="o">.</span><span class="n">isValid</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+        <span class="n">specfile</span> <span class="o">=</span> <span class="n">_ModelPackage</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span><span class="o">.</span><span class="n">getRootModel</span><span class="p">()</span><span class="o">.</span><span class="n">path</span><span class="p">()</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">specfile</span> <span class="o">=</span> <span class="n">filename</span>
 
     <span class="n">spec</span> <span class="o">=</span> <span class="n">_Model_pb2</span><span class="o">.</span><span class="n">Model</span><span class="p">()</span>
-
-    <span class="n">specfile</span> <span class="o">=</span> <span class="n">filename</span>
-    <span class="k">if</span> <span class="n">_ModelPackage</span><span class="o">.</span><span class="n">isValid</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
-        <span class="n">specfile</span> <span class="o">=</span> <span class="n">_ModelPackage</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span><span class="o">.</span><span class="n">getRootModel</span><span class="p">()</span><span class="o">.</span><span class="n">path</span><span class="p">()</span>
-
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">specfile</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
         <span class="n">contents</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
         <span class="n">spec</span><span class="o">.</span><span class="n">ParseFromString</span><span class="p">(</span><span class="n">contents</span><span class="p">)</span>
@@ -363,9 +371,7 @@
             <span class="s2">&quot;half precision.</span><span class="se">\n</span><span class="s2">&quot;</span>
         <span class="p">)</span>
 
-    <span class="kn">import</span> <span class="nn">sys</span>
-
-    <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">byteorder</span> <span class="o">==</span> <span class="s2">&quot;little&quot;</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">_sys</span><span class="o">.</span><span class="n">byteorder</span> <span class="o">==</span> <span class="s2">&quot;little&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">_np</span><span class="o">.</span><span class="n">float16</span><span class="p">(</span><span class="n">fp32_arr</span><span class="p">)</span><span class="o">.</span><span class="n">tobytes</span><span class="p">()</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">_fp32_to_reversed_fp16_byte_array</span><span class="p">(</span><span class="n">fp32_arr</span><span class="p">)</span>
@@ -438,8 +444,7 @@
 <span class="sd">        Test data on which to evaluate the models</span>
 
 <span class="sd">    target: str</span>
-<span class="sd">       Name of the column in the dataframe that must be interpreted</span>
-<span class="sd">       as the target column.</span>
+<span class="sd">       Name of the column in the dataframe to be compared against the prediction</span>
 
 <span class="sd">    verbose: bool</span>
 <span class="sd">       Set to true for a more verbose output.</span>
@@ -465,11 +470,11 @@
     <span class="n">max_error</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="n">error_squared</span> <span class="o">=</span> <span class="mi">0</span>
 
-    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+    <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
         <span class="n">input_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
         <span class="n">_remove_invalid_keys</span><span class="p">(</span><span class="n">input_dict</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
         <span class="n">predicted</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">input_dict</span><span class="p">)[</span><span class="n">_to_unicode</span><span class="p">(</span><span class="n">target</span><span class="p">)]</span>
-        <span class="n">other_framework</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;prediction&quot;</span><span class="p">]</span>
+        <span class="n">other_framework</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="n">target</span><span class="p">]</span>
         <span class="n">delta</span> <span class="o">=</span> <span class="n">predicted</span> <span class="o">-</span> <span class="n">other_framework</span>
 
         <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
@@ -530,11 +535,11 @@
 
     <span class="n">num_errors</span> <span class="o">=</span> <span class="mi">0</span>
 
-    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+    <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
         <span class="n">input_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
         <span class="n">_remove_invalid_keys</span><span class="p">(</span><span class="n">input_dict</span><span class="p">,</span> <span class="n">model</span><span class="p">)</span>
         <span class="n">predicted</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">input_dict</span><span class="p">)[</span><span class="n">_to_unicode</span><span class="p">(</span><span class="n">target</span><span class="p">)]</span>
-        <span class="n">other_framework</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s2">&quot;prediction&quot;</span><span class="p">]</span>
+        <span class="n">other_framework</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="n">target</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">predicted</span> <span class="o">!=</span> <span class="n">other_framework</span><span class="p">:</span>
             <span class="n">num_errors</span> <span class="o">+=</span> <span class="mi">1</span>
 

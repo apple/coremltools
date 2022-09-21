@@ -136,14 +136,15 @@ image\_resizing (iOS 15)
 
 .. automodule:: coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing
 
-   .. autoclass:: affine
    .. autoclass:: upsample_nearest_neighbor
-   .. autoclass:: upsample_bilinear
-   .. autoclass:: resample
    .. autoclass:: resize_nearest_neighbor
+   .. autoclass:: upsample_bilinear
    .. autoclass:: resize_bilinear
    .. autoclass:: crop_resize
    .. autoclass:: crop
+   .. autoclass:: affine
+   .. autoclass:: resample
+
 
 image\_resizing (iOS 16+)
 --------------------------------------------------------------
@@ -267,6 +268,7 @@ tensor\_operation (iOS 16+)
 
 .. automodule:: coremltools.converters.mil.mil.ops.defs.iOS16.tensor_operation
 
+   .. autoclass:: fill_like
    .. autoclass:: topk
 
 
@@ -294,5 +296,7 @@ tensor\_transformation (iOS 16+)
 
 .. automodule:: coremltools.converters.mil.mil.ops.defs.iOS16.tensor_transformation
 
+   .. autoclass:: reshape_like
    .. autoclass:: pixel_unshuffle
+
 

@@ -83,16 +83,15 @@
 <span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
 
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">types</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.block</span> <span class="kn">import</span> <span class="n">curr_opset_version</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.input_type</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">BoolInputType</span><span class="p">,</span>
     <span class="n">DefaultInputs</span><span class="p">,</span>
     <span class="n">InputSpec</span><span class="p">,</span>
-    <span class="n">IntTensorInputType</span><span class="p">,</span>
     <span class="n">TensorInputType</span><span class="p">,</span>
-    <span class="n">StringInputType</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs._op_reqs</span> <span class="kn">import</span> <span class="n">register_op</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs._utils</span> <span class="kn">import</span> <span class="n">spatial_dimensions_out_shape</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs.iOS15</span> <span class="kn">import</span> <span class="n">_IOS15_TARGET</span>
 
 
 <span class="k">class</span> <span class="nc">Pooling</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
@@ -100,13 +99,17 @@
 <span class="sd">    Pooling Op Superclass</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
-        <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(),</span>
-        <span class="n">kernel_sizes</span><span class="o">=</span><span class="n">IntTensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-        <span class="n">strides</span><span class="o">=</span><span class="n">IntTensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-        <span class="n">pad_type</span><span class="o">=</span><span class="n">StringInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-        <span class="n">pad</span><span class="o">=</span><span class="n">IntTensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-        <span class="n">ceil_mode</span><span class="o">=</span><span class="n">BoolInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+        <span class="n">kernel_sizes</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+        <span class="n">strides</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+        <span class="n">pad_type</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">str</span><span class="p">),</span>
+        <span class="n">pad</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+        <span class="n">ceil_mode</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">bool</span><span class="p">),</span>
     <span class="p">)</span>
+    
+    <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">),</span>
+    <span class="p">}</span>
 
     <span class="k">def</span> <span class="nf">default_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">num_spatial_dims</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">rank</span> <span class="o">-</span> <span class="mi">2</span>
@@ -116,9 +119,6 @@
             <span class="n">ceil_mode</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
             <span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-
     <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">ksize</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">kernel_sizes</span><span class="o">.</span><span class="n">val</span>
         <span class="n">x_shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span>
@@ -126,7 +126,7 @@
 
         <span class="n">strides</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">D_in_rank</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">strides</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">strides</span><span class="o">.</span><span class="n">val</span>
         <span class="n">pad_type</span> <span class="o">=</span> <span class="s2">&quot;valid&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad_type</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad_type</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">pad_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;valid&quot;</span><span class="p">,</span> <span class="s2">&quot;same&quot;</span><span class="p">,</span> <span class="s2">&quot;custom&quot;</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="n">pad_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;valid&quot;</span><span class="p">,</span> <span class="s2">&quot;same&quot;</span><span class="p">,</span> <span class="s2">&quot;custom&quot;</span><span class="p">,</span> <span class="s2">&quot;same_lower&quot;</span><span class="p">]:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unrecognized value of pad_type : </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">pad_type</span><span class="p">))</span>
         <span class="n">pad</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad</span><span class="o">.</span><span class="n">val</span>
         <span class="n">D_in</span> <span class="o">=</span> <span class="n">x_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span>  <span class="c1"># spatial dimensions</span>
@@ -140,6 +140,11 @@
                 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">D_in_rank</span><span class="p">):</span>
                     <span class="k">if</span> <span class="n">pad</span><span class="p">[</span><span class="mi">2</span><span class="o">*</span><span class="n">i</span><span class="p">]</span> <span class="o">!=</span> <span class="n">pad</span><span class="p">[</span><span class="mi">2</span><span class="o">*</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]:</span>
                         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Padding must be symmetric if ceil_mode is True&quot;</span><span class="p">)</span>
+        
+        <span class="c1"># The same_lower padding is not supported in iOS15</span>
+        <span class="k">if</span> <span class="n">curr_opset_version</span><span class="p">()</span> <span class="o">==</span> <span class="n">_IOS15_TARGET</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad_type</span><span class="o">.</span><span class="n">val</span> <span class="o">==</span> <span class="s2">&quot;same_lower&quot;</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;iOS15 version of pooling layers do not support pad_type = `same_lower`&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
         <span class="n">D_out_shape</span> <span class="o">=</span> <span class="n">spatial_dimensions_out_shape</span><span class="p">(</span>
             <span class="n">pad_type</span><span class="o">=</span><span class="n">pad_type</span><span class="p">,</span>
@@ -184,6 +189,8 @@
 <span class="sd">        * ``custom``: Specify custom padding in the parameter pad. note that ``same``</span>
 <span class="sd">          padding is equivalent to custom padding with</span>
 <span class="sd">          ``pad[2*i] + pad[2*i+1] = kernel_size[i]``.</span>
+<span class="sd">        * ``same_lower``: Similar to ``same`` but the padding</span>
+<span class="sd">          will place extra rows/cols on the top/left if the padding amount is odd.</span>
 <span class="sd">    </span>
 <span class="sd">    pad: const&lt;[P],i32&gt; (Optional. Default to all 0s)</span>
 <span class="sd">        * ``pad`` represents the number of elements to pad before and after each </span>
@@ -237,8 +244,7 @@
     
     <span class="n">input_spec</span> <span class="o">=</span> <span class="p">(</span>
         <span class="n">InputSpec</span><span class="p">(</span>
-          <span class="n">exclude_padding_from_average</span><span class="o">=</span><span class="n">BoolInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                                                     <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+          <span class="n">exclude_padding_from_average</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">bool</span><span class="p">))</span>
         <span class="o">+</span> <span class="n">Pooling</span><span class="o">.</span><span class="n">input_spec</span>
     <span class="p">)</span>
 
@@ -246,20 +252,17 @@
         <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">default_inputs</span><span class="p">()</span> <span class="o">+</span> \
             <span class="n">DefaultInputs</span><span class="p">(</span>
                 <span class="n">exclude_padding_from_average</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                <span class="p">)</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
-
+            <span class="p">)</span></div>
 
 <div class="viewcode-block" id="l2_pool"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.pool.l2_pool">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">l2_pool</span><span class="p">(</span><span class="n">Pooling</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Perform L2 pooling. Supports 1-D, 2-D, and 3-D pool.</span>
+<span class="sd">    Perform L2 pooling. Supports 1-D and 2-D pool.</span>
 <span class="sd">    </span>
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    x: tensor&lt;[n,C_in,*D_in],T&gt; (Required)</span>
+<span class="sd">        * Only support 1d and 2d pooling.</span>
 <span class="sd">        * See ``avg_pool``.</span>
 <span class="sd">    </span>
 <span class="sd">    kernel_sizes: const tensor&lt;[K],T&gt; (Required)</span>
@@ -287,9 +290,12 @@
 <span class="sd">    --------</span>
 <span class="sd">    avg_pool, max_pool</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+        
+    <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">rank</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;l2_pool only supports rank 1 or 2. Got rank: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">rank</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">type_inference</span><span class="p">()</span></div>
 
 
 <div class="viewcode-block" id="max_pool"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.pool.max_pool">[docs]</a><span class="nd">@register_op</span>
@@ -330,9 +336,8 @@
 <span class="sd">    --------</span>
 <span class="sd">    avg_pool, l2_pool</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+    <span class="k">pass</span></div>
 </pre></div>
 
            </div>

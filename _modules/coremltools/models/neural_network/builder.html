@@ -85,25 +85,31 @@
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Neural network builder class to construct Core ML models.</span>
 <span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">floor</span> <span class="k">as</span> <span class="n">_math_floor</span>
 
-<span class="kn">from</span> <span class="nn">...</span> <span class="kn">import</span> <span class="n">SPECIFICATION_VERSION</span> <span class="k">as</span> <span class="n">_SPECIFICATION_VERSION</span>
-<span class="kn">from</span> <span class="nn">...</span> <span class="kn">import</span> <span class="n">_MINIMUM_NDARRAY_SPEC_VERSION</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">_np</span>
 
-<span class="kn">from</span> <span class="nn">...</span> <span class="kn">import</span> <span class="n">_MINIMUM_UPDATABLE_SPEC_VERSION</span>
-<span class="kn">from</span> <span class="nn">...</span> <span class="kn">import</span> <span class="n">_SPECIFICATION_VERSION_IOS_14</span>
-<span class="kn">from</span> <span class="nn">...proto</span> <span class="kn">import</span> <span class="n">Model_pb2</span> <span class="k">as</span> <span class="n">_Model_pb2</span>
-<span class="kn">from</span> <span class="nn">...proto</span> <span class="kn">import</span> <span class="n">NeuralNetwork_pb2</span> <span class="k">as</span> <span class="n">_NeuralNetwork_pb2</span>
-<span class="kn">from</span> <span class="nn">...proto</span> <span class="kn">import</span> <span class="n">FeatureTypes_pb2</span> <span class="k">as</span> <span class="n">_FeatureTypes_pb2</span>
+<span class="kn">from</span> <span class="nn">...</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_MINIMUM_NDARRAY_SPEC_VERSION</span><span class="p">,</span>
+    <span class="n">_MINIMUM_UPDATABLE_SPEC_VERSION</span><span class="p">,</span>
+    <span class="n">SPECIFICATION_VERSION</span> <span class="k">as</span> <span class="n">_SPECIFICATION_VERSION</span><span class="p">,</span>
+    <span class="n">_SPECIFICATION_VERSION_IOS_14</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">...proto</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">FeatureTypes_pb2</span> <span class="k">as</span> <span class="n">_FeatureTypes_pb2</span><span class="p">,</span>
+    <span class="n">Model_pb2</span> <span class="k">as</span> <span class="n">_Model_pb2</span><span class="p">,</span>
+    <span class="n">NeuralNetwork_pb2</span> <span class="k">as</span> <span class="n">_NeuralNetwork_pb2</span><span class="p">,</span>
+<span class="p">)</span>
 <span class="kn">from</span> <span class="nn">.._interface_management</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">set_transform_interface_params</span><span class="p">,</span>
     <span class="n">set_training_features</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">datatypes</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">_np</span>
+
 <span class="kn">from</span> <span class="nn">.quantization_utils</span> <span class="kn">import</span> <span class="n">_unpack_to_bytes</span><span class="p">,</span> <span class="n">_convert_array_to_nbit_quantized_bytes</span>
 <span class="kn">from</span> <span class="nn">.spec_inspection_utils</span> <span class="kn">import</span> <span class="n">_summarize_network_layer_info</span>
 <span class="kn">from</span> <span class="nn">.update_optimizer_utils</span> <span class="kn">import</span> <span class="n">AdamParams</span><span class="p">,</span> <span class="n">SgdParams</span>
-<span class="kn">from</span> <span class="nn">math</span> <span class="kn">import</span> <span class="n">floor</span> <span class="k">as</span> <span class="n">_math_floor</span>
+
 
 <span class="n">_SUPPORTED_UPDATABLE_LAYERS</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;innerProduct&quot;</span><span class="p">,</span> <span class="s2">&quot;convolution&quot;</span><span class="p">]</span>
 
