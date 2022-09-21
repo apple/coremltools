@@ -92,15 +92,10 @@
 <span class="kn">from</span> <span class="nn">.program</span> <span class="kn">import</span> <span class="n">Program</span><span class="p">,</span> <span class="n">Placeholder</span>
 <span class="kn">from</span> <span class="nn">.block</span> <span class="kn">import</span> <span class="n">curr_block</span><span class="p">,</span> <span class="n">Function</span>
 <span class="kn">from</span> <span class="nn">.input_type</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">_InputType</span><span class="p">,</span>
-    <span class="n">InternalStringInputType</span><span class="p">,</span>
-    <span class="n">InternalScalarOrTensorInputType</span><span class="p">,</span>
-    <span class="n">ScalarOrTensorInputType</span><span class="p">,</span>
-    <span class="n">ListOrScalarOrTensorInputType</span><span class="p">,</span>
-    <span class="n">TupleInputType</span><span class="p">,</span>
-    <span class="n">InputSpec</span><span class="p">,</span>
     <span class="n">InternalInputType</span><span class="p">,</span>
-    <span class="n">PyFunctionInputType</span><span class="p">,</span>
+    <span class="n">ListOrTensorInputType</span><span class="p">,</span>
+    <span class="n">TensorInputType</span><span class="p">,</span>
+    <span class="n">TupleInputType</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">.var</span> <span class="kn">import</span> <span class="n">InternalVar</span><span class="p">,</span> <span class="n">Var</span>
 
@@ -228,8 +223,7 @@
                 <span class="n">update_dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">var</span>
                 <span class="k">continue</span>
 
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">in_type</span><span class="p">,</span> <span class="p">(</span><span class="n">ScalarOrTensorInputType</span><span class="p">,</span>
-              <span class="n">ListOrScalarOrTensorInputType</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">in_type</span><span class="p">,</span> <span class="p">(</span><span class="n">TensorInputType</span><span class="p">,</span> <span class="n">ListOrTensorInputType</span><span class="p">)):</span>
                 <span class="n">var</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_add_const</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">new_var_name</span><span class="p">,</span> <span class="n">before_op</span><span class="p">)</span>
                 <span class="n">update_dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">var</span>
 

@@ -87,14 +87,13 @@
 
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">types</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.operation</span> <span class="kn">import</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">precondition</span><span class="p">,</span> <span class="n">SYMBOL</span><span class="p">,</span> <span class="n">VALUE</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.types</span> <span class="kn">import</span> <span class="n">nptype_from_builtin</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.types.symbolic</span> <span class="kn">import</span> <span class="n">is_symbolic</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs._op_reqs</span> <span class="kn">import</span> <span class="n">register_op</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.input_type</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">DefaultInputs</span><span class="p">,</span>
-    <span class="n">FloatInputType</span><span class="p">,</span>
     <span class="n">InputSpec</span><span class="p">,</span>
-    <span class="n">ScalarOrTensorInputType</span><span class="p">,</span>
-    <span class="n">StringInputType</span>
+    <span class="n">TensorInputType</span><span class="p">,</span>
 <span class="p">)</span>
 
 
@@ -110,10 +109,28 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Elementwise Unary Op Superclass</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">ScalarOrTensorInputType</span><span class="p">(),)</span>
+    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+    <span class="p">)</span>
+    
+    <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">),</span>
+    <span class="p">}</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">sym_type</span>
+        
+<span class="k">class</span> <span class="nc">elementwise_unary_with_int</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Elementwise Unary Op Superclass</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+    <span class="p">)</span>
+    
+    <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+    <span class="p">}</span>
 
     <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">sym_type</span>
@@ -123,7 +140,7 @@
 <span class="sd">&quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="abs"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.abs">[docs]</a><span class="nd">@register_op</span>
-<span class="k">class</span> <span class="nc">abs</span><span class="p">(</span><span class="n">elementwise_unary</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">abs</span><span class="p">(</span><span class="n">elementwise_unary_with_int</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return the absolute values of the input ``x``, element-wise.</span>
 
@@ -133,16 +150,13 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;[\*d], f32&gt;</span>
+<span class="sd">    tensor&lt;[\*d], T&gt;</span>
 <span class="sd">        * A tensor of the same shape as ``x``.</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    T: fp16, fp32, i32</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -161,16 +175,13 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;[\*d], f32&gt;</span>
+<span class="sd">    tensor&lt;[\*d], T&gt;</span>
 <span class="sd">        * A tensor of the same shape as ``x``.</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    T: fp16, fp32</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -189,16 +200,13 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;[\*d], f32&gt;</span>
+<span class="sd">    tensor&lt;[\*d], T&gt;</span>
 <span class="sd">        * A tensor of the same shape as ``x``.</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    T: fp16, fp32</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -217,16 +225,13 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;[\*d], f32&gt;</span>
+<span class="sd">    tensor&lt;[\*d], T&gt;</span>
 <span class="sd">        * A tensor of the same shape as ``x``.</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    T: fp16, fp32</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -246,16 +251,13 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;[\*d], f32&gt;</span>
+<span class="sd">    tensor&lt;[\*d], T&gt;</span>
 <span class="sd">        * A tensor of the same shape as ``x``.</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    T: fp16, fp32</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -274,16 +276,13 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;[\*d], f32&gt;</span>
+<span class="sd">    tensor&lt;[\*d], T&gt;</span>
 <span class="sd">        * A tensor of the same shape as ``x``.</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    T: fp16, fp32</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -301,12 +300,12 @@
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    x: tensor&lt;[\*d], T&gt; (Required)</span>
-<span class="sd">    alpha: const f32 (Required)</span>
-<span class="sd">    beta: const f32 (Required)</span>
+<span class="sd">    alpha: const T (Required)</span>
+<span class="sd">    beta: const T (Required)</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;[\*d], f32&gt;</span>
+<span class="sd">    tensor&lt;[\*d], T&gt;</span>
 <span class="sd">        * A tensor of the same shape as ``x``.</span>
 
 <span class="sd">    Attributes</span>
@@ -315,13 +314,14 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
-        <span class="n">x</span><span class="o">=</span><span class="n">ScalarOrTensorInputType</span><span class="p">(),</span>
-        <span class="n">alpha</span><span class="o">=</span><span class="n">FloatInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-        <span class="n">beta</span><span class="o">=</span><span class="n">FloatInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+        <span class="n">alpha</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+        <span class="n">beta</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
     <span class="p">)</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    
+    <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">),</span>
+    <span class="p">}</span>
 
     <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">sym_type</span>
@@ -350,9 +350,6 @@
 <span class="sd">    T: fp16, fp32</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-
     <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">val</span><span class="p">)</span>
@@ -378,9 +375,6 @@
 <span class="sd">    T: fp16, fp32</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-
     <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">result</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cosh</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">val</span><span class="p">)</span>
@@ -398,16 +392,13 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;[\*d], f32&gt;</span>
+<span class="sd">    tensor&lt;[\*d], T&gt;</span>
 <span class="sd">        * A tensor of the same shape as ``x``.</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    T: fp16, fp32</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -426,16 +417,13 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;[\*d], f32&gt;</span>
+<span class="sd">    tensor&lt;[\*d], T&gt;</span>
 <span class="sd">        * A tensor of the same shape as ``x``.</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    T: fp16, fp32</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -444,7 +432,7 @@
 
 
 <div class="viewcode-block" id="exp2"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.exp2">[docs]</a><span class="nd">@register_op</span>
-<span class="k">class</span> <span class="nc">exp2</span><span class="p">(</span><span class="n">elementwise_unary</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">exp2</span><span class="p">(</span><span class="n">elementwise_unary_with_int</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return 2^x, element-wise.</span>
 
@@ -454,16 +442,13 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;[\*d], f32&gt;</span>
+<span class="sd">    tensor&lt;[\*d], T&gt;</span>
 <span class="sd">        * A tensor of the same shape as ``x``.</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    T: fp16, fp32, i32</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -483,16 +468,13 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;[\*d], f32&gt;</span>
+<span class="sd">    tensor&lt;[\*d], T&gt;</span>
 <span class="sd">        * A tensor of the same shape as ``x``.</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    T: fp16, fp32</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -508,14 +490,14 @@
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    x: tensor&lt;[\*d], T&gt; (Required)</span>
-<span class="sd">    epsilon: const fp32 (Optional, default=1e-4)</span>
+<span class="sd">    epsilon: const T (Optional, default=1e-4)</span>
 <span class="sd">        * This is a small constant that is added to the input, before taking its</span>
 <span class="sd">          inverse, for stability.</span>
 <span class="sd">        * ``y = 1 / (x + epsilon)``.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;[\*d], f32&gt;</span>
+<span class="sd">    tensor&lt;[\*d], T&gt;</span>
 <span class="sd">        * A tensor of the same shape as ``x``.</span>
 
 <span class="sd">    Attributes</span>
@@ -524,17 +506,18 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
-        <span class="n">x</span><span class="o">=</span><span class="n">ScalarOrTensorInputType</span><span class="p">(),</span>
-        <span class="n">epsilon</span><span class="o">=</span><span class="n">FloatInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+        <span class="n">epsilon</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
     <span class="p">)</span>
+    
+    <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">),</span>
+    <span class="p">}</span>
 
     <span class="k">def</span> <span class="nf">default_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">DefaultInputs</span><span class="p">(</span>
-            <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span>
-            <span class="p">)</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">epsilon</span><span class="o">=</span><span class="n">nptype_from_builtin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span><span class="p">)(</span><span class="mf">1e-4</span><span class="p">),</span>
+        <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">sym_type</span>
@@ -552,13 +535,13 @@
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    x: tensor&lt;[\*d], T&gt; (Required)</span>
-<span class="sd">    epsilon: const fp32 (Optional, default=1e-45)</span>
+<span class="sd">    epsilon: const T (Optional, default=1e-45)</span>
 <span class="sd">        * This is a small constant that is added to the input, before taking log.</span>
 <span class="sd">        * ``y = log(x + epsilon)``.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;[\*d], f32&gt;</span>
+<span class="sd">    tensor&lt;[\*d], T&gt;</span>
 <span class="sd">        * A tensor of the same shape as ``x``.</span>
 
 <span class="sd">    Attributes</span>
@@ -567,16 +550,18 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
-        <span class="n">x</span><span class="o">=</span><span class="n">ScalarOrTensorInputType</span><span class="p">(),</span>
-        <span class="n">epsilon</span><span class="o">=</span><span class="n">FloatInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+        <span class="n">epsilon</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
     <span class="p">)</span>
+    
+    <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">),</span>
+    <span class="p">}</span>
 
     <span class="k">def</span> <span class="nf">default_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">DefaultInputs</span><span class="p">(</span>
-            <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-45</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">epsilon</span><span class="o">=</span><span class="n">nptype_from_builtin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span><span class="p">)(</span><span class="mf">1e-45</span><span class="p">)</span>
+        <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">sym_type</span>
@@ -587,7 +572,7 @@
 
 
 <div class="viewcode-block" id="logical_not"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.logical_not">[docs]</a><span class="nd">@register_op</span>
-<span class="k">class</span> <span class="nc">logical_not</span><span class="p">(</span><span class="n">elementwise_unary</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">logical_not</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return the value of NOT the input ``x``, element-wise. (``1`` for true, ``0``</span>
 <span class="sd">    for false in numeric domain.) A numeric value ``t`` is evaluated to true</span>
@@ -595,24 +580,28 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    x: tensor&lt;[\*d], T&gt; (Required)</span>
+<span class="sd">    x: tensor&lt;[\*d], bool&gt; (Required)</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;[\*d], f32&gt;</span>
+<span class="sd">    tensor&lt;[\*d], bool&gt;</span>
 <span class="sd">        * A tensor of the same shape as ``x``.</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    T: bool</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    
+    <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">bool</span><span class="p">),</span>
+    <span class="p">)</span>
 
     <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_not</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">val</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_not</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">val</span><span class="p">)</span>
+        
+    <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">sym_type</span></div>
 
 
 <div class="viewcode-block" id="round"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.round">[docs]</a><span class="nd">@register_op</span>
@@ -627,16 +616,13 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;[\*d], f32&gt;</span>
+<span class="sd">    tensor&lt;[\*d], T&gt;</span>
 <span class="sd">        * A tensor of the same shape as ``x``.</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    T: fp16, fp32</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -652,14 +638,14 @@
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    x: tensor&lt;[\*d], T&gt; (Required)</span>
-<span class="sd">    epsilon: const fp32 (Optional, default=1e-12)</span>
+<span class="sd">    epsilon: const T (Optional, default=1e-12)</span>
 <span class="sd">        * This is a small constant that is added to the input, before applying the</span>
 <span class="sd">          ``rsqrt`` function, for stability.</span>
 <span class="sd">        * ``y = 1 / sqrt(x + epsilon)``.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;[\*d], f32&gt;</span>
+<span class="sd">    tensor&lt;[\*d], T&gt;</span>
 <span class="sd">        * A tensor of the same shape as ``x``.</span>
 
 <span class="sd">    Attributes</span>
@@ -668,17 +654,18 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
-        <span class="n">x</span><span class="o">=</span><span class="n">ScalarOrTensorInputType</span><span class="p">(),</span>
-        <span class="n">epsilon</span><span class="o">=</span><span class="n">FloatInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+        <span class="n">epsilon</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
     <span class="p">)</span>
+    
+    <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">),</span>
+    <span class="p">}</span>
 
     <span class="k">def</span> <span class="nf">default_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">DefaultInputs</span><span class="p">(</span>
-            <span class="n">epsilon</span><span class="o">=</span><span class="mf">1e-12</span><span class="p">,</span>
-            <span class="p">)</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">epsilon</span><span class="o">=</span><span class="n">nptype_from_builtin</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span><span class="p">)(</span><span class="mf">1e-12</span><span class="p">),</span>
+        <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">sym_type</span>
@@ -690,7 +677,7 @@
 
 
 <div class="viewcode-block" id="sign"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.sign">[docs]</a><span class="nd">@register_op</span>
-<span class="k">class</span> <span class="nc">sign</span><span class="p">(</span><span class="n">elementwise_unary</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">sign</span><span class="p">(</span><span class="n">elementwise_unary_with_int</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return the sign value of the input ``x``, element-wise.</span>
 
@@ -702,16 +689,13 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;[\*d], f32&gt;</span>
+<span class="sd">    tensor&lt;[\*d], T&gt;</span>
 <span class="sd">        * A tensor of the same shape as ``x``.</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    T: fp16, fp32, i32</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -730,16 +714,13 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;[\*d], f32&gt;</span>
+<span class="sd">    tensor&lt;[\*d], T&gt;</span>
 <span class="sd">        * A tensor of the same shape as ``x``.</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    T: fp16, fp32</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -758,16 +739,13 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;[\*d], f32&gt;</span>
+<span class="sd">    tensor&lt;[\*d], T&gt;</span>
 <span class="sd">        * A tensor of the same shape as ``x``.</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    T: fp16, fp32</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -786,16 +764,13 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;[\*d], f32&gt;</span>
+<span class="sd">    tensor&lt;[\*d], T&gt;</span>
 <span class="sd">        * A tensor of the same shape as ``x``.</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    T: fp16, fp32</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -804,7 +779,7 @@
 
 
 <div class="viewcode-block" id="square"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.square">[docs]</a><span class="nd">@register_op</span>
-<span class="k">class</span> <span class="nc">square</span><span class="p">(</span><span class="n">elementwise_unary</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">square</span><span class="p">(</span><span class="n">elementwise_unary_with_int</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return ``x^2``, element-wise.</span>
 
@@ -814,16 +789,13 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;[\*d], f32&gt;</span>
+<span class="sd">    tensor&lt;[\*d], T&gt;</span>
 <span class="sd">        * A tensor of the same shape as ``x``.</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    T: fp16, fp32, i32</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -842,16 +814,13 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;[\*d], f32&gt;</span>
+<span class="sd">    tensor&lt;[\*d], T&gt;</span>
 <span class="sd">        * A tensor of the same shape as ``x``.</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    T: fp16, fp32</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -871,16 +840,13 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;[\*d], f32&gt;</span>
+<span class="sd">    tensor&lt;[\*d], T&gt;</span>
 <span class="sd">        * A tensor of the same shape as ``x``.</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    T: fp16, fp32</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -897,11 +863,11 @@
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    x: tensor&lt;[\*d], T&gt; (Required)</span>
-<span class="sd">    alpha: const fp32 (Required)</span>
+<span class="sd">    alpha: const T (Required)</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;[\*d], f32&gt;</span>
+<span class="sd">    tensor&lt;[\*d], T&gt;</span>
 <span class="sd">        * A tensor of the same shape as ``x``.</span>
 
 <span class="sd">    Attributes</span>
@@ -910,11 +876,13 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
-        <span class="n">x</span><span class="o">=</span><span class="n">ScalarOrTensorInputType</span><span class="p">(),</span> <span class="n">alpha</span><span class="o">=</span><span class="n">FloatInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+        <span class="n">alpha</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
     <span class="p">)</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    
+    <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
+    <span class="p">}</span>
 
     <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">sym_type</span>
@@ -946,19 +914,21 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
-        <span class="n">x</span><span class="o">=</span><span class="n">ScalarOrTensorInputType</span><span class="p">(),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">StringInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+        <span class="n">dtype</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">str</span><span class="p">)</span>
     <span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp64</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">int64</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">bool</span><span class="p">),</span>
+    <span class="p">}</span>
 
     <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">type_map</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;int32&quot;</span><span class="p">:</span> <span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span>
-            <span class="s2">&quot;int64&quot;</span><span class="p">:</span> <span class="n">types</span><span class="o">.</span><span class="n">int64</span><span class="p">,</span>
+            <span class="s2">&quot;int64&quot;</span><span class="p">:</span> <span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span>
             <span class="s2">&quot;fp16&quot;</span><span class="p">:</span> <span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span>
             <span class="s2">&quot;fp32&quot;</span><span class="p">:</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">,</span>
-            <span class="s2">&quot;fp64&quot;</span><span class="p">:</span> <span class="n">types</span><span class="o">.</span><span class="n">fp64</span><span class="p">,</span>
+            <span class="s2">&quot;fp64&quot;</span><span class="p">:</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">,</span>
             <span class="s2">&quot;bool&quot;</span><span class="p">:</span> <span class="n">types</span><span class="o">.</span><span class="n">bool</span><span class="p">,</span>
         <span class="p">}</span>
 
@@ -982,10 +952,10 @@
     <span class="k">def</span> <span class="nf">get_cast_value</span><span class="p">(</span><span class="n">input_var</span><span class="p">,</span> <span class="n">dtype_val</span><span class="p">):</span>
         <span class="n">type_map</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s2">&quot;int32&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span>
-            <span class="s2">&quot;int64&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">,</span>
+            <span class="s2">&quot;int64&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,</span>
             <span class="s2">&quot;fp16&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">float16</span><span class="p">,</span>
             <span class="s2">&quot;fp32&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span>
-            <span class="s2">&quot;fp64&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span>
+            <span class="s2">&quot;fp64&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span>
             <span class="s2">&quot;bool&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">bool</span><span class="p">,</span>
         <span class="p">}</span>
 

@@ -83,7 +83,7 @@
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">types</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.input_type</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">InputSpec</span><span class="p">,</span>
-    <span class="n">ScalarOrTensorInputType</span><span class="p">,</span>
+    <span class="n">TensorInputType</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil._deployment_compatibility</span> <span class="kn">import</span> <span class="n">AvailableTarget</span> <span class="k">as</span> <span class="n">target</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.operation</span> <span class="kn">import</span> <span class="n">Operation</span>
@@ -130,7 +130,7 @@
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    const tensor&lt;DstT, [1..]&gt;</span>
-<span class="sd">  </span>
+
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    SrcT: uint8, int8</span>
@@ -138,16 +138,17 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
-        <span class="n">quantized_data</span><span class="o">=</span><span class="n">ScalarOrTensorInputType</span><span class="p">(</span>
-            <span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">)</span>
-        <span class="p">),</span>
-        <span class="n">zero_point</span><span class="o">=</span><span class="n">ScalarOrTensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">)),</span>
-        <span class="n">scale</span><span class="o">=</span><span class="n">ScalarOrTensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float16</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)),</span>
-        <span class="n">axis</span><span class="o">=</span><span class="n">ScalarOrTensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">,)),</span>
+        <span class="n">quantized_data</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;SrcT&quot;</span><span class="p">),</span>
+        <span class="n">zero_point</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;ZeroPointT&quot;</span><span class="p">),</span>
+        <span class="n">scale</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;DstT&quot;</span><span class="p">),</span>
+        <span class="n">axis</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
     <span class="p">)</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    
+    <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;DstT&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">),</span>
+        <span class="s2">&quot;SrcT&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">uint8</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">int8</span><span class="p">),</span>
+        <span class="s2">&quot;ZeroPointT&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">uint8</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">int8</span><span class="p">),</span>
+    <span class="p">}</span>
 
     <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">def</span> <span class="nf">assert_is_scalar_or_vector</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
@@ -237,12 +238,9 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
-        <span class="n">source_val</span><span class="o">=</span><span class="n">ScalarOrTensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float16</span><span class="p">,)),</span>
-        <span class="n">output_dtype</span><span class="o">=</span><span class="n">ScalarOrTensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="p">(</span><span class="nb">str</span><span class="p">,)),</span>
+        <span class="n">source_val</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">),</span>
+        <span class="n">output_dtype</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">str</span><span class="p">),</span>
     <span class="p">)</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 
@@ -283,7 +281,7 @@
 <span class="sd">    * ``NUM_PALETTES`` can be one of ``{2, 4, 16, 64 or 256}``.</span>
 <span class="sd">    * ``n_bits = log2(NUM_PALETTES)`` can thus be one of ``{1, 2, 4, 6, 8}``.</span>
 <span class="sd">    * Indices are packed in bytes of size ``M``, where ``M = ceil(n_bits * product(shape) / 8)``.</span>
-<span class="sd">    </span>
+
 <span class="sd">    The bit fields are packed one byte at a time, starting with the least significant bit (LSB) and</span>
 <span class="sd">    moving upward to the most significant bit (MSB). It follows, naturally, that if an index is split</span>
 <span class="sd">    across two bytes, the LSBs of that index is filled over the MSBs of current byte, and the remaining</span>
@@ -309,15 +307,14 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
-        <span class="n">indices</span><span class="o">=</span><span class="n">ScalarOrTensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">,)),</span>
-        <span class="n">lut</span><span class="o">=</span><span class="n">ScalarOrTensorInputType</span><span class="p">(</span>
-            <span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float16</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
-        <span class="p">),</span>
-        <span class="n">shape</span><span class="o">=</span><span class="n">ScalarOrTensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">,)),</span>
+        <span class="n">indices</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">uint8</span><span class="p">),</span>
+        <span class="n">lut</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+        <span class="n">shape</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">uint32</span><span class="p">),</span>
     <span class="p">)</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    
+    <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">int8</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">uint8</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">)</span>
+    <span class="p">}</span>
 
     <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">def</span> <span class="nf">assert_is_vector</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
@@ -417,15 +414,14 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
-        <span class="n">nonzero_data</span><span class="o">=</span><span class="n">ScalarOrTensorInputType</span><span class="p">(</span>
-            <span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float16</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
-        <span class="p">),</span>
-        <span class="n">mask</span><span class="o">=</span><span class="n">ScalarOrTensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">,)),</span>
-        <span class="n">shape</span><span class="o">=</span><span class="n">ScalarOrTensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint32</span><span class="p">,)),</span>
+        <span class="n">nonzero_data</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
+        <span class="n">mask</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">uint8</span><span class="p">),</span>
+        <span class="n">shape</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">uint32</span><span class="p">),</span>
     <span class="p">)</span>
-
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    
+    <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">int8</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">uint8</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">)</span>
+    <span class="p">}</span>
 
     <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">def</span> <span class="nf">assert_is_vector</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>

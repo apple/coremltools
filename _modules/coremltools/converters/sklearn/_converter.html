@@ -123,7 +123,7 @@
 <span class="sd">        or Classifier.</span>
 
 <span class="sd">        Note that there may not be a one-to-one correspondence between scikit</span>
-<span class="sd">        learn models and which Core ML models are used to represent them.  For</span>
+<span class="sd">        learn models and the Core ML models chosen to represent them.  For</span>
 <span class="sd">        example, many scikit learn models are embedded in a pipeline to handle</span>
 <span class="sd">        processing of input features.</span>
 
@@ -131,64 +131,64 @@
 <span class="sd">    input_features: str | dict | list</span>
 
 <span class="sd">        Optional name(s) that can be given to the inputs of the scikit-learn</span>
-<span class="sd">        model. Defaults to &#39;input&#39;.</span>
+<span class="sd">        model. Defaults to ``&quot;input&quot;``.</span>
 
 <span class="sd">        Input features can be specified in a number of forms.</span>
 
 <span class="sd">        -   Single string: In this case, the input is assumed to be a single</span>
-<span class="sd">            array, with the number of dimensions set using num_dimensions.</span>
+<span class="sd">            array, with the number of dimensions set using ``num_dimensions``.</span>
 
 <span class="sd">        -   List of strings: In this case, the overall input dimensions to the</span>
-<span class="sd">            scikit-learn model is assumed to be the length of the list.  If</span>
+<span class="sd">            scikit-learn model are assumed to be the length of the list. If</span>
 <span class="sd">            neighboring names are identical, they are assumed to be an input</span>
-<span class="sd">            array of that length.  For example:</span>
+<span class="sd">            array of that length. For example:</span>
 
-<span class="sd">               [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;]</span>
+<span class="sd">               ``[&quot;a&quot;, &quot;b&quot;, &quot;c&quot;]``</span>
 
-<span class="sd">            resolves to</span>
+<span class="sd">            resolves to:</span>
 
-<span class="sd">                [(&quot;a&quot;, Double), (&quot;b&quot;, Double), (&quot;c&quot;, Double)].</span>
+<span class="sd">                ``[(&quot;a&quot;, Double), (&quot;b&quot;, Double), (&quot;c&quot;, Double)]``.</span>
 
-<span class="sd">            And:</span>
+<span class="sd">            In addition:</span>
 
-<span class="sd">                [&quot;a&quot;, &quot;a&quot;, &quot;b&quot;]</span>
+<span class="sd">                ``[&quot;a&quot;, &quot;a&quot;, &quot;b&quot;]``</span>
 
-<span class="sd">            resolves to</span>
+<span class="sd">            resolves to:</span>
 
-<span class="sd">                [(&quot;a&quot;, Array(2)), (&quot;b&quot;, Double)].</span>
+<span class="sd">                ``[(&quot;a&quot;, Array(2)), (&quot;b&quot;, Double)]``.</span>
 
 <span class="sd">        - Dictionary: Where the keys are the names and the indices or ranges of</span>
 <span class="sd">          feature indices.</span>
 
-<span class="sd">            In this case, it&#39;s presented as a mapping from keys to indices or</span>
-<span class="sd">            ranges of contiguous indices.  For example,</span>
+<span class="sd">            In this case, the Dictionary is presented as a mapping from keys to indices or</span>
+<span class="sd">            ranges of contiguous indices. For example:</span>
 
-<span class="sd">                {&quot;a&quot; : 0, &quot;b&quot; : [2,3], &quot;c&quot; : 1}</span>
+<span class="sd">                ``{&quot;a&quot; : 0, &quot;b&quot; : [2,3], &quot;c&quot; : 1}``</span>
 
-<span class="sd">            Resolves to</span>
+<span class="sd">            resolves to:</span>
 
-<span class="sd">                [(&quot;a&quot;, Double), (&quot;c&quot;, Double), (&quot;b&quot;, Array(2))].</span>
+<span class="sd">                ``[(&quot;a&quot;, Double), (&quot;c&quot;, Double), (&quot;b&quot;, Array(2))]``.</span>
 
 <span class="sd">            Note that the ordering is determined by the indices.</span>
 
-<span class="sd">        -   List of tuples of the form `(name, datatype)`.  Here, `name` is the</span>
-<span class="sd">            name of the exposed feature, and `datatype` is an instance of</span>
-<span class="sd">            `String`, `Double`, `Int64`, `Array`, or `Dictionary`.</span>
+<span class="sd">        -   List of tuples of the form ``(name, datatype)``, in which ``name`` is the</span>
+<span class="sd">            name of the exposed feature, and ``datatype`` is an instance of</span>
+<span class="sd">            ``String``, ``Double``, ``Int64``, ``Array``, or ``Dictionary``.</span>
 
 <span class="sd">    output_feature_names: string or list of strings</span>
-<span class="sd">            Optional name(s) that can be given to the inputs of the scikit-learn</span>
-<span class="sd">            model.</span>
+<span class="sd">        Optional name(s) that can be given to the inputs of the scikit-learn</span>
+<span class="sd">        model.</span>
 
-<span class="sd">        The output_feature_names is interpreted according to the model type:</span>
+<span class="sd">        The ``output_feature_names`` is interpreted according to the model type:</span>
 
 <span class="sd">        - If the scikit-learn model is a transformer, it is the name of the</span>
 <span class="sd">          array feature output by the final sequence of the transformer</span>
-<span class="sd">          (defaults to &quot;output&quot;).</span>
+<span class="sd">          (defaults to ``&quot;output&quot;``).</span>
 <span class="sd">        - If it is a classifier, it should be a 2-tuple of names giving the top</span>
 <span class="sd">          class prediction and the array of scores for each class (defaults to</span>
-<span class="sd">          &quot;classLabel&quot; and &quot;classScores&quot;).</span>
+<span class="sd">          ``&quot;classLabel&quot;`` and ``&quot;classScores&quot;``).</span>
 <span class="sd">        - If it is a regressor, it should give the name of the prediction value</span>
-<span class="sd">          (defaults to &quot;prediction&quot;).</span>
+<span class="sd">          (defaults to ``&quot;prediction&quot;``).</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
