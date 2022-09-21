@@ -37,7 +37,7 @@ class reshape_like(Operation):
         * A tuple of integers specifying the end index into the shape vector of the corresponding ``ref_tensor``.
 
     end_masks: Tuple[const<bool>] (Required)
-        * If true, select all axes from the begin index until the end of the corresponding ``ref_tensor``, as in
+        * If ``True``, select all axes from the begin index until the end of the corresponding ``ref_tensor``, as in
           ``ref_tensors[i].shape[begins[i]:]``.
 
     Notes

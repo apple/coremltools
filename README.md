@@ -26,10 +26,7 @@ After conversion, you can integrate the Core ML models with your app using Xcode
 
 ## Version 6
 
-The coremltools 6 package offers the following new features to optimize the model conversion process:
-
-* Model compression utilities. For details, see [Compressing ML Program Weights](https://coremltools.readme.io/docs/compressing-ml-program-weights).
-* [Float 16 input/output types including image](https://coremltools.readme.io/docs/new-in-coremltools#float-16-inputoutput-types-including-image). 
+The coremltools 6 package offers new features to optimize the model conversion process. For details, see [New in coremltools](https://coremltools.readme.io/docs/new-in-coremltools).
 
 For a full list of changes, see [Release Notes](https://github.com/apple/coremltools/releases/). 
 
@@ -41,10 +38,7 @@ pip install coremltools
 
 ## Version 5
 
-The coremltools 5 package offered several performance improvements over previous versions, including the following new features: 
-
-* [Core ML model package](https://coremltools.readme.io/docs/new-in-coremltools#save-a-core-ml-model-package): A new model container format that separates the model into components and offers more flexible metadata editing and better source control.
-* [ML program](https://coremltools.readme.io/docs/ml-programs): A new model type that represents computation as programmatic instructions, offers more control over the precision of its intermediate tensors and better performance. 
+The coremltools 5 package offers several performance improvements over previous versions, including new features. For details, see [New in coremltools](https://coremltools.readme.io/docs/new-in-coremltools).
 
 
 ## Core ML
