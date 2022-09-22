@@ -4683,3 +4683,38 @@ def scatter(context, node):
 def scatter_add(context, node):
     inputs = _get_inputs(context, node)
     _scatter(context, inputs, 'add', node.name)
+
+
+@register_torch_op
+def baddbmm(context, node):
+    """
+    baddbmm(Tensor input, Tensor batch1, Tensor batch2, Scalar beta=1, Scalar alpha=1)
+    output = beta * input + alpha * batch1 * batch2
+
+    Notice that batch1 and batch2 must be 3-D tensors each containing the same number of matrices.
+    If batch1 is a (b×n×m) tensor, batch2 is a (b×m×p) tensor, then input must be broadcastable with a (b×n×p) tensor
+    and out will be a (b×n×p) tensor.
+    """
+    assert len(node.outputs) == 1
+    inputs = _get_inputs(context, node, expected=5)
+    bias = inputs[0]
+    batch1 = inputs[1]
+    batch2 = inputs[2]
+    beta = inputs[3]
+    alpha = inputs[4]
+
+    if beta.val != 1.0:
+        # Apply scaling factor beta to the bias.
+        bias = mb.mul(x=beta, y=bias, name=bias.name + "_scaled")
+        context.add(bias)
+
+    if alpha.val != 1.0:
+        # Apply scaling factor alpha to the input.
+        batch1 = mb.mul(x=alpha, y=batch1, name=batch1.name + "_scaled")
+        context.add(batch1)
+
+    bmm_node = mb.matmul(x=batch1, y=batch2, name=node.name + "_bmm")
+    context.add(bmm_node)
+
+    baddbmm_node = mb.add(x=bias, y=bmm_node, name=node.name)
+    context.add(baddbmm_node)
