@@ -1638,20 +1638,29 @@ def group_norm(context, node):
     num_groups = inputs[1].val
     weight = inputs[2]
     bias = inputs[3]
-    eps = inputs[4]
-    n,c,h,w = x.shape[0],x.shape[1],x.shape[2],x.shape[3]
+    eps = inputs[4] 
+    n,c = x.shape[0],x.shape[1] # at minimum (N, C) required
+    input_shape = [*x.shape] # n, c, *
     num_groups = builtins.min(num_groups,c)
-    x = mb.reshape(x=x, shape=[n,num_groups,c//num_groups,h,w])
-    mean = mb.reduce_mean(x=x, axes=[2,3,4], keep_dims=True)
-    var = _std(x,[2,3,4],True,False,eps.val)
+    new_shape = [n, num_groups, c//num_groups]
+    new_shape += [*x.shape[2:]] # adds remaining dims
+    num_extra_axes = len(x.shape[2:])
+    axes_ = [int(i) for i in range(2, 2 + num_extra_axes + 1)]
+    weight_shape, bias_shape = [1,c], [1,c]
+    weight_shape += [1 for _ in range(num_extra_axes)]
+    bias_shape += [1 for _ in range(num_extra_axes)]
+    
+    x = mb.reshape(x=x, shape=new_shape)
+    mean = mb.reduce_mean(x=x, axes=axes_, keep_dims=True)
+    var = _std(x,axes_,True,False,eps.val)
     x = mb.sub(x=x,y=mean)
     x = mb.real_div(x=x,y=var)
-    x = mb.reshape(x=x, shape=[n,c,h,w])
+    x = mb.reshape(x=x, shape=input_shape)
     if weight is not None:
-        weight = mb.reshape(x=weight, shape=[1,c,1,1])
+        weight = mb.reshape(x=weight, shape=weight_shape)
         x = mb.mul(x=x,y=weight)
     if bias is not None:
-        bias = mb.reshape(x=bias, shape=[1,c,1,1])
+        bias = mb.reshape(x=bias, shape=bias_shape)
         x = mb.add(x=x,y=bias)
     context.add(x,node.name)
 
