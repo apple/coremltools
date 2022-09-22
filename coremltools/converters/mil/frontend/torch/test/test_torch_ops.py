@@ -11,6 +11,8 @@ import platform
 import pytest
 import torch.nn as nn
 
+import torchvision
+
 from .testing_utils import (
     contains_op,
     generate_input_data,
@@ -4699,3 +4701,76 @@ class TestEmbedding(TorchBaseTest):
             backend=backend,
             converter_input_type=converter_input_type,
         )
+
+class TestNumel(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "shapes, backend",
+        itertools.product(
+            [
+                [(2, 1)],
+                [(5, 1, 4, 1)],
+                [(1,)],
+            ],
+            backends
+        ),
+    )
+    def test_numel(self, shapes, backend):
+        class Model(nn.Module):
+            def __init__(self):
+                super().__init__()
+
+            def forward(self, x):
+                v = torch.numel(x)
+                return torch.tensor(v)
+
+        model = Model()
+        self.run_compare_torch(shapes, model, backend=backend)
+
+
+class TestNarrow(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "shapes, dim_start_length, backend",
+        itertools.product(
+            [
+                [(3, 3)],
+            ],
+            [
+                (0, 0, 2)
+            ]
+            ,
+            backends
+        ),
+    )
+    def test_narrow(self, shapes, dim_start_length, backend):
+        dim, start, length = dim_start_length
+        class Model(nn.Module):
+            def __init__(self):
+                super().__init__()
+
+            def forward(self, x):
+                return torch.narrow(x, dim, start, length)
+
+        model = Model()
+        self.run_compare_torch(shapes, model, backend=backend)
+
+
+class TestNonMaximalSuppression(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "shapes, scores, backend",
+        itertools.product(
+            [[(2, 4)]],
+            [(2,)],
+            backends
+        ),
+    )
+    def test_non_maximal_supression(self, shapes, scores, backend):
+        scores = torch.rand(scores)
+        class Model(nn.Module):
+            def __init__(self):
+                super().__init__()
+
+            def forward(self, x):
+                return torchvision.ops.nms(x, scores, iou_threshold=0.7)
+
+        model = Model()
+        self.run_compare_torch(shapes, model, backend=backend)
