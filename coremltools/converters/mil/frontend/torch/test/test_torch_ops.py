@@ -2377,22 +2377,36 @@ class TestTypeAs(TorchBaseTest):
 
 
 class TestReduction(TorchBaseTest):
+  
+    class TestModel(nn.Module):
+        def __init__(self, mode, dim=None, keepdim=None):
+            super().__init__()
+            args = {"dim": dim, "keepdim": keepdim}
+
+            self.op_args = {k:v for k, v in args.items() if v is not None}
+
+            if mode == "min":
+                self.op = torch.min
+            elif mode == "max":
+                self.op = torch.max
+            else:
+                raise ValueError("Unsupported mode: {mode}".format(mode=mode))
+        
+        def forward(self, x, y=None):
+
+            if y is not None:
+                return self.op(x, y)
+            else:
+                return self.op(x, **self.op_args)
+
+
     @pytest.mark.parametrize(
         "input_shape, dim, keepdim, mode, backend",
         itertools.product([(2, 2), (1, 1)], [0, 1], [True, False], ["min", "max"], backends)
     )
     def test_min_max(self, input_shape, dim, keepdim, mode, backend):
-        class TestModel(nn.Module):
-            def forward(self, x):
-                if mode == "min":
-                    return torch.min(x, dim=dim, keepdim=keepdim)
-                elif mode == "max":
-                    return torch.max(x, dim=dim, keepdim=keepdim)
-                else:
-                    raise ValueError("Unsupported mode: {mode}".format(mode=mode))
-
         input_data = torch.rand(input_shape)
-        model = TestModel()
+        model = self.TestModel(mode, dim=dim, keepdim=keepdim)
         # rdar://62681982 (Determine the output names of MLModels)
         expected_results = model(input_data)[::-1]
         self.run_compare_torch(
@@ -2408,16 +2422,32 @@ class TestReduction(TorchBaseTest):
         itertools.product([(2, 2), (1, 1)], ["min", "max"], backends)
     )
     def test_min_max_with_no_arguments(self, input_shape, mode, backend):
-        class TestModel(nn.Module):
-            def forward(self, x):
-                if mode == "min":
-                    return torch.min(x)
-                elif mode == "max":
-                    return torch.max(x)
-                else:
-                    raise ValueError("Unsupported mode: {mode}".format(mode=mode))
+        self.run_compare_torch(input_shape, self.TestModel(mode), backend=backend)
 
-        self.run_compare_torch(input_shape, TestModel(), backend=backend)
+    @pytest.mark.parametrize(
+        "input_shape, dim, mode, backend",
+        itertools.product([(2, 2), (1, 1)], [0, 1], ["min", "max"], backends)
+    )
+    def test_min_max_no_keepdim(self, input_shape, dim, mode, backend):
+        input_data = torch.rand(input_shape)
+        model = self.TestModel(mode, dim=dim)
+        # rdar://62681982 (Determine the output names of MLModels)
+        expected_results = model(input_data)[::-1]
+        self.run_compare_torch(
+            input_data,
+            model,
+            expected_results=expected_results,
+            input_as_shape=False,
+            backend=backend,
+        )
+
+    @pytest.mark.parametrize(
+        "input_shape, mode, backend",
+        itertools.product([(2, 2), (1, 1)], ["min", "max"], backends)
+    )
+    def test_min_max_two_tensors(self, input_shape, mode, backend):
+        model = self.TestModel(mode)
+        self.run_compare_torch([input_shape] * 2, model, backend=backend)     
 
 
 class TestLayerNorm(TorchBaseTest):
