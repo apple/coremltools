@@ -4697,11 +4697,7 @@ def baddbmm(context, node):
     """
     assert len(node.outputs) == 1
     inputs = _get_inputs(context, node, expected=5)
-    bias = inputs[0]
-    batch1 = inputs[1]
-    batch2 = inputs[2]
-    beta = inputs[3]
-    alpha = inputs[4]
+    bias, batch1, batch2, beta, alpha = inputs
 
     if beta.val != 1.0:
         # Apply scaling factor beta to the bias.
