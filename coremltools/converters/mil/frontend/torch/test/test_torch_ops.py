@@ -4745,3 +4745,37 @@ class TestGlu(TorchBaseTest):
         for glu_dim in glu_dim_list:
             model = torch.nn.GLU(glu_dim)
             self.run_compare_torch(shapes, model, backend=backend)
+
+
+class TestHstack(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "backend, shapes",
+        itertools.product(
+            backends,
+            [[(2, 4, 6), (2, 4, 6)],
+             [(1, 4, 5), (1, 2, 5)],
+             [(1,), (3,)]],  # Test 1-D tensors.
+        )
+    )
+    def test_hstack(self, backend, shapes):
+        class HstackModel(nn.Module):
+            def forward(self, *tensors):
+                return torch.hstack(tensors)
+
+        self.run_compare_torch(shapes, HstackModel(), backend=backend)
+
+    @pytest.mark.parametrize(
+        "backend, shapes",
+        itertools.product(
+            backends,
+            [[(2, 4, 6), (2, 4, 6)]],
+        )
+    )
+    def test_hstack_with_parameter_out(self, backend, shapes):
+        class HstackModel(nn.Module):
+            def forward(self, *tensors):
+                output_tensor = torch.tensor([])
+                torch.hstack(tensors, out=output_tensor)
+                return output_tensor
+
+        self.run_compare_torch(shapes, HstackModel(), backend=backend)

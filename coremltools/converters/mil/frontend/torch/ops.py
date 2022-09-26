@@ -4736,3 +4736,19 @@ def glu(context, node):
 
     glu_node = mb.mul(x=first_half, y=sigmoid_second_half, name=node.name)
     context.add(glu_node)
+
+
+@register_torch_op
+def hstack(context, node):
+    """
+    hstack(List[Tensor] tensors, Optional[Tensor] out)
+    Stack tensors in sequence horizontally (column wise). This is equivalent to concatenation along the first axis for
+    1-D tensors, and along the second axis for all other tensors.
+    """
+    inputs = _get_inputs(context, node)
+    tensors = inputs[0]
+    input_shapes = [list(x.shape) for x in tensors]
+    # Concatenates along the first axis for 1-D tensors, and along the second axis for all other tensors.
+    axis = 0 if len(input_shapes[0]) == 1 else 1
+    hstack_node = mb.concat(values=tensors, axis=axis, name=node.name)
+    context.add(hstack_node)
