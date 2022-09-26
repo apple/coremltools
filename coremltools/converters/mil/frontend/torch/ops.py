@@ -4714,3 +4714,25 @@ def baddbmm(context, node):
 
     baddbmm_node = mb.add(x=bias, y=bmm_node, name=node.name)
     context.add(baddbmm_node)
+
+
+@register_torch_op
+def glu(context, node):
+    """
+    glu(Tensor input, Scalar dim=-1)
+    Applies the gated linear unit function GLU(a,b)=a⊗σ(b) where a is the first half of the input matrices and b is the
+    second half.
+    """
+    assert len(node.outputs) == 1
+    inputs = _get_inputs(context, node, expected=2)
+    input, axis = inputs
+
+    first_half, second_half = mb.split(x=input, num_splits=2, axis=axis.val, name=node.name + "_split")
+    context.add(first_half)
+    context.add(second_half)
+
+    sigmoid_second_half = mb.sigmoid(x=second_half, name=second_half.name + "_sigmoid")
+    context.add(sigmoid_second_half)
+
+    glu_node = mb.mul(x=first_half, y=sigmoid_second_half, name=node.name)
+    context.add(glu_node)

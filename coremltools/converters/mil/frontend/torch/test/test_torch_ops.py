@@ -4729,3 +4729,19 @@ class TestBaddbmm(TorchBaseTest):
         # Makes it broadcastable to (B, N, P).
         for input_shape in [(1, N, P), (B, 1, P), (1, P)]:
             self.run_compare_torch(input_shape, model, backend=backend)
+
+
+class TestGlu(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "backend, shapes",
+        itertools.product(
+            backends,
+            [(2, 4, 6, 8), (6, 2, 10)],
+        )
+    )
+    def test_glu(self, backend, shapes):
+        # The dim specified for GLU shouldn't exceed the max dim in input.
+        glu_dim_list = [-1] + [i for i in range(len(shapes))]
+        for glu_dim in glu_dim_list:
+            model = torch.nn.GLU(glu_dim)
+            self.run_compare_torch(shapes, model, backend=backend)
