@@ -4699,3 +4699,33 @@ class TestEmbedding(TorchBaseTest):
             backend=backend,
             converter_input_type=converter_input_type,
         )
+
+
+class TestBaddbmm(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "backend, shapes",
+        itertools.product(
+            backends,
+            [(2, 4, 6, 8), (4, 12, 6, 16)],
+        )
+    )
+    def test_baddbmm(self, backend, shapes):
+        B, N, M, P = shapes
+
+        # input shape: any shape broadcastable to (B, N, P)
+        # batch1 shape: (B, N, M)
+        # batch2 shape: (B, M, P)
+        # output shape : (B, N, P)
+        class BaddbmmModel(nn.Module):
+            def __init__(self):
+                super(BaddbmmModel, self).__init__()
+                self.batch1 = torch.randn(B, N, M)
+                self.batch2 = torch.randn(B, M, P)
+
+            def forward(self, x):
+                return torch.baddbmm(x, self.batch1, self.batch2)
+
+        model = BaddbmmModel()
+        # Makes it broadcastable to (B, N, P).
+        for input_shape in [(1, N, P), (B, 1, P), (1, P)]:
+            self.run_compare_torch(input_shape, model, backend=backend)
