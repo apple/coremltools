@@ -4779,3 +4779,37 @@ class TestHstack(TorchBaseTest):
                 return output_tensor
 
         self.run_compare_torch(shapes, HstackModel(), backend=backend)
+
+
+class TestRemainder(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "backend, shapes",
+        itertools.product(
+            backends,
+            [[(2, 4, 6), (2, 4, 6)],
+             [(2, 4, 6), (4, 6)],  # broadcastable tensors
+             [(2, 4, 6), (2, 1, 6)]],
+        )
+    )
+    def test_remainder(self, backend, shapes):
+        class RemainderModel(nn.Module):
+            def forward(self, dividend, divisor):
+                return torch.remainder(dividend, divisor)
+
+        self.run_compare_torch(shapes, RemainderModel(), backend=backend)
+
+    @pytest.mark.parametrize(
+        "backend, shapes",
+        itertools.product(
+            backends,
+            [[(2, 4, 6), (2, 4, 6)]],
+        )
+    )
+    def test_remainder_with_parameter_out(self, backend, shapes):
+        class RemainderModel(nn.Module):
+            def forward(self, dividend, divisor):
+                output_tensor = torch.tensor([])
+                torch.remainder(dividend, divisor, out=output_tensor)
+                return output_tensor
+
+        self.run_compare_torch(shapes, RemainderModel(), backend=backend)

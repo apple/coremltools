@@ -4752,3 +4752,22 @@ def hstack(context, node):
     axis = 0 if len(input_shapes[0]) == 1 else 1
     hstack_node = mb.concat(values=tensors, axis=axis, name=node.name)
     context.add(hstack_node)
+
+
+@register_torch_op
+def remainder(context, node):
+    """
+    remainder(Tensor dividend, Tensor divisor, Optional[Tensor] out)
+    Computes Python’s modulus operation entrywise. The result has the same sign as the divisor and its absolute value
+    is less than that of divisor. It may also be defined in terms of torch.div() as:
+    remainder(a, b) == a - a.div(b, rounding_mode="floor") * b
+    """
+    # Don't specify `expected` because the parameter `out` is optional.
+    inputs = _get_inputs(context, node)
+    dividend, divisor = inputs[0], inputs[1]
+    div_node = mb.floor_div(x=dividend, y=divisor, name=node.name + "_div")
+    context.add(div_node)
+    scaled_div = mb.mul(x=div_node, y=divisor, name=div_node.name + "_scaled")
+    context.add(scaled_div)
+    remainder_node = mb.sub(x=dividend, y=scaled_div, name=node.name)
+    context.add(remainder_node)
