@@ -4723,3 +4723,60 @@ def baddbmm(context, node):
 
     baddbmm_node = mb.add(x=bias, y=bmm_node, name=node.name)
     context.add(baddbmm_node)
+
+
+@register_torch_op
+def glu(context, node):
+    """
+    glu(Tensor input, Scalar dim=-1)
+    Applies the gated linear unit function GLU(a,b)=a⊗σ(b) where a is the first half of the input matrices and b is the
+    second half.
+    """
+    assert len(node.outputs) == 1
+    inputs = _get_inputs(context, node, expected=2)
+    input, axis = inputs
+
+    first_half, second_half = mb.split(x=input, num_splits=2, axis=axis.val, name=node.name + "_split")
+    context.add(first_half)
+    context.add(second_half)
+
+    sigmoid_second_half = mb.sigmoid(x=second_half, name=second_half.name + "_sigmoid")
+    context.add(sigmoid_second_half)
+
+    glu_node = mb.mul(x=first_half, y=sigmoid_second_half, name=node.name)
+    context.add(glu_node)
+
+
+@register_torch_op
+def hstack(context, node):
+    """
+    hstack(List[Tensor] tensors, Optional[Tensor] out)
+    Stack tensors in sequence horizontally (column wise). This is equivalent to concatenation along the first axis for
+    1-D tensors, and along the second axis for all other tensors.
+    """
+    inputs = _get_inputs(context, node)
+    tensors = inputs[0]
+    input_shapes = [list(x.shape) for x in tensors]
+    # Concatenates along the first axis for 1-D tensors, and along the second axis for all other tensors.
+    axis = 0 if len(input_shapes[0]) == 1 else 1
+    hstack_node = mb.concat(values=tensors, axis=axis, name=node.name)
+    context.add(hstack_node)
+
+
+@register_torch_op
+def remainder(context, node):
+    """
+    remainder(Tensor dividend, Tensor divisor, Optional[Tensor] out)
+    Computes Python’s modulus operation entrywise. The result has the same sign as the divisor and its absolute value
+    is less than that of divisor. It may also be defined in terms of torch.div() as:
+    remainder(a, b) == a - a.div(b, rounding_mode="floor") * b
+    """
+    # Don't specify `expected` because the parameter `out` is optional.
+    inputs = _get_inputs(context, node)
+    dividend, divisor = inputs[0], inputs[1]
+    div_node = mb.floor_div(x=dividend, y=divisor, name=node.name + "_div")
+    context.add(div_node)
+    scaled_div = mb.mul(x=div_node, y=divisor, name=div_node.name + "_scaled")
+    context.add(scaled_div)
+    remainder_node = mb.sub(x=dividend, y=scaled_div, name=node.name)
+    context.add(remainder_node)

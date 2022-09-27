@@ -4745,3 +4745,87 @@ class TestBaddbmm(TorchBaseTest):
         # Makes it broadcastable to (B, N, P).
         for input_shape in [(1, N, P), (B, 1, P), (1, P)]:
             self.run_compare_torch(input_shape, model, backend=backend)
+
+
+class TestGlu(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "backend, shapes",
+        itertools.product(
+            backends,
+            [(2, 4, 6, 8), (6, 2, 10)],
+        )
+    )
+    def test_glu(self, backend, shapes):
+        # The dim specified for GLU shouldn't exceed the max dim in input.
+        glu_dim_list = [-1] + [i for i in range(len(shapes))]
+        for glu_dim in glu_dim_list:
+            model = torch.nn.GLU(glu_dim)
+            self.run_compare_torch(shapes, model, backend=backend)
+
+
+class TestHstack(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "backend, shapes",
+        itertools.product(
+            backends,
+            [[(2, 4, 6), (2, 4, 6)],
+             [(1, 4, 5), (1, 2, 5)],
+             [(1,), (3,)]],  # Test 1-D tensors.
+        )
+    )
+    def test_hstack(self, backend, shapes):
+        class HstackModel(nn.Module):
+            def forward(self, *tensors):
+                return torch.hstack(tensors)
+
+        self.run_compare_torch(shapes, HstackModel(), backend=backend)
+
+    @pytest.mark.parametrize(
+        "backend, shapes",
+        itertools.product(
+            backends,
+            [[(2, 4, 6), (2, 4, 6)]],
+        )
+    )
+    def test_hstack_with_parameter_out(self, backend, shapes):
+        class HstackModel(nn.Module):
+            def forward(self, *tensors):
+                output_tensor = torch.tensor([])
+                torch.hstack(tensors, out=output_tensor)
+                return output_tensor
+
+        self.run_compare_torch(shapes, HstackModel(), backend=backend)
+
+
+class TestRemainder(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "backend, shapes",
+        itertools.product(
+            backends,
+            [[(2, 4, 6), (2, 4, 6)],
+             [(2, 4, 6), (4, 6)],  # broadcastable tensors
+             [(2, 4, 6), (2, 1, 6)]],
+        )
+    )
+    def test_remainder(self, backend, shapes):
+        class RemainderModel(nn.Module):
+            def forward(self, dividend, divisor):
+                return torch.remainder(dividend, divisor)
+
+        self.run_compare_torch(shapes, RemainderModel(), backend=backend)
+
+    @pytest.mark.parametrize(
+        "backend, shapes",
+        itertools.product(
+            backends,
+            [[(2, 4, 6), (2, 4, 6)]],
+        )
+    )
+    def test_remainder_with_parameter_out(self, backend, shapes):
+        class RemainderModel(nn.Module):
+            def forward(self, dividend, divisor):
+                output_tensor = torch.tensor([])
+                torch.remainder(dividend, divisor, out=output_tensor)
+                return output_tensor
+
+        self.run_compare_torch(shapes, RemainderModel(), backend=backend)
