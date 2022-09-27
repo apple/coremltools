@@ -766,7 +766,23 @@ class TestGroupNorm(TorchBaseTest):
     def test_groupnorm(self, group_features, eps, affine, backend):
         model = nn.GroupNorm(group_features[0],group_features[1], eps=eps, affine=affine)
         self.run_compare_torch((6, group_features[1], 5, 5), model, backend=backend)
-
+        
+    @pytest.mark.parametrize(
+        "group_features, eps,affine, backend",
+        itertools.product([(16, 32), (1, 1)], [0.1, 1e-05],[True, False], backends),
+    )
+    def test_groupnorm_rank3_input(self, group_features, eps, affine, backend):
+        model = nn.GroupNorm(group_features[0],group_features[1], eps=eps, affine=affine)
+        self.run_compare_torch((6, group_features[1], 5), model, backend=backend)
+        
+    @pytest.mark.parametrize(
+        "group_features, eps,affine, backend",
+        itertools.product([(16, 32), (1, 1)], [0.1, 1e-05],[True, False], backends),
+    )
+    def test_groupnorm_rank2_input(self, group_features, eps, affine, backend):
+        model = nn.GroupNorm(group_features[0],group_features[1], eps=eps, affine=affine)
+        self.run_compare_torch((4, group_features[1]), model, backend=backend)
+        
 class TestLinear(TorchBaseTest):
     @pytest.mark.parametrize(
         "in_features, out_features, bias, backend",
