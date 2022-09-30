@@ -3948,10 +3948,18 @@ def dim(context, node):
 def min(context, node):
     inputs = _get_inputs(context, node)
 
-    if len(inputs) == 3:
+    # mimic functionality from https://pytorch.org/docs/stable/generated/torch.min.html
+    if len(inputs) == 1:
+        value = mb.reduce_min(x=inputs[0], axes=None, name=node.name)
+        context.add(value)
+    elif len(inputs) == 2 and inputs[0].shape == inputs[1].shape:
+        value = mb.minimum(x=inputs[0], y=inputs[1], name=node.name)
+        context.add(value)
+    else:
+        assert(len(inputs) <= 3)
         _input = inputs[0]
         dim = inputs[1].val
-        keepdim = inputs[2].val
+        keepdim = inputs[2].val if len(inputs) == 3 else False
 
         values = mb.reduce_min(x=_input, axes=[dim], keep_dims=keepdim)
         indices = mb.reduce_argmin(x=_input, axis=dim, keep_dims=keepdim)
@@ -3960,19 +3968,24 @@ def min(context, node):
         indices_name = node.outputs[1]
         context.add(values, torch_name=values_name)
         context.add(indices, torch_name=indices_name)
-    else:
-        assert(len(inputs) == 1)
-        value = mb.reduce_min(x=inputs[0], axes=None, name=node.name)
-        context.add(value)
+
 
 @register_torch_op
 def max(context, node):
     inputs = _get_inputs(context, node)
 
-    if len(inputs) == 3:
+    # mimic functionality from https://pytorch.org/docs/stable/generated/torch.max.html
+    if len(inputs) == 1:
+        value = mb.reduce_max(x=inputs[0], axes=None, name=node.name)
+        context.add(value)
+    elif len(inputs) == 2 and inputs[0].shape == inputs[1].shape:
+        value = mb.maximum(x=inputs[0], y=inputs[1], name=node.name)
+        context.add(value)
+    else:
+        assert(len(inputs) <= 3)
         _input = inputs[0]
         dim = inputs[1].val
-        keepdim = inputs[2].val
+        keepdim = inputs[2].val if len(inputs) == 3 else False
 
         values = mb.reduce_max(x=_input, axes=[dim], keep_dims=keepdim)
         indices = mb.reduce_argmax(x=_input, axis=dim, keep_dims=keepdim)
@@ -3981,10 +3994,7 @@ def max(context, node):
         indices_name = node.outputs[1]
         context.add(values, torch_name=values_name)
         context.add(indices, torch_name=indices_name)
-    else:
-        assert(len(inputs) == 1)
-        value = mb.reduce_max(x=inputs[0], axes=None, name=node.name)
-        context.add(value)
+
 
 @register_torch_op
 def argsort(context, node):
