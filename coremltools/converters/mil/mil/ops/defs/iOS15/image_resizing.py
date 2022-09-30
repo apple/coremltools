@@ -584,8 +584,8 @@ class crop(Operation):
     -------
     tensor<[\*D, H2, W2],T>
         * Tensor with same type as the input.
-        * ``H2`` = ``H1`` - crop_height[0] - crop_height[1].
-        * ``W2`` = ``W1`` - crop_width[0] - crop_width[1].
+        * ``H2`` = ``H1 - crop_height[0] - crop_height[1]``.
+        * ``W2`` = ``W1 - crop_width[0] - crop_width[1]``.
 
     Attributes
     ----------
@@ -645,10 +645,10 @@ class affine(Operation):
     nearest neighbor interpolation. If the ``(x’, y’)`` point falls outside the input
     image, then padding information is used to compute the value.
 
-    .. sourcecode:: python
+    ::
 
-        * x’ = a0 * x + a1 * y + a2
-        * y’ = b0 * x + b1 * y + b2
+        x’ = a0 * x + a1 * y + a2
+        y’ = b0 * x + b1 * y + b2
 
 
     Parameters

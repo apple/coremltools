@@ -5,6 +5,8 @@
 [Core ML Tools](https://coremltools.readme.io/docs)
 =======================
 
+![Core ML Tools logo](docs/logo.png)
+
 Use *coremltools* to convert machine learning models from third-party libraries to the Core ML format. This Python package contains the supporting tools for converting models from training libraries such as the following:
 
 * [TensorFlow 1.x](https://www.tensorflow.org/versions/r1.15/api_docs/python/tf)
