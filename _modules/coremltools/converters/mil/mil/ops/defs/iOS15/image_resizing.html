@@ -17,6 +17,7 @@
         <script src="../../../../../../../../_static/underscore.js"></script>
         <script src="../../../../../../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../../../../../../../_static/doctools.js"></script>
+        <script src="../../../../../../../../_static/sphinx_highlight.js"></script>
     <script src="../../../../../../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../../../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../../../../../search.html" /> 
@@ -663,8 +664,8 @@
 <span class="sd">    -------</span>
 <span class="sd">    tensor&lt;[\*D, H2, W2],T&gt;</span>
 <span class="sd">        * Tensor with same type as the input.</span>
-<span class="sd">        * ``H2`` = ``H1`` - crop_height[0] - crop_height[1].</span>
-<span class="sd">        * ``W2`` = ``W1`` - crop_width[0] - crop_width[1].</span>
+<span class="sd">        * ``H2`` = ``H1 - crop_height[0] - crop_height[1]``.</span>
+<span class="sd">        * ``W2`` = ``W1 - crop_width[0] - crop_width[1]``.</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
@@ -724,10 +725,10 @@
 <span class="sd">    nearest neighbor interpolation. If the ``(x’, y’)`` point falls outside the input</span>
 <span class="sd">    image, then padding information is used to compute the value.</span>
 
-<span class="sd">    .. sourcecode:: python</span>
+<span class="sd">    ::</span>
 
-<span class="sd">        * x’ = a0 * x + a1 * y + a2</span>
-<span class="sd">        * y’ = b0 * x + b1 * y + b2</span>
+<span class="sd">        x’ = a0 * x + a1 * y + a2</span>
+<span class="sd">        y’ = b0 * x + b1 * y + b2</span>
 
 
 <span class="sd">    Parameters</span>

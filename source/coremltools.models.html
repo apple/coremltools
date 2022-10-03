@@ -18,6 +18,7 @@
         <script src="../_static/underscore.js"></script>
         <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
         <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -45,16 +46,51 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="coremltools.converters.html">Converters</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Models</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.models.model">MLModel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.models.model">MLModel</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.models.model.MLModel"><code class="docutils literal notranslate"><span class="pre">MLModel</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.model.MLModel.__init__"><code class="docutils literal notranslate"><span class="pre">MLModel.__init__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.model.MLModel.get_spec"><code class="docutils literal notranslate"><span class="pre">MLModel.get_spec()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.model.MLModel.predict"><code class="docutils literal notranslate"><span class="pre">MLModel.predict()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.model.MLModel.save"><code class="docutils literal notranslate"><span class="pre">MLModel.save()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#compression-utils">compression_utils</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="coremltools.models.ml_program.html">affine_quantize_weights</a></li>
 <li class="toctree-l3"><a class="reference internal" href="coremltools.models.ml_program.html#module-0">palettize_weights</a></li>
 <li class="toctree-l3"><a class="reference internal" href="coremltools.models.ml_program.html#module-1">sparsify_weights</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.models.array_feature_extractor">array_feature_extractor</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.models.feature_vectorizer">feature_vectorizer</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.models.nearest_neighbors.builder">nearest_neighbors</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.models.array_feature_extractor">array_feature_extractor</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.models.array_feature_extractor.create_array_feature_extractor"><code class="docutils literal notranslate"><span class="pre">create_array_feature_extractor()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.models.feature_vectorizer">feature_vectorizer</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.models.feature_vectorizer.create_feature_vectorizer"><code class="docutils literal notranslate"><span class="pre">create_feature_vectorizer()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.models.nearest_neighbors.builder">nearest_neighbors</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder"><code class="docutils literal notranslate"><span class="pre">KNearestNeighborsClassifierBuilder</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.__init__"><code class="docutils literal notranslate"><span class="pre">KNearestNeighborsClassifierBuilder.__init__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.add_samples"><code class="docutils literal notranslate"><span class="pre">KNearestNeighborsClassifierBuilder.add_samples()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.author"><code class="docutils literal notranslate"><span class="pre">KNearestNeighborsClassifierBuilder.author</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.description"><code class="docutils literal notranslate"><span class="pre">KNearestNeighborsClassifierBuilder.description</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.index_type"><code class="docutils literal notranslate"><span class="pre">KNearestNeighborsClassifierBuilder.index_type</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.is_updatable"><code class="docutils literal notranslate"><span class="pre">KNearestNeighborsClassifierBuilder.is_updatable</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.leaf_size"><code class="docutils literal notranslate"><span class="pre">KNearestNeighborsClassifierBuilder.leaf_size</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.license"><code class="docutils literal notranslate"><span class="pre">KNearestNeighborsClassifierBuilder.license</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.number_of_dimensions"><code class="docutils literal notranslate"><span class="pre">KNearestNeighborsClassifierBuilder.number_of_dimensions</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.number_of_neighbors"><code class="docutils literal notranslate"><span class="pre">KNearestNeighborsClassifierBuilder.number_of_neighbors</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.number_of_neighbors_allowed_range"><code class="docutils literal notranslate"><span class="pre">KNearestNeighborsClassifierBuilder.number_of_neighbors_allowed_range()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.number_of_neighbors_allowed_set"><code class="docutils literal notranslate"><span class="pre">KNearestNeighborsClassifierBuilder.number_of_neighbors_allowed_set()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.set_index_type"><code class="docutils literal notranslate"><span class="pre">KNearestNeighborsClassifierBuilder.set_index_type()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.set_number_of_neighbors_with_bounds"><code class="docutils literal notranslate"><span class="pre">KNearestNeighborsClassifierBuilder.set_number_of_neighbors_with_bounds()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.nearest_neighbors.builder.KNearestNeighborsClassifierBuilder.weighting_scheme"><code class="docutils literal notranslate"><span class="pre">KNearestNeighborsClassifierBuilder.weighting_scheme</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#neural-network">neural_network</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="coremltools.models.neural_network.html">neural_network.builder</a></li>
 <li class="toctree-l3"><a class="reference internal" href="coremltools.models.neural_network.html#module-coremltools.models.neural_network.flexible_shape_utils">neural_network.flexible_shape_utils</a></li>
@@ -62,9 +98,57 @@
 <li class="toctree-l3"><a class="reference internal" href="coremltools.models.neural_network.html#module-coremltools.models.neural_network.update_optimizer_utils">neural_network.update_optimizer_utils</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.models.pipeline">pipeline</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.models.tree_ensemble">tree_ensemble</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.models.utils">utils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.models.pipeline">pipeline</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.models.pipeline.Pipeline"><code class="docutils literal notranslate"><span class="pre">Pipeline</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.pipeline.Pipeline.__init__"><code class="docutils literal notranslate"><span class="pre">Pipeline.__init__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.pipeline.Pipeline.add_model"><code class="docutils literal notranslate"><span class="pre">Pipeline.add_model()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.pipeline.Pipeline.set_training_input"><code class="docutils literal notranslate"><span class="pre">Pipeline.set_training_input()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.models.pipeline.PipelineClassifier"><code class="docutils literal notranslate"><span class="pre">PipelineClassifier</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.pipeline.PipelineClassifier.__init__"><code class="docutils literal notranslate"><span class="pre">PipelineClassifier.__init__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.pipeline.PipelineClassifier.add_model"><code class="docutils literal notranslate"><span class="pre">PipelineClassifier.add_model()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.pipeline.PipelineClassifier.set_training_input"><code class="docutils literal notranslate"><span class="pre">PipelineClassifier.set_training_input()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.models.pipeline.PipelineRegressor"><code class="docutils literal notranslate"><span class="pre">PipelineRegressor</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.pipeline.PipelineRegressor.__init__"><code class="docutils literal notranslate"><span class="pre">PipelineRegressor.__init__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.pipeline.PipelineRegressor.add_model"><code class="docutils literal notranslate"><span class="pre">PipelineRegressor.add_model()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.pipeline.PipelineRegressor.set_training_input"><code class="docutils literal notranslate"><span class="pre">PipelineRegressor.set_training_input()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.models.tree_ensemble">tree_ensemble</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.models.tree_ensemble.TreeEnsembleBase"><code class="docutils literal notranslate"><span class="pre">TreeEnsembleBase</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.tree_ensemble.TreeEnsembleBase.__init__"><code class="docutils literal notranslate"><span class="pre">TreeEnsembleBase.__init__()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.tree_ensemble.TreeEnsembleBase.add_branch_node"><code class="docutils literal notranslate"><span class="pre">TreeEnsembleBase.add_branch_node()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.tree_ensemble.TreeEnsembleBase.add_leaf_node"><code class="docutils literal notranslate"><span class="pre">TreeEnsembleBase.add_leaf_node()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.tree_ensemble.TreeEnsembleBase.set_default_prediction_value"><code class="docutils literal notranslate"><span class="pre">TreeEnsembleBase.set_default_prediction_value()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.tree_ensemble.TreeEnsembleBase.set_post_evaluation_transform"><code class="docutils literal notranslate"><span class="pre">TreeEnsembleBase.set_post_evaluation_transform()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.models.tree_ensemble.TreeEnsembleClassifier"><code class="docutils literal notranslate"><span class="pre">TreeEnsembleClassifier</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.tree_ensemble.TreeEnsembleClassifier.__init__"><code class="docutils literal notranslate"><span class="pre">TreeEnsembleClassifier.__init__()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.models.tree_ensemble.TreeEnsembleRegressor"><code class="docutils literal notranslate"><span class="pre">TreeEnsembleRegressor</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.tree_ensemble.TreeEnsembleRegressor.__init__"><code class="docutils literal notranslate"><span class="pre">TreeEnsembleRegressor.__init__()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-coremltools.models.utils">utils</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.models.utils.convert_double_to_float_multiarray_type"><code class="docutils literal notranslate"><span class="pre">convert_double_to_float_multiarray_type()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.models.utils.evaluate_classifier"><code class="docutils literal notranslate"><span class="pre">evaluate_classifier()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.models.utils.evaluate_classifier_with_probabilities"><code class="docutils literal notranslate"><span class="pre">evaluate_classifier_with_probabilities()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.models.utils.evaluate_regressor"><code class="docutils literal notranslate"><span class="pre">evaluate_regressor()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.models.utils.evaluate_transformer"><code class="docutils literal notranslate"><span class="pre">evaluate_transformer()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.models.utils.load_spec"><code class="docutils literal notranslate"><span class="pre">load_spec()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.models.utils.rename_feature"><code class="docutils literal notranslate"><span class="pre">rename_feature()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.models.utils.save_spec"><code class="docutils literal notranslate"><span class="pre">save_spec()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.html">MIL Builder</a></li>

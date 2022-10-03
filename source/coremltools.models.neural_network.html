@@ -18,6 +18,7 @@
         <script src="../_static/underscore.js"></script>
         <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
         <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -51,10 +52,41 @@
 <li class="toctree-l2"><a class="reference internal" href="coremltools.models.html#module-coremltools.models.feature_vectorizer">feature_vectorizer</a></li>
 <li class="toctree-l2"><a class="reference internal" href="coremltools.models.html#module-coremltools.models.nearest_neighbors.builder">nearest_neighbors</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="coremltools.models.html#neural-network">neural_network</a><ul class="current">
-<li class="toctree-l3 current"><a class="current reference internal" href="#">neural_network.builder</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#module-coremltools.models.neural_network.flexible_shape_utils">neural_network.flexible_shape_utils</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#module-coremltools.models.neural_network.quantization_utils">neural_network.quantization_utils</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#module-coremltools.models.neural_network.update_optimizer_utils">neural_network.update_optimizer_utils</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">neural_network.builder</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.neural_network.builder.NeuralNetworkBuilder"><code class="docutils literal notranslate"><span class="pre">NeuralNetworkBuilder</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-coremltools.models.neural_network.flexible_shape_utils">neural_network.flexible_shape_utils</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkImageSize"><code class="docutils literal notranslate"><span class="pre">NeuralNetworkImageSize</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkImageSizeRange"><code class="docutils literal notranslate"><span class="pre">NeuralNetworkImageSizeRange</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkMultiArrayShape"><code class="docutils literal notranslate"><span class="pre">NeuralNetworkMultiArrayShape</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkMultiArrayShapeRange"><code class="docutils literal notranslate"><span class="pre">NeuralNetworkMultiArrayShapeRange</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.neural_network.flexible_shape_utils.add_enumerated_image_sizes"><code class="docutils literal notranslate"><span class="pre">add_enumerated_image_sizes()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.neural_network.flexible_shape_utils.add_enumerated_multiarray_shapes"><code class="docutils literal notranslate"><span class="pre">add_enumerated_multiarray_shapes()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.neural_network.flexible_shape_utils.add_multiarray_ndshape_enumeration"><code class="docutils literal notranslate"><span class="pre">add_multiarray_ndshape_enumeration()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.neural_network.flexible_shape_utils.set_multiarray_ndshape_range"><code class="docutils literal notranslate"><span class="pre">set_multiarray_ndshape_range()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.neural_network.flexible_shape_utils.update_image_size_range"><code class="docutils literal notranslate"><span class="pre">update_image_size_range()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.neural_network.flexible_shape_utils.update_multiarray_shape_range"><code class="docutils literal notranslate"><span class="pre">update_multiarray_shape_range()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-coremltools.models.neural_network.quantization_utils">neural_network.quantization_utils</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.neural_network.quantization_utils.AdvancedQuantizedLayerSelector"><code class="docutils literal notranslate"><span class="pre">AdvancedQuantizedLayerSelector</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.neural_network.quantization_utils.MatrixMultiplyLayerSelector"><code class="docutils literal notranslate"><span class="pre">MatrixMultiplyLayerSelector</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.neural_network.quantization_utils.ModelMetrics"><code class="docutils literal notranslate"><span class="pre">ModelMetrics</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.neural_network.quantization_utils.OutputMetric"><code class="docutils literal notranslate"><span class="pre">OutputMetric</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.neural_network.quantization_utils.QuantizedLayerSelector"><code class="docutils literal notranslate"><span class="pre">QuantizedLayerSelector</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.neural_network.quantization_utils.activate_int8_int8_matrix_multiplications"><code class="docutils literal notranslate"><span class="pre">activate_int8_int8_matrix_multiplications()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.neural_network.quantization_utils.compare_models"><code class="docutils literal notranslate"><span class="pre">compare_models()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.neural_network.quantization_utils.quantize_weights"><code class="docutils literal notranslate"><span class="pre">quantize_weights()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#module-coremltools.models.neural_network.update_optimizer_utils">neural_network.update_optimizer_utils</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.neural_network.update_optimizer_utils.AdamParams"><code class="docutils literal notranslate"><span class="pre">AdamParams</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.neural_network.update_optimizer_utils.Batch"><code class="docutils literal notranslate"><span class="pre">Batch</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.neural_network.update_optimizer_utils.RangeParam"><code class="docutils literal notranslate"><span class="pre">RangeParam</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.models.neural_network.update_optimizer_utils.SgdParams"><code class="docutils literal notranslate"><span class="pre">SgdParams</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="coremltools.models.html#module-coremltools.models.pipeline">pipeline</a></li>
