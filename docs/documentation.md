@@ -218,34 +218,7 @@ This section is for generating a new version of the API Reference from scratch, 
 	
 	The build files appear in the `build` folder.
 
-    If you run into a `cmake` error (something about `cmake` not found in your PATH), you may need to change your PATH. If you need help with this, see [Use environment variables in Terminal on Mac](https://support.apple.com/guide/terminal/use-environment-variables-apd382cc5fa-4f58-4449-b20a-41c53c006f8f/mac). You may also need to install cmake.
-    
-    For example, you may want to switch to the folder where cmake is supposed to be:
-   
-    ```shell
-    (base) tonybove@users-MacBook-Pro coremltools % cd ~/Library/Python/3.8/bin
-    ```
-    
-    Then follow these steps:
-    
-       1. Install cmake:
-           
-	      ```
-	      (base) tonybove@users-MacBook-Pro bin % pip install cmake
-          ...
-		  WARNING: The scripts cmake, cpack and ctest are installed in
-		  '/Users/tonybove/Library/Python/3.9/bin' which is not on PATH.
-		  Consider adding this directory to PATH...
-	      ```
-       
-       2. Put `/Users/tonybove/Library/Python/3.9/bin` on your PATH:
-         
-          ```
-          (base) tonybove@users-MacBook-Pro bin % 
-            PATH=/Users/tonybove/Library/Python/3.9/bin:$PATH
-          ```
-      
-      3. Now try `zsh -i ./scripts/build.sh` from the `coremltools` folder.
+    If you run into a `cmake` error (such as a warning that `cmake` was not found in your PATH), you may need to change your PATH. If you need help with this, see [Use environment variables in Terminal on Mac](https://support.apple.com/guide/terminal/use-environment-variables-apd382cc5fa-4f58-4449-b20a-41c53c006f8f/mac). You may also need to install cmake.
 
 4. Create a new `docs` folder in the `coremltools` root folder:
    
