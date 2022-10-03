@@ -4859,3 +4859,26 @@ class TestRemainder(TorchBaseTest):
                 return output_tensor
 
         self.run_compare_torch(shapes, RemainderModel(), backend=backend)
+
+
+class TestSum(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "backend, input_dtype",
+        itertools.product(
+            backends,
+            [torch.int32, torch.float32, torch.bool]
+        )
+    )
+    def test_sum(self, backend, input_dtype):
+        model = ModuleWrapper(function=torch.sum)
+
+        input_data = torch.zeros(2, 3).to(input_dtype)
+        expected_results = model(input_data)
+
+        TorchBaseTest.run_compare_torch(
+            input_data,
+            model,
+            expected_results=expected_results,
+            input_as_shape=False,
+            backend=backend,
+        )

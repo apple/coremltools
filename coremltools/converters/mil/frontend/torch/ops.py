@@ -1308,7 +1308,12 @@ def sub(context, node):
 def mean(context, node):
     inputs = _get_inputs(context, node)
 
-    kwargs = {"x": inputs[0], "name": node.name}
+    x = inputs[0]
+    if types.is_bool(x.dtype):
+        # TODO: In the future when MIL op supports bool, we need to use curr_opset_version to decide
+        # if we want to cast or not.
+        x = mb.cast(x=x, dtype="fp32")
+    kwargs = {"x": x, "name": node.name}
 
     # @axes is optional, so omit if None.
     axes = inputs[1]
