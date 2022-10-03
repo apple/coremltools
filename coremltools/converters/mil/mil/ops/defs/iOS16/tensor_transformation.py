@@ -60,8 +60,8 @@ class reshape_like(Operation):
     .. sourcecode:: python
 
         ref_tensors=[tensor[2, 3, 4], tensor[1, 5, 6]]
-        begins=[0, 1]``
-        ends=[2, 0]``
+        begins=[0, 1]
+        ends=[2, 0]
         end_masks=[False, True]
 
     The output shape would be ``(2, 3, 5, 6)``.

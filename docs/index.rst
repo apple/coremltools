@@ -6,7 +6,10 @@
 coremltools API
 =====================
 
-This is the API Reference for coremltools. For guides, installation instructions, and examples, see `Guides <https://coremltools.readme.io/docs>`_.
+.. image:: logo.png
+   :alt: Core ML Tools logo
+
+This document is the API Reference for coremltools. For guides, installation instructions, and examples, see `Guides <https://coremltools.readme.io/docs>`_.
 
 .. toctree::
    :maxdepth: 1
