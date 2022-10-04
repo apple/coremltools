@@ -503,6 +503,20 @@ class TestNorms(TorchBaseTest):
             TorchBaseTest.run_compare_torch(shape, model, backend=backend, places=2)
 
 
+class TestWeightNorm(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "in_features, out_features, backend",
+        itertools.product(
+            (2, 10, 20),
+            (1, 2, 10),
+            backends,
+        )
+    )
+    def test_weight_norm_util(self, in_features, out_features, backend):
+        model = torch.nn.utils.weight_norm(torch.nn.Linear(in_features, out_features))
+        TorchBaseTest.run_compare_torch((in_features,), model, backend=backend, places=4)
+
+
 class TestLinAlgNorms(TorchBaseTest):
     def _is_valid_config(self, shape, order, dim):
         if isinstance(dim, tuple):
