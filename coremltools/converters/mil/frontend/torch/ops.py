@@ -1618,12 +1618,20 @@ def batch_norm(context, node):
 def _weight_norm(context, node):
     v, g, dim = _get_inputs(context, node, expected=3)
 
-    if dim.val != 0:
-        raise NotImplementedError("dim value ({}) not supported.".format(dim))
+    # Determine axes for L2 norm
+    if dim.val == -1:
+        axes = None
+    else:
+        axes = list(range(v.rank))
+        dim = dim.val
+        if dim >= 0:
+            axes.remove(dim)
+        else:
+            axes.remove(v.rank + dim)
 
-    # Calculate L2 norm of v, independently for each channel
+    # Calculate L2 norm of v
     temp = mb.pow(x=v, y=2.)
-    temp = mb.reduce_sum(x=temp, axes=list(range(1, temp.rank)), keep_dims=True)
+    temp = mb.reduce_sum(x=temp, axes=axes, keep_dims=True)
     norm = mb.pow(x=temp, y=1./2)
 
     inverse_norm = mb.inverse(x=norm)

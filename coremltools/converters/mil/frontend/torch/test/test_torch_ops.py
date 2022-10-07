@@ -513,8 +513,9 @@ class TestWeightNorm(TorchBaseTest):
         )
     )
     def test_weight_norm_util(self, in_features, out_features, backend):
-        model = torch.nn.utils.weight_norm(torch.nn.Linear(in_features, out_features))
-        TorchBaseTest.run_compare_torch((in_features,), model, backend=backend, places=3)
+        for dim in (None, -2, -1, 0, 1):
+            model = nn.utils.weight_norm(nn.Linear(in_features, out_features),dim=dim)
+            TorchBaseTest.run_compare_torch((in_features,), model, backend=backend, places=3)
 
 
 class TestLinAlgNorms(TorchBaseTest):
