@@ -512,10 +512,22 @@ class TestWeightNorm(TorchBaseTest):
             backends,
         )
     )
-    def test_weight_norm_util(self, in_features, out_features, backend):
+    def test_linear(self, in_features, out_features, backend):
         for dim in (None, -2, -1, 0, 1):
             model = nn.utils.weight_norm(nn.Linear(in_features, out_features),dim=dim)
             TorchBaseTest.run_compare_torch((in_features,), model, backend=backend, places=3)
+
+    @pytest.mark.parametrize("backend", backends)
+    def test_conv2d(self, backend):
+        model = nn.utils.weight_norm(nn.Conv2d(16, 33, 3))
+        x = torch.randn(20, 16, 50, 100)
+        TorchBaseTest.run_compare_torch(x, model, input_as_shape=False, places=3, backend=backend)
+
+    @pytest.mark.parametrize("backend", backends)
+    def test_conv3d(self, backend):
+        model = nn.utils.weight_norm(nn.Conv3d(16, 33, 3))
+        x = torch.randn(20, 16, 5, 50, 100)
+        TorchBaseTest.run_compare_torch(x, model, input_as_shape=False, places=3, backend=backend)
 
 
 class TestLinAlgNorms(TorchBaseTest):
