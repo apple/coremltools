@@ -4799,15 +4799,23 @@ def remainder(context, node):
 
 @register_torch_op
 def hann_window(context, node):
-    inputs = _get_inputs(context, node)
-    window_length = inputs[0]
-    ones = mb.fill(shape=(window_length,), value=1.0)
+    inputs = _get_inputs(context, node, expected=5)
+    # TODO: Support unknown window length
+    # TODO: Support unknown periodic
+    size = (inputs[0].val,)
+    if inputs[0].val == 1:
+        one = mb.fill(shape=size, value=1.0, name=node.name)
+        context.add(one)
+        return
+
+    ones = mb.fill(shape=size, value=1.0)
     cum = mb.cumsum(x=ones, axis=0)
     seq = mb.sub(x=cum, y=ones)
-    pi = mb.fill(shape=(window_length,), value=_math.pi)
-    denominator = mb.fill(shape=(window_length,), value=window_length)
-    numerator = mb.mul(seq, pi)
-    frac = mb.real_div(numerator, denominator)
-    frac_sq = mb.mul(frac, frac)
-    sin = mb.sin(frac_sq, name=node.name)
-    context.add(sin)
+    pi = mb.fill(shape=size, value=_math.pi)
+    window_length_float = mb.cast(x=inputs[0], dtype="fp32")
+    denominator = mb.fill(shape=size, value=window_length_float)
+    numerator = mb.mul(x=seq, y=pi)
+    frac = mb.real_div(x=numerator, y=denominator)
+    sin = mb.sin(x=frac)
+    sin_sq = mb.mul(x=sin, y=sin, name=node.name)
+    context.add(sin_sq)
