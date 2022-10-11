@@ -505,29 +505,34 @@ class TestNorms(TorchBaseTest):
 
 class TestWeightNorm(TorchBaseTest):
     @pytest.mark.parametrize(
-        "in_features, out_features, backend",
+        "in_out_features, backend",
         itertools.product(
-            (2, 10, 20),
-            (1, 2, 10),
+            [(1, 1), (2, 10), (20, 10)],
             backends,
         )
     )
-    def test_linear(self, in_features, out_features, backend):
+    def test_linear(self, in_out_features, backend):
+        in_features, out_features = in_out_features
+
         for dim in (None, -2, -1, 0, 1):
-            model = nn.utils.weight_norm(nn.Linear(in_features, out_features),dim=dim)
+            model = nn.utils.weight_norm(nn.Linear(in_features, out_features), dim=dim)
             TorchBaseTest.run_compare_torch((in_features,), model, backend=backend, places=3)
 
     @pytest.mark.parametrize("backend", backends)
     def test_conv2d(self, backend):
-        model = nn.utils.weight_norm(nn.Conv2d(16, 33, 3))
         x = torch.randn(20, 16, 50, 100)
-        TorchBaseTest.run_compare_torch(x, model, input_as_shape=False, places=3, backend=backend)
+
+        for dim in (None, ) + tuple(range(-4, 4)):
+            model = nn.utils.weight_norm(nn.Conv2d(16, 33, 3), dim=dim)
+            TorchBaseTest.run_compare_torch(x, model, input_as_shape=False, places=3, backend=backend)
 
     @pytest.mark.parametrize("backend", backends)
     def test_conv3d(self, backend):
-        model = nn.utils.weight_norm(nn.Conv3d(16, 33, 3))
         x = torch.randn(20, 16, 5, 50, 100)
-        TorchBaseTest.run_compare_torch(x, model, input_as_shape=False, places=3, backend=backend)
+
+        for dim in (None, ) + tuple(range(-5, 5)):
+            model = nn.utils.weight_norm(nn.Conv3d(16, 33, 3), dim=dim)
+            TorchBaseTest.run_compare_torch(x, model, input_as_shape=False, places=3, backend=backend)
 
 
 class TestLinAlgNorms(TorchBaseTest):
