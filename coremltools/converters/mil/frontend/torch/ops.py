@@ -3347,6 +3347,16 @@ def new_full(context, node):
     context.add(result)
 
 @register_torch_op
+def randint(context, node):
+    inputs = _get_inputs(context, node, expected=8)
+    low = mb.cast(x=inputs[0], dtype="fp32")
+    high = mb.cast(x=inputs[1], dtype="fp32")
+    shape = inputs[2]
+    rand_uniform = mb.random_uniform(shape=shape, low=low, high=high)
+    rand_int = mb.cast(x=rand_uniform, dtype="int32", name=node.name)
+    context.add(rand_int)
+
+@register_torch_op
 def bitwise_not(context, node):
     inputs = _get_inputs(context, node)
     x = inputs[0]

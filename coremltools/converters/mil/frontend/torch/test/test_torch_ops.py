@@ -2366,6 +2366,24 @@ class TestOnes(TorchBaseTest):
 
         self.run_compare_torch(shape, OnesStaticModel().eval(), backend=backend)
 
+class TestRandint(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "backend, shape, low, high",
+        itertools.product(
+            backends,
+            [(1,), (2, 3)],
+            [-1, 2],
+            [3, 5],
+        ),
+    )
+    def test_randint(self, backend, shape, low, high):
+        class TestModel(nn.Module):
+            def forward(self, x):
+                y = torch.randint(low, high, x.shape)
+                return torch.Tensor([len(y)])
+
+        self.run_compare_torch(shape, TestModel(), backend=backend)
+
 class TestTypeAs(TorchBaseTest):
     @pytest.mark.parametrize("backend, type",
         itertools.product(
