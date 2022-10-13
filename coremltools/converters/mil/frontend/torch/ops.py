@@ -4799,11 +4799,13 @@ def remainder(context, node):
 
 @register_torch_op
 def hann_window(context, node):
-    inputs = _get_inputs(context, node, expected=5)
-    # TODO: Support unknown window length
-    # TODO: Support unknown periodic
+    inputs = _get_inputs(context, node, expected=[5, 6])
+    if inputs[0].val is None:
+        raise NotImplementedError("variable 'window_length' not supported.")
+    if len(inputs) == 6:
+        raise NotImplementedError("'periodic' not supported.")
     size = (inputs[0].val,)
-    if inputs[0].val == 1:
+    if inputs[0].val <= 1:
         one = mb.fill(shape=size, value=1.0, name=node.name)
         context.add(one)
         return
