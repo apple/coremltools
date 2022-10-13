@@ -451,7 +451,7 @@ def _vector_norm(x, order, dim, keep_dims, name):
         temp = mb.abs(x=x)
         temp = mb.reduce_min(x=temp, axes=dim, keep_dims=keep_dims, name=name)
     else:
-        # sum(abs(x)^{ord})^{(1 / ord)}
+        # sum(abs(x)^{order})^{(1 / order)}
         temp = mb.abs(x=x)
         x, y = promote_input_dtypes([temp, order.val])
         temp = mb.pow(x=x, y=y)
@@ -1617,6 +1617,32 @@ def batch_norm(context, node):
         _add_batch_norm_1d()
     else:
         _add_batch_norm()
+
+
+@register_torch_op
+def _weight_norm(context, node):
+    v, g, dim = _get_inputs(context, node, expected=3)
+
+    # Determine axes for L2 norm
+    if dim.val == -1:
+        axes = None
+    else:
+        axes = list(range(v.rank))
+        dim = dim.val
+        if dim >= 0:
+            axes.remove(dim)
+        else:
+            axes.remove(v.rank + dim)
+
+    # Calculate L2 norm of v
+    temp = mb.pow(x=v, y=2.)
+    temp = mb.reduce_sum(x=temp, axes=axes, keep_dims=True)
+    norm = mb.pow(x=temp, y=1./2)
+
+    inverse_norm = mb.inverse(x=norm)
+    direction = mb.mul(x=v, y=inverse_norm)
+    result = mb.mul(x=g, y=direction, name=node.name)
+    context.add(result)
 
 
 @register_torch_op
