@@ -44,6 +44,10 @@ class NameSanitizer:
         if re.match("[^a-zA-Z_]", new_name):
             new_name = self.prefix + new_name
 
+        reserved_names = ["tensor"]
+        if new_name in reserved_names:
+            new_name += "_workaround"
+
         if new_name == name:
             # return if nothing has changed
             self.all_names.add(name)
