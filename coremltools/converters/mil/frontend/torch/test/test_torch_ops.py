@@ -4889,7 +4889,7 @@ class TestHannWindow(TorchBaseTest):
         "backend, window_length",
         itertools.product(
             backends,
-            [1, 3, 6],
+            [1, 3, 6, 10, 12],
         ),
     )
     def test_hann_window(self, backend, window_length):
@@ -4897,7 +4897,7 @@ class TestHannWindow(TorchBaseTest):
             def forward(self, x):
                 return torch.hann_window(window_length)
 
-        input_shape = np.random.randint(low=2, high=6, size=(window_length,))
+        input_shape = np.random.randint(low=1, high=10, size=(window_length,))
         torch_in = torch.tensor(input_shape, dtype=torch.int32)
         model = HannWindowModel().eval()
         torch_out = model(torch_in)
