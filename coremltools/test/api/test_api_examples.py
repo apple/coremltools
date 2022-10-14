@@ -302,6 +302,42 @@ class TestTensorFlow2ConverterExamples:
         mlmodel = ct.convert("./saved_model")
         mlmodel.save("./model.mlmodel")
 
+    @staticmethod
+    def test_convert_from_two_tags_saved_model_dir(tmpdir):
+        import tensorflow as tf
+        from tensorflow.compat.v1.saved_model import build_tensor_info
+        from tensorflow.compat.v1.saved_model import signature_constants
+        from tensorflow.compat.v1.saved_model import signature_def_utils
+
+        @tf.function
+        def add(a, b):
+          return a + b
+
+        c = add.get_concrete_function(tf.constant(21.0), tf.constant(21.0))
+
+        save_path = str(tmpdir)
+        builder = tf.compat.v1.saved_model.Builder(save_path)
+
+        with tf.compat.v1.Session(graph=c.graph) as sess:
+            tensor_info_a = build_tensor_info(c.graph.inputs[0])
+            tensor_info_b = build_tensor_info(c.graph.inputs[1])
+            tensor_info_y = build_tensor_info(c.graph.outputs[0])
+
+            prediction_signature = signature_def_utils.build_signature_def(
+                inputs={'a': tensor_info_a, 'b': tensor_info_b},
+                outputs={'output': tensor_info_y},
+                method_name=signature_constants.PREDICT_METHOD_NAME)
+
+            builder.add_meta_graph_and_variables(sess, ["serve"],
+                signature_def_map={
+                    signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY:
+                    prediction_signature,
+                })
+
+            builder.add_meta_graph(["serve", "tpu"])
+            builder.save()
+
+        ct.convert(save_path, source="tensorflow", tags=["serve"])
 
     @staticmethod
     def test_keras_custom_layer_model():

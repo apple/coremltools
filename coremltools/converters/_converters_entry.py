@@ -64,6 +64,7 @@ def convert(
     compute_units=_ComputeUnit.ALL,
     package_dir=None,
     debug=False,
+    **kwargs
 ):
     """
     Convert a TensorFlow or PyTorch model to the Core ML model format as either
@@ -366,6 +367,9 @@ def convert(
           - For Tensorflow conversion, it will cause to display extra logging
             and visualizations.
 
+    Note that for TensorFlow SaveModel models with more than 1 tag set,
+    ``tags: list[str]``, can be used to specify a set of tags.
+
     Returns
     -------
     
@@ -461,6 +465,7 @@ def convert(
         package_dir=package_dir,
         debug=debug,
         specification_version=specification_version,
+        **kwargs
     )
 
     if exact_target == 'milinternal':
