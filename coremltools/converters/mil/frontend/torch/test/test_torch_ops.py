@@ -2524,20 +2524,28 @@ class TestExpand(TorchBaseTest):
         self.run_compare_torch(input_shape, model, backend=backend)
 
     @pytest.mark.parametrize("backend", backends)
-    def test_expand_dynamic_shape(self, backend):
-        class TestModel(torch.nn.Module):
+    def test_expand_dynamic_shape1(self, backend):
+        class TestModel(nn.Module):
             def forward(self, x):
                 return x.expand(x.shape[0], 1, x.shape[-1], x.shape[-1])
 
-        model = TestModel()
-        x = torch.ones((1, 20))
-
-        self.run_compare_torch(x,
-                               model,
+        self.run_compare_torch(torch.ones((1, 20)),
+                               TestModel(),
                                input_as_shape=False,
                                converter_input_type=[TensorType(shape=[1, ct.RangeDim()])],
                                backend=backend)
 
+    @pytest.mark.parametrize("backend", backends)
+    def test_expand_dynamic_shape2(self, backend):
+        class TestModel(nn.Module):
+            def forward(self, x):
+                return x.expand(x.shape[-1], 1, x.shape[-1], x.shape[-1])
+
+        self.run_compare_torch(torch.ones((1, 20)),
+                               TestModel(),
+                               input_as_shape=False,
+                               converter_input_type=[TensorType(shape=[1, ct.RangeDim()])],
+                               backend=backend)
 
     @pytest.mark.parametrize(
         "backend, input_shapes",
