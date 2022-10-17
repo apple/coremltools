@@ -4914,3 +4914,24 @@ class TestSum(TorchBaseTest):
             input_as_shape=False,
             backend=backend,
         )
+
+
+class TestHannWindow(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "backend, window_length",
+        itertools.product(
+            backends,
+            [1, 3, 6, 10, 12],
+        ),
+    )
+    def test_hann_window(self, backend, window_length):
+        class HannWindowModel(nn.Module):
+            def forward(self, x):
+                return torch.hann_window(window_length)
+
+        input_shape = np.random.randint(low=1, high=10, size=(window_length,))
+        torch_in = torch.tensor(input_shape, dtype=torch.int32)
+        model = HannWindowModel().eval()
+        torch_out = model(torch_in)
+        self.run_compare_torch(torch_in, model, expected_results=torch_out,
+                           input_as_shape=False, backend=backend)

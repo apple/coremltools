@@ -4821,3 +4821,29 @@ def remainder(context, node):
     context.add(scaled_div)
     remainder_node = mb.sub(x=dividend, y=scaled_div, name=node.name)
     context.add(remainder_node)
+
+
+@register_torch_op
+def hann_window(context, node):
+    inputs = _get_inputs(context, node, expected=[5, 6])
+    if inputs[0].val is None:
+        raise NotImplementedError("variable 'window_length' not supported.")
+    if len(inputs) == 6:
+        raise NotImplementedError("'periodic' not supported.")
+    size = (inputs[0].val,)
+    if inputs[0].val <= 1:
+        one = mb.fill(shape=size, value=1.0, name=node.name)
+        context.add(one)
+        return
+
+    ones = mb.fill(shape=size, value=1.0)
+    cum = mb.cumsum(x=ones, axis=0)
+    seq = mb.sub(x=cum, y=ones)
+    pi = mb.fill(shape=size, value=_math.pi)
+    window_length_float = mb.cast(x=inputs[0], dtype="fp32")
+    denominator = mb.fill(shape=size, value=window_length_float)
+    numerator = mb.mul(x=seq, y=pi)
+    frac = mb.real_div(x=numerator, y=denominator)
+    sin = mb.sin(x=frac)
+    sin_sq = mb.mul(x=sin, y=sin, name=node.name)
+    context.add(sin_sq)
