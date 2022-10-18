@@ -3715,12 +3715,12 @@ def _broadcast(name, tensor, shape):
 @register_torch_op
 def expand(context, node):
     def _broadcast_dynamic(name, tensor, shape):
+        # Add any extra dimensions
         if len(shape) > tensor.rank:
             new_dims = len(shape) - tensor.rank
             tensor = mb.expand_dims(x=tensor, axes=list(range(new_dims)))
 
-        shape[0] = 1
-        shape[-1] = 1
+        shape[-1] = 1    # Convert expand op to tile op
 
         reps = mb.concat(values=shape, axis=0)
         res = mb.tile(x=tensor, reps=reps, name=name)
