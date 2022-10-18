@@ -42,7 +42,8 @@ def load(model_spec, debug=False, **kwargs):
     """
     torchscript = _torchscript_from_model(model_spec)
     if torchscript.training:
-        _logging.warning("Model not in eval mode")
+        _logging.warning("Model is not in eval mode. "
+                         "Consider calling '.eval()' on your model prior to conversion")
 
     if type(torchscript) == _torch.jit._script.RecursiveScriptModule:
         _logging.warning("Support for converting Torch Script Models is experimental. "
