@@ -142,21 +142,39 @@ def test_while_example():
     if ct.utils._is_macos():
         prediction = mlmodel.predict(feed_dict)
         assert len(prediction) == 2
-        
+
+
+def test_reserved_node_names():
+    @mb.program(input_specs=[mb.TensorSpec(shape=(10, 20))])
+    def prog(x):
+        return mb.square(x=x, name="tensor")
+
+    mlmodel = ct.convert(prog, source="milinternal", convert_to="mlprogram")
+
+    feed_dict = {
+        "x": np.random.rand(10, 20).astype(np.float32),
+    }
+    assert mlmodel is not None
+
+    if ct.utils._is_macos():
+        prediction = mlmodel.predict(feed_dict)
+        assert len(prediction) == 1
+
+
 def get_simple_topk_program(opset_version=None):
     @mb.program(input_specs=[mb.TensorSpec(shape=(1, 1, 4, 4))], opset_version=opset_version)
     def prog(x):
         x = mb.topk(x=x, k=1, axis=-1, ascending=True)
         return x
     return prog
-    
+
 def get_simple_pixel_unshuffle_program(opset_version=None):
     @mb.program(input_specs=[mb.TensorSpec(shape=(1, 1, 4, 4))], opset_version=opset_version)
     def prog(x):
         x = mb.pixel_unshuffle(x=x, downscale_factor=np.uint32(2))
         return x
     return prog
-    
+
 def get_simple_topk_pixel_unshuffle_program(opset_version=None):
     @mb.program(input_specs=[mb.TensorSpec(shape=(1, 1, 4, 4))], opset_version=opset_version)
     def prog(x):
@@ -164,18 +182,18 @@ def get_simple_topk_pixel_unshuffle_program(opset_version=None):
         x = mb.topk(x=x, k=1, axis=-1, ascending=True)
         return x
     return prog
-    
+
 def get_simple_nested_block_program(opset_version=None):
     @mb.program(input_specs=[mb.TensorSpec(shape=(1, 1, 4, 4))], opset_version=opset_version)
     def prog(x):
         def true_fn():
             topk, _ = mb.topk(x=x, k=1, axis=-1, ascending=True)
             return mb.add(x=topk, y=1)
-        
+
         def false_fn():
             topk, _ = mb.topk(x=x, k=1, axis=-1, ascending=True)
             return mb.add(x=topk, y=2)
-        
+
         shape = mb.shape(x=x)
         rank = mb.shape(x=shape)
         pred = mb.squeeze(x=rank)
@@ -194,7 +212,7 @@ class TestMLProgramVersionHandling:
         main_func = prog.functions["main"]
         topk_op = main_func.find_ops(op_type="topk")[0]
         assert topk_op.opset_version == ct.target.iOS13
-        
+
         # pick up iOS13 version topk
         prog = get_simple_topk_program(opset_version=ct.target.iOS15)
         main_func = prog.functions["main"]
@@ -206,12 +224,12 @@ class TestMLProgramVersionHandling:
         main_func = prog.functions["main"]
         topk_op = main_func.find_ops(op_type="topk")[0]
         assert topk_op.opset_version == ct.target.iOS16
-        
+
     @staticmethod
     def test_pymil_front_end_conversion():
         prog = get_simple_topk_pixel_unshuffle_program(opset_version=ct.target.iOS16)
         mlmodel = ct.convert(prog, minimum_deployment_target=ct.target.iOS16)
-        
+
     @staticmethod
     def test_nested_block_opset_version_selection():
         # pick up the oldest version (iOS13) topk by default
@@ -219,13 +237,13 @@ class TestMLProgramVersionHandling:
         main_func = prog.functions["main"]
         topk_ops = main_func.find_ops(op_type="topk")
         assert all([topk.opset_version == ct.target.iOS13 for topk in topk_ops])
-        
+
         # pick up iOS16 version topk
         prog = get_simple_nested_block_program(opset_version=ct.target.iOS16)
         main_func = prog.functions["main"]
         topk_ops = main_func.find_ops(op_type="topk")
         assert all([topk.opset_version == ct.target.iOS16 for topk in topk_ops])
-        
+
     @staticmethod
     def test_pymil_opset_version_inference():
         '''
@@ -240,7 +258,7 @@ class TestMLProgramVersionHandling:
         )
         with pytest.raises(ValueError, match=expected_err_str):
             mlmodel = ct.convert(prog, convert_to="mlprogram")
-        
+
     @staticmethod
     def test_pymil_front_end_conversion_early_error_out():
         prog = get_simple_topk_pixel_unshuffle_program(opset_version=ct.target.iOS16)
@@ -265,7 +283,7 @@ class TestMLProgramVersionHandling:
             def prog(x):
                 x = mb.pixel_unshuffle(x=x, downscale_factor=np.uint32(2))
                 return x
-                
+
     @staticmethod
     def test_bulid_non_compatible_program_early_error_out():
         '''
@@ -280,7 +298,7 @@ class TestMLProgramVersionHandling:
         )
         with pytest.raises(ValueError, match=expected_err_str):
             get_simple_topk_pixel_unshuffle_program()
-            
+
     @staticmethod
     def test_type_domain_validation():
         '''

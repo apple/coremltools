@@ -44,6 +44,12 @@ class NameSanitizer:
         if re.match("[^a-zA-Z_]", new_name):
             new_name = self.prefix + new_name
 
+        reserved_names = ["any", "bool", "program", "func", "tensor", "list", "dict", "tuple", "true",
+                          "false", "string", "bf16", "fp16", "fp32", "fp64", "int8", "int16", "int32",
+                          "int64", "uint8", "uint16", "uint32", "uint64"]
+        if new_name in reserved_names:
+            new_name += "_workaround"
+
         if new_name == name:
             # return if nothing has changed
             self.all_names.add(name)
