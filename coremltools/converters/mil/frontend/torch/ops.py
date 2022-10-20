@@ -3720,9 +3720,10 @@ def expand(context, node):
             new_dims = len(shape) - tensor.rank
             tensor = mb.expand_dims(x=tensor, axes=list(range(new_dims)))
 
-        shape[-1] = 1    # Convert expand op to tile op
-
-        reps = mb.concat(values=shape, axis=0)
+        tensor_shape = mb.shape(x=tensor)
+        shape = mb.concat(values=shape, axis=0)
+        reps = mb.real_div(x=shape, y=tensor_shape)
+        reps = mb.cast(x=reps, dtype="int32")
         res = mb.tile(x=tensor, reps=reps, name=name)
         return res
 

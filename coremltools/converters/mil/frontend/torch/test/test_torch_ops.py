@@ -2559,6 +2559,18 @@ class TestExpand(TorchBaseTest):
                                converter_input_type=[TensorType(shape=[1, ct.RangeDim()])],
                                backend=backend)
 
+    @pytest.mark.parametrize("backend", backends)
+    def test_expand_dynamic_shape_and_broadcast(self, backend):
+        class TestModel(nn.Module):
+            def forward(self, x):
+                return x.expand(x.shape[0], 10)
+
+        self.run_compare_torch(torch.arange(20).reshape((20, 1)),
+                               TestModel(),
+                               input_as_shape=False,
+                               converter_input_type=[TensorType(shape=[ct.RangeDim(), 1])],
+                               backend=backend)
+
     @pytest.mark.parametrize(
         "backend, input_shapes",
         itertools.product(
