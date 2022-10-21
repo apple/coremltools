@@ -887,12 +887,9 @@ class cast(Operation):
             )
 
         if input_var.val is None:
-            if input_var.sym_val is not None:
-                if not is_symbolic(input_var.sym_val) and len(input_var.sym_val.shape) == 1:
-                    result = [np.array(val).astype(dtype=type_map[dtype_val]).item() if not is_symbolic(val) else val for val in input_var.sym_val]
-                    return np.array(result)
-                elif is_symbolic(input_var.sym_val):
-                    return input_var.sym_val
+            if input_var.sym_val is not None and not is_symbolic(input_var.sym_val) and len(input_var.sym_val.shape) == 1:
+                result = [np.array(val).astype(dtype=type_map[dtype_val]).item() if not is_symbolic(val) else val for val in input_var.sym_val]
+                return np.array(result)
             return None
 
         if not types.is_tensor(input_var.sym_type):
