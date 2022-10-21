@@ -3734,7 +3734,7 @@ def expand(context, node):
     x = inputs[0]
     shape = inputs[1]
 
-    if isinstance(inputs[1], list):
+    if isinstance(shape, list):
         res = _broadcast_dynamic(node.name, x, shape)
     else:
         res = _broadcast(node.name, x, shape.val)
