@@ -50,9 +50,9 @@ def dict(keytype, valuetype):
             assert isinstance(newval, self.T[1])
             self.val[key] = newval
 
-        @annotate(type_int.int)
+        @annotate(type_int.int64)
         def __len__(self):
-            return type_int.int(len(self.val))
+            return type_int.int64(len(self.val))
 
         @annotate(type_bool.bool, key=T[0])
         def __contains__(self, key):
