@@ -4,6 +4,7 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from enum import Enum
+
 import numpy as np
 
 from coremltools.converters.mil.mil.types.symbolic import is_symbolic
@@ -13,11 +14,13 @@ from coremltools.converters.mil.mil.types.type_mapping import (
     is_builtin,
 )
 
+
 class ColorLayout(Enum):
     RGB = "RGB"
     BGR = "BGR"
     GRAYSCALE = "G"
     GRAYSCALE_FLOAT16 = "G_FLOAT16"
+
 
 class ClassifierConfig:
     def __init__(
@@ -93,10 +96,10 @@ class ImageType(InputType):
 
         Parameters
         ----------
-        scale: (float)
+        scale: float or list of floats
             The scaling factor for all values in the image channels.
 
-        bias: float or list of float
+        bias: float or list of floats
             * If ``color_layout`` is ``ct.colorlayout.GRAYSCALE`` or
               ``ct.colorlayout.GRAYSCALE_FLOAT16``, bias would be a ``float``.
             * If ``color_layout`` is ``ct.colorlayout.RGB`` or ``ct.colorlayout.BGR``,
