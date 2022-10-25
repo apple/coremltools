@@ -41,7 +41,7 @@ def load(model_spec, debug=False, **kwargs):
         only.
     """
     torchscript = _torchscript_from_model(model_spec)
-    if torchscript.training:
+    if hasattr(torchscript, 'training') and torchscript.training:
         _logging.warning("Model is not in eval mode. "
                          "Consider calling '.eval()' on your model prior to conversion")
 
