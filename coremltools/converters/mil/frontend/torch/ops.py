@@ -3755,13 +3755,30 @@ def _broadcast(name, tensor, shape):
 
 @register_torch_op
 def expand(context, node):
+    def _broadcast_dynamic(name, tensor, shape):
+        # Add any extra dimensions
+        if len(shape) > tensor.rank:
+            new_dims = len(shape) - tensor.rank
+            tensor = mb.expand_dims(x=tensor, axes=list(range(new_dims)))
+
+        tensor_shape = mb.shape(x=tensor)
+        shape = mb.concat(values=shape, axis=0)
+        reps = mb.real_div(x=shape, y=tensor_shape)
+        reps = mb.cast(x=reps, dtype="int32")
+        res = mb.tile(x=tensor, reps=reps, name=name)
+        return res
+
+
     # PyTorch 1.6+ has 3 inputs while older version has 2
     inputs = _get_inputs(context, node, expected=[2, 3])
 
     x = inputs[0]
-    shape = inputs[1].val
+    shape = inputs[1]
 
-    res = _broadcast(node.name, x, shape)
+    if isinstance(shape, list):
+        res = _broadcast_dynamic(node.name, x, shape)
+    else:
+        res = _broadcast(node.name, x, shape.val)
     context.add(res)
 
 
