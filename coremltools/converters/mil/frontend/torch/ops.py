@@ -4855,8 +4855,14 @@ def hann_window(context, node):
     inputs = _get_inputs(context, node, expected=[5, 6])
     if inputs[0].val is None:
         raise NotImplementedError("variable 'window_length' not supported.")
+
+    periodic = True
     if len(inputs) == 6:
-        raise NotImplementedError("'periodic' not supported.")
+        if inputs[1].val is None:
+            raise NotImplementedError("variable 'periodic' not supported.")
+        if not inputs[1].val:
+            periodic = False
+
     size = (inputs[0].val,)
     if inputs[0].val <= 1:
         one = mb.fill(shape=size, value=1.0, name=node.name)
@@ -4868,6 +4874,8 @@ def hann_window(context, node):
     seq = mb.sub(x=cum, y=ones)
     pi = mb.fill(shape=size, value=_math.pi)
     window_length_float = mb.cast(x=inputs[0], dtype="fp32")
+    if not periodic:
+        window_length_float = mb.sub(x=window_length_float, y=ones)
     denominator = mb.fill(shape=size, value=window_length_float)
     numerator = mb.mul(x=seq, y=pi)
     frac = mb.real_div(x=numerator, y=denominator)
