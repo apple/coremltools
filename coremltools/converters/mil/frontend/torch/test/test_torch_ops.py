@@ -456,6 +456,25 @@ class TestOuter(TorchBaseTest):
         TorchBaseTest.run_compare_torch((vector1, vector2), model, backend=backend, input_as_shape=False)
 
 
+class TestCross(TorchBaseTest):
+    @pytest.mark.parametrize("shape_dim, backend",
+                             itertools.product([((3,), 0), ((4, 3, 2), 1)], backends)
+                             )
+    def test_cross(self, shape_dim, backend):
+        shape = shape_dim[0]
+        dim = shape_dim[1]
+        class CrossModel(nn.Module):
+            def forward(self, x, y):
+                return torch.cross(x, y, dim)
+
+        x = generate_input_data(shape)
+        y = generate_input_data(shape)
+        model = CrossModel().eval()
+        torch_out = model(x, y)
+        self.run_compare_torch((x, y), model, expected_results=torch_out,
+                           input_as_shape=False, backend=backend)
+
+
 class TestNormalize(TorchBaseTest):
     @pytest.mark.parametrize(
         "shape, backend",
