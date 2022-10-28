@@ -5015,16 +5015,17 @@ class TestSum(TorchBaseTest):
 
 class TestHannWindow(TorchBaseTest):
     @pytest.mark.parametrize(
-        "backend, window_length",
+        "backend, window_length, periodic",
         itertools.product(
             backends,
             [1, 3, 6, 10, 12],
+            [True, False],
         ),
     )
-    def test_hann_window(self, backend, window_length):
+    def test_hann_window(self, backend, window_length, periodic):
         class HannWindowModel(nn.Module):
             def forward(self, x):
-                return torch.hann_window(window_length)
+                return torch.hann_window(window_length, periodic)
 
         input_shape = np.random.randint(low=1, high=10, size=(window_length,))
         torch_in = torch.tensor(input_shape, dtype=torch.int32)
