@@ -2798,7 +2798,10 @@ class TestEinsum(TorchBaseTest):
              "abc,cde->abde",
              "btnh,bfnh->bnft",
              "bnft,btnh->bfnh",
-             "abcd,cde->abe"],
+             "abcd,cde->abe",
+             "abc,acd->abd",
+             "abcd,acdb->ad",
+             "abcd,efbd->eafc"],
             [False, True]
         ),
     )
@@ -2823,6 +2826,12 @@ class TestEinsum(TorchBaseTest):
             input_shapes = [[1,2,3,4], [1,4,2,6]]
         elif equation == "abcd,cde->abe":
             input_shapes = [[1,2,3,4], [3,4,6]]
+        elif equation == "abc,acd->abd":
+            input_shapes = [[2,3,4], [2,4,5]]
+        elif equation == "abcd,acdb->ad":
+            input_shapes = [[1,2,3,4], [1,3,4,2]]
+        elif equation == "abcd,efbd->eafc":
+            input_shapes = [[1,2,3,4], [1,2,2,4]]
         else:
             raise ValueError("unrecognized equation")
 

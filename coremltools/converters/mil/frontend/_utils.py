@@ -102,9 +102,7 @@ def build_einsum_mil(a_var, b_var, equation, name):
         else:
             x = mb.einsum(values=(b_var, a_var), equation=equation_rev, name=name)
     else:
-        raise NotImplementedError(
-            "Einsum unsupported equation format: ", equation
-        )
+        x = solve_generic_einsum(parsed_vectors, a_var, b_var, name)
 
     return x
 
@@ -159,3 +157,76 @@ def get_output_names(outputs):
         if all([name is None for name in output_names]):
             output_names = None
     return output_names
+
+
+def multiply(numbers):
+    """
+    :param numbers: list[int]
+    :param return: int
+    """
+    ret = 1
+    for num in numbers:
+        ret *= num
+    return ret
+
+
+def get_perm(src_axes, dst_axes):
+    """
+    :param src_axes: list[int]
+    :param dst_axes: list[int]
+    :return: list[int]
+    """
+    return [dst_axes.find(s) for s in src_axes]
+
+
+def solve_generic_einsum(parsed_vectors, a_var, b_var, name):
+    """
+    :param parsed_vectors: list[list[int]]
+    :param a_var:
+        - var
+        - first input variable
+    :param b_var:
+        - var
+        - second input variable
+    :param name:
+        - str
+        - name tp be assigned to the output var
+
+    :return:
+        - var
+        - output var that contains the einsum result
+    """
+    a_axes, b_axes, out_axes = parsed_vectors
+    batched_axes = []
+    reduced_axes = []
+    a_unique_axes = []
+    b_unique_axes = []
+
+    for a_axis in a_axes:
+        if a_axis in b_axes:
+            if a_axis in out_axes:
+                batched_axes.append(a_axis)
+            else:
+                reduced_axes.append(a_axis)
+        else:
+            a_unique_axes.append(a_axis)
+
+    for b_axis in b_axes:
+        if b_axis not in a_axes:
+            b_unique_axes.append(b_axis)
+
+    a_transposed_axes = batched_axes + a_unique_axes + reduced_axes
+    a = mb.transpose(x=a_var, perm=get_perm(a_transposed_axes))
+    a_reshaped_axes = [multiply(batched_axes), multiply(a_unique_axes), multiply(reduced_axes)]
+    a = mb.reshape(x=a, shape=a_reshaped_axes)
+
+    b_transposed_axes = batched_axes + reduced_axes + b_unique_axes
+    b = mb.transpose(x=b_var, perm=get_perm(b_transposed_axes))
+    b_reshaped_axes = [multiply(batched_axes), multiply(a_unique_axes), multiply(reduced_axes)]
+    b = mb.reshape(x=b, shape=b_reshaped_axes)
+
+    ab = mb.matmul(x=a, y=b)
+    ab_reshaped_axes = batched_axes + a_unique_axes + b_unique_axes
+    ab = mb.reshape(x=ab, shape=ab_reshaped_axes)
+    ab = mb.transpose(x=ab, perm=get_perm(out_axes), name=name)
+    return ab
