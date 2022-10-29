@@ -48,7 +48,7 @@ def build_einsum_mil(a_var, b_var, equation, name):
     """
 
     ## TODO: rdar://73851694 (Update einsum op translation to support generic cases) 
-
+    equation = equation.replace(" ", "")
     parsed_vectors = parse_einsum_equation(equation)
     equation_rev = _reverse_input_einsum_eq(equation)
     parsed_vectors_rev = parse_einsum_equation(equation_rev)
