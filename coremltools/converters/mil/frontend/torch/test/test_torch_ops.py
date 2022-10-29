@@ -2808,7 +2808,7 @@ class TestEinsum(TorchBaseTest):
             def forward(self, x, y):
                 return torch.einsum(equation, x, y)
 
-        if equation == "abcd,adce->abce" or "a b c d , a d c e -> a b c e":
+        if equation in ["abcd,adce->abce", "a b c d , a d c e -> a b c e"]:
             input_shapes = [[3, 4, 2, 6], [3, 6, 2, 2]]
         elif equation == "abc,cbd->abd":
             input_shapes = [[4, 2, 6], [6, 2, 2]]
