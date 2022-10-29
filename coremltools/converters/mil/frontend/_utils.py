@@ -176,7 +176,7 @@ def get_perm(src_axes, dst_axes):
     :param dst_axes: list[int]
     :return: list[int]
     """
-    return [dst_axes.find(s) for s in src_axes]
+    return [src_axes.index(s) for s in dst_axes]
 
 
 def solve_generic_einsum(parsed_vectors, a_var, b_var, name):
@@ -196,37 +196,55 @@ def solve_generic_einsum(parsed_vectors, a_var, b_var, name):
         - var
         - output var that contains the einsum result
     """
+    if any_symbolic(a_var.shape) or any_symbolic(b_var.shape):
+        raise ValueError(
+            "Generic einsum does not support flexible shape."
+        )
+
     a_axes, b_axes, out_axes = parsed_vectors
+    a_dims = list(a_var.shape)
+    b_dims = list(b_var.shape)
+
     batched_axes = []
     reduced_axes = []
     a_unique_axes = []
     b_unique_axes = []
 
-    for a_axis in a_axes:
+    batched_dims = []
+    reduced_dims = []
+    a_unique_dims = []
+    b_unique_dims = []
+
+    for a_dim, a_axis in zip(a_dims, a_axes):
         if a_axis in b_axes:
             if a_axis in out_axes:
                 batched_axes.append(a_axis)
+                batched_dims.append(a_dim)
             else:
                 reduced_axes.append(a_axis)
+                reduced_dims.append(a_dim)
         else:
             a_unique_axes.append(a_axis)
+            a_unique_dims.append(a_dim)
 
-    for b_axis in b_axes:
+    for b_dim, b_axis in zip(b_dims, b_axes):
         if b_axis not in a_axes:
             b_unique_axes.append(b_axis)
+            b_unique_dims.append(b_dim)
 
     a_transposed_axes = batched_axes + a_unique_axes + reduced_axes
-    a = mb.transpose(x=a_var, perm=get_perm(a_transposed_axes))
-    a_reshaped_axes = [multiply(batched_axes), multiply(a_unique_axes), multiply(reduced_axes)]
-    a = mb.reshape(x=a, shape=a_reshaped_axes)
+    a = mb.transpose(x=a_var, perm=get_perm(a_axes, a_transposed_axes))
+    a_reshaped_dims = [multiply(batched_dims), multiply(a_unique_dims), multiply(reduced_dims)]
+    a = mb.reshape(x=a, shape=a_reshaped_dims)
 
     b_transposed_axes = batched_axes + reduced_axes + b_unique_axes
-    b = mb.transpose(x=b_var, perm=get_perm(b_transposed_axes))
-    b_reshaped_axes = [multiply(batched_axes), multiply(a_unique_axes), multiply(reduced_axes)]
-    b = mb.reshape(x=b, shape=b_reshaped_axes)
+    b = mb.transpose(x=b_var, perm=get_perm(b_axes, b_transposed_axes))
+    b_reshaped_dims = [multiply(batched_dims), multiply(reduced_dims), multiply(b_unique_dims)]
+    b = mb.reshape(x=b, shape=b_reshaped_dims)
 
     ab = mb.matmul(x=a, y=b)
+    ab_reshaped_dims = batched_dims + a_unique_dims + b_unique_dims
+    ab = mb.reshape(x=ab, shape=ab_reshaped_dims)
     ab_reshaped_axes = batched_axes + a_unique_axes + b_unique_axes
-    ab = mb.reshape(x=ab, shape=ab_reshaped_axes)
-    ab = mb.transpose(x=ab, perm=get_perm(out_axes), name=name)
+    ab = mb.transpose(x=ab, perm=get_perm(ab_reshaped_axes, out_axes), name=name)
     return ab
