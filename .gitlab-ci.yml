@@ -108,6 +108,17 @@ test_py37_tf1:
     TEST_PACKAGE: coremltools.converters.mil.frontend.tensorflow
     WHEEL_PATH: build/dist/*cp37*10_15*
 
+test_py37_tf2:
+  <<: *test_macos_pkg
+  tags:
+    - macos12
+  dependencies:
+    - build_wheel_macos_py37
+  variables:
+    PYTHON: "3.7"
+    TEST_PACKAGE: coremltools.converters.mil.frontend.tensorflow2
+    WHEEL_PATH: build/dist/*cp37*10_15*
+
 test_py37_mil:
   <<: *test_macos_pkg
   tags:
