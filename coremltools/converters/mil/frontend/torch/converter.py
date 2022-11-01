@@ -369,7 +369,8 @@ class TorchConverter:
         def _check_is_tensor(node, module):
             if not isinstance(module, _torch.Tensor):
                 return False
-            assert str(node.output().type()) == "Tensor"
+            if str(node.output().type()) not in ("Tensor", "Optional[Tensor]"):
+                raise TypeError("Type \"{}\" not supported".format(node.output().type()))
             return True
 
         def _check_is_quantized_tensor(node, module):
