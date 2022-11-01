@@ -4355,7 +4355,18 @@ def logical_xor(context, node):
 
 @register_torch_op
 def where(context, node):
-    inputs = _get_inputs(context, node, expected=3)
+    inputs = _get_inputs(context, node)
+
+    if len(inputs) == 1:
+        x = inputs[0]
+        non_zero = mb.non_zero(x=x)
+        a = mb.slice_by_index(x=non_zero, begin=[0, 0], end=[3, 1], end_mask=[True, False], squeeze_mask=[False, True])
+        b = mb.slice_by_index(x=non_zero, begin=[0, 1], end=[3, 2], end_mask=[True, True], squeeze_mask=[False, True])
+
+        context.add((a, b), node.name)
+        return
+
+    assert len(inputs) == 3
     cond = inputs[0]
     if not types.is_bool(cond.dtype):
         # cond must be bool type

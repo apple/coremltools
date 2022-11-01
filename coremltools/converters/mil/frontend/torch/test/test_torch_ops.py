@@ -3916,6 +3916,30 @@ class TestWhere(TorchBaseTest):
             input_as_shape=False,
         )
 
+    @pytest.mark.parametrize("backend", backends)
+    def test_where_single_param(self, backend):
+        class WhereModel(nn.Module):
+            def forward(self, x):
+                return torch.where(x)
+
+        '''
+        x = torch.tensor([[0.6, 0.0, 0.0, 0.0],
+                          [0.0, 0.4, 0.0, 0.0],
+                          [0.0, 0.0, 1.2, 0.0],
+                          [0.0, 3.0, 0.0, -0.4]])
+        '''
+        x = torch.zeros(20, dtype=torch.float32).reshape((10, 2))
+        #x[1,1] = 12
+        x[3,0] = -1
+        x[4,1] = 9
+
+        self.run_compare_torch(
+            x,
+            WhereModel(),
+            backend=backend,
+            input_as_shape=False,
+        )
+
 
 class TestSelect(TorchBaseTest):
     @pytest.mark.parametrize(
