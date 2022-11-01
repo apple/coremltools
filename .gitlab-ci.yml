@@ -118,6 +118,7 @@ test_py37_tf2:
     PYTHON: "3.7"
     TEST_PACKAGE: coremltools.converters.mil.frontend.tensorflow2
     WHEEL_PATH: build/dist/*cp37*10_15*
+    REQUIREMENTS: reqs/test_tf2.pip
 
 test_py37_mil:
   <<: *test_macos_pkg
