@@ -146,24 +146,28 @@ class TorchConverter:
             cut_at_symbols: A list of internal symbol name strings. Graph conversion will
                 terminate once these symbols have been generated. For debugging use
                 only. See kwarg in load.py.
-            opset_version: An int represents the coreml opset version
+            opset_version: An int represents the Core ML opset version
         """
-
         assert isinstance(torchscript, _torch.jit.ScriptModule)
+
         self.inputs = inputs
         for idx, inp in enumerate(self.inputs):
             if isinstance(inp, ImageType) and self.inputs[idx].channel_first is None:
                 self.inputs[idx].channel_first = True
+
         self.torchscript = torchscript
         self.outputs = outputs
         self.output_names = get_output_names(self.outputs)
         self.opset_version = _target(opset_version) if opset_version is not None else None
         self.context = TranscriptionContext()
+
         raw_graph, params_dict = self._expand_and_optimize_ir(self.torchscript)
         self.params_dict = params_dict
         self.graph = InternalTorchIRGraph(
             raw_graph, params_dict, self.inputs, cut_at_symbols
         )
+
+        # Apply Torch IR passes
         passes = [
             transform_inplace_ops,
             flatten_graph_input_values,
@@ -173,7 +177,8 @@ class TorchConverter:
         ]
         for p in passes:
             p(self.graph)
-        self.inputs = [v for v in self.graph.inputs.values()]
+
+        self.inputs = list(self.graph.inputs.values())
         self.torch_passes = torch_passes
         self._prog = Program()
 
@@ -332,7 +337,7 @@ class TorchConverter:
 
         And a dictionary {"linear.weight": ..., "linear.bias": ...} is returned, to record the parameters values.
         Note that, those GetAttr nodes are still in the torch ir graph, but they would be removed in a latter
-        graph pass in the coreml torch internal graph
+        graph pass in the coremltools torch internal graph
 
         """
 
