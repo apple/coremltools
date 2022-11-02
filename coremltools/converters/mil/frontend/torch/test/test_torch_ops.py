@@ -3918,17 +3918,18 @@ class TestWhere(TorchBaseTest):
         )
 
     @pytest.mark.parametrize("shape, backend",
-        itertools.product([(4,4)], backends))
+        itertools.product(COMMON_SHAPES + [(10,)], backends)
+    )
     def test_where_single_param(self, shape, backend):
         class WhereModelSingleParam(nn.Module):
             def forward(self, x):
                 return torch.where(x)
 
-        # Create a tensor of `shape` of ~90% non-zero entries
+        # Create a tensor of given shape with ~90% zero entries
         x = np.zeros(shape)
         all_indices = list(zip(*np.where(x == 0)))
         num_indices = len(all_indices)
-        random_picks = np.random.choice(np.arange(num_indices), size=num_indices//10)
+        random_picks = np.random.choice(np.arange(num_indices), size=num_indices//10, replace=False)
         for i in random_picks:
             x[all_indices[i]] = np.random.choice([-1, 12, 100])
         x = torch.Tensor(x)

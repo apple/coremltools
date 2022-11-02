@@ -4360,11 +4360,19 @@ def where(context, node):
     if len(inputs) == 1:
         x = inputs[0]
         non_zero = mb.non_zero(x=x)
-        a = mb.slice_by_index(x=non_zero, begin=[0, 0], end=[-1, -1], end_mask=[True, True], squeeze_mask=[False, True])
-        b = mb.slice_by_index(x=non_zero, begin=[0, 1], end=[-1, -1], end_mask=[True, True], squeeze_mask=[False, True])
 
-        context.add((a, b), node.name)
+        result = []
+        for i in range(x.rank):
+            result.append(mb.slice_by_index(x=non_zero,
+                                            begin=[0, i],
+                                            end=[-1, -1], # Will be ignored, but is required
+                                            end_mask=[True, True],
+                                            squeeze_mask=[False, True])
+            )
+
+        context.add(result, node.name)
         return
+
 
     assert len(inputs) == 3
     cond = inputs[0]
