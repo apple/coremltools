@@ -4360,8 +4360,8 @@ def where(context, node):
     if len(inputs) == 1:
         x = inputs[0]
         non_zero = mb.non_zero(x=x)
-        a = mb.slice_by_index(x=non_zero, begin=[0, 0], end=[3, 1], end_mask=[True, False], squeeze_mask=[False, True])
-        b = mb.slice_by_index(x=non_zero, begin=[0, 1], end=[3, 2], end_mask=[True, True], squeeze_mask=[False, True])
+        a = mb.slice_by_index(x=non_zero, begin=[0, 0], end=[-1, -1], end_mask=[True, True], squeeze_mask=[False, True])
+        b = mb.slice_by_index(x=non_zero, begin=[0, 1], end=[-1, -1], end_mask=[True, True], squeeze_mask=[False, True])
 
         context.add((a, b), node.name)
         return
