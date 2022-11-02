@@ -3967,16 +3967,17 @@ class TestSelect(TorchBaseTest):
             input_shape, model, backend=backend,
         )
 
+
 class TestNonZero(TorchBaseTest):
     @pytest.mark.parametrize(
-        "backend, rank",
+        "backend, rank, as_tuple",
         itertools.product(
             backends,
             [1, 3],
+            [False, True],
         ),
     )
-    def test_non_zero(self, backend, rank):
-
+    def test_non_zero(self, backend, rank, as_tuple):
         if rank == 1:
             input_shape = (10)
             zeros_indices = np.array([1, 4, 7, 9])
@@ -3989,12 +3990,11 @@ class TestNonZero(TorchBaseTest):
         input = np.reshape(input, input_shape)
         input = torch.tensor(input)
 
-        model = ModuleWrapper(
-            torch.nonzero,
-        )
+        model = ModuleWrapper(torch.nonzero, {'as_tuple':as_tuple})
 
         self.run_compare_torch(input, model,
             input_as_shape=False, backend=backend)
+
 
 class TestTorchTensor(TorchBaseTest):
     @pytest.mark.parametrize(
