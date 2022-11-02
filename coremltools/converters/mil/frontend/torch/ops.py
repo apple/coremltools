@@ -4137,9 +4137,11 @@ def _abs(context, node):
 def repeat(context, node):
     x = context[node.inputs[0]]
     reps = context[node.inputs[1]]
+    if isinstance(reps, list):
+        reps = mb.concat(values=reps, axis=0)
 
-    if len(reps.val) > len(x.shape):
-        x = mb.expand_dims(x=x, axes=list(range(len(reps.val) - x.rank)))
+    if reps.shape[0] > len(x.shape):
+        x = mb.expand_dims(x=x, axes=list(range(reps.shape[0] - x.rank)))
     context.add(mb.tile(x=x, reps=reps, name=node.name))
 
 @register_torch_op
