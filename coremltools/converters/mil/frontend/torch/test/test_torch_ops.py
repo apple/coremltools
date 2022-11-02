@@ -3899,15 +3899,16 @@ class TestWhere(TorchBaseTest):
         ),
     )
     def test_where_test3(self, backend, shapes):
-
         class WhereModel(nn.Module):
             def forward(self, cond, x, y):
                 return torch.where(cond, x, y)
+
         cond_shape, x_shape, y_shape = shapes
         cond = torch.rand(*cond_shape) > 0.5
         inputs = [cond, torch.rand(*x_shape), torch.rand(*y_shape)]
         model = WhereModel()
         expected_results = model(*inputs)
+
         self.run_compare_torch(
             inputs,
             model,
@@ -3916,20 +3917,25 @@ class TestWhere(TorchBaseTest):
             input_as_shape=False,
         )
 
-    @pytest.mark.parametrize("backend", backends)
-    def test_where_single_param(self, backend):
-        class WhereModel(nn.Module):
+    @pytest.mark.parametrize("shape, backend",
+        itertools.product([(4,4)], backends))
+    def test_where_single_param(self, shape, backend):
+        class WhereModelSingleParam(nn.Module):
             def forward(self, x):
                 return torch.where(x)
 
-        x = torch.tensor([[0.6, 0.0, 0.0, 0.0],
-                          [0.0, 0.4, 0.0, 0.0],
-                          [0.0, 0.0, 1.2, 0.0],
-                          [0.0, 3.0, 0.0, -0.4]])
+        # Create a tensor of `shape` of ~90% non-zero entries
+        x = np.zeros(shape)
+        all_indices = list(zip(*np.where(x == 0)))
+        num_indices = len(all_indices)
+        random_picks = np.random.choice(np.arange(num_indices), size=num_indices//10)
+        for i in random_picks:
+            x[all_indices[i]] = np.random.choice([-1, 12, 100])
+        x = torch.Tensor(x)
 
         self.run_compare_torch(
             x,
-            WhereModel(),
+            WhereModelSingleParam(),
             backend=backend,
             input_as_shape=False,
         )
