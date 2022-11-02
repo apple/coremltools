@@ -70,7 +70,7 @@ build_wheel_macos_py39:
 
 .test_macos_pkg_with_reqs: &test_macos_pkg_with_reqs
    stage: test
-   timeout: 9h
+   timeout: 10h
    script:
      - zsh -e scripts/test.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON}
        --test-package=${TEST_PACKAGE} --requirements=${REQUIREMENTS} --fast
@@ -109,7 +109,7 @@ test_py37_tf1:
     WHEEL_PATH: build/dist/*cp37*10_15*
 
 test_py37_tf2:
-  <<: *test_macos_pkg
+  <<: *test_macos_pkg_with_reqs
   tags:
     - macos12
   dependencies:
