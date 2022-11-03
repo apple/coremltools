@@ -70,7 +70,7 @@ build_wheel_macos_py39:
 
 .test_macos_pkg_with_reqs: &test_macos_pkg_with_reqs
    stage: test
-   timeout: 10h
+   timeout: 12h
    script:
      - zsh -e scripts/test.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON}
        --test-package=${TEST_PACKAGE} --requirements=${REQUIREMENTS} --fast
