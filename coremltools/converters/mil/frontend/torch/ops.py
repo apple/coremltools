@@ -4355,14 +4355,17 @@ def logical_xor(context, node):
 
 
 def _nonzero_as_tuple(context, node, x):
+    '''
+    Calculates the non-zero elements of x then slices results by each inner index.
+    '''
     non_zero = mb.non_zero(x=x)
 
     result = []
     for i in range(x.rank):
         result.append(mb.slice_by_index(x=non_zero,
                                         begin=[0, i],
-                                        end=[-1, -1], # Will be ignored, but is required
-                                        end_mask=[True, True],
+                                        end=[-1, -1], # Ignored, but required
+                                        end_mask=[True, False],
                                         squeeze_mask=[False, True])
         )
 
