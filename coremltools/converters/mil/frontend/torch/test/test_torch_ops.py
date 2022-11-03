@@ -5104,3 +5104,16 @@ class TestHannWindow(TorchBaseTest):
         torch_out = model(torch_in)
         self.run_compare_torch(torch_in, model, expected_results=torch_out,
                            input_as_shape=False, backend=backend)
+
+
+class TestTrace(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "backend, shape",
+        itertools.product(
+            backends,
+            [(1, 1), (5, 5)],
+        ),
+    )
+    def test_trace(self, backend, shape):
+        model = ModuleWrapper(torch.trace)
+        self.run_compare_torch(shape, model, backend=backend)
