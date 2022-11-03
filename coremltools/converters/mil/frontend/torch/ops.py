@@ -4665,7 +4665,7 @@ def _pad_packed_sequence(context, node):
 
     # transpose the tensor if batch_first = False
     if not batch_first:
-        x = x = mb.stack(values=total_tensor, axis=0)
+        x = mb.stack(values=total_tensor, axis=0)
         x = mb.transpose(x=x, perm=[1,0,2], name=node.name)
     else:
         x = mb.stack(values=total_tensor, axis=0, name=node.name)
