@@ -2799,6 +2799,7 @@ class TestEinsum(TorchBaseTest):
              "btnh,bfnh->bnft",
              "bnft,btnh->bfnh",
              "abcd,cde->abe",
+             "a b c d , a d c e -> a b c e",
              "ab,ab->b",
              "abc,acd->abd",
              "abc,abc->a",
@@ -2821,7 +2822,7 @@ class TestEinsum(TorchBaseTest):
             def forward(self, x, y):
                 return torch.einsum(equation, x, y)
 
-        if equation == "abcd,adce->abce":
+        if equation in ["abcd,adce->abce", "a b c d , a d c e -> a b c e"]:
             input_shapes = [[3, 4, 2, 6], [3, 6, 2, 2]]
         elif equation == "abc,cbd->abd":
             input_shapes = [[4, 2, 6], [6, 2, 2]]
@@ -3491,6 +3492,76 @@ class TestRepeat(TorchBaseTest):
             repeats = np.random.randint(low=2, high=4, size=rank + num_extra_dims)
             model = ModuleWrapper(function=lambda x: x.repeat(*repeats))
             self.run_compare_torch(input_shape, model, backend=backend)
+
+    @pytest.mark.parametrize(
+        "backend",
+        backends,
+    )
+    def test_repeats_with_enumerated_shape_case1(self, backend):
+        class Model(nn.Module):
+            def forward(self, x, y):
+                reps = x.size(0)
+                return y.repeat(reps)
+
+        enumerated_shapes = ct.EnumeratedShapes(shapes=[(1, 1), (2, 1)])
+        module = Model()
+        inputs = [torch.tensor([[1]]), torch.tensor([2])]
+
+        self.run_compare_torch(
+            inputs,
+            module,
+            input_as_shape=False,
+            converter_input_type=[
+                ct.TensorType(shape=enumerated_shapes),
+                ct.TensorType(shape=(1,)),
+            ],
+            backend=backend
+        )
+
+    @pytest.mark.parametrize(
+        "backend",
+        backends,
+    )
+    def test_repeats_with_enumerated_shape_case2(self, backend):
+        class Model(nn.Module):
+            def forward(self, x, y):
+                return y.repeat(x.size(0), x.size(1))
+
+        enumerated_shapes = ct.EnumeratedShapes(shapes=[(1, 1), (2, 1)])
+        module = Model()
+        inputs = [torch.tensor([[1], [2]]), torch.tensor([2])]
+        self.run_compare_torch(
+            inputs,
+            module,
+            input_as_shape=False,
+            converter_input_type=[
+                ct.TensorType(shape=enumerated_shapes),
+                ct.TensorType(shape=(1,)),
+            ],
+            backend=backend
+        )
+
+    @pytest.mark.parametrize(
+        "backend",
+        backends,
+    )
+    def test_repeats_with_symbolic_shape(self, backend):
+        class Model(nn.Module):
+            def forward(self, x, y):
+                return y.repeat([x.shape[-1], 1, x.shape[0]])
+
+        module = Model()
+        inputs = [torch.tensor([[1], [2]]), torch.tensor([2])]
+        self.run_compare_torch(
+            inputs,
+            module,
+            input_as_shape=False,
+            converter_input_type=[
+                ct.TensorType(shape=(ct.RangeDim(), ct.RangeDim())),
+                ct.TensorType(shape=(1,)),
+            ],
+            backend=backend
+        )
 
 
 class TestStd(TorchBaseTest):
