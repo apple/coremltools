@@ -2813,6 +2813,8 @@ class TestEinsum(TorchBaseTest):
              "abcd,acdb->ad",
              "abcd,efbd->eafc",
              "ab,b->a",
+             "i,j->ij",
+             "i,i->i",
              "abcd,cb->dca"],
             [False, True]
         ),
@@ -2864,6 +2866,10 @@ class TestEinsum(TorchBaseTest):
             input_shapes = [[1,2,3,4], [1,2,2,4]]
         elif equation == "ab,b->a":
             input_shapes = [[2, 3], [3]]
+        elif equation == "i,j->ij":
+            input_shapes = [[2], [3]]
+        elif equation == "i,i->i":
+            input_shapes = [[2], [2]]
         elif equation == "abcd,cb->dca":
             input_shapes = [[1, 2, 3, 4], [3, 2]]
         else:
