@@ -5111,7 +5111,7 @@ class TestTrace(TorchBaseTest):
         "backend, shape",
         itertools.product(
             backends,
-            [(1, 1), (5, 5)],
+            [(1, 1), (2, 4), (4, 3), (5, 5)],
         ),
     )
     def test_trace(self, backend, shape):
