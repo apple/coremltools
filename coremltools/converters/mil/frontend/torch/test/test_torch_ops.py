@@ -4,7 +4,7 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import itertools
-import sys
+from typing import Tuple
 
 import numpy as np
 import platform
@@ -5104,3 +5104,42 @@ class TestHannWindow(TorchBaseTest):
         torch_out = model(torch_in)
         self.run_compare_torch(torch_in, model, expected_results=torch_out,
                            input_as_shape=False, backend=backend)
+
+
+class TestArgmax(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "backend, shape, axis, input_dtype",
+        itertools.product(
+            backends,
+            COMMON_SHAPES,
+            [-1, 0],
+            [np.float32, np.int32, np.int64],
+        ),
+    )
+    def test_argmax(
+        self,
+        backend: Tuple[str, str],
+        shape: Tuple[int],
+        axis: int,
+        input_dtype: np.dtype,
+    ):
+        input_data = (
+            torch.rand(*shape)
+            if input_dtype == np.float32
+            else torch.randint(10, shape)
+        )
+        converter_input_type = [
+            ct.TensorType(shape=input_data.shape, dtype=input_dtype)
+        ]
+        model = ModuleWrapper(function=torch.argmax, kwargs={"dim": axis})
+        expected_results = model(input_data)
+        TorchBaseTest.run_compare_torch(
+            input_data,
+            model,
+            expected_results=expected_results,
+            input_as_shape=False,
+            backend=backend,
+            converter_input_type=converter_input_type,
+        )
+
+

@@ -3948,6 +3948,9 @@ def argmax(context, node):
     x = inputs[0]
     axis = inputs[1]
     keep_dims = inputs[2]
+    if types.is_int(x.dtype) and x.dtype._width == 64:
+        # MIL reduce_argmax doesn't support int64.
+        x = mb.cast(x=x, dtype="int32")
     res = mb.reduce_argmax(x=x, axis=axis, keep_dims=keep_dims, name=node.name)
     context.add(res)
 
