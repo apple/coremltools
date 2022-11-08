@@ -50,7 +50,7 @@ def _replace_in_list(ls, old_val, new_val):
 
 class InternalTorchIRBlock:
     """
-    CoreML internal representation of a torch IR block.
+    coremltools internal representation of a torch IR block.
     """
 
     def __init__(self, raw_block=None, parent=None, nodes=None, inputs=None, outputs=None):
@@ -119,7 +119,7 @@ class InternalTorchIRBlock:
 
 class InternalTorchIRNode:
     """
-    CoreML internal representation of a torch IR node.
+    coremltools internal representation of a torch IR node.
     Can construct itself from a provided torchIR node or manually constructed with
     args for testing.
 

@@ -12,19 +12,16 @@ from .converter import TorchConverter, torch_to_mil_types
 from coremltools.converters.mil.input_types import InputType, TensorType
 
 
-def load(model_spec, debug=False, **kwargs):
+def load(model_spec, inputs, specification_version,
+         debug=False, outputs=None, cut_at_symbols=None,
+         **kwargs):
     """
-    Convert PyTorch .pt file to mil CoreML format.
+    Convert PyTorch model to mil CoreML format.
 
     Parameters
     ----------
     model_spec: String path to .pt file, or a TorchScript object representing
         the model to convert.
-    debug: bool, optional. Defaults to False.
-        This flag should generally be False except for debugging purposes
-        for diagnosing conversion errors. Setting this flag to True will
-        print the list of supported and unsupported ops found in the model
-        if conversion fails due to an unsupported op.
     inputs: Can be a singular element or list of elements of the following form
         1. Any subclass of InputType
         2. torch.Tensor (only shape and dtype will be used)
@@ -33,6 +30,11 @@ def load(model_spec, debug=False, **kwargs):
         If names are not specified: input keys for calling predict on the converted model
         will be internal symbols of the input to the graph.
         User can specify a subset of names.
+    debug: bool, optional. Defaults to False.
+        This flag should generally be False except for debugging purposes
+        for diagnosing conversion errors. Setting this flag to True will
+        print the list of supported and unsupported ops found in the model
+        if conversion fails due to an unsupported op.
     outputs (optional): list[ct.InputType] or None
         list of either ct.TensorTypes or ct.ImageTypes (both of which are child classes of InputType)
         This is the value of the "outputs" argument, passed on by the user in "coremltools.convert" API.
@@ -41,18 +43,16 @@ def load(model_spec, debug=False, **kwargs):
         only.
     """
     torchscript = _torchscript_from_model(model_spec)
+
     if hasattr(torchscript, 'training') and torchscript.training:
         _logging.warning("Model is not in eval mode. "
                          "Consider calling '.eval()' on your model prior to conversion")
-
     if type(torchscript) == _torch.jit._script.RecursiveScriptModule:
         _logging.warning("Support for converting Torch Script Models is experimental. "
                          "If possible you should use a traced model for conversion.")
-    inputs = _convert_to_torch_inputtype(kwargs["inputs"])
-    outputs = kwargs.get("outputs", None)
-    cut_at_symbols = kwargs.get("cut_at_symbols", None)
-    opset_version = kwargs["specification_version"]
-    converter = TorchConverter(torchscript, inputs, outputs, cut_at_symbols, opset_version)
+
+    inputs = _convert_to_torch_inputtype(inputs)
+    converter = TorchConverter(torchscript, inputs, outputs, cut_at_symbols, specification_version)
     return _perform_torch_convert(converter, debug)
 
 
