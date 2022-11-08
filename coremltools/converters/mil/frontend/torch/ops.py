@@ -4358,9 +4358,34 @@ def logical_xor(context, node):
     y = mb.cast(x=y, dtype="bool")
     context.add(mb.logical_xor(x=x, y=y, name=node.name))
 
+
+def _nonzero_as_tuple(context, node, x):
+    '''
+    Calculates the non-zero elements of x then slices results by each inner index.
+    '''
+    non_zero = mb.non_zero(x=x)
+
+    result = []
+    for i in range(x.rank):
+        result.append(mb.slice_by_index(x=non_zero,
+                                        begin=[0, i],
+                                        end=[-1, -1], # Ignored, but required
+                                        end_mask=[True, False],
+                                        squeeze_mask=[False, True])
+        )
+
+    context.add(result, node.name)
+
+
 @register_torch_op
 def where(context, node):
-    inputs = _get_inputs(context, node, expected=3)
+    inputs = _get_inputs(context, node)
+
+    if len(inputs) == 1:
+        _nonzero_as_tuple(context, node, inputs[0])
+        return
+
+    assert len(inputs) == 3
     cond = inputs[0]
     if not types.is_bool(cond.dtype):
         # cond must be bool type
@@ -4372,6 +4397,13 @@ def where(context, node):
     else:
         result = mb.select(cond=cond, a=inputs[1], b=inputs[2], name=node.name)
     context.add(result)
+
+
+@register_torch_op
+def nonzero_numpy(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+    _nonzero_as_tuple(context, node, inputs[0])
+
 
 @register_torch_op
 def neg(context, node):
