@@ -24,6 +24,7 @@ from coremltools.converters.mil.testing_utils import (
     get_op_types_in_program,
     random_gen,
 )
+from coremltools.models.utils import _macos_version
 from ..._utils import is_symbolic_dim_in_prog
 
 TensorFlowBaseTest.run_compare_tf_keras = \
@@ -496,6 +497,9 @@ class TestConvolution(TensorFlowBaseTest):
         backend,
         padding,
     ):
+        if backend[0] == "mlprogram" and _macos_version() < (13, 0):
+            pytest.skip("Error in declaring network.")
+
         # Test same padding
         input_layer = Input(batch_size=1, shape=(None, None, 1))
         layer = Conv2D(
