@@ -5131,6 +5131,19 @@ class TestHannWindow(TorchBaseTest):
                            input_as_shape=False, backend=backend)
 
 
+class TestTrace(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "backend, shape",
+        itertools.product(
+            backends,
+            [(1, 1), (2, 4), (4, 3), (5, 5)],
+        ),
+    )
+    def test_trace(self, backend, shape):
+        model = ModuleWrapper(torch.trace)
+        self.run_compare_torch(shape, model, backend=backend)
+
+
 class TestArgmax(TorchBaseTest):
     @pytest.mark.parametrize(
         "backend, shape, axis, input_dtype",
@@ -5166,5 +5179,3 @@ class TestArgmax(TorchBaseTest):
             backend=backend,
             converter_input_type=converter_input_type,
         )
-
-

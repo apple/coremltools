@@ -4935,3 +4935,18 @@ def hann_window(context, node):
     sin = mb.sin(x=frac)
     sin_sq = mb.mul(x=sin, y=sin, name=node.name)
     context.add(sin_sq)
+
+
+@register_torch_op
+def trace(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+    x = inputs[0]
+    dims = mb.shape(x=x)
+    dim0 = _value_at(dims, 0)
+    dim1 = _value_at(dims, 1)
+    min_dim = mb.minimum(x=dim0, y=dim1)
+    indices = mb.range_1d(end=min_dim, start=0, step=1)
+    indices = mb.stack(values=[indices, indices], axis=1)
+    diagonal = mb.gather_nd(x=x, indices=indices)
+    trace = mb.reduce_sum(x=diagonal, name=node.name)
+    context.add(trace)
