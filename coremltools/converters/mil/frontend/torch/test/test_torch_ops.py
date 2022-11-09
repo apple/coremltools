@@ -5180,7 +5180,8 @@ class TestArgmax(TorchBaseTest):
             converter_input_type=converter_input_type,
         )
 
-class TestCopy:
+
+class TestCopy(TorchBaseTest):
     @pytest.mark.parametrize(
         "backend, rank", itertools.product(backends, list(range(1, 6))),
     )
