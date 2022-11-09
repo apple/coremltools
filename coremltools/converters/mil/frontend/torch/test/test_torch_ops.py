@@ -4,7 +4,7 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import itertools
-import sys
+from typing import Tuple
 
 import numpy as np
 import platform
@@ -3970,20 +3970,45 @@ class TestWhere(TorchBaseTest):
         ),
     )
     def test_where_test3(self, backend, shapes):
-
         class WhereModel(nn.Module):
             def forward(self, cond, x, y):
                 return torch.where(cond, x, y)
+
         cond_shape, x_shape, y_shape = shapes
         cond = torch.rand(*cond_shape) > 0.5
         inputs = [cond, torch.rand(*x_shape), torch.rand(*y_shape)]
         model = WhereModel()
         expected_results = model(*inputs)
+
         self.run_compare_torch(
             inputs,
             model,
             backend=backend,
             expected_results=expected_results,
+            input_as_shape=False,
+        )
+
+    @pytest.mark.parametrize("shape, backend",
+        itertools.product(COMMON_SHAPES + [(10,)], backends)
+    )
+    def test_where_single_param(self, shape, backend):
+        class WhereModelSingleParam(nn.Module):
+            def forward(self, x):
+                return torch.where(x)
+
+        # Create a tensor of given shape with ~90% zero entries
+        x = np.zeros(shape)
+        all_indices = list(zip(*np.where(x == 0)))
+        num_indices = len(all_indices)
+        random_picks = np.random.choice(np.arange(num_indices), size=num_indices//10, replace=False)
+        for i in random_picks:
+            x[all_indices[i]] = np.random.choice([-1, 12, 100])
+        x = torch.Tensor(x)
+
+        self.run_compare_torch(
+            x,
+            WhereModelSingleParam(),
+            backend=backend,
             input_as_shape=False,
         )
 
@@ -4013,16 +4038,17 @@ class TestSelect(TorchBaseTest):
             input_shape, model, backend=backend,
         )
 
+
 class TestNonZero(TorchBaseTest):
     @pytest.mark.parametrize(
-        "backend, rank",
+        "backend, rank, as_tuple",
         itertools.product(
             backends,
             [1, 3],
+            [False, True],
         ),
     )
-    def test_non_zero(self, backend, rank):
-
+    def test_non_zero(self, backend, rank, as_tuple):
         if rank == 1:
             input_shape = (10)
             zeros_indices = np.array([1, 4, 7, 9])
@@ -4035,12 +4061,11 @@ class TestNonZero(TorchBaseTest):
         input = np.reshape(input, input_shape)
         input = torch.tensor(input)
 
-        model = ModuleWrapper(
-            torch.nonzero,
-        )
+        model = ModuleWrapper(torch.nonzero, {'as_tuple':as_tuple})
 
         self.run_compare_torch(input, model,
             input_as_shape=False, backend=backend)
+
 
 class TestTorchTensor(TorchBaseTest):
     @pytest.mark.parametrize(
@@ -5117,3 +5142,40 @@ class TestTrace(TorchBaseTest):
     def test_trace(self, backend, shape):
         model = ModuleWrapper(torch.trace)
         self.run_compare_torch(shape, model, backend=backend)
+
+
+class TestArgmax(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "backend, shape, axis, input_dtype",
+        itertools.product(
+            backends,
+            COMMON_SHAPES,
+            [-1, 0],
+            [np.float32, np.int32, np.int64],
+        ),
+    )
+    def test_argmax(
+        self,
+        backend: Tuple[str, str],
+        shape: Tuple[int],
+        axis: int,
+        input_dtype: np.dtype,
+    ):
+        input_data = (
+            torch.rand(*shape)
+            if input_dtype == np.float32
+            else torch.randint(10, shape)
+        )
+        converter_input_type = [
+            ct.TensorType(shape=input_data.shape, dtype=input_dtype)
+        ]
+        model = ModuleWrapper(function=torch.argmax, kwargs={"dim": axis})
+        expected_results = model(input_data)
+        TorchBaseTest.run_compare_torch(
+            input_data,
+            model,
+            expected_results=expected_results,
+            input_as_shape=False,
+            backend=backend,
+            converter_input_type=converter_input_type,
+        )
