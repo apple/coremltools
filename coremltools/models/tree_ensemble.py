@@ -6,7 +6,7 @@
 """
 Tree ensemble builder class to construct CoreML models.
 """
-import collections as _collections
+import collections.abc as _abc
 
 from .. import SPECIFICATION_VERSION as _SPECIFICATION_VERSION
 from ..proto import Model_pb2 as _Model_pb2
@@ -232,7 +232,7 @@ class TreeEnsembleBase:
             "LeafNode"
         )
 
-        if not isinstance(values, _collections.Iterable):
+        if not isinstance(values, _abc.Iterable):
             values = [values]
 
         if relative_hit_rate is not None:
