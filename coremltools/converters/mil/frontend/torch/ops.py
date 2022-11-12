@@ -3948,6 +3948,9 @@ def argmax(context, node):
     x = inputs[0]
     axis = inputs[1]
     keep_dims = inputs[2]
+    if types.is_int(x.dtype) and x.dtype._width == 64:
+        # MIL reduce_argmax doesn't support int64.
+        x = mb.cast(x=x, dtype="int32")
     res = mb.reduce_argmax(x=x, axis=axis, keep_dims=keep_dims, name=node.name)
     context.add(res)
 
@@ -4355,9 +4358,34 @@ def logical_xor(context, node):
     y = mb.cast(x=y, dtype="bool")
     context.add(mb.logical_xor(x=x, y=y, name=node.name))
 
+
+def _nonzero_as_tuple(context, node, x):
+    '''
+    Calculates the non-zero elements of x then slices results by each inner index.
+    '''
+    non_zero = mb.non_zero(x=x)
+
+    result = []
+    for i in range(x.rank):
+        result.append(mb.slice_by_index(x=non_zero,
+                                        begin=[0, i],
+                                        end=[-1, -1], # Ignored, but required
+                                        end_mask=[True, False],
+                                        squeeze_mask=[False, True])
+        )
+
+    context.add(result, node.name)
+
+
 @register_torch_op
 def where(context, node):
-    inputs = _get_inputs(context, node, expected=3)
+    inputs = _get_inputs(context, node)
+
+    if len(inputs) == 1:
+        _nonzero_as_tuple(context, node, inputs[0])
+        return
+
+    assert len(inputs) == 3
     cond = inputs[0]
     if not types.is_bool(cond.dtype):
         # cond must be bool type
@@ -4369,6 +4397,13 @@ def where(context, node):
     else:
         result = mb.select(cond=cond, a=inputs[1], b=inputs[2], name=node.name)
     context.add(result)
+
+
+@register_torch_op
+def nonzero_numpy(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+    _nonzero_as_tuple(context, node, inputs[0])
+
 
 @register_torch_op
 def neg(context, node):
@@ -4665,7 +4700,7 @@ def _pad_packed_sequence(context, node):
 
     # transpose the tensor if batch_first = False
     if not batch_first:
-        x = x = mb.stack(values=total_tensor, axis=0)
+        x = mb.stack(values=total_tensor, axis=0)
         x = mb.transpose(x=x, perm=[1,0,2], name=node.name)
     else:
         x = mb.stack(values=total_tensor, axis=0, name=node.name)
@@ -4900,3 +4935,18 @@ def hann_window(context, node):
     sin = mb.sin(x=frac)
     sin_sq = mb.mul(x=sin, y=sin, name=node.name)
     context.add(sin_sq)
+
+
+@register_torch_op
+def trace(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+    x = inputs[0]
+    dims = mb.shape(x=x)
+    dim0 = _value_at(dims, 0)
+    dim1 = _value_at(dims, 1)
+    min_dim = mb.minimum(x=dim0, y=dim1)
+    indices = mb.range_1d(end=min_dim, start=0, step=1)
+    indices = mb.stack(values=[indices, indices], axis=1)
+    diagonal = mb.gather_nd(x=x, indices=indices)
+    trace = mb.reduce_sum(x=diagonal, name=node.name)
+    context.add(trace)

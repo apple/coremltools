@@ -13,14 +13,15 @@ from coremltools._deps import (
     MSG_TORCH_NOT_FOUND,
 )
 
+if _HAS_TORCH:
+    import torch
+    import torchvision
+
 
 @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
 class TestPyTorchConverter:
     @staticmethod
     def test_no_inputs():
-        import torch
-        import torchvision
-
         model = torchvision.models.mobilenet_v2()
         model.eval()
 
@@ -32,10 +33,10 @@ class TestPyTorchConverter:
             ct.convert(traced_model)
         e.match(r'Expected argument for pytorch "inputs" not provided')
 
+
     @staticmethod
     def test_pth_extension(tmpdir):
         # test for issue: https://github.com/apple/coremltools/issues/917
-        import torch
 
         class TestModule(torch.nn.Module):
             def __init__(self):
