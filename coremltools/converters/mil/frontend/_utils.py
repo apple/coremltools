@@ -9,6 +9,24 @@ from coremltools.converters.mil.mil.ops.defs._utils import parse_einsum_equation
 from coremltools.converters.mil.mil.types.symbolic import any_symbolic, is_symbolic
 
 
+def value_at(x, idx, name=None):
+    """
+    input x: 1D tensor (vector).
+    return value at index idx. x[idx].
+    Could specify the name of the returned MIL scalar tensor as well.
+    """
+    assert x.rank == 1
+    args = {
+        "x": x,
+        "begin": [idx],
+        "end": [0],
+        "squeeze_mask": [True],
+    }
+    if name is not None:
+        args["name"] = name
+    return mb.slice_by_index(**args)
+
+
 def _reverse_input_einsum_eq(equation):
     """
     Reverse the input order of the einsum eqaution
@@ -159,26 +177,6 @@ def get_output_names(outputs):
     return output_names
 
 
-def multiply(numbers):
-    """
-    :param numbers: list[int]
-    :param return: int
-    """
-    ret = 1
-    for num in numbers:
-        ret *= num
-    return ret
-
-
-def get_perm(src_axes, dst_axes):
-    """
-    :param src_axes: list[int]
-    :param dst_axes: list[int]
-    :return: list[int]
-    """
-    return [src_axes.index(s) for s in dst_axes]
-
-
 def solve_generic_einsum(parsed_vectors, a_var, b_var, name):
     """
     :param parsed_vectors: list[list[int]]
@@ -190,61 +188,96 @@ def solve_generic_einsum(parsed_vectors, a_var, b_var, name):
         - second input variable
     :param name:
         - str
-        - name tp be assigned to the output var
+        - name to be assigned to the output var
 
     :return:
         - var
         - output var that contains the einsum result
     """
-    if any_symbolic(a_var.shape) or any_symbolic(b_var.shape):
-        raise ValueError(
-            "Generic einsum does not support flexible shape."
-        )
+
+    def _get_perm(src_axes, dst_axes):
+        """
+        :param src_axes: list[int]
+        :param dst_axes: list[int]
+        :return: list[int]
+        """
+        return [src_axes.index(s) for s in dst_axes]
+
+    def _concat_dims(dims, none_if_empty=False):
+        if len(dims) == 0:
+            if none_if_empty:
+                return None
+            else:
+                return 1
+        return mb.concat(values=dims, axis=0)
 
     a_axes, b_axes, out_axes = parsed_vectors
-    a_dims = list(a_var.shape)
-    b_dims = list(b_var.shape)
+
+    if len(a_axes) > len(set(a_axes)) or len(b_axes) > len(set(b_axes)):
+        raise ValueError(
+            "Generic einsum does not support trace operation."
+        )
+
+    if not out_axes:
+        raise ValueError(
+            "Generic einsum does not support scalar output."
+        )
+
+    a_dims = mb.shape(x=a_var)
+    b_dims = mb.shape(x=b_var)
 
     batched_axes = []
     reduced_axes = []
     a_unique_axes = []
     b_unique_axes = []
 
-    batched_dims = []
-    reduced_dims = []
+    batch_dims = []
+    reduce_dims = []
     a_unique_dims = []
     b_unique_dims = []
 
-    for a_dim, a_axis in zip(a_dims, a_axes):
+    for i, a_axis in enumerate(a_axes):
+        a_dim = value_at(a_dims, i)
         if a_axis in b_axes:
             if a_axis in out_axes:
                 batched_axes.append(a_axis)
-                batched_dims.append(a_dim)
+                batch_dims.append(a_dim)
             else:
                 reduced_axes.append(a_axis)
-                reduced_dims.append(a_dim)
+                reduce_dims.append(a_dim)
         else:
             a_unique_axes.append(a_axis)
             a_unique_dims.append(a_dim)
+    concat_batch_dims = _concat_dims(batch_dims)
+    concat_reduce_dims = _concat_dims(reduce_dims)
+    concat_a_unique_dims = _concat_dims(a_unique_dims)
 
-    for b_dim, b_axis in zip(b_dims, b_axes):
+    for i, b_axis in enumerate(b_axes):
+        b_dim = value_at(b_dims, i)
         if b_axis not in a_axes:
             b_unique_axes.append(b_axis)
             b_unique_dims.append(b_dim)
+    concat_b_unique_dims = _concat_dims(b_unique_dims)
 
-    a_transposed_axes = batched_axes + a_unique_axes + reduced_axes
-    a = mb.transpose(x=a_var, perm=get_perm(a_axes, a_transposed_axes))
-    a_reshaped_dims = [multiply(batched_dims), multiply(a_unique_dims), multiply(reduced_dims)]
-    a = mb.reshape(x=a, shape=a_reshaped_dims)
+    a_transpose_axes = batched_axes + a_unique_axes + reduced_axes
+    a = mb.transpose(x=a_var, perm=_get_perm(a_axes, a_transpose_axes))
+    a_reshape_dims = _concat_dims(
+        [mb.reduce_prod(x=x) for x in [concat_batch_dims, concat_a_unique_dims, concat_reduce_dims] if x is not None])
+    a = mb.reshape(x=a, shape=a_reshape_dims)
 
-    b_transposed_axes = batched_axes + reduced_axes + b_unique_axes
-    b = mb.transpose(x=b_var, perm=get_perm(b_axes, b_transposed_axes))
-    b_reshaped_dims = [multiply(batched_dims), multiply(reduced_dims), multiply(b_unique_dims)]
-    b = mb.reshape(x=b, shape=b_reshaped_dims)
+    b_transpose_axes = batched_axes + reduced_axes + b_unique_axes
+    b = mb.transpose(x=b_var, perm=_get_perm(b_axes, b_transpose_axes))
+    b_reshape_dims = _concat_dims(
+        [mb.reduce_prod(x=x) for x in [concat_batch_dims, concat_reduce_dims, concat_b_unique_dims] if x is not None])
+    b = mb.reshape(x=b, shape=b_reshape_dims)
 
     ab = mb.matmul(x=a, y=b)
-    ab_reshaped_dims = batched_dims + a_unique_dims + b_unique_dims
+    concat_batch_dims = _concat_dims(batch_dims, True)
+    concat_a_unique_dims = _concat_dims(a_unique_dims, True)
+    concat_b_unique_dims = _concat_dims(b_unique_dims, True)
+    ab_reshaped_dims = _concat_dims(
+        [x for x in [concat_batch_dims, concat_a_unique_dims, concat_b_unique_dims] if x is not None])
     ab = mb.reshape(x=ab, shape=ab_reshaped_dims)
     ab_reshaped_axes = batched_axes + a_unique_axes + b_unique_axes
-    ab = mb.transpose(x=ab, perm=get_perm(ab_reshaped_axes, out_axes), name=name)
+    ab = mb.transpose(x=ab, perm=_get_perm(ab_reshaped_axes, out_axes), name=name)
     return ab

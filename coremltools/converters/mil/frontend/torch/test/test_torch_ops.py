@@ -2791,31 +2791,35 @@ class TestEinsum(TorchBaseTest):
         "backend, equation, reverse_input_order",
         itertools.product(
             backends,
-            ["abcd,adce->abce",
-             "abc,cbd->abd",
-             "bnqd,bnkd->bnqk",
-             "abc,cd->abd",
-             "abc,cde->abde",
-             "btnh,bfnh->bnft",
-             "bnft,btnh->bfnh",
-             "abcd,cde->abe",
-             "a b c d , a d c e -> a b c e",
-             "ab,ab->b",
-             "abc,acd->abd",
-             "abc,abc->a",
-             "abc,abc->c",
-             "abc,bac->c",
-             "abc,abc->ab",
-             "abc,abc->bc",
-             "abc,bac->ba",
-             "abcd,abde->abce",
-             "acdb,bade->abce",
-             "abcd,acdb->ad",
-             "abcd,efbd->eafc",
-             "ab,b->a",
-             "i,j->ij",
-             "i,i->i",
-             "abcd,cb->dca"],
+            [
+                # Hardcoded cases
+                "abcd,adce->abce",
+                "abc,cbd->abd",
+                "bnqd,bnkd->bnqk",
+                "abc,cd->abd",
+                "abc,cde->abde",
+                "btnh,bfnh->bnft",
+                "bnft,btnh->bfnh",
+                "abcd,cde->abe",
+                "a b c d , a d c e -> a b c e",
+                # Generic cases
+                "i,i->i",
+                "i,j->ij",
+                "ab,b->a",
+                "ab,ab->b",
+                "abc,abc->a",
+                "abc,abc->c",
+                "abc,bac->c",
+                "abc,acd->abd",
+                "abc,abc->ab",
+                "abc,abc->bc",
+                "abc,bac->ba",
+                "abcd,cb->dca",
+                "abcd,acdb->ad",
+                "abcd,abde->abce",
+                "abcd,efbd->eafc",
+                "acdb,bade->abce",
+             ],
             [False, True]
         ),
     )
@@ -2824,6 +2828,7 @@ class TestEinsum(TorchBaseTest):
             def forward(self, x, y):
                 return torch.einsum(equation, x, y)
 
+        # Hardcoded cases
         if equation in ["abcd,adce->abce", "a b c d , a d c e -> a b c e"]:
             input_shapes = [[3, 4, 2, 6], [3, 6, 2, 2]]
         elif equation == "abc,cbd->abd":
@@ -2840,10 +2845,16 @@ class TestEinsum(TorchBaseTest):
             input_shapes = [[1,2,3,4], [1,4,2,6]]
         elif equation == "abcd,cde->abe":
             input_shapes = [[1,2,3,4], [3,4,6]]
+
+        # Generic cases
+        elif equation == "i,i->i":
+            input_shapes = [[2], [2]]
+        elif equation == "i,j->ij":
+            input_shapes = [[2], [3]]
+        elif equation == "ab,b->a":
+            input_shapes = [[2, 3], [3]]
         elif equation == "ab,ab->b":
             input_shapes = [[2, 3], [2, 3]]
-        elif equation == "abc,acd->abd":
-            input_shapes = [[2,3,4], [2,4,5]]
         elif equation == "abc,abc->a":
             input_shapes = [[2, 2, 2], [2, 2, 2]]
         elif equation == "abc,abc->c":
@@ -2856,22 +2867,18 @@ class TestEinsum(TorchBaseTest):
             input_shapes = [[2, 2, 2], [2, 2, 2]]
         elif equation == "abc,bac->ba":
             input_shapes = [[1, 2, 3], [2, 1, 3]]
-        elif equation == "abcd,abde->abce":
-            input_shapes = [[1, 2, 3, 4], [1, 2, 4, 5]]
-        elif equation == "acdb,bade->abce":
-            input_shapes = [[2, 2, 3, 4], [4, 2, 3, 2]]
-        elif equation == "abcd,acdb->ad":
-            input_shapes = [[1,2,3,4], [1,3,4,2]]
-        elif equation == "abcd,efbd->eafc":
-            input_shapes = [[1,2,3,4], [1,2,2,4]]
-        elif equation == "ab,b->a":
-            input_shapes = [[2, 3], [3]]
-        elif equation == "i,j->ij":
-            input_shapes = [[2], [3]]
-        elif equation == "i,i->i":
-            input_shapes = [[2], [2]]
+        elif equation == "abc,acd->abd":
+            input_shapes = [[2, 3, 4], [2, 4, 5]]
         elif equation == "abcd,cb->dca":
             input_shapes = [[1, 2, 3, 4], [3, 2]]
+        elif equation == "abcd,acdb->ad":
+            input_shapes = [[1, 2, 3, 4], [1, 3, 4, 2]]
+        elif equation == "abcd,abde->abce":
+            input_shapes = [[1, 2, 3, 4], [1, 2, 4, 5]]
+        elif equation == "abcd,efbd->eafc":
+            input_shapes = [[1, 2, 3, 4], [1, 2, 2, 4]]
+        elif equation == "acdb,bade->abce":
+            input_shapes = [[2, 2, 3, 4], [4, 2, 3, 2]]
         else:
             raise ValueError("unrecognized equation")
 

@@ -12,7 +12,7 @@ import numpy as _np
 import torch
 from tqdm import tqdm as _tqdm
 
-from .._utils import build_einsum_mil
+from .._utils import value_at, build_einsum_mil
 from .torch_op_registry import _TORCH_OPS_REGISTRY, register_torch_op
 from coremltools.converters.mil.mil import (
     Builder as mb,
@@ -51,24 +51,6 @@ def _all_outputs_present(context, graph):
         except ValueError:
             return False
     return True
-
-def _value_at(x, idx, name=None):
-    """
-    input x: 1D tensor (vector).
-    return value at index idx. x[idx].
-    Could specify the name of the returned MIL scalar tensor as well.
-    """
-    assert x.rank == 1
-    args = {
-        "x": x,
-        "begin": [idx],
-        "end": [0],
-        "squeeze_mask": [True],
-    }
-    if name is not None:
-        args["name"] = name
-    return mb.slice_by_index(**args)
-
 
 def convert_nodes(context, graph):
     """
@@ -3166,7 +3148,7 @@ def index_put(context, node):
         values = mb.expand_dims(x=values, axes=[0])
 
     if values.rank == 1 and values.shape[0] == 1:
-        reps = _value_at(mb.shape(x=indices), 0)
+        reps = value_at(mb.shape(x=indices), 0)
         reps = mb.expand_dims(x=reps, axes=[0])
         values = mb.tile(x=values, reps=reps)
 
@@ -4019,7 +4001,7 @@ def dim(context, node):
     inputs = _get_inputs(context, node)
     shape = mb.shape(x=inputs[0])
     rank = mb.shape(x=shape)
-    context.add(_value_at(rank, 0, node.name))
+    context.add(value_at(rank, 0, node.name))
 
 @register_torch_op
 def min(context, node):
@@ -4658,7 +4640,7 @@ def _pad_packed_sequence(context, node):
         # if the unpadded sequence has length seq_length,
         # x would have shape [seq_length, input_dim].
         # For example, the first data would result in a [len_1, input_dim] tensor.
-        seq_length = _value_at(seq_lengths, i)
+        seq_length = value_at(seq_lengths, i)
         concate_values = [seq_length, input_dim]
         end_index = mb.concat(values=concate_values, axis=0)
         x = mb.slice_by_index(
@@ -4942,8 +4924,8 @@ def trace(context, node):
     inputs = _get_inputs(context, node, expected=1)
     x = inputs[0]
     dims = mb.shape(x=x)
-    dim0 = _value_at(dims, 0)
-    dim1 = _value_at(dims, 1)
+    dim0 = value_at(dims, 0)
+    dim1 = value_at(dims, 1)
     min_dim = mb.minimum(x=dim0, y=dim1)
     indices = mb.range_1d(end=min_dim, start=0, step=1)
     indices = mb.stack(values=[indices, indices], axis=1)
