@@ -2785,7 +2785,6 @@ class TestArange(TorchBaseTest):
         inputs = [torch.tensor([start, end, step])]
         self.run_compare_torch(inputs, model, backend=backend, input_as_shape=False)
 
-
 class TestEinsum(TorchBaseTest):
     @pytest.mark.parametrize(
         "backend, equation, reverse_input_order",
@@ -2828,6 +2827,28 @@ class TestEinsum(TorchBaseTest):
             def forward(self, x, y):
                 return torch.einsum(equation, x, y)
 
+        def make_input_types(equation):
+            equation = equation.replace(" ", "")
+            left = equation.split("->")[0]
+            a_desc, b_desc = left.split(",")
+            converter_shapes = {}
+            shapes = {}
+            cur_default_shape = 2
+            for symbol in a_desc + b_desc:
+                if symbol not in shapes:
+                    shapes[symbol] = cur_default_shape
+                    converter_shapes[symbol] = RangeDim(default=cur_default_shape)
+                    cur_default_shape += 1
+            a_shape = [shapes[symbol] for symbol in a_desc]
+            b_shape = [shapes[symbol] for symbol in b_desc]
+            a_converter_shape = [converter_shapes[symbol] for symbol in a_desc]
+            b_converter_shape = [converter_shapes[symbol] for symbol in b_desc]
+            return ([a_shape, b_shape],
+                    [TensorType(shape=a_converter_shape, dtype=np.float32), TensorType(shape=b_converter_shape,
+                                                                                       dtype=np.float32)])
+
+        converter_input_type = None
+
         # Hardcoded cases
         if equation in ["abcd,adce->abce", "a b c d , a d c e -> a b c e"]:
             input_shapes = [[3, 4, 2, 6], [3, 6, 2, 2]]
@@ -2847,50 +2868,20 @@ class TestEinsum(TorchBaseTest):
             input_shapes = [[1,2,3,4], [3,4,6]]
 
         # Generic cases
-        elif equation == "i,i->i":
-            input_shapes = [[2], [2]]
-        elif equation == "i,j->ij":
-            input_shapes = [[2], [3]]
-        elif equation == "ab,b->a":
-            input_shapes = [[2, 3], [3]]
-        elif equation == "ab,ab->b":
-            input_shapes = [[2, 3], [2, 3]]
-        elif equation == "abc,abc->a":
-            input_shapes = [[2, 2, 2], [2, 2, 2]]
-        elif equation == "abc,abc->c":
-            input_shapes = [[2, 2, 2], [2, 2, 2]]
-        elif equation == "abc,bac->c":
-            input_shapes = [[2, 2, 2], [2, 2, 2]]
-        elif equation == "abc,abc->ab":
-            input_shapes = [[2, 2, 2], [2, 2, 2]]
-        elif equation == "abc,abc->bc":
-            input_shapes = [[2, 2, 2], [2, 2, 2]]
-        elif equation == "abc,bac->ba":
-            input_shapes = [[1, 2, 3], [2, 1, 3]]
-        elif equation == "abc,acd->abd":
-            input_shapes = [[2, 3, 4], [2, 4, 5]]
-        elif equation == "abcd,cb->dca":
-            input_shapes = [[1, 2, 3, 4], [3, 2]]
-        elif equation == "abcd,acdb->ad":
-            input_shapes = [[1, 2, 3, 4], [1, 3, 4, 2]]
-        elif equation == "abcd,abde->abce":
-            input_shapes = [[1, 2, 3, 4], [1, 2, 4, 5]]
-        elif equation == "abcd,efbd->eafc":
-            input_shapes = [[1, 2, 3, 4], [1, 2, 2, 4]]
-        elif equation == "acdb,bade->abce":
-            input_shapes = [[2, 2, 3, 4], [4, 2, 3, 2]]
         else:
-            raise ValueError("unrecognized equation")
+            input_shapes, converter_input_type = make_input_types(equation)
 
         if reverse_input_order:
             input_output_strings = equation.split('->')
             input_strings = input_output_strings[0].split(',')
             equation = input_strings[1] + ',' + input_strings[0] + '->' + input_output_strings[1]
             input_shapes = [input_shapes[1], input_shapes[0]]
+            if converter_input_type is not None:
+                converter_input_type = [converter_input_type[1], converter_input_type[0]]
 
         model = TestEinsum()
-        self.run_compare_torch(input_shapes, model, backend=backend, input_as_shape=True)
-
+        self.run_compare_torch(input_shapes, model, backend=backend, input_as_shape=True,
+                               converter_input_type=converter_input_type)
 
 class TestSqueeze(TorchBaseTest):
     @pytest.mark.parametrize(
