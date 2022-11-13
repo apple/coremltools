@@ -2828,7 +2828,7 @@ class TestEinsum(TorchBaseTest):
             def forward(self, x, y):
                 return torch.einsum(equation, x, y)
 
-        def make_input_types(equation):
+        def make_input_types(equation, dynamic):
             equation = equation.replace(" ", "")
             left = equation.split("->")[0]
             a_desc, b_desc = left.split(",")
@@ -2851,7 +2851,7 @@ class TestEinsum(TorchBaseTest):
                     [TensorType(shape=a_converter_shape, dtype=np.float32), TensorType(shape=b_converter_shape,
                                                                                        dtype=np.float32)])
 
-        input_shapes, converter_input_type = make_input_types(equation)
+        input_shapes, converter_input_type = make_input_types(equation, dynamic)
 
         if reverse_input_order:
             input_output_strings = equation.split('->')

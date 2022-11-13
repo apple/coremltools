@@ -2055,47 +2055,76 @@ class TestCross(TensorFlowBaseTest):
 
 class TestEinsum(TensorFlowBaseTest):
     @pytest.mark.parametrize(
-        "use_cpu_for_conversion, backend, equation, reverse_input_order",
+        "use_cpu_for_conversion, backend, equation, reverse_input_order, dynamic",
         itertools.product(
             [True, False],
             backends,
-            ["abcd,adce->abce",
-             "abc,cbd->abd",
-             "bnqd,bnkd->bnqk",
-             "abc,cd->abd",
-             "abc,cde->abde",
-             "btnh,bfnh->bnft",
-             "bnft,btnh->bfnh",
-             "abcd,cde->abe"],
+            [
+                # Hardcoded cases
+                "abcd,adce->abce",
+                "abc,cbd->abd",
+                "bnqd,bnkd->bnqk",
+                "abc,cd->abd",
+                "abc,cde->abde",
+                "btnh,bfnh->bnft",
+                "bnft,btnh->bfnh",
+                "abcd,cde->abe",
+                # Generic cases
+                "i,i->i",
+                "i,j->ij",
+                "ab,b->a",
+                "ab,ab->b",
+                "abc,abc->a",
+                "abc,abc->c",
+                "abc,bac->c",
+                "abc,acd->abd",
+                "abc,abc->ab",
+                "abc,abc->bc",
+                "abc,bac->ba",
+                "abcd,cb->dca",
+                "abcd,acdb->ad",
+                "abcd,abde->abce",
+                "abcd,efbd->eafc",
+                "acdb,bade->abce",
+            ],
             [False, True],
+            [False],
         )
     )
-    def test(self, use_cpu_for_conversion, backend, equation, reverse_input_order):
-        
-        if equation == "abcd,adce->abce":
-            input_shapes = [[3, 4, 2, 6], [3, 6, 2, 2]]
-        elif equation == "abc,cbd->abd":
-            input_shapes = [[4, 2, 6], [6, 2, 2]]
-        elif equation == "bnqd,bnkd->bnqk":
-            input_shapes = [[1, 2, 3, 4], [1, 2, 4, 4]]
-        elif equation == "abc,cd->abd":
-            input_shapes = [[2, 3, 4], [4, 5]]
-        elif equation == "abc,cde->abde":
-            input_shapes = [[2, 3, 4], [4, 5, 6]]
-        elif equation == "btnh,bfnh->bnft":
-            input_shapes = [[1, 2, 3, 4], [1, 5, 3, 4]]
-        elif equation == "bnft,btnh->bfnh":
-            input_shapes = [[1, 2, 3, 4], [1, 4, 2, 6]]
-        elif equation == "abcd,cde->abe":
-            input_shapes = [[1, 2, 3, 4], [3, 4, 6]]
-        else:
-            raise ValueError("unrecognized equation")
+    def test(self, use_cpu_for_conversion, backend, equation, reverse_input_order, dynamic):
+
+        def make_input_types(equation, dynamic):
+            equation = equation.replace(" ", "")
+            left = equation.split("->")[0]
+            a_desc, b_desc = left.split(",")
+            converter_shapes = {}
+            shapes = {}
+            cur_default_shape = 2
+            for symbol in a_desc + b_desc:
+                if symbol not in shapes:
+                    shapes[symbol] = cur_default_shape
+                    if dynamic:
+                        converter_shapes[symbol] = RangeDim(default=cur_default_shape)
+                    else:
+                        converter_shapes[symbol] = cur_default_shape
+                    cur_default_shape += 1
+            a_shape = [shapes[symbol] for symbol in a_desc]
+            b_shape = [shapes[symbol] for symbol in b_desc]
+            a_converter_shape = [converter_shapes[symbol] for symbol in a_desc]
+            b_converter_shape = [converter_shapes[symbol] for symbol in b_desc]
+            return ([a_shape, b_shape],
+                    [TensorType(shape=a_converter_shape, dtype=np.float32, name="x"),
+                     TensorType(shape=b_converter_shape, dtype=np.float32, name="y")])
+
+        input_shapes, converter_input_type = make_input_types(equation, dynamic)
 
         if reverse_input_order:
             input_output_strings = equation.split('->')
             input_strings = input_output_strings[0].split(',')
             equation = input_strings[1] + ',' + input_strings[0] + '->' + input_output_strings[1]
             input_shapes = [input_shapes[1], input_shapes[0]]
+            if converter_input_type is not None:
+                converter_input_type = [converter_input_type[1], converter_input_type[0]]
 
         @make_tf_graph(input_shapes)
         def build_model(x, y):
