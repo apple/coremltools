@@ -10,12 +10,10 @@ from .. import SPECIFICATION_VERSION as _SPECIFICATION_VERSION
 from ..proto import Model_pb2 as _Model_pb2
 from . import _feature_management
 from . import model as _model
-from ._interface_management import (
-    set_classifier_interface_params,
-    set_regressor_interface_params,
-    set_training_features,
-    set_transform_interface_params,
-)
+from ._interface_management import (set_classifier_interface_params,
+                                    set_regressor_interface_params,
+                                    set_training_features,
+                                    set_transform_interface_params)
 
 
 class Pipeline:

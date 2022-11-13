@@ -3,21 +3,21 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import coremltools
+from coremltools.proto import FeatureTypes_pb2
+
 from ..._deps import _HAS_SCIPY, _HAS_SKLEARN
 from ...models import MLModel as _MLModel
-import coremltools
-
-from coremltools.proto import FeatureTypes_pb2
 
 if _HAS_SKLEARN:
     import sklearn.neighbors as _neighbors
+
     from . import _sklearn_util
 
 if _HAS_SCIPY:
     import scipy as sp
 
 import numpy as np
-
 
 model_type = "classifier"
 sklearn_class = _neighbors.KNeighborsClassifier

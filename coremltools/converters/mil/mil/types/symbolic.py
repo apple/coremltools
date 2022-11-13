@@ -3,8 +3,8 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import sympy as sm
 import numpy as np
+import sympy as sm
 
 k_used_symbols = {}
 k_num_internal_syms = 0

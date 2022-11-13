@@ -6,10 +6,12 @@
 import numpy as np
 
 from coremltools.converters.mil import Builder as mb
-from coremltools.converters.mil.experimental.passes.generic_pass_infrastructure import fuse_all_blocks
+from coremltools.converters.mil.experimental.passes.generic_pass_infrastructure import \
+    fuse_all_blocks
 from coremltools.converters.mil.mil import get_new_symbol
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
-from coremltools.converters.mil.mil.passes.helper import _check_var_scalar_value
+from coremltools.converters.mil.mil.passes.helper import \
+    _check_var_scalar_value
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 
 

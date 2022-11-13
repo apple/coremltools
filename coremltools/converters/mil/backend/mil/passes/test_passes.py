@@ -11,19 +11,14 @@ import pytest
 
 # import mil internal ops to add it to the builder
 import coremltools as ct
-from coremltools.converters.mil.mil import Builder as mb, types
-from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
-from coremltools.converters.mil.mil.types import string_to_builtin, builtin_to_string, promote_types
-from coremltools.converters.mil._deployment_compatibility import AvailableTarget as target
-
 # Set the testing backend
-import coremltools.converters.mil.testing_reqs as testing_reqs
-
+from coremltools.converters.mil._deployment_compatibility import \
+    AvailableTarget as target
+from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil import types
+from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
 from coremltools.converters.mil.testing_utils import (
-    get_op_types_in_program,
-    apply_pass_and_basic_check,
-    assert_model_is_valid,
-)
+    apply_pass_and_basic_check, assert_model_is_valid, get_op_types_in_program)
 
 
 class TestAdjustToSupportedTypes:

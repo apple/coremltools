@@ -3,25 +3,27 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import logging
 import numpy as np
 
+from coremltools import _logger as logger
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil.passes.helper import block_context_manager
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 
+
 target_ops = [
-    "torch_upsample_nearest_neighbor", 
+    "torch_upsample_nearest_neighbor",
     "torch_upsample_bilinear",
 ]
+
 
 @register_pass(namespace="torch")
 class torch_upsample_to_core_upsample(AbstractGraphPass):
     """
-    Try to map Torch dialect ops 
+    Try to map Torch dialect ops
     1. `torch_upsample_nearest_neighbor`
-    2. `torch_upsample_bilinear` 
+    2. `torch_upsample_bilinear`
     to `upsample_nearest_neighbor` or `upsample_bilinear` in the core op set if compatible.
 
     Inputs:
@@ -40,7 +42,7 @@ def _torch_upsample_to_core_upsample_block(block):
 
         if op.op_type in target_ops:
             if _try_replace_with_core_upsample(op):
-                logging.info("Successfully map {} to core upsample".format(op.op_type))
+                logger.info("Successfully map {} to core upsample".format(op.op_type))
             else:
                 raise ValueError("Unable to map {} to core upsample".format(op.op_type))
 
@@ -98,7 +100,7 @@ def _try_replace_with_core_upsample(op):
     False otherwise
     """
     assert op.op_type in target_ops
-    
+
     # 2d upsampling
     if op.op_type in ["torch_upsample_nearest_neighbor", "torch_upsample_bilinear"]:
         scales_h = _try_get_upsample_factor(op.output_height.op)

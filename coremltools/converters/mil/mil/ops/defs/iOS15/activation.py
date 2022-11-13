@@ -4,18 +4,19 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import math
+
 import numpy as np
 
 from coremltools.converters.mil.mil import types
-from coremltools.converters.mil.mil.input_type import (
-    DefaultInputs,
-    InputSpec,
-    TensorInputType,
-)
-from coremltools.converters.mil.mil.operation import Operation, precondition, VALUE
+from coremltools.converters.mil.mil.input_type import (DefaultInputs,
+                                                       InputSpec,
+                                                       TensorInputType)
+from coremltools.converters.mil.mil.operation import (VALUE, Operation,
+                                                      precondition)
 from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
 
 from .elementwise_unary import elementwise_unary
+
 
 class activation_with_alpha(Operation):
     """
@@ -25,15 +26,15 @@ class activation_with_alpha(Operation):
         x=TensorInputType(type_domain="T"),
         alpha=TensorInputType(const=True, type_domain="T"),
     )
-    
+
     type_domains = {
         "T": (types.fp16, types.fp32),
     }
-        
+
     def type_inference(self):
         return self.x.sym_type
-        
-        
+
+
 class activation_with_alpha_and_beta(Operation):
     """
     Activation with Alpha Beta Op Superclass
@@ -43,11 +44,11 @@ class activation_with_alpha_and_beta(Operation):
         alpha=TensorInputType(const=True, type_domain="T"),
         beta=TensorInputType(const=True, type_domain="T"),
     )
-    
+
     type_domains = {
         "T": (types.fp16, types.fp32),
     }
-        
+
     def type_inference(self):
         return self.x.sym_type
 
@@ -112,30 +113,30 @@ class elu(activation_with_alpha):
 class gelu(Operation):
     """
     Return the elementwise Gaussian error linear unit activation function for ``x``.
-    
+
     You can use ``EXACT``, ``TANH_APPROXIMATION``, or ``SIGMOID_APPROXIMATION`` values
     based on the following formulas:
-    
+
     * ``EXACT``:
-    
+
     .. math::
        f(x) = 0.5x\\left ( 1+\\rm{erf}\\left ( \\frac{x}{\\sqrt{2}} \\right ) \\right )
-    
+
     * ``TANH_APPROXIMATION``:
-    
+
     .. math::
        f(x) = 0.5x\\left ( 1+\\rm{tanh}\\left ( \\sqrt{2/\\pi}\\left ( x + 0.044715x^3 \\right ) \\right ) \\right )
-    
+
     * ``SIGMOID_APPROXIMATION``:
-    
+
     .. math::
        f(x) = x*\\rm{sigmoid}(1.702x)
 
-    
+
     Parameters
     ----------
     x: tensor<\*?, T> (Required)
-    
+
     mode: const str (Optional)
         * Use ``'EXACT'``, ``'TANH_APPROXIMATION'``, or ``'SIGMOID_APPROXIMATION'`` for ``str``.
         * Default is ``'EXACT'``.
@@ -154,7 +155,7 @@ class gelu(Operation):
         x=TensorInputType(type_domain="T"),
         mode=TensorInputType(const=True, optional=True, type_domain=types.str),
     )
-    
+
     type_domains = {
         "T": (types.fp16, types.fp32),
     }
@@ -162,7 +163,7 @@ class gelu(Operation):
     def default_inputs(self):
         return DefaultInputs(
             mode="EXACT",
-            )
+        )
 
     @precondition(allow=VALUE)
     def value_inference(self):
@@ -196,7 +197,7 @@ class leaky_relu(activation_with_alpha):
 
     Returns
     -------
-    tensor<\*?, fp32>
+    tensor<\*?, T>
         * A tensor of the same shape and type as ``x``.
 
     Attributes
@@ -270,7 +271,11 @@ class prelu(activation_with_alpha):
 
     def type_inference(self):
         if self.x.rank not in (3, 4, 5):
-            raise ValueError("prelu op: x must be rank 3 or 4 or 5, instead it is of rank {}".format(len(self.x.shape)))
+            raise ValueError(
+                "prelu op: x must be rank 3 or 4 or 5, instead it is of rank {}".format(
+                    len(self.x.shape)
+                )
+            )
         if len(self.alpha.val.shape) != 1:
             raise ValueError("alpha should be rank 1")
         if self.x.shape[1] != self.alpha.val.shape[0]:
@@ -280,25 +285,29 @@ class prelu(activation_with_alpha):
             )
         if self.x.rank in (3, 5):
             # check whether all alpha values are the same or not
-            are_values_same = np.where(np.abs(self.alpha.val - self.alpha.val[0]) > 1e-5)[0].size == 0
+            are_values_same = (
+                np.where(np.abs(self.alpha.val - self.alpha.val[0]) > 1e-5)[0].size == 0
+            )
             if not are_values_same:
-                raise ValueError("prelu op: rank 3 or rank 5 input is only supported when all the values of alpha are same,"
-                                 "which is not the case here")
+                raise ValueError(
+                    "prelu op: rank 3 or rank 5 input is only supported when all the values of alpha are same,"
+                    "which is not the case here"
+                )
         return self.x.sym_type
 
 
 @register_op
 class relu(elementwise_unary):
     """
-    Return elementwise-applied rectified linear activation: ``min(x, 0)``.
+    Return elementwise-applied rectified linear activation: ``max(x, 0)``.
 
     Parameters
     ----------
-    x: tensor<\*?, fp32> (Required)
+    x: tensor<\*?, T> (Required)
 
     Returns
     -------
-    tensor<\*?, fp32>
+    tensor<\*?, T>
         * A tensor of the same shape and type as ``x``.
 
     Attributes
@@ -349,7 +358,7 @@ class scaled_tanh(activation_with_alpha_and_beta):
 
     Returns
     -------
-    tensor<\*?, fp32>
+    tensor<\*?, T>
         * A tensor of the same shape and type as ``x``.
 
     Attributes
@@ -399,7 +408,7 @@ class sigmoid_hard(activation_with_alpha_and_beta):
 
     Returns
     -------
-    tensor<\*?, fp32>
+    tensor<\*?, T>
         * A tensor of the same shape and type as ``x``.
 
     Attributes
@@ -412,8 +421,8 @@ class sigmoid_hard(activation_with_alpha_and_beta):
         return np.minimum(
             np.maximum((self.alpha.val * self.x.val) + self.beta.val, 0), 1
         )
-        
-        
+
+
 @register_op
 class silu(elementwise_unary):
     """
@@ -467,8 +476,8 @@ class softplus_parametric(activation_with_alpha_and_beta):
     Parameters
     ----------
     x: tensor<[b, C, n, m], T> (Required)
-    alpha: const tensor<[C], fp32> (Required)
-    beta: const tensor<[C], fp32> (Required)
+    alpha: const tensor<[C], T> (Required)
+    beta: const tensor<[C], T> (Required)
 
     Returns
     -------
@@ -522,7 +531,7 @@ class softmax(Operation):
 
     Returns
     -------
-    tensor<\*?, fp32>
+    tensor<\*?, T>
         * A tensor of the same shape and type as ``x``.
 
     Attributes
@@ -534,7 +543,7 @@ class softmax(Operation):
         x=TensorInputType(type_domain="T"),
         axis=TensorInputType(const=True, optional=True, type_domain=types.int32),
     )
-    
+
     type_domains = {
         "T": (types.fp16, types.fp32),
     }
@@ -542,7 +551,7 @@ class softmax(Operation):
     def default_inputs(self):
         return DefaultInputs(
             axis=-1,
-            )
+        )
 
     def type_inference(self):
         return self.x.sym_type
@@ -554,6 +563,7 @@ class softmax(Operation):
         max_vals = np.max(x, axis=axis, keepdims=True)
         temp = np.exp(x - max_vals)
         return temp / np.sum(temp, axis=axis, keepdims=True)
+
 
 @register_op
 class softsign(elementwise_unary):

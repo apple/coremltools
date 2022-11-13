@@ -8,12 +8,15 @@ import pytest
 import torch
 import torch.nn as nn
 
-from ..converter import torch_to_mil_types
-from coremltools import ComputeUnit, TensorType, RangeDim
-from coremltools._deps import _IS_MACOS
+import coremltools as ct
 import coremltools.models.utils as coremltoolsutils
-from coremltools.converters.mil.mil.types.type_mapping import nptype_from_builtin
+from coremltools import RangeDim, TensorType
+from coremltools._deps import _IS_MACOS
+from coremltools.converters.mil.mil.types.type_mapping import \
+    nptype_from_builtin
 from coremltools.converters.mil.testing_utils import ct_convert
+
+from ..converter import torch_to_mil_types
 
 
 class ModuleWrapper(nn.Module):
@@ -71,7 +74,7 @@ def convert_to_coreml_inputs(input_description, inputs):
 
 
 def convert_to_mlmodel(model_spec, tensor_inputs, backend=("neuralnetwork", "fp32"),
-                       converter_input_type=None, use_cpu_for_conversion=False,
+                       converter_input_type=None, compute_unit=ct.ComputeUnit.CPU_ONLY,
                        minimum_deployment_target=None):
     def _convert_to_inputtype(inputs):
         if isinstance(inputs, list):
@@ -91,11 +94,6 @@ def convert_to_mlmodel(model_spec, tensor_inputs, backend=("neuralnetwork", "fp3
         inputs = list(_convert_to_inputtype(tensor_inputs))
     else:
         inputs = converter_input_type
-
-    if use_cpu_for_conversion:
-        compute_unit = ComputeUnit.CPU_ONLY
-    else:
-        compute_unit = ComputeUnit.ALL
         
     return ct_convert(model_spec, inputs=inputs, convert_to=backend,
                       source="pytorch", compute_units=compute_unit,
@@ -141,13 +139,17 @@ def flatten_and_detach_torch_results(torch_results):
     return [torch_results.detach().numpy()]
 
 
-def convert_and_compare(input_data, model_spec,
-                        expected_results=None, atol=1e-4,
-                        backend=("neuralnetwork", "fp32"),
-                        converter_input_type=None,
-                        use_cpu_for_conversion=True,
-                        minimum_deployment_target=None
-                        ):
+def convert_and_compare(
+    input_data,
+    model_spec,
+    expected_results=None,
+    atol=1e-4,
+    rtol=1e-05,
+    backend=("neuralnetwork", "fp32"),
+    converter_input_type=None,
+    compute_unit=ct.ComputeUnit.CPU_ONLY,
+    minimum_deployment_target=None
+):
     """
     If expected results is not set, it will by default
     be set to the flattened output of the torch model.
@@ -155,9 +157,6 @@ def convert_and_compare(input_data, model_spec,
     Inputs:
 
     - input_data: torch.tensor or list[torch.tensor]
-    - use_cpu_for_conversion: bool
-        Argument which is passed as is to the unified converter API.
-        It forces the model to be loaded on the CPU context, post conversion.
     """
     if isinstance(model_spec, str):
         torch_model = torch.jit.load(model_spec)
@@ -173,7 +172,7 @@ def convert_and_compare(input_data, model_spec,
     expected_results = flatten_and_detach_torch_results(expected_results)
     mlmodel = convert_to_mlmodel(model_spec, input_data, backend=backend,
                                  converter_input_type=converter_input_type,
-                                 use_cpu_for_conversion=use_cpu_for_conversion,
+                                 compute_unit=compute_unit,
                                  minimum_deployment_target=minimum_deployment_target,)
 
     coreml_inputs = convert_to_coreml_inputs(mlmodel.input_description, input_data)
@@ -182,8 +181,9 @@ def convert_and_compare(input_data, model_spec,
         return model_spec, mlmodel, coreml_inputs, None
 
     _, dtype = backend
-    if dtype == "fp16":
+    if mlmodel.compute_unit != ct.ComputeUnit.CPU_ONLY or (dtype == "fp16"):
         atol = max(atol * 100.0, 5e-1)
+        rtol = max(rtol * 100.0, 5e-2)
 
     if not coremltoolsutils._has_custom_layer(mlmodel._spec):
         coreml_results = mlmodel.predict(coreml_inputs)
@@ -195,8 +195,7 @@ def convert_and_compare(input_data, model_spec,
             if torch_result.shape == ():
                 torch_result = np.array([torch_result])
             np.testing.assert_equal(coreml_result.shape, torch_result.shape)
-            np.testing.assert_allclose(coreml_result, torch_result,
-                                       atol=atol)
+            np.testing.assert_allclose(coreml_result, torch_result, atol=atol, rtol=rtol)
     return model_spec, mlmodel, coreml_inputs, coreml_results
 
 
@@ -211,11 +210,17 @@ class TorchBaseTest:
 
     @staticmethod
     def run_compare_torch(
-            input_data, model, expected_results=None, places=5,
-            input_as_shape=True, backend=("neuralnetwork", "fp32"),
-            rand_range=(-1.0, 1.0), use_scripting=False,
+            input_data,
+            model,
+            expected_results=None,
+            atol=1e-04,
+            rtol=1e-05,
+            input_as_shape=True,
+            backend=("neuralnetwork", "fp32"),
+            rand_range=(-1.0, 1.0),
+            use_scripting=False,
             converter_input_type=None,
-            use_cpu_for_conversion=True,
+            compute_unit=ct.ComputeUnit.CPU_ONLY,
             minimum_deployment_target=None,
     ):
         """
@@ -237,10 +242,14 @@ class TorchBaseTest:
 
         model_spec, mlmodel, coreml_inputs, coreml_results = \
             convert_and_compare(
-                input_data, model_spec, expected_results=expected_results,
-                atol=10.0 ** -places, backend=backend,
+                input_data,
+                model_spec,
+                expected_results=expected_results,
+                atol=atol,
+                rtol=rtol,
+                backend=backend,
                 converter_input_type=converter_input_type,
-                use_cpu_for_conversion=use_cpu_for_conversion,
+                compute_unit=compute_unit,
                 minimum_deployment_target=minimum_deployment_target,
             )
 

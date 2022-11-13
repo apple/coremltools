@@ -3,34 +3,31 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 import numpy as _np
+import numpy as np
+import sympy as sm
 
 import coremltools.proto.MIL_pb2 as _mil_pm
 from coremltools.converters.mil.mil import types as _mil_types
 
-from .type_bool import bool as types_bool, is_bool
-from .type_double import (
-    is_float,
-    fp16 as types_fp16,
-    fp32 as types_fp32,
-    fp64 as types_fp64,
-)
+from .get_type_info import get_type_info
+from .type_bool import bool as types_bool
+from .type_bool import is_bool
+from .type_double import fp16 as types_fp16
+from .type_double import fp32 as types_fp32
+from .type_double import fp64 as types_fp64
+from .type_double import is_float
+from .type_int import int8 as types_int8
+from .type_int import int16 as types_int16
+from .type_int import int32 as types_int32
+from .type_int import int64 as types_int64
+from .type_int import is_int
+from .type_int import uint8 as types_uint8
+from .type_int import uint16 as types_uint16
+from .type_int import uint32 as types_uint32
+from .type_int import uint64 as types_uint64
 from .type_list import is_list
-from .type_int import (
-    is_int,
-    int8 as types_int8,
-    int16 as types_int16,
-    int32 as types_int32,
-    int64 as types_int64,
-    uint8 as types_uint8,
-    uint16 as types_uint16,
-    uint32 as types_uint32,
-    uint64 as types_uint64,
-)
 from .type_str import str as types_str
 from .type_unknown import unknown
-import numpy as np
-import sympy as sm
-from .get_type_info import get_type_info
 
 _types_TO_NPTYPES = {
     types_bool: np.bool_,
@@ -63,6 +60,35 @@ _types_TO_STRINGS = {
     types_fp64: "fp64",
     types_str: "string",
 }
+
+builtin_to_proto_types = {
+    # bool:
+    _mil_types.bool: _mil_pm.BOOL,
+
+    # fp
+    _mil_types.fp16: _mil_pm.FLOAT16,
+    _mil_types.float: _mil_pm.FLOAT32,
+    _mil_types.double: _mil_pm.FLOAT64,
+
+    # int
+    _mil_types.uint8: _mil_pm.UINT8,
+    _mil_types.int8: _mil_pm.INT8,
+
+    _mil_types.uint16: _mil_pm.UINT16,
+    _mil_types.int16: _mil_pm.INT16,
+
+    _mil_types.uint32: _mil_pm.UINT32,
+    _mil_types.int32: _mil_pm.INT32,
+
+    _mil_types.uint64: _mil_pm.UINT64,
+    _mil_types.int64: _mil_pm.INT64,
+
+    # str
+    _mil_types.str: _mil_pm.STRING,
+}
+
+proto_to_builtin_types = {v: k for k, v in builtin_to_proto_types.items()}
+
 
 def np_dtype_to_py_type(np_dtype):
     # Can't use dict, as hash(np.int32) != hash(val.dtype)
@@ -348,34 +374,6 @@ def is_subtype(type1, type2):
     if is_tensor(type1) and is_tensor(type2):
         return is_subtype_tensor(type1, type2)
     return type1 == type2
-
-builtin_to_proto_types = {
-    # bool:
-    _mil_types.bool: _mil_pm.BOOL,
-
-    # fp
-    _mil_types.fp16: _mil_pm.FLOAT16,
-    _mil_types.float: _mil_pm.FLOAT32,
-    _mil_types.double: _mil_pm.FLOAT64,
-
-    # int
-    _mil_types.uint8: _mil_pm.UINT8,
-    _mil_types.int8: _mil_pm.INT8,
-
-    _mil_types.uint16: _mil_pm.UINT16,
-    _mil_types.int16: _mil_pm.INT16,
-
-    _mil_types.uint32: _mil_pm.UINT32,
-    _mil_types.int32: _mil_pm.INT32,
-
-    _mil_types.uint64: _mil_pm.UINT64,
-    _mil_types.int64: _mil_pm.INT64,
-
-    # str
-    _mil_types.str: _mil_pm.STRING,
-}
-
-proto_to_builtin_types = {v: k for k, v in builtin_to_proto_types.items()}
 
 
 def np_val_to_py_type(val):

@@ -8,7 +8,6 @@ Basic Data Types.
 """
 import numpy as _np
 
-from ..proto import FeatureTypes_pb2 as _FeatureTypes_pb2
 from ..proto import Model_pb2
 
 

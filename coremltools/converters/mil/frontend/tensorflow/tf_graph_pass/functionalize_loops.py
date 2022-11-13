@@ -3,25 +3,15 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import logging
+from coremltools import _logger as logger
 
+from ..basic_graph_ops import (connect_dests, connect_edge, connect_sources,
+                               delete_node, disconnect_edge, replace_dest,
+                               replace_source)
 from ..parsed_tf_node import ParsedTFNode
-from ..basic_graph_ops import (
-    connect_dests,
-    connect_edge,
-    connect_sources,
-    delete_node,
-    disconnect_edge,
-    replace_dest,
-    replace_source
-)
 from ..tfssa import SSAFunction
-from .visitors import (
-    FindAllReachableNodes,
-    FindImmediateDownstreamNodes,
-    FindImmediateUpstreamNodes,
-    FindSubgraph,
-)
+from .visitors import (FindAllReachableNodes, FindImmediateDownstreamNodes,
+                       FindImmediateUpstreamNodes, FindSubgraph)
 
 
 class FunctionalizeLoops:
@@ -66,7 +56,7 @@ class FunctionalizeLoops:
         assert node.op == "Enter"
 
         frame_name = node.attr["frame_name"]
-        logging.debug("Fixing frame name: %s", frame_name)
+        logger.debug("Fixing frame name: %s", frame_name)
         # find all the enter args
         # this is basically the enter frame
         # functionalize_control_flow.cc:FunctionalizeControlFlow (1160-1196)
@@ -155,7 +145,7 @@ class FunctionalizeLoops:
                 new_enter_node.outputs = []
                 new_enter_node.name = node.name + "/trsplit%d" % (j)
                 g[new_enter_node.name] = new_enter_node
-                logging.debug("splitting %s", node.name)
+                logger.debug("splitting %s", node.name)
                 # connect the new node
                 enter_output = node_output_copy[j]
                 disconnect_edge(g, node.name, enter_output)
@@ -409,7 +399,7 @@ class FunctionalizeLoops:
         )
         downstream_cond = set(downstream_cond) - cond_function
         if len(downstream_cond) > 0:
-            logging.debug(
+            logger.debug(
                 "Disconnecting unused variables in condition function %s",
                 downstream_cond,
             )
@@ -423,7 +413,7 @@ class FunctionalizeLoops:
         )
         downstream_body = set(downstream_body) - body_function
         if len(downstream_body) > 0:
-            logging.debug(
+            logger.debug(
                 "Disconnecting unused variables in body function %s", downstream_body
             )
             for i in downstream_body:

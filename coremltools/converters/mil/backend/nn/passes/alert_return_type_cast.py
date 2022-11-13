@@ -3,9 +3,8 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import logging
-
-from coremltools.converters.mil.mil import types, Var
+from coremltools import _logger as logger
+from coremltools.converters.mil.mil import Var, types
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 
@@ -44,6 +43,6 @@ class alert_return_type_cast(AbstractGraphPass):
                     msg = (
                         "Output var {} of type {} in function {} is " + "cast to type fp32"
                     )
-                    logging.warning(
+                    logger.warning(
                         msg.format(v.name, types.builtin_to_string(v.dtype), f_name)
                     )

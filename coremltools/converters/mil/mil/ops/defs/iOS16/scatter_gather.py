@@ -4,18 +4,13 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from coremltools.converters.mil.mil import Operation, types
-from coremltools.converters.mil.mil.input_type import (
-    DefaultInputs,
-    InputSpec,
-    TensorInputType,
-)
-from coremltools.converters.mil.mil.operation import precondition
+from coremltools.converters.mil.mil.input_type import (DefaultInputs,
+                                                       InputSpec,
+                                                       TensorInputType)
+from coremltools.converters.mil.mil.operation import (SYMBOL, VALUE,
+                                                      precondition)
 from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
 from coremltools.converters.mil.mil.ops.defs._utils import compute_gather
-from coremltools.converters.mil.mil.operation import (
-    SYMBOL,
-    VALUE
-)
 from coremltools.converters.mil.mil.ops.defs.iOS16 import _IOS16_TARGET
 
 

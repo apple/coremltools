@@ -4,32 +4,27 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from collections import OrderedDict
-import logging as _logging
+
 import numpy as _np
 import torch as _torch
 
+from coremltools import _logger as logger
 from coremltools._deps import version_lt
-from coremltools.converters.mil._deployment_compatibility import AvailableTarget as _target
+from coremltools.converters.mil._deployment_compatibility import \
+    AvailableTarget as _target
 from coremltools.converters.mil.input_types import ImageType
-from coremltools.converters.mil.mil import (
-    Builder as mb,
-    Function,
-    types,
-    Program
-)
+from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil import Function, Program, types
 
+from .._utils import get_output_names
 from .internal_graph import InternalTorchIRGraph
 from .ops import convert_nodes
-from .torch_op_registry import _TORCH_OPS_REGISTRY
-from .torchir_passes import (
-    flatten_graph_input_values,
-    flatten_graph_output_values,
-    generate_tensor_assignment_ops,
-    transform_inplace_ops,
-    remove_getattr_nodes
-)
 from .ssa_passes.torch_passes import torch_passes
-from .._utils import get_output_names
+from .torch_op_registry import _TORCH_OPS_REGISTRY
+from .torchir_passes import (flatten_graph_input_values,
+                             flatten_graph_output_values,
+                             generate_tensor_assignment_ops,
+                             remove_getattr_nodes, transform_inplace_ops)
 
 torch_to_mil_types = {
     _torch.bool: types.bool,
@@ -39,6 +34,7 @@ torch_to_mil_types = {
     _torch.int32: types.int32,
     _torch.int64: types.int32,
 }
+
 
 mil_to_torch_types = {v: k for k, v in torch_to_mil_types.items()}
 
@@ -229,7 +225,7 @@ class TorchConverter:
             self.context.add(const)
 
     def convert(self):
-        _logging.info("Converting graph.")
+        logger.info("Converting graph.")
 
         # This will hold the converted model.
         prog = self._prog
@@ -280,7 +276,7 @@ class TorchConverter:
             for g in graph_outputs:
                 if g is None:
                     msg = "Droping output {} which is None"
-                    _logging.warning(msg.format(g))
+                    logger.warning(msg.format(g))
             graph_outputs = [g for g in graph_outputs if g is not None]
 
             # Output renaming occurs

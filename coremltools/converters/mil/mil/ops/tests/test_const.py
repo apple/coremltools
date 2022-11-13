@@ -8,18 +8,20 @@ import itertools
 import numpy as np
 import pytest
 
-from .testing_utils import run_compare_builder
 from coremltools.converters.mil import testing_reqs
-from coremltools.converters.mil.mil import Builder as mb, types
+from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil import types
 
+from .testing_utils import run_compare_builder
 
 backends = testing_reqs.backends
+compute_units = testing_reqs.compute_units
 
 
 class TestConst:
     @pytest.mark.parametrize(
-        "use_cpu_for_conversion, backend, dtype", itertools.product(
-            [True, False],
+        "compute_unit, backend, dtype", itertools.product(
+            compute_units,
             backends,
             [
                 np.int32,
@@ -30,7 +32,7 @@ class TestConst:
             ]
         )
     )
-    def test_builder_to_backend_smoke(self, use_cpu_for_conversion, backend, dtype):
+    def test_builder_to_backend_smoke(self, compute_unit, backend, dtype):
         if backend[0] == "mlprogram" and dtype in [np.uint8, np.int8, np.uint32]:
             pytest.skip("Data type not supported")
 
@@ -55,7 +57,6 @@ class TestConst:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_for_conversion,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )

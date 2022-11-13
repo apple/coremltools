@@ -4,8 +4,10 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from coremltools.converters.mil.input_types import ColorLayout
-from coremltools.converters.mil.mil.passes.name_sanitization_utils import NameSanitizer
+from coremltools.converters.mil.mil.passes.name_sanitization_utils import \
+    NameSanitizer
 from coremltools.proto import FeatureTypes_pb2 as ft
+
 
 def _get_probability_var_for_classifier(prog, classifier_config):
     '''

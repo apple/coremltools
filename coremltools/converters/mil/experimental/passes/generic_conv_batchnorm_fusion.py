@@ -4,10 +4,12 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import os
+
 import numpy as np
 
 from coremltools.converters.mil import Builder as mb
-from coremltools.converters.mil.experimental.passes.generic_pass_infrastructure import register_generic_pass
+from coremltools.converters.mil.experimental.passes.generic_pass_infrastructure import \
+    register_generic_pass
 
 """
 Fuse the following batch_norm layer into conv and conv_transpose

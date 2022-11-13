@@ -3,9 +3,9 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import logging
-
+from coremltools import _logger as logger
 from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
+
 
 def tensorflow_passes(prog):
     passes = [
@@ -26,8 +26,8 @@ def tensorflow_passes(prog):
 
     prog.validate()
     for p in passes:
-        logging.info('Performing passes for TensorFlow 2.x frontend: "{}"'.format(p))
+        logger.info('Performing passes for TensorFlow 2.x frontend: "{}"'.format(p))
         PASS_REGISTRY[p](prog)
         prog.validate()
 
-    logging.debug("Program after TensorFlow 2.x frontend passes:\n{}".format(prog))
+    logger.debug("Program after TensorFlow 2.x frontend passes:\n{}".format(prog))

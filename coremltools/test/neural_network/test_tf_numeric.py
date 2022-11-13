@@ -8,13 +8,13 @@ import unittest
 
 import numpy as np
 
-from coremltools import ComputeUnit
-from coremltools._deps import _HAS_TF, MSG_TF1_NOT_FOUND
-from coremltools.models import MLModel, neural_network
 import coremltools.models.datatypes as datatypes
+from coremltools import ComputeUnit
+from coremltools._deps import _HAS_TF_2, MSG_TF2_NOT_FOUND
+from coremltools.models import MLModel, neural_network
 from coremltools.models.utils import _is_macos, _macos_version
 
-if _HAS_TF:
+if _HAS_TF_2:
     import tensorflow as tf
 
 
@@ -22,7 +22,7 @@ np.random.seed(10)
 np.set_printoptions(precision=4, suppress=True)
 
 
-@unittest.skipIf(not _HAS_TF, MSG_TF1_NOT_FOUND)
+@unittest.skipIf(not _HAS_TF_2, MSG_TF2_NOT_FOUND)
 class CorrectnessTest(unittest.TestCase):
     def _compare_shapes(self, ref_preds, coreml_preds):
         if np.squeeze(ref_preds).shape != np.squeeze(coreml_preds).shape:
@@ -43,10 +43,6 @@ class CorrectnessTest(unittest.TestCase):
         if noise_var > 1e-6 and signal_energy > 1e-6:
             SNR = 10 * np.log10(signal_energy / noise_var)
             PSNR = 10 * np.log10(max_signal_energy / noise_var)
-
-            # print('ref: ', ref_preds)
-            # print('coreml: ', coreml_preds)
-            # print('noise: ', noise)
 
             print("SNR: {}, PSNR: {}".format(SNR, PSNR))
             print("noise var: ", np.mean(noise ** 2))
@@ -107,16 +103,11 @@ class StressTest(CorrectnessTest):
             return mlmodel, eval
 
         def get_tf_predictions_reorganize(X, params):
-            Hin = params["H"]
-            Win = params["W"]
-            Cin = params["C"]
-            with tf.Graph().as_default(), tf.Session() as sess:
-                x = tf.placeholder(tf.float32, shape=(1, Hin, Win, Cin))
-                if params["mode"] == "SPACE_TO_DEPTH":
-                    y = tf.space_to_depth(x, params["block_size"])
-                else:
-                    y = tf.depth_to_space(x, params["block_size"])
-                return sess.run(y, feed_dict={x: X})
+            if params["mode"] == "SPACE_TO_DEPTH":
+                y = tf.nn.space_to_depth(X, params["block_size"])
+            else:
+                y = tf.nn.depth_to_space(X, params["block_size"])
+            return y.numpy()
 
         """
         Define Params
@@ -228,22 +219,16 @@ class StressTest(CorrectnessTest):
             return mlmodel, eval
 
         def get_tf_predictions_depthwise(X, params, w):
-            Hin = Win = params["H"]
             Cin = params["C"]
             Kh = Kw = params["kernel_size"]
             channel_multiplier = params["multiplier"]
-            with tf.Graph().as_default(), tf.Session() as sess:
-                x = tf.placeholder(tf.float32, shape=(1, Hin, Win, Cin))
-                W = tf.constant(
-                    w, dtype=tf.float32, shape=[Kh, Kw, Cin, channel_multiplier]
-                )
-                y = tf.nn.depthwise_conv2d(
-                    x,
-                    W,
-                    strides=[1, params["stride"], params["stride"], 1],
-                    padding=params["padding"],
-                )
-                return sess.run(y, feed_dict={x: X})
+            y = tf.nn.depthwise_conv2d(
+                X,
+                w,
+                strides=[1, params["stride"], params["stride"], 1],
+                padding=params["padding"],
+            )
+            return y.numpy()
 
         """
         Define Params
@@ -342,17 +327,12 @@ class StressTest(CorrectnessTest):
             return mlmodel, eval
 
         def get_tf_predictions_resize_bilinear(X, params):
-            with tf.Graph().as_default(), tf.Session() as sess:
-                x = tf.placeholder(
-                    tf.float32,
-                    shape=(params["batch"], params["H"], params["W"], params["ch"]),
-                )
-                y = tf.image.resize_bilinear(
-                    x,
-                    size=[params["Hnew"], params["Wnew"]],
-                    align_corners=params["align_corners"],
-                )
-                return sess.run(y, feed_dict={x: X})
+            y = tf.compat.v1.image.resize_bilinear(
+                X,
+                size=[params["Hnew"], params["Wnew"]],
+                align_corners=params["align_corners"],
+            )
+            return y.numpy()
 
         """
         Define Params
@@ -458,15 +438,10 @@ class StressTest(CorrectnessTest):
             return mlmodel, eval
 
         def get_tf_predictions_crop_resize(X, boxes, box_ind, params):
-            batch, ch, n_roi = params["b_c_n"]
-            with tf.Graph().as_default(), tf.Session() as sess:
-                x = tf.placeholder(
-                    tf.float32, shape=(batch, params["H"], params["W"], ch)
-                )
-                y = tf.image.crop_and_resize(
-                    x, boxes, box_ind, crop_size=[params["Hnew"], params["Wnew"]]
-                )
-                return sess.run(y, feed_dict={x: X})
+            y = tf.image.crop_and_resize(
+                X, boxes, box_ind, crop_size=[params["Hnew"], params["Wnew"]]
+            )
+            return y.numpy()
 
         """
         Define Params
@@ -492,9 +467,6 @@ class StressTest(CorrectnessTest):
         failed_tests_compile = []
         for i in range(len(valid_params)):
             params = valid_params[i]
-            # print("=========: ", params)
-            # if i % 100 == 0:
-            #     print("======================= Testing {}/{}".format(str(i), str(len(valid_params))))
             batch, ch, n_roi = params["b_c_n"]
             X = np.round(255 * np.random.rand(batch, ch, params["H"], params["W"]))
             roi = np.zeros((n_roi, 4), dtype=np.float32)

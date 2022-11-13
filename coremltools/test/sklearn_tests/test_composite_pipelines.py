@@ -3,26 +3,21 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import itertools
-import os
 import unittest
+from distutils.version import StrictVersion
 
-import numpy as np
 import pandas as pd
 
 from coremltools._deps import _HAS_SKLEARN, _SKLEARN_VERSION
-from distutils.version import StrictVersion
-from coremltools.models.utils import evaluate_transformer
-from coremltools.models.utils import evaluate_regressor
-from coremltools.models.utils import _macos_version, _is_macos
 from coremltools.converters.sklearn import convert
+from coremltools.models.utils import (_is_macos, _macos_version,
+                                      evaluate_regressor, evaluate_transformer)
 
 if _HAS_SKLEARN:
     from sklearn.datasets import load_boston
     from sklearn.ensemble import GradientBoostingRegressor
     from sklearn.pipeline import Pipeline
-    from sklearn.preprocessing import StandardScaler
-    from sklearn.preprocessing import OneHotEncoder
+    from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
 
 @unittest.skipIf(not _HAS_SKLEARN, "Missing sklearn. Skipping tests.")

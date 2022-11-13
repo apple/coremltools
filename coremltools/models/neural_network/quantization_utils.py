@@ -7,32 +7,27 @@
 Utilities to compress Neural Network Models.
 Only available in coremltools 2.0b1 and onwards
 """
-from sys import stdout as _stdout
 from os import listdir as _listdir
+from sys import stdout as _stdout
 
 import numpy as _np
 
-from .optimization_utils import _optimize_nn
 from coremltools import ComputeUnit as _ComputeUnit
-from coremltools.models import (
-    _LUT_BASED_QUANTIZATION,
-    _SUPPORTED_QUANTIZATION_MODES,
-    _QUANTIZATION_MODE_DEQUANTIZE,
-    _QUANTIZATION_MODE_LOOKUP_TABLE_LINEAR,
-    _QUANTIZATION_MODE_LOOKUP_TABLE_KMEANS,
-    _QUANTIZATION_MODE_CUSTOM_LOOKUP_TABLE,
-    _QUANTIZATION_MODE_LINEAR_QUANTIZATION,
-    _QUANTIZATION_MODE_LINEAR_SYMMETRIC,
-    MLModel as _MLModel,
-)
+from coremltools.models import (_QUANTIZATION_MODE_CUSTOM_LOOKUP_TABLE,
+                                _QUANTIZATION_MODE_DEQUANTIZE,
+                                _QUANTIZATION_MODE_LINEAR_QUANTIZATION,
+                                _QUANTIZATION_MODE_LINEAR_SYMMETRIC,
+                                _QUANTIZATION_MODE_LOOKUP_TABLE_KMEANS,
+                                _QUANTIZATION_MODE_LOOKUP_TABLE_LINEAR,
+                                _SUPPORTED_QUANTIZATION_MODES)
+from coremltools.models import MLModel as _MLModel
 
-from ..utils import _get_nn_layers, _wp_to_fp16wp, _get_model, _macos_version
+from ... import (_MINIMUM_FP16_SPEC_VERSION,
+                 _MINIMUM_QUANTIZED_MODEL_SPEC_VERSION,
+                 _SPECIFICATION_VERSION_IOS_14)
 from ..._deps import _HAS_SKLEARN as _HAS_SKLEARN
-from ... import (
-    _MINIMUM_QUANTIZED_MODEL_SPEC_VERSION,
-    _MINIMUM_FP16_SPEC_VERSION,
-    _SPECIFICATION_VERSION_IOS_14,
-)
+from ..utils import _get_model, _macos_version, _wp_to_fp16wp
+from .optimization_utils import _optimize_nn
 
 
 class QuantizedLayerSelector:

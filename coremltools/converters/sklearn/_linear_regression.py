@@ -3,20 +3,19 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from ... import SPECIFICATION_VERSION
-from ...models._interface_management import set_regressor_interface_params
-from ...proto import Model_pb2 as _Model_pb2
-from ...proto import FeatureTypes_pb2 as _FeatureTypes_pb2
-
 import numpy as _np
 
+from ... import SPECIFICATION_VERSION
 from ..._deps import _HAS_SKLEARN
 from ...models import MLModel as _MLModel
+from ...models._interface_management import set_regressor_interface_params
+from ...proto import Model_pb2 as _Model_pb2
 
 if _HAS_SKLEARN:
-    from . import _sklearn_util
     import sklearn
     from sklearn.linear_model import LinearRegression
+
+    from . import _sklearn_util
 
     model_type = "regressor"
     sklearn_class = sklearn.linear_model.LinearRegression

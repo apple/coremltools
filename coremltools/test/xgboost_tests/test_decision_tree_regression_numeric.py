@@ -4,14 +4,15 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import itertools
-import pytest
+import unittest
+from distutils.version import StrictVersion
 
 import pandas as pd
-import unittest
+import pytest
 
-from coremltools.models.utils import evaluate_regressor, _macos_version, _is_macos
 from coremltools._deps import _HAS_SKLEARN, _SKLEARN_VERSION
-from distutils.version import StrictVersion
+from coremltools.models.utils import (_is_macos, _macos_version,
+                                      evaluate_regressor)
 
 
 @unittest.skipIf(not _HAS_SKLEARN, "Missing sklearn. Skipping tests.")
@@ -57,6 +58,7 @@ class DecisionTreeRegressorBostonHousingScikitNumericTest(unittest.TestCase):
         Train a scikit-learn model, convert it and then evaluate it with CoreML
         """
         from sklearn.tree import DecisionTreeRegressor
+
         from coremltools.converters import sklearn as skl_converter
 
         scikit_model = DecisionTreeRegressor(random_state=1, **scikit_params)

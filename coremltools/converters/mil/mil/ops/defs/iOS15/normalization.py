@@ -4,19 +4,13 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 import numpy as np
 
-from coremltools.converters.mil.mil import (
-    DefaultInputs,
-    InputSpec,
-    Operation,
-    precondition,
-    TensorInputType,
-    types,
-)
+from coremltools.converters.mil.mil import (DefaultInputs, InputSpec,
+                                            Operation, TensorInputType,
+                                            precondition, types)
 from coremltools.converters.mil.mil.operation import VALUE
 from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
-from coremltools.converters.mil.mil.types.symbolic import (
-    any_symbolic,
-)
+from coremltools.converters.mil.mil.types.symbolic import any_symbolic
+
 
 @register_op
 class batch_norm(Operation):

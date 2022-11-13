@@ -3,11 +3,9 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from .spec_inspection_utils import (
-    _get_feature_description_summary,
-    _summarize_neural_network_spec_code_style,
-    _summarize_neural_network_spec,
-)
+from .spec_inspection_utils import (_get_feature_description_summary,
+                                    _summarize_neural_network_spec,
+                                    _summarize_neural_network_spec_code_style)
 
 
 def _print_network_spec_parameter_info_style(mlmodel_spec, interface_only=False):

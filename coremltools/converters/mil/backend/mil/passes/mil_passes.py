@@ -3,11 +3,8 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import logging as _logging
-
-from coremltools.converters.mil.backend.nn.passes.nn_passes import nn_backend_passes
+from coremltools import _logger as logger
 from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
-from coremltools.converters.mil._deployment_compatibility import AvailableTarget
 
 
 def mil_backend_passes(prog):
@@ -24,12 +21,12 @@ def mil_backend_passes(prog):
         "nn_backend::handle_unused_inputs",  # must come after dce.
     ]
 
-    _logging.debug("Program before common passes:\n{}".format(prog))
+    logger.debug("Program before common passes:\n{}".format(prog))
 
     prog.validate()
     for p in passes:
-        _logging.info('Performing passes for mil backend: "{}"'.format(p))
+        logger.info('Performing passes for mil backend: "{}"'.format(p))
         PASS_REGISTRY[p](prog)
         # No more validation from this point on as prog is not SSA anymore.
 
-    _logging.debug("Program after mil backend passes:\n{}".format(prog))
+    logger.debug("Program after mil backend passes:\n{}".format(prog))

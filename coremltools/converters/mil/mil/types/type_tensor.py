@@ -3,21 +3,16 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import logging
-
 import numpy as np
 import sympy as sm
 
-from .type_spec import Type
+from coremltools import _logger as logger
+
 from .get_type_info import get_type_info
-from .type_mapping import (
-    promote_types,
-    is_tensor,
-    nptype_from_builtin,
-    builtin_to_string,
-    numpy_type_to_builtin_type,
-    is_subtype,
-)
+from .type_mapping import (builtin_to_string, is_subtype, is_tensor,
+                           nptype_from_builtin, numpy_type_to_builtin_type,
+                           promote_types)
+from .type_spec import Type
 
 
 def memoize(f):
@@ -104,7 +99,7 @@ def tensor(primitive, shape):
             elif promoted_type == primitive:
                 self._val = v.astype(nptype_from_builtin(primitive))
             else:
-                logging.warning(
+                logger.warning(
                     "Saving value type of {} into a builtin type of {}, might lose precision!".format(
                         v.dtype, builtin_to_string(primitive)
                     )

@@ -7,12 +7,11 @@ from enum import Enum
 
 import numpy as np
 
-from coremltools.converters.mil.mil.types.symbolic import is_symbolic
 from coremltools.converters.mil.mil import types
+from coremltools.converters.mil.mil.types.symbolic import is_symbolic
 from coremltools.converters.mil.mil.types.type_mapping import (
-    numpy_type_to_builtin_type,
-    is_builtin,
-)
+    is_builtin, numpy_type_to_builtin_type)
+
 
 
 class ColorLayout(Enum):

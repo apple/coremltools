@@ -4,17 +4,13 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import math
+
 import numpy as np
 
-from coremltools.converters.mil.mil.types.symbolic import (
-    is_symbolic,
-    any_symbolic,
-    is_compatible_symbolic_vector,
-)
 from coremltools.converters.mil.mil import (
     get_new_symbol,
     get_new_variadic_symbol,
-    types
+    types,
 )
 from coremltools.converters.mil.mil.input_type import (
     DefaultInputs,
@@ -25,13 +21,18 @@ from coremltools.converters.mil.mil.input_type import (
 )
 from coremltools.converters.mil.mil.operation import (
     NONE,
+    SYMBOL,
+    VALUE,
     Operation,
     precondition,
-    SYMBOL,
-    VALUE
 )
 from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
-from coremltools.converters.mil.mil.ops.defs._utils import promoted_primitive_type, MAX_SIZE_CONSTANT_FOLDING
+from coremltools.converters.mil.mil.ops.defs._utils import MAX_SIZE_CONSTANT_FOLDING
+from coremltools.converters.mil.mil.types.symbolic import (
+    any_symbolic,
+    is_compatible_symbolic_vector,
+    is_symbolic,
+)
 
 
 @register_op
@@ -72,7 +73,7 @@ class band_part(Operation):
         lower=TensorInputType(const=True, optional=True, type_domain=types.int32),
         upper=TensorInputType(const=True, optional=True, type_domain=types.int32),
     )
-    
+
     type_domains = {
         "T": (types.fp16, types.fp32, types.int32, types.bool),
     }
@@ -124,7 +125,7 @@ class cumsum(Operation):
         exclusive=TensorInputType(const=True, optional=True, type_domain=types.bool),
         reverse=TensorInputType(const=True, optional=True, type_domain=types.bool),
     )
-    
+
     type_domains = {
         "T": (types.fp16, types.fp32, types.int32),
     }
@@ -190,7 +191,7 @@ class fill(Operation):
         shape=TensorInputType(type_domain=types.int32),
         value=TensorInputType(const=True, optional=True, type_domain="T"),
     )
-    
+
     type_domains = {
         "T": (types.fp16, types.fp32, types.int32, types.bool),
     }
@@ -319,7 +320,7 @@ class non_zero(Operation):
     input_spec = InputSpec(
         x=TensorInputType(type_domain="T")
     )
-    
+
     type_domains = {
         "T": (types.fp16, types.fp32, types.int32, types.bool),
     }
@@ -372,7 +373,7 @@ class one_hot(Operation):
         on_value=TensorInputType(const=True, optional=True, type_domain="T"),
         off_value=TensorInputType(const=True, optional=True, type_domain="T"),
     )
-    
+
     type_domains = {
         "T": (types.fp16, types.fp32, types.int32, types.bool),
     }
@@ -426,12 +427,12 @@ class pad(Operation):
 
     Parameters
     ----------
-    
+
     x: tensor<[\*D_in], T>  (Required)
 
     pad: tensor<[2\*N], i32> (Required)
         ``N <= D_in``. Last ``N`` dimensions of ``x`` are padded as follows:
-        
+
         * For each dimension ``i`` of ``x`` if ``i >= D_in - N``:
             * pad ``pad[2*i]`` elements before ``x[..,i,..]``.
             * pad ``pad[2*i+1]`` elements after ``x[..,i,..]``.
@@ -465,7 +466,7 @@ class pad(Operation):
         mode=TensorInputType(const=True, optional=True, type_domain=types.str),
         constant_val=TensorInputType(const=True, optional=True, type_domain="T"),
     )
-    
+
     type_domains = {
         "T": (types.fp16, types.fp32),
     }
@@ -474,7 +475,7 @@ class pad(Operation):
         return DefaultInputs(
             mode="constant",
             constant_val=0.,
-            )
+        )
 
     def type_inference(self):
         in_shape = self.x.shape
@@ -498,7 +499,10 @@ class pad(Operation):
             pad = pad.reshape(-1, 2)
 
             if pad.shape[0] > len(ret_shape):
-                raise ValueError("Number of dimensions specified through pad must less than or equal to rank of input x")
+                raise ValueError(
+                    "Number of dimensions specified through pad must less than or equal to rank "
+                    "of input x"
+                )
 
             for i in range(len(pad)):
                 ret_shape[-len(pad) + i] = ret_shape[-len(pad) + i] + pad[i][0] + pad[i][1]
@@ -530,7 +534,7 @@ class pad(Operation):
 @register_op
 class range_1d(Operation):
     """
-    Returns a numpy-like 1- range sequence.
+    Returns a numpy-like 1-D range sequence.
 
     Parameters
     ----------
@@ -556,7 +560,7 @@ class range_1d(Operation):
         start=TensorInputType(type_domain="T"),
         step=TensorInputType(type_domain="T"),
     )
-    
+
     type_domains = {
         "T": (types.fp16, types.fp32, types.int32),
     }
@@ -592,7 +596,11 @@ class range_1d(Operation):
             shape = shape if is_symbolic(shape) else int(math.ceil(shape))
             shape = tuple([shape])
         else:
-            shape = tuple([get_new_symbol(),])
+            shape = tuple(
+                [
+                    get_new_symbol(),
+                ]
+            )
 
         return types.tensor(self.start.dtype, shape)
 
@@ -624,7 +632,7 @@ class tile(Operation):
         x=TensorInputType(type_domain="T"),
         reps=TensorInputType(type_domain=types.int32),
     )
-    
+
     type_domains = {
         "T": (types.fp16, types.fp32, types.int32, types.bool),
     }
@@ -701,7 +709,7 @@ class argsort(Operation):
         axis=TensorInputType(const=True, optional=True, type_domain=types.int32),
         ascending=TensorInputType(const=True, optional=True, type_domain=types.bool),
     )
-    
+
     type_domains = {
         "T": (types.fp16, types.fp32, types.int32),
     }
@@ -710,7 +718,7 @@ class argsort(Operation):
         return DefaultInputs(
             axis=-1,
             ascending=False,
-            )
+        )
 
     def type_inference(self):
         return types.tensor(types.int32, self.x.shape)
@@ -761,7 +769,7 @@ class topk(Operation):
         axis=TensorInputType(const=True, optional=True, type_domain=types.int32),
         ascending=TensorInputType(const=True, optional=True, type_domain=types.bool),
     )
-    
+
     type_domains = {
         "T": (types.fp16, types.fp32, types.int32),
     }
@@ -771,7 +779,7 @@ class topk(Operation):
             k=1,
             axis=-1,
             ascending=False,
-            )
+        )
 
     def type_inference(self):
         x_type = self.x.dtype
@@ -836,7 +844,7 @@ class flatten2d(Operation):
         x=TensorInputType(type_domain="T"),
         axis=TensorInputType(const=True, optional=True, type_domain=types.int32)
     )
-    
+
     type_domains = {
         "T": (types.fp16, types.fp32, types.int32, types.bool),
     }
@@ -844,7 +852,7 @@ class flatten2d(Operation):
     def default_inputs(self):
         return DefaultInputs(
             axis=1,
-            )
+        )
 
     def type_inference(self):
         shape = list(self.x.shape)
@@ -885,9 +893,7 @@ class shape(Operation):
     T: fp16, fp32, i32, bool
     """
 
-    input_spec = InputSpec(
-        x = TensorInputType(type_domain="T")
-    )
+    input_spec = InputSpec(x=TensorInputType(type_domain="T"))
 
     type_domains = {
         "T": (types.fp16, types.fp32, types.int32, types.bool),
@@ -930,21 +936,19 @@ class concat(Operation):
 
     .. sourcecode:: python
 
-        in1 : shape (3, 2), value = [[1, 2], [3, 4], [5, 6]]
-        in2 : shape (3, 2), value = [[7, 8], [9, 10], [11, 12]]
-        axis = 0
+        in1 = [[1, 2], [3, 4], [5, 6]]  # shape (3, 2)
+        in2 = [[7, 8], [9, 10], [11, 12]]  # shape (3, 2)
+        axis = 0  # output shape is (6, 2)
 
-        if interleave = False (default)
-        output : shape (6, 2)
-        output[0:3, :] = in1
-        output[3:6, :] = in2
-        value = [[1, 2], [3, 4], [5, 6], [7, 8], [9, 10], [11, 12]]
+        if interleave is False:  # default
+            # output[0:3, :] = in1
+            # output[3:6, :] = in2
+            output = [[1, 2], [3, 4], [5, 6], [7, 8], [9, 10], [11, 12]]
 
-        if interleave = True
-        output : shape (6, 2)
-        output[0::2, :] = in1
-        output[1::2, :] = in2
-        value = [[1, 2], [7, 8], [3, 4], [9, 10], [5, 6], [11, 12]]
+        if interleave is True:
+            # output[0::2, :] = in1
+            # output[1::2, :] = in2
+            output = [[1, 2], [7, 8], [3, 4], [9, 10], [5, 6], [11, 12]]
 
     Returns
     -------
@@ -987,14 +991,15 @@ class concat(Operation):
             msg = "In {} of op_type {}: axis out of bound for input " + "(rank {})"
             raise ValueError(msg.format(self.name, self.op_type, rank))
 
-        # Validate primitive types are compatible
+        # Validate values share the same data type
         dtype = self.values[0].dtype
         for v in self.values[1:]:
-            new_dtype = promoted_primitive_type(v.dtype, dtype)
-            if new_dtype is None:
-                msg = "Incompatible primitive types concat: {} vs {}"
-                raise ValueError(msg.format(v.dtype, dtype))
-            dtype = new_dtype
+            if v.dtype != dtype:
+                msg = (
+                    "Tensors in 'values' of the concat op ({}) should share the "
+                    "same data type. Got {}."
+                ).format(self.name, [x.dtype for x in self.values])
+                raise ValueError(msg)
 
         # validate that non-axis dimensions match
         retshape = list(self.values[0].shape)
@@ -1244,8 +1249,22 @@ class stack(Operation):
             if not is_compatible_symbolic_vector(t.shape, t_shape):
                 msg = "Component tensor {} has shape {}, others have {}"
                 raise ValueError(msg.format(t.name, t.shape, t_shape))
+
+        # Validate values share the same data type
+        dtype = self.values[0].dtype
+        for v in self.values[1:]:
+            if v.dtype != dtype:
+                msg = (
+                    "Tensors in 'values' of the stack op ({}) should share the "
+                    "same data type. Got {}."
+                ).format(self.name, [x.dtype for x in self.values])
+                raise ValueError(msg)
+
+        axis = self.axis.val
+        if axis < 0:
+            axis += (self.values[0].rank + 1)
         ret_shape = list(t_shape)
-        ret_shape.insert(self.axis.val, num_tensors)
+        ret_shape.insert(axis, num_tensors)
         return types.tensor(self.values[0].dtype, ret_shape)
 
     @precondition(allow=VALUE | SYMBOL | NONE)

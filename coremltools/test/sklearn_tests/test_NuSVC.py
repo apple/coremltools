@@ -3,39 +3,32 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import os
-import tempfile
 import random
+import tempfile
 import unittest
 
 import pandas as pd
 import pytest
 
-from coremltools.models.utils import (
-    evaluate_classifier,
-    evaluate_classifier_with_probabilities,
-    _macos_version,
-    _is_macos,
-)
-from coremltools._deps import (
-    _HAS_LIBSVM,
-    MSG_LIBSVM_NOT_FOUND,
-    _HAS_SKLEARN,
-    _SKLEARN_VERSION,
-    MSG_SKLEARN_NOT_FOUND,
-)
+from coremltools._deps import (_HAS_LIBSVM, _HAS_SKLEARN, _SKLEARN_VERSION,
+                               MSG_LIBSVM_NOT_FOUND, MSG_SKLEARN_NOT_FOUND)
+from coremltools.models.utils import (_is_macos, _macos_version,
+                                      evaluate_classifier,
+                                      evaluate_classifier_with_probabilities)
 
 if _HAS_LIBSVM:
-    from libsvm import svm, svmutil
-    from svmutil import svm_train, svm_predict
     from libsvm import svmutil
+    from svmutil import svm_predict, svm_train
+
     from coremltools.converters import libsvm
 
 if _HAS_SKLEARN:
-    from sklearn.svm import NuSVC
-    from sklearn.preprocessing import OneHotEncoder
-    from coremltools.converters import sklearn as scikit_converter
     from distutils.version import StrictVersion
+
+    from sklearn.preprocessing import OneHotEncoder
+    from sklearn.svm import NuSVC
+
+    from coremltools.converters import sklearn as scikit_converter
 
 
 @unittest.skipIf(not _HAS_SKLEARN, MSG_SKLEARN_NOT_FOUND)

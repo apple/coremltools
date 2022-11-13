@@ -5,13 +5,13 @@
 
 import os
 import shutil
-from coremltools.models.utils import _is_macos
-
 import unittest
 
-from coremltools.models import MLModel
-from coremltools.models.nearest_neighbors import KNearestNeighborsClassifierBuilder
 from coremltools._deps import _HAS_SKLEARN
+from coremltools.models import MLModel
+from coremltools.models.nearest_neighbors import \
+    KNearestNeighborsClassifierBuilder
+from coremltools.models.utils import _is_macos
 
 if _HAS_SKLEARN:
     from sklearn.datasets import load_iris

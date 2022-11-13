@@ -9,11 +9,9 @@ import numpy as np
 import pytest
 
 from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil import get_new_symbol
 from coremltools.converters.mil.testing_utils import (
-    apply_pass_and_basic_check,
-    assert_model_is_valid,
-    get_op_types_in_program,
-)
+    apply_pass_and_basic_check, assert_model_is_valid, get_op_types_in_program)
 
 
 @pytest.mark.parametrize(
@@ -87,6 +85,38 @@ def test_elementwise_broadcast():
         {"x": [4]},
         expected_output_shapes={block.outputs[0].name: (2, 4)},
     )
+
+
+def test_elementwise_elimination_fill():
+    """
+    When fill layer with dynamic shape is fed to elementwise-binary operation,
+    even though the tensor can't be materialized at conversion time but no-op
+    elimination can still be performed based on fill-value
+    """
+
+    @mb.program(input_specs=[mb.TensorSpec(shape=(2, get_new_symbol()))])
+    def prog(x):
+        shape = mb.shape(x=x)
+        y = mb.fill(value=0.0, shape=shape)
+        x = mb.add(x=x, y=y)
+        return mb.relu(x=x)
+
+    prev_prog, prev_block, block = apply_pass_and_basic_check(
+        prog, "common::noop_elimination"
+    )
+    assert get_op_types_in_program(prev_prog) == ["shape", "fill", "add", "relu"]
+    assert get_op_types_in_program(prog) == ["shape", "fill", "relu"]
+
+    apply_pass_and_basic_check(prog, "common::dead_code_elimination")
+
+    assert get_op_types_in_program(prog) == ["relu"]
+
+    assert_model_is_valid(
+        prog,
+        {"x": (2, 4)},
+        expected_output_shapes={block.outputs[0].name: (2, 4)},
+    )
+
 
 def test_reshape_elimination():
     @mb.program(input_specs=[mb.TensorSpec(shape=(2, 4))])

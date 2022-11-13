@@ -5,18 +5,17 @@
 
 
 from ... import SPECIFICATION_VERSION
-from ...models._interface_management import (
-    set_transform_interface_params as _set_transform_interface_params,
-)
+from ..._deps import _HAS_SKLEARN
+from ...models import MLModel as _MLModel
+from ...models._interface_management import \
+    set_transform_interface_params as _set_transform_interface_params
 from ...proto import Model_pb2 as _Model_pb2
 from ...proto.Normalizer_pb2 import Normalizer as _proto__normalizer
 
-from ..._deps import _HAS_SKLEARN
-from ...models import MLModel as _MLModel
-
 if _HAS_SKLEARN:
-    from . import _sklearn_util
     from sklearn.preprocessing import Normalizer
+
+    from . import _sklearn_util
 
     sklearn_class = Normalizer
 

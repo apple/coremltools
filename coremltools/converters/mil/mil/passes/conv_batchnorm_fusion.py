@@ -12,7 +12,6 @@ from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 
 
 def _try_to_transform(conv_op, bn_op, block):
-
     # get parameters from batch_norm layer
     gamma = bn_op.gamma.val
     beta = bn_op.beta.val
@@ -29,7 +28,12 @@ def _try_to_transform(conv_op, bn_op, block):
 
     # get type of the conv layer
     is_deconv = conv_op.op_type == 'conv_transpose'
-    is_conv_1d  = len(conv_weight.shape) == 3
+    # The deconv weight transpose axes is determined by the dimension of convolution.
+    # Conv1d should be [1, 0, 2], Conv2d should be [1, 0, 2, 3], Conv3d should be [1, 0, 2, 3, 4]
+    if not 3 <= len(conv_weight.shape) <= 5:
+        raise AssertionError(f"Only supports Conv1/2/3d, which means weight's dimension should between 3 and 5, "
+                             f"but got weight with {len(conv_weight.shape)} dimensions. ")
+    deconv_weight_transpose_axes = [1, 0] + [axis for axis in range(2, len(conv_weight.shape))]
 
     # D_in denotes the spatial dimensions for conv kernel weight
     # for conv_transpose, conv_weight has shape [Cin, Cout / groups, *D_in]
@@ -60,7 +64,7 @@ def _try_to_transform(conv_op, bn_op, block):
     new_conv_bias = []
 
     if is_deconv:
-        conv_weight = np.transpose(conv_weight, [1, 0, 2] if is_conv_1d else [1, 0, 2, 3])
+        conv_weight = np.transpose(conv_weight, deconv_weight_transpose_axes)
         conv_weight = np.reshape(conv_weight, [Cout, Cin // groups] + list(conv_weight.shape[2:]))
 
     for i in range(Cout):
@@ -86,11 +90,13 @@ def _try_to_transform(conv_op, bn_op, block):
 
     if is_deconv:
         new_conv_weight = np.reshape(new_conv_weight, [Cout // groups, Cin] + list(new_conv_weight.shape[2:]))
-        new_conv_weight = np.transpose(new_conv_weight, [1, 0, 2] if is_conv_1d else [1, 0, 2, 3])
+        new_conv_weight = np.transpose(new_conv_weight, deconv_weight_transpose_axes)
 
     # make sure the updated weight and bias have the same shape as the original ones
-    assert new_conv_weight.shape == origin_weight_shape, "conv weight should have the same shape before and after the fuse_conv_batchnorm pass."
-    assert new_conv_bias.shape == origin_bias_shape, "conv bias should have the same shape before and after the fuse_conv_batchnorm pass."
+    if new_conv_weight.shape != origin_weight_shape:
+        raise AssertionError("conv weight should have the same shape before and after the fuse_conv_batchnorm pass. ")
+    if new_conv_bias.shape != origin_bias_shape:
+        raise AssertionError("conv bias should have the same shape before and after the fuse_conv_batchnorm pass. ")
 
     # create a new conv op with the new bias value, copying rest of the attributes
     out_name = bn_op.outputs[0].name
@@ -107,17 +113,17 @@ def _try_to_transform(conv_op, bn_op, block):
         x = mb.conv(**conv_kargs)
 
     if bn_op.enclosing_block.try_replace_uses_of_var_after_op(
-        anchor_op=bn_op,
-        old_var=bn_op.outputs[0],
-        new_var=x,
+            anchor_op=bn_op,
+            old_var=bn_op.outputs[0],
+            new_var=x,
     ):
         bn_op.enclosing_block.remove_ops([conv_op, bn_op])
         return True
     return False
 
+
 @block_context_manager
 def _fuse_conv_batchnorm_block(block):
-
     def _match_pattern(op):
         if op.op_type == "conv" or op.op_type == "conv_transpose":
             # abort fusion if op output is also a block output

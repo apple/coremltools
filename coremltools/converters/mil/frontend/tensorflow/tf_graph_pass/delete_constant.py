@@ -3,10 +3,9 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+from coremltools import _logger as logger
 
-from ..basic_graph_ops import delete_node, check_connections, disconnect_edge
-
-import logging
+from ..basic_graph_ops import check_connections, delete_node, disconnect_edge
 
 
 def convert_constant_nodes_to_const_ops(tfssa):
@@ -79,5 +78,5 @@ def delete_unnecessary_constant_nodes(tfssa):
     for f in list(tfssa.functions.values()):
         check_connections(f.graph)
     convert_constant_nodes_to_const_ops(tfssa)
-    logging.debug("%s nodes deleted", delete_count)
+    logger.debug("%s nodes deleted", delete_count)
     return delete_count

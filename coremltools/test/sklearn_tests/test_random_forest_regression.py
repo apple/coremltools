@@ -6,11 +6,10 @@
 import unittest
 
 from coremltools._deps import _HAS_SKLEARN
-from coremltools.proto import Model_pb2
-from coremltools.proto import FeatureTypes_pb2
 
 if _HAS_SKLEARN:
     from sklearn.ensemble import RandomForestRegressor
+
     from coremltools.converters import sklearn as skl_converter
 
 

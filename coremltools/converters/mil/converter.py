@@ -8,20 +8,17 @@ import stat as _stat
 import tempfile as _tempfile
 import warnings as _warnings
 
-from . import InputType, ImageType
-from .mil.passes.apply_common_pass_pipeline import apply_common_pass_pipeline
 from coremltools.converters._profile_utils import _profile
 from coremltools.converters.mil.mil import Builder as mb
-from coremltools.converters.mil.mil.passes.quantization_passes import AbstractQuantizationPass
-from coremltools.converters.mil.mil.types.symbolic import k_used_symbols, k_num_internal_syms
+from coremltools.converters.mil.mil.passes.quantization_passes import \
+    AbstractQuantizationPass
+from coremltools.converters.mil.mil.types.symbolic import (k_num_internal_syms,
+                                                           k_used_symbols)
 from coremltools.models import MLModel
 from coremltools.models.model import _create_mlpackage
-from coremltools.models.utils import _MLMODEL_EXTENSION, _MLPACKAGE_EXTENSION
 
-try:
-    from coremltools.libmodelpackage import ModelPackage
-except ModuleNotFoundError:
-    pass
+from . import ImageType, InputType
+from .mil.passes.apply_common_pass_pipeline import apply_common_pass_pipeline
 
 
 class ConverterRegistry:

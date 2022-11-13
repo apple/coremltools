@@ -5,7 +5,7 @@
 
 import numpy as np
 
-from ..basic_graph_ops import replace_source, delete_node
+from ..basic_graph_ops import delete_node, replace_source
 
 
 def _try_same(input_h, input_w, W_h, W_w, dilation_factor, padding, crop):

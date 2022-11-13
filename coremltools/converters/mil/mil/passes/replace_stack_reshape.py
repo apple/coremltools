@@ -8,6 +8,7 @@ from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil.passes.helper import block_context_manager
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 
+
 def _match_operation(stack_op):
 
     # Identify if this is an op we can transform

@@ -3,20 +3,22 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from distutils.version import StrictVersion as _StrictVersion
 import gc
-import logging
+from distutils.version import StrictVersion as _StrictVersion
+
 import tensorflow as tf
 
-from ..basic_graph_ops import const_determined_nodes
+from coremltools import _logger as logger
 from coremltools._deps import _get_version
 from coremltools.converters.mil.mil import types
-from coremltools.converters.mil.mil.types.type_mapping import numpy_val_to_builtin_val
+from coremltools.converters.mil.mil.types.type_mapping import \
+    numpy_val_to_builtin_val
+
+from ..basic_graph_ops import const_determined_nodes
 
 
 def _get_const_nodes(fn):
-    from tensorflow.core.framework import graph_pb2
-    from tensorflow.core.framework import node_def_pb2
+    from tensorflow.core.framework import graph_pb2, node_def_pb2
 
     new_graph = graph_pb2.GraphDef()
     constant_nodes = set()
@@ -106,7 +108,7 @@ def _constant_propagation(fn, new_graph, constant_nodes, constant_node_num_outpu
                         res = sess.run([op])
                         result.update({op: res[0]})
                     except:
-                        logging.warning(
+                        logger.warning(
                             '[Constant Propagation] Skip "dead" tensor: {}'.format(
                                 op
                             )
@@ -124,8 +126,8 @@ def _constant_propagation(fn, new_graph, constant_nodes, constant_node_num_outpu
                                 result[result_entry]
                             )
                         except:
-                            logging.error(result_entry)
-                            logging.error(result[result_entry])
+                            logger.error(result_entry)
+                            logger.error(result[result_entry])
                     else:
                         values = [
                             result[k + ":" + str(i)]
@@ -138,7 +140,7 @@ def _constant_propagation(fn, new_graph, constant_nodes, constant_node_num_outpu
                             for idx, val in enumerate(npval):
                                 v.value.val[idx] = val[0]
                         except:
-                            logging.error(values)
+                            logger.error(values)
             for k, v in fn.graph.items():
                 if v.op == "get_tuple":
                     inp = fn.graph[v.inputs[0]]
@@ -148,7 +150,7 @@ def _constant_propagation(fn, new_graph, constant_nodes, constant_node_num_outpu
                         v.datatype = inp.datatype.T[idx]
 
     except Exception as e:
-        logging.exception("Constant Propagation pass failed: {}".format(e))
+        logger.exception("Constant Propagation pass failed: {}".format(e))
 
 
 def constant_propagation(tfssa):

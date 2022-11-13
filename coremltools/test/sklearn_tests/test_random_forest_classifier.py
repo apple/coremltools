@@ -4,12 +4,12 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import unittest
+
 from coremltools._deps import _HAS_SKLEARN
-from coremltools.proto import Model_pb2
-from coremltools.proto import FeatureTypes_pb2
 
 if _HAS_SKLEARN:
     from sklearn.ensemble import RandomForestClassifier
+
     from coremltools.converters import sklearn as skl_converter
 
 
@@ -99,9 +99,9 @@ class RandomForestMultiClassClassifierScikitTest(unittest.TestCase):
         """
         Set up the unit test by loading the dataset and training a model.
         """
+        import numpy as np
         from sklearn.datasets import load_boston
         from sklearn.ensemble import RandomForestClassifier
-        import numpy as np
 
         scikit_data = load_boston()
         # n_estimators default changed >= 0.22. Specify explicitly to match <0.22 behavior.

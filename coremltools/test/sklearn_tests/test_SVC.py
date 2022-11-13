@@ -4,7 +4,6 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import copy
-import os
 import random
 import tempfile
 import unittest
@@ -14,23 +13,22 @@ import pandas as pd
 import pytest
 
 from coremltools._deps import _HAS_LIBSVM, _HAS_SKLEARN
-from coremltools.models.utils import (
-    evaluate_classifier,
-    evaluate_classifier_with_probabilities,
-    _macos_version,
-    _is_macos,
-)
+from coremltools.models.utils import (_is_macos, _macos_version,
+                                      evaluate_classifier,
+                                      evaluate_classifier_with_probabilities)
 
 if _HAS_SKLEARN:
     from sklearn.preprocessing import OneHotEncoder
     from sklearn.svm import SVC
+
     from coremltools.converters import sklearn as scikit_converter
 
 if _HAS_LIBSVM:
-    from svm import svm_parameter, svm_problem
-    from svmutil import svm_train, svm_predict
-    from coremltools.converters import libsvm
     import svmutil
+    from svm import svm_parameter
+    from svmutil import svm_predict, svm_train
+
+    from coremltools.converters import libsvm
 
 
 @unittest.skipIf(not _HAS_SKLEARN, "Missing scikit-learn. Skipping tests.")

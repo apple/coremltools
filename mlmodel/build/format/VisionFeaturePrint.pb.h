@@ -67,12 +67,13 @@ void InitDefaults();
 enum VisionFeaturePrint_Scene_SceneVersion {
   VisionFeaturePrint_Scene_SceneVersion_SCENE_VERSION_INVALID = 0,
   VisionFeaturePrint_Scene_SceneVersion_SCENE_VERSION_1 = 1,
+  VisionFeaturePrint_Scene_SceneVersion_SCENE_VERSION_2 = 2,
   VisionFeaturePrint_Scene_SceneVersion_VisionFeaturePrint_Scene_SceneVersion_INT_MIN_SENTINEL_DO_NOT_USE_ = ::google::protobuf::kint32min,
   VisionFeaturePrint_Scene_SceneVersion_VisionFeaturePrint_Scene_SceneVersion_INT_MAX_SENTINEL_DO_NOT_USE_ = ::google::protobuf::kint32max
 };
 bool VisionFeaturePrint_Scene_SceneVersion_IsValid(int value);
 const VisionFeaturePrint_Scene_SceneVersion VisionFeaturePrint_Scene_SceneVersion_SceneVersion_MIN = VisionFeaturePrint_Scene_SceneVersion_SCENE_VERSION_INVALID;
-const VisionFeaturePrint_Scene_SceneVersion VisionFeaturePrint_Scene_SceneVersion_SceneVersion_MAX = VisionFeaturePrint_Scene_SceneVersion_SCENE_VERSION_1;
+const VisionFeaturePrint_Scene_SceneVersion VisionFeaturePrint_Scene_SceneVersion_SceneVersion_MAX = VisionFeaturePrint_Scene_SceneVersion_SCENE_VERSION_2;
 const int VisionFeaturePrint_Scene_SceneVersion_SceneVersion_ARRAYSIZE = VisionFeaturePrint_Scene_SceneVersion_SceneVersion_MAX + 1;
 
 enum VisionFeaturePrint_Objects_ObjectsVersion {
@@ -153,6 +154,8 @@ class VisionFeaturePrint_Scene : public ::google::protobuf::MessageLite /* @@pro
     VisionFeaturePrint_Scene_SceneVersion_SCENE_VERSION_INVALID;
   static const SceneVersion SCENE_VERSION_1 =
     VisionFeaturePrint_Scene_SceneVersion_SCENE_VERSION_1;
+  static const SceneVersion SCENE_VERSION_2 =
+    VisionFeaturePrint_Scene_SceneVersion_SCENE_VERSION_2;
   static inline bool SceneVersion_IsValid(int value) {
     return VisionFeaturePrint_Scene_SceneVersion_IsValid(value);
   }

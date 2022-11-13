@@ -3,33 +3,27 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import logging
 import os
 
 import numpy as np
 
-from coremltools import _OPSET
-from coremltools.converters.mil._deployment_compatibility import AvailableTarget as _target
-from coremltools.converters.mil.mil import (
-    Block,
-    Builder as mb,
-    Function,
-    ListVar,
-    mil_list,
-    Placeholder,
-    Program,
-    TupleInputType,
-    types,
-    Var,
-)
-from coremltools.converters.mil.mil.block import curr_block, curr_opset_version
-from coremltools.converters.mil.mil.ops.registry import SSAOpRegistry as _SSAOpRegistry
+from coremltools import _logger as logger
+from coremltools.converters.mil._deployment_compatibility import \
+    AvailableTarget as _target
+from coremltools.converters.mil.mil import Block
+from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil import (Function, ListVar, Placeholder,
+                                            Program, TupleInputType, Var,
+                                            mil_list, types)
+from coremltools.converters.mil.mil.block import curr_block
+from coremltools.converters.mil.mil.ops.registry import \
+    SSAOpRegistry as _SSAOpRegistry
 from coremltools.libmilstoragepython import _BlobStorageReader as BlobReader
-from coremltools.proto import (
-    MIL_pb2 as pm,
-    Model_pb2 as ml
-)
+from coremltools.proto import MIL_pb2 as pm
+from coremltools.proto import Model_pb2 as ml
+
 from .helper import proto_to_types
+
 
 
 class TranscriptionContext:
@@ -49,7 +43,7 @@ class TranscriptionContext:
         if name in self.name_to_var:
             # Overriding allow us to translate control flow blocks
             msg = "Var %s is added again. Overriding previous value"
-            logging.info(msg % name)
+            logger.info(msg % name)
         self.name_to_var[name] = var
 
     def get_var_from_name(self, name):
@@ -173,9 +167,9 @@ def _create_var_from_spec(spec):
     name = spec.name
     if types.is_list(sym_type):
         var = ListVar(
-            name, 
-            elem_type=sym_type.T[0], 
-            init_length=sym_type.T[1], 
+            name,
+            elem_type=sym_type.T[0],
+            init_length=sym_type.T[1],
             dynamic_length=sym_type.T[2])
     else:
         var = Var(name, sym_type, None, op=None, op_output_idx=None)
@@ -218,13 +212,13 @@ def _create_nested_blocks(context, op_spec):
 
 def _set_inputs_for_control_flow_op(inputs, blocks, op_type):
     """
-    An utility function that set the dummy functional inputs and blocks inputs for 
+    An utility function that set the dummy functional inputs and blocks inputs for
     control flow ops.
     """
     if op_type == "while_loop":
         def _dummy_cond(*loop_vars):
             return None
-        
+
         def _dummy_body(*loop_vars):
             return None
 
@@ -385,7 +379,7 @@ def _load_function(context, func_spec, spec_version):
             sym_shape=valuetype.get_shape(), dtype=valuetype.get_primitive(), name=name
         )
         context.register_var_with_name(name, func_inputs[name].outputs[0])
-        
+
     opset = func_spec.opset
     if opset not in func_spec.block_specializations:
         raise ValueError("Missing block specialization for opset {}".format(opset))
@@ -399,10 +393,10 @@ def _load_function(context, func_spec, spec_version):
 def load(model_spec, specification_version, file_weights_dir="", **kwargs):
     if not isinstance(model_spec, ml.Model):
         raise TypeError("Invalid Model sepc object")
-    
+
     if specification_version < model_spec.specificationVersion:
         raise ValueError("specification_version must be greater or equal to the input model spec version")
-        
+
     if model_spec.WhichOneof("Type") != "mlProgram":
         raise ValueError("Only MIL proto based mlmodels can be loaded")
 

@@ -3,11 +3,12 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from functools import partial
 import itertools
+from functools import partial
+
+from coremltools.converters.mil.mil.passes.helper import block_context_manager
 
 from ...mil.passes import pass_registry
-from coremltools.converters.mil.mil.passes.helper import block_context_manager
 
 # IMPORTANT: List of assumptions we are making about the problem
 # 1) The user defined pattern has exactly one root variable, and one final output operation. As such, we will be searching for a singlular

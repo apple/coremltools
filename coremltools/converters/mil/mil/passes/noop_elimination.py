@@ -9,12 +9,25 @@ from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil.passes.helper import block_context_manager
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 
+
 def _remove_elementwise_binary(op, block, x, y):
     # We remove the ops that has op.x == x or op.y == y
-    if x is not None and op.x.val is not None and np.all(op.x.val == x):
+    def has_all_elements_equal_to(var, value):
+        if value is None:
+            return False
+
+        if var.val is not None:
+            return np.all(var.val == value)
+        elif var.op is not None and var.op.op_type == "fill":
+            fill_value = var.op.value.val
+            return fill_value is not None and (fill_value == value)
+        else:
+            return False
+
+    if has_all_elements_equal_to(op.x, x):
         input_var = op.y
         input_op = input_var.op
-    elif y is not None and op.y.val is not None and np.all(op.y.val == y):
+    elif has_all_elements_equal_to(op.y, y):
         input_var = op.x
         input_op = input_var.op
     else:

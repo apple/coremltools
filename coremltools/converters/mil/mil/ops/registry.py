@@ -3,15 +3,19 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import logging
-from .helper import _get_version_of_op
-from ..builder import Builder
 from collections import defaultdict
-from coremltools.converters.mil._deployment_compatibility import AvailableTarget as target
+
+from coremltools import _logger as logger
+from coremltools.converters.mil._deployment_compatibility import \
+    AvailableTarget as target
 from coremltools.converters.mil.mil.block import curr_opset_version
 
+from ..builder import Builder
+from .helper import _get_version_of_op
+
+
 class SSAOpRegistry:
-    
+
     """
     There are three kinds of operations that we could register:
 
@@ -32,8 +36,9 @@ class SSAOpRegistry:
                     ct.target.iOS14: op_2_iOS13,
                     ct.target.iOS15: op_2_iOS13,
                     ct.target.iOS16: op_2_iOS16,
+                    ct.target.iOS17: op_2_iOS17,
                }``
-                . Two versions of op type ``op_2`` are registered, one defined in iOS13 and one for iOS16
+                . Three versions of op type ``op_2`` are registered, one each for iOS13, iOS16 & ios17
                 . The builder picks up correct version of the op according to curr_opset_version(), which returns the opset version of
                   the current function.
                     -- If ``curr_opset_version()`` is ``None`` (the version of the function is not set), ``mb.op_2`` would call the oldest version of the op by default, which is ``op_2_ios13``
@@ -52,12 +57,13 @@ class SSAOpRegistry:
         target.iOS13,
         target.iOS14,
         target.iOS15,
-        target.iOS16
+        target.iOS16,
+        target.iOS17
     )
     core_ops = defaultdict(dict)
     dialect_ops = {}
     custom_ops = {}
-    
+
     @staticmethod
     def _get_core_op_cls(op_type=None):
         """
@@ -72,7 +78,7 @@ class SSAOpRegistry:
     def register_op(_cls=None, is_custom_op=False, namespace=None, opset_version=target.iOS13, allow_override=False):
         """
         Registration routine for MIL Program operators
-        
+
         Parameters
         ----------
         is_custom_op: boolean
@@ -102,7 +108,7 @@ class SSAOpRegistry:
                 op_msg = "Custom op"
             elif is_dialect_op:
                 op_msg = "Dialect op"
-            logging.debug("Registering {} {}".format(op_msg, op_type))
+            logger.debug("Registering {} {}".format(op_msg, op_type))
 
             # pick the right dict for registration
             if is_custom_op:
@@ -144,10 +150,10 @@ class SSAOpRegistry:
                 idx = SSAOpRegistry.SUPPORTED_OPSET_VERSIONS.index(opset_version)
                 for i in range(idx, len(SSAOpRegistry.SUPPORTED_OPSET_VERSIONS)):
                     op_reg[op_type][SSAOpRegistry.SUPPORTED_OPSET_VERSIONS[i]] = op_cls
-                
+
             # add the version information to the op cls
             op_cls._op_variants = op_reg[op_type]
-                
+
             @classmethod
             def add_op(cls, **kwargs):
                 """
@@ -156,7 +162,7 @@ class SSAOpRegistry:
                 There are two cases:
 
                 (1) custom op / dialect op:
-                    If the op is a custom op or a dialect op, we could directly pick up the op class through 
+                    If the op is a custom op or a dialect op, we could directly pick up the op class through
                     ``SSAOpRegistry.custom_ops[op_type]`` or  ``SSAOpRegistry.dialect_ops[op_type]``
 
                 (2) core op:
@@ -173,8 +179,8 @@ class SSAOpRegistry:
 
             setattr(Builder, op_type, add_op)
             return op_cls
-            
+
         if _cls is None:
             return class_wrapper
-        
+
         return class_wrapper(_cls)

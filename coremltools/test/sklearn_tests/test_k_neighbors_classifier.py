@@ -5,15 +5,15 @@
 
 import unittest
 
-import numpy as np
 from scipy import sparse
 
 from coremltools._deps import _HAS_SKLEARN
 
 if _HAS_SKLEARN:
-    from coremltools.converters import sklearn
     from sklearn.datasets import load_iris
     from sklearn.neighbors import KNeighborsClassifier
+
+    from coremltools.converters import sklearn
 
 
 @unittest.skipIf(not _HAS_SKLEARN, "Missing sklearn. Skipping tests.")

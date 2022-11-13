@@ -3,20 +3,21 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from coremltools.converters.mil.converter import mil_convert as _mil_convert
+from coremltools import _SPECIFICATION_VERSION_IOS_16
 from coremltools.converters.mil import Operation as _Operation
-from coremltools.converters.mil.frontend.milproto.load import load as _milproto_to_pymil
-from coremltools.converters.mil.mil.passes.compression_passes import (
-    WeightSparsifier as _WeightSparsifier,
-    WeightPalettizer as _WeightPalettizer,
-    WeightAffineQuantizer as _WeightAffineQuantizer,
-    WeightDecompressor as _WeightDecompressor,
-)
-from coremltools.converters.mil.mil.passes.quantization_passes import AbstractQuantizationPass as _AbstractQuantizationPass
-from coremltools import (
-    _SPECIFICATION_VERSION_IOS_16,
-    ComputeUnit as _ComputeUnit
-)
+from coremltools.converters.mil.converter import mil_convert as _mil_convert
+from coremltools.converters.mil.frontend.milproto.load import \
+    load as _milproto_to_pymil
+from coremltools.converters.mil.mil.passes.compression_passes import \
+    WeightAffineQuantizer as _WeightAffineQuantizer
+from coremltools.converters.mil.mil.passes.compression_passes import \
+    WeightDecompressor as _WeightDecompressor
+from coremltools.converters.mil.mil.passes.compression_passes import \
+    WeightPalettizer as _WeightPalettizer
+from coremltools.converters.mil.mil.passes.compression_passes import \
+    WeightSparsifier as _WeightSparsifier
+from coremltools.converters.mil.mil.passes.quantization_passes import \
+    AbstractQuantizationPass as _AbstractQuantizationPass
 
 _DEFAULT_MIN_WEIGHT_SIZE_TO_COMPRESS = 2048
 _DEFAULT_SPECIFICATION_VERSION_FOR_COMPRESSION = _SPECIFICATION_VERSION_IOS_16

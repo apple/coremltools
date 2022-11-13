@@ -3,10 +3,9 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import logging
-
 import numpy as np
 
+from coremltools import _logger as logger
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
@@ -48,7 +47,7 @@ def _expand_tf_lstm_helper(block):
 
         if op.op_type == "tf_lstm_block_cell":
             _expand_tf_lstm_block_cell(op)
-            logging.info("Expanding {} (op_type: {})".format(op.name, op.op_type))
+            logger.info("Expanding {} (op_type: {})".format(op.name, op.op_type))
 
         if op.op_type == "tf_lstm_block":
             # only cs, h are supported for now. Can be easily extended to other outputs at performance hit.
@@ -59,7 +58,7 @@ def _expand_tf_lstm_helper(block):
                 )
             ):
                 _expand_tf_lstm_block(op)
-                logging.info("Expanding {} (op_type: {})".format(op.name, op.op_type))
+                logger.info("Expanding {} (op_type: {})".format(op.name, op.op_type))
 
 
 def _lstm_cell_builder(op, x, h_prev, cs_prev, before_op=None):

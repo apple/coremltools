@@ -8,6 +8,7 @@ from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil.passes.helper import block_context_manager
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 
+
 @block_context_manager
 def _const_elimination_block(block):
     # shallow copy hides changes on f.operations during the loop

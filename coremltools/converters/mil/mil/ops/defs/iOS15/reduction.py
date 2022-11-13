@@ -4,16 +4,10 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 import numpy as np
 
-from coremltools.converters.mil.mil import (
-    Operation,
-    precondition,
-    types,
-)
-from coremltools.converters.mil.mil.input_type import (
-    DefaultInputs,
-    InputSpec,
-    TensorInputType
-)
+from coremltools.converters.mil.mil import Operation, precondition, types
+from coremltools.converters.mil.mil.input_type import (DefaultInputs,
+                                                       InputSpec,
+                                                       TensorInputType)
 from coremltools.converters.mil.mil.operation import VALUE
 from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
 

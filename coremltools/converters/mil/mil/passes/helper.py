@@ -7,6 +7,7 @@ import numpy as np
 
 from coremltools.converters.mil.mil import Block, Var
 
+
 def block_context_manager(func):
     """
     This decorator executes a function under the context manager `with block`.

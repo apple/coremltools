@@ -3,16 +3,14 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import operator as op
 from collections import defaultdict
 from copy import copy
 from functools import reduce
+
 import numpy as _np
-import operator as op
 
 from . import datatypes
-from .. import SPECIFICATION_VERSION
-from ..proto import Model_pb2 as _Model_pb2
-from ..proto import FeatureTypes_pb2 as _FeatureTypes_pb2
 
 
 def process_or_validate_classifier_output_features(

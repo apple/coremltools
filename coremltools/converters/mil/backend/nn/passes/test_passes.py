@@ -9,10 +9,8 @@ import pytest
 
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
-from coremltools.converters.mil.testing_utils import (
-    assert_model_is_valid,
-    assert_same_output_names
-)
+from coremltools.converters.mil.testing_utils import (assert_model_is_valid,
+                                                      assert_same_output_names)
 
 
 def test_commingle_loop_vars():

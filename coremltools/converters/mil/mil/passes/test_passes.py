@@ -10,31 +10,20 @@ import numpy as np
 import pytest
 
 import coremltools as ct
-from coremltools.converters.mil.mil import (
-    Builder as mb,
-    Function,
-    get_new_symbol,
-    Program,
-    Symbol,
-    types
-)
-from coremltools.converters.mil.testing_utils import (
-    assert_op_count_match,
-    assert_model_is_valid,
-    assert_same_output_names,
-    get_op_types_in_program,
-    apply_pass_and_basic_check,
-)
-from coremltools.converters.mil.experimental.passes.generic_pass_infrastructure import register_generic_pass
-from coremltools.converters.mil.mil.passes.helper import _check_var_scalar_value
+from coremltools.converters.mil.experimental.passes.generic_pass_infrastructure import \
+    register_generic_pass
+from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil import (Function, Program, Symbol,
+                                            get_new_symbol, types)
+from coremltools.converters.mil.mil.passes.helper import \
+    _check_var_scalar_value
 from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
+from coremltools.converters.mil.testing_utils import (
+    apply_pass_and_basic_check, assert_model_is_valid, assert_op_count_match,
+    assert_same_output_names, get_op_types_in_program)
 
-from .compression_passes import (
-    WeightSparsifier,
-    WeightPalettizer,
-    WeightAffineQuantizer,
-)
-
+from .compression_passes import (WeightAffineQuantizer, WeightPalettizer,
+                                 WeightSparsifier)
 
 np.random.seed(1984)
 validate_model = True
@@ -1002,7 +991,7 @@ class TestTopologicalReorder:
 
         block = prog.functions["main"]
         # Reorder `split` op to test op with multiple output case
-        from .topological_reorder import  _move_operations_to_the_end_block
+        from .topological_reorder import _move_operations_to_the_end_block
         _move_operations_to_the_end_block(block, ['split'])
 
         assert get_op_types_in_program(prog) == ['square', 'relu', 'split', 'square', 'add']

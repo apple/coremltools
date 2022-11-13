@@ -13,18 +13,14 @@ import numpy as np
 import pytest
 
 import coremltools
-from coremltools import ComputeUnit
-from coremltools.models import (
-    neural_network,
-    _QUANTIZATION_MODE_LINEAR_QUANTIZATION,
-)
 import coremltools.models.datatypes as datatypes
+from coremltools import ComputeUnit
+from coremltools.models import (_QUANTIZATION_MODE_LINEAR_QUANTIZATION,
+                                neural_network)
 from coremltools.models.neural_network import quantization_utils
 from coremltools.models.neural_network.quantization_utils import (
-    activate_int8_int8_matrix_multiplications,
-    MatrixMultiplyLayerSelector,
-    _quantize_spec_weights,
-)
+    MatrixMultiplyLayerSelector, _quantize_spec_weights,
+    activate_int8_int8_matrix_multiplications)
 
 
 @unittest.skipIf(

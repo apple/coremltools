@@ -3,8 +3,7 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import logging
-
+from coremltools import _logger as logger
 from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
 
 
@@ -20,8 +19,8 @@ def nn_backend_passes(prog):
 
     prog.validate()
     for p in passes:
-        logging.info('Performing passes for nn_backend: "{}"'.format(p))
+        logger.info('Performing passes for nn_backend: "{}"'.format(p))
         PASS_REGISTRY[p](prog)
         # No more validation from this point on as prog is not SSA anymore.
 
-    logging.debug("Program after nn backend passes:\n{}".format(prog))
+    logger.debug("Program after nn backend passes:\n{}".format(prog))

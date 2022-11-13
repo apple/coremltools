@@ -4,32 +4,38 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import itertools
+import platform
 
 import numpy as np
 import pytest
 
 import coremltools as ct
+from coremltools._deps import _HAS_TF_2, MSG_TF2_NOT_FOUND
 from coremltools.converters.mil import testing_reqs
-from coremltools.converters.mil.mil import (
-    Builder as mb,
-    get_new_symbol,
-    types
-)
-from coremltools.converters.mil.testing_utils import random_gen, ssa_fn, get_op_types_in_program
+from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil import get_new_symbol, types
+from coremltools.converters.mil.testing_utils import (get_op_types_in_program,
+                                                      random_gen, ssa_fn)
 from coremltools.models.utils import _macos_version
+
 from .testing_utils import UNK_SYM, UNK_VARIADIC, run_compare_builder
 
-if testing_reqs._HAS_TF_1 or testing_reqs._HAS_TF_2:
-    from coremltools.converters.mil.testing_reqs import tf
+if _HAS_TF_2:
+    import tensorflow as tf
 
 backends = testing_reqs.backends
+compute_units = testing_reqs.compute_units
 
 
 class TestBandPart:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+    def test_builder_to_backend_smoke(self, compute_unit, backend):
         x_val = np.array(
             [
                 [3.0, 3.0, 5.0, 1.0],
@@ -102,17 +108,20 @@ class TestBandPart:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
 
 class TestCumSum:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+    def test_builder_to_backend_smoke(self, compute_unit, backend):
         t = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
         input_placeholders = {"x": mb.placeholder(shape=t.shape)}
         input_values = {"x": t}
@@ -129,8 +138,7 @@ class TestCumSum:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
@@ -215,12 +223,12 @@ class TestCumSum:
 
 class TestFillLike:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends)
+        "compute_unit, backend", itertools.product(compute_units, backends)
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+    def test_builder_to_backend_smoke(self, compute_unit, backend):
         if backend[0] == "neuralnetwork":
             pytest.xfail("nn backend not supported")
-            
+
         if ct.utils._macos_version() < (13, 0):
             pytest.skip("fill_like not supported in macOS12 or older.")
 
@@ -242,16 +250,17 @@ class TestFillLike:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
+            compute_unit=compute_unit,
             backend=backend,
             minimum_deployment_target=ct.target.iOS16,
         )
 
+
 class TestFill:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends)
+        "compute_unit, backend", itertools.product(compute_units, backends)
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+    def test_builder_to_backend_smoke(self, compute_unit, backend):
         shape = (2, 1, 3)
         x_val = np.zeros(shape=shape, dtype=np.float32)
         input_placeholders = {"x": mb.placeholder(shape=x_val.shape)}
@@ -270,7 +279,7 @@ class TestFill:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
@@ -281,15 +290,15 @@ class TestFill:
         np.testing.assert_allclose(np.full(shape, fill_value=1991.0), res, atol=1e-04, rtol=1e-05)
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, rank, value",
+        "compute_unit, backend, rank, value",
         itertools.product(
-            [True, False],
+            compute_units,
             backends,
             [rank for rank in range(1, 6)],
             [-1917.0, 0.0, 2048.0],
         ),
     )
-    def test_builder_to_backend_stress(self, use_cpu_only, backend, rank, value):
+    def test_builder_to_backend_stress(self, compute_unit, backend, rank, value):
         shape = np.random.randint(low=1, high=4, size=rank).astype(np.int32)
         x_val = np.zeros(shape=shape, dtype=np.float32)
         input_placeholders = {"x": mb.placeholder(shape=x_val.shape)}
@@ -307,14 +316,18 @@ class TestFill:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
     )
-    def test_builder_to_backend_symbolic(self, use_cpu_only, backend):
+    def test_builder_to_backend_symbolic(self, compute_unit, backend):
         s_len = get_new_symbol()
         input_placeholders = {
             "shape": mb.placeholder(shape=(s_len,), dtype=types.int32),
@@ -333,18 +346,21 @@ class TestFill:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
 
-@pytest.mark.skipif(not (testing_reqs._HAS_TF_1 or testing_reqs._HAS_TF_2),
-                    reason="NMS references require TensorFlow")
+@pytest.mark.skipif(not _HAS_TF_2, reason=MSG_TF2_NOT_FOUND)
 class TestNonMaximumSuppression:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+    def test_builder_to_backend_smoke(self, compute_unit, backend):
         boxes_val = np.array(
             [
                 [
@@ -392,7 +408,7 @@ class TestNonMaximumSuppression:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
@@ -456,27 +472,14 @@ class TestNonMaximumSuppression:
             score_vector = np.max(scores[b, :, :], axis=-1)  # (n_box,)
             if not per_class_suppression:
                 # this is the simple case as TF directly supports it
-                with tf.Graph().as_default(), tf.Session() as sess:
-                    box_coord_matrix_pl = tf.placeholder(
-                        tf.float32, shape=box_coord_matrix.shape
-                    )
-                    score_vector_pl = tf.placeholder(
-                        tf.float32, shape=score_vector.shape
-                    )
-                    ids_g = tf.image.non_max_suppression(
-                        box_coord_matrix_pl,
-                        score_vector_pl,
-                        max_output_size=max_boxes,
-                        iou_threshold=iou_threshold,
-                        score_threshold=score_threshold,
-                    )
-                    ids = sess.run(
-                        ids_g,
-                        feed_dict={
-                            box_coord_matrix_pl: box_coord_matrix,
-                            score_vector_pl: score_vector,
-                        },
-                    )
+                ids_g = tf.image.non_max_suppression(
+                    box_coord_matrix,
+                    score_vector,
+                    max_output_size=max_boxes,
+                    iou_threshold=iou_threshold,
+                    score_threshold=score_threshold,
+                )
+                ids = ids_g.numpy()
             else:
                 # this is slightly complicated as TF does not directly support it
                 class_ids = np.argmax(scores[b, :, :], axis=-1)  # (n_box,)
@@ -495,28 +498,14 @@ class TestNonMaximumSuppression:
                     if len(current_class_ids) > 0:
                         feed_in1 = np.take(box_coord_matrix2, current_class_ids, axis=0)
                         feed_in2 = np.take(score_vector2, current_class_ids)
-
-                        with tf.Graph().as_default(), tf.Session() as sess:
-                            box_coord_matrix_pl = tf.placeholder(
-                                tf.float32, shape=feed_in1.shape
-                            )
-                            score_vector_pl = tf.placeholder(
-                                tf.float32, shape=feed_in2.shape
-                            )
-                            cur_ids_g = tf.image.non_max_suppression(
-                                box_coord_matrix_pl,
-                                score_vector_pl,
-                                max_output_size=max_boxes,
-                                iou_threshold=iou_threshold,
-                                score_threshold=score_threshold,
-                            )
-                            cur_ids = sess.run(
-                                cur_ids_g,
-                                feed_dict={
-                                    box_coord_matrix_pl: feed_in1,
-                                    score_vector_pl: feed_in2,
-                                },
-                            )
+                        cur_ids_g = tf.image.non_max_suppression(
+                            feed_in1,
+                            feed_in2,
+                            max_output_size=max_boxes,
+                            iou_threshold=iou_threshold,
+                            score_threshold=score_threshold,
+                        )
+                        cur_ids = cur_ids_g.numpy()
 
                         from_sort_ids = np.take(current_class_ids, cur_ids)
                         ids_intermediate = np.append(ids_intermediate, from_sort_ids)
@@ -540,7 +529,7 @@ class TestNonMaximumSuppression:
     @pytest.mark.parametrize(
         ",".join(
             [
-                "use_cpu_only",
+                "compute_unit",
                 "backend",
                 "iou_threshold_percentile",
                 "score_threshold_percentile",
@@ -551,7 +540,7 @@ class TestNonMaximumSuppression:
             ]
         ),
         itertools.product(
-            [True, False],
+            compute_units,
             backends,
             [0, 30, 80, 100],
             [0, 40, 100],
@@ -563,7 +552,7 @@ class TestNonMaximumSuppression:
     )
     def test_builder_to_backend_stress(
         self,
-        use_cpu_only,
+        compute_unit,
         backend,
         iou_threshold_percentile,
         score_threshold_percentile,
@@ -574,6 +563,9 @@ class TestNonMaximumSuppression:
     ):
         if backend[0] == "mlprogram" and iou_threshold_percentile == 0:
             pytest.xfail("rdar://78080118")
+
+        if backend[0] == "neuralnetwork" and n_boxes == (10, 7) and platform.machine() == "x86_64":
+            pytest.xfail("rdar://78080118 (Investigate failing tests for NMS in coremltools)")
 
         if backend == ("mlprogram", "fp16"):
             pytest.xfail("CPU: rdar://80662705 and GPU: rdar://80661262")
@@ -645,16 +637,16 @@ class TestNonMaximumSuppression:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
 
 class TestNonZero:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends)
+        "compute_unit, backend", itertools.product(compute_units, backends)
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+    def test_builder_to_backend_smoke(self, compute_unit, backend):
         x_val = np.array([[3, 0, 0], [0, 4, 0], [5, 6, 0]], dtype=np.float32)
         input_placeholders = {"x": mb.placeholder(shape=x_val.shape)}
         input_values = {"x": x_val}
@@ -671,7 +663,7 @@ class TestNonZero:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
@@ -684,9 +676,13 @@ class TestNonZero:
 
 class TestOneHot:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+    def test_builder_to_backend_smoke(self, compute_unit, backend):
         x = np.array([1, 0], dtype=np.int32)
         depth = 4
 
@@ -729,16 +725,20 @@ class TestOneHot:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
 
 class TestPad:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+    def test_builder_to_backend_smoke(self, compute_unit, backend):
         def test_constant_mode():
             t = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
             pad = np.array([1, 1, 2, 2], dtype=np.int32)
@@ -765,8 +765,7 @@ class TestPad:
                 input_values,
                 expected_output_types,
                 expected_outputs,
-                use_cpu_only=use_cpu_only,
-                frontend_only=False,
+                compute_unit=compute_unit,
                 backend=backend,
             )
 
@@ -796,8 +795,7 @@ class TestPad:
                 input_values,
                 expected_output_types,
                 expected_outputs,
-                use_cpu_only=use_cpu_only,
-                frontend_only=False,
+                compute_unit=compute_unit,
                 backend=backend,
             )
 
@@ -827,8 +825,7 @@ class TestPad:
                 input_values,
                 expected_output_types,
                 expected_outputs,
-                use_cpu_only=use_cpu_only,
-                frontend_only=False,
+                compute_unit=compute_unit,
                 backend=backend,
             )
 
@@ -858,8 +855,7 @@ class TestPad:
                 input_values,
                 expected_output_types,
                 expected_outputs,
-                use_cpu_only=use_cpu_only,
-                frontend_only=False,
+                compute_unit=compute_unit,
                 backend=backend,
             )
 
@@ -883,8 +879,7 @@ class TestPad:
                 input_values,
                 expected_output_types,
                 expected_outputs,
-                use_cpu_only=use_cpu_only,
-                frontend_only=False,
+                compute_unit=compute_unit,
                 backend=backend,
             )
 
@@ -964,9 +959,13 @@ class TestPad:
 
 class TestRange1d:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+    def test_builder_to_backend_smoke(self, compute_unit, backend):
         x = 15.0
         y = 5.0
         z = 2.0
@@ -1015,16 +1014,20 @@ class TestRange1d:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
     )
-    def test_large_array(self, use_cpu_only, backend):
+    def test_large_array(self, compute_unit, backend):
         input_placeholders = {
-            "x": mb.placeholder(shape=(1,)), # dummpy input
+            "x": mb.placeholder(shape=(1,)),  # dummpy input
         }
         input_values = {"x": 0.5}
 
@@ -1045,7 +1048,7 @@ class TestRange1d:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
@@ -1062,9 +1065,13 @@ class TestRange1d:
 
 class TestTile:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+    def test_builder_to_backend_smoke(self, compute_unit, backend):
         x = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
         input_placeholders = {"x": mb.placeholder(shape=x.shape)}
 
@@ -1092,8 +1099,7 @@ class TestTile:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
@@ -1103,11 +1109,16 @@ class TestTile:
         v = mb.tile(x=x, reps=(1, 2))
         np.testing.assert_allclose(np.tile(x, reps=(1, 2)), v.val, atol=1e-04, rtol=1e-05)
 
+
 class TestDynamicTile:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+    def test_builder_to_backend_smoke(self, compute_unit, backend):
         x = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
         rep1 = np.array([1, 1]).astype(np.int32)
         rep2 = np.array([2, 1]).astype(np.int32)
@@ -1154,17 +1165,20 @@ class TestDynamicTile:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
 
 class TestTopK:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+    def test_builder_to_backend_smoke(self, compute_unit, backend):
         val = np.array([[-1.0, 2.0, -3.0], [4.0, -5.0, 6.0]], dtype=np.float32)
         input_placeholders = {"x": mb.placeholder(shape=val.shape)}
         input_values = {"x": val}
@@ -1187,32 +1201,34 @@ class TestTopK:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, return_indices, sort", 
+        "compute_unit, backend, return_indices, sort",
         itertools.product(
-            [True, False], 
+            compute_units,
             backends,
             [True, False],
             [True, False],
         )
     )
-    def test_builder_to_backend_smoke_iOS16(self, use_cpu_only, backend, return_indices, sort):
+    def test_builder_to_backend_smoke_iOS16(self, compute_unit, backend, return_indices, sort):
         if backend[0] == "neuralnetwork":
             pytest.skip("nn backend not supported")
         if _macos_version() < (13, 0):
             pytest.skip("New functionality in macOS13/iOS16")
 
         if not return_indices:
-            pytest.xfail("rdar://92880117 (Topk with return_indices = False error out at the MIL->EIR stage)")
+            pytest.xfail(
+                "rdar://92880117 (Topk with return_indices = False error out at the MIL->EIR stage)"
+            )
 
         val = np.array([[-1.0, 2.0, -3.0], [4.0, -5.0, 6.0]], dtype=np.float32)
         input_placeholders = {"x": mb.placeholder(shape=val.shape)}
         input_values = {"x": val}
-        
+
         def build(x):
             return mb.topk(x=x, k=2, axis=1, return_indices=return_indices, sort=sort)
 
@@ -1235,7 +1251,7 @@ class TestTopK:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
+            compute_unit=compute_unit,
             backend=backend,
             minimum_deployment_target=ct.target.iOS16,
         )
@@ -1263,9 +1279,13 @@ class TestTopK:
         np.testing.assert_allclose(ref_indices, res_indices.val, atol=1e-04, rtol=1e-05)
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
     )
-    def test_builder_to_backend_symbolic(self, use_cpu_only, backend):
+    def test_builder_to_backend_symbolic(self, compute_unit, backend):
         s0 = get_new_symbol()
 
         val = np.array([[1.0, 2.0, -3.0], [4.0, -5.0, 6.0]], dtype=np.float32)
@@ -1290,16 +1310,20 @@ class TestTopK:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
 
 class TestFlatten2d:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+    def test_builder_to_backend_smoke(self, compute_unit, backend):
         t = np.array(
             [[[1, 2, 3], [4, 5, 6]], [[-1, -2, -3], [-4, -5, -6]]], dtype=np.float32
         )
@@ -1322,15 +1346,20 @@ class TestFlatten2d:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
     @pytest.mark.parametrize(
-        "use_cpu_only, rank, axis, backend", itertools.product([True, False], range(1, 6), range(-5, 6), backends,)
+        "compute_unit, rank, axis, backend",
+        itertools.product(
+            compute_units,
+            range(1, 6),
+            range(-5, 6),
+            backends,
+        ),
     )
-    def test_builder_to_backend_stress(self, use_cpu_only, rank, axis, backend):
+    def test_builder_to_backend_stress(self, compute_unit, rank, axis, backend):
         if axis < -rank or axis >= rank + 1:
             return
 
@@ -1364,8 +1393,7 @@ class TestFlatten2d:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
@@ -1377,9 +1405,13 @@ class TestFlatten2d:
         np.testing.assert_allclose(expected_f, f.val, atol=1e-04, rtol=1e-05)
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
     )
-    def test_builder_to_backend_symbolic(self, use_cpu_only, backend):
+    def test_builder_to_backend_symbolic(self, compute_unit, backend):
         s0 = get_new_symbol()
 
         input_placeholders = {
@@ -1402,17 +1434,21 @@ class TestFlatten2d:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
 
 class TestShape:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, input_type", itertools.product([True, False], backends, ["int32", "float32"])
+        "compute_unit, backend, input_type",
+        itertools.product(
+            compute_units,
+            backends,
+            ["int32", "float32"]
+        )
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend, input_type):
+    def test_builder_to_backend_smoke(self, compute_unit, backend, input_type):
         np_type = np.int32 if input_type == "int32" else np.float32
         mb_type = types.int32 if input_type == "int32" else types.fp32
 
@@ -1434,8 +1470,7 @@ class TestShape:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
@@ -1447,9 +1482,14 @@ class TestShape:
         np.testing.assert_allclose(expected_f, f.val, atol=1e-04, rtol=1e-05)
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, input_type", itertools.product([True, False], backends, ["int32", "float32"])
+        "compute_unit, backend, input_type",
+        itertools.product(
+            compute_units,
+            backends,
+            ["int32", "float32"]
+        )
     )
-    def test_builder_to_backend_symbolic(self, use_cpu_only, backend, input_type):
+    def test_builder_to_backend_symbolic(self, compute_unit, backend, input_type):
         np_type = np.int32 if input_type == "int32" else np.float32
         mb_type = types.int32 if input_type == "int32" else types.fp32
 
@@ -1476,16 +1516,21 @@ class TestShape:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
+
 class TestIdentity:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, input_type", itertools.product([True, False], backends, ["int32", "float32"])
+        "compute_unit, backend, input_type",
+        itertools.product(
+            compute_units,
+            backends,
+            ["int32", "float32"]
+        )
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend, input_type):
+    def test_builder_to_backend_smoke(self, compute_unit, backend, input_type):
         np_type = np.int32 if input_type == "int32" else np.float32
         mb_type = types.int32 if input_type == "int32" else types.fp32
 
@@ -1507,8 +1552,7 @@ class TestIdentity:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
@@ -1520,9 +1564,13 @@ class TestIdentity:
         np.testing.assert_allclose(expected_f, f.val, atol=1e-04, rtol=1e-05)
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
     )
-    def test_builder_to_backend_symbolic(self, use_cpu_only, backend):
+    def test_builder_to_backend_symbolic(self, compute_unit, backend):
         input_placeholders = {
             "x": mb.placeholder(shape=(10, 4, 5, 6)),
         }
@@ -1543,17 +1591,20 @@ class TestIdentity:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
 
 class TestArgSort:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+    def test_builder_to_backend_smoke(self, compute_unit, backend):
         val = np.array([[-1.0, 2.0, -3.0], [4.0, -5.0, 6.0]], dtype=np.float32)
         input_placeholders = {"x": mb.placeholder(shape=val.shape)}
         input_values = {"x": val}
@@ -1576,7 +1627,7 @@ class TestArgSort:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
+            compute_unit=compute_unit,
             backend=backend,
         )
 

@@ -7,11 +7,8 @@ import unittest
 
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.testing_utils import (
-    assert_model_is_valid,
-    get_op_types_in_program,
-    get_op_names_in_program,
-    apply_pass_and_basic_check,
-)
+    apply_pass_and_basic_check, assert_model_is_valid, get_op_names_in_program,
+    get_op_types_in_program)
 
 
 class OpNameDeduplicationPass(unittest.TestCase):

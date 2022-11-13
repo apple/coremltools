@@ -8,7 +8,6 @@ from .annotate import annotate
 from .get_type_info import get_type_info
 from .type_spec import Type
 
-
 _global_tuple = tuple
 
 

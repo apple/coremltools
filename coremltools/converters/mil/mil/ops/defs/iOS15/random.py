@@ -3,12 +3,11 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from coremltools.converters.mil.mil import get_new_symbol, get_new_variadic_symbol, types
-from coremltools.converters.mil.mil.input_type import (
-    DefaultInputs,
-    InputSpec,
-    TensorInputType,
-)
+from coremltools.converters.mil.mil import (get_new_symbol,
+                                            get_new_variadic_symbol, types)
+from coremltools.converters.mil.mil.input_type import (DefaultInputs,
+                                                       InputSpec,
+                                                       TensorInputType)
 from coremltools.converters.mil.mil.operation import Operation
 from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
 from coremltools.converters.mil.mil.types.symbolic import any_symbolic

@@ -3,19 +3,14 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from coremltools.converters.mil.mil import (
-    Operation,
-    types,
-)
+from coremltools.converters.mil.mil import Operation, types
 from coremltools.converters.mil.mil.block import curr_opset_version
-from coremltools.converters.mil.mil.input_type import InputSpec
-from coremltools.converters.mil.mil.input_type import (
-    DefaultInputs,
-    InputSpec,
-    TensorInputType,
-)
+from coremltools.converters.mil.mil.input_type import (DefaultInputs,
+                                                       InputSpec,
+                                                       TensorInputType)
 from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
-from coremltools.converters.mil.mil.ops.defs._utils import spatial_dimensions_out_shape
+from coremltools.converters.mil.mil.ops.defs._utils import \
+    spatial_dimensions_out_shape
 from coremltools.converters.mil.mil.ops.defs.iOS15 import _IOS15_TARGET
 
 

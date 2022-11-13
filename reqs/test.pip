@@ -17,7 +17,7 @@ scipy > 1.4 ; python_version < '3.8'
 scipy==1.8.1; python_version >= '3.8'
 six
 sympy > 1.6
-tensorflow==1.15.4; python_version < '3.8'
+gast==0.4.0
 torch==1.12.1
 torchvision==0.13.1
 xgboost==1.4.2; platform_machine != "arm64"
@@ -25,3 +25,12 @@ mock
 wrapt
 tqdm
 pytest-timeout
+
+# tensorflow related package
+tensorflow==2.10.0; platform_machine != "arm64"
+tensorflow-macos==2.10.0; platform_machine == "arm64"
+tensorflow-estimator==2.10.0
+keras==2.10.0
+tensorflow-addons==0.18.0
+tensorflow-hub==0.12.0
+transformers==4.17.0; python_version > '3.6'
