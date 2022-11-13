@@ -2787,7 +2787,7 @@ class TestArange(TorchBaseTest):
 
 class TestEinsum(TorchBaseTest):
     @pytest.mark.parametrize(
-        "backend, equation, reverse_input_order",
+        "backend, equation, reverse_input_order, dynamic",
         itertools.product(
             backends,
             [
@@ -2819,10 +2819,11 @@ class TestEinsum(TorchBaseTest):
                 "abcd,efbd->eafc",
                 "acdb,bade->abce",
              ],
-            [False, True]
+            [False, True],
+            [False, True],
         ),
     )
-    def test_einsum(self, backend, equation, reverse_input_order):
+    def test_einsum(self, backend, equation, reverse_input_order, dynamic):
         class TestEinsum(nn.Module):
             def forward(self, x, y):
                 return torch.einsum(equation, x, y)
@@ -2837,7 +2838,10 @@ class TestEinsum(TorchBaseTest):
             for symbol in a_desc + b_desc:
                 if symbol not in shapes:
                     shapes[symbol] = cur_default_shape
-                    converter_shapes[symbol] = RangeDim(default=cur_default_shape)
+                    if dynamic:
+                        converter_shapes[symbol] = RangeDim(default=cur_default_shape)
+                    else:
+                        converter_shapes[symbol] = cur_default_shape
                     cur_default_shape += 1
             a_shape = [shapes[symbol] for symbol in a_desc]
             b_shape = [shapes[symbol] for symbol in b_desc]
@@ -2847,29 +2851,7 @@ class TestEinsum(TorchBaseTest):
                     [TensorType(shape=a_converter_shape, dtype=np.float32), TensorType(shape=b_converter_shape,
                                                                                        dtype=np.float32)])
 
-        converter_input_type = None
-
-        # Hardcoded cases
-        if equation in ["abcd,adce->abce", "a b c d , a d c e -> a b c e"]:
-            input_shapes = [[3, 4, 2, 6], [3, 6, 2, 2]]
-        elif equation == "abc,cbd->abd":
-            input_shapes = [[4, 2, 6], [6, 2, 2]]
-        elif equation == "bnqd,bnkd->bnqk":
-            input_shapes = [[1,2,3,4], [1,2,4,4]]
-        elif equation == "abc,cd->abd":
-            input_shapes = [[2,3,4], [4,5]]
-        elif equation == "abc,cde->abde":
-            input_shapes = [[2,3,4], [4,5,6]]
-        elif equation == "btnh,bfnh->bnft":
-            input_shapes = [[1,2,3,4], [1,5,3,4]]
-        elif equation == "bnft,btnh->bfnh":
-            input_shapes = [[1,2,3,4], [1,4,2,6]]
-        elif equation == "abcd,cde->abe":
-            input_shapes = [[1,2,3,4], [3,4,6]]
-
-        # Generic cases
-        else:
-            input_shapes, converter_input_type = make_input_types(equation)
+        input_shapes, converter_input_type = make_input_types(equation)
 
         if reverse_input_order:
             input_output_strings = equation.split('->')

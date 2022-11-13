@@ -65,7 +65,7 @@ def build_einsum_mil(a_var, b_var, equation, name):
         - output var that contains the einsum result
     """
 
-    ## TODO: rdar://73851694 (Update einsum op translation to support generic cases) 
+    ## TODO: rdar://73851694 (Update einsum op translation to support generic cases)
     equation = equation.replace(" ", "")
     parsed_vectors = parse_einsum_equation(equation)
     equation_rev = _reverse_input_einsum_eq(equation)
@@ -74,6 +74,7 @@ def build_einsum_mil(a_var, b_var, equation, name):
     def _swap(a, b):
         return b, a
 
+    is_dynamic = any_symbolic(a_var.shape) or any_symbolic(b_var.shape)
     if parsed_vectors == ([0,1,2,3],[0,1,4,3],[0,1,2,4]) or parsed_vectors_rev == ([0,1,2,3],[0,1,4,3],[0,1,2,4]): # equation == "bnqd,bnkd->bnqk"
         if parsed_vectors_rev == ([0,1,2,3],[0,1,4,3],[0,1,2,4]):
             a_var, b_var = _swap(a_var, b_var)
@@ -82,7 +83,7 @@ def build_einsum_mil(a_var, b_var, equation, name):
         if parsed_vectors_rev == ([0,1,2],[2,3],[0,1,3]):
             a_var, b_var = _swap(a_var, b_var)
         x = mb.matmul(x=a_var, y=b_var, transpose_x=False, transpose_y=False, name=name)
-    elif parsed_vectors == ([0,1,2],[2,3,4],[0,1,3,4]) or parsed_vectors_rev == ([0,1,2],[2,3,4],[0,1,3,4]): # equation == "abc,cde->abde"
+    elif (parsed_vectors == ([0,1,2],[2,3,4],[0,1,3,4]) or parsed_vectors_rev == ([0,1,2],[2,3,4],[0,1,3,4])) and not is_dynamic: # equation == "abc,cde->abde"
         if parsed_vectors_rev == ([0,1,2],[2,3,4],[0,1,3,4]):
             a_var, b_var = _swap(a_var, b_var)
         x_1 = mb.reshape(x=a_var, shape=[a_var.shape[0] * a_var.shape[1], a_var.shape[2]])
@@ -103,7 +104,7 @@ def build_einsum_mil(a_var, b_var, equation, name):
         b_var = mb.transpose(x=b_var, perm=[0, 2, 1, 3])
         x = mb.matmul(x=a_var, y=b_var, transpose_x=False, transpose_y=False)
         x = mb.transpose(x=x, perm=[0, 2, 1, 3], name=name)
-    elif parsed_vectors == ([0,1,2,3],[2,3,4],[0,1,4]) or parsed_vectors_rev == ([0,1,2,3],[2,3,4],[0,1,4]): # equation == "abcd,cde->abe"
+    elif (parsed_vectors == ([0,1,2,3],[2,3,4],[0,1,4]) or parsed_vectors_rev == ([0,1,2,3],[2,3,4],[0,1,4])) and not is_dynamic: # equation == "abcd,cde->abe"
         if parsed_vectors_rev == ([0,1,2,3],[2,3,4],[0,1,4]):
             a_var, b_var = _swap(a_var, b_var)
         x_1 = mb.reshape(x=a_var, shape=[a_var.shape[0], a_var.shape[1], a_var.shape[2] * a_var.shape[3]])
