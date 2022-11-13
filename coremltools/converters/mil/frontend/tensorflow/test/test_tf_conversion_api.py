@@ -4,6 +4,7 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import os
+from shutil import rmtree
 from tempfile import mkdtemp
 
 import numpy as np
