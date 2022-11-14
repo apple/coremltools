@@ -1175,7 +1175,8 @@ def slice_by_index(const_context, builder, op):
 
         for i in range(rank):
             if (not begin_mask[i] and begin[i] != 0) or \
-               (not end_mask[i] and end[i] != op.x.shape[i]):
+               (not end_mask[i] and end[i] != op.x.shape[i]) or \
+               stride[i] != 1:
                 slice_dim.append(i)
 
         if len(slice_dim) == 1 and not squeeze_mask[slice_dim[0]]:
