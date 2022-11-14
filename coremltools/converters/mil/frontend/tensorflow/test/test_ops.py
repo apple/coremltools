@@ -16,7 +16,7 @@ import coremltools as ct
 from coremltools import TensorType, RangeDim
 from coremltools._deps import _HAS_TF_2
 from coremltools.converters.mil import testing_reqs
-from coremltools.converters.mil.testing_utils import random_gen
+from coremltools.converters.mil.testing_utils import random_gen, gen_input_shapes_einsum
 from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import (
     make_tf_graph,
     layer_counts,
@@ -2091,22 +2091,7 @@ class TestEinsum(TensorFlowBaseTest):
         )
     )
     def test(self, use_cpu_for_conversion, backend, equation, reverse_input_order):
-
-        def make_input_types(equation):
-            equation = equation.replace(" ", "")
-            left = equation.split("->")[0]
-            a_desc, b_desc = left.split(",")
-            shapes = {}
-            cur_default_shape = 2
-            for symbol in a_desc + b_desc:
-                if symbol not in shapes:
-                    shapes[symbol] = cur_default_shape
-                    cur_default_shape += 1
-            a_shape = [shapes[symbol] for symbol in a_desc]
-            b_shape = [shapes[symbol] for symbol in b_desc]
-            return [a_shape, b_shape]
-
-        input_shapes = make_input_types(equation)
+        input_shapes, _ = gen_input_shapes_einsum(equation, False)
 
         if reverse_input_order:
             input_output_strings = equation.split('->')

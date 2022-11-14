@@ -25,6 +25,7 @@ from coremltools import (
 )
 from coremltools._deps import version_lt
 from coremltools.converters.mil import testing_reqs
+from coremltools.converters.mil.testing_utils import gen_input_shapes_einsum
 from coremltools.models.utils import (
     _macos_version,
     _python_version
@@ -2828,30 +2829,7 @@ class TestEinsum(TorchBaseTest):
             def forward(self, x, y):
                 return torch.einsum(equation, x, y)
 
-        def make_input_types(equation, dynamic):
-            equation = equation.replace(" ", "")
-            left = equation.split("->")[0]
-            a_desc, b_desc = left.split(",")
-            converter_shapes = {}
-            shapes = {}
-            cur_default_shape = 2
-            for symbol in a_desc + b_desc:
-                if symbol not in shapes:
-                    shapes[symbol] = cur_default_shape
-                    if dynamic:
-                        converter_shapes[symbol] = RangeDim(default=cur_default_shape)
-                    else:
-                        converter_shapes[symbol] = cur_default_shape
-                    cur_default_shape += 1
-            a_shape = [shapes[symbol] for symbol in a_desc]
-            b_shape = [shapes[symbol] for symbol in b_desc]
-            a_converter_shape = [converter_shapes[symbol] for symbol in a_desc]
-            b_converter_shape = [converter_shapes[symbol] for symbol in b_desc]
-            return ([a_shape, b_shape],
-                    [TensorType(shape=a_converter_shape, dtype=np.float32), TensorType(shape=b_converter_shape,
-                                                                                       dtype=np.float32)])
-
-        input_shapes, converter_input_type = make_input_types(equation, dynamic)
+        input_shapes, converter_input_type = gen_input_shapes_einsum(equation, dynamic)
 
         if reverse_input_order:
             input_output_strings = equation.split('->')
