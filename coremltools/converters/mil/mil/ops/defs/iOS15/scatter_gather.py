@@ -6,19 +6,15 @@
 import numpy as np
 
 from coremltools.converters.mil.mil import Operation, types
-from coremltools.converters.mil.mil.input_type import (
-    DefaultInputs,
-    InputSpec,
-    TensorInputType,
-)
-from coremltools.converters.mil.mil.operation import precondition
+from coremltools.converters.mil.mil.input_type import (DefaultInputs,
+                                                       InputSpec,
+                                                       TensorInputType)
+from coremltools.converters.mil.mil.operation import (SYMBOL, VALUE,
+                                                      precondition)
 from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
 from coremltools.converters.mil.mil.ops.defs._utils import compute_gather
-from coremltools.converters.mil.mil.types.symbolic import is_compatible_symbolic_vector, is_symbolic
-from coremltools.converters.mil.mil.operation import (
-    SYMBOL,
-    VALUE
-)
+from coremltools.converters.mil.mil.types.symbolic import (
+    is_compatible_symbolic_vector)
 
 
 @register_op

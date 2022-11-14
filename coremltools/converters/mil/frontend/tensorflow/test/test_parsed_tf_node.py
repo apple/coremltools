@@ -4,6 +4,7 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import unittest
+
 import pytest
 
 pytest.importorskip("tensorflow", minversion="1.15.0")
@@ -11,7 +12,8 @@ from tensorflow.core.framework import node_def_pb2 as node_def
 from tensorflow.core.framework import tensor_shape_pb2 as tensor_shape
 from tensorflow.core.framework import types_pb2 as types
 
-from coremltools.converters.mil.frontend.tensorflow.parsed_tf_node import ParsedTFNode
+from coremltools.converters.mil.frontend.tensorflow.parsed_tf_node import \
+    ParsedTFNode
 
 
 def _mock_tf_node():

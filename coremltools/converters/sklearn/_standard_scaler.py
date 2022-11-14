@@ -5,19 +5,16 @@
 
 
 from ... import SPECIFICATION_VERSION
-from ...models._interface_management import (
-    set_transform_interface_params as _set_transform_interface_params,
-)
-from ...proto import Model_pb2 as _Model_pb2
-from ...proto import FeatureTypes_pb2 as _FeatureTypes_pb2
-
 from ..._deps import _HAS_SKLEARN
 from ...models import MLModel as _MLModel
+from ...models._interface_management import \
+    set_transform_interface_params as _set_transform_interface_params
+from ...proto import Model_pb2 as _Model_pb2
 
 if _HAS_SKLEARN:
-    from . import _sklearn_util
-    import sklearn
     from sklearn.preprocessing import StandardScaler
+
+    from . import _sklearn_util
 
     sklearn_class = StandardScaler
 

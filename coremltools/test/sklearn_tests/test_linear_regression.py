@@ -3,19 +3,20 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import os
 import unittest
 
 import pandas as pd
 
 from coremltools._deps import _HAS_SKLEARN
-from coremltools.models.utils import evaluate_regressor, _macos_version, _is_macos
+from coremltools.models.utils import (_is_macos, _macos_version,
+                                      evaluate_regressor)
 
 if _HAS_SKLEARN:
     from sklearn.datasets import load_boston
     from sklearn.linear_model import LinearRegression
     from sklearn.preprocessing import OneHotEncoder
     from sklearn.svm import LinearSVR
+
     from coremltools.converters.sklearn import convert
 
 

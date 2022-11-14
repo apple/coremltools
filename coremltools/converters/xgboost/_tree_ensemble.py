@@ -3,13 +3,12 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from ...models.tree_ensemble import (
-    TreeEnsembleRegressor as _TreeEnsembleRegressor,
-    TreeEnsembleClassifier,
-)
-from ..._deps import _HAS_XGBOOST
-
 import numpy as _np
+
+from ..._deps import _HAS_XGBOOST
+from ...models.tree_ensemble import TreeEnsembleClassifier
+from ...models.tree_ensemble import \
+    TreeEnsembleRegressor as _TreeEnsembleRegressor
 
 if _HAS_XGBOOST:
     import xgboost as _xgboost

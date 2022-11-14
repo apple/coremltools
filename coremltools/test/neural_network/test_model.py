@@ -3,27 +3,24 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import coremltools
-import numpy as np
-import PIL.Image
 import os
 import tempfile
 import unittest
 
+import numpy as np
+import PIL.Image
+
+import coremltools
 from coremltools import ComputeUnit
 from coremltools._deps import _HAS_TORCH
 from coremltools.converters.mil import Builder as mb
-from coremltools.models.utils import (
-    rename_feature,
-    save_spec,
-    _macos_version,
-    _convert_neural_network_spec_weights_to_fp16,
-    _is_macos,
-    convert_double_to_float_multiarray_type,
-)
 from coremltools.models import MLModel, datatypes
 from coremltools.models.neural_network import NeuralNetworkBuilder
-from coremltools.models.neural_network.utils import make_image_input, make_nn_classifier
+from coremltools.models.neural_network.utils import (make_image_input,
+                                                     make_nn_classifier)
+from coremltools.models.utils import (
+    _convert_neural_network_spec_weights_to_fp16, _is_macos, _macos_version,
+    convert_double_to_float_multiarray_type, rename_feature, save_spec)
 from coremltools.proto import Model_pb2
 
 if _HAS_TORCH:

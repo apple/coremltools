@@ -6,12 +6,11 @@
 import os
 
 import pytest
+import torch
+import torchvision
 
 import coremltools as ct
-from coremltools._deps import (
-    _HAS_TORCH,
-    MSG_TORCH_NOT_FOUND,
-)
+from coremltools._deps import _HAS_TORCH, MSG_TORCH_NOT_FOUND
 
 if _HAS_TORCH:
     import torch
@@ -37,7 +36,6 @@ class TestPyTorchConverter:
     @staticmethod
     def test_pth_extension(tmpdir):
         # test for issue: https://github.com/apple/coremltools/issues/917
-
         class TestModule(torch.nn.Module):
             def __init__(self):
                 super(TestModule, self).__init__()

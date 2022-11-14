@@ -3,25 +3,23 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import logging as _logging
-
 import numpy as _np
 from tqdm import tqdm as _tqdm
 
-from .mil_to_nn_mapping_registry import MIL_TO_NN_MAPPING_REGISTRY, register_mil_to_nn_mapping
-from coremltools.models import neural_network as neural_network
-from coremltools.proto import NeuralNetwork_pb2
-from coremltools.converters.mil.mil.types.symbolic import (
-    is_variadic,
-    any_symbolic,
-    is_symbolic,
-)
+from coremltools import _logger as logger
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.ops.registry import SSAOpRegistry
+from coremltools.converters.mil.mil.types.symbolic import (any_symbolic,
+                                                           is_symbolic,
+                                                           is_variadic)
 from coremltools.converters.mil.mil.types.type_mapping import np_val_to_py_type
-from coremltools.models.neural_network.quantization_utils import (
-    _convert_array_to_nbit_quantized_bytes,
-)
+from coremltools.models import neural_network as neural_network
+from coremltools.models.neural_network.quantization_utils import \
+    _convert_array_to_nbit_quantized_bytes
+from coremltools.proto import NeuralNetwork_pb2
+
+from .mil_to_nn_mapping_registry import (MIL_TO_NN_MAPPING_REGISTRY,
+                                         register_mil_to_nn_mapping)
 
 
 def convert_ops(const_context, builder, ops, outputs):
@@ -83,7 +81,7 @@ def _convert_pool(const_context, builder, op, mode, exclude_padding_from_average
     num_spatial_dimensions = len(op.kernel_sizes.val)
     op_pad = op.pad.val if op.pad_type.val == 'custom' \
         else [0] * num_spatial_dimensions * 2
-    
+
     padding_type = op.pad_type.val.upper()
     same_padding_asymmetry_mode = "BOTTOM_RIGHT_HEAVY"
     if padding_type == "SAME_LOWER":
@@ -92,7 +90,7 @@ def _convert_pool(const_context, builder, op, mode, exclude_padding_from_average
             raise ValueError(msg)
         padding_type = "SAME"
         same_padding_asymmetry_mode = "TOP_LEFT_HEAVY"
-    
+
     if num_spatial_dimensions == 1:
         builder.add_expand_dims(
             name=op.name + "_expanded",
@@ -236,7 +234,7 @@ def add_const(const_context, builder, name, val):
     """
     for const_set in const_context:
         if name in const_set:
-            _logging.warning("Const {} was already added.".format(name))
+            logger.warning("Const {} was already added.".format(name))
             return
     if not isinstance(val, (_np.ndarray, _np.generic)):
         val = _np.array([val])
@@ -254,7 +252,7 @@ def add_const(const_context, builder, name, val):
             name=name, output_name=name, constant_value=val, shape=val.shape
         )
     const_context[-1].add(name)
-    _logging.info("added const {} for builder {}".format(name, builder))
+    logger.info("added const {} for builder {}".format(name, builder))
 
 
 # Helper routines for recurrent layers
@@ -527,7 +525,7 @@ def conv_helper(const_context, builder, op):
             pad["padding_bottom"] = op.pad.val[3]
             pad["padding_left"] = op.pad.val[4]
             pad["padding_right"] = op.pad.val[5]
-            
+
     same_padding_asymmetry_mode = "BOTTOM_RIGHT_HEAVY"
     if padding_mode == "same_lower":
         if is_conv3d:
@@ -687,7 +685,7 @@ def _add_elementwise_unary(
     else:
         add_func = getattr(builder, "add_" + mode, None)
         if add_func is None:
-            _logging.error(
+            logger.error(
                 "Elementwise unary method {} not found in builder.".format(mode)
             )
         add_func(
@@ -1000,19 +998,21 @@ def einsum(const_context, builder, op):
     perm = [0, 2, 1, 3] if rank == 4 else [1, 0, 2]
     input_names = make_input(const_context, builder, op.values)
 
+    output_name_1 = op.name + "_transpose_1"
+    output_name_2 = op.name + "_transpose_2"
     builder.add_transpose(name=op.name + "_transpose_x",
                           axes=perm,
                           input_name=input_names[0],
-                          output_name=input_names[0] + "_transposed"
+                          output_name=output_name_1
     )
     builder.add_transpose(name=op.name + "_transpose_y",
                           axes=perm,
                           input_name=input_names[1],
-                          output_name=input_names[1] + "_transposed"
+                          output_name=output_name_2
     )
     builder.add_batched_mat_mul(
         name=op.name + "_batch_matmul",
-        input_names=[input_names[0] + "_transposed", input_names[1] + "_transposed"],
+        input_names=[output_name_1, output_name_2],
         output_name=op.outputs[0].name + "_pre_transpose"
     )
     builder.add_transpose(name=op.name,
@@ -3241,7 +3241,7 @@ def while_loop(const_context, builder, op):
     for vx_in, vx_out in zip(body_block.inputs, body_block.outputs):
         if vx_in.name == vx_out.name:
             msg = "Loop invariant var {} detected in block {}"
-            _logging.warning(msg.format(vx_in.name, body_block.name))
+            logger.warning(msg.format(vx_in.name, body_block.name))
             continue
         body_builder.add_copy(
             name=vx_in.name + "_ret_copy",

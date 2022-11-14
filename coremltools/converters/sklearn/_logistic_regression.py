@@ -10,6 +10,7 @@ from ...models import MLModel as _MLModel
 
 if _HAS_SKLEARN:
     from sklearn.linear_model import LogisticRegression
+
     from . import _sklearn_util
 
     sklearn_class = LogisticRegression

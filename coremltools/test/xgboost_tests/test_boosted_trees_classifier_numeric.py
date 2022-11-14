@@ -11,20 +11,19 @@ import pandas as pd
 import pytest
 
 from coremltools._deps import _HAS_SKLEARN, _HAS_XGBOOST
-from coremltools.models.utils import (
-    evaluate_classifier,
-    evaluate_classifier_with_probabilities,
-    _macos_version,
-    _is_macos,
-)
+from coremltools.models.utils import (_is_macos, _macos_version,
+                                      evaluate_classifier,
+                                      evaluate_classifier_with_probabilities)
 
 if _HAS_SKLEARN:
     from sklearn.datasets import load_boston
     from sklearn.ensemble import GradientBoostingClassifier
+
     from coremltools.converters import sklearn as skl_converter
 
 if _HAS_XGBOOST:
     import xgboost
+
     from coremltools.converters import xgboost as xgb_converter
 
 

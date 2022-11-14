@@ -89,6 +89,7 @@ bool VisionFeaturePrint_Scene_SceneVersion_IsValid(int value) {
   switch (value) {
     case 0:
     case 1:
+    case 2:
       return true;
     default:
       return false;
@@ -98,6 +99,7 @@ bool VisionFeaturePrint_Scene_SceneVersion_IsValid(int value) {
 #if !defined(_MSC_VER) || _MSC_VER >= 1900
 const VisionFeaturePrint_Scene_SceneVersion VisionFeaturePrint_Scene::SCENE_VERSION_INVALID;
 const VisionFeaturePrint_Scene_SceneVersion VisionFeaturePrint_Scene::SCENE_VERSION_1;
+const VisionFeaturePrint_Scene_SceneVersion VisionFeaturePrint_Scene::SCENE_VERSION_2;
 const VisionFeaturePrint_Scene_SceneVersion VisionFeaturePrint_Scene::SceneVersion_MIN;
 const VisionFeaturePrint_Scene_SceneVersion VisionFeaturePrint_Scene::SceneVersion_MAX;
 const int VisionFeaturePrint_Scene::SceneVersion_ARRAYSIZE;

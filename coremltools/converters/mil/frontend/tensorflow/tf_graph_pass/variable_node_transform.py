@@ -3,7 +3,7 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from ..basic_graph_ops import disconnect_vertex_ins, delete_node
+from ..basic_graph_ops import delete_node, disconnect_vertex_ins
 
 
 # Variable nodes are not horribly complicated.

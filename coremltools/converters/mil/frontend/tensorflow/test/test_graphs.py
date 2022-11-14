@@ -4,24 +4,22 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import itertools
+
 import numpy as np
 import pytest
 
-from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import (
-    make_tf_graph,
-    TensorFlowBaseTest
-)
-backends = testing_reqs.backends
+    TensorFlowBaseTest, make_tf_graph)
+from coremltools.converters.mil.testing_reqs import backends, compute_units
 
 tf = pytest.importorskip("tensorflow")
 
 
-class TestTF1Graphs(TensorFlowBaseTest):
+class TestTFGraphs(TensorFlowBaseTest):
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends)
+        "compute_unit, backend", itertools.product(compute_units, backends)
     )
-    def test_masked_input(self, use_cpu_only, backend):
+    def test_masked_input(self, compute_unit, backend):
 
         input_shape = [4, 10, 8]
         val = np.random.rand(*input_shape).astype(np.float32)
@@ -29,7 +27,7 @@ class TestTF1Graphs(TensorFlowBaseTest):
         @make_tf_graph([input_shape])
         def build_model(input):
             sliced_input = input[..., 4]
-            mask = tf.where_v2(sliced_input > 0)
+            mask = tf.where(sliced_input > 0)
             masked_input = tf.gather_nd(input, mask)
             return masked_input
 
@@ -41,7 +39,6 @@ class TestTF1Graphs(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_for_conversion=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )

@@ -4,21 +4,17 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import unittest
-import tempfile
 
-import json
-from coremltools.proto import Model_pb2
-from coremltools.proto import FeatureTypes_pb2
-from coremltools._deps import _HAS_XGBOOST
-from coremltools._deps import _HAS_SKLEARN
+from coremltools._deps import _HAS_SKLEARN, _HAS_XGBOOST
 
 if _HAS_XGBOOST:
-    import xgboost
-    from coremltools.converters import xgboost as xgb_converter
+
+    pass
 
 if _HAS_SKLEARN:
-    from coremltools.converters import sklearn as skl_converter
     from sklearn.tree import DecisionTreeRegressor
+
+    from coremltools.converters import sklearn as skl_converter
 
 
 @unittest.skipIf(not _HAS_SKLEARN, "Missing sklearn. Skipping tests.")

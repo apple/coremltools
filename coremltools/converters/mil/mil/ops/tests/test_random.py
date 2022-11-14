@@ -4,23 +4,24 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import itertools
-import unittest
 
 import numpy as np
 import pytest
 
-from .testing_utils import UNK_SYM, run_compare_builder
-from coremltools.converters.mil.mil import Builder as mb, types
-from coremltools.converters.mil.testing_reqs import backends
+from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil import types
+from coremltools.converters.mil.testing_reqs import backends, compute_units
 from coremltools.converters.mil.testing_utils import get_core_ml_prediction
 from coremltools.models.utils import _macos_version
+
+from .testing_utils import UNK_SYM, run_compare_builder
 
 
 class TestRandomBernoulli:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "compute_unit, backend", itertools.product(compute_units, backends,)
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+    def test_builder_to_backend_smoke(self, compute_unit, backend):
 
         x_val = np.array([0.0], dtype=np.float32)
         input_placeholders = {"x": mb.placeholder(shape=x_val.shape)}
@@ -47,14 +48,14 @@ class TestRandomBernoulli:
             input_values,
             expected_output_types,
             expected_outputs=expected_outputs,
-            use_cpu_only=use_cpu_only,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, rank, prob, dynamic",
+        "compute_unit, backend, rank, prob, dynamic",
         itertools.product(
-            [True, False],
+            compute_units,
             backends,
             [rank for rank in range(1, 6)],
             [1.0, 0.0],
@@ -62,7 +63,7 @@ class TestRandomBernoulli:
         ),
     )
     def test_builder_to_backend_stress(
-        self, use_cpu_only, backend, rank, prob, dynamic
+        self, compute_unit, backend, rank, prob, dynamic
     ):
         shape = np.random.randint(low=1, high=4, size=rank).astype(np.int32)
         x_val = np.array([0.0], dtype=np.float32)
@@ -105,7 +106,7 @@ class TestRandomBernoulli:
             input_values,
             expected_output_types,
             expected_outputs=expected_outputs,
-            use_cpu_only=use_cpu_only,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
@@ -116,9 +117,9 @@ class TestRandomCategorical:
         return e_data / e_data.sum()
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "compute_unit, backend", itertools.product(compute_units, backends,)
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+    def test_builder_to_backend_smoke(self, compute_unit, backend):
         x_val = np.array([1], dtype=np.int32)
         input_placeholders = {"x": mb.placeholder(shape=x_val.shape)}
         input_values = {"x": x_val}
@@ -142,17 +143,21 @@ class TestRandomCategorical:
             input_values,
             expected_output_types,
             expected_outputs=expected_outputs,
-            use_cpu_only=use_cpu_only,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
-    @unittest.skipIf(_macos_version() < (12, 0),
-                     "Can only get predictions for ml program on macOS 12+")
+    @pytest.mark.skipif(_macos_version() < (12, 0), reason="Can only get predictions for ml program on macOS 12+")
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, n_sample, n_class",
-        itertools.product([True, False], backends, [50000], [2, 10, 20]),
+        "compute_unit, backend, n_sample, n_class",
+        itertools.product(
+            compute_units,
+            backends,
+            [50000],
+            [2, 10, 20]
+        ),
     )
-    def test_builder_to_backend_stress(self, use_cpu_only, backend, n_sample, n_class):
+    def test_builder_to_backend_stress(self, compute_unit, backend, n_sample, n_class):
         output_name = "random_categorical"
         logits = np.random.rand(2, n_class)
         probs = [self.softmax(logits[0]), self.softmax(logits[1])]
@@ -169,7 +174,7 @@ class TestRandomCategorical:
             ]
 
         prediction = get_core_ml_prediction(
-            build, input_placeholders, input_values, backend=backend
+            build, input_placeholders, input_values, backend=backend, compute_unit=compute_unit,
         )
 
         ref0 = np.random.multinomial(n_sample, probs[0])
@@ -208,7 +213,7 @@ class TestRandomCategorical:
             ]
 
         prediction = get_core_ml_prediction(
-            build, input_placeholders, input_values, backend=backend
+            build, input_placeholders, input_values, backend=backend, compute_unit=compute_unit
         )
 
         pred0 = prediction[output_name].reshape(2, n_sample)[0]
@@ -235,9 +240,9 @@ class TestRandomCategorical:
 
 class TestRandomNormal:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "compute_unit, backend", itertools.product(compute_units, backends,)
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+    def test_builder_to_backend_smoke(self, compute_unit, backend):
         x_val = np.array([0.0], dtype=np.float32)
         input_placeholders = {"x": mb.placeholder(shape=x_val.shape)}
         input_values = {"x": x_val}
@@ -267,14 +272,14 @@ class TestRandomNormal:
             input_values,
             expected_output_types,
             expected_outputs=expected_outputs,
-            use_cpu_only=use_cpu_only,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, rank, mean, dynamic",
+        "compute_unit, backend, rank, mean, dynamic",
         itertools.product(
-            [True, False],
+            compute_units,
             backends,
             [rank for rank in range(1, 6)],
             [1.0, 0.0],
@@ -282,7 +287,7 @@ class TestRandomNormal:
         ),
     )
     def test_builder_to_backend_stress(
-        self, use_cpu_only, backend, rank, mean, dynamic
+        self, compute_unit, backend, rank, mean, dynamic
     ):
         shape = np.random.randint(low=1, high=4, size=rank).astype(np.int32)
         x_val = np.array([0.0], dtype=np.float32)
@@ -330,16 +335,16 @@ class TestRandomNormal:
             input_values,
             expected_output_types,
             expected_outputs=expected_outputs,
-            use_cpu_only=use_cpu_only,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
 
 class TestRandomUniform:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "compute_unit, backend", itertools.product(compute_units, backends,)
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+    def test_builder_to_backend_smoke(self, compute_unit, backend):
         x_val = np.array([0.0], dtype=np.float32)
         input_placeholders = {"x": mb.placeholder(shape=x_val.shape)}
         input_values = {"x": x_val}
@@ -369,14 +374,14 @@ class TestRandomUniform:
             input_values,
             expected_output_types,
             expected_outputs=expected_outputs,
-            use_cpu_only=use_cpu_only,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, rank, low, high, dynamic",
+        "compute_unit, backend, rank, low, high, dynamic",
         itertools.product(
-            [True, False],
+            compute_units,
             backends,
             [rank for rank in range(1, 6)],
             [0.0],
@@ -385,7 +390,7 @@ class TestRandomUniform:
         ),
     )
     def test_builder_to_backend_stress(
-        self, use_cpu_only, backend, rank, low, high, dynamic
+        self, compute_unit, backend, rank, low, high, dynamic
     ):
         shape = np.random.randint(low=1, high=4, size=rank).astype(np.int32)
         x_val = np.array([0.0], dtype=np.float32)
@@ -433,6 +438,6 @@ class TestRandomUniform:
             input_values,
             expected_output_types,
             expected_outputs=expected_outputs,
-            use_cpu_only=use_cpu_only,
+            compute_unit=compute_unit,
             backend=backend,
         )

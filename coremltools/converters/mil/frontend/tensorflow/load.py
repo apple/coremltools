@@ -3,34 +3,30 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from distutils.version import StrictVersion as _StrictVersion
 import gc
-import logging
 import os
+from distutils.version import StrictVersion as _StrictVersion
 from tempfile import mktemp
+
 import tensorflow as tf
 from tqdm import tqdm as _tqdm
 
+from coremltools import _logger as logger
+from coremltools._deps import _get_version
+from coremltools.converters._profile_utils import _profile
+
+from .._utils import get_output_names
 from .basic_graph_ops import fill_outputs
 from .converter import TFConverter
-from .tf_graph_pass import (
-    cond_to_where,
-    constant_propagation,
-    delete_unnecessary_constant_nodes,
-    delete_asserts,
-    delete_disconnected_nodes,
-    functionalize_loops,
-    fuse_dilation_conv,
-    insert_get_tuple,
-    quantization_pass,
-    remove_variable_nodes,
-    tensor_array_resource_removal
-)
-from .tfssa import NetworkEnsemble, SSAFunction
 from .parsed_tf_node import ParsedTFNode
-from .._utils import get_output_names
-from coremltools.converters._profile_utils import _profile
-from coremltools._deps import _get_version
+from .tf_graph_pass import (cond_to_where, constant_propagation,
+                            delete_asserts, delete_disconnected_nodes,
+                            delete_unnecessary_constant_nodes,
+                            functionalize_loops, fuse_dilation_conv,
+                            insert_get_tuple, quantization_pass,
+                            remove_variable_nodes,
+                            tensor_array_resource_removal)
+from .tfssa import NetworkEnsemble, SSAFunction
 
 
 class TFLoader:
@@ -59,7 +55,7 @@ class TFLoader:
     def load(self):
         """Load TensorFlow model into MIL program."""
 
-        logging.info("Loading TensorFlow model '{}'".format(self.model))
+        logger.info("Loading TensorFlow model '{}'".format(self.model))
         outputs = self.kwargs.get("outputs", None)
         output_names = get_output_names(outputs)
         self._graph_def = self._graph_def_from_model(output_names)
@@ -84,7 +80,7 @@ class TFLoader:
             )
 
         program = self._program_from_tf_ssa()
-        logging.debug("program:\n{}".format(program))
+        logger.debug("program:\n{}".format(program))
         return program
 
     # @abstractmethod
@@ -108,7 +104,7 @@ class TFLoader:
         if outputs is None or len(outputs) == 0:
             return graph_def
         msg = "Extracting sub-graph based on outputs '{}' from the full model"
-        logging.debug(msg.format(outputs))
+        logger.debug(msg.format(outputs))
         outputs = outputs if isinstance(outputs, list) else [outputs]
         outputs = [i.split(":")[0] for i in outputs]
         if _get_version(tf.__version__) < _StrictVersion("1.13.1"):
@@ -214,8 +210,8 @@ class TF1Loader(TFLoader):
                 try:
                     tf_pass(self._tf_ssa)
                 except Exception as e:
-                    logging.exception('Exception in pass "{}": {}'.format(tf_pass, e))
-                    logging.info("Ignoring exception and continuing to next pass")
+                    logger.exception('Exception in pass "{}": {}'.format(tf_pass, e))
+                    logger.info("Ignoring exception and continuing to next pass")
         else:
             for tf_pass in _tqdm(
                 tf_passes, desc="Running TensorFlow Graph Passes", unit=" passes"
@@ -242,10 +238,9 @@ class TF1Loader(TFLoader):
 
     @staticmethod
     def _from_saved_model(saved_model_dir):
-        from tensorflow.python.tools import freeze_graph
-
         # must import here as tf.contrib is only available on TF 1.x
         from tensorflow.contrib.saved_model.python.saved_model import reader
+        from tensorflow.python.tools import freeze_graph
 
         saved_model_tags = reader.get_saved_model_tag_sets(saved_model_dir)[0]
         if not saved_model_tags:
@@ -303,10 +298,9 @@ class TF1Loader(TFLoader):
 
     @staticmethod
     def _from_tf_keras_model(keras_model):
+        from tensorflow.python.framework.convert_to_constants import \
+            convert_variables_to_constants_v2
         from tensorflow.python.keras.saving import saving_utils
-        from tensorflow.python.framework.convert_to_constants import (
-            convert_variables_to_constants_v2,
-        )
 
         if not isinstance(keras_model, tf.keras.Model):
             keras_model = tf.keras.models.load_model(keras_model, None)

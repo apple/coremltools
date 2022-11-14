@@ -6,10 +6,11 @@
 import numpy as np
 
 from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil import types as _types
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil.passes.helper import block_context_manager
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
-from coremltools.converters.mil.mil import types as _types
+
 
 @block_context_manager
 def _divide_to_multiply_block(block):

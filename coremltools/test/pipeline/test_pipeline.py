@@ -4,24 +4,21 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import unittest
-import tempfile
-from coremltools.proto import FeatureTypes_pb2
-from coremltools._deps import _HAS_SKLEARN, _HAS_LIBSVM
-from coremltools.models.pipeline import PipelineRegressor, PipelineClassifier
-from coremltools.models.utils import evaluate_transformer
-import coremltools.models.datatypes as datatypes
-from coremltools.models.feature_vectorizer import create_feature_vectorizer
+
+from coremltools._deps import _HAS_LIBSVM, _HAS_SKLEARN
+from coremltools.models.pipeline import PipelineClassifier, PipelineRegressor
 
 if _HAS_SKLEARN:
-    from sklearn.preprocessing import OneHotEncoder
     from sklearn.datasets import load_boston
     from sklearn.linear_model import LinearRegression
     from sklearn.pipeline import Pipeline
+    from sklearn.preprocessing import OneHotEncoder
+
     from coremltools.converters import sklearn as converter
 
 if _HAS_LIBSVM:
-    from libsvm import svm
     from libsvm import svmutil
+
     from coremltools.converters import libsvm as libsvm_converter
 
 

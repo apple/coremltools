@@ -3,17 +3,16 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import numpy as np
+
+from coremltools.converters.mil.input_types import ColorLayout, ImageType
+from coremltools.converters.mil.mil import Builder as mb
+# import mil internal ops to add it to the builder
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil.passes.helper import block_context_manager
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
-from coremltools.converters.mil.input_types import ColorLayout, ImageType
-
-# import mil internal ops to add it to the builder
-from coremltools.converters.mil.mil.ops import defs as _ops
-from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil.types import nptype_from_builtin
 
-import numpy as np
 
 @register_pass(namespace="mil_backend")
 class insert_image_preprocessing_ops(AbstractGraphPass):

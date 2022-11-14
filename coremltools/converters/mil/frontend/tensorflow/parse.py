@@ -3,20 +3,18 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import logging as _logging
-
 import numpy as _np
-
-from coremltools.converters.mil.mil import types
 from tensorflow.core.framework.types_pb2 import DataType
 from tensorflow.python.framework.dtypes import _TF_TO_NP
+
+from coremltools import _logger as logger
+from coremltools.converters.mil.mil import types
 
 
 def parse_type(t):
     mapping = {
         # bool
         DataType.DT_BOOL: types.bool,
-        
         # floating point
         DataType.DT_HALF: types.fp16,
         DataType.DT_FLOAT: types.float,
@@ -32,7 +30,6 @@ def parse_type(t):
         DataType.DT_UINT16: types.uint16,
         DataType.DT_UINT32: types.uint32,
         DataType.DT_UINT64: types.uint64,
-        
         # string
         DataType.DT_STRING: types.str,
     }
@@ -40,7 +37,7 @@ def parse_type(t):
     if t in mapping:
         return mapping[t]
     else:
-        _logging.info("Type %d cannot be mapped", t)
+        logger.info("Type %d cannot be mapped", t)
         return None
 
 
@@ -89,7 +86,7 @@ def parse_tensor(t):
 
 def parse_string(s):
     if isinstance(s, bytes):
-        return s.decode("utf-8")
+        return s.decode("utf-8", errors="ignore")
     else:
         return s
 

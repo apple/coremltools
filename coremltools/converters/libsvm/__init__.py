@@ -4,10 +4,8 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 
-from . import _libsvm_converter
-from . import _libsvm_util
-
 from ..._deps import _HAS_LIBSVM
+from . import _libsvm_converter, _libsvm_util
 
 if _HAS_LIBSVM:
     from libsvm import svmutil as _svmutil

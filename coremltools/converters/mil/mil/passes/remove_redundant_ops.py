@@ -5,10 +5,11 @@
 
 from collections import OrderedDict
 
-from .helper import _are_ops_identical
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil.passes.helper import block_context_manager
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
+
+from .helper import _are_ops_identical
 
 
 def _is_op_eligible_to_be_removed(op):

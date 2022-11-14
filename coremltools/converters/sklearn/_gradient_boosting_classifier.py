@@ -3,15 +3,15 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from ._tree_ensemble import convert_tree_ensemble as _convert_tree_ensemble
-from ._tree_ensemble import get_input_dimension
+import numpy as np
 
 from ..._deps import _HAS_SKLEARN
 from ...models import MLModel as _MLModel
-import numpy as np
+from ._tree_ensemble import convert_tree_ensemble as _convert_tree_ensemble, get_input_dimension
 
 if _HAS_SKLEARN:
     import sklearn.ensemble as _ensemble
+
     from . import _sklearn_util
 
     sklearn_class = _ensemble.GradientBoostingClassifier

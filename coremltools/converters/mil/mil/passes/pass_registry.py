@@ -3,7 +3,7 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import logging
+from coremltools import _logger as logger
 
 
 class PassRegistry:
@@ -26,7 +26,7 @@ class PassRegistry:
     def add(self, namespace, pass_cls, override, name):
         cls_name = pass_cls.__name__ if name is None else name
         pass_id = namespace + "::" + cls_name
-        logging.debug("Registering pass {}".format(pass_id))
+        logger.debug("Registering pass {}".format(pass_id))
         if pass_id in self.passes and not override:
             msg = "Pass {} already registered."
             raise KeyError(msg.format(pass_id))

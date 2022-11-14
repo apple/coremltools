@@ -4,15 +4,17 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from collections import defaultdict
-import logging
 
 from tqdm import tqdm as _tqdm
 
+from coremltools import _logger as logger
+from coremltools.converters.mil.mil import types
+from coremltools.converters.mil.mil.types.symbolic import (any_variadic,
+                                                           is_symbolic)
+from coremltools.converters.mil.mil.var import ListVar
+
 from .basic_graph_ops import topsort
 from .tf_op_registry import _TF_OPS_REGISTRY
-from coremltools.converters.mil.mil import types
-from coremltools.converters.mil.mil.types.symbolic import is_symbolic, any_variadic
-from coremltools.converters.mil.mil.var import ListVar
 
 
 def compatible_shapes(tf_shape, inf_shape):
@@ -23,7 +25,7 @@ def compatible_shapes(tf_shape, inf_shape):
             return True
         elif is_symbolic(ds):
             if is_symbolic(dt) and dt != ds:
-                logging.warning("Symbolic dim {} and {}".format(ds, dt) +\
+                logger.warning("Symbolic dim {} and {}".format(ds, dt) +\
                                 " assumed to be equal")
             return True
         else:
@@ -125,7 +127,7 @@ def connect_global_initializer(graph):
             continue
         variable_name = node.attr["variable"]
         for get_node in var_to_get_global_nodes[variable_name]:
-            logging.info(
+            logger.info(
                 "add {} as control inputs of {}".format(node_name, get_node.name)
             )
             get_node.control_inputs.append(node_name)
@@ -173,7 +175,7 @@ def convert_graph(context, graph, outputs=None):
         node = graph[node_name]
         if node.op == "return":
             continue
-        logging.info(
+        logger.info(
             "[{}/{}] Converting {} op '{}'".format(i + 1, num_nodes, node.op, node.name)
         )
 

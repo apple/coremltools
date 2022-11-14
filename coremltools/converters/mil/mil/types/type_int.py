@@ -3,13 +3,14 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import logging
 import math
 
 import numpy as np
 import sympy as sm
 
-from .annotate import class_annotate, annotate, delay_type
+from coremltools import _logger as logger
+
+from .annotate import annotate, class_annotate, delay_type
 from .type_bool import bool
 from .type_spec import Type
 
@@ -32,11 +33,8 @@ def make_int(width, unsigned):
 
         @val.setter
         def val(self, v):
-            from .type_mapping import (
-                nptype_from_builtin,
-                builtin_to_string,
-                numpy_type_to_builtin_type,
-            )
+            from .type_mapping import (builtin_to_string, nptype_from_builtin,
+                                       numpy_type_to_builtin_type)
 
             if not isinstance(v, (np.generic, sm.Basic)):
                 raise ValueError(
@@ -55,14 +53,14 @@ def make_int(width, unsigned):
                     self._val = v
                 else:
                     self._val = v.astype(nptype_from_builtin(self.__class__))
-                    logging.warning(
+                    logger.warning(
                         "Saving value type of {} into a builtin type of {}, might overflow or loses precision!".format(
                             v.dtype, builtin_to_string(self.__class__)
                         )
                     )
             else:
                 self._val = v.astype(nptype_from_builtin(self.__class__))
-                logging.warning(
+                logger.warning(
                     "Saving value type of {} into a builtin type of {}, might be incompatible or loses precision!".format(
                         v.dtype, builtin_to_string(self.__class__)
                     )

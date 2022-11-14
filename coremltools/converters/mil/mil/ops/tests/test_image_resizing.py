@@ -9,28 +9,25 @@ import itertools
 import numpy as np
 import pytest
 
-from .testing_utils import run_compare_builder
-
 import coremltools as ct
-from coremltools.converters.mil import testing_reqs
-from coremltools.converters.mil.mil import (
-    Builder as mb,
-    get_new_symbol,
-    types
-)
-from coremltools.converters.mil.testing_reqs import backends
+from coremltools._deps import _HAS_TORCH, MSG_TORCH_NOT_FOUND
+from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil import get_new_symbol, types
+from coremltools.converters.mil.testing_reqs import backends, compute_units
 from coremltools.converters.mil.testing_utils import random_gen
 from coremltools.models.utils import _macos_version
 
-if testing_reqs._HAS_TORCH:
+from .testing_utils import run_compare_builder
+
+if _HAS_TORCH:
     import torch
 
 
 class TestAffine:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends)
+        "compute_unit, backend", itertools.product(compute_units, backends)
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+    def test_builder_to_backend_smoke(self, compute_unit, backend):
         if backend[0] == "neuralnetwork":
             pytest.skip("nn backend not supported")
 
@@ -94,21 +91,21 @@ class TestAffine:
             input_value_dict,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
 
 class TestResample:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, minimum_deployment_target",
+        "compute_unit, backend, minimum_deployment_target",
         itertools.product(
-            [True, False],
+            compute_units,
             backends,
             [ct.target.iOS15, ct.target.iOS16],
         )
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend, minimum_deployment_target):
+    def test_builder_to_backend_smoke(self, compute_unit, backend, minimum_deployment_target):
         if backend[0] == "neuralnetwork":
             pytest.skip("nn backend not supported")
         if minimum_deployment_target == ct.target.iOS16 and _macos_version() < (13, 0):
@@ -201,7 +198,7 @@ class TestResample:
                 input_value_dict,
                 expected_output_type,
                 expected_output,
-                use_cpu_only=use_cpu_only,
+                compute_unit=compute_unit,
                 backend=backend,
                 minimum_deployment_target=minimum_deployment_target,
             )
@@ -218,9 +215,9 @@ class TestResample:
 
 class TestResizeNearestNeighbor:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends)
+        "compute_unit, backend", itertools.product(compute_units, backends)
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+    def test_builder_to_backend_smoke(self, compute_unit, backend):
         x_val = np.array([0.37, 6.17], dtype=np.float32).reshape([1, 1, 2, 1])
         input_placeholder_dict = {"x": mb.placeholder(shape=x_val.shape)}
         input_value_dict = {"x": x_val}
@@ -252,20 +249,20 @@ class TestResizeNearestNeighbor:
             input_value_dict,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
 
 class TestUpsampleNearestNeighborFractionalScales:
     @pytest.mark.parametrize(
-        "use_cpu_for_conversion, backend", itertools.product([True, False], backends)
+        "compute_unit, backend", itertools.product(compute_units, backends)
     )
-    def test_builder_to_backend_smoke(self, use_cpu_for_conversion, backend):
+    def test_builder_to_backend_smoke(self, compute_unit, backend):
         if backend[0] == "neuralnetwork":
             pytest.skip("nn backend not supported")
         
-        if backend[0] == "mlprogram" and not use_cpu_for_conversion:
+        if backend[0] == "mlprogram" and compute_unit != ct.ComputeUnit.CPU_ONLY:
             pytest.xfail("rdar://97398448 (TestUpsampleNearestNeighborFractionalScales failing on GPU)")
 
         x_val = np.array([1.5, -2.5, 3.5], dtype=np.float32).reshape([1, 1, 1, 3])
@@ -306,20 +303,20 @@ class TestUpsampleNearestNeighborFractionalScales:
             input_value_dict,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_for_conversion,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
 
 class TestResizeBilinear:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "compute_unit, backend", itertools.product(compute_units, backends,)
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+    def test_builder_to_backend_smoke(self, compute_unit, backend):
         if backend[0] == "mlprogram":
             pytest.xfail("Seg fault: rdar://78343191 ((MIL GPU) Core ML Tools Unit Test failures [failure to load or Seg fault])")
 
-        if backend[0] == "neuralnetwork" and use_cpu_only:
+        if backend[0] == "neuralnetwork" and compute_unit == ct.ComputeUnit.CPU_ONLY:
             pytest.xfail("rdar://85318710 (Coremltools Smoke test on ResizeBilinear failing on NNv1 backend.)")
 
         x = np.array([0, 1], dtype=np.float32).reshape(1, 1, 2)
@@ -345,8 +342,7 @@ class TestResizeBilinear:
             input_value_dict,
             expected_output_type,
             expected_output,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
@@ -365,8 +361,7 @@ class TestResizeBilinear:
             input_value_dict,
             expected_output_type,
             expected_output,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
@@ -388,8 +383,7 @@ class TestResizeBilinear:
             input_value_dict,
             expected_output_type,
             expected_output,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
@@ -412,17 +406,16 @@ class TestResizeBilinear:
                 input_value_dict,
                 expected_output_type,
                 expected_output,
-                use_cpu_only=use_cpu_only,
-                frontend_only=False,
+                compute_unit=compute_unit,
                 backend=backend,
             )
 
 
 class TestUpsampleBilinear:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "compute_unit, backend", itertools.product(compute_units, backends,)
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+    def test_builder_to_backend_smoke(self, compute_unit, backend):
         x = np.array([0, 1], dtype=np.float32).reshape(1, 1, 2)
         input_placeholder_dict = {"x": mb.placeholder(shape=x.shape)}
         input_value_dict = {"x": x}
@@ -443,8 +436,7 @@ class TestUpsampleBilinear:
             input_value_dict,
             expected_output_type,
             expected_output,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
@@ -464,21 +456,20 @@ class TestUpsampleBilinear:
             input_value_dict,
             expected_output_type,
             expected_output,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, align_corners, half_pixel_centers", 
+        "compute_unit, backend, align_corners, half_pixel_centers",
         itertools.product(
-            [True, False], 
+            compute_units,
             backends,
             [True, False],
             [True, False],
         )
     )
-    def test_builder_to_backend_smoke_iOS16(self, use_cpu_only, backend, align_corners, half_pixel_centers):
+    def test_builder_to_backend_smoke_iOS16(self, compute_unit, backend, align_corners, half_pixel_centers):
         if backend[0] == "neuralnetwork" or ct.utils._macos_version() < (13, 0):
             pytest.skip("The new half_pixel_centers argument only available in iOS16")
 
@@ -517,17 +508,16 @@ class TestUpsampleBilinear:
             input_value_dict,
             expected_output_type,
             expected_output,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
             minimum_deployment_target=ct.target.iOS16,
         )
 
-    @pytest.mark.skipif(not testing_reqs._HAS_TORCH, reason="PyTorch not installed.")
+    @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, input_shape, scale_factor, align_corners, recompute_scale_factor",
+        "compute_unit, backend, input_shape, scale_factor, align_corners, recompute_scale_factor",
         itertools.product(
-            [True],
+            compute_units,
             backends,
             [(2, 5, 10, 22)],
             [(3, 4), (2.5, 2.0), (0.5, 0.75)],
@@ -536,7 +526,7 @@ class TestUpsampleBilinear:
         ),
     )
     def test_builder_to_backend_stress(
-        self, use_cpu_only, backend, input_shape, scale_factor, align_corners, recompute_scale_factor
+        self, compute_unit, backend, input_shape, scale_factor, align_corners, recompute_scale_factor
     ):
         scale_factor_height, scale_factor_width = scale_factor
         _, _, height, width = input_shape
@@ -587,17 +577,16 @@ class TestUpsampleBilinear:
             input_value_dict,
             expected_output_type,
             torch_pred,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
 
 class TestUpsampleNearestNeighbor:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "compute_unit, backend", itertools.product(compute_units, backends,)
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+    def test_builder_to_backend_smoke(self, compute_unit, backend):
         x = np.array([1.5, 2.5, 3.5], dtype=np.float32).reshape([1, 1, 1, 3])
         input_placeholder_dict = {"x": mb.placeholder(shape=x.shape)}
         input_value_dict = {"x": x}
@@ -618,18 +607,17 @@ class TestUpsampleNearestNeighbor:
             input_value_dict,
             expected_output_type,
             expected_output,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
 
 class TestCrop:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, is_symbolic",
-        itertools.product([True, False], backends, [True, False]),
+        "compute_unit, backend, is_symbolic",
+        itertools.product(compute_units, backends, compute_units),
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend, is_symbolic):
+    def test_builder_to_backend_smoke(self, compute_unit, backend, is_symbolic):
         x = np.array(
             [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 16]],
             dtype=np.float32,
@@ -663,22 +651,21 @@ class TestCrop:
             input_value_dict,
             expected_output_type,
             expected_output,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, C, H, W",
+        "compute_unit, backend, C, H, W",
         itertools.product(
-            [True, False],
+            compute_units,
             backends,
             [x for x in range(2, 4)],
             [x for x in range(5, 8)],
             [x for x in range(8, 10)],
         ),
     )
-    def test_builder_to_backend_stress(self, use_cpu_only, backend, C, H, W):
+    def test_builder_to_backend_stress(self, compute_unit, backend, C, H, W):
         input_shape = (1, C, H, W)
         x = np.random.random(input_shape)
 
@@ -708,18 +695,17 @@ class TestCrop:
             input_value_dict,
             expected_output_type,
             expected_output,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
 
 class TestCropResize:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend",
-        itertools.product([True, False], backends),
+        "compute_unit, backend",
+        itertools.product(compute_units, backends),
     )
-    def test_builder_to_backend_smoke_pad_value(self, use_cpu_only, backend):
+    def test_builder_to_backend_smoke_pad_value(self, compute_unit, backend):
         if backend[0] == "neuralnetwork":
             pytest.skip("pad_mode only supported on iOS16 or above")
             
@@ -765,19 +751,18 @@ class TestCropResize:
             input_value_dict,
             expected_output_type,
             expected_output,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
             minimum_deployment_target=ct.target.iOS16,
         )
         
         
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, is_symbolic",
-        itertools.product([True, False], backends, [True, False]),
+        "compute_unit, backend, is_symbolic",
+        itertools.product(compute_units, backends, compute_units),
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend, is_symbolic):
-        if backend[0] == "mlprogram" and not use_cpu_only:
+    def test_builder_to_backend_smoke(self, compute_unit, backend, is_symbolic):
+        if backend[0] == "mlprogram" and compute_unit != ct.ComputeUnit.CPU_ONLY:
             pytest.xfail("rdar://97398582 (TestCropResize failing on mlprogram + GPU)")
         x = np.array(
             [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12], [13, 14, 15, 16]],
@@ -943,7 +928,6 @@ class TestCropResize:
                     input_value_dict,
                     expected_output_type[mode],
                     expected_output[mode],
-                    use_cpu_only=use_cpu_only,
-                    frontend_only=False,
+                    compute_unit=compute_unit,
                     backend=backend,
                 )

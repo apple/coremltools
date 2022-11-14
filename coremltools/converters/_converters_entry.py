@@ -6,49 +6,42 @@
 import collections
 import gc
 import os
-import warnings
 
 from coremltools import (
-    ComputeUnit as _ComputeUnit,
-    __version__ as _ct_version,
-    _LOWEST_ALLOWED_SPECIFICATION_VERSION_FOR_NEURALNETWORK,
     _LOWEST_ALLOWED_SPECIFICATION_VERSION_FOR_MILPROGRAM,
-)
-from coremltools.converters.mil.mil.passes.quantization_passes import (
-    AbstractQuantizationPass,
-    ComputePrecision as precision,
-    FP16ComputePrecision
-)
-from coremltools.converters.mil.input_types import (
-    ClassifierConfig,
-    ImageType,
-    InputType,
-    TensorType,
-)
-from coremltools.converters.mil.converter import mil_convert
-from coremltools.converters.mil.mil import Program, types
-from coremltools._deps import _HAS_TORCH, _HAS_TF_1, _HAS_TF_2
+    _LOWEST_ALLOWED_SPECIFICATION_VERSION_FOR_NEURALNETWORK)
+from coremltools import ComputeUnit as _ComputeUnit
+from coremltools import __version__ as _ct_version
+from coremltools._deps import _HAS_TF_1, _HAS_TF_2, _HAS_TORCH
 from coremltools.converters._profile_utils import _profile
-
-from coremltools.models import _METADATA_VERSION, _METADATA_SOURCE
-from coremltools.models.utils import _MLPACKAGE_EXTENSION
 from coremltools.converters.mil._deployment_compatibility import (
-    AvailableTarget,
-    check_deployment_compatibility,
-)
+    AvailableTarget, check_deployment_compatibility)
+from coremltools.converters.mil.converter import mil_convert
+from coremltools.converters.mil.input_types import (ClassifierConfig,
+                                                    ImageType, InputType,
+                                                    TensorType)
+from coremltools.converters.mil.mil import Program, types
+from coremltools.converters.mil.mil.passes.quantization_passes import \
+    ComputePrecision as precision
+from coremltools.converters.mil.mil.passes.quantization_passes import \
+    FP16ComputePrecision
+from coremltools.models import _METADATA_SOURCE, _METADATA_VERSION
+from coremltools.models.utils import _MLPACKAGE_EXTENSION
 
 if _HAS_TF_1:
     import tensorflow as tf
+
     from coremltools.converters.mil.frontend.tensorflow.load import TF1Loader
 if _HAS_TF_2:
     import tensorflow as tf
+
     from coremltools.converters.mil.frontend.tensorflow2.load import TF2Loader
 
 if _HAS_TORCH:
     import torch
-    from coremltools.converters.mil.frontend.torch.load import (
-        _torchscript_from_model as pytorch_load,
-    )
+
+    from coremltools.converters.mil.frontend.torch.load import \
+        _torchscript_from_model as pytorch_load
 
 @_profile
 def convert(

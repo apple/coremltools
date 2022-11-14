@@ -4,22 +4,20 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import itertools
+
 import numpy as np
 import pytest
 
-from coremltools.converters.mil.mil import Builder as mb
-from coremltools.converters.mil.testing_utils import (
-    assert_model_is_valid,
-    get_op_types_in_program,
-    apply_pass_and_basic_check,
-)
 from coremltools.converters.mil import testing_reqs
+from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil.types import numpy_type_to_builtin_type
-
+from coremltools.converters.mil.testing_utils import (
+    apply_pass_and_basic_check, assert_model_is_valid, get_op_types_in_program)
 
 np.random.seed(1984)
 
 backends = testing_reqs.backends
+
 
 def _apply_weight_transform(inputs, is_deconv, dtype=np.float32):
     """
@@ -27,6 +25,7 @@ def _apply_weight_transform(inputs, is_deconv, dtype=np.float32):
     """
     Cin, _, groups = 10, 20, 10
     input_shape = (1, Cin, 2, 2)
+
     @mb.program(input_specs=[mb.TensorSpec(shape=input_shape, dtype=numpy_type_to_builtin_type(dtype))])
     def prog(x):
 
@@ -56,7 +55,7 @@ def _apply_weight_transform(inputs, is_deconv, dtype=np.float32):
         return x
 
     apply_pass_and_basic_check(
-            prog, "common::fuse_conv_batchnorm"
+        prog, "common::fuse_conv_batchnorm"
     )
 
     # get the updated weight from the prog
@@ -81,7 +80,7 @@ class TestConvBatchNormOptimizationPasses:
         Test the weight transform function with an identity batchnorm layer.
         """
         # parameters for conv
-        is_deconv = conv_type == "conv_type"
+        is_deconv = conv_type == "conv_transpose"
         conv_weight = np.arange(20).astype(np.float32)
         conv_weight = np.reshape(conv_weight, (10, 2, 1, 1)) if is_deconv else np.reshape(conv_weight, (20, 1, 1, 1))
         conv_bias = np.arange(20).astype(np.float32)
@@ -108,7 +107,6 @@ class TestConvBatchNormOptimizationPasses:
         np.testing.assert_equal(new_conv_weight, conv_weight)
         np.testing.assert_equal(new_conv_bias, conv_bias)
 
-
     @pytest.mark.parametrize(
         "conv_type, dtype",
         itertools.product(
@@ -121,7 +119,7 @@ class TestConvBatchNormOptimizationPasses:
         The weight transform function should return an updated conv weight with correct data type
         """
         # parameters for conv
-        is_deconv = conv_type == "conv_type"
+        is_deconv = conv_type == "conv_transpose"
         conv_weight = np.arange(20).astype(dtype)
         conv_weight = np.reshape(conv_weight, (10, 2, 1, 1)) if is_deconv else np.reshape(conv_weight, (20, 1, 1, 1))
         conv_bias = np.arange(20).astype(dtype)
@@ -147,10 +145,9 @@ class TestConvBatchNormOptimizationPasses:
 
         assert new_conv_weight.dtype == dtype, "the weight transform function should retain the weight's original dtype."
 
-
     @pytest.mark.parametrize(
         "rank, groups, has_bias, backend",
-        itertools.product([3, 4], [1, 2, 10], [False, True], backends),
+        itertools.product([3, 4, 5], [1, 2, 10], [False, True], backends),
     )
     def test_conv(self, rank, groups, has_bias, backend):
         """
@@ -159,21 +156,28 @@ class TestConvBatchNormOptimizationPasses:
 
         Output graph:
         input -----> conv ----> out
+
+        Different `rank` represents different conv dimensions: rank=3 for Conv1d, rank=4 for Conv2d, rank=5 for Conv3d.
         """
         Cin, Cout = 10, 30
-        input_shape = (2, Cin, 20) if rank == 3 else (2, Cin, 20, 24)
+        rank_to_input_shape = {3: (2, Cin, 20), 4: (2, Cin, 20, 24), 5: (2, Cin, 20, 24, 24)}
+        rank_to_conv_weight_shape = {3: (Cout, Cin // groups, 2), 4: (Cout, Cin // groups, 2, 3),
+                                     5: (Cout, Cin // groups, 2, 3, 3)}
+        rank_to_output_shape = {3: (2, Cout, 19), 4: (2, Cout, 19, 22), 5: (2, Cout, 19, 22, 22)}
+
+        input_shape = rank_to_input_shape[rank]
 
         @mb.program(input_specs=[mb.TensorSpec(shape=input_shape)])
         def prog(x):
             # conv layer
-            conv_weight = np.random.rand(Cout, Cin // groups, 2) if rank == 3 else np.random.rand(Cout, Cin // groups, 2, 3)
+            conv_weight = np.random.rand(*rank_to_conv_weight_shape[rank])
             conv_bias = np.random.rand(Cout) if has_bias else None
             x = mb.conv(
-                    x=x,
-                    weight=conv_weight,
-                    bias=conv_bias,
-                    groups=groups,
-                )
+                x=x,
+                weight=conv_weight,
+                bias=conv_bias,
+                groups=groups,
+            )
 
             # batch_norm layer
             gamma = np.random.rand(Cout)
@@ -182,13 +186,13 @@ class TestConvBatchNormOptimizationPasses:
             variance = np.random.rand(Cout)
             epsilon = 1e-2
             x = mb.batch_norm(
-                    x=x,
-                    mean=mean,
-                    variance=variance,
-                    gamma=gamma,
-                    beta=beta,
-                    epsilon=epsilon,
-                )
+                x=x,
+                mean=mean,
+                variance=variance,
+                gamma=gamma,
+                beta=beta,
+                epsilon=epsilon,
+            )
             return x
 
         prev_prog, prev_block, block = apply_pass_and_basic_check(
@@ -199,7 +203,7 @@ class TestConvBatchNormOptimizationPasses:
         assert get_op_types_in_program(prog) == ["conv"]
 
         # validate graph pass
-        output_shape = (2, Cout, 19) if rank == 3 else (2, Cout, 19, 22)
+        output_shape = rank_to_output_shape[rank]
         assert_model_is_valid(
             prog,
             {"x": input_shape},
@@ -207,10 +211,9 @@ class TestConvBatchNormOptimizationPasses:
             backend=backend,
         )
 
-
     @pytest.mark.parametrize(
         "rank, groups, has_bias, backend",
-        itertools.product([3, 4], [1, 2, 10], [False, True], backends),
+        itertools.product([3, 4, 5], [1, 2, 10], [False, True], backends),
     )
     def test_conv_transpose(self, rank, groups, has_bias, backend):
         """
@@ -221,12 +224,17 @@ class TestConvBatchNormOptimizationPasses:
         input -----> conv_transpose ----> out
         """
         Cin, Cout = 10, 30
-        input_shape = (2, Cin, 20) if rank == 3 else (2, Cin, 20, 24)
+        rank_to_input_shape = {3: (2, Cin, 20), 4: (2, Cin, 20, 24), 5: (2, Cin, 20, 24, 24)}
+        rank_to_conv_weight_shape = {3: (Cin, Cout // groups, 2), 4: (Cin, Cout // groups, 2, 3),
+                                     5: (Cin, Cout // groups, 2, 3, 3)}
+        rank_to_output_shape = {3: (2, Cout, 21), 4: (2, Cout, 21, 26), 5: (2, Cout, 21, 26, 26)}
+
+        input_shape = rank_to_input_shape[rank]
 
         @mb.program(input_specs=[mb.TensorSpec(shape=input_shape)])
         def prog(x):
             # conv layer
-            conv_weight = np.random.rand(Cin, Cout // groups, 2) if rank == 3 else np.random.rand(Cin, Cout // groups, 2, 3)
+            conv_weight = np.random.rand(*rank_to_conv_weight_shape[rank])
             conv_bias = np.random.rand(Cout) if has_bias else None
             x = mb.conv_transpose(
                 x=x,
@@ -243,13 +251,13 @@ class TestConvBatchNormOptimizationPasses:
 
             epsilon = 1e-5
             x = mb.batch_norm(
-                    x=x,
-                    mean=mean,
-                    variance=variance,
-                    gamma=gamma,
-                    beta=beta,
-                    epsilon=epsilon,
-                )
+                x=x,
+                mean=mean,
+                variance=variance,
+                gamma=gamma,
+                beta=beta,
+                epsilon=epsilon,
+            )
             return x
 
         prev_prog, prev_block, block = apply_pass_and_basic_check(
@@ -260,7 +268,7 @@ class TestConvBatchNormOptimizationPasses:
         assert get_op_types_in_program(prog) == ["conv_transpose"]
 
         # validate graph pass
-        output_shape = (2, Cout, 21) if rank == 3 else (2, Cout, 21, 26)
+        output_shape = rank_to_output_shape[rank]
         assert_model_is_valid(
             prog,
             {"x": input_shape},

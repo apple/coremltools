@@ -7,11 +7,13 @@ import numpy as np
 
 from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.types import is_compatible_type
-from coremltools.converters.mil.mil.types.symbolic import is_symbolic, any_symbolic
+from coremltools.converters.mil.mil.types.symbolic import (any_symbolic,
+                                                           is_symbolic)
+
 from . import SPACES
 from .block import curr_block
 from .input_type import DefaultInputs, TensorInputType, TupleInputType
-from .var import Var, InternalVar, ListVar
+from .var import InternalVar, ListVar, Var
 
 VALUE = 1
 SYMBOL = 2
@@ -280,8 +282,17 @@ class Operation:
                         op=self,
                         op_output_idx=i,
                     )
+                    elem_shape = new_var.elem_shape
+                    if elem_shape is not None and len(elem_shape) >= 5:
+                        msg = ("Core ML only supports list of elements with rank <= 4. "
+                               "Layer \"{}\", with type \"{}\", outputs a list of rank {} tensors.").format(self.name, self.op_type, len(elem_shape))
+                        raise ValueError(msg)
                 else:
                     new_var = Var(name, sym_type, sym_val, op=self, op_output_idx=i)
+                    if new_var.rank >= 6:
+                        msg = ("Core ML only supports tensors with rank <= 5. "
+                               "Layer \"{}\", with type \"{}\", outputs a rank {} tensor.").format(self.name, self.op_type, new_var.rank)
+                        raise ValueError(msg)
                 self._output_vars.append(new_var)
         else:
             # Check new inference result against existing self._output_vars.

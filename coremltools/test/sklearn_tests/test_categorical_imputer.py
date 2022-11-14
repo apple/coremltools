@@ -4,14 +4,16 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import unittest
-import numpy as np
-from coremltools._deps import _HAS_SKLEARN, _SKLEARN_VERSION
 from distutils.version import StrictVersion
 
-if _HAS_SKLEARN:
-    from coremltools.converters import sklearn as converter
+import numpy as np
 
+from coremltools._deps import _HAS_SKLEARN, _SKLEARN_VERSION
+
+if _HAS_SKLEARN:
     import sklearn
+
+    from coremltools.converters import sklearn as converter
     try:
         # scikit-learn >= 0.21
         from sklearn.impute import SimpleImputer as Imputer

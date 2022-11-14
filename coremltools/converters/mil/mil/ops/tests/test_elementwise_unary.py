@@ -8,29 +8,27 @@ import itertools
 import numpy as np
 import pytest
 import scipy
-from scipy import special
-from .testing_utils import run_compare_builder
+
 from coremltools.converters.mil import testing_reqs
-from coremltools.converters.mil.mil import (
-    Builder as mb,
-    Function,
-    get_new_symbol,
-    Program,
-    types,
-)
-from coremltools.converters.mil.mil.types.symbolic import is_compatible_symbolic_vector
+from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil import (Function, get_new_symbol,
+                                            types)
+from coremltools.converters.mil.mil.types.symbolic import \
+    is_compatible_symbolic_vector
 from coremltools.converters.mil.testing_utils import ssa_fn
 
+from .testing_utils import run_compare_builder
 
 backends = testing_reqs.backends
+compute_units = testing_reqs.compute_units
 
 
 class TestElementwiseUnary:
     # All ops in this test share the same backends
     @pytest.mark.parametrize(
-        "use_cpu_for_conversion, backend, mode",
+        "compute_unit, backend, mode",
         itertools.product(
-            [True, False],
+            compute_units,
             backends,
             [
                 "abs",
@@ -61,7 +59,7 @@ class TestElementwiseUnary:
             ],
         ),
     )
-    def test_builder_to_backend_smoke(self, use_cpu_for_conversion, backend, mode):
+    def test_builder_to_backend_smoke(self, compute_unit, backend, mode):
         if mode == "abs":
             val = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.float32)
             expected_outputs = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
@@ -279,8 +277,7 @@ class TestElementwiseUnary:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_for_conversion,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
@@ -545,15 +542,15 @@ class TestElementwiseUnary:
             assert is_compatible_symbolic_vector(output_vars.sym_val, [get_new_symbol(), 1])
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, epsilon",
+        "compute_unit, backend, epsilon",
         itertools.product(
-            [True, False],
+            compute_units,
             backends,
             [1e-3, 1e-1, 1.0],
         ),
     )
     def test_builder_to_backend_stress_inverse(
-        self, use_cpu_only, backend, epsilon
+        self, compute_unit, backend, epsilon
     ):
         x = np.array([[1, -2, 3], [4, -5, 6]], dtype=np.float32)
         numpy_pred = 1 / (x + epsilon)
@@ -571,21 +568,20 @@ class TestElementwiseUnary:
             input_value_dict,
             expected_output_type,
             numpy_pred,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, epsilon",
+        "compute_unit, backend, epsilon",
         itertools.product(
-            [True, False],
+            compute_units,
             backends,
             [1e-3, 1e-1, 1.0],
         ),
     )
     def test_builder_to_backend_stress_rsqrt(
-        self, use_cpu_only, backend, epsilon
+        self, compute_unit, backend, epsilon
     ):
         x = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
         numpy_pred = 1.0 / np.sqrt(x + epsilon)
@@ -603,21 +599,20 @@ class TestElementwiseUnary:
             input_value_dict,
             expected_output_type,
             numpy_pred,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, epsilon",
+        "compute_unit, backend, epsilon",
         itertools.product(
-            [True, False],
+            compute_units,
             backends,
             [1e-3, 1e-1, 1.0],
         ),
     )
     def test_builder_to_backend_stress_log(
-            self, use_cpu_only, backend, epsilon
+            self, compute_unit, backend, epsilon
     ):
         x = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
         numpy_pred = np.log(x + epsilon)
@@ -635,21 +630,20 @@ class TestElementwiseUnary:
             input_value_dict,
             expected_output_type,
             numpy_pred,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
     @pytest.mark.parametrize(
-        "use_cpu_for_conversion, backend, src_dst",
+        "compute_unit, backend, src_dst",
         itertools.product(
-            [True, False],
+            compute_units,
             backends,
             [("fp16", "fp32"), ("fp32", "fp16")],
         ),
     )
     def test_builder_to_backend_stress_cast(
-            self, use_cpu_for_conversion, backend, src_dst
+            self, compute_unit, backend, src_dst
     ):
         src_dtype, dst_dtype = src_dst
         x = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
@@ -673,8 +667,7 @@ class TestElementwiseUnary:
             input_value_dict,
             expected_output_type,
             numpy_pred,
-            use_cpu_only=use_cpu_for_conversion,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )
 

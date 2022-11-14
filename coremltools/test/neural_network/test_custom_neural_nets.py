@@ -3,16 +3,17 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import numpy as np
 import os
-import tempfile
 import shutil
+import tempfile
 import unittest
+
+import numpy as np
 
 import coremltools
 import coremltools.models.datatypes as datatypes
 from coremltools.models import neural_network as neural_network
-from coremltools.models.utils import _macos_version, _is_macos
+from coremltools.models.utils import _is_macos, _macos_version
 
 
 class SimpleTest(unittest.TestCase):

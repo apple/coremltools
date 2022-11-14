@@ -7,9 +7,7 @@ import unittest
 from coremltools import ImageType
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.testing_utils import (
-    get_op_types_in_program,
-    apply_pass_and_basic_check,
-)
+    apply_pass_and_basic_check, get_op_types_in_program)
 
 
 class ImagePreprocessingPass(unittest.TestCase):

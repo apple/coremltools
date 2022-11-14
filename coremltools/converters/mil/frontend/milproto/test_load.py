@@ -9,15 +9,22 @@ import torch
 
 import coremltools as ct
 from coremltools import ComputeUnit
+from coremltools._deps import _HAS_TF_2
+from coremltools.converters._converters_entry import _get_metadata_from_mlmodel
 from coremltools.converters.mil import Builder as mb
 from coremltools.converters.mil.converter import mil_convert
-from coremltools.converters.mil.frontend.milproto.load import load as milproto_to_pymil
-from coremltools.converters.mil.frontend.torch.test.test_torch_ops import TestScriptedModels as _TestScriptedModels
-from coremltools.converters.mil.frontend.tensorflow.test.test_ops import TestTensorArray as _TestTensorArray
-from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import run_compare_tf
-from coremltools.converters.mil.mil.ops.tests.testing_utils import compare_backend
+from coremltools.converters.mil.frontend.milproto.load import \
+    load as milproto_to_pymil
+from coremltools.converters.mil.frontend.tensorflow.test.test_ops import \
+    TestTensorArray as _TestTensorArray
+from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import \
+    run_compare_tf
+from coremltools.converters.mil.frontend.torch.test.test_torch_ops import \
+    TestScriptedModels as _TestScriptedModels
+from coremltools.converters.mil.mil.ops.tests.testing_utils import \
+    compare_backend
 from coremltools.converters.mil.testing_utils import get_op_types_in_program
-from coremltools.converters._converters_entry import _get_metadata_from_mlmodel
+
 
 def get_pymil_prog_from_mlmodel(mlmodel):
     model_spec = mlmodel.get_spec()
@@ -170,6 +177,7 @@ class TestE2ENumericalCorrectness:
         roundtrip_and_compare_mlmodel(mlmodel, {"data": np.array([1.])})
         roundtrip_and_compare_mlmodel(mlmodel, {"data": np.array([11.])})
 
+    @pytest.mark.skipif(_HAS_TF_2, reason="Fix and re-enable this test: rdar://76293949 (TF2 unit test InvalidArgumentError)")
     def test_list(self):
         model, inputs, outputs = _TestTensorArray.get_dynamic_elem_shape_model()
         input_values = [np.random.rand(2, 3)]
@@ -178,7 +186,7 @@ class TestE2ENumericalCorrectness:
             model,
             input_dict, 
             outputs,
-            use_cpu_for_conversion=True,
+            compute_unit=ct.ComputeUnit.CPU_ONLY,
             backend=("mlprogram", "fp16")
         )
         roundtrip_and_compare_mlmodel(mlmodel, {"Placeholder": input_values[0]})

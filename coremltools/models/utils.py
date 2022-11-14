@@ -6,23 +6,24 @@
 """
 Utilities for the entire package.
 """
-from functools import lru_cache as _lru_cache
 import math as _math
-import numpy as _np
 import os as _os
-import pathlib as _pathlib
 import shutil as _shutil
 import stat as _stat
 import subprocess as _subprocess
 import sys as _sys
 import tempfile as _tempfile
 import warnings as _warnings
+from functools import lru_cache as _lru_cache
 
-from .._deps import _HAS_SCIPY
+import numpy as _np
 
 from coremltools import ComputeUnit as _ComputeUnit
-from coremltools.converters.mil.mil.passes.name_sanitization_utils import NameSanitizer as _NameSanitizer
+from coremltools.converters.mil.mil.passes.name_sanitization_utils import \
+    NameSanitizer as _NameSanitizer
 from coremltools.proto import Model_pb2 as _Model_pb2
+
+from .._deps import _HAS_SCIPY
 
 _MLMODEL_EXTENSION = ".mlmodel"
 _MLPACKAGE_EXTENSION = ".mlpackage"
@@ -307,10 +308,8 @@ def _wp_to_fp16wp(wp):
     del wp.floatValue[:]
 
 def _convert_neural_network_spec_weights_to_fp16(fp_spec):
-    from .neural_network.quantization_utils import _quantize_spec_weights
     from .neural_network.quantization_utils import (
-        _QUANTIZATION_MODE_LINEAR_QUANTIZATION,
-    )
+        _QUANTIZATION_MODE_LINEAR_QUANTIZATION, _quantize_spec_weights)
 
     qspec = _quantize_spec_weights(fp_spec, 16, _QUANTIZATION_MODE_LINEAR_QUANTIZATION)
     return qspec

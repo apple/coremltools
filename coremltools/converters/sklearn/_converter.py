@@ -4,7 +4,7 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from coremltools import __version__ as ct_version
-from coremltools.models import _METADATA_VERSION, _METADATA_SOURCE
+from coremltools.models import _METADATA_SOURCE, _METADATA_VERSION
 
 """
 Defines the primary function for converting scikit-learn models.
@@ -141,7 +141,6 @@ def convert(sk_obj, input_features=None, output_feature_names=None):
     # This function is just a thin wrapper around the internal converter so
     # that sklearn isn't actually imported unless this function is called
     from ...models import MLModel
-
     # NOTE: Providing user-defined class labels will be enabled when
     # several issues with the ordering of the classes are worked out.  For now,
     # to use custom class labels, directly import the internal function below.

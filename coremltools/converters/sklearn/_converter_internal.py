@@ -9,40 +9,25 @@ The primary file for converting Scikit-learn models.
 
 """
 
+from ..._deps import _HAS_SKLEARN
 from ...models import _feature_management as _fm
 from ...models import datatypes
 from ...models.feature_vectorizer import create_feature_vectorizer
-from ...models.pipeline import Pipeline, PipelineRegressor, PipelineClassifier
-
-from ..._deps import _HAS_SKLEARN
+from ...models.pipeline import Pipeline, PipelineClassifier, PipelineRegressor
 
 if _HAS_SKLEARN:
-    import sklearn as _sklearn
     from sklearn.pipeline import Pipeline as sk_Pipeline
 
 from collections import namedtuple as _namedtuple
-import numpy as _np
 
-from . import _one_hot_encoder
-from . import _dict_vectorizer
-from . import _NuSVC
-from . import _NuSVR
-from . import _SVC
-from . import _SVR
-from . import _LinearSVC
-from . import _LinearSVR
-from . import _linear_regression
-from . import _decision_tree_classifier
-from . import _decision_tree_regressor
-from . import _gradient_boosting_classifier
-from . import _gradient_boosting_regressor
-from . import _logistic_regression
-from . import _normalizer
-from . import _imputer
-from . import _random_forest_classifier
-from . import _random_forest_regressor
-from . import _standard_scaler
-from . import _k_neighbors_classifier
+
+from . import (_SVC, _SVR, _decision_tree_classifier, _decision_tree_regressor,
+               _dict_vectorizer, _gradient_boosting_classifier,
+               _gradient_boosting_regressor, _imputer, _k_neighbors_classifier,
+               _linear_regression, _LinearSVC, _LinearSVR,
+               _logistic_regression, _normalizer, _NuSVC, _NuSVR,
+               _one_hot_encoder, _random_forest_classifier,
+               _random_forest_regressor, _standard_scaler)
 
 _PIPELINE_INTERNAL_FEATURE_NAME = "__feature_vector__"
 

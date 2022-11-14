@@ -4,17 +4,12 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 
-import logging
-
+from coremltools import _logger as logger
 from coremltools.converters.mil.frontend.tensorflow.basic_graph_ops import (
-    disconnect_edge,
-    connect_edge,
-    delete_node,
-    replace_node,
-    replace_dest,
-    connect_edge_at_index,
-)
-from coremltools.converters.mil.frontend.tensorflow.parsed_tf_node import ParsedTFNode
+    connect_edge, connect_edge_at_index, delete_node, disconnect_edge,
+    replace_dest, replace_node)
+from coremltools.converters.mil.frontend.tensorflow.parsed_tf_node import \
+    ParsedTFNode
 
 
 def _rename_node_in_fn(node, new_name, fn):
@@ -100,7 +95,7 @@ def _flatten_sub_graph_namespaces(tf_ssa, fn_name):
             _flatten_sub_graph_namespaces(tf_ssa, sf_name)
 
             msg = "flatten_sub_graph_namespaces: {} nodes renamed in '{}'"
-            logging.info(msg.format(count, sf_name))
+            logger.info(msg.format(count, sf_name))
 
 
 def _insert_op(fn, op, name, attr=None):
@@ -220,7 +215,7 @@ def _rewrite_cond_functions(tf_ssa, fn):
         else_fn_name = cond_node.attr.get("else_branch")
 
         msg = "Rewriting '{}' ({}) sub-graphs: then '{}', else '{}'"
-        logging.info(
+        logger.info(
             msg.format(cond_node.name, cond_node.op, then_fn_name, else_fn_name)
         )
 
@@ -380,7 +375,7 @@ def _eliminate_loop_cond_nodes(tf_ssa, fn):
         body_fn = tf_ssa.functions.get(node.attr.get("body"))
 
         cond_lc_nodes = {cond_fn.inputs.pop(0), cond_fn.inputs.pop(0)}
-        logging.info("Removing {} from cond graph".format(cond_lc_nodes))
+        logger.info("Removing {} from cond graph".format(cond_lc_nodes))
         for n in cond_lc_nodes:
             delete_node(cond_fn.graph, n)
 
@@ -403,10 +398,10 @@ def _eliminate_loop_cond_nodes(tf_ssa, fn):
         for n in body_lc_nodes:
             if n in body_fn.outputs:
                 msg = "Removing '{}' ({}) from body fn outputs"
-                logging.info(msg.format(n, body_fn.graph[n].op))
+                logger.info(msg.format(n, body_fn.graph[n].op))
                 body_fn.outputs.remove(n)
 
-        logging.info("Removing {} from body graph".format(body_lc_nodes))
+        logger.info("Removing {} from body graph".format(body_lc_nodes))
         for n in body_lc_nodes:
             delete_node(body_fn.graph, n)
 
@@ -469,7 +464,7 @@ def _rewrite_while_loop_functions(tf_ssa, fn):
         body_fn_name = while_node.attr.get("body")
 
         msg = "Rewriting '{}' ({}) sub-graphs: cond '{}', body '{}'"
-        logging.info(
+        logger.info(
             msg.format(while_node.name, while_node.op, cond_fn_name, body_fn_name)
         )
 

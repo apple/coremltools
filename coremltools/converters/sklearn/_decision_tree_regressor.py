@@ -3,13 +3,13 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from ._tree_ensemble import convert_tree_ensemble as _convert_tree_ensemble
-
 from ..._deps import _HAS_SKLEARN
 from ...models import MLModel as _MLModel
+from ._tree_ensemble import convert_tree_ensemble as _convert_tree_ensemble
 
 if _HAS_SKLEARN:
     import sklearn.tree as _tree
+
     from . import _sklearn_util
 
 model_type = "regressor"

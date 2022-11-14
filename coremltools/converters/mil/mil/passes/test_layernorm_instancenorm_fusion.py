@@ -5,12 +5,10 @@
 
 import numpy as np
 import pytest
+
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.testing_utils import (
-    assert_model_is_valid,
-    get_op_types_in_program,
-    apply_pass_and_basic_check,
-)
+    apply_pass_and_basic_check, assert_model_is_valid, get_op_types_in_program)
 
 np.random.seed(6174)
 

@@ -2,20 +2,23 @@
 # source: Model.proto
 
 import sys
+
 _b=sys.version_info[0]<3 and (lambda x:x) or (lambda x:x.encode('latin1'))
 from google.protobuf import descriptor as _descriptor
+from google.protobuf import descriptor_pb2
 from google.protobuf import message as _message
 from google.protobuf import reflection as _reflection
 from google.protobuf import symbol_database as _symbol_database
-from google.protobuf import descriptor_pb2
+
 # @@protoc_insertion_point(imports)
 
 _sym_db = _symbol_database.Default()
 
 
-from . import VisionFeaturePrint_pb2 as VisionFeaturePrint__pb2
 from . import AudioFeaturePrint_pb2 as AudioFeaturePrint__pb2
 from . import TextClassifier_pb2 as TextClassifier__pb2
+from . import VisionFeaturePrint_pb2 as VisionFeaturePrint__pb2
+
 try:
   DataStructures__pb2 = TextClassifier__pb2.DataStructures__pb2
 except AttributeError:
@@ -25,6 +28,7 @@ try:
 except AttributeError:
   FeatureTypes__pb2 = TextClassifier__pb2.FeatureTypes_pb2
 from . import WordTagger_pb2 as WordTagger__pb2
+
 try:
   DataStructures__pb2 = WordTagger__pb2.DataStructures__pb2
 except AttributeError:
@@ -34,6 +38,7 @@ try:
 except AttributeError:
   FeatureTypes__pb2 = WordTagger__pb2.FeatureTypes_pb2
 from . import Gazetteer_pb2 as Gazetteer__pb2
+
 try:
   DataStructures__pb2 = Gazetteer__pb2.DataStructures__pb2
 except AttributeError:
@@ -43,6 +48,7 @@ try:
 except AttributeError:
   FeatureTypes__pb2 = Gazetteer__pb2.FeatureTypes_pb2
 from . import WordEmbedding_pb2 as WordEmbedding__pb2
+
 try:
   DataStructures__pb2 = WordEmbedding__pb2.DataStructures__pb2
 except AttributeError:
@@ -54,6 +60,7 @@ except AttributeError:
 from . import ArrayFeatureExtractor_pb2 as ArrayFeatureExtractor__pb2
 from . import BayesianProbitRegressor_pb2 as BayesianProbitRegressor__pb2
 from . import CategoricalMapping_pb2 as CategoricalMapping__pb2
+
 try:
   DataStructures__pb2 = CategoricalMapping__pb2.DataStructures__pb2
 except AttributeError:
@@ -64,6 +71,7 @@ except AttributeError:
   FeatureTypes__pb2 = CategoricalMapping__pb2.FeatureTypes_pb2
 from . import CustomModel_pb2 as CustomModel__pb2
 from . import DictVectorizer_pb2 as DictVectorizer__pb2
+
 try:
   DataStructures__pb2 = DictVectorizer__pb2.DataStructures__pb2
 except AttributeError:
@@ -74,8 +82,9 @@ except AttributeError:
   FeatureTypes__pb2 = DictVectorizer__pb2.FeatureTypes_pb2
 from . import FeatureTypes_pb2 as FeatureTypes__pb2
 from . import FeatureVectorizer_pb2 as FeatureVectorizer__pb2
-from . import GLMRegressor_pb2 as GLMRegressor__pb2
 from . import GLMClassifier_pb2 as GLMClassifier__pb2
+from . import GLMRegressor_pb2 as GLMRegressor__pb2
+
 try:
   DataStructures__pb2 = GLMClassifier__pb2.DataStructures__pb2
 except AttributeError:
@@ -85,6 +94,7 @@ try:
 except AttributeError:
   FeatureTypes__pb2 = GLMClassifier__pb2.FeatureTypes_pb2
 from . import NearestNeighbors_pb2 as NearestNeighbors__pb2
+
 try:
   DataStructures__pb2 = NearestNeighbors__pb2.DataStructures__pb2
 except AttributeError:
@@ -107,6 +117,7 @@ except AttributeError:
   FeatureTypes__pb2 = NearestNeighbors__pb2.FeatureTypes_pb2
 from . import Identity_pb2 as Identity__pb2
 from . import Imputer_pb2 as Imputer__pb2
+
 try:
   DataStructures__pb2 = Imputer__pb2.DataStructures__pb2
 except AttributeError:
@@ -117,6 +128,7 @@ except AttributeError:
   FeatureTypes__pb2 = Imputer__pb2.FeatureTypes_pb2
 from . import MIL_pb2 as MIL__pb2
 from . import NeuralNetwork_pb2 as NeuralNetwork__pb2
+
 try:
   DataStructures__pb2 = NeuralNetwork__pb2.DataStructures__pb2
 except AttributeError:
@@ -139,6 +151,7 @@ except AttributeError:
   FeatureTypes__pb2 = NeuralNetwork__pb2.FeatureTypes_pb2
 from . import Normalizer_pb2 as Normalizer__pb2
 from . import OneHotEncoder_pb2 as OneHotEncoder__pb2
+
 try:
   DataStructures__pb2 = OneHotEncoder__pb2.DataStructures__pb2
 except AttributeError:
@@ -147,8 +160,9 @@ try:
   FeatureTypes__pb2 = OneHotEncoder__pb2.FeatureTypes__pb2
 except AttributeError:
   FeatureTypes__pb2 = OneHotEncoder__pb2.FeatureTypes_pb2
-from . import Scaler_pb2 as Scaler__pb2
 from . import NonMaximumSuppression_pb2 as NonMaximumSuppression__pb2
+from . import Scaler_pb2 as Scaler__pb2
+
 try:
   DataStructures__pb2 = NonMaximumSuppression__pb2.DataStructures__pb2
 except AttributeError:
@@ -158,6 +172,7 @@ try:
 except AttributeError:
   FeatureTypes__pb2 = NonMaximumSuppression__pb2.FeatureTypes_pb2
 from . import SVM_pb2 as SVM__pb2
+
 try:
   DataStructures__pb2 = SVM__pb2.DataStructures__pb2
 except AttributeError:
@@ -167,6 +182,7 @@ try:
 except AttributeError:
   FeatureTypes__pb2 = SVM__pb2.FeatureTypes_pb2
 from . import TreeEnsemble_pb2 as TreeEnsemble__pb2
+
 try:
   DataStructures__pb2 = TreeEnsemble__pb2.DataStructures__pb2
 except AttributeError:
@@ -176,6 +192,7 @@ try:
 except AttributeError:
   FeatureTypes__pb2 = TreeEnsemble__pb2.FeatureTypes_pb2
 from . import Parameters_pb2 as Parameters__pb2
+
 try:
   DataStructures__pb2 = Parameters__pb2.DataStructures__pb2
 except AttributeError:
@@ -185,6 +202,7 @@ try:
 except AttributeError:
   FeatureTypes__pb2 = Parameters__pb2.FeatureTypes_pb2
 from . import ItemSimilarityRecommender_pb2 as ItemSimilarityRecommender__pb2
+
 try:
   DataStructures__pb2 = ItemSimilarityRecommender__pb2.DataStructures__pb2
 except AttributeError:
@@ -193,8 +211,9 @@ try:
   FeatureTypes__pb2 = ItemSimilarityRecommender__pb2.FeatureTypes__pb2
 except AttributeError:
   FeatureTypes__pb2 = ItemSimilarityRecommender__pb2.FeatureTypes_pb2
-from . import SoundAnalysisPreprocessing_pb2 as SoundAnalysisPreprocessing__pb2
 from . import LinkedModel_pb2 as LinkedModel__pb2
+from . import SoundAnalysisPreprocessing_pb2 as SoundAnalysisPreprocessing__pb2
+
 try:
   Parameters__pb2 = LinkedModel__pb2.Parameters__pb2
 except AttributeError:
@@ -208,36 +227,36 @@ try:
 except AttributeError:
   FeatureTypes__pb2 = LinkedModel__pb2.FeatureTypes_pb2
 
-from .VisionFeaturePrint_pb2 import *
-from .AudioFeaturePrint_pb2 import *
-from .TextClassifier_pb2 import *
-from .WordTagger_pb2 import *
-from .Gazetteer_pb2 import *
-from .WordEmbedding_pb2 import *
 from .ArrayFeatureExtractor_pb2 import *
+from .AudioFeaturePrint_pb2 import *
 from .BayesianProbitRegressor_pb2 import *
 from .CategoricalMapping_pb2 import *
 from .CustomModel_pb2 import *
 from .DictVectorizer_pb2 import *
 from .FeatureTypes_pb2 import *
 from .FeatureVectorizer_pb2 import *
-from .GLMRegressor_pb2 import *
+from .Gazetteer_pb2 import *
 from .GLMClassifier_pb2 import *
-from .NearestNeighbors_pb2 import *
+from .GLMRegressor_pb2 import *
 from .Identity_pb2 import *
 from .Imputer_pb2 import *
+from .ItemSimilarityRecommender_pb2 import *
+from .LinkedModel_pb2 import *
 from .MIL_pb2 import *
+from .NearestNeighbors_pb2 import *
 from .NeuralNetwork_pb2 import *
+from .NonMaximumSuppression_pb2 import *
 from .Normalizer_pb2 import *
 from .OneHotEncoder_pb2 import *
-from .Scaler_pb2 import *
-from .NonMaximumSuppression_pb2 import *
-from .SVM_pb2 import *
-from .TreeEnsemble_pb2 import *
 from .Parameters_pb2 import *
-from .ItemSimilarityRecommender_pb2 import *
+from .Scaler_pb2 import *
 from .SoundAnalysisPreprocessing_pb2 import *
-from .LinkedModel_pb2 import *
+from .SVM_pb2 import *
+from .TextClassifier_pb2 import *
+from .TreeEnsemble_pb2 import *
+from .VisionFeaturePrint_pb2 import *
+from .WordEmbedding_pb2 import *
+from .WordTagger_pb2 import *
 
 DESCRIPTOR = _descriptor.FileDescriptor(
   name='Model.proto',

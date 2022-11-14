@@ -4,11 +4,14 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import unittest
-from coremltools._deps import _HAS_SKLEARN, _SKLEARN_VERSION
 from distutils.version import StrictVersion
-import numpy.random as rn
+
 import numpy as np
-from coremltools.models.utils import evaluate_transformer, _macos_version, _is_macos
+import numpy.random as rn
+
+from coremltools._deps import _HAS_SKLEARN, _SKLEARN_VERSION
+from coremltools.models.utils import (_is_macos, _macos_version,
+                                      evaluate_transformer)
 
 if _HAS_SKLEARN:
     import sklearn

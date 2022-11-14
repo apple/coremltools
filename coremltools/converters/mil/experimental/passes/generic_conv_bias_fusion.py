@@ -3,14 +3,15 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import logging
-import numpy as np
 import os
 
-from coremltools.converters.mil import Builder as mb
-from coremltools.converters.mil.experimental.passes.generic_pass_infrastructure import register_generic_pass
-from coremltools.converters.mil.mil import types
+import numpy as np
 
+from coremltools import _logger as logger
+from coremltools.converters.mil import Builder as mb
+from coremltools.converters.mil.experimental.passes.generic_pass_infrastructure import \
+    register_generic_pass
+from coremltools.converters.mil.mil import types
 
 """
 Fold add/sub into bias of conv and conv_transpose
@@ -28,7 +29,7 @@ Given:
 Result:
    %3 = conv(%1)
    ...
-   
+
 The second one is:
 
 Pattern 2:
@@ -43,7 +44,7 @@ Pattern 2:
        %2 = conv(%1)
        %4 = transpose(%2)
        ...
-       
+
 When taking all of the conv/conv_tranpose, transpose/no transpose, and add/sub into account,
 We end up with a total of 8 patterns (2^3). These patterns are paramaterized by the pattern_to_detect
 function below.
@@ -172,7 +173,7 @@ def transform_pattern(pattern):
     if new_bias_value.dtype != np.float32 and new_bias_value.dtype != np.float16:
         # cast the bias to match the weight type
         weight_np_type = types.nptype_from_builtin(pattern.conv.inputs["weight"].sym_type.get_primitive())
-        logging.warning("conv_bias_fusion pass: casting bias "
+        logger.warning("conv_bias_fusion pass: casting bias "
                         "from {} to {} to match the dtype of the weight of the conv layer".format(
                             new_bias_value.dtype, weight_np_type
                         )

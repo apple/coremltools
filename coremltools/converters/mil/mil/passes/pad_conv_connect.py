@@ -4,6 +4,7 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import copy
+
 import numpy as np
 
 from coremltools.converters.mil.mil import Builder as mb

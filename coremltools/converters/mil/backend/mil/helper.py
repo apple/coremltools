@@ -7,17 +7,15 @@ import os
 
 import numpy as np
 
-from coremltools.converters.mil.mil import types
-from coremltools.converters.mil.mil.types import builtin_to_proto_types
-from coremltools.models.utils import _WEIGHTS_DIR_NAME, _WEIGHTS_FILE_NAME
 import coremltools.proto.FeatureTypes_pb2 as ft
 import coremltools.proto.MIL_pb2 as pm
-from coremltools.converters.mil.mil.types import (
-    type_to_builtin_type,
-    numpy_type_to_builtin_type,
-    builtin_to_string
-)
+from coremltools.converters.mil.mil import types
+from coremltools.converters.mil.mil.types import (builtin_to_proto_types,
+                                                  builtin_to_string,
+                                                  numpy_type_to_builtin_type,
+                                                  type_to_builtin_type)
 from coremltools.converters.mil.mil.types.type_mapping import np_val_to_py_type
+from coremltools.models.utils import _WEIGHTS_DIR_NAME, _WEIGHTS_FILE_NAME
 
 
 def create_valuetype_scalar(data_type):

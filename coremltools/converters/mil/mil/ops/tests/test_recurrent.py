@@ -8,23 +8,21 @@ import itertools
 import numpy as np
 import pytest
 
-from .testing_utils import run_compare_builder
-from coremltools.converters.mil import testing_reqs
-from coremltools.converters.mil.mil import (
-    Builder as mb,
-    get_new_symbol,
-    types
-)
-from coremltools.converters.mil.testing_reqs import backends
+from coremltools._deps import _HAS_TORCH, MSG_TORCH_NOT_FOUND
+from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil import get_new_symbol, types
+from coremltools.converters.mil.testing_reqs import backends, compute_units
 
-if testing_reqs._HAS_TORCH:
+from .testing_utils import run_compare_builder
+
+if _HAS_TORCH:
     import torch
 
 
 class TestGRU:
     @pytest.mark.parametrize(
         argnames=[
-            "use_cpu_only",
+            "compute_unit",
             "backend",
             "seq_len",
             "batch_size",
@@ -37,7 +35,7 @@ class TestGRU:
             "symbolic",
         ],
         argvalues=itertools.product(
-            [True, False],
+            compute_units,
             backends,
             [1, 3],
             [1],  # <rdar://problem/59644603> [MIL] GRU with batch size 1 produces incorrect
@@ -56,7 +54,7 @@ class TestGRU:
     )
     def test_builder_to_backend_smoke(
         self,
-        use_cpu_only,
+        compute_unit,
         backend,
         seq_len,
         batch_size,
@@ -105,11 +103,16 @@ class TestGRU:
             for i in range(batch_size):
                 numpy_input = X[i]
                 hidden_state = H[i]
-                out.append(get_numpy_prediction_gru_single_batch(numpy_input, hidden_state, return_seq, direction,
-                                                                 inner_activation_str=inner_activation_str,
-                                                                 activation_str=activation_str,
-                                                                 )
-                           )
+                out.append(
+                    get_numpy_prediction_gru_single_batch(
+                        numpy_input,
+                        hidden_state,
+                        return_seq,
+                        direction,
+                        inner_activation_str=inner_activation_str,
+                        activation_str=activation_str,
+                    )
+                )
             output = np.stack(out, axis=0)
             output = np.transpose(output, (1, 0, 2))
             return output, output[-1, :, :]
@@ -139,7 +142,9 @@ class TestGRU:
         h = np.random.rand(batch_size, hidden_size)
 
         activation, inner_activation = activation_functions
-        output, state = get_numpy_prediction_gru(x, h, output_sequence, direction, inner_activation, activation)
+        output, state = get_numpy_prediction_gru(
+            x, h, output_sequence, direction, inner_activation, activation
+        )
         expected_outputs = [output, state]
 
         if symbolic:
@@ -188,8 +193,7 @@ class TestGRU:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
@@ -198,7 +202,7 @@ class TestLSTM:
     @pytest.mark.parametrize(
         ",".join(
             [
-                "use_cpu_only",
+                "compute_unit",
                 "backend",
                 "input_dims",
                 "output_dim",
@@ -214,7 +218,7 @@ class TestLSTM:
             ]
         ),
         itertools.product(
-            [True, False],
+            compute_units,
             backends,
             [[8, 32, 32]],
             [1, 4],
@@ -231,7 +235,7 @@ class TestLSTM:
     )
     def test_numpy_numerical(
         self,
-        use_cpu_only,
+        compute_unit,
         backend,
         input_dims,
         output_dim,
@@ -380,17 +384,16 @@ class TestLSTM:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
             atol=1e-3,
             rtol=1e-3,
         )
 
-    @pytest.mark.skipif(not testing_reqs._HAS_TORCH, reason="PyTorch not installed.")
+    @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
     @pytest.mark.parametrize(
         argnames=[
-            "use_cpu_only",
+            "compute_unit",
             "backend",
             "seq_len",
             "batch_size",
@@ -402,7 +405,7 @@ class TestLSTM:
             "symbolic",
         ],
         argvalues=itertools.product(
-            [True, False],
+            compute_units,
             backends,
             [1, 8],
             [1, 32],
@@ -416,7 +419,7 @@ class TestLSTM:
     )
     def test_builder_to_backend_smoke_unilstm(
         self,
-        use_cpu_only,
+        compute_unit,
         backend,
         seq_len,
         batch_size,
@@ -514,15 +517,14 @@ class TestLSTM:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
-    @pytest.mark.skipif(not testing_reqs._HAS_TORCH, reason="PyTorch not installed.")
+    @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
     @pytest.mark.parametrize(
         argnames=[
-            "use_cpu_only",
+            "compute_unit",
             "backend",
             "seq_len",
             "batch_size",
@@ -533,7 +535,7 @@ class TestLSTM:
             "symbolic",
         ],
         argvalues=itertools.product(
-            [True],
+            compute_units,
             backends,
             [1, 8],
             [1, 32],
@@ -546,7 +548,7 @@ class TestLSTM:
     )
     def test_builder_to_backend_smoke_bidirlstm(
         self,
-        use_cpu_only,
+        compute_unit,
         backend,
         seq_len,
         batch_size,
@@ -668,17 +670,16 @@ class TestLSTM:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
 
 class TestRNN:
-    @pytest.mark.skipif(not testing_reqs._HAS_TORCH, reason="PyTorch not installed.")
+    @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
     @pytest.mark.parametrize(
         argnames=[
-            "use_cpu_only",
+            "compute_unit",
             "backend",
             "seq_len",
             "batch_size",
@@ -690,7 +691,7 @@ class TestRNN:
             "symbolic",
         ],
         argvalues=itertools.product(
-            [True, False],
+            compute_units,
             backends,
             [2, 8],
             [1, 32],
@@ -704,7 +705,7 @@ class TestRNN:
     )
     def test_builder_to_backend_smoke(
         self,
-        use_cpu_only,
+        compute_unit,
         backend,
         seq_len,
         batch_size,
@@ -784,7 +785,6 @@ class TestRNN:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )

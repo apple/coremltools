@@ -4,19 +4,19 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import itertools
-import os
 import unittest
 
-import numpy as np
 import pandas as pd
 import pytest
 
 from coremltools._deps import _HAS_SKLEARN
-from coremltools.models.utils import evaluate_regressor, _macos_version, _is_macos
+from coremltools.models.utils import (_is_macos, _macos_version,
+                                      evaluate_regressor)
 
 if _HAS_SKLEARN:
     from sklearn.datasets import load_boston
     from sklearn.ensemble import RandomForestRegressor
+
     from coremltools.converters import sklearn as skl_converter
 
 

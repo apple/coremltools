@@ -4,13 +4,16 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import unittest
-import numpy as _np
-from coremltools._deps import _HAS_SKLEARN
 
-from coremltools.models.utils import evaluate_transformer, _macos_version, _is_macos
+import numpy as _np
+
+from coremltools._deps import _HAS_SKLEARN
+from coremltools.models.utils import (_is_macos, _macos_version,
+                                      evaluate_transformer)
 
 if _HAS_SKLEARN:
     from sklearn.preprocessing import StandardScaler
+
     from coremltools.converters import sklearn as converter
 
 

@@ -3,48 +3,41 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from distutils.version import StrictVersion as _StrictVersion
-import logging as _logging
 import os.path as _os_path
-from tqdm import tqdm as _tqdm
+from distutils.version import StrictVersion as _StrictVersion
 
 import tensorflow as _tf
-from tensorflow.lite.python.util import get_grappler_config as _get_grappler_config
-from tensorflow.lite.python.util import (
-    run_graph_optimizations as _run_graph_optimizations,
-)
-from tensorflow.python.framework import dtypes as _dtypes
-from tensorflow.python.framework.convert_to_constants import (
-    convert_variables_to_constants_v2 as _convert_variables_to_constants_v2,
-)
-from tensorflow.python.framework.function_def_to_graph import (
-    function_def_to_graph as _function_def_to_graph,
-)
-from tensorflow.python.keras.saving import saving_utils as _saving_utils
+from tensorflow.lite.python.util import \
+    get_grappler_config as _get_grappler_config
+from tensorflow.lite.python.util import \
+    run_graph_optimizations as _run_graph_optimizations
 from tensorflow.python.eager import context
+from tensorflow.python.framework import dtypes as _dtypes
+from tensorflow.python.framework.convert_to_constants import \
+    convert_variables_to_constants_v2 as _convert_variables_to_constants_v2
+from tensorflow.python.framework.function_def_to_graph import \
+    function_def_to_graph as _function_def_to_graph
+from tensorflow.python.keras.saving import saving_utils as _saving_utils
+from tqdm import tqdm as _tqdm
+
+from coremltools import _logger as logger
+from coremltools._deps import _get_version
+from coremltools.converters.mil.frontend.tensorflow2.tf_graph_pass import (
+    flatten_sub_graph_namespaces, rewrite_control_flow_functions)
+from coremltools.converters.mil.frontend.tensorflow.basic_graph_ops import \
+    fill_outputs
+from coremltools.converters.mil.frontend.tensorflow.load import TFLoader
+from coremltools.converters.mil.frontend.tensorflow.parsed_tf_node import \
+    ParsedTFNode
+from coremltools.converters.mil.frontend.tensorflow.tf_graph_pass import (
+    constant_propagation, delete_disconnected_nodes,
+    delete_unnecessary_constant_nodes, fuse_dilation_conv, insert_get_tuple,
+    remove_variable_nodes, tensor_array_resource_removal)
+from coremltools.converters.mil.frontend.tensorflow.tfssa import (
+    NetworkEnsemble, SSAFunction)
+from coremltools.converters.mil.input_types import TensorType
 
 from .converter import TF2Converter
-from coremltools._deps import _get_version
-from coremltools.converters.mil.frontend.tensorflow.basic_graph_ops import fill_outputs
-from coremltools.converters.mil.frontend.tensorflow.load import TFLoader
-from coremltools.converters.mil.frontend.tensorflow.parsed_tf_node import ParsedTFNode
-from coremltools.converters.mil.frontend.tensorflow.tf_graph_pass import (
-    constant_propagation,
-    delete_unnecessary_constant_nodes,
-    delete_disconnected_nodes,
-    fuse_dilation_conv,
-    insert_get_tuple,
-    remove_variable_nodes,
-    tensor_array_resource_removal,
-)
-from coremltools.converters.mil.frontend.tensorflow.tfssa import (
-    NetworkEnsemble,
-    SSAFunction,
-)
-from coremltools.converters.mil.frontend.tensorflow2.tf_graph_pass import (
-    flatten_sub_graph_namespaces,
-    rewrite_control_flow_functions,
-)
 
 
 class TF2Loader(TFLoader):
@@ -79,7 +72,7 @@ class TF2Loader(TFLoader):
             Dictionary of additional arguments.
         """
         TFLoader.__init__(self, model, debug, **kwargs)
-        
+
         """
         tf_ssa graph passes
         Notes:
@@ -132,12 +125,21 @@ class TF2Loader(TFLoader):
             raise NotImplementedError(msg.format(self.model))
 
         graph_def = self._graph_def_from_concrete_fn(cfs)
-        
+
         return cfs, graph_def
 
     def _graph_def_from_model(self, output_names=None):
         """Overwrites TFLoader._graph_def_from_model()"""
-        _, graph_def = self._get_concrete_functions_and_graph_def()
+        cfs, graph_def = self._get_concrete_functions_and_graph_def()
+        if isinstance(self.model, _tf.keras.Model) and self.kwargs.get("outputs", None) is None:
+            # For the keras model, check if the outputs is provided by the user.
+            # If not, we make sure the coreml model outputs order is the same as
+            # the original keras model
+            cf = cfs[0]
+            output_names = []
+            for key in cf.structured_outputs:
+                output_names.append(cf.structured_outputs[key].name.split(":")[0])
+            self.kwargs["outputs"] = [TensorType(name=name) for name in output_names]
         return self.extract_sub_graph(graph_def, output_names)
 
     def _tf_ssa_from_graph_def(self, fn_name="main"):
@@ -178,8 +180,8 @@ class TF2Loader(TFLoader):
                 try:
                     tf_pass(self._tf_ssa)
                 except Exception as e:
-                    _logging.exception('Exception in pass "{}": {}'.format(tf_pass, e))
-                    _logging.info("Ignoring exception and continuing to next pass")
+                    logger.exception('Exception in pass "{}": {}'.format(tf_pass, e))
+                    logger.info("Ignoring exception and continuing to next pass")
 
         else:
             for tf_pass in _tqdm(

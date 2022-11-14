@@ -24,12 +24,9 @@ For more information: http://developer.apple.com/documentation/coreml
 from enum import Enum as _Enum
 from logging import getLogger as _getLogger
 
-
-# Backup root logger handlers
-_root_logger = _getLogger()
-_root_logger_handlers_backup = _root_logger.handlers.copy()
-
 from .version import __version__
+
+_logger = _getLogger(__name__)
 
 # This is the basic Core ML specification format understood by iOS 11.0
 SPECIFICATION_VERSION = 1
@@ -63,6 +60,9 @@ _SPECIFICATION_VERSION_IOS_15 = 6
 # New versions for iOS 16.0
 _SPECIFICATION_VERSION_IOS_16 = 7
 
+# New versions for iOS 17.0
+_SPECIFICATION_VERSION_IOS_17 = 8
+
 class ComputeUnit(_Enum):
     '''
     The set of processing-unit configurations the model can use to make predictions.
@@ -79,6 +79,7 @@ _OPSET = {
     _SPECIFICATION_VERSION_IOS_14: "CoreML4",
     _SPECIFICATION_VERSION_IOS_15: "CoreML5",
     _SPECIFICATION_VERSION_IOS_16: "CoreML6",
+    _SPECIFICATION_VERSION_IOS_17: "CoreML7",
 }
 
 # Default specification version for each backend
@@ -122,9 +123,3 @@ _ENABLE_PROFILING = _os.environ.get("ENABLE_PROFILING", False)
 
 if _ENABLE_PROFILING:
     _sys.setprofile(_profiler)
-
-# Restore root logger handlers
-_root_logger = _getLogger()
-_coreml_logger = _getLogger(__name__)
-_coreml_logger.handlers = _root_logger.handlers.copy()
-_root_logger.handlers = _root_logger_handlers_backup

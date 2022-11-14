@@ -5,19 +5,17 @@
 
 import math
 import numbers
+from typing import List, Tuple
+
+
 import numpy as np
 
-from coremltools.converters.mil.mil import (
-    Builder as mb,
-    get_new_symbol, 
-    types,
-    Var,
+from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil import Var, get_new_symbol, types
+from coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary import (
+    cast as cast_op_class,
 )
-from coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary import cast as cast_op_class
-from coremltools.converters.mil.mil.types import (
-    builtin_to_string,
-    promote_dtypes,
-)
+from coremltools.converters.mil.mil.types import builtin_to_string, promote_dtypes
 from coremltools.converters.mil.mil.types.symbolic import is_symbolic
 
 MAX_SIZE_CONSTANT_FOLDING = 1024 * 1024 / 4 # When a fp32 const takes over 1MB, we won't create a const op for that
@@ -32,6 +30,14 @@ def broadcast_shapes(shape_x, shape_y):
     :return: tuple of int or symbols
         Result from broadcast.
     """
+
+    def raise_incompatible_dim_exception():
+        raise ValueError(
+            "Incompatible dim {} in shapes {} vs. {}".format(
+                i, shape_x, shape_y
+            )
+        )
+
     shape_x = tuple(shape_x)
     shape_y = tuple(shape_y)
     if len(shape_x) < len(shape_y):
@@ -41,33 +47,27 @@ def broadcast_shapes(shape_x, shape_y):
 
     ret_shapes = list()
     for i in range(len(shape_x)):
-        x_unknown = is_symbolic(shape_x[i])
-        y_unknown = is_symbolic(shape_y[i])
-        if shape_x[i] == 1:
-            ret_shapes.append(shape_y[i])
-        elif shape_y[i] == 1:
+        if shape_x[i] == shape_y[i]:
             ret_shapes.append(shape_x[i])
-        elif not y_unknown and shape_y[i] > 1:
-            if not x_unknown and shape_x[i] != shape_y[i]:
-                raise ValueError(
-                    "Incompatible dim {} in shapes {} vs. {}".format(
-                        i, shape_x, shape_y
-                    )
-                )
-            ret_shapes.append(shape_y[i])
-        elif not x_unknown and shape_x[i] > 1:
-            if not y_unknown and shape_x[i] != shape_y[i]:
-                raise ValueError(
-                    "Incompatible dim {} in shapes {} vs. {}".format(
-                        i, shape_x, shape_y
-                    )
-                )
-            ret_shapes.append(shape_x[i])
-        elif x_unknown or y_unknown:
-            ret_shapes.append(get_new_symbol())
         else:
-            assert shape_x[i] == shape_y[i]
-            ret_shapes.append(shape_x[i])
+            is_x_unknown = is_symbolic(shape_x[i])
+            is_y_unknown = is_symbolic(shape_y[i])
+            if shape_x[i] == 1:
+                ret_shapes.append(shape_y[i])
+            elif shape_y[i] == 1:
+                ret_shapes.append(shape_x[i])
+            elif not is_y_unknown and shape_y[i] > 1:
+                if not is_x_unknown and shape_x[i] != shape_y[i]:
+                    raise_incompatible_dim_exception()
+                ret_shapes.append(shape_y[i])
+            elif not is_x_unknown and shape_x[i] > 1:
+                if not is_y_unknown and shape_x[i] != shape_y[i]:
+                    raise_incompatible_dim_exception()
+                ret_shapes.append(shape_x[i])
+            elif is_x_unknown or is_y_unknown:
+                ret_shapes.append(get_new_symbol())
+            else:
+                raise_incompatible_dim_exception()
 
     return tuple(ret_shapes)
 
@@ -265,7 +265,7 @@ def spatial_dimensions_out_shape(
     return out_shape
 
 
-def parse_einsum_equation(equation):
+def parse_einsum_equation(equation: str) -> Tuple[List]:
     """
     Args
         equation : str
@@ -312,7 +312,7 @@ def parse_einsum_equation(equation):
 
     index = _update_vec(input1_str, input1_vec, map_char_to_int, 0)
     index = _update_vec(input2_str, input2_vec, map_char_to_int, index)
-    index = _update_vec(output_str, output_vec, map_char_to_int, index)
+    _update_vec(output_str, output_vec, map_char_to_int, index)
 
     return input1_vec, input2_vec, output_vec
 
@@ -359,7 +359,7 @@ def promote_input_dtypes(input_vars):
     """
     def _is_same_dtype(dtype1, dtype2):
         return builtin_to_string(dtype1) == builtin_to_string(dtype2)
-    
+
     def _promoted_var(var, promoted_dtype):
         if var.val is None:
             x = mb.cast(
@@ -372,7 +372,7 @@ def promote_input_dtypes(input_vars):
     for i, var in enumerate(input_vars):
         if not isinstance(var, Var):
             input_vars[i] = mb.const(val=var)
-            
+
     promoted_dtype = promote_dtypes([var.dtype for var in input_vars])
 
     for i, var in enumerate(input_vars):
@@ -380,8 +380,8 @@ def promote_input_dtypes(input_vars):
             input_vars[i] = _promoted_var(var, promoted_dtype)
 
     return input_vars
-    
-    
+
+
 def solve_slice_by_index_shape(x_shape, begin, end, stride, begin_mask, end_mask, squeeze_mask):
     """
     Helper function to solve the shape of tensor slicing.
@@ -456,4 +456,3 @@ def solve_slice_by_index_shape(x_shape, begin, end, stride, begin_mask, end_mask
         ret_shape.append(max(0, num))
 
     return ret_shape
-

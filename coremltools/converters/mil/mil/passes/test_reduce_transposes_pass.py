@@ -3,35 +3,29 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import numpy as np
-import pytest
 import unittest
 
-from .reduce_transposes import _find_transpose_compliment
-from coremltools.converters.mil.mil import (
-    Builder as mb,
-    get_new_symbol
-)
+import numpy as np
+import pytest
+
+from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil import get_new_symbol
 from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
 from coremltools.converters.mil.testing_utils import (
-    apply_pass_and_basic_check,
-    assert_model_is_valid,
-    get_op_types_in_program,
-)
+    apply_pass_and_basic_check, assert_model_is_valid, get_op_types_in_program)
 
+from .reduce_transposes import _find_transpose_compliment
 
 np.random.seed(1984)
 
 
 class TransposeOptimizationPass(unittest.TestCase):
-    """"""
-
     """
     Input graph:
     input -----> transpose(axis=[1,0]) -----> transpose(axis=[1,0]) ---> out
 
     Output graph:
-    input -----> relu -----> out
+    input -----> identity -----> out
     """
 
     def test_simple_consecutive_ops_fusion_direct_output(self):
@@ -438,11 +432,14 @@ class TransposeOptimizationPass(unittest.TestCase):
             prog,
             {"x": (10, 2, 3, 5)},
             expected_output_shapes={
-                block.outputs[0].name: (10, 2, 3, 5),
+                # Two consecutive relus are merged, so the first two outputs have the same name. See
+                # `test_name_change_depend_on_output` in test_merge_consecutive_relus.py.
                 block.outputs[1].name: (10, 2, 3, 5),
                 block.outputs[2].name: (10, 3, 2, 5),
                 block.outputs[3].name: (10, 3, 2, 5),
             },
+            # rdar://100243127 ([PyTorch] Duplicate Output Tensor Doesn't work for neuralnetwork).
+            backend=("mlprogram", "fp16")
         )
 
     """
@@ -2044,6 +2041,39 @@ class TransposeOptimizationPass(unittest.TestCase):
             expected_output_shapes={block.outputs[0].name: (5, 3, 4, 2)},
         )
 
+    def test_input_duplicate_output(self):
+        """
+        Input graph:
+        input -----> out (consist of duplicated input)
+
+        Output graph:
+        input -----> out (consist of duplicated input)
+
+        Notice that a temp identity sink is added for all outputs, so the block before going through the pass is:
+            function[CoreML3](%x: (2, 2, 1, 1, fp32)(Tensor)) {
+              block0() {
+                %identity_0: (2, 2, 1, 1, fp32)(Tensor) = identity(x=%x, name="identity_0")
+              } -> (%identity_0, %identity_0)
+            }
+        """
+        @mb.program(input_specs=[mb.TensorSpec(shape=(2, 2, 1, 1))])
+        def prog(x):
+            return x, x
+
+        prev_prog, prev_block, block = apply_pass_and_basic_check(
+            prog, "common::reduce_transposes"
+        )
+
+        self.assertEqual(
+            get_op_types_in_program(prev_prog), []
+        )
+        self.assertEqual(get_op_types_in_program(prog), [])
+        assert_model_is_valid(
+            prog,
+            {"x": (2, 2, 1, 1)},
+            backend=("mlprogram", "fp16"),
+            expected_output_shapes={block.outputs[0].name: (2, 2, 1, 1), block.outputs[1].name: (2, 2, 1, 1)},
+        )
 
 class TestTransposePassUtilityMethods():
 

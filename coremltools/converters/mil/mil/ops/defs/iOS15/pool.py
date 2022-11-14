@@ -5,13 +5,12 @@
 
 from coremltools.converters.mil.mil import Operation, types
 from coremltools.converters.mil.mil.block import curr_opset_version
-from coremltools.converters.mil.mil.input_type import (
-    DefaultInputs,
-    InputSpec,
-    TensorInputType,
-)
+from coremltools.converters.mil.mil.input_type import (DefaultInputs,
+                                                       InputSpec,
+                                                       TensorInputType)
 from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
-from coremltools.converters.mil.mil.ops.defs._utils import spatial_dimensions_out_shape
+from coremltools.converters.mil.mil.ops.defs._utils import \
+    spatial_dimensions_out_shape
 from coremltools.converters.mil.mil.ops.defs.iOS15 import _IOS15_TARGET
 
 
@@ -27,7 +26,7 @@ class Pooling(Operation):
         pad=TensorInputType(const=True, optional=True, type_domain=types.int32),
         ceil_mode=TensorInputType(const=True, optional=True, type_domain=types.bool),
     )
-    
+
     type_domains = {
         "T": (types.fp16, types.fp32),
     }
@@ -35,10 +34,10 @@ class Pooling(Operation):
     def default_inputs(self):
         num_spatial_dims = self.x.rank - 2
         return DefaultInputs(
-            strides=[1]*num_spatial_dims,
-            pad=[0]*2*num_spatial_dims,
+            strides=[1] * num_spatial_dims,
+            pad=[0] * 2 * num_spatial_dims,
             ceil_mode=False,
-            )
+        )
 
     def type_inference(self):
         ksize = self.kernel_sizes.val
@@ -59,9 +58,9 @@ class Pooling(Operation):
                 raise ValueError("ceil_mode must be False when pad_type==same")
             if pad is not None:
                 for i in range(D_in_rank):
-                    if pad[2*i] != pad[2*i+1]:
+                    if pad[2 * i] != pad[2 * i + 1]:
                         raise ValueError("Padding must be symmetric if ceil_mode is True")
-        
+
         # The same_lower padding is not supported in iOS15
         if curr_opset_version() == _IOS15_TARGET and self.pad_type.val == "same_lower":
             msg = "iOS15 version of pooling layers do not support pad_type = `same_lower`"
@@ -83,27 +82,27 @@ class Pooling(Operation):
 class avg_pool(Pooling):
     """
     Perform average pooling. Supports 1-D, 2-D, and 3-D pool (1, 2, or 3 spatial dimensions).
-    
+
     Parameters
     ----------
-    x: tensor<[n,C_in,\*D_in],T> (Required)
+    x: tensor<[n,C_in,\*D_in], T> (Required)
         *  ``3 <= rank <= 5``.
         *  ``D_in`` are spatial dimensions, ``1 <= len(D_in) <= 3``.
         *  ``C_in`` is the number of input channels or depth dimensions.
         *  ``n`` is the batch dimension.
-    
-    kernel_sizes: const tensor<[K],T> (Required)
+
+    kernel_sizes: const tensor<[K], T> (Required)
         * The size of the window for each spatial dimension ``D_in`` of the
           input tensor.
         * ``K == len(D_in)``
-    
+
     strides: const tensor<[S],i32> (Optional, default to all 1s)
         * Stride along each of the spatial dimensions.
         * ``S == len(D_in)``.
-    
+
     pad_type: const str (Required)
         Must be one of ``valid``, ``same`` or ``custom``.
-        
+
         * ``valid``: No padding. This is equivalent to custom pad with ``pad[i] = 0, for
           all i``.
         * ``same`` : This is equivalent to custom pad with ``pad[2*i] + pad[2*i+1] = kernel_size[i]``.
@@ -112,14 +111,14 @@ class avg_pool(Pooling):
           ``pad[2*i] + pad[2*i+1] = kernel_size[i]``.
         * ``same_lower``: Similar to ``same`` but the padding
           will place extra rows/cols on the top/left if the padding amount is odd.
-    
+
     pad: const<[P],i32> (Optional. Default to all 0s)
-        * ``pad`` represents the number of elements to pad before and after each 
+        * ``pad`` represents the number of elements to pad before and after each
           dimension: ``pad[2*i], pad[2*i+1]`` are the pad size before and after spatial
           dimension ``i``.
         * ``P = 2 * len(D_in)``.
         * ``pad`` should be specified if and only if ``pad_type == custom``
-    
+
     exclude_padding_from_average: const tensor<[], bool> (Optional, default to False)
         * If ``True``, padded values (0s) are excluded from the denominator count
           when computing the average over the kernel window.
@@ -129,12 +128,12 @@ class avg_pool(Pooling):
         * ``ceil`` is used instead of floor in calculating the output size.
         * Optional, defaults to ``False``.
         * Only applicable when ``pad_type`` is ``valid`` or ``custom``.
-        * When ``ceil_mode`` is True, padding must be symmetric; that is, if specified, 
+        * When ``ceil_mode`` is True, padding must be symmetric; that is, if specified,
           ``pad[2*i] == pad[2*i+1]`` must hold.
-    
+
     Returns
     -------
-    tensor<[n, C_out,\*D_out],T>
+    tensor<[n, C_out,\*D_out], T>
         * Same rank as ``x``.
         * When ``ceil_mode = False``:
             * ``D_out[i] = floor[(D_in[i] + pad[2*i] + pad[2*i+1] - kernel_sizes[i]) /
@@ -153,65 +152,68 @@ class avg_pool(Pooling):
             * The first equation is same as:
 
                 * ``D_out[i] = floor[(D_in[i] + pad[2*i] + pad[2*i+1] - kernel_sizes[i] + strides[i] - 1) / strides[i]] +1, for i = 0, .., len(D_in) - 1``
-    
+
     Attributes
     ----------
     T: fp16, fp32
-    
+
     See Also
     --------
     l2_pool, max_pool
     """
-    
+
     input_spec = (
         InputSpec(
-          exclude_padding_from_average=TensorInputType(const=True, optional=True, type_domain=types.bool))
+            exclude_padding_from_average=TensorInputType(
+                const=True, optional=True, type_domain=types.bool
+            )
+        )
         + Pooling.input_spec
     )
 
     def default_inputs(self):
-        return super().default_inputs() + \
-            DefaultInputs(
-                exclude_padding_from_average=False,
-            )
+        return super().default_inputs() + DefaultInputs(
+            exclude_padding_from_average=False,
+        )
+
 
 @register_op
 class l2_pool(Pooling):
     """
     Perform L2 pooling. Supports 1-D and 2-D pool.
-    
+
     Parameters
     ----------
-    x: tensor<[n,C_in,*D_in],T> (Required)
+    x: tensor<[n,C_in,*D_in], T> (Required)
         * Only support 1d and 2d pooling.
         * See ``avg_pool``.
-    
-    kernel_sizes: const tensor<[K],T> (Required)
+
+    kernel_sizes: const tensor<[K], T> (Required)
         * See ``avg_pool``.
-    
+
     strides: const tensor<[S],i32> (Optional, default to all 1s)
         * See ``avg_pool``.
-    
+
     pad_type: const str (Required)
         * See ``avg_pool``.
-    
+
     pad: const<[P],i32> (Optional, default to all 0s)
         * See ``avg_pool``.
-    
+
     Returns
     -------
-    tensor<[n, C_out,*D_out],T>
+    tensor<[n, C_out,*D_out], T>
         * See ``avg_pool``.
-    
+
     Attributes
     ----------
     T: fp16, fp32
-    
+
     See Also
     --------
     avg_pool, max_pool
     """
-        
+
     def type_inference(self):
         if self.x.rank - 2 > 2:
             msg = "l2_pool only supports rank 1 or 2. Got rank: {}".format(self.x.rank - 2)
@@ -223,32 +225,32 @@ class l2_pool(Pooling):
 class max_pool(Pooling):
     """
     Perform max pooling. Supports 1-D, 2-D, and 3-D pool.
-    
+
     Parameters
     ----------
-    x: tensor<[n,C_in,*D_in],T> (Required)
+    x: tensor<[n,C_in,*D_in], T> (Required)
         * See ``avg_pool``.
-    
-    kernel_sizes: const tensor<[K],T> (Required)
+
+    kernel_sizes: const tensor<[K], T> (Required)
         * See ``avg_pool``.
-    
+
     strides: const tensor<[S],i32> (Optional, default to all 1s)
         * See ``avg_pool``.
-    
+
     pad_type: const str (Required)
         * See ``avg_pool``.
-    
+
     pad: const<[P],i32> (Optional, default to all 0s)
         * See ``avg_pool``.
 
     ceil_mode: const<bool>
         * see ``avg_pool``.
-    
+
     Returns
     -------
-    tensor<[n, C_out,*D_out],T>
+    tensor<[n, C_out,*D_out], T>
         * See ``avg_pool``.
-    
+
     Attributes
     ----------
     T: fp16, fp32

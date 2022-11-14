@@ -5,9 +5,10 @@
 
 import numpy as _np
 
+import coremltools
+
 from ...proto import FeatureTypes_pb2
 from .. import datatypes
-import coremltools
 
 
 class KNearestNeighborsClassifierBuilder:

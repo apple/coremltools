@@ -3,17 +3,14 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import logging
-
-from coremltools.converters.mil.mil.types.symbolic import (
-    is_symbolic,
-    any_variadic,
-    num_symbolic,
-)
+from coremltools import _logger as logger
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil.passes.helper import block_context_manager
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
+from coremltools.converters.mil.mil.types.symbolic import (any_variadic,
+                                                           is_symbolic,
+                                                           num_symbolic)
 
 
 @block_context_manager
@@ -99,4 +96,4 @@ class remove_symbolic_reshape(AbstractGraphPass):
         for f in prog.functions.values():
             num_changes = _remove_symbolic_reshape_block(f)
             msg = "remove_symbolic_reshape: changed {} reshapes."
-            logging.info(msg.format(num_changes))
+            logger.info(msg.format(num_changes))

@@ -8,12 +8,10 @@ import copy
 import numpy as np
 
 from coremltools.converters.mil.mil import Builder as mb
-from coremltools.converters.mil.testing_utils import (
-    assert_model_is_valid,
-    assert_same_output_names,
-)
-from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
 from coremltools.converters.mil.mil import types
+from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
+from coremltools.converters.mil.testing_utils import (assert_model_is_valid,
+                                                      assert_same_output_names)
 
 np.random.seed(1984)
 validate_model = True

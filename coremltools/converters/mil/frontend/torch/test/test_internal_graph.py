@@ -13,9 +13,8 @@ torch = pytest.importorskip("torch")
 import torch.nn as nn
 import torch.nn.functional as F
 
-from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil import Builder as mb
-from coremltools.converters.mil.mil import Function, get_new_symbol
+from coremltools.converters.mil.mil import Function, get_new_symbol, types
 from coremltools.converters.mil.testing_utils import random_gen
 
 from .. import ops

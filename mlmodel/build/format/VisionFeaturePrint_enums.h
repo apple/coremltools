@@ -22,6 +22,7 @@ static const char * MLVisionFeaturePrintVisionFeaturePrintType_Name(MLVisionFeat
 enum MLSceneVersion: int {
     MLSceneVersionSCENE_VERSION_INVALID = 0,
     MLSceneVersionSCENE_VERSION_1 = 1,
+    MLSceneVersionSCENE_VERSION_2 = 2,
 };
 
 enum MLObjectsVersion: int {

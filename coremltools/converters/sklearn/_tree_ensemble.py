@@ -3,15 +3,14 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from ...models.tree_ensemble import TreeEnsembleRegressor, TreeEnsembleClassifier
-from ...models._feature_management import process_or_validate_features
-
 from ..._deps import _HAS_SKLEARN
+from ...models._feature_management import process_or_validate_features
+from ...models.tree_ensemble import (TreeEnsembleClassifier,
+                                     TreeEnsembleRegressor)
 
 if _HAS_SKLEARN:
     from sklearn.tree import _tree
 
-import numpy as _np
 
 
 def _get_value(scikit_value, mode="regressor", scaling=1.0, n_classes=2, tree_index=0):

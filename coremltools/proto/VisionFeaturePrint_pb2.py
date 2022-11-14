@@ -2,12 +2,14 @@
 # source: VisionFeaturePrint.proto
 
 import sys
+
 _b=sys.version_info[0]<3 and (lambda x:x) or (lambda x:x.encode('latin1'))
 from google.protobuf import descriptor as _descriptor
+from google.protobuf import descriptor_pb2
 from google.protobuf import message as _message
 from google.protobuf import reflection as _reflection
 from google.protobuf import symbol_database as _symbol_database
-from google.protobuf import descriptor_pb2
+
 # @@protoc_insertion_point(imports)
 
 _sym_db = _symbol_database.Default()
@@ -19,7 +21,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='VisionFeaturePrint.proto',
   package='CoreML.Specification.CoreMLModels',
   syntax='proto3',
-  serialized_pb=_b('\n\x18VisionFeaturePrint.proto\x12!CoreML.Specification.CoreMLModels\"\xb4\x04\n\x12VisionFeaturePrint\x12L\n\x05scene\x18\x14 \x01(\x0b\x32;.CoreML.Specification.CoreMLModels.VisionFeaturePrint.SceneH\x00\x12P\n\x07objects\x18\x15 \x01(\x0b\x32=.CoreML.Specification.CoreMLModels.VisionFeaturePrint.ObjectsH\x00\x1a\xa2\x01\n\x05Scene\x12Y\n\x07version\x18\x01 \x01(\x0e\x32H.CoreML.Specification.CoreMLModels.VisionFeaturePrint.Scene.SceneVersion\">\n\x0cSceneVersion\x12\x19\n\x15SCENE_VERSION_INVALID\x10\x00\x12\x13\n\x0fSCENE_VERSION_1\x10\x01\x1a\xbe\x01\n\x07Objects\x12]\n\x07version\x18\x01 \x01(\x0e\x32L.CoreML.Specification.CoreMLModels.VisionFeaturePrint.Objects.ObjectsVersion\x12\x0e\n\x06output\x18\x64 \x03(\t\"D\n\x0eObjectsVersion\x12\x1b\n\x17OBJECTS_VERSION_INVALID\x10\x00\x12\x15\n\x11OBJECTS_VERSION_1\x10\x01\x42\x18\n\x16VisionFeaturePrintTypeB\x02H\x03\x62\x06proto3')
+  serialized_pb=_b('\n\x18VisionFeaturePrint.proto\x12!CoreML.Specification.CoreMLModels\"\xc9\x04\n\x12VisionFeaturePrint\x12L\n\x05scene\x18\x14 \x01(\x0b\x32;.CoreML.Specification.CoreMLModels.VisionFeaturePrint.SceneH\x00\x12P\n\x07objects\x18\x15 \x01(\x0b\x32=.CoreML.Specification.CoreMLModels.VisionFeaturePrint.ObjectsH\x00\x1a\xb7\x01\n\x05Scene\x12Y\n\x07version\x18\x01 \x01(\x0e\x32H.CoreML.Specification.CoreMLModels.VisionFeaturePrint.Scene.SceneVersion\"S\n\x0cSceneVersion\x12\x19\n\x15SCENE_VERSION_INVALID\x10\x00\x12\x13\n\x0fSCENE_VERSION_1\x10\x01\x12\x13\n\x0fSCENE_VERSION_2\x10\x02\x1a\xbe\x01\n\x07Objects\x12]\n\x07version\x18\x01 \x01(\x0e\x32L.CoreML.Specification.CoreMLModels.VisionFeaturePrint.Objects.ObjectsVersion\x12\x0e\n\x06output\x18\x64 \x03(\t\"D\n\x0eObjectsVersion\x12\x1b\n\x17OBJECTS_VERSION_INVALID\x10\x00\x12\x15\n\x11OBJECTS_VERSION_1\x10\x01\x42\x18\n\x16VisionFeaturePrintTypeB\x02H\x03\x62\x06proto3')
 )
 
 
@@ -38,11 +40,15 @@ _VISIONFEATUREPRINT_SCENE_SCENEVERSION = _descriptor.EnumDescriptor(
       name='SCENE_VERSION_1', index=1, number=1,
       options=None,
       type=None),
+    _descriptor.EnumValueDescriptor(
+      name='SCENE_VERSION_2', index=2, number=2,
+      options=None,
+      type=None),
   ],
   containing_type=None,
   options=None,
   serialized_start=347,
-  serialized_end=409,
+  serialized_end=430,
 )
 _sym_db.RegisterEnumDescriptor(_VISIONFEATUREPRINT_SCENE_SCENEVERSION)
 
@@ -63,8 +69,8 @@ _VISIONFEATUREPRINT_OBJECTS_OBJECTSVERSION = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   options=None,
-  serialized_start=534,
-  serialized_end=602,
+  serialized_start=555,
+  serialized_end=623,
 )
 _sym_db.RegisterEnumDescriptor(_VISIONFEATUREPRINT_OBJECTS_OBJECTSVERSION)
 
@@ -97,7 +103,7 @@ _VISIONFEATUREPRINT_SCENE = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=247,
-  serialized_end=409,
+  serialized_end=430,
 )
 
 _VISIONFEATUREPRINT_OBJECTS = _descriptor.Descriptor(
@@ -134,8 +140,8 @@ _VISIONFEATUREPRINT_OBJECTS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=412,
-  serialized_end=602,
+  serialized_start=433,
+  serialized_end=623,
 )
 
 _VISIONFEATUREPRINT = _descriptor.Descriptor(
@@ -175,7 +181,7 @@ _VISIONFEATUREPRINT = _descriptor.Descriptor(
       index=0, containing_type=None, fields=[]),
   ],
   serialized_start=64,
-  serialized_end=628,
+  serialized_end=649,
 )
 
 _VISIONFEATUREPRINT_SCENE.fields_by_name['version'].enum_type = _VISIONFEATUREPRINT_SCENE_SCENEVERSION

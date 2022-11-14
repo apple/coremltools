@@ -4,26 +4,21 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import copy
-from sys import platform
 import unittest
+from sys import platform
 
 import numpy as np
 
+import coremltools.models.datatypes as datatypes
 from coremltools import ComputeUnit
 from coremltools._deps import _IS_MACOS
-import coremltools.models.datatypes as datatypes
-from coremltools.models.utils import _macos_version
-from coremltools.models import (
-    neural_network as neural_network,
-    MLModel
-)
-from coremltools.models.neural_network.printer import print_network_spec
 from coremltools.converters.mil.backend.nn.passes.mlmodel_passes import (
-    remove_disconnected_layers,
-    transform_conv_crop,
-    remove_redundant_transposes,
-)
-
+    remove_disconnected_layers, remove_redundant_transposes,
+    transform_conv_crop)
+from coremltools.models import MLModel
+from coremltools.models import neural_network as neural_network
+from coremltools.models.neural_network.printer import print_network_spec
+from coremltools.models.utils import _macos_version
 
 DEBUG = False
 np.random.seed(10)
@@ -595,8 +590,8 @@ class Redundant_Transposees_Test(unittest.TestCase):
                 RELU
         """
 
-        from itertools import permutations
         import random
+        from itertools import permutations
 
         random.seed(1000)
         input_shape = (3, 10, 5)
@@ -629,8 +624,8 @@ class Redundant_Transposees_Test(unittest.TestCase):
         """
         Same test as the previous one, but add more layers and dimension.
         """
-        from itertools import permutations
         import random
+        from itertools import permutations
 
         random.seed(0)
         input_shape = (3, 10, 5, 2, 4)

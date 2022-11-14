@@ -4,17 +4,16 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import unittest
-from coremltools._deps import _HAS_XGBOOST
-from coremltools._deps import _HAS_SKLEARN
-from coremltools.proto import Model_pb2
-from coremltools.proto import FeatureTypes_pb2
+
+from coremltools._deps import _HAS_SKLEARN, _HAS_XGBOOST
 
 if _HAS_SKLEARN:
     from sklearn.tree import DecisionTreeClassifier
+
     from coremltools.converters.sklearn import convert as skl_converter
 
 if _HAS_XGBOOST:
-    from coremltools.converters import xgboost as xgb_converter
+    pass
 
 
 @unittest.skipIf(not _HAS_SKLEARN, "Missing scikit-learn. Skipping tests.")
@@ -95,10 +94,9 @@ class DecisionTreeMultiClassClassifierScikitTest(unittest.TestCase):
         """
         Set up the unit test by loading the dataset and training a model.
         """
+        import numpy as np
         from sklearn.datasets import load_boston
         from sklearn.tree import DecisionTreeClassifier
-        from sklearn.preprocessing import MultiLabelBinarizer
-        import numpy as np
 
         scikit_data = load_boston()
         scikit_model = DecisionTreeClassifier(random_state=1)

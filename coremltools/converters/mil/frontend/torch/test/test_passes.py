@@ -9,16 +9,11 @@ import numpy as np
 import pytest
 import torch
 
-from ..internal_graph import (
-    InternalTorchIRBlock,
-    InternalTorchIRGraph,
-    InternalTorchIRNode
-)
-from ..torchir_passes import (
-    flatten_graph_input_values,
-    flatten_graph_output_values,
-    transform_inplace_ops
-)
+from ..internal_graph import (InternalTorchIRBlock, InternalTorchIRGraph,
+                              InternalTorchIRNode)
+from ..torchir_passes import (flatten_graph_input_values,
+                              flatten_graph_output_values,
+                              transform_inplace_ops)
 
 
 def _build_flattening_test_graph():

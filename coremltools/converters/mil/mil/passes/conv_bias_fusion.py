@@ -3,17 +3,19 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import logging
 import numpy as np
 
-from coremltools.converters.mil.mil import Builder as mb, types
+from coremltools import _logger as logger
+from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil import types
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
-from coremltools.converters.mil.mil.passes.helper import _check_child_op_type, block_context_manager
+from coremltools.converters.mil.mil.passes.helper import (
+    _check_child_op_type, block_context_manager)
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 
 
-
 child_op_types = ["add", "sub"]
+
 
 def _match_pattern(op):
     if op.op_type == "conv" or op.op_type == "conv_transpose":
@@ -27,7 +29,7 @@ def _match_pattern(op):
             if add_op_candidate.op_type in child_op_types:
                 return add_op_candidate
     return None
-    
+
 def _try_to_transform_transpose_pattern(conv_op, block):
 
     ops_to_remove = []
@@ -128,7 +130,7 @@ def _try_to_transform_transpose_pattern(conv_op, block):
             continue
         tranpose_kargs[k] = v
     x = mb.transpose(**tranpose_kargs)
-    
+
     if add_or_sub_op.enclosing_block.try_replace_uses_of_var_after_op(
         anchor_op=add_or_sub_op,
         old_var=add_or_sub_op.outputs[0],
@@ -218,7 +220,7 @@ def _try_to_transform(conv_op, add_op, block):
     if new_bias_value.dtype != np.float32 and new_bias_value.dtype != np.float16:
         # cast the bias to match the weight type
         weight_np_type = types.nptype_from_builtin(conv_op.inputs["weight"].sym_type.get_primitive())
-        logging.warning("conv_bias_fusion pass: casting bias "
+        logger.warning("conv_bias_fusion pass: casting bias "
                         "from {} to {} to match the dtype of the weight of the conv layer".format(
                         new_bias_value.dtype, weight_np_type
                         )
@@ -237,7 +239,7 @@ def _try_to_transform(conv_op, add_op, block):
         x = mb.conv(**conv_kargs)
     else:
         x = mb.conv_transpose(**conv_kargs)
-    
+
     if add_op.enclosing_block.try_replace_uses_of_var_after_op(
         anchor_op=add_op,
         old_var=add_op.outputs[0],

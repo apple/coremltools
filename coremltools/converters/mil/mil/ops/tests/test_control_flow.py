@@ -5,20 +5,22 @@
 
 import itertools
 
-import pytest
 import numpy as np
+import pytest
 
-from .testing_utils import run_compare_builder, UNK_SYM
-from coremltools.converters.mil.mil import Builder as mb, types
-from coremltools.converters.mil.testing_reqs import backends
-from coremltools.converters.mil.testing_utils import ssa_fn, random_gen
+from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil import types
+from coremltools.converters.mil.testing_reqs import backends, compute_units
+from coremltools.converters.mil.testing_utils import random_gen, ssa_fn
+
+from .testing_utils import UNK_SYM, run_compare_builder
 
 
 class TestSelect:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends)
+        "compute_unit, backend", itertools.product(compute_units, backends)
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+    def test_builder_to_backend_smoke(self, compute_unit, backend):
         cond_val = np.array([[3, 0, 0], [0, 4, 0], [5, 6, 0]], dtype=np.float32)
         a_val = np.array([[3, 1, 1], [1, 4, 1], [5, 6, 1]], dtype=np.float32)
         b_val = np.array([[3, 2, 2], [2, 4, 2], [5, 6, 2]], dtype=np.float32)
@@ -47,14 +49,14 @@ class TestSelect:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends)
+        "compute_unit, backend", itertools.product(compute_units, backends)
     )
-    def test_builder_to_backend_smoke_broadcast(self, use_cpu_only, backend):
+    def test_builder_to_backend_smoke_broadcast(self, compute_unit, backend):
         cond_val = np.array([[1], [0], [2]], dtype=np.float32)
         a_val = np.array([[3, 1, 1], [1, 4, 1], [5, 6, 1]], dtype=np.float32)
         b_val = np.array([[3, 2, 2], [2, 4, 2], [5, 6, 2]], dtype=np.float32)
@@ -83,7 +85,7 @@ class TestSelect:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
@@ -106,9 +108,9 @@ class TestSelect:
 
 class TestCond:
     @pytest.mark.parametrize(
-        "use_cpu_for_conversion, backend", itertools.product([True, False], backends,)
+        "compute_unit, backend", itertools.product(compute_units, backends,)
     )
-    def test_builder_to_backend_smoke(self, use_cpu_for_conversion, backend):
+    def test_builder_to_backend_smoke(self, compute_unit, backend):
         input_placeholders = {
             "a": mb.placeholder(shape=(1,), dtype=types.bool),
             "b": mb.placeholder(shape=(1,)),
@@ -144,17 +146,16 @@ class TestCond:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_for_conversion,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
 
 class TestWhileLoop:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True,False], backends,)
+        "compute_unit, backend", itertools.product(compute_units, backends,)
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+    def test_builder_to_backend_smoke(self, compute_unit, backend):
         def body(a, b):
             return mb.add(x=a, y=np.float32(1)), b
 
@@ -189,15 +190,14 @@ class TestWhileLoop:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "compute_unit, backend", itertools.product(compute_units, backends,)
     )
-    def test_builder_to_backend_power(self, use_cpu_only, backend):
+    def test_builder_to_backend_power(self, compute_unit, backend):
 
         input_placeholders = {
             "a": mb.placeholder(shape=(1,)),
@@ -234,15 +234,14 @@ class TestWhileLoop:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "compute_unit, backend", itertools.product(compute_units, backends,)
     )
-    def test_builder_to_backend_nested(self, use_cpu_only, backend):
+    def test_builder_to_backend_nested(self, compute_unit, backend):
         if backend[0] == 'neuralnetwork':
             pytest.xfail("rdar://96862073 (test_control_folw::TestWhileLoop::test_builder_to_backend_nested failing on nnv1)")
 
@@ -300,17 +299,16 @@ class TestWhileLoop:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
 
 class TestList:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "compute_unit, backend", itertools.product(compute_units, backends,)
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+    def test_builder_to_backend_smoke(self, compute_unit, backend):
         elem_shape = (2,)
         input_placeholders = {
             "a": mb.placeholder(shape=elem_shape),
@@ -357,15 +355,14 @@ class TestList:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "compute_unit, backend", itertools.product(compute_units, backends,)
     )
-    def test_builder_to_backend_while(self, use_cpu_only, backend):
+    def test_builder_to_backend_while(self, compute_unit, backend):
         # The while_loop appends [1, 2]*i to `ls` for each iteration
         # i = 0, ... num_iters-1.
         def body(i, num_iters, ls, update):
@@ -417,7 +414,6 @@ class TestList:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )

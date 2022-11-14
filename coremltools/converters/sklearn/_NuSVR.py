@@ -3,15 +3,14 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+from ..._deps import _HAS_SKLEARN
 from . import _SVR as _SVR
 
-from ..._deps import _HAS_SKLEARN
-from ...models import MLModel as _MLModel
-
 if _HAS_SKLEARN:
-    from ._sklearn_util import check_fitted
     from sklearn.svm import NuSVR as _NuSVR
+
     from . import _sklearn_util
+    from ._sklearn_util import check_fitted
 
     sklearn_class = _NuSVR
 

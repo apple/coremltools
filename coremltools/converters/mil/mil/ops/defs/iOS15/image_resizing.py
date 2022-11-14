@@ -5,14 +5,9 @@
 
 import numpy as np
 
-from coremltools.converters.mil.mil import (
-    DefaultInputs,
-    get_new_symbol,
-    InputSpec,
-    Operation,
-    TensorInputType,
-    types,
-)
+from coremltools.converters.mil.mil import (DefaultInputs, InputSpec,
+                                            Operation, TensorInputType,
+                                            get_new_symbol, types)
 from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
 from coremltools.converters.mil.mil.ops.defs.iOS15 import _IOS15_TARGET
 from coremltools.converters.mil.mil.types.symbolic import is_symbolic

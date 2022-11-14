@@ -8,6 +8,7 @@ from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil.passes.helper import block_context_manager
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 
+
 @block_context_manager
 def _move_operations_to_the_end_block(block, op_type_to_move):
     # Moves ops with `op_type_to_move` in `block.operations` (list) to the end of the program.

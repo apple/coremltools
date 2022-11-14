@@ -10,13 +10,10 @@ import numpy as np
 import coremltools as ct
 from coremltools._deps import _IS_MACOS
 from coremltools.converters.mil.mil import Builder as mb
-from coremltools.converters.mil.mil.passes import quantization_passes as transform
+from coremltools.converters.mil.mil.passes import \
+    quantization_passes as transform
 from coremltools.converters.mil.testing_utils import (
-    assert_model_is_valid,
-    get_op_types_in_program,
-    apply_pass_and_basic_check,
-)
-
+    apply_pass_and_basic_check, assert_model_is_valid, get_op_types_in_program)
 
 np.random.seed(1984)
 
@@ -40,7 +37,9 @@ class FP16CastTransform(unittest.TestCase):
 
         self.assertEqual(get_op_types_in_program(prog), ['square'])
 
-        apply_pass_and_basic_check(prog, transform.FP16ComputePrecision(op_selector=lambda op: True))
+        apply_pass_and_basic_check(
+            prog, transform.FP16ComputePrecision(op_selector=lambda op: True)
+        )
         _, _, block = apply_pass_and_basic_check(prog, "common::dead_code_elimination")
 
         self.assertEqual(get_op_types_in_program(prog), ["cast", "square", "cast"])
@@ -111,12 +110,14 @@ class FP16CastTransform(unittest.TestCase):
     def test_multiple_inputs_to_single_operation(self):
         @mb.program(input_specs=[mb.TensorSpec(shape=(10, 20)), mb.TensorSpec(shape=(10, 20))])
         def prog(x, y):
-            x = mb.concat(values= (x,y), axis=0)
+            x = mb.concat(values=(x, y), axis=0)
             return x
 
         self.assertEqual(get_op_types_in_program(prog), ['concat'])
 
-        apply_pass_and_basic_check(prog, transform.FP16ComputePrecision(op_selector=lambda op: True))
+        apply_pass_and_basic_check(
+            prog, transform.FP16ComputePrecision(op_selector=lambda op: True)
+        )
         _, _, block = apply_pass_and_basic_check(prog, "common::dead_code_elimination")
 
         self.assertEqual(get_op_types_in_program(prog), ["cast", "cast", "concat", "cast"])
@@ -135,7 +136,6 @@ class FP16CastTransform(unittest.TestCase):
         self.assertEqual(len(cast_2.outputs[0].child_ops), 1)
         self.assertEqual(cast_2.outputs[0].child_ops[0].op_type, "concat")
 
-
         # Asserting third cast configuration
         cast_3 = block.find_ops(op_type="cast")[2]
         self.assertEqual(cast_3.dtype.val, "fp32")
@@ -147,7 +147,6 @@ class FP16CastTransform(unittest.TestCase):
             {"x": (10, 20), "y": (10, 20)},
             expected_output_shapes={block.outputs[0].name: (20, 20)},
         )
-
 
     """
     Input graph:
@@ -163,7 +162,6 @@ class FP16CastTransform(unittest.TestCase):
 
     """
 
-
     def test_multiple_outputs_from_single_operation(self):
         @mb.program(input_specs=[mb.TensorSpec(shape=(10, 20))])
         def prog(x):
@@ -172,7 +170,9 @@ class FP16CastTransform(unittest.TestCase):
 
         self.assertEqual(get_op_types_in_program(prog), ['split'])
 
-        apply_pass_and_basic_check(prog, transform.FP16ComputePrecision(op_selector=lambda op: True))
+        apply_pass_and_basic_check(
+            prog, transform.FP16ComputePrecision(op_selector=lambda op: True)
+        )
         _, _, block = apply_pass_and_basic_check(prog, "common::dead_code_elimination")
 
         self.assertEqual(get_op_types_in_program(prog), ["cast", "split", "cast", "cast"])
@@ -222,11 +222,13 @@ class FP16CastTransform(unittest.TestCase):
         def prog(x):
             y = mb.square(x=x)
             z = mb.relu(x=x)
-            return y,z
+            return y, z
 
         self.assertEqual(get_op_types_in_program(prog), ['square', 'relu'])
 
-        apply_pass_and_basic_check(prog, transform.FP16ComputePrecision(op_selector=lambda op: True))
+        apply_pass_and_basic_check(
+            prog, transform.FP16ComputePrecision(op_selector=lambda op: True)
+        )
         _, _, block = apply_pass_and_basic_check(prog, "common::dead_code_elimination")
 
         self.assertEqual(get_op_types_in_program(prog), ["cast", "square", "cast", "relu", "cast"])
@@ -254,5 +256,24 @@ class FP16CastTransform(unittest.TestCase):
         assert_model_is_valid(
             prog,
             {"x": (10, 20)},
-            expected_output_shapes={block.outputs[0].name: (10, 20), block.outputs[1].name: (10, 20)},
+            expected_output_shapes={block.outputs[0].name: (10, 20),
+                                    block.outputs[1].name: (10, 20)},
+        )
+
+    def test_duplicate_output_vars(self):
+        @mb.program(input_specs=[mb.TensorSpec(shape=(1, 2))])
+        def prog(x):
+            relu1 = mb.relu(x=x)
+            return relu1, relu1
+
+        _, _, block = apply_pass_and_basic_check(
+            prog, transform.FP16ComputePrecision(op_selector=lambda op: True)
+        )
+        self.assertEqual(get_op_types_in_program(prog), ["cast", "relu", "cast"])
+
+        assert_model_is_valid(
+            prog,
+            {"x": (1, 2)},
+            expected_output_shapes={block.outputs[0].name: (1, 2), block.outputs[1].name: (1, 2)},
+            backend=("mlprogram", "fp16")
         )

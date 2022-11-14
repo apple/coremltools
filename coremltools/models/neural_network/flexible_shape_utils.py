@@ -8,9 +8,9 @@ Utilities to annotate Neural Network Features with flexible shape information.
 Only available in coremltools 2.0b1 and onwards
 """
 
-from ..utils import _get_feature, _get_nn_layers, _get_input_names
-from ... import _MINIMUM_FLEXIBLE_SHAPES_SPEC_VERSION
-from ... import _MINIMUM_NDARRAY_SPEC_VERSION
+from ... import (_MINIMUM_FLEXIBLE_SHAPES_SPEC_VERSION,
+                 _MINIMUM_NDARRAY_SPEC_VERSION)
+from ..utils import _get_feature
 
 _SEQUENCE_KEY = "S"
 _BATCH_KEY = "B"

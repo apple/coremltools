@@ -2,14 +2,12 @@
 import numpy as np
 
 from coremltools.converters.mil.mil import types
-from coremltools.converters.mil.mil.input_type import (
-    InputSpec,
-    TensorInputType,
-)
-from coremltools.converters.mil._deployment_compatibility import AvailableTarget as target
+from coremltools.converters.mil.mil.input_type import (InputSpec,
+                                                       TensorInputType)
 from coremltools.converters.mil.mil.operation import Operation
 from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
 from coremltools.converters.mil.mil.ops.defs.iOS16 import _IOS16_TARGET
+
 
 @register_op(opset_version=_IOS16_TARGET)
 class constexpr_affine_dequantize(Operation):
@@ -121,6 +119,8 @@ class constexpr_affine_dequantize(Operation):
 
     @staticmethod
     def decompress(quantized_data, zero_point, scale, axis):
+
+        axis = axis if axis >= 0 else axis + len(quantized_data.shape)
 
         def rank_promoted_to_same_as_quantized_data(param):
             if len(param.shape) == 0:
@@ -362,6 +362,10 @@ class constexpr_sparse_to_dense(Operation):
             raise AssertionError(
                 "Constraint Violated: M = ceil( product(shape) / 8) where M = mask.size"
             )
+
+        bitarray = np.unpackbits(self.mask.val, bitorder="little")
+        if any(bitarray[i] != 0 for i in range(output_size, len(bitarray))):
+            raise AssertionError("Padded bits in mask should be unset or equals to zero")
 
         dtype = self.nonzero_data.dtype
         shape = self.shape.val

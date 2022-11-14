@@ -10,45 +10,22 @@ import tempfile
 import pytest
 
 import coremltools.converters as converter
+from coremltools.converters.mil.frontend.tensorflow.test.test_load import \
+    frontend
+from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import \
+    get_tf_keras_io_names
 from coremltools.converters.mil.input_types import TensorType
-from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import (
-    get_tf_keras_io_names,
-)
-from coremltools.converters.mil.frontend.tensorflow.test import (
-    testing_utils as tf_testing_utils,
-)
-from coremltools.converters.mil.frontend.tensorflow2.test.testing_utils import (
-    make_tf2_graph
-)
 
 tf = pytest.importorskip("tensorflow", minversion="2.1.0")
-
-# -----------------------------------------------------------------------------
-# Overwrite utilities to enable different conversion / compare method
-tf_testing_utils.frontend = "tensorflow"
-tf_testing_utils.make_tf_graph = make_tf2_graph
-
-# -----------------------------------------------------------------------------
-# Import TF 2.x-compatible TF 1.x test cases
-from coremltools.converters.mil.frontend.tensorflow2.test.testing_utils import (
-    TensorFlow2BaseTest
-)
-from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import (
-    TensorFlowBaseTest
-)
-TensorFlowBaseTest.run_compare_tf = TensorFlow2BaseTest.run_compare_tf2
-
-from coremltools.converters.mil.frontend.tensorflow.test.test_load import (
-    frontend,
-    TestTf1ModelInputsOutputs as TestTf2ModelInputsOutputs,
-)
-
 
 class TestTf2ModelFormats:
     def setup(self):
         self.saved_model_dir = tempfile.mkdtemp()
         _, self.model_path_h5 = tempfile.mkstemp(
             suffix=".h5", prefix=self.saved_model_dir
+        )
+        _, self.model_path_hdf5 = tempfile.mkstemp(
+            suffix=".hdf5", prefix=self.saved_model_dir
         )
         _, self.model_path_pb = tempfile.mkstemp(
             suffix=".pb", prefix=self.saved_model_dir
@@ -90,6 +67,20 @@ class TestTf2ModelFormats:
         )
         input_names, output_names = get_tf_keras_io_names(keras_model)
         keras_model.save(self.model_path_h5, save_format="h5")
+        mlmodel = converter.convert(
+            self.model_path_h5,
+            inputs=[TensorType(input_names[0], (3, 4, 5))],
+            outputs=["Identity"],
+            source=frontend,
+        )
+        assert mlmodel is not None
+        
+    def test_keras_hdf5_file(self):
+        keras_model = tf.keras.Sequential(
+            [tf.keras.layers.ReLU(input_shape=(4, 5), batch_size=3)]
+        )
+        input_names, output_names = get_tf_keras_io_names(keras_model)
+        keras_model.save(self.model_path_h5, save_format="hdf5")
         mlmodel = converter.convert(
             self.model_path_h5,
             inputs=[TensorType(input_names[0], (3, 4, 5))],
@@ -164,7 +155,8 @@ class TestTf2ModelFormats:
 
         model = build_model()
 
-        from tensorflow.python.framework.convert_to_constants import convert_variables_to_constants_v2
+        from tensorflow.python.framework.convert_to_constants import \
+            convert_variables_to_constants_v2
         frozen_graph_func = convert_variables_to_constants_v2(
             model.call.get_concrete_function())
         frozen_graph_def = frozen_graph_func.graph.as_graph_def()

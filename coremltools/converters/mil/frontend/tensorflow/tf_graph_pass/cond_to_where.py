@@ -3,11 +3,11 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import logging
+from coremltools import _logger as logger
+from coremltools._deps import _HAS_TF_2
 
 from ..basic_graph_ops import delete_node, disconnect_edge
 from .visitors import FindAllUpstreamTerminals
-from coremltools._deps import _HAS_TF_2
 
 
 def compute_max_rank(graph):
@@ -103,7 +103,7 @@ class CondToWhere:
         if len(merges) == 0:
             return False
         for m in merges:
-            logging.debug("Fixing cond at merge location: %s", m)
+            logger.debug("Fixing cond at merge location: %s", m)
             switches = self._search(g, m)
             self._fix_found_cond(g, m, switches)
             stuff_done = True

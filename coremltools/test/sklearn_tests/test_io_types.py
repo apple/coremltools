@@ -3,25 +3,21 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import pytest
 import unittest
-
-import coremltools
-from coremltools._deps import (
-    _HAS_SKLEARN,
-    MSG_SKLEARN_NOT_FOUND,
-)
-from coremltools.models.utils import _macos_version, _is_macos
 
 import numpy as np
 import PIL.Image
+
+import coremltools
+from coremltools._deps import _HAS_SKLEARN, MSG_SKLEARN_NOT_FOUND
+from coremltools.models.utils import _is_macos, _macos_version
+
 if _HAS_SKLEARN:
-    import sklearn
-    from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
-    from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
+    from sklearn.datasets import load_boston
+    from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
     from sklearn.linear_model import LinearRegression
     from sklearn.svm import SVC, SVR
-    from sklearn.datasets import load_boston
+    from sklearn.tree import DecisionTreeRegressor
 
 
 def create_model(spec):
@@ -212,7 +208,7 @@ class TestIODataTypes(unittest.TestCase):
             test_data = data[0].reshape(1, -1)
             coreml_model = create_model(spec)
             try:
-                self.assertEqual(
+                self.assertAlmostEqual(
                     scikit_model.predict(test_data)[0],
                     coreml_model.predict({"data": test_data})["target"],
                     msg="{} != {} for Dtype: {}".format(

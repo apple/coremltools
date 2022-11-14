@@ -4,7 +4,8 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from abc import ABC, abstractmethod
-from coremltools.converters.mil._deployment_compatibility import AvailableTarget as target
+
+
 
 class AbstractGraphPass(ABC):
 

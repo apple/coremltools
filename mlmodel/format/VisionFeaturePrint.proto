@@ -24,6 +24,10 @@ message VisionFeaturePrint {
             // VERSION_1 is available on iOS,tvOS 12.0+, macOS 10.14+
             // It uses a 299x299 input image and yields a 2048 float feature vector
             SCENE_VERSION_1 = 1;
+
+            // VERSION_2 is available on iOS,tvOS 17.0+, macOS 14.0+
+            // It uses a 360x360 input image and yields a 768 float feature vector
+            SCENE_VERSION_2 = 2;
         }
         
         SceneVersion version = 1;

@@ -3,9 +3,11 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from coremltools.converters.mil.mil import Builder as mb, types as types
-from coremltools.converters.mil.mil.passes.pass_registry import register_pass
+from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil import types as types
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
+from coremltools.converters.mil.mil.passes.pass_registry import register_pass
+
 
 @register_pass(namespace="common")
 class update_output_dtypes(AbstractGraphPass):

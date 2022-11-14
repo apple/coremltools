@@ -3,18 +3,20 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import numpy as np
 import os
-import pytest
 import shutil
 import tempfile
+
+import numpy as np
+import pytest
 
 import coremltools
 from coremltools import ComputeUnit, utils
 from coremltools.converters.mil import Builder as mb
 from coremltools.libmodelpackage import ModelPackage
 from coremltools.models import MLModel
-from coremltools.models.utils import _MLPACKAGE_AUTHOR_NAME, _WEIGHTS_DIR_NAME, _WEIGHTS_FILE_NAME
+from coremltools.models.utils import (_MLPACKAGE_AUTHOR_NAME,
+                                      _WEIGHTS_DIR_NAME)
 from coremltools.proto import Model_pb2
 
 
