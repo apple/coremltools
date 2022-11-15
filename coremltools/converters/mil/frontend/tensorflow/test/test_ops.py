@@ -2228,7 +2228,7 @@ class TestEinsum(TensorFlowBaseTest):
             [False, True],
         )
     )
-    def test(self, use_cpu_for_conversion, backend, equation, reverse_input_order):
+    def test(self, compute_unit, backend, equation, reverse_input_order):
         input_shapes, _ = gen_input_shapes_einsum(equation, False)
 
         if reverse_input_order:
