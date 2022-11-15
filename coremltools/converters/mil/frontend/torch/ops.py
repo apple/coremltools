@@ -59,28 +59,7 @@ def _all_outputs_present(context, graph):
             return False
     return True
 
-<<<<<<< HEAD
-=======
 
-def _value_at(x, idx, name=None):
-    """
-    input x: 1D tensor (vector).
-    return value at index idx. x[idx].
-    Could specify the name of the returned MIL scalar tensor as well.
-    """
-    assert x.rank == 1
-    args = {
-        "x": x,
-        "begin": [idx],
-        "end": [0],
-        "squeeze_mask": [True],
-    }
-    if name is not None:
-        args["name"] = name
-    return mb.slice_by_index(**args)
-
-
->>>>>>> main
 def convert_nodes(context, graph):
     """
     Iterate over the nodes of a graph or block and convert to MIL.
@@ -4917,11 +4896,7 @@ def _pad_packed_sequence(context, node):
         # if the unpadded sequence has length seq_length,
         # x would have shape [seq_length, input_dim].
         # For example, the first data would result in a [len_1, input_dim] tensor.
-<<<<<<< HEAD
-        seq_length = value_at(seq_lengths, i)
-=======
-        seq_length = mb.cast(x=_value_at(seq_lengths, i), dtype="int32")
->>>>>>> main
+        seq_length = mb.cast(x=value_at(seq_lengths, i), dtype="int32")
         concate_values = [seq_length, input_dim]
         end_index = mb.concat(values=concate_values, axis=0)
         x = mb.slice_by_index(
