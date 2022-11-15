@@ -3,21 +3,26 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 import itertools
-import pytest
+import platform
+
 import numpy as np
+import pytest
+
+import coremltools as ct
+from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil import types
+from coremltools.converters.mil.testing_reqs import backends, compute_units
+from coremltools.converters.mil.testing_utils import random_gen, ssa_fn
 
 from .testing_utils import run_compare_builder
-from coremltools.converters.mil.mil import Builder as mb, types
-from coremltools.converters.mil.testing_reqs import backends
-from coremltools.converters.mil.testing_utils import ssa_fn, random_gen
 
 
 class TestLinear:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend",
-        itertools.product([True], backends),
+        "compute_unit, backend",
+        itertools.product(compute_units, backends),
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+    def test_builder_to_backend_smoke(self, compute_unit, backend):
         x_val = np.array([[-4.7182, 11.94], [-3.3939, 9.2166]], dtype=np.float32)
         weight_val = np.array([[1.2313, -0.095], [-1.4075, -0.8816]], dtype=np.float32)
         bias_val = np.array([1.0, 2.0], dtype=np.float32)
@@ -40,7 +45,7 @@ class TestLinear:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
@@ -53,12 +58,16 @@ class TestLinear:
         np.testing.assert_allclose(np.matmul(x_val, weight_val.T) + bias_val, v.val, atol=1e-04, rtol=1e-05)
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, rank",
-        itertools.product([True, False], backends, [2, 3, 5]),
+        "compute_unit, backend, rank",
+        itertools.product(compute_units, backends, [2, 3, 5]),
     )
-    def test_builder_to_backend_stress(self, use_cpu_only, backend, rank):
-        if backend[0] == "mlprogram" and not use_cpu_only:
+    def test_builder_to_backend_stress(self, compute_unit, backend, rank):
+        if backend[0] == "mlprogram" and compute_unit != ct.ComputeUnit.CPU_ONLY:
             pytest.xfail("rdar://97398733 (TestLinear failing on mlprogram + GPU)")
+            
+        if backend[0] == "neuralnetwork" and compute_unit != ct.ComputeUnit.CPU_ONLY and platform.machine() == "arm64" and rank == 5:
+            pytest.xfail("rdar://98015195 ([M1 native tests] Some MIL unittests are failing on M1 native)")
+            
         x_shape = np.random.randint(low=1, high=3, size=(rank,))
         x_val = np.random.rand(*x_shape)
         out_channels = 3
@@ -83,16 +92,16 @@ class TestLinear:
             input_values,
             expected_output_types,
             expected_outputs=expected_outputs,
-            use_cpu_only=use_cpu_only,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
 
 class TestMatMul:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends)
+        "compute_unit, backend", itertools.product(compute_units, backends)
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+    def test_builder_to_backend_smoke(self, compute_unit, backend):
         x_val = np.array([[-4.0, 13.0], [-3.0, 9.0]], dtype=np.float32)
         y_val = np.array([[1.0, -7.0], [-1.0, -8.0]], dtype=np.float32)
         input_placeholders = {
@@ -140,7 +149,7 @@ class TestMatMul:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
@@ -152,9 +161,9 @@ class TestMatMul:
         np.testing.assert_allclose(np.matmul(x_val, y_val), v.val, atol=1e-04, rtol=1e-05)
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, shapes",
+        "compute_unit, backend, shapes",
         itertools.product(
-            [True, False],
+            compute_units,
             backends,
             [
                 ((3, 2, 3, 4), (3, 2, 4, 5)),
@@ -165,7 +174,7 @@ class TestMatMul:
             ],
         ),
     )
-    def test_builder_to_backend_stress(self, use_cpu_only, backend, shapes):
+    def test_builder_to_backend_stress(self, compute_unit, backend, shapes):
         shape_x, shape_y = shapes
         x_val = np.random.rand(*shape_x)
         y_val = np.random.rand(*shape_y)
@@ -187,14 +196,14 @@ class TestMatMul:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, shape_x",
+        "compute_unit, backend, shape_x",
         itertools.product(
-            [True, False],
+            compute_units,
             backends,
             [
                 (5,),
@@ -205,7 +214,7 @@ class TestMatMul:
             ],
         ),
     )
-    def test_builder_y_rank_2_const(self, use_cpu_only, backend, shape_x):
+    def test_builder_y_rank_2_const(self, compute_unit, backend, shape_x):
         x_val = np.random.rand(*shape_x)
         y_val = np.random.rand(5, 10)
         input_placeholders = {
@@ -225,16 +234,16 @@ class TestMatMul:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=True,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
 
 class TestEinsum:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "compute_unit, backend", itertools.product(compute_units, backends,)
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+    def test_builder_to_backend_smoke(self, compute_unit, backend):
         equation = "abcd,adce->abce"
 
         x_val = np.arange(12).astype(np.float32).reshape((2, 1, 3, 2))
@@ -259,19 +268,20 @@ class TestEinsum:
             input_value_dict,
             expected_output_type,
             expected_output,
-            use_cpu_only=use_cpu_only,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
     @pytest.mark.parametrize(
-        "use_cpu_only, rank, broadcast, backend",
+        "compute_unit, rank, broadcast, backend",
         itertools.product(
-            [True, False],
+            compute_units,
             [3, 4],
-            [False, True],
-            backends,)
+            [True, False],
+            backends,
+        )
     )
-    def test_builder_to_backend_stress(self, use_cpu_only, rank, broadcast, backend):
+    def test_builder_to_backend_stress(self, compute_unit, rank, broadcast, backend):
         equation = "abcd,adce->abce" if rank == 4 else "vnm,mno->vno"
         shape_x = np.random.randint(low=2, high=16, size=rank).astype(np.int32)
         shape_y = np.random.randint(low=2, high=12, size=rank).astype(np.int32)
@@ -310,7 +320,7 @@ class TestEinsum:
             input_value_dict,
             expected_output_type,
             expected_output,
-            use_cpu_only=use_cpu_only,
+            compute_unit=compute_unit,
             backend=backend,
         )
 

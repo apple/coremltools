@@ -3,17 +3,19 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import logging as _logging
 import numpy as _np
 import sympy as _sm
 
-from . import types
-from .block import Function
-from .var import Var
-from .types.symbolic import k_used_symbols, k_num_internal_syms
-from coremltools.converters.mil._deployment_compatibility import AvailableTarget as _target
+from coremltools import _logger as logger
+from coremltools.converters.mil._deployment_compatibility import \
+    AvailableTarget as _target
 from coremltools.converters.mil.input_types import InputType
 from coremltools.converters.mil.mil.ops.helper import _get_version_of_op
+
+from . import types
+from .block import Function
+from .types.symbolic import k_num_internal_syms, k_used_symbols
+from .var import Var
 
 
 class Program:
@@ -41,7 +43,7 @@ class Program:
         for func in self.functions.values():
             update_max_opset_version_block(func)
         return max_opset_version, op_with_max_opset_version
-        
+
     def _check_ops_version_compatibility(self, max_opset_version):
         def check_version_compatibility_block(block):
             for op in list(block.operations):
@@ -58,7 +60,7 @@ class Program:
                     raise ValueError(msg)
         for func in self.functions.values():
             check_version_compatibility_block(func)
-            
+
     def _check_or_set_functions_opset_version(self, max_opset_version):
         funcs = list(self.functions.values())
         for func in funcs:
@@ -160,7 +162,7 @@ class Placeholder:
             if not allow_rank0_input:
                 raise ValueError('Rank-0 (input {}) is unsupported'.format(name))
             else:
-                _logging.warning('Rank-0 (input {}) is unsupported in coreml. You might run into error while\
+                logger.warning('Rank-0 (input {}) is unsupported in coreml. You might run into error while\
                 running this model'.format(name))
 
         for i, d in enumerate(sym_shape):
@@ -217,7 +219,7 @@ def get_new_symbol(name=None):
         if s in k_used_symbols:
             new_name = name + k_num_internal_syms
             msg = 'Symbol name "{}" already occupied. Renaming to {}'
-            _logging.warning(msg.format(name, new_name))
+            logger.warning(msg.format(name, new_name))
             s = Symbol(new_name)
     else:
         s = Symbol("is" + str(k_num_internal_syms))

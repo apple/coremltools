@@ -5,9 +5,11 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from ..basic_graph_ops import delete_node
-import logging
 import sys
+from coremltools import _logger as logger
+
+from ..basic_graph_ops import delete_node
+
 
 sys.setrecursionlimit(5000)  # increase recursion limit to support convert large models
 
@@ -62,5 +64,5 @@ def delete_asserts(tfssa):
             if memo[m]:
                 delete_count += 1
                 delete_node(f.graph, m)
-    logging.debug("%d assert nodes deleted", delete_count)
+    logger.debug("%d assert nodes deleted", delete_count)
     return delete_count

@@ -3,35 +3,24 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import logging
-
 import numpy as np
 import sympy as sm
 
-from coremltools.converters.mil.mil.types.symbolic import (
-    is_symbolic,
-    isscalar,
-    any_symbolic,
-    any_variadic,
-)
-from coremltools.converters.mil.mil import (
-    get_new_symbol,
-    get_new_variadic_symbol,
-    Operation,
-    precondition,
-    types,
-)
-from coremltools.converters.mil.mil.input_type import (
-    DefaultInputs,
-    InputSpec,
-    TensorInputType
-)
-from coremltools.converters.mil.mil.operation import (
-    SYMBOL,
-    VALUE
-)
+from coremltools import _logger as logger
+from coremltools.converters.mil.mil import (Operation, get_new_symbol,
+                                            get_new_variadic_symbol,
+                                            precondition, types)
+from coremltools.converters.mil.mil.input_type import (DefaultInputs,
+                                                       InputSpec,
+                                                       TensorInputType)
+from coremltools.converters.mil.mil.operation import SYMBOL, VALUE
 from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
-from coremltools.converters.mil.mil.ops.defs._utils import solve_slice_by_index_shape
+from coremltools.converters.mil.mil.ops.defs._utils import \
+    solve_slice_by_index_shape
+from coremltools.converters.mil.mil.types.symbolic import (any_symbolic,
+                                                           any_variadic,
+                                                           is_symbolic,
+                                                           isscalar)
 
 
 @register_op
@@ -202,7 +191,7 @@ class reshape(Operation):
         x=TensorInputType(type_domain="T"),
         shape=TensorInputType(type_domain=types.int32),
     )
-    
+
     type_domains = {
         "T": (types.fp16, types.fp32, types.int32, types.bool),
     }
@@ -326,7 +315,7 @@ class reverse(Operation):
         x=TensorInputType(type_domain="T"),
         axes=TensorInputType(const=True, optional=True, type_domain=types.int32),
     )
-    
+
     type_domains = {
         "T": (types.fp16, types.fp32, types.int32, types.bool),
     }
@@ -392,11 +381,11 @@ class reverse_sequence(Operation):
         seq_axis=TensorInputType(const=True, optional=True, type_domain=types.int32),
         batch_axis=TensorInputType(const=True, optional=True, type_domain=types.int32),
     )
-    
+
     type_domains = {
         "T": (types.fp16, types.fp32, types.int32, types.bool),
     }
-    
+
     def default_inputs(self):
         return DefaultInputs(
             seq_axis=0,
@@ -415,10 +404,10 @@ class slice_by_index(Operation):
     """
     Method for numpy style indexing and slicing.
     With a tensor ``x``, this method achieves the following:
-    
+
     ``result = x[begin[0]: end[0]: stride[0], begin[1]: end[1]: stride[1], ...]``
 
-    Note: This method does not support pure indexing. You would need to do a 
+    Note: This method does not support pure indexing. You would need to do a
     squeeze if indexing is intended.
 
     Parameters
@@ -462,7 +451,7 @@ class slice_by_index(Operation):
         end_mask=TensorInputType(const=True, optional=True, type_domain=types.bool),
         squeeze_mask=TensorInputType(const=True, optional=True, type_domain=types.bool),
     )
-    
+
     type_domains = {
         "T": (types.fp16, types.fp32, types.int32, types.bool),
     }
@@ -541,7 +530,7 @@ class slice_by_index(Operation):
         if len(squeeze_axes) > 0:
             if len(squeeze_axes) == len(res.shape):
                 if len(res) == 0:
-                    logging.warning("%s seems to be a 0 sized tensor", self.name)
+                    logger.warning("%s seems to be a 0 sized tensor", self.name)
                     return np.array([])
                 res = res.tolist()[0]
                 if is_symbolic(res):
@@ -590,7 +579,7 @@ class slice_by_size(Operation):
         begin=TensorInputType(type_domain=types.int32),
         size=TensorInputType(type_domain=types.int32),
     )
-    
+
     type_domains = {
         "T": (types.fp16, types.fp32, types.int32, types.bool),
     }
@@ -736,7 +725,7 @@ class space_to_batch(Operation):
         block_shape=TensorInputType(const=True, type_domain=types.int32),
         paddings=TensorInputType(const=True, type_domain=types.int32),
     )
-        
+
     type_domains = {
         "T": (types.fp16, types.fp32),
     }
@@ -848,7 +837,7 @@ class batch_to_space(Operation):
             msg = ("Batch size must be perfectly divided by the product of block_shape. Got batch size {}, and block_shape {}."
             ).format(b, block_shape)
             raise ValueError(msg)
-            
+
         new_b = b / np.prod(block_shape)
         new_spatial_shape = [spatial_shape[i] * block_shape[i] for i in range(m)]
         cropped_spatial_shape = [x - crops[i][0] - crops[i][1] for i, x in enumerate(new_spatial_shape)]
@@ -884,7 +873,7 @@ class squeeze(Operation):
         x=TensorInputType(type_domain="T"),
         axes=TensorInputType(const=True, optional=True, type_domain=types.int32),
     )
-    
+
     type_domains = {
         "T": (types.fp16, types.fp32, types.int32, types.bool),
     }
@@ -953,7 +942,7 @@ class transpose(Operation):
         x=TensorInputType(type_domain="T"),
         perm=TensorInputType(const=True, type_domain=types.int32),
     )
-    
+
     type_domains = {
         "T": (types.fp16, types.fp32, types.int32, types.bool),
     }
@@ -1009,7 +998,7 @@ class pixel_shuffle(Operation):
         x=TensorInputType(type_domain="T"),
         upscale_factor=TensorInputType(const=True, type_domain=types.int32),
     )
-    
+
     type_domains = {
         "T": (types.fp16, types.fp32),
     }
@@ -1060,7 +1049,7 @@ class sliding_windows(Operation):
         size=TensorInputType(const=True, type_domain=types.int32),
         stride=TensorInputType(const=True, optional=True, type_domain=types.int32),
     )
-    
+
     type_domains = {
         "T": (types.fp16, types.fp32, types.int32),
     }

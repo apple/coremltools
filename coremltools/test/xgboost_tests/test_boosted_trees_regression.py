@@ -3,21 +3,23 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import unittest
-import tempfile
 import json
+import tempfile
+import unittest
 
 from coremltools._deps import _HAS_SKLEARN, _HAS_XGBOOST
 from coremltools.models.utils import _macos_version
 
 if _HAS_XGBOOST:
     import xgboost
+
     from coremltools.converters import xgboost as xgb_converter
 
 if _HAS_SKLEARN:
     from sklearn.datasets import load_boston
     from sklearn.ensemble import GradientBoostingRegressor
     from sklearn.preprocessing import OneHotEncoder
+
     from coremltools.converters import sklearn as skl_converter
 
 @unittest.skipIf(not _HAS_SKLEARN, "Missing scikit-learn. Skipping tests.")

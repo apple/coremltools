@@ -10,7 +10,6 @@ from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil.passes.helper import block_context_manager
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 
-
 child_op_types = ["add", "sub"]
 
 def _find_candidate_op(op):

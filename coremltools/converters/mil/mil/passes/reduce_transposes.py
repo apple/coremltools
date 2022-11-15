@@ -3,12 +3,12 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from collections import defaultdict
 import copy
-import logging
+from collections import defaultdict
 
 import numpy as np
 
+from coremltools import _logger as logger
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
@@ -759,7 +759,7 @@ class TransposeOptimization:
         self._add_output_sinks()
 
     def _add_output_sinks(self):
-        # We add a identity sink for all outputs.
+        # We add an identity sink for all outputs.
         self.old_output_vars = {var: var.name for var in self.block.outputs}
         new_outputs = []
         output_sinks_var = {}
@@ -1179,7 +1179,7 @@ class TransposeOptimization:
         and transform the graph by cancelling out transpose ops that can be removed.
         """
 
-        logging.debug(
+        logger.debug(
             "Block before optimize transpose transform:\n{}".format(self.block)
         )
         if DEBUG:
@@ -1216,7 +1216,7 @@ class TransposeOptimization:
                 )
             ).view(filename="/tmp/block_after_reduce_transpose")
 
-        logging.debug(
+        logger.debug(
             "Block after optimize transpose transform:\n{}".format(self.block)
         )
 
@@ -1237,7 +1237,7 @@ def _reduce_transposes_block(block):
     for op in list(block.operations):
         if len(op.blocks) > 0:
             return
-    
+
     with block:
         opt_transposes = TransposeOptimization(block)
         opt_transposes.block_traversal()

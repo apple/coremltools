@@ -6,6 +6,7 @@
 import itertools
 import math
 import os
+import platform
 import random
 import shutil
 import tempfile
@@ -15,19 +16,21 @@ import uuid
 import numpy as np
 import pytest
 
-from coremltools._deps import _HAS_TF, MSG_TF1_NOT_FOUND
-if _HAS_TF:
+from coremltools._deps import _HAS_TF_2, MSG_TF2_NOT_FOUND
+
+if _HAS_TF_2:
     import tensorflow as tf
+
 import torch
 
 import coremltools
-from coremltools import ComputeUnit
 import coremltools.models.datatypes as datatypes
+from coremltools import ComputeUnit
 from coremltools.converters.mil.mil.ops.defs._utils import aggregated_pad
-from coremltools.models import _MLMODEL_FULL_PRECISION, _MLMODEL_HALF_PRECISION, neural_network
+from coremltools.models import (_MLMODEL_FULL_PRECISION,
+                                _MLMODEL_HALF_PRECISION, neural_network)
 from coremltools.models.neural_network import flexible_shape_utils
-from coremltools.models.utils import _macos_version, _is_macos
-
+from coremltools.models.utils import _is_macos, _macos_version
 
 np.random.seed(10)
 
@@ -1923,7 +1926,8 @@ class NewLayersSimpleTest(CorrectnessTest):
             self._test_model(builder.spec, inputs, expected, useCPUOnly=cpu_only)
 
     def test_round_gpu(self):
-        pytest.xfail("rdar://98010495 (Some old nnv1 test are failing on M1 machine when running on ANE)")
+        if platform.machine() == "arm64":
+            pytest.xfail("rdar://98010495 (Some old nnv1 test are failing on M1 machine when running on ANE)")
         self.test_round_cpu(cpu_only=False)
 
     def test_sign_cpu(self, cpu_only=True):
@@ -2029,7 +2033,8 @@ class NewLayersSimpleTest(CorrectnessTest):
                     self.assertEqual(rank, builder._get_rank(output_))
 
     def test_split_nd_gpu(self):
-        pytest.xfail("rdar://98010495 (Some old nnv1 test are failing on M1 machine when running on ANE)")
+        if platform.machine() == "arm64":
+            pytest.xfail("rdar://98010495 (Some old nnv1 test are failing on M1 machine when running on ANE)")
         self.test_split_nd_cpu(cpu_only=False)
 
     def test_split_nd_with_split_sizes_cpu(self, cpu_only=True):
@@ -2695,14 +2700,11 @@ class NewLayersSimpleTest(CorrectnessTest):
     def test_topk_gpu(self):
         self.test_topk_cpu(cpu_only=False)
 
-    @unittest.skipIf(not _HAS_TF, MSG_TF1_NOT_FOUND)
+    @unittest.skipIf(not _HAS_TF_2, MSG_TF2_NOT_FOUND)
     def test_const_pad_cpu(self, cpu_only=True):
         def get_reference(data, pads, value):
-            with tf.Graph().as_default(), tf.Session() as sess:
-                x = tf.placeholder(tf.float32, shape=data.shape)
-                p = tf.placeholder(tf.int32, shape=pads.shape)
-                y = tf.pad(x, p, mode="CONSTANT", constant_values=value)
-                return sess.run(y, feed_dict={x: data, p: pads})
+            res = tf.pad(data, pads, mode='CONSTANT', constant_values=value)
+            return res.numpy()
 
         value = 34.0
         shapes = [(3,), (4, 5), (2, 4, 5), (12, 6, 3, 5, 7), (1, 24, 2, 4, 8)]
@@ -2765,22 +2767,21 @@ class NewLayersSimpleTest(CorrectnessTest):
                         )
 
     def test_const_pad_gpu(self):
+        if platform.machine() == "arm64":
+            pytest.xfail("rdar://98010495 (Some old nnv1 test are failing on M1 machine when running on ANE)")
         self.test_const_pad_cpu(cpu_only=False)
 
-    @unittest.skipIf(not _HAS_TF, MSG_TF1_NOT_FOUND)
+    @unittest.skipIf(not _HAS_TF_2, MSG_TF2_NOT_FOUND)
     def test_const_pad_mode2_cpu(self, cpu_only=True):
         def get_reference(data, output_shape, value, left_pad=False):
-            with tf.Graph().as_default(), tf.Session() as sess:
-                x = tf.placeholder(tf.float32, shape=data.shape)
-                p = tf.placeholder(tf.int32, shape=(len(output_shape), 2))
-                y = tf.pad(x, p, mode="CONSTANT", constant_values=value)
-                pads = np.zeros((len(output_shape), 2))
-                if left_pad:
-                    pads[:, 0] = np.array(output_shape) - np.array(data.shape)
-                else:
-                    pads[:, 1] = np.array(output_shape) - np.array(data.shape)
+            pads = np.zeros((len(output_shape), 2))
+            if left_pad:
+                pads[:, 0] = np.array(output_shape) - np.array(data.shape)
+            else:
+                pads[:, 1] = np.array(output_shape) - np.array(data.shape)
+            res =  tf.pad(data, pads, mode="CONSTANT", constant_values=value)
+            return res.numpy()
 
-                return sess.run(y, feed_dict={x: data, p: pads})
 
         value = 34.0
         shapes = [(3,), (4, 5), (2, 4, 5), (12, 6, 3, 5, 7), (1, 24, 2, 4, 8)]
@@ -2850,6 +2851,8 @@ class NewLayersSimpleTest(CorrectnessTest):
                     self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
     def test_const_pad_mode2_gpu(self):
+        if platform.machine() == "arm64":
+            pytest.xfail("rdar://98010495 (Some old nnv1 test are failing on M1 machine when running on ANE)")
         self.test_const_pad_mode2_cpu(cpu_only=False)
 
     def test_nms_cpu(self, cpu_only=True):
@@ -2877,7 +2880,7 @@ class NewLayersSimpleTest(CorrectnessTest):
             iou = intersection_area / union_area
             return iou
 
-        @unittest.skipIf(not _HAS_TF, MSG_TF1_NOT_FOUND)
+        @unittest.skipIf(not _HAS_TF_2, MSG_TF2_NOT_FOUND)
         def _nms_TF(
             boxes, scores, iou_threshold, score_threshold, per_class_suppression, M
         ):
@@ -2912,28 +2915,14 @@ class NewLayersSimpleTest(CorrectnessTest):
                 score_vector = np.max(scores[b, :, :], axis=-1)  # (N,)
                 if not per_class_suppression:
                     # this is the simple case as TF directly supports it
-                    with tf.Graph().as_default(), tf.Session() as sess:
-                        box_coord_matrix_pl = tf.placeholder(
-                            tf.float32, shape=box_coord_matrix.shape
-                        )
-                        score_vector_pl = tf.placeholder(
-                            tf.float32, shape=score_vector.shape
-                        )
-                        ids_g = tf.image.non_max_suppression(
-                            box_coord_matrix_pl,
-                            score_vector_pl,
-                            max_output_size=M,
-                            iou_threshold=iou_threshold,
-                            score_threshold=score_threshold,
-                        )
-
-                        ids = sess.run(
-                            ids_g,
-                            feed_dict={
-                                box_coord_matrix_pl: box_coord_matrix,
-                                score_vector_pl: score_vector,
-                            },
-                        )
+                    ids_g = tf.image.non_max_suppression(
+                        box_coord_matrix,
+                        score_vector,
+                        max_output_size=M,
+                        iou_threshold=iou_threshold,
+                        score_threshold=score_threshold,
+                    )
+                    ids = ids_g.numpy()
                 else:
                     # this is slightly complicated as TF does not directly support it
                     class_ids = np.argmax(scores[b, :, :], axis=-1)  # (N,)
@@ -2956,28 +2945,14 @@ class NewLayersSimpleTest(CorrectnessTest):
                                 box_coord_matrix2, current_class_ids, axis=0
                             )
                             feed_in2 = np.take(score_vector2, current_class_ids)
-
-                            with tf.Graph().as_default(), tf.Session() as sess:
-                                box_coord_matrix_pl = tf.placeholder(
-                                    tf.float32, shape=feed_in1.shape
-                                )
-                                score_vector_pl = tf.placeholder(
-                                    tf.float32, shape=feed_in2.shape
-                                )
-                                cur_ids_g = tf.image.non_max_suppression(
-                                    box_coord_matrix_pl,
-                                    score_vector_pl,
-                                    max_output_size=M,
-                                    iou_threshold=iou_threshold,
-                                    score_threshold=score_threshold,
-                                )
-                                cur_ids = sess.run(
-                                    cur_ids_g,
-                                    feed_dict={
-                                        box_coord_matrix_pl: feed_in1,
-                                        score_vector_pl: feed_in2,
-                                    },
-                                )
+                            cur_ids_g = tf.image.non_max_suppression(
+                                feed_in1,
+                                feed_in2,
+                                max_output_size=M,
+                                iou_threshold=iou_threshold,
+                                score_threshold=score_threshold,
+                            )
+                            cur_ids = cur_ids_g.numpy()
 
                             from_sort_ids = np.take(current_class_ids, cur_ids)
                             ids_intermediate = np.append(
@@ -4906,7 +4881,7 @@ class NewLayersSimpleTest(CorrectnessTest):
     def test_reduce_logsumexp_gpu(self):
         self.test_reduce_logsumexp_cpu(cpu_only=False)
 
-    @unittest.skipIf(not _HAS_TF, MSG_TF1_NOT_FOUND)
+    @unittest.skipIf(not _HAS_TF_2, MSG_TF2_NOT_FOUND)
     def test_reverse_sequence_cpu(self, cpu_only=True):
         for rank in range(2, 6):
             for i in range(20):
@@ -4950,14 +4925,13 @@ class NewLayersSimpleTest(CorrectnessTest):
 
                 input = {"data": data, "lengths": lengths.astype(np.float32)}
 
-                with tf.Graph().as_default(), tf.Session() as sess:
-                    tf_op = tf.reverse_sequence(
-                        input=data,
-                        seq_lengths=lengths,
-                        seq_axis=pos_seq_axis,
-                        batch_axis=pos_batch_axis,
-                    )
-                    expected = {"output": sess.run(tf_op)}
+                tf_op = tf.reverse_sequence(
+                    input=data,
+                    seq_lengths=lengths,
+                    seq_axis=pos_seq_axis,
+                    batch_axis=pos_batch_axis,
+                )
+                expected = {"output": tf_op.numpy()}
 
                 self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
@@ -5077,7 +5051,7 @@ class NewLayersSimpleTest(CorrectnessTest):
     def test_gather_along_axis_gpu(self):
         self.test_gather_along_axis_cpu(cpu_only=False)
 
-    @unittest.skipIf(not _HAS_TF, MSG_TF1_NOT_FOUND)
+    @unittest.skipIf(not _HAS_TF_2, MSG_TF2_NOT_FOUND)
     def test_gather_nd_cpu(self, cpu_only=True):
         for params_rank, indices_rank in [
             (i, j) for i in range(1, 6) for j in range(1, 6)
@@ -5115,9 +5089,8 @@ class NewLayersSimpleTest(CorrectnessTest):
                 indices = np.stack(indices_list, axis=-1)
                 input = {"params": a, "indices": indices.astype(np.float)}
 
-                with tf.Graph().as_default(), tf.Session() as sess:
-                    tf_op = tf.gather_nd(a, indices)
-                    expected = {"output": sess.run(tf_op)}
+                tf_op = tf.gather_nd(a, indices)
+                expected = {"output": tf_op.numpy()}
 
                 self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
                 self.assertEqual(-1, builder._get_rank("output"))
@@ -5125,7 +5098,7 @@ class NewLayersSimpleTest(CorrectnessTest):
     def test_gather_nd_gpu(self):
         self.test_gather_nd_cpu(cpu_only=False)
 
-    @unittest.skipIf(not _HAS_TF, MSG_TF1_NOT_FOUND)
+    @unittest.skipIf(not _HAS_TF_2, MSG_TF2_NOT_FOUND)
     def test_scatter_cpu(self, cpu_only=True):
         for ref_rank, indices_rank in [
             (i, j) for i in range(1, 6) for j in range(1, 6)
@@ -5171,24 +5144,22 @@ class NewLayersSimpleTest(CorrectnessTest):
                         "updates": updates,
                     }
 
-                    with tf.Graph().as_default(), tf.Session() as sess:
-                        tf_output = tf.Variable(ref)
-                        sess.run(tf.global_variables_initializer())
-                        if accumulate_mode == "UPDATE":
-                            sess.run(tf.scatter_update(tf_output, indices, updates))
-                        if accumulate_mode == "ADD":
-                            sess.run(tf.scatter_add(tf_output, indices, updates))
-                        if accumulate_mode == "SUB":
-                            sess.run(tf.scatter_sub(tf_output, indices, updates))
-                        if accumulate_mode == "MUL":
-                            sess.run(tf.scatter_mul(tf_output, indices, updates))
-                        if accumulate_mode == "DIV":
-                            sess.run(tf.scatter_div(tf_output, indices, updates))
-                        if accumulate_mode == "MAX":
-                            sess.run(tf.scatter_max(tf_output, indices, updates))
-                        if accumulate_mode == "MIN":
-                            sess.run(tf.scatter_min(tf_output, indices, updates))
-                        expected = {"output": sess.run(tf_output)}
+                    tf_output = tf.Variable(ref)
+                    if accumulate_mode == "UPDATE":
+                        tf.compat.v1.scatter_update(tf_output, indices, updates)
+                    if accumulate_mode == "ADD":
+                        tf.compat.v1.scatter_add(tf_output, indices, updates)
+                    if accumulate_mode == "SUB":
+                        tf.compat.v1.scatter_sub(tf_output, indices, updates)
+                    if accumulate_mode == "MUL":
+                        tf.compat.v1.scatter_mul(tf_output, indices, updates)
+                    if accumulate_mode == "DIV":
+                        tf.compat.v1.scatter_div(tf_output, indices, updates)
+                    if accumulate_mode == "MAX":
+                        tf.compat.v1.scatter_max(tf_output, indices, updates)
+                    if accumulate_mode == "MIN":
+                        tf.compat.v1.scatter_min(tf_output, indices, updates)
+                    expected = {"output": tf_output.numpy()}
 
                     self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
@@ -5299,7 +5270,7 @@ class NewLayersSimpleTest(CorrectnessTest):
     def test_scatter_along_axis_gpu(self):
         self.test_scatter_along_axis_cpu(cpu_only=False)
 
-    @unittest.skipIf(not _HAS_TF, MSG_TF1_NOT_FOUND)
+    @unittest.skipIf(not _HAS_TF_2, MSG_TF2_NOT_FOUND)
     def test_scatter_nd_cpu(self, cpu_only=True):
         for ref_rank, indices_rank in [
             (i, j) for i in range(1, 6) for j in range(2, 6)
@@ -5351,16 +5322,14 @@ class NewLayersSimpleTest(CorrectnessTest):
                         "updates": updates,
                     }
 
-                    with tf.Graph().as_default(), tf.Session() as sess:
-                        tf_output = tf.Variable(ref)
-                        sess.run(tf.global_variables_initializer())
-                        if accumulate_mode == "UPDATE":
-                            sess.run(tf.scatter_nd_update(tf_output, indices, updates))
-                        if accumulate_mode == "ADD":
-                            sess.run(tf.scatter_nd_add(tf_output, indices, updates))
-                        if accumulate_mode == "SUB":
-                            sess.run(tf.scatter_nd_sub(tf_output, indices, updates))
-                        expected = {"output": sess.run(tf_output)}
+                    tf_output = tf.Variable(ref)
+                    if accumulate_mode == "UPDATE":
+                        tf.compat.v1.scatter_nd_update(tf_output, indices, updates)
+                    if accumulate_mode == "ADD":
+                        tf.compat.v1.scatter_nd_add(tf_output, indices, updates)
+                    if accumulate_mode == "SUB":
+                        tf.compat.v1.scatter_nd_sub(tf_output, indices, updates)
+                    expected = {"output": tf_output.numpy()}
 
                     self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
@@ -5993,7 +5962,7 @@ class CoreML3NetworkStressTest(CorrectnessTest):
     "macOS 11.0+ required. Skipping tests.",
 )
 class IOS14SingleLayerTests(CorrectnessTest):
-    @unittest.skipIf(not _HAS_TF, MSG_TF1_NOT_FOUND)
+    @unittest.skipIf(not _HAS_TF_2, MSG_TF2_NOT_FOUND)
     def test_onehot_layer_cpu(self, cpu_only=True):
         ctr = 0
         params_dict = dict(
@@ -6039,18 +6008,17 @@ class IOS14SingleLayerTests(CorrectnessTest):
                 x = np.random.randint(0, vectorSize, size=input_shape)
                 # x[::4] -= vectorSize  # [To do] Need to Handle this case.
 
-                with tf.Graph().as_default(), tf.Session() as sess:
-                    # TF seems to have a bug with axis < -1
-                    if axis_param < -1:
-                        axis_param += input_rank + 1
-                    tf_op = tf.one_hot(
-                        x,
-                        axis=axis_param,
-                        depth=vectorSize,
-                        on_value=on_value,
-                        off_value=off_value,
-                    )
-                    expected = {"output": sess.run(tf_op)}
+                # TF seems to have a bug with axis < -1
+                if axis_param < -1:
+                    axis_param += input_rank + 1
+                tf_op = tf.one_hot(
+                    x,
+                    axis=axis_param,
+                    depth=vectorSize,
+                    on_value=on_value,
+                    off_value=off_value,
+                )
+                expected = {"output": tf_op.numpy()}
 
                 input = {"data": x.astype(np.float)}
                 self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
@@ -6198,7 +6166,7 @@ class IOS14SingleLayerTests(CorrectnessTest):
     def test_onehot_layer_gpu(self):
         self.test_onehot_layer_cpu(cpu_only=False)
 
-    @unittest.skipIf(not _HAS_TF, MSG_TF1_NOT_FOUND)
+    @unittest.skipIf(not _HAS_TF_2, MSG_TF2_NOT_FOUND)
     def test_cumsum_layer_cpu(self, cpu_only=True):
         ctr = 0
         params_dict = dict(
@@ -6253,11 +6221,10 @@ class IOS14SingleLayerTests(CorrectnessTest):
 
                 x = np.random.rand(*input_shape)
 
-                with tf.Graph().as_default(), tf.Session() as sess:
-                    tf_op = tf.cumsum(
-                        x, axis=axis_param, exclusive=exclusive, reverse=reverse
-                    )
-                    expected = {"output": sess.run(tf_op)}
+                tf_op = tf.cumsum(
+                    x, axis=axis_param, exclusive=exclusive, reverse=reverse
+                )
+                expected = {"output": tf_op.numpy()}
 
                 input = {"data": x}
                 if n_inputs == 2:
@@ -6541,7 +6508,8 @@ class IOS14SingleLayerTests(CorrectnessTest):
         self._test_pool3d(cpu_only=True)
 
     def test_pool3d_gpu(self):
-        pytest.xfail("rdar://98010495 (Some old nnv1 test are failing on M1 machine when running on ANE)")
+        if platform.machine() == "arm64":
+            pytest.xfail("rdar://98010495 (Some old nnv1 test are failing on M1 machine when running on ANE)")
         self._test_pool3d(cpu_only=False)
 
     def _test_global_pool3d(self, cpu_only):
@@ -6622,7 +6590,8 @@ class IOS14SingleLayerTests(CorrectnessTest):
         self.upsample_pytorch_test_iter(np.arange(1.0, 3.0, 0.66), True)
 
     def test_upsample_pytorch_gpu(self):
-        pytest.xfail("rdar://98010495 (Some old nnv1 test are failing on M1 machine when running on ANE)")
+        if platform.machine() == "arm64":
+            pytest.xfail("rdar://98010495 (Some old nnv1 test are failing on M1 machine when running on ANE)")
         self.upsample_pytorch_test_iter(np.arange(1, 4), False)
         self.upsample_pytorch_test_iter(np.arange(1.0, 3.0, 0.66), False)
 
@@ -6997,12 +6966,11 @@ class IOS14SingleLayerTests(CorrectnessTest):
         self._test_conv3d(cpu_only=False, full_test=True)
 
 
-@pytest.mark.slow
 @unittest.skipUnless(
     _is_macos() and _macos_version() >= LAYERS_11_0_MACOS_VERSION,
     "Only supported on macOS 10.16+",
 )
-class ReorganizeDataTests(CorrectnessTest):
+class TestReorganizeDataTests(CorrectnessTest):
     def _to_rank_4(self, x):
         from_rank = len(x.shape)
         if from_rank == 3:
@@ -7020,7 +6988,7 @@ class ReorganizeDataTests(CorrectnessTest):
         elif to_rank == 5:
             return np.reshape(x, [1] + list(x.shape))
 
-    @unittest.skipIf(not _HAS_TF, MSG_TF1_NOT_FOUND)
+    @unittest.skipIf(not _HAS_TF_2, MSG_TF2_NOT_FOUND)
     def test_depth_to_space_cpu(self, cpu_only=True):
 
         params_dict = {
@@ -7060,14 +7028,11 @@ class ReorganizeDataTests(CorrectnessTest):
             )
 
             # Run tensorflow to calculate expected values
-            with tf.Session() as sess:
-                # TensorFlow requires rank 4, NHWC order on CPU
-                x_tf = self._to_rank_4(x).transpose(0, 2, 3, 1)
-                out_tf = sess.run(
-                    tf.nn.depth_to_space(x_tf, block_size, data_format="NHWC")
-                )
-                out = self._from_rank_4(out_tf.transpose(0, 3, 1, 2), to_rank=rank)
-                expected = {"output": out}
+            # TensorFlow requires rank 4, NHWC order on CPU
+            x_tf = self._to_rank_4(x).transpose(0, 2, 3, 1)
+            out_tf = tf.nn.depth_to_space(x_tf, block_size, data_format="NHWC").numpy()
+            out = self._from_rank_4(out_tf.transpose(0, 3, 1, 2), to_rank=rank)
+            expected = {"output": out}
 
             # Run model to calculate CoreML values and compare with expected
             self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)

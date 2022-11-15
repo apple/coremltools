@@ -3,38 +3,27 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from copy import deepcopy as _deepcopy
-import numpy as _np
 import os as _os
 import shutil as _shutil
 import tempfile as _tempfile
 import warnings as _warnings
+from copy import deepcopy as _deepcopy
+
+import numpy as _np
 import numpy as _numpy
 
-from ..proto import (
-    FeatureTypes_pb2 as _ft,
-    Model_pb2 as _Model_pb2,
-    MIL_pb2 as _MIL_pb2,
-)
-from .utils import (
-    _create_mlpackage,
-    _has_custom_layer,
-    _is_macos,
-    _macos_version,
-    _MLMODEL_EXTENSION,
-    _MLPACKAGE_AUTHOR_NAME,
-    _MLPACKAGE_EXTENSION,
-    _WEIGHTS_DIR_NAME,
-    load_spec as _load_spec,
-    save_spec as _save_spec
-)
 from coremltools import ComputeUnit as _ComputeUnit
+from coremltools._deps import _HAS_TF_1, _HAS_TF_2, _HAS_TORCH
 from coremltools.converters.mil.mil.program import Program as _Program
-from coremltools._deps import (
-    _HAS_TF_1,
-    _HAS_TF_2,
-    _HAS_TORCH,
-)
+
+from ..proto import FeatureTypes_pb2 as _ft
+from ..proto import MIL_pb2 as _MIL_pb2
+from ..proto import Model_pb2 as _Model_pb2
+from .utils import (_MLMODEL_EXTENSION, _MLPACKAGE_AUTHOR_NAME,
+                    _MLPACKAGE_EXTENSION, _WEIGHTS_DIR_NAME, _create_mlpackage,
+                    _has_custom_layer, _is_macos, _macos_version)
+from .utils import load_spec as _load_spec
+from .utils import save_spec as _save_spec
 
 if _HAS_TORCH:
     import torch

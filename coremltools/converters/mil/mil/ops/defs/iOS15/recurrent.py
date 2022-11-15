@@ -4,11 +4,9 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from coremltools.converters.mil.mil import Operation, types
-from coremltools.converters.mil.mil.input_type import (
-    DefaultInputs,
-    InputSpec,
-    TensorInputType,
-)
+from coremltools.converters.mil.mil.input_type import (DefaultInputs,
+                                                       InputSpec,
+                                                       TensorInputType)
 from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
 
 
@@ -103,7 +101,7 @@ class gru(Operation):
         recurrent_activation=TensorInputType(const=True, optional=True, type_domain=types.str),
         activation=TensorInputType(const=True, optional=True, type_domain=types.str)
     )
-    
+
     type_domains = {
         "T": (types.fp32,),
     }
@@ -155,8 +153,9 @@ class gru(Operation):
         if hidden_size != (hidden_dim // dim_factor):
             raise ValueError(
                 "Incorrect weight matrix: hidden dim size mismatch. \
-                Provided weight_ih {}, weight_hh {}. Expecting <b, 3*H>").format(
+                Provided weight_ih {}, weight_hh {}. Expecting <b, 3*H>".format(
                     self.weight_ih.shape, self.weight_hh.shape
+                )
             )
 
         out_seq_len = sequence_length if self.output_sequence.val else 1
@@ -330,7 +329,7 @@ class lstm(Operation):
         activation=TensorInputType(const=True, optional=True, type_domain=types.str),
         clip=TensorInputType(const=True, optional=True, type_domain="T"),
     )
-    
+
     type_domains = {
         "T": (types.fp32,),
     }
@@ -358,24 +357,27 @@ class lstm(Operation):
         def weight_shape_check(wt_ih, wt_hh):
             if wt_ih.rank != 2 or wt_hh.rank != 2:
                 raise ValueError(
-                    "Expecting Rank 2 input, got weight_ih rank: {}, weight_hh rank: {}").format(
+                    "Expecting Rank 2 input, got weight_ih rank: {}, weight_hh rank: {}".format(
                         wt_ih.rank, wt_hh.rank
                     )
+                )
 
             hidden_size = wt_hh.shape[1]
             if wt_hh.shape[0] // hidden_size != 4 or wt_ih.shape[0] // hidden_size != 4:
                 raise ValueError(
                     "Incorrect weight matrix: hidden dim size mismatch. \
-                                Provided weight_ih {}, weight_hh {}. Expecting <4*H, H>").format(
-                                    wt_ih.shape, wt_hh.shape
+                                Provided weight_ih {}, weight_hh {}. Expecting <4*H, H>".format(
+                        wt_ih.shape, wt_hh.shape
+                    )
                 )
 
         direction = self.direction.val
         valid_directions = {"forward", "reverse", "bidirectional"}
         if direction not in valid_directions:
             raise ValueError(
-                "Direction {} not supported. Supported directions: {}").format(
+                "Direction {} not supported. Supported directions: {}".format(
                     direction, valid_directions
+                )
             )
 
         weight_shape_check(self.weight_ih, self.weight_hh)
@@ -464,7 +466,7 @@ class rnn(Operation):
         output_sequence=TensorInputType(const=True, optional=True, type_domain=types.bool),
         activation=TensorInputType(const=True, optional=True, type_domain=types.str),
     )
-    
+
     type_domains = {
         "T": (types.fp32,),
     }
@@ -479,18 +481,16 @@ class rnn(Operation):
     def type_inference(self):
         if self.x.rank != 3:
             raise ValueError(
-                "Invalid input shape. Expecting Rank 3 input, got {}".format(
-                    len(self.x.rank)
-                )
+                f"Invalid input shape. Expecting Rank 3 input, got {len(self.x.rank)}"
             )
 
         sequence_length, batch_size, input_size = self.x.shape
 
         if self.weight_ih.rank != 2 or self.weight_hh.rank != 2:
             raise ValueError(
-                "Invalid weight shape. Expecting Rank 2 input, got weight_ih {}, weight_hh {}").format(
-                    self.weight_ih.rank, self.weight_hh.rank
-                )
+                f"Invalid weight shape. Expecting Rank 2 input, got weight_ih "
+                f"{self.weight_ih.rank}, weight_hh {self.weight_hh.rank}"
+            )
 
         hidden_size, _ = self.weight_ih.shape
 
@@ -498,9 +498,7 @@ class rnn(Operation):
         valid_directions = {"forward", "reverse"}
         if direction not in valid_directions:
             raise ValueError(
-                "Direction {} not supported. Supported directions: {}".format(
-                    direction, valid_directions
-                )
+                f"Direction {direction} not supported. Supported directions: {valid_directions}"
             )
 
         out_seq_len = sequence_length if self.output_sequence.val else 1

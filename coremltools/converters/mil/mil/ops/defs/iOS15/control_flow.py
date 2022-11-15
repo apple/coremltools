@@ -4,42 +4,27 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import copy
-import logging
 
 import numpy as np
 
-from coremltools.converters.mil.mil import (
-    Block,
-    get_new_symbol,
-    get_existing_symbol,
-    types,
-
-)
-from coremltools.converters.mil.mil.input_type import (
-    DefaultInputs,
-    InputSpec,
-    InternalInputType,
-    ListInputType,
-    PyFunctionInputType,
-    TensorInputType,
-    TupleInputType,
-)
-from coremltools.converters.mil.mil.operation import (
-    mil_list,
-    NONE,
-    Operation,
-    precondition,
-    SYMBOL,
-    VALUE
-)
+from coremltools import _logger as logger
+from coremltools.converters.mil.mil import (Block, get_existing_symbol,
+                                            get_new_symbol, types)
+from coremltools.converters.mil.mil.input_type import (DefaultInputs,
+                                                       InputSpec,
+                                                       InternalInputType,
+                                                       ListInputType,
+                                                       PyFunctionInputType,
+                                                       TensorInputType,
+                                                       TupleInputType)
+from coremltools.converters.mil.mil.operation import (NONE, SYMBOL, VALUE,
+                                                      Operation, mil_list,
+                                                      precondition)
+from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
 from coremltools.converters.mil.mil.types import is_compatible_type
 from coremltools.converters.mil.mil.types.type_mapping import (
-    builtin_to_string,
-    numpy_type_to_builtin_type,
-    numpy_val_to_builtin_val,
-    is_subtype,
-)
-from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
+    builtin_to_string, is_subtype, numpy_type_to_builtin_type,
+    numpy_val_to_builtin_val)
 
 
 @register_op
@@ -67,7 +52,7 @@ class cond(Operation):
         * Python list of ``Block``.
         * For internal use only. When converting a milproto, we already got existing blocks,
           and the ``build_nested_blocks`` function can use them directly.
-        * When ``_existing_blocks`` is set, ``_true_fn`` and ``_false_fn`` must be dummy functions which returns ``None``. 
+        * When ``_existing_blocks`` is set, ``_true_fn`` and ``_false_fn`` must be dummy functions which returns ``None``.
 
     Returns
     -------
@@ -187,14 +172,14 @@ class Const(Operation):
             if value.dtype in [np.uint16, np.int16, np.uint64, np.int64]:
                 if value.dtype in [np.uint64, np.int64]:
                     msg = "Downcast const op {} data".format(self.name) + builtin_to_string(numpy_type_to_builtin_type(value.dtype)) + " as int32"
-                    logging.debug(msg)
+                    logger.debug(msg)
                 value = value.astype(np.int32)
 
 
             # For the float type, we use float32 by default
             elif value.dtype == np.float64:
                 msg = "Downcast const op {} data fp64 as fp32".format(self.name)
-                logging.debug(msg)
+                logger.debug(msg)
                 value = value.astype(np.float32)
 
         elif isinstance(value, mil_list):
@@ -207,7 +192,8 @@ class Const(Operation):
             # mil_list is a special case that we want to preserve the int64 element type
             if isinstance(list_value[0], np.int64):
                 builtin_elem_type = types.int64
-            from coremltools.converters.mil.mil.types.type_list import list as types_list
+            from coremltools.converters.mil.mil.types.type_list import \
+                list as types_list
             builtin_type = types_list(builtin_elem_type, init_length=len(list_value), dynamic_length=False)
             return builtin_type, value
 
@@ -284,7 +270,7 @@ class select(Operation):
         a=TensorInputType(type_domain="T"),
         b=TensorInputType(type_domain="T")
     )
-    
+
     type_domains = {
         "T": (types.fp16, types.fp32, types.bool, types.int32),
     }
@@ -332,7 +318,7 @@ class while_loop(Operation):
         * Python list of ``Block``.
         * For internal use only. When converting a milproto, we already got existing blocks,
           and the ``build_nested_blocks`` function can use them directly.
-        * When ``_existing_blocks`` is set, ``_cond`` and ``_body`` must be dummy functions which returns ``None``. 
+        * When ``_existing_blocks`` is set, ``_cond`` and ``_body`` must be dummy functions which returns ``None``.
 
     Returns
     -------
@@ -542,15 +528,15 @@ class make_list(Operation):
           ``init_length`` is the fixed length of the list throughout runtime.
 
     dynamic_length: <bool> (Optional, Default is True)
- 
+
     elem_shape: <K,T> (Required)
-    	* Where ``T = "string", "int32"``.
+        * Where ``T = "string", "int32"``.
         * Non-symbolic 1-D tensor denoting the shape of elements.
         * If not provided, the resulting ``List`` won’t have the elementary shape
           info, which may cause backend errors. Remedy this with SSA passes.
 
     dtype: const (Optional, Default is fp32)
-    	* Possible values: ``{"bool", "fp16", "fp32", "int32"}``
+        * Possible values: ``{"bool", "fp16", "fp32", "int32"}``
         * Element tensor’s ``dtype``.
 
     Returns
@@ -664,7 +650,7 @@ class list_write(Operation):
         index=TensorInputType(type_domain=types.int32),
         value=TensorInputType(type_domain="T"),
     )
-    
+
     type_domains = {
         "T": (types.fp16, types.fp32, types.bool, types.int32),
     }
@@ -682,7 +668,7 @@ class list_write(Operation):
             )
         if list_elem_type == types.unknown:
             msg = "Input ls elem type unknown. Override with {}"
-            logging.warning(msg.format(value_type))
+            logger.warning(msg.format(value_type))
             return types.list(
                 value_type, init_length=init_length, dynamic_length=dynamic_length
             )

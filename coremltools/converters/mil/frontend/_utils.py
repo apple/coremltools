@@ -4,12 +4,13 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from coremltools.converters.mil.input_types import InputType
-from coremltools.converters.mil.mil import Builder as mb, types
+from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil import Var, types
 from coremltools.converters.mil.mil.ops.defs._utils import parse_einsum_equation
 from coremltools.converters.mil.mil.types.symbolic import any_symbolic, is_symbolic
 
 
-def value_at(x, idx, name=None):
+def value_at(x: Var, idx: int, name=None):
     """
     input x: 1D tensor (vector).
     return value at index idx. x[idx].
@@ -27,7 +28,7 @@ def value_at(x, idx, name=None):
     return mb.slice_by_index(**args)
 
 
-def _reverse_input_einsum_eq(equation):
+def _reverse_input_einsum_eq(equation: str) -> str:
     """
     Reverse the input order of the einsum eqaution
     e.g.:
@@ -42,7 +43,7 @@ def _reverse_input_einsum_eq(equation):
     return equation
 
 
-def build_einsum_mil(a_var, b_var, equation, name):
+def build_einsum_mil(a_var: Var, b_var: Var, equation: str, name: str) -> Var:
     """
     Get MIL variables as input and build a variable using MIL builder, that
     contains the output of the einsum equation
@@ -75,16 +76,60 @@ def build_einsum_mil(a_var, b_var, equation, name):
         return b, a
 
     is_dynamic = any_symbolic(a_var.shape) or any_symbolic(b_var.shape)
-    if parsed_vectors == ([0,1,2,3],[0,1,4,3],[0,1,2,4]) or parsed_vectors_rev == ([0,1,2,3],[0,1,4,3],[0,1,2,4]): # equation == "bnqd,bnkd->bnqk"
-        if parsed_vectors_rev == ([0,1,2,3],[0,1,4,3],[0,1,2,4]):
+    # list of equations supported for explicit mil translations
+    vec_bnqd_bnkd_bnqk = (
+        [0, 1, 2, 3],
+        [0, 1, 4, 3],
+        [0, 1, 2, 4],
+    )  # equation == "bnqd,bnkd->bnqk"
+    vec_bhcq_bhck_bhqk = (
+        [0, 1, 2, 3],
+        [0, 1, 2, 4],
+        [0, 1, 3, 4],
+    )  # equation == "bhcq,bhck->bhqk"
+    vec_abc_cd_abd = ([0, 1, 2], [2, 3], [0, 1, 3])  # equation == "abc,cd->abd"
+    vec_abc_cde_abde = (
+        [0, 1, 2],
+        [2, 3, 4],
+        [0, 1, 3, 4],
+    )  # equation == "abc,cde->abde"
+    vec_btnh_bfnh_bnft = (
+        [0, 1, 2, 3],
+        [0, 4, 2, 3],
+        [0, 2, 4, 1],
+    )  # equation == "btnh,bfnh->bnft"
+    vec_bnft_btnh_bfnh = (
+        [0, 1, 2, 3],
+        [0, 3, 1, 4],
+        [0, 2, 1, 4],
+    )  # equation == "bnft,btnh->bfnh"
+    vec_abcd_cde_abe = (
+        [0, 1, 2, 3],
+        [2, 3, 4],
+        [0, 1, 4],
+    )  # equation == "abcd,cde->abe"
+    vec_nchw_nwhu_nchu = (
+        [0, 1, 2, 3],
+        [0, 3, 2, 4],
+        [0, 1, 2, 4],
+    )  # equation == "nchw,nwhu->nchu"
+    vec_chw_whu_chu = ([0, 1, 2], [2, 1, 3], [0, 1, 3])  # equation == "chw,whu->chu"
+
+    # add the op(s) corresponding to the equation
+    if vec_bnqd_bnkd_bnqk in [parsed_vectors, parsed_vectors_rev]:
+        if parsed_vectors_rev == vec_bnqd_bnkd_bnqk:
             a_var, b_var = _swap(a_var, b_var)
         x = mb.matmul(x=a_var, y=b_var, transpose_x=False, transpose_y=True, name=name)
-    elif parsed_vectors == ([0,1,2],[2,3],[0,1,3]) or parsed_vectors_rev == ([0,1,2],[2,3],[0,1,3]): # equation == "abc,cd->abd"
-        if parsed_vectors_rev == ([0,1,2],[2,3],[0,1,3]):
+    elif vec_bhcq_bhck_bhqk in [parsed_vectors, parsed_vectors_rev]:
+        if parsed_vectors_rev == vec_bhcq_bhck_bhqk:
+            a_var, b_var = _swap(a_var, b_var)
+        x = mb.matmul(x=a_var, y=b_var, transpose_x=True, transpose_y=False, name=name)
+    elif vec_abc_cd_abd in [parsed_vectors, parsed_vectors_rev]:
+        if parsed_vectors_rev == vec_abc_cd_abd:
             a_var, b_var = _swap(a_var, b_var)
         x = mb.matmul(x=a_var, y=b_var, transpose_x=False, transpose_y=False, name=name)
-    elif (parsed_vectors == ([0,1,2],[2,3,4],[0,1,3,4]) or parsed_vectors_rev == ([0,1,2],[2,3,4],[0,1,3,4])) and not is_dynamic: # equation == "abc,cde->abde"
-        if parsed_vectors_rev == ([0,1,2],[2,3,4],[0,1,3,4]):
+    elif vec_abc_cde_abde in [parsed_vectors, parsed_vectors_rev] and not is_dynamic:
+        if parsed_vectors_rev == vec_abc_cde_abde:
             a_var, b_var = _swap(a_var, b_var)
         x_1 = mb.reshape(x=a_var, shape=[a_var.shape[0] * a_var.shape[1], a_var.shape[2]])
         x_2 = mb.reshape(x=b_var, shape=[b_var.shape[0], b_var.shape[1] * b_var.shape[2]])
@@ -92,31 +137,31 @@ def build_einsum_mil(a_var, b_var, equation, name):
         x = mb.reshape(
             x=x, shape=[a_var.shape[0], a_var.shape[1], b_var.shape[1], b_var.shape[2]], name=name
         )
-    elif parsed_vectors == ([0,1,2,3],[0,4,2,3],[0,2,4,1]) or parsed_vectors_rev == ([0,1,2,3],[0,4,2,3],[0,2,4,1]): # equation == "BTNH,BFNH->BNFT"
-        if parsed_vectors_rev == ([0,1,2,3],[0,4,2,3],[0,2,4,1]):
+    elif vec_btnh_bfnh_bnft in [parsed_vectors, parsed_vectors_rev]:
+        if parsed_vectors_rev == vec_btnh_bfnh_bnft:
             a_var, b_var = _swap(a_var, b_var)
         x_1 = mb.transpose(x=a_var, perm=[0, 2, 1, 3])
         x_2 = mb.transpose(x=b_var, perm=[0, 2, 1, 3])
         x = mb.matmul(x=x_2, y=x_1, transpose_x=False, transpose_y=True, name=name)
-    elif parsed_vectors == ([0,1,2,3],[0,3,1,4],[0,2,1,4]) or parsed_vectors_rev == ([0,1,2,3],[0,3,1,4],[0,2,1,4]): # equation == "BNFT,BTNH->BFNH"
-        if parsed_vectors_rev == ([0,1,2,3],[0,3,1,4],[0,2,1,4]):
+    elif vec_bnft_btnh_bfnh in [parsed_vectors, parsed_vectors_rev]:
+        if parsed_vectors_rev == vec_bnft_btnh_bfnh:
             a_var, b_var = _swap(a_var, b_var)
         b_var = mb.transpose(x=b_var, perm=[0, 2, 1, 3])
         x = mb.matmul(x=a_var, y=b_var, transpose_x=False, transpose_y=False)
         x = mb.transpose(x=x, perm=[0, 2, 1, 3], name=name)
-    elif (parsed_vectors == ([0,1,2,3],[2,3,4],[0,1,4]) or parsed_vectors_rev == ([0,1,2,3],[2,3,4],[0,1,4])) and not is_dynamic: # equation == "abcd,cde->abe"
-        if parsed_vectors_rev == ([0,1,2,3],[2,3,4],[0,1,4]):
+    elif vec_abcd_cde_abe in [parsed_vectors, parsed_vectors_rev] and not is_dynamic:
+        if parsed_vectors_rev == vec_abcd_cde_abe:
             a_var, b_var = _swap(a_var, b_var)
         x_1 = mb.reshape(x=a_var, shape=[a_var.shape[0], a_var.shape[1], a_var.shape[2] * a_var.shape[3]])
         x_2 = mb.reshape(x=b_var, shape=[b_var.shape[0] * b_var.shape[1], b_var.shape[2]])
         x = mb.matmul(x=x_1, y=x_2, transpose_x=False, transpose_y=False, name=name)
-    elif parsed_vectors == ([0,1,2,3],[0,3,2,4],[0,1,2,4]) or parsed_vectors_rev == ([0,1,2,3],[0,3,2,4],[0,1,2,4]): # equation == "nchw,nwhu->nchu"
-        if parsed_vectors == ([0,1,2,3],[0,3,2,4],[0,1,2,4]):
+    elif vec_nchw_nwhu_nchu in [parsed_vectors, parsed_vectors_rev]:
+        if parsed_vectors == vec_nchw_nwhu_nchu:
             x = mb.einsum(values=(a_var, b_var), equation=equation, name=name)
         else:
             x = mb.einsum(values=(b_var, a_var), equation=equation_rev, name=name)
-    elif parsed_vectors == ([0,1,2],[2,1,3],[0,1,3]) or parsed_vectors_rev == ([0,1,2],[2,1,3],[0,1,3]): # equation == "chw,whu->chu"
-        if parsed_vectors == ([0,1,2],[2,1,3],[0,1,3]):
+    elif vec_chw_whu_chu in [parsed_vectors, parsed_vectors_rev]:
+        if parsed_vectors == vec_chw_whu_chu:
             x = mb.einsum(values=(a_var, b_var), equation=equation, name=name)
         else:
             x = mb.einsum(values=(b_var, a_var), equation=equation_rev, name=name)

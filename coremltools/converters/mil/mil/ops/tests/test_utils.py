@@ -6,10 +6,7 @@
 import numpy as np
 
 from coremltools.converters.mil.mil.ops.defs._utils import (
-    aggregated_pad,
-    effective_kernel,
-    spatial_dimensions_out_shape,
-)
+    aggregated_pad, effective_kernel, spatial_dimensions_out_shape)
 
 
 class TestDilation:

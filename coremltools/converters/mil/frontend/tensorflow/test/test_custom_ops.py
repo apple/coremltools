@@ -2,43 +2,31 @@
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
+
 import itertools
+
 import numpy as np
 import pytest
 
-from coremltools._deps import MSG_TF1_NOT_FOUND
-from coremltools.converters.mil import testing_reqs
-from coremltools.converters.mil.testing_reqs import backends
 from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import (
-    tf_graph_to_mlmodel
-)
-
-if testing_reqs._HAS_TF_1:
-    from coremltools.converters.mil.testing_reqs import tf
-
-# Custom Op imports
-from coremltools.converters.mil.frontend.tensorflow.tf_op_registry import register_tf_op
-
+    TensorFlowBaseTest, make_tf_graph)
 # Importing _TF_OPS_REGISTRY to ensure `overriding` existing TF op does not break
 # testing of default op
 # pytest imports all the tests and hence overriding op invokes custom op which is not expected
 # In real usecase, importing following is not recommended!!
 from coremltools.converters.mil.frontend.tensorflow.tf_op_registry import (
-    _TF_OPS_REGISTRY,
-)
-from coremltools.converters.mil.testing_utils import random_gen
+    _TF_OPS_REGISTRY, register_tf_op)
+from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil import Operation, types
+from coremltools.converters.mil.mil.input_type import (DefaultInputs,
+                                                       InputSpec,
+                                                       TensorInputType)
 from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
-from coremltools.converters.mil.mil import (
-    Builder as mb,
-    Operation,
-    types,
-)
-from coremltools.converters.mil.mil.input_type import (
-    DefaultInputs,
-    InputSpec,
-    TensorInputType,
-)
 from coremltools.converters.mil.mil.types.symbolic import is_symbolic
+from coremltools.converters.mil.testing_reqs import backends, compute_units
+from coremltools.converters.mil.testing_utils import random_gen
+
+tf = pytest.importorskip("tensorflow")
 
 
 class TestCustomMatMul:
@@ -108,68 +96,84 @@ class TestCustomMatMul:
         )
         context.add(node.name, x)
 
-    @pytest.mark.skipif(not testing_reqs._HAS_TF_1, reason=MSG_TF1_NOT_FOUND)
+
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, transpose_a, transpose_b," "a_is_sparse, b_is_sparse, b_is_const",
+        "compute_unit, backend, transpose_a, transpose_b," "a_is_sparse, b_is_sparse, b_is_const",
         itertools.product(
-            [True], backends, [True, False], [True, False], [True, False], [True, False], [True, False],
+            compute_units,
+            backends,
+            [True, False],
+            [True, False],
+            [True, False],
+            [True, False],
+            [True, False],
         ),
     )
     def test_tf(
-        self, use_cpu_only, backend, transpose_a, transpose_b, a_is_sparse, b_is_sparse, b_is_const,
+        self, compute_unit, backend, transpose_a, transpose_b, a_is_sparse, b_is_sparse, b_is_const,
     ):
         if backend[0] == 'mlprogram':
             pytest.skip("Custom layer not supported with ML Program backend")
 
         rank = 2
-        shape = list(np.random.randint(low=3, high=100, size=1)) * rank
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=shape)
+        input_shape = list(np.random.randint(low=3, high=100, size=1)) * rank
+        if b_is_const:
+            @make_tf_graph([input_shape])
+            def build_model(x):
+                ref = tf.compat.v1.sparse_matmul(
+                    x,
+                    random_gen(input_shape),
+                    transpose_a=transpose_a,
+                    transpose_b=transpose_b,
+                    a_is_sparse=a_is_sparse,
+                    b_is_sparse=b_is_sparse,
+                )
+                return ref
+            input_values = [random_gen(input_shape, -1.0, 1.0)]
+        else:
+            @make_tf_graph([input_shape, input_shape])
+            def build_model(x, y):
+                ref = tf.compat.v1.sparse_matmul(
+                    x,
+                    y,
+                    transpose_a=transpose_a,
+                    transpose_b=transpose_b,
+                    a_is_sparse=a_is_sparse,
+                    b_is_sparse=b_is_sparse,
+                )
+                return ref
+            input_values = [random_gen(input_shape, -1.0, 1.0), random_gen(input_shape, -1.0, 1.0)]
+        
+        model, inputs, outputs = build_model
+        input_dict = dict(zip(inputs, input_values))
+        spec, _, _, _, _, _ = TensorFlowBaseTest.run_compare_tf(
+            model,
+            input_dict,
+            outputs,
+            compute_unit=compute_unit,
+            frontend_only=True,
+            backend=backend,
+        )
+        
+        layers = spec.neuralNetwork.layers
+        assert layers[-1].custom is not None, "Expecting a custom layer"
+        assert (
+            "SparseMatMul" == layers[-1].custom.className
+        ), "Custom Layer class name mis-match"
+        assert (
+            transpose_a == layers[-1].custom.parameters["transpose_x"].boolValue
+        ), "Incorrect parameter value k"
+        assert (
+            transpose_b == layers[-1].custom.parameters["transpose_y"].boolValue
+        ), "Incorrect parameter value k"
+        assert (
+            a_is_sparse == layers[-1].custom.parameters["x_is_sparse"].boolValue
+        ), "Incorrect parameter value k"
+        assert (
+            b_is_sparse == layers[-1].custom.parameters["y_is_sparse"].boolValue
+        ), "Incorrect parameter value k"
 
-            if b_is_const:
-                y_value = random_gen(shape, rand_min=-100, rand_max=100)
-                y = tf.constant(y_value, dtype=tf.float32)
-            else:
-                y = tf.placeholder(tf.float32, shape=shape)
-
-            ref = tf.sparse_matmul(
-                x,
-                y,
-                transpose_a=transpose_a,
-                transpose_b=transpose_b,
-                a_is_sparse=a_is_sparse,
-                b_is_sparse=b_is_sparse,
-            )
-            mlmodel, _, _, _ = tf_graph_to_mlmodel(
-                graph,
-                {
-                    x: random_gen(shape, rand_min=-100, rand_max=100),
-                } if b_is_const else {
-                    x: random_gen(shape, rand_min=-100, rand_max=100),
-                    y: random_gen(shape, rand_min=-100, rand_max=100),
-                },
-                ref,
-                backend=backend,
-            )
-            layers = mlmodel.get_spec().neuralNetwork.layers
-            assert layers[-1].custom is not None, "Expecting a custom layer"
-            assert (
-                "SparseMatMul" == layers[-1].custom.className
-            ), "Custom Layer class name mis-match"
-            assert (
-                transpose_a == layers[-1].custom.parameters["transpose_x"].boolValue
-            ), "Incorrect parameter value k"
-            assert (
-                transpose_b == layers[-1].custom.parameters["transpose_y"].boolValue
-            ), "Incorrect parameter value k"
-            assert (
-                a_is_sparse == layers[-1].custom.parameters["x_is_sparse"].boolValue
-            ), "Incorrect parameter value k"
-            assert (
-                b_is_sparse == layers[-1].custom.parameters["y_is_sparse"].boolValue
-            ), "Incorrect parameter value k"
-
-            assert len(layers) == 2 if b_is_const else len(layers) == 1
+        assert len(layers) == 2 if b_is_const else len(layers) == 1
 
 
 class TestCustomTopK:
@@ -238,35 +242,47 @@ class TestCustomTopK:
 
         _TF_OPS_REGISTRY["TopKV2"] = default_tf_topk
 
-    @pytest.mark.skipif(not testing_reqs._HAS_TF_1, reason=MSG_TF1_NOT_FOUND)
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, rank, k",
-        itertools.product([True], backends, [rank for rank in range(1, 4)], [1, 2],),
+        "compute_unit, backend, rank, k",
+        itertools.product(
+            compute_units,
+            backends,
+            [rank for rank in range(1, 4)],
+            [1, 2],
+        ),
     )
     @pytest.mark.usefixtures("create_custom_TopK")
-    def test_tf(self, use_cpu_only, backend, rank, k):
+    def test_tf(self, compute_unit, backend, rank, k):
         if backend[0] == 'mlprogram':
             pytest.skip("Custom layer not supported with ML Program backend")
 
-        shape = np.random.randint(low=3, high=6, size=rank)
-        with tf.Graph().as_default() as graph:
-            x = tf.placeholder(tf.float32, shape=shape)
+        input_shape = np.random.randint(low=3, high=6, size=rank)
+        
+        @make_tf_graph([input_shape])
+        def build_model(x):
             ref = tf.math.top_k(x, k=k, sorted=True)
-            ref = (ref[1], ref[0])
-            mlmodel, _, _, _ = tf_graph_to_mlmodel(
-                graph,
-                {x: random_gen(shape, rand_min=-100, rand_max=100)},
-                ref,
-                backend=backend,
-            )
-            layers = mlmodel.get_spec().neuralNetwork.layers
-            assert layers[-1].custom is not None, "Expecting a custom layer"
-            assert (
-                "TopK" == layers[-1].custom.className
-            ), "Custom Layer class name mis-match"
-            assert (
-                k == layers[-1].custom.parameters["k"].intValue
-            ), "Incorrect parameter value k"
-            assert (
-                layers[-1].custom.parameters["sorted"].boolValue is True
-            ), "Incorrect parameter value for Sorted"
+            return ref[1], ref[0]
+            
+        model, inputs, outputs = build_model
+        input_values = [random_gen(input_shape, -1.0, 1.0)]
+        input_dict = dict(zip(inputs, input_values))
+        spec, _, _, _, _, _ = TensorFlowBaseTest.run_compare_tf(
+            model,
+            input_dict,
+            outputs,
+            compute_unit=compute_unit,
+            frontend_only=True,
+            backend=backend,
+        )
+        
+        layers = spec.neuralNetwork.layers
+        assert layers[-1].custom is not None, "Expecting a custom layer"
+        assert (
+            "TopK" == layers[-1].custom.className
+        ), "Custom Layer class name mis-match"
+        assert (
+            k == layers[-1].custom.parameters["k"].intValue
+        ), "Incorrect parameter value k"
+        assert (
+            layers[-1].custom.parameters["sorted"].boolValue is True
+        ), "Incorrect parameter value for Sorted"

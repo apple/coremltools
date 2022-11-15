@@ -5,29 +5,15 @@
 
 SPACES = "  "
 
-from .block import curr_block, Block, Function
-from .input_type import (
-    DefaultInputs,
-    InputSpec,
-    InternalVar,
-    ListInputType,
-    PyFunctionInputType,
-    SUPPORT_FLOAT_TYPES,
-    SUPPORT_INT_TYPES,
-    TensorInputType,
-    TupleInputType,
-)
-from .operation import mil_list, precondition, Operation
-from .program import (
-    get_existing_symbol,
-    get_new_symbol,
-    get_new_variadic_symbol,
-    InputType,
-    Placeholder,
-    Program,
-    Symbol,
-)
-from .var import ListVar, Var
-
+from .block import Block, Function, curr_block
 from .builder import Builder
+from .input_type import (SUPPORT_FLOAT_TYPES, SUPPORT_INT_TYPES, DefaultInputs,
+                         InputSpec, InternalVar, ListInputType,
+                         PyFunctionInputType, TensorInputType, TupleInputType)
+from .operation import Operation, mil_list, precondition
+from .program import (InputType, Placeholder, Program, Symbol,
+                      get_existing_symbol, get_new_symbol,
+                      get_new_variadic_symbol)
+from .var import ListVar, Var
 from .ops.defs._op_reqs import register_op
+

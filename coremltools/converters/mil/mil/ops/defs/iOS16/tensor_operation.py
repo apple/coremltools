@@ -6,19 +6,14 @@
 import numpy as np
 
 from coremltools.converters.mil.mil import types
-from coremltools.converters.mil.mil import types
-from coremltools.converters.mil.mil.input_type import (
-    DefaultInputs,
-    InputSpec,
-    TensorInputType,
-)
-from coremltools.converters.mil.mil.operation import (
-    Operation,
-    precondition,
-    VALUE
-)
+from coremltools.converters.mil.mil.input_type import (DefaultInputs,
+                                                       InputSpec,
+                                                       TensorInputType)
+from coremltools.converters.mil.mil.operation import (VALUE, Operation,
+                                                      precondition)
 from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
-from coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation import topk as _topk_iOS15
+from coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation import \
+    topk as _topk_iOS15
 from coremltools.converters.mil.mil.ops.defs.iOS16 import _IOS16_TARGET
 
 

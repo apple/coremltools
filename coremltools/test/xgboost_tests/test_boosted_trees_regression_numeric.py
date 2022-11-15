@@ -10,17 +10,19 @@ import pandas as pd
 import pytest
 
 from coremltools._deps import _HAS_SKLEARN, _HAS_XGBOOST
-from coremltools.models.utils import evaluate_regressor, _macos_version, _is_macos
+from coremltools.models.utils import (_is_macos, _macos_version,
+                                      evaluate_regressor)
 
 if _HAS_XGBOOST:
     import xgboost
+
     from coremltools.converters import xgboost as xgb_converter
 
 if _HAS_SKLEARN:
     from sklearn.datasets import load_boston
     from sklearn.ensemble import GradientBoostingRegressor
+
     from coremltools.converters import sklearn as skl_converter
-    from sklearn.tree import DecisionTreeRegressor
 
 
 @unittest.skipIf(not _HAS_SKLEARN, "Missing sklearn. Skipping tests.")

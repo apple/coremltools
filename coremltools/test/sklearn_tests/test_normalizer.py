@@ -3,16 +3,17 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import numpy as _np
-import random
 import unittest
 
-from coremltools.models.utils import evaluate_transformer, _macos_version, _is_macos
+import numpy as _np
 
 from coremltools._deps import _HAS_SKLEARN
+from coremltools.models.utils import (_is_macos, _macos_version,
+                                      evaluate_transformer)
 
 if _HAS_SKLEARN:
     from sklearn.preprocessing import Normalizer
+
     from coremltools.converters import sklearn as converter
 
 

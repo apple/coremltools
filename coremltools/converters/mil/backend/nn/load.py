@@ -4,35 +4,29 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import coremltools as ct
-from coremltools.converters.mil.input_types import (
-    ColorLayout,
-    ImageType,
-    EnumeratedShapes,
-    Shape,
-    RangeDim,
-)
-from coremltools.converters.mil.backend.backend_helper import _get_probability_var_for_classifier
-from coremltools.converters.mil.mil import types
-from coremltools.converters.mil.mil.types.symbolic import (
-    any_symbolic,
-    any_variadic,
-    is_symbolic,
-)
 from coremltools.converters._profile_utils import _profile
-from coremltools.models import (
-    MLModel,
-    neural_network as neural_network
-)
+from coremltools.converters.mil.backend.backend_helper import \
+    _get_probability_var_for_classifier
+from coremltools.converters.mil.input_types import (ColorLayout,
+                                                    EnumeratedShapes,
+                                                    ImageType, RangeDim, Shape)
+from coremltools.converters.mil.mil import types
+from coremltools.converters.mil.mil.types.symbolic import (any_symbolic,
+                                                           any_variadic,
+                                                           is_symbolic)
+from coremltools.models import MLModel
+from coremltools.models import neural_network as neural_network
 from coremltools.models.datatypes import Array
 from coremltools.models.neural_network import flexible_shape_utils
 from coremltools.models.neural_network.flexible_shape_utils import (
-    add_enumerated_image_sizes,
-    set_multiarray_ndshape_range,
-    add_multiarray_ndshape_enumeration,
-)
+    add_enumerated_image_sizes, add_multiarray_ndshape_enumeration,
+    set_multiarray_ndshape_range)
+
+from ..backend_helper import (_get_colorspace_enum,
+                              _validate_image_input_output_shapes)
 from .op_mapping import convert_ops
 from .passes.nn_passes import nn_backend_passes
-from ..backend_helper import _get_colorspace_enum, _validate_image_input_output_shapes
+
 
 def _convert_to_image_input(proto, inputs, skip_model_load=False):
     tmp_model = MLModel(proto, skip_model_load=skip_model_load)

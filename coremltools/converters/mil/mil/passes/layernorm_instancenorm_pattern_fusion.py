@@ -3,22 +3,21 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import logging
-import numpy as np
 from typing import List, Optional
 
-from coremltools.converters.mil.mil import (
-    Block,
-    Builder as mb,
-    Operation,
-    Var
-)
+import numpy as np
+
+from coremltools import _logger as logger
+from coremltools.converters.mil.mil import Block
+from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil import Operation, Var
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil.passes.helper import block_context_manager
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 
 
 DEBUG = False  # set to true to plot the block before and after the transformation
+
 
 def _check_no_output_connection(block: Block, ops: List[Operation]) -> bool:
     """
@@ -834,7 +833,7 @@ class fuse_layernorm_or_instancenorm(AbstractGraphPass):
                     graphviz.Source(
                         f.get_dot_string(highlight_debug_op_types=["instance_norm"],)
                     ).view(filename="/tmp/block_before_fuse_layernorm_or_instancenorm")
-                logging.debug(
+                logger.debug(
                     "Block before fuse_layernorm_or_instancenorm transform:\n{}".format(f)
                 )
 
@@ -845,6 +844,6 @@ class fuse_layernorm_or_instancenorm(AbstractGraphPass):
                         f.get_dot_string(highlight_debug_op_types=["instance_norm"],)
                     ).view(filename="/tmp/block_after_fuse_layernorm_or_instancenorm")
 
-                logging.debug(
+                logger.debug(
                     "Block after fuse_layernorm_or_instancenorm transform:\n{}".format(f)
                 )

@@ -4,18 +4,18 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import math
+
 import numpy as np
 
 from coremltools.converters.mil.mil import types
-from coremltools.converters.mil.mil.operation import Operation, precondition, SYMBOL, VALUE
+from coremltools.converters.mil.mil.input_type import (DefaultInputs,
+                                                       InputSpec,
+                                                       TensorInputType)
+from coremltools.converters.mil.mil.operation import (SYMBOL, VALUE, Operation,
+                                                      precondition)
+from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
 from coremltools.converters.mil.mil.types import nptype_from_builtin
 from coremltools.converters.mil.mil.types.symbolic import is_symbolic
-from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
-from coremltools.converters.mil.mil.input_type import (
-    DefaultInputs,
-    InputSpec,
-    TensorInputType,
-)
 
 
 def _maintain_shape(x, y):

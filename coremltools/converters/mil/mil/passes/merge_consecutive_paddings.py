@@ -8,9 +8,7 @@ import numpy as np
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 from coremltools.converters.mil.mil.passes.helper import (
-    _check_child_op_type,
-    block_context_manager,
-)
+    _check_child_op_type, block_context_manager)
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 
 

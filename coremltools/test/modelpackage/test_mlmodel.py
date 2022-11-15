@@ -3,15 +3,14 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import numpy as np
 import os
-import pytest
 import shutil
+
+import numpy as np
 import torch
 
 import coremltools as ct
 from coremltools._deps import _IS_MACOS
-from coremltools.converters.mil.mil.builder import Builder as mb
 from coremltools.models.model import MLModel
 from coremltools.models.utils import _macos_version
 

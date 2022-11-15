@@ -3,6 +3,4 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from . import tensorflow
-from . import tensorflow2
-from . import torch
+from . import tensorflow, tensorflow2, torch

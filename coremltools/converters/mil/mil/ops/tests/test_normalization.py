@@ -4,32 +4,33 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import itertools
-import numpy as np
 import platform
+
+import numpy as np
 import pytest
 
-from .testing_utils import UNK_SYM, run_compare_builder
-from coremltools.converters.mil import testing_reqs
-from coremltools.converters.mil.mil import (
-    Builder as mb,
-    Function,
-    get_new_symbol,
-    types
-)
-from coremltools.converters.mil.testing_reqs import backends
+import coremltools as ct
+from coremltools._deps import (_HAS_TF_2, _HAS_TORCH, MSG_TF2_NOT_FOUND,
+                               MSG_TORCH_NOT_FOUND)
+from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil import Function, get_new_symbol, types
+from coremltools.converters.mil.testing_reqs import backends, compute_units
 from coremltools.converters.mil.testing_utils import random_gen
 
-if testing_reqs._HAS_TORCH:
+from .testing_utils import UNK_SYM, run_compare_builder
+
+if _HAS_TORCH:
     import torch
-if testing_reqs._HAS_TF_2:
+
+if _HAS_TF_2:
     import tensorflow as tf
 
 
 class TestNormalizationBatchNorm:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "compute_unit, backend", itertools.product(compute_units, backends,)
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+    def test_builder_to_backend_smoke(self, compute_unit, backend):
         x_val = np.array(
             [
                 [
@@ -93,16 +94,16 @@ class TestNormalizationBatchNorm:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
 
 class TestNormalizationInstanceNorm:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "compute_unit, backend", itertools.product(compute_units, backends,)
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+    def test_builder_to_backend_smoke(self, compute_unit, backend):
         x_val = np.array(
             [
                 [
@@ -152,14 +153,14 @@ class TestNormalizationInstanceNorm:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "compute_unit, backend", itertools.product(compute_units, backends,)
     )
-    def test_builder_to_backend_smoke_with_gamma_and_beta(self, use_cpu_only, backend):
+    def test_builder_to_backend_smoke_with_gamma_and_beta(self, compute_unit, backend):
         x_val = np.array(
             [
                 [
@@ -212,16 +213,21 @@ class TestNormalizationInstanceNorm:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
-    @pytest.mark.skipif(not testing_reqs._HAS_TORCH, reason="PyTorch not found.")
+    @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
     @pytest.mark.parametrize(
-        "rank, use_cpu_only, backend, epsilon",
-        itertools.product([3, 4], [True, False], backends, [1e-3, 1e-5, 1e-10]),
+        "rank, compute_unit, backend, epsilon",
+        itertools.product(
+            [3, 4],
+            compute_units,
+            backends,
+            [1e-3, 1e-5, 1e-10]
+        ),
     )
-    def test_builder_to_backend_stress(self, rank, use_cpu_only, backend, epsilon):
+    def test_builder_to_backend_stress(self, rank, compute_unit, backend, epsilon):
         shape = np.random.randint(low=2, high=6, size=rank)
         x_val = random_gen(shape=shape, rand_min=-100.0, rand_max=100.0)
         input_placeholders = {"x": mb.placeholder(shape=x_val.shape)}
@@ -241,7 +247,7 @@ class TestNormalizationInstanceNorm:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
+            compute_unit=compute_unit,
             backend=backend,
             atol=1e-3,
             rtol=1e-4,
@@ -268,9 +274,9 @@ class TestNormalizationL2Norm:
         return output
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "compute_unit, backend", itertools.product(compute_units, backends,)
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+    def test_builder_to_backend_smoke(self, compute_unit, backend):
         x_val = np.array([[[1.0, -7.0], [5.0, -6.0], [-3.0, -5.0]]], dtype=np.float32)
         input_placeholders = {"x": mb.placeholder(shape=x_val.shape)}
         input_values = {"x": x_val}
@@ -298,14 +304,20 @@ class TestNormalizationL2Norm:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, rank, epsilon", itertools.product([True, False], backends, [3, 4, 5], [1e-4, 5.7])
+        "compute_unit, backend, rank, epsilon",
+        itertools.product(
+            compute_units,
+            backends,
+            [3, 4, 5],
+            [1e-4, 5.7]
+        )
     )
-    def test_builder_to_backend_stress(self, use_cpu_only, backend, rank, epsilon):
+    def test_builder_to_backend_stress(self, compute_unit, backend, rank, epsilon):
         shape = np.random.randint(low=2, high=6, size=rank)
         x_val = random_gen(shape=shape, rand_min=-1.0, rand_max=1.0)
         input_placeholders = {"x": mb.placeholder(shape=shape)}
@@ -326,7 +338,7 @@ class TestNormalizationL2Norm:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
@@ -370,9 +382,9 @@ class TestNormalizationLayerNorm:
         return num / dem * gamma + beta
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "compute_unit, backend", itertools.product(compute_units, backends,)
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+    def test_builder_to_backend_smoke(self, compute_unit, backend):
         x_val = np.array([[[1.0, -7.0], [5.0, -6.0], [-3.0, -5.0]]], dtype=np.float32)
         input_placeholders = {"x": mb.placeholder(shape=x_val.shape)}
         input_values = {"x": x_val}
@@ -429,14 +441,14 @@ class TestNormalizationLayerNorm:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "compute_unit, backend", itertools.product(compute_units, backends,)
     )
-    def test_builder_to_backend_smoke_rank_2(self, use_cpu_only, backend):
+    def test_builder_to_backend_smoke_rank_2(self, compute_unit, backend):
         x_val = np.array([[1.0, -7.0], [5.0, -6.0], [-3.0, -5.0]], dtype=np.float32)
         gamma_val = np.array([1.0, 1.0], dtype=np.float32)
         beta_val = np.array([1.0, 0.0], dtype=np.float32)
@@ -476,14 +488,14 @@ class TestNormalizationLayerNorm:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "compute_unit, backend", itertools.product(compute_units, backends,)
     )
-    def test_builder_to_backend_smoke_with_dynamic_shape(self, use_cpu_only, backend):
+    def test_builder_to_backend_smoke_with_dynamic_shape(self, compute_unit, backend):
         x_val = np.array([[[1.0, -7.0], [5.0, -6.0], [-3.0, -5.0]]], dtype=np.float32)
         shape = (get_new_symbol(), get_new_symbol(), 2)
         input_placeholders = {"x": mb.placeholder(shape=shape)}
@@ -514,23 +526,32 @@ class TestNormalizationLayerNorm:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, rank_and_axes, epsilon, provides_gamma_beta",
-        itertools.product([True, False], backends,
-                          [[3,[0,2]], [3,[-2]], [4,[0,1,3]], [5,[0,4]], [5,[-5,-4,-3,-2,-1]]],
-                          [0.0001, 0.01],
-                          [True, False]),
+        "compute_unit, backend, rank_and_axes, epsilon, provides_gamma_beta",
+        itertools.product(
+            compute_units,
+            backends,
+            [
+                [3, [0, 2]],
+                [3, [-2]],
+                [4, [0, 1, 3]],
+                [5, [0, 4]],
+                [5, [-5, -4, -3, -2, -1]]
+            ],
+            [0.0001, 0.01],
+            [True, False]
+        ),
         )
-    def test_builder_to_backend_stress_numpy(self, use_cpu_only, backend, rank_and_axes, epsilon, provides_gamma_beta):
+    def test_builder_to_backend_stress_numpy(self, compute_unit, backend, rank_and_axes, epsilon, provides_gamma_beta):
 
-        if backend == ("mlprogram", "fp16") and not use_cpu_only:
+        if backend == ("mlprogram", "fp16") and compute_unit != ct.ComputeUnit.CPU_ONLY:
             pytest.xfail("rdar://80662357 ([GPU failures] LayerNorm FP16 tests failing on GPU with numerical errors)")
             
-        if backend[0] == "neuralnetwork" and not use_cpu_only and platform.machine() == "arm64":
+        if backend[0] == "neuralnetwork" and compute_unit != ct.ComputeUnit.CPU_ONLY and platform.machine() == "arm64":
             pytest.xfail("rdar://98015195 ([M1 native tests] Some MIL unittests are failing on M1 native)")
 
         rank, axes = rank_and_axes
@@ -564,20 +585,29 @@ class TestNormalizationLayerNorm:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
+            compute_unit=compute_unit,
             backend=backend,
             atol=1e-3,
             rtol=1e-4,
         )
 
-    @pytest.mark.skipif(not testing_reqs._HAS_TF_2, reason="Tensorflow not found.")
+    @pytest.mark.skipif(not _HAS_TF_2, reason=MSG_TF2_NOT_FOUND)
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, rank_and_axes, epsilon",
-        itertools.product([True, False], backends,
-                          [[3,[0,2]], [3,[-2]], [4,[0,1,3]], [5,[0,4]], [5,[-5,-4,-3,-2,-1]]],
-                          [0.0001, 0.01]),
-        )
-    def test_builder_to_backend_stress_keras(self, use_cpu_only, backend, rank_and_axes, epsilon):
+        "compute_unit, backend, rank_and_axes, epsilon",
+        itertools.product(
+            compute_units,
+            backends,
+            [
+                [3, [0, 2]],
+                [3, [-2]],
+                [4, [0, 1, 3]],
+                [5, [0, 4]],
+                [5, [-5, -4, -3, -2, -1]]
+            ],
+            [0.0001, 0.01]
+        ),
+    )
+    def test_builder_to_backend_stress_keras(self, compute_unit, backend, rank_and_axes, epsilon):
         rank, axes = rank_and_axes
         shape = np.random.randint(low=2, high=6, size=rank)
         x_val = random_gen(shape=shape, rand_min=-100.0, rand_max=100.0)
@@ -601,13 +631,19 @@ class TestNormalizationLayerNorm:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
     @pytest.mark.parametrize("rank_and_axes, epsilon",
         itertools.product(
-            [[3,[0,2]], [3,[-2,-1]], [4,[0,1,2,3]], [5,[0,2,-1]], [5,[-5,-4,-3,-2,-1]]],
+            [
+                [3, [0, 2]],
+                [3, [-2, -1]],
+                [4, [0, 1, 2, 3]],
+                [5, [0, 2, -1]],
+                [5, [-5, -4, -3, -2, -1]]
+            ],
             [0.0001, 0.01],
         ),
     )
@@ -627,9 +663,9 @@ class TestNormalizationLayerNorm:
 
 class TestNormalizationLocalResponseNorm:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "compute_unit, backend", itertools.product(compute_units, backends,)
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+    def test_builder_to_backend_smoke(self, compute_unit, backend):
         x_val = np.array([[[1.0, -7.0], [5.0, -6.0], [-3.0, -5.0]]], dtype=np.float32)
         input_placeholders = {"x": mb.placeholder(shape=x_val.shape)}
         input_values = {"x": x_val}
@@ -670,15 +706,15 @@ class TestNormalizationLocalResponseNorm:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
-    @pytest.mark.skipif(not testing_reqs._HAS_TORCH, reason="PyTorch not found.")
+    @pytest.mark.skipif(not _HAS_TORCH, reason=MSG_TORCH_NOT_FOUND)
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, rank, size, alpha, beta, k",
+        "compute_unit, backend, rank, size, alpha, beta, k",
         itertools.product(
-            [True, False],
+            compute_units,
             backends,
             [rank for rank in range(3, 6)],
             [2, 3, 5],
@@ -688,7 +724,7 @@ class TestNormalizationLocalResponseNorm:
         ),
     )
     def test_builder_to_backend_stress(
-        self, use_cpu_only, backend, rank, size, alpha, beta, k
+        self, compute_unit, backend, rank, size, alpha, beta, k
     ):
         shape = np.random.randint(low=2, high=5, size=rank)
         x_val = random_gen(shape=shape)
@@ -708,7 +744,7 @@ class TestNormalizationLocalResponseNorm:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
+            compute_unit=compute_unit,
             backend=backend,
             atol=1e-2,
             rtol=1e-3,

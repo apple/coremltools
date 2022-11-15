@@ -3,10 +3,11 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+from coremltools import __version__ as ct_version
+from coremltools.models import _METADATA_SOURCE, _METADATA_VERSION
+
 from ... import SPECIFICATION_VERSION
 from ..._deps import _HAS_LIBSVM
-from coremltools import __version__ as ct_version
-from coremltools.models import _METADATA_VERSION, _METADATA_SOURCE
 
 
 def _infer_min_num_features(model):
@@ -55,10 +56,9 @@ def convert(libsvm_model, feature_names, target, input_length, probability):
         raise RuntimeError("libsvm not found. libsvm conversion API is disabled.")
 
     from libsvm import svm as _svm
-    from ...proto import SVM_pb2
-    from ...proto import Model_pb2
-    from ...proto import FeatureTypes_pb2
+
     from ...models import MLModel
+    from ...proto import Model_pb2
 
     svm_type_enum = libsvm_model.param.svm_type
 

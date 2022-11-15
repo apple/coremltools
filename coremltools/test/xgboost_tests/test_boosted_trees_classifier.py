@@ -7,16 +7,16 @@ import json
 import tempfile
 import unittest
 
+from coremltools._deps import _HAS_SKLEARN, _HAS_XGBOOST
 from coremltools.converters import sklearn as skl_converter
 from coremltools.models.utils import _macos_version
-from coremltools.proto import FeatureTypes_pb2, Model_pb2
-from coremltools._deps import _HAS_SKLEARN, _HAS_XGBOOST
 
 if _HAS_SKLEARN:
     from sklearn.ensemble import GradientBoostingClassifier
 
 if _HAS_XGBOOST:
     import xgboost
+
     from coremltools.converters import xgboost as xgb_converter
 
 
@@ -105,8 +105,8 @@ class GradientBoostingMulticlassClassifierScikitTest(unittest.TestCase):
         """
         Set up the unit test by loading the dataset and training a model.
         """
-        from sklearn.datasets import load_boston
         import numpy as np
+        from sklearn.datasets import load_boston
 
         scikit_data = load_boston()
         scikit_model = GradientBoostingClassifier(random_state=1)
@@ -248,8 +248,8 @@ class GradientBoostingMulticlassClassifierXGboostTest(unittest.TestCase):
         """
         Set up the unit test by loading the dataset and training a model.
         """
-        from sklearn.datasets import load_boston
         import numpy as np
+        from sklearn.datasets import load_boston
 
         scikit_data = load_boston()
         t = scikit_data.target

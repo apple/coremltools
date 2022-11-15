@@ -4,6 +4,7 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import unittest
+
 import pytest
 
 pytest.importorskip("tensorflow", minversion="1.15.0")
@@ -11,8 +12,8 @@ from tensorflow.core.framework import attr_value_pb2 as attr_value
 from tensorflow.core.framework import tensor_shape_pb2 as tensor_shape
 from tensorflow.core.framework import types_pb2 as types
 
-from coremltools.converters.mil.mil import types as mil_types
 import coremltools.converters.mil.frontend.tensorflow.parse as parse
+from coremltools.converters.mil.mil import types as mil_types
 
 
 class TestParse(unittest.TestCase):

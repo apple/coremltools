@@ -3,17 +3,16 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from ...proto import Model_pb2 as _Model_pb2
-from ...proto import SVM_pb2 as _SVM_pb2
 from ... import SPECIFICATION_VERSION as _SPECIFICATION_VERSION
-from ...models._interface_management import set_classifier_interface_params
-
 from ..._deps import _HAS_SKLEARN
 from ...models import MLModel as _MLModel
+from ...models._interface_management import set_classifier_interface_params
+from ...proto import Model_pb2 as _Model_pb2
 
 if _HAS_SKLEARN:
-    from ._sklearn_util import check_fitted
     from sklearn.svm import SVC as _SVC
+
+    from ._sklearn_util import check_fitted
 
     sklearn_class = _SVC
 

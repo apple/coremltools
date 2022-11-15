@@ -5,8 +5,9 @@
 
 import copy as _copy
 
-from .builder import NeuralNetworkBuilder
 from coremltools.models.utils import _get_model
+
+from .builder import NeuralNetworkBuilder
 
 
 def make_image_input(

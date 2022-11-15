@@ -3,10 +3,11 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from collections import defaultdict, OrderedDict
-import logging as _logging
+from collections import OrderedDict, defaultdict
 
-from .internal_graph import InternalTorchIRNode, InternalTorchIRGraph
+from coremltools import _logger as logger
+
+from .internal_graph import InternalTorchIRGraph, InternalTorchIRNode
 
 
 def generate_tensor_assignment_ops(graph):
@@ -251,7 +252,7 @@ def flatten_graph_input_values(graph):
                 changed = True
                 if not notified:
                     notified = True
-                    _logging.warning(
+                    logger.warning(
                         "Tuple detected at graph input. This will be flattened in the converted model."
                     )
                 # If this input to the graph is a tuple, we want to replace it
@@ -312,7 +313,7 @@ def flatten_graph_output_values(graph):
                 changed = True
                 if not notified:
                     notified = True
-                    _logging.warning(
+                    logger.warning(
                         "Tuple detected at graph output. This will be flattened in the converted model."
                     )
             else:

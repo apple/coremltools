@@ -286,8 +286,10 @@ class ListVar(Var):
     def elem_shape(self):
         if self._elem_type == types.unknown:
             return None
-        return self._elem_type.get_shape()
-
+        elif types.is_tensor(self._elem_type):
+            return self._elem_type.get_shape()
+        return ()
+        
     def shape_str(self):
         length = "?"
         if not self.dynamic_length:

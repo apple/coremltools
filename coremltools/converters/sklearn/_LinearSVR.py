@@ -7,8 +7,9 @@ from ..._deps import _HAS_SKLEARN
 from ...models import MLModel as _MLModel
 
 if _HAS_SKLEARN:
-    from sklearn.svm import LinearSVR as _LinearSVR
     import sklearn
+    from sklearn.svm import LinearSVR as _LinearSVR
+
     from . import _sklearn_util
 
     sklearn_class = sklearn.svm.LinearSVR

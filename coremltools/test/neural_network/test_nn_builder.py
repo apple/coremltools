@@ -3,22 +3,18 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import unittest
-
 import numpy as np
 import pytest
+import unittest
 
 import coremltools
 from coremltools import ComputeUnit
 from coremltools.converters.mil.mil.types.type_mapping import np_val_to_py_type
-from coremltools.models import datatypes, MLModel
+from coremltools.models import MLModel, datatypes
 from coremltools.models.neural_network import NeuralNetworkBuilder
 from coremltools.models.neural_network.quantization_utils import (
-    _convert_array_to_nbit_quantized_bytes,
-    quantize_weights,
-)
-from coremltools.models.utils import _macos_version, _is_macos
-
+    _convert_array_to_nbit_quantized_bytes, quantize_weights)
+from coremltools.models.utils import _is_macos, _macos_version
 
 MIN_MACOS_VERSION_REQUIRED = (10, 13)
 LAYERS_10_14_MACOS_VERSION = (10, 14)
@@ -237,6 +233,7 @@ class BasicNumericCorrectnessTest_1014NewLayers(unittest.TestCase):
         self.assertTrue(np.allclose(out, expected_out))
 
     def test_linear_quant_inner_product_3bit(self):
+        pytest.xfail("rdar://101370330 ([CI] nnv1 model compression tests are failing after roots is updated)")
         W = np.reshape(np.arange(6), (2, 3)).astype(np.uint8)
         input_features = [("data", datatypes.Array(3))]
         output_features = [("probs", None)]
@@ -263,6 +260,7 @@ class BasicNumericCorrectnessTest_1014NewLayers(unittest.TestCase):
         self.assertTrue(np.allclose(probs.flatten(), expected_out.flatten()))
 
     def test_lut_quant_inner_product_1bit(self):
+        pytest.xfail("rdar://101370330 ([CI] nnv1 model compression tests are failing after roots is updated)")
         W = np.zeros((2, 3), dtype=np.uint8)
         W[0, :] = [0, 1, 1]
         W[1, :] = [1, 0, 0]

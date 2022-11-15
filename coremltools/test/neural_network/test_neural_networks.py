@@ -3,30 +3,13 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import os
-import shutil
-import tempfile
 import unittest
 
-import numpy as np
-import pytest
-
 import coremltools
-from coremltools._deps import _HAS_TF, MSG_TF1_NOT_FOUND
-from coremltools.models.utils import (
-    _get_custom_layer_names,
-    _replace_custom_layer_name,
-    _macos_version,
-    _is_macos,
-)
+from coremltools.models.utils import (_get_custom_layer_names,
+                                      _replace_custom_layer_name)
 from coremltools.proto import Model_pb2
 
-if _HAS_TF:
-    import tensorflow as tf
-    from tensorflow.python.platform import gfile
-    from tensorflow.python.tools import freeze_graph
-
-    tf.compat.v1.disable_eager_execution()
 
 class CustomLayerUtilsTest(unittest.TestCase):
     @classmethod

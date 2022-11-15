@@ -3,21 +3,24 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 import itertools
+
 import numpy as np
 import pytest
 
-from .testing_utils import run_compare_builder
-from coremltools.converters.mil.mil import Builder as mb, types
-from coremltools.converters.mil.testing_reqs import backends
+from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil import get_new_symbol, types
+from coremltools.converters.mil.testing_reqs import backends, compute_units
 from coremltools.converters.mil.testing_utils import ssa_fn
+
+from .testing_utils import run_compare_builder
 
 
 class TestElementwiseBinary:
     # All in this test share the same backends
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, mode",
+        "compute_unit, backend, mode",
         itertools.product(
-            [True, False],
+            compute_units,
             backends,
             [
                 "add",
@@ -32,7 +35,7 @@ class TestElementwiseBinary:
             ],
         ),
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend, mode):
+    def test_builder_to_backend_smoke(self, compute_unit, backend, mode):
         if mode == "add":
             x = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
             y = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.float32)
@@ -105,10 +108,30 @@ class TestElementwiseBinary:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )
+
+    def test_output_dim_for_same_symbolic_dim_inputs(self):
+        symbolic_input_shape = (get_new_symbol(), 4, 5)
+
+        @mb.program(
+            input_specs=[
+                mb.TensorSpec(shape=symbolic_input_shape),
+                mb.TensorSpec(shape=symbolic_input_shape),
+            ]
+        )
+        def prog(x, y):
+            return mb.add(x=x, y=y)
+
+        add_op = prog.find_ops(op_type="add")[0]
+        output_shape = add_op.outputs[0].shape
+        if output_shape != symbolic_input_shape:
+            raise AssertionError(
+                "Invalid Output shape {}. Should instead be {}".format(
+                    output_shape, symbolic_input_shape
+                )
+            )
 
     @ssa_fn
     def test_builder_add(self):
@@ -199,27 +222,27 @@ class TestElementwiseBinary:
         expected_outputs = np.array([[2, 0, 6], [0, 10, 0]], dtype=np.float32)
         v = mb.sub(x=x, y=y)
         np.testing.assert_allclose(expected_outputs, v.val, atol=1e-04, rtol=1e-05)
-        
+
     @pytest.mark.parametrize(
-        "use_cpu_only, backend",
+        "compute_unit, backend",
         itertools.product(
-            [True, False],
+            compute_units,
             backends,
         ),
     )
-    def test_real_div_int_builder_to_backend(self, use_cpu_only, backend):
+    def test_real_div_int_builder_to_backend(self, compute_unit, backend):
         """
         For the neuralnetwork backend, the real_div is producing float output even for int inputs,
         while the mlprogram backend produces int type output.
         """
         x = np.array([[10, 20, 30], [40, 50, 60]], dtype=np.float32)
         y = np.array([[11, 12, 13], [14, 15, 16]], dtype=np.float32)
-        
+
         if backend[0] == "neuralnetwork":
             dtype = np.float32
         else:
             dtype = np.int32
-        expected_outputs = np.array(x/y, dtype=dtype)
+        expected_outputs = np.array(x / y, dtype=dtype)
 
         build = lambda x, y: mb.real_div(x=x, y=y)
 
@@ -235,17 +258,20 @@ class TestElementwiseBinary:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
 
 class TestEqual:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+    def test_builder_to_backend_smoke(self, compute_unit, backend):
         x = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
         y = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.float32)
         input_placeholders = {
@@ -272,8 +298,7 @@ class TestEqual:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
@@ -288,9 +313,13 @@ class TestEqual:
 
 class TestGreater:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+    def test_builder_to_backend_smoke(self, compute_unit, backend):
         x = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
         y = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.float32)
         input_placeholders = {
@@ -317,8 +346,7 @@ class TestGreater:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
@@ -333,9 +361,13 @@ class TestGreater:
 
 class TestGreaterEqual:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+    def test_builder_to_backend_smoke(self, compute_unit, backend):
         x = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
         y = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.float32)
         input_placeholders = {
@@ -362,8 +394,7 @@ class TestGreaterEqual:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
@@ -378,9 +409,13 @@ class TestGreaterEqual:
 
 class TestLess:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+    def test_builder_to_backend_smoke(self, compute_unit, backend):
         x = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
         y = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.float32)
         input_placeholders = {
@@ -401,15 +436,18 @@ class TestLess:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
     )
-    def test_builder_to_backend_smoke2(self, use_cpu_only, backend):
+    def test_builder_to_backend_smoke2(self, compute_unit, backend):
         x = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
         input_placeholders = {"x": mb.placeholder(shape=x.shape)}
         input_values = {"x": x}
@@ -428,15 +466,18 @@ class TestLess:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
     )
-    def test_builder_to_backend_broadcast(self, use_cpu_only, backend):
+    def test_builder_to_backend_broadcast(self, compute_unit, backend):
         x = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
         input_placeholders = {"x": mb.placeholder(shape=x.shape)}
         input_values = {"x": x}
@@ -454,8 +495,7 @@ class TestLess:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
@@ -470,9 +510,13 @@ class TestLess:
 
 class TestLessEqual:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+    def test_builder_to_backend_smoke(self, compute_unit, backend):
         x = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
         y = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.float32)
         input_placeholders = {
@@ -493,8 +537,7 @@ class TestLessEqual:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
@@ -509,9 +552,13 @@ class TestLessEqual:
 
 class TestNotEqual:
     @pytest.mark.parametrize(
-        "use_cpu_for_conversion, backend", itertools.product([True, False], backends,)
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
     )
-    def test_builder_to_backend_smoke(self, use_cpu_for_conversion, backend):
+    def test_builder_to_backend_smoke(self, compute_unit, backend):
         x = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
         y = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.float32)
         input_placeholders = {
@@ -532,8 +579,7 @@ class TestNotEqual:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_for_conversion,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )
 

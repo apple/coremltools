@@ -9,19 +9,14 @@ import tempfile
 import unittest
 
 import numpy as _np
-import pytest
 
-import coremltools
-from coremltools.models import MLModel
 import coremltools.models.datatypes as datatypes
-from coremltools.models.neural_network import (
-    AdamParams,
-    NeuralNetworkBuilder,
-    SgdParams,
-    quantization_utils,
-)
-from coremltools.models.pipeline import PipelineRegressor, PipelineClassifier
-from coremltools.models.utils import _macos_version, save_spec
+from coremltools.models import MLModel
+from coremltools.models.neural_network import (AdamParams,
+                                               NeuralNetworkBuilder, SgdParams,
+                                               quantization_utils)
+from coremltools.models.pipeline import PipelineClassifier, PipelineRegressor
+from coremltools.models.utils import save_spec
 
 
 class LayerSelector(quantization_utils.QuantizedLayerSelector):

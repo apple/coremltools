@@ -3,13 +3,14 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import logging as _logging
 import os.path as _os_path
 
 import torch as _torch
 
-from .converter import TorchConverter, torch_to_mil_types
+from coremltools import _logger as logger
 from coremltools.converters.mil.input_types import InputType, TensorType
+
+from .converter import TorchConverter, torch_to_mil_types
 
 
 def load(model_spec, inputs, specification_version,
@@ -45,10 +46,10 @@ def load(model_spec, inputs, specification_version,
     torchscript = _torchscript_from_model(model_spec)
 
     if hasattr(torchscript, 'training') and torchscript.training:
-        _logging.warning("Model is not in eval mode. "
+        logger.warning("Model is not in eval mode. "
                          "Consider calling '.eval()' on your model prior to conversion")
     if type(torchscript) == _torch.jit._script.RecursiveScriptModule:
-        _logging.warning("Support for converting Torch Script Models is experimental. "
+        logger.warning("Support for converting Torch Script Models is experimental. "
                          "If possible you should use a traced model for conversion.")
 
     inputs = _convert_to_torch_inputtype(inputs)

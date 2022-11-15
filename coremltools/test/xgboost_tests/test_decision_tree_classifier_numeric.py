@@ -3,22 +3,23 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from distutils.version import StrictVersion
 import itertools
-import os
 import unittest
+from distutils.version import StrictVersion
 
 import numpy as np
 import pandas as pd
 import pytest
 
 from coremltools._deps import _HAS_SKLEARN, _SKLEARN_VERSION
-from coremltools.models.utils import evaluate_classifier, _macos_version, _is_macos
+from coremltools.models.utils import (_is_macos, _macos_version,
+                                      evaluate_classifier)
 
 if _HAS_SKLEARN:
-    from coremltools.converters import sklearn as skl_converter
     from sklearn.datasets import load_boston
     from sklearn.tree import DecisionTreeClassifier
+
+    from coremltools.converters import sklearn as skl_converter
 
 
 @unittest.skipIf(not _HAS_SKLEARN, "Missing sklearn. Skipping tests.")

@@ -4,29 +4,28 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import itertools
+
 import numpy as np
 import pytest
 import scipy
-from scipy import special
 
 from coremltools.converters.mil import testing_reqs
-from coremltools.converters.mil.mil import (
-    Builder as mb,
-    get_new_symbol,
-    types,
-)
-from coremltools.converters.mil.mil.ops.tests.testing_utils import run_compare_builder
+from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil import get_new_symbol, types
+from coremltools.converters.mil.mil.ops.tests.testing_utils import \
+    run_compare_builder
 from coremltools.converters.mil.testing_utils import random_gen, ssa_fn
 
 backends = testing_reqs.backends
+compute_units = testing_reqs.compute_units
 
 
 class TestReduction:
     # All ops in this test share the same backends
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, mode",
+        "compute_unit, backend, mode",
         itertools.product(
-            [True, False],
+            compute_units,
             backends,
             [
                 "argmax",
@@ -44,7 +43,7 @@ class TestReduction:
             ],
         ),
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend, mode):
+    def test_builder_to_backend_smoke(self, compute_unit, backend, mode):
         val = np.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]], dtype=np.float32)
         input_placeholders = {"x": mb.placeholder(shape=val.shape)}
         input_values = {"x": val}
@@ -99,16 +98,19 @@ class TestReduction:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, mode",
-        itertools.product([True, False], backends, ["max", "mean"]),
+        "compute_unit, backend, mode",
+        itertools.product(
+            compute_units,
+            backends,
+            ["max", "mean"]
+        ),
     )
-    def test_builder_to_backend_global_pool_2d(self, use_cpu_only, backend, mode):
+    def test_builder_to_backend_global_pool_2d(self, compute_unit, backend, mode):
         # test lowering to spatial reduction to global_pool path
         val = np.array([[[[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]]]], dtype=np.float32)
         input_placeholders = {"x": mb.placeholder(shape=val.shape)}
@@ -129,15 +131,19 @@ class TestReduction:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, mode",
-        itertools.product([True, False], backends, ["max", "mean"]),
+        "compute_unit, backend, mode",
+        itertools.product(
+            compute_units,
+            backends,
+            ["max", "mean"]
+        ),
     )
-    def test_builder_to_backend_global_pool_none(self, use_cpu_only, backend, mode):
+    def test_builder_to_backend_global_pool_none(self, compute_unit, backend, mode):
         # test lowering to spatial reduction to global_pool path for axis = None
         val = np.array([[[[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]], [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]]]], dtype=np.float32)
         input_placeholders = {"x": mb.placeholder(shape=val.shape)}
@@ -158,15 +164,19 @@ class TestReduction:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, mode",
-        itertools.product([True, False], backends, ["max", "mean"]),
+        "compute_unit, backend, mode",
+        itertools.product(
+            compute_units,
+            backends,
+            ["max", "mean"]
+        ),
     )
-    def test_builder_to_backend_global_pool_3d(self, use_cpu_only, backend, mode):
+    def test_builder_to_backend_global_pool_3d(self, compute_unit, backend, mode):
         # test lowering to spatial reduction to global_pool path
         val = np.array([[[[[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]]]]], dtype=np.float32)
         input_placeholders = {"x": mb.placeholder(shape=val.shape)}
@@ -187,13 +197,17 @@ class TestReduction:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
 
     @pytest.mark.parametrize(
-        ["axis", "keep_dims"], itertools.product([1, -3], [True, False])
+        ["axis", "keep_dims"],
+        itertools.product(
+            [1, -3],
+            [True, False]
+        )
     )
     def test_builder_eval(self, axis, keep_dims):
         x_val = random_gen(shape=(1, 3, 4, 4), rand_min=-100.0, rand_max=100.0)
@@ -289,9 +303,9 @@ class TestReduction:
         test_reduce_sum_square()
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "compute_unit, backend", itertools.product(compute_units, backends,)
     )
-    def test_builder_to_backend_symbolic(self, use_cpu_only, backend):
+    def test_builder_to_backend_symbolic(self, compute_unit, backend):
         s0 = get_new_symbol()
 
         val = np.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]], dtype=np.float32)
@@ -316,8 +330,7 @@ class TestReduction:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
@@ -335,4 +348,9 @@ class TestReduction:
 
             op = list(prog.functions.values())[0].operations[3]
             assert op.op_type == 'reduce_log_sum_exp'
-            np.testing.assert_allclose(op.value_inference(), scipy.special.logsumexp(x, axis=axis), atol=1e-04, rtol=1e-05)
+            np.testing.assert_allclose(
+                op.value_inference(),
+                scipy.special.logsumexp(x, axis=axis),
+                atol=1e-04,
+                rtol=1e-05
+            )

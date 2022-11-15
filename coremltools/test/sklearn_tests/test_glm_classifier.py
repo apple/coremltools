@@ -4,7 +4,6 @@
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import itertools
-import os
 import random
 import unittest
 
@@ -12,12 +11,9 @@ import pandas as pd
 
 from coremltools._deps import _HAS_SKLEARN
 from coremltools.converters.sklearn import convert
-from coremltools.models.utils import (
-    evaluate_classifier,
-    evaluate_classifier_with_probabilities,
-    _macos_version,
-    _is_macos,
-)
+from coremltools.models.utils import (_is_macos, _macos_version,
+                                      evaluate_classifier,
+                                      evaluate_classifier_with_probabilities)
 
 if _HAS_SKLEARN:
     from sklearn.linear_model import LogisticRegression

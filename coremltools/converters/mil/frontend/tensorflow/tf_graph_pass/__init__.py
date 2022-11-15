@@ -4,17 +4,16 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 
-# graphdef to tfssa
-from .delete_disconnected_nodes import delete_disconnected_nodes
-from .insert_get_tuple import insert_get_tuple
-from .tensor_array_transform import tensor_array_resource_removal
-
+from .cond_to_where import cond_to_where
+from .constant_propagation import constant_propagation
 # graph passes
 from .delete_asserts import delete_asserts
-from .constant_propagation import constant_propagation
-from .quantization_pass import quantization_pass
-from .variable_node_transform import remove_variable_nodes
-from .functionalize_loops import functionalize_loops
-from .cond_to_where import cond_to_where
-from .fuse_dilation_conv import fuse_dilation_conv
 from .delete_constant import delete_unnecessary_constant_nodes
+# graphdef to tfssa
+from .delete_disconnected_nodes import delete_disconnected_nodes
+from .functionalize_loops import functionalize_loops
+from .fuse_dilation_conv import fuse_dilation_conv
+from .insert_get_tuple import insert_get_tuple
+from .quantization_pass import quantization_pass
+from .tensor_array_transform import tensor_array_resource_removal
+from .variable_node_transform import remove_variable_nodes

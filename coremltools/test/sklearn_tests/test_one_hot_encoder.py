@@ -3,21 +3,23 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from copy import copy
 import unittest
+from copy import copy
+from distutils.version import StrictVersion
+
 import numpy as np
 
 from coremltools._deps import _HAS_SKLEARN, _SKLEARN_VERSION
-from distutils.version import StrictVersion
-from coremltools.models.utils import evaluate_transformer, _macos_version, _is_macos
+from coremltools.models.utils import (_is_macos, _macos_version,
+                                      evaluate_transformer)
 
 if _HAS_SKLEARN:
+    from sklearn.datasets import load_boston
     from sklearn.pipeline import Pipeline
-    from sklearn.preprocessing import OneHotEncoder
-    from sklearn.preprocessing import Normalizer
+    from sklearn.preprocessing import Normalizer, OneHotEncoder
+
     from coremltools.converters import sklearn
     from coremltools.models.datatypes import Array
-    from sklearn.datasets import load_boston
 
 
 @unittest.skipIf(not _HAS_SKLEARN, "Missing sklearn. Skipping tests.")

@@ -8,16 +8,14 @@ import itertools
 import numpy as np
 import pytest
 
-from .testing_utils import run_compare_builder
 import coremltools as ct
 from coremltools.converters.mil import testing_reqs
-from coremltools.converters.mil.mil import (
-    Builder as mb,
-    get_new_symbol,
-    types
-)
-from coremltools.converters.mil.testing_reqs import backends
+from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil import get_new_symbol, types
+from coremltools.converters.mil.testing_reqs import backends, compute_units
 from coremltools.models.utils import _macos_version
+
+from .testing_utils import run_compare_builder
 
 
 class TestConvTranspose:
@@ -26,14 +24,14 @@ class TestConvTranspose:
     @pytest.mark.parametrize(
         ",".join(
             [
-                "use_cpu_only",
+                "compute_unit",
                 "backend",
                 "conv_dim",
                 "config",
             ]
         ),
         itertools.product(
-            [True, False],
+            compute_units,
             backends,
             ["conv1d", "conv2d", "conv3d"],
             [{
@@ -81,7 +79,7 @@ class TestConvTranspose:
     )
     def test_builder_to_backend_stress(
         self,
-        use_cpu_only,
+        compute_unit,
         backend,
         conv_dim,
         config,
@@ -206,8 +204,7 @@ class TestConvTranspose:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
@@ -216,15 +213,15 @@ class TestConv:
 
     @pytest.mark.skipif(not testing_reqs._HAS_TORCH, reason="PyTorch not installed.")
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, padding_mode, conv_dim",
+        "compute_unit, backend, padding_mode, conv_dim",
         itertools.product(
-            [True, False],
+            compute_units,
             backends,
             ["same_lower", "same", "valid"],
             ["conv1d", "conv2d", "conv3d"],
         ),
     )
-    def test_padding_mode_stress(self, use_cpu_only, backend, padding_mode, conv_dim):
+    def test_padding_mode_stress(self, compute_unit, backend, padding_mode, conv_dim):
         import torch
         def rotation_tensor(tensor):
             assert tensor.shape[0] == tensor.shape[1] == 1
@@ -327,8 +324,7 @@ class TestConv:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
             minimum_deployment_target=minimum_deployment_target,
         )
@@ -338,14 +334,14 @@ class TestConv:
     @pytest.mark.parametrize(
         ",".join(
             [
-                "use_cpu_only",
+                "compute_unit",
                 "backend",
                 "conv_dim",
                 "config",
             ]
         ),
         itertools.product(
-            [True, False],
+            compute_units,
             backends,
             ["conv1d", "conv2d", "conv3d"],
             [{
@@ -389,7 +385,7 @@ class TestConv:
     )
     def test_builder_to_backend_stress(
         self,
-        use_cpu_only,
+        compute_unit,
         backend,
         conv_dim,
         config,
@@ -514,8 +510,7 @@ class TestConv:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
@@ -523,14 +518,14 @@ class TestConv:
     @pytest.mark.parametrize(
         ",".join(
             [
-                "use_cpu_only",
+                "compute_unit",
                 "backend",
                 "conv_dim",
                 "config",
             ]
         ),
         itertools.product(
-            [True, False],
+            compute_units,
             backends,
             ["conv1d", "conv2d"],
             [
@@ -575,7 +570,7 @@ class TestConv:
     )
     def test_builder_to_backend_stress_weights_input(
         self,
-        use_cpu_only,
+        compute_unit,
         backend,
         conv_dim,
         config,
@@ -590,7 +585,7 @@ class TestConv:
         if backend[0] == "neuralnetwork" and groups > 1:
             pytest.skip("dynamic conv with groups > 1 is not supported on the neuralnetwork backend")
             
-        if backend[0] == "mlprogram" and not use_cpu_only:
+        if backend[0] == "mlprogram" and compute_unit != ct.ComputeUnit.CPU_ONLY:
             pytest.xfail("rdar://97398343 (test_builder_to_backend_stress_weights_input is failing on mlprogram + GPU)")
 
         D, H, W, Kd, Kh, Kw = DHWKdKhKw
@@ -677,15 +672,14 @@ class TestConv:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True], backends, )
+        "compute_unit, backend", itertools.product(compute_units, backends)
     )
-    def test_conv_bias_fusion(self, use_cpu_only, backend):
+    def test_conv_bias_fusion(self, compute_unit, backend):
         """
         Test conv bias fusion when const input.
 
@@ -719,7 +713,6 @@ class TestConv:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )

@@ -4,30 +4,23 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import itertools
+
 import numpy as np
 import pytest
 
-from coremltools.converters.mil.testing_reqs import backends
-from coremltools.converters.mil.testing_utils import random_gen
 from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import (
-    make_tf_graph,
-    TensorFlowBaseTest
-)
-
-# Custom Op imports
-from coremltools.converters.mil.frontend.tensorflow.tf_op_registry import register_tf_op
-
+    TensorFlowBaseTest, make_tf_graph)
 # Importing _TF_OPS_REGISTRY to ensure `overriding` existing TF op does not break
 # testing of default op
 # pytest imports all the tests and hence overriding op invokes custom op which is not expected
 # In real usecase, importing following is not recommended!!
 from coremltools.converters.mil.frontend.tensorflow.tf_op_registry import (
-    _TF_OPS_REGISTRY,
-)
+    _TF_OPS_REGISTRY, register_tf_op)
 from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.testing_reqs import backends, compute_units
+from coremltools.converters.mil.testing_utils import random_gen
 
 tf = pytest.importorskip("tensorflow")
-
 
 class TestCompositeOp(TensorFlowBaseTest):
     @pytest.fixture(scope="class")
@@ -48,11 +41,15 @@ class TestCompositeOp(TensorFlowBaseTest):
         _TF_OPS_REGISTRY["Selu"] = default_selu
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, rank",
-        itertools.product([True, False], backends, list(range(1, 5))),
+        "compute_unit, backend, rank",
+        itertools.product(
+            compute_units,
+            backends,
+            list(range(1, 5))
+        ),
     )
     @pytest.mark.usefixtures("create_custom_selu")
-    def test_selu(self, use_cpu_only, backend, rank):
+    def test_selu(self, compute_unit, backend, rank):
         input_shape = np.random.randint(low=1, high=6, size=rank)
 
         @make_tf_graph([input_shape])
@@ -67,7 +64,6 @@ class TestCompositeOp(TensorFlowBaseTest):
             model,
             input_dict,
             outputs,
-            use_cpu_for_conversion=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )

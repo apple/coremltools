@@ -3,20 +3,23 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import logging as _logging
 import numpy as _np
+
+from coremltools import _logger as logger
+from coremltools.converters.mil._deployment_compatibility import \
+    AvailableTarget as target
+from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil import types
+from coremltools.converters.mil.mil.block import \
+    is_current_opset_version_compatible_with
+from coremltools.converters.mil.mil.ops.defs._utils import (
+    broadcast_shapes, promote_input_dtypes)
+from coremltools.converters.mil.mil.types.symbolic import (any_symbolic,
+                                                           is_symbolic)
 
 from .._utils import build_einsum_mil
 from .convert_utils import convert_graph
 from .tf_op_registry import register_tf_op
-from coremltools.converters.mil._deployment_compatibility import AvailableTarget as target
-from coremltools.converters.mil.mil import Builder as mb, types
-from coremltools.converters.mil.mil.block import is_current_opset_version_compatible_with
-from coremltools.converters.mil.mil.ops.defs._utils import (
-    broadcast_shapes,
-    promote_input_dtypes,
-)
-from coremltools.converters.mil.mil.types.symbolic import is_symbolic, any_symbolic
 
 
 def _adjust_min_max(min, max, num_bits=8):
@@ -197,6 +200,21 @@ def Add(context, node):
     x = context[node.inputs[0]]
     y = context[node.inputs[1]]
     x, y = promote_input_dtypes([x, y])
+
+    if "data_format" in node.attr and node.attr["data_format"] == "NCHW":
+        if x.rank != 1 and y.rank != 1:
+            raise AssertionError("Bias needs to have its rank equals to 1")
+
+        bias, data = (y, x) if y.rank == 1 else (x, y)
+
+        if not data.rank >= 3:
+            raise AssertionError("Data needs to be of at least ranke 3")
+
+        axes = [-(i + 1) for i in range(data.rank - 2)]
+
+        x = data
+        y = mb.expand_dims(x=bias, axes=axes, name=node.name + "_expanded_bias")
+
     x = mb.add(x=x, y=y, name=node.name)
     context.add(node.name, x)
 
@@ -364,10 +382,10 @@ def BatchToSpaceND(context, node):
     # 1. A single batch dimension
     # 2. Spatial dimensions, with a length spatial_rank, which could be neither 1 or 2. Also, spatial_rank
     #    is equal to the length of block_shape
-    # 3. Remaining dimensions, with a length remaining_rank 
+    # 3. Remaining dimensions, with a length remaining_rank
 
     # The logic of translating this op is as followed:
-    # 1. We first reshape the input to a canonical shape (rolling the remaining shape dimensions into a 
+    # 1. We first reshape the input to a canonical shape (rolling the remaining shape dimensions into a
     #    single dimension): (batch,) + spatial_shape + (R), where R = remaining_dim_1 * ... * remaining_dim_n
     # 2. We support rank 1 and rank 2 spatial shape:
     #    (i) rank 1: We decompose the BatchToSpace into small basic ops.
@@ -401,7 +419,7 @@ def BatchToSpaceND(context, node):
         # Tensor has shape [B, H, W, C], we can directly use the batch_to_space op by doing
         # [B, H, W, C] -> transpose -> [B, C, H, W] -> batch_to_space -> [B_new, C, H_new, W_new] ->
         # transpose -> [B_new, H_new, W_new, C]
-        x = mb.transpose(x=x, perm=[0, 3, 1, 2])  
+        x = mb.transpose(x=x, perm=[0, 3, 1, 2])
         x = mb.batch_to_space(x=x, block_shape=block_shape, crops=crops, name=node.name)
         x = mb.transpose(x=x, perm=[0, 2, 3, 1])
 
@@ -433,12 +451,12 @@ def BatchToSpaceND(context, node):
         x = mb.crop(x=x, crop_height=crops[0], crop_width=[0, 0])
 
     if has_non_unity_remaining_dims:
-        # Reshape the tensor from shape [batch_new, spatial_shape_new, remaining_dim_1 * ... * remaining_dim_N] back to 
+        # Reshape the tensor from shape [batch_new, spatial_shape_new, remaining_dim_1 * ... * remaining_dim_N] back to
         # shape [batch_new, spatial_shape_new, remaining_shape]
         x = _reshape_remaining_dimension_to_original_shape(x, original_shape, remaining_rank)
 
     context.add(node.name, mb.identity(x=x, name=node.name))
-    
+
 
 @register_tf_op
 def Ceil(context, node):
@@ -1154,7 +1172,7 @@ def ImageProjectiveTransformV2(context, node):
     transforms = context[node.inputs[1]]
     # 1-D Tensor [new_height, new_width]
     output_shape = context[node.inputs[2]]
-    
+
     # For V3, there is an additional fill_value input
     if len(node.inputs) == 4:
         fill_value = context[node.inputs[3]].val
@@ -1162,19 +1180,19 @@ def ImageProjectiveTransformV2(context, node):
             msg = ("fill_value {} not supported for tf ImageProjectiveTransformV2/V3 op {}. "
                    "Only fill_value = 0.0 is supported.").format(fill_value, node.name)
             raise ValueError(msg)
-    
+
     interpolation = node.attr.get("interpolation")
     if interpolation != "BILINEAR":
         msg = ("interpolation {} not supported for tf ImageProjectiveTransformV2/V3 op {}. "
                "Only interpolation = BILINEAR is supported.").format(interpolation, node.name)
         raise ValueError(msg)
-        
+
     fill_mode = node.attr.get("fill_mode")
     if fill_mode != "CONSTANT":
         msg = ("fill_mode {} not supported for tf ImageProjectiveTransformV2/V3 op {}. "
                "Only fill_mode = CONSTANT is supported.").format(fill_mode, node.name)
         raise ValueError(msg)
-        
+
     h_out = output_shape.val[0]
     w_out = output_shape.val[1]
     h_in = x.shape[1]
@@ -1215,10 +1233,8 @@ def ImageProjectiveTransformV2(context, node):
         new_e = e * (h_out - 1) / (h_in - 1)
         new_f = (2 * f + d * (w_out - 1) + e * (h_out - 1)) / (h_in - 1) - 1
         transform_matrix.append([new_a, new_b, new_c, new_d, new_e, new_f])
-        
+
     transform_matrix = _np.array(transform_matrix)
-        
-        
 
     x = _transpose_NHWC_to_NCHW(x)
     x = mb.affine(
@@ -1538,7 +1554,7 @@ def SparseSoftmaxCrossEntropyWithLogits(context, node):
     labels = context[node.inputs[1]]
     class_nums = feats.shape[1]
     labels = mb.one_hot(
-        indices=labels, 
+        indices=labels,
         one_hot_vector_size=class_nums,
     )
     labels = mb.cast(x=labels, dtype="fp32")
@@ -2051,23 +2067,23 @@ def Softmax(context, node):
 
 
 @register_tf_op
-def SpaceToBatchND(context, node):    
+def SpaceToBatchND(context, node):
     # In tensorflow, the input tensor has the shape of (batch,) + spatial_shape + remaining_shape.
     # The shape is treated as a combination of 3 components:
     # 1. A single batch dimension
     # 2. Spatial dimensions, with a length spatial_rank, which could be neither 1 or 2. Also, spatial_rank
     #    is equal to the length of block_shape
-    # 3. Remaining dimensions, with a length remaining_rank 
+    # 3. Remaining dimensions, with a length remaining_rank
 
     # The logic of translating this op is as followed:
-    # 1. We first reshape the input to a canonical shape (rolling the remaining shape dimensions into a 
+    # 1. We first reshape the input to a canonical shape (rolling the remaining shape dimensions into a
     #    single dimension): (batch,) + spatial_shape + (R), where R = remaining_dim_1 * ... * remaining_dim_n
     # 2. We support rank 1 and rank 2 spatial shape:
     #    (i) rank 1: We decompose the SpaceToBatch into small basic ops.
     #    (ii) rank 2: We directly use the built in space_to_batch op.
     #    The output would have shape (batch_new,) + spatial_shape_new + (R)
     # 3. We transform the tensor back, by unrolling the remaining shape: (B_new,) + spatial_shape_new + remaining_shape
-  
+
     x = context[node.inputs[0]]
     block_shape = context[node.inputs[1]].val
     paddings = context[node.inputs[2]].val
@@ -2101,7 +2117,7 @@ def SpaceToBatchND(context, node):
     if spatial_rank == 1:
         # In this case, we decompose space_to_batch into small basic ops
         # [B, H, C] -> decomposite ops -> [B_new, H_new, C]
-        
+
         # expand padding to shape [3, 2]
         new_paddings = _np.zeros(shape=(3, 2), dtype=_np.int32)
         new_paddings[1] = paddings
@@ -2133,7 +2149,7 @@ def SpaceToBatchND(context, node):
         x = mb.reshape(x=permuted_reshaped_padded, shape=final_shape)
 
     if has_non_unity_remaining_dims:
-        # Reshape the tensor from shape [batch_new, spatial_shape_new, remaining_dim_1 * ... * remaining_dim_N] back to 
+        # Reshape the tensor from shape [batch_new, spatial_shape_new, remaining_dim_1 * ... * remaining_dim_N] back to
         # shape [batch_new, spatial_shape_new, remaining_shape]
         x = _reshape_remaining_dimension_to_original_shape(x, original_shape, remaining_rank)
 
@@ -2232,7 +2248,7 @@ def _perform_gather_with_batch_dims(x, indices, batch_dims, gather_func, func_ar
     msg = ("The implementation of gather/gather_nd for iOS15 and older is not efficient. Highly recommend "
            " set minimum_deployment_target=coremltools.target.iOS16 in the coremltools.convert() function."
     )
-    _logging.warning(msg)
+    logger.warning(msg)
     x_shape = mb.shape(x=x)
     indices_shape = mb.shape(x=indices)
     batch_shape = mb.gather(x=x_shape, indices=_np.array(range(batch_dims)), axis=0)
@@ -2278,13 +2294,13 @@ def GatherV2(context, node):
         # For iOS16 and above, we can directly use the batch_dims argument
         x = mb.gather(x=x, indices=indices, axis=axis, batch_dims=batch_dims, name=node.name)
     else:
-        # For iOS15 or below, we have to manually compute it 
+        # For iOS15 or below, we have to manually compute it
         if batch_dims == 0:
             x = mb.gather(x=x, indices=indices, axis=axis, name=node.name)
         else:
             func_args = {"axis": axis - batch_dims}
             x = _perform_gather_with_batch_dims(x, indices, batch_dims, mb.gather, func_args, node.name)
-        
+
     context.add(node.name, x)
 
 
@@ -2551,7 +2567,7 @@ def ResizeNearestNeighbor(context, node):
                 name=node.name + "_channel_first_resize",
             )
         else:
-            _logging.warning('Using upsample_nearest_neighbor to approximate resize_nearest_neighbor.')
+            logger.warning('Using upsample_nearest_neighbor to approximate resize_nearest_neighbor.')
             x = mb.upsample_nearest_neighbor(
                 x=x,
                 scale_factor_height=scaling_factor_h,
@@ -2597,7 +2613,7 @@ def ResizeBilinear(context, node):
         raise ValueError(
             '"ResizeBilinear" op: "align_corners" and "half_pixel_centers" are both True and this mode is not supported'
         )
-        
+
     # In iOS16, we can support dynamic shape + any combination of aligh_corners and half_pixel_centers,
     # if the output_shape comes from a pattern of input_shape * (h_scale, w_scale)
     if is_current_opset_version_compatible_with(target.iOS16) and context[node.inputs[1]].val is None:
@@ -2616,7 +2632,7 @@ def ResizeBilinear(context, node):
             x = _transpose_NCHW_to_NHWC(x, node.name)
             context.add(node.name, x)
             return
-            
+
     if (align_corners and not half_pixel_centers) or \
        (not align_corners and not half_pixel_centers):
         # output shape needed to be known at compile time
@@ -3022,7 +3038,7 @@ def CropAndResize(context, node):
             ).format(pad_value)
             raise ValueError(msg)
     x = mb.crop_resize(**args)
-    
+
     # CoreML output format: [N, 1, C, h_out, w_out]
     # TF output format: [N, h_out, w_out, C]
     x = mb.squeeze(x=x, axes=[1])
@@ -3135,7 +3151,7 @@ def BroadcastTo(context, node):
     context.add(node.name, x)
 
 
-@register_tf_op()
+@register_tf_op
 def get_global(context, node):
     # Design comment: This is only works if variable doesn't cross block
     # boundary (e.g. while_loop, cond, function)
@@ -3144,7 +3160,7 @@ def get_global(context, node):
     context.add(node.name, x, is_new_var=False)
 
 
-@register_tf_op()
+@register_tf_op
 def set_global(context, node):
     x = context[node.inputs[0]]
     variable_name = node.attr["variable"]
@@ -3157,7 +3173,7 @@ def _get_const_or_raise(variable):
     return variable.val
 
 
-@register_tf_op()
+@register_tf_op
 def LSTMBlockCell(context, node):
     x = context[node.inputs[0]]  # [batch, input_dim]
     c_prev = context[node.inputs[1]]  # [b, hidden_dim]

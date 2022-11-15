@@ -3,10 +3,9 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import logging
-
-from coremltools.converters.mil.mil.passes.pass_registry import register_pass
+from coremltools import _logger as logger
 from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
+from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 
 
 def _dead_code_elimination_block(block):
@@ -34,7 +33,7 @@ def _dead_code_elimination_block(block):
             used_vars.update(used_in_block)
 
     for op in ops_to_remove:
-        logging.info('Removing op "{}" (type: {})'.format(op.name, op.op_type))
+        logger.info('Removing op "{}" (type: {})'.format(op.name, op.op_type))
         op.remove_from_block()
 
     return used_vars

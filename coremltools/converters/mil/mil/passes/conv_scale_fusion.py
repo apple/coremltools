@@ -11,7 +11,6 @@ from coremltools.converters.mil.mil.passes.helper import block_context_manager
 from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 
 
-
 def _try_to_transform(conv_op, scale_op, block):
 
     # get the scale

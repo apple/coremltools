@@ -3,17 +3,15 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import unittest
-import tempfile
 import os
 import shutil
+import tempfile
+import unittest
 
 import numpy as np
 
-from coremltools.libmilstoragepython import (
-    _BlobStorageReader as BlobReader,
-    _BlobStorageWriter as BlobWriter
-)
+from coremltools.libmilstoragepython import _BlobStorageReader as BlobReader
+from coremltools.libmilstoragepython import _BlobStorageWriter as BlobWriter
 
 
 class WeightTest(unittest.TestCase):

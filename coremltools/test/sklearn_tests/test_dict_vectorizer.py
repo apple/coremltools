@@ -3,7 +3,6 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from copy import copy
 import unittest
 
 import numpy as np
@@ -12,15 +11,16 @@ import pandas as pd
 
 import coremltools
 from coremltools._deps import _HAS_SKLEARN
-from coremltools.models.utils import (
-    _macos_version, _is_macos, evaluate_classifier, evaluate_transformer,
-)
+from coremltools.models.utils import (_is_macos, _macos_version,
+                                      evaluate_classifier,
+                                      evaluate_transformer)
 
 if _HAS_SKLEARN:
-    from coremltools.converters import sklearn
     from sklearn.feature_extraction import DictVectorizer
-    from sklearn.pipeline import Pipeline
     from sklearn.linear_model import LogisticRegression
+    from sklearn.pipeline import Pipeline
+
+    from coremltools.converters import sklearn
 
 
 @unittest.skipIf(not _HAS_SKLEARN, "Missing sklearn. Skipping tests.")

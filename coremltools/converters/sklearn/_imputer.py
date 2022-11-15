@@ -3,15 +3,15 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from . import _sklearn_util
+from distutils.version import StrictVersion
+
 from ... import SPECIFICATION_VERSION
+from ..._deps import _HAS_SKLEARN, _SKLEARN_VERSION
+from ...models import MLModel as _MLModel
+from ...models import datatypes
 from ...models._interface_management import set_transform_interface_params
 from ...proto import Model_pb2 as _Model_pb2
-from ...models import datatypes
-from ...models import MLModel as _MLModel
-
-from ..._deps import _HAS_SKLEARN, _SKLEARN_VERSION
-from distutils.version import StrictVersion
+from . import _sklearn_util
 
 if _HAS_SKLEARN:
     import sklearn

@@ -3,12 +3,12 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import logging
-
 import coremltools as ct
-from coremltools.converters.mil.mil import Program, Function
+from coremltools import _logger as logger
+from coremltools.converters.mil.mil import Function, Program
 from coremltools.converters.mil.mil.types.symbolic import is_symbolic
-from coremltools.converters.mil.testing_utils import compare_backend, ct_convert
+from coremltools.converters.mil.testing_utils import (compare_backend,
+                                                      ct_convert)
 
 
 UNK_VARIADIC = "*s_unk"
@@ -21,7 +21,7 @@ def run_compare_builder(
     input_values,
     expected_output_types=None,
     expected_outputs=None,
-    use_cpu_only=False,
+    compute_unit=ct.ComputeUnit.CPU_ONLY,
     frontend_only=False,
     backend=("neuralnetwork", "fp32"),
     atol=1e-04,
@@ -46,6 +46,8 @@ def run_compare_builder(
 
         - expected_output_types: list[(shape, builtin_type)] or (shape,
           builtin_type).  None skips type inference validation.
+
+        - compute_unit: Enum[ct.ComputeUnit]. Compute unit for the coreml model
 
         - expected_outputs: list[np.array] or np.array. Required iff
           frontend_only == False
@@ -101,7 +103,7 @@ def run_compare_builder(
             )
         if UNK_VARIADIC in s[:-1]:
             msg = "Skip type checking for UNK_VARIADIC. Output shape: {} vs expected shape: {}"
-            logging.debug(msg.format(out_var.shape, s[:-1]))
+            logger.debug(msg.format(out_var.shape, s[:-1]))
             continue
         expected_shape = s[:-1]
         msg = "Output {} shape: expect {}, got {}. Program:\n{}".format(
@@ -120,11 +122,6 @@ def run_compare_builder(
         expected_shape = [i if is_symbolic(i) else int(i) for i in expected_shape]
         if output_shape != expected_shape:
             raise ValueError(msg)
-
-    if use_cpu_only:
-        compute_unit = ct.ComputeUnit.CPU_ONLY
-    else:
-        compute_unit = ct.ComputeUnit.ALL
 
     mlmodel = ct_convert(prog,
                          converter=converter,
@@ -158,5 +155,5 @@ def run_compare_builder(
         also_compare_shapes=also_compare_shapes,
         dtype=backend[1]
     )
-    
+
     return mlmodel

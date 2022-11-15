@@ -3,10 +3,10 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from coremltools.converters.mil.frontend.tensorflow.converter import TFConverter
-from coremltools.converters.mil.frontend.tensorflow.basic_graph_ops import (
-    simple_topsort,
-)
+from coremltools.converters.mil.frontend.tensorflow.basic_graph_ops import \
+    simple_topsort
+from coremltools.converters.mil.frontend.tensorflow.converter import \
+    TFConverter
 
 from .ssa_passes.tf_passes import tensorflow_passes as tensorflow2_passes
 

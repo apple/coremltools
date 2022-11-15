@@ -11,24 +11,22 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from coremltools._deps import (
-    _HAS_LIBSVM,
-    MSG_LIBSVM_NOT_FOUND,
-    _HAS_SKLEARN,
-    MSG_SKLEARN_NOT_FOUND,
-)
-from coremltools.models.utils import evaluate_regressor, _macos_version, _is_macos
+from coremltools._deps import (_HAS_LIBSVM, _HAS_SKLEARN, MSG_LIBSVM_NOT_FOUND,
+                               MSG_SKLEARN_NOT_FOUND)
+from coremltools.models.utils import (_is_macos, _macos_version,
+                                      evaluate_regressor)
 
 if _HAS_LIBSVM:
     import svmutil
-    import svm
+
     from coremltools.converters import libsvm
 
 if _HAS_SKLEARN:
-    from sklearn.svm import SVR
     from sklearn.datasets import load_boston
-    from coremltools.converters import sklearn as sklearn_converter
     from sklearn.preprocessing import OneHotEncoder
+    from sklearn.svm import SVR
+
+    from coremltools.converters import sklearn as sklearn_converter
 
 
 @unittest.skipIf(not _HAS_SKLEARN, MSG_SKLEARN_NOT_FOUND)
@@ -207,7 +205,7 @@ class EpsilonSVRLibSVMTest(unittest.TestCase):
         Test that the same predictions are made
         """
         from svm import svm_parameter, svm_problem
-        from svmutil import svm_train, svm_predict
+        from svmutil import svm_predict, svm_train
 
         # Generate some smallish (poly kernels take too long on anything else) random data
         x, y = [], []

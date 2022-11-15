@@ -8,9 +8,9 @@ import os
 import numpy as np
 
 import coremltools
+import coremltools.models.datatypes as datatypes
 from coremltools import ComputeUnit, utils
 from coremltools.models import neural_network as neural_network
-import coremltools.models.datatypes as datatypes
 
 
 class TestNeuralNetworkPrediction:

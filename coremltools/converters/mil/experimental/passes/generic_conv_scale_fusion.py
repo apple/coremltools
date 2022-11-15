@@ -4,10 +4,12 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import os
+
 import numpy as np
 
 from coremltools.converters.mil import Builder as mb
-from coremltools.converters.mil.experimental.passes.generic_pass_infrastructure import register_generic_pass
+from coremltools.converters.mil.experimental.passes.generic_pass_infrastructure import \
+    register_generic_pass
 
 """
 Fold mul/div into conv/conv_transpose by updating the weight/bias of the convolution layers.

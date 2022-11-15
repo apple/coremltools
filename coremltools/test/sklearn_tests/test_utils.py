@@ -2,14 +2,15 @@
 # # Use of this source code is governed by a BSD-3-clause license that can be # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import unittest
-from coremltools.models.utils import rename_feature, _macos_version, _is_macos
-from coremltools.models import MLModel
+
 from coremltools._deps import _HAS_SKLEARN
+from coremltools.models import MLModel
+from coremltools.models.utils import _is_macos, _macos_version, rename_feature
 
 if _HAS_SKLEARN:
     from sklearn.datasets import load_boston
     from sklearn.linear_model import LinearRegression
-    from sklearn.pipeline import Pipeline
+
     from coremltools.converters import sklearn as converter
 
 

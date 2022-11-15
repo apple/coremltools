@@ -4,9 +4,10 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import copy
-import logging
 
+from coremltools import _logger as logger
 from coremltools.converters.mil.mil import types
+
 from .basic_graph_ops import check_connections, const_determined_nodes
 from .dot_visitor import DotVisitor
 from .naming_utils import escape_fn_name
@@ -203,14 +204,14 @@ class NetworkEnsemble:
         Renames the function with function name (src_func) to (tgt_func)
         """
         if src_func not in self.functions:
-            logging.warning("Couldn't find function name (%s).", src_func)
+            logger.warning("Couldn't find function name (%s).", src_func)
             return
         if tgt_func in self.functions:
-            logging.warning("(%s) already exists in some function name.", tgt_func)
+            logger.warning("(%s) already exists in some function name.", tgt_func)
             return
 
         self.functions[tgt_func] = self.functions.pop(src_func)
-        logging.debug(
+        logger.debug(
             "Successfully changed function name from (%s) to (%s)", src_func, tgt_func
         )
 
@@ -226,7 +227,7 @@ class NetworkEnsemble:
             if src_node in tfssa.graph:
                 in_ssa = True
                 if tgt_node in tfssa.graph:
-                    logging.warning(
+                    logger.warning(
                         "(%s) already exists in function (%s).", tgt_node, func
                     )
                     break
@@ -259,9 +260,9 @@ class NetworkEnsemble:
                 break
 
         if not in_ssa:
-            logging.warning("Couldn't find (%s) in any functions", src_node)
+            logger.warning("Couldn't find (%s) in any functions", src_node)
         if success is not None:
-            logging.debug(
+            logger.debug(
                 "Changed (%s) to (%s) in function (%s)", src_node, tgt_node, success
             )
 
@@ -390,7 +391,7 @@ class NetworkEnsemble:
         Delete the SSAfunction with function_name.
         """
         if name not in self.functions:
-            logging.warning("(%s) not in NetworkEnsemble", name)
+            logger.warning("(%s) not in NetworkEnsemble", name)
             return
         del self.functions[name]
 

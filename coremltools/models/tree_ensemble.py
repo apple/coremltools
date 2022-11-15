@@ -11,12 +11,8 @@ import collections as _collections
 from .. import SPECIFICATION_VERSION as _SPECIFICATION_VERSION
 from ..proto import Model_pb2 as _Model_pb2
 from ..proto import TreeEnsemble_pb2 as _TreeEnsemble_pb2
-from ..proto import FeatureTypes_pb2 as _FeatureTypes_pb2
-
-from ._interface_management import (
-    set_classifier_interface_params,
-    set_regressor_interface_params
-)
+from ._interface_management import (set_classifier_interface_params,
+                                    set_regressor_interface_params)
 
 
 class TreeEnsembleBase:
@@ -232,7 +228,7 @@ class TreeEnsembleBase:
             "LeafNode"
         )
 
-        if not isinstance(values, _collections.Iterable):
+        if not isinstance(values, _collections.abc.Iterable):
             values = [values]
 
         if relative_hit_rate is not None:

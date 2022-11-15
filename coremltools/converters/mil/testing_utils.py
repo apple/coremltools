@@ -4,22 +4,22 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import copy
-from functools import partial
 import os
-from pathlib import Path
 import re
+from functools import partial
+from pathlib import Path
 
 import numpy as np
 from PIL import Image
 
 import coremltools as ct
-from coremltools._deps import _IS_MACOS
-from coremltools.converters.mil.mil import Program, Function
-from coremltools.converters.mil.mil.passes.quantization_passes import AbstractQuantizationPass
-from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
 import coremltools.models.utils as coremltoolsutils
+from coremltools._deps import _IS_MACOS
+from coremltools.converters.mil.mil import Function, Program
+from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
+from coremltools.converters.mil.mil.passes.quantization_passes import \
+    AbstractQuantizationPass
 from coremltools.proto import FeatureTypes_pb2 as ft
-
 
 np.random.seed(10)
 
@@ -76,7 +76,8 @@ def assert_model_is_valid(
     assert mlmodel is not None
 
     if verbose:
-        from coremltools.models.neural_network.printer import print_network_spec
+        from coremltools.models.neural_network.printer import \
+            print_network_spec
         print_network_spec(mlmodel.get_spec(), style="coding")
 
     if _IS_MACOS and (not mlmodel.is_package or coremltoolsutils._macos_version() >= (12, 0)):
@@ -332,13 +333,14 @@ def ct_convert(
     )
 
     if os.environ.get("DEBUG_SAVE_MLMODEL", "0") == "1":
-        from coremltools.converters.mil.testing_utils import _serialize_current_pytest
+        from coremltools.converters.mil.testing_utils import \
+            _serialize_current_pytest
         _serialize_current_pytest(mlmodel)
 
     return mlmodel
 
 def get_core_ml_prediction(
-        build, input_placeholders, input_values, use_cpu_only=True,
+        build, input_placeholders, input_values, compute_unit=ct.ComputeUnit.CPU_ONLY,
         backend=("neuralnetwork", "fp32")):
     """
     Return predictions of the given model.
@@ -353,13 +355,12 @@ def get_core_ml_prediction(
         ssa_func.set_outputs(output_vars)
         program.add_function("main", ssa_func)
 
-    if use_cpu_only:
-        compute_unit = ct.ComputeUnit.CPU_ONLY
-    else:
-        compute_unit = ct.ComputeUnit.ALL
-
-    mlmodel = ct_convert(program, source="milinternal",
-                         convert_to=backend,  compute_units=compute_unit)
+    mlmodel = ct_convert(
+        program,
+        source="milinternal",
+        convert_to=backend,
+        compute_units=compute_unit
+    )
     return mlmodel.predict(input_values)
 
 

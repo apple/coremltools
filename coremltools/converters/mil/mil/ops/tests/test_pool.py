@@ -4,20 +4,23 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import itertools
+
 import numpy as np
 import pytest
 
-from .testing_utils import run_compare_builder
 import coremltools as ct
-from coremltools.converters.mil.mil import Builder as mb, types
-from coremltools.converters.mil.testing_reqs import backends
+from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil import types
+from coremltools.converters.mil.testing_reqs import backends, compute_units
+
+from .testing_utils import run_compare_builder
 
 
 class TestAvgPool:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, inputshape_kernelshape",
+        "compute_unit, backend, inputshape_kernelshape",
         itertools.product(
-            [True, False],
+            compute_units,
             backends,
             [
                 [(1, 1, 2), (2,)],
@@ -26,35 +29,46 @@ class TestAvgPool:
             ]
         ),
     )
-    def test_avgpool_builder_to_backend_smoke_samelower_padtype(self, use_cpu_only, backend, inputshape_kernelshape):
+    def test_avgpool_builder_to_backend_smoke_samelower_padtype(
+        self, compute_unit, backend, inputshape_kernelshape
+    ):
         input_shape, kernel_shape = inputshape_kernelshape
         rank = len(input_shape) - 2
-        
+
         if backend[0] == "neuralnetwork" and rank == 3:
-            pytest.skip("pad_type `same_lower` not supported for 3d pooling in neuralnetwork backend")
+            pytest.skip(
+                "pad_type `same_lower` not supported for 3d pooling in neuralnetwork backend"
+            )
         if backend[0] == "mlprogram" and rank == 1:
-            pytest.xfail("rdar://98852008 (MIL backend producing wrong result for 1d pooling with pad_type same_lower)")
+            pytest.xfail(
+                "rdar://98852008 (MIL backend producing wrong result for 1d pooling with pad_type "
+                "same_lower)"
+            )
         if backend[0] == "mlprogram" and ct.utils._macos_version() < (13, 0):
             pytest.skip("same_lower pad_type not supported in macOS12 or older.")
-            
+
         minimum_deployment_target = ct.target.iOS16 if backend[0] == "mlprogram" else None
-        
+
         x_val = np.arange(1, np.prod(input_shape) + 1).reshape(*input_shape).astype(np.float32)
-       
+
         if rank == 1:
             expected_output_val = [0.5, 1.5]
         elif rank == 2:
             expected_output_val = [0.25, 0.75, 1, 2.5]
         else:
             expected_output_val = [0.125, 0.375, 0.5, 1.25, 0.75, 1.75, 2, 4.5]
-        
+
         expected_output_types = [input_shape + (types.fp32,)]
         expected_outputs = [np.array(expected_output_val).reshape(*input_shape).astype(np.float32)]
         input_values = {"x": x_val}
         input_placeholders = {"x": mb.placeholder(shape=x_val.shape)}
 
         def build(x):
-            return mb.avg_pool(x=x, kernel_sizes=kernel_shape, pad_type="same_lower",)
+            return mb.avg_pool(
+                x=x,
+                kernel_sizes=kernel_shape,
+                pad_type="same_lower",
+            )
 
         run_compare_builder(
             build,
@@ -62,18 +76,20 @@ class TestAvgPool:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
             minimum_deployment_target=minimum_deployment_target,
         )
 
-
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, num_dims",
-        itertools.product([True, False], backends, [1, 2, 3]),
+        "compute_unit, backend, num_dims",
+        itertools.product(
+            compute_units,
+            backends,
+            [1, 2, 3]
+        ),
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend, num_dims):
+    def test_builder_to_backend_smoke(self, compute_unit, backend, num_dims):
         kernel_sizes = [1, 2, 3]
         strides = [2, 1, 3]
 
@@ -179,8 +195,7 @@ class TestAvgPool:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
@@ -188,9 +203,9 @@ class TestAvgPool:
 class TestMaxPool:
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, inputshape_kernelshape",
+        "compute_unit, backend, inputshape_kernelshape",
         itertools.product(
-            [True, False],
+            compute_units,
             backends,
             [
                 [(1, 1, 2), (2,)],
@@ -199,35 +214,46 @@ class TestMaxPool:
             ]
         ),
     )
-    def test_maxpool_builder_to_backend_smoke_samelower_padtype(self, use_cpu_only, backend, inputshape_kernelshape):
+    def test_maxpool_builder_to_backend_smoke_samelower_padtype(
+        self, compute_unit, backend, inputshape_kernelshape
+    ):
         input_shape, kernel_shape = inputshape_kernelshape
         rank = len(input_shape) - 2
-        
+
         if backend[0] == "neuralnetwork" and rank == 3:
-            pytest.skip("pad_type `same_lower` not supported for 3d pooling in neuralnetwork backend")
+            pytest.skip(
+                "pad_type `same_lower` not supported for 3d pooling in neuralnetwork backend"
+            )
         if backend[0] == "mlprogram" and rank == 1:
-            pytest.xfail("rdar://98852008 (MIL backend producing wrong result for 1d pooling with pad_type same_lower)")
+            pytest.xfail(
+                "rdar://98852008 (MIL backend producing wrong result for 1d pooling with pad_type "
+                "same_lower)"
+            )
         if backend[0] == "mlprogram" and ct.utils._macos_version() < (13, 0):
             pytest.skip("same_lower pad_type not supported in macOS12 or older.")
 
         minimum_deployment_target = ct.target.iOS16 if backend[0] == "mlprogram" else None
-        
+
         x_val = np.arange(1, np.prod(input_shape) + 1).reshape(*input_shape).astype(np.float32)
-       
+
         if rank == 1:
             expected_output_val = [1, 2]
         elif rank == 2:
             expected_output_val = [1, 2, 3, 4]
         else:
             expected_output_val = [1, 2, 3, 4, 5, 6, 7, 8]
-        
+
         expected_output_types = [input_shape + (types.fp32,)]
         expected_outputs = [np.array(expected_output_val).reshape(*input_shape).astype(np.float32)]
         input_values = {"x": x_val}
         input_placeholders = {"x": mb.placeholder(shape=x_val.shape)}
 
         def build(x):
-            return mb.max_pool(x=x, kernel_sizes=kernel_shape, pad_type="same_lower",)
+            return mb.max_pool(
+                x=x,
+                kernel_sizes=kernel_shape,
+                pad_type="same_lower",
+            )
 
         run_compare_builder(
             build,
@@ -235,17 +261,20 @@ class TestMaxPool:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
             minimum_deployment_target=minimum_deployment_target,
         )
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, num_dims",
-        itertools.product([True, False], backends, [1, 2, 3]),
+        "compute_unit, backend, num_dims",
+        itertools.product(
+            compute_units,
+            backends,
+            [1, 2, 3]
+        ),
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend, num_dims):
+    def test_builder_to_backend_smoke(self, compute_unit, backend, num_dims):
         kernel_sizes = [1, 2, 3]
         strides = [2, 1, 3]
 
@@ -340,8 +369,7 @@ class TestMaxPool:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
@@ -349,9 +377,9 @@ class TestMaxPool:
 class TestL2Pool:
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, inputshape_kernelshape",
+        "compute_unit, backend, inputshape_kernelshape",
         itertools.product(
-            [True, False],
+            compute_units,
             backends,
             [
                 [(1, 1, 2), (2,)],
@@ -359,31 +387,40 @@ class TestL2Pool:
             ]
         ),
     )
-    def test_l2pool_builder_to_backend_smoke_samelower_padtype(self, use_cpu_only, backend, inputshape_kernelshape):
+    def test_l2pool_builder_to_backend_smoke_samelower_padtype(
+        self, compute_unit, backend, inputshape_kernelshape
+    ):
         input_shape, kernel_shape = inputshape_kernelshape
         rank = len(input_shape) - 2
-        
+
         if backend[0] == "mlprogram" and rank == 1:
-            pytest.xfail("rdar://98852008 (MIL backend producing wrong result for 1d pooling with pad_type same_lower)")
+            pytest.xfail(
+                "rdar://98852008 (MIL backend producing wrong result for 1d pooling with pad_type "
+                "same_lower)"
+            )
         if backend[0] == "mlprogram" and ct.utils._macos_version() < (13, 0):
             pytest.skip("same_lower pad_type not supported in macOS12 or older.")
 
         minimum_deployment_target = ct.target.iOS16 if backend[0] == "mlprogram" else None
-        
+
         x_val = np.arange(1, np.prod(input_shape) + 1).reshape(*input_shape).astype(np.float32)
-       
+
         if rank == 1:
             expected_output_val = [1, 2.236068]
         else:
             expected_output_val = [1, 2.236068, 3.162278, 5.477226]
-        
+
         expected_output_types = [input_shape + (types.fp32,)]
         expected_outputs = [np.array(expected_output_val).reshape(*input_shape).astype(np.float32)]
         input_values = {"x": x_val}
         input_placeholders = {"x": mb.placeholder(shape=x_val.shape)}
 
         def build(x):
-            return mb.l2_pool(x=x, kernel_sizes=kernel_shape, pad_type="same_lower",)
+            return mb.l2_pool(
+                x=x,
+                kernel_sizes=kernel_shape,
+                pad_type="same_lower",
+            )
 
         run_compare_builder(
             build,
@@ -391,17 +428,16 @@ class TestL2Pool:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
             minimum_deployment_target=minimum_deployment_target,
         )
 
     @pytest.mark.parametrize(
-        "use_cpu_only, backend, num_dims",
-        itertools.product([True, False], backends, [1, 2]),
+        "compute_unit, backend, num_dims",
+        itertools.product(compute_units, backends, [1, 2]),
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend, num_dims):
+    def test_builder_to_backend_smoke(self, compute_unit, backend, num_dims):
         kernel_sizes = [1, 2, 3]
         strides = [2, 1, 3]
 
@@ -453,7 +489,6 @@ class TestL2Pool:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )

@@ -3,21 +3,18 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from collections import defaultdict
-import logging
 import numbers
+from collections import defaultdict
 
 import numpy as np
 
+from coremltools import _logger as logger
 from coremltools.converters.mil.mil.types.symbolic import any_symbolic
-from .program import Program, Placeholder
-from .block import curr_block, Function
-from .input_type import (
-    InternalInputType,
-    ListOrTensorInputType,
-    TensorInputType,
-    TupleInputType,
-)
+
+from .block import Function, curr_block
+from .input_type import (InternalInputType, ListOrTensorInputType,
+                         TensorInputType, TupleInputType)
+from .program import Placeholder, Program
 from .var import InternalVar, Var
 
 
@@ -33,9 +30,9 @@ def is_python_value(val):
 
 class Builder:
     """
-    This class is a singleton builder to construct a MIL program. For more 
+    This class is a singleton builder to construct a MIL program. For more
     information, see `Create a MIL program <https://coremltools.readme.io/docs/model-intermediate-language#create-a-mil-program>`_.
-    
+
     Importing ``.ops`` triggers the installation of all MIL ops into the Builder.
     For details on each op, see `MIL ops <https://apple.github.io/coremltools/source/coremltools.converters.mil.mil.ops.defs.html>`_.
 
@@ -53,7 +50,7 @@ class Builder:
     >>>   res_var = mb.add(x=x, y=y) # created within ssa_fun block
     >>>   ssa_fun.set_outputs([res_var])
     >>> prog.add_function("main", ssa_fun)
-    
+
     >>> # Importing ops triggers installation of all ops into Builder.
     >>> from .ops import defs as _ops
 
@@ -86,7 +83,7 @@ class Builder:
             )
             raise ValueError(msg.format(name, val))
         const_name = cls._get_free_name(name)
-        logging.debug("Adding const op '{}'".format(const_name))
+        logger.debug("Adding const op '{}'".format(const_name))
         output_var = cls.const(val=val, name=const_name,
             before_op=before_op)
         return output_var
@@ -156,7 +153,7 @@ class Builder:
         Add an op of type `op_cls` (e.g., convolution) to current block.
         """
         kwargs = cls._maybe_set_name(kwargs, op_cls.__name__)
-        logging.info(
+        logger.info(
             "Adding op '{}' of type {}".format(kwargs["name"], op_cls.__name__)
         )
         before_op = kwargs.get("before_op", None)
@@ -198,20 +195,20 @@ class Builder:
     @staticmethod
     def program(input_specs=None, opset_version=None):
         """
-        
-        The ``mb.program`` decorator creates a MIL program with a single 
+
+        The ``mb.program`` decorator creates a MIL program with a single
         function (``main``). The input to ``main`` is a tensor.
-        
+
         Parameters
         ----------
-        
+
         input_specs: TensorSpec
             Describes a tensor.
-             
+
         opset_version: AvailableTarget enum
             Describes the opset version of the program
-        
-        
+
+
         Examples
         --------
         >>> import coremltools as ct

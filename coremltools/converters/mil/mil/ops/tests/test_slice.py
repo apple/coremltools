@@ -3,20 +3,23 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 import itertools
-import pytest
+
 import numpy as np
+import pytest
+
+from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil import types
+from coremltools.converters.mil.testing_reqs import backends, compute_units
+from coremltools.converters.mil.testing_utils import ssa_fn
 
 from .testing_utils import UNK_SYM, run_compare_builder
-from coremltools.converters.mil.mil import Builder as mb, types
-from coremltools.converters.mil.testing_reqs import backends
-from coremltools.converters.mil.testing_utils import ssa_fn
 
 
 class TestSliceByIndex:
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "compute_unit, backend", itertools.product(compute_units, backends,)
     )
-    def test_builder_to_backend_smoke(self, use_cpu_only, backend):
+    def test_builder_to_backend_smoke(self, compute_unit, backend):
         x_val = np.array(list(range(24))).reshape((2, 3, 4)).astype(np.float32)
         begin_val = np.array([1, 1, 1], dtype=np.int32)
         end_val = np.array([2, 3, 3], dtype=np.int32)
@@ -43,16 +46,15 @@ class TestSliceByIndex:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )
 
     @pytest.mark.xfail(reason="rdar://99664032")
     @pytest.mark.parametrize(
-        "use_cpu_only, backend", itertools.product([True, False], backends,)
+        "compute_unit, backend", itertools.product(compute_units, backends,)
     )
-    def test_single_element_edge_case(self, use_cpu_only, backend):
+    def test_single_element_edge_case(self, compute_unit, backend):
         x_val = np.array(list(range(6))).reshape((1, 3, 2)).astype(np.float32)
         input_placeholders = {
             "x": mb.placeholder(shape=x_val.shape),
@@ -66,7 +68,8 @@ class TestSliceByIndex:
                 end=[-2, 0, 0],
                 stride=[-1, 1, 1],
                 begin_mask=[False, True, True],
-                end_mask=[False, True, True])
+                end_mask=[False, True, True]
+            )
 
         expected_output_types = [(1, 3, 2, types.fp32)]
         expected_outputs = [np.array([[[0, 1], [2, 3], [4, 5]]], dtype=np.float32)]
@@ -76,8 +79,7 @@ class TestSliceByIndex:
             input_values,
             expected_output_types,
             expected_outputs,
-            use_cpu_only=use_cpu_only,
-            frontend_only=False,
+            compute_unit=compute_unit,
             backend=backend,
         )
 

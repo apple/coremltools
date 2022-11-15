@@ -3,7 +3,6 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import itertools
 
 import numpy as np
 import pytest
@@ -12,11 +11,8 @@ import coremltools as ct
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.testing_utils import get_op_types_in_program
 
-from .compression_passes import (
-    WeightSparsifier,
-    WeightPalettizer,
-    WeightAffineQuantizer,
-)
+from .compression_passes import (WeightAffineQuantizer, WeightPalettizer,
+                                 WeightSparsifier)
 
 np.random.seed(1984)
 

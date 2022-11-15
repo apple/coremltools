@@ -3,31 +3,26 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import logging
+from coremltools import _logger as logger
+from coremltools.converters._profile_utils import _profile
+from coremltools.converters.mil._deployment_compatibility import \
+    AvailableTarget as _target
+from coremltools.converters.mil.input_types import (ImageType, InputType,
+                                                    RangeDim)
+from coremltools.converters.mil.input_types import Shape as InputShape
+from coremltools.converters.mil.input_types import (TensorType,
+                                                    _get_shaping_class)
+from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil import (Function, Program, get_new_symbol,
+                                            types)
+from coremltools.converters.mil.mil.types.symbolic import is_symbolic
+from coremltools.converters.mil.mil.var import Var
 
+from .._utils import get_output_names
 from .basic_graph_ops import simple_topsort
 from .convert_utils import convert_graph
 from .ssa_passes.tf_passes import tensorflow_passes
-from .._utils import get_output_names
-from coremltools.converters.mil._deployment_compatibility import AvailableTarget as _target
-from coremltools.converters.mil.input_types import (
-    _get_shaping_class,
-    InputType,
-    ImageType,
-    RangeDim,
-    Shape as InputShape,
-    TensorType
-)
-from coremltools.converters.mil.mil.var import Var
-from coremltools.converters.mil.mil.types.symbolic import is_symbolic
-from coremltools.converters.mil.mil import (
-    Builder as mb,
-    Function,
-    get_new_symbol,
-    Program,
-    types,
-)
-from coremltools.converters._profile_utils import _profile
+
 
 
 # TranscriptionContext maintains a map of tf_node.name --> ssa_var available
@@ -76,7 +71,7 @@ class TranscriptionContext:
             # Overriding allow us to translate while_loop body twice (which is
             # needed to figure out shapes changes during iterates)
             msg = "TF var %s is added again. Overriding previous value"
-            logging.info(msg % tf_name)
+            logger.info(msg % tf_name)
         if is_new_var and isinstance(ssa_vars, Var) and tf_name != ssa_vars.name:
             msg = (
                 "MIL op's name ({}) does not match TensorFlow's node name ({})."
@@ -202,7 +197,7 @@ class TFConverter:
             added_inputs[inp] = (shape, dtype)
 
         if len(added_inputs) > 0:
-            logging.info(
+            logger.info(
                 "Adding Input not specified by users: '{}'".format(
                     added_inputs)
             )
@@ -449,7 +444,7 @@ class TFConverter:
         input_names = [x.name for x in self.inputs]
         for v_o, out_name in zip(prog["main"].outputs, self.output_names):
             if v_o.name != out_name and v_o.name not in input_names:
-                logging.info(
+                logger.info(
                     "Renaming output var: '{}' -> '{}'".format(v_o.name, out_name)
                 )
                 v_o.name = out_name

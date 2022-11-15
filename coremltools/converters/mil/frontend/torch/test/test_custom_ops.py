@@ -7,29 +7,24 @@ import pytest
 import torch
 import torch.nn as nn
 
-from .testing_utils import convert_to_mlmodel, TorchBaseTest
+from coremltools.converters.mil.frontend.torch.ops import _get_inputs
+from coremltools.converters.mil.frontend.torch.ops import \
+    cosine_similarity as cosine_similarity_main
+from coremltools.converters.mil.frontend.torch.torch_op_registry import \
+    _TORCH_OPS_REGISTRY as _TORCH_OPS_REG
+from coremltools.converters.mil.frontend.torch.torch_op_registry import \
+    register_torch_op
+from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil import Operation, types
+from coremltools.converters.mil.mil.input_type import (DefaultInputs,
+                                                       InputSpec,
+                                                       TensorInputType)
+from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
+
+from .testing_utils import TorchBaseTest, convert_to_mlmodel
 
 # Custom layer imports
 
-from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
-from coremltools.converters.mil.frontend.torch.torch_op_registry import (
-    register_torch_op,
-)
-from coremltools.converters.mil.frontend.torch.torch_op_registry import (
-    _TORCH_OPS_REGISTRY as _TORCH_OPS_REG,
-)
-from coremltools.converters.mil.frontend.torch.ops import _get_inputs
-from coremltools.converters.mil.frontend.torch.ops import cosine_similarity as cosine_similarity_main
-from coremltools.converters.mil.mil import (
-    Builder as mb,
-    Operation,
-    types
-)
-from coremltools.converters.mil.mil.input_type import (
-    DefaultInputs,
-    InputSpec,
-    TensorInputType,
-)
 
 
 # Log Converter supported Cosine Similarity conversion function

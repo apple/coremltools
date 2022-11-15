@@ -4,30 +4,27 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import os
-import tempfile
 import shutil
+import tempfile
 
 import numpy as np
 import pytest
 
 import coremltools as ct
-from coremltools._deps import _IS_MACOS
 import coremltools.converters as converter
 import coremltools.proto.FeatureTypes_pb2 as ft
-from coremltools import TensorType, ImageType, RangeDim, EnumeratedShapes
-from coremltools.converters.mil.testing_utils import random_gen
-from coremltools.converters.mil.frontend.tensorflow.converter import TFConverter
+from coremltools import EnumeratedShapes, ImageType, RangeDim, TensorType
+from coremltools._deps import _HAS_TF_1, _IS_MACOS, MSG_TF1_NOT_FOUND
+from coremltools.converters.mil.frontend.tensorflow.converter import \
+    TFConverter
 from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import (
-    frontend,
-    make_tf_graph,
-    get_tf_keras_io_names,
-    TensorFlowBaseTest
-)
+    TensorFlowBaseTest, get_tf_keras_io_names, make_tf_graph)
+from coremltools.converters.mil.testing_utils import random_gen
 
 tf = pytest.importorskip("tensorflow")
+frontend = "tensorflow"
 
-
-class TestTf1ModelInputsOutputs(TensorFlowBaseTest):
+class TestTfModelInputsOutputs(TensorFlowBaseTest):
     def setup(self):
         self.saved_model_dir = tempfile.mkdtemp()
         _, self.model_path_h5 = tempfile.mkstemp(
@@ -304,6 +301,7 @@ class TestTf1ModelInputsOutputs(TensorFlowBaseTest):
         assert ot == ft.ArrayFeatureType.ArrayDataType.Value("FLOAT32")
 
 
+@pytest.mark.skipif(not _HAS_TF_1, reason=MSG_TF1_NOT_FOUND)
 class TestTf1ModelFormats:
     def setup(self):
         self.saved_model_dir = tempfile.mkdtemp()

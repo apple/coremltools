@@ -5,23 +5,19 @@
 
 import numpy as _np
 
-from coremltools.converters.mil.mil import Builder as mb
-from coremltools.converters.mil.frontend.tensorflow.convert_utils import convert_graph
-from coremltools.converters.mil.frontend.tensorflow.ops import (
-    _transpose_NHWC_to_NCHW,
-    _transpose_NCHW_to_NHWC,
-    _transpose_NDHWC_to_NCDHW,
-    _transpose_NCDHW_to_NDHWC
-)
-from coremltools.converters.mil.frontend.tensorflow.tf_op_registry import register_tf_op
-from coremltools.converters.mil.mil.types import builtin_to_string
-from coremltools.converters.mil.mil.types.symbolic import any_symbolic
-
 # TF 2.x now imports and registers all TF 1.x op against the new registry
 # (separated from TF 1.x registry). Overwrite might needed in case the op
 # semantics are different between TF 1.x and TF 2.x.<
-from coremltools.converters.mil.frontend.tensorflow import ops
-from coremltools.converters.mil.frontend.tensorflow import dialect_ops
+from coremltools.converters.mil.frontend.tensorflow.convert_utils import \
+    convert_graph
+from coremltools.converters.mil.frontend.tensorflow.ops import (
+    _transpose_NCDHW_to_NDHWC, _transpose_NCHW_to_NHWC,
+    _transpose_NDHWC_to_NCDHW, _transpose_NHWC_to_NCHW)
+from coremltools.converters.mil.frontend.tensorflow.tf_op_registry import \
+    register_tf_op
+from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil.types import builtin_to_string
+from coremltools.converters.mil.mil.types.symbolic import any_symbolic
 
 
 @register_tf_op(override=True, tf_alias=["FusedBatchNorm"])

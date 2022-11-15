@@ -3,10 +3,11 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from ._tree_ensemble import convert_tree_ensemble as _convert_tree_ensemble
-from ...models import MLModel as _MLModel
 from coremltools import __version__ as ct_version
-from coremltools.models import _METADATA_VERSION, _METADATA_SOURCE
+from coremltools.models import _METADATA_SOURCE, _METADATA_VERSION
+
+from ...models import MLModel as _MLModel
+from ._tree_ensemble import convert_tree_ensemble as _convert_tree_ensemble
 
 
 def convert(

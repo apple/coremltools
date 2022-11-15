@@ -3,53 +3,39 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import logging
 import os
 
 import numpy as np
 
-from .passes import mil_passes
-from ..backend_helper import _get_colorspace_enum, _validate_image_input_output_shapes
-from coremltools import _SPECIFICATION_VERSION_IOS_15
-from coremltools import _OPSET
+from coremltools import _logger as logger, _OPSET, _SPECIFICATION_VERSION_IOS_15
+from coremltools.converters.mil.backend.backend_helper import \
+    _get_probability_var_for_classifier
 from coremltools.converters.mil.backend.mil.helper import (
-    cast_to_framework_io_dtype,
-    create_file_value,
-    create_immediate_value,
-    create_list_scalarvalue,
-    create_scalar_value,
-    types_to_proto
-)
-from coremltools.converters.mil.backend.backend_helper import _get_probability_var_for_classifier
-from coremltools.converters.mil.mil import (
-    Builder as mb,
-    Function,
-    mil_list,
-    types
-)
+    cast_to_framework_io_dtype, create_file_value, create_immediate_value,
+    create_list_scalarvalue, create_scalar_value, types_to_proto)
 from coremltools.converters.mil.backend.nn.load import _set_optional_inputs
-from coremltools.converters.mil.input_types import ColorLayout, ImageType, TensorType, EnumeratedShapes, RangeDim
+from coremltools.converters.mil.input_types import (EnumeratedShapes,
+                                                    ImageType, RangeDim,
+                                                    TensorType)
+from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil import Function, mil_list, types
 from coremltools.converters.mil.mil.ops.registry import SSAOpRegistry
-from coremltools.converters.mil.mil.types.symbolic import (
-    any_symbolic,
-    any_variadic,
-    is_symbolic,
-)
+from coremltools.converters.mil.mil.types.symbolic import (any_symbolic,
+                                                           any_variadic,
+                                                           is_symbolic)
 from coremltools.libmilstoragepython import _BlobStorageWriter as BlobWriter
-from coremltools.models.utils import _WEIGHTS_FILE_NAME
 from coremltools.models.neural_network.flexible_shape_utils import (
-    add_enumerated_image_sizes,
-    add_multiarray_ndshape_enumeration,
-    NeuralNetworkImageSize,
-    NeuralNetworkImageSizeRange,
-    set_multiarray_ndshape_range,
-    update_image_size_range
-)
-from coremltools.proto import (
-    FeatureTypes_pb2 as ft,
-    MIL_pb2 as pm,
-    Model_pb2 as ml
-)
+    NeuralNetworkImageSize, NeuralNetworkImageSizeRange,
+    add_enumerated_image_sizes, add_multiarray_ndshape_enumeration,
+    set_multiarray_ndshape_range, update_image_size_range)
+from coremltools.models.utils import _WEIGHTS_FILE_NAME
+from coremltools.proto import FeatureTypes_pb2 as ft
+from coremltools.proto import MIL_pb2 as pm
+from coremltools.proto import Model_pb2 as ml
+
+from ..backend_helper import (_get_colorspace_enum,
+                              _validate_image_input_output_shapes)
+from .passes import mil_passes
 
 
 def should_use_weight_file(val):
@@ -360,7 +346,7 @@ def load(prog, weights_dir, resume_on_errors=False, specification_version=_SPECI
                 if name in input_shape_map:
                     shape = input_shape_map[name].shape.default
                 else:
-                    logging.warning("Input shape not fully specified by enumerated shapes or range dim! 1 will be used for dimension not specified instead.")
+                    logger.warning("Input shape not fully specified by enumerated shapes or range dim! 1 will be used for dimension not specified instead.")
                 # If no input shape is provided (ex. auto conversion of -1 in Tensorflow)
                 shape = [1 if is_symbolic(d) else d for d in shape]
 

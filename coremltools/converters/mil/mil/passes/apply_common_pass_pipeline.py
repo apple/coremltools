@@ -3,13 +3,15 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import logging as _logging
 from tqdm import tqdm as _tqdm
 
+from coremltools import _logger as logger
 from coremltools.converters._profile_utils import _profile
-from coremltools.converters.mil.experimental.passes.generic_pass_infrastructure import PassContainer
+from coremltools.converters.mil.experimental.passes.generic_pass_infrastructure import \
+    PassContainer
 from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
-from coremltools.converters.mil.mil.passes.quantization_passes import AbstractQuantizationPass
+from coremltools.converters.mil.mil.passes.quantization_passes import \
+    AbstractQuantizationPass
 
 
 @_profile
@@ -20,18 +22,18 @@ def apply_common_pass_pipeline(prog, passes):
         if len(passes) == 0:
             return
 
-        _logging.debug("Program before {} passes:\n{}".format(name, prog))
+        logger.debug("Program before {} passes:\n{}".format(name, prog))
 
         prog.validate()
         s = 'passes' if len(passes) > 1 else 'pass'
         for p in _tqdm(passes, desc="Running MIL {} {}".format(name, s), unit=" passes"):
-            _logging.info('Performing pass: "{}"'.format(p))
+            logger.info('Performing pass: "{}"'.format(p))
             graph_pass = PASS_REGISTRY[p] if not isinstance(p, AbstractQuantizationPass) else p
             graph_pass(prog)
             if isinstance(p, AbstractQuantizationPass) or not isinstance(PASS_REGISTRY[p], PassContainer):
                 prog.validate()
 
-        _logging.debug("Program after {} passes:\n{}".format(name, prog))
+        logger.debug("Program after {} passes:\n{}".format(name, prog))
 
         return
 
@@ -72,6 +74,7 @@ def apply_common_pass_pipeline(prog, passes):
         "common::concat_to_pixel_shuffle", # should come after detect_concat_interleave and after replace_stack_reshape
         "common::fuse_prelu", # reduce_transpose pass should run before and after this pass (the one after will be run during the cleanup passes stage)
         "common::prelu_to_lrelu",
+        "common::merge_consecutive_relus",
         #  "remove_redundant_ops" pass should be applied towards the end, once other graph passes have done their optimizations.
         # For instance, it should come after passes such as "reduce_transpose" that can introduce redundant transposes
         # in the network (while reducing the total number of transposes), and after passes such as "fuse_layernorm_or_instancenorm"

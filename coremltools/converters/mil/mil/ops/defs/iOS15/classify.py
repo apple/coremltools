@@ -5,12 +5,10 @@
 
 import numpy as np
 
-from coremltools.converters.mil.mil import types, Operation
-from coremltools.converters.mil.mil.input_type import (
-    InputSpec,
-    ListInputType,
-    TensorInputType
-)
+from coremltools.converters.mil.mil import Operation, types
+from coremltools.converters.mil.mil.input_type import (InputSpec,
+                                                       ListInputType,
+                                                       TensorInputType)
 from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
 from coremltools.converters.mil.mil.types.symbolic import any_symbolic
 

@@ -3,20 +3,18 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from enum import Enum
-import logging as _logging
-
 import numpy as np
 
+from coremltools import _logger as logger
 from coremltools.converters.mil.backend.mil.load import should_use_weight_file
 from coremltools.converters.mil.mil import Builder as mb
-from coremltools.converters.mil.mil.passes.quantization_passes import AbstractQuantizationPass
-from coremltools.models.neural_network.quantization_utils import _get_kmeans_lookup_table_and_weight
 from coremltools.converters.mil.mil.ops.defs.iOS16 import (
-    constexpr_affine_dequantize,
-    constexpr_lut_to_dense,
-    constexpr_sparse_to_dense,
-)
+    constexpr_affine_dequantize, constexpr_lut_to_dense,
+    constexpr_sparse_to_dense)
+from coremltools.converters.mil.mil.passes.quantization_passes import \
+    AbstractQuantizationPass
+from coremltools.models.neural_network.quantization_utils import \
+    _get_kmeans_lookup_table_and_weight
 
 
 class SparseParams:
@@ -44,16 +42,17 @@ class WeightSparsifier(AbstractQuantizationPass):
         self.target_percentile = target_percentile
 
         if not self.mode in WeightSparsifier.WEIGHT_SPARSIFICATION_MODES:
-            msg = "Only mode {} supported for weight sparsification. Got mode {}.".format(
-                WeightSparsifier.WEIGHT_SPARSIFICATION_MODES, 
-                self.mode
+            msg = (
+                "Only mode {} supported for weight sparsification. Got mode {}.".format(
+                    WeightSparsifier.WEIGHT_SPARSIFICATION_MODES, self.mode
+                )
             )
             raise ValueError(msg)
 
-        if self.target_percentile < 0 or self.target_percentile > 1:
+        if self.mode == "PERCENTILE_BASED" and (self.target_percentile < 0 or self.target_percentile > 1):
             raise ValueError("Invalid value of target_percentile: {}. Needs to be in [0, 1]".format(self.target_percentile))
 
-        if self.threshold < 0:
+        if self.mode == "THRESHOLD_BASED" and self.threshold < 0:
             raise ValueError("Invalid value of threshold: {}. Needs to be in [0, inf)".format(self.threshold))
 
     def is_valid_op(self, op):
@@ -114,14 +113,14 @@ class WeightSparsifier(AbstractQuantizationPass):
                 before_op=op,
                 name=op.name + "_fake_sparsified",
             )
-            
+
         op.enclosing_block.replace_uses_of_var_after_op(
             anchor_op=op,
             old_var=op.outputs[0],
             new_var=new_var,
             no_check_var_types=True,
         )
-        
+
         block.remove_ops([op])
 
 
@@ -149,9 +148,10 @@ class WeightPalettizer(AbstractQuantizationPass):
         self.lut_function = lut_function
 
         if not self.mode in WeightPalettizer.WEIGHT_PALETTIZATION_MODES:
-            msg = "Only mode {} supported for weight palettization. Got mode {}.".format(
-                WeightPalettizer.WEIGHT_PALETTIZATION_MODES, 
-                self.mode
+            msg = (
+                "Only mode {} supported for weight palettization. Got mode {}.".format(
+                    WeightPalettizer.WEIGHT_PALETTIZATION_MODES, self.mode
+                )
             )
             raise ValueError(msg)
 
@@ -200,7 +200,7 @@ class WeightPalettizer(AbstractQuantizationPass):
             ).astype(np.uint8)
             lut = np.array(range(0, 1 << nbits)) * scale + val_min
             lut = lut.astype(val.dtype)
-            return lut, indices 
+            return lut, indices
 
         def get_nbits_for_unique_mode(val):
             val = val.flatten()
@@ -209,7 +209,7 @@ class WeightPalettizer(AbstractQuantizationPass):
                 if len(unique_vals) <= 1 << nbits:
                     return nbits
             msg = "weight value cannot be represented in an 8 bits palettization. Skipped."
-            _logging.warning(msg)
+            logger.warning(msg)
             return None
 
         def compress_unique(val, nbits):
@@ -285,7 +285,7 @@ class WeightPalettizer(AbstractQuantizationPass):
     def transform_op(self, op):
         block = op.enclosing_block
         lut_params = self.compress(op.val.val, self.mode, self.nbits, self.lut_function)
-        
+
         if lut_params is None:
             return
 
@@ -311,7 +311,7 @@ class WeightPalettizer(AbstractQuantizationPass):
             new_var=new_var,
             no_check_var_types=True,
         )
-        
+
         block.remove_ops([op])
 
 
@@ -338,10 +338,8 @@ class WeightAffineQuantizer(AbstractQuantizationPass):
         self.mode = mode.upper()
 
         if not self.mode in WeightAffineQuantizer.WEIGHT_AFFINE_QUANTIZATION_MODES:
-            msg = "Only mode {} supported for weight affine quantization. Got mode {}."\
-            .format(
-                WeightAffineQuantizer.WEIGHT_AFFINE_QUANTIZATION_MODES, 
-                self.mode
+            msg = "Only mode {} supported for weight affine quantization. Got mode {}.".format(
+                WeightAffineQuantizer.WEIGHT_AFFINE_QUANTIZATION_MODES, self.mode
             )
             raise ValueError(msg)
 
@@ -421,7 +419,7 @@ class WeightAffineQuantizer(AbstractQuantizationPass):
             new_var=new_var,
             no_check_var_types=True,
         )
-        
+
         block.remove_ops([op])
 
 
@@ -442,7 +440,7 @@ class WeightDecompressor(AbstractQuantizationPass):
 
     def transform_op(self, op):
         block = op.enclosing_block
-        
+
         decompressed_val = op.value_inference()
         new_var = mb.const(
             val=decompressed_val,
@@ -457,5 +455,5 @@ class WeightDecompressor(AbstractQuantizationPass):
             no_check_var_types=True,
             force_replace=True,
         )
-        
+
         block.remove_ops([op])
