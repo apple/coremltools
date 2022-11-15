@@ -4319,6 +4319,7 @@ class TestEinsum(TorchBaseTest):
             expected_results=out,
         )
 
+
 class TestSqueeze(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, rank_and_axis",
