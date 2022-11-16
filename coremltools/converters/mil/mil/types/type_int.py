@@ -162,7 +162,6 @@ int8 = make_int(8, "")
 int16 = make_int(16, "")
 int32 = make_int(32, "")
 int64 = make_int(64, "")
-int = int64
 
 uint8 = make_int(8, "u")
 uint16 = make_int(16, "u")

@@ -44,20 +44,20 @@ def list(arg, init_length=None, dynamic_length=True):
             assert isinstance(other, self.T[0])
             self.val.append(other)
 
-        @annotate(T[0], index=type_int.int)
+        @annotate(T[0], index=type_int.int64)
         def __getitem__(self, index):
-            assert isinstance(index, type_int.int)
+            assert isinstance(index, type_int.int64)
             return self.val[index.val]
 
-        @annotate(void, index=type_int.int, newval=T[0])
+        @annotate(void, index=type_int.int64, newval=T[0])
         def __setitem__(self, index, newval):
-            assert isinstance(index, type_int.int)
+            assert isinstance(index, type_int.int64)
             assert isinstance(newval, self.T[0])
             self.val[index.val] = newval
 
-        @annotate(type_int.int)
+        @annotate(type_int.int64)
         def __len__(self):
-            return type_int.int(len(self.val)) if self.T[1] is None else self.T[1]
+            return type_int.int64(len(self.val)) if self.T[1] is None else self.T[1]
 
     list.__template_name__ = "list[" + arg.__name__ + "]"
     return list

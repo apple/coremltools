@@ -43,7 +43,7 @@ def tuple(args):
         def __type_info__(cls):
             return Type("tuple", [get_type_info(arg) for arg in args], python_class=cls)
 
-        @annotate(type_int.int)
+        @annotate(type_int.int64)
         def __len__(self):
             return len(args)
 
