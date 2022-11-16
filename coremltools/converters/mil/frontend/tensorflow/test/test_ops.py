@@ -20,7 +20,7 @@ from coremltools._deps import (_HAS_TF_1, _HAS_TF_2, MSG_TF1_NOT_FOUND,
 from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import (
     TensorFlowBaseTest, freeze_g, layer_counts, load_tf_pb, make_tf_graph)
 from coremltools.converters.mil.testing_reqs import backends, compute_units
-from coremltools.converters.mil.testing_utils import random_gen
+from coremltools.converters.mil.testing_utils import random_gen, gen_input_shapes_einsum
 from coremltools.models.utils import _is_macos, _macos_version
 
 tf = pytest.importorskip("tensorflow")
@@ -2198,6 +2198,7 @@ class TestEinsum(TensorFlowBaseTest):
             compute_units,
             backends,
             [
+                # Hardcoded cases
                 "abcd,adce->abce",
                 "abc,cbd->abd",
                 "bnqd,bnkd->bnqk",
@@ -2205,31 +2206,30 @@ class TestEinsum(TensorFlowBaseTest):
                 "abc,cde->abde",
                 "btnh,bfnh->bnft",
                 "bnft,btnh->bfnh",
-                "abcd,cde->abe"
+                "abcd,cde->abe",
+                # Generic cases
+                "i,i->i",
+                "i,j->ij",
+                "ab,b->a",
+                "ab,ab->b",
+                "abc,abc->a",
+                "abc,abc->c",
+                "abc,bac->c",
+                "abc,acd->abd",
+                "abc,abc->ab",
+                "abc,abc->bc",
+                "abc,bac->ba",
+                "abcd,cb->dca",
+                "abcd,acdb->ad",
+                "abcd,abde->abce",
+                "abcd,efbd->eafc",
+                "acdb,bade->abce",
             ],
             [False, True],
         )
     )
     def test(self, compute_unit, backend, equation, reverse_input_order):
-        
-        if equation == "abcd,adce->abce":
-            input_shapes = [[3, 4, 2, 6], [3, 6, 2, 2]]
-        elif equation == "abc,cbd->abd":
-            input_shapes = [[4, 2, 6], [6, 2, 2]]
-        elif equation == "bnqd,bnkd->bnqk":
-            input_shapes = [[1, 2, 3, 4], [1, 2, 4, 4]]
-        elif equation == "abc,cd->abd":
-            input_shapes = [[2, 3, 4], [4, 5]]
-        elif equation == "abc,cde->abde":
-            input_shapes = [[2, 3, 4], [4, 5, 6]]
-        elif equation == "btnh,bfnh->bnft":
-            input_shapes = [[1, 2, 3, 4], [1, 5, 3, 4]]
-        elif equation == "bnft,btnh->bfnh":
-            input_shapes = [[1, 2, 3, 4], [1, 4, 2, 6]]
-        elif equation == "abcd,cde->abe":
-            input_shapes = [[1, 2, 3, 4], [3, 4, 6]]
-        else:
-            raise ValueError("unrecognized equation")
+        input_shapes, _ = gen_input_shapes_einsum(equation, False)
 
         if reverse_input_order:
             input_output_strings = equation.split('->')

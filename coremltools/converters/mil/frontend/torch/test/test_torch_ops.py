@@ -15,6 +15,7 @@ import coremltools as ct
 from coremltools import RangeDim, Shape, TensorType
 from coremltools._deps import version_lt
 from coremltools.converters.mil import testing_reqs
+from coremltools.converters.mil.testing_utils import gen_input_shapes_einsum
 from coremltools.models.utils import _macos_version, _python_version
 
 from .testing_utils import (
@@ -4225,14 +4226,14 @@ class TestArange(TorchBaseTest):
             input_as_shape=False
         )
 
-
 class TestEinsum(TorchBaseTest):
     @pytest.mark.parametrize(
-        "compute_unit, backend, equation, reverse_input_order",
+        "compute_unit, backend, equation, reverse_input_order, dynamic",
         itertools.product(
             compute_units,
             backends,
             [
+                # Hardcoded cases
                 "abcd,adce->abce",
                 "abc,cbd->abd",
                 "bnqd,bnkd->bnqk",
@@ -4242,42 +4243,42 @@ class TestEinsum(TorchBaseTest):
                 "bnft,btnh->bfnh",
                 "abcd,cde->abe",
                 "a b c d , a d c e -> a b c e",
-                "bhcq,bhck->bhqk",
-            ],
+                # Generic cases
+                "i,i->i",
+                "i,j->ij",
+                "ab,b->a",
+                "ab,ab->b",
+                "abc,abc->a",
+                "abc,abc->c",
+                "abc,bac->c",
+                "abc,acd->abd",
+                "abc,abc->ab",
+                "abc,abc->bc",
+                "abc,bac->ba",
+                "abcd,cb->dca",
+                "abcd,acdb->ad",
+                "abcd,abde->abce",
+                "abcd,efbd->eafc",
+                "acdb,bade->abce",
+             ],
+            [False, True],
             [False, True],
         ),
     )
-    def test_einsum(self, compute_unit, backend, equation, reverse_input_order):
+    def test_einsum(self, compute_unit, backend, equation, reverse_input_order, dynamic):
         class TestEinsum(nn.Module):
             def forward(self, x, y):
                 return torch.einsum(equation, x, y)
 
-        if equation in ["abcd,adce->abce", "a b c d , a d c e -> a b c e"]:
-            input_shapes = [[3, 4, 2, 6], [3, 6, 2, 2]]
-        elif equation == "abc,cbd->abd":
-            input_shapes = [[4, 2, 6], [6, 2, 2]]
-        elif equation == "bnqd,bnkd->bnqk":
-            input_shapes = [[1, 2, 3, 4], [1, 2, 4, 4]]
-        elif equation == "abc,cd->abd":
-            input_shapes = [[2, 3, 4], [4, 5]]
-        elif equation == "abc,cde->abde":
-            input_shapes = [[2, 3, 4], [4, 5, 6]]
-        elif equation == "btnh,bfnh->bnft":
-            input_shapes = [[1, 2, 3, 4], [1, 5, 3, 4]]
-        elif equation == "bnft,btnh->bfnh":
-            input_shapes = [[1, 2, 3, 4], [1, 4, 2, 6]]
-        elif equation == "abcd,cde->abe":
-            input_shapes = [[1, 2, 3, 4], [3, 4, 6]]
-        elif equation == "bhcq,bhck->bhqk":
-            input_shapes = [[2, 3, 4, 5], [2, 3, 4, 6]]
-        else:
-            raise ValueError("unrecognized equation")
+        input_shapes, converter_input_type = gen_input_shapes_einsum(equation, dynamic)
 
         if reverse_input_order:
             input_output_strings = equation.split('->')
             input_strings = input_output_strings[0].split(',')
             equation = input_strings[1] + ',' + input_strings[0] + '->' + input_output_strings[1]
             input_shapes = [input_shapes[1], input_shapes[0]]
+            if converter_input_type is not None:
+                converter_input_type = [converter_input_type[1], converter_input_type[0]]
 
         model = TestEinsum()
         self.run_compare_torch(
@@ -4285,7 +4286,8 @@ class TestEinsum(TorchBaseTest):
             model,
             backend=backend,
             compute_unit=compute_unit,
-            input_as_shape=True
+            input_as_shape=True,
+            converter_input_type=converter_input_type
         )
 
     @pytest.mark.parametrize(

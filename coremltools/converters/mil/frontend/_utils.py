@@ -10,6 +10,24 @@ from coremltools.converters.mil.mil.ops.defs._utils import parse_einsum_equation
 from coremltools.converters.mil.mil.types.symbolic import any_symbolic, is_symbolic
 
 
+def value_at(x: Var, idx: int, name=None):
+    """
+    input x: 1D tensor (vector).
+    return value at index idx. x[idx].
+    Could specify the name of the returned MIL scalar tensor as well.
+    """
+    assert x.rank == 1
+    args = {
+        "x": x,
+        "begin": [idx],
+        "end": [0],
+        "squeeze_mask": [True],
+    }
+    if name is not None:
+        args["name"] = name
+    return mb.slice_by_index(**args)
+
+
 def _reverse_input_einsum_eq(equation: str) -> str:
     """
     Reverse the input order of the einsum eqaution
@@ -57,6 +75,7 @@ def build_einsum_mil(a_var: Var, b_var: Var, equation: str, name: str) -> Var:
     def _swap(a, b):
         return b, a
 
+    is_dynamic = any_symbolic(a_var.shape) or any_symbolic(b_var.shape)
     # list of equations supported for explicit mil translations
     vec_bnqd_bnkd_bnqk = (
         [0, 1, 2, 3],
@@ -109,7 +128,7 @@ def build_einsum_mil(a_var: Var, b_var: Var, equation: str, name: str) -> Var:
         if parsed_vectors_rev == vec_abc_cd_abd:
             a_var, b_var = _swap(a_var, b_var)
         x = mb.matmul(x=a_var, y=b_var, transpose_x=False, transpose_y=False, name=name)
-    elif vec_abc_cde_abde in [parsed_vectors, parsed_vectors_rev]:
+    elif vec_abc_cde_abde in [parsed_vectors, parsed_vectors_rev] and not is_dynamic:
         if parsed_vectors_rev == vec_abc_cde_abde:
             a_var, b_var = _swap(a_var, b_var)
         x_1 = mb.reshape(x=a_var, shape=[a_var.shape[0] * a_var.shape[1], a_var.shape[2]])
@@ -130,7 +149,7 @@ def build_einsum_mil(a_var: Var, b_var: Var, equation: str, name: str) -> Var:
         b_var = mb.transpose(x=b_var, perm=[0, 2, 1, 3])
         x = mb.matmul(x=a_var, y=b_var, transpose_x=False, transpose_y=False)
         x = mb.transpose(x=x, perm=[0, 2, 1, 3], name=name)
-    elif vec_abcd_cde_abe in [parsed_vectors, parsed_vectors_rev]:
+    elif vec_abcd_cde_abe in [parsed_vectors, parsed_vectors_rev] and not is_dynamic:
         if parsed_vectors_rev == vec_abcd_cde_abe:
             a_var, b_var = _swap(a_var, b_var)
         x_1 = mb.reshape(x=a_var, shape=[a_var.shape[0], a_var.shape[1], a_var.shape[2] * a_var.shape[3]])
@@ -147,7 +166,7 @@ def build_einsum_mil(a_var: Var, b_var: Var, equation: str, name: str) -> Var:
         else:
             x = mb.einsum(values=(b_var, a_var), equation=equation_rev, name=name)
     else:
-        raise NotImplementedError("Unsupported einsum equation: ", equation)
+        x = solve_generic_einsum(parsed_vectors, a_var, b_var, name)
 
     return x
 
@@ -202,3 +221,109 @@ def get_output_names(outputs):
         if all([name is None for name in output_names]):
             output_names = None
     return output_names
+
+
+def solve_generic_einsum(parsed_vectors, a_var, b_var, name):
+    """
+    :param parsed_vectors: list[list[int]]
+    :param a_var:
+        - var
+        - first input variable
+    :param b_var:
+        - var
+        - second input variable
+    :param name:
+        - str
+        - name to be assigned to the output var
+
+    :return:
+        - var
+        - output var that contains the einsum result
+    """
+
+    def _get_perm(src_axes, dst_axes):
+        """
+        :param src_axes: list[int]
+        :param dst_axes: list[int]
+        :return: list[int]
+        """
+        return [src_axes.index(s) for s in dst_axes]
+
+    def _concat_dims(dims, none_if_empty=False):
+        if len(dims) == 0:
+            if none_if_empty:
+                return None
+            else:
+                return 1
+        return mb.concat(values=dims, axis=0)
+
+    a_axes, b_axes, out_axes = parsed_vectors
+
+    if len(a_axes) > len(set(a_axes)) or len(b_axes) > len(set(b_axes)):
+        raise ValueError(
+            "Generic einsum does not support trace operation."
+        )
+
+    if not out_axes:
+        raise ValueError(
+            "Generic einsum does not support scalar output."
+        )
+
+    a_dims = mb.shape(x=a_var)
+    b_dims = mb.shape(x=b_var)
+
+    batched_axes = []
+    reduced_axes = []
+    a_unique_axes = []
+    b_unique_axes = []
+
+    batch_dims = []
+    reduce_dims = []
+    a_unique_dims = []
+    b_unique_dims = []
+
+    for i, a_axis in enumerate(a_axes):
+        a_dim = value_at(a_dims, i)
+        if a_axis in b_axes:
+            if a_axis in out_axes:
+                batched_axes.append(a_axis)
+                batch_dims.append(a_dim)
+            else:
+                reduced_axes.append(a_axis)
+                reduce_dims.append(a_dim)
+        else:
+            a_unique_axes.append(a_axis)
+            a_unique_dims.append(a_dim)
+    concat_batch_dims = _concat_dims(batch_dims)
+    concat_reduce_dims = _concat_dims(reduce_dims)
+    concat_a_unique_dims = _concat_dims(a_unique_dims)
+
+    for i, b_axis in enumerate(b_axes):
+        b_dim = value_at(b_dims, i)
+        if b_axis not in a_axes:
+            b_unique_axes.append(b_axis)
+            b_unique_dims.append(b_dim)
+    concat_b_unique_dims = _concat_dims(b_unique_dims)
+
+    a_transpose_axes = batched_axes + a_unique_axes + reduced_axes
+    a = mb.transpose(x=a_var, perm=_get_perm(a_axes, a_transpose_axes))
+    a_reshape_dims = _concat_dims(
+        [mb.reduce_prod(x=x) for x in [concat_batch_dims, concat_a_unique_dims, concat_reduce_dims] if x is not None])
+    a = mb.reshape(x=a, shape=a_reshape_dims)
+
+    b_transpose_axes = batched_axes + reduced_axes + b_unique_axes
+    b = mb.transpose(x=b_var, perm=_get_perm(b_axes, b_transpose_axes))
+    b_reshape_dims = _concat_dims(
+        [mb.reduce_prod(x=x) for x in [concat_batch_dims, concat_reduce_dims, concat_b_unique_dims] if x is not None])
+    b = mb.reshape(x=b, shape=b_reshape_dims)
+
+    ab = mb.matmul(x=a, y=b)
+    concat_batch_dims = _concat_dims(batch_dims, True)
+    concat_a_unique_dims = _concat_dims(a_unique_dims, True)
+    concat_b_unique_dims = _concat_dims(b_unique_dims, True)
+    ab_reshaped_dims = _concat_dims(
+        [x for x in [concat_batch_dims, concat_a_unique_dims, concat_b_unique_dims] if x is not None])
+    ab = mb.reshape(x=ab, shape=ab_reshaped_dims)
+    ab_reshaped_axes = batched_axes + a_unique_axes + b_unique_axes
+    ab = mb.transpose(x=ab, perm=_get_perm(ab_reshaped_axes, out_axes), name=name)
+    return ab

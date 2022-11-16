@@ -453,6 +453,29 @@ def random_gen_input_feature_type(input_desc):
     else:
         raise ValueError('unsupported type')
 
+def gen_input_shapes_einsum(equation, dynamic):
+    equation = equation.replace(" ", "")
+    left = equation.split("->")[0]
+    a_desc, b_desc = left.split(",")
+    converter_shapes = {}
+    shapes = {}
+    cur_default_shape = 2
+    for symbol in a_desc + b_desc:
+        if symbol not in shapes:
+            shapes[symbol] = cur_default_shape
+            if dynamic:
+                converter_shapes[symbol] = ct.RangeDim(default=cur_default_shape)
+            else:
+                converter_shapes[symbol] = cur_default_shape
+            cur_default_shape += 1
+    a_shape = [shapes[symbol] for symbol in a_desc]
+    b_shape = [shapes[symbol] for symbol in b_desc]
+    a_converter_shape = [converter_shapes[symbol] for symbol in a_desc]
+    b_converter_shape = [converter_shapes[symbol] for symbol in b_desc]
+    return ([a_shape, b_shape],
+            [ct.TensorType(shape=a_converter_shape, dtype=np.float32),
+             ct.TensorType(shape=b_converter_shape, dtype=np.float32)])
+
 def verify_prediction(mlmodel, multiarray_type=None):
     spec = mlmodel._spec
     input_dict = {}
