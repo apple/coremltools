@@ -2,17 +2,17 @@
 #
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
+
 import itertools
 
 import numpy as np
 import pytest
 
-from coremltools.converters.mil.mil import Builder as mb
-from coremltools.converters.mil.mil import types
+from .testing_utils import UNK_SYM, run_compare_builder
+import coremltools as ct
+from coremltools.converters.mil.mil import Builder as mb, types
 from coremltools.converters.mil.testing_reqs import backends, compute_units
 from coremltools.converters.mil.testing_utils import ssa_fn
-
-from .testing_utils import UNK_SYM, run_compare_builder
 
 
 class TestSliceByIndex:
@@ -242,3 +242,35 @@ class TestSliceByIndex:
         ]
         for idx in range(len(v)):
             np.testing.assert_allclose(ans[idx], v[idx].val, atol=1e-04, rtol=1e-05)
+
+
+    @staticmethod
+    def test_slice_by_index():
+        INPUT_SHAPE = (1, 2, 8, 16)
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=INPUT_SHAPE)])
+        def prog(x):
+            x = mb.slice_by_index(
+                x=x,
+                begin=[0, 0, 0, 0],
+                end=[1, 2, 8, 12],
+                stride=[1, 1, 2, 2],
+                begin_mask=None,
+                end_mask=None,
+                squeeze_mask=None,
+            )
+            return x
+
+        x = np.random.rand(*INPUT_SHAPE)
+
+        # slice by index is x[begin[0]: end[0]: stride[0], begin[1]: end[1]: stride[1], ...]
+        y_numpy = x[0:1:1, 0:2:1, 0:8:2, 0:12:2]
+
+        model = ct.convert(prog, source="milinternal", convert_to="neuralnetwork")
+        y_neuralnetwork = list(model.predict({'x': x}).values())[0]
+        np.testing.assert_allclose(y_numpy, y_neuralnetwork)
+
+        model = ct.convert(prog, source="milinternal", convert_to="mlprogram")
+        y_mlprogram = list(model.predict({'x': x}).values())[0]
+        # rdar://102217935 needs to be fixed before mlprogram will pass
+        # np.testing.assert_allclose(y_numpy, y_mlprogram)
