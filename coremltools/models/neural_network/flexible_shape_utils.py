@@ -5,7 +5,6 @@
 
 """
 Utilities to annotate Neural Network Features with flexible shape information.
-Only available in coremltools 2.0b1 and onwards
 """
 
 from ... import (_MINIMUM_FLEXIBLE_SHAPES_SPEC_VERSION,
