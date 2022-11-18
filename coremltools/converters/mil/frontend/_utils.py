@@ -223,6 +223,28 @@ def get_output_names(outputs):
     return output_names
 
 
+def solve_unary_einsum(parsed_vectors, vars):
+    def solve_diagonal_einsum_one_step(x, parsed_vector):
+        for i in range(len(parsed_vector)):
+            for j in range(1, len(parsed_vector)):
+                perm = [i for i in range(len(parsed_vector))]
+                perm[0], perm[i] = perm[i], perm[0]
+                perm[1], perm[j] = perm[j], perm[1]
+
+                dims = mb.shape(x=x)
+                dim_length = value_at(dims, i)
+
+                indices = mb.range_1d(end=dim_length, start=0, step=1)
+                indices = mb.stack(values=[indices, indices], axis=1)
+                x = mb.transpose(x=x, perm=perm)
+                x = mb.gather_nd(x=x, indices=indices)
+                return x, parsed_vector
+
+    for parsed_vector, x in zip(parsed_vectors, vars):
+        while len(parsed_vector) != len(set(parsed_vector)):
+            parsed_vector, x = solve_diagonal_einsum_one_step(x, parsed_vector)
+
+
 def solve_generic_einsum(parsed_vectors, a_var, b_var, name):
     """
     :param parsed_vectors: list[list[int]]
@@ -257,12 +279,9 @@ def solve_generic_einsum(parsed_vectors, a_var, b_var, name):
                 return 1
         return mb.concat(values=dims, axis=0)
 
+    parsed_vectors, vars = solve_unary_einsum(parsed_vectors, [a_var, b_var])
+    a_var, b_var = vars
     a_axes, b_axes, out_axes = parsed_vectors
-
-    if len(a_axes) > len(set(a_axes)) or len(b_axes) > len(set(b_axes)):
-        raise ValueError(
-            "Generic einsum does not support trace operation."
-        )
 
     if not out_axes:
         raise ValueError(
