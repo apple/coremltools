@@ -7450,6 +7450,26 @@ class TestTrace(TorchBaseTest):
         )
 
 
+class TestRoll(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, shape, shifts",
+        itertools.product(
+            compute_units,
+            backends,
+            [(5,), (2, 4), (4, 2, 3)],
+            [0, 1, 3],
+        ),
+    )
+    def test_roll(self, compute_unit, backend, shape, shifts):
+        model = ModuleWrapper(torch.roll, kwargs={"shifts": shifts})
+        self.run_compare_torch(
+            shape,
+            model,
+            backend=backend,
+            compute_unit=compute_unit
+        )
+
+
 class TestArgmax(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, shape, axis, input_dtype",

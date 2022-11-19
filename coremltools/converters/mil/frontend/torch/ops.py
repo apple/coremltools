@@ -5196,3 +5196,22 @@ def trace(context, node):
     diagonal = mb.gather_nd(x=x, indices=indices)
     trace = mb.reduce_sum(x=diagonal, name=node.name)
     context.add(trace)
+
+@register_torch_op
+def roll(context, node):
+    inputs = _get_inputs(context, node, expected=3)
+    x = inputs[0]
+    shift = inputs[1]
+    if inputs[2].val:
+        raise NotImplementedError(f"dims is not supported. {inputs[2]} {inputs[2].val}")
+    shape = mb.shape(x=x)
+    flatten = mb.reshape(x=x, shape=[-1])
+
+    dim_prod = mb.reduce_prod(x=shape)
+    start_idx = mb.sub(x=dim_prod, y=shift)
+    indices0 = mb.range_1d(end=dim_prod, start=start_idx, step=1)
+    indices1 = mb.range_1d(end=start_idx, start=0, step=1)
+    indices = mb.concat(values=[indices0, indices1], axis=0)
+    x = mb.gather(x=flatten, indices=indices, name=node.name)
+    x = mb.reshape(x=x, shape=shape, name=node.name)
+    context.add(x)
