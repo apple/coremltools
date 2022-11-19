@@ -223,13 +223,17 @@ def get_output_names(outputs):
     return output_names
 
 
-def solve_unary_einsum(parsed_vectors, vars):
-    def solve_diagonal_einsum_one_step(x, parsed_vector):
+def solve_diagonal_einsum(parsed_vectors, vars):
+    def solve_diagonal_einsum_one_step(parsed_vector, x):
         for i in range(len(parsed_vector)):
-            for j in range(1, len(parsed_vector)):
-                perm = [i for i in range(len(parsed_vector))]
+            for j in range(i + 1, len(parsed_vector)):
+                if parsed_vector[i] != parsed_vector[j]:
+                    continue
+                perm = list(range(len(parsed_vector)))
                 perm[0], perm[i] = perm[i], perm[0]
                 perm[1], perm[j] = perm[j], perm[1]
+                parsed_vector[0], parsed_vector[i] = parsed_vector[i], parsed_vector[0]
+                parsed_vector[1], parsed_vector[j] = parsed_vector[j], parsed_vector[1]
 
                 dims = mb.shape(x=x)
                 dim_length = value_at(dims, i)
@@ -238,11 +242,16 @@ def solve_unary_einsum(parsed_vectors, vars):
                 indices = mb.stack(values=[indices, indices], axis=1)
                 x = mb.transpose(x=x, perm=perm)
                 x = mb.gather_nd(x=x, indices=indices)
-                return x, parsed_vector
 
-    for parsed_vector, x in zip(parsed_vectors, vars):
-        while len(parsed_vector) != len(set(parsed_vector)):
-            parsed_vector, x = solve_diagonal_einsum_one_step(x, parsed_vector)
+                ret_parsed_vector = [parsed_vector[k] for k in range(len(parsed_vector)) if k != 1]
+                return ret_parsed_vector, x
+
+    for i in range(len(vars)):
+        while len(parsed_vectors[i]) != len(set(parsed_vectors[i])):
+            parsed_vector, var = solve_diagonal_einsum_one_step(parsed_vectors[i], vars[i])
+            parsed_vectors[i] = parsed_vector
+            vars[i] = var
+    return parsed_vectors, vars
 
 
 def solve_generic_einsum(parsed_vectors, a_var, b_var, name):
@@ -279,7 +288,7 @@ def solve_generic_einsum(parsed_vectors, a_var, b_var, name):
                 return 1
         return mb.concat(values=dims, axis=0)
 
-    parsed_vectors, vars = solve_unary_einsum(parsed_vectors, [a_var, b_var])
+    parsed_vectors, vars = solve_diagonal_einsum(parsed_vectors, [a_var, b_var])
     a_var, b_var = vars
     a_axes, b_axes, out_axes = parsed_vectors
 

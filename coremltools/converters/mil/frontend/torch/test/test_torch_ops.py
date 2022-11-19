@@ -4248,7 +4248,6 @@ class TestEinsum(TorchBaseTest):
                 "i,j->ij",
                 "ab,b->a",
                 "ab,ab->b",
-                "aab,bbc->c",
                 "abc,abc->a",
                 "abc,abc->c",
                 "abc,bac->c",
@@ -4262,6 +4261,10 @@ class TestEinsum(TorchBaseTest):
                 "abcd,abde->abce",
                 "abcd,efbd->eafc",
                 "acdb,bade->abce",
+                # Generic with diagonal
+                "jiii,ijjk->jk",
+                "iji,ji->j",
+                "jii,ijk->jk",
              ],
             [False, True],
             [False, True],
