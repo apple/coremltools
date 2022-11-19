@@ -2224,6 +2224,10 @@ class TestEinsum(TensorFlowBaseTest):
                 "abcd,abde->abce",
                 "abcd,efbd->eafc",
                 "acdb,bade->abce",
+                # Generic with diagonal
+                "jiii,ijjk->jk",
+                "iji,ji->j",
+                "jii,ijk->jk",
             ],
             [False, True],
         )

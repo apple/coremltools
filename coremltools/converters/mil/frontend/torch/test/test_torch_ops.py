@@ -4256,7 +4256,6 @@ class TestEinsum(TorchBaseTest):
                 "abc,abc->bc",
                 "abc,bac->ba",
                 "abcd,cb->dca",
-                "abaa,abba->a",
                 "abcd,acdb->ad",
                 "abcd,abde->abce",
                 "abcd,efbd->eafc",
