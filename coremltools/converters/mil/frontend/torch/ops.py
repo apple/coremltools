@@ -241,6 +241,8 @@ def _construct_constant(val, name):
     if val is None:
         return None
     else:
+        if isinstance(val, float):
+            return mb.const(val=val, name=name)
         return mb.const(val=val, name=name)
 
 
@@ -454,7 +456,7 @@ def norm(context, node):
 def _vector_norm(x, order, dim, keep_dims, name):
     if order.val == 0:
         # sum(x!=0)
-        x = mb.cast(x=x, dtype="fp32")
+        x = mb.cast(x=x, dtype="fp16")
         temp = mb.not_equal(x=x, y=0.)
         temp = mb.cast(x=temp, dtype='int32')
         temp = mb.reduce_sum(x=temp, axes=dim, keep_dims=keep_dims, name=name)
@@ -1070,8 +1072,8 @@ def linspace(context, node):
     start = inputs[0]
     end = inputs[1]
     nums = inputs[2]
-    start = mb.cast(x=start, dtype="fp32")
-    end = mb.cast(x=end, dtype="fp32")
+    start = mb.cast(x=start, dtype="fp16")
+    end = mb.cast(x=end, dtype="fp16")
 
     if start.can_be_folded_to_const() and end.can_be_folded_to_const() and nums.can_be_folded_to_const():
         start_val = start.val
@@ -1092,8 +1094,8 @@ def linspace(context, node):
             # step = (end - start) / (nums - 1)
             x = mb.sub(x=end, y=start)
             y = mb.sub(x=nums, y=1)
-            x = mb.cast(x=x, dtype="fp32")
-            y = mb.cast(x=y, dtype="fp32")
+            x = mb.cast(x=x, dtype="fp16")
+            y = mb.cast(x=y, dtype="fp16")
             step = mb.real_div(x=x, y=y)
 
             # Note that the range_1d op excluded the end point,
@@ -1351,8 +1353,8 @@ def div(context, node):
             # e.g.:
             # values before trunc: [2.6, -3.4, -3.6]
             # values after trunc: [2, -3, -3]
-            x = mb.cast(x=inputs[0], dtype="fp32")
-            y = mb.cast(x=inputs[1], dtype="fp32")
+            x = mb.cast(x=inputs[0], dtype="fp16")
+            y = mb.cast(x=inputs[1], dtype="fp16")
             z = mb.real_div(x=x, y=y)
             s = mb.sign(x=z)
             all_positive = mb.mul(x=z, y=s)
@@ -1363,8 +1365,8 @@ def div(context, node):
                 'rounding mode "{}" not supported in the "div" op'.format(rounding_mode)
             )
     else:
-        x = mb.cast(x=inputs[0], dtype="fp32")
-        y = mb.cast(x=inputs[1], dtype="fp32")
+        x = mb.cast(x=inputs[0], dtype="fp16")
+        y = mb.cast(x=inputs[1], dtype="fp16")
         res = mb.real_div(x=x, y=y, name=node.name)
     context.add(res)
 
@@ -1374,7 +1376,7 @@ def floor_divide(context, node):
     inputs = _get_inputs(context, node, expected=2)
     div_res = mb.floor_div(x=inputs[0], y=inputs[1])
     # Pytorch's floor_divide always returns fp32, even if the inputs are int
-    res = mb.cast(x=div_res, dtype='fp32', name=node.name)
+    res = mb.cast(x=div_res, dtype='fp16', name=node.name)
     context.add(res)
 
 
@@ -1440,7 +1442,7 @@ def mean(context, node):
     if types.is_bool(x.dtype):
         # TODO: In the future when MIL op supports bool, we need to use curr_opset_version to decide
         # if we want to cast or not.
-        x = mb.cast(x=x, dtype="fp32")
+        x = mb.cast(x=x, dtype="fp16")
     kwargs = {"x": x, "name": node.name}
 
     # @axes is optional, so omit if None.
@@ -1790,7 +1792,7 @@ def group_norm(context, node):
 
     x = mb.reshape(x=x, shape=new_shape)
     mean = mb.reduce_mean(x=x, axes=axes_, keep_dims=True)
-    var = _std(x,axes_,True,False,eps.val)
+    var = _std(x,axes_,True,False,eps.val.astype(_np.dtype(f'float{x.dtype.get_bitwidth()}')))
     x = mb.sub(x=x,y=mean)
     x = mb.real_div(x=x,y=var)
     x = mb.reshape(x=x, shape=input_shape)
@@ -3593,8 +3595,8 @@ def new_full(context, node):
 @register_torch_op
 def randint(context, node):
     inputs = _get_inputs(context, node, expected=8)
-    low = mb.cast(x=inputs[0], dtype="fp32")
-    high = mb.cast(x=inputs[1], dtype="fp32")
+    low = mb.cast(x=inputs[0], dtype="fp16")
+    high = mb.cast(x=inputs[1], dtype="fp16")
     shape = inputs[2]
     rand_uniform = mb.random_uniform(shape=shape, low=low, high=high)
     rand_int = mb.cast(x=rand_uniform, dtype="int32", name=node.name)
@@ -4067,9 +4069,9 @@ def arange(context, node):
     int_step = isinstance(step, int) or types.is_int(step.dtype)
 
     if int_start != int_end or int_start != int_step:
-        start = mb.cast(x=start, dtype="fp32")
-        end = mb.cast(x=end, dtype="fp32")
-        step = mb.cast(x=step, dtype="fp32")
+        start = mb.cast(x=start, dtype="fp16")
+        end = mb.cast(x=end, dtype="fp16")
+        step = mb.cast(x=step, dtype="fp16")
     res = mb.range_1d(start=start, end=end, step=step, name=node.name)
     context.add(res)
 
@@ -4086,7 +4088,7 @@ def masked_fill(context, node):
     if types.is_int(value.dtype):
         # @mb.fill cannot handle value with dtype integer
         # so we cast the value.
-        value = mb.cast(x=value, dtype="fp32")
+        value = mb.cast(x=value, dtype="fp16")
 
     if not types.is_bool(mask.dtype):
         # cond must be bool type

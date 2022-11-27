@@ -102,7 +102,7 @@ def np_dtype_to_py_type(np_dtype):
         return int
     if np_dtype in [bool, np.bool_]:
         return bool
-    if np_dtype in [np.float32, np.float64]:
+    if np_dtype in [np.float16, np.float32, np.float64]:
         return float
     if np_dtype in [np.complex64, np.complex128]:
         return complex
@@ -304,11 +304,9 @@ def numpy_type_to_builtin_type(nptype):
     elif np.issubclass_(nptype, np.object_):
         # symbolic shape is considered int32
         return types_int32
-    elif np.issubclass_(nptype, np.float16):
+    elif np.issubclass_(nptype, (np.float16, np.half)) or nptype == float:
         return types_fp16
-    elif (
-        np.issubclass_(nptype, (np.float32, np.single)) or nptype == float
-    ):
+    elif np.issubclass_(nptype, (np.float32, np.single)):
         return types_fp32
     elif np.issubclass_(nptype, (np.float64, np.double)):
         return types_fp64
@@ -337,7 +335,7 @@ def type_to_builtin_type(type):
     elif np.issubclass_(type, str):
         return types_str
     elif np.issubclass_(type, float):
-        return types_fp32
+        return types_fp16
     elif np.issubclass_(type, complex):
         return types_complex64
     else:

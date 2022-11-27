@@ -51,7 +51,7 @@ def apply_common_pass_pipeline(prog, passes):
         "common::noop_elimination",
         "common::fuse_matmul_weight_bias",
         "common::fuse_linear_bias",
-        "common::fuse_gelu_tanh_approximation",
+        # "common::fuse_gelu_tanh_approximation",
         "common::fuse_gelu_exact",
         "common::fuse_leaky_relu",
         "common::rank0_expand_dims_swap",
@@ -73,7 +73,7 @@ def apply_common_pass_pipeline(prog, passes):
         "common::fuse_conv_batchnorm", # In some cases, we need to run conv / batch_norm fusion again after the fuse_conv_scale and fuse_conv_bias passes
         "common::detect_concat_interleave",
         "common::concat_to_pixel_shuffle", # should come after detect_concat_interleave and after replace_stack_reshape
-        "common::fuse_prelu", # reduce_transpose pass should run before and after this pass (the one after will be run during the cleanup passes stage)
+        # "common::fuse_prelu", # reduce_transpose pass should run before and after this pass (the one after will be run during the cleanup passes stage)
         "common::prelu_to_lrelu",
         "common::merge_consecutive_relus",
         #  "remove_redundant_ops" pass should be applied towards the end, once other graph passes have done their optimizations.
