@@ -265,7 +265,7 @@ def spatial_dimensions_out_shape(
     return out_shape
 
 
-def parse_einsum_equation(equation: str) -> List[List[int]]:
+def parse_einsum_equation(equation: str) -> Tuple[Tuple]:
     """
     Args
         equation : str
@@ -314,7 +314,7 @@ def parse_einsum_equation(equation: str) -> List[List[int]]:
     index = _update_vec(input2_str, input2_vec, map_char_to_int, index)
     _update_vec(output_str, output_vec, map_char_to_int, index)
 
-    return [input1_vec, input2_vec, output_vec]
+    return input1_vec, input2_vec, output_vec
 
 def compute_gather(params, indices, axis, batch_dims):
     """

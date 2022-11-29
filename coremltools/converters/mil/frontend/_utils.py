@@ -225,6 +225,7 @@ def get_output_names(outputs):
 
 def solve_diagonal_einsum(parsed_vectors, vars):
     def solve_diagonal_einsum_one_step(parsed_vector, x):
+        parsed_vector = list(parsed_vector)
         for i in range(len(parsed_vector)):
             for j in range(i + 1, len(parsed_vector)):
                 if parsed_vector[i] != parsed_vector[j]:
