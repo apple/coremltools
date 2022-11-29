@@ -1169,6 +1169,17 @@ def softplus(context, node):
     context.add(res)
 
 
+@register_torch_op
+def mish(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+    x = inputs[0]
+
+    softplus = mb.softplus(x=x)
+    tanh = mb.tanh(x=softplus)
+    res = mb.mul(x=x, y=tanh, name=node.name)
+    context.add(res)
+
+
 def _adjust_pad_for_ceil_mode(input_shape, kernel_size, stride_sizes, pad_sizes):
     """ Given an input tensor and pooling parameters, add the extra input
         padding needed to replicate ceil_mode.
