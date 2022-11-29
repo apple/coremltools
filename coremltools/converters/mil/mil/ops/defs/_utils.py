@@ -265,7 +265,7 @@ def spatial_dimensions_out_shape(
     return out_shape
 
 
-def parse_einsum_equation(equation: str) -> Tuple[Tuple]:
+def parse_einsum_equation(equation: str) -> Tuple[List]:
     """
     Args
         equation : str
