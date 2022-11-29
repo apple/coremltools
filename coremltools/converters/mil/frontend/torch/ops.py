@@ -5203,7 +5203,7 @@ def roll(context, node):
     x = inputs[0]
     shift = inputs[1]
     if inputs[2].val:
-        raise NotImplementedError(f"dims is not supported. {inputs[2]} {inputs[2].val}")
+        raise NotImplementedError('"dims" parameter of "roll" op is not supported.')
     shape = mb.shape(x=x)
     flatten = mb.reshape(x=x, shape=[-1])
 
