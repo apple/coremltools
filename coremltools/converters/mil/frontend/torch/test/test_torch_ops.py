@@ -4786,6 +4786,23 @@ class TestActivation(TorchBaseTest):
             compute_units,
             backends,
             COMMON_SHAPES_ALL
+        ),
+    )
+    def test_mish(self, compute_unit, backend, shape):
+        model = nn.Mish().eval()
+        self.run_compare_torch(
+            shape,
+            model,
+            backend=backend,
+            compute_unit=compute_unit
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, shape",
+        itertools.product(
+            compute_units,
+            backends,
+            COMMON_SHAPES_ALL
         )
     )
     def test_softsign(self, compute_unit, backend, shape):
