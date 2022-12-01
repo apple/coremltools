@@ -7526,3 +7526,25 @@ class TestArgmax(TorchBaseTest):
             compute_unit=compute_unit
         )
 
+
+class TestUnfold(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, kernel_size, padding",
+        itertools.product(
+            compute_units,
+            backends,
+            [(2, 3)],
+            [0, 1, 8, (1, 3), (2, 6), (0, 5)],
+        ),
+    )
+    def test_unfold(self, compute_unit, backend, kernel_size, padding):
+        class UnfoldModel(nn.Module):
+            def forward(self, x):
+                return torch.nn.functional.unfold(
+                    input=x, kernel_size=kernel_size, padding=padding
+                )
+
+        input_shape = (2, 5, 3, 4)
+        self.run_compare_torch(
+            input_shape, UnfoldModel(), backend=backend, compute_unit=compute_unit
+        )
