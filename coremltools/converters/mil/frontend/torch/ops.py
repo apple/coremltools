@@ -5227,43 +5227,15 @@ def roll(context, node):
     x = mb.reshape(x=x, shape=shape, name=node.name)
     context.add(x)
 
+
 @register_torch_op
 def im2col(context, node):
     """
-    This op is used by torch.nn.Unfold.
+    This op is used by torch.nn.Unfold, which extracts sliding local blocks from a batched input
+    tensor.
 
-    Reference Implementation based on:
-        https://stackoverflow.com/questions/30109068/implement-matlabs-im2col-sliding-in-python
-
-    assert len(input.shape) == 4
-    assert dilation[0] == 1 and dilation[1] == 1
-    assert stride[0] == 1 and stride[1] == 1
-    if padding[0] != 0 or padding[1] != 0:
-        padding = (padding[1], padding[1], padding[0], padding[0])
-        input = torch.nn.functional.pad(input, pad=padding, mode="constant")
-    N,C,H,W = input.shape
-    sptial_size = (H, W)
-    row_extent = H - kernel_size[0] + 1
-    col_extent = W - kernel_size[1] + 1
-    # See https://pytorch.org/docs/stable/generated/torch.nn.Unfold.html for details
-    block_size = C * kernel_size[0] * kernel_size[1]
-    block_count = 1
-    for i in range(2):
-        block_count *= math.floor((sptial_size[i] - dilation[i] * (kernel_size[i] - 1) - 1) / stride[i]) + 1
-    # Get batch block indices
-    batch_idx = torch.arange(N)[:, None, None] * C * H * W
-    # Get Starting block indices
-    start_idx = torch.arange(kernel_size[0])[None, :,None] * W + torch.arange(kernel_size[1])
-    # Generate Depth indices
-    channel_index = H * W * torch.arange(C)
-    start_idx = (channel_index[None, :, None] + torch.ravel(start_idx)).reshape((-1, kernel_size[0], kernel_size[1]))
-    # Get offsetted indices across the height and width of input array
-    offset_idx = torch.arange(row_extent)[None, :, None] * W + torch.arange(col_extent)
-    indices = torch.ravel(start_idx)[:,None] + torch.ravel(offset_idx)
-    # Add batch
-    indices = batch_idx + indices
-    output = torch.gather(input.reshape(-1), 0, indices.reshape(-1))
-    return output.reshape((N, block_size, block_count))
+    It only supports rank-4 tensor (consistent with PyTorch) with dilation and stride both set to 1.
+    More flexbible dilation and stride support will be added in the future.
     """
     inputs = _get_inputs(context, node, expected=5)
     input_data = inputs[0]
@@ -5291,10 +5263,9 @@ def im2col(context, node):
         input_data = mb.pad(x=input_data, pad=pad_dim, mode="constant")
 
     N, C, H, W = input_data.shape
+
+    # Get total number of blocks. It follows the formula at torch.nn.Unfold documentation.
     sptial_size = (H, W)
-    row_extent = H - kernel_size[0] + 1
-    col_extent = W - kernel_size[1] + 1
-    block_size = C * kernel_size[0] * kernel_size[1]
     block_count = 1
     for i in range(2):
         block_count *= (
@@ -5303,27 +5274,36 @@ def im2col(context, node):
             ).astype(_np.int32)
             + 1
         )
-    # Get batch block indices
+
+    # Get batch block indices.
     batch_idx = _np.arange(N)[:, None, None] * C * H * W
-    # Get Starting block indices
+
+    # Get starting block indices.
     start_idx = _np.arange(kernel_size[0])[None, :, None] * W + _np.arange(
         kernel_size[1]
     )
-    # Generate Depth indices
+
+    # Generate depth indices.
     channel_index = H * W * _np.arange(C)
     start_idx = (channel_index[None, :, None] + _np.ravel(start_idx)).reshape(
         (-1, kernel_size[0], kernel_size[1])
     )
-    # Get offsetted indices across the height and width of input array
+
+    # Get offsetted indices across the height and width of input array.
+    row_extent = H - kernel_size[0] + 1
+    col_extent = W - kernel_size[1] + 1
     offset_idx = _np.arange(row_extent)[None, :, None] * W + _np.arange(col_extent)
     indices = _np.ravel(start_idx)[:, None] + _np.ravel(offset_idx)
-    # Add batch
+
+    # Gather batches together.
     indices = batch_idx + indices
     input_data = mb.reshape(x=input_data, shape=[-1])
     gathered_data = mb.gather_along_axis(
         x=input_data, indices=indices.reshape(-1), axis=0
     )
+    block_size = C * kernel_size[0] * kernel_size[1]
     output = mb.reshape(
         x=gathered_data, shape=(N, block_size, block_count), name=node.name
     )
+
     context.add(output)
