@@ -1421,7 +1421,11 @@ def sub(context, node):
     context.add(res)
 
 
-@register_torch_op(torch_alias=["sum"])
+@register_torch_op(
+    torch_alias=[
+        "sum",
+        "logsumexp",
+    ])
 def mean(context, node):
     inputs = _get_inputs(context, node)
 
@@ -1451,8 +1455,12 @@ def mean(context, node):
     # Last input to mean is an optional output tensor. We always expect this to
     # be None or absent.
     assert len(inputs) <= 3 or inputs[3] is None
-    func = mb.reduce_sum if node.kind == "sum" else mb.reduce_mean
-    res = func(**kwargs)
+    if node.kind == "sum":
+        res = mb.reduce_sum(**kwargs)
+    elif node.kind == "logsumexp":
+        res = mb.reduce_log_sum_exp(**kwargs)
+    else:
+        res = mb.reduce_mean(**kwargs)
     context.add(res)
 
 
