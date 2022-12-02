@@ -7421,15 +7421,16 @@ class TestSum(TorchBaseTest):
 
 class TestLogsumexp(TorchBaseTest):
     @pytest.mark.parametrize(
-        "compute_unit, backend, shape",
+        "compute_unit, backend, shape, dim",
         itertools.product(
             compute_units,
             backends,
             COMMON_SHAPES,
+            [0, -1],
         ),
     )
-    def test_logsumexp(self, compute_unit, backend, shape):
-        params = {"dim": 0}
+    def test_logsumexp(self, compute_unit, backend, shape, dim):
+        params = {"dim": dim}
         model = ModuleWrapper(
             function=torch.logsumexp,
             kwargs=params,
