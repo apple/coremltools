@@ -4264,6 +4264,7 @@ class TestEinsum(TorchBaseTest):
                 "jiii,ijjk->jk",
                 "iji,ji->j",
                 "jii,ijk->jk",
+                "ijij,iij->ij",
              ],
             [False, True],
             [False, True],

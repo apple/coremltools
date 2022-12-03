@@ -2228,12 +2228,16 @@ class TestEinsum(TensorFlowBaseTest):
                 "jiii,ijjk->jk",
                 "iji,ji->j",
                 "jii,ijk->jk",
+                "ijij,iij->ij",
             ],
             [False, True],
         )
     )
     def test(self, compute_unit, backend, equation, reverse_input_order):
         input_shapes, _ = gen_input_shapes_einsum(equation, False)
+        if _HAS_TF_1:
+            if len(set(input_shapes[0])) < len(input_shapes[0]) or len(set(input_shapes[1])) < len(input_shapes[1]):
+                pytest.skip("tf1 does not support diagonal cases")
 
         if reverse_input_order:
             input_output_strings = equation.split('->')

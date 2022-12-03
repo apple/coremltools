@@ -225,34 +225,34 @@ def get_output_names(outputs):
 
 def solve_diagonal_einsum(parsed_vectors, vars):
     def solve_diagonal_einsum_one_step(parsed_vector, x):
-        parsed_vector = list(parsed_vector)
         for i in range(len(parsed_vector)):
             for j in range(i + 1, len(parsed_vector)):
                 if parsed_vector[i] != parsed_vector[j]:
                     continue
+
                 perm = list(range(len(parsed_vector)))
-                perm[0], perm[i] = perm[i], perm[0]
-                perm[1], perm[j] = perm[j], perm[1]
-                parsed_vector[0], parsed_vector[i] = parsed_vector[i], parsed_vector[0]
-                parsed_vector[1], parsed_vector[j] = parsed_vector[j], parsed_vector[1]
+                duplicated_indices = [j for j in range(len(parsed_vector)) if parsed_vector[j] == parsed_vector[i]]
+                for i, j in enumerate(duplicated_indices):
+                    perm[i], perm[j] = perm[j], perm[i]
+                    parsed_vector[i], parsed_vector[j] = parsed_vector[j], parsed_vector[i]
 
                 dims = mb.shape(x=x)
-                dim_length = value_at(dims, i)
+                dim_length = value_at(dims, duplicated_indices[0])
 
                 indices = mb.range_1d(end=dim_length, start=0, step=1)
-                indices = mb.stack(values=[indices, indices], axis=1)
+                indices = mb.stack(values=[indices] * len(duplicated_indices), axis=1)
                 x = mb.transpose(x=x, perm=perm)
                 x = mb.gather_nd(x=x, indices=indices)
-
-                ret_parsed_vector = [parsed_vector[k] for k in range(len(parsed_vector)) if k != 1]
+                ret_parsed_vector = [parsed_vector[0]] + parsed_vector[len(duplicated_indices):]
                 return ret_parsed_vector, x
 
+    parsed_vectors = list(parsed_vectors)
     for i in range(len(vars)):
         while len(parsed_vectors[i]) != len(set(parsed_vectors[i])):
             parsed_vector, var = solve_diagonal_einsum_one_step(parsed_vectors[i], vars[i])
             parsed_vectors[i] = parsed_vector
             vars[i] = var
-    return parsed_vectors, vars
+    return tuple(parsed_vectors), vars
 
 
 def solve_generic_einsum(parsed_vectors, a_var, b_var, name):
