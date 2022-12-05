@@ -7419,6 +7419,30 @@ class TestSum(TorchBaseTest):
         )
 
 
+class TestLogsumexp(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, shape, dim",
+        itertools.product(
+            compute_units,
+            backends,
+            COMMON_SHAPES,
+            [0, -1],
+        ),
+    )
+    def test_logsumexp(self, compute_unit, backend, shape, dim):
+        params = {"dim": dim}
+        model = ModuleWrapper(
+            function=torch.logsumexp,
+            kwargs=params,
+        )
+        TorchBaseTest.run_compare_torch(
+            shape,
+            model,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
+
 class TestHannWindow(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, window_length, periodic",
