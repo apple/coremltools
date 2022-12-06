@@ -377,7 +377,10 @@ def _get_kmeans_lookup_table_and_weight(
     if _HAS_SKLEARN:
         from sklearn.cluster import KMeans
     else:
-        raise Exception("scikit-learn package required for k-means quantization")
+        raise ModuleNotFoundError(
+            "scikit-learn is required for k-means quantization."
+            " To install, run: \"pip install -U scikit-learn\"."
+        )
     units = _np.prod(w.shape)
     lut_len = 1 << nbits
     n_clusters = units if (units < lut_len) else lut_len
