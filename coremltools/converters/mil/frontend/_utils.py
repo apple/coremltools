@@ -223,6 +223,38 @@ def get_output_names(outputs):
     return output_names
 
 
+def solve_diagonal_einsum(parsed_vectors, vars):
+    def solve_diagonal_einsum_one_step(parsed_vector, x):
+        for i in range(len(parsed_vector)):
+            for j in range(i + 1, len(parsed_vector)):
+                if parsed_vector[i] != parsed_vector[j]:
+                    continue
+
+                perm = list(range(len(parsed_vector)))
+                duplicated_indices = [j for j in range(len(parsed_vector)) if parsed_vector[j] == parsed_vector[i]]
+                for i, j in enumerate(duplicated_indices):
+                    perm[i], perm[j] = perm[j], perm[i]
+                    parsed_vector[i], parsed_vector[j] = parsed_vector[j], parsed_vector[i]
+
+                dims = mb.shape(x=x)
+                dim_length = value_at(dims, duplicated_indices[0])
+
+                indices = mb.range_1d(end=dim_length, start=0, step=1)
+                indices = mb.stack(values=[indices] * len(duplicated_indices), axis=1)
+                x = mb.transpose(x=x, perm=perm)
+                x = mb.gather_nd(x=x, indices=indices)
+                ret_parsed_vector = [parsed_vector[0]] + parsed_vector[len(duplicated_indices):]
+                return ret_parsed_vector, x
+
+    parsed_vectors = list(parsed_vectors)
+    for i in range(len(vars)):
+        while len(parsed_vectors[i]) != len(set(parsed_vectors[i])):
+            parsed_vector, var = solve_diagonal_einsum_one_step(parsed_vectors[i], vars[i])
+            parsed_vectors[i] = parsed_vector
+            vars[i] = var
+    return tuple(parsed_vectors), vars
+
+
 def solve_generic_einsum(parsed_vectors, a_var, b_var, name):
     """
     :param parsed_vectors: list[list[int]]
@@ -257,12 +289,9 @@ def solve_generic_einsum(parsed_vectors, a_var, b_var, name):
                 return 1
         return mb.concat(values=dims, axis=0)
 
+    parsed_vectors, vars = solve_diagonal_einsum(parsed_vectors, [a_var, b_var])
+    a_var, b_var = vars
     a_axes, b_axes, out_axes = parsed_vectors
-
-    if len(a_axes) > len(set(a_axes)) or len(b_axes) > len(set(b_axes)):
-        raise ValueError(
-            "Generic einsum does not support trace operation."
-        )
 
     if not out_axes:
         raise ValueError(
