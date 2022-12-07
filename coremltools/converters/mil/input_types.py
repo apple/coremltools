@@ -34,10 +34,10 @@ class ClassifierConfig:
         Parameters
         ----------
         class_labels: str / list of int / list of str
-            If a ``list`` is given, the ``list`` maps the index of the output of a
+            If a ``list`` is provided, the ``list`` maps the index of the output of a
             neural network to labels in a classifier.
 
-            If a ``str`` is given, the ``str`` points to a file which maps the index
+            If a ``str`` is provided, the ``str`` points to a file which maps the index
             to labels in a classifier.
 
         predicted_feature_name: str
@@ -59,7 +59,7 @@ class ClassifierConfig:
 class InputType:
     def __init__(self, name=None, shape=None, dtype=None):
         """
-        The Input Type for inputs fed into the model.
+        The input type for inputs fed into the model.
 
         Parameters
         ----------
@@ -267,7 +267,7 @@ class RangeDim:
     def __init__(self, lower_bound=1, upper_bound=-1, default=None,
             symbol=None):
         """
-        A class that can be used to give a range of accepted shapes.
+        A class for providing a range of accepted shapes.
 
         Parameters
         ----------
@@ -277,12 +277,10 @@ class RangeDim:
         upper_bound: (int)
             The maximum valid value for the shape.
 
-            Set to ``-1`` if there's no upper limit.
+            Set to ``-1`` if there is no upper limit.
 
         default: (int) or None
-            The default value that is used for initiating the model, and set in
-
-            input shape field of the model file.
+            The default value that is used for initiating the model, and set in the input shape field of the model file.
 
             If set to ``None``, ``lower_bound`` would be used as default.
 
@@ -404,14 +402,14 @@ class Shape:
 class EnumeratedShapes:
     def __init__(self, shapes, default=None):
         """
-        A shape class that is used for setting multiple valid shape in InputType.
+        A shape class for setting multiple valid shapes in InputType.
 
         Parameters
         ----------
         shapes: list of Shape objects, or Shape-compatible lists.
             The valid shapes of the inputs.
 
-            If input provided is not Shape object, but can be converted to Shape,
+            If input provided is not a Shape object, but can be converted to a Shape,
             the Shape object would be stored in ``shapes`` instead.
 
         default: tuple of int or None
