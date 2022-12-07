@@ -6,6 +6,13 @@ Input types supported by the Model Intermediate Language (MIL):
 .. automodule:: coremltools.converters.mil.input_types
 
 
+   InputType
+   ---------
+   
+   .. autoclass:: InputType
+      :members:
+
+
    ClassifierConfig
    ----------------
    

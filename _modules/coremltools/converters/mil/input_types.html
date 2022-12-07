@@ -66,9 +66,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../../../index.html">Module code</a> &raquo;</li>
-      <li>coremltools.converters.mil.input_types</li>
+      <li><a href="../../../../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">coremltools.converters.mil.input_types</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -84,20 +84,22 @@
 <span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
 
 <span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
+
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.types.symbolic</span> <span class="kn">import</span> <span class="n">is_symbolic</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">types</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.types.symbolic</span> <span class="kn">import</span> <span class="n">is_symbolic</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.types.type_mapping</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">numpy_type_to_builtin_type</span><span class="p">,</span>
-    <span class="n">is_builtin</span><span class="p">,</span>
-<span class="p">)</span>
+    <span class="n">is_builtin</span><span class="p">,</span> <span class="n">numpy_type_to_builtin_type</span><span class="p">)</span>
+
+
 
 <span class="k">class</span> <span class="nc">ColorLayout</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
     <span class="n">RGB</span> <span class="o">=</span> <span class="s2">&quot;RGB&quot;</span>
     <span class="n">BGR</span> <span class="o">=</span> <span class="s2">&quot;BGR&quot;</span>
     <span class="n">GRAYSCALE</span> <span class="o">=</span> <span class="s2">&quot;G&quot;</span>
     <span class="n">GRAYSCALE_FLOAT16</span> <span class="o">=</span> <span class="s2">&quot;G_FLOAT16&quot;</span>
+
 
 <div class="viewcode-block" id="ClassifierConfig"><a class="viewcode-back" href="../../../../source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.ClassifierConfig">[docs]</a><span class="k">class</span> <span class="nc">ClassifierConfig</span><span class="p">:</span>
 <div class="viewcode-block" id="ClassifierConfig.__init__"><a class="viewcode-back" href="../../../../source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.ClassifierConfig.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
@@ -112,10 +114,10 @@
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        class_labels: str / list of int / list of str</span>
-<span class="sd">            If a ``list`` is given, the ``list`` maps the index of the output of a</span>
+<span class="sd">            If a ``list`` is provided, the ``list`` maps the index of the output of a</span>
 <span class="sd">            neural network to labels in a classifier.</span>
 
-<span class="sd">            If a ``str`` is given, the ``str`` points to a file which maps the index</span>
+<span class="sd">            If a ``str`` is provided, the ``str`` points to a file which maps the index</span>
 <span class="sd">            to labels in a classifier.</span>
 
 <span class="sd">        predicted_feature_name: str</span>
@@ -134,10 +136,10 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">predicted_probabilities_output</span> <span class="o">=</span> <span class="n">predicted_probabilities_output</span></div></div>
 
 
-<span class="k">class</span> <span class="nc">InputType</span><span class="p">:</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="InputType"><a class="viewcode-back" href="../../../../source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.InputType">[docs]</a><span class="k">class</span> <span class="nc">InputType</span><span class="p">:</span>
+<div class="viewcode-block" id="InputType.__init__"><a class="viewcode-back" href="../../../../source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.InputType.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        The Input Type for inputs fed into the model.</span>
+<span class="sd">        The input type for inputs fed into the model.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -155,7 +157,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">shape</span> <span class="o">=</span> <span class="n">_get_shaping_class</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">shape</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">dtype</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">dtype</span></div></div>
 
 
 <div class="viewcode-block" id="ImageType"><a class="viewcode-back" href="../../../../source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.ImageType">[docs]</a><span class="k">class</span> <span class="nc">ImageType</span><span class="p">(</span><span class="n">InputType</span><span class="p">):</span>
@@ -173,10 +175,10 @@
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        scale: (float)</span>
+<span class="sd">        scale: float or list of floats</span>
 <span class="sd">            The scaling factor for all values in the image channels.</span>
 
-<span class="sd">        bias: float or list of float</span>
+<span class="sd">        bias: float or list of floats</span>
 <span class="sd">            * If ``color_layout`` is ``ct.colorlayout.GRAYSCALE`` or</span>
 <span class="sd">              ``ct.colorlayout.GRAYSCALE_FLOAT16``, bias would be a ``float``.</span>
 <span class="sd">            * If ``color_layout`` is ``ct.colorlayout.RGB`` or ``ct.colorlayout.BGR``,</span>
@@ -345,7 +347,7 @@
 <div class="viewcode-block" id="RangeDim.__init__"><a class="viewcode-back" href="../../../../source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.RangeDim.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lower_bound</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">upper_bound</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
             <span class="n">symbol</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        A class that can be used to give a range of accepted shapes.</span>
+<span class="sd">        A class for providing a range of accepted shapes.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -355,12 +357,10 @@
 <span class="sd">        upper_bound: (int)</span>
 <span class="sd">            The maximum valid value for the shape.</span>
 
-<span class="sd">            Set to ``-1`` if there&#39;s no upper limit.</span>
+<span class="sd">            Set to ``-1`` if there is no upper limit.</span>
 
 <span class="sd">        default: (int) or None</span>
-<span class="sd">            The default value that is used for initiating the model, and set in</span>
-
-<span class="sd">            input shape field of the model file.</span>
+<span class="sd">            The default value that is used for initiating the model, and set in the input shape field of the model file.</span>
 
 <span class="sd">            If set to ``None``, ``lower_bound`` would be used as default.</span>
 
@@ -482,14 +482,14 @@
 <div class="viewcode-block" id="EnumeratedShapes"><a class="viewcode-back" href="../../../../source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.EnumeratedShapes">[docs]</a><span class="k">class</span> <span class="nc">EnumeratedShapes</span><span class="p">:</span>
 <div class="viewcode-block" id="EnumeratedShapes.__init__"><a class="viewcode-back" href="../../../../source/coremltools.converters.mil.input_types.html#coremltools.converters.mil.input_types.EnumeratedShapes.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shapes</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        A shape class that is used for setting multiple valid shape in InputType.</span>
+<span class="sd">        A shape class for setting multiple valid shapes in InputType.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        shapes: list of Shape objects, or Shape-compatible lists.</span>
 <span class="sd">            The valid shapes of the inputs.</span>
 
-<span class="sd">            If input provided is not Shape object, but can be converted to Shape,</span>
+<span class="sd">            If input provided is not a Shape object, but can be converted to a Shape,</span>
 <span class="sd">            the Shape object would be stored in ``shapes`` instead.</span>
 
 <span class="sd">        default: tuple of int or None</span>

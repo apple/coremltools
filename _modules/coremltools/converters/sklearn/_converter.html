@@ -66,9 +66,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../../../index.html">Module code</a> &raquo;</li>
-      <li>coremltools.converters.sklearn._converter</li>
+      <li><a href="../../../../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">coremltools.converters.sklearn._converter</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -84,7 +84,7 @@
 <span class="c1"># found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
 
 <span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">__version__</span> <span class="k">as</span> <span class="n">ct_version</span>
-<span class="kn">from</span> <span class="nn">coremltools.models</span> <span class="kn">import</span> <span class="n">_METADATA_VERSION</span><span class="p">,</span> <span class="n">_METADATA_SOURCE</span>
+<span class="kn">from</span> <span class="nn">coremltools.models</span> <span class="kn">import</span> <span class="n">_METADATA_SOURCE</span><span class="p">,</span> <span class="n">_METADATA_VERSION</span>
 
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Defines the primary function for converting scikit-learn models.</span>
@@ -221,7 +221,6 @@
     <span class="c1"># This function is just a thin wrapper around the internal converter so</span>
     <span class="c1"># that sklearn isn&#39;t actually imported unless this function is called</span>
     <span class="kn">from</span> <span class="nn">...models</span> <span class="kn">import</span> <span class="n">MLModel</span>
-
     <span class="c1"># NOTE: Providing user-defined class labels will be enabled when</span>
     <span class="c1"># several issues with the ordering of the classes are worked out.  For now,</span>
     <span class="c1"># to use custom class labels, directly import the internal function below.</span>

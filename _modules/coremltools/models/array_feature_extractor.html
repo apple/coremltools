@@ -66,9 +66,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../../index.html">Module code</a> &raquo;</li>
-      <li>coremltools.models.array_feature_extractor</li>
+      <li><a href="../../../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">coremltools.models.array_feature_extractor</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -83,10 +83,9 @@
 <span class="c1"># Use of this source code is governed by a BSD-3-clause license that can be</span>
 <span class="c1"># found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
 
-<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">datatypes</span>
 <span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">SPECIFICATION_VERSION</span>
 <span class="kn">from</span> <span class="nn">..proto</span> <span class="kn">import</span> <span class="n">Model_pb2</span> <span class="k">as</span> <span class="n">_Model_pb2</span>
-<span class="kn">from</span> <span class="nn">..proto</span> <span class="kn">import</span> <span class="n">FeatureTypes_pb2</span> <span class="k">as</span> <span class="n">_FeatureTypes_pb2</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">datatypes</span>
 <span class="kn">from</span> <span class="nn">._interface_management</span> <span class="kn">import</span> <span class="n">set_transform_interface_params</span>
 
 
@@ -94,13 +93,17 @@
     <span class="n">input_features</span><span class="p">,</span> <span class="n">output_name</span><span class="p">,</span> <span class="n">extract_indices</span><span class="p">,</span> <span class="n">output_type</span><span class="o">=</span><span class="kc">None</span>
 <span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Creates a feature extractor from an input array feature, return</span>
+<span class="sd">    Creates a feature extractor from an input array ``(feature, return)``.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    input_features:</span>
+<span class="sd">        A list of one ``(name, array)`` tuple.</span>
 
-<span class="sd">    input_features is a list of one (name, array) tuple.</span>
-
-<span class="sd">    extract_indices is either an integer or a list.  If it&#39;s an integer,</span>
-<span class="sd">    the output type is by default a double (but may also be an integer).</span>
-<span class="sd">    If a list, the output type is an array.</span>
+<span class="sd">    extract_indices:</span>
+<span class="sd">        Either an integer or a list.</span>
+<span class="sd">        If it&#39;s an integer, the output type is by default a double (but may also be an integer).</span>
+<span class="sd">        If a list, the output type is an array.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="c1"># Make sure that our starting stuff is in the proper form.</span>

@@ -66,9 +66,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../../../index.html">Module code</a> &raquo;</li>
-      <li>coremltools.models.ml_program.compression_utils</li>
+      <li><a href="../../../../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">coremltools.models.ml_program.compression_utils</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -83,20 +83,21 @@
 <span class="c1"># Use of this source code is governed by a BSD-3-clause license that can be</span>
 <span class="c1"># found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
 
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.converter</span> <span class="kn">import</span> <span class="n">mil_convert</span> <span class="k">as</span> <span class="n">_mil_convert</span>
+<span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">_SPECIFICATION_VERSION_IOS_16</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil</span> <span class="kn">import</span> <span class="n">Operation</span> <span class="k">as</span> <span class="n">_Operation</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.frontend.milproto.load</span> <span class="kn">import</span> <span class="n">load</span> <span class="k">as</span> <span class="n">_milproto_to_pymil</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.compression_passes</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">WeightSparsifier</span> <span class="k">as</span> <span class="n">_WeightSparsifier</span><span class="p">,</span>
-    <span class="n">WeightPalettizer</span> <span class="k">as</span> <span class="n">_WeightPalettizer</span><span class="p">,</span>
-    <span class="n">WeightAffineQuantizer</span> <span class="k">as</span> <span class="n">_WeightAffineQuantizer</span><span class="p">,</span>
-    <span class="n">WeightDecompressor</span> <span class="k">as</span> <span class="n">_WeightDecompressor</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.quantization_passes</span> <span class="kn">import</span> <span class="n">AbstractQuantizationPass</span> <span class="k">as</span> <span class="n">_AbstractQuantizationPass</span>
-<span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">_SPECIFICATION_VERSION_IOS_16</span><span class="p">,</span>
-    <span class="n">ComputeUnit</span> <span class="k">as</span> <span class="n">_ComputeUnit</span>
-<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.converter</span> <span class="kn">import</span> <span class="n">mil_convert</span> <span class="k">as</span> <span class="n">_mil_convert</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.frontend.milproto.load</span> <span class="kn">import</span> \
+    <span class="n">load</span> <span class="k">as</span> <span class="n">_milproto_to_pymil</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.compression_passes</span> <span class="kn">import</span> \
+    <span class="n">WeightAffineQuantizer</span> <span class="k">as</span> <span class="n">_WeightAffineQuantizer</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.compression_passes</span> <span class="kn">import</span> \
+    <span class="n">WeightDecompressor</span> <span class="k">as</span> <span class="n">_WeightDecompressor</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.compression_passes</span> <span class="kn">import</span> \
+    <span class="n">WeightPalettizer</span> <span class="k">as</span> <span class="n">_WeightPalettizer</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.compression_passes</span> <span class="kn">import</span> \
+    <span class="n">WeightSparsifier</span> <span class="k">as</span> <span class="n">_WeightSparsifier</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.quantization_passes</span> <span class="kn">import</span> \
+    <span class="n">AbstractQuantizationPass</span> <span class="k">as</span> <span class="n">_AbstractQuantizationPass</span>
 
 <span class="n">_DEFAULT_MIN_WEIGHT_SIZE_TO_COMPRESS</span> <span class="o">=</span> <span class="mi">2048</span>
 <span class="n">_DEFAULT_SPECIFICATION_VERSION_FOR_COMPRESSION</span> <span class="o">=</span> <span class="n">_SPECIFICATION_VERSION_IOS_16</span>

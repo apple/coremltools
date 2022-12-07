@@ -47,6 +47,13 @@
 <li class="toctree-l1"><a class="reference internal" href="coremltools.models.html">Models</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coremltools.converters.mil.html">MIL Builder</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">MIL Input Types</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#inputtype">InputType</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.input_types.InputType"><code class="docutils literal notranslate"><span class="pre">InputType</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#coremltools.converters.mil.input_types.InputType.__init__"><code class="docutils literal notranslate"><span class="pre">InputType.__init__()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#classifierconfig">ClassifierConfig</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#coremltools.converters.mil.input_types.ClassifierConfig"><code class="docutils literal notranslate"><span class="pre">ClassifierConfig</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#coremltools.converters.mil.input_types.ClassifierConfig.__init__"><code class="docutils literal notranslate"><span class="pre">ClassifierConfig.__init__()</span></code></a></li>
@@ -113,8 +120,8 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>MIL Input Types</li>
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active">MIL Input Types</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/source/coremltools.converters.mil.input_types.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -127,7 +134,32 @@
   <section id="mil-input-types">
 <h1>MIL Input Types<a class="headerlink" href="#mil-input-types" title="Permalink to this heading"></a></h1>
 <p>Input types supported by the Model Intermediate Language (MIL):</p>
-<span class="target" id="module-coremltools.converters.mil.input_types"></span><section id="classifierconfig">
+<span class="target" id="module-coremltools.converters.mil.input_types"></span><section id="inputtype">
+<h2>InputType<a class="headerlink" href="#inputtype" title="Permalink to this heading"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="coremltools.converters.mil.input_types.InputType">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.input_types.</span></span><span class="sig-name descname"><span class="pre">InputType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/input_types.html#InputType"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.input_types.InputType" title="Permalink to this definition"></a></dt>
+<dd><dl class="py method">
+<dt class="sig sig-object py" id="coremltools.converters.mil.input_types.InputType.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/input_types.html#InputType.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.input_types.InputType.__init__" title="Permalink to this definition"></a></dt>
+<dd><p>The input type for inputs fed into the model.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>name: (str)</strong></dt><dd><p>The name of the input.</p>
+</dd>
+<dt><strong>shape: list, tuple, Shape object, EnumeratedShapes object, or None</strong></dt><dd><p>The shape(s) that are valid for this input.</p>
+<p>If set to <code class="docutils literal notranslate"><span class="pre">None</span></code>, the shape will be infered from the model itself.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="classifierconfig">
 <h2>ClassifierConfig<a class="headerlink" href="#classifierconfig" title="Permalink to this heading"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.input_types.ClassifierConfig">
@@ -139,9 +171,9 @@
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl>
-<dt><strong>class_labels: str / list of int / list of str</strong></dt><dd><p>If a <code class="docutils literal notranslate"><span class="pre">list</span></code> is given, the <code class="docutils literal notranslate"><span class="pre">list</span></code> maps the index of the output of a
+<dt><strong>class_labels: str / list of int / list of str</strong></dt><dd><p>If a <code class="docutils literal notranslate"><span class="pre">list</span></code> is provided, the <code class="docutils literal notranslate"><span class="pre">list</span></code> maps the index of the output of a
 neural network to labels in a classifier.</p>
-<p>If a <code class="docutils literal notranslate"><span class="pre">str</span></code> is given, the <code class="docutils literal notranslate"><span class="pre">str</span></code> points to a file which maps the index
+<p>If a <code class="docutils literal notranslate"><span class="pre">str</span></code> is provided, the <code class="docutils literal notranslate"><span class="pre">str</span></code> points to a file which maps the index
 to labels in a classifier.</p>
 </dd>
 <dt><strong>predicted_feature_name: str</strong></dt><dd><p>Name of the output feature for the class labels exposed in the
@@ -168,12 +200,12 @@ of a softmax layer).</p>
 <dd><dl class="py method">
 <dt class="sig sig-object py" id="coremltools.converters.mil.input_types.EnumeratedShapes.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">shapes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/input_types.html#EnumeratedShapes.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.input_types.EnumeratedShapes.__init__" title="Permalink to this definition"></a></dt>
-<dd><p>A shape class that is used for setting multiple valid shape in InputType.</p>
+<dd><p>A shape class for setting multiple valid shapes in InputType.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl>
 <dt><strong>shapes: list of Shape objects, or Shape-compatible lists.</strong></dt><dd><p>The valid shapes of the inputs.</p>
-<p>If input provided is not Shape object, but can be converted to Shape,
+<p>If input provided is not a Shape object, but can be converted to a Shape,
 the Shape object would be stored in <code class="docutils literal notranslate"><span class="pre">shapes</span></code> instead.</p>
 </dd>
 <dt><strong>default: tuple of int or None</strong></dt><dd><p>The default shape that is used for initiating the model, and set in
@@ -200,9 +232,9 @@ the metadata of the model file.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl>
-<dt><strong>scale: (float)</strong></dt><dd><p>The scaling factor for all values in the image channels.</p>
+<dt><strong>scale: float or list of floats</strong></dt><dd><p>The scaling factor for all values in the image channels.</p>
 </dd>
-<dt><strong>bias: float or list of float</strong></dt><dd><ul class="simple">
+<dt><strong>bias: float or list of floats</strong></dt><dd><ul class="simple">
 <li><p>If <code class="docutils literal notranslate"><span class="pre">color_layout</span></code> is <code class="docutils literal notranslate"><span class="pre">ct.colorlayout.GRAYSCALE</span></code> or
 <code class="docutils literal notranslate"><span class="pre">ct.colorlayout.GRAYSCALE_FLOAT16</span></code>, bias would be a <code class="docutils literal notranslate"><span class="pre">float</span></code>.</p></li>
 <li><p>If <code class="docutils literal notranslate"><span class="pre">color_layout</span></code> is <code class="docutils literal notranslate"><span class="pre">ct.colorlayout.RGB</span></code> or <code class="docutils literal notranslate"><span class="pre">ct.colorlayout.BGR</span></code>,
@@ -251,17 +283,16 @@ bias would be a list of <code class="docutils literal notranslate"><span class="
 <dd><dl class="py method">
 <dt class="sig sig-object py" id="coremltools.converters.mil.input_types.RangeDim.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lower_bound</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">upper_bound</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">symbol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/input_types.html#RangeDim.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.input_types.RangeDim.__init__" title="Permalink to this definition"></a></dt>
-<dd><p>A class that can be used to give a range of accepted shapes.</p>
+<dd><p>A class for providing a range of accepted shapes.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl>
 <dt><strong>lower_bound: (int)</strong></dt><dd><p>The minimum valid value for the shape.</p>
 </dd>
 <dt><strong>upper_bound: (int)</strong></dt><dd><p>The maximum valid value for the shape.</p>
-<p>Set to <code class="docutils literal notranslate"><span class="pre">-1</span></code> if there’s no upper limit.</p>
+<p>Set to <code class="docutils literal notranslate"><span class="pre">-1</span></code> if there is no upper limit.</p>
 </dd>
-<dt><strong>default: (int) or None</strong></dt><dd><p>The default value that is used for initiating the model, and set in</p>
-<p>input shape field of the model file.</p>
+<dt><strong>default: (int) or None</strong></dt><dd><p>The default value that is used for initiating the model, and set in the input shape field of the model file.</p>
 <p>If set to <code class="docutils literal notranslate"><span class="pre">None</span></code>, <code class="docutils literal notranslate"><span class="pre">lower_bound</span></code> would be used as default.</p>
 </dd>
 <dt><strong>symbol: (str)</strong></dt><dd><p>Optional symbol name for the dim. Autogenerate a symbol name if

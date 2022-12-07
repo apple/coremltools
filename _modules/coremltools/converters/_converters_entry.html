@@ -66,9 +66,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../../index.html">Module code</a> &raquo;</li>
-      <li>coremltools.converters._converters_entry</li>
+      <li><a href="../../../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">coremltools.converters._converters_entry</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -86,49 +86,42 @@
 <span class="kn">import</span> <span class="nn">collections</span>
 <span class="kn">import</span> <span class="nn">gc</span>
 <span class="kn">import</span> <span class="nn">os</span>
-<span class="kn">import</span> <span class="nn">warnings</span>
 
 <span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">ComputeUnit</span> <span class="k">as</span> <span class="n">_ComputeUnit</span><span class="p">,</span>
-    <span class="n">__version__</span> <span class="k">as</span> <span class="n">_ct_version</span><span class="p">,</span>
-    <span class="n">_LOWEST_ALLOWED_SPECIFICATION_VERSION_FOR_NEURALNETWORK</span><span class="p">,</span>
     <span class="n">_LOWEST_ALLOWED_SPECIFICATION_VERSION_FOR_MILPROGRAM</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.quantization_passes</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">AbstractQuantizationPass</span><span class="p">,</span>
-    <span class="n">ComputePrecision</span> <span class="k">as</span> <span class="n">precision</span><span class="p">,</span>
-    <span class="n">FP16ComputePrecision</span>
-<span class="p">)</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.input_types</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">ClassifierConfig</span><span class="p">,</span>
-    <span class="n">ImageType</span><span class="p">,</span>
-    <span class="n">InputType</span><span class="p">,</span>
-    <span class="n">TensorType</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.converter</span> <span class="kn">import</span> <span class="n">mil_convert</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Program</span><span class="p">,</span> <span class="n">types</span>
-<span class="kn">from</span> <span class="nn">coremltools._deps</span> <span class="kn">import</span> <span class="n">_HAS_TORCH</span><span class="p">,</span> <span class="n">_HAS_TF_1</span><span class="p">,</span> <span class="n">_HAS_TF_2</span>
+    <span class="n">_LOWEST_ALLOWED_SPECIFICATION_VERSION_FOR_NEURALNETWORK</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">ComputeUnit</span> <span class="k">as</span> <span class="n">_ComputeUnit</span>
+<span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">__version__</span> <span class="k">as</span> <span class="n">_ct_version</span>
+<span class="kn">from</span> <span class="nn">coremltools._deps</span> <span class="kn">import</span> <span class="n">_HAS_TF_1</span><span class="p">,</span> <span class="n">_HAS_TF_2</span><span class="p">,</span> <span class="n">_HAS_TORCH</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters._profile_utils</span> <span class="kn">import</span> <span class="n">_profile</span>
-
-<span class="kn">from</span> <span class="nn">coremltools.models</span> <span class="kn">import</span> <span class="n">_METADATA_VERSION</span><span class="p">,</span> <span class="n">_METADATA_SOURCE</span>
-<span class="kn">from</span> <span class="nn">coremltools.models.utils</span> <span class="kn">import</span> <span class="n">_MLPACKAGE_EXTENSION</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil._deployment_compatibility</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">AvailableTarget</span><span class="p">,</span>
-    <span class="n">check_deployment_compatibility</span><span class="p">,</span>
-<span class="p">)</span>
+    <span class="n">AvailableTarget</span><span class="p">,</span> <span class="n">check_deployment_compatibility</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.converter</span> <span class="kn">import</span> <span class="n">mil_convert</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.input_types</span> <span class="kn">import</span> <span class="p">(</span><span class="n">ClassifierConfig</span><span class="p">,</span>
+                                                    <span class="n">ImageType</span><span class="p">,</span> <span class="n">InputType</span><span class="p">,</span>
+                                                    <span class="n">TensorType</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Program</span><span class="p">,</span> <span class="n">types</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.quantization_passes</span> <span class="kn">import</span> \
+    <span class="n">ComputePrecision</span> <span class="k">as</span> <span class="n">precision</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.passes.quantization_passes</span> <span class="kn">import</span> \
+    <span class="n">FP16ComputePrecision</span>
+<span class="kn">from</span> <span class="nn">coremltools.models</span> <span class="kn">import</span> <span class="n">_METADATA_SOURCE</span><span class="p">,</span> <span class="n">_METADATA_VERSION</span>
+<span class="kn">from</span> <span class="nn">coremltools.models.utils</span> <span class="kn">import</span> <span class="n">_MLPACKAGE_EXTENSION</span>
 
 <span class="k">if</span> <span class="n">_HAS_TF_1</span><span class="p">:</span>
     <span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+
     <span class="kn">from</span> <span class="nn">coremltools.converters.mil.frontend.tensorflow.load</span> <span class="kn">import</span> <span class="n">TF1Loader</span>
 <span class="k">if</span> <span class="n">_HAS_TF_2</span><span class="p">:</span>
     <span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+
     <span class="kn">from</span> <span class="nn">coremltools.converters.mil.frontend.tensorflow2.load</span> <span class="kn">import</span> <span class="n">TF2Loader</span>
 
 <span class="k">if</span> <span class="n">_HAS_TORCH</span><span class="p">:</span>
     <span class="kn">import</span> <span class="nn">torch</span>
-    <span class="kn">from</span> <span class="nn">coremltools.converters.mil.frontend.torch.load</span> <span class="kn">import</span> <span class="p">(</span>
-        <span class="n">_torchscript_from_model</span> <span class="k">as</span> <span class="n">pytorch_load</span><span class="p">,</span>
-    <span class="p">)</span>
+
+    <span class="kn">from</span> <span class="nn">coremltools.converters.mil.frontend.torch.load</span> <span class="kn">import</span> \
+        <span class="n">_torchscript_from_model</span> <span class="k">as</span> <span class="n">pytorch_load</span>
 
 <div class="viewcode-block" id="convert"><a class="viewcode-back" href="../../../source/coremltools.converters.convert.html#coremltools.converters._converters_entry.convert">[docs]</a><span class="nd">@_profile</span>
 <span class="k">def</span> <span class="nf">convert</span><span class="p">(</span>
