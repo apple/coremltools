@@ -66,9 +66,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../../index.html">Module code</a> &raquo;</li>
-      <li>coremltools.models.model</li>
+      <li><a href="../../../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">coremltools.models.model</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -83,38 +83,27 @@
 <span class="c1"># Use of this source code is governed by a BSD-3-clause license that can be</span>
 <span class="c1"># found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
 
-<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span> <span class="k">as</span> <span class="n">_deepcopy</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">_np</span>
 <span class="kn">import</span> <span class="nn">os</span> <span class="k">as</span> <span class="nn">_os</span>
 <span class="kn">import</span> <span class="nn">shutil</span> <span class="k">as</span> <span class="nn">_shutil</span>
 <span class="kn">import</span> <span class="nn">tempfile</span> <span class="k">as</span> <span class="nn">_tempfile</span>
 <span class="kn">import</span> <span class="nn">warnings</span> <span class="k">as</span> <span class="nn">_warnings</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span> <span class="k">as</span> <span class="n">_deepcopy</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">_np</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">_numpy</span>
 
-<span class="kn">from</span> <span class="nn">..proto</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">FeatureTypes_pb2</span> <span class="k">as</span> <span class="n">_ft</span><span class="p">,</span>
-    <span class="n">Model_pb2</span> <span class="k">as</span> <span class="n">_Model_pb2</span><span class="p">,</span>
-    <span class="n">MIL_pb2</span> <span class="k">as</span> <span class="n">_MIL_pb2</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">_create_mlpackage</span><span class="p">,</span>
-    <span class="n">_has_custom_layer</span><span class="p">,</span>
-    <span class="n">_is_macos</span><span class="p">,</span>
-    <span class="n">_macos_version</span><span class="p">,</span>
-    <span class="n">_MLMODEL_EXTENSION</span><span class="p">,</span>
-    <span class="n">_MLPACKAGE_AUTHOR_NAME</span><span class="p">,</span>
-    <span class="n">_MLPACKAGE_EXTENSION</span><span class="p">,</span>
-    <span class="n">_WEIGHTS_DIR_NAME</span><span class="p">,</span>
-    <span class="n">load_spec</span> <span class="k">as</span> <span class="n">_load_spec</span><span class="p">,</span>
-    <span class="n">save_spec</span> <span class="k">as</span> <span class="n">_save_spec</span>
-<span class="p">)</span>
 <span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">ComputeUnit</span> <span class="k">as</span> <span class="n">_ComputeUnit</span>
+<span class="kn">from</span> <span class="nn">coremltools._deps</span> <span class="kn">import</span> <span class="n">_HAS_TF_1</span><span class="p">,</span> <span class="n">_HAS_TF_2</span><span class="p">,</span> <span class="n">_HAS_TORCH</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.program</span> <span class="kn">import</span> <span class="n">Program</span> <span class="k">as</span> <span class="n">_Program</span>
-<span class="kn">from</span> <span class="nn">coremltools._deps</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">_HAS_TF_1</span><span class="p">,</span>
-    <span class="n">_HAS_TF_2</span><span class="p">,</span>
-    <span class="n">_HAS_TORCH</span><span class="p">,</span>
-<span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">..proto</span> <span class="kn">import</span> <span class="n">FeatureTypes_pb2</span> <span class="k">as</span> <span class="n">_ft</span>
+<span class="kn">from</span> <span class="nn">..proto</span> <span class="kn">import</span> <span class="n">MIL_pb2</span> <span class="k">as</span> <span class="n">_MIL_pb2</span>
+<span class="kn">from</span> <span class="nn">..proto</span> <span class="kn">import</span> <span class="n">Model_pb2</span> <span class="k">as</span> <span class="n">_Model_pb2</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="p">(</span><span class="n">_MLMODEL_EXTENSION</span><span class="p">,</span> <span class="n">_MLPACKAGE_AUTHOR_NAME</span><span class="p">,</span>
+                    <span class="n">_MLPACKAGE_EXTENSION</span><span class="p">,</span> <span class="n">_WEIGHTS_DIR_NAME</span><span class="p">,</span> <span class="n">_create_mlpackage</span><span class="p">,</span>
+                    <span class="n">_has_custom_layer</span><span class="p">,</span> <span class="n">_is_macos</span><span class="p">,</span> <span class="n">_macos_version</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">load_spec</span> <span class="k">as</span> <span class="n">_load_spec</span>
+<span class="kn">from</span> <span class="nn">.utils</span> <span class="kn">import</span> <span class="n">save_spec</span> <span class="k">as</span> <span class="n">_save_spec</span>
 
 <span class="k">if</span> <span class="n">_HAS_TORCH</span><span class="p">:</span>
     <span class="kn">import</span> <span class="nn">torch</span>

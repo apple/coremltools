@@ -66,9 +66,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../../../../../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../../../../../../../index.html">Module code</a> &raquo;</li>
-      <li>coremltools.converters.mil.mil.ops.defs.iOS15.recurrent</li>
+      <li><a href="../../../../../../../../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">coremltools.converters.mil.mil.ops.defs.iOS15.recurrent</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -84,11 +84,9 @@
 <span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
 
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">types</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.input_type</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">DefaultInputs</span><span class="p">,</span>
-    <span class="n">InputSpec</span><span class="p">,</span>
-    <span class="n">TensorInputType</span><span class="p">,</span>
-<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.input_type</span> <span class="kn">import</span> <span class="p">(</span><span class="n">DefaultInputs</span><span class="p">,</span>
+                                                       <span class="n">InputSpec</span><span class="p">,</span>
+                                                       <span class="n">TensorInputType</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs._op_reqs</span> <span class="kn">import</span> <span class="n">register_op</span>
 
 
@@ -183,7 +181,7 @@
         <span class="n">recurrent_activation</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">str</span><span class="p">),</span>
         <span class="n">activation</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">str</span><span class="p">)</span>
     <span class="p">)</span>
-    
+
     <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">,),</span>
     <span class="p">}</span>
@@ -235,8 +233,9 @@
         <span class="k">if</span> <span class="n">hidden_size</span> <span class="o">!=</span> <span class="p">(</span><span class="n">hidden_dim</span> <span class="o">//</span> <span class="n">dim_factor</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                 <span class="s2">&quot;Incorrect weight matrix: hidden dim size mismatch. </span><span class="se">\</span>
-<span class="s2">                Provided weight_ih </span><span class="si">{}</span><span class="s2">, weight_hh </span><span class="si">{}</span><span class="s2">. Expecting &lt;b, 3*H&gt;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+<span class="s2">                Provided weight_ih </span><span class="si">{}</span><span class="s2">, weight_hh </span><span class="si">{}</span><span class="s2">. Expecting &lt;b, 3*H&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">weight_ih</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight_hh</span><span class="o">.</span><span class="n">shape</span>
+                <span class="p">)</span>
             <span class="p">)</span>
 
         <span class="n">out_seq_len</span> <span class="o">=</span> <span class="n">sequence_length</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_sequence</span><span class="o">.</span><span class="n">val</span> <span class="k">else</span> <span class="mi">1</span>
@@ -410,7 +409,7 @@
         <span class="n">activation</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">str</span><span class="p">),</span>
         <span class="n">clip</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
     <span class="p">)</span>
-    
+
     <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">,),</span>
     <span class="p">}</span>
@@ -438,24 +437,27 @@
         <span class="k">def</span> <span class="nf">weight_shape_check</span><span class="p">(</span><span class="n">wt_ih</span><span class="p">,</span> <span class="n">wt_hh</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">wt_ih</span><span class="o">.</span><span class="n">rank</span> <span class="o">!=</span> <span class="mi">2</span> <span class="ow">or</span> <span class="n">wt_hh</span><span class="o">.</span><span class="n">rank</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="s2">&quot;Expecting Rank 2 input, got weight_ih rank: </span><span class="si">{}</span><span class="s2">, weight_hh rank: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="s2">&quot;Expecting Rank 2 input, got weight_ih rank: </span><span class="si">{}</span><span class="s2">, weight_hh rank: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
                         <span class="n">wt_ih</span><span class="o">.</span><span class="n">rank</span><span class="p">,</span> <span class="n">wt_hh</span><span class="o">.</span><span class="n">rank</span>
                     <span class="p">)</span>
+                <span class="p">)</span>
 
             <span class="n">hidden_size</span> <span class="o">=</span> <span class="n">wt_hh</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
             <span class="k">if</span> <span class="n">wt_hh</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="n">hidden_size</span> <span class="o">!=</span> <span class="mi">4</span> <span class="ow">or</span> <span class="n">wt_ih</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="n">hidden_size</span> <span class="o">!=</span> <span class="mi">4</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                     <span class="s2">&quot;Incorrect weight matrix: hidden dim size mismatch. </span><span class="se">\</span>
-<span class="s2">                                Provided weight_ih </span><span class="si">{}</span><span class="s2">, weight_hh </span><span class="si">{}</span><span class="s2">. Expecting &lt;4*H, H&gt;&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                                    <span class="n">wt_ih</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">wt_hh</span><span class="o">.</span><span class="n">shape</span>
+<span class="s2">                                Provided weight_ih </span><span class="si">{}</span><span class="s2">, weight_hh </span><span class="si">{}</span><span class="s2">. Expecting &lt;4*H, H&gt;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="n">wt_ih</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">wt_hh</span><span class="o">.</span><span class="n">shape</span>
+                    <span class="p">)</span>
                 <span class="p">)</span>
 
         <span class="n">direction</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">direction</span><span class="o">.</span><span class="n">val</span>
         <span class="n">valid_directions</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;forward&quot;</span><span class="p">,</span> <span class="s2">&quot;reverse&quot;</span><span class="p">,</span> <span class="s2">&quot;bidirectional&quot;</span><span class="p">}</span>
         <span class="k">if</span> <span class="n">direction</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">valid_directions</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;Direction </span><span class="si">{}</span><span class="s2"> not supported. Supported directions: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="s2">&quot;Direction </span><span class="si">{}</span><span class="s2"> not supported. Supported directions: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
                     <span class="n">direction</span><span class="p">,</span> <span class="n">valid_directions</span>
+                <span class="p">)</span>
             <span class="p">)</span>
 
         <span class="n">weight_shape_check</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">weight_ih</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight_hh</span><span class="p">)</span>
@@ -544,7 +546,7 @@
         <span class="n">output_sequence</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">bool</span><span class="p">),</span>
         <span class="n">activation</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">str</span><span class="p">),</span>
     <span class="p">)</span>
-    
+
     <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">,),</span>
     <span class="p">}</span>
@@ -559,18 +561,16 @@
     <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">rank</span> <span class="o">!=</span> <span class="mi">3</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;Invalid input shape. Expecting Rank 3 input, got </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                    <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">rank</span><span class="p">)</span>
-                <span class="p">)</span>
+                <span class="sa">f</span><span class="s2">&quot;Invalid input shape. Expecting Rank 3 input, got </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">rank</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="p">)</span>
 
         <span class="n">sequence_length</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">input_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">shape</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight_ih</span><span class="o">.</span><span class="n">rank</span> <span class="o">!=</span> <span class="mi">2</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight_hh</span><span class="o">.</span><span class="n">rank</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;Invalid weight shape. Expecting Rank 2 input, got weight_ih </span><span class="si">{}</span><span class="s2">, weight_hh </span><span class="si">{}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">weight_ih</span><span class="o">.</span><span class="n">rank</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight_hh</span><span class="o">.</span><span class="n">rank</span>
-                <span class="p">)</span>
+                <span class="sa">f</span><span class="s2">&quot;Invalid weight shape. Expecting Rank 2 input, got weight_ih &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">weight_ih</span><span class="o">.</span><span class="n">rank</span><span class="si">}</span><span class="s2">, weight_hh </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">weight_hh</span><span class="o">.</span><span class="n">rank</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
 
         <span class="n">hidden_size</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">weight_ih</span><span class="o">.</span><span class="n">shape</span>
 
@@ -578,9 +578,7 @@
         <span class="n">valid_directions</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;forward&quot;</span><span class="p">,</span> <span class="s2">&quot;reverse&quot;</span><span class="p">}</span>
         <span class="k">if</span> <span class="n">direction</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">valid_directions</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                <span class="s2">&quot;Direction </span><span class="si">{}</span><span class="s2"> not supported. Supported directions: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                    <span class="n">direction</span><span class="p">,</span> <span class="n">valid_directions</span>
-                <span class="p">)</span>
+                <span class="sa">f</span><span class="s2">&quot;Direction </span><span class="si">{</span><span class="n">direction</span><span class="si">}</span><span class="s2"> not supported. Supported directions: </span><span class="si">{</span><span class="n">valid_directions</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="p">)</span>
 
         <span class="n">out_seq_len</span> <span class="o">=</span> <span class="n">sequence_length</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_sequence</span><span class="o">.</span><span class="n">val</span> <span class="k">else</span> <span class="mi">1</span>

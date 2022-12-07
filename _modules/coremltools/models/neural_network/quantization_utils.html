@@ -66,9 +66,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../../../index.html">Module code</a> &raquo;</li>
-      <li>coremltools.models.neural_network.quantization_utils</li>
+      <li><a href="../../../../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">coremltools.models.neural_network.quantization_utils</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -87,32 +87,27 @@
 <span class="sd">Utilities to compress Neural Network Models.</span>
 <span class="sd">Only available in coremltools 2.0b1 and onwards</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="kn">from</span> <span class="nn">sys</span> <span class="kn">import</span> <span class="n">stdout</span> <span class="k">as</span> <span class="n">_stdout</span>
 <span class="kn">from</span> <span class="nn">os</span> <span class="kn">import</span> <span class="n">listdir</span> <span class="k">as</span> <span class="n">_listdir</span>
+<span class="kn">from</span> <span class="nn">sys</span> <span class="kn">import</span> <span class="n">stdout</span> <span class="k">as</span> <span class="n">_stdout</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">_np</span>
 
-<span class="kn">from</span> <span class="nn">.optimization_utils</span> <span class="kn">import</span> <span class="n">_optimize_nn</span>
 <span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">ComputeUnit</span> <span class="k">as</span> <span class="n">_ComputeUnit</span>
-<span class="kn">from</span> <span class="nn">coremltools.models</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">_LUT_BASED_QUANTIZATION</span><span class="p">,</span>
-    <span class="n">_SUPPORTED_QUANTIZATION_MODES</span><span class="p">,</span>
-    <span class="n">_QUANTIZATION_MODE_DEQUANTIZE</span><span class="p">,</span>
-    <span class="n">_QUANTIZATION_MODE_LOOKUP_TABLE_LINEAR</span><span class="p">,</span>
-    <span class="n">_QUANTIZATION_MODE_LOOKUP_TABLE_KMEANS</span><span class="p">,</span>
-    <span class="n">_QUANTIZATION_MODE_CUSTOM_LOOKUP_TABLE</span><span class="p">,</span>
-    <span class="n">_QUANTIZATION_MODE_LINEAR_QUANTIZATION</span><span class="p">,</span>
-    <span class="n">_QUANTIZATION_MODE_LINEAR_SYMMETRIC</span><span class="p">,</span>
-    <span class="n">MLModel</span> <span class="k">as</span> <span class="n">_MLModel</span><span class="p">,</span>
-<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.models</span> <span class="kn">import</span> <span class="p">(</span><span class="n">_QUANTIZATION_MODE_CUSTOM_LOOKUP_TABLE</span><span class="p">,</span>
+                                <span class="n">_QUANTIZATION_MODE_DEQUANTIZE</span><span class="p">,</span>
+                                <span class="n">_QUANTIZATION_MODE_LINEAR_QUANTIZATION</span><span class="p">,</span>
+                                <span class="n">_QUANTIZATION_MODE_LINEAR_SYMMETRIC</span><span class="p">,</span>
+                                <span class="n">_QUANTIZATION_MODE_LOOKUP_TABLE_KMEANS</span><span class="p">,</span>
+                                <span class="n">_QUANTIZATION_MODE_LOOKUP_TABLE_LINEAR</span><span class="p">,</span>
+                                <span class="n">_SUPPORTED_QUANTIZATION_MODES</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.models</span> <span class="kn">import</span> <span class="n">MLModel</span> <span class="k">as</span> <span class="n">_MLModel</span>
 
-<span class="kn">from</span> <span class="nn">..utils</span> <span class="kn">import</span> <span class="n">_get_nn_layers</span><span class="p">,</span> <span class="n">_wp_to_fp16wp</span><span class="p">,</span> <span class="n">_get_model</span><span class="p">,</span> <span class="n">_macos_version</span>
+<span class="kn">from</span> <span class="nn">...</span> <span class="kn">import</span> <span class="p">(</span><span class="n">_MINIMUM_FP16_SPEC_VERSION</span><span class="p">,</span>
+                 <span class="n">_MINIMUM_QUANTIZED_MODEL_SPEC_VERSION</span><span class="p">,</span>
+                 <span class="n">_SPECIFICATION_VERSION_IOS_14</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">..._deps</span> <span class="kn">import</span> <span class="n">_HAS_SKLEARN</span> <span class="k">as</span> <span class="n">_HAS_SKLEARN</span>
-<span class="kn">from</span> <span class="nn">...</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">_MINIMUM_QUANTIZED_MODEL_SPEC_VERSION</span><span class="p">,</span>
-    <span class="n">_MINIMUM_FP16_SPEC_VERSION</span><span class="p">,</span>
-    <span class="n">_SPECIFICATION_VERSION_IOS_14</span><span class="p">,</span>
-<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">..utils</span> <span class="kn">import</span> <span class="n">_get_model</span><span class="p">,</span> <span class="n">_macos_version</span><span class="p">,</span> <span class="n">_wp_to_fp16wp</span>
+<span class="kn">from</span> <span class="nn">.optimization_utils</span> <span class="kn">import</span> <span class="n">_optimize_nn</span>
 
 
 <div class="viewcode-block" id="QuantizedLayerSelector"><a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.quantization_utils.QuantizedLayerSelector">[docs]</a><span class="k">class</span> <span class="nc">QuantizedLayerSelector</span><span class="p">:</span>
@@ -462,7 +457,10 @@
     <span class="k">if</span> <span class="n">_HAS_SKLEARN</span><span class="p">:</span>
         <span class="kn">from</span> <span class="nn">sklearn.cluster</span> <span class="kn">import</span> <span class="n">KMeans</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;scikit-learn package required for k-means quantization&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ModuleNotFoundError</span><span class="p">(</span>
+            <span class="s2">&quot;scikit-learn is required for k-means quantization.&quot;</span>
+            <span class="s2">&quot; To install, run: </span><span class="se">\&quot;</span><span class="s2">pip install -U scikit-learn</span><span class="se">\&quot;</span><span class="s2">.&quot;</span>
+        <span class="p">)</span>
     <span class="n">units</span> <span class="o">=</span> <span class="n">_np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">w</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
     <span class="n">lut_len</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">&lt;&lt;</span> <span class="n">nbits</span>
     <span class="n">n_clusters</span> <span class="o">=</span> <span class="n">units</span> <span class="k">if</span> <span class="p">(</span><span class="n">units</span> <span class="o">&lt;</span> <span class="n">lut_len</span><span class="p">)</span> <span class="k">else</span> <span class="n">lut_len</span>

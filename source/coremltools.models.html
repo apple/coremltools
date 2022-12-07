@@ -175,8 +175,8 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>Models</li>
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active">Models</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/source/coremltools.models.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -403,11 +403,19 @@ a package directory containing the <code class="docutils literal notranslate"><s
 <dl class="py function">
 <dt class="sig sig-object py" id="coremltools.models.array_feature_extractor.create_array_feature_extractor">
 <span class="sig-prename descclassname"><span class="pre">coremltools.models.array_feature_extractor.</span></span><span class="sig-name descname"><span class="pre">create_array_feature_extractor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_features</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extract_indices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/array_feature_extractor.html#create_array_feature_extractor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.array_feature_extractor.create_array_feature_extractor" title="Permalink to this definition"></a></dt>
-<dd><p>Creates a feature extractor from an input array feature, return</p>
-<p>input_features is a list of one (name, array) tuple.</p>
-<p>extract_indices is either an integer or a list.  If it’s an integer,
-the output type is by default a double (but may also be an integer).
+<dd><p>Creates a feature extractor from an input array <code class="docutils literal notranslate"><span class="pre">(feature,</span> <span class="pre">return)</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>input_features:</strong></dt><dd><p>A list of one <code class="docutils literal notranslate"><span class="pre">(name,</span> <span class="pre">array)</span></code> tuple.</p>
+</dd>
+<dt><strong>extract_indices:</strong></dt><dd><p>Either an integer or a list.
+If it’s an integer, the output type is by default a double (but may also be an integer).
 If a list, the output type is an array.</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 </section>

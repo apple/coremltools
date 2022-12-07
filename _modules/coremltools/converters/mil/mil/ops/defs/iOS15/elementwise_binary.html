@@ -66,9 +66,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../../../../../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../../../../../../../index.html">Module code</a> &raquo;</li>
-      <li>coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary</li>
+      <li><a href="../../../../../../../../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -82,19 +82,17 @@
 <span class="c1">#</span>
 <span class="c1">#  Use of this source code is governed by a BSD-3-clause license that can be</span>
 <span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">operator</span>
 
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">InputSpec</span><span class="p">,</span>
-    <span class="n">Operation</span><span class="p">,</span>
-    <span class="n">precondition</span><span class="p">,</span>
-    <span class="n">TensorInputType</span><span class="p">,</span>
-    <span class="n">types</span>
-<span class="p">)</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="p">(</span><span class="n">InputSpec</span><span class="p">,</span> <span class="n">Operation</span><span class="p">,</span>
+                                            <span class="n">TensorInputType</span><span class="p">,</span> <span class="n">precondition</span><span class="p">,</span>
+                                            <span class="n">types</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.operation</span> <span class="kn">import</span> <span class="n">VALUE</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs._op_reqs</span> <span class="kn">import</span> <span class="n">register_op</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs._utils</span> <span class="kn">import</span> <span class="n">promoted_primitive_type</span><span class="p">,</span> <span class="n">broadcast_shapes</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs._utils</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">broadcast_shapes</span><span class="p">,</span> <span class="n">promoted_primitive_type</span><span class="p">)</span>
 
 
 <span class="k">class</span> <span class="nc">elementwise_binary</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
@@ -105,7 +103,7 @@
         <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
         <span class="n">y</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
     <span class="p">)</span>
-    
+
     <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
     <span class="p">}</span>
@@ -159,7 +157,8 @@
         <span class="n">to_cast</span> <span class="o">=</span> <span class="nb">any</span><span class="p">([</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">]])</span>
         <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_operator</span><span class="p">()(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">result</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">to_cast</span> <span class="k">else</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
-        
+
+
 <span class="k">class</span> <span class="nc">elementwise_binary_logical</span><span class="p">(</span><span class="n">elementwise_binary</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Elementwise Binary Logical Op Superclass</span>
@@ -168,7 +167,7 @@
         <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
         <span class="n">y</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
     <span class="p">)</span>
-    
+
     <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">bool</span><span class="p">,),</span>
     <span class="p">}</span>
@@ -184,19 +183,19 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return ``x + y`` element-wise with</span>
 <span class="sd">    `broadcasting &lt;https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html&gt;`_.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    x: &lt;\*,T&gt; (Required)</span>
 <span class="sd">        * Shape must be compatible with ``y`` in broadcast.</span>
-<span class="sd">    </span>
+
 <span class="sd">    y: &lt;\*,T&gt; (Required)</span>
 <span class="sd">        * Shape must be compatible with ``x`` in broadcast.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    &lt;\*,T&gt;</span>
-<span class="sd">    </span>
+
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    T: fp16, fp32, i32</span>
@@ -212,20 +211,20 @@
 <span class="sd">    Return the truth value of ``x == y`` element-wise with</span>
 <span class="sd">    `broadcasting &lt;https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html&gt;`_</span>
 <span class="sd">    (``1`` for true, ``0`` for false in numeric domain).</span>
-<span class="sd">    </span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    x: &lt;\*,T&gt; (Required)</span>
 <span class="sd">        * Shape must be compatible with ``y`` in broadcast.</span>
-<span class="sd">    </span>
+
 <span class="sd">    y: &lt;\*,T&gt; (Required)</span>
 <span class="sd">        * Shape must be compatible with ``x`` in broadcast.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    &lt;\*, bool&gt;</span>
 <span class="sd">        * A boolean tensor with the same shape as the inputs.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    T: fp16, fp32, i32</span>
@@ -244,20 +243,20 @@
 <span class="sd">    Return ``x / y`` element-wise with</span>
 <span class="sd">    `broadcasting &lt;https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html&gt;`_,</span>
 <span class="sd">    rounded towards negative infinity.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    x: tensor&lt;\*, T&gt; (Required)</span>
 <span class="sd">        * Shape must be compatible with ``y`` in broadcast.</span>
-<span class="sd">    </span>
+
 <span class="sd">    y: tensor&lt;\*, T&gt; (Required)</span>
 <span class="sd">        * Shape must be compatible with ``x`` in broadcast.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    tensor&lt;\*, T&gt;</span>
 <span class="sd">        * A tensor of the same type and shape as the inputs.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    T: fp16, fp32, i32</span>
@@ -278,10 +277,10 @@
 <span class="sd">    ----------</span>
 <span class="sd">    x: tensor&lt;\*, T&gt; (Required)</span>
 <span class="sd">        * Shape must be compatible with ``y`` in broadcast.</span>
-<span class="sd">    </span>
+
 <span class="sd">    y: tensor&lt;\*, T&gt; (Required)</span>
 <span class="sd">        * Shape must be compatible with ``x`` in broadcast.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    tensor&lt;\*, bool&gt;</span>
@@ -305,20 +304,20 @@
 <span class="sd">    Return the truth value of ``x &gt;= y`` element-wise with</span>
 <span class="sd">    `broadcasting &lt;https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html&gt;`_</span>
 <span class="sd">    (``1`` for true, ``0`` for false in numeric domain).</span>
-<span class="sd">    </span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    x: tensor&lt;\*, T&gt; (Required)</span>
 <span class="sd">        * Shape must be compatible with ``y`` in broadcast.</span>
-<span class="sd">    </span>
+
 <span class="sd">    y: tensor&lt;\*, T&gt; (Required)</span>
 <span class="sd">        * Shape must be compatible with ``x`` in broadcast.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    tensor&lt;\*?, bool&gt;</span>
 <span class="sd">        * A boolean tensor with the same shape as the inputs.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    T: fp16, fp32, i32</span>
@@ -337,20 +336,20 @@
 <span class="sd">    Return the truth value of ``x &lt; y`` element-wise with</span>
 <span class="sd">    `broadcasting &lt;https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html&gt;`_</span>
 <span class="sd">    (``1`` for true, ``0`` for false in numeric domain).</span>
-<span class="sd">    </span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    x: tensor&lt;\*, T&gt; (Required)</span>
 <span class="sd">        * Shape must be compatible with ``y`` in broadcast.</span>
-<span class="sd">    </span>
+
 <span class="sd">    y: tensor&lt;\*, T&gt; (Required)</span>
 <span class="sd">        * Shape must be compatible with ``x`` in broadcast.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    tensor&lt;\*?, bool&gt;</span>
 <span class="sd">        * A boolean tensor with the same shape as the inputs.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    T: fp16, fp32, i32</span>
@@ -369,20 +368,20 @@
 <span class="sd">    Return the truth value of ``x &lt;= y`` element-wise with</span>
 <span class="sd">    `broadcasting &lt;https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html&gt;`_</span>
 <span class="sd">    (``1`` for true, ``0`` for false in numeric domain).</span>
-<span class="sd">    </span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    x: tensor&lt;\*, T&gt; (Required)</span>
 <span class="sd">        * Shape must be compatible with ``y`` in broadcast.</span>
-<span class="sd">    </span>
+
 <span class="sd">    y: tensor&lt;\*, T&gt; (Required)</span>
 <span class="sd">        * Shape must be compatible with ``x`` in broadcast.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    tensor&lt;\*?, bool&gt;</span>
 <span class="sd">        * A boolean tensor with the same shape as the inputs.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    T: fp16, fp32, i32</span>
@@ -405,19 +404,19 @@
 <span class="sd">    ----------</span>
 <span class="sd">    x: tensor&lt;\*, T&gt; (Required)</span>
 <span class="sd">        * Shape must be compatible with ``y`` in broadcast.</span>
-<span class="sd">    </span>
+
 <span class="sd">    y: tensor&lt;\*, T&gt; (Required)</span>
 <span class="sd">        * Shape must be compatible with ``x`` in broadcast.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    tensor&lt;\*?, bool&gt;</span>
 <span class="sd">        * A boolean tensor with the same shape as the inputs.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    T: bool</span>
-<span class="sd">    </span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">get_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -432,24 +431,24 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return the truth value of ``x OR y`` element-wise with</span>
 <span class="sd">    `broadcasting &lt;https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html&gt;`_</span>
-<span class="sd">    </span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    x: tensor&lt;\*, T&gt; (Required)</span>
 <span class="sd">        * Shape must be compatible with ``y`` in broadcast.</span>
-<span class="sd">    </span>
+
 <span class="sd">    y: tensor&lt;\*, T&gt; (Required)</span>
 <span class="sd">        * Shape must be compatible with ``x`` in broadcast.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    tensor&lt;\*?, bool&gt;</span>
 <span class="sd">        * A boolean tensor with the same shape as the inputs.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    T: bool</span>
-<span class="sd">    </span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">get_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -464,24 +463,24 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return the truth value of ``x XOR y`` element-wise with</span>
 <span class="sd">    `broadcasting &lt;https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html&gt;`_</span>
-<span class="sd">    </span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    x: tensor&lt;\*, T&gt; (Required)</span>
 <span class="sd">        * Shape must be compatible with ``y`` in broadcast.</span>
-<span class="sd">    </span>
+
 <span class="sd">    y: tensor&lt;\*, T&gt; (Required)</span>
 <span class="sd">        * Shape must be compatible with ``x`` in broadcast.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    tensor&lt;\*?, bool&gt;</span>
 <span class="sd">        * A boolean tensor with the same shape as the inputs.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    T: bool</span>
-<span class="sd">    </span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">get_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -496,20 +495,20 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return ``x &gt; y ? x : y`` element-wise with</span>
 <span class="sd">    `broadcasting &lt;https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html&gt;`_.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    x: tensor&lt;\*, T&gt; (Required)</span>
 <span class="sd">        * Shape must be compatible with ``y`` in broadcast.</span>
-<span class="sd">    </span>
+
 <span class="sd">    y: tensor&lt;\*, T&gt; (Required)</span>
 <span class="sd">        * Shape must be compatible with ``x`` in broadcast.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;\*?, bool&gt;</span>
-<span class="sd">        * A boolean tensor with the same shape as the inputs.</span>
-<span class="sd">    </span>
+<span class="sd">    tensor&lt;\*?, T&gt;</span>
+<span class="sd">        * A tensor with the broadcasted shape from inputs, and type is derived from inputs.</span>
+
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    T: fp16, fp32, i32</span>
@@ -524,20 +523,20 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return ``x &gt; y ? y : x`` element-wise with</span>
 <span class="sd">    `broadcasting &lt;https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html&gt;`_.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    x: tensor&lt;\*, T&gt; (Required)</span>
 <span class="sd">        * Shape must be compatible with ``y`` in broadcast.</span>
-<span class="sd">    </span>
+
 <span class="sd">    y: tensor&lt;\*, T&gt; (Required)</span>
 <span class="sd">        * Shape must be compatible with ``x`` in broadcast.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;\*?, bool&gt;</span>
-<span class="sd">        * A boolean tensor with the same shape as the inputs.</span>
-<span class="sd">    </span>
+<span class="sd">    tensor&lt;\*?, T&gt;</span>
+<span class="sd">        * A tensor with the broadcasted shape from inputs, and type is derived from inputs.</span>
+
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    T: fp16, fp32, i32</span>
@@ -557,15 +556,15 @@
 <span class="sd">    ----------</span>
 <span class="sd">    x: tensor&lt;\*, T&gt; (Required)</span>
 <span class="sd">        * Shape must be compatible with ``y`` in broadcast.</span>
-<span class="sd">    </span>
+
 <span class="sd">    y: tensor&lt;\*, T&gt; (Required)</span>
 <span class="sd">        * Shape must be compatible with ``x`` in broadcast.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;\*?, bool&gt;</span>
-<span class="sd">        * A boolean tensor with the same shape as the inputs.</span>
-<span class="sd">    </span>
+<span class="sd">    tensor&lt;\*?, T&gt;</span>
+<span class="sd">        * A tensor with the broadcasted shape from inputs, and type is derived from inputs.</span>
+
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    T: fp16, fp32, i32</span>
@@ -585,15 +584,15 @@
 <span class="sd">    ----------</span>
 <span class="sd">    x: tensor&lt;\*, T&gt; (Required)</span>
 <span class="sd">        * Shape must be compatible with ``y`` in broadcast.</span>
-<span class="sd">    </span>
+
 <span class="sd">    y: tensor&lt;\*, T&gt; (Required)</span>
 <span class="sd">        * Shape must be compatible with ``x`` in broadcast.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;\*?, bool&gt;</span>
-<span class="sd">        * A boolean tensor with the same shape as the inputs.</span>
-<span class="sd">    </span>
+<span class="sd">    tensor&lt;\*?, T&gt;</span>
+<span class="sd">        * A tensor with the broadcasted shape from inputs, and type is derived from inputs.</span>
+
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    T: fp16, fp32, i32</span>
@@ -609,19 +608,19 @@
 <span class="sd">    Return the truth value of ``x != y`` element-wise with</span>
 <span class="sd">    `broadcasting &lt;https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html&gt;`_</span>
 <span class="sd">    (``1`` for true, ``0`` for false in numeric domain).</span>
-<span class="sd">    </span>
+
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    x: tensor&lt;\*, T&gt; (Required)</span>
 <span class="sd">        * Shape must be compatible with ``y`` in broadcast.</span>
-<span class="sd">    </span>
+
 <span class="sd">    y: tensor&lt;\*, T&gt; (Required)</span>
 <span class="sd">        * Shape must be compatible with ``x`` in broadcast.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    tensor&lt;\*?, bool&gt;</span>
-<span class="sd">        * A boolean tensor with the same shape as the inputs.</span>
+<span class="sd">        * A boolean tensor with the broadcasted shape from inputs.</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
@@ -645,15 +644,15 @@
 <span class="sd">    ----------</span>
 <span class="sd">    x: tensor&lt;\*, T&gt; (Required)</span>
 <span class="sd">        * Shape must be compatible with ``y`` in broadcast.</span>
-<span class="sd">    </span>
+
 <span class="sd">    y: tensor&lt;\*, T&gt; (Required)</span>
 <span class="sd">        * Shape must be compatible with ``x`` in broadcast.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    tensor&lt;\*?, T&gt;</span>
-<span class="sd">        * A tensor with the same type and shape as the inputs.</span>
-<span class="sd">    </span>
+<span class="sd">        * A tensor with the broadcasted shape from inputs, and type is derived from inputs.</span>
+
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    T: fp16, fp32, i32</span>
@@ -673,15 +672,15 @@
 <span class="sd">    ----------</span>
 <span class="sd">    x: tensor&lt;\*, T&gt; (Required)</span>
 <span class="sd">        * Shape must be compatible with ``y`` in broadcast.</span>
-<span class="sd">    </span>
+
 <span class="sd">    y: tensor&lt;\*, T&gt; (Required)</span>
 <span class="sd">        * Shape must be compatible with ``x`` in broadcast.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;\*?, bool&gt;</span>
-<span class="sd">        * A boolean tensor with the same shape as the inputs.</span>
-<span class="sd">    </span>
+<span class="sd">    tensor&lt;\*?, T&gt;</span>
+<span class="sd">        * A tensor with the broadcasted shape from inputs, and type is derived from inputs.</span>
+
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    T: fp16, fp32, i32</span>
@@ -701,15 +700,15 @@
 <span class="sd">    ----------</span>
 <span class="sd">    x: tensor&lt;\*, T&gt; (Required)</span>
 <span class="sd">        * Shape must be compatible with ``y`` in broadcast.</span>
-<span class="sd">    </span>
+
 <span class="sd">    y: tensor&lt;\*, T&gt; (Required)</span>
 <span class="sd">        * Shape must be compatible with ``x`` in broadcast.</span>
-<span class="sd">    </span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    tensor&lt;\*?, bool&gt;</span>
-<span class="sd">        * A boolean tensor with the same shape as the inputs.</span>
-<span class="sd">    </span>
+<span class="sd">    tensor&lt;\*?, T&gt;</span>
+<span class="sd">        * A tensor with the broadcasted shape from inputs, and type is derived from inputs.</span>
+
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    T: fp16, fp32, i32</span>

@@ -288,8 +288,8 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>MIL Ops</li>
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active">MIL Ops</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/source/coremltools.converters.mil.mil.ops.defs.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -421,7 +421,7 @@ based on the following formulas:</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><dl class="simple">
-<dt>tensor&lt;*?, fp32&gt;</dt><dd><ul class="simple">
+<dt>tensor&lt;*?, T&gt;</dt><dd><ul class="simple">
 <li><p>A tensor of the same shape and type as <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p></li>
 </ul>
 </dd>
@@ -499,16 +499,16 @@ based on the following formulas:</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS15.activation.relu">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS15.activation.</span></span><span class="sig-name descname"><span class="pre">relu</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS15/activation.html#relu"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS15.activation.relu" title="Permalink to this definition"></a></dt>
-<dd><p>Return elementwise-applied rectified linear activation: <code class="docutils literal notranslate"><span class="pre">min(x,</span> <span class="pre">0)</span></code>.</p>
+<dd><p>Return elementwise-applied rectified linear activation: <code class="docutils literal notranslate"><span class="pre">max(x,</span> <span class="pre">0)</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>x: tensor&lt;*?, fp32&gt; (Required)</strong></dt><dd></dd>
+<dt><strong>x: tensor&lt;*?, T&gt; (Required)</strong></dt><dd></dd>
 </dl>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><dl class="simple">
-<dt>tensor&lt;*?, fp32&gt;</dt><dd><ul class="simple">
+<dt>tensor&lt;*?, T&gt;</dt><dd><ul class="simple">
 <li><p>A tensor of the same shape and type as <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p></li>
 </ul>
 </dd>
@@ -565,7 +565,7 @@ based on the following formulas:</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><dl class="simple">
-<dt>tensor&lt;*?, fp32&gt;</dt><dd><ul class="simple">
+<dt>tensor&lt;*?, T&gt;</dt><dd><ul class="simple">
 <li><p>A tensor of the same shape and type as <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p></li>
 </ul>
 </dd>
@@ -619,7 +619,7 @@ based on the following formulas:</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><dl class="simple">
-<dt>tensor&lt;*?, fp32&gt;</dt><dd><ul class="simple">
+<dt>tensor&lt;*?, T&gt;</dt><dd><ul class="simple">
 <li><p>A tensor of the same shape and type as <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p></li>
 </ul>
 </dd>
@@ -690,8 +690,8 @@ based on the following formulas:</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>x: tensor&lt;[b, C, n, m], T&gt; (Required)</strong></dt><dd></dd>
-<dt><strong>alpha: const tensor&lt;[C], fp32&gt; (Required)</strong></dt><dd></dd>
-<dt><strong>beta: const tensor&lt;[C], fp32&gt; (Required)</strong></dt><dd></dd>
+<dt><strong>alpha: const tensor&lt;[C], T&gt; (Required)</strong></dt><dd></dd>
+<dt><strong>beta: const tensor&lt;[C], T&gt; (Required)</strong></dt><dd></dd>
 </dl>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -726,7 +726,7 @@ based on the following formulas:</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><dl class="simple">
-<dt>tensor&lt;*?, fp32&gt;</dt><dd><ul class="simple">
+<dt>tensor&lt;*?, T&gt;</dt><dd><ul class="simple">
 <li><p>A tensor of the same shape and type as <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p></li>
 </ul>
 </dd>
@@ -1984,8 +1984,8 @@ rounded towards negative infinity.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><dl class="simple">
-<dt>tensor&lt;*?, bool&gt;</dt><dd><ul class="simple">
-<li><p>A boolean tensor with the same shape as the inputs.</p></li>
+<dt>tensor&lt;*?, T&gt;</dt><dd><ul class="simple">
+<li><p>A tensor with the broadcasted shape from inputs, and type is derived from inputs.</p></li>
 </ul>
 </dd>
 </dl>
@@ -2018,8 +2018,8 @@ rounded towards negative infinity.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><dl class="simple">
-<dt>tensor&lt;*?, bool&gt;</dt><dd><ul class="simple">
-<li><p>A boolean tensor with the same shape as the inputs.</p></li>
+<dt>tensor&lt;*?, T&gt;</dt><dd><ul class="simple">
+<li><p>A tensor with the broadcasted shape from inputs, and type is derived from inputs.</p></li>
 </ul>
 </dd>
 </dl>
@@ -2052,8 +2052,8 @@ rounded towards negative infinity.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><dl class="simple">
-<dt>tensor&lt;*?, bool&gt;</dt><dd><ul class="simple">
-<li><p>A boolean tensor with the same shape as the inputs.</p></li>
+<dt>tensor&lt;*?, T&gt;</dt><dd><ul class="simple">
+<li><p>A tensor with the broadcasted shape from inputs, and type is derived from inputs.</p></li>
 </ul>
 </dd>
 </dl>
@@ -2086,8 +2086,8 @@ rounded towards negative infinity.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><dl class="simple">
-<dt>tensor&lt;*?, bool&gt;</dt><dd><ul class="simple">
-<li><p>A boolean tensor with the same shape as the inputs.</p></li>
+<dt>tensor&lt;*?, T&gt;</dt><dd><ul class="simple">
+<li><p>A tensor with the broadcasted shape from inputs, and type is derived from inputs.</p></li>
 </ul>
 </dd>
 </dl>
@@ -2122,7 +2122,7 @@ rounded towards negative infinity.</p>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><dl class="simple">
 <dt>tensor&lt;*?, bool&gt;</dt><dd><ul class="simple">
-<li><p>A boolean tensor with the same shape as the inputs.</p></li>
+<li><p>A boolean tensor with the broadcasted shape from inputs.</p></li>
 </ul>
 </dd>
 </dl>
@@ -2156,7 +2156,7 @@ rounded towards negative infinity.</p>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><dl class="simple">
 <dt>tensor&lt;*?, T&gt;</dt><dd><ul class="simple">
-<li><p>A tensor with the same type and shape as the inputs.</p></li>
+<li><p>A tensor with the broadcasted shape from inputs, and type is derived from inputs.</p></li>
 </ul>
 </dd>
 </dl>
@@ -2189,8 +2189,8 @@ rounded towards negative infinity.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><dl class="simple">
-<dt>tensor&lt;*?, bool&gt;</dt><dd><ul class="simple">
-<li><p>A boolean tensor with the same shape as the inputs.</p></li>
+<dt>tensor&lt;*?, T&gt;</dt><dd><ul class="simple">
+<li><p>A tensor with the broadcasted shape from inputs, and type is derived from inputs.</p></li>
 </ul>
 </dd>
 </dl>
@@ -2223,8 +2223,8 @@ rounded towards negative infinity.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><dl class="simple">
-<dt>tensor&lt;*?, bool&gt;</dt><dd><ul class="simple">
-<li><p>A boolean tensor with the same shape as the inputs.</p></li>
+<dt>tensor&lt;*?, T&gt;</dt><dd><ul class="simple">
+<li><p>A tensor with the broadcasted shape from inputs, and type is derived from inputs.</p></li>
 </ul>
 </dd>
 </dl>
@@ -4109,14 +4109,14 @@ shape <code class="docutils literal notranslate"><span class="pre">(5,6)</span><
 <dl class="field-list">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>x: tensor&lt;[n,C_in,*D_in],T&gt; (Required)</strong></dt><dd><ul class="simple">
+<dt><strong>x: tensor&lt;[n,C_in,*D_in], T&gt; (Required)</strong></dt><dd><ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">3</span> <span class="pre">&lt;=</span> <span class="pre">rank</span> <span class="pre">&lt;=</span> <span class="pre">5</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">D_in</span></code> are spatial dimensions, <code class="docutils literal notranslate"><span class="pre">1</span> <span class="pre">&lt;=</span> <span class="pre">len(D_in)</span> <span class="pre">&lt;=</span> <span class="pre">3</span></code>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">C_in</span></code> is the number of input channels or depth dimensions.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">n</span></code> is the batch dimension.</p></li>
 </ul>
 </dd>
-<dt><strong>kernel_sizes: const tensor&lt;[K],T&gt; (Required)</strong></dt><dd><ul class="simple">
+<dt><strong>kernel_sizes: const tensor&lt;[K], T&gt; (Required)</strong></dt><dd><ul class="simple">
 <li><p>The size of the window for each spatial dimension <code class="docutils literal notranslate"><span class="pre">D_in</span></code> of the
 input tensor.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">K</span> <span class="pre">==</span> <span class="pre">len(D_in)</span></code></p></li>
@@ -4165,7 +4165,7 @@ when computing the average over the kernel window.</p></li>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><dl>
-<dt>tensor&lt;[n, C_out,*D_out],T&gt;</dt><dd><ul>
+<dt>tensor&lt;[n, C_out,*D_out], T&gt;</dt><dd><ul>
 <li><p>Same rank as <code class="docutils literal notranslate"><span class="pre">x</span></code>.</p></li>
 <li><dl>
 <dt>When <code class="docutils literal notranslate"><span class="pre">ceil_mode</span> <span class="pre">=</span> <span class="pre">False</span></code>:</dt><dd><ul>
@@ -4231,12 +4231,12 @@ then <code class="docutils literal notranslate"><span class="pre">D_out[i]</span
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>x: tensor&lt;[n,C_in,*D_in],T&gt; (Required)</strong></dt><dd><ul class="simple">
+<dt><strong>x: tensor&lt;[n,C_in,*D_in], T&gt; (Required)</strong></dt><dd><ul class="simple">
 <li><p>Only support 1d and 2d pooling.</p></li>
 <li><p>See <code class="docutils literal notranslate"><span class="pre">avg_pool</span></code>.</p></li>
 </ul>
 </dd>
-<dt><strong>kernel_sizes: const tensor&lt;[K],T&gt; (Required)</strong></dt><dd><ul class="simple">
+<dt><strong>kernel_sizes: const tensor&lt;[K], T&gt; (Required)</strong></dt><dd><ul class="simple">
 <li><p>See <code class="docutils literal notranslate"><span class="pre">avg_pool</span></code>.</p></li>
 </ul>
 </dd>
@@ -4256,7 +4256,7 @@ then <code class="docutils literal notranslate"><span class="pre">D_out[i]</span
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><dl class="simple">
-<dt>tensor&lt;[n, C_out,*D_out],T&gt;</dt><dd><ul class="simple">
+<dt>tensor&lt;[n, C_out,*D_out], T&gt;</dt><dd><ul class="simple">
 <li><p>See <code class="docutils literal notranslate"><span class="pre">avg_pool</span></code>.</p></li>
 </ul>
 </dd>
@@ -4285,11 +4285,11 @@ then <code class="docutils literal notranslate"><span class="pre">D_out[i]</span
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>x: tensor&lt;[n,C_in,*D_in],T&gt; (Required)</strong></dt><dd><ul class="simple">
+<dt><strong>x: tensor&lt;[n,C_in,*D_in], T&gt; (Required)</strong></dt><dd><ul class="simple">
 <li><p>See <code class="docutils literal notranslate"><span class="pre">avg_pool</span></code>.</p></li>
 </ul>
 </dd>
-<dt><strong>kernel_sizes: const tensor&lt;[K],T&gt; (Required)</strong></dt><dd><ul class="simple">
+<dt><strong>kernel_sizes: const tensor&lt;[K], T&gt; (Required)</strong></dt><dd><ul class="simple">
 <li><p>See <code class="docutils literal notranslate"><span class="pre">avg_pool</span></code>.</p></li>
 </ul>
 </dd>
@@ -4313,7 +4313,7 @@ then <code class="docutils literal notranslate"><span class="pre">D_out[i]</span
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><dl class="simple">
-<dt>tensor&lt;[n, C_out,*D_out],T&gt;</dt><dd><ul class="simple">
+<dt>tensor&lt;[n, C_out,*D_out], T&gt;</dt><dd><ul class="simple">
 <li><p>See <code class="docutils literal notranslate"><span class="pre">avg_pool</span></code>.</p></li>
 </ul>
 </dd>
@@ -6048,7 +6048,7 @@ at most <code class="docutils literal notranslate"><span class="pre">D[i]</span>
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.range_1d">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.</span></span><span class="sig-name descname"><span class="pre">range_1d</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS15/tensor_operation.html#range_1d"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.range_1d" title="Permalink to this definition"></a></dt>
-<dd><p>Returns a numpy-like 1- range sequence.</p>
+<dd><p>Returns a numpy-like 1-D range sequence.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
@@ -6317,21 +6317,19 @@ determined at compile time (i.e. a tuple).</p></li>
 </dd>
 </dl>
 <p class="rubric">Examples</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">in1</span> <span class="p">:</span> <span class="n">shape</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">value</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">]]</span>
-<span class="n">in2</span> <span class="p">:</span> <span class="n">shape</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">value</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">],</span> <span class="p">[</span><span class="mi">9</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span> <span class="p">[</span><span class="mi">11</span><span class="p">,</span> <span class="mi">12</span><span class="p">]]</span>
-<span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">in1</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">]]</span>  <span class="c1"># shape (3, 2)</span>
+<span class="n">in2</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">],</span> <span class="p">[</span><span class="mi">9</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span> <span class="p">[</span><span class="mi">11</span><span class="p">,</span> <span class="mi">12</span><span class="p">]]</span>  <span class="c1"># shape (3, 2)</span>
+<span class="n">axis</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># output shape is (6, 2)</span>
 
-<span class="k">if</span> <span class="n">interleave</span> <span class="o">=</span> <span class="kc">False</span> <span class="p">(</span><span class="n">default</span><span class="p">)</span>
-<span class="n">output</span> <span class="p">:</span> <span class="n">shape</span> <span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-<span class="n">output</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">in1</span>
-<span class="n">output</span><span class="p">[</span><span class="mi">3</span><span class="p">:</span><span class="mi">6</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">in2</span>
-<span class="n">value</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span> <span class="p">[</span><span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">],</span> <span class="p">[</span><span class="mi">9</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span> <span class="p">[</span><span class="mi">11</span><span class="p">,</span> <span class="mi">12</span><span class="p">]]</span>
+<span class="k">if</span> <span class="n">interleave</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>  <span class="c1"># default</span>
+    <span class="c1"># output[0:3, :] = in1</span>
+    <span class="c1"># output[3:6, :] = in2</span>
+    <span class="n">output</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span> <span class="p">[</span><span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">],</span> <span class="p">[</span><span class="mi">9</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span> <span class="p">[</span><span class="mi">11</span><span class="p">,</span> <span class="mi">12</span><span class="p">]]</span>
 
-<span class="k">if</span> <span class="n">interleave</span> <span class="o">=</span> <span class="kc">True</span>
-<span class="n">output</span> <span class="p">:</span> <span class="n">shape</span> <span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
-<span class="n">output</span><span class="p">[</span><span class="mi">0</span><span class="p">::</span><span class="mi">2</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">in1</span>
-<span class="n">output</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">in2</span>
-<span class="n">value</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="p">[</span><span class="mi">9</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span> <span class="p">[</span><span class="mi">11</span><span class="p">,</span> <span class="mi">12</span><span class="p">]]</span>
+<span class="k">if</span> <span class="n">interleave</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+    <span class="c1"># output[0::2, :] = in1</span>
+    <span class="c1"># output[1::2, :] = in2</span>
+    <span class="n">output</span> <span class="o">=</span> <span class="p">[[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">7</span><span class="p">,</span> <span class="mi">8</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span> <span class="p">[</span><span class="mi">9</span><span class="p">,</span> <span class="mi">10</span><span class="p">],</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">],</span> <span class="p">[</span><span class="mi">11</span><span class="p">,</span> <span class="mi">12</span><span class="p">]]</span>
 </pre></div>
 </div>
 <dl class="field-list simple">

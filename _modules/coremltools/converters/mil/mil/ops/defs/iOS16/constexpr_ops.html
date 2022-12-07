@@ -66,9 +66,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../../../../../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../../../../../../../index.html">Module code</a> &raquo;</li>
-      <li>coremltools.converters.mil.mil.ops.defs.iOS16.constexpr_ops</li>
+      <li><a href="../../../../../../../../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">coremltools.converters.mil.mil.ops.defs.iOS16.constexpr_ops</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -82,14 +82,12 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">types</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.input_type</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">InputSpec</span><span class="p">,</span>
-    <span class="n">TensorInputType</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil._deployment_compatibility</span> <span class="kn">import</span> <span class="n">AvailableTarget</span> <span class="k">as</span> <span class="n">target</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.input_type</span> <span class="kn">import</span> <span class="p">(</span><span class="n">InputSpec</span><span class="p">,</span>
+                                                       <span class="n">TensorInputType</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.operation</span> <span class="kn">import</span> <span class="n">Operation</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs._op_reqs</span> <span class="kn">import</span> <span class="n">register_op</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs.iOS16</span> <span class="kn">import</span> <span class="n">_IOS16_TARGET</span>
+
 
 <div class="viewcode-block" id="constexpr_affine_dequantize"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS16.constexpr_ops.constexpr_affine_dequantize">[docs]</a><span class="nd">@register_op</span><span class="p">(</span><span class="n">opset_version</span><span class="o">=</span><span class="n">_IOS16_TARGET</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">constexpr_affine_dequantize</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
@@ -201,6 +199,8 @@
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">decompress</span><span class="p">(</span><span class="n">quantized_data</span><span class="p">,</span> <span class="n">zero_point</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">axis</span><span class="p">):</span>
+
+        <span class="n">axis</span> <span class="o">=</span> <span class="n">axis</span> <span class="k">if</span> <span class="n">axis</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">axis</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">quantized_data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
 
         <span class="k">def</span> <span class="nf">rank_promoted_to_same_as_quantized_data</span><span class="p">(</span><span class="n">param</span><span class="p">):</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">param</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
@@ -442,6 +442,10 @@
             <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span>
                 <span class="s2">&quot;Constraint Violated: M = ceil( product(shape) / 8) where M = mask.size&quot;</span>
             <span class="p">)</span>
+
+        <span class="n">bitarray</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unpackbits</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="n">bitorder</span><span class="o">=</span><span class="s2">&quot;little&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">bitarray</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">output_size</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">bitarray</span><span class="p">))):</span>
+            <span class="k">raise</span> <span class="ne">AssertionError</span><span class="p">(</span><span class="s2">&quot;Padded bits in mask should be unset or equals to zero&quot;</span><span class="p">)</span>
 
         <span class="n">dtype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nonzero_data</span><span class="o">.</span><span class="n">dtype</span>
         <span class="n">shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="o">.</span><span class="n">val</span>

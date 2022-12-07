@@ -66,9 +66,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../../../../../../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../../../../../../../index.html">Module code</a> &raquo;</li>
-      <li>coremltools.converters.mil.mil.ops.defs.iOS15.reduction</li>
+      <li><a href="../../../../../../../../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../../../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">coremltools.converters.mil.mil.ops.defs.iOS15.reduction</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -84,16 +84,10 @@
 <span class="c1">#  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">Operation</span><span class="p">,</span>
-    <span class="n">precondition</span><span class="p">,</span>
-    <span class="n">types</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.input_type</span> <span class="kn">import</span> <span class="p">(</span>
-    <span class="n">DefaultInputs</span><span class="p">,</span>
-    <span class="n">InputSpec</span><span class="p">,</span>
-    <span class="n">TensorInputType</span>
-<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil</span> <span class="kn">import</span> <span class="n">Operation</span><span class="p">,</span> <span class="n">precondition</span><span class="p">,</span> <span class="n">types</span>
+<span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.input_type</span> <span class="kn">import</span> <span class="p">(</span><span class="n">DefaultInputs</span><span class="p">,</span>
+                                                       <span class="n">InputSpec</span><span class="p">,</span>
+                                                       <span class="n">TensorInputType</span><span class="p">)</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.operation</span> <span class="kn">import</span> <span class="n">VALUE</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.mil.ops.defs._op_reqs</span> <span class="kn">import</span> <span class="n">register_op</span>
 
