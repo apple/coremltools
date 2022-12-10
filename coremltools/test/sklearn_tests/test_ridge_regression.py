@@ -88,7 +88,7 @@ class RidgeRegressionScikitTest(unittest.TestCase):
     @unittest.skipUnless(
         _is_macos() and _macos_version() >= (10, 13), "Only supported on macOS 10.13+"
     )
-    def test_linear_regression_evaluation(self):
+    def test_ridge_regression_evaluation(self):
         """
         Check that the evaluation results are the same in scikit learn and coremltools
         """

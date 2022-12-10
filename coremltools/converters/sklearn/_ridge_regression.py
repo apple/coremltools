@@ -57,7 +57,7 @@ def _convert(model, features, target):
     spec.specificationVersion = SPECIFICATION_VERSION
     spec = set_regressor_interface_params(spec, features, target)
 
-    # Add parameters for the linear regression.
+    # Add parameters for the ridge regression.
     lr = spec.glmRegressor
 
     if isinstance(model.intercept_, _np.ndarray):
