@@ -27,7 +27,7 @@ from . import (_SVC, _SVR, _decision_tree_classifier, _decision_tree_regressor,
                _linear_regression, _LinearSVC, _LinearSVR,
                _logistic_regression, _normalizer, _NuSVC, _NuSVR,
                _one_hot_encoder, _random_forest_classifier,
-               _random_forest_regressor, _standard_scaler)
+               _random_forest_regressor, _standard_scaler, _ridge_regression)
 
 _PIPELINE_INTERNAL_FEATURE_NAME = "__feature_vector__"
 
@@ -52,6 +52,7 @@ _converter_module_list = [
     _gradient_boosting_classifier,
     _gradient_boosting_regressor,
     _k_neighbors_classifier,
+    _ridge_regression
 ]
 
 
