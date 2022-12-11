@@ -282,7 +282,7 @@ def solve_sum_einsum(parsed_vectors, vars):
 
 
 def solve_generic_einsum(parsed_vectors, a_var, b_var, name):
-    """hi
+    """
     :param parsed_vectors: list[list[int]]
     :param a_var:
         - var
