@@ -255,6 +255,26 @@ def solve_diagonal_einsum(parsed_vectors, vars):
     return tuple(parsed_vectors), vars
 
 
+def solve_sum_einsum(parsed_vectors, vars):
+    def solve_sum_einsum_one_step(src_axes, out_axes, x):
+        dst_axes = []
+        for axis in src_axes:
+            if axis in out_axes:
+                continue
+            dst_axes.append(axis)
+        summed_axis_indices = [i for i in range(len(src_axes)) if src_axes[i] not in dst_axes]
+        x = mb.reduce_sum(x=x, axes=summed_axis_indices)
+        return dst_axes, x
+
+    parsed_vectors = list(parsed_vectors)
+    out_axes = parsed_vectors[-1]
+    for i, var in enumerate(vars):
+        dst_axes, var = solve_sum_einsum_one_step(parsed_vectors[i], out_axes, var)
+        parsed_vectors[i] = dst_axes
+        vars[i] = var
+    return parsed_vectors, vars
+
+
 def solve_generic_einsum(parsed_vectors, a_var, b_var, name):
     """
     :param parsed_vectors: list[list[int]]
@@ -290,6 +310,7 @@ def solve_generic_einsum(parsed_vectors, a_var, b_var, name):
         return mb.concat(values=dims, axis=0)
 
     parsed_vectors, vars = solve_diagonal_einsum(parsed_vectors, [a_var, b_var])
+    parsed_vectors, vars = solve_sum_einsum(parsed_vectors, [a_var, b_var])
     a_var, b_var = vars
     a_axes, b_axes, out_axes = parsed_vectors
 
