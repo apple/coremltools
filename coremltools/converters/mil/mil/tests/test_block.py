@@ -5,14 +5,17 @@
 
 import copy
 
-import numpy as _np
+import numpy as np
 import pytest
 
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil.passes.test_passes import CONSTEXPR_FUNCS
 from coremltools.converters.mil.testing_utils import (
-    assert_same_output_names, assert_same_output_shapes,
-    get_op_types_in_program)
+    assert_same_output_names,
+    assert_same_output_shapes,
+    get_op_types_in_program
+)
+
 
 """
 Test manipulating variable and operations in the Block.
@@ -27,7 +30,8 @@ the core API being tested here.
 
 
 def test_empty_block():
-    """Test an empty program
+    """
+    Test an empty program
     """
 
     @mb.program(input_specs=[mb.TensorSpec(shape=(2, 4))])
@@ -42,7 +46,8 @@ def test_empty_block():
 
 
 def test_add_op():
-    """Test add statement to an empty program, also change the output
+    """
+    Test add statement to an empty program, also change the output
     """
 
     @mb.program(input_specs=[mb.TensorSpec(shape=(2, 4))])
@@ -63,7 +68,8 @@ def test_add_op():
 
 
 def test_remove_op():
-    """Test remove all ops and return empty program
+    """
+    Test remove all ops and return empty program
     """
 
     @mb.program(input_specs=[mb.TensorSpec(shape=(2, 4))])
@@ -86,7 +92,8 @@ def test_remove_op():
 
 
 def test_remove_op2():
-    """Test remove ops with multiple identical inputs
+    """
+    Test remove ops with multiple identical inputs
     """
 
     @mb.program(input_specs=[mb.TensorSpec(shape=(2, 4))])
@@ -271,7 +278,7 @@ def test_replace_nonreplaceable_vars():
     constexpr_op = block.find_ops(op_type=constexpr_op)[0]
     
     with block:
-        const = mb.const(val=_np.random.rand(4, 2), before_op=constexpr_op)
+        const = mb.const(val=np.random.rand(4, 2), before_op=constexpr_op)
         expected_err_str = "might potentially be removed during the replacement of those vars."
         with pytest.raises(ValueError, match=expected_err_str):
             block.replace_uses_of_var_after_op(
@@ -299,7 +306,7 @@ def test_replace_nonreplaceable_vars_force():
     assert len(add_op.outputs[0].nonreplaceable_vars_upstream) == 1
 
     with block:
-        const = mb.const(val=_np.random.rand(4, 2), before_op=constexpr_op)
+        const = mb.const(val=np.random.rand(4, 2), before_op=constexpr_op)
         block.replace_uses_of_var_after_op(
             anchor_op=constexpr_op,
             old_var=constexpr_op.outputs[0],
@@ -312,7 +319,8 @@ def test_replace_nonreplaceable_vars_force():
     
 
 def test_simple_substituion():
-    """Replace log(x+y) with log(x*y)
+    """
+    Replace log(x+y) with log(x*y)
     """
 
     @mb.program(input_specs=[mb.TensorSpec(shape=(2, 4)), mb.TensorSpec(shape=(2, 4))])
@@ -355,7 +363,9 @@ def test_simple_substituion():
 
 
 def test_substitute_nested_op():
-    """"Replace an conditional op with nested block"""
+    """"
+    Replace an conditional op with nested block
+    """
 
     @mb.program(input_specs=[mb.TensorSpec(shape=(2, 4)), mb.TensorSpec(shape=(2, 4))])
     def prog(x0, y0):
@@ -389,7 +399,8 @@ def test_substitute_nested_op():
 
 
 def test_simple_transpose_squash():
-    """Test eliminate consecutive transpose can be canceled
+    """
+    Test eliminate consecutive transpose can be canceled
     """
 
     @mb.program(input_specs=[mb.TensorSpec(shape=(2, 4))])
