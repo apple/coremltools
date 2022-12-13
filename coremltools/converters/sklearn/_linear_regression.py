@@ -13,12 +13,12 @@ from ...proto import Model_pb2 as _Model_pb2
 
 if _HAS_SKLEARN:
     import sklearn
-    from sklearn.linear_model import LinearRegression
+    from sklearn.linear_model import LinearRegression, Ridge
 
     from . import _sklearn_util
 
     model_type = "regressor"
-    sklearn_class = sklearn.linear_model.LinearRegression
+    sklearn_class = sklearn.linear_model.LinearRegression or sklearn.linear_model.Ridge
 
 
 def convert(model, features, target):
@@ -45,7 +45,7 @@ def convert(model, features, target):
         )
 
     # Check the scikit learn model
-    _sklearn_util.check_expected_type(model, LinearRegression)
+    _sklearn_util.check_expected_type(model, LinearRegression or Ridge)
     _sklearn_util.check_fitted(model, lambda m: hasattr(m, "coef_"))
 
     return _MLModel(_convert(model, features, target))
