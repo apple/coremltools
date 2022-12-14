@@ -1176,10 +1176,10 @@ def slice_by_index(const_context, builder, op):
         for i in range(rank):
             if (not begin_mask[i] and begin[i] != 0) or \
                (not end_mask[i] and end[i] != op.x.shape[i]) or \
-               stride[i] != 1:
+               squeeze_mask[i] or stride[i] != 1:
                 slice_dim.append(i)
 
-        if len(slice_dim) == 1 and not squeeze_mask[slice_dim[0]]:
+        if len(slice_dim) == 1:
             dim = slice_dim[0] - rank
             if dim in [-3, -2, -1]:
                 # get the axis, only channel, width, and depth dimension are supported

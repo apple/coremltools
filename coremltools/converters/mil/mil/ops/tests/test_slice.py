@@ -274,3 +274,39 @@ class TestSliceByIndex:
         y_mlprogram = list(model.predict({'x': x}).values())[0]
         # rdar://102217935 needs to be fixed before mlprogram will pass
         # np.testing.assert_allclose(y_numpy, y_mlprogram)
+
+    @staticmethod
+    def test_slice_by_index_slice_squeeze_separate():
+        INPUT_SHAPE = (1, 2, 8, 16)
+
+        @mb.program(input_specs=[mb.TensorSpec(shape=INPUT_SHAPE)])
+        def prog(x):
+            x = mb.slice_by_index(
+                x=x,
+                begin=[0, 0, 0, 0],
+                end=[1, 2, 8, 12],
+                stride=[1, 1, 1, 2],
+                begin_mask=None,
+                end_mask=None,
+                squeeze_mask=[True, False, False, False],
+            )
+            return x
+
+        x = np.random.rand(*INPUT_SHAPE)
+
+        # slice by index is x[begin[0]: end[0]: stride[0], begin[1]: end[1]: stride[1], ...]
+        # and squeeze dim 0
+        y_numpy = x[0:1:1, 0:2:1, 0:8:1, 0:12:2]
+        y_numpy = np.squeeze(y_numpy, axis=0)
+
+        model = ct.convert(prog, source="milinternal", convert_to="neuralnetwork")
+        y_neuralnetwork = list(model.predict({'x': x}).values())[0]
+
+        assert y_numpy.shape == y_neuralnetwork.shape
+        np.testing.assert_allclose(y_numpy, y_neuralnetwork)
+
+        model = ct.convert(prog, source="milinternal", convert_to="mlprogram")
+        y_mlprogram = list(model.predict({'x': x}).values())[0]
+        # TODO: https://github.com/apple/coremltools/issues/1710
+        # MLProgram does not apply squeeze_mask.
+        # np.testing.assert_allclose(y_numpy, y_mlprogram)
