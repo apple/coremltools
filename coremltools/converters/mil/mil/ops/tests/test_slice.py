@@ -307,6 +307,5 @@ class TestSliceByIndex:
 
         model = ct.convert(prog, source="milinternal", convert_to="mlprogram")
         y_mlprogram = list(model.predict({'x': x}).values())[0]
-        # TODO: https://github.com/apple/coremltools/issues/1710
-        # MLProgram does not apply squeeze_mask.
+        # TODO: rdar://103365766 MLProgram does not apply squeeze_mask.
         # np.testing.assert_allclose(y_numpy, y_mlprogram)
