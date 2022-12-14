@@ -23,7 +23,6 @@ from coremltools.converters.mil.mil.ops.registry import SSAOpRegistry
 from coremltools.converters.mil.mil.types.symbolic import (any_symbolic,
                                                            any_variadic,
                                                            is_symbolic)
-from coremltools.libmilstoragepython import _BlobStorageWriter as BlobWriter
 from coremltools.models.neural_network.flexible_shape_utils import (
     NeuralNetworkImageSize, NeuralNetworkImageSizeRange,
     add_enumerated_image_sizes, add_multiarray_ndshape_enumeration,
@@ -36,6 +35,11 @@ from coremltools.proto import Model_pb2 as ml
 from ..backend_helper import (_get_colorspace_enum,
                               _validate_image_input_output_shapes)
 from .passes import mil_passes
+
+try:
+    from coremltools.libmilstoragepython import _BlobStorageWriter as BlobWriter
+except:
+    BlobWriter = None
 
 
 def should_use_weight_file(val):
@@ -271,6 +275,8 @@ def _add_classify_op(prog, classifier_config):
         return out[0].name, out[1].name
 
 def load(prog, weights_dir, resume_on_errors=False, specification_version=_SPECIFICATION_VERSION_IOS_15, **kwargs):
+    if BlobWriter is None:
+        raise RuntimeError("BlobWriter not loaded")
     if "main" not in prog.functions:
         raise ValueError("main function not found in program")
 

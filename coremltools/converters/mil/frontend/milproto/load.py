@@ -18,12 +18,15 @@ from coremltools.converters.mil.mil import (Function, ListVar, Placeholder,
 from coremltools.converters.mil.mil.block import curr_block
 from coremltools.converters.mil.mil.ops.registry import \
     SSAOpRegistry as _SSAOpRegistry
-from coremltools.libmilstoragepython import _BlobStorageReader as BlobReader
 from coremltools.proto import MIL_pb2 as pm
 from coremltools.proto import Model_pb2 as ml
 
 from .helper import proto_to_types
 
+try:
+    from coremltools.libmilstoragepython import _BlobStorageReader as BlobReader
+except:
+    BlobReader = None
 
 
 class TranscriptionContext:
@@ -89,6 +92,8 @@ def _load_immediate_value(immediatevalue_spec):
 
 
 def _load_file_value(context, filevalue_spec, dtype):
+    if BlobReader is None:
+        raise RuntimeError("BlobReader not loaded")
     if not isinstance(filevalue_spec, pm.Value.BlobFileValue):
         raise TypeError("Invalid BlobFileValue spec object")
 
