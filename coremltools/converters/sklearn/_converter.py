@@ -27,6 +27,7 @@ def convert(sk_obj, input_features=None, output_feature_names=None):
 
         -   Linear and Logistic Regression
         -   LinearSVC and LinearSVR
+        -   Ridge Regression
         -   SVC and SVR
         -   NuSVC and NuSVR
         -   Gradient Boosting Classifier and Regressor
