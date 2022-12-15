@@ -1842,7 +1842,7 @@ def hardtanh(context, node):
     context.add(res)
 
 
-@register_torch_op
+@register_torch_op(torch_alias=['concat'])
 def cat(context, node):
     inputs = _get_inputs(context, node)
     axis = 0 if len(inputs) == 1 else inputs[1]
