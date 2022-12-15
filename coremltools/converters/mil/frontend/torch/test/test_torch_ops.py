@@ -3312,6 +3312,32 @@ class TestConcat(TorchBaseTest):
             compute_unit=compute_unit,
         )
 
+    @pytest.mark.parametrize("compute_unit, backend", itertools.product(compute_units, backends))
+    def test_concat_alias(self, compute_unit, backend):
+
+        class Outer(torch.nn.Module):
+            def __init__(self, net):
+                super(Outer, self).__init__()
+                self.net = net
+
+            def forward(self, x):
+                x = self.net(x)
+                return x
+
+        class TestNet(nn.Module):
+            def forward(self, x):
+                x = torch.concat((x, x), axis=1)
+                return x
+
+        # test passes without adding alias if `Outer` is not used
+        model = Outer(TestNet())
+        self.run_compare_torch(
+            (1, 3, 16, 16),
+            model,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
 
 class TestBitwiseNot(TorchBaseTest):
     @pytest.mark.parametrize(
