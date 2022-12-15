@@ -1179,7 +1179,7 @@ def slice_by_index(const_context, builder, op):
                stride[i] != 1:
                 slice_dim.append(i)
 
-        if len(slice_dim) == 1 and not squeeze_mask[slice_dim[0]]:
+        if len(slice_dim) == 1 and not any(squeeze_mask):
             dim = slice_dim[0] - rank
             if dim in [-3, -2, -1]:
                 # get the axis, only channel, width, and depth dimension are supported
