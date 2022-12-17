@@ -256,6 +256,17 @@ def solve_diagonal_einsum(parsed_vectors, vars):
 
 
 def solve_sum_einsum(parsed_vectors, vars):
+    """
+    Apply reduce_sum for axes before binary einsum calculation if enable.
+
+    e.g.:
+    input : "abce,acd->ae"
+    returns : "ace,ax->ae"
+
+    In this example, since each of those axes is only used by one var and does not appear in the output,
+    axes `b` and `d` can be reduced before binary einsum.
+    """
+
     def solve_sum_einsum_one_step(src_axes, used_by_other_axes, x):
         dst_axes = []
         for axis in src_axes:
