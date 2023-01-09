@@ -137,7 +137,7 @@
             <span class="k">del</span> <span class="n">input_dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
 
 <span class="k">def</span> <span class="nf">_create_mlpackage</span><span class="p">(</span><span class="n">proto_spec</span><span class="p">,</span> <span class="n">weights_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">package_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">copy_weights</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Parameters</span>
 <span class="sd">    ---------</span>
 <span class="sd">    proto_spec: Model_pb2</span>
@@ -188,7 +188,7 @@
 
 
 <div class="viewcode-block" id="save_spec"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.utils.save_spec">[docs]</a><span class="k">def</span> <span class="nf">save_spec</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">auto_set_specification_version</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">weights_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Save a protobuf model specification to file.</span>
 
 <span class="sd">    Parameters</span>
@@ -262,7 +262,7 @@
             <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">spec_str</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="load_spec"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.utils.load_spec">[docs]</a><span class="k">def</span> <span class="nf">load_spec</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Load a protobuf model specification from file.</span>
 
 <span class="sd">    Parameters</span>
@@ -313,7 +313,7 @@
 
 
 <span class="k">def</span> <span class="nf">_get_nn_layers</span><span class="p">(</span><span class="n">spec</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Returns a list of neural network layers if the model contains any.</span>
 
 <span class="sd">    Parameters</span>
@@ -396,7 +396,7 @@
 
 
 <span class="k">def</span> <span class="nf">_convert_neural_network_weights_to_fp16</span><span class="p">(</span><span class="n">full_precision_model</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Utility function to convert a full precision (float) MLModel to a</span>
 <span class="sd">    half precision MLModel (float16).</span>
 
@@ -419,7 +419,7 @@
 
 
 <span class="k">def</span> <span class="nf">_get_model</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">compute_units</span><span class="o">=</span><span class="n">_ComputeUnit</span><span class="o">.</span><span class="n">ALL</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Utility to get the model and the data.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">MLModel</span>
@@ -431,7 +431,7 @@
 
 
 <div class="viewcode-block" id="evaluate_regressor"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.utils.evaluate_regressor">[docs]</a><span class="k">def</span> <span class="nf">evaluate_regressor</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">&quot;target&quot;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Evaluate a CoreML regression model and compare against predictions</span>
 <span class="sd">    from the original framework (for testing correctness of conversion).</span>
 
@@ -495,7 +495,7 @@
 
 
 <div class="viewcode-block" id="evaluate_classifier"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.utils.evaluate_classifier">[docs]</a><span class="k">def</span> <span class="nf">evaluate_classifier</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="s2">&quot;target&quot;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Evaluate a Core ML classifier model and compare against predictions</span>
 <span class="sd">    from the original framework (for testing correctness of conversion).</span>
 <span class="sd">    Use this evaluation for models that don&#39;t deal with probabilities.</span>
@@ -557,7 +557,7 @@
 <div class="viewcode-block" id="evaluate_classifier_with_probabilities"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.utils.evaluate_classifier_with_probabilities">[docs]</a><span class="k">def</span> <span class="nf">evaluate_classifier_with_probabilities</span><span class="p">(</span>
     <span class="n">model</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">probabilities</span><span class="o">=</span><span class="s2">&quot;probabilities&quot;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span>
 <span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Evaluate a classifier specification for testing.</span>
 
 <span class="sd">    Parameters</span>
@@ -625,7 +625,7 @@
 <div class="viewcode-block" id="rename_feature"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.utils.rename_feature">[docs]</a><span class="k">def</span> <span class="nf">rename_feature</span><span class="p">(</span>
     <span class="n">spec</span><span class="p">,</span> <span class="n">current_name</span><span class="p">,</span> <span class="n">new_name</span><span class="p">,</span> <span class="n">rename_inputs</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">rename_outputs</span><span class="o">=</span><span class="kc">True</span>
 <span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Rename a feature in the specification.</span>
 
 <span class="sd">    Parameters</span>
@@ -783,7 +783,7 @@
 
 
 <span class="k">def</span> <span class="nf">_sanitize_value</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Performs cleaning steps on the data so various type comparisons can</span>
 <span class="sd">    be performed correctly.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -804,7 +804,7 @@
 
 
 <span class="k">def</span> <span class="nf">_element_equal</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Performs a robust equality test between elements.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">_np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">_np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
@@ -827,7 +827,7 @@
 
 
 <div class="viewcode-block" id="evaluate_transformer"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.utils.evaluate_transformer">[docs]</a><span class="k">def</span> <span class="nf">evaluate_transformer</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">input_data</span><span class="p">,</span> <span class="n">reference_output</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Evaluate a transformer specification for testing.</span>
 
 <span class="sd">    Parameters</span>
@@ -893,7 +893,7 @@
 
 
 <span class="k">def</span> <span class="nf">_has_custom_layer</span><span class="p">(</span><span class="n">spec</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 
 <span class="sd">    Returns true if the given protobuf specification has a custom layer, and false otherwise.</span>
 
@@ -917,7 +917,7 @@
 
 
 <span class="k">def</span> <span class="nf">_get_custom_layer_names</span><span class="p">(</span><span class="n">spec</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 
 <span class="sd">    Returns a list of className fields which appear in the given protobuf spec</span>
 
@@ -941,7 +941,7 @@
 
 
 <span class="k">def</span> <span class="nf">_get_custom_layers</span><span class="p">(</span><span class="n">spec</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 
 <span class="sd">    Returns a list of all neural network custom layers in the spec.</span>
 
@@ -964,7 +964,7 @@
 
 
 <span class="k">def</span> <span class="nf">_replace_custom_layer_name</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">oldname</span><span class="p">,</span> <span class="n">newname</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 
 <span class="sd">    Substitutes newname for oldname in the className field of custom layers. If there are no custom layers, or no</span>
 <span class="sd">    layers with className=oldname, then the spec is unchanged.</span>
@@ -990,13 +990,13 @@
 
 
 <span class="k">def</span> <span class="nf">_is_macos</span><span class="p">():</span>
-    <span class="sd">&quot;&quot;&quot;Returns True if current platform is MacOS, False otherwise.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns True if current platform is MacOS, False otherwise.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">_sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s2">&quot;darwin&quot;</span>
 
 
 <span class="nd">@_lru_cache</span><span class="p">()</span>
 <span class="k">def</span> <span class="nf">_macos_version</span><span class="p">():</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Returns macOS version as a tuple of integers, making it easy to do proper</span>
 <span class="sd">    version comparisons. On non-Macs, it returns an empty tuple.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -1010,7 +1010,7 @@
 
 
 <span class="k">def</span> <span class="nf">_python_version</span><span class="p">():</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return python version as a tuple of integers</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">version</span> <span class="o">=</span> <span class="n">_sys</span><span class="o">.</span><span class="n">version</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
@@ -1031,7 +1031,7 @@
 
 
 <span class="k">def</span> <span class="nf">_get_input_names</span><span class="p">(</span><span class="n">spec</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Returns a list of the names of the inputs to this model.</span>
 <span class="sd">    :param spec: The model protobuf specification</span>
 <span class="sd">    :return: list of str A list of input feature names</span>
@@ -1041,7 +1041,7 @@
 
 
 <div class="viewcode-block" id="convert_double_to_float_multiarray_type"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.utils.convert_double_to_float_multiarray_type">[docs]</a><span class="k">def</span> <span class="nf">convert_double_to_float_multiarray_type</span><span class="p">(</span><span class="n">spec</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Convert all double multiarrays feature descriptions (input, output, training input)</span>
 <span class="sd">    to float multiarrays</span>
 

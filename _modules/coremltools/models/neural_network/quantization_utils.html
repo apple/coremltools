@@ -111,7 +111,7 @@
 
 
 <div class="viewcode-block" id="QuantizedLayerSelector"><a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.quantization_utils.QuantizedLayerSelector">[docs]</a><span class="k">class</span> <span class="nc">QuantizedLayerSelector</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This is the base class to implement custom selectors to skip certain</span>
 <span class="sd">    layers during quantization. To implement a custom selector, create a class</span>
 <span class="sd">    that inherits this class and override `do_quantize()` method.</span>
@@ -161,7 +161,7 @@
 
 
 <div class="viewcode-block" id="AdvancedQuantizedLayerSelector"><a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.quantization_utils.AdvancedQuantizedLayerSelector">[docs]</a><span class="k">class</span> <span class="nc">AdvancedQuantizedLayerSelector</span><span class="p">(</span><span class="n">QuantizedLayerSelector</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; Quantized layer selector allowing the user to specify some types of</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; Quantized layer selector allowing the user to specify some types of</span>
 <span class="sd">    layers to skip during quantization process and the minimum size parameters</span>
 <span class="sd">    in quantized convolution layers.</span>
 
@@ -207,7 +207,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">minimum_conv_weight_count</span> <span class="o">=</span> <span class="n">minimum_conv_weight_count</span>
 
 <div class="viewcode-block" id="AdvancedQuantizedLayerSelector.do_quantize"><a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.quantization_utils.AdvancedQuantizedLayerSelector.do_quantize">[docs]</a>    <span class="k">def</span> <span class="nf">do_quantize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">weight_param</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; weight_param - should be name of the WeightParam field</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot; weight_param - should be name of the WeightParam field</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">do_quantize</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">ret</span><span class="p">:</span>
@@ -257,7 +257,7 @@
 
 
 <div class="viewcode-block" id="MatrixMultiplyLayerSelector"><a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.quantization_utils.MatrixMultiplyLayerSelector">[docs]</a><span class="k">class</span> <span class="nc">MatrixMultiplyLayerSelector</span><span class="p">(</span><span class="n">QuantizedLayerSelector</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Layer selector object that allows users to select matrix multiplication layers</span>
 <span class="sd">    with one of the matrices being constant, based on some criterions like total</span>
 <span class="sd">    numbers of parameters/weights, number of input or output channels and/or layer</span>
@@ -297,7 +297,7 @@
             <span class="p">)</span>
 
 <div class="viewcode-block" id="MatrixMultiplyLayerSelector.do_quantize"><a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.quantization_utils.MatrixMultiplyLayerSelector.do_quantize">[docs]</a>    <span class="k">def</span> <span class="nf">do_quantize</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">layer</span><span class="p">,</span> <span class="n">weight_param</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        weight_param - should be name of the WeightParam field</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">ret</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">do_quantize</span><span class="p">(</span><span class="n">layer</span><span class="p">)</span>
@@ -349,7 +349,7 @@
 
 
 <span class="k">def</span> <span class="nf">_convert_1bit_array_to_byte_array</span><span class="p">(</span><span class="n">arr</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Convert bit array to byte array.</span>
 
 <span class="sd">    arr: list</span>
@@ -393,7 +393,7 @@
 
 
 <span class="k">def</span> <span class="nf">_decompose_bytes_to_bit_arr</span><span class="p">(</span><span class="n">arr</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Unpack bytes to bits</span>
 
 <span class="sd">    arr: list</span>
@@ -412,7 +412,7 @@
 
 
 <span class="k">def</span> <span class="nf">_get_linear_lookup_table_and_weight</span><span class="p">(</span><span class="n">nbits</span><span class="p">,</span> <span class="n">wp</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Generate a linear lookup table.</span>
 
 <span class="sd">    nbits: int</span>
@@ -438,7 +438,7 @@
 <span class="k">def</span> <span class="nf">_get_kmeans_lookup_table_and_weight</span><span class="p">(</span>
     <span class="n">nbits</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="s2">&quot;k-means++&quot;</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-2</span><span class="p">,</span> <span class="n">n_init</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">rand_seed</span><span class="o">=</span><span class="mi">0</span>
 <span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Generate K-Means lookup table given a weight parameter field</span>
 
 <span class="sd">    nbits:</span>
@@ -475,7 +475,7 @@
 
 
 <span class="k">def</span> <span class="nf">_quantize_channelwise_linear</span><span class="p">(</span><span class="n">weight</span><span class="p">,</span> <span class="n">nbits</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">symmetric</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Linearly quantize weight blob.</span>
 
 <span class="sd">    weight: numpy.array</span>
@@ -545,7 +545,7 @@
 
 
 <span class="k">def</span> <span class="nf">_quantize_wp</span><span class="p">(</span><span class="n">wp</span><span class="p">,</span> <span class="n">nbits</span><span class="p">,</span> <span class="n">qm</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Quantize the weight blob</span>
 
 <span class="sd">    wp: numpy.array</span>
@@ -608,7 +608,7 @@
 
 
 <span class="k">def</span> <span class="nf">_quantize_wp_field</span><span class="p">(</span><span class="n">wp</span><span class="p">,</span> <span class="n">nbits</span><span class="p">,</span> <span class="n">qm</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Quantize WeightParam field in Neural Network Protobuf</span>
 
 <span class="sd">    wp: MLModel.NeuralNetwork.WeightParam</span>
@@ -772,14 +772,14 @@
 
 
 <span class="k">def</span> <span class="nf">_dequantize_nn_spec</span><span class="p">(</span><span class="n">spec</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Dequantize weights in NeuralNetwork type mlmodel specifications.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">_quantize_nn_spec</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">_QUANTIZATION_MODE_DEQUANTIZE</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">_quantize_nn_spec</span><span class="p">(</span><span class="n">nn_spec</span><span class="p">,</span> <span class="n">nbits</span><span class="p">,</span> <span class="n">qm</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Quantize weights in NeuralNetwork type mlmodel specifications.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">selector</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;selector&quot;</span><span class="p">,</span> <span class="n">QuantizedLayerSelector</span><span class="p">())</span>
@@ -1293,7 +1293,7 @@
 
 
 <div class="viewcode-block" id="OutputMetric"><a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.quantization_utils.OutputMetric">[docs]</a><span class="k">class</span> <span class="nc">OutputMetric</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Utility class to calculate and hold metrics between</span>
 <span class="sd">    two model outputs</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -1313,7 +1313,7 @@
 
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
-                <span class="sd">&quot;&quot;&quot;Unable to determine which metric to</span>
+<span class="w">                </span><span class="sd">&quot;&quot;&quot;Unable to determine which metric to</span>
 <span class="sd">            compute for output: {}&quot;&quot;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
                     <span class="n">name</span>
                 <span class="p">)</span>
@@ -1329,7 +1329,7 @@
 
 
 <div class="viewcode-block" id="ModelMetrics"><a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.quantization_utils.ModelMetrics">[docs]</a><span class="k">class</span> <span class="nc">ModelMetrics</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A utility class to hold evaluation metrics</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -1449,7 +1449,7 @@
 
 
 <div class="viewcode-block" id="compare_models"><a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.quantization_utils.compare_models">[docs]</a><span class="k">def</span> <span class="nf">compare_models</span><span class="p">(</span><span class="n">full_precision_model</span><span class="p">,</span> <span class="n">quantized_model</span><span class="p">,</span> <span class="n">sample_data</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Utility function to compare the performance of a full precision vs quantized model</span>
 
 <span class="sd">    full_precision_model: MLModel</span>
@@ -1480,7 +1480,7 @@
         <span class="n">input_type</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">input</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">WhichOneof</span><span class="p">(</span><span class="s2">&quot;Type&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">num_inputs</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">input_type</span> <span class="o">!=</span> <span class="s2">&quot;imageType&quot;</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
-                <span class="sd">&quot;&quot;&quot;Unable to analyze quantized models. Sample data</span>
+<span class="w">                </span><span class="sd">&quot;&quot;&quot;Unable to analyze quantized models. Sample data</span>
 <span class="sd">            was a path to a directory which is only supported with models with</span>
 <span class="sd">            one image type input. Please try passing in a list of sample inputs</span>
 <span class="sd">            as sample data.</span>
@@ -1502,7 +1502,7 @@
 
 
 <div class="viewcode-block" id="activate_int8_int8_matrix_multiplications"><a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.quantization_utils.activate_int8_int8_matrix_multiplications">[docs]</a><span class="k">def</span> <span class="nf">activate_int8_int8_matrix_multiplications</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">selector</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Utility function that takes in either a full precision (float) spec or</span>
 <span class="sd">    an nbit quantized spec to selectively enable int8 activation + weight quantization</span>
 <span class="sd">    of matrix multiplication operations where the second matrix represents a constant weight.</span>
@@ -1627,7 +1627,7 @@
 <div class="viewcode-block" id="quantize_weights"><a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.quantization_utils.quantize_weights">[docs]</a><span class="k">def</span> <span class="nf">quantize_weights</span><span class="p">(</span>
     <span class="n">full_precision_model</span><span class="p">,</span> <span class="n">nbits</span><span class="p">,</span> <span class="n">quantization_mode</span><span class="o">=</span><span class="s2">&quot;linear&quot;</span><span class="p">,</span> <span class="n">sample_data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
 <span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Utility function to convert a full precision (float) MLModel to a</span>
 <span class="sd">    nbit quantized MLModel (float16).</span>
 

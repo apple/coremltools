@@ -96,14 +96,14 @@
 
 
 <div class="viewcode-block" id="TreeEnsembleBase"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.tree_ensemble.TreeEnsembleBase">[docs]</a><span class="k">class</span> <span class="nc">TreeEnsembleBase</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Base class for the tree ensemble builder class.  This should be instantiated</span>
 <span class="sd">    either through the :py:class:`TreeEnsembleRegressor` or</span>
 <span class="sd">    :py:class:`TreeEnsembleClassifier` classes.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="TreeEnsembleBase.__init__"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.tree_ensemble.TreeEnsembleBase.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        High level Python API to build a tree ensemble model for Core ML.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Set inputs and outputs</span>
@@ -114,7 +114,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">spec</span> <span class="o">=</span> <span class="n">spec</span></div>
 
 <div class="viewcode-block" id="TreeEnsembleBase.set_default_prediction_value"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.tree_ensemble.TreeEnsembleBase.set_default_prediction_value">[docs]</a>    <span class="k">def</span> <span class="nf">set_default_prediction_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">values</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set the default prediction value(s).</span>
 
 <span class="sd">        The values given here form the base prediction value that the values</span>
@@ -135,7 +135,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">tree_parameters</span><span class="o">.</span><span class="n">basePredictionValue</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="TreeEnsembleBase.set_post_evaluation_transform"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.tree_ensemble.TreeEnsembleBase.set_post_evaluation_transform">[docs]</a>    <span class="k">def</span> <span class="nf">set_post_evaluation_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
-        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set the post processing transform applied after the prediction value</span>
 <span class="sd">        from the tree ensemble.</span>
 
@@ -189,7 +189,7 @@
         <span class="n">relative_hit_rate</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
         <span class="n">missing_value_tracks_true_child</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Add a branch node to the tree ensemble.</span>
 
 <span class="sd">        Parameters</span>
@@ -277,7 +277,7 @@
         <span class="n">spec_node</span><span class="o">.</span><span class="n">missingValueTracksTrueChild</span> <span class="o">=</span> <span class="n">missing_value_tracks_true_child</span></div>
 
 <div class="viewcode-block" id="TreeEnsembleBase.add_leaf_node"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.tree_ensemble.TreeEnsembleBase.add_leaf_node">[docs]</a>    <span class="k">def</span> <span class="nf">add_leaf_node</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tree_id</span><span class="p">,</span> <span class="n">node_id</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">relative_hit_rate</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Add a leaf node to the tree ensemble.</span>
 
 <span class="sd">        Parameters</span>
@@ -329,7 +329,7 @@
 
 
 <div class="viewcode-block" id="TreeEnsembleRegressor"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.tree_ensemble.TreeEnsembleRegressor">[docs]</a><span class="k">class</span> <span class="nc">TreeEnsembleRegressor</span><span class="p">(</span><span class="n">TreeEnsembleBase</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Tree Ensemble builder class to construct a Tree Ensemble regression model.</span>
 
 <span class="sd">    The TreeEnsembleRegressor class constructs a Tree Ensemble model incrementally</span>
@@ -391,7 +391,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="TreeEnsembleRegressor.__init__"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.tree_ensemble.TreeEnsembleRegressor.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">features</span><span class="p">,</span> <span class="n">target</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create a Tree Ensemble regression model that takes one or more input</span>
 <span class="sd">        features and maps them to an output feature.</span>
 
@@ -416,7 +416,7 @@
 
 
 <div class="viewcode-block" id="TreeEnsembleClassifier"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.tree_ensemble.TreeEnsembleClassifier">[docs]</a><span class="k">class</span> <span class="nc">TreeEnsembleClassifier</span><span class="p">(</span><span class="n">TreeEnsembleBase</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Tree Ensemble builder class to construct a Tree Ensemble classification model.</span>
 
 <span class="sd">    The TreeEnsembleClassifier class constructs a Tree Ensemble model incrementally</span>
@@ -473,7 +473,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="TreeEnsembleClassifier.__init__"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.tree_ensemble.TreeEnsembleClassifier.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">features</span><span class="p">,</span> <span class="n">class_labels</span><span class="p">,</span> <span class="n">output_features</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create a tree ensemble classifier model.</span>
 
 <span class="sd">        Parameters</span>

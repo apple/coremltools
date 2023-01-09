@@ -99,7 +99,7 @@
 
 
 <span class="k">class</span> <span class="nc">activation_with_alpha</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Activation with Alpha Op Superclass</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
@@ -116,7 +116,7 @@
 
 
 <span class="k">class</span> <span class="nc">activation_with_alpha_and_beta</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Activation with Alpha Beta Op Superclass</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
@@ -135,7 +135,7 @@
 
 <div class="viewcode-block" id="clamped_relu"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.activation.clamped_relu">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">clamped_relu</span><span class="p">(</span><span class="n">activation_with_alpha_and_beta</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    If ``x &gt;= 0`` return elementwise ``min(beta, x)``, otherwise return</span>
 <span class="sd">    ``min(beta, alpha * x)``.</span>
 
@@ -164,7 +164,7 @@
 
 <div class="viewcode-block" id="elu"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.activation.elu">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">elu</span><span class="p">(</span><span class="n">activation_with_alpha</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    If ``x &gt; 0`` return elementwise ``x``, otherwise return ``alpha * (e^x - 1)``.</span>
 
 <span class="sd">    Parameters</span>
@@ -191,7 +191,7 @@
 
 <div class="viewcode-block" id="gelu"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.activation.gelu">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">gelu</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return the elementwise Gaussian error linear unit activation function for ``x``.</span>
 
 <span class="sd">    You can use ``EXACT``, ``TANH_APPROXIMATION``, or ``SIGMOID_APPROXIMATION`` values</span>
@@ -267,7 +267,7 @@
 
 <div class="viewcode-block" id="leaky_relu"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.activation.leaky_relu">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">leaky_relu</span><span class="p">(</span><span class="n">activation_with_alpha</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    If ``x &gt;= 0`` apply ``x`` elementwise, otherwise apply ``alpha * x`` elementwise.</span>
 
 <span class="sd">    Parameters</span>
@@ -294,7 +294,7 @@
 
 <div class="viewcode-block" id="linear_activation"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.activation.linear_activation">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">linear_activation</span><span class="p">(</span><span class="n">activation_with_alpha_and_beta</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Apply elementwise ``x * alpha + beta``.</span>
 
 <span class="sd">    Parameters</span>
@@ -320,7 +320,7 @@
 
 <div class="viewcode-block" id="prelu"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.activation.prelu">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">prelu</span><span class="p">(</span><span class="n">activation_with_alpha</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Where ``i = 1 ... C``, if ``x_i &gt; 0``, return ``x_i`` , otherwise return ``alpha_i * x_i``.</span>
 
 <span class="sd">    Parameters</span>
@@ -378,7 +378,7 @@
 
 <div class="viewcode-block" id="relu"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.activation.relu">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">relu</span><span class="p">(</span><span class="n">elementwise_unary</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return elementwise-applied rectified linear activation: ``max(x, 0)``.</span>
 
 <span class="sd">    Parameters</span>
@@ -402,7 +402,7 @@
 
 <div class="viewcode-block" id="relu6"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.activation.relu6">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">relu6</span><span class="p">(</span><span class="n">elementwise_unary</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return elementwise-applied rectified linear activation: ``min(max(x, 0), 6)``.</span>
 
 <span class="sd">    Parameters</span>
@@ -426,7 +426,7 @@
 
 <div class="viewcode-block" id="scaled_tanh"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.activation.scaled_tanh">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">scaled_tanh</span><span class="p">(</span><span class="n">activation_with_alpha_and_beta</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return ``alpha * tanh(beta * x)`` elementwise.</span>
 
 <span class="sd">    Parameters</span>
@@ -453,7 +453,7 @@
 
 <div class="viewcode-block" id="sigmoid"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.activation.sigmoid">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">sigmoid</span><span class="p">(</span><span class="n">elementwise_unary</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return ``sigmoid(x)`` elementwise.</span>
 
 <span class="sd">    Parameters</span>
@@ -477,7 +477,7 @@
 
 <div class="viewcode-block" id="sigmoid_hard"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.activation.sigmoid_hard">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">sigmoid_hard</span><span class="p">(</span><span class="n">activation_with_alpha_and_beta</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return ``min( max( alpha * x + beta, 0 ), 1 )`` elementwise.</span>
 
 <span class="sd">    Parameters</span>
@@ -505,7 +505,7 @@
 
 <div class="viewcode-block" id="silu"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.activation.silu">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">silu</span><span class="p">(</span><span class="n">elementwise_unary</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Sigmoid Linear Unit, elementwise apply the SiLU or Swish operation ``x * sigmoid(x)``.</span>
 
 <span class="sd">    Parameters</span>
@@ -526,7 +526,7 @@
 
 <div class="viewcode-block" id="softplus"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.activation.softplus">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">softplus</span><span class="p">(</span><span class="n">elementwise_unary</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return ``log( 1 + e^x )`` elementwise.</span>
 
 <span class="sd">    Parameters</span>
@@ -550,7 +550,7 @@
 
 <div class="viewcode-block" id="softplus_parametric"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.activation.softplus_parametric">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">softplus_parametric</span><span class="p">(</span><span class="n">activation_with_alpha_and_beta</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return ``alpha_i * log( 1 + e^( beta_i * x_i ) )``, where ``i = 1 ... C``.</span>
 
 <span class="sd">    Parameters</span>
@@ -600,7 +600,7 @@
 
 <div class="viewcode-block" id="softmax"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.activation.softmax">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">softmax</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return ``exp(x) / tf.reduce_sum(tf.exp(x), axis)``.</span>
 
 <span class="sd">    Parameters</span>
@@ -647,7 +647,7 @@
 
 <div class="viewcode-block" id="softsign"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.activation.softsign">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">softsign</span><span class="p">(</span><span class="n">elementwise_unary</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return ``x / ( 1 + |x| )`` applied elementwise.</span>
 
 <span class="sd">    Parameters</span>
@@ -671,7 +671,7 @@
 
 <div class="viewcode-block" id="thresholded_relu"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.activation.thresholded_relu">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">thresholded_relu</span><span class="p">(</span><span class="n">activation_with_alpha</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return ``x`` if ``x &gt;= alpha``, otherwise return ``0``.</span>
 
 <span class="sd">    Parameters</span>

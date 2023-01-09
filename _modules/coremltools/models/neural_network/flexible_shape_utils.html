@@ -85,7 +85,6 @@
 
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Utilities to annotate Neural Network Features with flexible shape information.</span>
-<span class="sd">Only available in coremltools 2.0b1 and onwards</span>
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">from</span> <span class="nn">...</span> <span class="kn">import</span> <span class="p">(</span><span class="n">_MINIMUM_FLEXIBLE_SHAPES_SPEC_VERSION</span><span class="p">,</span>
@@ -118,7 +117,7 @@
 
 
 <div class="viewcode-block" id="NeuralNetworkMultiArrayShape"><a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkMultiArrayShape">[docs]</a><span class="k">class</span> <span class="nc">NeuralNetworkMultiArrayShape</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    An object representing a shape for a multiArray feature in a</span>
 <span class="sd">    neural network. Valid shapes must have have only the Channel [C]</span>
 <span class="sd">    shape or the Channel, Height and Width [C, H, W] shapes populated</span>
@@ -168,7 +167,7 @@
 
 
 <div class="viewcode-block" id="NeuralNetworkImageSize"><a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkImageSize">[docs]</a><span class="k">class</span> <span class="nc">NeuralNetworkImageSize</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    An object representing a size for an image feature inside a</span>
 <span class="sd">    neural network. Valid sizess for height and width are &gt; 0.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -237,7 +236,7 @@
 
 
 <div class="viewcode-block" id="NeuralNetworkMultiArrayShapeRange"><a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkMultiArrayShapeRange">[docs]</a><span class="k">class</span> <span class="nc">NeuralNetworkMultiArrayShapeRange</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    An object representing a range of shapes for a multiArray feature in a</span>
 <span class="sd">    neural network. Valid shape ranges must have have only the Channel [C]</span>
 <span class="sd">    range or the Channel, Height and Width [C, H, W] ranges populated. A &quot;-1&quot;</span>
@@ -315,7 +314,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">arrayShapeRange</span><span class="p">[</span><span class="n">_WIDTH_KEY</span><span class="p">]</span>
 
 <div class="viewcode-block" id="NeuralNetworkMultiArrayShapeRange.isFlexible"><a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkMultiArrayShapeRange.isFlexible">[docs]</a>    <span class="k">def</span> <span class="nf">isFlexible</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Returns true if any one of the channel, height, or width ranges of this shape allow more than one input value.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">arrayShapeRange</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
@@ -327,7 +326,7 @@
 
 
 <div class="viewcode-block" id="NeuralNetworkImageSizeRange"><a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.flexible_shape_utils.NeuralNetworkImageSizeRange">[docs]</a><span class="k">class</span> <span class="nc">NeuralNetworkImageSizeRange</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    An object representing a range of sizes for an image feature inside a</span>
 <span class="sd">    neural network. Valid ranges for height and width are &gt; 0. A &quot;-1&quot;</span>
 <span class="sd">    upper bound value for either width or height represents an unbounded size</span>
@@ -378,7 +377,7 @@
 
 
 <div class="viewcode-block" id="add_enumerated_multiarray_shapes"><a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.flexible_shape_utils.add_enumerated_multiarray_shapes">[docs]</a><span class="k">def</span> <span class="nf">add_enumerated_multiarray_shapes</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">feature_name</span><span class="p">,</span> <span class="n">shapes</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Annotate an input or output multiArray feature in a Neural Network spec to</span>
 <span class="sd">    to accommodate a list of enumerated array shapes</span>
 
@@ -463,7 +462,7 @@
 
 
 <div class="viewcode-block" id="add_enumerated_image_sizes"><a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.flexible_shape_utils.add_enumerated_image_sizes">[docs]</a><span class="k">def</span> <span class="nf">add_enumerated_image_sizes</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">feature_name</span><span class="p">,</span> <span class="n">sizes</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Annotate an input or output image feature in a Neural Network spec to</span>
 <span class="sd">    to accommodate a list of enumerated image sizes</span>
 
@@ -531,7 +530,7 @@
 
 
 <div class="viewcode-block" id="update_image_size_range"><a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.flexible_shape_utils.update_image_size_range">[docs]</a><span class="k">def</span> <span class="nf">update_image_size_range</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">feature_name</span><span class="p">,</span> <span class="n">size_range</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Annotate an input or output Image feature in a Neural Network spec to</span>
 <span class="sd">    to accommodate a range of image sizes</span>
 
@@ -591,7 +590,7 @@
 
 
 <div class="viewcode-block" id="update_multiarray_shape_range"><a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.flexible_shape_utils.update_multiarray_shape_range">[docs]</a><span class="k">def</span> <span class="nf">update_multiarray_shape_range</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">feature_name</span><span class="p">,</span> <span class="n">shape_range</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Annotate an input or output MLMultiArray feature in a Neural Network spec</span>
 <span class="sd">    to accommodate a range of shapes</span>
 
@@ -659,7 +658,7 @@
 
 
 <div class="viewcode-block" id="set_multiarray_ndshape_range"><a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.flexible_shape_utils.set_multiarray_ndshape_range">[docs]</a><span class="k">def</span> <span class="nf">set_multiarray_ndshape_range</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">feature_name</span><span class="p">,</span> <span class="n">lower_bounds</span><span class="p">,</span> <span class="n">upper_bounds</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Annotate an input or output MLMultiArray feature in a Neural Network spec</span>
 <span class="sd">    to accommodate a range of shapes.</span>
 <span class="sd">    This is different from &quot;update_multiarray_shape_range&quot;, which works with rank 5</span>
@@ -745,7 +744,7 @@
 
 
 <div class="viewcode-block" id="add_multiarray_ndshape_enumeration"><a class="viewcode-back" href="../../../../source/coremltools.models.neural_network.html#coremltools.models.neural_network.flexible_shape_utils.add_multiarray_ndshape_enumeration">[docs]</a><span class="k">def</span> <span class="nf">add_multiarray_ndshape_enumeration</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">feature_name</span><span class="p">,</span> <span class="n">enumerated_shapes</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Annotate an input or output MLMultiArray feature in a Neural Network spec</span>
 <span class="sd">    to accommodate a range of shapes.</span>
 <span class="sd">    Add provided enumerated shapes to the list of shapes already present.</span>

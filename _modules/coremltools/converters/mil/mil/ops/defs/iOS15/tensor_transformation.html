@@ -105,7 +105,7 @@
 
 <div class="viewcode-block" id="depth_to_space"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.depth_to_space">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">depth_to_space</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Rearrange elements in a tensor from depth (channel) into spatial dimensions.</span>
 
 <span class="sd">    Parameters</span>
@@ -145,7 +145,7 @@
 
 <div class="viewcode-block" id="expand_dims"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.expand_dims">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">expand_dims</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Insert a single-dimension in a 1-D or higher tensor at each axis in axes.</span>
 
 <span class="sd">    Parameters</span>
@@ -218,7 +218,7 @@
 
 
 <span class="k">def</span> <span class="nf">reshape_with_symbol</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">shape</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Perform basic reshape if v is symbolic (not array of symbols).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">is_symbolic</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
@@ -229,7 +229,7 @@
 
 <div class="viewcode-block" id="reshape"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.reshape">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">reshape</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return a tensor that has the same values as ``x`` with shape ``shape``.</span>
 <span class="sd">    ``shape`` must have the same volume (number of elements) as ``x``.</span>
 
@@ -364,7 +364,7 @@
 
 <div class="viewcode-block" id="reverse"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.reverse">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">reverse</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Reverse the order of the input tensor ``x`` along specified ``axes`` (dimensions).</span>
 
 <span class="sd">    Parameters</span>
@@ -419,7 +419,7 @@
 
 <div class="viewcode-block" id="reverse_sequence"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.reverse_sequence">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">reverse_sequence</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Reverse variable length slices for specified axes / dimensions of the input</span>
 <span class="sd">    tensor. This op first slices input tensor along the ``batch_axis`` dimension, then</span>
 <span class="sd">    partially reverses the elements along the ``seq_axis`` for the first ``lengths[i]``</span>
@@ -481,7 +481,7 @@
 
 <div class="viewcode-block" id="slice_by_index"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.slice_by_index">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">slice_by_index</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Method for numpy style indexing and slicing.</span>
 <span class="sd">    With a tensor ``x``, this method achieves the following:</span>
 
@@ -630,7 +630,7 @@
 
 <div class="viewcode-block" id="slice_by_size"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.slice_by_size">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">slice_by_size</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Slice input tensor starting from the given ``begin`` index and by</span>
 <span class="sd">    the amount specified by the ``size`` input, for each dimension.</span>
 
@@ -732,7 +732,7 @@
 
 <div class="viewcode-block" id="space_to_depth"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.space_to_depth">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">space_to_depth</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Rearrange elements in a tensor from spatial into depth (channel) dimension.</span>
 
 <span class="sd">    Parameters</span>
@@ -771,7 +771,7 @@
 
 <span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">space_to_batch</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Rearrange elements in a tensor from spatial into batch dimension.</span>
 
 <span class="sd">    Parameters</span>
@@ -847,7 +847,7 @@
 
 <span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">batch_to_space</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Rearrange elements in a tensor from batch into spatial dimension.</span>
 
 <span class="sd">    Parameters</span>
@@ -928,7 +928,7 @@
 
 <div class="viewcode-block" id="squeeze"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.squeeze">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">squeeze</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Remove single-dimension dimensions in a 1-D or higher tensor.</span>
 
 <span class="sd">    Parameters</span>
@@ -994,7 +994,7 @@
 
 <div class="viewcode-block" id="transpose"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.transpose">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">transpose</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Permute tensor ``x`` dimensions according to ``perm``.</span>
 
 <span class="sd">    Parameters</span>
@@ -1049,7 +1049,7 @@
 
 <div class="viewcode-block" id="pixel_shuffle"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.pixel_shuffle">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">pixel_shuffle</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Rearrange elements in a tensor from depth (channel) into spatial dimensions.</span>
 <span class="sd">    Equivalent to PyTorch&#39;s ``PixelShuffle``.</span>
 
@@ -1093,7 +1093,7 @@
 
 <div class="viewcode-block" id="sliding_windows"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_transformation.sliding_windows">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">sliding_windows</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return a tensor containing all windows of ``size``, separated by stride along the</span>
 <span class="sd">    given ``axis``.</span>
 
