@@ -179,7 +179,7 @@ class lstm(Operation):
        f_t = \rm{recurrent\_activation}(W_{if} x_t + B_{if} + W_{hf} h_(t-1) + B_{hf})
 
     .. math::
-       z_t = cell_activation(W_{iz} x_t + B_{iz} + W_{hz} h_(t-1) + B_{hz})
+       z_t = cell\_activation(W_{iz} x_t + B_{iz} + W_{hz} h_(t-1) + B_{hz})
 
     .. math::
        o_t = \rm{recurrent\_activation}(W_{io} x_t + B_{io} + W_{ho} h_(t-1) + B_{ho})
