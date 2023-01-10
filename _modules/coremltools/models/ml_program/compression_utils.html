@@ -146,7 +146,7 @@
     <span class="k">return</span> <span class="n">compressed_mlmodel</span>
 
 <div class="viewcode-block" id="affine_quantize_weights"><a class="viewcode-back" href="../../../../source/coremltools.models.ml_program.html#coremltools.models.ml_program.compression_utils.affine_quantize_weights">[docs]</a><span class="k">def</span> <span class="nf">affine_quantize_weights</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;linear_symmetric&quot;</span><span class="p">,</span> <span class="n">op_selector</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Utility function to convert a float precision MLModel of type ``mlprogram`` that uses</span>
 <span class="sd">    float-precision weights into a compressed MLModel that uses 8-bit weights. This is</span>
 <span class="sd">    achieved by converting the float weight values that are stored in the ``const`` op</span>
@@ -298,7 +298,7 @@
 
 
 <div class="viewcode-block" id="palettize_weights"><a class="viewcode-back" href="../../../../source/coremltools.models.ml_program.html#coremltools.models.ml_program.compression_utils.palettize_weights">[docs]</a><span class="k">def</span> <span class="nf">palettize_weights</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> <span class="n">nbits</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;kmeans&quot;</span><span class="p">,</span> <span class="n">op_selector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">lut_function</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Utility function to convert a float precision MLModel of type ``mlprogram`` to a</span>
 <span class="sd">    compressed MLModel by reducing the overall number of weights using a lookup table</span>
 <span class="sd">    (LUT). A LUT contains a list of float values. An `nbit` LUT has 2\ :sup:`nbits` entries.</span>
@@ -497,7 +497,7 @@
     
 
 <div class="viewcode-block" id="sparsify_weights"><a class="viewcode-back" href="../../../../source/coremltools.models.ml_program.html#coremltools.models.ml_program.compression_utils.sparsify_weights">[docs]</a><span class="k">def</span> <span class="nf">sparsify_weights</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;threshold_based&quot;</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span> <span class="n">target_percentile</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">op_selector</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Utility function to convert a float precision MLModel of type ``mlprogram`` to a</span>
 <span class="sd">    compressed MLModel using sparse representation. The ``const`` ops storing weight</span>
 <span class="sd">    values are replaced by ``constexpr_sparse_to_dense`` ops.</span>
@@ -623,7 +623,7 @@
     <span class="k">return</span> <span class="n">_apply_graph_pass</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> <span class="n">weight_sparsifier</span><span class="p">)</span></div>
 
 <span class="k">def</span> <span class="nf">decompress_weights</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Utility function to convert weights that are sparse or palettized or affine quantized, back to the float format.</span>
 <span class="sd">    That is, convert any of the follwing three ops:</span>
 <span class="sd">    </span>

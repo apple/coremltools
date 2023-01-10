@@ -233,7 +233,7 @@
     <span class="k">return</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">specification</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">_try_get_weights_dir_path</span><span class="p">(</span><span class="n">mlpackage_path</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Try to find the weights in mlpackage and return the path to the weights directory if found.</span>
 <span class="sd">    Return None if not found.</span>
 <span class="sd">    :param mlpackage_path: str, path to the mlpackage directory</span>
@@ -251,7 +251,7 @@
 
 
 <div class="viewcode-block" id="MLModel"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.model.MLModel">[docs]</a><span class="k">class</span> <span class="nc">MLModel</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This class defines the minimal interface to a CoreML object in Python.</span>
 
 <span class="sd">    At a high level, the protobuf specification consists of:</span>
@@ -314,7 +314,7 @@
                  <span class="n">skip_model_load</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">compute_units</span><span class="o">=</span><span class="n">_ComputeUnit</span><span class="o">.</span><span class="n">ALL</span><span class="p">,</span>
                  <span class="n">weights_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Construct an MLModel from an ``.mlmodel``.</span>
 
 <span class="sd">        Parameters</span>
@@ -504,7 +504,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__repr__</span><span class="p">()</span>
 
 <div class="viewcode-block" id="MLModel.save"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.model.MLModel.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Save the model to a ``.mlmodel`` format. For an MIL program, the filename is</span>
 <span class="sd">        a package directory containing the ``mlmodel`` and weights.</span>
 
@@ -533,7 +533,7 @@
             <span class="n">_save_spec</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_spec</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="MLModel.get_spec"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.model.MLModel.get_spec">[docs]</a>    <span class="k">def</span> <span class="nf">get_spec</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get a deep copy of the protobuf specification of the model.</span>
 
 <span class="sd">        Returns</span>
@@ -549,7 +549,7 @@
 
 
 <div class="viewcode-block" id="MLModel.predict"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.model.MLModel.predict">[docs]</a>    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return predictions for the model.</span>
 
 <span class="sd">        Parameters</span>
@@ -655,7 +655,7 @@
 
 
     <span class="k">def</span> <span class="nf">_get_mil_internal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Get a deep copy of the MIL program object, if available.</span>
 <span class="sd">        It&#39;s available whenever an MLModel object is constructed using</span>
 <span class="sd">        the unified converter API [`coremltools.convert()`](https://apple.github.io/coremltools/source/coremltools.converters.mil.html#coremltools.converters._converters_entry.convert).</span>

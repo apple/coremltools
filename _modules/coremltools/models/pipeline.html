@@ -97,7 +97,7 @@
 
 
 <div class="viewcode-block" id="Pipeline"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.pipeline.Pipeline">[docs]</a><span class="k">class</span> <span class="nc">Pipeline</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A pipeline model that exposes a sequence of models as a single model,</span>
 <span class="sd">    It requires a set of inputs, a sequence of other models and a set of outputs.</span>
 
@@ -109,7 +109,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="Pipeline.__init__"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.pipeline.Pipeline.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_features</span><span class="p">,</span> <span class="n">output_features</span><span class="p">,</span> <span class="n">training_features</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create a pipeline of models to be executed sequentially.</span>
 
 <span class="sd">        Parameters</span>
@@ -148,7 +148,7 @@
             <span class="p">)</span>
 
 <div class="viewcode-block" id="Pipeline.add_model"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.pipeline.Pipeline.add_model">[docs]</a>    <span class="k">def</span> <span class="nf">add_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spec</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Add a protobuf spec or :py:class:`models.MLModel` instance to the pipeline.</span>
 
 <span class="sd">        All input features of this model must either match the input_features</span>
@@ -195,7 +195,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_validate_sub_models_and_make_updatable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="o">.</span><span class="n">pipeline</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">spec</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Pipeline.set_training_input"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.pipeline.Pipeline.set_training_input">[docs]</a>    <span class="k">def</span> <span class="nf">set_training_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">training_input</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set the training inputs of the network spec.</span>
 
 <span class="sd">        Parameters</span>
@@ -208,7 +208,7 @@
 
 
 <div class="viewcode-block" id="PipelineRegressor"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.pipeline.PipelineRegressor">[docs]</a><span class="k">class</span> <span class="nc">PipelineRegressor</span><span class="p">(</span><span class="n">Pipeline</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A pipeline model that exposes a sequence of models as a single model,</span>
 <span class="sd">    It requires a set of inputs, a sequence of other models and a set of outputs.</span>
 <span class="sd">    In this case the pipeline itself behaves as a regression model by designating</span>
@@ -216,7 +216,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="PipelineRegressor.__init__"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.pipeline.PipelineRegressor.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_features</span><span class="p">,</span> <span class="n">output_features</span><span class="p">,</span> <span class="n">training_features</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create a set of pipeline models given a set of model specs.  The final</span>
 <span class="sd">        output model must be a regression model.</span>
 
@@ -249,7 +249,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">spec</span> <span class="o">=</span> <span class="n">spec</span></div>
 
 <div class="viewcode-block" id="PipelineRegressor.add_model"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.pipeline.PipelineRegressor.add_model">[docs]</a>    <span class="k">def</span> <span class="nf">add_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spec</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Add a protobuf spec or :py:class:`models.MLModel` instance to the pipeline.</span>
 
 <span class="sd">        All input features of this model must either match the input_features</span>
@@ -276,7 +276,7 @@
         <span class="p">)</span>
 
 <div class="viewcode-block" id="PipelineRegressor.set_training_input"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.pipeline.PipelineRegressor.set_training_input">[docs]</a>    <span class="k">def</span> <span class="nf">set_training_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">training_input</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set the training inputs of the network spec.</span>
 
 <span class="sd">        Parameters</span>
@@ -289,7 +289,7 @@
 
 
 <div class="viewcode-block" id="PipelineClassifier"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.pipeline.PipelineClassifier">[docs]</a><span class="k">class</span> <span class="nc">PipelineClassifier</span><span class="p">(</span><span class="n">Pipeline</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A pipeline model that exposes a sequence of models as a single model,</span>
 <span class="sd">    It requires a set of inputs, a sequence of other models and a set of outputs.</span>
 <span class="sd">    In this case the pipeline itself behaves as a classification model by designating</span>
@@ -299,7 +299,7 @@
 <div class="viewcode-block" id="PipelineClassifier.__init__"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.pipeline.PipelineClassifier.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span> <span class="n">input_features</span><span class="p">,</span> <span class="n">class_labels</span><span class="p">,</span> <span class="n">output_features</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">training_features</span><span class="o">=</span><span class="kc">None</span>
     <span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Create a set of pipeline models given a set of model specs.  The last</span>
 <span class="sd">        model in this list must be a classifier model.</span>
 
@@ -347,7 +347,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">spec</span> <span class="o">=</span> <span class="n">spec</span></div>
 
 <div class="viewcode-block" id="PipelineClassifier.add_model"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.pipeline.PipelineClassifier.add_model">[docs]</a>    <span class="k">def</span> <span class="nf">add_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spec</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Add a protobuf spec or :py:class:`models.MLModel` instance to the pipeline.</span>
 
 <span class="sd">        All input features of this model must either match the input_features</span>
@@ -373,7 +373,7 @@
         <span class="p">)</span>
 
 <div class="viewcode-block" id="PipelineClassifier.set_training_input"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.pipeline.PipelineClassifier.set_training_input">[docs]</a>    <span class="k">def</span> <span class="nf">set_training_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">training_input</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set the training inputs of the network spec.</span>
 
 <span class="sd">        Parameters</span>

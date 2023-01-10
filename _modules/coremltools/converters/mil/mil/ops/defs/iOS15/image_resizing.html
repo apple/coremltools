@@ -95,7 +95,7 @@
 
 <div class="viewcode-block" id="upsample_nearest_neighbor"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.upsample_nearest_neighbor">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">upsample_nearest_neighbor</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Upsample the spatial dimensions (last two dimensions) of the input</span>
 <span class="sd">    by integer scale factors using nearest-neighbor interpolation.</span>
 
@@ -162,7 +162,7 @@
 
 <div class="viewcode-block" id="resize_nearest_neighbor"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.resize_nearest_neighbor">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">resize_nearest_neighbor</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Resize the spatial (last two) dimensions to the specified target size</span>
 <span class="sd">    using nearest neighbor interpolation. Although this op is similar to</span>
 <span class="sd">    ``upsample_nearest_neighbor``, ``resize_nearest_neighbor`` works with</span>
@@ -221,7 +221,7 @@
 
 <div class="viewcode-block" id="upsample_bilinear"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.upsample_bilinear">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">upsample_bilinear</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Upsample the spatial dimensions (last two dimensions) of the input</span>
 <span class="sd">    by scale factors using bilinear interpolation.</span>
 <span class="sd">    The upsample_bilinear operation in MIL corresponds to the recompute_scale_factor=True</span>
@@ -343,7 +343,7 @@
 
 <div class="viewcode-block" id="resize_bilinear"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.resize_bilinear">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">resize_bilinear</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Resize the spatial (last two) dimensions to the specified target size</span>
 <span class="sd">    using bilinear interpolation. Although this op is similar to</span>
 <span class="sd">    ``upsample_bilinear``, ``resize_bilinear`` works with a target size</span>
@@ -494,7 +494,7 @@
 
 <div class="viewcode-block" id="crop_resize"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.crop_resize">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">crop_resize</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Resize the spatial dimensions (last two dimensions) of the first input</span>
 <span class="sd">    according to the bounding boxes specified in the second input, using</span>
 <span class="sd">    bilinear interpolation.</span>
@@ -641,7 +641,7 @@
 
 <div class="viewcode-block" id="crop"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.crop">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">crop</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Crop the spatial dimensions (last two dimensions) of the input by the</span>
 <span class="sd">    specified amounts.</span>
 
@@ -712,7 +712,7 @@
 
 <div class="viewcode-block" id="affine"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.affine">[docs]</a><span class="nd">@register_op</span><span class="p">(</span><span class="n">opset_version</span><span class="o">=</span><span class="n">_IOS15_TARGET</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">affine</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Apply a linear affine transform to the input 2D image tensor. The value at the</span>
 <span class="sd">    ``(x, y)`` (i.e., ``(w, h)``) coordinate of the output is computed by first computing</span>
 <span class="sd">    the coordinates ``x’`` and ``y’`` with the following equation, and then computing the</span>
@@ -847,7 +847,7 @@
 
 <div class="viewcode-block" id="resample"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.image_resizing.resample">[docs]</a><span class="nd">@register_op</span><span class="p">(</span><span class="n">opset_version</span><span class="o">=</span><span class="n">_IOS15_TARGET</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">resample</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Resample the input image tensor ``x`` at the ``coordinates``.</span>
 <span class="sd">    Resampling is required if the coordinates do not correspond to exact</span>
 <span class="sd">    pixels in the input image. The ``sampling_mode`` determines</span>

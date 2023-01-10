@@ -109,7 +109,7 @@
 
 <div class="viewcode-block" id="cond"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.cond">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">cond</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Perform a conditional execution. The return types must be identical</span>
 <span class="sd">    between the true and false branches.</span>
 
@@ -204,7 +204,7 @@
 
 
 <div class="viewcode-block" id="Const"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.Const">[docs]</a><span class="k">class</span> <span class="nc">Const</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    A base class that returns constant values.</span>
 
 <span class="sd">    Parameters</span>
@@ -309,7 +309,7 @@
 
 <div class="viewcode-block" id="select"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.select">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">select</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return the elements selected from either ``a`` or ``b`` depending on the ``cond``.</span>
 
 <span class="sd">    The shape of ``cond``, ``a``, and ``b`` must be broadcastable.</span>
@@ -377,7 +377,7 @@
 
 <div class="viewcode-block" id="while_loop"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.while_loop">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">while_loop</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Perform the body repeatedly while the condition ``cond`` is true.</span>
 
 <span class="sd">    Parameters</span>
@@ -563,7 +563,7 @@
 
     <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">get_compat_shape</span><span class="p">(</span><span class="n">type1</span><span class="p">,</span> <span class="n">type2</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        For tensor types `type1`, `type2` that are of the same rank, return</span>
 <span class="sd">        compat_shape (python list) where compat_shape[i] is integer iff type1</span>
 <span class="sd">        and type2 have the same integer shape on dim i. compat_shape[i] is</span>
@@ -596,7 +596,7 @@
 
 <div class="viewcode-block" id="make_list"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.make_list">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">make_list</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Create a list of tensor elements. The elements should have the same shape.</span>
 <span class="sd">    The list is similar to an auto-resizing array.</span>
 
@@ -671,7 +671,7 @@
 
 <div class="viewcode-block" id="list_length"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.list_length">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">list_length</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return the length of ``ls``.</span>
 
 <span class="sd">    Parameters</span>
@@ -702,7 +702,7 @@
 
 <div class="viewcode-block" id="list_write"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.list_write">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">list_write</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Write a value into index ``index`` of ``ls``.</span>
 
 <span class="sd">    Parameters</span>
@@ -761,7 +761,7 @@
 
 <div class="viewcode-block" id="list_read"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.list_read">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">list_read</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Read the value at location ``index`` of ``ls``.</span>
 
 <span class="sd">    Parameters</span>
@@ -799,7 +799,7 @@
 
 <div class="viewcode-block" id="list_gather"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.list_gather">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">list_gather</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return selected values in ``ls`` as a packed ``Tensor``.</span>
 
 <span class="sd">    Parameters</span>
@@ -841,7 +841,7 @@
 
 <div class="viewcode-block" id="list_scatter"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.control_flow.list_scatter">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">list_scatter</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Scatter ``values`` to ``ls`` at locations ``indices``.</span>
 
 <span class="sd">    Parameters</span>

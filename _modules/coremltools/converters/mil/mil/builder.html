@@ -109,7 +109,7 @@
 
 
 <div class="viewcode-block" id="Builder"><a class="viewcode-back" href="../../../../../source/coremltools.converters.mil.html#coremltools.converters.mil.mil.Builder">[docs]</a><span class="k">class</span> <span class="nc">Builder</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This class is a singleton builder to construct a MIL program. For more</span>
 <span class="sd">    information, see `Create a MIL program &lt;https://coremltools.readme.io/docs/model-intermediate-language#create-a-mil-program&gt;`_.</span>
 
@@ -172,7 +172,7 @@
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">_create_vars</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">input_spec</span><span class="p">,</span> <span class="n">op_name</span><span class="p">,</span> <span class="n">before_op</span><span class="p">,</span>
         <span class="n">candidate_kv</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        For each key K in `candidate_kv`, create a Var if the</span>
 <span class="sd">        followings are satisfied:</span>
 
@@ -229,7 +229,7 @@
 
     <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">_add_op</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">op_cls</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Add an op of type `op_cls` (e.g., convolution) to current block.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">kwargs</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_maybe_set_name</span><span class="p">(</span><span class="n">kwargs</span><span class="p">,</span> <span class="n">op_cls</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
@@ -274,7 +274,7 @@
 
 <div class="viewcode-block" id="Builder.program"><a class="viewcode-back" href="../../../../../source/coremltools.converters.mil.html#coremltools.converters.mil.mil.Builder.program">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">program</span><span class="p">(</span><span class="n">input_specs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">opset_version</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 
 <span class="sd">        The ``mb.program`` decorator creates a MIL program with a single</span>
 <span class="sd">        function (``main``). The input to ``main`` is a tensor.</span>

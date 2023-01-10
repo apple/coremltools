@@ -96,7 +96,7 @@
 
 
 <span class="k">class</span> <span class="nc">elementwise_binary</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Elementwise Binary Op Superclass</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
@@ -138,20 +138,20 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cast_check_value_inferene</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">val</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="o">.</span><span class="n">val</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">get_operator</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        All subclasses have to implement this.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">get_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">promoted_dtype</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Override if output primitive type is different from input types</span>
 <span class="sd">        (e.g., less, greater)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">promoted_dtype</span>
 
     <span class="k">def</span> <span class="nf">_cast_check_value_inferene</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        If one of the input is tensor, cast the result to tensor.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">to_cast</span> <span class="o">=</span> <span class="nb">any</span><span class="p">([</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="p">[</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">]])</span>
@@ -160,7 +160,7 @@
 
 
 <span class="k">class</span> <span class="nc">elementwise_binary_logical</span><span class="p">(</span><span class="n">elementwise_binary</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Elementwise Binary Logical Op Superclass</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
@@ -180,7 +180,7 @@
 
 <div class="viewcode-block" id="add"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.add">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">add</span><span class="p">(</span><span class="n">elementwise_binary</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return ``x + y`` element-wise with</span>
 <span class="sd">    `broadcasting &lt;https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html&gt;`_.</span>
 
@@ -207,7 +207,7 @@
 
 <div class="viewcode-block" id="equal"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.equal">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">equal</span><span class="p">(</span><span class="n">elementwise_binary</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return the truth value of ``x == y`` element-wise with</span>
 <span class="sd">    `broadcasting &lt;https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html&gt;`_</span>
 <span class="sd">    (``1`` for true, ``0`` for false in numeric domain).</span>
@@ -239,7 +239,7 @@
 
 <div class="viewcode-block" id="floor_div"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.floor_div">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">floor_div</span><span class="p">(</span><span class="n">elementwise_binary</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return ``x / y`` element-wise with</span>
 <span class="sd">    `broadcasting &lt;https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html&gt;`_,</span>
 <span class="sd">    rounded towards negative infinity.</span>
@@ -268,7 +268,7 @@
 
 <div class="viewcode-block" id="greater"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.greater">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">greater</span><span class="p">(</span><span class="n">elementwise_binary</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return the truth value of ``x &gt; y`` element-wise with</span>
 <span class="sd">    `broadcasting &lt;https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html&gt;`_</span>
 <span class="sd">    (``1`` for true, ``0`` for false in numeric domain).</span>
@@ -300,7 +300,7 @@
 
 <div class="viewcode-block" id="greater_equal"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.greater_equal">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">greater_equal</span><span class="p">(</span><span class="n">elementwise_binary</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return the truth value of ``x &gt;= y`` element-wise with</span>
 <span class="sd">    `broadcasting &lt;https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html&gt;`_</span>
 <span class="sd">    (``1`` for true, ``0`` for false in numeric domain).</span>
@@ -332,7 +332,7 @@
 
 <div class="viewcode-block" id="less"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.less">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">less</span><span class="p">(</span><span class="n">elementwise_binary</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return the truth value of ``x &lt; y`` element-wise with</span>
 <span class="sd">    `broadcasting &lt;https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html&gt;`_</span>
 <span class="sd">    (``1`` for true, ``0`` for false in numeric domain).</span>
@@ -364,7 +364,7 @@
 
 <div class="viewcode-block" id="less_equal"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.less_equal">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">less_equal</span><span class="p">(</span><span class="n">elementwise_binary</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return the truth value of ``x &lt;= y`` element-wise with</span>
 <span class="sd">    `broadcasting &lt;https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html&gt;`_</span>
 <span class="sd">    (``1`` for true, ``0`` for false in numeric domain).</span>
@@ -396,7 +396,7 @@
 
 <div class="viewcode-block" id="logical_and"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.logical_and">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">logical_and</span><span class="p">(</span><span class="n">elementwise_binary_logical</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return the truth value of ``x AND y`` element-wise with</span>
 <span class="sd">    `broadcasting &lt;https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html&gt;`_</span>
 
@@ -428,7 +428,7 @@
 
 <div class="viewcode-block" id="logical_or"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.logical_or">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">logical_or</span><span class="p">(</span><span class="n">elementwise_binary_logical</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return the truth value of ``x OR y`` element-wise with</span>
 <span class="sd">    `broadcasting &lt;https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html&gt;`_</span>
 
@@ -460,7 +460,7 @@
 
 <div class="viewcode-block" id="logical_xor"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.logical_xor">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">logical_xor</span><span class="p">(</span><span class="n">elementwise_binary_logical</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return the truth value of ``x XOR y`` element-wise with</span>
 <span class="sd">    `broadcasting &lt;https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html&gt;`_</span>
 
@@ -492,7 +492,7 @@
 
 <div class="viewcode-block" id="maximum"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.maximum">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">maximum</span><span class="p">(</span><span class="n">elementwise_binary</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return ``x &gt; y ? x : y`` element-wise with</span>
 <span class="sd">    `broadcasting &lt;https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html&gt;`_.</span>
 
@@ -520,7 +520,7 @@
 
 <div class="viewcode-block" id="minimum"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.minimum">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">minimum</span><span class="p">(</span><span class="n">elementwise_binary</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return ``x &gt; y ? y : x`` element-wise with</span>
 <span class="sd">    `broadcasting &lt;https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html&gt;`_.</span>
 
@@ -548,7 +548,7 @@
 
 <div class="viewcode-block" id="mod"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.mod">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">mod</span><span class="p">(</span><span class="n">elementwise_binary</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return ``x % y`` element-wise with</span>
 <span class="sd">    `broadcasting &lt;https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html&gt;`_.</span>
 
@@ -576,7 +576,7 @@
 
 <div class="viewcode-block" id="mul"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.mul">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">mul</span><span class="p">(</span><span class="n">elementwise_binary</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return ``x * y`` element-wise with</span>
 <span class="sd">    `broadcasting &lt;https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html&gt;`_.</span>
 
@@ -604,7 +604,7 @@
 
 <div class="viewcode-block" id="not_equal"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.not_equal">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">not_equal</span><span class="p">(</span><span class="n">elementwise_binary</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return the truth value of ``x != y`` element-wise with</span>
 <span class="sd">    `broadcasting &lt;https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html&gt;`_</span>
 <span class="sd">    (``1`` for true, ``0`` for false in numeric domain).</span>
@@ -636,7 +636,7 @@
 
 <div class="viewcode-block" id="real_div"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.real_div">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">real_div</span><span class="p">(</span><span class="n">elementwise_binary</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return ``x / y`` element-wise with</span>
 <span class="sd">    `broadcasting &lt;https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html&gt;`_.</span>
 
@@ -664,7 +664,7 @@
 
 <div class="viewcode-block" id="pow"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.pow">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">pow</span><span class="p">(</span><span class="n">elementwise_binary</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return ``x ^ y`` element-wise with</span>
 <span class="sd">    `broadcasting &lt;https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html&gt;`_.</span>
 
@@ -692,7 +692,7 @@
 
 <div class="viewcode-block" id="sub"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_binary.sub">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">sub</span><span class="p">(</span><span class="n">elementwise_binary</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Return ``x - y`` element-wise with</span>
 <span class="sd">    `broadcasting &lt;https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html&gt;`_.</span>
 

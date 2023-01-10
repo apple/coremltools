@@ -93,7 +93,7 @@
 
 
 <span class="k">class</span> <span class="nc">ReductionAxes</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Reduction Op Superclasses</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
@@ -213,7 +213,7 @@
 
 <div class="viewcode-block" id="reduce_argmax"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.reduction.reduce_argmax">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">reduce_argmax</span><span class="p">(</span><span class="n">reduce_arg</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Computes the indices of the maximum value across dimensions of a tensor.</span>
 <span class="sd">    In case of ties, the identity of the return value is not guaranteed.</span>
 
@@ -248,7 +248,7 @@
 
 <div class="viewcode-block" id="reduce_argmin"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.reduction.reduce_argmin">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">reduce_argmin</span><span class="p">(</span><span class="n">reduce_arg</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Computes the indices of the minimum value across dimensions of a tensor.</span>
 <span class="sd">    In case of ties, the identity of the return value is not guaranteed.</span>
 
@@ -284,7 +284,7 @@
 
 <div class="viewcode-block" id="reduce_l1_norm"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.reduction.reduce_l1_norm">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">reduce_l1_norm</span><span class="p">(</span><span class="n">ReductionAxes</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Computes the L1 normalization of elements across given dimensions of the input tensor.</span>
 <span class="sd">    </span>
 <span class="sd">    Parameters</span>
@@ -323,7 +323,7 @@
 
 <div class="viewcode-block" id="reduce_l2_norm"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.reduction.reduce_l2_norm">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">reduce_l2_norm</span><span class="p">(</span><span class="n">ReductionAxes</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Computes the L2 normalization of elements across given dimensions of the input tensor.</span>
 <span class="sd">    </span>
 <span class="sd">    Parameters</span>
@@ -357,7 +357,7 @@
 
 <div class="viewcode-block" id="reduce_log_sum"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.reduction.reduce_log_sum">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">reduce_log_sum</span><span class="p">(</span><span class="n">ReductionAxes</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Computes the natural logarithm of the sum of all the elements across given dimensions</span>
 <span class="sd">    of the input tensor.</span>
 <span class="sd">    </span>
@@ -392,7 +392,7 @@
 
 <div class="viewcode-block" id="reduce_log_sum_exp"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.reduction.reduce_log_sum_exp">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">reduce_log_sum_exp</span><span class="p">(</span><span class="n">ReductionAxes</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Computes the natural logarithm of the sum of the exponentials of the elements across</span>
 <span class="sd">    given dimensions of the input tensor. It is a smooth approximation of the maximum</span>
 <span class="sd">    function, more numerically stable than ``log(sum(exp(input)))``. It avoids</span>
@@ -443,7 +443,7 @@
 
 <div class="viewcode-block" id="reduce_max"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.reduction.reduce_max">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">reduce_max</span><span class="p">(</span><span class="n">ReductionAxes</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Computes the maximum of elements across given dimensions of the input tensor.</span>
 <span class="sd">    </span>
 <span class="sd">    Parameters</span>
@@ -477,7 +477,7 @@
 
 <div class="viewcode-block" id="reduce_mean"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.reduction.reduce_mean">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">reduce_mean</span><span class="p">(</span><span class="n">ReductionAxes</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Computes the mean of elements across given dimensions of the input tensor.</span>
 <span class="sd">    </span>
 <span class="sd">    Parameters</span>
@@ -512,7 +512,7 @@
 
 <div class="viewcode-block" id="reduce_min"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.reduction.reduce_min">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">reduce_min</span><span class="p">(</span><span class="n">ReductionAxes</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Computes the minimum of elements across given dimensions of the input tensor.</span>
 <span class="sd">    </span>
 <span class="sd">    Parameters</span>
@@ -543,7 +543,7 @@
 
 <div class="viewcode-block" id="reduce_prod"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.reduction.reduce_prod">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">reduce_prod</span><span class="p">(</span><span class="n">ReductionAxes</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Computes the product of elements across given dimensions of the input tensor.</span>
 
 <span class="sd">    Parameters</span>
@@ -575,7 +575,7 @@
 
 <div class="viewcode-block" id="reduce_sum"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.reduction.reduce_sum">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">reduce_sum</span><span class="p">(</span><span class="n">ReductionAxes</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Computes the sum of elements across given dimensions of the input tensor.</span>
 
 <span class="sd">    Parameters</span>
@@ -606,7 +606,7 @@
 
 <div class="viewcode-block" id="reduce_sum_square"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.reduction.reduce_sum_square">[docs]</a><span class="nd">@register_op</span>
 <span class="k">class</span> <span class="nc">reduce_sum_square</span><span class="p">(</span><span class="n">ReductionAxes</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Computes the sum of squares of elements across given dimensions of the input tensor.</span>
 
 <span class="sd">    Parameters</span>

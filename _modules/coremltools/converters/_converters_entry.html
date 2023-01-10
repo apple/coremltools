@@ -138,7 +138,7 @@
     <span class="n">package_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">debug</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
 <span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Convert a TensorFlow or PyTorch model to the Core ML model format as either</span>
 <span class="sd">    a neural network or an `ML program &lt;https://coremltools.readme.io/docs/ml-programs&gt;`_.</span>
 <span class="sd">    Some parameters and requirements differ for TensorFlow and PyTorch</span>
@@ -574,7 +574,7 @@
         <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">minimum_deployment_target</span><span class="p">))</span>
 
 <span class="k">def</span> <span class="nf">_validate_outputs_argument</span><span class="p">(</span><span class="n">outputs</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    - validate properties that the &quot;outputs&quot; argument must satisfy, for instance, it should either be a list</span>
 <span class="sd">      of ct.ImageType/ct.TensorType or a list of strings, etc.</span>
 <span class="sd">    - return : tuple</span>
@@ -644,7 +644,7 @@
                                    <span class="n">convert_to</span><span class="p">,</span>
                                    <span class="n">minimum_deployment_target</span><span class="p">,</span>
                                    <span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Validate and process model, inputs, classifier_config based on</span>
 <span class="sd">    `exact_source` (which cannot be `auto`)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
@@ -755,7 +755,7 @@
                       <span class="n">output_names</span><span class="p">,</span>
                       <span class="n">outputs_as_tensor_or_image_types</span><span class="p">,</span>
                       <span class="n">output_argument_as_specified_by_user</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Infer source (which can be auto) to the precise framework.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">source</span> <span class="o">=</span> <span class="n">source</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
@@ -823,7 +823,7 @@
     <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">_determine_target</span><span class="p">(</span><span class="n">convert_to</span><span class="p">,</span> <span class="n">minimum_deployment_target</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Infer the precise backend target, which could be one of ``milinternal``, ``neuralnetwork`` or ``mlprogram``</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">minimum_deployment_target</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
