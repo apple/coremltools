@@ -19,25 +19,25 @@ class gru(Operation):
        r_t = \rm{recurrent\_activation}(W_{ir} x_t + b_{ir} + W_{hr} h_{t-1} + b_{hr})
 
     .. math::
-       z_t = \rm{recurrent\_activation}(W_{iz} x_t + b_{iz} + W_{hz} h_(t−1) + b_{hz})
+       z_t = \rm{recurrent\_activation}(W_{iz} x_t + b_{iz} + W_{hz} h_{t-1} + b_{hz})
 
     .. math::
-       o_t = activation(W_{io} x_t + b_{io} + r_t * W_{ho} h_(t−1) + b_{ho})
+       o_t = \rm{activation}(W_{io} x_t + b_{io} + r_t * W_{ho} h_{t-1} + b_{ho})
 
     .. math::
-       h_t = (1 − z_t) * o_t + z_t * h_{(t−1)}
+       h_t = (1 − z_t) * o_t + z_t * h_{t−1}
 
     Where:
 
-    * ``W_{ir}``, ``W_{io}``, and ``W_{iz}`` state input-hidden weight for reset, output
+    * :math:`W_{ir}`, :math:`W_{io}`, and :math:`W_{iz}` are state input-hidden weights for reset, output
       and update gate, respectively.
-    * ``W_{h[r|o|z]}`` are recurrent weights on hidden state to reset, output, update gate.
-    * ``h_t``  is the hidden state at time ``t``.
-    * ``x_t`` is the input at time ``t``.
-    * ``h_(t-1)`` is the hidden state of the layer at time ``t-1`` or the initial
+    * :math:`W_{h[r|o|z]}` are recurrent weights on hidden state to reset, output, and update gates, respectively.
+    * :math:`h_t`  is the hidden state at time ``t``.
+    * :math:`x_t` is the input at time ``t``.
+    * :math:`h_{t-1}` is the hidden state of the layer at time ``t-1`` or the initial
       hidden state at time ``0``.
-    * ``r_t``, ``o_t``, and ``z_t`` are the reset, new, and update gates, respectively.
-    * ``*`` is elementwise product.
+    * :math:`r_t`, :math:`o_t`, and :math:`z_t` are the reset, new, and update gates, respectively.
+    * :math:`*` is elementwise product.
 
     Parameters
     ----------
@@ -173,33 +173,33 @@ class lstm(Operation):
     Single long short-term memory (LSTM) sequence.
 
     .. math::
-       i_t = \rm{recurrent\_activation}(W_{ii} x_t + B_{ii} + W_{hi} h_(t-1) + B_{hi})
+       i_t = \rm{recurrent\_activation}(W_{ii} x_t + B_{ii} + W_{hi} h_{t-1} + B_{hi})
 
     .. math::
-       f_t = \rm{recurrent\_activation}(W_{if} x_t + B_{if} + W_{hf} h_(t-1) + B_{hf})
+       f_t = \rm{recurrent\_activation}(W_{if} x_t + B_{if} + W_{hf} h_{t-1} + B_{hf})
 
     .. math::
-       z_t = cell\_activation(W_{iz} x_t + B_{iz} + W_{hz} h_(t-1) + B_{hz})
+       z_t = \rm{cell\_activation}(W_{iz} x_t + B_{iz} + W_{hz} h_{t-1} + B_{hz})
 
     .. math::
-       o_t = \rm{recurrent\_activation}(W_{io} x_t + B_{io} + W_{ho} h_(t-1) + B_{ho})
+       o_t = \rm{recurrent\_activation}(W_{io} x_t + B_{io} + W_{ho} h_{t-1} + B_{ho})
 
     .. math::
-       c_t = f_t * c_(t-1) + i_t * z_t
+       c_t = f_t * c_{t-1} + i_t * z_t
 
     .. math::
-       h_t = o_t * activation(c_t)
+       h_t = o_t * \rm{activation(c_t)}
 
     Where:
 
-    * ``i_t``, ``f_t``, ``o_t``, and ``z_t`` are input, forget, output, and cell gates,
+    * :math:`i_t`, :math:`f_t`, :math:`o_t`, and :math:`z_t` are input, forget, output, and cell gates,
       respectively, at time ``t``.
-    * ``c_t`` is cell state at time ``t``.
-    * ``h_t``  is the hidden state at time ``t``.
-    * ``W_{ii}``, ``W_{if}``, ``W_{io}``, and ``W_{iz}`` are input weights for input,
-      forget, output and cell gate, respectively.
-    * ``W_{hi}``, ``W_{hf}``, ``W_{ho}``, and ``W_{hz}`` are recurrent weights for input,
-      forget, output and cell gate, respectively.
+    * :math:`c_t` is cell state at time ``t``.
+    * :math:`h_t`  is the hidden state at time ``t``.
+    * :math:`W_{ii}`, :math:`W_{if}`, :math:`W_{io}`, and :math:`W_{iz}` are input weights for input,
+      forget, output, and cell gate, respectively.
+    * :math:`W_{hi}`, :math:`W_{hf}`, :math:`W_{ho}`, and :math:`W_{hz}` are recurrent weights for input,
+      forget, output, and cell gate, respectively.
 
     Parameters
     ----------
@@ -401,19 +401,19 @@ class lstm(Operation):
 
 @register_op
 class rnn(Operation):
-    """
+    r"""
     Recurrent neural network (RNN).
 
     .. math::
-       h_t = activation(W_{ih} x_t + b_{ih} + W_{hh} h_(t−1) + b_{hh})
+       h_t = \rm{activation}(W_{ih} x_t + b_{ih} + W_{hh} h_{t−1} + b_{hh})
 
     Where:
 
-    * ``W_{ih}`` is input weight.
-    * ``W_{hh}`` is hidden/recurrent weight.
-    * ``h_t``  is the hidden state at time ``t``.
-    * ``x_t`` is the input at time ``t``.
-    * ``h_(t-1)`` is the hidden state of the layer at time ``t-1`` or the initial
+    * :math:`W_{ih}` is the input weight.
+    * :math:`W_{hh}` is the hidden/recurrent weight.
+    * :math:`h_t`  is the hidden state at time ``t``.
+    * :math:`x_t` is the input at time ``t``.
+    * :math:`h_{t-1}` is the hidden state of the layer at time ``t-1`` or the initial
       hidden state at time ``0``.
 
     Parameters
