@@ -4549,22 +4549,22 @@ the results are officially undefined and may eventually raise an error.</p>
 <div class="math notranslate nohighlight">
 \[r_t = \rm{recurrent\_activation}(W_{ir} x_t + b_{ir} + W_{hr} h_{t-1} + b_{hr})\]</div>
 <div class="math notranslate nohighlight">
-\[z_t = \rm{recurrent\_activation}(W_{iz} x_t + b_{iz} + W_{hz} h_(t−1) + b_{hz})\]</div>
+\[z_t = \rm{recurrent\_activation}(W_{iz} x_t + b_{iz} + W_{hz} h_{t-1} + b_{hz})\]</div>
 <div class="math notranslate nohighlight">
-\[o_t = activation(W_{io} x_t + b_{io} + r_t * W_{ho} h_(t−1) + b_{ho})\]</div>
+\[o_t = \rm{activation}(W_{io} x_t + b_{io} + r_t * W_{ho} h_{t-1} + b_{ho})\]</div>
 <div class="math notranslate nohighlight">
-\[h_t = (1 − z_t) * o_t + z_t * h_{(t−1)}\]</div>
+\[h_t = (1 − z_t) * o_t + z_t * h_{t−1}\]</div>
 <p>Where:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">W_{ir}</span></code>, <code class="docutils literal notranslate"><span class="pre">W_{io}</span></code>, and <code class="docutils literal notranslate"><span class="pre">W_{iz}</span></code> state input-hidden weight for reset, output
+<li><p><span class="math notranslate nohighlight">\(W_{ir}\)</span>, <span class="math notranslate nohighlight">\(W_{io}\)</span>, and <span class="math notranslate nohighlight">\(W_{iz}\)</span> are state input-hidden weights for reset, output
 and update gate, respectively.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">W_{h[r|o|z]}</span></code> are recurrent weights on hidden state to reset, output, update gate.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">h_t</span></code>  is the hidden state at time <code class="docutils literal notranslate"><span class="pre">t</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">x_t</span></code> is the input at time <code class="docutils literal notranslate"><span class="pre">t</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">h_(t-1)</span></code> is the hidden state of the layer at time <code class="docutils literal notranslate"><span class="pre">t-1</span></code> or the initial
+<li><p><span class="math notranslate nohighlight">\(W_{h[r|o|z]}\)</span> are recurrent weights on hidden state to reset, output, and update gates, respectively.</p></li>
+<li><p><span class="math notranslate nohighlight">\(h_t\)</span>  is the hidden state at time <code class="docutils literal notranslate"><span class="pre">t</span></code>.</p></li>
+<li><p><span class="math notranslate nohighlight">\(x_t\)</span> is the input at time <code class="docutils literal notranslate"><span class="pre">t</span></code>.</p></li>
+<li><p><span class="math notranslate nohighlight">\(h_{t-1}\)</span> is the hidden state of the layer at time <code class="docutils literal notranslate"><span class="pre">t-1</span></code> or the initial
 hidden state at time <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">r_t</span></code>, <code class="docutils literal notranslate"><span class="pre">o_t</span></code>, and <code class="docutils literal notranslate"><span class="pre">z_t</span></code> are the reset, new, and update gates, respectively.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">*</span></code> is elementwise product.</p></li>
+<li><p><span class="math notranslate nohighlight">\(r_t\)</span>, <span class="math notranslate nohighlight">\(o_t\)</span>, and <span class="math notranslate nohighlight">\(z_t\)</span> are the reset, new, and update gates, respectively.</p></li>
+<li><p><span class="math notranslate nohighlight">\(*\)</span> is elementwise product.</p></li>
 </ul>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -4642,27 +4642,27 @@ concatenation and <code class="docutils literal notranslate"><span class="pre">[
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS15.recurrent.</span></span><span class="sig-name descname"><span class="pre">lstm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS15/recurrent.html#lstm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS15.recurrent.lstm" title="Permalink to this definition"></a></dt>
 <dd><p>Single long short-term memory (LSTM) sequence.</p>
 <div class="math notranslate nohighlight">
-\[i_t = \rm{recurrent\_activation}(W_{ii} x_t + B_{ii} + W_{hi} h_(t-1) + B_{hi})\]</div>
+\[i_t = \rm{recurrent\_activation}(W_{ii} x_t + B_{ii} + W_{hi} h_{t-1} + B_{hi})\]</div>
 <div class="math notranslate nohighlight">
-\[f_t = \rm{recurrent\_activation}(W_{if} x_t + B_{if} + W_{hf} h_(t-1) + B_{hf})\]</div>
+\[f_t = \rm{recurrent\_activation}(W_{if} x_t + B_{if} + W_{hf} h_{t-1} + B_{hf})\]</div>
 <div class="math notranslate nohighlight">
-\[z_t = cell\_activation(W_{iz} x_t + B_{iz} + W_{hz} h_(t-1) + B_{hz})\]</div>
+\[z_t = \rm{cell\_activation}(W_{iz} x_t + B_{iz} + W_{hz} h_{t-1} + B_{hz})\]</div>
 <div class="math notranslate nohighlight">
-\[o_t = \rm{recurrent\_activation}(W_{io} x_t + B_{io} + W_{ho} h_(t-1) + B_{ho})\]</div>
+\[o_t = \rm{recurrent\_activation}(W_{io} x_t + B_{io} + W_{ho} h_{t-1} + B_{ho})\]</div>
 <div class="math notranslate nohighlight">
-\[c_t = f_t * c_(t-1) + i_t * z_t\]</div>
+\[c_t = f_t * c_{t-1} + i_t * z_t\]</div>
 <div class="math notranslate nohighlight">
-\[h_t = o_t * activation(c_t)\]</div>
+\[h_t = o_t * \rm{activation(c_t)}\]</div>
 <p>Where:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">i_t</span></code>, <code class="docutils literal notranslate"><span class="pre">f_t</span></code>, <code class="docutils literal notranslate"><span class="pre">o_t</span></code>, and <code class="docutils literal notranslate"><span class="pre">z_t</span></code> are input, forget, output, and cell gates,
+<li><p><span class="math notranslate nohighlight">\(i_t\)</span>, <span class="math notranslate nohighlight">\(f_t\)</span>, <span class="math notranslate nohighlight">\(o_t\)</span>, and <span class="math notranslate nohighlight">\(z_t\)</span> are input, forget, output, and cell gates,
 respectively, at time <code class="docutils literal notranslate"><span class="pre">t</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">c_t</span></code> is cell state at time <code class="docutils literal notranslate"><span class="pre">t</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">h_t</span></code>  is the hidden state at time <code class="docutils literal notranslate"><span class="pre">t</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">W_{ii}</span></code>, <code class="docutils literal notranslate"><span class="pre">W_{if}</span></code>, <code class="docutils literal notranslate"><span class="pre">W_{io}</span></code>, and <code class="docutils literal notranslate"><span class="pre">W_{iz}</span></code> are input weights for input,
-forget, output and cell gate, respectively.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">W_{hi}</span></code>, <code class="docutils literal notranslate"><span class="pre">W_{hf}</span></code>, <code class="docutils literal notranslate"><span class="pre">W_{ho}</span></code>, and <code class="docutils literal notranslate"><span class="pre">W_{hz}</span></code> are recurrent weights for input,
-forget, output and cell gate, respectively.</p></li>
+<li><p><span class="math notranslate nohighlight">\(c_t\)</span> is cell state at time <code class="docutils literal notranslate"><span class="pre">t</span></code>.</p></li>
+<li><p><span class="math notranslate nohighlight">\(h_t\)</span>  is the hidden state at time <code class="docutils literal notranslate"><span class="pre">t</span></code>.</p></li>
+<li><p><span class="math notranslate nohighlight">\(W_{ii}\)</span>, <span class="math notranslate nohighlight">\(W_{if}\)</span>, <span class="math notranslate nohighlight">\(W_{io}\)</span>, and <span class="math notranslate nohighlight">\(W_{iz}\)</span> are input weights for input,
+forget, output, and cell gate, respectively.</p></li>
+<li><p><span class="math notranslate nohighlight">\(W_{hi}\)</span>, <span class="math notranslate nohighlight">\(W_{hf}\)</span>, <span class="math notranslate nohighlight">\(W_{ho}\)</span>, and <span class="math notranslate nohighlight">\(W_{hz}\)</span> are recurrent weights for input,
+forget, output, and cell gate, respectively.</p></li>
 </ul>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -4808,14 +4808,14 @@ values, respectively.</p></li>
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS15.recurrent.</span></span><span class="sig-name descname"><span class="pre">rnn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS15/recurrent.html#rnn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS15.recurrent.rnn" title="Permalink to this definition"></a></dt>
 <dd><p>Recurrent neural network (RNN).</p>
 <div class="math notranslate nohighlight">
-\[h_t = activation(W_{ih} x_t + b_{ih} + W_{hh} h_(t−1) + b_{hh})\]</div>
+\[h_t = \rm{activation}(W_{ih} x_t + b_{ih} + W_{hh} h_{t−1} + b_{hh})\]</div>
 <p>Where:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">W_{ih}</span></code> is input weight.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">W_{hh}</span></code> is hidden/recurrent weight.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">h_t</span></code>  is the hidden state at time <code class="docutils literal notranslate"><span class="pre">t</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">x_t</span></code> is the input at time <code class="docutils literal notranslate"><span class="pre">t</span></code>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">h_(t-1)</span></code> is the hidden state of the layer at time <code class="docutils literal notranslate"><span class="pre">t-1</span></code> or the initial
+<li><p><span class="math notranslate nohighlight">\(W_{ih}\)</span> is the input weight.</p></li>
+<li><p><span class="math notranslate nohighlight">\(W_{hh}\)</span> is the hidden/recurrent weight.</p></li>
+<li><p><span class="math notranslate nohighlight">\(h_t\)</span>  is the hidden state at time <code class="docutils literal notranslate"><span class="pre">t</span></code>.</p></li>
+<li><p><span class="math notranslate nohighlight">\(x_t\)</span> is the input at time <code class="docutils literal notranslate"><span class="pre">t</span></code>.</p></li>
+<li><p><span class="math notranslate nohighlight">\(h_{t-1}\)</span> is the hidden state of the layer at time <code class="docutils literal notranslate"><span class="pre">t-1</span></code> or the initial
 hidden state at time <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p></li>
 </ul>
 <dl class="field-list simple">
