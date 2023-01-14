@@ -108,6 +108,15 @@ class TorchFrontend:
 
         return load(*args, **kwargs)
 
+@ConverterRegistry.frontend
+class PaddleFrontend:
+    name = "paddle"
+
+    def __call__(self, *args, **kwargs):
+        from .frontend.paddle import load
+
+        return load(*args, **kwargs)
+
 
 @ConverterRegistry.backend
 class NNProtoBackend:

@@ -12,7 +12,7 @@ from coremltools import (
     _LOWEST_ALLOWED_SPECIFICATION_VERSION_FOR_NEURALNETWORK)
 from coremltools import ComputeUnit as _ComputeUnit
 from coremltools import __version__ as _ct_version
-from coremltools._deps import _HAS_TF_1, _HAS_TF_2, _HAS_TORCH
+from coremltools._deps import _HAS_TF_1, _HAS_TF_2, _HAS_TORCH, _HAS_PADDLE
 from coremltools.converters._profile_utils import _profile
 from coremltools.converters.mil._deployment_compatibility import (
     AvailableTarget, check_deployment_compatibility)
@@ -42,6 +42,12 @@ if _HAS_TORCH:
 
     from coremltools.converters.mil.frontend.torch.load import \
         _torchscript_from_model as pytorch_load
+
+if _HAS_PADDLE:
+    import paddle
+
+    from coremltools.converters.mil.frontend.paddle.load import \
+        _pdmodel_from_model as paddle_load
 
 @_profile
 def convert(
@@ -665,6 +671,9 @@ def _validate_conversion_arguments(model,
                 "Input should be a list/tuple (or nested lists/tuples) of TensorType or ImageType"
             )
 
+    elif exact_source == "paddle":
+        pass
+
     elif exact_source == "milinternal":
         if not isinstance(model, Program):
             msg = "Converter was asked to convert MIL input, but input is not a MIL program!"
@@ -726,6 +735,21 @@ def _determine_source(model, source,
                 msg = '"outputs" must be a list of type ct.TensorType or ct.ImageType for pytorch conversion'
                 raise ValueError(msg)
             return "pytorch"
+    if source == "auto" and _HAS_PADDLE:
+        is_paddle_load_successful = False
+        try:
+            paddle_load(model)
+            is_paddle_load_successful = True
+        except:
+            pass
+        if is_paddle_load_successful:
+            # validate that the outputs passed by the user are of type ImageType/TensorType
+            # if output_argument_as_specified_by_user is not None and \
+            #     not all([isinstance(t, TensorType) or isinstance(t, ImageType) \
+            #             for t in output_argument_as_specified_by_user]):
+            #     msg = '"outputs" must be a list of type ct.TensorType or ct.ImageType for pytorch conversion'
+            #     raise ValueError(msg)
+            return "paddle"
 
 
     if source == "auto" and isinstance(model, Program):
@@ -797,6 +821,8 @@ def _record_build_metadata(mlmodel, exact_source):
         src_pkg_version = "tensorflow=={0}".format(tf.__version__)
     elif exact_source == "pytorch" and _HAS_TORCH:
         src_pkg_version = "torch=={0}".format(torch.__version__)
+    elif exact_source == "paddle" and _HAS_PADDLE:
+        src_pkg_version = "padddle=={0}".format(paddle.__version__)
     elif exact_source == 'milinternal':
         src_pkg_version = "milinternal"
     else:

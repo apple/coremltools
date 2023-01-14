@@ -155,6 +155,15 @@ except:
     _HAS_TORCH = False
 MSG_TORCH_NOT_FOUND = "PyTorch not found."
 
+# ---------------------------------------------------------------------------------------
+_HAS_PADDLE = True
+_PADDLE_MAX_VERSION = "2.4.1"
+try:
+    import paddle
+    _warn_if_above_max_supported_version("", paddle.__version__, _PADDLE_MAX_VERSION)
+except:
+    _HAS_PADDLE = False
+MSG_PADDLE_NOT_FOUND = "Paddle not found."
 
 # ---------------------------------------------------------------------------------------
 try:

@@ -69,8 +69,8 @@ setup(
         "": ["LICENSE.txt", "README.md", "libmilstoragepython.so", "libcoremlpython.so", "libmodelpackage.so"]
     },
     install_requires=[
-        "numpy >= 1.14.5",
-        "protobuf >= 3.1.0, <= 4.0.0",
+        "numpy >= 1.14.5, <=1.23.0",
+        "protobuf >= 3.1.0, <= 3.20.0",
         "sympy",
         "tqdm",
         "packaging",
