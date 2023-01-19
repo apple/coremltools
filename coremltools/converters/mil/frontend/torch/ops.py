@@ -5239,38 +5239,49 @@ def roll(context, node):
 @register_torch_op
 def im2col(context, node):
     """
-    This op is used by torch.nn.Unfold, which extracts sliding local blocks from a batched input
-    tensor.
+    Extract sliding local blocks from a batched input tensor (rank=4).
 
-    It only supports rank-4 tensor (consistent with PyTorch) with dilation and stride both set to 1.
-    More flexbible dilation and stride support will be added in the future.
+    torch.nn.functional.unfold aims to be the general version: im2col is the rank=4 case of unfold.
+    PyTorch currently only supports rank=4 input: torch.nn.functional.unfold redispatches to at::im2col,
+    which is why coremltools needs im2col to convert torch.nn.functional.unfold.
+
+    We currently only support rank=4 input (consistent with PyTorch) and dilation set to 1.
+    More flexbible dilation support will be added in the future.
+
+    Reference https://pytorch.org/docs/stable/generated/torch.nn.Unfold.html
     """
     inputs = _get_inputs(context, node, expected=5)
-    input_data = inputs[0]
+    x = inputs[0]
     kernel_size = inputs[1].val
     dilation = inputs[2].val
     padding = inputs[3].val
     stride = inputs[4].val
 
-    if input_data.rank != 4:
+    if x.rank != 4:
         raise ValueError("Only supports rank=4 input data for im2col (unfold).")
     if not (dilation[0] == 1 and dilation[1] == 1):
         raise ValueError("Only supports dilation=1 for im2col (unfold).")
-    if not (stride[0] == 1 and stride[1] == 1):
-        raise ValueError("Only supports stride=1 for im2col (unfold).")
 
-    if padding[0] != 0 or padding[1] != 0:
-        # The order for padding is reversed for unfold compared to what is used for padding, i.e.,
-        # pad expects the layout (padding_left, padding_right, padding_top, padding_bottom). But in
-        # the functions from `unfold` to `im2col`, it uses the first index to be the vertical
-        # padding and second for horizontal: (padding[1], padding[1], padding[0], padding[0]).
-        pad_dim = _np.flip(padding).repeat(2)
-        pad_dim = pad_dim.reshape((-1, 2))[::-1].reshape(-1).tolist()
-        missing_dims = input_data.rank - (len(pad_dim) // 2)
-        pad_dim = [0, 0] * missing_dims + pad_dim
-        input_data = mb.pad(x=input_data, pad=pad_dim, mode="constant")
+    # for simplicity, we explicitly pad; TODO: implicit padding would be more efficient
+    # torch.unfold padding has different semantics
+    # * for torch.unfold
+    #   x.shape[i + x.rank - padding.rank] = padding[i] + x.shape[i + x.rank - padding.rank] + padding[i]
+    #   taking x.rank = 4 and padding.rank = 2 as an example:
+    #       x.shape[0 + 4 - 2] = padding[0] + x.shape[0 + 4 - 2] + padding[0]
+    #       x.shape[1 + 4 - 2] = padding[1] + x.shape[1 + 4 - 2] + padding[1]
+    # * for mb.pad(x=x, pad=pad, mode="constant")
+    #   x.shape[i] = pad[2 * i] + x.shape[i] + pad[2 * i + 1]
+    # * for torch.nn.functional.pad
+    #   x.shape[-1] = padding[0] +x.shape[-1] + padding[1]
+    #   x.shape[-2] = padding[2] +x.shape[-1] + padding[3]
+    #   ...
+    #   x.shape[-i] = padding[2 * i - 2] + x.shape[-i] + padding[2 * i - 1]
+    # so we need to convert torch.unfold padding to mb.pad(mode="constant") pad
+    missing_dims = x.rank - len(padding)
+    pad = [0, 0] * missing_dims + _np.array(padding).repeat(2).tolist()
+    x = mb.pad(x=x, pad=pad, mode="constant")
 
-    N, C, H, W = input_data.shape
+    N, C, H, W = x.shape
 
     # Get total number of blocks. It follows the formula at torch.nn.Unfold documentation.
     sptial_size = (H, W)
@@ -5278,10 +5289,17 @@ def im2col(context, node):
     for i in range(2):
         block_count *= (
             _np.floor(
+                # the original formula is
+                #     (sptial_size[i] + 2 * padding[i] - dilation[i] * (kernel_size[i] - 1) - 1) / stride[i]
+                # since we have explicitly padded, we no longer add 2 * padding[i] to sptial_size[i]
                 (sptial_size[i] - dilation[i] * (kernel_size[i] - 1) - 1) / stride[i]
             ).astype(_np.int32)
             + 1
         )
+
+    """
+    The implementation below assumes x to be contiguous
+    """
 
     # Get batch block indices.
     batch_idx = _np.arange(N)[:, None, None] * C * H * W
@@ -5300,15 +5318,13 @@ def im2col(context, node):
     # Get offsetted indices across the height and width of input array.
     row_extent = H - kernel_size[0] + 1
     col_extent = W - kernel_size[1] + 1
-    offset_idx = _np.arange(row_extent)[None, :, None] * W + _np.arange(col_extent)
+    offset_idx = _np.arange(0, row_extent, stride[0])[None, :, None] * W + _np.arange(0, col_extent, stride[1])
     indices = _np.ravel(start_idx)[:, None] + _np.ravel(offset_idx)
 
     # Gather batches together.
     indices = batch_idx + indices
-    input_data = mb.reshape(x=input_data, shape=[-1])
-    gathered_data = mb.gather_along_axis(
-        x=input_data, indices=indices.reshape(-1), axis=0
-    )
+    x = mb.reshape(x=x, shape=[-1])
+    gathered_data = mb.gather_along_axis(x=x, indices=indices.reshape(-1), axis=0)
     block_size = C * kernel_size[0] * kernel_size[1]
     output = mb.reshape(
         x=gathered_data, shape=(N, block_size, block_count), name=node.name
