@@ -1964,12 +1964,14 @@ def stack(context, node):
     values = [context[k] for k in node.input("X")]
     output_name = node.output("Y")[0]
 
-    if (len(values)==1):
-        res = mb.identity(x=values[0], name=output_name)
-        context.add(res)
-        return
-        
     axis = node.desc.attr("axis")
+
+    # if (len(values)==1):
+    #     res = mb.expand_dims(x=values[0], axes=[axis], name=output_name)
+    #     context.add(res)
+    #     return
+
+    
     res = mb.stack(values=values, axis=axis, name=output_name)
     context.add(res)
 
@@ -2779,7 +2781,7 @@ def _get_scales_from_output_size(output_size, input_shape):
         # (3) A numpy array
 
         if isinstance(output_size, list):
-            output_size = [x.val for x in output_size]
+            output_size = [x.val[0] for x in output_size]
         if isinstance(output_size, Var):
             output_size = [x for x in output_size.val]
         if isinstance(output_size, _np.ndarray):
