@@ -214,6 +214,10 @@ class TFConverter:
                 continue
             if any([isinstance(s, RangeDim) for s in inputtype.shape.shape]):
                 continue
+            if inputtype.name not in graph:
+                raise ValueError(
+                    f"The input {inputtype.name} provided is not in graph."
+                )
             node = graph[inputtype.name]
             shape = [-1 if is_symbolic(s) else s for s in inputtype.shape.shape]
             node.attr["_output_shapes"] = [shape]  # list of length 1

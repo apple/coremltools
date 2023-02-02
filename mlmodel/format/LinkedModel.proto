@@ -9,7 +9,7 @@ import public "Parameters.proto";
 
 package CoreML.Specification;
 
-/**
+/*
  * A model which wraps another (compiled) model external to this one
  */
 message LinkedModel {

@@ -1857,7 +1857,7 @@ def _get_constexpr_lut_to_dense(shape):
 
 def _get_constexpr_affine_dequantize(shape):
     val = np.random.rand(*shape)
-    quant_params = WeightAffineQuantizer.compress(val=val, axis=0, mode="LINEAR_SYMMETRIC")
+    quant_params = WeightAffineQuantizer.compress(val=val, axis=0, mode="LINEAR_SYMMETRIC", dtype=types.uint8)
     return mb.constexpr_affine_dequantize(
             quantized_data=quant_params.quantized_data,
             zero_point=quant_params.zero_point,

@@ -586,7 +586,7 @@ bool CoreML::hasIOS14Features(const Specification::Model& model) {
 }
 
 bool CoreML::hasIOS15Features(const Specification::Model& model) {
-    // New in IOS15 features: 
+    // New in IOS15 features:
     // - mlProgram proto message
     // - new sound print
     //
@@ -630,13 +630,35 @@ bool CoreML::hasIOS16Features(const Specification::Model& model) {
     //  - FLOAT16 array data type
     //  - GRAYSCALE_FLOAT16 image color space.
     //  - CoreML6 Opsets for mlProgram models
-    
+
     bool result = false;
     result = result || hasFloat16MultiArray(model);
     result = result || hasGrayscaleFloat16Image(model);
     result = result || hasCoreML6Opsets(model);
 
     return result;
+}
+
+__attribute__((__unused__))
+bool CoreML::hasIOS17Features(const Specification::Model& model) {
+    // New in IOS17 features:
+    // - Apple Vision feature extractor for scenes using scene net V5 (revision == 2)
+    // - Apple Vision feature extractor for objects using scene net v5 (revision == 2)
+
+    switch (model.Type_case()) {
+        case Specification::Model::kVisionFeaturePrint:
+            if (model.visionfeatureprint().has_scene() && model.visionfeatureprint().scene().version() == 2) {
+                return true;
+            }
+            if (model.visionfeatureprint().has_objects() && model.visionfeatureprint().objects().version() == 2) {
+                return true;
+            }
+
+        default:
+            break;
+    }
+
+    return false;
 }
 
 bool CoreML::hasCustomModel(const Specification::Model& model) {

@@ -10,10 +10,10 @@ import public "DataStructures.proto";
 
 package CoreML.Specification;
 
-/// Kernel Definitions
-/// ------------------
+// Kernel Definitions
+// ------------------
 
-/**
+/*
  * A linear kernel.
  *
  * This function has the following formula:
@@ -24,7 +24,7 @@ package CoreML.Specification;
 message LinearKernel {
 }
 
-/**
+/*
  * A Gaussian radial basis function (RBF) kernel.
  *
  * This function has the following formula:
@@ -38,7 +38,7 @@ message RBFKernel {
     double gamma = 1;
 }
 
-/**
+/*
  * A polynomial kernel.
  *
  * This function has the following formula:
@@ -53,7 +53,7 @@ message PolyKernel {
     double gamma = 3;
 }
 
-/**
+/*
  * A sigmoid kernel.
  *
  * This function has the following formula:
@@ -67,7 +67,7 @@ message SigmoidKernel {
     double c = 2;
 }
 
-/**
+/*
  * A kernel.
  */
 message Kernel {
@@ -80,10 +80,10 @@ message Kernel {
 }
 
 
-/// Support Vector Definitions
-/// --------------------------
+// Support Vector Definitions
+// --------------------------
 
-/**
+/*
  * A sparse node.
  */
 message SparseNode {
@@ -91,42 +91,42 @@ message SparseNode {
     double value = 2;
 }
 
-/**
+/*
  * A sparse vector.
  */
 message SparseVector {
     repeated SparseNode nodes = 1;
 }
 
-/**
+/*
  * One or more sparse support vectors.
  */
 message SparseSupportVectors {
     repeated SparseVector vectors = 1;
 }
 
-/**
+/*
  * A dense vector.
  */
 message DenseVector {
     repeated double values = 1;
 }
 
-/**
+/*
  * One or more dense support vectors.
  */
 message DenseSupportVectors {
     repeated DenseVector vectors = 1;
 }
 
-/**
+/*
  * One or more coefficients.
  */
 message Coefficients {
     repeated double alpha = 1;
 }
 
-/**
+/*
  * A support vector regressor.
  */
 message SupportVectorRegressor {
@@ -144,18 +144,18 @@ message SupportVectorRegressor {
     double rho = 5;
 }
 
-/**
+/*
  * A support vector classifier
  */
 message SupportVectorClassifier {
     Kernel kernel = 1;
 
-    /**
+    /*
      * The number of support vectors for each class.
      */
     repeated int32 numberOfSupportVectorsPerClass = 2;
 
-    /**
+    /*
      * The support vectors, in either sparse or dense format.
      */
     oneof supportVectors {
@@ -163,20 +163,20 @@ message SupportVectorClassifier {
         DenseSupportVectors denseSupportVectors = 4;
     }
 
-    /**
+    /*
      * The coefficients, essentially a two dimensional array of
      * size: (numberOfClasses-1) by (total number of support vectors)
      */
     repeated Coefficients coefficients = 5;
 
-    /**
+    /*
      * Constants for decision function,
      * with K*(K-1) / 2 elements,
      * where K is the number of classes.
      */
     repeated double rho = 6;
 
-    /**
+    /*
      * Pairwise probability information for A vs B classifier.
      * Total of K*(K-1)/2 elements where K is the number of classes.
      * These fields are optional,
@@ -185,7 +185,7 @@ message SupportVectorClassifier {
     repeated double probA = 7;
     repeated double probB = 8;
 
-    /**
+    /*
      * Class label mapping.
      */
     oneof ClassLabels {

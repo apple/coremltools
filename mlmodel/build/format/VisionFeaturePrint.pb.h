@@ -79,12 +79,13 @@ const int VisionFeaturePrint_Scene_SceneVersion_SceneVersion_ARRAYSIZE = VisionF
 enum VisionFeaturePrint_Objects_ObjectsVersion {
   VisionFeaturePrint_Objects_ObjectsVersion_OBJECTS_VERSION_INVALID = 0,
   VisionFeaturePrint_Objects_ObjectsVersion_OBJECTS_VERSION_1 = 1,
+  VisionFeaturePrint_Objects_ObjectsVersion_OBJECTS_VERSION_2 = 2,
   VisionFeaturePrint_Objects_ObjectsVersion_VisionFeaturePrint_Objects_ObjectsVersion_INT_MIN_SENTINEL_DO_NOT_USE_ = ::google::protobuf::kint32min,
   VisionFeaturePrint_Objects_ObjectsVersion_VisionFeaturePrint_Objects_ObjectsVersion_INT_MAX_SENTINEL_DO_NOT_USE_ = ::google::protobuf::kint32max
 };
 bool VisionFeaturePrint_Objects_ObjectsVersion_IsValid(int value);
 const VisionFeaturePrint_Objects_ObjectsVersion VisionFeaturePrint_Objects_ObjectsVersion_ObjectsVersion_MIN = VisionFeaturePrint_Objects_ObjectsVersion_OBJECTS_VERSION_INVALID;
-const VisionFeaturePrint_Objects_ObjectsVersion VisionFeaturePrint_Objects_ObjectsVersion_ObjectsVersion_MAX = VisionFeaturePrint_Objects_ObjectsVersion_OBJECTS_VERSION_1;
+const VisionFeaturePrint_Objects_ObjectsVersion VisionFeaturePrint_Objects_ObjectsVersion_ObjectsVersion_MAX = VisionFeaturePrint_Objects_ObjectsVersion_OBJECTS_VERSION_2;
 const int VisionFeaturePrint_Objects_ObjectsVersion_ObjectsVersion_ARRAYSIZE = VisionFeaturePrint_Objects_ObjectsVersion_ObjectsVersion_MAX + 1;
 
 // ===================================================================
@@ -249,6 +250,8 @@ class VisionFeaturePrint_Objects : public ::google::protobuf::MessageLite /* @@p
     VisionFeaturePrint_Objects_ObjectsVersion_OBJECTS_VERSION_INVALID;
   static const ObjectsVersion OBJECTS_VERSION_1 =
     VisionFeaturePrint_Objects_ObjectsVersion_OBJECTS_VERSION_1;
+  static const ObjectsVersion OBJECTS_VERSION_2 =
+    VisionFeaturePrint_Objects_ObjectsVersion_OBJECTS_VERSION_2;
   static inline bool ObjectsVersion_IsValid(int value) {
     return VisionFeaturePrint_Objects_ObjectsVersion_IsValid(value);
   }

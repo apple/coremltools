@@ -8,10 +8,10 @@ option optimize_for = LITE_RUNTIME;
 
 package CoreML.Specification.CoreMLModels;
 
-/**
-* A model which takes audio signal samples as input and outputs an array of
-* preprocessed samples according to the specified preprocessing types
-*/
+/*
+ * A model which takes audio signal samples as input and outputs an array of
+ * preprocessed samples according to the specified preprocessing types
+ */
 message SoundAnalysisPreprocessing {
 
     // Specific preprocessing types for sound analysis

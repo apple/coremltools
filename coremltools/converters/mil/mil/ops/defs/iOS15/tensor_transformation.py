@@ -414,7 +414,7 @@ class slice_by_index(Operation):
     ----------
     x: tensor<*?, T> (Required)
         * Input tensor
-    begin: tensor<[rank<x>], i32> (Required)
+    begin: tensor<[rank(x)], i32> (Required)
         * Starting index for the dimension of slicing.
     end: tensor<[rank(x)], i32> (Required)
         * Ending index for the dimension of slicing.
@@ -423,13 +423,13 @@ class slice_by_index(Operation):
         * Stride for the dimension of slicing.
     begin_mask: tensor<[rank(x)], bool> (Optional)
         * Default to all ``False``.
-        * If ``begin_mask[i]==True``, neglect ``begin[i]``, and set ``begin[i]`` to ``0``.
+        * If ``begin_mask[i]==True``, ignores ``begin[i]``, and set ``begin[i]`` to ``0``.
     end_mask: tensor<[rank(x)], bool> (Optional)
         * Default to all ``False``.
-        * If ``end_mask[i]==True``, neglect ``end[i]``, and set ``end[i]`` to ``x.shape[i]``.
+        * If ``end_mask[i]==True``, ignores ``end[i]``, and set ``end[i]`` to ``x.shape[i]``.
     squeeze_mask: tensor<[rank(x)], bool> (Optional)
         * Default to all ``False``.
-        * If ``squeeze_mask[i]==true``, neglect ``end[i]``, and do the pure index at ``begin[i]``.
+        * If ``squeeze_mask[i]==true``, ignores ``end[i]``, and do the pure index at ``begin[i]``.
 
     Returns
     -------

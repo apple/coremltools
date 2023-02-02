@@ -33,14 +33,14 @@ class elementwise_unary(Operation):
     input_spec = InputSpec(
         x=TensorInputType(type_domain="T"),
     )
-    
+
     type_domains = {
         "T": (types.fp16, types.fp32),
     }
 
     def type_inference(self):
         return self.x.sym_type
-        
+
 class elementwise_unary_with_int(Operation):
     """
     Elementwise Unary Op Superclass
@@ -48,7 +48,7 @@ class elementwise_unary_with_int(Operation):
     input_spec = InputSpec(
         x=TensorInputType(type_domain="T"),
     )
-    
+
     type_domains = {
         "T": (types.fp16, types.fp32, types.int32),
     }
@@ -239,7 +239,7 @@ class clip(Operation):
         alpha=TensorInputType(const=True, type_domain="T"),
         beta=TensorInputType(const=True, type_domain="T"),
     )
-    
+
     type_domains = {
         "T": (types.fp16, types.fp32),
     }
@@ -430,7 +430,7 @@ class inverse(Operation):
         x=TensorInputType(type_domain="T"),
         epsilon=TensorInputType(const=True, optional=True, type_domain="T"),
     )
-    
+
     type_domains = {
         "T": (types.fp16, types.fp32),
     }
@@ -445,7 +445,7 @@ class inverse(Operation):
 
     @precondition(allow=VALUE)
     def value_inference(self):
-        return np.reciprocal(self.x.val + self.epsilon.val)
+        return np.array(np.reciprocal(self.x.val + self.epsilon.val), copy=False)
 
 
 @register_op
@@ -474,7 +474,7 @@ class log(Operation):
         x=TensorInputType(type_domain="T"),
         epsilon=TensorInputType(const=True, optional=True, type_domain="T"),
     )
-    
+
     type_domains = {
         "T": (types.fp16, types.fp32),
     }
@@ -512,7 +512,7 @@ class logical_not(Operation):
     ----------
     T: bool
     """
-    
+
     input_spec = InputSpec(
         x=TensorInputType(type_domain=types.bool),
     )
@@ -520,7 +520,7 @@ class logical_not(Operation):
     @precondition(allow=VALUE)
     def value_inference(self):
         return np.logical_not(self.x.val)
-        
+
     def type_inference(self):
         return self.x.sym_type
 
@@ -578,7 +578,7 @@ class rsqrt(Operation):
         x=TensorInputType(type_domain="T"),
         epsilon=TensorInputType(const=True, optional=True, type_domain="T"),
     )
-    
+
     type_domains = {
         "T": (types.fp16, types.fp32),
     }
@@ -800,7 +800,7 @@ class threshold(Operation):
         x=TensorInputType(type_domain="T"),
         alpha=TensorInputType(const=True, type_domain="T"),
     )
-    
+
     type_domains = {
         "T": (types.fp16, types.fp32, types.int32),
     }
@@ -877,7 +877,7 @@ class cast(Operation):
             "fp16": np.float16,
             "fp32": np.float32,
             "fp64": np.float32,
-            "bool": np.bool,
+            "bool": bool,
         }
 
         if dtype_val not in type_map.keys():

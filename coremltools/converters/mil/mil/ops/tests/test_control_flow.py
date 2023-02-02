@@ -91,7 +91,7 @@ class TestSelect:
 
     @ssa_fn
     def test_builder_eval(self):
-        cond = np.random.randint(low=0, high=2, size=(6, 1, 7)).astype(np.bool)
+        cond = np.random.randint(low=0, high=2, size=(6, 1, 7)).astype(bool)
         a = random_gen(shape=(6, 1, 7), rand_min=-1962.0, rand_max=0.0)
         b = random_gen(shape=(6, 1, 7), rand_min=0.0, rand_max=1964.0)
         res = mb.select(cond=cond, a=a, b=b)

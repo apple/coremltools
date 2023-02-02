@@ -17,14 +17,17 @@ from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import Function, Program, types
 
 from .._utils import get_output_names
-from .internal_graph import InternalTorchIRGraph
+from .internal_graph import InternalTorchIRGraph, InternalTorchIRNode
 from .ops import convert_nodes
 from .ssa_passes.torch_passes import torch_passes
 from .torch_op_registry import _TORCH_OPS_REGISTRY
-from .torchir_passes import (flatten_graph_input_values,
-                             flatten_graph_output_values,
-                             generate_tensor_assignment_ops,
-                             remove_getattr_nodes, transform_inplace_ops)
+from .torchir_passes import (
+    flatten_graph_input_values,
+    flatten_graph_output_values,
+    generate_tensor_assignment_ops,
+    remove_getattr_nodes,
+    transform_inplace_ops,
+)
 
 torch_to_mil_types = {
     _torch.bool: types.bool,
@@ -50,6 +53,13 @@ class TranscriptionContext:
     def __init__(self, name=None):
         self.name = name if name else ""
         self._current_graph = [{}]
+
+    def prepare_for_conversion(self, node: InternalTorchIRNode):
+        """
+        Perform any preparation necessary before node-specific frontend conversion
+        is invoked.
+        """
+        pass
 
     def add(self, ssa_var, torch_name=None):
         """
@@ -156,7 +166,6 @@ class TorchConverter:
         self.output_names = get_output_names(self.outputs)
         self.opset_version = _target(opset_version) if opset_version is not None else None
         self.context = TranscriptionContext()
-
         raw_graph, params_dict = self._expand_and_optimize_ir(self.torchscript)
         self.params_dict = params_dict
         self.graph = InternalTorchIRGraph(
@@ -219,6 +228,8 @@ class TorchConverter:
 
     def convert_const(self):
         for name, val in self.graph.params.items():
+            if not isinstance(val, _np.ndarray):
+                raise ValueError("unsupported class for {} in PyTorch graph: {}".format(name, type(val)))
             if val.dtype == _np.uint8:
                 val = val.astype(_np.int32)
             const = mb.const(val=val, name=name)
@@ -377,17 +388,9 @@ class TorchConverter:
         def _check_is_quantized_tensor(node, module):
             if not isinstance(module, _torch._C.ScriptObject):
                 return False
-            # There are three quantized parameters currently supported in Torch:
-            # ref: https://github.com/pytorch/pytorch/blob/master/torch/csrc/jit/passes/lower_graph.cpp
-            supported_quantizes_types = ["LinearPackedParamsBase", "Conv2dPackedParamsBase", "Conv3dPackedParamsBase"]
-            assert node.output().type().name() in supported_quantizes_types
+            # We only support ScriptObjects that correspond to quantized packed params.
+            assert "PackedParams" in node.output().type().name()
             return True
-
-        def _get_tensor(module):
-            return module
-
-        def _get_quantized_tensor(module):
-            return tuple(list(module.__getstate__())[:-1])
 
         def _lower_graph_block(graph):
             for node in list(graph.nodes()):
@@ -424,7 +427,7 @@ class TorchConverter:
                         assert _torch.equal(module, params_dict[prefix])
                         replace_input[_output] = first_node_with_prefix[prefix]
                     else:
-                        params_dict[prefix] = _get_tensor(module) if is_tensor else _get_quantized_tensor(module)
+                        params_dict[prefix] = module
                         first_node_with_prefix[prefix] = _output
                         _output.setDebugName(prefix)
 

@@ -9,12 +9,12 @@ Utilities for the entire package.
 import math as _math
 import os as _os
 import shutil as _shutil
-import stat as _stat
 import subprocess as _subprocess
 import sys as _sys
 import tempfile as _tempfile
 import warnings as _warnings
 from functools import lru_cache as _lru_cache
+from typing import Optional as _Optional
 
 import numpy as _np
 
@@ -47,6 +47,7 @@ def _to_unicode(x):
     else:
         return x
 
+
 def _remove_invalid_keys(input_dict, model):
     # make sure that input_dict does not contain an input name, which
     # is not present in the list of model inputs
@@ -56,53 +57,56 @@ def _remove_invalid_keys(input_dict, model):
         if k not in model_input_names:
             del input_dict[k]
 
-def _create_mlpackage(proto_spec, weights_dir=None, package_path=None, copy_weights=False):
-    """
-    Parameters
-    ---------
-    proto_spec: Model_pb2
-    weights_dir: str
-        copy or move weights from this path to the mlpackage
-    package_path: str
-        If provided place the created mlpackage at this path
-    copy_weights: bool
-        If False, delete the weights directory provided in ``weights_dir``
 
-    :return: str
+def _create_mlpackage(
+    proto_spec: _Model_pb2,
+    weights_dir: _Optional[str] = None,
+    package_path: _Optional[str] = None,
+) -> str:
+    """
+    Args:
+        proto_spec: The proto spec of the model.
+        weights_dir: Copy weights from this path to the mlpackage.
+        package_path: Place the created mlpackage at this path. Error out if this path is a non-empty directory.
+
+    Returns:
         path to the mlpackage
     """
-    # Save proto to disk
-    proto_spec_str = proto_spec.SerializeToString()
-    spec_file = _tempfile.NamedTemporaryFile(suffix=_MLMODEL_EXTENSION)
-    spec_file.write(proto_spec_str)
-    spec_file.flush()
-
-    # To make sure everyone can read this file
-    _os.chmod(spec_file.name, _stat.S_IRUSR | _stat.S_IWUSR | _stat.S_IRGRP | _stat.S_IROTH)
-
-    # If package directory is already provided, use that
     if package_path is None:
         package_path = _tempfile.mkdtemp(suffix=_MLPACKAGE_EXTENSION)
-    else:
-        name, ext = _os.path.splitext(package_path)
-        if ext != _MLPACKAGE_EXTENSION:
-            raise Exception("For an ML Package, extension must be {} (not {})".format(_MLPACKAGE_EXTENSION, ext))
-
     if _os.path.exists(package_path):
+        if _os.listdir(package_path):
+            raise FileExistsError(
+                f"The package_path is invalid because it's a non-empty directory: {package_path}"
+            )
+        # If package_path is an empty dir, the ModelPackage load will error out with `manifest.json not found` issue.
         _shutil.rmtree(package_path)
+
+    _, ext = _os.path.splitext(package_path)
+    if ext != _MLPACKAGE_EXTENSION:
+        raise Exception(
+            f"For an ML Package, extension must be {_MLPACKAGE_EXTENSION} (not {ext})"
+        )
 
     package = _ModelPackage(package_path)
 
-    # Root model file is copied into the model package.
+    # Save proto to disk as the root model file, and copy into the model package.
+    spec_file = _tempfile.NamedTemporaryFile(suffix=_MLMODEL_EXTENSION)
+    spec_file.write(proto_spec.SerializeToString())
+    spec_file.flush()
     package.setRootModel(spec_file.name, _MODEL_FILE_NAME, _MLPACKAGE_AUTHOR_NAME,
                          "CoreML Model Specification")
-    spec_file.close()  # clean up spec file now that it is part of the model package
+    # Spec file is auto cleaned after close, which is fine because it is already added to the model package.
+    spec_file.close()
 
-    # Weights bundle is copied into the model package. Changes to in-memory JSON is commited to disk when package goes out of scope.
+    # Add weights bundle into the model package.
     if weights_dir is not None:
-        package.addItem(weights_dir, _WEIGHTS_DIR_NAME, _MLPACKAGE_AUTHOR_NAME, "CoreML Model Weights")
-        if not copy_weights:
-            _shutil.rmtree(weights_dir)  # clean up weights now that it is part of the model package
+        package.addItem(
+            weights_dir,
+            _WEIGHTS_DIR_NAME,
+            _MLPACKAGE_AUTHOR_NAME,
+            "CoreML Model Weights",
+        )
 
     return package_path
 
@@ -131,9 +135,11 @@ def save_spec(spec, filename, auto_set_specification_version=False, weights_dir=
     --------
     .. sourcecode:: python
 
-        >>> coremltools.utils.save_spec(spec, 'HousePricer.mlmodel')
-        >>> coremltools.utils.save_spec(spec, 'HousePricer.mlpackage')
-        >>> coremltools.utils.save_spec(spec, 'mlprogram_model.mlpackage', weights_dir="/path/to/weights/directory")
+        coremltools.utils.save_spec(spec, "HousePricer.mlmodel")
+        coremltools.utils.save_spec(spec, "HousePricer.mlpackage")
+        coremltools.utils.save_spec(
+            spec, "mlprogram_model.mlpackage", weights_dir="/path/to/weights/directory"
+        )
 
     See Also
     --------
@@ -175,21 +181,19 @@ def save_spec(spec, filename, auto_set_specification_version=False, weights_dir=
                 raise Exception('spec of type mlProgram cannot be saved without the'
                                 ' weights file. Please provide the path to the weights file as well, '
                                 'using the \'weights_dir\' argument.')
-        _create_mlpackage(spec, weights_dir=weights_dir, package_path=filename, copy_weights=True)
+        _create_mlpackage(spec, weights_dir=weights_dir, package_path=filename)
     else:
-        spec_str = spec.SerializeToString()
         with open(filename, "wb") as f:
-            f.write(spec_str)
+            f.write(spec.SerializeToString())
 
-def load_spec(filename):
+
+def load_spec(model_path: str) -> _Model_pb2:
     """
-    Load a protobuf model specification from file.
+    Load a protobuf model specification from file (mlmodel) or directory (mlpackage).
 
     Parameters
     ----------
-    filename: str
-        Location on disk (a valid file path) from which the file is loaded
-        as a protobuf spec.
+    model_path: Path to the model from which the protobuf spec is loaded.
 
     Returns
     -------
@@ -200,36 +204,24 @@ def load_spec(filename):
     --------
     .. sourcecode:: python
 
-        >>> spec = coremltools.utils.load_spec('HousePricer.mlmodel')
-        >>> spec = coremltools.utils.load_spec('HousePricer.mlpackage')
+        spec = coremltools.utils.load_spec("HousePricer.mlmodel")
+        spec = coremltools.utils.load_spec("HousePricer.mlpackage")
 
     See Also
     --------
     save_spec
     """
-    _, file_extension = _os.path.splitext(filename)
-    
-    has_mlmodel_file_extension = False
-    if file_extension:
-        if file_extension == _MLMODEL_EXTENSION:
-            has_mlmodel_file_extension = True
-        elif file_extension != _MLPACKAGE_EXTENSION:
-            raise Exception("File extension must be {} or {} (not {})".format(
-                _MLMODEL_EXTENSION, _MLPACKAGE_EXTENSION, file_extension))
-
-    if not has_mlmodel_file_extension and _ModelPackage is None:
-        raise Exception("Unable to load libmodelpackage. Cannot make save spec.")
-
-    if not has_mlmodel_file_extension and _ModelPackage.isValid(filename):
-        specfile = _ModelPackage(filename).getRootModel().path()
+    if _os.path.isdir(model_path):
+        if _ModelPackage is None:
+            raise Exception("Unable to load libmodelpackage. Cannot make save spec.")
+        specfile = _ModelPackage(model_path).getRootModel().path()
     else:
-        specfile = filename
+        specfile = model_path
 
     spec = _Model_pb2.Model()
     with open(specfile, "rb") as f:
-        contents = f.read()
-        spec.ParseFromString(contents)
-        return spec
+        spec.ParseFromString(f.read())
+    return spec
 
 
 def _get_nn_layers(spec):
@@ -377,8 +369,10 @@ def evaluate_regressor(model, data, target="target", verbose=False):
     --------
     .. sourcecode:: python
 
-        >>> metrics = coremltools.utils.evaluate_regressor(spec, 'data_and_predictions.csv', 'target')
-        >>> print(metrics)
+        metrics = coremltools.utils.evaluate_regressor(
+            spec, "data_and_predictions.csv", "target"
+        )
+        print(metrics)
         {"samples": 10, "rmse": 0.0, max_error: 0.0}
     """
     model = _get_model(model)
@@ -444,8 +438,10 @@ def evaluate_classifier(model, data, target="target", verbose=False):
     --------
     .. sourcecode:: python
 
-        >>> metrics =  coremltools.utils.evaluate_classifier(spec, 'data_and_predictions.csv', 'target')
-        >>> print(metrics)
+        metrics = coremltools.utils.evaluate_classifier(
+            spec, "data_and_predictions.csv", "target"
+        )
+        print(metrics)
         {"samples": 10, num_errors: 0}
     """
     model = _get_model(model)
@@ -573,22 +569,22 @@ def rename_feature(
     .. sourcecode:: python
 
         # In-place rename of spec
-        >>> model = MLModel("model.mlmodel")
-        >>> spec = model.get_spec()
-        >>> coremltools.utils.rename_feature(spec, 'old_feature', 'new_feature_name')
-        >>> # re-initialize model
-        >>> model = MLModel(spec)
-        >>> model.save("model.mlmodel")
+        model = MLModel("model.mlmodel")
+        spec = model.get_spec()
+        coremltools.utils.rename_feature(spec, "old_feature", "new_feature_name")
+        # re-initialize model
+        model = MLModel(spec)
+        model.save("model.mlmodel")
 
         # Rename a spec when the model is an mlprogram, in that case, weights are stored outside of the spec
-        >>> model = coremltools.convert(torch_model, convert_to="mlprogram")
-        >>> spec = model.get_spec()
-        >>> # print info about inputs and outputs
-        >>> print(spec.description)
-        >>> coremltools.utils.rename_feature(spec, 'old_feature', 'new_feature_name')
-        >>> # re-initialize model
-        >>> model = MLModel(spec, weights_dir=model.weights_dir)
-        >>> model.save("model.mlpackage")
+        model = coremltools.convert(torch_model, convert_to="mlprogram")
+        spec = model.get_spec()
+        # print info about inputs and outputs
+        print(spec.description)
+        coremltools.utils.rename_feature(spec, "old_feature", "new_feature_name")
+        # re-initialize model
+        model = MLModel(spec, weights_dir=model.weights_dir)
+        model.save("model.mlpackage")
     """
     from coremltools.models import MLModel
 
@@ -769,9 +765,11 @@ def evaluate_transformer(model, input_data, reference_output, verbose=False):
     --------
     .. sourcecode:: python
 
-        >>> input_data = [{'input_1': 1, 'input_2': 2}, {'input_1': 3, 'input_2': 3}]
-        >>> expected_output = [{'input_1': 2.5, 'input_2': 2.0}, {'input_1': 1.3, 'input_2': 2.3}]
-        >>> metrics = coremltools.utils.evaluate_transformer(scaler_spec, input_data, expected_output)
+        input_data = [{"input_1": 1, "input_2": 2}, {"input_1": 3, "input_2": 3}]
+        expected_output = [{"input_1": 2.5, "input_2": 2.0}, {"input_1": 1.3, "input_2": 2.3}]
+        metrics = coremltools.utils.evaluate_transformer(
+            scaler_spec, input_data, expected_output
+        )
 
     See Also
     --------
@@ -975,9 +973,9 @@ def convert_double_to_float_multiarray_type(spec):
     .. sourcecode:: python
 
         # In-place convert multiarray type of spec
-        >>> spec = mlmodel.get_spec()
-        >>> coremltools.utils.convert_double_to_float_multiarray_type(spec)
-        >>> model = coremltools.models.MLModel(spec)
+        spec = mlmodel.get_spec()
+        coremltools.utils.convert_double_to_float_multiarray_type(spec)
+        model = coremltools.models.MLModel(spec)
     """
 
     def _convert_to_float(feature):

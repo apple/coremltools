@@ -8,10 +8,10 @@ option optimize_for = LITE_RUNTIME;
 
 package CoreML.Specification.CoreMLModels;
 
-/**
-* A model which takes an input image and outputs array(s) of features
-* according to the specified feature types
-*/
+/*
+ * A model which takes an input image and outputs array(s) of features
+ * according to the specified feature types
+ */
 message VisionFeaturePrint {
 
     // Specific vision feature print types
@@ -43,6 +43,12 @@ message VisionFeaturePrint {
             // features: one at high resolution of shape (288, 35, 35)
             // the other at low resolution of shape (768, 17, 17)
             OBJECTS_VERSION_1 = 1;
+
+            // VERSION_2 is available on iOS,tvOS 17.0+, macOS 14.0+
+            // It uses a 360x360 input image and yields two multiarray
+            // features: one at high resolution of shape (128, 45, 45)
+            // the other at low resolution of shape (168, 23, 23)
+            OBJECTS_VERSION_2 = 2;
         }
 
         ObjectsVersion version = 1;

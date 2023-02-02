@@ -4,8 +4,7 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 import os
-from shutil import rmtree
-from tempfile import mkdtemp
+import tempfile
 
 import numpy as np
 import pytest
@@ -21,7 +20,7 @@ from coremltools.proto import FeatureTypes_pb2 as ft
 from coremltools.test.api.test_api_examples import TestInputs as _TestInputs
 
 tf = pytest.importorskip("tensorflow")
-    
+
 #################################################################################
 # Note: all tests are also used as examples in https://coremltools.readme.io/docs
 # as a reference.
@@ -146,16 +145,18 @@ class TestTensorFlow1ConverterExamples:
 
         from tensorflow.python.tools.freeze_graph import freeze_graph
 
-        model_dir = mkdtemp()
-        graph_def_file = os.path.join(model_dir, 'tf_graph.pb')
-        checkpoint_file = os.path.join(model_dir, 'tf_model.ckpt')
-        frozen_graph_file = os.path.join(model_dir, 'tf_frozen.pb')
+        model_dir = tempfile.TemporaryDirectory()
+        graph_def_file = os.path.join(model_dir.name, "tf_graph.pb")
+        checkpoint_file = os.path.join(model_dir.name, "tf_model.ckpt")
+        frozen_graph_file = os.path.join(model_dir.name, "tf_frozen.pb")
 
         with tf.Session(graph=graph) as sess:
             # initialize variables
             sess.run(tf.global_variables_initializer())
             # save graph definition somewhere
-            tf.train.write_graph(sess.graph, model_dir, graph_def_file, as_text=False)
+            tf.train.write_graph(
+                sess.graph, model_dir.name, graph_def_file, as_text=False
+            )
             # save the weights
             saver = tf.train.Saver()
             saver.save(sess, checkpoint_file)
@@ -173,13 +174,8 @@ class TestTensorFlow1ConverterExamples:
                          clear_devices=True,
                          initializer_nodes="")
         print("Tensorflow frozen graph saved at {}".format(frozen_graph_file))
+        ct.convert(frozen_graph_file)
 
-        mlmodel = ct.convert(frozen_graph_file)
-        try:
-            rmtree(model_dir)
-        except:
-            pass
-            
     @staticmethod
     def test_convert_tf1_frozen_graph_to_milinternal(tmpdir):
         with tf.Graph().as_default() as graph:
@@ -188,7 +184,7 @@ class TestTensorFlow1ConverterExamples:
 
         model = ct.convert(graph, convert_to='milinternal')
         assert isinstance(model, ct.converters.mil.Program)
-        
+
     @staticmethod
     def test_mil_op_names_consistency(tmpdir):
         '''
@@ -210,7 +206,7 @@ class TestTensorFlow1ConverterExamples:
 
         # compare op names of the two programs
         np.testing.assert_array_equal(get_op_types_in_program(mil_prog1), get_op_types_in_program(mil_prog2))
-            
+
 ###############################################################################
 # Note: Stress tests for TF1 input / output types
 ###############################################################################
@@ -249,7 +245,7 @@ class TestTf1Inputs(_TestInputs):
         expected_error = "Multiple inputs are found in graph, but no input name was provided"
         expected_error = "Input ({}) provided is not found in given tensorflow graph. Placeholders in graph are: {}".format("wrong_input", ["input", "input_1"])
         assert expected_error == str(e.value)
-        
+
     @staticmethod
     @pytest.mark.skipif(not ct.utils._is_macos(), reason="test needs predictions")
     def test_tf_predict_input():

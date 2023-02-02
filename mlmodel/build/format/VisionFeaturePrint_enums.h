@@ -28,6 +28,7 @@ enum MLSceneVersion: int {
 enum MLObjectsVersion: int {
     MLObjectsVersionOBJECTS_VERSION_INVALID = 0,
     MLObjectsVersionOBJECTS_VERSION_1 = 1,
+    MLObjectsVersionOBJECTS_VERSION_2 = 2,
 };
 
 #endif

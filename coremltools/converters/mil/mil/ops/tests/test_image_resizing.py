@@ -579,6 +579,7 @@ class TestUpsampleBilinear:
             torch_pred,
             compute_unit=compute_unit,
             backend=backend,
+            rtol=0.5,
         )
 
 

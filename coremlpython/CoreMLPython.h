@@ -21,6 +21,7 @@ namespace CoreML {
         private:
             MLModel *m_model = nil;
             NSURL *compiledUrl = nil;
+            bool m_deleteCompiledModelOnExit;
         public:
             Model(const Model&) = delete;
             Model& operator=(const Model&) = delete;

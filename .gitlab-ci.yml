@@ -98,7 +98,7 @@ test_py37_pytorch:
     WHEEL_PATH: build/dist/*cp37*10_15*
 
 test_py37_tf1:
-  <<: *test_macos_pkg_with_reqs
+  <<: *test_macos_pkg
   tags:
     - macos12
   dependencies:
@@ -107,10 +107,9 @@ test_py37_tf1:
     PYTHON: "3.7"
     TEST_PACKAGE: coremltools.converters.mil.frontend.tensorflow
     WHEEL_PATH: build/dist/*cp37*10_15*
-    REQUIREMENTS: reqs/test_tf1.pip
 
 test_py37_tf2:
-  <<: *test_macos_pkg
+  <<: *test_macos_pkg_with_reqs
   tags:
     - macos12
   dependencies:
@@ -119,6 +118,7 @@ test_py37_tf2:
     PYTHON: "3.7"
     TEST_PACKAGE: coremltools.converters.mil.frontend.tensorflow2
     WHEEL_PATH: build/dist/*cp37*10_15*
+    REQUIREMENTS: reqs/test.pip
 
 test_py37_mil:
   <<: *test_macos_pkg

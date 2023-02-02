@@ -415,7 +415,7 @@ class TestNonMaximumSuppression:
     @staticmethod
     def _compute_iou_matrix(boxes):
         # input is (N, 4), in order [center_w, center_h, width, height]
-        boxes = boxes.astype(np.float)
+        boxes = boxes.astype(np.float32)
         center_w, center_h, width, height = np.split(boxes, 4, axis=1)
         top = center_h + 0.5 * height
         bottom = center_h - 0.5 * height
@@ -488,7 +488,7 @@ class TestNonMaximumSuppression:
                 score_vector2 = np.take(score_vector, sorted_score_ids)
                 class_ids = np.take(class_ids, sorted_score_ids)
                 classes_seen = dict()
-                ids_intermediate = np.array([], dtype=np.int)
+                ids_intermediate = np.array([], dtype=np.int32)
                 for n in range(n_box):
                     if class_ids[n] in classes_seen:
                         continue

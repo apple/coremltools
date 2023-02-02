@@ -5,17 +5,20 @@
 
 import itertools
 import platform
-from typing import Tuple
+from typing import List, Tuple
+from unittest.mock import patch
 
 import numpy as np
 import pytest
 import torch.nn as nn
+import torchvision
 
 import coremltools as ct
 from coremltools import RangeDim, Shape, TensorType
 from coremltools._deps import version_lt
 from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.testing_utils import gen_input_shapes_einsum
+from coremltools.converters.mil.mil.var import Var
 from coremltools.models.utils import _macos_version, _python_version
 
 from .testing_utils import (
@@ -218,9 +221,11 @@ class TestScriptedModels(TorchBaseTest):
 
 
 class TestMean(TorchBaseTest):
-    @pytest.mark.parametrize("compute_unit, backend", itertools.product(compute_units, backends))
+    @pytest.mark.parametrize(
+        "compute_unit, backend", itertools.product(compute_units, backends)
+    )
     def test_with_flexible_shape(self, compute_unit, backend):
-        if backend[0] == 'mlprogram' and _macos_version() < (13, 0):
+        if backend[0] == "mlprogram" and _macos_version() < (13, 0):
             pytest.xfail(
                 "Issue fixed in iOS16/macOS13: https://github.com/apple/coremltools/issues/1420"
             )
@@ -240,11 +245,13 @@ class TestMean(TorchBaseTest):
             model,
             backend=backend,
             compute_unit=compute_unit,
-            converter_input_type=converter_input_type
+            converter_input_type=converter_input_type,
         )
 
     @staticmethod
-    @pytest.mark.skipif(ct.utils._macos_version() < (13, 0), reason='Bug fixed in macOS13/iOS16')
+    @pytest.mark.skipif(
+        ct.utils._macos_version() < (13, 0), reason="Bug fixed in macOS13/iOS16"
+    )
     def test_flexible_shape_with_default_value():
         # test for bug reported in https://github.com/apple/coremltools/issues/1420
         class Network(torch.nn.Module):
@@ -258,11 +265,13 @@ class TestMean(TorchBaseTest):
             shape=(1, 3, ct.RangeDim(default=256), ct.RangeDim(default=256)),
             name="input",
         )
-        cml = ct.convert(traced_model,
-                         inputs=[input_x],
-                         outputs=[ct.TensorType(name="out")],
-                         convert_to="mlprogram",
-                         compute_units=ct.ComputeUnit.CPU_ONLY)
+        cml = ct.convert(
+            traced_model,
+            inputs=[input_x],
+            outputs=[ct.TensorType(name="out")],
+            convert_to="mlprogram",
+            compute_units=ct.ComputeUnit.CPU_ONLY,
+        )
 
         input_dict = {"input": np.random.rand(1, 3, 112, 112)}
 
@@ -280,7 +289,7 @@ class TestAffineGrid(TorchBaseTest):
                 "x_shape_and_target_size",
                 "sampling_mode",
                 "padding_mode",
-                "align_corners"
+                "align_corners",
             ]
         ),
         itertools.product(
@@ -320,7 +329,9 @@ class TestAffineGrid(TorchBaseTest):
 
             def forward(self, x):
                 grid = self.affine_grid(
-                    theta=theta, size=target_size, align_corners=align_corners,
+                    theta=theta,
+                    size=target_size,
+                    align_corners=align_corners,
                 )
                 x = self.grid_sample(
                     x,
@@ -375,9 +386,7 @@ class TestGridSample(TorchBaseTest):
             "padding_mode": padding_mode,
             "align_corners": align_corners,
         }
-        model = ModuleWrapper(
-            function=torch.nn.functional.grid_sample, kwargs=params
-        )
+        model = ModuleWrapper(function=torch.nn.functional.grid_sample, kwargs=params)
         self.run_compare_torch(
             data_grid_shapes,
             model,
@@ -402,7 +411,7 @@ class TestFrac(TorchBaseTest):
             model,
             backend=backend,
             compute_unit=compute_unit,
-            rand_range=(-10.0, 10.0)
+            rand_range=(-10.0, 10.0),
         )
 
 
@@ -456,7 +465,7 @@ class TestArgSort(TorchBaseTest):
             COMMON_SHAPES,
             [-1, 0],
             [True, False],
-        )
+        ),
     )
     def test_argsort(self, compute_unit, backend, shape, axis, descending):
         model = ModuleWrapper(
@@ -479,7 +488,7 @@ class TestSort(TorchBaseTest):
             COMMON_SHAPES,
             [-1, 0],
             [True, False],
-        )
+        ),
     )
     def test_sort(self, compute_unit, backend, shape, axis, descending):
         model = ModuleWrapper(
@@ -500,10 +509,10 @@ class TestSelu(TorchBaseTest):
             compute_units,
             backends,
             [True, False],
-        )
+        ),
     )
     def test_selu(self, compute_unit, backend, inplace):
-        x = torch.tensor([-6., -4., -2., 0., 2., 4., 6.])
+        x = torch.tensor([-6.0, -4.0, -2.0, 0.0, 2.0, 4.0, 6.0])
         model = torch.nn.SELU(inplace=inplace)
         TorchBaseTest.run_compare_torch(
             x,
@@ -517,11 +526,7 @@ class TestSelu(TorchBaseTest):
 class TestMv(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, matrix_shape",
-        itertools.product(
-            compute_units,
-            backends,
-            [(2, 3), (10, 12), (10, 1), (1, 5)]
-        )
+        itertools.product(compute_units, backends, [(2, 3), (10, 12), (10, 1), (1, 5)]),
     )
     def test_mv(self, compute_unit, backend, matrix_shape):
         model = ModuleWrapper(function=torch.mv)
@@ -535,7 +540,7 @@ class TestMv(TorchBaseTest):
             model,
             backend=backend,
             compute_unit=compute_unit,
-            input_as_shape=False
+            input_as_shape=False,
         )
 
 
@@ -572,18 +577,14 @@ class TestCosineSimilarity(TorchBaseTest):
             model,
             input_as_shape=False,
             backend=backend,
-            compute_unit=compute_unit
+            compute_unit=compute_unit,
         )
 
 
 class TestDot(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, vector_length",
-        itertools.product(
-            compute_units,
-            backends,
-            [1, 5, 11]
-        )
+        itertools.product(compute_units, backends, [1, 5, 11]),
     )
     def test_dot(self, compute_unit, backend, vector_length):
         model = ModuleWrapper(function=torch.dot)
@@ -596,7 +597,7 @@ class TestDot(TorchBaseTest):
             model,
             backend=backend,
             compute_unit=compute_unit,
-            input_as_shape=False
+            input_as_shape=False,
         )
 
 
@@ -608,7 +609,7 @@ class TestOuter(TorchBaseTest):
             backends,
             [1, 5],
             [1, 3],
-        )
+        ),
     )
     def test_outer(self, compute_unit, backend, x_vector_length, y_vector_length):
         model = ModuleWrapper(function=torch.outer)
@@ -621,22 +622,19 @@ class TestOuter(TorchBaseTest):
             model,
             backend=backend,
             compute_unit=compute_unit,
-            input_as_shape=False
+            input_as_shape=False,
         )
 
 
 class TestCross(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, shape_dim",
-        itertools.product(
-            compute_units,
-            backends,
-            [((3,), 0), ((4, 3, 2), 1)]
-        )
+        itertools.product(compute_units, backends, [((3,), 0), ((4, 3, 2), 1)]),
     )
     def test_cross(self, compute_unit, backend, shape_dim):
         shape = shape_dim[0]
         dim = shape_dim[1]
+
         class CrossModel(nn.Module):
             def forward(self, x, y):
                 return torch.cross(x, y, dim)
@@ -651,7 +649,7 @@ class TestCross(TorchBaseTest):
             expected_results=torch_out,
             input_as_shape=False,
             backend=backend,
-            compute_unit=compute_unit
+            compute_unit=compute_unit,
         )
 
 
@@ -662,7 +660,7 @@ class TestNormalize(TorchBaseTest):
             compute_units,
             backends,
             COMMON_SHAPES,
-        )
+        ),
     )
     def test_normalize(self, compute_unit, backend, shape):
         model = ModuleWrapper(function=nn.functional.normalize)
@@ -677,18 +675,13 @@ class TestNormalize(TorchBaseTest):
 class TestNorms(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, shape, keepdim",
-        itertools.product(
-            compute_units,
-            backends,
-            COMMON_SHAPES,
-            [True, False]
-        )
+        itertools.product(compute_units, backends, COMMON_SHAPES, [True, False]),
     )
     def test_frobenius_norm(self, compute_unit, backend, shape, keepdim):
         num_dims = len(shape)
         for dim in range(-num_dims, num_dims):
             model = ModuleWrapper(
-                function=torch.norm, kwargs={'keepdim': keepdim, 'dim': dim}
+                function=torch.norm, kwargs={"keepdim": keepdim, "dim": dim}
             )
             TorchBaseTest.run_compare_torch(
                 shape,
@@ -704,13 +697,13 @@ class TestNorms(TorchBaseTest):
             backends,
             COMMON_SHAPES,
             [-1, 0, 1, 2, 3, np.inf, -np.inf],
-            [True, False]
-        )
+            [True, False],
+        ),
     )
     def test_number_norm(self, compute_unit, backend, shape, p, keepdim):
         for dim in (-1, 0, 1):
             model = ModuleWrapper(
-                function=torch.norm, kwargs={'p': p, 'keepdim': keepdim, 'dim': dim}
+                function=torch.norm, kwargs={"p": p, "keepdim": keepdim, "dim": dim}
             )
             TorchBaseTest.run_compare_torch(
                 shape,
@@ -719,7 +712,8 @@ class TestNorms(TorchBaseTest):
                 compute_unit=compute_unit,
                 atol=1e-2,
             )
-            
+
+
 class TestWeightNorm(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, in_out_features",
@@ -727,7 +721,7 @@ class TestWeightNorm(TorchBaseTest):
             compute_units,
             backends,
             [(1, 1), (2, 10), (20, 10)],
-        )
+        ),
     )
     def test_linear(self, compute_unit, backend, in_out_features):
         in_features, out_features = in_out_features
@@ -739,7 +733,7 @@ class TestWeightNorm(TorchBaseTest):
                 model,
                 backend=backend,
                 compute_unit=compute_unit,
-                atol=1e-3
+                atol=1e-3,
             )
 
     @pytest.mark.parametrize(
@@ -747,12 +741,12 @@ class TestWeightNorm(TorchBaseTest):
         itertools.product(
             compute_units,
             backends,
-        )
+        ),
     )
     def test_conv2d(self, compute_unit, backend):
         x = torch.randn(20, 16, 50, 100)
 
-        for dim in (None, ) + tuple(range(-4, 4)):
+        for dim in (None,) + tuple(range(-4, 4)):
             model = nn.utils.weight_norm(nn.Conv2d(16, 33, 3), dim=dim)
             TorchBaseTest.run_compare_torch(
                 x,
@@ -760,7 +754,7 @@ class TestWeightNorm(TorchBaseTest):
                 input_as_shape=False,
                 atol=1e-3,
                 backend=backend,
-                compute_unit=compute_unit
+                compute_unit=compute_unit,
             )
 
     @pytest.mark.parametrize(
@@ -768,12 +762,12 @@ class TestWeightNorm(TorchBaseTest):
         itertools.product(
             compute_units,
             backends,
-        )
+        ),
     )
     def test_conv3d(self, compute_unit, backend):
         x = torch.randn(20, 16, 5, 50, 100)
 
-        for dim in (None, ) + tuple(range(-5, 5)):
+        for dim in (None,) + tuple(range(-5, 5)):
             model = nn.utils.weight_norm(nn.Conv3d(16, 33, 3), dim=dim)
             TorchBaseTest.run_compare_torch(
                 x,
@@ -781,7 +775,7 @@ class TestWeightNorm(TorchBaseTest):
                 input_as_shape=False,
                 atol=1e-3,
                 backend=backend,
-                compute_unit=compute_unit
+                compute_unit=compute_unit,
             )
 
 
@@ -797,7 +791,11 @@ class TestLinAlgNorms(TorchBaseTest):
             if order is not None:
                 if len(shape) > 2:
                     return False
-                elif len(shape) == 2 and not isinstance(order, str) and (order == 0 or order > 2):
+                elif (
+                    len(shape) == 2
+                    and not isinstance(order, str)
+                    and (order == 0 or order > 2)
+                ):
                     return False
                 elif len(shape) == 1 and isinstance(order, str):
                     return False
@@ -811,8 +809,8 @@ class TestLinAlgNorms(TorchBaseTest):
             COMMON_SHAPES,
             [-2, -1, 0, 1, 2, 3, np.inf, -np.inf, "fro", None],
             [True, False],
-            [-1, 0, 1, (0, 1), (0, -1), None]
-        )
+            [-1, 0, 1, (0, 1), (0, -1), None],
+        ),
     )
     def test_norm(self, compute_unit, backend, shape, order, keepdim, dim):
         if not self._is_valid_config(shape, order, dim):
@@ -845,8 +843,8 @@ class TestLinAlgMatrixNorms(TorchBaseTest):
             COMMON_SHAPES,
             [-2, -1, 1, 2, np.inf, -np.inf, "fro", "nuc"],
             [True, False],
-            [(0, 1), (0, -1), (1, 2), (0, 2), (2, 3)]
-        )
+            [(0, 1), (0, -1), (1, 2), (0, 2), (2, 3)],
+        ),
     )
     def test_norm(self, compute_unit, backend, shape, order, keepdim, dim):
         if dim[-1] > len(shape) - 1:
@@ -871,8 +869,8 @@ class TestLinAlgVectorNorms(TorchBaseTest):
             COMMON_SHAPES,
             [-2, -1, 0, 1, 2, np.inf, -np.inf],
             [True, False],
-            [-1, 0, 1, (0, 1), (0, -1), None]
-        )
+            [-1, 0, 1, (0, 1), (0, -1), None],
+        ),
     )
     def test_norm(self, compute_unit, backend, shape, order, keepdim, dim):
         model = ModuleWrapper(
@@ -898,7 +896,7 @@ class TestHardswish(TorchBaseTest):
             return self.activation(x)
 
     def test_longer_range_input_element_values(self):
-        x = torch.tensor([-6., -4., -2., 0., 2., 4., 6.])
+        x = torch.tensor([-6.0, -4.0, -2.0, 0.0, 2.0, 4.0, 6.0])
 
         model = TestHardswish.HardswishModel()
         TorchBaseTest.run_compare_torch(x, model, input_as_shape=False)
@@ -912,7 +910,7 @@ class TestHardswish(TorchBaseTest):
             compute_units,
             backends,
             COMMON_SHAPES,
-        )
+        ),
     )
     def test_additional_shapes_and_backends(self, compute_unit, backend, shape):
         model = TestHardswish.HardswishModel()
@@ -928,11 +926,7 @@ class TestBatchNorm(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, num_features, eps, affine",
         itertools.product(
-            compute_units,
-            backends,
-            [5, 3, 1],
-            [0.1, 1e-05],
-            [True, False]
+            compute_units, backends, [5, 3, 1], [0.1, 1e-05], [True, False]
         ),
     )
     def test_batchnorm(self, compute_unit, backend, num_features, eps, affine):
@@ -946,11 +940,7 @@ class TestBatchNorm(TorchBaseTest):
 
     @pytest.mark.parametrize(
         "compute_unit, backend, affine",
-        itertools.product(
-            compute_units,
-            backends,
-            [True, False]
-        ),
+        itertools.product(compute_units, backends, [True, False]),
     )
     def test_batchnorm_2d_with_conv(self, compute_unit, backend, affine):
         class CRNNBase(nn.Module):
@@ -983,7 +973,9 @@ class TestBatchNorm(TorchBaseTest):
             ["None", "Batch", "Height", "Width", "Depth", "All"],
         ),
     )
-    def test_batchnorm_3d(self, compute_unit, backend, num_features, eps, affine, dynamic_input):
+    def test_batchnorm_3d(
+        self, compute_unit, backend, num_features, eps, affine, dynamic_input
+    ):
         model = nn.BatchNorm3d(num_features, eps, affine=affine)
         input_shape = (6, num_features, 2, 3, 4)
         if dynamic_input == "None":
@@ -1022,18 +1014,24 @@ class TestBatchNorm(TorchBaseTest):
                     )
                 ]
             elif dynamic_input == "All":
-                converter_input_type = [TensorType(shape=(RangeDim(1, 10),
-                                                          num_features,
-                                                          RangeDim(1, 10),
-                                                          RangeDim(1, 10),
-                                                          RangeDim(1, 10)),
-                                                   dtype=np.float32)]
+                converter_input_type = [
+                    TensorType(
+                        shape=(
+                            RangeDim(1, 10),
+                            num_features,
+                            RangeDim(1, 10),
+                            RangeDim(1, 10),
+                            RangeDim(1, 10),
+                        ),
+                        dtype=np.float32,
+                    )
+                ]
             self.run_compare_torch(
                 input_shape,
                 model,
                 backend=backend,
                 compute_unit=compute_unit,
-                converter_input_type=converter_input_type
+                converter_input_type=converter_input_type,
             )
 
     @pytest.mark.parametrize(
@@ -1044,10 +1042,12 @@ class TestBatchNorm(TorchBaseTest):
             [3, 4, 5],
             [5, 1],
             [0.1, 1e-05],
-            [True, False]
+            [True, False],
         ),
     )
-    def test_batchnorm_dynamic(self, compute_unit, backend, rank, num_features, eps, training):
+    def test_batchnorm_dynamic(
+        self, compute_unit, backend, rank, num_features, eps, training
+    ):
         model = ModuleWrapper(
             nn.functional.batch_norm,
             {
@@ -1072,7 +1072,7 @@ class TestBatchNorm(TorchBaseTest):
             backend=backend,
             compute_unit=compute_unit,
         )
-        
+
     @pytest.mark.parametrize(
         "compute_unit, backend, has_weight, has_bias, has_running_mean, has_running_var",
         itertools.product(
@@ -1091,27 +1091,27 @@ class TestBatchNorm(TorchBaseTest):
         has_weight,
         has_bias,
         has_running_mean,
-        has_running_var
+        has_running_var,
     ):
         num_features = 5
         input_shape = (3, num_features, 2)
-        
+
         weight = torch.randn(num_features) if has_weight else None
         bias = torch.randn(num_features) if has_bias else None
         running_mean = torch.randn(num_features) if has_running_mean else None
         running_var = torch.randn(num_features) if has_running_var else None
-        
+
         class Model(torch.nn.Module):
             def forward(self, x):
                 res = torch.nn.functional.batch_norm(
-                        input=x,
-                        running_mean=running_mean,
-                        running_var=running_var,
-                        weight=weight,
-                        bias=bias,
-                        training=True,
-                        momentum=0.0,
-                        eps=1e-05,
+                    input=x,
+                    running_mean=running_mean,
+                    running_var=running_var,
+                    weight=weight,
+                    bias=bias,
+                    training=True,
+                    momentum=0.0,
+                    eps=1e-05,
                 )
                 return res
 
@@ -1124,11 +1124,7 @@ class TestBatchNorm(TorchBaseTest):
 
     @pytest.mark.parametrize(
         "compute_unit, backend, affine",
-        itertools.product(
-            compute_units,
-            backends,
-            [True, False]
-        ),
+        itertools.product(compute_units, backends, [True, False]),
     )
     def test_batchnorm_1d_with_conv(self, compute_unit, backend, affine):
         class CRNNBase(nn.Module):
@@ -1157,7 +1153,7 @@ class TestBatchNorm(TorchBaseTest):
             backends,
             [(1, 10), (4, 6), (10, 1)],
             [0.1, 1e-05],
-            [True, False]
+            [True, False],
         ),
     )
     def test_batchnorm1d_rank2(self, compute_unit, backend, shape, eps, affine):
@@ -1177,7 +1173,7 @@ class TestBatchNorm(TorchBaseTest):
             backends,
             [(4, 8, 2), (1, 5, 3), (5, 10, 1), (6, 1, 4)],
             [0.1, 1e-05],
-            [True, False]
+            [True, False],
         ),
     )
     def test_batchnorm1d_rank3(self, compute_unit, backend, shape, eps, affine):
@@ -1194,12 +1190,7 @@ class TestBatchNorm(TorchBaseTest):
 class TestInstanceNorm(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, num_features, eps",
-        itertools.product(
-            compute_units,
-            backends,
-            [5, 2, 1],
-            [0.1, 1e-05]
-        ),
+        itertools.product(compute_units, backends, [5, 2, 1], [0.1, 1e-05]),
     )
     def test_instancenorm(self, compute_unit, backend, num_features, eps):
         model = nn.InstanceNorm2d(num_features, eps)
@@ -1212,11 +1203,7 @@ class TestInstanceNorm(TorchBaseTest):
 
     @pytest.mark.parametrize(
         "compute_unit, backend, num_features",
-        itertools.product(
-            compute_units,
-            backends,
-            [5, 2, 1]
-        ),
+        itertools.product(compute_units, backends, [5, 2, 1]),
     )
     def test_instancenorm_1d(self, compute_unit, backend, num_features):
         model = nn.InstanceNorm1d(num_features)
@@ -1232,11 +1219,7 @@ class TestGroupNorm(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, group_features, eps, affine",
         itertools.product(
-            compute_units,
-            backends,
-            [(16, 32), (1, 1)],
-            [0.1, 1e-05],
-            [True, False]
+            compute_units, backends, [(16, 32), (1, 1)], [0.1, 1e-05], [True, False]
         ),
     )
     def test_groupnorm(self, compute_unit, backend, group_features, eps, affine):
@@ -1253,14 +1236,12 @@ class TestGroupNorm(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, group_features, eps, affine",
         itertools.product(
-            compute_units,
-            backends,
-            [(16, 32), (1, 1)],
-            [0.1, 1e-05],
-            [True, False]
+            compute_units, backends, [(16, 32), (1, 1)], [0.1, 1e-05], [True, False]
         ),
     )
-    def test_groupnorm_rank3_input(self, compute_unit, backend, group_features, eps, affine):
+    def test_groupnorm_rank3_input(
+        self, compute_unit, backend, group_features, eps, affine
+    ):
         model = nn.GroupNorm(
             group_features[0], group_features[1], eps=eps, affine=affine
         )
@@ -1270,18 +1251,16 @@ class TestGroupNorm(TorchBaseTest):
             backend=backend,
             compute_unit=compute_unit,
         )
-        
+
     @pytest.mark.parametrize(
         "compute_unit, backend, group_features, eps, affine",
         itertools.product(
-            compute_units,
-            backends,
-            [(16, 32), (1, 1)],
-            [0.1, 1e-05],
-            [True, False]
+            compute_units, backends, [(16, 32), (1, 1)], [0.1, 1e-05], [True, False]
         ),
     )
-    def test_groupnorm_rank2_input(self, compute_unit, backend, group_features, eps, affine):
+    def test_groupnorm_rank2_input(
+        self, compute_unit, backend, group_features, eps, affine
+    ):
         model = nn.GroupNorm(
             group_features[0], group_features[1], eps=eps, affine=affine
         )
@@ -1291,7 +1270,7 @@ class TestGroupNorm(TorchBaseTest):
             backend=backend,
             compute_unit=compute_unit,
         )
-        
+
 
 class TestLinear(TorchBaseTest):
     @pytest.mark.parametrize(
@@ -1304,7 +1283,9 @@ class TestLinear(TorchBaseTest):
             [True, False],
         ),
     )
-    def test_linear_rank1_input(self, compute_unit, backend, in_features, out_features, bias):
+    def test_linear_rank1_input(
+        self, compute_unit, backend, in_features, out_features, bias
+    ):
         model = nn.Linear(in_features, out_features, bias=bias)
         self.run_compare_torch(
             (in_features,),
@@ -1315,15 +1296,11 @@ class TestLinear(TorchBaseTest):
 
     @pytest.mark.parametrize(
         "compute_unit, backend, in_features, out_features, bias",
-        itertools.product(
-            compute_units,
-            backends,
-            [10, 25],
-            [3, 6],
-            [True, False]
-        ),
+        itertools.product(compute_units, backends, [10, 25], [3, 6], [True, False]),
     )
-    def test_linear_rank2_input(self, compute_unit, backend, in_features, out_features, bias):
+    def test_linear_rank2_input(
+        self, compute_unit, backend, in_features, out_features, bias
+    ):
         model = nn.Linear(in_features, out_features, bias=bias)
         self.run_compare_torch(
             (1, in_features),
@@ -1334,15 +1311,11 @@ class TestLinear(TorchBaseTest):
 
     @pytest.mark.parametrize(
         "compute_unit, backend, in_features, out_features, bias",
-        itertools.product(
-            compute_units,
-            backends,
-            [10],
-            [6],
-            [True, False]
-        ),
+        itertools.product(compute_units, backends, [10], [6], [True, False]),
     )
-    def test_linear_rank3_input(self, compute_unit, backend, in_features, out_features, bias):
+    def test_linear_rank3_input(
+        self, compute_unit, backend, in_features, out_features, bias
+    ):
         model = nn.Linear(in_features, out_features, bias=bias)
         self.run_compare_torch(
             (1, 3, in_features),
@@ -1353,15 +1326,11 @@ class TestLinear(TorchBaseTest):
 
     @pytest.mark.parametrize(
         "compute_unit, backend, in_features, out_features, bias",
-        itertools.product(
-            compute_units,
-            backends,
-            [10],
-            [6],
-            [True, False]
-        ),
+        itertools.product(compute_units, backends, [10], [6], [True, False]),
     )
-    def test_linear_rank4_input(self, compute_unit, backend, in_features, out_features, bias):
+    def test_linear_rank4_input(
+        self, compute_unit, backend, in_features, out_features, bias
+    ):
         model = nn.Linear(in_features, out_features, bias=bias)
         self.run_compare_torch((1, 5, 3, in_features), model, backend=backend)
 
@@ -1372,30 +1341,101 @@ class TestConv(TorchBaseTest):
             [
                 "compute_unit",
                 "backend",
+                "padding",
+                "stride",
+                "length",
+                "in_channels",
+                "out_channels",
+                "kernel_size",
+                "dilation",
+                "bias",
+            ]
+        ),
+        [
+            (compute_unit, backend, padding, stride, *param)
+            for compute_unit, backend, padding, stride, param in itertools.product(
+                [ct.ComputeUnit.CPU_ONLY],
+                backends,
+                ["same", "valid", 0, 1],
+                [1, 2, 3],
+                [
+                    (5, 1, 1, 1, 1, True),
+                    (3, 1, 1, 1, 3, False),
+                    (4, 3, 3, 2, 1, True),
+                    (7, 3, 3, 1, 1, False),
+                    (5, 3, 3, 1, 1, True),
+                    (3, 3, 3, 1, 1, False),
+                    (3, 3, 3, 1, 3, True),
+                    (7, 3, 3, 2, 3, False),
+                ],
+            )
+        ],
+    )
+    def test_convolution1d(
+        self,
+        compute_unit,
+        backend,
+        padding,
+        stride,
+        length,
+        in_channels,
+        out_channels,
+        kernel_size,
+        dilation,
+        bias,
+        groups=1,
+    ):
+        if padding == "same" and stride != 1:
+            # configuration not supported
+            return
+        model = nn.Conv1d(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            kernel_size=kernel_size,
+            stride=stride,
+            padding=padding,
+            dilation=dilation,
+            bias=bias,
+        )
+        self.run_compare_torch(
+            (1, in_channels, length),
+            model,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
+    @pytest.mark.parametrize(
+        ",".join(
+            [
+                "compute_unit",
+                "backend",
+                "padding",
+                "stride",
                 "height",
                 "width",
                 "in_channels",
                 "out_channels",
                 "kernel_size",
-                "stride",
-                "padding",
                 "dilation",
+                "bias",
             ]
         ),
         [
-            (compute_unit, backend, *param)
-            for compute_unit, backend, param in itertools.product(
+            (compute_unit, backend, padding, stride, *param)
+            for compute_unit, backend, padding, stride, param in itertools.product(
                 [ct.ComputeUnit.CPU_ONLY],
                 backends,
+                ["same", "valid", 1, 0],
+                [1, 2, 3],
                 [
-                    (5, 3, 1, 1, 1, 2, 0, 1),
-                    (3, 3, 1, 1, 1, 2, 1, 3),
-                    (4, 3, 3, 3, 2, 2, 0, 1),
-                    (7, 3, 3, 3, 1, 3, 0, 1),
-                    (5, 5, 3, 3, 1, 3, 0, 1),
-                    (3, 5, 3, 3, 1, 3, 0, 1),
-                    (3, 5, 3, 3, 1, 3, 1, 3),
-                    (7, 5, 3, 3, 2, 3, 1, 3),
+                    (5, 3, 1, 1, 1, 1, True),
+                    (3, 3, 1, 1, 1, 3, False),
+                    (4, 3, 3, 3, 2, 1, True),
+                    (7, 3, 3, 3, 1, 1, False),
+                    (5, 5, 3, 3, 1, 1, True),
+                    (3, 5, 3, 3, 1, 1, False),
+                    (3, 5, 3, 3, 1, 3, True),
+                    (7, 5, 3, 3, 2, 3, False),
                 ],
             )
         ],
@@ -1404,16 +1444,19 @@ class TestConv(TorchBaseTest):
         self,
         compute_unit,
         backend,
+        padding,
+        stride,
         height,
         width,
         in_channels,
         out_channels,
         kernel_size,
-        stride,
-        padding,
         dilation,
+        bias,
         groups=1,
     ):
+        if padding == "same" and stride != 1:
+            return
         model = nn.Conv2d(
             in_channels=in_channels,
             out_channels=out_channels,
@@ -1421,6 +1464,7 @@ class TestConv(TorchBaseTest):
             stride=stride,
             padding=padding,
             dilation=dilation,
+            bias=bias,
         )
         self.run_compare_torch(
             (1, in_channels, height, width),
@@ -1433,66 +1477,68 @@ class TestConv(TorchBaseTest):
         ",".join(
             [
                 "compute_unit",
-                "backend,"
+                "backend",
+                "padding",
+                "stride",
+                "depth",
                 "height",
                 "width",
                 "in_channels",
                 "out_channels",
                 "kernel_size",
-                "stride",
                 "dilation",
-                "groups",
                 "bias",
             ]
         ),
         [
-            (compute_unit, backend, *param)
-            for compute_unit, backend, param in itertools.product(
-                compute_units,
+            (compute_unit, backend, padding, stride, *param)
+            for compute_unit, backend, padding, stride, param in itertools.product(
+                [ct.ComputeUnit.CPU_ONLY],
                 backends,
+                ["same", "valid", 1, 0],
+                [1, 2, 3],
                 [
-                    (7, 3, 3, 1, 2, 1, 1, 2, True),
-                    (5, 3, 1, 3, 2, 3, 3, 1, False),
-                    (7, 3, 1, 3, 2, 3, 1, 1, False),
-                    (5, 3, 3, 3, 2, 1, 3, 2, False),
-                    (5, 3, 1, 1, 1, 3, 3, 2, True),
-                    (5, 5, 1, 3, 2, 2, 3, 1, True),
-                    (5, 3, 1, 3, 1, 3, 3, 1, False),
-                    (3, 3, 3, 1, 2, 2, 3, 1, False),
-                    (5, 5, 3, 3, 1, 2, 3, 1, True),
-                    (7, 3, 1, 3, 1, 2, 1, 2, True),
-                    (7, 5, 3, 1, 2, 3, 1, 1, False),
-                    (5, 5, 1, 3, 2, 1, 1, 2, True),
+                    (5, 3, 2, 1, 1, 1, 1, True),
+                    (3, 3, 1, 1, 1, 1, 3, False),
+                    (4, 3, 3, 3, 3, 2, 1, True),
+                    (7, 3, 4, 3, 3, 1, 1, False),
+                    (5, 5, 3, 3, 3, 1, 1, True),
+                    (3, 5, 1, 3, 3, 1, 1, False),
+                    (3, 5, 4, 3, 3, 1, 3, True),
+                    (7, 5, 6, 3, 3, 2, 3, False),
                 ],
             )
         ],
     )
-    def test_convolution_same_padding(
-            self,
-            compute_unit,
-            backend,
-            height,
-            width,
-            in_channels,
-            out_channels,
-            kernel_size,
-            stride,
-            dilation,
-            groups,
-            bias,
+    def test_convolution3d(
+        self,
+        compute_unit,
+        backend,
+        padding,
+        stride,
+        depth,
+        height,
+        width,
+        in_channels,
+        out_channels,
+        kernel_size,
+        dilation,
+        bias,
+        groups=1,
     ):
-        model = torch.nn.Conv2d(
+        if padding == "same" and stride != 1:
+            return
+        model = nn.Conv3d(
             in_channels=in_channels,
             out_channels=out_channels,
             kernel_size=kernel_size,
-            padding="same",
-            stride=1,
-            dilation=1,
-            groups=1,
+            stride=stride,
+            padding=padding,
+            dilation=dilation,
             bias=bias,
         )
         self.run_compare_torch(
-            (1, in_channels, height, width),
+            (1, in_channels, depth, height, width),
             model,
             backend=backend,
             compute_unit=compute_unit,
@@ -1546,10 +1592,7 @@ class TestDynamicConv(TorchBaseTest):
         class DynamicConv(nn.Module):
             def forward(self, input_data, weights):
                 return nn.functional.conv1d(
-                    input_data,
-                    weights,
-                    stride=stride,
-                    padding=padding
+                    input_data, weights, stride=stride, padding=padding
                 )
 
         model = DynamicConv()
@@ -1614,10 +1657,7 @@ class TestDynamicConv(TorchBaseTest):
         class DynamicConv(nn.Module):
             def forward(self, input_data, weights):
                 return nn.functional.conv2d(
-                    input_data,
-                    weights,
-                    stride=stride,
-                    padding=padding
+                    input_data, weights, stride=stride, padding=padding
                 )
 
         model = DynamicConv()
@@ -1627,10 +1667,7 @@ class TestDynamicConv(TorchBaseTest):
             (out_channels, int(in_channels / groups), kernel_size, kernel_size),
         ]
         self.run_compare_torch(
-            input_shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
+            input_shape, model, backend=backend, compute_unit=compute_unit
         )
 
 
@@ -1668,17 +1705,17 @@ class TestConvTranspose(TorchBaseTest):
         ],
     )
     def test_convolution_transpose1d(
-            self,
-            compute_unit,
-            backend,
-            width,
-            in_channels,
-            out_channels,
-            kernel_size,
-            stride,
-            padding,
-            dilation,
-            groups=1,
+        self,
+        compute_unit,
+        backend,
+        width,
+        in_channels,
+        out_channels,
+        kernel_size,
+        stride,
+        padding,
+        dilation,
+        groups=1,
     ):
         model = nn.ConvTranspose1d(
             in_channels=in_channels,
@@ -1687,7 +1724,7 @@ class TestConvTranspose(TorchBaseTest):
             stride=stride,
             padding=padding,
             dilation=dilation,
-            groups=groups
+            groups=groups,
         )
         self.run_compare_torch(
             (1, in_channels, width),
@@ -1797,7 +1834,7 @@ class TestConvTranspose(TorchBaseTest):
                 model,
                 backend=backend,
                 compute_unit=compute_unit,
-                converter_input_type=converter_input_type
+                converter_input_type=converter_input_type,
             )
         else:
             self.run_compare_torch(
@@ -1967,7 +2004,7 @@ class TestConvTranspose(TorchBaseTest):
             (1, in_channels, depth, height, width),
             model,
             backend=backend,
-            compute_unit=compute_unit
+            compute_unit=compute_unit,
         )
 
 
@@ -1983,7 +2020,7 @@ class TestUpsample(TorchBaseTest):
             backends,
             [1, 3, 10, 190],
             [True, False],
-        )
+        ),
     )
     def test_upsample_linear1d_with_output_size(
         self, compute_unit, backend, output_size, align_corners
@@ -1999,20 +2036,13 @@ class TestUpsample(TorchBaseTest):
             },
         )
         self.run_compare_torch(
-            input_shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
+            input_shape, model, backend=backend, compute_unit=compute_unit
         )
 
     @pytest.mark.parametrize(
         "compute_unit, backend, scale, align_corners, recompute_scale_factor",
         itertools.product(
-            compute_units,
-            backends,
-            [2, 0.5, 5.3],
-            [True, False],
-            [True, False]
+            compute_units, backends, [2, 0.5, 5.3], [True, False], [True, False]
         ),
     )
     def test_upsample_linear1d_with_scales(
@@ -2036,20 +2066,13 @@ class TestUpsample(TorchBaseTest):
             },
         )
         self.run_compare_torch(
-            input_shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
+            input_shape, model, backend=backend, compute_unit=compute_unit
         )
 
     @pytest.mark.parametrize(
         "compute_unit, backend, scales, align_corners, recompute_scale_factor",
         itertools.product(
-            compute_units,
-            backends,
-            [2, 0.7, 3.6],
-            [True, False],
-            [True, False]
+            compute_units, backends, [2, 0.7, 3.6], [True, False], [True, False]
         ),
     )
     def test_upsample_linear1d_with_scales_dynamic(
@@ -2071,19 +2094,21 @@ class TestUpsample(TorchBaseTest):
                 "recompute_scale_factor": recompute_scale_factor,
             },
         )
-        converter_input_type = [TensorType(shape=(1, 3, RangeDim(default=22)), dtype=np.float32)]
+        converter_input_type = [
+            TensorType(shape=(1, 3, RangeDim(default=22)), dtype=np.float32)
+        ]
         mlmodel = self.run_compare_torch(
             input_shape,
             model,
             backend=backend,
             compute_unit=compute_unit,
-            converter_input_type=converter_input_type
+            converter_input_type=converter_input_type,
         )[1]
 
         # also check if the scale factor are integers
-        if backend[0] == 'neuralnetwork' and not is_float:
+        if backend[0] == "neuralnetwork" and not is_float:
             for layer in mlmodel._spec.neuralNetwork.layers:
-                if layer.WhichOneof('layer') == "upsample":
+                if layer.WhichOneof("layer") == "upsample":
                     assert len(layer.upsample.fractionalScalingFactor) == 0
 
     @pytest.mark.parametrize(
@@ -2092,12 +2117,15 @@ class TestUpsample(TorchBaseTest):
             compute_units,
             backends,
             [10, 170],
-        )
+        ),
     )
-    def test_upsample_nearest1d_with_output_size(self, compute_unit, backend, output_size):
+    def test_upsample_nearest1d_with_output_size(
+        self, compute_unit, backend, output_size
+    ):
         input_shape = (1, 3, 10)
         model = ModuleWrapper(
-            nn.functional.interpolate, {"size": output_size, "mode": "nearest"},
+            nn.functional.interpolate,
+            {"size": output_size, "mode": "nearest"},
         )
         self.run_compare_torch(
             input_shape,
@@ -2108,11 +2136,7 @@ class TestUpsample(TorchBaseTest):
 
     @pytest.mark.parametrize(
         "compute_unit, backend, scales",
-        itertools.product(
-            compute_units,
-            backends,
-            [2, 3, 4.5]
-        ),
+        itertools.product(compute_units, backends, [2, 3, 4.5]),
     )
     def test_upsample_nearest1d_with_scales(self, compute_unit, backend, scales):
         if backend[0] == "neuralnetwork":
@@ -2133,13 +2157,11 @@ class TestUpsample(TorchBaseTest):
 
     @pytest.mark.parametrize(
         "compute_unit, backend, scales",
-        itertools.product(
-            compute_units,
-            backends,
-            [2, 3]
-        ),
+        itertools.product(compute_units, backends, [2, 3]),
     )
-    def test_upsample_nearest1d_with_scales_dynamic(self, compute_unit, backend, scales):
+    def test_upsample_nearest1d_with_scales_dynamic(
+        self, compute_unit, backend, scales
+    ):
         input_shape = (1, 3, 10)
         model = ModuleWrapper(
             nn.functional.interpolate,
@@ -2155,13 +2177,13 @@ class TestUpsample(TorchBaseTest):
             model,
             backend=backend,
             compute_unit=compute_unit,
-            converter_input_type=converter_input_type
+            converter_input_type=converter_input_type,
         )[1]
 
         # also check if the scale factor are integers
-        if backend[0] == 'neuralnetwork':
+        if backend[0] == "neuralnetwork":
             for layer in mlmodel._spec.neuralNetwork.layers:
-                if layer.WhichOneof('layer') == "upsample":
+                if layer.WhichOneof("layer") == "upsample":
                     assert len(layer.upsample.fractionalScalingFactor) == 0
 
     @pytest.mark.parametrize(
@@ -2169,13 +2191,16 @@ class TestUpsample(TorchBaseTest):
         itertools.product(
             compute_units,
             backends,
-            [(10, 10),
-             # PyTorch has a bug for the following parameter:
-             # (1, 1),
-             # See: https://github.com/pytorch/pytorch/issues/71188
-             (2, 3), (190, 170)],
+            [
+                (10, 10),
+                # PyTorch has a bug for the following parameter:
+                # (1, 1),
+                # See: https://github.com/pytorch/pytorch/issues/71188
+                (2, 3),
+                (190, 170),
+            ],
             [True, False],
-        )
+        ),
     )
     def test_upsample_bilinear2d_with_output_size(
         self, compute_unit, backend, output_size, align_corners
@@ -2205,7 +2230,7 @@ class TestUpsample(TorchBaseTest):
             [3, 0.5, 5.3],
             [True, False],
             [True, False],
-        )
+        ),
     )
     def test_upsample_bilinear2d_with_scales(
         self,
@@ -2225,7 +2250,11 @@ class TestUpsample(TorchBaseTest):
         is_h_float = _is_float_value(output_h)
         is_w_float = _is_float_value(output_w)
 
-        if (is_h_float or is_w_float) and not align_corners and not recompute_scale_factor:
+        if (
+            (is_h_float or is_w_float)
+            and not align_corners
+            and not recompute_scale_factor
+        ):
             pytest.xfail("rdar://81124053 (Support recompute_scale_factor)")
 
         model = ModuleWrapper(
@@ -2250,12 +2279,15 @@ class TestUpsample(TorchBaseTest):
             compute_units,
             backends,
             [(10, 10), (190, 170)],
-        )
+        ),
     )
-    def test_upsample_nearest2d_with_output_size(self, compute_unit, backend, output_size):
+    def test_upsample_nearest2d_with_output_size(
+        self, compute_unit, backend, output_size
+    ):
         input_shape = (1, 3, 10, 10)
         model = ModuleWrapper(
-            nn.functional.interpolate, {"size": output_size, "mode": "nearest"},
+            nn.functional.interpolate,
+            {"size": output_size, "mode": "nearest"},
         )
         self.run_compare_torch(
             input_shape,
@@ -2266,13 +2298,11 @@ class TestUpsample(TorchBaseTest):
 
     @pytest.mark.parametrize(
         "compute_unit, backend, scales_h, scales_w",
-        itertools.product(
-            compute_units,
-            backends,
-            [2, 3, 4.5], [4, 5, 5.5]
-        ),
+        itertools.product(compute_units, backends, [2, 3, 4.5], [4, 5, 5.5]),
     )
-    def test_upsample_nearest2d_with_scales(self, compute_unit, backend, scales_h, scales_w):
+    def test_upsample_nearest2d_with_scales(
+        self, compute_unit, backend, scales_h, scales_w
+    ):
         if backend[0] == "neuralnetwork":
             if isinstance(scales_h, float) or isinstance(scales_w, float):
                 return  # Skip fractional scale factors tests for neuralnetwork
@@ -2283,19 +2313,12 @@ class TestUpsample(TorchBaseTest):
             {"scale_factor": (scales_h, scales_w), "mode": "nearest"},
         )
         self.run_compare_torch(
-            input_shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
+            input_shape, model, backend=backend, compute_unit=compute_unit
         )
 
     @pytest.mark.parametrize(
         "compute_unit, backend, scales_h, scales_w",
-        itertools.product(
-            compute_units,
-            backends,
-            [2, 3], [4, 5]
-        ),
+        itertools.product(compute_units, backends, [2, 3], [4, 5]),
     )
     def test_upsample_nearest2d_with_scales_dynamic(
         self, compute_unit, backend, scales_h, scales_w
@@ -2309,19 +2332,21 @@ class TestUpsample(TorchBaseTest):
                 "recompute_scale_factor": True,
             },
         )
-        converter_input_type = [TensorType(shape=(1, 3, RangeDim(), RangeDim()), dtype=np.float32)]
+        converter_input_type = [
+            TensorType(shape=(1, 3, RangeDim(), RangeDim()), dtype=np.float32)
+        ]
         mlmodel = self.run_compare_torch(
             input_shape,
             model,
             backend=backend,
             compute_unit=compute_unit,
-            converter_input_type=converter_input_type
+            converter_input_type=converter_input_type,
         )[1]
 
         # also check if the scale factor are integers
-        if backend[0] == 'neuralnetwork':
+        if backend[0] == "neuralnetwork":
             for layer in mlmodel._spec.neuralNetwork.layers:
-                if layer.WhichOneof('layer') == "upsample":
+                if layer.WhichOneof("layer") == "upsample":
                     assert len(layer.upsample.fractionalScalingFactor) == 0
 
     @pytest.mark.parametrize(
@@ -2333,7 +2358,7 @@ class TestUpsample(TorchBaseTest):
             [4, 0.7],
             [True, False],
             [True, False],
-        )
+        ),
     )
     def test_upsample_bilinear2d_with_scales_dynamic(
         self,
@@ -2349,7 +2374,11 @@ class TestUpsample(TorchBaseTest):
         is_w_float = _is_float_value(scales_w)
         input_shape = (1, 3, 9, 22)
 
-        if (is_h_float or is_w_float) and not align_corners and not recompute_scale_factor:
+        if (
+            (is_h_float or is_w_float)
+            and not align_corners
+            and not recompute_scale_factor
+        ):
             pytest.xfail("rdar://81124053 (Support recompute_scale_factor)")
 
         model = ModuleWrapper(
@@ -2372,13 +2401,13 @@ class TestUpsample(TorchBaseTest):
             model,
             backend=backend,
             compute_unit=compute_unit,
-            converter_input_type=converter_input_type
+            converter_input_type=converter_input_type,
         )[1]
 
         # also check if the scale factor are integers
-        if backend[0] == 'neuralnetwork' and not is_h_float and not is_w_float:
+        if backend[0] == "neuralnetwork" and not is_h_float and not is_w_float:
             for layer in mlmodel._spec.neuralNetwork.layers:
-                if layer.WhichOneof('layer') == "upsample":
+                if layer.WhichOneof("layer") == "upsample":
                     assert len(layer.upsample.fractionalScalingFactor) == 0
 
 
@@ -2389,7 +2418,7 @@ class TestEmpty(TorchBaseTest):
             compute_units,
             backends,
             COMMON_SHAPES,
-        )
+        ),
     )
     def test_empty_like(self, compute_unit, backend, shape):
         class TestModel(nn.Module):
@@ -2399,10 +2428,7 @@ class TestEmpty(TorchBaseTest):
                 return torch.Tensor([len(y)])
 
         self.run_compare_torch(
-            shape,
-            TestModel(),
-            backend=backend,
-            compute_unit=compute_unit
+            shape, TestModel(), backend=backend, compute_unit=compute_unit
         )
 
     @pytest.mark.parametrize(
@@ -2411,7 +2437,7 @@ class TestEmpty(TorchBaseTest):
             compute_units,
             backends,
             COMMON_SHAPES,
-        )
+        ),
     )
     def test_new_empty(self, compute_unit, backend, shape):
         class TestModel(nn.Module):
@@ -2430,7 +2456,6 @@ class TestEmpty(TorchBaseTest):
 
 
 class TestAvgPool(TorchBaseTest):
-
     @pytest.mark.parametrize(
         ",".join(
             [
@@ -2613,16 +2638,13 @@ class TestAvgPool(TorchBaseTest):
             count_include_pad=include_pad,
         )
         self.run_compare_torch(
-            input_shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
+            input_shape, model, backend=backend, compute_unit=compute_unit
         )
 
 
 class TestAdaptiveMaxPool(TorchBaseTest):
     @pytest.mark.parametrize(
-        "compute_unit, backend, output_size, magnification, delta, depth",
+        "compute_unit, backend, output_size, magnification, delta, depth, n",
         itertools.product(
             compute_units,
             backends,
@@ -2630,26 +2652,19 @@ class TestAdaptiveMaxPool(TorchBaseTest):
             [1, 2, 7],
             [0, 11],
             [1, 2, 3],
+            [1, 2],
         ),
     )
     def test_adaptive_max_pool2d(
-            self, compute_unit, backend, output_size, magnification, delta, depth
+        self, compute_unit, backend, output_size, magnification, delta, depth, n
     ):
         # input_size = output_size * magnification + delta
         input_size = (
             delta + magnification * output_size[0],
             delta + magnification * output_size[1],
         )
-        # since coremltools reproduces PyTorch's kernel sizes and
-        # offsets for adaptive pooling layers only when input_size is
-        # a multiple of output_size, we expect failures otherwise
-        if not (input_size[0] % output_size[0] == 0 and input_size[1] % output_size[1] == 0):
-            pytest.xfail("Test should fail because input_size is not a multiple of output_size")
-        n = 1
         in_shape = (n, depth) + input_size
-        model = nn.AdaptiveMaxPool2d(
-            output_size
-        )
+        model = nn.AdaptiveMaxPool2d(output_size)
         self.run_compare_torch(
             in_shape,
             model,
@@ -2660,7 +2675,7 @@ class TestAdaptiveMaxPool(TorchBaseTest):
 
 class TestAdaptiveAvgPool(TorchBaseTest):
     @pytest.mark.parametrize(
-        "compute_unit, backend, output_size, magnification, delta, depth",
+        "compute_unit, backend, output_size, magnification, delta, depth, n",
         itertools.product(
             compute_units,
             backends,
@@ -2668,26 +2683,19 @@ class TestAdaptiveAvgPool(TorchBaseTest):
             [1, 2, 7],
             [0, 11],
             [1, 2, 3],
+            [1, 2],
         ),
     )
     def test_adaptive_avg_pool2d(
-            self, compute_unit, backend, output_size, magnification, delta, depth
+        self, compute_unit, backend, output_size, magnification, delta, depth, n
     ):
         # input_size = output_size * magnification + delta
         input_size = (
             delta + magnification * output_size[0],
             delta + magnification * output_size[1],
         )
-        # since coremltools reproduces PyTorch's kernel sizes and
-        # offsets for adaptive pooling layers only when input_size is
-        # a multiple of output_size, we expect failures otherwise
-        if not (input_size[0] % output_size[0] == 0 and input_size[1] % output_size[1] == 0):
-            pytest.xfail("Test should fail because input_size is not a multiple of output_size")
-        n = 1
         in_shape = (n, depth) + input_size
-        model = nn.AdaptiveAvgPool2d(
-            output_size
-        )
+        model = nn.AdaptiveAvgPool2d(output_size)
         self.run_compare_torch(
             in_shape,
             model,
@@ -2697,7 +2705,6 @@ class TestAdaptiveAvgPool(TorchBaseTest):
 
 
 class TestMaxPool(TorchBaseTest):
-
     @pytest.mark.parametrize(
         "compute_unit, backend, input_shape, kernel_size, stride, padding, ceil_mode",
         itertools.product(
@@ -2737,10 +2744,7 @@ class TestMaxPool(TorchBaseTest):
             ceil_mode=ceil_mode,
         )
         self.run_compare_torch(
-            input_shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
+            input_shape, model, backend=backend, compute_unit=compute_unit
         )
 
     @pytest.mark.parametrize(
@@ -2783,10 +2787,7 @@ class TestMaxPool(TorchBaseTest):
             ceil_mode=ceil_mode,
         )
         self.run_compare_torch(
-            input_shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
+            input_shape, model, backend=backend, compute_unit=compute_unit
         )
 
     @pytest.mark.parametrize(
@@ -2829,25 +2830,27 @@ class TestMaxPool(TorchBaseTest):
             ceil_mode=ceil_mode,
         )
         self.run_compare_torch(
-            input_shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
+            input_shape, model, backend=backend, compute_unit=compute_unit
         )
 
 
 class TestMaximumMinimum(TorchBaseTest):
-
     @pytest.mark.parametrize(
-        "compute_unit, backend, input_shape, mode",
+        "compute_unit, backend, input_shapes, mode",
         itertools.product(
             compute_units,
             backends,
-            [(2, 5, 7, 3), (3, 2, 9)],
+            [
+                [(2, 5, 7, 3), (2, 5, 7, 3)],
+                [(3, 2, 9), (3, 2, 9)],
+                [(1, 2, 3), (1,)],
+                [(1,), (2, 5, 6, 7)],
+                [(1, 2, 1), (3, 4, 2, 5)],
+            ],
             ["minimum", "maximum"],
         ),
     )
-    def test_minimum_maximum(self, compute_unit, backend, input_shape, mode):
+    def test_minimum_maximum(self, compute_unit, backend, input_shapes, mode):
         class TestModel(torch.nn.Module):
             def forward(self, x, y):
                 if mode == "minimum":
@@ -2859,10 +2862,7 @@ class TestMaximumMinimum(TorchBaseTest):
 
         model = TestModel()
         self.run_compare_torch(
-            [input_shape] * 2,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
+            input_shapes, model, backend=backend, compute_unit=compute_unit
         )
 
 
@@ -2876,12 +2876,14 @@ class TestPoolSymbolicInput(TorchBaseTest):
             ceil_mode=True,
         )
         input_shape = (1, 1, 11, 11)
-        converter_input_type = [TensorType(shape=(1, 1, RangeDim(), RangeDim()), dtype=np.float32)]
+        converter_input_type = [
+            TensorType(shape=(1, 1, RangeDim(), RangeDim()), dtype=np.float32)
+        ]
         self.run_compare_torch(
             input_shape,
             model,
             backend=backends[0],
-            converter_input_type=converter_input_type
+            converter_input_type=converter_input_type,
         )
 
     def test_avg_pool(self):
@@ -2893,12 +2895,14 @@ class TestPoolSymbolicInput(TorchBaseTest):
             ceil_mode=True,
         )
         input_shape = (1, 2, 15, 15)
-        converter_input_type = [TensorType(shape=(1, 2, RangeDim(), RangeDim()), dtype=np.float32)]
+        converter_input_type = [
+            TensorType(shape=(1, 2, RangeDim(), RangeDim()), dtype=np.float32)
+        ]
         self.run_compare_torch(
             input_shape,
             model,
             backend=backends[0],
-            converter_input_type=converter_input_type
+            converter_input_type=converter_input_type,
         )
 
 
@@ -2914,7 +2918,7 @@ class TestLSTM(TorchBaseTest):
                 "bias",
                 "batch_first",
                 "dropout",
-                "bidirectional"
+                "bidirectional",
             ]
         ),
         [
@@ -2973,7 +2977,11 @@ class TestLSTM(TorchBaseTest):
         inputs = (_input, (h0, c0))
         expected_results = model(*inputs)
         self.run_compare_torch(
-            inputs, model, expected_results, input_as_shape=False, backend=backend,
+            inputs,
+            model,
+            expected_results,
+            input_as_shape=False,
+            backend=backend,
         )
 
 
@@ -3204,7 +3212,7 @@ class TestLSTMWithPackedSequence(TorchBaseTest):
             expected_results,
             input_as_shape=False,
             backend=backend,
-            compute_unit=compute_unit
+            compute_unit=compute_unit,
         )
 
 
@@ -3235,7 +3243,7 @@ class TestStackedBLSTM(TorchBaseTest):
             [True, False],
             [True, False],
             [0.3],
-            [True]
+            [True],
         ),
     )
     def test_lstm(
@@ -3258,7 +3266,8 @@ class TestStackedBLSTM(TorchBaseTest):
                 bias=bias,
                 batch_first=batch_first,
                 dropout=dropout,
-                bidirectional=True),
+                bidirectional=True,
+            ),
             StripCellAndHidden(False),
             nn.LSTM(
                 input_size=2 * hidden_size,
@@ -3267,8 +3276,9 @@ class TestStackedBLSTM(TorchBaseTest):
                 bias=bias,
                 batch_first=batch_first,
                 dropout=dropout,
-                bidirectional=True),
-            StripCellAndHidden(True)
+                bidirectional=True,
+            ),
+            StripCellAndHidden(True),
         )
 
         SEQUENCE_LENGTH = 3
@@ -3289,16 +3299,51 @@ class TestStackedBLSTM(TorchBaseTest):
             expected_results,
             input_as_shape=False,
             backend=backend,
-            compute_unit=compute_unit
+            compute_unit=compute_unit,
         )
 
 
 class TestConcat(TorchBaseTest):
+    @pytest.mark.parametrize("compute_unit, backend", itertools.product(compute_units, backends))
+    def test_cat_basic(self, compute_unit, backend):
+        class TestNet(nn.Module):
+            def forward(self, x):
+                x = torch.cat((x, x), axis=1)
+                return x
+
+        model = TestNet()
+        self.run_compare_torch(
+            (1, 2, 3),
+            model,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend", itertools.product(compute_units, backends)
+    )
+    def test_cat_input_types_promotion(self, compute_unit, backend):
+        class TestNet(nn.Module):
+            def forward(self, x, y):
+                return torch.cat((x, y), axis=1)
+
+        input_data_x = torch.randint(low=0, high=10, size=(2, 3), dtype=torch.int32)
+        input_data_y = torch.rand(2, 3)
+        self.run_compare_torch(
+            [input_data_x, input_data_y],
+            TestNet(),
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=False,
+        )
+
     # This tests an edge case where the list of tensors to concatenate only
     # has one item. NN throws an error for this case, hence why we have to
     # run through the full conversion process to test it.
-    @pytest.mark.parametrize("compute_unit, backend", itertools.product(compute_units, backends))
-    def test_cat(self, compute_unit, backend):
+    @pytest.mark.parametrize(
+        "compute_unit, backend", itertools.product(compute_units, backends)
+    )
+    def test_cat_single_input(self, compute_unit, backend):
         class TestNet(nn.Module):
             def forward(self, x):
                 x = torch.cat((x,), axis=1)
@@ -3313,8 +3358,40 @@ class TestConcat(TorchBaseTest):
         )
 
     @pytest.mark.parametrize("compute_unit, backend", itertools.product(compute_units, backends))
-    def test_concat_alias(self, compute_unit, backend):
+    def test_cat_const_fold(self, compute_unit, backend):
+        class TestNet(nn.Module):
+            def forward(self, x):
+                x = torch.tensor([[[1, 2], [2, 3], [3, 4]]])
+                return torch.cat((x, x), axis=1)
 
+        model = TestNet()
+        mlmodel = self.run_compare_torch(
+            (1, 2, 3),
+            model,
+            backend=backend,
+            compute_unit=compute_unit,
+        )
+        prog = mlmodel[1]._mil_program
+        # The `listconstruct` is folded into a single const.
+        assert len(prog.find_ops(op_type="const")) == 1
+
+        with patch.object(Var, '_is_nonreplaceable_var') as mocked_is_nonreplaceable_var:
+            # Mock that the input with shape [1, 3, 2] const is non-replaceable.
+            mocked_is_nonreplaceable_var.side_effect = (
+                lambda var: var.op and var.op.op_type == "const" and var.rank == 3
+            )
+            mlmodel = self.run_compare_torch(
+                [(1, 2, 3)],
+                model,
+                backend=backend,
+                compute_unit=compute_unit
+            )
+            prog = mlmodel[1]._mil_program
+            # The `listconstruct` is not folded so there are 3 const ops.
+            assert len(prog.find_ops(op_type="const")) == 3
+
+    @pytest.mark.parametrize("compute_unit, backend", itertools.product(compute_units, backends))
+    def test_concat_alias(self, compute_unit, backend):
         class Outer(torch.nn.Module):
             def __init__(self, net):
                 super(Outer, self).__init__()
@@ -3363,7 +3440,7 @@ class TestBitwiseNot(TorchBaseTest):
             model,
             backend=backend,
             compute_unit=compute_unit,
-            input_as_shape=False
+            input_as_shape=False,
         )
 
 
@@ -3397,7 +3474,7 @@ class TestFull(TorchBaseTest):
             expected_results=torch_out,
             input_as_shape=False,
             backend=backend,
-            compute_unit=compute_unit
+            compute_unit=compute_unit,
         )
 
     @pytest.mark.parametrize(
@@ -3420,10 +3497,7 @@ class TestFull(TorchBaseTest):
                 return torch.full(x.shape, fill_value=val)
 
         self.run_compare_torch(
-            shape,
-            FullStaticModel().eval(),
-            backend=backend,
-            compute_unit=compute_unit
+            shape, FullStaticModel().eval(), backend=backend, compute_unit=compute_unit
         )
 
     @pytest.mark.parametrize(
@@ -3458,7 +3532,7 @@ class TestFull(TorchBaseTest):
             FullLikeModel().eval(),
             backend=backend[:2],
             compute_unit=compute_unit,
-            minimum_deployment_target=backend[2]
+            minimum_deployment_target=backend[2],
         )
 
 
@@ -3481,10 +3555,7 @@ class TestDim(TorchBaseTest):
                 return torch.tensor([x.dim()])
 
         self.run_compare_torch(
-            shape,
-            DimModel().eval(),
-            backend=backend,
-            compute_unit=compute_unit
+            shape, DimModel().eval(), backend=backend, compute_unit=compute_unit
         )
 
 
@@ -3518,7 +3589,7 @@ class TestNewZeros(TorchBaseTest):
             expected_results=torch_out,
             input_as_shape=False,
             backend=backend,
-            compute_unit=compute_unit
+            compute_unit=compute_unit,
         )
 
     @pytest.mark.parametrize(
@@ -3542,10 +3613,7 @@ class TestNewZeros(TorchBaseTest):
                 return x.new_zeros(x.shape)
 
         self.run_compare_torch(
-            shape,
-            ZerosStaticModel().eval(),
-            backend=backend,
-            compute_unit=compute_unit
+            shape, ZerosStaticModel().eval(), backend=backend, compute_unit=compute_unit
         )
 
 
@@ -3579,7 +3647,7 @@ class TestNewFull(TorchBaseTest):
             expected_results=torch_out,
             input_as_shape=False,
             backend=backend,
-            compute_unit=compute_unit
+            compute_unit=compute_unit,
         )
 
     @pytest.mark.parametrize(
@@ -3602,10 +3670,7 @@ class TestNewFull(TorchBaseTest):
                 return x.new_full(x.shape, fill_value=val)
 
         self.run_compare_torch(
-            shape,
-            FullStaticModel().eval(),
-            backend=backend,
-            compute_unit=compute_unit
+            shape, FullStaticModel().eval(), backend=backend, compute_unit=compute_unit
         )
 
 
@@ -3631,10 +3696,7 @@ class TestEye(TorchBaseTest):
         input_shape = (3, 3) if eye_type == "single" else (2, 3)
         model = Model().eval()
         self.run_compare_torch(
-            input_shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
+            input_shape, model, backend=backend, compute_unit=compute_unit
         )
 
 
@@ -3668,7 +3730,7 @@ class TestOnes(TorchBaseTest):
             expected_results=torch_out,
             input_as_shape=False,
             backend=backend,
-            compute_unit=compute_unit
+            compute_unit=compute_unit,
         )
 
     @pytest.mark.parametrize(
@@ -3685,10 +3747,7 @@ class TestOnes(TorchBaseTest):
                 return torch.ones(x.shape)
 
         self.run_compare_torch(
-            shape,
-            OnesStaticModel().eval(),
-            backend=backend,
-            compute_unit=compute_unit
+            shape, OnesStaticModel().eval(), backend=backend, compute_unit=compute_unit
         )
 
 
@@ -3710,10 +3769,7 @@ class TestRandint(TorchBaseTest):
                 return torch.Tensor([len(y)])
 
         self.run_compare_torch(
-            shape,
-            TestModel(),
-            backend=backend,
-            compute_unit=compute_unit
+            shape, TestModel(), backend=backend, compute_unit=compute_unit
         )
 
 
@@ -3743,17 +3799,16 @@ class TestTypeAs(TorchBaseTest):
             model,
             backend=backend,
             compute_unit=compute_unit,
-            input_as_shape=False
+            input_as_shape=False,
         )
 
 
 class TestReduction(TorchBaseTest):
-
     class TestModel(nn.Module):
         def __init__(self, mode, dim=None, keepdim=None):
             super().__init__()
             args = {"dim": dim, "keepdim": keepdim}
-            self.op_args = {k:v for k, v in args.items() if v is not None}
+            self.op_args = {k: v for k, v in args.items() if v is not None}
 
             if mode == "min":
                 self.op = torch.min
@@ -3767,64 +3822,55 @@ class TestReduction(TorchBaseTest):
                 return self.op(x, y)
             return self.op(x, **self.op_args)
 
-
     @pytest.mark.parametrize(
         "compute_unit, backend, input_shape, dim, keepdim, mode",
         itertools.product(
             compute_units,
             backends,
             [(2, 2), (1, 1)],
-            [0, 1],
-            [True, False],
-            ["min", "max"]
-        )
+            [0, 1, None],
+            [True, False, None],
+            ["min", "max"],
+        ),
     )
     def test_min_max(self, compute_unit, backend, input_shape, dim, keepdim, mode):
+        if dim is None and keepdim is not None:
+            pytest.skip("invalid torch.min configuration")
+
         input_data = torch.rand(input_shape)
         model = self.TestModel(mode, dim=dim, keepdim=keepdim)
-        # rdar://62681982 (Determine the output names of MLModels)
-        expected_results = model(input_data)[::-1]
+
         self.run_compare_torch(
             input_data,
             model,
-            expected_results=expected_results,
             input_as_shape=False,
             backend=backend,
-            compute_unit=compute_unit
+            compute_unit=compute_unit,
         )
 
     @pytest.mark.parametrize(
         "compute_unit, backend, input_shape, mode",
-        itertools.product(
-            compute_units,
-            backends,
-            [(2, 2), (1, 1)],
-            ["min", "max"]
-        )
+        itertools.product(compute_units, backends, [(2, 2), (1, 1)], ["min", "max"]),
     )
     def test_min_max_with_no_arguments(self, compute_unit, backend, input_shape, mode):
         self.run_compare_torch(
             input_shape,
             self.TestModel(mode),
             backend=backend,
-            compute_unit=compute_unit
+            compute_unit=compute_unit,
         )
-        
+
     @pytest.mark.parametrize(
         "compute_unit, backend, input_shape, dim, mode",
         itertools.product(
-            compute_units,
-            backends,
-            [(2, 2), (1, 1)], [0, 1],
-            ["min", "max"]
-        )
+            compute_units, backends, [(2, 2), (1, 1)], [0, 1], ["min", "max"]
+        ),
     )
     def test_min_max_no_keepdim(self, compute_unit, backend, input_shape, dim, mode):
         input_data = torch.rand(input_shape)
         model = self.TestModel(mode, dim=dim)
-        print(type(model))
-        expected_results = model(input_data)[::-1]
-        
+        expected_results = model(input_data)
+
         self.run_compare_torch(
             input_data,
             model,
@@ -3836,20 +3882,12 @@ class TestReduction(TorchBaseTest):
 
     @pytest.mark.parametrize(
         "compute_unit, backend, input_shape, mode",
-        itertools.product(
-            compute_units,
-            backends,
-            [(2, 2), (1, 1)],
-            ["min", "max"]
-        )
+        itertools.product(compute_units, backends, [(2, 2), (1, 1)], ["min", "max"]),
     )
     def test_min_max_two_tensors(self, compute_unit, backend, input_shape, mode):
         model = self.TestModel(mode)
         self.run_compare_torch(
-            [input_shape] * 2,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
+            [input_shape] * 2, model, backend=backend, compute_unit=compute_unit
         )
 
 
@@ -3860,16 +3898,13 @@ class TestLayerNorm(TorchBaseTest):
             [ct.ComputeUnit.CPU_ONLY],
             backends,
             [(1, 3, 15, 15), (1, 1, 1, 1)],
-            [1e-5, 1e-7]
+            [1e-5, 1e-7],
         ),
     )
     def test_layer_norm(self, compute_unit, backend, input_shape, eps):
         model = nn.LayerNorm(input_shape, eps=eps)
         self.run_compare_torch(
-            input_shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
+            input_shape, model, backend=backend, compute_unit=compute_unit
         )
 
 
@@ -3877,11 +3912,7 @@ class TestPixelShuffle(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, batch_size, CHW, r",
         itertools.product(
-            compute_units,
-            backends,
-            [1, 3],
-            [(1, 4, 4), (3, 2, 3)],
-            [2, 4]
+            compute_units, backends, [1, 3], [(1, 4, 4), (3, 2, 3)], [2, 4]
         ),
     )
     def test_pixel_shuffle(self, compute_unit, backend, batch_size, CHW, r):
@@ -3889,23 +3920,18 @@ class TestPixelShuffle(TorchBaseTest):
         input_shape = (batch_size, C * r * r, H, W)
         model = nn.PixelShuffle(upscale_factor=r)
         self.run_compare_torch(
-            input_shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
+            input_shape, model, backend=backend, compute_unit=compute_unit
         )
 
 
-@pytest.mark.skipif(_macos_version() < (13, 0), reason="New functionality in macOS13/iOS16")
+@pytest.mark.skipif(
+    _macos_version() < (13, 0), reason="New functionality in macOS13/iOS16"
+)
 class TestPixelUnshuffle(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, batch_size, CHW, r",
         itertools.product(
-            compute_units,
-            backends,
-            [1, 3],
-            [(1, 4, 4), (3, 2, 3)],
-            [2, 4]
+            compute_units, backends, [1, 3], [(1, 4, 4), (3, 2, 3)], [2, 4]
         ),
     )
     def test_pixel_shuffle(self, compute_unit, backend, batch_size, CHW, r):
@@ -3920,7 +3946,7 @@ class TestPixelUnshuffle(TorchBaseTest):
             model,
             backend=backend,
             compute_unit=compute_unit,
-            minimum_deployment_target=ct.target.iOS16
+            minimum_deployment_target=ct.target.iOS16,
         )
 
 
@@ -3935,7 +3961,7 @@ class TestExpand(TorchBaseTest):
                 [(3, 1), (-1, 4)],
                 [(1, 3, 4, 4), (3, 3, 4, 4)],
                 [(4,), (3, 4)],
-                [(3, 2), (1, 2, -1, 2)]
+                [(3, 2), (1, 2, -1, 2)],
             ],
         ),
     )
@@ -3949,12 +3975,9 @@ class TestExpand(TorchBaseTest):
         model = TestModel()
 
         self.run_compare_torch(
-            input_shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
+            input_shape, model, backend=backend, compute_unit=compute_unit
         )
-        
+
     @pytest.mark.parametrize(
         "compute_unit, backend",
         itertools.product(
@@ -3973,7 +3996,7 @@ class TestExpand(TorchBaseTest):
             input_as_shape=False,
             converter_input_type=[TensorType(shape=[1, ct.RangeDim()])],
             backend=backend,
-            compute_unit=compute_unit
+            compute_unit=compute_unit,
         )
 
     @pytest.mark.parametrize(
@@ -4015,7 +4038,7 @@ class TestExpand(TorchBaseTest):
             input_as_shape=False,
             converter_input_type=[TensorType(shape=[1, ct.RangeDim()])],
             backend=backend,
-            compute_unit=compute_unit
+            compute_unit=compute_unit,
         )
 
     @pytest.mark.parametrize(
@@ -4036,7 +4059,7 @@ class TestExpand(TorchBaseTest):
             input_as_shape=False,
             converter_input_type=[TensorType(shape=[ct.RangeDim(), ct.RangeDim()])],
             backend=backend,
-            compute_unit=compute_unit
+            compute_unit=compute_unit,
         )
 
     @pytest.mark.parametrize(
@@ -4057,9 +4080,8 @@ class TestExpand(TorchBaseTest):
             input_as_shape=False,
             converter_input_type=[TensorType(shape=[ct.RangeDim(), 1])],
             backend=backend,
-            compute_unit=compute_unit
+            compute_unit=compute_unit,
         )
-
 
     @pytest.mark.parametrize(
         "compute_unit, backend, input_shapes",
@@ -4070,7 +4092,7 @@ class TestExpand(TorchBaseTest):
                 [(2, 1), (2, 2)],
                 [(3, 1), (3, 4)],
                 [(1, 3, 4, 4), (3, 3, 4, 4)],
-                [(4,), (1, 3, 4)]
+                [(4,), (1, 3, 4)],
             ],
         ),
     )
@@ -4082,10 +4104,7 @@ class TestExpand(TorchBaseTest):
         model = TestModel()
 
         self.run_compare_torch(
-            input_shapes,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
+            input_shapes, model, backend=backend, compute_unit=compute_unit
         )
 
 
@@ -4107,10 +4126,7 @@ class TestExpandDims(TorchBaseTest):
         input_shape = tuple(np.random.randint(low=2, high=10, size=rank))
         model = ModuleWrapper(function=torch.unsqueeze, kwargs={"dim": axis})
         self.run_compare_torch(
-            input_shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
+            input_shape, model, backend=backend, compute_unit=compute_unit
         )
 
 
@@ -4134,13 +4150,12 @@ class TestLinspace(TorchBaseTest):
 
         model = Model()
         self.run_compare_torch(
-            input_shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
+            input_shape, model, backend=backend, compute_unit=compute_unit
         )
 
-    @pytest.mark.parametrize("compute_unit, backend", itertools.product(compute_units, backends))
+    @pytest.mark.parametrize(
+        "compute_unit, backend", itertools.product(compute_units, backends)
+    )
     def test_linspace_static_large(self, compute_unit, backend):
         input_shape = tuple([1])
 
@@ -4150,10 +4165,7 @@ class TestLinspace(TorchBaseTest):
 
         model = Model()
         self.run_compare_torch(
-            input_shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
+            input_shape, model, backend=backend, compute_unit=compute_unit
         )
 
     @pytest.mark.parametrize(
@@ -4179,8 +4191,50 @@ class TestLinspace(TorchBaseTest):
             model,
             backend=backend,
             compute_unit=compute_unit,
-            input_as_shape=False
+            input_as_shape=False,
         )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
+    )
+    def test_linspace_static_not_fold(self, compute_unit, backend):
+        class Model(nn.Module):
+            def forward(self, x):
+                return torch.linspace(0, 1, 100)
+
+        model = Model()
+        mlmodel = self.run_compare_torch(
+            [(1, 2, 3)],
+            model,
+            backend=backend,
+            compute_unit=compute_unit
+        )
+        prog = mlmodel[1]._mil_program
+        # The linspace op is folded to const, so there is no range_1d op.
+        assert len(prog.find_ops(op_type="const")) == 1
+        assert len(prog.find_ops(op_type="range_1d")) == 0
+
+        with patch.object(Var, '_is_nonreplaceable_var') as mocked_is_nonreplaceable_var:
+            # Mock that the first param to linspace is non-replaceable.
+            mocked_is_nonreplaceable_var.side_effect = (
+                lambda var: var.op
+                and var.op.op_type == "const"
+                and var.rank == 0
+                and var.val == 0
+            )
+            mlmodel = self.run_compare_torch(
+                [(1, 2, 3)],
+                model,
+                backend=backend,
+                compute_unit=compute_unit
+            )
+            prog = mlmodel[1]._mil_program
+            # The linspace op is not folded to const, but translated to range_1d instead.
+            assert len(prog.find_ops(op_type="range_1d")) == 1
 
 
 class TestArange(TorchBaseTest):
@@ -4216,10 +4270,7 @@ class TestArange(TorchBaseTest):
 
         model = Model()
         self.run_compare_torch(
-            input_shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
+            input_shape, model, backend=backend, compute_unit=compute_unit
         )
 
     @pytest.mark.parametrize(
@@ -4249,7 +4300,7 @@ class TestArange(TorchBaseTest):
             model,
             backend=backend,
             compute_unit=compute_unit,
-            input_as_shape=False
+            input_as_shape=False,
         )
 
 class TestEinsum(TorchBaseTest):
@@ -4304,9 +4355,15 @@ class TestEinsum(TorchBaseTest):
         input_shapes, converter_input_type = gen_input_shapes_einsum(equation, dynamic)
 
         if reverse_input_order:
-            input_output_strings = equation.split('->')
-            input_strings = input_output_strings[0].split(',')
-            equation = input_strings[1] + ',' + input_strings[0] + '->' + input_output_strings[1]
+            input_output_strings = equation.split("->")
+            input_strings = input_output_strings[0].split(",")
+            equation = (
+                input_strings[1]
+                + ","
+                + input_strings[0]
+                + "->"
+                + input_output_strings[1]
+            )
             input_shapes = [input_shapes[1], input_shapes[0]]
             if converter_input_type is not None:
                 converter_input_type = [converter_input_type[1], converter_input_type[0]]
@@ -4331,8 +4388,8 @@ class TestEinsum(TorchBaseTest):
     def test_einsum_with_same_input(self, compute_unit, backend):
         class Einsum(nn.Module):
             def forward(self, m1, m2, m3):
-                y1 = torch.einsum('bnhd,bdhm->bnhm', m1, m2)
-                y2 = torch.einsum('bnhd,bdhm->bnhm', m1, m3)
+                y1 = torch.einsum("bnhd,bdhm->bnhm", m1, m2)
+                y2 = torch.einsum("bnhd,bdhm->bnhm", m1, m3)
                 return y1, y2
 
         m1 = torch.rand(1, 8, 8, 64)
@@ -4381,10 +4438,7 @@ class TestSqueeze(TorchBaseTest):
             function=torch.squeeze, kwargs={"dim": axis} if axis else {}
         )
         self.run_compare_torch(
-            input_shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
+            input_shape, model, backend=backend, compute_unit=compute_unit
         )
 
 
@@ -4400,14 +4454,9 @@ class TestCumSum(TorchBaseTest):
     def test_cumsum(self, compute_unit, backend, axis):
         input_shape = list(np.random.randint(low=2, high=10, size=4))
         input_shape = tuple(input_shape)
-        model = ModuleWrapper(
-            function=torch.cumsum, kwargs={"dim": axis}
-        )
+        model = ModuleWrapper(function=torch.cumsum, kwargs={"dim": axis})
         self.run_compare_torch(
-            input_shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
+            input_shape, model, backend=backend, compute_unit=compute_unit
         )
 
 
@@ -4428,12 +4477,10 @@ class TestReshape(TorchBaseTest):
         input_shape = (2, 3)
         model = ModuleWrapper(function=torch.reshape, kwargs={"shape": output_shape})
         self.run_compare_torch(
-            input_shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
+            input_shape, model, backend=backend, compute_unit=compute_unit
         )
-        
+
+
 class TestReshapeAs(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, input_output_shape",
@@ -4450,27 +4497,21 @@ class TestReshapeAs(TorchBaseTest):
         class Model(nn.Module):
             def forward(self, x, ref):
                 return x.reshape_as(ref)
-        
+
         model = Model()
         input_shape, output_shape = input_output_shape
         self.run_compare_torch(
             [input_shape, output_shape],
             model,
             backend=backend,
-            compute_unit=compute_unit
+            compute_unit=compute_unit,
         )
 
 
 class TestFlatten(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, start_dim, end_dim, is_dynamic",
-        itertools.product(
-            compute_units,
-            backends,
-            [2, -2, 0],
-            [3, -1],
-            [False, True]
-        ),
+        itertools.product(compute_units, backends, [2, -2, 0], [3, -1], [False, True]),
     )
     def test_flatten(self, compute_unit, backend, start_dim, end_dim, is_dynamic):
         input_shape = (2, 3, 4, 5)
@@ -4490,7 +4531,7 @@ class TestFlatten(TorchBaseTest):
             model,
             backend=backend,
             compute_unit=compute_unit,
-            converter_input_type=converter_input_type
+            converter_input_type=converter_input_type,
         )
 
 
@@ -4498,9 +4539,7 @@ class TestGather(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, rank_and_axis",
         itertools.product(
-            compute_units,
-            backends,
-            [(i, j) for i in range(1, 6) for j in range(0, i)]
+            compute_units, backends, [(i, j) for i in range(1, 6) for j in range(0, i)]
         ),
     )
     def test_gather_along_axis(self, compute_unit, backend, rank_and_axis):
@@ -4515,52 +4554,33 @@ class TestGather(TorchBaseTest):
             kwargs={"dim": axis, "index": torch.from_numpy(indices)},
         )
         self.run_compare_torch(
-            [params_shape],
-            model,
-            backend=backend,
-            compute_unit=compute_unit
+            [params_shape], model, backend=backend, compute_unit=compute_unit
         )
 
 
 class TestActivation(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, shape",
-        itertools.product(
-            compute_units,
-            backends,
-            COMMON_SHAPES_ALL
-        ),
+        itertools.product(compute_units, backends, COMMON_SHAPES_ALL),
     )
     def test_relu(self, compute_unit, backend, shape):
         model = nn.ReLU().eval()
         self.run_compare_torch(
-            shape, model, backend=backend,
+            shape,
+            model,
+            backend=backend,
         )
 
         model = ModuleWrapper(nn.functional.relu_)
-        self.run_compare_torch(
-            shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
-        )
+        self.run_compare_torch(shape, model, backend=backend, compute_unit=compute_unit)
 
     @pytest.mark.parametrize(
         "compute_unit, backend, shape",
-        itertools.product(
-            compute_units,
-            backends,
-            COMMON_SHAPES_ALL
-        ),
+        itertools.product(compute_units, backends, COMMON_SHAPES_ALL),
     )
     def test_relu6(self, compute_unit, backend, shape):
         model = nn.ReLU6().eval()
-        self.run_compare_torch(
-            shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
-        )
+        self.run_compare_torch(shape, model, backend=backend, compute_unit=compute_unit)
 
     @pytest.mark.parametrize(
         "compute_unit, backend, alpha, shape, single_alpha",
@@ -4568,18 +4588,12 @@ class TestActivation(TorchBaseTest):
             compute_units,
             backends,
             [0.25, 2.0],
-            [
-                (3,),
-                (2, 6),
-                (2, 3, 4),
-                (2, 5, 6, 7),
-                (2, 3, 4, 5, 6)
-            ],
+            [(3,), (2, 6), (2, 3, 4), (2, 5, 6, 7), (2, 3, 4, 5, 6)],
             [True, False],
         ),
     )
     def test_prelu(self, compute_unit, backend, alpha, shape, single_alpha):
-        if (backend[0] == "mlprogram" and backend[1] == "fp16" or (len(shape) == 5)):
+        if backend[0] == "mlprogram" and backend[1] == "fp16" or (len(shape) == 5):
             pytest.xfail(
                 "rdar://92175249 ([MIL] TestActivation::test_prelu[backend=(mlprogram, fp16)] CI failure)"
             )
@@ -4589,10 +4603,7 @@ class TestActivation(TorchBaseTest):
             num_parameters = 1
         model = nn.PReLU(num_parameters, alpha).eval()
         mlmodel = self.run_compare_torch(
-            input_shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
+            input_shape, model, backend=backend, compute_unit=compute_unit
         )
         prog = mlmodel[1]._mil_program
         # Unfortunately since all these tests result in a prelu with a common leakage factor, the
@@ -4602,26 +4613,18 @@ class TestActivation(TorchBaseTest):
 
     @pytest.mark.parametrize(
         "compute_unit, backend, shape, alpha",
-        itertools.product(
-            compute_units,
-            backends,
-            COMMON_SHAPES_ALL,
-            [0.1, 2.0, 1.4]
-        )
+        itertools.product(compute_units, backends, COMMON_SHAPES_ALL, [0.1, 2.0, 1.4]),
     )
     def test_leaky_relu(self, compute_unit, backend, shape, alpha):
         model = nn.LeakyReLU(negative_slope=alpha).eval()
         self.run_compare_torch(
-            shape, model, backend=backend,
-        )
-
-        model = ModuleWrapper(nn.functional.leaky_relu_, {'negative_slope': alpha})
-        self.run_compare_torch(
             shape,
             model,
             backend=backend,
-            compute_unit=compute_unit
         )
+
+        model = ModuleWrapper(nn.functional.leaky_relu_, {"negative_slope": alpha})
+        self.run_compare_torch(shape, model, backend=backend, compute_unit=compute_unit)
 
     @pytest.mark.parametrize(
         "compute_unit, backend, shape",
@@ -4629,173 +4632,91 @@ class TestActivation(TorchBaseTest):
             compute_units,
             backends,
             COMMON_SHAPES_ALL,
-        )
+        ),
     )
     def test_randomized_leaky_relu(self, compute_unit, backend, shape):
         model = nn.RReLU(lower=0.01, upper=0.9).eval()
-        self.run_compare_torch(
-            shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
-        )
+        self.run_compare_torch(shape, model, backend=backend, compute_unit=compute_unit)
 
     @pytest.mark.parametrize(
         "compute_unit, backend, shape",
-        itertools.product(
-            compute_units,
-            backends,
-            COMMON_SHAPES_ALL
-        ),
+        itertools.product(compute_units, backends, COMMON_SHAPES_ALL),
     )
     def test_softmax(self, compute_unit, backend, shape):
         model = nn.Softmax().eval()
-        self.run_compare_torch(
-            shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
-        )
+        self.run_compare_torch(shape, model, backend=backend, compute_unit=compute_unit)
 
     @pytest.mark.parametrize(
         "compute_unit, backend, range_val",
         itertools.product(
-            compute_units,
-            backends,
-            [
-                (-1.0, 1.0),
-                (0.0, 0.1),
-                (1.0, 3.0),
-                (-1.0, 6.0)
-            ]
+            compute_units, backends, [(-1.0, 1.0), (0.0, 0.1), (1.0, 3.0), (-1.0, 6.0)]
         ),
     )
     def test_hardtanh(self, compute_unit, backend, range_val):
         input_shape = (1, 10, 4, 5)
         model = nn.Hardtanh(range_val[0], range_val[1]).eval()
         self.run_compare_torch(
-            input_shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
+            input_shape, model, backend=backend, compute_unit=compute_unit
         )
 
         model = ModuleWrapper(
             nn.functional.hardtanh_, {"min_val": range_val[0], "max_val": range_val[1]}
         )
         self.run_compare_torch(
-            input_shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
+            input_shape, model, backend=backend, compute_unit=compute_unit
         )
 
     @pytest.mark.parametrize(
         "compute_unit, backend, shape, alpha",
-        itertools.product(
-            compute_units,
-            backends,
-            COMMON_SHAPES_ALL,
-            [0.1, 2.0, 1.4]
-        )
+        itertools.product(compute_units, backends, COMMON_SHAPES_ALL, [0.1, 2.0, 1.4]),
     )
     def test_elu(self, compute_unit, backend, shape, alpha):
         model = nn.ELU(alpha).eval()
-        self.run_compare_torch(
-            shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
-        )
+        self.run_compare_torch(shape, model, backend=backend, compute_unit=compute_unit)
 
     @pytest.mark.parametrize(
         "compute_unit, backend, shape",
-        itertools.product(
-            compute_units,
-            backends,
-            COMMON_SHAPES_ALL
-        )
+        itertools.product(compute_units, backends, COMMON_SHAPES_ALL),
     )
     def test_gelu(self, compute_unit, backend, shape):
         model = nn.GELU().eval()
-        self.run_compare_torch(
-            shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
-        )
+        self.run_compare_torch(shape, model, backend=backend, compute_unit=compute_unit)
 
     @pytest.mark.skipif(_python_version() < (3, 6), reason="requires python 3.6")
     @pytest.mark.parametrize(
         "compute_unit, backend, shape",
-        itertools.product(
-            compute_units,
-            backends,
-            COMMON_SHAPES_ALL
-        ),
+        itertools.product(compute_units, backends, COMMON_SHAPES_ALL),
     )
     def test_erf(self, compute_unit, backend, shape):
-
         class ERFActivation(nn.Module):
             def forward(self, x):
                 return torch.erf(x)
 
         model = ERFActivation().eval()
-        self.run_compare_torch(
-            shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
-        )
+        self.run_compare_torch(shape, model, backend=backend, compute_unit=compute_unit)
 
     @pytest.mark.parametrize(
         "compute_unit, backend, shape",
         itertools.product(
-            compute_units,
-            backends,
-            [
-                (1, 10),
-                (1, 3, 5),
-                (1, 5, 6, 7),
-                (1, 3, 4, 5, 6)
-            ]
+            compute_units, backends, [(1, 10), (1, 3, 5), (1, 5, 6, 7), (1, 3, 4, 5, 6)]
         ),
     )
     def test_sigmoid(self, compute_unit, backend, shape):
         model = nn.Sigmoid().eval()
-        self.run_compare_torch(
-            shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
-        )
+        self.run_compare_torch(shape, model, backend=backend, compute_unit=compute_unit)
 
     @pytest.mark.skipif(_python_version() < (3, 6), reason="requires python 3.6")
     @pytest.mark.parametrize(
         "compute_unit, backend, shape",
-        itertools.product(
-            compute_units,
-            backends,
-            COMMON_SHAPES_ALL
-        )
+        itertools.product(compute_units, backends, COMMON_SHAPES_ALL),
     )
     def test_sigmoid_hard(self, compute_unit, backend, shape):
         model = nn.Hardsigmoid().eval()
-        self.run_compare_torch(
-            shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
-        )
+        self.run_compare_torch(shape, model, backend=backend, compute_unit=compute_unit)
 
     @pytest.mark.parametrize(
         "compute_unit, backend, beta, threshold",
-        itertools.product(
-            compute_units,
-            backends,
-            [1, 2, 5],
-            [5, 10, 20]
-        ),
+        itertools.product(compute_units, backends, [1, 2, 5], [5, 10, 20]),
     )
     @pytest.mark.skipif(
         _macos_version() <= (10, 15),
@@ -4805,10 +4726,7 @@ class TestActivation(TorchBaseTest):
         input_shape = (1, 10, 5, 15)
         model = nn.Softplus(beta, threshold).eval()
         self.run_compare_torch(
-            input_shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
+            input_shape, model, backend=backend, compute_unit=compute_unit
         )
 
     @pytest.mark.parametrize(
@@ -4830,20 +4748,11 @@ class TestActivation(TorchBaseTest):
 
     @pytest.mark.parametrize(
         "compute_unit, backend, shape",
-        itertools.product(
-            compute_units,
-            backends,
-            COMMON_SHAPES_ALL
-        )
+        itertools.product(compute_units, backends, COMMON_SHAPES_ALL),
     )
     def test_softsign(self, compute_unit, backend, shape):
         model = nn.Softsign().eval()
-        self.run_compare_torch(
-            shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
-        )
+        self.run_compare_torch(shape, model, backend=backend, compute_unit=compute_unit)
 
     @pytest.mark.skipif(
         condition=version_lt(torch, "1.7.0"),
@@ -4851,14 +4760,7 @@ class TestActivation(TorchBaseTest):
     )
     @pytest.mark.parametrize(
         "compute_unit, backend, shape",
-        itertools.product(
-            compute_units,
-            backends,
-            [
-                (1, 10),
-                (1, 3, 4),
-                (1, 4, 5, 6)
-            ]),
+        itertools.product(compute_units, backends, [(1, 10), (1, 3, 4), (1, 4, 5, 6)]),
     )
     def test_silu(self, compute_unit, backend, shape):
         model = ModuleWrapper(function=torch.nn.functional.silu)
@@ -4866,15 +4768,12 @@ class TestActivation(TorchBaseTest):
 
     @pytest.mark.parametrize(
         "compute_unit, backend, rounding_mode",
-        itertools.product(
-            compute_units,
-            backends,
-            [None, "floor", "trunc"]
-        ),
+        itertools.product(compute_units, backends, [None, "floor", "trunc"]),
     )
     def test_div(self, compute_unit, backend, rounding_mode):
-        model = ModuleWrapper(function=torch.div,
-                              kwargs={"rounding_mode": rounding_mode})
+        model = ModuleWrapper(
+            function=torch.div, kwargs={"rounding_mode": rounding_mode}
+        )
         x1 = torch.from_numpy(np.array([2.3, 2.6, -3.6, -3.2], dtype=np.float32))
         x2 = torch.from_numpy(np.array([1.0, 1.0, 1.0, 1.0], dtype=np.float32))
         out = torch.div(x1, x2, rounding_mode=rounding_mode)
@@ -4924,12 +4823,7 @@ class TestElementWiseUnary(TorchBaseTest):
 
         op_func = getattr(torch, op_string)
         model = ModuleWrapper(function=op_func)
-        self.run_compare_torch(
-            shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
-        )
+        self.run_compare_torch(shape, model, backend=backend, compute_unit=compute_unit)
 
     @pytest.mark.parametrize(
         "compute_unit, backend, shape, clamp_range",
@@ -4942,7 +4836,9 @@ class TestElementWiseUnary(TorchBaseTest):
                 (-1.0, 0.5),
                 (0.2, 0.7),
                 (None, 4.0),
-                (-3.0, None)
+                (-3.0, None),
+                (1, 2),
+                (1, 3.5),
             ],
         ),
     )
@@ -4955,11 +4851,27 @@ class TestElementWiseUnary(TorchBaseTest):
 
         model = ModuleWrapper(torch.clamp, params_dict)
         self.run_compare_torch(
-            shape,
+            shape, model, backend=backend, compute_unit=compute_unit, rand_range=(-5, 5)
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
+    )
+    def test_clamp_int_input(self, compute_unit, backend):
+        params_dict = {"min": -2, "max": 2}
+        input_data = torch.randint(low=-5, high=5, size=(2, 3, 4))
+        model = ModuleWrapper(torch.clamp, params_dict)
+        self.run_compare_torch(
+            input_data,
             model,
             backend=backend,
             compute_unit=compute_unit,
-            rand_range=(-5, 5)
+            input_as_shape=False,
+            converter_input_type=[TensorType(shape=input_data.shape, dtype=np.int32)],
         )
 
     @pytest.mark.parametrize(
@@ -4968,7 +4880,7 @@ class TestElementWiseUnary(TorchBaseTest):
             compute_units,
             backends,
             [(1, 3, 5, 8)],
-            [(0.0, 0.0), (0.5, 0.5), (0.5, 10), (0.9, 0.0)]
+            [(0.0, 0.0), (0.5, 0.5), (0.5, 10), (0.9, 0.0)],
         ),
     )
     def test_threshold(self, compute_unit, backend, shape, threshold):
@@ -5000,7 +4912,9 @@ class TestElementWiseUnary(TorchBaseTest):
             ],
         ),
     )
-    def test_elementwise_numerically_stable(self, compute_unit, backend, shape, op_string):
+    def test_elementwise_numerically_stable(
+        self, compute_unit, backend, shape, op_string
+    ):
         op_func = getattr(torch, op_string)
         model = ModuleWrapper(function=op_func)
         self.run_compare_torch(
@@ -5008,12 +4922,87 @@ class TestElementWiseUnary(TorchBaseTest):
             model,
             backend=backend,
             compute_unit=compute_unit,
-            rand_range=(20, 100)
+            rand_range=(20, 100),
         )
 
 
-class TestTriu(TorchBaseTest):
+class TestAtan2(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, rank",
+        itertools.product(compute_units, backends, range(1, 6)),
+    )
+    def test_atan2(self, compute_unit, backend, rank):
+        model = ModuleWrapper(function=torch.atan2)
+        input_shape = tuple(np.random.randint(low=1, high=10, size=rank))
+        TorchBaseTest.run_compare_torch(
+            [input_shape, input_shape],
+            model,
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=True,
+        )
 
+    @pytest.mark.parametrize(
+        "compute_unit, backend, rank",
+        itertools.product(compute_units, backends, range(1, 6)),
+    )
+    def test_atan2_x0(self, compute_unit, backend, rank):
+        model = ModuleWrapper(function=torch.atan2)
+        input_shape = tuple(np.random.randint(low=1, high=10, size=rank))
+        y = generate_input_data(input_shape, rand_range=(-1.0, 1.0))
+        x = torch.zeros(input_shape)
+        TorchBaseTest.run_compare_torch(
+            (y, x),
+            model,
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=False,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, rank",
+        itertools.product(compute_units, backends, range(1, 6)),
+    )
+    def test_atan2_y0x0(self, compute_unit, backend, rank):
+        model = ModuleWrapper(function=torch.atan2)
+        input_shape = tuple(np.random.randint(low=1, high=10, size=rank))
+        y = torch.zeros(input_shape)
+        x = torch.zeros(input_shape)
+        TorchBaseTest.run_compare_torch(
+            (y, x),
+            model,
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=False,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, rank",
+        itertools.product(compute_units, backends, range(1, 6)),
+    )
+    def test_atan2_broadcast(self, compute_unit, backend, rank):
+        model = ModuleWrapper(function=torch.atan2)
+        input_shape = tuple(np.random.randint(low=1, high=10, size=rank))
+        truncated_shape = list(input_shape)
+        while len(truncated_shape) > 1:
+            truncated_shape.pop(0)
+            TorchBaseTest.run_compare_torch(
+                [input_shape, truncated_shape],
+                model,
+                backend=backend,
+                compute_unit=compute_unit,
+                input_as_shape=True,
+            )
+            TorchBaseTest.run_compare_torch(
+                [truncated_shape, input_shape],
+                model,
+                backend=backend,
+                compute_unit=compute_unit,
+                input_as_shape=True,
+            )
+
+
+class TestTriu(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, shape, diagonal",
         itertools.product(
@@ -5028,16 +5017,10 @@ class TestTriu(TorchBaseTest):
         if diagonal is not None:
             params_dict["diagonal"] = diagonal
         model = ModuleWrapper(torch.triu, params_dict)
-        self.run_compare_torch(
-            shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
-        )
+        self.run_compare_torch(shape, model, backend=backend, compute_unit=compute_unit)
 
 
 class TestTril(TorchBaseTest):
-
     @pytest.mark.parametrize(
         "compute_unit, backend, shape, diagonal",
         itertools.product(
@@ -5061,7 +5044,6 @@ class TestTril(TorchBaseTest):
 
 
 class TestMatMul(TorchBaseTest):
-
     @pytest.mark.parametrize(
         "compute_unit, backend",
         itertools.product(
@@ -5073,73 +5055,71 @@ class TestMatMul(TorchBaseTest):
         shape_x, shape_y = (3, 4, 5), (3, 5, 6)
         model = ModuleWrapper(function=torch.bmm)
         self.run_compare_torch(
-            [shape_x, shape_y],
-            model,
-            backend=backend,
-            compute_unit=compute_unit
+            [shape_x, shape_y], model, backend=backend, compute_unit=compute_unit
+        )
+
+
+class TestNumel(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, input_shape",
+        itertools.product(
+            compute_units,
+            backends,
+            [(1,), (2, 3)],
+        ),
+    )
+    def test_numel(self, compute_unit, backend, input_shape):
+        class TestModel(torch.nn.Module):
+            def forward(self, x):
+                res = torch.numel(x)
+                return x + res
+
+        model = TestModel()
+        self.run_compare_torch(
+            input_shape, model, backend=backend, compute_unit=compute_unit
         )
 
 
 class TestSplit(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, split_size_or_sections, dim",
-        itertools.product(
-            compute_units,
-            backends,
-            [1, 2, [1, 4]],
-            [0, -2]
-        ),
+        itertools.product(compute_units, backends, [1, 2, [1, 4]], [0, -2]),
     )
     def test_split(self, compute_unit, backend, split_size_or_sections, dim):
         input_shape = (5, 2)
-        model = ModuleWrapper(function=torch.split,
-                              kwargs={"split_size_or_sections": split_size_or_sections, "dim": dim})
+        model = ModuleWrapper(
+            function=torch.split,
+            kwargs={"split_size_or_sections": split_size_or_sections, "dim": dim},
+        )
         self.run_compare_torch(
-            input_shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
+            input_shape, model, backend=backend, compute_unit=compute_unit
         )
 
     @pytest.mark.parametrize(
         "compute_unit, backend, split_sizes, dim",
-        itertools.product(
-            compute_units,
-            backends,
-            [[1, 4], [3, 2]],
-            [-1, -2]
-        ),
+        itertools.product(compute_units, backends, [[1, 4], [3, 2]], [-1, -2]),
     )
     def test_split_with_sizes(self, compute_unit, backend, split_sizes, dim):
         input_shape = (5, 5)
-        model = ModuleWrapper(function=torch.split_with_sizes,
-                              kwargs={"split_sizes": split_sizes, "dim": dim})
+        model = ModuleWrapper(
+            function=torch.split_with_sizes,
+            kwargs={"split_sizes": split_sizes, "dim": dim},
+        )
         self.run_compare_torch(
-            input_shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
+            input_shape, model, backend=backend, compute_unit=compute_unit
         )
 
 
 class TestUnbind(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, dim",
-        itertools.product(
-            compute_units,
-            backends,
-            [0, 1, 2]
-        ),
+        itertools.product(compute_units, backends, [0, 1, 2]),
     )
     def test_unbind(self, compute_unit, backend, dim):
         input_shape = (3, 3, 4)
-        model = ModuleWrapper(function=torch.unbind,
-                              kwargs={"dim": dim})
+        model = ModuleWrapper(function=torch.unbind, kwargs={"dim": dim})
         self.run_compare_torch(
-            input_shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
+            input_shape, model, backend=backend, compute_unit=compute_unit
         )
 
     @pytest.mark.parametrize(
@@ -5152,13 +5132,9 @@ class TestUnbind(TorchBaseTest):
     def test_unbind_one_dim_shape(self, compute_unit, backend):
         input_shape = (1,)
         dim = 0
-        model = ModuleWrapper(function=torch.unbind,
-                              kwargs={"dim": dim})
+        model = ModuleWrapper(function=torch.unbind, kwargs={"dim": dim})
         self.run_compare_torch(
-            input_shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
+            input_shape, model, backend=backend, compute_unit=compute_unit
         )
 
 
@@ -5166,21 +5142,14 @@ class TestTranspose(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, shape, dims",
         itertools.product(
-            compute_units,
-            backends,
-            COMMON_SHAPES,
-            [(0, 1), (-2, -1), (1, 0), (-1, -2)]
+            compute_units, backends, COMMON_SHAPES, [(0, 1), (-2, -1), (1, 0), (-1, -2)]
         ),
     )
     def test(self, compute_unit, backend, shape, dims):
-        model = ModuleWrapper(function=torch.transpose,
-                              kwargs={"dim0": dims[0], "dim1": dims[1]})
-        self.run_compare_torch(
-            shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
+        model = ModuleWrapper(
+            function=torch.transpose, kwargs={"dim0": dims[0], "dim1": dims[1]}
         )
+        self.run_compare_torch(shape, model, backend=backend, compute_unit=compute_unit)
 
 
 class TestTo(TorchBaseTest):
@@ -5189,7 +5158,7 @@ class TestTo(TorchBaseTest):
         itertools.product(
             compute_units,
             backends,
-        )
+        ),
     )
     def test_cast_bug(self, compute_unit, backend):
         if _macos_version() < (13, 0) and backend[0] == "mlprogram":
@@ -5216,11 +5185,98 @@ class TestTo(TorchBaseTest):
             )
         model = TestModel()
         self.run_compare_torch(
-            [(1, 4, 2), (1, 6, 3)],
+            [(1, 4, 2), (1, 6, 3)], model, backend=backend, compute_unit=compute_unit
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
+    )
+    def test_to_uint8(self, compute_unit, backend):
+        class TestModel(torch.nn.Module):
+            def forward(self, input_data):
+                input_data = input_data + input_data
+                return input_data.to(torch.uint8)
+
+        inputs = [TensorType(name="input_data", shape=(1, 2, 3), dtype=np.int32)]
+        self.run_compare_torch(
+            inputs, TestModel(), backend=backend, compute_unit=compute_unit
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, input_type",
+        itertools.product(
+            compute_units,
+            backends,
+            [np.float32, np.float16, np.int32],
+        ),
+    )
+    def test_to_no_param(self, compute_unit, backend: Tuple[str], input_type):
+        if input_type == np.float16 and backend[0] == "neuralnetwork":
+            pytest.skip(
+                "Input float16 needs target >= iOS16, which doesn't support neuralnetwork."
+            )
+        if input_type == np.float16 and _macos_version() < (13, 0):
+            pytest.skip("Input float16 needs target >= iOS16, which is not available until macOS 13.")
+
+        class TestModel(torch.nn.Module):
+            def forward(self, input_data):
+                return input_data.to()
+
+        inputs = [TensorType(name="input_data", shape=(1, 2, 3), dtype=input_type)]
+        # The float16 dtype for inputs is only supported for deployment target >= iOS16/macOS13.
+        minimum_deployment_target = (
+            ct.target.iOS16 if input_type == np.float16 else None
+        )
+        self.run_compare_torch(
+            inputs,
+            TestModel(),
+            backend=backend,
+            compute_unit=compute_unit,
+            minimum_deployment_target=minimum_deployment_target,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        )
+    )
+    def test_fold_const(self, compute_unit: ct.ComputeUnit.CPU_ONLY, backend: List[Tuple[str]]):
+        class TestModel(torch.nn.Module):
+            def forward(self, x):
+                return torch.arange(0, 3).float()
+
+        model = TestModel()
+
+        mlmodel = self.run_compare_torch(
+            [(1, 2, 3)],
             model,
             backend=backend,
             compute_unit=compute_unit
         )
+        prog = mlmodel[1]._mil_program
+        # The range_1d op translated from `torch.arange` is folded to const.
+        assert len(prog.find_ops(op_type="range_1d")) == 0
+
+        with patch.object(Var, '_is_nonreplaceable_var') as mocked_is_nonreplaceable_var:
+            # Mock that only the range_1d op is not replaceable.
+            mocked_is_nonreplaceable_var.side_effect = (
+                lambda var: var.op and "range_1d" in var.op.op_type
+            )
+            mlmodel = self.run_compare_torch(
+                [(1, 2, 3)],
+                model,
+                backend=backend,
+                compute_unit=compute_unit
+            )
+            prog = mlmodel[1]._mil_program
+            # The range_1d op translated from `torch.arange` shouldn't be folded.
+            assert len(prog.find_ops(op_type="range_1d")) == 1
 
 
 class TestSlice(TorchBaseTest):
@@ -5230,7 +5286,7 @@ class TestSlice(TorchBaseTest):
         itertools.product(
             compute_units,
             backends,
-        )
+        ),
     )
     def test_dynamic_slice(self, compute_unit, backend):
         class DynamicSlicer(torch.nn.Module):
@@ -5238,7 +5294,6 @@ class TestSlice(TorchBaseTest):
                 return x[context_length:, :, :]
 
         class Model(torch.nn.Module):
-
             def __init__(self):
                 super(Model, self).__init__()
                 self.tokens_embedding = torch.nn.Embedding(10, 10, 0)
@@ -5265,22 +5320,14 @@ class TestSlice(TorchBaseTest):
             TensorType(name="context_length", shape=(1,), dtype=np.int32),
         ]
         self.run_compare_torch(
-            inputs,
-            model,
-            rand_range=(0, 8),
-            backend=backend,
-            compute_unit=compute_unit
+            inputs, model, rand_range=(0, 8), backend=backend, compute_unit=compute_unit
         )
 
 
 class TestRepeat(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, rank",
-        itertools.product(
-            compute_units,
-            backends,
-            range(1, 6)
-        ),
+        itertools.product(compute_units, backends, range(1, 6)),
     )
     def test_repeat(self, compute_unit, backend, rank):
         input_shape = np.random.randint(low=2, high=6, size=rank)
@@ -5289,19 +5336,12 @@ class TestRepeat(TorchBaseTest):
 
         model = ModuleWrapper(function=lambda x: x.repeat(*repeats))
         self.run_compare_torch(
-            input_shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
+            input_shape, model, backend=backend, compute_unit=compute_unit
         )
 
     @pytest.mark.parametrize(
         "compute_unit, backend, rank",
-        itertools.product(
-            compute_units,
-            backends,
-            (1, 2)
-        ),
+        itertools.product(compute_units, backends, (1, 2)),
     )
     def test_repeats_with_extra_dimensions(self, compute_unit, backend, rank):
         input_shape = np.random.randint(low=2, high=6, size=rank)
@@ -5310,12 +5350,9 @@ class TestRepeat(TorchBaseTest):
             repeats = np.random.randint(low=2, high=4, size=rank + num_extra_dims)
             model = ModuleWrapper(function=lambda x: x.repeat(*repeats))
             self.run_compare_torch(
-                input_shape,
-                model,
-                backend=backend,
-                compute_unit=compute_unit
+                input_shape, model, backend=backend, compute_unit=compute_unit
             )
-            
+
     @pytest.mark.parametrize(
         "compute_unit, backend",
         itertools.product(
@@ -5342,7 +5379,7 @@ class TestRepeat(TorchBaseTest):
                 ct.TensorType(shape=(1,)),
             ],
             backend=backend,
-            compute_unit=compute_unit
+            compute_unit=compute_unit,
         )
 
     @pytest.mark.parametrize(
@@ -5369,7 +5406,7 @@ class TestRepeat(TorchBaseTest):
                 ct.TensorType(shape=(1,)),
             ],
             backend=backend,
-            compute_unit=compute_unit
+            compute_unit=compute_unit,
         )
 
     @pytest.mark.parametrize(
@@ -5395,22 +5432,17 @@ class TestRepeat(TorchBaseTest):
                 ct.TensorType(shape=(1,)),
             ],
             backend=backend,
-            compute_unit=compute_unit
+            compute_unit=compute_unit,
         )
 
 
 class TestStd(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, unbiased",
-        itertools.product(
-            compute_units,
-            backends,
-            [True, False]
-        ),
+        itertools.product(compute_units, backends, [True, False]),
     )
     def test_std_2_inputs(self, compute_unit, backend, unbiased):
-        model = ModuleWrapper(function=torch.std,
-                              kwargs={"unbiased": unbiased})
+        model = ModuleWrapper(function=torch.std, kwargs={"unbiased": unbiased})
         x = torch.randn(1, 5, 10) * 3
         out = torch.std(x, unbiased=unbiased).unsqueeze(0)
         self.run_compare_torch(
@@ -5419,17 +5451,13 @@ class TestStd(TorchBaseTest):
             expected_results=out,
             input_as_shape=False,
             backend=backend,
-            compute_unit=compute_unit
+            compute_unit=compute_unit,
         )
 
     @pytest.mark.parametrize(
         "compute_unit, backend, unbiased, dim, keepdim",
         itertools.product(
-            compute_units,
-            backends,
-            [True, False],
-            [[0, 2], [1], [2]],
-            [True, False]
+            compute_units, backends, [True, False], [[0, 2], [1], [2]], [True, False]
         ),
     )
     def test_std_4_inputs(self, compute_unit, backend, unbiased, dim, keepdim):
@@ -5439,10 +5467,7 @@ class TestStd(TorchBaseTest):
         )
         input_shape = (2, 5, 10)
         self.run_compare_torch(
-            input_shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
+            input_shape, model, backend=backend, compute_unit=compute_unit
         )
 
 
@@ -5464,10 +5489,7 @@ class TestOnesLike(TorchBaseTest):
         input_shape = tuple(input_shape)
         model = OnesLikeStaticModel()
         self.run_compare_torch(
-            input_shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
+            input_shape, model, backend=backend, compute_unit=compute_unit
         )
 
     @pytest.mark.parametrize(
@@ -5531,10 +5553,7 @@ class TestZeros(TorchBaseTest):
         input_shape = tuple(input_shape)
         model = ZerosLikeStaticModel()
         self.run_compare_torch(
-            input_shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
+            input_shape, model, backend=backend, compute_unit=compute_unit
         )
 
     @pytest.mark.parametrize(
@@ -5580,6 +5599,45 @@ class TestZeros(TorchBaseTest):
         )
 
     @pytest.mark.parametrize(
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        )
+    )
+    def test_zeros_like_static_fold_to_const(self, compute_unit, backend):
+        class TestModel(nn.Module):
+            def forward(self, x):
+                x = torch.arange(0, 3)
+                return torch.zeros_like(x)
+
+        model = TestModel()
+        mlmodel = self.run_compare_torch(
+            [(1, 2, 3)],
+            model,
+            backend=backend,
+            compute_unit=compute_unit
+        )
+        prog = mlmodel[1]._mil_program
+        # The empty_like op is folded to const, so there is no fill nor fill_like op.
+        assert len(prog.find_ops(op_type="fill")) + len(prog.find_ops(op_type="fill_like")) == 0
+
+        with patch.object(Var, '_is_nonreplaceable_var') as mocked_is_nonreplaceable_var:
+            # Mock that only shape op is not replaceable.
+            mocked_is_nonreplaceable_var.side_effect = (
+                lambda var: var.op and var.op.op_type == "shape"
+            )
+            mlmodel = self.run_compare_torch(
+                [(1, 2, 3)],
+                model,
+                backend=backend,
+                compute_unit=compute_unit
+            )
+            prog = mlmodel[1]._mil_program
+            # The shape op is not folded to const.
+            assert len(prog.find_ops(op_type="fill")) + len(prog.find_ops(op_type="fill_like")) == 1
+
+    @pytest.mark.parametrize(
         "compute_unit, backend, rank",
         itertools.product(
             compute_units,
@@ -5599,10 +5657,7 @@ class TestZeros(TorchBaseTest):
         input_shape = tuple(input_shape)
         model = ZerosStaticModel()
         self.run_compare_torch(
-            input_shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
+            input_shape, model, backend=backend, compute_unit=compute_unit
         )
 
     @pytest.mark.parametrize(
@@ -5634,26 +5689,61 @@ class TestZeros(TorchBaseTest):
             expected_results=torch_out,
             input_as_shape=False,
             backend=backend,
+            compute_unit=compute_unit,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        )
+    )
+    def test_zeros_static_fold_to_const(self, compute_unit, backend):
+        class TestModel(nn.Module):
+            def forward(self, x):
+                return torch.zeros(2, 3, 5)
+
+        model = TestModel()
+        mlmodel = self.run_compare_torch(
+            [(1, 2, 3)],
+            model,
+            backend=backend,
             compute_unit=compute_unit
         )
+        prog = mlmodel[1]._mil_program
+        # The zeros op is folded to const.
+        assert len(prog.find_ops(op_type="fill")) == 0
+
+        with patch.object(Var, '_is_nonreplaceable_var') as mocked_is_nonreplaceable_var:
+            # Mock that the size parameter to torch.zeros is non-replaceable.
+            mocked_is_nonreplaceable_var.side_effect = (
+                lambda var: var.op and var.rank == 1 and np.all(var.val == [2, 3, 5])
+            )
+            mlmodel = self.run_compare_torch(
+                [(1, 2, 3)],
+                model,
+                backend=backend,
+                compute_unit=compute_unit
+            )
+            prog = mlmodel[1]._mil_program
+            # The zeros op is not folded to const.
+            assert len(prog.find_ops(op_type="fill")) == 1
 
 
 class TestTopk(TorchBaseTest):
     @pytest.mark.parametrize(
-        "compute_unit, backend, largest, sort, shape_dim_k",
+        "compute_unit, backend, largest, sort, dynamic, shape_dim_k",
         itertools.product(
             compute_units,
             backends,
             [True, False],
             [True, False],
-            [
-                ((4, 6, 7, 3), -1, 2),
-                ((10, 3, 4), 2, 2),
-                ((5,), 0, 2)
-            ],
+            [True, False],
+            [((4, 6, 7, 3), -1, 2), ((10, 3, 4), 2, 2), ((5,), 0, 2)],
         ),
     )
-    def test_topk(self, compute_unit, backend, largest, sort, shape_dim_k):
+    def test_topk(self, compute_unit, backend, largest, sort, shape_dim_k, dynamic):
         if not sort and backend[0] == "neuralnetwork":
             pytest.xfail("iOS16 version topk needed for sort = False")
         if not sort and _macos_version() < (13, 0):
@@ -5664,19 +5754,24 @@ class TestTopk(TorchBaseTest):
         k = shape_dim_k[2]
 
         class TopkModel(nn.Module):
-            def forward(self, x):
+            def forward(self, x, y):
+                if dynamic:
+                    nonlocal k
+                    k = torch.min(y)
                 topk = torch.topk(x, k, dim=dim, largest=largest, sorted=sort)
                 values, indices = topk.values, topk.indices
                 if not sort:
                     values, _ = torch.sort(values, dim=dim)
                     indices, _ = torch.sort(indices, dim=dim)
-                return values, indices
+                return values, indices, y + 1
 
         input_data = torch.rand(input_shape)
+        k_list = torch.tensor([k + 1, k, k + 2])
+
         model = TopkModel()
-        expected_results = model(input_data)
+        expected_results = model(input_data, k_list)
         self.run_compare_torch(
-            input_data,
+            [input_data, k_list],
             model,
             expected_results=expected_results,
             input_as_shape=False,
@@ -5689,11 +5784,7 @@ class TestTopk(TorchBaseTest):
 class TestLog10(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, rank",
-        itertools.product(
-            compute_units,
-            backends,
-            range(1, 6)
-        ),
+        itertools.product(compute_units, backends, range(1, 6)),
     )
     def test_log10(self, compute_unit, backend, rank):
         class Log10Model(nn.Module):
@@ -5703,21 +5794,14 @@ class TestLog10(TorchBaseTest):
         input_shape = tuple(np.random.randint(low=1, high=10, size=rank))
         model = Log10Model()
         self.run_compare_torch(
-            input_shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
+            input_shape, model, backend=backend, compute_unit=compute_unit
         )
 
 
 class TestLog2(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, rank",
-        itertools.product(
-            compute_units,
-            backends,
-            range(1, 6)
-        ),
+        itertools.product(compute_units, backends, range(1, 6)),
     )
     def test_log2(self, compute_unit, backend, rank):
         class Log2Model(nn.Module):
@@ -5730,10 +5814,7 @@ class TestLog2(TorchBaseTest):
         input_shape = tuple(np.random.randint(low=1, high=10, size=rank))
         model = Log2Model()
         self.run_compare_torch(
-            input_shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
+            input_shape, model, backend=backend, compute_unit=compute_unit
         )
 
 
@@ -5743,12 +5824,7 @@ class TestFlip(TorchBaseTest):
         itertools.product(
             compute_units,
             backends,
-            [
-                (1, [0]),
-                (2, [0, 1]),
-                (3, [1]),
-                (4, [0, 1, 2, 3])
-            ]
+            [(1, [0]), (2, [0, 1]), (3, [1]), (4, [0, 1, 2, 3])],
         ),
     )
     def test_flip(self, compute_unit, backend, rank_dim):
@@ -5761,10 +5837,7 @@ class TestFlip(TorchBaseTest):
         input_shape = tuple(np.random.randint(low=1, high=10, size=rank))
         model = FlipModel()
         self.run_compare_torch(
-            input_shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
+            input_shape, model, backend=backend, compute_unit=compute_unit
         )
 
 
@@ -5799,7 +5872,7 @@ class TestBitWiseLogical(TorchBaseTest):
             model,
             backend=backend,
             compute_unit=compute_unit,
-            input_as_shape=False
+            input_as_shape=False,
         )
 
 
@@ -5830,7 +5903,7 @@ class TestLogicalAnd(TorchBaseTest):
             model,
             backend=backend,
             compute_unit=compute_unit,
-            input_as_shape=False
+            input_as_shape=False,
         )
 
 
@@ -5861,7 +5934,7 @@ class TestLogicalOr(TorchBaseTest):
             model,
             backend=backend,
             compute_unit=compute_unit,
-            input_as_shape=False
+            input_as_shape=False,
         )
 
 
@@ -5892,18 +5965,14 @@ class TestLogicalXor(TorchBaseTest):
             model,
             backend=backend,
             compute_unit=compute_unit,
-            input_as_shape=False
+            input_as_shape=False,
         )
 
 
 class TestWhere(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, shape",
-        itertools.product(
-            compute_units,
-            backends,
-            [(2, 6), (3, 4, 5)]
-        ),
+        itertools.product(compute_units, backends, [(2, 6), (3, 4, 5)]),
     )
     def test_where_test1(self, compute_unit, backend, shape):
         class WhereModel(nn.Module):
@@ -5913,19 +5982,12 @@ class TestWhere(TorchBaseTest):
         input_shape = [shape, shape]
         model = WhereModel()
         self.run_compare_torch(
-            input_shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
+            input_shape, model, backend=backend, compute_unit=compute_unit
         )
 
     @pytest.mark.parametrize(
         "compute_unit, backend, shape",
-        itertools.product(
-            compute_units,
-            backends,
-            [(2, 6), (3, 4, 5)]
-        ),
+        itertools.product(compute_units, backends, [(2, 6), (3, 4, 5)]),
     )
     def test_where_test2(self, compute_unit, backend, shape):
         class WhereModel(nn.Module):
@@ -5953,7 +6015,7 @@ class TestWhere(TorchBaseTest):
             [
                 [(1, 2), (1, 2), (1, 1)],
                 [(1, 2, 3), (1, 1, 1), (1, 1, 3)],
-            ]
+            ],
         ),
     )
     def test_where_test3(self, compute_unit, backend, shapes):
@@ -5974,14 +6036,10 @@ class TestWhere(TorchBaseTest):
             expected_results=expected_results,
             input_as_shape=False,
         )
-        
+
     @pytest.mark.parametrize(
         "compute_unit, backend, shape",
-        itertools.product(
-            compute_units,
-            backends,
-            COMMON_SHAPES + [(10,)]
-        )
+        itertools.product(compute_units, backends, COMMON_SHAPES + [(10,)]),
     )
     def test_where_single_param(self, compute_unit, backend, shape):
         class WhereModelSingleParam(nn.Module):
@@ -5992,7 +6050,9 @@ class TestWhere(TorchBaseTest):
         x = np.zeros(shape)
         all_indices = list(zip(*np.where(x == 0)))
         num_indices = len(all_indices)
-        random_picks = np.random.choice(np.arange(num_indices), size=num_indices//10, replace=False)
+        random_picks = np.random.choice(
+            np.arange(num_indices), size=num_indices // 10, replace=False
+        )
         for i in random_picks:
             x[all_indices[i]] = np.random.choice([-1, 12, 100])
         x = torch.Tensor(x)
@@ -6016,7 +6076,7 @@ class TestSelect(TorchBaseTest):
                 [0, 0],
                 [1, 1],
                 [-1, -1],
-            ]
+            ],
         ),
     )
     def test_select(self, compute_unit, backend, dim_index):
@@ -6029,10 +6089,7 @@ class TestSelect(TorchBaseTest):
         input_shape = (1, 2, 3)
         model = SelectModel()
         self.run_compare_torch(
-            input_shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
+            input_shape, model, backend=backend, compute_unit=compute_unit
         )
 
 
@@ -6049,7 +6106,7 @@ class TestNonZero(TorchBaseTest):
     def test_non_zero(self, compute_unit, backend, rank, as_tuple):
 
         if rank == 1:
-            input_shape = (10)
+            input_shape = 10
             zeros_indices = np.array([1, 4, 7, 9])
         elif rank == 3:
             input_shape = (2, 7, 3)
@@ -6062,7 +6119,7 @@ class TestNonZero(TorchBaseTest):
 
         model = ModuleWrapper(
             torch.nonzero,
-            {'as_tuple':as_tuple},
+            {"as_tuple": as_tuple},
         )
 
         self.run_compare_torch(
@@ -6070,7 +6127,7 @@ class TestNonZero(TorchBaseTest):
             model,
             input_as_shape=False,
             backend=backend,
-            compute_unit=compute_unit
+            compute_unit=compute_unit,
         )
 
 
@@ -6080,7 +6137,7 @@ class TestTorchTensor(TorchBaseTest):
         itertools.product(
             compute_units,
             backends,
-            [1, 2, 3, 4, 5],
+            [0, 1, 2, 3, 4, 5],
         ),
     )
     def test_torch_tensor(self, compute_unit, backend, rank):
@@ -6091,6 +6148,9 @@ class TestTorchTensor(TorchBaseTest):
 
             def forward(self, x):
                 with torch.no_grad():
+                    if self.rank == 0:
+                        res = self.generate_tensor_rank_0(x)
+                        return torch.unsqueeze(res, 0)
                     if self.rank == 1:
                         return self.generate_tensor_rank_1(x)
                     if self.rank == 2:
@@ -6101,6 +6161,11 @@ class TestTorchTensor(TorchBaseTest):
                         return self.generate_tensor_rank_4(x)
                     if self.rank == 5:
                         return self.generate_tensor_rank_5(x)
+
+            @torch.jit.script
+            def generate_tensor_rank_0(x):
+                _, _, _, w = x.shape
+                return torch.tensor(w, dtype=torch.int32)
 
             @torch.jit.script
             def generate_tensor_rank_1(x):
@@ -6137,12 +6202,7 @@ class TestTorchTensor(TorchBaseTest):
 
         shape = (1, 1, 3, 4)
         model = Model(rank)
-        self.run_compare_torch(
-            shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
-        )
+        self.run_compare_torch(shape, model, backend=backend, compute_unit=compute_unit)
 
     @pytest.mark.parametrize(
         "compute_unit, backend, torch_op",
@@ -6169,27 +6229,26 @@ class TestTorchTensor(TorchBaseTest):
                 torch.sqrt,
                 torch.square,
                 torch.tan,
-                torch.tanh
+                torch.tanh,
             ],
         ),
     )
     def test_torch_rank0_tensor(self, compute_unit, backend, torch_op):
         class Model(nn.Module):
             def forward(self, x: torch.Tensor) -> torch.Tensor:
-                return torch_op(torch.tensor(.1))
+                return torch_op(torch.tensor(0.1))
 
         model = Model()
         self.run_compare_torch(
-            torch.tensor([1., 2., 3.]),
+            torch.tensor([1.0, 2.0, 3.0]),
             model,
             input_as_shape=False,
             backend=backend,
-            compute_unit=compute_unit
+            compute_unit=compute_unit,
         )
 
 
 class TestTensorAssign(TorchBaseTest):
-
     @pytest.mark.parametrize(
         "compute_unit, backend",
         itertools.product(
@@ -6209,12 +6268,7 @@ class TestTensorAssign(TorchBaseTest):
 
         shape = (5,)
         model = TensorAssignModel()
-        self.run_compare_torch(
-            shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
-        )
+        self.run_compare_torch(shape, model, backend=backend, compute_unit=compute_unit)
 
     @pytest.mark.parametrize(
         "compute_unit, backend",
@@ -6239,10 +6293,7 @@ class TestTensorAssign(TorchBaseTest):
         shape = (5,)
         model = TensorAssignModel()
         self.run_compare_torch(
-            [shape, shape],
-            model,
-            backend=backend,
-            compute_unit=compute_unit
+            [shape, shape], model, backend=backend, compute_unit=compute_unit
         )
 
     @pytest.mark.parametrize(
@@ -6253,7 +6304,7 @@ class TestTensorAssign(TorchBaseTest):
             [
                 (5, 4),
                 (5, 4, 3),
-            ]
+            ],
         ),
     )
     def test_tensor_assign_case_3(self, compute_unit, backend, shape):
@@ -6270,10 +6321,7 @@ class TestTensorAssign(TorchBaseTest):
 
         model = TensorAssignModel()
         self.run_compare_torch(
-            [shape, shape],
-            model,
-            backend=backend,
-            compute_unit=compute_unit
+            [shape, shape], model, backend=backend, compute_unit=compute_unit
         )
 
     @pytest.mark.parametrize(
@@ -6287,7 +6335,7 @@ class TestTensorAssign(TorchBaseTest):
         # single dimension assignment for two n-D tensors
         class TensorAssignModel(torch.nn.Module):
             def forward(self, x, y):
-                x[0] = torch.tensor([1., 2., 3., 4.])
+                x[0] = torch.tensor([1.0, 2.0, 3.0, 4.0])
                 x[3] = 1
                 y[0] = x[0]
                 return x, y
@@ -6295,10 +6343,7 @@ class TestTensorAssign(TorchBaseTest):
         shape = (5, 4)
         model = TensorAssignModel()
         self.run_compare_torch(
-            [shape, shape],
-            model,
-            backend=backend,
-            compute_unit=compute_unit
+            [shape, shape], model, backend=backend, compute_unit=compute_unit
         )
 
     @pytest.mark.parametrize(
@@ -6317,12 +6362,7 @@ class TestTensorAssign(TorchBaseTest):
 
         shape = (2, 10)
         model = TensorAssignModel()
-        self.run_compare_torch(
-            shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
-        )
+        self.run_compare_torch(shape, model, backend=backend, compute_unit=compute_unit)
 
     @pytest.mark.parametrize(
         "compute_unit, backend",
@@ -6340,12 +6380,7 @@ class TestTensorAssign(TorchBaseTest):
 
         shape = (2, 10, 3)
         model = TensorAssignModel()
-        self.run_compare_torch(
-            shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
-        )
+        self.run_compare_torch(shape, model, backend=backend, compute_unit=compute_unit)
 
     @pytest.mark.parametrize(
         "compute_unit, backend",
@@ -6384,10 +6419,7 @@ class TestIndexPut(TorchBaseTest):
         shape = (3, 2)
         model = IndexPutModel()
         self.run_compare_torch(
-            [shape, shape],
-            model,
-            backend=backend,
-            compute_unit=compute_unit
+            [shape, shape], model, backend=backend, compute_unit=compute_unit
         )
 
     @pytest.mark.parametrize(
@@ -6403,19 +6435,14 @@ class TestIndexPut(TorchBaseTest):
             def forward(self, x):
                 mask = torch.tensor([True, False, False, False, True, True]).view(3, 2)
                 if rank == 0:
-                    x[mask] = 0.
+                    x[mask] = 0.0
                 if rank == 1:
-                    x[mask] = torch.tensor([1.])
+                    x[mask] = torch.tensor([1.0])
                 return x
 
         shape = (3, 2)
         model = IndexPutModel()
-        self.run_compare_torch(
-            shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
-        )
+        self.run_compare_torch(shape, model, backend=backend, compute_unit=compute_unit)
 
     @pytest.mark.parametrize(
         "compute_unit, backend",
@@ -6431,12 +6458,12 @@ class TestIndexPut(TorchBaseTest):
         class IndexPutModel(torch.nn.Module):
             def forward(self, x, y):
                 mask = y > 1
-                x[y > 1] = 0.
+                x[y > 1] = 0.0
                 return x
 
         inputs = [
-            torch.Tensor([1., 2., 3., 4., 5., 6]),
-            torch.Tensor([0., 0., 0., 0., 0., 0.]),
+            torch.Tensor([1.0, 2.0, 3.0, 4.0, 5.0, 6]),
+            torch.Tensor([0.0, 0.0, 0.0, 0.0, 0.0, 0.0]),
         ]
         model = IndexPutModel()
         self.run_compare_torch(
@@ -6449,12 +6476,7 @@ class TestIndexPut(TorchBaseTest):
 
     @pytest.mark.parametrize(
         "compute_unit, backend, rank, accumulate",
-        itertools.product(
-            compute_units,
-            backends,
-            [1, 2],
-            [True, False]
-        ),
+        itertools.product(compute_units, backends, [1, 2], [True, False]),
     )
     def test_index_put_case_4(self, compute_unit, backend, rank, accumulate):
         class IndexPutModel(torch.nn.Module):
@@ -6464,15 +6486,15 @@ class TestIndexPut(TorchBaseTest):
 
         if rank == 1:
             inputs = [
-                torch.Tensor([1., 2., 3., 4., 5., 6]),
+                torch.Tensor([1.0, 2.0, 3.0, 4.0, 5.0, 6]),
                 torch.LongTensor([[0], [4]]),
-                torch.Tensor([3., 7.])
+                torch.Tensor([3.0, 7.0]),
             ]
         elif rank == 2:
             inputs = [
                 torch.ones([3, 4]),
                 torch.LongTensor([[0, 1], [1, 2], [2, 2]]),
-                torch.Tensor([1., 5., 8.]),
+                torch.Tensor([1.0, 5.0, 8.0]),
             ]
 
         model = IndexPutModel()
@@ -6494,7 +6516,7 @@ class TestIndex(TorchBaseTest):
             [
                 (10,),
                 (3, 4, 5, 6),
-            ]
+            ],
         ),
     )
     def test_index_bool_index(self, compute_unit, backend, shape):
@@ -6521,7 +6543,7 @@ class TestIndex(TorchBaseTest):
             [
                 (1, 2),
                 (3, 4, 5, 6),
-            ]
+            ],
         ),
     )
     def test_index_int_index_case_1(self, compute_unit, backend, shape):
@@ -6534,12 +6556,7 @@ class TestIndex(TorchBaseTest):
                     return x[:]
 
         model = IndexModel()
-        self.run_compare_torch(
-            shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
-        )
+        self.run_compare_torch(shape, model, backend=backend, compute_unit=compute_unit)
 
     @pytest.mark.parametrize(
         "compute_unit, backend, shape",
@@ -6549,7 +6566,7 @@ class TestIndex(TorchBaseTest):
             [
                 (1, 2),
                 (3, 4, 5, 6),
-            ]
+            ],
         ),
     )
     def test_index_int_index_case_2(self, compute_unit, backend, shape):
@@ -6564,12 +6581,7 @@ class TestIndex(TorchBaseTest):
                     return x[:, :, index]
 
         model = IndexModel()
-        self.run_compare_torch(
-            shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
-        )
+        self.run_compare_torch(shape, model, backend=backend, compute_unit=compute_unit)
 
     @pytest.mark.parametrize(
         "compute_unit, backend, shape",
@@ -6579,7 +6591,7 @@ class TestIndex(TorchBaseTest):
             [
                 (1, 2, 3),
                 (2, 3, 4, 5),
-            ]
+            ],
         ),
     )
     def test_index_int_index_case_3(self, compute_unit, backend, shape):
@@ -6597,12 +6609,7 @@ class TestIndex(TorchBaseTest):
                     return x[:, index_1, index_2, :]
 
         model = IndexModel()
-        self.run_compare_torch(
-            shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
-        )
+        self.run_compare_torch(shape, model, backend=backend, compute_unit=compute_unit)
 
     @pytest.mark.parametrize(
         "compute_unit, backend, shape",
@@ -6612,7 +6619,7 @@ class TestIndex(TorchBaseTest):
             [
                 (1, 2, 3),
                 (2, 3, 4, 5),
-            ]
+            ],
         ),
     )
     def test_index_int_index_case_4(self, compute_unit, backend, shape):
@@ -6630,12 +6637,7 @@ class TestIndex(TorchBaseTest):
                     return x[index_1, :, :, index_2]
 
         model = IndexModel()
-        self.run_compare_torch(
-            shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
-        )
+        self.run_compare_torch(shape, model, backend=backend, compute_unit=compute_unit)
 
     @pytest.mark.parametrize(
         "compute_unit, backend, shape",
@@ -6645,7 +6647,7 @@ class TestIndex(TorchBaseTest):
             [
                 (1, 2, 3),
                 (2, 3, 4, 5),
-            ]
+            ],
         ),
     )
     def test_index_int_index_case_5(self, compute_unit, backend, shape):
@@ -6666,12 +6668,7 @@ class TestIndex(TorchBaseTest):
                     return x[index_1, index_2, index_3, index_4]
 
         model = IndexModel()
-        self.run_compare_torch(
-            shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
-        )
+        self.run_compare_torch(shape, model, backend=backend, compute_unit=compute_unit)
 
     @pytest.mark.parametrize(
         "compute_unit, backend, shape",
@@ -6681,7 +6678,7 @@ class TestIndex(TorchBaseTest):
             [
                 (1, 2),
                 (3, 4, 5, 6),
-            ]
+            ],
         ),
     )
     def test_index_int_index_case_6(self, compute_unit, backend, shape):
@@ -6698,12 +6695,7 @@ class TestIndex(TorchBaseTest):
                     return x[:, index]
 
         model = IndexModel()
-        self.run_compare_torch(
-            shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
-        )
+        self.run_compare_torch(shape, model, backend=backend, compute_unit=compute_unit)
 
     @pytest.mark.parametrize(
         "compute_unit, backend, shape",
@@ -6713,7 +6705,7 @@ class TestIndex(TorchBaseTest):
             [
                 (1, 2, 3),
                 (2, 3, 4, 5),
-            ]
+            ],
         ),
     )
     def test_index_int_index_case_7(self, compute_unit, backend, shape):
@@ -6731,12 +6723,7 @@ class TestIndex(TorchBaseTest):
                     return x[:, index_1, index_2, :]
 
         model = IndexModel()
-        self.run_compare_torch(
-            shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
-        )
+        self.run_compare_torch(shape, model, backend=backend, compute_unit=compute_unit)
 
     @pytest.mark.parametrize(
         "compute_unit, backend, shape",
@@ -6746,7 +6733,7 @@ class TestIndex(TorchBaseTest):
             [
                 (1, 2, 3),
                 (2, 3, 4, 5),
-            ]
+            ],
         ),
     )
     def test_index_int_index_case_8(self, compute_unit, backend, shape):
@@ -6764,12 +6751,7 @@ class TestIndex(TorchBaseTest):
                     return x[index_1, :, :, index_2]
 
         model = IndexModel()
-        self.run_compare_torch(
-            shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
-        )
+        self.run_compare_torch(shape, model, backend=backend, compute_unit=compute_unit)
 
     @pytest.mark.parametrize(
         "compute_unit, backend, shape",
@@ -6779,7 +6761,7 @@ class TestIndex(TorchBaseTest):
             [
                 (1, 2, 3),
                 (2, 3, 4, 5),
-            ]
+            ],
         ),
     )
     def test_index_int_index_case_9(self, compute_unit, backend, shape):
@@ -6793,12 +6775,7 @@ class TestIndex(TorchBaseTest):
                     return x[[True, False], :, :, :]
 
         model = IndexModel()
-        self.run_compare_torch(
-            shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
-        )
+        self.run_compare_torch(shape, model, backend=backend, compute_unit=compute_unit)
 
     @pytest.mark.parametrize(
         "compute_unit, backend, shape",
@@ -6808,7 +6785,7 @@ class TestIndex(TorchBaseTest):
             [
                 (1, 2, 3),
                 (2, 3, 4, 5),
-            ]
+            ],
         ),
     )
     def test_index_int_index_case_10(self, compute_unit, backend, shape):
@@ -6827,11 +6804,32 @@ class TestIndex(TorchBaseTest):
                     ]
 
         model = IndexModel()
+        self.run_compare_torch(shape, model, backend=backend, compute_unit=compute_unit)
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, shape",
+        itertools.product(
+            compute_units,
+            backends,
+            [
+                (1, 2, 3),
+                (2, 3, 4, 5),
+            ],
+        ),
+    )
+    def test_index_broadcast(self, compute_unit, backend, shape):
+        class IndexModel(torch.nn.Module):
+            def forward(self, x):
+                index_1 = torch.tensor([0, 1])
+                index_2 = torch.tensor([0])
+                return (
+                    x[:, index_1, index_2]
+                    if len(shape) == 3
+                    else x[:, index_1, index_2, :]
+                )
+
         self.run_compare_torch(
-            shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
+            shape, IndexModel(), backend=backend, compute_unit=compute_unit
         )
 
 
@@ -6839,11 +6837,8 @@ class TestPad(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, rank, mode",
         itertools.product(
-            compute_units,
-            backends,
-            range(3, 5),
-            ['reflect', 'replicate']
-        )
+            compute_units, backends, range(3, 5), ["reflect", "replicate"]
+        ),
     )
     def test_pad_reflect_replicate(self, compute_unit, backend, rank: int, mode: str):
         if rank == 3:
@@ -6857,24 +6852,17 @@ class TestPad(TorchBaseTest):
                 "Only 3D, 4D padding with non-constant padding are supported for now"
             )
         max_pad = min(input_shape[-1], input_shape[-2])
-        pad = list(np.random.randint(low=0, high=max_pad,
-                                     size=pad_len))
-        model = ModuleWrapper(function=torch.nn.functional.pad,
-                              kwargs={"pad": pad, "mode": mode})
+        pad = list(np.random.randint(low=0, high=max_pad, size=pad_len))
+        model = ModuleWrapper(
+            function=torch.nn.functional.pad, kwargs={"pad": pad, "mode": mode}
+        )
         self.run_compare_torch(
-            input_shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
+            input_shape, model, backend=backend, compute_unit=compute_unit
         )
 
     @pytest.mark.parametrize(
         "compute_unit, backend, rank",
-        itertools.product(
-            compute_units,
-            backends,
-            range(1, 6)
-        )
+        itertools.product(compute_units, backends, range(1, 6)),
     )
     def test_pad_constant(self, compute_unit, backend, rank: int):
         if rank > 5:
@@ -6882,15 +6870,13 @@ class TestPad(TorchBaseTest):
         val = float(np.random.random(1))
         input_shape = tuple(np.random.randint(low=1, high=10, size=rank))
         pad_dims = np.random.randint(low=1, high=rank + 1)
-        pad = list(np.random.randint(low=0, high=10,
-                                     size=pad_dims * 2))
-        model = ModuleWrapper(function=torch.nn.functional.pad,
-                              kwargs={"pad": pad, "mode": "constant", "value": val})
+        pad = list(np.random.randint(low=0, high=10, size=pad_dims * 2))
+        model = ModuleWrapper(
+            function=torch.nn.functional.pad,
+            kwargs={"pad": pad, "mode": "constant", "value": val},
+        )
         self.run_compare_torch(
-            input_shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
+            input_shape, model, backend=backend, compute_unit=compute_unit
         )
 
     @pytest.mark.parametrize(
@@ -6904,10 +6890,7 @@ class TestPad(TorchBaseTest):
         input_shape = (3, 4, 5)
         model = torch.nn.ConstantPad1d((5, 6), 3.5).eval()
         self.run_compare_torch(
-            input_shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
+            input_shape, model, backend=backend, compute_unit=compute_unit
         )
 
     @pytest.mark.parametrize(
@@ -6921,10 +6904,7 @@ class TestPad(TorchBaseTest):
         input_shape = (3, 4, 5, 6)
         model = torch.nn.ConstantPad2d((5, 6, 3, 8), 3.5).eval()
         self.run_compare_torch(
-            input_shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
+            input_shape, model, backend=backend, compute_unit=compute_unit
         )
 
     @pytest.mark.parametrize(
@@ -6938,46 +6918,48 @@ class TestPad(TorchBaseTest):
         input_shape = (3, 4, 5, 6, 2)
         model = torch.nn.ConstantPad3d((5, 6, 3, 8, 2, 4), 3.5).eval()
         self.run_compare_torch(
-            input_shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
+            input_shape, model, backend=backend, compute_unit=compute_unit
         )
 
 
 class TestMeshgrid(TorchBaseTest):
     @pytest.mark.parametrize(
-        "compute_unit, backend, rows, cols, dtype, inp_mode",
+        "compute_unit, backend, x, y, z, dtype, inp_mode, indexing",
         itertools.product(
             compute_units,
             backends,
-            [1, 2, 3],
-            [1, 2, 3],
+            [1, 2],
+            [3, 4],
+            [5, 6],
             [torch.int, torch.float],
-            ["norm", "list"]
+            ["norm", "list"],
+            [None, "ij", "xy"],
         ),
     )
     def test_meshgrid(
         self,
         compute_unit,
         backend,
-        inp_mode,
-        rows,
-        cols,
+        x,
+        y,
+        z,
         dtype,
+        inp_mode,
+        indexing,
     ):
         class TestModel(nn.Module):
-            def forward(self, rows, cols):
+            def forward(self, x, y, z):
                 if inp_mode == "norm":
-                    return torch.meshgrid(rows, cols)
+                    return torch.meshgrid(x, y, z, indexing=indexing)
                 elif inp_mode == "list":
-                    return torch.meshgrid([rows, cols])
+                    return torch.meshgrid([x, y, z], indexing=indexing)
                 else:
                     raise ValueError("Unsupported mode: {mode}".format(mode=inp_mode))
 
         inputs = (
-            torch.arange(start=0, end=rows, step=1, dtype=dtype),
-            torch.arange(start=0, end=cols, step=1, dtype=dtype)
+            torch.arange(start=0, end=x, step=1, dtype=dtype),
+            torch.arange(start=0, end=y, step=1, dtype=dtype),
+            torch.arange(start=0, end=z, step=1, dtype=dtype),
         )
         model = TestModel().eval()
         expected_results = model(*inputs)
@@ -6987,7 +6969,7 @@ class TestMeshgrid(TorchBaseTest):
             expected_results,
             input_as_shape=False,
             backend=backend,
-            compute_unit=compute_unit
+            compute_unit=compute_unit,
         )
 
 
@@ -7019,10 +7001,7 @@ class TestScatter(TorchBaseTest):
         for dim in dims:
             m = TestModel(0, shapes)
             self.run_compare_torch(
-                shapes,
-                m,
-                backend=backend,
-                compute_unit=compute_unit
+                shapes, m, backend=backend, compute_unit=compute_unit
             )
 
     @pytest.mark.parametrize(
@@ -7044,7 +7023,7 @@ class TestScatter(TorchBaseTest):
                 self.dim = dim
                 self.source = 1.0
                 self.index = torch.randint(0, shapes[dim], size=shapes)
-                
+
             def forward(self, x):
                 return x.scatter_(self.dim, self.index, self.source)
 
@@ -7052,10 +7031,7 @@ class TestScatter(TorchBaseTest):
         for dim in dims:
             m = TestModel(0, shapes)
             self.run_compare_torch(
-                shapes,
-                m,
-                backend=backend,
-                compute_unit=compute_unit
+                shapes, m, backend=backend, compute_unit=compute_unit
             )
 
     @pytest.mark.parametrize(
@@ -7068,7 +7044,7 @@ class TestScatter(TorchBaseTest):
                 [(2, 3), (1, -1)],
                 [(2, 3, 4, 5), (0, -2)],
             ],
-            ['add', 'multiply'],
+            ["add", "multiply"],
         ),
     )
     def test_scatter_with_reduce(self, compute_unit, backend, shapes_dims, mode):
@@ -7087,10 +7063,7 @@ class TestScatter(TorchBaseTest):
         for dim in dims:
             m = TestModel(0, shapes, mode)
             self.run_compare_torch(
-                shapes,
-                m,
-                backend=backend,
-                compute_unit=compute_unit
+                shapes, m, backend=backend, compute_unit=compute_unit
             )
 
     @pytest.mark.parametrize(
@@ -7120,10 +7093,7 @@ class TestScatter(TorchBaseTest):
         for dim in dims:
             m = TestModel(dim, shapes)
             self.run_compare_torch(
-                shapes,
-                m,
-                backend=backend,
-                compute_unit=compute_unit
+                shapes, m, backend=backend, compute_unit=compute_unit
             )
 
 
@@ -7142,10 +7112,7 @@ class TestBroadcastTensors(TorchBaseTest):
                 return torch.broadcast_tensors(a)
 
         self.run_compare_torch(
-            shapes,
-            TestModel().eval(),
-            backend=backend,
-            compute_unit=compute_unit
+            shapes, TestModel().eval(), backend=backend, compute_unit=compute_unit
         )
 
     @pytest.mark.parametrize(
@@ -7157,7 +7124,7 @@ class TestBroadcastTensors(TorchBaseTest):
                 [(2, 1), (1, 3)],
                 [(5, 1, 4, 1), (3, 1, 1)],
                 [(1,), (3, 1, 7)],
-                [(2, 1), (4, 3, 2, 1)]
+                [(2, 1), (4, 3, 2, 1)],
             ],
         ),
     )
@@ -7167,10 +7134,7 @@ class TestBroadcastTensors(TorchBaseTest):
                 return torch.broadcast_tensors(a, b)
 
         self.run_compare_torch(
-            shapes,
-            TestModel().eval(),
-            backend=backend,
-            compute_unit=compute_unit
+            shapes, TestModel().eval(), backend=backend, compute_unit=compute_unit
         )
 
     @pytest.mark.parametrize(
@@ -7191,10 +7155,7 @@ class TestBroadcastTensors(TorchBaseTest):
                 return torch.broadcast_tensors(a, b, c, d)
 
         self.run_compare_torch(
-            shapes,
-            TestModel().eval(),
-            backend=backend,
-            compute_unit=compute_unit
+            shapes, TestModel().eval(), backend=backend, compute_unit=compute_unit
         )
 
 
@@ -7205,7 +7166,7 @@ class TestEmbedding(TorchBaseTest):
             compute_units,
             backends,
             [np.int32, np.float32],
-        )
+        ),
     )
     def test_embedding(self, compute_unit, backend, input_dtype):
         num_embeddings = 4
@@ -7247,10 +7208,12 @@ class TestDuplicateOutputTensors(TorchBaseTest):
             compute_units,
             backends,
             [np.int32, np.float32],
-        )
+        ),
     )
     # Test case for rdar://100138064 (Duplicate output tensors trigger ops removal errors).
-    def test_duplicate_output_not_raise_errors(self, compute_unit, backend, input_dtype):
+    def test_duplicate_output_not_raise_errors(
+        self, compute_unit, backend, input_dtype
+    ):
         if backend[0] == "neuralnetwork":
             pytest.skip(
                 "rdar://100243127 ([PyTorch] Duplicate Output Tensor Doesn't work for neuralnetwork)"
@@ -7282,7 +7245,7 @@ class TestBaddbmm(TorchBaseTest):
             compute_units,
             backends,
             [(2, 4, 6, 8), (4, 12, 6, 16)],
-        )
+        ),
     )
     def test_baddbmm(self, compute_unit, backend, shapes):
         B, N, M, P = shapes
@@ -7304,10 +7267,7 @@ class TestBaddbmm(TorchBaseTest):
         # Makes it broadcastable to (B, N, P).
         for input_shape in [(1, N, P), (B, 1, P), (1, P)]:
             self.run_compare_torch(
-                input_shape,
-                model,
-                backend=backend,
-                compute_unit=compute_unit
+                input_shape, model, backend=backend, compute_unit=compute_unit
             )
 
 
@@ -7318,7 +7278,7 @@ class TestGlu(TorchBaseTest):
             compute_units,
             backends,
             [(2, 4, 6, 8), (6, 2, 10)],
-        )
+        ),
     )
     def test_glu(self, compute_unit, backend, shapes):
         # The dim specified for GLU shouldn't exceed the max dim in input.
@@ -7326,10 +7286,7 @@ class TestGlu(TorchBaseTest):
         for glu_dim in glu_dim_list:
             model = torch.nn.GLU(glu_dim)
             self.run_compare_torch(
-                shapes,
-                model,
-                backend=backend,
-                compute_unit=compute_unit
+                shapes, model, backend=backend, compute_unit=compute_unit
             )
 
 
@@ -7339,10 +7296,12 @@ class TestHstack(TorchBaseTest):
         itertools.product(
             compute_units,
             backends,
-            [[(2, 4, 6), (2, 4, 6)],
-             [(1, 4, 5), (1, 2, 5)],
-             [(1,), (3,)]],  # Test 1-D tensors.
-        )
+            [
+                [(2, 4, 6), (2, 4, 6)],
+                [(1, 4, 5), (1, 2, 5)],
+                [(1,), (3,)],
+            ],  # Test 1-D tensors.
+        ),
     )
     def test_hstack(self, compute_unit, backend, shapes):
         class HstackModel(nn.Module):
@@ -7350,10 +7309,7 @@ class TestHstack(TorchBaseTest):
                 return torch.hstack(tensors)
 
         self.run_compare_torch(
-            shapes,
-            HstackModel(),
-            backend=backend,
-            compute_unit=compute_unit
+            shapes, HstackModel(), backend=backend, compute_unit=compute_unit
         )
 
     @pytest.mark.parametrize(
@@ -7362,7 +7318,7 @@ class TestHstack(TorchBaseTest):
             compute_units,
             backends,
             [[(2, 4, 6), (2, 4, 6)]],
-        )
+        ),
     )
     def test_hstack_with_parameter_out(self, compute_unit, backend, shapes):
         class HstackModel(nn.Module):
@@ -7372,10 +7328,7 @@ class TestHstack(TorchBaseTest):
                 return output_tensor
 
         self.run_compare_torch(
-            shapes,
-            HstackModel(),
-            backend=backend,
-            compute_unit=compute_unit
+            shapes, HstackModel(), backend=backend, compute_unit=compute_unit
         )
 
 
@@ -7385,10 +7338,12 @@ class TestRemainder(TorchBaseTest):
         itertools.product(
             compute_units,
             backends,
-            [[(2, 4, 6), (2, 4, 6)],
-             [(2, 4, 6), (4, 6)],  # broadcastable tensors
-             [(2, 4, 6), (2, 1, 6)]],
-        )
+            [
+                [(2, 4, 6), (2, 4, 6)],
+                [(2, 4, 6), (4, 6)],  # broadcastable tensors
+                [(2, 4, 6), (2, 1, 6)],
+            ],
+        ),
     )
     def test_remainder(self, compute_unit, backend, shapes):
         class RemainderModel(nn.Module):
@@ -7396,10 +7351,7 @@ class TestRemainder(TorchBaseTest):
                 return torch.remainder(dividend, divisor)
 
         self.run_compare_torch(
-            shapes,
-            RemainderModel(),
-            backend=backend,
-            compute_unit=compute_unit
+            shapes, RemainderModel(), backend=backend, compute_unit=compute_unit
         )
 
     @pytest.mark.parametrize(
@@ -7408,7 +7360,7 @@ class TestRemainder(TorchBaseTest):
             compute_units,
             backends,
             [[(2, 4, 6), (2, 4, 6)]],
-        )
+        ),
     )
     def test_remainder_with_parameter_out(self, compute_unit, backend, shapes):
         class RemainderModel(nn.Module):
@@ -7418,10 +7370,29 @@ class TestRemainder(TorchBaseTest):
                 return output_tensor
 
         self.run_compare_torch(
-            shapes,
+            shapes, RemainderModel(), backend=backend, compute_unit=compute_unit
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
+    )
+    def test_remainder_input_types_promotion(self, compute_unit, backend):
+        class RemainderModel(nn.Module):
+            def forward(self, dividend, divisor):
+                return torch.remainder(dividend, divisor)
+
+        input_dividend = torch.randint(low=0, high=10, size=(2, 3), dtype=torch.int32)
+        input_divisor = torch.rand(2, 3)
+        self.run_compare_torch(
+            [input_dividend, input_divisor],
             RemainderModel(),
             backend=backend,
-            compute_unit=compute_unit
+            compute_unit=compute_unit,
+            input_as_shape=False,
         )
 
 
@@ -7429,10 +7400,8 @@ class TestSum(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, input_dtype",
         itertools.product(
-            compute_units,
-            backends,
-            [torch.int32, torch.float32, torch.bool]
-        )
+            compute_units, backends, [torch.int32, torch.float32, torch.bool]
+        ),
     )
     def test_sum(self, compute_unit, backend, input_dtype):
         model = ModuleWrapper(function=torch.sum)
@@ -7446,7 +7415,7 @@ class TestSum(TorchBaseTest):
             expected_results=expected_results,
             input_as_shape=False,
             backend=backend,
-            compute_unit=compute_unit
+            compute_unit=compute_unit,
         )
 
 
@@ -7499,9 +7468,9 @@ class TestHannWindow(TorchBaseTest):
             expected_results=torch_out,
             input_as_shape=False,
             backend=backend,
-            compute_unit=compute_unit
+            compute_unit=compute_unit,
         )
-            
+
 
 class TestTrace(TorchBaseTest):
     @pytest.mark.parametrize(
@@ -7514,12 +7483,7 @@ class TestTrace(TorchBaseTest):
     )
     def test_trace(self, compute_unit, backend, shape):
         model = ModuleWrapper(torch.trace)
-        self.run_compare_torch(
-            shape,
-            model,
-            backend=backend,
-            compute_unit=compute_unit
-        )
+        self.run_compare_torch(shape, model, backend=backend, compute_unit=compute_unit)
 
 
 class TestRoll(TorchBaseTest):
@@ -7578,9 +7542,613 @@ class TestArgmax(TorchBaseTest):
             input_as_shape=False,
             backend=backend,
             converter_input_type=converter_input_type,
+            compute_unit=compute_unit,
+        )
+
+
+class TestStack(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, rank, num",
+        itertools.product(
+            compute_units,
+            backends,
+            [1, 3],
+            [1, 3],
+        ),
+    )
+    def test_stack(self, compute_unit, backend, rank, num):
+        input_shape = np.random.randint(low=1, high=6, size=rank)
+        for dim in [None] + list(range(rank + 1)):
+            print("dim", dim)
+
+            class StackModel(torch.nn.Module):
+                def forward(self, *inputs):
+                    if dim is None:
+                        return torch.stack(inputs)
+                    else:
+                        return torch.stack(inputs, dim=dim)
+
+            TorchBaseTest.run_compare_torch(
+                [input_shape] * num,
+                StackModel(),
+                backend=backend,
+                compute_unit=compute_unit,
+            )
+
+
+class TestComplex(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
+    )
+    def test_complex(self, compute_unit: ct.ComputeUnit, backend):
+        class ComplexModel(torch.nn.Module):
+            def forward(self, x):
+                real_part = x + 1
+                imag_part = -x
+                complex_data = torch.complex(real_part, imag_part)
+                return torch.stack([complex_data.real, complex_data.imag], dim=1)
+
+        TorchBaseTest.run_compare_torch(
+            (2, 3, 4), ComplexModel(), backend=backend, compute_unit=compute_unit
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
+    )
+    def test_complex_real_imag_same_input(self, compute_unit: ct.ComputeUnit, backend):
+        class ComplexModel(torch.nn.Module):
+            def forward(self, x):
+                return torch.complex(x, x).real
+
+        TorchBaseTest.run_compare_torch(
+            (2, 3, 4), ComplexModel(), backend=backend, compute_unit=compute_unit
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
+    )
+    def test_complex_input_error(self, compute_unit: ct.ComputeUnit, backend):
+        class ComplexModel(torch.nn.Module):
+            def forward(self, x):
+                return torch.complex(x.real, x.imag)
+
+        input_data = torch.tensor([1 + 0j, 2 + 3j], dtype=torch.complex64)
+        with pytest.raises(
+            TypeError,
+            match="dtype=<class 'numpy.complex64'> is unsupported for inputs/outputs of the model",
+        ):
+            converter_input_type = [
+                ct.TensorType(shape=input_data.shape, dtype=np.complex64)
+            ]
+            TorchBaseTest.run_compare_torch(
+                input_data,
+                ComplexModel(),
+                backend=backend,
+                compute_unit=compute_unit,
+                input_as_shape=False,
+                converter_input_type=converter_input_type,
+            )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
+    )
+    def test_complex_output_error(self, compute_unit: ct.ComputeUnit, backend):
+        class ComplexModel(torch.nn.Module):
+            def forward(self, x):
+                return torch.complex(x, x)
+
+        with pytest.raises(
+            ValueError, match="MIL doesn't support complex data as model's output"
+        ):
+            TorchBaseTest.run_compare_torch(
+                (2, 3, 4), ComplexModel(), backend=backend, compute_unit=compute_unit
+            )
+
+
+class TestReal(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
+    )
+    def test_real_real_input(self, compute_unit: ct.ComputeUnit, backend):
+        class RealModel(torch.nn.Module):
+            def forward(self, x):
+                return torch.real(x)
+
+        TorchBaseTest.run_compare_torch(
+            (2, 3, 4), RealModel(), backend=backend, compute_unit=compute_unit
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
+    )
+    def test_real_complex_input(self, compute_unit: ct.ComputeUnit, backend):
+        class RealModel(torch.nn.Module):
+            def forward(self, x):
+                return torch.real(torch.complex(x, x))
+
+        TorchBaseTest.run_compare_torch(
+            (2, 3, 4), RealModel(), backend=backend, compute_unit=compute_unit
+        )
+
+
+class TestImag(TorchBaseTest):
+    # torch.imag only support complex input, so we don't need to test real number input.
+    @pytest.mark.parametrize(
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
+    )
+    def test_imag_complex_input(self, compute_unit: ct.ComputeUnit, backend):
+        class ImagModel(torch.nn.Module):
+            def forward(self, x):
+                return torch.imag(torch.complex(x, x))
+
+        TorchBaseTest.run_compare_torch(
+            (2, 3, 4), ImagModel(), backend=backend, compute_unit=compute_unit
+        )
+
+
+class TestFft(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
+    )
+    def test_directly_use_fft_complex_output_error(
+        self, compute_unit: ct.ComputeUnit, backend
+    ):
+        class FftModel(torch.nn.Module):
+            def forward(self, x):
+                return torch.fft.fft(x)
+
+        with pytest.raises(
+            ValueError, match="MIL doesn't support complex data as model's output"
+        ):
+            TorchBaseTest.run_compare_torch(
+                (2, 3, 4), FftModel(), backend=backend, compute_unit=compute_unit
+            )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, input_shape, fft_variant",
+        itertools.product(
+            compute_units,
+            backends,
+            [(1,), (2, 3), (3, 1, 2)],
+            ["fft", "rfft", "ifft", "irfft"],
+        ),
+    )
+    def test_fft_basic_no_param(
+        self, compute_unit: ct.ComputeUnit, backend, input_shape, fft_variant
+    ):
+        if input_shape == (1,) and fft_variant == "irfft":
+            pytest.skip("PyTorch doesn't support length-1 input (1,) for irfft.")
+
+        class FftModel(torch.nn.Module):
+            def forward(self, x):
+                if fft_variant == "fft":
+                    return torch.fft.fft(x).real
+                elif fft_variant == "rfft":
+                    return torch.fft.rfft(x).real
+                elif fft_variant == "ifft":
+                    x = torch.complex(x, x)
+                    return torch.fft.ifft(x).real
+                elif fft_variant == "irfft":
+                    x = torch.complex(x, x)
+                    return torch.fft.irfft(x)
+                else:
+                    raise ValueError(f"Invalid fft_variant {fft_variant}.")
+
+        TorchBaseTest.run_compare_torch(
+            input_shape, FftModel(), backend=backend, compute_unit=compute_unit
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, fft_variant, n, dim, norm",
+        itertools.product(
+            compute_units,
+            backends,
+            ["fft", "rfft", "ifft", "irfft"],
+            [None, 1, 5],
+            [0, 1, -1],
+            [None, "forward", "backward", "ortho"],
+        ),
+    )
+    def test_fft_basic(
+        self, compute_unit: ct.ComputeUnit, backend, fft_variant, n, dim, norm
+    ):
+        class FftModel(torch.nn.Module):
+            def forward(self, x):
+                if fft_variant == "fft":
+                    fft_res = torch.fft.fft(x, n=n, dim=dim, norm=norm)
+                elif fft_variant == "rfft":
+                    fft_res = torch.fft.rfft(x, n=n, dim=dim, norm=norm)
+                elif fft_variant == "ifft":
+                    x = torch.complex(x, x)
+                    fft_res = torch.fft.ifft(x, n=n, dim=dim, norm=norm)
+                elif fft_variant == "irfft":
+                    x = torch.complex(x, x)
+                    return torch.fft.irfft(x, n=n, dim=dim, norm=norm)
+                else:
+                    raise ValueError(f"Invalid fft_variant {fft_variant}.")
+                return torch.stack([fft_res.real, fft_res.imag], dim=0)
+
+        TorchBaseTest.run_compare_torch(
+            (2, 3, 4), FftModel(), backend=backend, compute_unit=compute_unit
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
+    )
+    def test_fft_nested(self, compute_unit: ct.ComputeUnit, backend):
+        class FftModel(torch.nn.Module):
+            def forward(self, x):
+                fft_1 = torch.fft.fft(x, dim=2, norm="forward")
+                fft_2 = torch.fft.fft(fft_1, dim=0, norm="backward")
+                fft_3 = torch.fft.fft(fft_2, dim=1, norm="ortho")
+                return torch.real(fft_3)
+
+        TorchBaseTest.run_compare_torch(
+            (2, 3, 4), FftModel(), backend=backend, compute_unit=compute_unit
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, fftn_variant, shapes_and_dims, norm",
+        itertools.product(
+            compute_units,
+            backends,
+            ["fftn", "rfftn", "ifftn", "irfftn"],
+            [
+                (None, None),
+                (None, [1, 0]),
+                ([2], None),
+                ([5], [0]),
+                ([1, 4], [1, 2]),
+                ([1, 3, 5], [1, -1, 0]),
+            ],
+            [None, "forward", "backward", "ortho"],
+        ),
+    )
+    def test_fftn(
+        self, compute_unit: ct.ComputeUnit, backend, fftn_variant, shapes_and_dims, norm
+    ):
+        shapes, dims = shapes_and_dims
+
+        class FftnModel(torch.nn.Module):
+            def forward(self, x):
+                if fftn_variant == "fftn":
+                    fftn_res = torch.fft.fftn(x, s=shapes, dim=dims, norm=norm)
+                elif fftn_variant == "rfftn":
+                    fftn_res = torch.fft.rfftn(x, s=shapes, dim=dims, norm=norm)
+                elif fftn_variant == "ifftn":
+                    x = torch.complex(x, x)
+                    fftn_res = torch.fft.ifftn(x, s=shapes, dim=dims, norm=norm)
+                elif fftn_variant == "irfftn":
+                    x = torch.complex(x, x)
+                    return torch.fft.irfftn(x, s=shapes, dim=dims, norm=norm)
+                else:
+                    raise ValueError(f"Invalid fftn_variant {fftn_variant}.")
+                return torch.stack([torch.real(fftn_res), torch.imag(fftn_res)], dim=0)
+
+        TorchBaseTest.run_compare_torch(
+            (2, 3, 4), FftnModel(), backend=backend, compute_unit=compute_unit
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
+    )
+    def test_dims_specify_by_shapes(self, compute_unit: ct.ComputeUnit, backend):
+        class FftnModel(torch.nn.Module):
+            def forward(self, x):
+                x = torch.complex(x, x)
+                return torch.fft.irfftn(x, s=x.shape[-3:], dim=(-3, -2, -1))
+
+        TorchBaseTest.run_compare_torch(
+            (2, 3, 4), FftnModel(), backend=backend, compute_unit=compute_unit
+        )
+
+
+class TestNms(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, box_num, iou_threshold, dynamic_input",
+        itertools.product(
+            compute_units,
+            backends,
+            [1, 5, 20, 1000],
+            [0.0, 0.2, 0.8],
+            [True, False],
+        ),
+    )
+    def test_nms(
+        self,
+        compute_unit,
+        backend: Tuple[str, str],
+        box_num: int,
+        iou_threshold: float,
+        dynamic_input: bool,
+    ):
+        if box_num >= 1000 and backend == ("mlprogram", "fp16"):
+            pytest.xfail(
+                "rdar://103891349 ([TensorFlow] [PyTorch] NMS discrepancy in Fp16 when "
+                "number of boxes is large)"
+            )
+
+        class NmsModel(torch.nn.Module):
+            def forward(self, boxes, scores):
+                return torchvision.ops.nms(boxes, scores, iou_threshold=iou_threshold)
+
+        input_boxes = torch.randint(
+            low=0, high=box_num, size=(box_num, 4), dtype=torch.float32
+        )
+        # When two boxes have IOU exactly equal to iou_threshold (>0.0), it will hit the corner case as shown in
+        # `test_nms_corner_case`, which has a discrepancy between CoreML and PyTorch. To avoid this situation, we keep
+        # regenerating the input boxes at most _MAX_REGEN times until there is no corner case in the generated boxes.
+        _MAX_REGEN = 3
+        regen_count = 0
+        while regen_count < _MAX_REGEN and iou_threshold > 0.0 and iou_threshold in torchvision.ops.box_iou(
+                input_boxes, input_boxes):
+            input_boxes = torch.randint(
+                low=0, high=box_num, size=(box_num, 4), dtype=torch.float32
+            )
+            regen_count += 1
+
+        # When the input score is too close, the returned index order is not guaranteed (same
+        # behaviour as PyTorch). So instead of generating random scores by torch.rand, use shuffle.
+        input_scores = np.arange(box_num)
+        np.random.shuffle(input_scores)
+        input_scores = torch.tensor(input_scores, dtype=torch.float32)
+
+        if dynamic_input:
+            converter_input_type = [
+                ct.TensorType(shape=(RangeDim(1, -1), 4)),
+                ct.TensorType(shape=(RangeDim(1, -1),)),
+            ]
+        else:
+            converter_input_type = [
+                ct.TensorType(shape=input_boxes.shape),
+                ct.TensorType(shape=input_scores.shape),
+            ]
+
+        nms_model = NmsModel()
+        nms_model.eval()
+        expected_results = nms_model(input_boxes, input_scores)
+        TorchBaseTest.run_compare_torch(
+            [input_boxes, input_scores],
+            nms_model,
+            expected_results=expected_results,
+            input_as_shape=False,
+            backend=backend,
+            converter_input_type=converter_input_type,
+            compute_unit=compute_unit,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
+    )
+    def test_nms_corner_case_iou_equal_threshold(
+        self,
+        compute_unit,
+        backend: Tuple[str, str],
+    ):
+        class NmsModel(torch.nn.Module):
+            def forward(self, boxes, scores):
+                return torchvision.ops.nms(boxes, scores, iou_threshold=0.2)
+
+        input_boxes = torch.tensor([[3., 2., 3., 0.],
+                                    [0., 0., 2., 2.],
+                                    [1., 3., 2., 1.],
+                                    [0., 2., 1., 3.],
+                                    [1., 1., 2., 3.]], dtype=torch.float32)
+        input_scores = torch.tensor([3., 2., 0., 1., 4.], dtype=torch.float32)
+        converter_input_type = [
+            ct.TensorType(shape=input_boxes.shape),
+            ct.TensorType(shape=input_scores.shape),
+        ]
+
+        nms_model = NmsModel()
+        nms_model.eval()
+        expected_results = nms_model(input_boxes, input_scores)
+        with pytest.raises(AssertionError, match="Items are not equal"):
+            # TODO: rdar://104966206 ([PyTorch] Re-enable NMS Corner Case Tests After PyTorch Fixes Bugs).
+            # This is because the IOU between the last box ([1., 1., 2., 3.]) and the second box ([0., 0., 2., 2.]) is
+            # exactly 0.2 (IOU threshold), which leads to a corner case that PyTorch will remove the second box while
+            # CoreML keeps it. According to PyTorch's doc, only boxes with `greater than iou_threshold` should be
+            # removed, so it's a bug in PyTorch's side.
+            TorchBaseTest.run_compare_torch(
+                [input_boxes, input_scores],
+                nms_model,
+                expected_results=expected_results,
+                input_as_shape=False,
+                backend=backend,
+                converter_input_type=converter_input_type,
+                compute_unit=compute_unit,
+            )
+
+        # Change the last input box to make IOU slightly larger than 0.2, the output of CoreML will match PyTorch.
+        input_boxes[-1][-1] = 2.999
+        expected_results = nms_model(input_boxes, input_scores)
+        TorchBaseTest.run_compare_torch(
+            [input_boxes, input_scores],
+            nms_model,
+            expected_results=expected_results,
+            input_as_shape=False,
+            backend=backend,
+            converter_input_type=converter_input_type,
+            compute_unit=compute_unit,
+        )
+
+        # Change the last input box to make IOU slightly smaller than 0.2, the output of CoreML will match PyTorch.
+        input_boxes[-1][-1] = 3.0001
+        expected_results = nms_model(input_boxes, input_scores)
+        TorchBaseTest.run_compare_torch(
+            [input_boxes, input_scores],
+            nms_model,
+            expected_results=expected_results,
+            input_as_shape=False,
+            backend=backend,
+            converter_input_type=converter_input_type,
+            compute_unit=compute_unit,
+        )
+
+
+class TestTensorSize(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        )
+    )
+    def test_tensor_size(self, compute_unit: ct.ComputeUnit.CPU_ONLY, backend: List[Tuple[str]]):
+        class TestModel(torch.nn.Module):
+            def forward(self, x):
+                return x.size()
+
+        self.run_compare_torch(
+            [(1, 2, 3)],
+            TestModel(),
+            backend=backend,
             compute_unit=compute_unit
         )
 
+    @pytest.mark.parametrize(
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            [('mlprogram', "fp16")],
+        )
+    )
+    def test_tensor_size_with_dim(self, compute_unit: ct.ComputeUnit.CPU_ONLY,
+                                  backend: List[Tuple[str]]):
+        class TestModel(torch.nn.Module):
+            def forward(self, x):
+                return x.size(dim=-1)
+
+        model = TestModel()
+
+        mlmodel = self.run_compare_torch(
+            [(1, 2, 3)],
+            model,
+            backend=backend,
+            compute_unit=compute_unit
+        )
+        prog = mlmodel[1]._mil_program
+        # The shape op is folded to const.
+        assert len(prog.find_ops(op_type="shape")) == 0
+
+        with patch.object(Var, '_is_nonreplaceable_var') as mocked_is_nonreplaceable_var:
+            # Mock that shape op is non-replaceable.
+            mocked_is_nonreplaceable_var.side_effect = (
+                lambda var: var.op and "shape" in var.op.op_type
+            )
+            mlmodel = self.run_compare_torch(
+                [(1, 2, 3)],
+                model,
+                backend=backend,
+                compute_unit=compute_unit
+            )
+            prog = mlmodel[1]._mil_program
+            # The shape op is not folded to const.
+            assert len(prog.find_ops(op_type="shape")) == 1
+
+
+class TestBitwiseAnd(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
+    )
+    def test_bitwise_and(
+        self, compute_unit: ct.ComputeUnit.CPU_ONLY, backend: List[Tuple[str]]
+    ):
+        class TestModel(torch.nn.Module):
+            def forward(self, x, y):
+                return torch.bitwise_and(x, y)
+
+        input_shape = (2, 3)
+        input_data_x = torch.rand(*input_shape) > 0.2
+        input_data_y = torch.rand(*input_shape) < 0.8
+        self.run_compare_torch(
+            [input_data_x, input_data_y],
+            TestModel(),
+            backend=backend,
+            compute_unit=compute_unit,
+            input_as_shape=False,
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
+    )
+    def test_bitwise_and_unsupport_input(
+        self, compute_unit: ct.ComputeUnit.CPU_ONLY, backend: List[Tuple[str]]
+    ):
+        class TestModel(torch.nn.Module):
+            def forward(self, x, y):
+                return torch.bitwise_and(x, y)
+
+        input_shape = (2, 3)
+        input_data_x = torch.randint(
+            low=0, high=10, size=input_shape, dtype=torch.int32
+        )
+        input_data_y = torch.randint(
+            low=0, high=10, size=input_shape, dtype=torch.int32
+        )
+        with pytest.raises(
+            NotImplementedError,
+            match="The `bitwise_and` op only supports boolean input",
+        ):
+            self.run_compare_torch(
+                [input_data_x, input_data_y],
+                TestModel(),
+                backend=backend,
+                compute_unit=compute_unit,
+                input_as_shape=False,
+            )
 
 class TestUnfold(TorchBaseTest):
     @pytest.mark.parametrize(

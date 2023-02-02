@@ -892,7 +892,7 @@ class TestLambda(TensorFlowBaseTest):
 
 class TestBatchNormalization(TensorFlowBaseTest):
     @pytest.mark.parametrize(
-        "compute_unit, backend, rank, axis, momentum, epsilon",
+        "compute_unit, backend, rank, axis, momentum, epsilon, mixed_precision",
         itertools.product(
             compute_units,
             backends,
@@ -900,11 +900,18 @@ class TestBatchNormalization(TensorFlowBaseTest):
             [0, -1],
             [0.99, 0.85],
             [1e-2, 1e-5],
+            [True, False],
         ),
     )
     def test_batch_normalization(
-        self, compute_unit, backend, rank, axis, momentum, epsilon
+        self, compute_unit, backend, rank, axis, momentum, epsilon, mixed_precision
     ):
+        if backend[0] != "mlprogram" and mixed_precision:
+            pytest.skip("neuralnetwork backend doesn't support fp16 computation.")
+
+        if mixed_precision:
+            tf.keras.mixed_precision.set_global_policy('mixed_float16')
+
         shape = np.random.randint(low=2, high=4, size=rank)
         model = tf.keras.Sequential(
             [
@@ -926,19 +933,29 @@ class TestBatchNormalization(TensorFlowBaseTest):
             backend=backend,
         )
 
+        if mixed_precision:
+            tf.keras.mixed_precision.set_global_policy(tf.keras.backend.floatx())
+
     @pytest.mark.parametrize(
-        "compute_unit, backend, rank_and_axis, momentum, epsilon",
+        "compute_unit, backend, rank_and_axis, momentum, epsilon, mixed_precision",
         itertools.product(
             compute_units,
             backends,
             [(4, 1), (4, -3)],
             [0.99, 0.85],
             [1e-2, 1e-5],
+            [True, False],
         ),
     )
     def test_fused_batch_norm_v3(
-        self, compute_unit, backend, rank_and_axis, momentum, epsilon
+        self, compute_unit, backend, rank_and_axis, momentum, epsilon, mixed_precision
     ):
+        if backend[0] != "mlprogram" and mixed_precision:
+            pytest.skip("neuralnetwork backend doesn't support fp16 computation.")
+
+        if mixed_precision:
+            tf.keras.mixed_precision.set_global_policy('mixed_float16')
+
         rank, axis = rank_and_axis
         shape = np.random.randint(low=2, high=4, size=rank)
         model = tf.keras.Sequential(
@@ -960,6 +977,9 @@ class TestBatchNormalization(TensorFlowBaseTest):
             compute_unit=compute_unit,
             backend=backend,
         )
+        
+        if mixed_precision:
+            tf.keras.mixed_precision.set_global_policy(tf.keras.backend.floatx())
 
 
 class TestInstanceNormalization(TensorFlowBaseTest):
@@ -1082,7 +1102,7 @@ class TestNormalization(TensorFlowBaseTest):
 
 class TestPadding(TensorFlowBaseTest):
     @pytest.mark.parametrize(
-        "compute_unit, backend, op, data_format, padding",
+        "compute_unit, backend, op, data_format, padding, mixed_precision",
         itertools.product(
             compute_units,
             backends,
@@ -1093,9 +1113,16 @@ class TestPadding(TensorFlowBaseTest):
             ],
             ["channels_first", "channels_last"],
             [(1, 1, 1), (2, 2, 2), (3, 3, 3), (1, 3, 4), (2, 3, 5)],
+            [True, False],
         ),
     )
-    def test(self, compute_unit, backend, op, data_format, padding):
+    def test(self, compute_unit, backend, op, data_format, padding, mixed_precision):
+        if backend[0] != "mlprogram" and mixed_precision:
+            pytest.skip("neuralnetwork backend doesn't support fp16 computation.")
+        
+        if mixed_precision:
+            tf.keras.mixed_precision.set_global_policy('mixed_float16')
+            
         shape = None
         kwargs = {}
         if op == tf.keras.layers.ZeroPadding1D:
@@ -1117,6 +1144,9 @@ class TestPadding(TensorFlowBaseTest):
             compute_unit=compute_unit,
             backend=backend,
         )
+        
+        if mixed_precision:
+            tf.keras.mixed_precision.set_global_policy(tf.keras.backend.floatx())
 
 
 class TestPermute(TensorFlowBaseTest):
@@ -1318,8 +1348,6 @@ class TestRecurrent(TensorFlowBaseTest):
         "compute_unit, backend", itertools.product(compute_units, backends)
     )
     def test_lstm_dynamic_batch(self, compute_unit, backend):
-        if backend[0] == "mlprogram":
-            pytest.xfail("rdar://101145374 ([CI] Re-enable unittest that that blocked by the make_list bug in MIL)")
         input_shape = (1, 1280)
         inp = tf.keras.layers.Input(shape=input_shape)
         out, hn, cn = tf.keras.layers.LSTM(512,
@@ -1374,12 +1402,10 @@ class TestRecurrent(TensorFlowBaseTest):
         _test_for_symbolic_shapes(keras_input_shape=(None, None, 10),
                                   input_shape_for_conversion=(1, 32, 10),
                                   are_symbols_expected=False)
-        
-        if backend[0] != "mlprogram":
-            # FIX ME: rdar://101145374 ([CI] Re-enable unittest that that blocked by the make_list bug in MIL)
-            _test_for_symbolic_shapes(keras_input_shape=(None, 32, 10),
-                                      input_shape_for_conversion=(ct.RangeDim(1, 10), 32, 10),
-                                      are_symbols_expected=True)
+
+        _test_for_symbolic_shapes(keras_input_shape=(None, 32, 10),
+                                  input_shape_for_conversion=(ct.RangeDim(1, 10), 32, 10),
+                                  are_symbols_expected=True)
 
         if backend[0] != "mlprogram":
             # FIX ME: model load fails if backend is "mlprogram". rdar://84862138

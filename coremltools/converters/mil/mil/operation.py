@@ -3,6 +3,8 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+from typing import Any, Dict, Tuple
+
 import numpy as np
 
 from coremltools.converters.mil.mil import types
@@ -13,7 +15,7 @@ from coremltools.converters.mil.mil.types.symbolic import (any_symbolic,
 from . import SPACES
 from .block import curr_block
 from .input_type import DefaultInputs, TensorInputType, TupleInputType
-from .var import InternalVar, ListVar, Var
+from .var import ComplexVar, InternalVar, ListVar, Var
 
 VALUE = 1
 SYMBOL = 2
@@ -120,9 +122,9 @@ def is_internal_input(arg_name):
 
 
 class mil_list:
-    '''
+    """
     A wrapper around python list
-    '''
+    """
 
     def __init__(self, ls=None):
         self.ls = ls if ls is not None else []
@@ -150,9 +152,12 @@ class Operation:
         List of output var based on type inference. Read-only
     """
 
+    # Map from type domain id to a tuple of accepted types.
+    type_domains: Dict[str, Tuple[Any]] = dict()
+
     def __init__(self, **kwargs):
         self._input_types = self.input_spec.input_types
-        self._type_domains = getattr(self, "type_domains", {})
+        self._type_domains = self.type_domains
         self.name = kwargs.get("name", None)
 
         self._output_vars = None
@@ -166,7 +171,7 @@ class Operation:
             self._input_vars[k] = None
 
         self._check_expected_inputs(kwargs)
-        
+
         # Populate type_domains into input types
         for v in self._input_types.values():
             if not isinstance(v, TensorInputType):
@@ -184,7 +189,7 @@ class Operation:
 
     def _check_expected_inputs(self, kwargs):
         """
-        Check that all kwargs inputs are one of the followings:
+        Check that all kwargs are one of the following:
 
         - system inputs (non-attributes)
         - op inputs (self._input_types.keys())
@@ -198,20 +203,16 @@ class Operation:
             "version",
             "before_op",
             "no_check_var_visibility",  # no_check_var_visibility==True to deviate from SSA
-            "no_check_var_types",  # no_check_var_types==True to force set inputs, even if type does not match with earlier ones
+            "no_check_var_types",
+            # no_check_var_types==True to force set inputs, even if type does not match with earlier ones
         ]
         for k in kwargs.keys():
             if k not in non_attributes and k not in self._input_types:
                 raise ValueError(
-                    "Unknown input '{}' for op '{}'".format(
-                      k, self.op_type)
+                    "Unknown input '{}' for op '{}'".format(k, self.op_type)
                 )
 
-    def set_inputs(self,
-                   no_check_var_types=False,
-                   type_inference=False,
-                   **input_kvs
-    ):
+    def set_inputs(self, no_check_var_types=False, type_inference=False, **input_kvs):
         """
         Parameters
         ----------
@@ -221,8 +222,7 @@ class Operation:
         - type_inference: bool
           True to perform type inference and recreate output Var.
         """
-        self._validate_and_set_inputs(input_kvs,
-            no_check_var_types=no_check_var_types)
+        self._validate_and_set_inputs(input_kvs, no_check_var_types=no_check_var_types)
         if type_inference and not no_check_var_types:
             self.type_value_inference()
         self._ensure_required_inputs()
@@ -278,21 +278,46 @@ class Operation:
                         elem_type=sym_type.T[0],
                         init_length=sym_type.T[1],
                         dynamic_length=sym_type.T[2],
-                        sym_val=sym_val if (sym_val is not None and isinstance(sym_val.val, list)) else None,
+                        sym_val=sym_val
+                        if (sym_val is not None and isinstance(sym_val.val, list))
+                        else None,
                         op=self,
                         op_output_idx=i,
                     )
                     elem_shape = new_var.elem_shape
                     if elem_shape is not None and len(elem_shape) >= 5:
-                        msg = ("Core ML only supports list of elements with rank <= 4. "
-                               "Layer \"{}\", with type \"{}\", outputs a list of rank {} tensors.").format(self.name, self.op_type, len(elem_shape))
+                        msg = (
+                            "Core ML only supports list of elements with rank <= 4. "
+                            'Layer "{}", with type "{}", outputs a list of rank {} tensors.'
+                        ).format(self.name, self.op_type, len(elem_shape))
                         raise ValueError(msg)
                 else:
-                    new_var = Var(name, sym_type, sym_val, op=self, op_output_idx=i)
+                    if types.is_tensor(sym_type) and types.is_complex(sym_type.T[0]):
+                        # Only `complex` op needs to maintain the real/imag data in the ComplexVar.
+                        # For other ops, this ComplexVar is just a placeholder here, which will be
+                        # replaced by a newly created ComplexVar during complex ops lowering pass.
+                        real_data = (
+                            self.real_data if self.op_type == "complex" else None
+                        )
+                        imag_data = (
+                            self.imag_data if self.op_type == "complex" else None
+                        )
+                        new_var = ComplexVar(
+                            name,
+                            sym_type,
+                            sym_val,
+                            op=self,
+                            op_output_idx=i,
+                            real=real_data,
+                            imag=imag_data,
+                        )
+                    else:
+                        new_var = Var(name, sym_type, sym_val, op=self, op_output_idx=i)
                     if new_var.rank >= 6:
-                        msg = ("Core ML only supports tensors with rank <= 5. "
-                               "Layer \"{}\", with type \"{}\", outputs a rank {} tensor.").format(self.name, self.op_type, new_var.rank)
-                        raise ValueError(msg)
+                        raise ValueError(
+                            f'Core ML only supports tensors with rank <= 5. Layer "{self.name}", '
+                            f'with type "{self.op_type}", outputs a rank {new_var.rank} tensor. '
+                        )
                 self._output_vars.append(new_var)
         else:
             # Check new inference result against existing self._output_vars.
@@ -319,7 +344,7 @@ class Operation:
                             msg = 'value_inference differs for var {} in op {}'
                             if not _is_compatible_symbolic_array(sym_val.val, out_var.sym_val):
                                 raise ValueError(msg.format(out_var.name, self.name))
-                                
+
                 for o in self.outputs:
                     o._set_nonreplaceable_vars_upstream()
 
@@ -431,12 +456,11 @@ class Operation:
         Raise value error if required inputs aren't present
         """
         for name, input_type in self._input_types.items():
-            if not input_type.optional and \
-                self._input_vars[name] is None:
-                msg_prefix = 'Op \"{}\" (op_type: {}) '.format(self.name,
-                self.op_type)
-                raise ValueError(msg_prefix + \
-                    "Required input {} is missing".format(name))
+            if not input_type.optional and self._input_vars[name] is None:
+                msg_prefix = 'Op "{}" (op_type: {}) '.format(self.name, self.op_type)
+                raise ValueError(
+                    msg_prefix + "Required input {} is missing".format(name)
+                )
 
     def _validate_and_set_inputs(self, input_kvs, no_check_var_types=False):
         """
@@ -479,9 +503,6 @@ class Operation:
         self.input_spec.validate_inputs(self.name, self.op_type, input_kvs)
 
         for name, var in input_kvs.items():
-            # TODO: remove InternalVar check
-            # if not isinstance(var, InternalVar):
-
             # Remove this operation itself from existing input
             # Var's child_ops
             existing_input_var = self._input_vars[name]
@@ -496,6 +517,8 @@ class Operation:
 
             # Set var as input_var
             if isinstance(var, Var):
+                # TODO: the child op of complex op's input might get lost, as the complex op will
+                # be lowered. Maybe should add child op here and take care of it in lowering pass.
                 var.add_child_op(self)
             elif isinstance(var, (tuple, list)):
                 for v in var:
@@ -503,7 +526,6 @@ class Operation:
             # ignore function inputs
             self._input_vars[name] = var
             setattr(self, name, var)
-
 
     @property
     def inputs(self):
@@ -513,8 +535,11 @@ class Operation:
         - inputs: Dict[str, Union[Var, Tuple[Var]]]
         """
         # Filter out InternalVar
-        return {k: v for k, v in self._input_vars.items() if not
-            isinstance(v, InternalVar) and v is not None}
+        return {
+            k: v
+            for k, v in self._input_vars.items()
+            if not isinstance(v, InternalVar) and v is not None
+        }
 
     @property
     def outputs(self):
@@ -523,7 +548,7 @@ class Operation:
     @property
     def op_type(self):
         return type(self).__name__
-        
+
     @property
     def opset_version(self):
         op_variants = type(self)._op_variants

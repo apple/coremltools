@@ -708,7 +708,7 @@ class TestImagePreprocessingPass:
         assert np.all(add_op.y.val == np.array([1.0, 2.0, 3.0]).reshape([1, 3, 1, 1]))
 
     @pytest.mark.parametrize(
-        "scale_type, bias_type", itertools.product([np.float, np.int32], [np.float, np.int32])
+        "scale_type, bias_type", itertools.product([np.float32, np.int32], [np.float32, np.int32])
     )
     def test_scale_bias_types(self, scale_type, bias_type):
         """

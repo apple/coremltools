@@ -10,7 +10,7 @@ import public "DataStructures.proto";
 
 package CoreML.Specification;
 
-/**
+/*
  * Transforms a categorical feature into an array. The array will be all
  * zeros expect a single entry of one.
  *
@@ -24,7 +24,7 @@ message OneHotEncoder {
         IgnoreUnknown = 1;   // Output will be all zeros for unknown values.
     }
 
-    /**
+    /*
      * Mapping to be used for the encoding. The position of the category in
      * the below vector determines where the single one entry will be in the
      * output.

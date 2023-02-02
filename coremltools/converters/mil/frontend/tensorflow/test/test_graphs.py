@@ -15,6 +15,7 @@ from coremltools.converters.mil.testing_reqs import backends, compute_units
 tf = pytest.importorskip("tensorflow")
 
 
+# TODO (rdar://103050703): Move it to test_ops because it only test tf ops instead of graphs.
 class TestTFGraphs(TensorFlowBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend", itertools.product(compute_units, backends)

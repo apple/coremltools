@@ -94,7 +94,7 @@ def convert_to_mlmodel(model_spec, tensor_inputs, backend=("neuralnetwork", "fp3
         inputs = list(_convert_to_inputtype(tensor_inputs))
     else:
         inputs = converter_input_type
-        
+
     return ct_convert(model_spec, inputs=inputs, convert_to=backend,
                       source="pytorch", compute_units=compute_unit,
                       minimum_deployment_target=minimum_deployment_target)
@@ -186,17 +186,19 @@ def convert_and_compare(
         rtol = max(rtol * 100.0, 5e-2)
 
     if not coremltoolsutils._has_custom_layer(mlmodel._spec):
-        coreml_results = mlmodel.predict(coreml_inputs)
-        sorted_coreml_results = [
-            coreml_results[key] for key in sorted(coreml_results.keys())
+        coreml_preds = mlmodel.predict(coreml_inputs)
+        coreml_outputs = mlmodel._spec.description.output
+        coreml_results = [
+            coreml_preds[output.name] for output in coreml_outputs
         ]
         for torch_result, coreml_result in zip(expected_results,
-                                               sorted_coreml_results):
+                                               coreml_results):
+
             if torch_result.shape == ():
                 torch_result = np.array([torch_result])
             np.testing.assert_equal(coreml_result.shape, torch_result.shape)
             np.testing.assert_allclose(coreml_result, torch_result, atol=atol, rtol=rtol)
-    return model_spec, mlmodel, coreml_inputs, coreml_results
+    return model_spec, mlmodel, coreml_inputs, coreml_preds
 
 
 class TorchBaseTest:
@@ -228,7 +230,7 @@ class TorchBaseTest:
         Args:
             input_as_shape <bool>: If true generates random input data with shape.
             expected_results <iterable, optional>: Expected result from running pytorch model.
-            converter_input_type: If not None, then pass it to the "inputs" argument to the 
+            converter_input_type: If not None, then pass it to the "inputs" argument to the
                 ct.convert() call.
         """
         model.eval()

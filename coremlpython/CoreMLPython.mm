@@ -33,10 +33,22 @@ bool usingMacOS13OrHigher() {
     return (NSProtocolFromString(@"MLProgram") != nil);
 }
 
+bool isCompiledModelPath(const std::string& path) {
+    const std::string fileExtension = ".mlmodelc";
+
+    size_t start = path.length() - fileExtension.length();
+    if (path.back() == '/') {
+        start--;
+    }
+    const std::string match = path.substr(start, fileExtension.length());
+
+    return (match == fileExtension);
+}
+
 Model::~Model() {
     @autoreleasepool {
         NSFileManager *fileManager = [NSFileManager defaultManager];
-        if (compiledUrl != nil) {
+        if (compiledUrl != nil and m_deleteCompiledModelOnExit) {
             [fileManager removeItemAtURL:compiledUrl error:NULL];
         }
     }
@@ -44,31 +56,37 @@ Model::~Model() {
 
 Model::Model(const std::string& urlStr, const std::string& computeUnits) {
     @autoreleasepool {
-
-        // Compile the model
         NSError *error = nil;
-        NSURL *specUrl = Utils::stringToNSURL(urlStr);
 
-        // Swallow output for the very verbose coremlcompiler
-        int stdoutBack = dup(STDOUT_FILENO);
-        int devnull = open("/dev/null", O_WRONLY);
-        dup2(devnull, STDOUT_FILENO);
+        if (! isCompiledModelPath(urlStr)) {
+            // Compile the model
+            NSURL *specUrl = Utils::stringToNSURL(urlStr);
 
-        // Compile the model
-        compiledUrl = [MLModel compileModelAtURL:specUrl error:&error];
+            // Swallow output for the very verbose coremlcompiler
+            int stdoutBack = dup(STDOUT_FILENO);
+            int devnull = open("/dev/null", O_WRONLY);
+            dup2(devnull, STDOUT_FILENO);
 
-        // Close all the file descriptors and revert back to normal
-        dup2(stdoutBack, STDOUT_FILENO);
-        close(devnull);
-        close(stdoutBack);
+            // Compile the model
+            compiledUrl = [MLModel compileModelAtURL:specUrl error:&error];
+            m_deleteCompiledModelOnExit = true;
 
-        // Translate into a type that pybind11 can bridge to Python
-        if (error != nil) {
-            std::stringstream errmsg;
-            errmsg << "Error compiling model: \"";
-            errmsg << error.localizedDescription.UTF8String;
-            errmsg << "\".";
-            throw std::runtime_error(errmsg.str());
+            // Close all the file descriptors and revert back to normal
+            dup2(stdoutBack, STDOUT_FILENO);
+            close(devnull);
+            close(stdoutBack);
+
+            // Translate into a type that pybind11 can bridge to Python
+            if (error != nil) {
+                std::stringstream errmsg;
+                errmsg << "Error compiling model: \"";
+                errmsg << error.localizedDescription.UTF8String;
+                errmsg << "\".";
+                throw std::runtime_error(errmsg.str());
+            }
+        } else {
+            m_deleteCompiledModelOnExit = false;  // Don't delete user specified file
+            compiledUrl = Utils::stringToNSURL(urlStr);
         }
 
         // Set compute unit

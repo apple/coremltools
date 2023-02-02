@@ -8,7 +8,7 @@ option optimize_for = LITE_RUNTIME;
 
 package CoreML.Specification;
 
-/**
+/*
  * A FeatureVectorizer puts one or more features into a single array.
  *
  * The ordering of features in the output array is determined by

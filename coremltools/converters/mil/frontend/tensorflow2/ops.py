@@ -62,6 +62,7 @@ def FusedBatchNormV3(context, node):
     offset = context[node.inputs[2]]
     mean = context[node.inputs[3]]
     variance = context[node.inputs[4]]
+    input_dtype = x.dtype
 
     batch_norm_name = node.name + "_nchw" if data_format == "NHWC" else node.name
 
@@ -70,12 +71,16 @@ def FusedBatchNormV3(context, node):
     elif data_format == "NDHWC":
         x = _transpose_NDHWC_to_NCDHW(x)
 
+    x = mb.cast(x=x, dtype=builtin_to_string(mean.dtype))
+
     x = _add_batch_norm(x, mean, variance, scale, offset, epsilon, batch_norm_name)
 
     if data_format == "NHWC":
-        x = _transpose_NCHW_to_NHWC(x, node.name)
+        x = _transpose_NCHW_to_NHWC(x, node.name + "_to_NHWC")
     elif data_format == "NDHWC":
-        x = _transpose_NCDHW_to_NDHWC(x, node.name)
+        x = _transpose_NCDHW_to_NDHWC(x, node.name + "_to_NDHWC")
+
+    x = mb.cast(x=x, dtype=builtin_to_string(input_dtype), name=node.name)
 
     # Inference only batch norm does not have meaningful outputs for
     # batch_mean, batch_variance etc.

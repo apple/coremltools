@@ -288,8 +288,8 @@ class TestEqual:
             (2, 3, types.bool),
         ]
         expected_outputs = [
-            np.array([[0, 1, 0], [1, 0, 1]], dtype=np.bool),
-            np.array([[0, 0, 1], [0, 0, 0]], dtype=np.bool),
+            np.array([[0, 1, 0], [1, 0, 1]], dtype=bool),
+            np.array([[0, 0, 1], [0, 0, 0]], dtype=bool),
         ]
 
         run_compare_builder(
@@ -306,7 +306,7 @@ class TestEqual:
     def test_builder_eval(self):
         x_val = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
         y_val = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.float32)
-        expected_outputs = np.array([[0, 1, 0], [1, 0, 1]], dtype=np.bool)
+        expected_outputs = np.array([[0, 1, 0], [1, 0, 1]], dtype=bool)
         v = mb.equal(x=x_val, y=y_val)
         np.testing.assert_allclose(expected_outputs, v.val, atol=1e-04, rtol=1e-05)
 
@@ -336,8 +336,8 @@ class TestGreater:
             (2, 3, types.bool),
         ]
         expected_outputs = [
-            np.array([[1, 0, 1], [0, 1, 0]], dtype=np.bool),
-            np.array([[0, 0, 0], [1, 1, 1]], dtype=np.bool),
+            np.array([[1, 0, 1], [0, 1, 0]], dtype=bool),
+            np.array([[0, 0, 0], [1, 1, 1]], dtype=bool),
         ]
 
         run_compare_builder(
@@ -354,7 +354,7 @@ class TestGreater:
     def test_builder_eval(self):
         x_val = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
         y_val = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.float32)
-        expected_outputs = np.array([[1, 0, 1], [0, 1, 0]], dtype=np.bool)
+        expected_outputs = np.array([[1, 0, 1], [0, 1, 0]], dtype=bool)
         v = mb.greater(x=x_val, y=y_val)
         np.testing.assert_allclose(expected_outputs, v.val, atol=1e-04, rtol=1e-05)
 
@@ -384,8 +384,8 @@ class TestGreaterEqual:
             (2, 3, types.bool),
         ]
         expected_outputs = [
-            np.array([[1, 1, 1], [1, 1, 1]], dtype=np.bool),
-            np.array([[0, 0, 0], [1, 1, 1]], dtype=np.bool),
+            np.array([[1, 1, 1], [1, 1, 1]], dtype=bool),
+            np.array([[0, 0, 0], [1, 1, 1]], dtype=bool),
         ]
 
         run_compare_builder(
@@ -402,7 +402,7 @@ class TestGreaterEqual:
     def test_builder_eval(self):
         x_val = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
         y_val = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.float32)
-        expected_outputs = np.array([[1, 1, 1], [1, 1, 1]], dtype=np.bool)
+        expected_outputs = np.array([[1, 1, 1], [1, 1, 1]], dtype=bool)
         v = mb.greater_equal(x=x_val, y=y_val)
         np.testing.assert_allclose(expected_outputs, v.val, atol=1e-04, rtol=1e-05)
 
@@ -428,7 +428,7 @@ class TestLess:
             return mb.less(x=x, y=y)
 
         expected_output_types = (2, 3, types.bool)
-        expected_outputs = np.array([[0, 0, 0], [0, 0, 0]], dtype=np.bool)
+        expected_outputs = np.array([[0, 0, 0], [0, 0, 0]], dtype=bool)
 
         run_compare_builder(
             build,
@@ -458,7 +458,7 @@ class TestLess:
             return mb.less(x=x, y=y)
 
         expected_output_types = (2, 3, types.bool)
-        expected_outputs = np.array([[0, 0, 0], [0, 0, 0]], dtype=np.bool)
+        expected_outputs = np.array([[0, 0, 0], [0, 0, 0]], dtype=bool)
 
         run_compare_builder(
             build,
@@ -487,7 +487,7 @@ class TestLess:
             return mb.less(x=x, y=3.5)
 
         expected_output_types = (2, 3, types.bool)
-        expected_outputs = np.array([[1, 1, 1], [0, 0, 0]], dtype=np.bool)
+        expected_outputs = np.array([[1, 1, 1], [0, 0, 0]], dtype=bool)
 
         run_compare_builder(
             build,
@@ -503,7 +503,7 @@ class TestLess:
     def test_builder_eval(self):
         x_val = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
         y_val = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.float32)
-        expected_outputs = np.array([[0, 0, 0], [0, 0, 0]], dtype=np.bool)
+        expected_outputs = np.array([[0, 0, 0], [0, 0, 0]], dtype=bool)
         v = mb.less(x=x_val, y=y_val)
         np.testing.assert_allclose(expected_outputs, v.val, atol=1e-04, rtol=1e-05)
 
@@ -529,7 +529,7 @@ class TestLessEqual:
             return mb.less_equal(x=x, y=y)
 
         expected_output_types = (2, 3, types.bool)
-        expected_outputs = np.array([[0, 1, 0], [1, 0, 1]], dtype=np.bool)
+        expected_outputs = np.array([[0, 1, 0], [1, 0, 1]], dtype=bool)
 
         run_compare_builder(
             build,
@@ -545,7 +545,7 @@ class TestLessEqual:
     def test_builder_eval(self):
         x_val = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
         y_val = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.float32)
-        expected_outputs = np.array([[0, 1, 0], [1, 0, 1]], dtype=np.bool)
+        expected_outputs = np.array([[0, 1, 0], [1, 0, 1]], dtype=bool)
         v = mb.less_equal(x=x_val, y=y_val)
         np.testing.assert_allclose(expected_outputs, v.val, atol=1e-04, rtol=1e-05)
 
@@ -571,7 +571,7 @@ class TestNotEqual:
             return mb.not_equal(x=x, y=y)
 
         expected_output_types = (2, 3, types.bool)
-        expected_outputs = np.array([[1, 0, 1], [0, 1, 0]], dtype=np.bool)
+        expected_outputs = np.array([[1, 0, 1], [0, 1, 0]], dtype=bool)
 
         run_compare_builder(
             build,
@@ -587,6 +587,6 @@ class TestNotEqual:
     def test_builder_eval(self):
         x_val = np.array([[1, 2, 3], [4, 5, 6]], dtype=np.float32)
         y_val = np.array([[-1, 2, -3], [4, -5, 6]], dtype=np.float32)
-        expected_outputs = np.array([[1, 0, 1], [0, 1, 0]], dtype=np.bool)
+        expected_outputs = np.array([[1, 0, 1], [0, 1, 0]], dtype=bool)
         v = mb.not_equal(x=x_val, y=y_val)
         np.testing.assert_allclose(expected_outputs, v.val, atol=1e-04, rtol=1e-05)

@@ -237,9 +237,14 @@ def create_file_value_tensor(file_name, offset, dim, data_type):
 
 def types_to_proto_primitive(valuetype):
     if valuetype not in builtin_to_proto_types:
+        additional_error_msg = ""
+        if valuetype in (types.complex64, types.complex128):
+            additional_error_msg = (
+                "(MIL doesn't support complex data as model's output, please extract real and "
+                "imaginary parts explicitly.) "
+            )
         raise ValueError(
-            "Unknown type {} to map from SSA types to Proto types".format(
-                valuetype)
+            f"Unknown map from SSA type {valuetype} to Proto type. {additional_error_msg}"
         )
     return builtin_to_proto_types[valuetype]
 
@@ -302,7 +307,7 @@ def create_immediate_value(var):
         return create_tensor_value(var.val)
     elif types.is_list(var.sym_type):
         if var.elem_type == types.str:
-            return create_list_scalarvalue(var.val, np.str)
+            return create_list_scalarvalue(var.val, str)
         elif var.elem_type == types.int64:
             return create_list_scalarvalue(var.val, np.int64)
         else:

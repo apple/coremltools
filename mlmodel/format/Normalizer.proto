@@ -8,11 +8,11 @@ option optimize_for = LITE_RUNTIME;
 
 package CoreML.Specification;
 
-/**
+/*
  * A normalization preprocessor.
  */
 message Normalizer {
-    /**
+    /*
      * There are three normalization modes,
      * which have the corresponding formulas:
      *

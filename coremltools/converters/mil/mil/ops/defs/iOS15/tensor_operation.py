@@ -232,9 +232,10 @@ class non_maximum_suppression(Operation):
     ----------
 
     boxes: tensor<[n, B, 4], T> (Required)
-        * Box coordinates on which to perform NMS.
+        * Box coordinates on which to perform NMS. The coordinates are expected in
+          CENTER_SIZE_WIDTH_FIRST format (x, y, width, height) where (x, y) is the center.
     scores: tensor<[n, B, K], T> (Required)
-        * Scores for each one of the boxes.
+        * Scores for each one of the boxes. K is the number of classes.
     iou_threshold: const<T> (Required)
         * The intersection over union (``IoU``) threshold over which boxes are
           suppressed. NMS remove all overlapping boxes with ``IoU > iou_threshold``.
@@ -1199,7 +1200,7 @@ class split(Operation):
             # No split_indices possible.
             return self.x.sym_val
 
-        split_indices = np.cumsum(sizes).astype(np.int)
+        split_indices = np.cumsum(sizes).astype(np.int32)
         return tuple(np.split(self.x.sym_val, split_indices[:-1], axis=self.axis.val))
 
 

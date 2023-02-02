@@ -513,7 +513,7 @@ class MLModelTest(unittest.TestCase):
     def test_rename_feature_mlprogram(self):
         @mb.program(input_specs=[mb.TensorSpec(shape=(3,))])
         def linear_prog(input):
-            W = np.ones((10, 3), dtype=np.float)
+            W = np.ones((10, 3), dtype=np.float32)
             out = mb.linear(x=input, weight=W, name="output")
             return out
 

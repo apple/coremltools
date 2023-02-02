@@ -238,10 +238,10 @@ def add_const(const_context, builder, name, val):
             return
     if not isinstance(val, (_np.ndarray, _np.generic)):
         val = _np.array([val])
-    if val.dtype != _np.float:
+    if val.dtype != float:
         # nn proto only supports float32 activation. (e.g., pred in cond op
         # needs to be converted to float)
-        val = val.astype(_np.float)
+        val = val.astype(float)
     rank = len(val.shape)
     if rank == 0:
         builder.add_load_constant_nd(
@@ -755,9 +755,9 @@ def _add_elementwise_binary(
                 builder.add_less_than(**params)
             return
 
-    if op.x.val is not None:
+    if op.x.can_be_folded_to_const():
         add_const(const_context, builder, op.x.name, op.x.val)
-    if op.y.val is not None:
+    if op.y.can_be_folded_to_const():
         if mode == "pow":
             _add_elementwise_unary(
                 const_context,
