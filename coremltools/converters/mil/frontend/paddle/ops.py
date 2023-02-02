@@ -781,11 +781,6 @@ def pixel_unshuffle(context, node):
 
 @register_paddle_op(paddle_alias=["matmul_v2"])
 def matmul(context, node):
-    # inputs = _get_inputs(context, node, expected=2)
-    # if inputs[1].val is not None and \
-    #         len(inputs[1].shape) == 2 and len(inputs[0].shape) <= 3:
-    #     res = mb.linear(x=inputs[0], weight=_np.transpose(inputs[1].val), name=node.name)
-    # else:
     x = context[node.input("X")[0]]
     y = context[node.input("Y")[0]]
     output_name = node.output("Out")[0]
@@ -793,10 +788,20 @@ def matmul(context, node):
     trans_x = node.desc.attr("trans_x")
     trans_y= node.desc.attr("trans_y")
 
-    if len(x.shape)==4 and trans_x:
-        x = mb.transpose(x=x, perm=[0,1,3,2])
-    if len(y.shape)==4 and trans_y:
-        y = mb.transpose(x=y, perm=[0,1,3,2])
+    if trans_x:
+        if len(x.shape) == 2:
+            x = mb.transpose(x=x, perm=[1,0])
+        elif len(x.shape) == 3:
+            x = mb.transpose(x=x, perm=[0,2,1])
+        elif len(x.shape) == 4:
+            x = mb.transpose(x=x, perm=[0,1,3,2])
+    if trans_y:
+        if len(y.shape) == 2:
+            y = mb.transpose(x=y, perm=[1,0])
+        elif len(y.shape) == 3:
+            y = mb.transpose(x=y, perm=[0,2,1])
+        elif len(y.shape) == 4:
+            y = mb.transpose(x=y, perm=[0,1,3,2])
 
     res = mb.matmul(x=x, y=y, name=output_name)
     context.add(res)
@@ -1436,14 +1441,13 @@ def div(context, node):
     context.add(res)
 
 
-@register_paddle_op(paddle_alias=["floordiv"])
+@register_paddle_op(paddle_alias=["elementwise_floordiv"])
 def floor_divide(context, node):
-    inputs = _get_inputs(context, node, expected=2)
-    div_res = mb.floor_div(x=inputs[0], y=inputs[1])
-    # Pypaddle's floor_divide always returns fp32, even if the inputs are int
-    res = mb.cast(x=div_res, dtype='fp32', name=node.name)
+    x = context[node.input("X")[0]]
+    y = context[node.input("Y")[0]]
+    output_name = node.output("Out")[0]
+    res = mb.floor_div(x=x, y=y, name=output_name)
     context.add(res)
-
 
 @register_paddle_op
 def true_divide(context, node):
@@ -1554,21 +1558,27 @@ def mean(context, node):
     context.add(res)
 
 
-@register_paddle_op
+@register_paddle_op(paddle_alias=["squeeze2"])
 def squeeze(context, node):
-    inputs = _get_inputs(context, node)
-    if len(inputs) == 1:
-        res = mb.squeeze(x=inputs[0], name=node.name)
-    elif len(inputs) == 2:
-        squeeze_dim = inputs[1].val
-        res = mb.squeeze(x=inputs[0], axes=(squeeze_dim,), name=node.name)
+    x = context[node.input("X")[0]]
+    output_name = node.output("Out")[0]
+    axes = node.desc.attr("axes")
+    if axes:
+        res = mb.squeeze(x=x, axes=axes, name=output_name)
+    else:
+        res = mb.squeeze(x=x, name=output_name)
     context.add(res)
 
-
 @register_paddle_op
-def unsqueeze(context, node):
-    inputs = _get_inputs(context, node, expected=2)
-    unsqueeze = mb.expand_dims(x=inputs[0], axes=[inputs[1].val], name=node.name)
+def unsqueeze2(context, node):
+    # inputs = _get_inputs(context, node, expected=2)
+    x = context[node.input("X")[0]]
+
+    output_name = node.output("Out")[0]
+
+    axes = node.desc.attr("axes")
+
+    unsqueeze = mb.expand_dims(x=x, axes=axes, name=output_name)
     context.add(unsqueeze)
 
 
@@ -1614,6 +1624,7 @@ def view(context, node):
         isinstance(shape, list)
         and all([isinstance(dim, Var) and len(dim.shape) == 1 for dim in shape])
     ):
+        shape = [mb.cast(x=k, dtype="int32") for k in shape]
         shape = mb.concat(values=shape, axis=0)
 
     shape = mb.cast(x=shape, dtype="int32")
@@ -1939,22 +1950,26 @@ def hardtanh(context, node):
     context.add(res)
 
 
-@register_paddle_op(paddle_alias=['concat'])
-def cat(context, node):
-    inputs = _get_inputs(context, node)
-    axis = 0 if len(inputs) == 1 else inputs[1]
-    concat = mb.concat(values=inputs[0], axis=axis, name=node.name)
-    context.add(concat)
+@register_paddle_op
+def concat(context, node):
+    x = [context[k] for k in node.input("X")]
+    output_name = node.output("Out")[0]
+    axis = node.desc.attr("axis")
+    res = mb.concat(values=x, axis=axis, name=output_name)
+    context.add(res)
 
 
 @register_paddle_op
 def stack(context, node):
-
     values = [context[k] for k in node.input("X")]
     output_name = node.output("Y")[0]
 
+    if (len(values)==1):
+        res = mb.identity(x=values[0], name=output_name)
+        context.add(res)
+        return
+        
     axis = node.desc.attr("axis")
-
     res = mb.stack(values=values, axis=axis, name=output_name)
     context.add(res)
 
@@ -2990,13 +3005,35 @@ def upsample_nearest1d(context, node):
 
 @register_paddle_op(paddle_alias=["nearest_interp_v2"])
 def upsample_nearest2d(context, node):
-    _input = context[node.input("X")[0]]
+    x = context[node.input("X")[0]]
+    scale_tensor = context[node.input("Scale")[0]] if node.input("Scale") else None
+    output_size = [context[k] for k in node.input("SizeTensor")] if node.input("SizeTensor") else None
+
     output_name = node.output("Out")[0]
 
-    scales_h, scales_w = node.desc.attr("scale")
+    if (
+        scale_tensor is not None
+        and scale_tensor.val is not None
+        # and scale_tensor.rank == 1
+        # and scale_tensor.shape[0] == 2
+    ):
+        # get scale factors from provided inputs
+        scale_tensor = scale_tensor.val
+        scales_h = scale_tensor[0]
+        scales_w = scale_tensor[1]
+    elif node.desc.attr("scale"):
+        scales_h, scales_w = node.desc.attr("scale")
+    elif output_size is not None:
+        scales = _get_scales_from_output_size(output_size, x.shape)
+        if scales:
+            scales_h, scales_w = scales
+        else:
+            raise ValueError("Failed to infer scale factors from inputs.")
+    else:
+        raise ValueError("Failed to infer scale factors from inputs.")
 
     upsample_nearest2d = mb.upsample_nearest_neighbor(
-        x=_input,
+        x=x,
         scale_factor_height=scales_h,
         scale_factor_width=scales_w,
         name=output_name,
@@ -3662,7 +3699,10 @@ def fill_constant(context, node):
     if dtype==2 or dtype==3:
         val = _np.array(val, dtype=_np.int32)
 
-    result = _make_fill_op(size, val, output_name, dtype)
+    if size:
+        result = _make_fill_op(size, val, output_name, dtype)
+    else:
+        result = mb.const(val=val, name=output_name)
     
     context.add(result)
 
@@ -3857,12 +3897,10 @@ def hardsigmoid(context, node):
 
 @register_paddle_op
 def gelu(context, node):
-    inputs = _get_inputs(context, node)
-    assert len(inputs) in (1, 2)
-    if len(inputs) == 2:
-        approximate = inputs[1].val
-        assert approximate == 'none'
-    res = mb.gelu(x=inputs[0], name=node.name)
+    x = context[node.input("X")[0]]
+    output_name = node.output("Out")[0]
+
+    res = mb.gelu(x=x, name=output_name)
     context.add(res)
 
 
@@ -3950,35 +3988,77 @@ def _slice(context, node):
     context.add(res)
 
 
-@register_paddle_op(paddle_alias=["split_with_sizes"])
+@register_paddle_op
 def split(context, node):
-    inputs = _get_inputs(context, node, expected=3)
-    x = inputs[0]
-    split_sizes = inputs[1]
-    dim = inputs[2].val
+    x = context[node.input("X")[0]]
+    # sections_tensor_list = [context[k] for k in node.input("SectionsTensorList")]
+    output_name = node.output("Out")
 
-    if not isinstance(split_sizes.val, _np.ndarray):
-        shape = mb.shape(x=x)
-        dim_size = _list_select(shape, dim)
-        # MIL split op needs the size of each split to be given explicitly.
-        num_whole_splits = mb.floor_div(x=dim_size, y=split_sizes)
-        remainder = mb.mod(x=dim_size, y=split_sizes)
+    
+    num = node.desc.attr("num")
 
-        # MIL doesn't have a way of turning a scalar into a tensor (list write
-        # only supports tensors). As a workaround, we create a constant [1]
-        # tensor and multiply it by the scalar value, thus creating a tensor
-        # with the scalar value in it.
-        tmp = mb.const(val=[1])
-        whole_sizes = mb.mul(x=tmp, y=split_sizes)
-        reps = mb.mul(x=tmp, y=num_whole_splits)
-        whole_sizes = mb.tile(x=whole_sizes, reps=reps)
-        if remainder.val == 0:
-            split_sizes = whole_sizes
+    if node.input("AxisTensor"):
+        axis_tensor = context[node.input("AxisTensor")[0]]
+        axis = axis_tensor.val
+        if num > 0:
+            total = x.shape[axis]
+            size = int(total / num)
+            split_sizes = [size] * num
+            res = mb.split(x=x, split_sizes=split_sizes, axis=axis)
+            for val, name in zip(res, output_name):
+                context.add(val, name)
+            return
         else:
-            partial_size = mb.mul(x=tmp, y=remainder)
-            split_sizes = mb.concat(values=[whole_sizes, partial_size], axis=0)
-    res = mb.split(x=x, split_sizes=split_sizes, axis=dim, name=node.name)
-    context.add(res, paddle_name=node.name)
+            raise ValueError("num must be greater than 0")
+    else:
+        axis = node.desc.attr("axis")
+        if num > 0:
+            total = x.shape[axis]
+            size = int(total / num)
+            split_sizes = [size] * num
+            res = mb.split(x=x, split_sizes=split_sizes, axis=axis)
+            for val, name in zip(res, output_name):
+                context.add(val, name)
+            return
+        else:
+            raise ValueError("num must be greater than 0")
+
+    #     elif sections_tensor_list:
+    #         section = [s.val for s in sections_tensor_list]
+    #     elif node.desc.attr("sections"):
+    #         section = node.desc.attr("sections")
+    #     else:
+    #         section = node.desc.attr("sections")
+    # else:
+
+
+    # inputs = _get_inputs(context, node, expected=3)
+    # x = inputs[0]
+    # split_sizes = inputs[1]
+    # dim = inputs[2].val
+
+    # if not isinstance(split_sizes.val, _np.ndarray):
+    #     shape = mb.shape(x=x)
+    #     dim_size = _list_select(shape, dim)
+    #     # MIL split op needs the size of each split to be given explicitly.
+    #     num_whole_splits = mb.floor_div(x=dim_size, y=split_sizes)
+    #     remainder = mb.mod(x=dim_size, y=split_sizes)
+
+    #     # MIL doesn't have a way of turning a scalar into a tensor (list write
+    #     # only supports tensors). As a workaround, we create a constant [1]
+    #     # tensor and multiply it by the scalar value, thus creating a tensor
+    #     # with the scalar value in it.
+    #     tmp = mb.const(val=[1])
+    #     whole_sizes = mb.mul(x=tmp, y=split_sizes)
+    #     reps = mb.mul(x=tmp, y=num_whole_splits)
+    #     whole_sizes = mb.tile(x=whole_sizes, reps=reps)
+    #     if remainder.val == 0:
+    #         split_sizes = whole_sizes
+    #     else:
+    #         partial_size = mb.mul(x=tmp, y=remainder)
+    #         split_sizes = mb.concat(values=[whole_sizes, partial_size], axis=0)
+    # res = mb.split(x=x, split_sizes=split_sizes, axis=dim, name=node.name)
+    # context.add(res, paddle_name=node.name)
 
 
 @register_paddle_op
@@ -4109,7 +4189,35 @@ def _broadcast(name, tensor, shape):
     return res
 
 
-@register_paddle_op
+# @register_paddle_op
+# def expand(context, node):
+#     def _broadcast_dynamic(name, tensor, shape):
+#         # Add any extra dimensions
+#         if len(shape) > tensor.rank:
+#             new_dims = len(shape) - tensor.rank
+#             tensor = mb.expand_dims(x=tensor, axes=list(range(new_dims)))
+
+#         tensor_shape = mb.shape(x=tensor)
+#         shape = mb.concat(values=shape, axis=0)
+#         reps = mb.real_div(x=shape, y=tensor_shape)
+#         reps = mb.cast(x=reps, dtype="int32")
+#         res = mb.tile(x=tensor, reps=reps, name=name)
+#         return res
+
+
+#     # PyPaddle 1.6+ has 3 inputs while older version has 2
+#     inputs = _get_inputs(context, node, expected=[2, 3])
+
+#     x = inputs[0]
+#     shape = inputs[1]
+
+#     if isinstance(shape, list):
+#         res = _broadcast_dynamic(node.name, x, shape)
+#     else:
+#         res = _broadcast(node.name, x, shape.val)
+#     context.add(res)
+
+@register_paddle_op(paddle_alias=["expand_v2"])
 def expand(context, node):
     def _broadcast_dynamic(name, tensor, shape):
         # Add any extra dimensions
@@ -4123,18 +4231,22 @@ def expand(context, node):
         reps = mb.cast(x=reps, dtype="int32")
         res = mb.tile(x=tensor, reps=reps, name=name)
         return res
+    x = context[node.input("X")[0]]
+    if node.input("Shape"):
+        shape = context[node.input("Shape")[0]]
+    if node.input("expand_shapes_tensor"):
+        shape_tensor = context[node.input("expand_shapes_tensor")[0]]
+    output_name = node.output("Out")[0]
 
+    shape_attr = node.desc.attr("shape")
 
-    # PyPaddle 1.6+ has 3 inputs while older version has 2
-    inputs = _get_inputs(context, node, expected=[2, 3])
-
-    x = inputs[0]
-    shape = inputs[1]
-
-    if isinstance(shape, list):
-        res = _broadcast_dynamic(node.name, x, shape)
+    if node.input("Shape"):
+        res = _broadcast_dynamic(output_name, x, shape)
+    elif node.input("expand_shapes_tensor"):
+        res = _broadcast(output_name, x, shape_tensor.val)
     else:
-        res = _broadcast(node.name, x, shape.val)
+        res = _broadcast_dynamic(output_name, x, shape_attr)
+    
     context.add(res)
 
 
@@ -4564,8 +4676,9 @@ def tril(context, node):
 
 @register_paddle_op
 def cos(context, node):
-    inputs = _get_inputs(context, node, expected=1)
-    context.add(mb.cos(x=inputs[0], name=node.name))
+    x = context[node.input("X")[0]]
+    output = node.output("Out")[0]
+    context.add(mb.cos(x=x, name=output))
 
 
 @register_paddle_op
@@ -4573,11 +4686,12 @@ def cosh(context, node):
     inputs = _get_inputs(context, node, expected=1)
     context.add(mb.cosh(x=inputs[0], name=node.name))
 
-
+    
 @register_paddle_op
 def exp(context, node):
-    inputs = _get_inputs(context, node, expected=1)
-    context.add(mb.exp(x=inputs[0], name=node.name))
+    x = context[node.input("X")[0]]
+    output_name = node.output("Out")[0]
+    context.add(mb.exp(x=x, name=output_name))
 
 
 @register_paddle_op
@@ -4618,8 +4732,9 @@ def rsqrt(context, node):
 
 @register_paddle_op
 def sin(context, node):
-    inputs = _get_inputs(context, node, expected=1)
-    context.add(mb.sin(x=inputs[0], name=node.name))
+    x = context[node.input("X")[0]]
+    output_name = node.output("Out")[0]
+    context.add(mb.sin(x=x, name=output_name))
 
 
 @register_paddle_op

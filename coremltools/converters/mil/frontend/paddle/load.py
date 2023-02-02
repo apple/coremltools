@@ -66,12 +66,12 @@ def _pdmodel_from_model(model_spec):
             model_dir, exe, model_filename="inference.pdmodel", params_filename="inference.pdiparams")
     # elif isinstance(model_spec, _paddle.jit.ScriptModule):
     #     return model_spec
-    # else:
-    #     raise TypeError(
-    #         "@model must either be a PyPaddle .pt or .pth file or a PaddleScript object, received: {}".format(
-    #             type(model_spec)
-    #         )
-    #     )
+    else:
+        raise TypeError(
+            "@model must the path of Paddle inference model, received: {}".format(
+                type(model_spec)
+            )
+        )
 
 
 def _perform_paddle_convert(converter, debug):
