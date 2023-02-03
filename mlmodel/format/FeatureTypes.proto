@@ -8,17 +8,17 @@ option optimize_for = LITE_RUNTIME;
 
 package CoreML.Specification;
 
-/**
+/*
  * The 64-bit integer feature type.
  */
 message Int64FeatureType {}
 
-/**
+/*
  * The double-precision floating point number feature type.
  */
 message DoubleFeatureType {}
 
-/**
+/*
  * The string feature type.
  */
 message StringFeatureType {}
@@ -29,7 +29,7 @@ message SizeRange {
     int64 upperBound = 2; // negative value means unbound otherwise upperbound is included in range
 }
 
-/**
+/*
  * The image feature type.
  */
 message ImageFeatureType {
@@ -99,7 +99,7 @@ message ImageFeatureType {
     ColorSpace colorSpace = 3;
 }
 
-/**
+/*
  * The array feature type.
  */
 message ArrayFeatureType {
@@ -146,7 +146,7 @@ message ArrayFeatureType {
         //
         // If the shape field is specified then it must be
         // one of the enumerated shapes.
-        ///
+        //
         // If shape is not specifed, the "default" shape will be considered
         // enumeratedShapes[0]
         //
@@ -175,11 +175,11 @@ message ArrayFeatureType {
 
 }
 
-/**
+/*
  * The dictionary feature type.
  */
 message DictionaryFeatureType {
-    /**
+    /*
      *  Key/value type tags, with the following restrictions:
      *  - ``keyType`` must be a hashable type
      *  - ``valueType`` is assumed to be a ``double``
@@ -190,12 +190,12 @@ message DictionaryFeatureType {
     }
 }
 
-/**
+/*
  * The Sequence feature type.
  */
 message SequenceFeatureType {
 
-    /**
+    /*
      * Currently only categorical int64 and String sequences are supported
      */
     oneof Type {
@@ -207,7 +207,7 @@ message SequenceFeatureType {
     SizeRange sizeRange = 101;
 }
 
-/**
+/*
  * A feature, which may be optional.
  */
 message FeatureType {

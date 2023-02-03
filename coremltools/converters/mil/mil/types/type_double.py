@@ -40,9 +40,7 @@ def make_float(width):
                     self._val = v.item()
                 else:
                     raise ValueError(
-                        "types should have value of numpy type, got {} instead".format(
-                            type(v)
-                        )
+                        f"Types should have zero-rank ndarray input, got {v} instead."
                     )
 
             elif isinstance(v, np.floating):

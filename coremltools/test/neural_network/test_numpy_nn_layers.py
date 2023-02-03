@@ -8,10 +8,8 @@ import math
 import os
 import platform
 import random
-import shutil
 import tempfile
 import unittest
-import uuid
 
 import numpy as np
 import pytest
@@ -30,7 +28,7 @@ from coremltools.converters.mil.mil.ops.defs._utils import aggregated_pad
 from coremltools.models import (_MLMODEL_FULL_PRECISION,
                                 _MLMODEL_HALF_PRECISION, neural_network)
 from coremltools.models.neural_network import flexible_shape_utils
-from coremltools.models.utils import _is_macos, _macos_version
+from coremltools.models.utils import _MODEL_FILE_NAME, _is_macos, _macos_version
 
 np.random.seed(10)
 
@@ -166,59 +164,52 @@ class CorrectnessTest(unittest.TestCase):
     ):
 
         if useCPUOnly:
-            compute_unit=ComputeUnit.CPU_ONLY
+            compute_unit = ComputeUnit.CPU_ONLY
         else:
-            compute_unit=ComputeUnit.ALL
+            compute_unit = ComputeUnit.ALL
 
-        model_dir = None
         # if we're given a path to a model
         if isinstance(model, str):
             model = coremltools.models.MLModel(model, compute_units=compute_unit)
-        # If we're passed in a specification, save out the model
-        # and then load it back up
+        # If we're passed in a specification, save out the model and then load it back.
         elif isinstance(model, coremltools.proto.Model_pb2.Model):
-            model_dir = tempfile.mkdtemp()
-            model_name = str(uuid.uuid4()) + ".mlmodel"
-            model_path = os.path.join(model_dir, model_name)
-            coremltools.utils.save_spec(model, model_path)
-            model = coremltools.models.MLModel(model, compute_units=compute_unit)
+            tmp_model_file = tempfile.NamedTemporaryFile(suffix=_MODEL_FILE_NAME)
+            coremltools.utils.save_spec(model, tmp_model_file.name)
+            model = coremltools.models.MLModel(
+                tmp_model_file.name, compute_units=compute_unit
+            )
 
         # If we want to test the half precision case
         if model_precision == _MLMODEL_HALF_PRECISION:
             model = coremltools.utils._convert_neural_network_weights_to_fp16(model)
 
-        try:
-            prediction = model.predict(input)
-            for output_name in expected:
-                if self.__class__.__name__ == "SimpleTest":
-                    self._test_shape_equality(
-                        expected[output_name], prediction[output_name]
-                    )
+        prediction = model.predict(input)
+        for output_name in expected:
+            if self.__class__.__name__ == "SimpleTest":
+                self._test_shape_equality(
+                    expected[output_name], prediction[output_name]
+                )
+            else:
+                if output_name in output_name_shape_dict:
+                    output_shape = output_name_shape_dict[output_name]
                 else:
-                    if output_name in output_name_shape_dict:
-                        output_shape = output_name_shape_dict[output_name]
-                    else:
-                        output_shape = []
+                    output_shape = []
 
-                    if len(output_shape) == 0 and len(expected[output_name].shape) == 0:
-                        output_shape = (1,)
+                if len(output_shape) == 0 and len(expected[output_name].shape) == 0:
+                    output_shape = (1,)
 
-                    self._test_nd_shape_equality(
-                        expected[output_name], prediction[output_name], output_shape
-                    )
+                self._test_nd_shape_equality(
+                    expected[output_name], prediction[output_name], output_shape
+                )
 
-                if not validate_shapes_only:
-                    self._test_predictions(
-                        expected[output_name],
-                        prediction[output_name],
-                        delta=delta,
-                        test_metric=test_metric,
-                        SNR=SNR,
-                    )
-        finally:
-            # Remove the temporary directory if we created one
-            if model_dir and os.path.exists(model_dir):
-                shutil.rmtree(model_dir)
+            if not validate_shapes_only:
+                self._test_predictions(
+                    expected[output_name],
+                    prediction[output_name],
+                    delta=delta,
+                    test_metric=test_metric,
+                    SNR=SNR,
+                )
 
 
 @unittest.skipIf(
@@ -1708,7 +1699,7 @@ class NewLayersSimpleTest(CorrectnessTest):
                 a = np.random.rand(*input_shapes[0])
                 b = np.random.rand(*input_shapes[1])
                 input = {"A": a, "B": b}
-                expected = {"output": func(a, b, dtype=np.float32)}
+                expected = {"output": func(a, b)}
                 self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
     def test_elementwise_binary_gpu(self):
@@ -1791,7 +1782,7 @@ class NewLayersSimpleTest(CorrectnessTest):
 
                 a = np.random.rand(*shape)
                 input = {"input": a}
-                expected = {"output": func(a, b, dtype=np.float32)}
+                expected = {"output": func(a, b)}
 
                 self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
@@ -1943,7 +1934,7 @@ class NewLayersSimpleTest(CorrectnessTest):
             builder.add_sign(name="sign", input_name="data", output_name="output")
 
             x = np.random.choice(
-                [-np.random.rand(1), 0.0, np.random.rand(1)], tuple(shape)
+                [-np.random.rand(1)[0], 0.0, np.random.rand(1)[0]], tuple(shape)
             ).astype(np.float32)
             inputs = {"data": x}
             expected = {"output": np.sign(x)}
@@ -2500,8 +2491,8 @@ class NewLayersSimpleTest(CorrectnessTest):
             )
 
             # save the model
-            model_dir = tempfile.mkdtemp()
-            model_path = os.path.join(model_dir, "test_layer.mlmodel")
+            model_dir = tempfile.TemporaryDirectory()
+            model_path = os.path.join(model_dir.name, "test_layer.mlmodel")
             coremltools.utils.save_spec(builder.spec, model_path)
 
             inputs = dict()
@@ -2759,7 +2750,7 @@ class NewLayersSimpleTest(CorrectnessTest):
 
                         input = {"data": data}
                         if n_inputs == 2:
-                            input["pads"] = pads.flatten().astype(np.float)
+                            input["pads"] = pads.flatten().astype(np.float32)
 
                         expected = {"output": reference}
                         self._test_model(
@@ -2845,7 +2836,7 @@ class NewLayersSimpleTest(CorrectnessTest):
 
                     input = {"data": data}
                     if n_inputs == 2:
-                        input["pads"] = pads.flatten().astype(np.float)
+                        input["pads"] = pads.flatten().astype(np.float32)
 
                     expected = {"output": reference}
                     self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
@@ -2860,7 +2851,7 @@ class NewLayersSimpleTest(CorrectnessTest):
             # input is (N,4), in order [center_w, center_h, width, height]
             self.assertEqual(len(boxes.shape), 2)
             self.assertEqual(boxes.shape[1], 4)
-            boxes = boxes.astype(np.float)
+            boxes = boxes.astype(np.float32)
             center_w, center_h, width, height = np.split(
                 boxes, 4, axis=1
             )  # outs are all (N,1)
@@ -2933,7 +2924,7 @@ class NewLayersSimpleTest(CorrectnessTest):
                     score_vector2 = np.take(score_vector, sorted_score_ids)
                     class_ids = np.take(class_ids, sorted_score_ids)
                     classes_seen = dict()
-                    ids_intermediate = np.array([], dtype=np.int)
+                    ids_intermediate = np.array([], dtype=np.int32)
                     for n in range(N):
                         if class_ids[n] in classes_seen:
                             continue
@@ -3090,13 +3081,13 @@ class NewLayersSimpleTest(CorrectnessTest):
 
                                         input_dict[
                                             "iou_threshold"
-                                        ] = iou_threshold * np.ones([1], dtype=np.float)
+                                        ] = iou_threshold * np.ones([1], dtype=np.float32)
                                         input_dict["score_threshold"] = (
                                             score_threshold
-                                            * np.ones([1], dtype=np.float)
+                                            * np.ones([1], dtype=np.float32)
                                         )
                                         input_dict["max_boxes"] = M * np.ones(
-                                            [1], dtype=np.float
+                                            [1], dtype=np.float32
                                         )
                                     else:
                                         builder.add_nms(
@@ -3375,7 +3366,7 @@ class NewLayersSimpleTest(CorrectnessTest):
             name="fill_dynamic_layer",
             input_name="alloc_shape",
             output_name="array",
-            value=np.float(0.0),
+            value=np.float32(0.0),
         )
         # CoreML input order: container (array), indices, slices (value)
         builder.add_scatter(
@@ -3662,7 +3653,7 @@ class NewLayersSimpleTest(CorrectnessTest):
                 seed=seed,
             )
 
-            inputs = {"shape": np.array(shape, np.float)}
+            inputs = {"shape": np.array(shape, np.float32)}
             expected = {"output": np.random.normal(mean, stddev, shape)}
 
             CorrectnessTest._compare_moments(
@@ -3779,7 +3770,7 @@ class NewLayersSimpleTest(CorrectnessTest):
                 seed=seed,
             )
 
-            inputs = {"shape": np.array(shape, np.float)}
+            inputs = {"shape": np.array(shape, np.float32)}
             expected = {"output": np.random.uniform(minval, maxval, shape)}
 
             CorrectnessTest._compare_moments(builder.spec, inputs, expected)
@@ -3890,7 +3881,7 @@ class NewLayersSimpleTest(CorrectnessTest):
                 seed=seed,
             )
 
-            inputs = {"shape": np.array(shape, np.float)}
+            inputs = {"shape": np.array(shape, np.float32)}
             expected = {"output": np.random.binomial(1, prob, shape)}
 
             CorrectnessTest._compare_moments(builder.spec, inputs, expected)
@@ -3994,8 +3985,8 @@ class NewLayersSimpleTest(CorrectnessTest):
             expected = {output_name: np.stack((pre0, pre1))}
 
             # convert to bincount and validate probabilities
-            pre0 = np.bincount(np.array(pre0).astype(np.int), minlength=num_class)
-            pre1 = np.bincount(np.array(pre1).astype(np.int), minlength=num_class)
+            pre0 = np.bincount(np.array(pre0).astype(np.int32), minlength=num_class)
+            pre1 = np.bincount(np.array(pre1).astype(np.int32), minlength=num_class)
 
             np.testing.assert_allclose(
                 np.true_divide(pre0, num_samples), probs[0], atol=1e-2
@@ -4087,8 +4078,8 @@ class NewLayersSimpleTest(CorrectnessTest):
             expected = {output_name: np.stack((pre0, pre1))}
 
             # convert to bincount and validate probabilities
-            pre0 = np.bincount(np.array(pre0).astype(np.int), minlength=num_class)
-            pre1 = np.bincount(np.array(pre1).astype(np.int), minlength=num_class)
+            pre0 = np.bincount(np.array(pre0).astype(np.int32), minlength=num_class)
+            pre1 = np.bincount(np.array(pre1).astype(np.int32), minlength=num_class)
 
             np.testing.assert_allclose(
                 np.true_divide(pre0, num_samples), probs[0], atol=1e-2
@@ -4955,8 +4946,8 @@ class NewLayersSimpleTest(CorrectnessTest):
 
                 x = np.random.randint(low=0, high=3, size=shape)
 
-                input = {"data": x.astype(np.float)}
-                expected = {"output": np.transpose(np.nonzero(x)).astype(np.float)}
+                input = {"data": x.astype(np.float32)}
+                expected = {"output": np.transpose(np.nonzero(x)).astype(np.float32)}
                 self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
     def test_where_nonzero_gpu(self):
@@ -5002,7 +4993,7 @@ class NewLayersSimpleTest(CorrectnessTest):
                 b = np.random.randint(
                     -shapeParams[axis], shapeParams[axis], size=shapeIndices
                 )
-                input = {"params": a, "indices": b.astype(np.float)}
+                input = {"params": a, "indices": b.astype(np.float32)}
                 expected = {"output": np.take(a, b, axis=axis)}
 
                 self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
@@ -5041,7 +5032,7 @@ class NewLayersSimpleTest(CorrectnessTest):
                         -params_shape[axis], params_shape[axis], size=indices_shape
                     )
 
-                    input = {"params": a, "indices": b.astype(np.float)}
+                    input = {"params": a, "indices": b.astype(np.float32)}
                     expected = {"output": np.take_along_axis(a, b, axis=axis)}
                     self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
                     self.assertEqual(
@@ -5087,7 +5078,7 @@ class NewLayersSimpleTest(CorrectnessTest):
                     )
 
                 indices = np.stack(indices_list, axis=-1)
-                input = {"params": a, "indices": indices.astype(np.float)}
+                input = {"params": a, "indices": indices.astype(np.float32)}
 
                 tf_op = tf.gather_nd(a, indices)
                 expected = {"output": tf_op.numpy()}
@@ -5140,7 +5131,7 @@ class NewLayersSimpleTest(CorrectnessTest):
                     indices = np.random.randint(0, ref_shape[0], size=indices_shape)
                     input = {
                         "ref": ref,
-                        "indices": indices.astype(np.float),
+                        "indices": indices.astype(np.float32),
                         "updates": updates,
                     }
 
@@ -5214,7 +5205,7 @@ class NewLayersSimpleTest(CorrectnessTest):
                         -params_shape[axis], params_shape[axis], size=indices_shape
                     )
 
-                    input = {"params": a, "indices": b.astype(np.float)}
+                    input = {"params": a, "indices": b.astype(np.float32)}
                     expected = {"output": a}
                     self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
@@ -5258,7 +5249,7 @@ class NewLayersSimpleTest(CorrectnessTest):
                     )
                     input = {
                         "ref": ref,
-                        "indices": indices.astype(np.float),
+                        "indices": indices.astype(np.float32),
                         "updates": updates,
                     }
 
@@ -5318,7 +5309,7 @@ class NewLayersSimpleTest(CorrectnessTest):
 
                     input = {
                         "ref": ref,
-                        "indices": indices.astype(np.float),
+                        "indices": indices.astype(np.float32),
                         "updates": updates,
                     }
 
@@ -5448,8 +5439,8 @@ def get_coreml_predictions_slice(X, params):
             "DOUBLE"
         )
         # save the model
-        model_dir = tempfile.mkdtemp()
-        model_path = os.path.join(model_dir, "test_layer.mlmodel")
+        model_dir = tempfile.TemporaryDirectory()
+        model_path = os.path.join(model_dir.name, "test_layer.mlmodel")
         coremltools.utils.save_spec(builder.spec, model_path)
         # prepare input and get predictions
         coreml_model = coremltools.models.MLModel(model_path)
@@ -5458,8 +5449,6 @@ def get_coreml_predictions_slice(X, params):
             coreml_preds = coreml_model.predict(coreml_input)["output"]
         else:
             coreml_preds = None
-        if os.path.exists(model_dir):
-            shutil.rmtree(model_dir)
     except RuntimeError as e:
         print(e)
         eval = False
@@ -5522,8 +5511,8 @@ def get_coreml_predictions_reduce(X, params):
             "DOUBLE"
         )
         # save the model
-        model_dir = tempfile.mkdtemp()
-        model_path = os.path.join(model_dir, "test_layer.mlmodel")
+        model_dir = tempfile.TemporaryDirectory()
+        model_path = os.path.join(model_dir.name, "test_layer.mlmodel")
         coremltools.utils.save_spec(builder.spec, model_path)
         # prepare input and get predictions
         coreml_model = coremltools.models.MLModel(model_path)
@@ -5532,8 +5521,6 @@ def get_coreml_predictions_reduce(X, params):
             coreml_preds = coreml_model.predict(coreml_input)["output"]
         else:
             coreml_preds = None
-        if os.path.exists(model_dir):
-            shutil.rmtree(model_dir)
     except RuntimeError as e:
         print(e)
         eval = False
@@ -5934,25 +5921,25 @@ class CoreML3NetworkStressTest(CorrectnessTest):
         from numpy import linalg as LA
 
         # try on 3x3 matrix
-        A = np.array([[2, -6, 8], [-6, 4, 5], [8, 5, 3]], dtype=np.float)
+        A = np.array([[2, -6, 8], [-6, 4, 5], [8, 5, 3]], dtype=np.float32)
         starting_vector = np.random.rand(3)
         starting_vector = starting_vector / np.sqrt(np.sum(starting_vector ** 2))
 
         e, v = LA.eig(A)
         idx = np.argmax(abs(e))
-        input = {"starting_vector": starting_vector, "matrix": A.astype(np.float)}
+        input = {"starting_vector": starting_vector, "matrix": A.astype(np.float32)}
         expected = {"maximum_eigen_value": np.array([[e[idx]]])}
         self._test_model(spec, input, expected, useCPUOnly=True)
 
         # try on 2x2 matrix
-        A = np.array([[4, -5], [-5, 3]], dtype=np.float)
+        A = np.array([[4, -5], [-5, 3]], dtype=np.float32)
         starting_vector = np.random.rand(2)
         starting_vector = starting_vector / np.sqrt(np.sum(starting_vector ** 2))
 
         e, v = LA.eig(A)
         idx = np.argmax(abs(e))
 
-        input = {"starting_vector": starting_vector, "matrix": A.astype(np.float)}
+        input = {"starting_vector": starting_vector, "matrix": A.astype(np.float32)}
         expected = {"maximum_eigen_value": np.array([[e[idx]]])}
         self._test_model(spec, input, expected, useCPUOnly=True)
 
@@ -6020,7 +6007,7 @@ class IOS14SingleLayerTests(CorrectnessTest):
                 )
                 expected = {"output": tf_op.numpy()}
 
-                input = {"data": x.astype(np.float)}
+                input = {"data": x.astype(np.float32)}
                 self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
     def test_batched_mat_mul_dynamic_quantization_cpu(self, cpu_only=True):
@@ -6069,7 +6056,7 @@ class IOS14SingleLayerTests(CorrectnessTest):
                 inputs = {"data": x}
                 expected = {
                     "output": np.matmul(
-                        x, W_quantized_int8.astype(np.float) * quant_scale
+                        x, W_quantized_int8.astype(np.float32) * quant_scale
                     )
                     + (b if has_bias else np.zeros(X2))
                 }
@@ -6110,7 +6097,7 @@ class IOS14SingleLayerTests(CorrectnessTest):
             rank = len(input_shape)
             x = np.random.rand(*input_shape) * 5
 
-            W_for_numpy = W_quantized_int8.astype(np.float) * quant_scale
+            W_for_numpy = W_quantized_int8.astype(np.float32) * quant_scale
             for has_bias in [True, False]:
                 b = b if has_bias else np.zeros(Xout)
                 if rank == 1 or rank == 2 or rank == 3:
@@ -6228,7 +6215,7 @@ class IOS14SingleLayerTests(CorrectnessTest):
 
                 input = {"data": x}
                 if n_inputs == 2:
-                    input["axis"] = axis_param * np.ones((1,), dtype=np.float)
+                    input["axis"] = axis_param * np.ones((1,), dtype=np.float32)
 
                 self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)
 
@@ -6253,7 +6240,7 @@ class IOS14SingleLayerTests(CorrectnessTest):
                 "clamped_relu", "data", "output", alpha=alpha, beta=beta
             )
 
-            x = np.arange(-20, 20, dtype=np.float)
+            x = np.arange(-20, 20, dtype=np.float32)
             input = {"data": x}
             expected = {"output": np.minimum(beta, np.where(x >= 0, x, x * alpha))}
             self._test_model(builder.spec, input, expected, useCPUOnly=cpu_only)

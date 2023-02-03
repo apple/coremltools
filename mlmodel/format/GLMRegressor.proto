@@ -8,7 +8,7 @@ option optimize_for = LITE_RUNTIME;
 
 package CoreML.Specification;
 
-/**
+/*
  * A generalized linear model regressor.
  */
 message GLMRegressor {

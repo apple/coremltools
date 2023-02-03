@@ -14,6 +14,7 @@ from coremltools.converters.mil.mil.block import \
     is_current_opset_version_compatible_with
 from coremltools.converters.mil.mil.ops.defs._utils import (
     broadcast_shapes, promote_input_dtypes)
+from coremltools.converters.mil.mil.types import builtin_to_string
 from coremltools.converters.mil.mil.types.symbolic import (any_symbolic,
                                                            is_symbolic)
 
@@ -420,7 +421,9 @@ def BatchToSpaceND(context, node):
         # [B, H, W, C] -> transpose -> [B, C, H, W] -> batch_to_space -> [B_new, C, H_new, W_new] ->
         # transpose -> [B_new, H_new, W_new, C]
         x = mb.transpose(x=x, perm=[0, 3, 1, 2])
-        x = mb.batch_to_space(x=x, block_shape=block_shape, crops=crops, name=node.name)
+        x = mb.batch_to_space(x=x, block_shape=block_shape, crops=_np.zeros((2, 2), _np.int32), name=node.name)
+        if tuple(crops[0]) != (0, 0) or tuple(crops[1]) != (0, 0):
+            x = mb.crop(x=x, crop_height=crops[0], crop_width=crops[1])
         x = mb.transpose(x=x, perm=[0, 2, 3, 1])
 
     if spatial_rank == 1:
@@ -1578,13 +1581,26 @@ def StridedSlice(context, node):
     stride = context[node.inputs[3]]
 
     def bitmask_to_array(bit):
-        arr = []
-        while bit > 0:
-            if bit & 1:
-                arr.append(True)
-            else:
-                arr.append(False)
-            bit >>= 1
+        if bit < 0:
+            arr = _np.binary_repr(bit, width=8)[::-1]
+            arr = [bool(int(x)) for x in list(arr)]
+            if node.attr.get("ellipsis_mask", 0) != 0:
+                # In case of non-zero ellipsis_mask, we compute the output rank to be the
+                # max rank of all the masks. This doesn't work if we computed a mask of constant
+                # width 8 here (since the max rank is then taken to be 8 wrongly).
+                raise ValueError("Cannot figure out slice rank with negative mask values and " \
+                    "non-zero ellipsis_mask")
+        else:
+            # This method prevents unnecessary padding of the bitmask when it is not negative.
+            # It can be padded with any extra False values later, based on output rank.
+            arr = []
+            while bit > 0:
+                if bit & 1:
+                    arr.append(True)
+                else:
+                    arr.append(False)
+                bit >>= 1
+
         return arr
 
     begin_mask = bitmask_to_array(node.attr.get("begin_mask", 0))
@@ -1859,11 +1875,13 @@ def MirrorPad(context, node):
 def Pad(context, node):
     x = context[node.inputs[0]]
     pad = context[node.inputs[1]]
+    input_dtype = x.dtype
 
     mode = node.attr.get("mode", "constant").lower()
     if mode == "symmetric":
         mode = "reflect"
     constant_val = node.attr.get("constant_val", 0.0)
+    constant_val = mb.const(val=constant_val)
     in_rank = len(x.sym_type.get_shape())
 
     if in_rank > 5:
@@ -1874,7 +1892,10 @@ def Pad(context, node):
     else:
         pad = pad.val.reshape(-1)
 
-    x = mb.pad(x=x, pad=pad, name=node.name, mode=mode, constant_val=constant_val)
+    x = mb.cast(x=x, dtype=builtin_to_string(constant_val.dtype))
+    x = mb.pad(x=x, pad=pad, mode=mode, constant_val=constant_val)
+    x = mb.cast(x=x, dtype=builtin_to_string(input_dtype), name=node.name)
+
     context.add(node.name, x)
 
 
@@ -1901,11 +1922,11 @@ def PadV2(context, node):
     constant_val = constant_val.val
     if constant_val == -_np.inf:
         INT_MIN = -_np.iinfo(_np.int64).max - 1
-        constant_val = _np.float(INT_MIN)
+        constant_val = float(INT_MIN)
 
     if constant_val == _np.inf:
         INT_MAX = _np.iinfo(_np.int64).max
-        constant_val = _np.float(INT_MAX)
+        constant_val = float(INT_MAX)
 
     x = mb.pad(x=x, pad=pad, name=node.name, mode="constant", constant_val=constant_val)
     context.add(node.name, x)
@@ -2111,7 +2132,9 @@ def SpaceToBatchND(context, node):
         # [B, H, W, C] -> transpose -> [B, C, H, W] -> space_to_batch -> [B_new, C, H_new, W_new] ->
         # transpose -> [B_new, H_new, W_new, C]
         x = mb.transpose(x=x, perm=[0, 3, 1, 2])
-        x = mb.space_to_batch(x=x, block_shape=block_shape, paddings=paddings)
+        if tuple(paddings[0]) != (0, 0) or tuple(paddings[1]) != (0, 0):
+            x = mb.pad(x=x, pad=paddings.flatten(), mode="constant")
+        x = mb.space_to_batch(x=x, block_shape=block_shape, paddings=_np.zeros((2, 2), _np.int32))
         x = mb.transpose(x=x, perm=[0, 2, 3, 1])
 
     if spatial_rank == 1:
@@ -2441,6 +2464,7 @@ def OneHot(context, node):
     )
     context.add(node.name, x)
 
+
 def _get_non_maximum_supression(context, node):
     """
     The helper function returns the outputs from mb.non_maximum_suppression,
@@ -2451,10 +2475,24 @@ def _get_non_maximum_supression(context, node):
     max_boxes = context[node.inputs[2]]
     iou_threshold = context[node.inputs[3]]
     score_threshold = context[node.inputs[4]]
+
+    # The boxes' coordinates in Tensorflow is (y1, x1, y2, x2) where (y1, x1) and (y2, x2) are the
+    # coordinates of diagonal pair of box corners. However, MIL NMS expects CENTER_SIZE_WIDTH_FIRST
+    # format, which is (x, y, width, height) where (x, y) is the center coordinate.
+    y1, x1, y2, x2 = mb.split(x=boxes, num_splits=4, axis=-1)
+    # As the input coordinates could be any diagonal pair of box corners, it's not guaranteed that
+    # x2 > x1 nor y2 > y1. So we need to use abs to get width/height, and (x1+x2)/2 to get center.
+    width = mb.abs(x=mb.sub(x=x2, y=x1))
+    height = mb.abs(x=mb.sub(x=y2, y=y1))
+    center_x = mb.real_div(x=mb.add(x=x1, y=x2), y=2.0)
+    center_y = mb.real_div(x=mb.add(x=y1, y=y2), y=2.0)
+    boxes = mb.concat(values=[center_x, center_y, width, height], axis=-1)
+
     if score_threshold.val == float("-inf"):
         # TensorFlow's default value for score_threshold, Core ML does not
         # have float('-inf') support, converted to minimum float32 instead
         score_threshold = -3.4e38
+
     boxes = mb.expand_dims(x=boxes, axes=[0])
     scores = mb.expand_dims(x=scores, axes=[0, -1])
     coordinates, scores, indices, valid_outputs = mb.non_maximum_suppression(
@@ -2464,20 +2502,29 @@ def _get_non_maximum_supression(context, node):
         iou_threshold=iou_threshold,
         score_threshold=score_threshold,
     )
-    num_boxes = boxes.shape[1]
 
-    return coordinates, scores, indices, valid_outputs, num_boxes, max_boxes.val
+    # The results from MIL NMS op are padded to max_boxes. We need to extract the valid part for TF.
+    # Notice that the batch dim and class num dim also need to be squeezed.
+    valid_outputs = mb.squeeze(x=valid_outputs, axes=[0])
+    range = mb.range_1d(end=valid_outputs, start=0, step=1)
+    coordinates = mb.squeeze(x=coordinates, axes=[0])
+    valid_coordinates = mb.gather(x=coordinates, indices=range, axis=0)
+    scores = mb.squeeze(x=scores, axes=[0, -1])
+    valid_scores = mb.gather(x=scores, indices=range, axis=0)
+    indices = mb.squeeze(x=indices, axes=[0])
+    valid_indices = mb.cast(
+        x=mb.gather(x=mb.cast(x=indices, dtype="fp32"), indices=range, axis=0),
+        dtype="int32",
+        name=node.name,
+    )
+
+    return valid_coordinates, valid_scores, valid_indices, valid_outputs
+
 
 @register_tf_op(tf_alias=["NonMaxSuppressionV3"])
 def NonMaxSuppression(context, node):
-    _, _, indices, _, num_boxes, max_boxes = _get_non_maximum_supression(context, node)
-
-    if not is_symbolic(num_boxes) and num_boxes < max_boxes:
-        indices = mb.squeeze(x=indices, axes=[0])
-        indices = mb.slice_by_index(x=indices, begin=[0], end=[num_boxes], name=node.name)
-    else:
-        indices = mb.squeeze(x=indices, axes=[0], name=node.name)
-    context.add(node.name, indices)
+    _, _, valid_indices, valid_outputs = _get_non_maximum_supression(context, node)
+    context.add(node.name, valid_indices)
 
 
 @register_tf_op
@@ -2486,24 +2533,24 @@ def NonMaxSuppressionV5(context, node):
     Different from NonMaxSuppression/NonMaxSuppressionV3, which only returns the indices of the selected boxes,
     NonMaxSuppressionV5 returns all indices, scores and number of the selected boxes.
     """
-    _, scores, indices, valid_outputs, num_boxes, max_boxes = _get_non_maximum_supression(context, node)
     soft_nms_sigma = context[node.inputs[5]].val
     if soft_nms_sigma != 0:
         raise NotImplementedError("NonMaxSuppressionV5 with soft_nms_sigma != 0 not supported.")
-    scores = mb.squeeze(x=scores, axes=[0, -1])
-    indices = mb.squeeze(x=indices, axes=[0])
-    valid_outputs = mb.squeeze(x=valid_outputs, axes=[0])
-    if not is_symbolic(num_boxes) and num_boxes < max_boxes:
-        scores = mb.slice_by_index(x=scores, begin=[0], end=[num_boxes])
-        indices = mb.slice_by_index(x=indices, begin=[0], end=[num_boxes])
-    res = [indices, scores, valid_outputs]
+
+    _, valid_scores, valid_indices, valid_outputs = _get_non_maximum_supression(
+        context, node
+    )
+    res = [valid_indices, valid_scores, valid_outputs]
     context.add(node.name, res)
 
 
 @register_tf_op
 def Shape(context, node):
     x = context[node.inputs[0]]
-    x = mb.shape(x=x, name=node.name)
+    if types.is_complex(x.dtype):
+        x = mb.complex_shape(x=x, name=node.name)
+    else:
+        x = mb.shape(x=x, name=node.name)
     context.add(node.name, x)
 
 
@@ -2937,6 +2984,13 @@ def ScatterNd(context, node):
 
 
 @register_tf_op
+def TensorScatterAdd(context, node):
+    tensor, indices, updates, = [context[name] for name in node.inputs]
+    output = mb.scatter_nd(data=tensor, indices=indices, updates=updates, mode="add", name=node.name)
+    context.add(node.name, output)
+
+
+@register_tf_op
 def ZerosLike(context, node):
     x = context[node.inputs[0]]
     if x.rank == 0:
@@ -3323,9 +3377,9 @@ def AudioSpectrogram(context, node):
     window_size = node.attr["window_size"]
 
     N = 2 ** _np.ceil(_np.log2(window_size))
-    N = N.astype(_np.int)
+    N = N.astype(_np.int32)
     fout = N / 2 + 1
-    fout = fout.astype(_np.int)
+    fout = fout.astype(_np.int32)
 
     # construct constant for hann window tensor, of shape (window_size,)
     h = _np.arange(window_size) * ((2 * _np.pi) / window_size)
@@ -3410,3 +3464,73 @@ def Mfcc(context, node):
     y = mb.log(x=y, epsilon=1e-12)
     y = mb.matmul(x=y, y=cosines, name=node.name) # (channels, T, dct_coefficient_count)
     context.add(node.name, y)
+
+
+@register_tf_op
+def Complex(context, node):
+    real_part = context[node.inputs[0]]
+    imag_part = context[node.inputs[1]]
+    result = mb.complex(real_data=real_part, imag_data=imag_part, name=node.name)
+    context.add(node.name, result)
+
+
+@register_tf_op
+def Real(context, node):
+    input_data = context[node.inputs[0]]
+    if types.is_complex(input_data.dtype):
+        real_part = mb.complex_real(data=input_data, name=node.name)
+    else:
+        real_part = input_data
+    context.add(node.name, real_part)
+
+
+@register_tf_op
+def Imag(context, node):
+    input_data = context[node.inputs[0]]
+    if types.is_complex(input_data.dtype):
+        imag_part = mb.complex_imag(data=input_data, name=node.name)
+    else:
+        # According to the doc of tf.math.imag, it returns a tensor of all zeros if input is real.
+        np_type = types.nptype_from_builtin(input_data.sym_type.get_primitive())
+        imag_part = mb.fill(
+            shape=mb.shape(x=input_data), value=np_type(0), name=node.name
+        )
+    context.add(node.name, imag_part)
+
+
+@register_tf_op
+def FFT(context, node):
+    input_data = context[node.inputs[0]]
+    fft_res = mb.complex_fft(data=input_data, name=node.name)
+    context.add(node.name, fft_res)
+
+
+@register_tf_op
+def RFFT(context, node):
+    input_data = context[node.inputs[0]]
+    fft_length = context[node.inputs[1]]
+    # The fft_length is an int32 tensor of shape [1] instead of an integer. To make it compatible
+    # to complex_rfft (which use PyTorch's params as reference), we extract the value from tensor.
+    rfft_res = mb.complex_rfft(
+        data=input_data, n=mb.const(val=fft_length.val[0]), name=node.name
+    )
+    context.add(node.name, rfft_res)
+
+
+@register_tf_op
+def IFFT(context, node):
+    input_data = context[node.inputs[0]]
+    ifft_res = mb.complex_ifft(data=input_data, name=node.name)
+    context.add(node.name, ifft_res)
+
+
+@register_tf_op
+def IRFFT(context, node):
+    input_data = context[node.inputs[0]]
+    fft_length = context[node.inputs[1]]
+    # The fft_length is an int32 tensor of shape [1] instead of an integer. To make it compatible
+    # to complex_rfft (which use PyTorch's params as reference), we extract the value from tensor.
+    irfft_res = mb.complex_irfft(
+        data=input_data, n=mb.const(val=fft_length.val[0]), name=node.name
+    )
+    context.add(node.name, irfft_res)

@@ -326,9 +326,12 @@ def compute_gather(params, indices, axis, batch_dims):
             res = np.take(params, [indices], axis)
             res2 = np.squeeze(res, axis=axis)
             if isinstance(res2, np.ndarray) and len(res2.shape) == 0:
-                # res2 is a scalar, but represented as np.array(symbol,
-                # dtype=np.object) which np.squeeze can't remove.
-                return res2.item()
+                # The `res2` is a numpy 0-d array (after doing np.squeeze on a 1-d array).
+                # For 0-d array in numpy, we need to extract the scalar value by first converting
+                # it back to 1-d array.
+                # Notice that .item() doesn't work because it returns a built-in type instead of
+                # np.generic type, which will fail the downstream var value setter.
+                return np.atleast_1d(res2)[0]
             return res2
         return np.take(params, indices, axis)
 

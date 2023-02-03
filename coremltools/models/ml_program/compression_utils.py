@@ -3,6 +3,8 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import numpy as _np
+
 from coremltools import _SPECIFICATION_VERSION_IOS_16
 from coremltools.converters.mil import Operation as _Operation
 from coremltools.converters.mil.converter import mil_convert as _mil_convert
@@ -65,7 +67,7 @@ def _apply_graph_pass(mlmodel, graph_pass):
     )
     return compressed_mlmodel
 
-def affine_quantize_weights(mlmodel, mode="linear_symmetric", op_selector=None):
+def affine_quantize_weights(mlmodel, mode="linear_symmetric", op_selector=None, dtype=_np.int8):
     """
     Utility function to convert a float precision MLModel of type ``mlprogram`` that uses
     float-precision weights into a compressed MLModel that uses 8-bit weights. This is
@@ -77,42 +79,43 @@ def affine_quantize_weights(mlmodel, mode="linear_symmetric", op_selector=None):
     All computation at runtime uses float precision; the precision of the intermediate
     tensors and the compute precision of the ops are not altered.
     
-    For each weight, this utility function converts the weight into the uint8 type using
+    For each weight, this utility function converts the weight into the int8 or uint8 type using
     either `Linear interpolation` (``"linear"`` mode) or `Linear symmetric
     interpolation` (``"linear_symmetric"`` mode, the default).
     
     **Linear interpolation**
     
     Linear interpolation (``"linear"`` mode) maps the min/max of the float
-    range to the range [0, 255] using a zero point (also called quantization bias, or
-    offset) and a scale factor.
-    
+    range to the 8-bit integer range ``[low, high]`` using a zero point (also called quantization bias, or
+    offset) and a scale factor. For the int8 quantization, ``[low, high] = [-128, 127]``, while uint8 
+    quantization uses range ``[0, 255]``.
+
     ``"linear"`` mode uses the quantization formula ``w_r = s * (w_q - z)``, where:
     
         * ``w_r`` and  ``s`` are of type float.
         * ``w_r`` represents the float precision weight.
         * ``s`` represents the scale.
-        * ``w_q`` and ``z`` are of type uint8.
+        * ``w_q`` and ``z`` are of type 8-bit integer.
         * ``w_q`` represents quantized weight.
         * ``z`` represents the zero point.
     
     Quantized weights are computed as follows:
     
-        * ``w_q = cast_to_uint8(w_r / s + cast_to_float(z))``
-        * Note: ``cast_to_uint8`` is the process of clipping the input to range [0, 255]
-          followed by rounding and casting to uint8.
+        * ``w_q = cast_to_8_bit_integer(w_r / s + cast_to_float(z))``
+        * Note: ``cast_to_8_bit_integer`` is the process of clipping the input to range ``[low, high]``
+          followed by rounding and casting to 8-bit integer.
     
     In ``"linear"`` mode, ``s, z`` are computed by mapping the original float range
-    ``[A, B]`` into the uint8 range [0, 255]. That is, you are solving the following
-    linear equations:
+    ``[A, B]`` into the 8-bit integer range ``[-128, 127]`` or ``[0, 255]``. That is, you are solving the 
+    following linear equations:
     
-        * ``B = s * (255 - z)``
-        * ``A = s * (0 - z)``
+        * ``B = s * (high - z)``
+        * ``A = s * (low - z)``
     
     The equations result in the following:
-    
-        * ``s = (B - A) / 255``
-        * ``z = cast_to_uint8(-255 * A / (B - A))``
+
+        * ``s = (B - A) / (high - low)``
+        * ``z = cast_to_8_bit_integer((low * B - high * A) / (B - A))``
     
     When the rank of weight ``w`` is 1, then ``s`` and ``z`` are both scalars. When the
     rank of the weight is greater than 1, then ``s`` and ``z`` are both vectors. In that
@@ -126,16 +129,18 @@ def affine_quantize_weights(mlmodel, mode="linear_symmetric", op_selector=None):
     
     With linear symmetric interpolation (``"linear_symmetric"`` mode, the default), rather than
     mapping the exact min/max of the float range to the quantized range,
-    the function chooses the maximum absolute value between the min/max, which results in
-    a zero point value of 127. The floating-point range is symmetric with respect to zero,
-    and so is the quantized range.
+    the function chooses the maximum absolute value between the min/max, which results in a 
+    floating-point range is symmetric with respect to zero. This also makes the resulting zero 
+    point ``0`` for int8 weight and ``127`` for uint8 weight. 
     
     For ``"linear_symmetric"`` mode:
     
        * ``A = -R`` and ``B = R``, where ``R = max(abs(w_r))``.
-       * This function maps to the range [0, 254].
+       * This function maps to the range of ``[-127, 127]`` for int8 weight and ``[0, 254]`` for uint8 weight.
        * The result is ``s=(B-A)/254`` --> ``s=2R/254`` --> ``s=R/127``.
-       * Solving for ``z``: ``z = (R/2R) * 254`` --> ``z=127``.
+       * Solving for ``z``: 
+            * int8:  ``z = (-127 * R + 127 * R)/2R`` --> ``z=0``.
+            * uint8: ``z = (0 * R + 254 * R)/2R`` --> ``z=127``.      
 
     Parameters
     ----------
@@ -197,6 +202,15 @@ def affine_quantize_weights(mlmodel, mode="linear_symmetric", op_selector=None):
               def op_selector(const_op):
                     returm const_op.val.val.size > 2048:
 
+    dtype: np.generic or mil.type type
+        Determines the quantizaed data type (int8/uint8).
+        
+        * The allowed values are:
+            * ``np.int8`` (the default)
+            * ``np.uint8``
+            * ``coremltools.converters.mil.mil.types.int8``
+            * ``coremltools.converters.mil.mil.types.uint8``
+
     Returns
     -------
     
@@ -213,7 +227,7 @@ def affine_quantize_weights(mlmodel, mode="linear_symmetric", op_selector=None):
     """
     if op_selector is None:
         op_selector = _default_op_selector
-    affine_weight_quantizer = _WeightAffineQuantizer(fake_compression=False, mode=mode, op_selector=op_selector)
+    affine_weight_quantizer = _WeightAffineQuantizer(fake_compression=False, mode=mode, op_selector=op_selector, dtype=dtype)
     return _apply_graph_pass(mlmodel, affine_weight_quantizer)
 
 

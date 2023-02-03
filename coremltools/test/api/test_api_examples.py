@@ -5,8 +5,7 @@
 
 import copy
 import os
-from shutil import rmtree
-from tempfile import mkdtemp
+import tempfile
 
 import numpy as np
 import pytest
@@ -99,7 +98,7 @@ class TestInputs:
     @pytest.mark.skipif(not ct.utils._is_macos(), reason="test needs predictions")
     def test_list_predict_input():
         TestInputs._test_variant_input_type_prediction(lambda x: x.tolist())
-        
+
     @staticmethod
     def test_rank0_inputs_mil():
         with pytest.raises(ValueError, match=r"Rank-0"):
@@ -186,14 +185,10 @@ class TestMLProgramConverterExamples:
         assert model is not None
         if skip_model_load:
             assert model.__proxy__ is None
-        model_dir = mkdtemp()
-        filename = os.path.join(model_dir, 'test.mlpackage')
+        model_dir = tempfile.TemporaryDirectory()
+        filename = os.path.join(model_dir.name, "test.mlpackage")
         model.save(filename)
         assert os.path.exists(filename)
-        try:
-            rmtree(model_dir)
-        except:
-            pass
 
 
 @pytest.mark.skipif(ct.utils._macos_version() < (12, 0), reason='Model produces specification 6.')

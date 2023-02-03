@@ -10,7 +10,7 @@ import public "DataStructures.proto";
 
 package CoreML.Specification;
 
-/**
+/*
  * Int64 parameter,
  * consisting of a default int64 value, and allowed range or set of values
  * value is unbounded if AllowedValues is not set.
@@ -23,7 +23,7 @@ message Int64Parameter {
     }
 }
 
-/**
+/*
  * Double parameter,
  * consisting of a default double value, and allowed range of values
  * value is unbounded if AllowedValues is not set.
@@ -35,7 +35,7 @@ message DoubleParameter {
     }
 }
 
-/**
+/*
  * String parameter,
  * A default string value must be provided
  */
@@ -43,7 +43,7 @@ message StringParameter {
     string defaultValue = 1;
 }
 
-/**
+/*
  * String parameter,
  * A default bool value must be provided
  */

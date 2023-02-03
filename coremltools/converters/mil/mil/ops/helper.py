@@ -12,6 +12,10 @@ def _get_version_of_op(op_variants, opset_version):
     opset_versions.sort()
     if opset_version is None:
         op_cls = op_variants[opset_versions[0]]
+    elif opset_version > opset_versions[-1]:
+        # TODO(rdar://103267345): Remove when no longer required.
+        # MIL opsets inherit ops from previous ones by default.
+        op_cls = op_variants[opset_versions[-1]]
     else:
         if opset_version not in op_variants:
             op_type = list(op_variants.values())[0].__name__

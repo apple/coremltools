@@ -10,12 +10,12 @@ import pytest
 
 import coremltools as ct
 from coremltools.converters.mil import testing_reqs
+from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import \
+    TensorFlowBaseTest
 from coremltools.converters.mil.frontend.tensorflow2.test.testing_utils import \
     TensorFlow2BaseTest
 from coremltools.converters.mil.frontend.tensorflow2.test.testing_utils import \
     make_tf2_graph as make_tf_graph
-from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import \
-    TensorFlowBaseTest
 from coremltools.converters.mil.testing_utils import random_gen
 
 TensorFlowBaseTest.run_compare_tf = TensorFlow2BaseTest.run_compare_tf2
@@ -121,7 +121,7 @@ class TestImageTransform(TensorFlowBaseTest):
         TensorFlowBaseTest.run_compare_tf(
             model, input_dict, outputs, compute_unit=compute_unit, backend=backend,
         )
-        
+
     @pytest.mark.parametrize(
         "compute_unit, backend, InputShape_OutputShape, op",
         itertools.product(
@@ -138,7 +138,7 @@ class TestImageTransform(TensorFlowBaseTest):
     def test_affine_transform(self, compute_unit, backend, InputShape_OutputShape, op):
         if backend[0] == "neuralnetwork":
             pytest.skip("Affine op not available in the neuralnetwork backend")
-            
+
         input_shape, output_shape = InputShape_OutputShape
         batch_size = input_shape[0]
         transforms = np.random.rand(batch_size, 8) - 0.05
@@ -165,7 +165,7 @@ class TestImageTransform(TensorFlowBaseTest):
                 )
             else:
                 raise ValueError("tensorflow op {} not supported".format(op))
-                
+
         model, inputs, outputs = build_model
         input_values = [np.random.rand(*input_shape).astype(np.float32)]
         input_dict = dict(zip(inputs, input_values))
@@ -245,7 +245,7 @@ class TestResizeNearestNeighbor(TensorFlowBaseTest):
                 return
             if target_shape[-2] % input_shape[-2] != 0:
                 return
-                
+
         if backend[0] == "mlprogram" and compute_unit != ct.ComputeUnit.CPU_ONLY and not half_pixel_centers:
             pytest.xfail("rdar://97399545 (TestResizeNearestNeighbor failing on mlprogram + GPU + half_pixel_centers=False)")
 

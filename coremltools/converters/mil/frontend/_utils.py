@@ -3,6 +3,8 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+from typing import List, Optional
+
 from coremltools.converters.mil.input_types import InputType
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import Var, types
@@ -208,10 +210,10 @@ def is_symbolic_dim_in_prog(prog):
     return False
 
 
-def get_output_names(outputs):
+def get_output_names(outputs) -> Optional[List[str]]:
     """
     :param: list[ct.TensorType/ct.ImageType]
-    :return: list[str]
+    :return: list[str] or None
     """
     output_names = None
     if outputs is not None:

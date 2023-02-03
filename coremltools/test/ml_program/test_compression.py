@@ -3,7 +3,7 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import unittest
+import itertools
 
 import numpy as np
 import pytest
@@ -12,6 +12,7 @@ import torch
 import coremltools as ct
 from coremltools._deps import _HAS_SKLEARN
 from coremltools.converters.mil.testing_utils import get_op_types_in_program
+from coremltools.converters.mil.mil import types
 
 
 def create_unique_weight(weight, nbits):
@@ -94,7 +95,7 @@ class TestCompressionUtils:
         assert get_op_types_in_program(mlmodel_no_quantized._mil_program) == expected_ops
 
     @staticmethod
-    @unittest.skipIf(not _HAS_SKLEARN, "Missing scikit-learn. Skipping tests.")
+    @pytest.mark.skipif(not _HAS_SKLEARN, reason="Missing scikit-learn. Skipping tests.")
     def test_weight_decompression():
         """
         This test is doing the following steps
@@ -165,6 +166,14 @@ class TestCompressionUtils:
         with pytest.raises(ValueError, match=expected_err_str):
             ct.compression_utils.affine_quantize_weights(mlmodel, mode="invalid_mode")
 
+        # Test invalid dtype for affine quantization
+        expected_err_str = "is unsupported for affine_quantize_weight"
+        with pytest.raises(ValueError, match=expected_err_str):
+            ct.compression_utils.affine_quantize_weights(mlmodel, dtype=np.int32)
+
+        with pytest.raises(ValueError, match=expected_err_str):
+            ct.compression_utils.affine_quantize_weights(mlmodel, dtype="int32")
+
         # Test invalid mode for weight sparsification
         expected_err_str = "supported for weight sparsification. Got mode"
         with pytest.raises(ValueError, match=expected_err_str):
@@ -216,15 +225,18 @@ class TestCompressionUtils:
 
     @staticmethod
     @pytest.mark.parametrize(
-        "mode",
-        ("linear", "linear_symmetric"),
+        "mode, dtype",
+        itertools.product(
+            ("linear", "linear_symmetric"),
+            (np.int8, np.uint8, types.int8, types.uint8),
+        ),
     )
-    def test_linear_quanitzation(mode):
+    def test_linear_quanitzation(mode, dtype):
         model, inputs, torch_input_values, coreml_input_values = get_test_model_and_data()
         torchmodel = torch.jit.trace(model, torch_input_values)
         mlmodel = ct.convert(torchmodel, inputs=inputs, convert_to="mlprogram")
 
-        mlmodel_quantized = ct.compression_utils.affine_quantize_weights(mlmodel, mode=mode)
+        mlmodel_quantized = ct.compression_utils.affine_quantize_weights(mlmodel, mode=mode, dtype=dtype)
 
         # validate parameters
         expected_ops = ['constexpr_affine_dequantize', 'cast', 'conv', 'cast']

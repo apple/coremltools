@@ -3,8 +3,6 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-import os as _os
-import stat as _stat
 import tempfile as _tempfile
 import warnings as _warnings
 
@@ -52,10 +50,9 @@ class MILFrontend:
                 msg = (
                     "Please update the minimum_deployment_target to {!s},"
                     " since op {} is only available in opset {!s} or newer."
-                
                 ).format(max_opset_version, op.op_type, max_opset_version)
                 raise ValueError(msg)
-                
+
         if "inputs" in kwargs and kwargs["inputs"] is not None:
             inputs = kwargs["inputs"]
             if not isinstance(inputs, (list, tuple)):
@@ -208,11 +205,8 @@ def _mil_convert(
 
     if convert_to == 'mlprogram':
         # mil_convert_to_proto places weight files inside the weights_dir
-        weights_dir = _tempfile.mkdtemp()
-        kwargs['weights_dir'] = weights_dir
-
-        # To make sure everyone can read and write to this directory (on par with os.mkdir())
-        _os.chmod(weights_dir, _stat.S_IRWXU | _stat.S_IRWXG | _stat.S_IRWXO)
+        weights_dir = _tempfile.TemporaryDirectory()
+        kwargs["weights_dir"] = weights_dir.name
 
     proto, mil_program = mil_convert_to_proto(
                             model,
@@ -225,22 +219,27 @@ def _mil_convert(
     _reset_conversion_state()
 
     if convert_to == 'milinternal':
-        return mil_program # mil program
+        return mil_program  # mil program
     elif convert_to == 'milpython':
-        return proto # internal mil data structure
+        return proto  # internal mil data structure
 
-    elif convert_to == 'mlprogram':
-        package_path = _create_mlpackage(proto, weights_dir, kwargs.get("package_dir"))
-        return modelClass(package_path,
-                          is_temp_package=not kwargs.get('package_dir'),
-                          mil_program=mil_program,
-                          skip_model_load=kwargs.get('skip_model_load', False),
-                          compute_units=compute_units)
+    elif convert_to == "mlprogram":
+        package_path = _create_mlpackage(
+            proto, kwargs.get("weights_dir"), kwargs.get("package_dir")
+        )
+        return modelClass(
+            package_path,
+            is_temp_package=not kwargs.get("package_dir"),
+            mil_program=mil_program,
+            skip_model_load=kwargs.get("skip_model_load", False),
+            compute_units=compute_units,
+        )
 
     return modelClass(proto,
                       mil_program=mil_program,
                       skip_model_load=kwargs.get('skip_model_load', False),
                       compute_units=compute_units)
+
 
 def mil_convert_to_proto(
     model,

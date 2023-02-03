@@ -184,8 +184,8 @@ class TestRandomCategorical:
         pred1 = prediction[output_name].reshape(2, n_sample)[1]
 
         # convert to bincount and validate probabilities
-        pred0 = np.bincount(np.array(pred0).astype(np.int), minlength=n_class)
-        pred1 = np.bincount(np.array(pred1).astype(np.int), minlength=n_class)
+        pred0 = np.bincount(np.array(pred0).astype(np.int32), minlength=n_class)
+        pred1 = np.bincount(np.array(pred1).astype(np.int32), minlength=n_class)
 
         assert np.allclose(np.true_divide(pred0, n_sample), probs[0], atol=1e-2)
         assert np.allclose(
@@ -220,8 +220,8 @@ class TestRandomCategorical:
         pred1 = prediction[output_name].reshape(2, n_sample)[1]
 
         # convert to bincount and validate probabilities
-        pred0 = np.bincount(np.array(pred0).astype(np.int), minlength=n_class)
-        pred1 = np.bincount(np.array(pred1).astype(np.int), minlength=n_class)
+        pred0 = np.bincount(np.array(pred0).astype(np.int32), minlength=n_class)
+        pred1 = np.bincount(np.array(pred1).astype(np.int32), minlength=n_class)
 
         assert np.allclose(np.true_divide(pred0, n_sample), probs[0], atol=1e-2)
         assert np.allclose(

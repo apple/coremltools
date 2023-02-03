@@ -18,8 +18,8 @@ scipy==1.8.1; python_version >= '3.8'
 six
 sympy > 1.6
 gast==0.4.0
-torch==1.12.1
-torchvision==0.13.1
+torch==1.13.1
+torchvision==0.14.1
 xgboost==1.4.2; platform_machine != "arm64"
 mock
 wrapt

@@ -36,32 +36,34 @@ namespace CoreML {
             case Specification::CoreMLModels::VisionFeaturePrint::kScene:
                 if (visionFeaturePrint.scene().version() == Specification::CoreMLModels::VisionFeaturePrint_Scene_SceneVersion_SCENE_VERSION_INVALID) {
                     return Result(ResultType::INVALID_MODEL_PARAMETERS, "Version for scene is invalid");
-                }
-
-                if (visionFeaturePrint.scene().version() == Specification::CoreMLModels::VisionFeaturePrint_Scene_SceneVersion_SCENE_VERSION_1) {
-                    // validate the outputs: only one output with multiarray type is allowed for version 1
+                } else if (visionFeaturePrint.scene().version() == Specification::CoreMLModels::VisionFeaturePrint_Scene_SceneVersion_SCENE_VERSION_1 || visionFeaturePrint.scene().version() == Specification::CoreMLModels::VisionFeaturePrint_Scene_SceneVersion_SCENE_VERSION_2) {
+                    // validate the outputs: only one output with multiarray type is allowed for version 1 and version 2.
                     result = validateDescriptionsContainFeatureWithTypes(interface.output(), 1, {Specification::FeatureType::kMultiArrayType});
                     if (!result.good()) {
                         return result;
                     }
+                } else {
+                    return Result(ResultType::INVALID_MODEL_PARAMETERS, "Version: '" + std::to_string(visionFeaturePrint.scene().version()) + "' for scene print is invalid");
                 }
                 break;
             case Specification::CoreMLModels::VisionFeaturePrint::kObjects:
                 if (visionFeaturePrint.objects().version() == Specification::CoreMLModels::VisionFeaturePrint_Objects_ObjectsVersion_OBJECTS_VERSION_INVALID) {
                     return Result(ResultType::INVALID_MODEL_PARAMETERS, "Version for objects is invalid");
-                }
-                if (visionFeaturePrint.objects().version() == Specification::CoreMLModels::VisionFeaturePrint_Objects_ObjectsVersion_OBJECTS_VERSION_1) {
+                } else if (visionFeaturePrint.objects().version() == Specification::CoreMLModels::VisionFeaturePrint_Objects_ObjectsVersion_OBJECTS_VERSION_1 || visionFeaturePrint.objects().version() == Specification::CoreMLModels::VisionFeaturePrint_Objects_ObjectsVersion_OBJECTS_VERSION_2) {
 
                     if (visionFeaturePrint.objects().output_size() != 2) {
                         return Result(ResultType::INVALID_MODEL_PARAMETERS, "Two outputs for objects need to be provided");
                     }
 
-                    // validate the outputs: only two outputs with multiarray type is allowed for version 1
+                    // validate the outputs: only two outputs with multiarray type is allowed for version 1 and version 2.
                     result = validateDescriptionsContainFeatureWithTypes(interface.output(), 2, {Specification::FeatureType::kMultiArrayType});
                     if (!result.good()) {
                         return result;
                     }
+                } else {
+                    return Result(ResultType::INVALID_MODEL_PARAMETERS, "Version: '" + std::to_string(visionFeaturePrint.objects().version()) + "' for object print is invalid");
                 }
+
                 for (auto modelOutputFeature : interface.output()) {
                     const std::string &modelOutputFeatureName = modelOutputFeature.name();
                     const auto &visionFeaturePrintOutputNames = visionFeaturePrint.objects().output();

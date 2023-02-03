@@ -10,7 +10,7 @@ import public "DataStructures.proto";
 
 package CoreML.Specification;
 
-/**
+/*
  * A categorical mapping.
  *
  * This allows conversion from integers to strings, or from strings to integers.
@@ -24,7 +24,7 @@ message CategoricalMapping {
         Int64ToStringMap int64ToStringMap = 2;
     }
 
-    /**
+    /*
      * The value returned if an input is not contained in the map above.
      * If one of these is not set, then an error is raised on an unknown input.
      */

@@ -111,6 +111,7 @@ namespace CoreML {
     bool hasIOS14Features(const Specification::Model& model);
     bool hasIOS15Features(const Specification::Model& model);
     bool hasIOS16Features(const Specification::Model& model);
+    bool hasIOS17Features(const Specification::Model& model);
 
     typedef std::pair<std::string,std::string> StringPair;
     // Returns a vector of pairs of strings, one pair per custom layer instance

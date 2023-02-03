@@ -138,9 +138,9 @@ def translate_generic_op(op, parameters, blob_writer, literal_params=[]):
 
         attr_dict["name"] = create_scalar_value(op.name)
         attr_dict["class_name"] = create_scalar_value(class_name)
-        attr_dict["input_order"] = create_list_scalarvalue(input_order, np.str)
-        attr_dict["parameters"] = create_list_scalarvalue(parameters, np.str)
-        attr_dict["weights"] = create_list_scalarvalue(weights, np.str)
+        attr_dict["input_order"] = create_list_scalarvalue(input_order, str)
+        attr_dict["parameters"] = create_list_scalarvalue(parameters, str)
+        attr_dict["weights"] = create_list_scalarvalue(weights, str)
         attr_dict["description"] = create_scalar_value(description)
 
     return pm.Operation(

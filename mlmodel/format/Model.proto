@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-3-clause license that can be
 // found in LICENSE.txt or at https://opensource.org/licenses/BSD-3-Clause
 
-/**
+/*
  * A Core ML model consists of a specification version
  * and a model description,
  * and can be any one of the following types:
@@ -92,7 +92,7 @@ import public "LinkedModel.proto";
 
 package CoreML.Specification;
 
-/**
+/*
  * A pipeline consisting of one or more models.
  */
 message Pipeline {
@@ -104,21 +104,21 @@ message Pipeline {
     repeated string names = 2;
 }
 
-/**
+/*
  * A classifier pipeline.
  */
 message PipelineClassifier {
     Pipeline pipeline = 1;
 }
 
-/**
+/*
  * A regressor pipeline.
  */
 message PipelineRegressor {
     Pipeline pipeline = 1;
 }
 
-/**
+/*
  * A feature description,
  * consisting of a name, short description, and type.
  */
@@ -128,7 +128,7 @@ message FeatureDescription {
     FeatureType type = 3;
 }
 
-/**
+/*
  * Model metadata,
  * consisting of a short description, a version string,
  * an author, a license, and any other user defined
@@ -142,7 +142,7 @@ message Metadata {
     map<string, string> userDefined = 100;
 }
 
-/**
+/*
  * A description of a model,
  * consisting of descriptions of its input and output features.
  * Both regressor and classifier models require the name of the
@@ -178,7 +178,7 @@ message SerializedModel {
     bytes model = 2;
 }
 
-/**
+/*
  * A Core ML model,
  * consisting of a specification version,
  * a model description, and a model type.
@@ -254,6 +254,11 @@ message SerializedModel {
  * 7 : iOS 16, macOS 13, tvOS 16, watchOS 9 (Core ML 6)
  * - FLOAT16 array data type
  * - GRAYSCALE_FLOAT16 image color space.
+ *
+ * 8 : iOS 17, macOS 14, tvOS 17, watchOS 10 (Core ML 7)
+ * - iOS 17 ops
+ * - Scene print v2
+ * - Detection print v2
  */
 message Model {
     int32 specificationVersion = 1;

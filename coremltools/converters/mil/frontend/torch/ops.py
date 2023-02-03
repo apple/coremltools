@@ -7,6 +7,7 @@ import builtins
 import math as _math
 import numbers
 from collections.abc import Iterable
+from typing import List, Optional
 
 import numpy as _np
 import torch
@@ -19,13 +20,12 @@ from coremltools.converters.mil._deployment_compatibility import (
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import Symbol, types
 from coremltools.converters.mil.mil.block import (
-    curr_opset_version,
     is_current_opset_version_compatible_with,
 )
 from coremltools.converters.mil.mil.ops.defs._utils import (
     MAX_SIZE_CONSTANT_FOLDING, promote_input_dtypes,
     solve_slice_by_index_shape)
-from coremltools.converters.mil.mil.types import is_bool
+from coremltools.converters.mil.mil.types import is_bool, nptype_from_builtin
 from coremltools.converters.mil.mil.types.symbolic import (
     any_symbolic,
     is_compatible_symbolic_vector,
@@ -35,7 +35,6 @@ from coremltools.converters.mil.mil.var import ListVar, Var
 
 from .._utils import value_at, build_einsum_mil
 from .torch_op_registry import _TORCH_OPS_REGISTRY, register_torch_op
-
 
 # The pytorch args for many of the below ops were sourced from
 # https://github.com/pytorch/pytorch/blob/d971007c291c0ead1003d12cd553d18ddb582207/torch/csrc/jit/mobile/register_mobile_ops.cpp#L216
@@ -71,7 +70,10 @@ def convert_nodes(context, graph):
     """
     for node in _tqdm(graph.nodes, desc="Converting PyTorch Frontend ==> MIL Ops", unit=" ops"):
         op_lookup = node.kind
-        if op_lookup.endswith("_"):
+        if op_lookup.startswith("__") and op_lookup.endswith("__"):
+            # Some ops may have double underscore, such as `__and__`.
+            op_lookup = op_lookup[2:-2]
+        elif op_lookup.endswith("_"):
             # This is an "in place" op.
             # Look up the standard op instead by removing underscore.
             op_lookup = op_lookup[:-1]
@@ -82,6 +84,8 @@ def convert_nodes(context, graph):
             raise RuntimeError(
                 "PyTorch convert function for op '{}' not implemented.".format(node.kind)
             )
+
+        context.prepare_for_conversion(node)
         add_op(context, node)
 
         # We've generated all the outputs the graph needs, terminate conversion.
@@ -131,6 +135,8 @@ NUM_TO_TORCH_DTYPE = {
     6: torch.float32,
     7: torch.float32,
     11: torch.bool,
+    12: torch.qint8,
+    13: torch.quint8,
 }
 
 NUMPY_DTYPE_TO_TORCH_NUM = {
@@ -142,7 +148,7 @@ NUMPY_DTYPE_TO_TORCH_NUM = {
     _np.float16: 5,
     _np.float32: 6,
     _np.float64: 7,
-    _np.bool: 11,
+    bool: 11,
 }
 
 NUM_TO_NUMPY_DTYPE = {
@@ -154,12 +160,13 @@ NUM_TO_NUMPY_DTYPE = {
     5: _np.float16,
     6: _np.float32,
     7: _np.float32,
-    11: _np.bool,
+    11: bool,
 }
 
 NUM_TO_DTYPE_STRING = {
     3: "int32",
     4: "int32",
+    5: "fp16",
     6: "fp32",
     7: "fp32",
     11: "bool",
@@ -173,7 +180,7 @@ TYPE_TO_DTYPE_STRING = {
 }
 
 
-def _get_inputs(context, node, expected=None, min_expected=None):
+def _get_inputs(context, node, expected=None, min_expected=None) -> List[Var]:
     """
     Look up a node's inputs in @context and return them as a list. If
     @expected is not None, also verifies the number of inputs matches the
@@ -206,8 +213,7 @@ def _list_select(shape_var, index):
     is known at compile time, extract it as a const. Otherwise, if it's
     symbolic, use gather.
     """
-    # TODO: gather doesn't work when the shape is known size.
-    if shape_var.val is not None:
+    if shape_var.can_be_folded_to_const():
         res = mb.const(val=shape_var.val[index])
     else:
         res = mb.gather(x=shape_var, indices=index)
@@ -468,7 +474,7 @@ def _vector_norm(x, order, dim, keep_dims, name):
         temp = mb.reduce_sum(x=temp, axes=dim, keep_dims=keep_dims)
         temp = mb.pow(x=temp, y=1.0 / order.val, name=name)
     return temp
-    
+
 @register_torch_op
 def _weight_norm(context, node):
     v, g, dim = _get_inputs(context, node, expected=3)
@@ -573,7 +579,7 @@ def hardswish(context, node):
     result = mb.mul(x=w, y=y, name=node.name)
 
     context.add(result)
-    
+
 
 @register_torch_op
 def reshape_as(context, node):
@@ -591,7 +597,7 @@ def _array_construct(context, node, array_type):
     scalar_inputs = [
         inp
         for inp in inputs
-        if isinstance(inp, Var) and inp.val is not None and len(inp.shape) == 0
+        if isinstance(inp, Var) and inp.can_be_folded_to_const() and len(inp.shape) == 0
     ]
 
     if len(scalar_inputs) == len(inputs):
@@ -885,7 +891,7 @@ def _convolution(context, node):
             # i.e. bottom from top-bottom,
             #      right  from left-right
             #      back   from front-back
-            # CoreML padding structure is similar [top, bottom, left, right]
+            # Core ML padding structure is similar [top, bottom, left, right]
             # mapping output_padding to simplify further processing!
             #
             # For ConvTranspose2d: [bottom, right] -> [0, b, 0, r]
@@ -944,11 +950,11 @@ def _convolution(context, node):
     context.add(conv)
 
 
-# Convolution with "same" padding
+# Convolution with "same, valid" padding
 @register_torch_op
 def _convolution_mode(context, node):
     inputs = _get_inputs(context, node, expected=7)
-    assert inputs[4].val == "same"
+    mode = inputs[4].val
 
     context.add(
         mb.conv(
@@ -956,7 +962,7 @@ def _convolution_mode(context, node):
             weight=inputs[1],
             bias=inputs[2],
             strides=inputs[3],
-            pad_type="same",
+            pad_type=mode,
             dilations=inputs[5],
             groups=inputs[6],
             name=node.name,
@@ -1067,7 +1073,7 @@ def linspace(context, node):
     start = mb.cast(x=start, dtype="fp32")
     end = mb.cast(x=end, dtype="fp32")
 
-    if start.val is not None and end.val is not None and nums.val is not None:
+    if start.can_be_folded_to_const() and end.can_be_folded_to_const() and nums.can_be_folded_to_const():
         start_val = start.val
         end_val = end.val
         nums_val = nums.val
@@ -1117,6 +1123,7 @@ def einsum(context, node):
 
 @register_torch_op
 def eye(context, node):
+    # TODO: rdar://104400568 ([PyTorch] Use MIL ops to construct the eye matrix in order to avoid directly folding the input into a const)
     inputs = _get_inputs(context, node, expected=[5, 6])
     if len(inputs) == 5:
         eye = _np.eye(inputs[0].val)
@@ -1485,9 +1492,14 @@ def unsqueeze(context, node):
 @register_torch_op
 def size(context, node):
     inputs = _get_inputs(context, node, expected=[1, 2])
+    x = inputs[0]
 
     # Get the shape of the tensor.
-    size_node = mb.shape(x=inputs[0], name=node.name + "_shape")
+    if types.is_complex(x.dtype):
+        size_node = mb.complex_shape(x=inputs[0], name=node.name + "_shape")
+    else:
+        size_node = mb.shape(x=inputs[0], name=node.name + "_shape")
+
     # Get the size of the tensor along the input dimension.
     if len(node.inputs) == 2:
         dim = inputs[1].val
@@ -1527,57 +1539,6 @@ def view(context, node):
     context.add(view)
 
 
-@register_torch_op
-def adaptive_avg_pool2d(context, node):
-    inputs = _get_inputs(context, node, expected=2)
-
-    _input = inputs[0]
-    output_size = inputs[1].val
-    assert isinstance(output_size, _np.ndarray)
-    output_size = tuple(output_size)
-
-    if output_size == (1, 1):
-        # Represent (1,1) output size via @reduce_mean
-        # Assume channel first ordering, reduce the last two (HW) dims.
-        axes = mb.const(val=[-2, -1], name=node.name + "_axes")
-        keep_dims = mb.const(val=True, name=node.name + "_keep_dims")
-
-        avg_pool = mb.reduce_mean(
-            x=_input, axes=axes, keep_dims=keep_dims, name=node.name
-        )
-    elif _input.shape is not None:
-        # TODO: The calculations to convert adaptive_pool to standard pool,
-        # given a known input size, come from
-        # https://stackoverflow.com/questions/53841509/how-does-adaptive-pooling-in-pytorch-work
-        # However, as indicated in that SO, this isn't quite how PyTorch
-        # computes adaptive pooling, leading to inaccuracies in model outputs.
-        # rdar://60900834
-        strides = [ind // outd for ind, outd in zip(_input.shape[-2:], output_size)]
-        pad_type = "valid"
-        # Need to explicity state L-R, T-B pad
-        pad = [0, 0, 0, 0]
-        kernel_sizes = [
-            ind - s * (outd - 1)
-            for ind, outd, s in zip(_input.shape[-2:], output_size, strides)
-        ]
-        avg_pool = mb.avg_pool(
-            x=_input,
-            kernel_sizes=kernel_sizes,
-            strides=strides,
-            pad_type=pad_type,
-            pad=pad,
-            name=node.name,
-        )
-    else:
-        raise ValueError(
-            "adaptive_avg_pool2d only supported when input tensor size is known or output size == (1,1). Recived: input size == {}, output size == {}".format(
-                _input.shape_str(), output_size,
-            )
-        )
-
-    context.add(avg_pool)
-
-
 @register_torch_op(torch_alias=['constant_pad_nd'])
 def pad(context, node):
     inputs = _get_inputs(context, node)
@@ -1606,51 +1567,92 @@ def pad(context, node):
 
 
 @register_torch_op
+def adaptive_avg_pool2d(context, node):
+    _adaptive_pool2d(context, node, mb.avg_pool, mb.reduce_mean)
+
+
+@register_torch_op
 def adaptive_max_pool2d(context, node):
+    _adaptive_pool2d(context, node, mb.max_pool, mb.reduce_max)
+
+
+def _adaptive_pool2d_non_fixed_kernel_size_and_stride(x, output_shape, name, reduce_op):
+    '''
+    If the input dimension is not evenly divisible by the output dimension, then the
+    stride and kernel size used by PyTorch is not fixed. This is true for both the
+    height and width dimension.
+    '''
+
+    def get_kernel_indexes_1d(in_dimension, out_dimension):
+        results = []
+        for i in range(out_dimension):
+            start = _math.floor(i * in_dimension / out_dimension)
+            end = _math.ceil((i + 1) * in_dimension / out_dimension)
+            results.append((start, end))
+
+        return results
+
+    pool_results = []
+
+    for s2, e2 in get_kernel_indexes_1d(x.shape[2], output_shape[0]):
+        for s3, e3 in get_kernel_indexes_1d(x.shape[3], output_shape[1]):
+            cur_kernel = mb.slice_by_index(
+                x=x,
+                begin=[0, 0, s2, s3],
+                end=[x.shape[0], x.shape[1], e2, e3],
+            )
+            cur_result = reduce_op(
+                x=cur_kernel,
+                axes=[-2, -1],
+                keep_dims=True
+            )
+            pool_results.append(cur_result)
+
+    return mb.reshape(
+        x=mb.concat(values=pool_results, axis=-1),
+        shape=[x.shape[0], x.shape[1], output_shape[0], output_shape[1]],
+        name=name,
+    )
+
+
+def _adaptive_pool2d(context, node, pool_op, reduce_op):
+    # Get input tensor and output shape
     inputs = _get_inputs(context, node, expected=2)
+    x = inputs[0]
+    output_shape = inputs[1].val
+    assert isinstance(output_shape, _np.ndarray) and len(output_shape) == 2
+    output_shape = tuple(output_shape)
 
-    _input = inputs[0]
-    output_size = inputs[1].val
-    assert isinstance(output_size, _np.ndarray)
-    output_size = tuple(output_size)
-
-    if output_size == (1, 1):
-        # Represent (1,1) output size via @reduce_max
-        # Assume channel first ordering, reduce the last two (HW) dims.
-        max_pool = mb.reduce_max(
-            x=_input, axes=[-2, -1], keep_dims=True, name=node.name
+    if output_shape == (1, 1):
+        # Represent (1,1) output size with global reduce op
+        result = reduce_op(x=x, axes=[-2, -1], keep_dims=True, name=node.name)
+    elif x.shape is None or any_symbolic(x.shape):
+        raise ValueError(
+            "Adaptive pooling is only supported when input tensor size is known or output size == (1,1). "
+            "Received: input size == {}, output size == {}".format(
+                x.shape_str(), output_shape,
+            )
         )
-    elif _input.shape is not None:
-        # TODO: The calculations to convert adaptive_pool to standard pool,
-        # given a known input size, come from
-        # https://stackoverflow.com/questions/53841509/how-does-adaptive-pooling-in-pytorch-work
-        # However, as indicated in that SO, this isn't quite how PyTorch
-        # computes adaptive pooling, leading to inaccuracies in model outputs.
-        # rdar://60900834
-        strides = [ind // outd for ind, outd in zip(_input.shape[-2:], output_size)]
-        pad_type = "valid"
-        # Need to explicity state L-R, T-B pad
-        pad = [0, 0, 0, 0]
+    elif x.shape[-2] % output_shape[-2] == 0 and x.shape[-1] % output_shape[-1] == 0:
+        # Stride and and kernel size is fixed
+        strides = [ind // outd for ind, outd in zip(x.shape[-2:], output_shape)]
         kernel_sizes = [
             ind - s * (outd - 1)
-            for ind, outd, s in zip(_input.shape[-2:], output_size, strides)
+            for ind, outd, s in zip(x.shape[-2:], output_shape, strides)
         ]
-        max_pool = mb.max_pool(
-            x=_input,
+        result = pool_op(
+            x=x,
             kernel_sizes=kernel_sizes,
             strides=strides,
-            pad_type=pad_type,
-            pad=pad,
+            pad_type="valid",
             name=node.name,
         )
     else:
-        raise ValueError(
-            "adaptive_max_pool2d only supported when input tensor size is known or output size == (1,1). Recived: input size == {}, output size == {}".format(
-                _input.shape_str(), output_size,
-            )
+        result = _adaptive_pool2d_non_fixed_kernel_size_and_stride(
+            x, output_shape, node.name, reduce_op
         )
 
-    context.add(max_pool)
+    context.add(result)
 
 
 @register_torch_op
@@ -1681,7 +1683,7 @@ def batch_norm(context, node):
     # helper functions for different type of batch norm
     def _add_batch_norm_dynamic():
         x = _input
-        
+
         if training or (running_mean is None) or (running_var is None):
             axes = [axis for axis in range(x.rank) if axis != 1]
             mean = mb.reduce_mean(x=x, axes=axes, keep_dims=True)
@@ -1698,15 +1700,15 @@ def batch_norm(context, node):
 
         variance_add_epsilon = mb.add(x=variance, y=eps)
         sqrt = mb.sqrt(x=variance_add_epsilon)
-        
+
         name = node.name if weight is None and bias is None else node.name + "_div"
         x = mb.real_div(x=num, y=sqrt, name=name)
-        
+
         if weight is not None:
             weight_reshape = mb.reshape(x=weight, shape=shape)
             name = node.name if bias is None else node.name + "_mul"
             x = mb.mul(x=x, y=weight_reshape, name=name)
-            
+
         if bias is not None:
             bias_reshape = mb.reshape(x=bias, shape=shape)
             x = mb.add(x=x, y=bias_reshape, name=node.name)
@@ -1774,7 +1776,7 @@ def group_norm(context, node):
     num_groups = inputs[1].val
     weight = inputs[2]
     bias = inputs[3]
-    eps = inputs[4] 
+    eps = inputs[4]
     n,c = x.shape[0],x.shape[1] # at minimum (N, C) required
     input_shape = [*x.shape] # n, c, *
     num_groups = builtins.min(num_groups,c)
@@ -1785,7 +1787,7 @@ def group_norm(context, node):
     weight_shape, bias_shape = [1,c], [1,c]
     weight_shape += [1 for _ in range(num_extra_axes)]
     bias_shape += [1 for _ in range(num_extra_axes)]
-    
+
     x = mb.reshape(x=x, shape=new_shape)
     mean = mb.reduce_mean(x=x, axes=axes_, keep_dims=True)
     var = _std(x,axes_,True,False,eps.val)
@@ -1819,7 +1821,7 @@ def embedding(context, node):
 
     if padding_idx != -1 or scale_grad_by_freq or sparse:
         logger.warning(
-            "CoreML embedding (gather) layer does not support any "
+            "Core ML embedding (gather) layer does not support any "
             "inputs besides the weights and indices. Those given "
             "will be ignored."
         )
@@ -1846,7 +1848,9 @@ def hardtanh(context, node):
 def cat(context, node):
     inputs = _get_inputs(context, node)
     axis = 0 if len(inputs) == 1 else inputs[1]
-    concat = mb.concat(values=inputs[0], axis=axis, name=node.name)
+    concat = mb.concat(
+        values=promote_input_dtypes(inputs[0]), axis=axis, name=node.name
+    )
     context.add(concat)
 
 
@@ -1861,7 +1865,10 @@ def stack(context, node):
     else:
         axis = inputs[1]
 
-    res = mb.stack(values=values, axis=axis, name=node.name)
+    if len(values) == 1:
+        res = mb.expand_dims(x=values[0], axes=[axis.val], name=node.name)
+    else:
+        res = mb.stack(values=values, axis=axis, name=node.name)
     context.add(res)
 
 
@@ -1890,7 +1897,7 @@ def _cast(context, node, dtype, dtype_name):
     if not (len(x.shape) == 0 or _np.all([d == 1 for d in x.shape])):
         raise ValueError("input to cast must be either a scalar or a length 1 tensor")
 
-    if x.val is not None:
+    if x.can_be_folded_to_const():
         # If x is a compile-time constant, directly cast it to @dtype if it's
         # not one already.
         if not isinstance(x.val, dtype):
@@ -1951,7 +1958,7 @@ def numtotensor(context, node):
             )
         )
 
-    if x.val is not None:
+    if x.can_be_folded_to_const():
         res = mb.const(val=[x.val], name=node.name)
         context.add(res)
     else:
@@ -1960,10 +1967,10 @@ def numtotensor(context, node):
 
 def _ifzo_to_ifoz(weights, name):
     """
-        i, f, z, o -> i, f, o, z
-        where weights_split[0] == i, etc.
-        Used to transform lstm weights from pytorch
-        to CoreML format
+    i, f, z, o -> i, f, o, z
+    where weights_split[0] == i, etc.
+    Used to transform lstm weights from pytorch
+    to Core ML format
     """
     split_size = weights.shape[0] // 4
     weights_split = mb.split(x=weights, split_sizes=_np.array([split_size] * 4), axis=0)
@@ -1975,8 +1982,8 @@ def _ifzo_to_ifoz(weights, name):
 
 def _pytorch_hidden_to_coreml_milops(x, name):
     """
-        Used to transform lstm state values (hn, cn)
-        from pytorch to CoreML format.
+    Used to transform lstm state values (hn, cn)
+    from pytorch to Core ML format.
     """
     split_size = x.shape[0] // 2
     x_split = mb.split(x=x, split_sizes=_np.array([split_size] * 2), axis=0)
@@ -1990,28 +1997,28 @@ def _pytorch_hidden_to_coreml_milops(x, name):
 
 def _add_gru_layer(_input, h0, wi, wh, bi, bh, h_list_name, h_name):
     """
-        Add a single GRU layer.
-        Please note that the CoreML GRU has different definition from Torch,
-        so we cannot use mb.gru, and need to implement it with while loop.
-        To be more specific, in CoreML:
+    Add a single GRU layer.
+    Please note that the Core ML GRU has different definition from Torch,
+    so we cannot use mb.gru, and need to implement it with while loop.
+    To be more specific, in Core ML:
 
-        o_t = activation(W_{io} x_t + r_t * W_{ho} h_(t−1) + b_{o})
+    o_t = activation(W_{io} x_t + r_t * W_{ho} h_(t−1) + b_{o})
 
-        while torch has
-        o_t = activation(W_{io} x_t + b_{io} + r_t * (W_{ho} h_(t−1) + b_{ho}))
+    while torch has
+    o_t = activation(W_{io} x_t + b_{io} + r_t * (W_{ho} h_(t−1) + b_{ho}))
 
-        Inputs:
-            _input : (seq_len, batch_size, input_dim)
-            h0 : (1, batch_size, hidden_dim)
-            wi : (3*hidden_dim, input_dim) for the first layer, else (3*hidden_dim, hidden_dim)
-            wh : (3*hidden_dim, hidden_dim)
-            bi : (3*hidden_dim)
-            bh : (3*hidden_dim)
+    Inputs:
+        _input : (seq_len, batch_size, input_dim)
+        h0 : (1, batch_size, hidden_dim)
+        wi : (3*hidden_dim, input_dim) for the first layer, else (3*hidden_dim, hidden_dim)
+        wh : (3*hidden_dim, hidden_dim)
+        bi : (3*hidden_dim)
+        bh : (3*hidden_dim)
 
-        Return:
-            h_list : the list contains all hidden states for each time step
-                     with shape (seq_len, batch_size, hidden_dim)
-            h : the last hidden state, with shape (1, batch_size, hidden_dim
+    Return:
+        h_list : the list contains all hidden states for each time step
+                 with shape (seq_len, batch_size, hidden_dim)
+        h : the last hidden state, with shape (1, batch_size, hidden_dim
     """
 
     # split the weights and bias
@@ -2372,9 +2379,9 @@ def rnn_relu(context, node):
 
 
 def _add_mil_lstm(input, initial_h, initial_c, weights, has_bias, bidirectional, name):
-    '''
+    """
     Most of this code is to transform the tensors into
-    a shape acceptable by the CoreML implementation of LSTM.
+    a shape acceptable by the Core ML implementation of LSTM.
 
     For weights, biases,  per direction, pytorch uses two tensors:
     (ii, if, ig, io) stacked on top of each other for each layer (tensor 1)
@@ -2383,9 +2390,9 @@ def _add_mil_lstm(input, initial_h, initial_c, weights, has_bias, bidirectional,
     (W_hi|W_hf|W_hg|W_ho), of shape (4*hidden_size, hidden_size).
 
 
-    The CoreML LSTM op expects two tensors, weight and bias. So
+    The Core ML LSTM op expects two tensors, weight and bias. So
     the tensors for weight and bias are seperated from pytorch's @weights list (1.).
-    For bias tensor, the CoreML LSTM op expects the form ii, if, io, ig and hi, hf, ho, hg,
+    For bias tensor, the Core ML LSTM op expects the form ii, if, io, ig and hi, hf, ho, hg,
     requiring the ifzo_to_ifoz function. Further adding input and hidden bias into one (2.).
     Similar to bias, input and hidden weight requires different layout. (3.)
 
@@ -2399,7 +2406,7 @@ def _add_mil_lstm(input, initial_h, initial_c, weights, has_bias, bidirectional,
             - split the input, shape=(2, B, H), to get (1,B,H) and (1,B,H)
             - concatenate to get (1,B,2*H)
             - squeeze to get (B,2*H)
-    '''
+    """
 
     if bidirectional:
         if has_bias:
@@ -3435,7 +3442,7 @@ def index(context, node):
 
         b has shape (2, )
 
-    Note that, in pytorch, the indices can be broadcasable. And it is NOT supported right now.
+    Note that the indices are broadcastable in PyTorch, but NOT supported here for dynamic shape.
     """
 
     # get the index axes
@@ -3467,7 +3474,15 @@ def index(context, node):
         context.add(x)
         return
 
-    # For multiple index axes case, we now assume that all the index have equal shape
+    # For multiple index axes case, we delegate broadcast to np if there is no dynamic shape.
+    if all(not any_symbolic(idx.shape) for idx in valid_indices):
+        broadcasted_shape = _np.broadcast_shapes(*[idx.shape for idx in valid_indices])
+        for i, index in enumerate(valid_indices):
+            if (index.shape != broadcasted_shape) and index.val is not None:
+                new_val = _np.broadcast_to(index.val, broadcasted_shape)
+                valid_indices[i] = mb.const(
+                    val=new_val, name=index.name + "_broadcasted"
+                )
     for index in valid_indices:
         if not is_compatible_symbolic_vector(index.shape, valid_indices[0].shape):
             raise NotImplementedError("Broadcasable tensor index not supported.")
@@ -3574,7 +3589,7 @@ def new_full(context, node):
     val = inputs[2].val
     result = _make_fill_op(size, val, node.name)
     context.add(result)
-    
+
 @register_torch_op
 def randint(context, node):
     inputs = _get_inputs(context, node, expected=8)
@@ -3599,6 +3614,19 @@ def bitwise_not(context, node):
     else:
         raise ValueError("Not supported type {} found for 'bitwise_not' op".format(dtype))
     context.add(x)
+
+
+@register_torch_op(torch_alias=["and"])
+def bitwise_and(context, node):
+    inputs = _get_inputs(context, node)
+
+    input_dtypes = [i.dtype for i in inputs]
+    if all(types.is_bool(input_dtype) for input_dtype in input_dtypes):
+        logical_and(context, node)
+    else:
+        raise NotImplementedError(
+            f"The `bitwise_and` op only supports boolean input, but get {input_dtypes}."
+        )
 
 
 def _avg_pool(context, node, inputs):
@@ -3713,7 +3741,7 @@ def nll_loss(context, node):
     elif reduction == "sum":
         out = mb.reduce_sum(x=loss, axes=[0], keep_dims=False, name=node.name)
     elif reduction == "mean":
-        out = mb.real_div(x=loss, y=_np.float(batch_size))
+        out = mb.real_div(x=loss, y=_np.float32(batch_size))
         out = mb.reduce_sum(x=out, axes=[0], keep_dims=False, name=node.name)
     else:
         raise NotImplementedError("Unsupported reduction type for NLLLoss.")
@@ -3853,57 +3881,59 @@ def unbind(context, node):
 
 @register_torch_op
 def to(context, node):
-    # @non_blocking and @copy are unused
     inputs = _get_inputs(context, node)
 
-    if len(inputs) == 8:
-        _input = inputs[0]
-        dtype = inputs[1].val
-    elif len(inputs) == 7:
-        _input = inputs[0]
-        dtype = inputs[1].val
-    elif len(inputs) == 6:
-        _input = inputs[0]
-        dtype = inputs[2].val
-        # non_blocking = inputs[3]
-        # copy = inputs[4]
-        # memory_format = inputs[5] # usually None
-    elif len(inputs) == 5:
-        _input = inputs[0]
-        dtype = (
-            NUMPY_DTYPE_TO_TORCH_NUM[inputs[1].val.dtype.type]
-            if isinstance(inputs[1].val, _np.ndarray)
-            else inputs[1].val
-        )
-        # non_blocking = inputs[2]
-        # copy = inputs[3]
-        # memory_format = inputs[4]
-    elif len(inputs) == 4:
-        _input = inputs[0]
-        dtype = inputs[1].val
-        # non_blocking = inputs[2]
-        # copy = inputs[3]
-    elif len(inputs) == 3:
-        # Since @non_blocking and @copy are unused, add back to context
-        _input = inputs[0]
-        # non_blocking = inputs[1]
-        # copy = inputs[2]
-        context.add(_input, torch_name=node.name)
-        return
+    # There are a lot of variants of `to` op.
+    # - When len(inputs) is 7 or 8, we only care about the first two params (input and dtype).
+    # - When len(inputs) == 6, the parameter is (input, _, dtype, non_blocking, copy, memory_format)
+    # - When len(inputs) == 5, the parameter is (input, dtype, non_blocking, copy, memory_format)
+    # - When len(inputs) == 4, the parameter is (input, dtype, non_blocking, copy)
+    # - When len(inputs) == 3, the parameter is (input, non_blocking, copy)
+    # We only use `input` and `dtype`, and `non_blocking` and `copy` are unused.
+    _input = inputs[0]
+    target_dtype: Optional[Var]
+    inputs_len = len(inputs)
+    if inputs_len in (4, 5, 7, 8):
+        target_dtype = inputs[1]
+    elif inputs_len == 6:
+        target_dtype = inputs[2]
+    elif inputs_len == 3:
+        target_dtype = None
     else:
         raise ValueError(
             "Received invalid arguments for PyTorch conversion of op {}".format(node)
         )
 
+    if target_dtype is None:
+        # When target_dtype is None, it means the input's dtype is already the target dtype.
+        context.add(_input, torch_name=node.name)
+        return
+    elif types.is_scalar(target_dtype.sym_type) and target_dtype.val is not None:
+        dtype = target_dtype.val
+    else:
+        # When the val of dtype is not available, bridge from the np dtype.
+        np_type = nptype_from_builtin(target_dtype.dtype)
+        dtype = NUMPY_DTYPE_TO_TORCH_NUM[np_type]
+
     torch_dtype = NUM_TO_TORCH_DTYPE[dtype]
-    if isinstance(_input, Var) and _input.val is not None:
-        _input = _input.val
+    if isinstance(_input, Var) and _input.can_be_folded_to_const():
         # numpy -> torch -> torch cast -> numpy
         # This path is needed to use the mapping of passed in dtypes to torch dtypes.
-        casted_input = torch.tensor(_input).type(torch_dtype).cpu().numpy()
+        casted_input = torch.tensor(_input.val).type(torch_dtype).cpu().numpy()
         res = mb.const(val=casted_input, name=node.name)
     else:
-        res = mb.cast(x=_input, dtype=NUM_TO_DTYPE_STRING[dtype], name=node.name)
+        if dtype in NUM_TO_DTYPE_STRING:
+            res = mb.cast(x=_input, dtype=NUM_TO_DTYPE_STRING[dtype], name=node.name)
+        else:
+            # For dtype that is not supported by mb.cast, we do it in best-effort to cast it to int
+            # or float based on the dtype.
+            np_dtype = NUM_TO_NUMPY_DTYPE[dtype]
+            if _np.issubdtype(np_dtype, _np.integer):
+                res = mb.cast(x=_input, dtype="int32", name=node.name)
+            elif _np.issubdtype(np_dtype, _np.floating):
+                res = mb.cast(x=_input, dtype="fp32", name=node.name)
+            else:
+                raise ValueError(f"Unsupported op {node} with target dtype {np_dtype}")
     context.add(res)
 
 
@@ -4080,42 +4110,48 @@ def meshgrid(context, node):
     N, N-dimenional grids, where the ith grid is defined as expanding the ith input over
     dimensions defined by the other inputs.
     """
-    inputs = _get_inputs(context, node)
-    if len(inputs) == 1:
-        inputs = inputs[0]
-    if len(inputs) < 2:
-        raise ValueError("Requires > 2 tensor inputs.")
+    supported_indexing_modes = ("ij", "xy")
+    indexing = "ij"
+    inputs = _get_inputs(context, node, expected=[1, 2])
 
-    # scalar inputs will be considered 1d tensors
-    tensor_inputs = []
-    for tensor_var in inputs:
-        if not isinstance(tensor_var.val, _np.ndarray):
-            tensor_inputs.append(_np.array(tensor_var.val))
-        else:
-            tensor_inputs.append(_np.array(tensor_var))
+    if len(inputs) == 2:
+        indexing = inputs[1].val
+        if indexing not in supported_indexing_modes:
+            raise ValueError("indexing mode {} not supported".format(indexing))
 
-    if any([len(tensor_var.shape) > 1 for tensor_var in inputs]):
+    tensor_inputs = inputs[0]
+    assert isinstance(tensor_inputs, (list, tuple))
+    if len(tensor_inputs) < 2:
+        raise ValueError("Requires >= 2 tensor inputs.")
+
+    if any([len(tensor_var.shape) > 1 for tensor_var in tensor_inputs]):
         raise ValueError("meshgrid recieved non-1d tensor.")
 
-    dim_tuple = tuple(tensor_var.shape[0] for tensor_var in inputs)
+    dim_tuple = tuple(tensor_var.shape[0] for tensor_var in tensor_inputs)
 
     grids = []
-    size = len(inputs)
+    size = len(tensor_inputs)
     for i in range(size):
         view_shape = [1] * size
         view_shape[i] = -1
         view_shape = tuple(view_shape)
         # (a.) in docstring
         view = mb.reshape(
-            x=inputs[i], shape=view_shape, name=node.name + "_view_" + str(i)
+            x=tensor_inputs[i], shape=view_shape, name=node.name + "_view_" + str(i)
         )
 
         # (b.) in docstring
         reps = [
             ds if ds > 0 and ts == 1 else 1 for ts, ds in zip(view.shape, dim_tuple)
         ]
-        expand = mb.tile(x=view, reps=reps, name=node.name + "_expand_" + str(i))
-        grids.append(expand)
+        res = mb.tile(x=view, reps=reps, name=node.name + "_expand_" + str(i))
+
+        # transpose the first two dimensions for "xy" indexing
+        if indexing == "xy":
+            perm = [1, 0] + list(range(2, size))
+            res = mb.transpose(x=res, perm=perm, name=node.name + "_transpose_" + str(i))
+
+        grids.append(res)
 
     context.add(tuple(grids), node.name)
 
@@ -4160,7 +4196,7 @@ def zeros_like(context, node):
     shape = mb.shape(x=x)
     np_type = NUM_TO_NUMPY_DTYPE[dtype]
 
-    if shape.val is not None:
+    if shape.can_be_folded_to_const():
         shape = shape.val
         zeros = _np.zeros(shape).astype(np_type)
         zeros_like = mb.const(val=zeros, name=node.name)
@@ -4178,22 +4214,24 @@ def zeros_like(context, node):
 def zeros(context, node):
     inputs = _get_inputs(context, node)
     size = inputs[0]
-    dtype = inputs[1].val
-    if isinstance(size, list):
-        # the size is dynamic
-        size = mb.concat(values=size, axis=0)
+    if inputs[1] is not None:
         dtype = inputs[1].val
-        np_type = NUM_TO_NUMPY_DTYPE[dtype]
-        value = np_type(0)
-        zeros = mb.fill(shape=size, value=value, name=node.name)
     else:
-        # the size is static
+        dtype = torch.get_default_dtype()
+        assert dtype in (torch.float32, torch.float64)
+        dtype = 6
+
+    if isinstance(size, list) or not size.can_be_folded_to_const():
+        # the size is dynamic or this zeros op cannot be folded into const.
+        size = mb.concat(values=size, axis=0) if isinstance(size, list) else size
+        np_type = NUM_TO_NUMPY_DTYPE[dtype]
+        zeros = mb.fill(shape=size, value=np_type(0), name=node.name)
+    else:
+        # the size is static and this zeros op can be folded into const.
         size = size.val
-        dtype = inputs[1].val
         # layout = inputs[2] unused
         # device = inputs[3] unused
         # pin_memory = inputs[4] unused
-
         torch_dtype = NUM_TO_TORCH_DTYPE[dtype]
         zeros_array = torch.zeros(tuple(size)).type(torch_dtype).numpy()
         zeros = mb.const(val=zeros_array, name=node.name)
@@ -4222,20 +4260,19 @@ def dim(context, node):
 
 @register_torch_op
 def min(context, node):
-    inputs = _get_inputs(context, node)
+    inputs = _get_inputs(context, node, expected=[1, 2, 3])
 
     # mimic functionality from https://pytorch.org/docs/stable/generated/torch.min.html
     if len(inputs) == 1:
         value = mb.reduce_min(x=inputs[0], axes=None, name=node.name)
         context.add(value)
-    elif len(inputs) == 2 and inputs[0].shape == inputs[1].shape:
+    elif len(inputs) == 2:
         value = mb.minimum(x=inputs[0], y=inputs[1], name=node.name)
         context.add(value)
-    else:
-        assert(len(inputs) <= 3)
+    elif len(inputs) == 3:
         _input = inputs[0]
         dim = inputs[1].val
-        keepdim = inputs[2].val if len(inputs) == 3 else False
+        keepdim = inputs[2].val
 
         values = mb.reduce_min(x=_input, axes=[dim], keep_dims=keepdim)
         indices = mb.reduce_argmin(x=_input, axis=dim, keep_dims=keepdim)
@@ -4248,20 +4285,19 @@ def min(context, node):
 
 @register_torch_op
 def max(context, node):
-    inputs = _get_inputs(context, node)
+    inputs = _get_inputs(context, node, expected=[1, 2, 3])
 
     # mimic functionality from https://pytorch.org/docs/stable/generated/torch.max.html
     if len(inputs) == 1:
         value = mb.reduce_max(x=inputs[0], axes=None, name=node.name)
         context.add(value)
-    elif len(inputs) == 2 and inputs[0].shape == inputs[1].shape:
+    elif len(inputs) == 2:
         value = mb.maximum(x=inputs[0], y=inputs[1], name=node.name)
         context.add(value)
-    else:
-        assert(len(inputs) <= 3)
+    elif len(inputs) == 3:
         _input = inputs[0]
         dim = inputs[1].val
-        keepdim = inputs[2].val if len(inputs) == 3 else False
+        keepdim = inputs[2].val
 
         values = mb.reduce_max(x=_input, axes=[dim], keep_dims=keepdim)
         indices = mb.reduce_argmax(x=_input, axis=dim, keep_dims=keepdim)
@@ -4379,6 +4415,85 @@ def atan(context, node):
 
 
 @register_torch_op
+def atan2(context, node):
+    """
+    atan2(Tensor y, Tensor x)
+    Element-wise arctangent of y / x with consideration of the quadrant
+    Returns a new tensor with the signed angles in radians between vector (x, y) and vector (1, 0)
+
+    On a high level:
+    1. atan(y / x) to get the angle in [-pi / 2, pi / 2]
+    2. analyze quadrant to determine the angle in [-pi, pi]
+
+    Reference PyTorch code https://gist.github.com/nikola-j/b5bb6b141b8d9920318677e1bba70466
+    def my_atan2(y, x):
+        pi = torch.from_numpy(np.array([np.pi])).to(y.device, y.dtype)
+        ans = torch.atan(y / x)
+        ans += ((y > 0) & (x < 0)) * pi
+        ans -= ((y < 0) & (x < 0)) * pi
+        ans *= (1 - ((y > 0) & (x == 0)) * 1.0)
+        ans += ((y > 0) & (x == 0)) * (pi / 2)
+        ans *= (1 - ((y < 0) & (x == 0)) * 1.0)
+        ans += ((y < 0) & (x == 0)) * (-pi / 2)
+        return ans
+    """
+    inputs = _get_inputs(context, node, expected=2)
+    y = inputs[0]
+    x = inputs[1]
+    if not types.is_float(y.dtype):
+        y = mb.cast(x=y, dtype="fp32")
+    if not types.is_float(x.dtype):
+        x = mb.cast(x=x, dtype="fp32")
+
+    # basic logical expressions
+    y_less_0 = mb.less(x=y, y=0.0)
+    y_greater_0 = mb.greater(x=y, y=0.0)
+    x_less_0 = mb.less(x=x, y=0.0)
+    x_equal_0 = mb.equal(x=x, y=0.0)
+
+    # combined logical expressions
+    ygreater0_and_xless0 = mb.logical_and(x=y_greater_0, y=x_less_0)
+    yless0_and_xless0 = mb.logical_and(x=y_less_0, y=x_less_0)
+    ygreater0_and_xequal0 = mb.logical_and(x=y_greater_0, y=x_equal_0)
+    yless0_and_xequal0 = mb.logical_and(x=y_less_0, y=x_equal_0)
+
+    # bool -> fp32 for numeric operation
+    ygreater0_and_xless0_numeric = mb.cast(x=ygreater0_and_xless0, dtype="fp32")
+    yless0_and_xless0_numeric = mb.cast(x=yless0_and_xless0, dtype="fp32")
+    ygreater0_and_xequal0_numeric = mb.cast(x=ygreater0_and_xequal0, dtype="fp32")
+    yless0_and_xequal0_numeric = mb.cast(x=yless0_and_xequal0, dtype="fp32")
+
+    # quadrant modification coefficients
+    coeff1 = mb.mul(x=ygreater0_and_xless0_numeric, y=_np.pi)
+    coeff2 = mb.mul(x=yless0_and_xless0_numeric, y=_np.pi)
+    coeff3 = mb.sub(x=1.0, y=ygreater0_and_xequal0_numeric)
+    coeff4 = mb.mul(x=ygreater0_and_xequal0_numeric, y=_np.pi / 2.0)
+    coeff5 = mb.sub(x=1.0, y=yless0_and_xequal0_numeric)
+    coeff6 = mb.mul(x=yless0_and_xequal0_numeric, y=-_np.pi / 2.0)
+
+    # if -1e-8 < x < 1e-8, x += 2e-8 to avoid y / 0
+    # this shift makes atan2(0, 0) = 0, which is consistent with PyTorch torch.atan2
+    x0left = mb.greater(x=x, y=-1e-8)
+    x0right = mb.less(x=x, y=1e-8)
+    x0 = mb.logical_and(x=x0left, y=x0right)
+    x0numeric = mb.cast(x=x0, dtype="fp32")
+    safe_shift = mb.mul(x=x0numeric, y=2e-8)
+    x_safe = mb.add(x=x, y=safe_shift)
+
+    # compute atan(y / x)
+    ydx = mb.real_div(x=y, y=x_safe)
+    atan2_1 = mb.atan(x=ydx)
+
+    # analyze quadrant
+    atan2_2 = mb.add(x=atan2_1, y=coeff1)
+    atan2_3 = mb.sub(x=atan2_2, y=coeff2)
+    atan2_4 = mb.mul(x=atan2_3, y=coeff3)
+    atan2_5 = mb.add(x=atan2_4, y=coeff4)
+    atan2_6 = mb.mul(x=atan2_5, y=coeff5)
+    context.add(mb.add(x=atan2_6, y=coeff6, name=node.name))
+
+
+@register_torch_op
 def atanh(context, node):
     inputs = _get_inputs(context, node, expected=1)
     context.add(mb.atanh(x=inputs[0], name=node.name))
@@ -4393,9 +4508,20 @@ def ceil(context, node):
 @register_torch_op
 def clamp(context, node):
     inputs = _get_inputs(context, node, expected=3)
+    x = inputs[0]
     min_val = inputs[1] if inputs[1] else _np.finfo(_np.float32).min
     max_val = inputs[2] if inputs[2] else _np.finfo(_np.float32).max
-    context.add(mb.clip(x=inputs[0], alpha=min_val, beta=max_val, name=node.name))
+
+    is_input_int = types.is_int(x.dtype)
+    if not types.is_float(x.dtype):
+        # The `mb.clip` op requires parameters from type domain ['fp16', 'fp32'].
+        x = mb.cast(x=x, dtype="fp32")
+    x, min_val, max_val = promote_input_dtypes([x, min_val, max_val])
+    if is_input_int:
+        clip_res = mb.clip(x=x, alpha=min_val, beta=max_val)
+        context.add(mb.cast(x=clip_res, dtype="int32", name=node.name))
+    else:
+        context.add(mb.clip(x=x, alpha=min_val, beta=max_val, name=node.name))
 
 
 @register_torch_op
@@ -4620,11 +4746,11 @@ def _nonzero_as_tuple(context, node, x):
 @register_torch_op
 def where(context, node):
     inputs = _get_inputs(context, node)
-    
+
     if len(inputs) == 1:
         _nonzero_as_tuple(context, node, inputs[0])
         return
-        
+
     assert len(inputs) == 3
     cond = inputs[0]
     if not types.is_bool(cond.dtype):
@@ -4642,8 +4768,8 @@ def where(context, node):
     else:
         result = mb.select(cond=cond, a=inputs[1], b=inputs[2], name=node.name)
     context.add(result)
-    
-    
+
+
 @register_torch_op
 def nonzero_numpy(context, node):
     inputs = _get_inputs(context, node, expected=1)
@@ -4656,9 +4782,19 @@ def neg(context, node):
     x, y = promote_input_dtypes([inputs[0], -1])
     context.add(mb.mul(x=x, y=y, name=node.name))
 
-
 @register_torch_op
 def topk(context, node):
+    def dynamic_topk(x, k, axis, ascending):
+        assert k.val is None, "Please use mb.topk directly if k is compile time known"
+        indices = mb.argsort(x=x, axis=axis, ascending=ascending)
+        values = mb.gather_along_axis(x=x, indices=indices, axis=axis)
+
+        k_indices = mb.range_1d(end=k, start=0, step=1)
+        values = mb.gather(x=values, indices=k_indices, axis=axis)
+        indices = mb.gather(x=indices, indices=k_indices, axis=axis)
+
+        return values, indices
+
     inputs = _get_inputs(context, node)
     kwargs = {"name": node.name, "x": inputs[0], "k": inputs[1]}
 
@@ -4677,7 +4813,7 @@ def topk(context, node):
     # last inputs to topk are optional - sorted and out.
     sort = True
     if len(inputs) > 4:
-        if inputs[4].val is False and curr_opset_version() < target.iOS16:
+        if inputs[4].val is False and not is_current_opset_version_compatible_with(target.iOS16):
             raise Exception("For opset <= iOS16, only sorted=True supported for the topk")
         sort = inputs[4].val
 
@@ -4691,7 +4827,16 @@ def topk(context, node):
     if is_current_opset_version_compatible_with(target.iOS16):
         kwargs["sort"] = sort
 
-    res = mb.topk(**kwargs)
+    if kwargs["k"].val is None:
+        res = dynamic_topk(
+                x=kwargs["x"],
+                k=kwargs["k"],
+                axis=kwargs["axis"],
+                ascending=kwargs["ascending"]
+        )
+    else:
+        res = mb.topk(**kwargs)
+
     values_name = node.outputs[0]
     indices_name = node.outputs[1]
     context.add(res[0], torch_name=values_name)
@@ -4738,6 +4883,13 @@ def _std(x, axes, keep_dim, unbiased, eps):
         y = mb.sqrt(x=x_demeaned_square_mean)
     return y
 
+@register_torch_op
+def numel(context, node):
+    inputs = _get_inputs(context, node, expected=1)
+    x = inputs[0]
+    x = mb.shape(x=x)
+    x = mb.reduce_prod(x=x, axes=[0], name=node.name)
+    context.add(x)
 
 @register_torch_op
 def std(context, node):
@@ -4779,7 +4931,7 @@ def dtype(context, node):
 def tensor(context, node):
     def _make_tensor(list_of_tensor, name, rank):
         if rank == 6:
-            raise NotImplementedError("CoreML only supports tensor rank <= 5.")
+            raise NotImplementedError("Core ML only supports tensor rank <= 5.")
         if not isinstance(list_of_tensor, list):
             return list_of_tensor
         values = [
@@ -4800,7 +4952,7 @@ def tensor(context, node):
         context.add(_make_tensor(val, node.name, 1))
         return
 
-    if val.shape != ():
+    if inputs[2] is None:
         context.add(mb.identity(x=val, name=node.name))
         return
 
@@ -4844,9 +4996,11 @@ source from https://pytorch.org/docs/stable/generated/torch.nn.utils.rnn.pad_pac
 @register_torch_op
 def _pack_padded_sequence(context, node):
     # The implementation of this op is not efficient. Raise a warning.
-    logger.warning("Encountered a _pack_padded_sequence layer. The implementation of translating pack/unpack op\
-        in pytorch is not efficient due to the current limitation of CoreML. Removing the pack-unpack logic \
-        and use a fixed batch size model is recommended.")
+    logger.warning(
+        "Encountered a _pack_padded_sequence layer. The implementation of translating pack/unpack op\
+        in pytorch is not efficient due to the current limitation of Core ML. Removing the pack-unpack logic \
+        and use a fixed batch size model is recommended."
+    )
 
     inputs = _get_inputs(context, node, expected=3)
     tensor_name, batch_sizes_name = node.outputs
@@ -4868,9 +5022,11 @@ def _pack_padded_sequence(context, node):
 @register_torch_op
 def _pad_packed_sequence(context, node):
     # The implementation of this op is not efficient. Raise a warning.
-    logger.warning("Encountered a _pad_packed_sequence layer. The implementation of translating pack/unpack op\
-        in pytorch is not efficient due to the current limitation of CoreML. Removing the pack-unpack logic \
-        and use a fixed batch size model is recommended.")
+    logger.warning(
+        "Encountered a _pad_packed_sequence layer. The implementation of translating pack/unpack op\
+        in pytorch is not efficient due to the current limitation of Core ML. Removing the pack-unpack logic \
+        and use a fixed batch size model is recommended."
+    )
     inputs = _get_inputs(context, node)
 
     # seq_lengths denotes the actual sequence length for each batch.
@@ -5160,7 +5316,7 @@ def remainder(context, node):
     """
     # Don't specify `expected` because the parameter `out` is optional.
     inputs = _get_inputs(context, node)
-    dividend, divisor = inputs[0], inputs[1]
+    dividend, divisor = promote_input_dtypes([inputs[0], inputs[1]])
     div_node = mb.floor_div(x=dividend, y=divisor, name=node.name + "_div")
     context.add(div_node)
     scaled_div = mb.mul(x=div_node, y=divisor, name=div_node.name + "_scaled")
@@ -5331,3 +5487,148 @@ def im2col(context, node):
     )
 
     context.add(output)
+
+
+@register_torch_op
+def complex(context, node):
+    real_part, imag_part = _get_inputs(context, node, expected=2)
+    result = mb.complex(real_data=real_part, imag_data=imag_part)
+    context.add(result, node.name)
+
+
+@register_torch_op
+def real(context, node):
+    input_data = _get_inputs(context, node, expected=1)[0]
+    if types.is_complex(input_data.dtype):
+        real_part = mb.complex_real(data=input_data)
+        context.add(real_part, node.name)
+    else:
+        context.add(input_data, node.name)
+
+
+@register_torch_op
+def imag(context, node):
+    input_data = _get_inputs(context, node, expected=1)[0]
+    if not types.is_complex(input_data.dtype):
+        # Keep consistent with PyTorch.
+        raise ValueError("The `imag` op only supports complex input.")
+    real_part = mb.complex_imag(data=input_data)
+    context.add(real_part, node.name)
+
+
+@register_torch_op
+def fft_fft(context, node):
+    """Lowers torch.fft.fft by the dialect op `complex_fft` from complex_dialect_ops.py."""
+    input_data, n, dim, norm = _get_inputs(context, node, expected=[4])
+    fft_res = mb.complex_fft(data=input_data, n=n, dim=dim, norm=norm)
+    context.add(fft_res, node.name)
+
+
+@register_torch_op
+def fft_fftn(context, node):
+    """Lowers torch.fft.fftn by the dialect op `complex_fftn` from complex_dialect_ops.py."""
+    input_data, shapes, dims, norm = _get_inputs(context, node, expected=[4])
+    fft_res = mb.complex_fftn(data=input_data, shapes=shapes, dims=dims, norm=norm)
+    context.add(fft_res, node.name)
+
+
+@register_torch_op
+def fft_rfft(context, node):
+    """Lowers torch.fft.rfft by the dialect op `complex_rfft` from complex_dialect_ops.py."""
+    input_data, n, dim, norm = _get_inputs(context, node, expected=[4])
+    rfft_res = mb.complex_rfft(data=input_data, n=n, dim=dim, norm=norm)
+    context.add(rfft_res, node.name)
+
+
+@register_torch_op
+def fft_rfftn(context, node):
+    """Lowers torch.fft.rfftn by the dialect op `complex_rfftn` from complex_dialect_ops.py."""
+    input_data, shapes, dims, norm = _get_inputs(context, node, expected=[4])
+    rfft_res = mb.complex_rfftn(data=input_data, shapes=shapes, dims=dims, norm=norm)
+    context.add(rfft_res, node.name)
+
+
+@register_torch_op
+def fft_ifft(context, node):
+    """Lowers torch.fft.ifft by the dialect op `complex_ifft` from complex_dialect_ops.py."""
+    input_data, n, dim, norm = _get_inputs(context, node, expected=[4])
+    ifft_res = mb.complex_ifft(data=input_data, n=n, dim=dim, norm=norm)
+    context.add(ifft_res, node.name)
+
+
+@register_torch_op
+def fft_ifftn(context, node):
+    """Lowers torch.fft.ifftn by the dialect op `complex_ifftn` from complex_dialect_ops.py."""
+    input_data, shapes, dims, norm = _get_inputs(context, node, expected=[4])
+    ifftn_res = mb.complex_ifftn(data=input_data, shapes=shapes, dims=dims, norm=norm)
+    context.add(ifftn_res, node.name)
+
+
+@register_torch_op
+def fft_irfft(context, node):
+    """Lowers torch.fft.irfft by the dialect op `complex_irfft` from complex_dialect_ops.py."""
+    input_data, n, dim, norm = _get_inputs(context, node, expected=[4])
+    irfft_res = mb.complex_irfft(data=input_data, n=n, dim=dim, norm=norm)
+    context.add(irfft_res, node.name)
+
+
+@register_torch_op
+def fft_irfftn(context, node):
+    """Lowers torch.fft.irfftn by the dialect op `complex_irfftn` from complex_dialect_ops.py."""
+    input_data, shapes, dims, norm = _get_inputs(context, node, expected=[4])
+    irfftn_res = mb.complex_irfftn(data=input_data, shapes=shapes, dims=dims, norm=norm)
+    context.add(irfftn_res, node.name)
+
+
+@register_torch_op(torch_alias=["torchvision::nms"])
+def torchvision_nms(context, node):
+    inputs = _get_inputs(context, node, expected=3)
+    boxes = inputs[0]
+    scores = inputs[1]
+    iou_threshold = inputs[2].val
+    # Use float min to avoid boxes being pruned by scores in MIL NMS op.
+    score_threshold = (
+        _np.finfo(_np.float16).min
+        if boxes.dtype._width == 16
+        else _np.finfo(_np.float32).min
+    )
+    # Use a large number to avoid valid boxes got pruned. We don't use _np.iinfo(_np.int32).max here
+    # because it triggers the MIL NMS op segment fault.
+    MAX_BOXES = 10000
+
+    box_num = boxes.shape[0]
+    if not is_symbolic(box_num) and box_num > MAX_BOXES:
+        raise ValueError(
+            f"Only support at most {MAX_BOXES} boxes, but got {box_num} boxes."
+        )
+
+    # The boxes' coordinates from PyTorch input is (x1, y1, x2, y2) format with 0 <= x1 < x2 and
+    # 0 <= y1 < y2. However, the MIL NMS op expects CENTER_SIZE_WIDTH_FIRST format, which is
+    # (x, y, width, height) where (x, y) is the center coordinate.
+    x1, y1, x2, y2 = mb.split(x=boxes, num_splits=4, axis=-1)
+    # For numerical stability, use x1+(x2-x1)/2 instead of (x1+x2)/2 to calculate center coordinate.
+    width = mb.sub(x=x2, y=x1)
+    height = mb.sub(x=y2, y=y1)
+    center_x = mb.add(x=x1, y=mb.real_div(x=width, y=2.0))
+    center_y = mb.add(x=y1, y=mb.real_div(x=height, y=2.0))
+    boxes = mb.concat(values=[center_x, center_y, width, height], axis=-1)
+
+    # Expand dims to construct the batch dim and score class dim expected by MIL NMS op.
+    boxes = mb.expand_dims(x=boxes, axes=[0])
+    scores = mb.expand_dims(x=scores, axes=[0, -1])
+
+    _, _, indices, valid_outputs = mb.non_maximum_suppression(
+        boxes=boxes,
+        scores=scores,
+        max_boxes=MAX_BOXES,
+        iou_threshold=iou_threshold,
+        score_threshold=score_threshold,
+    )
+
+    indices = mb.squeeze(x=indices, axes=[0])
+    valid_outputs = mb.squeeze(x=valid_outputs, axes=[0])
+    range = mb.range_1d(end=valid_outputs, start=0, step=1)
+    indices = mb.cast(x=indices, dtype="fp32")
+    valid_indices = mb.gather(x=indices, indices=range, axis=0)
+    valid_indices = mb.cast(x=valid_indices, dtype="int32", name=node.name)
+    context.add(valid_indices)

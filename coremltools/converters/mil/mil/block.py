@@ -12,7 +12,7 @@ from coremltools.converters.mil._deployment_compatibility import \
 
 from . import SPACES, types
 from .types.symbolic import is_symbolic, k_used_symbols
-from .var import InternalVar, Var
+from .var import ComplexVar, InternalVar, Var
 from .visitors.dot_visitor import DotVisitor
 
 # BLOCK_STACK[-1] is the current block
@@ -378,7 +378,9 @@ class Block:
         end_id=-1,
         no_check_var_types=False,
     ):
-        """Helper function for replace_uses_of_var_after_op"""
+        """
+        Helper function for replace_uses_of_var_after_op
+        """
         num_ops_affected = 0
 
         if end_id == -1:
@@ -450,13 +452,15 @@ class Block:
         anchor_op,
         old_var,
         new_var,
-        no_check_var_types=False
+        no_check_var_types=False,
+        no_check_var_visibility=False,
     ):
         """
         :param anchor_op: Operation
         :param old_var: Var
         :param new_var: Var
         :param no_check_var_types: bool
+        :param no_check_var_visibility: bool
         :return: True if the old_var can be replaced by new_var. False otherwsie.
 
         This helper function guards the replace_uses_of_var_after_op function,
@@ -473,6 +477,7 @@ class Block:
             old_var=old_var,
             new_var=new_var,
             no_check_var_types=no_check_var_types,
+            no_check_var_visibility=no_check_var_visibility,
         )
         return True
 
@@ -586,13 +591,34 @@ class Block:
             self.validate()
 
             idx = start if anchor_op is not None else len(self.operations)
-            if not self.is_var_visible_in_block(new_var, upto_op_with_id=idx):
-                msg = (
+            visibility_error_msg = (
                     "new_var '{}' is not visible in block '{}' at or before "
                     + "anchor_op '{}'"
-                )
-                anchor_op_name = "None" if anchor_op is None else anchor_op.name
-                raise ValueError(msg.format(new_var.name, self.name, anchor_op_name))
+            )
+            anchor_op_name = "None" if anchor_op is None else anchor_op.name
+
+            if isinstance(new_var, ComplexVar):
+                # For CompleVar, as it's just a temp wrapper to transit the real and imag data, we
+                # check the visibility of its real and imaginary Var instead.
+                if not self.is_var_visible_in_block(new_var.real, upto_op_with_id=idx):
+                    raise ValueError(
+                        visibility_error_msg.format(
+                            new_var.real.name, self.name, anchor_op_name
+                        )
+                    )
+                if not self.is_var_visible_in_block(new_var.imag, upto_op_with_id=idx):
+                    raise ValueError(
+                        visibility_error_msg.format(
+                            new_var.imag.name, self.name, anchor_op_name
+                        )
+                    )
+            else:
+                if not self.is_var_visible_in_block(new_var, upto_op_with_id=idx):
+                    raise ValueError(
+                        visibility_error_msg.format(
+                            new_var.name, self.name, anchor_op_name
+                        )
+                    )
 
         if end_id != -1 and end_id < start:
             msg = "end_op '{}' comes before the anchor_op '{}'"
@@ -666,7 +692,7 @@ class Block:
                 b.set_outputs([])
                 b.remove_ops(b.operations)
 
-            # remove the op (in reverse topological order)
+            # Remove the op (in reverse topological order)
             self.operations.pop(idx)
             op.enclosing_block = None
 

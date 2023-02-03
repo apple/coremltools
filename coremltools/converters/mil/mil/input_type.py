@@ -24,7 +24,19 @@ SUPPORT_INT_TYPES = [
     types.int32,
     types.int64,
 ]
-_SUPPORT_TYPES = SUPPORT_FLOAT_TYPES + SUPPORT_INT_TYPES + [types.bool, types.str]
+
+SUPPORT_COMPLEX_TYPES = [
+    types.complex64,
+    types.complex128,
+]
+
+_SUPPORT_TYPES = (
+    SUPPORT_FLOAT_TYPES
+    + SUPPORT_INT_TYPES
+    + SUPPORT_COMPLEX_TYPES
+    + [types.bool, types.str]
+)
+
 
 class DefaultInputs:
     def __init__(self, **kwargs):
@@ -97,7 +109,7 @@ class InputSpec:
             ValueErrr if value type is incompatible
         """
         msg_prefix = 'Op \"{}\" (op_type: {}) '.format(op_name, op_type)
-        
+
         # check vars sharing the same type_domain_id have the same dtype
         type_domain_group = {}
         var_to_input_name = {}
@@ -110,7 +122,7 @@ class InputSpec:
                 else:
                     type_domain_group[type_domain_id] = [var]
                 var_to_input_name[var] = name
-                    
+
         for type_domain_id, vars in type_domain_group.items():
             expected_dtype = vars[0].dtype
             ref_name = var_to_input_name[vars[0]]
@@ -214,33 +226,33 @@ class TensorInputType(_InputType):
     (1) A object / tuple of builtin types:
         This puts constraint on the allowed inputs data type.
         For example:
-        
+
         ```
         input_spec = InputSpec(
            x=TensorInputType(type_domain=types.int32),
         )
         ```
         only allows input `x` have int32 dtype.
-        
+
         ```
         input_spec = InputSpec(
            x=TensorInputType(type_domain=(types.int32, types.fp16)),
         )
         ```
         allows input `x` be either type of int32 or float16
-        
+
     (2) string:
         Verify different input parameters binding with the same `type_domain` are the same data type.
         This additional check is done by defining a `type_domains` dictionary in the Operation class
         For example:
-        
+
         ```
         class conv(Operation):
             input_spec = InputSpec(
                 x=TensorInputType(type_domain="T"),
                 weight=TensorInputType(type_domain="U"),
             )
-            
+
             type_domains = {
                 "T": (types.fp16, types.fp32),
             }
@@ -248,12 +260,12 @@ class TensorInputType(_InputType):
         would verify:
         (i) `x` and `weight` are one of the float16 or float32 type.
         (ii) `x` and `weight` are the same type.
-    
+
     """
     def __init__(self, type_domain, **kwargs):
         self._type_domain = ()
         self._type_domain_id = None
-        
+
         if isinstance(type_domain, str):
             self.type_domain_id = type_domain
         else:
@@ -266,22 +278,22 @@ class TensorInputType(_InputType):
         result = types.is_scalar(v.dtype) or types.is_tensor(v.dtype)
         result = result and (v.dtype in self.type_domain)
         return result
-        
+
     @property
     def type_domain(self):
         return self._type_domain
-        
+
     @type_domain.setter
     def type_domain(self, val):
         msg = "type_domain must be a tuple of builtin types"
         if not isinstance(val, tuple) or any(map(lambda t: t not in _SUPPORT_TYPES, val)):
             raise ValueError(msg)
         self._type_domain = val
-        
+
     @property
     def type_domain_id(self):
         return self._type_domain_id
-        
+
     @type_domain_id.setter
     def type_domain_id(self, val):
         if not isinstance(val, str):
@@ -365,7 +377,6 @@ class PyFunctionInputType(InternalInputType):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        
+
     def _is_compatible(self, v):
         return callable(v.val)
-

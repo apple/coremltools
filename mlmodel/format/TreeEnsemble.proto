@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-3-clause license that can be
 // found in LICENSE.txt or at https://opensource.org/licenses/BSD-3-Clause
 
-/**
+/*
  * Each tree is a collection of nodes,
  * each of which is identified by a unique identifier.
  *
@@ -29,7 +29,7 @@ import public "DataStructures.proto";
 
 package CoreML.Specification;
 
-/**
+/*
  * A tree ensemble post-evaluation transform.
  */
 enum TreeEnsemblePostEvaluationTransform {
@@ -39,7 +39,7 @@ enum TreeEnsemblePostEvaluationTransform {
     Classification_SoftMaxWithZeroClassReference = 3;
 }
 
-/**
+/*
  * Tree ensemble parameters.
  */
 message TreeEnsembleParameters {
@@ -57,7 +57,7 @@ message TreeEnsembleParameters {
             LeafNode = 6;
         }
 
-        /**
+        /*
          * The branch mode parameters.
          *
          * If branch is false,
@@ -66,7 +66,7 @@ message TreeEnsembleParameters {
          */
         TreeNodeBehavior nodeBehavior = 3;
 
-        /**
+        /*
          * If the node behavior mode is a branch mode,
          * then these values must be filled in.
          */
@@ -76,7 +76,7 @@ message TreeEnsembleParameters {
         uint64 falseChildNodeId = 13;
         bool missingValueTracksTrueChild = 14;
 
-        /**
+        /*
          * The leaf mode.
          *
          * If ``nodeBahavior`` == ``LeafNode``,
@@ -97,7 +97,7 @@ message TreeEnsembleParameters {
 
         repeated EvaluationInfo evaluationInfo = 20;
 
-        /**
+        /*
          * The relative hit rate of a node for optimization purposes.
          *
          * This value has no effect on the accuracy of the result;
@@ -114,7 +114,7 @@ message TreeEnsembleParameters {
 
     repeated TreeNode nodes = 1;
 
-    /**
+    /*
      * The number of prediction dimensions or classes in the model.
      *
      * All instances of ``evaluationIndex`` in a leaf node
@@ -129,7 +129,7 @@ message TreeEnsembleParameters {
      */
     uint64 numPredictionDimensions = 2;
 
-    /**
+    /*
      * The base prediction value.
      *
      * The number of values in this must match
@@ -138,7 +138,7 @@ message TreeEnsembleParameters {
     repeated double basePredictionValue = 3;
 }
 
-/**
+/*
  * A tree ensemble classifier.
  */
 message TreeEnsembleClassifier {
@@ -152,7 +152,7 @@ message TreeEnsembleClassifier {
     }
 }
 
-/**
+/*
  * A tree ensemble regressor.
  */
 message TreeEnsembleRegressor {

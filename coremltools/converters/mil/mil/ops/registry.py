@@ -36,9 +36,8 @@ class SSAOpRegistry:
                     ct.target.iOS14: op_2_iOS13,
                     ct.target.iOS15: op_2_iOS13,
                     ct.target.iOS16: op_2_iOS16,
-                    ct.target.iOS17: op_2_iOS17,
                }``
-                . Three versions of op type ``op_2`` are registered, one each for iOS13, iOS16 & ios17
+                . Two versions of op type ``op_2`` are registered, one each for iOS13, iOS16.
                 . The builder picks up correct version of the op according to curr_opset_version(), which returns the opset version of
                   the current function.
                     -- If ``curr_opset_version()`` is ``None`` (the version of the function is not set), ``mb.op_2`` would call the oldest version of the op by default, which is ``op_2_ios13``
@@ -57,8 +56,7 @@ class SSAOpRegistry:
         target.iOS13,
         target.iOS14,
         target.iOS15,
-        target.iOS16,
-        target.iOS17
+        target.iOS16
     )
     core_ops = defaultdict(dict)
     dialect_ops = {}

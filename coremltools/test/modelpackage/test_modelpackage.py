@@ -238,7 +238,7 @@ class TestMLModel:
         for converted_package_path in [None, temp_package_dir.name]:
             mlmodel = coremltools.convert(
                 traced_model,
-                package_dir = converted_package_path,
+                package_dir=converted_package_path,
                 source='pytorch',
                 convert_to='mlprogram',
                 compute_precision=coremltools.precision.FLOAT32,
@@ -424,11 +424,10 @@ class TestSpecAndMLModelAPIs:
 
     @pytest.mark.skipif(utils._macos_version() < (12, 0), reason="prediction on mlprogram model "
                                                                     "available only on macOS12+")
-    def test_save_spec_api(self):
+    def test_save_spec_api_mlprogram_without_weights_dir(self):
         """
-        save an mlpackage using the save_spec API. Reload the model from disk and verify it works
+        save an mlpackage using the save_spec API. It should error out because no weights dir.
         """
-        # get spec and use it to save .mlpackage
         spec = self.mlmodel.get_spec()
         with tempfile.TemporaryDirectory(suffix=utils._MLPACKAGE_EXTENSION) as model_path:
             # this should raise error:
@@ -437,9 +436,19 @@ class TestSpecAndMLModelAPIs:
                                                 "the weights file as well, using the 'weights_dir' argument."):
                 utils.save_spec(spec, model_path)
 
-            # provide weights dir path to save the spec correctly
+    @pytest.mark.skipif(
+        utils._macos_version() < (12, 0),
+        reason="prediction on mlprogram model " "available only on macOS12+",
+    )
+    def test_save_spec_api(self):
+        """
+        save an mlpackage using the save_spec API. Reload the model from disk and verify it works
+        """
+        spec = self.mlmodel.get_spec()
+        with tempfile.TemporaryDirectory(
+            suffix=utils._MLPACKAGE_EXTENSION
+        ) as model_path:
             utils.save_spec(spec, model_path, weights_dir=self.mlmodel.weights_dir)
-            # check the correctness of .mlpackage
             model = MLModel(model_path)
             self._test_mlmodel_correctness(model)
 
@@ -508,6 +517,3 @@ class TestSpecAndMLModelAPIs:
         # verify that findItemByNameAuthor returns None, when item not found
         model_package_item_info = mlpackage.findItemByNameAuthor(_WEIGHTS_DIR_NAME, "inexistent_author_name")
         assert model_package_item_info is None
-
-
-

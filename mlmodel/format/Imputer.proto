@@ -10,7 +10,7 @@ import public "DataStructures.proto";
 
 package CoreML.Specification;
 
-/**
+/*
  * A transformer that replaces missing values with a default value,
  * such as a statistically-derived value.
  *

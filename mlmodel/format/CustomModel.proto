@@ -8,9 +8,9 @@ option optimize_for = LITE_RUNTIME;
 
 package CoreML.Specification;
 
-/**
-* A parameterized model whose function is defined in code
-*/
+/*
+ * A parameterized model whose function is defined in code
+ */
 message CustomModel {
 
     message CustomModelParamValue {

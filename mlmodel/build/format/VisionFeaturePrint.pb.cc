@@ -108,6 +108,7 @@ bool VisionFeaturePrint_Objects_ObjectsVersion_IsValid(int value) {
   switch (value) {
     case 0:
     case 1:
+    case 2:
       return true;
     default:
       return false;
@@ -117,6 +118,7 @@ bool VisionFeaturePrint_Objects_ObjectsVersion_IsValid(int value) {
 #if !defined(_MSC_VER) || _MSC_VER >= 1900
 const VisionFeaturePrint_Objects_ObjectsVersion VisionFeaturePrint_Objects::OBJECTS_VERSION_INVALID;
 const VisionFeaturePrint_Objects_ObjectsVersion VisionFeaturePrint_Objects::OBJECTS_VERSION_1;
+const VisionFeaturePrint_Objects_ObjectsVersion VisionFeaturePrint_Objects::OBJECTS_VERSION_2;
 const VisionFeaturePrint_Objects_ObjectsVersion VisionFeaturePrint_Objects::ObjectsVersion_MIN;
 const VisionFeaturePrint_Objects_ObjectsVersion VisionFeaturePrint_Objects::ObjectsVersion_MAX;
 const int VisionFeaturePrint_Objects::ObjectsVersion_ARRAYSIZE;

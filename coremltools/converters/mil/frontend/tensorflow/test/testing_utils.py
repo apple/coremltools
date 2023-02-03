@@ -282,7 +282,7 @@ def run_compare_tf(
 
     for k, v in input_key_values.items():
         if isinstance(v, np.ndarray) and issubclass(v.dtype.type, np.integer):
-            input_key_values[k] = v.astype(np.float) # Core ML only accepts floats
+            input_key_values[k] = v.astype(float) # Core ML only accepts floats
 
     pred = None
     if not coremltoolsutils._has_custom_layer(mlmodel._spec):

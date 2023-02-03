@@ -101,7 +101,7 @@ class avg_pool(Pooling):
         * ``S == len(D_in)``.
 
     pad_type: const str (Required)
-        Must be one of ``valid``, ``same`` or ``custom``.
+        Must be one of ``valid``, ``same``, ``custom`` or ``same_lower``.
 
         * ``valid``: No padding. This is equivalent to custom pad with ``pad[i] = 0, for
           all i``.

@@ -162,7 +162,7 @@ class Const(Operation):
         if isinstance(value, (float, np.float64)):
             value = np.float32(value)
         elif isinstance(value, bool):
-            value = np.bool(value)
+            pass
         elif isinstance(value, (int, np.int64)):
             value = np.int32(value)
         elif isinstance(value, (tuple, list, np.ndarray)):
@@ -528,10 +528,12 @@ class make_list(Operation):
           ``init_length`` is the fixed length of the list throughout runtime.
 
     dynamic_length: <bool> (Optional, Default is True)
-
-    elem_shape: <K,T> (Required)
-        * Where ``T = "string", "int32"``.
-        * Non-symbolic 1-D tensor denoting the shape of elements.
+    
+    elem_shape: Tuple[const<T>] (Required)
+        * 1-D vector denoting the shape of elements.
+        * If ``T = int32``, the element shape is known at compile time.
+        * ``T = string`` denotes the symbolic shape, in which the shape is determined
+          at runtime.
         * If not provided, the resulting ``List`` won’t have the elementary shape
           info, which may cause backend errors. Remedy this with SSA passes.
 
@@ -542,6 +544,10 @@ class make_list(Operation):
     Returns
     -------
     List[*]
+    
+    Attributes
+    ----------
+    T: i32, string
     """
 
     input_spec = InputSpec(

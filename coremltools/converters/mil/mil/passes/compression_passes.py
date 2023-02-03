@@ -7,12 +7,22 @@ import numpy as np
 
 from coremltools import _logger as logger
 from coremltools.converters.mil.backend.mil.load import should_use_weight_file
-from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil import (
+    Builder as mb,
+    types,
+)
 from coremltools.converters.mil.mil.ops.defs.iOS16 import (
-    constexpr_affine_dequantize, constexpr_lut_to_dense,
-    constexpr_sparse_to_dense)
+    constexpr_affine_dequantize, 
+    constexpr_lut_to_dense,
+    constexpr_sparse_to_dense,
+)
 from coremltools.converters.mil.mil.passes.quantization_passes import \
     AbstractQuantizationPass
+from coremltools.converters.mil.mil.types.type_mapping import (
+    is_builtin, 
+    nptype_from_builtin,
+    numpy_type_to_builtin_type,
+)
 from coremltools.models.neural_network.quantization_utils import \
     _get_kmeans_lookup_table_and_weight
 
@@ -32,7 +42,7 @@ class WeightSparsifier(AbstractQuantizationPass):
     - If fake_compression=True,   Zeroed-Out Value is encoded via const op
     - Old const is replaced by a new operation with zeroed-out value.
     """
-    WEIGHT_SPARSIFICATION_MODES = ["THRESHOLD_BASED", "PERCENTILE_BASED"]
+    WEIGHT_SPARSIFICATION_MODES = ("THRESHOLD_BASED", "PERCENTILE_BASED")
 
     def __init__(self, mode="threshold_based", threshold=1e-3, target_percentile=1.0, fake_compression=False, op_selector=None):
         super().__init__(op_selector=op_selector)
@@ -139,7 +149,7 @@ class WeightPalettizer(AbstractQuantizationPass):
     - If fake_compression=True,   compressed value is decompressed and then encoded via const op
     - Old const op is replaced by a newly created operation.
     """
-    WEIGHT_PALETTIZATION_MODES = ["KMEANS", "UNIFORM", "UNIQUE", "CUSTOM"]
+    WEIGHT_PALETTIZATION_MODES = ("KMEANS", "UNIFORM", "UNIQUE", "CUSTOM")
     def __init__(self, nbits, fake_compression=False, op_selector=None, mode="kmeans", lut_function=None):
         super().__init__(op_selector=op_selector)
         self.fake_compression = fake_compression
@@ -331,16 +341,31 @@ class WeightAffineQuantizer(AbstractQuantizationPass):
     - If fake_compression=True,   compressed value is decompressed and then encoded via const op
     - Old const is replaced by a newly created operation.
     """
-    WEIGHT_AFFINE_QUANTIZATION_MODES = ["LINEAR_SYMMETRIC", "LINEAR"]
-    def __init__(self, fake_compression=False, op_selector=None, mode="linear"):
+    WEIGHT_AFFINE_QUANTIZATION_MODES = ("LINEAR_SYMMETRIC", "LINEAR")
+    WEIGHT_AFFINE_DTYPES = (types.int8, types.uint8)
+    def __init__(self, fake_compression=False, op_selector=None, mode="linear", dtype=np.int8):
         super().__init__(op_selector=op_selector)
         self.fake_compression = fake_compression
         self.mode = mode.upper()
 
+        # check mode
         if not self.mode in WeightAffineQuantizer.WEIGHT_AFFINE_QUANTIZATION_MODES:
             msg = "Only mode {} supported for weight affine quantization. Got mode {}.".format(
                 WeightAffineQuantizer.WEIGHT_AFFINE_QUANTIZATION_MODES, self.mode
             )
+            raise ValueError(msg)
+
+        # check dtype
+        msg = f"dtype={dtype} is unsupported for affine_quantize_weights."
+        if is_builtin(dtype):
+            self.dtype = dtype
+        else:
+            try:
+                self.dtype = numpy_type_to_builtin_type(dtype)
+            except TypeError:
+                raise ValueError(msg)
+
+        if self.dtype not in WeightAffineQuantizer.WEIGHT_AFFINE_DTYPES:    
             raise ValueError(msg)
 
     def is_valid_op(self, op):
@@ -357,8 +382,15 @@ class WeightAffineQuantizer(AbstractQuantizationPass):
         return axis
 
     @staticmethod
-    def compress(val, axis, mode):
+    def compress(val, axis, mode, dtype):
         mode = mode.upper()
+        mode_dtype_to_range = {
+            (types.int8, "LINEAR"): (-128, 127),
+            (types.int8, "LINEAR_SYMMETRIC"): (-127, 127),
+            (types.uint8, "LINEAR"): (0, 255),
+            (types.uint8, "LINEAR_SYMMETRIC"): (0, 254),
+        }
+
         if not isinstance(val, (np.ndarray, np.generic)):
             raise ValueError("Only numpy arrays are supported")
 
@@ -366,24 +398,38 @@ class WeightAffineQuantizer(AbstractQuantizationPass):
         axes = tuple([i for i in range(len(val.shape)) if i != axis])
         val_min = np.amin(val, axis=axes, keepdims=True)
         val_max = np.amax(val, axis=axes, keepdims=True)
-        val_range = 255
 
         if mode == "LINEAR_SYMMETRIC":
             # For the linear_symmetric mode, the range is symmetrical to 0
             max_abs = np.maximum(np.abs(val_min), np.abs(val_max))
             val_min = -max_abs
             val_max = max_abs
-            val_range = 254
 
-        params.scale = (val_max - val_min) / val_range
+        q_val_min, q_val_max = mode_dtype_to_range[(dtype, mode)]
+
+        # compute the params
+        np_dtype = nptype_from_builtin(dtype)
+        params.zero_point = (q_val_min * val_max - q_val_max * val_min) / (val_max - val_min)
+        params.zero_point = np.round(params.zero_point).astype(np_dtype)
+
+        params.scale = (val_max - val_min) / (q_val_max - q_val_min)
         params.scale = params.scale.astype(val.dtype).squeeze()
-        params.quantized_data = np.round(
-            ((val - val_min) / (val_max - val_min)) * val_range
-        ).astype(np.uint8)
-        params.zero_point = (
-            np.round((-val_min / (val_max - val_min)) * val_range).astype(np.uint8).squeeze()
-        )
+
+        params.quantized_data = np.round(val * (q_val_max - q_val_min) / (val_max - val_min)).astype(np_dtype)
+        params.quantized_data = params.quantized_data + params.zero_point
+
+        params.zero_point = params.zero_point.squeeze()
+
         params.axis = axis
+
+        # sanity check for the symmetric case
+        if mode == "LINEAR_SYMMETRIC":
+            if dtype == types.int8:
+                assert np.all(params.zero_point == 0), "int8 symmetric quantization should yield zero_point = 0, got {}".format(params.zero_point)
+            elif dtype == types.uint8:
+                assert np.all(params.zero_point == 127), "Uint8 symmetric quantization should yield zero_point = 127, got {}".format(params.zero_point)
+            else:
+                raise ValueError("unsupported dtype {}".format(dtype))
         return params
 
     @staticmethod
@@ -394,7 +440,7 @@ class WeightAffineQuantizer(AbstractQuantizationPass):
 
     def transform_op(self, op):
         block = op.enclosing_block
-        quant_params = self.compress(op.val.val, self._get_axis(op), self.mode)
+        quant_params = self.compress(op.val.val, self._get_axis(op), self.mode, self.dtype)
 
         if not self.fake_compression:
             new_var = mb.constexpr_affine_dequantize(
@@ -436,7 +482,7 @@ class WeightDecompressor(AbstractQuantizationPass):
         super().__init__(op_selector=op_selector)
 
     def is_valid_op(self, op):
-        return op.op_type in ["constexpr_affine_dequantize", "constexpr_lut_to_dense", "constexpr_sparse_to_dense"]
+        return op.op_type in ("constexpr_affine_dequantize", "constexpr_lut_to_dense", "constexpr_sparse_to_dense")
 
     def transform_op(self, op):
         block = op.enclosing_block

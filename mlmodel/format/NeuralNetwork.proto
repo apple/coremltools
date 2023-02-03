@@ -3,7 +3,7 @@
 // Use of this source code is governed by a BSD-3-clause license that can be
 // found in LICENSE.txt or at https://opensource.org/licenses/BSD-3-Clause
 
-/**
+/*
  * A neural network is defined through a collection of layers
  * and represents a directed acyclic graph (DAG).
  * Each layer has a name, a layer type,
@@ -124,7 +124,7 @@ enum NeuralNetworkImageShapeMapping {
 
 }
 
-/**
+/*
  A neural network.
  */
 message NeuralNetwork {
@@ -143,10 +143,10 @@ message NeuralNetwork {
 
 }
 
-/// Preprocessing
-/// -------------
+// Preprocessing
+// -------------
 
-/**
+/*
  * A neural network preprocessor that
  * performs a scalar multiplication of an image
  * followed by addition of scalar biases to the channels.
@@ -181,15 +181,15 @@ message NeuralNetwork {
  */
 message NeuralNetworkImageScaler {
 
-    float channelScale = 10; ///Scalar to be multiplied.
-    float blueBias = 20; ///Scalar blue bias to be added.
-    float greenBias = 21; ///Scalar green bias to be added.
-    float redBias = 22; ///Scalar red bias to be added.
-    float grayBias = 30; ///Scalar bias to be added for grayscale images.
+    float channelScale = 10; // Scalar to be multiplied.
+    float blueBias = 20; // Scalar blue bias to be added.
+    float greenBias = 21; // Scalar green bias to be added.
+    float redBias = 22; // Scalar red bias to be added.
+    float grayBias = 30; // Scalar bias to be added for grayscale images.
 
 }
 
-/**
+/*
  * A neural network preprocessor that
  * subtracts the provided mean image from the input image.
  * The mean image is subtracted from the input named
@@ -197,7 +197,7 @@ message NeuralNetworkImageScaler {
  */
 message NeuralNetworkMeanImage {
 
-    /**
+    /*
      * Mean image stored as a flattened array of floats,
      * representing shape [Channel,Height,Width].
      */
@@ -205,10 +205,10 @@ message NeuralNetworkMeanImage {
 
 }
 
-/// Preprocessing parameters for image inputs.
+// Preprocessing parameters for image inputs.
 message NeuralNetworkPreprocessing {
 
-    string featureName = 1; /// must be equal to the input name to which the preprocessing is applied
+    string featureName = 1; // must be equal to the input name to which the preprocessing is applied
     oneof preprocessor {
         NeuralNetworkImageScaler scaler = 10;
         NeuralNetworkMeanImage meanImage = 11;
@@ -216,10 +216,10 @@ message NeuralNetworkPreprocessing {
 
 }
 
-/// Activation Functions
-/// --------------------
+// Activation Functions
+// --------------------
 
-/**
+/*
  * A rectified linear unit (ReLU) activation function.
  *
  * This function has the following formula:
@@ -231,7 +231,7 @@ message ActivationReLU {
 
 }
 
-/**
+/*
  * A leaky rectified linear unit (ReLU) activation function.
  *
  * This function has the following formula:
@@ -248,7 +248,7 @@ message ActivationLeakyReLU {
 
 }
 
-/**
+/*
  * A hyperbolic tangent activation function.
  *
  * This function has the following formula:
@@ -260,7 +260,7 @@ message ActivationTanh {
 
 }
 
-/**
+/*
  * A scaled hyperbolic tangent activation function.
  *
  * This function has the following formula:
@@ -275,7 +275,7 @@ message ActivationScaledTanh {
 
 }
 
-/**
+/*
  * A sigmoid activation function.
  *
  * This function has the following formula:
@@ -287,7 +287,7 @@ message ActivationSigmoid {
 
 }
 
-/**
+/*
  * A linear activation function.
  *
  * This function has the following formula:
@@ -302,7 +302,7 @@ message ActivationLinear {
 
 }
 
-/**
+/*
  * A hard sigmoid activation function.
  *
  * This function has the following formula:
@@ -317,7 +317,7 @@ message ActivationSigmoidHard {
 
 }
 
-/**
+/*
  * A parameterized rectified linear unit (PReLU) activation function.
  * Input must be at least rank 3. Axis = -3 is denoted by "C", or channels.
  * "alpha" parameter can be a vector of length C.
@@ -338,7 +338,7 @@ message ActivationPReLU {
 
 }
 
-/**
+/*
  * An exponential linear unit (ELU) activation function.
  *
  * This function has the following formula:
@@ -355,7 +355,7 @@ message ActivationELU {
 
 }
 
-/**
+/*
  * A thresholded rectified linear unit (ReLU) activation function.
  *
  * This function has the following formula:
@@ -372,7 +372,7 @@ message ActivationThresholdedReLU {
 
 }
 
-/**
+/*
  * A softsign activation function.
  *
  * This function has the following formula:
@@ -384,7 +384,7 @@ message ActivationSoftsign {
 
 }
 
-/**
+/*
  * A softplus activation function.
  *
  * This function has the following formula:
@@ -396,7 +396,7 @@ message ActivationSoftplus {
 
 }
 
-/**
+/*
  * A parametric softplus activation function.
  * Input must be at least rank 3. axis = -3 is denoted by "C", or channels.
  * "alpha"/"beta" parameter can be a vector of length C.
@@ -439,7 +439,7 @@ message ActivationParams {
 
 }
 
-/**
+/*
  * Representation of the intermediate tensors
  */
 message Tensor {
@@ -452,7 +452,7 @@ message Tensor {
 
 }
 
-/**
+/*
  * A single neural network layer.
  */
 message NeuralNetworkLayer {
@@ -703,7 +703,7 @@ message NeuralNetworkLayer {
 
 }
 
-/**
+/*
  * Branching Layer
  *
  * A layer that provides the functionality of branching or an If-Else block.
@@ -716,12 +716,12 @@ message NeuralNetworkLayer {
  */
 message BranchLayerParams {
 
-    /**
+    /*
      * execute this graph if the absolute value of the input Tensor is greater than 1e-6
      * This must be present.
      */
     NeuralNetwork ifBranch = 1;
-    /**
+    /*
      * execute this graph if the absolute value of the input Tensor is less than 1e-6
      * This is optional.
      */
@@ -729,7 +729,7 @@ message BranchLayerParams {
 
 }
 
-/**
+/*
  * Loop Layer
  *
  * A layer that provides the functionality of a "for" loop or a "while" loop.
@@ -779,24 +779,24 @@ message BranchLayerParams {
  */
 message LoopLayerParams {
 
-    /**
+    /*
      * maximum number of iterations. Ignored if input is present.
      */
     uint64 maxLoopIterations = 1;
-    /**
+    /*
      * This field provides the name of the tensor which is produced by the conditionNetwork
      * and whose value is checked to start/continue/terminate the loop. Value close to 0.0f is treated as False.
      * This field is optional.
      * Must be a non empty string if and only if "conditionNetwork" is present.
      */
     string conditionVar = 2;
-    /**
+    /*
      * Must generate a tensor with the name provided in the "conditionVar" field.
      * This field is optional.
      * Must be present if and only if "conditionVar" field is a non empty string.
      */
     NeuralNetwork conditionNetwork = 3;
-    /**
+    /*
      * Body of the loop.
      * This field must be present.
      */
@@ -804,7 +804,7 @@ message LoopLayerParams {
 
 }
 
-/**
+/*
  * Loop break Layer
  *
  * Terminate the loop that has this layer.
@@ -817,7 +817,7 @@ message LoopBreakLayerParams {
 
 }
 
-/**
+/*
  * Loop Continue Layer
  *
  * Stop the current loop iteration and continue on the next iteration.
@@ -830,7 +830,7 @@ message LoopContinueLayerParams {
 
 }
 
-/**
+/*
  * Copy Layer
  *
  * A layer that copies its input tensor to the output tensor.
@@ -843,7 +843,7 @@ message CopyLayerParams {
 
 }
 
-/**
+/*
  * GreaterThan Layer
  *
  * Either 1 or 2 inputs.
@@ -863,14 +863,14 @@ message CopyLayerParams {
  */
 message GreaterThanLayerParams {
 
-    /**
+    /*
      * Compare to the scalar value provided here if there is 1 input
      */
     float alpha = 2;
 
 }
 
-/**
+/*
  * GreaterEqual Layer
  *
  * Either 1 or 2 inputs.
@@ -890,14 +890,14 @@ message GreaterThanLayerParams {
  */
 message GreaterEqualLayerParams {
 
-    /**
+    /*
      * Compare to the scalar value provided here if there is 1 input
      */
     float alpha = 2;
 
 }
 
-/**
+/*
  * LessThan Layer
  *
  * Either 1 or 2 inputs.
@@ -917,14 +917,14 @@ message GreaterEqualLayerParams {
  */
 message LessThanLayerParams {
 
-    /**
+    /*
      * Compare to the scalar value provided here if there is 1 input
      */
     float alpha = 2;
 
 }
 
-/**
+/*
  * LessEqual Layer
  *
  * Either 1 or 2 inputs.
@@ -944,14 +944,14 @@ message LessThanLayerParams {
  */
 message LessEqualLayerParams {
 
-    /**
+    /*
      * Compare to the scalar value provided here if there is 1 input
      */
     float alpha = 2;
 
 }
 
-/**
+/*
  * Equal Layer
  *
  * Either 1 or 2 inputs.
@@ -971,14 +971,14 @@ message LessEqualLayerParams {
  */
 message EqualLayerParams {
 
-    /**
+    /*
      * Compare to the scalar value provided here if there is 1 input
      */
     float alpha = 1;
 
 }
 
-/**
+/*
  * NotEqual Layer
  *
  * Either 1 or 2 inputs.
@@ -998,14 +998,14 @@ message EqualLayerParams {
  */
 message NotEqualLayerParams {
 
-    /**
+    /*
      * Compare to the scalar value provided here if there is 1 input
      */
     float alpha = 1;
 
 }
 
-/**
+/*
  * LogicalAnd Layer
  *
  * Must have 2 inputs, produces 1 output.
@@ -1025,7 +1025,7 @@ message LogicalAndLayerParams {
 
 }
 
-/**
+/*
  * LogicalOr Layer
  *
  * Must have 2 inputs, produces 1 output.
@@ -1045,7 +1045,7 @@ message LogicalOrLayerParams {
 
 }
 
-/**
+/*
  * LogicalXor Layer
  *
  * Must have 2 inputs, produces 1 output.
@@ -1065,7 +1065,7 @@ message LogicalXorLayerParams {
 
 }
 
-/**
+/*
  * LogicalNot Layer
  *
  * Must have 1 input, produces 1 output.
@@ -1084,10 +1084,10 @@ message LogicalNotLayerParams {
 
 }
 
-/// Border Amounts
-/// --------------
+// Border Amounts
+// --------------
 
-/**
+/*
  * Specifies the amount of spatial border to be either padded or cropped.
  *
  * For padding:
@@ -1117,18 +1117,18 @@ message LogicalNotLayerParams {
 message BorderAmounts {
 
     message EdgeSizes {
-        /**
+        /*
          * The amount to be padded or cropped from the beginning.
          */
         uint64 startEdgeSize = 1;
 
-        /**
+        /*
          * The amount to be padded or cropped from the end.
          */
         uint64 endEdgeSize = 2;
     }
 
-    /**
+    /*
      * The border amounts.
      * This must be length 2 in the order ``[H, W]``.
      */
@@ -1136,7 +1136,7 @@ message BorderAmounts {
 
 }
 
-/**
+/*
  * Specifies the type of padding to be used with Convolution/Deconvolution and Pooling layers.
  * After padding, input spatial shape: ``[H_in, W_in]``, gets modified to the
  * output spatial shape ``[H_out, W_out]``.
@@ -1182,7 +1182,7 @@ message ValidPadding {
 
 }
 
-/**
+/*
  * Specifies the type of padding to be used with Convolution/Deconvolution and pooling layers.
  * After padding, input spatial shape: ``[H_in, W_in]``, gets modified to the
  * output spatial shape ``[H_out, W_out]``.
@@ -1241,7 +1241,7 @@ message SamePadding {
 
 }
 
-/**
+/*
  * Specifies how grid points are sampled from an interval.
  * Without the loss of generality, assume the interval to be [0, X-1] from which N points are to be sampled.
  * Here X may correspond to an input image's height or width.
@@ -1254,27 +1254,27 @@ message SamplingMode {
 
     enum Method {
 
-        /**
+        /*
          * start = 0, end = X-1
          * grid points = numpy.linspace(start, end)
          */
         STRICT_ALIGN_ENDPOINTS_MODE = 0;
 
-        /**
+        /*
          * if N == 1: start = end = (X-1)/2
          * otherwise, start = 0, end = X-1
          * grid points = numpy.linspace(start, end)
          */
         ALIGN_ENDPOINTS_MODE = 1;
 
-        /**
+        /*
          * start = 0, end = X - X/N
          * grid points = min(X-1, numpy.linspace(start, end))
          * This is same as the mode used in the upsample layer in this specification, when used with bilinear interpolation. In that case N/X = upsample ratio.
          */
         UPSAMPLE_MODE = 2;
 
-        /**
+        /*
          * spacing = max(1, X-1)/N
          * start = 0.5 * spacing
          * end = start + (N-1) * spacing
@@ -1288,7 +1288,7 @@ message SamplingMode {
 
 }
 
-/**
+/*
  * Specifies the convention used to specify four bounding box coordinates for an image of size (Height, Width).
  * The (0,0) coordinate corresponds to the top-left corner of the image.
  */
@@ -1296,22 +1296,22 @@ message BoxCoordinatesMode {
 
     enum Coordinates {
 
-        /**
+        /*
          * [h_start, w_start, h_end, w_end]
          */
         CORNERS_HEIGHT_FIRST = 0;
 
-        /**
+        /*
          * [w_start, h_start, w_end, h_end]
          */
         CORNERS_WIDTH_FIRST = 1;
 
-        /**
+        /*
          * [h_center, w_center, box_height, box_width]
          */
         CENTER_SIZE_HEIGHT_FIRST = 2;
 
-        /**
+        /*
          * [w_center, h_center, box_width, box_height]
          */
         CENTER_SIZE_WIDTH_FIRST = 3;
@@ -1322,7 +1322,7 @@ message BoxCoordinatesMode {
 
 }
 
-/**
+/*
  * Weights for layer parameters.
  * Weights are stored as repeated floating point numbers
  * using row-major ordering
@@ -1330,17 +1330,17 @@ message BoxCoordinatesMode {
  */
 message WeightParams {
 
-    /**
+    /*
      * Values specified in single / float / FP32 precision.
      */
     repeated float floatValue = 1;
 
-    /**
+    /*
      * Values in 16-bit half precision floating point.
      */
     bytes float16Value = 2;
 
-    /**
+    /*
      * Raw value specification for quantized lower precisions.
      *
      * This field is interpreted as uintN, where N is the number of bits in quantization.
@@ -1350,7 +1350,7 @@ message WeightParams {
      */
     bytes rawValue = 30;
 
-    /**
+    /*
      * Field to be used if int8DynamicQuantize is set in the parent layer.
      * Cannot be set if rawValue is also set.
      * The values in this field are interpreted as INT8.
@@ -1361,7 +1361,7 @@ message WeightParams {
      */
     bytes int8RawValue = 31;
 
-    /**
+    /*
      * Quantization related parameters.
      */
     QuantizationParams quantization = 40;
@@ -1370,7 +1370,7 @@ message WeightParams {
 
 }
 
-/**
+/*
  * Quantization parameters.
  */
 message QuantizationParams {
@@ -1385,7 +1385,7 @@ message QuantizationParams {
 
 message LinearQuantizationParams {
 
-    /**
+    /*
      * Stores scale and bias values corresponding to the quantized weights.
      * Must be an array of 1 element, or an array of C elements, where C
      * is number of output channels. For recurrent layers it is equal to
@@ -1410,10 +1410,10 @@ message LookUpTableQuantizationParams {
 
 }
 
-/// Layers
-/// ------
+// Layers
+// ------
 
-/**
+/*
  * A layer that performs spatial convolution or deconvolution.
  *
  * .. code::
@@ -1457,20 +1457,20 @@ message LookUpTableQuantizationParams {
  */
 message ConvolutionLayerParams {
 
-    /**
+    /*
      * The number of kernels.
      * Same as ``C_out`` used in the layer description.
      */
     uint64 outputChannels = 1;
 
-    /**
+    /*
      * Channel dimension of the kernels.
      * Must be equal to ``inputChannels / nGroups``, if isDeconvolution == False
      * Must be equal to ``inputChannels``, if isDeconvolution == True
      */
     uint64 kernelChannels = 2;
 
-    /**
+    /*
      * Group convolution, i.e. weight reuse along channel axis.
      * Input and kernels are divided into g groups
      * and convolution / deconvolution is applied within the groups independently.
@@ -1478,26 +1478,26 @@ message ConvolutionLayerParams {
      */
     uint64 nGroups = 10;
 
-    /**
+    /*
      * Must be length 2 in the order ``[H, W]``.
      * If not set, default value ``[3, 3]`` is used.
      */
     repeated uint64 kernelSize = 20;
 
-    /**
+    /*
      * Must be length 2 in the order ``[H, W]``.
      * If not set, default value ``[1, 1]`` is used.
      */
     repeated uint64 stride = 30;
 
-    /**
+    /*
      * Must be length 2 in order ``[H, W]``.
      * If not set, default value ``[1, 1]`` is used.
      * It is ignored if ``isDeconvolution == true``.
      */
     repeated uint64 dilationFactor = 40;
 
-    /**
+    /*
      * The type of padding.
      */
     oneof ConvolutionPaddingType {
@@ -1505,17 +1505,17 @@ message ConvolutionLayerParams {
         SamePadding same = 51;
     }
 
-    /**
+    /*
      * Flag to specify whether it is a deconvolution layer.
      */
     bool isDeconvolution = 60;
 
-    /**
+    /*
      * Flag to specify whether a bias is to be added or not.
      */
     bool hasBias = 70;
 
-    /**
+    /*
      * Weights associated with this layer.
      * If convolution (``isDeconvolution == false``), weights have the shape
      * ``[outputChannels, kernelChannels, kernelHeight, kernelWidth]``, where kernelChannels == inputChannels / nGroups
@@ -1523,9 +1523,9 @@ message ConvolutionLayerParams {
      * ``[kernelChannels, outputChannels / nGroups, kernelHeight, kernelWidth]``, where kernelChannels == inputChannels
      */
     WeightParams weights = 90;
-    WeightParams bias = 91; /// Must be of size [outputChannels].
+    WeightParams bias = 91; // Must be of size [outputChannels].
 
-    /**
+    /*
      * The output shape, which has length 2 ``[H_out, W_out]``.
      * This is used only for deconvolution (``isDeconvolution == true``).
      * If not set, the deconvolution output shape is calculated
@@ -1535,7 +1535,7 @@ message ConvolutionLayerParams {
 
 }
 
-/**
+/*
  * A layer that performs a 3-dimensional convolution.
  *
  * .. code::
@@ -1570,17 +1570,17 @@ message ConvolutionLayerParams {
  */
 message Convolution3DLayerParams {
 
-    /**
+    /*
      * The number of channels in the output (channelsOut). Must be a positive integer.
      */
     int32 outputChannels = 1;
 
-    /**
+    /*
      * The number of channels in the input (channels). Must be a positive integer.
      */
     int32 inputChannels = 2;
 
-    /**
+    /*
     * Group convolution, i.e., weight reuse along the channel axis.
     * It must evenly divide both the number of input and output channels and be at most the number
     * of input channels (a depthwise convolution).
@@ -1625,13 +1625,13 @@ message Convolution3DLayerParams {
      */
     int32 dilationWidth = 42;
 
-    /**
+    /*
      * Flag to specify whether a bias is to be added or not.
      * If false, then no bias is added.
      */
     bool hasBias = 50;
 
-    /**
+    /*
      * Weights associated with this layer.
      * Weights have the shape
      * if deconvolution == False
@@ -1642,13 +1642,13 @@ message Convolution3DLayerParams {
      */
     WeightParams weights = 60;
 
-    /**
+    /*
      * Must be of size ``[outputChannels]``.
      */
     WeightParams bias = 61;
 
 
-    /**
+    /*
      * The type of padding.
      * All padding types pad the input shape with zeros.
      * CUSTOM padding will add the custom padding values specified below to their respective
@@ -1716,7 +1716,7 @@ message Convolution3DLayerParams {
 
 }
 
-/**
+/*
  * A layer that performs a matrix-vector or matrix-matrix product.
  * This is equivalent to a fully-connected, or dense layer.
  * The weight parameters correspond to a matrix of dimensions (inputChannels, outputChannels) i.e. (C_in, C_out)
@@ -1746,15 +1746,15 @@ message Convolution3DLayerParams {
  */
 message InnerProductLayerParams {
 
-    uint64 inputChannels = 1; /// Input size: C_in.
-    uint64 outputChannels = 2; /// Output size: C_out.
+    uint64 inputChannels = 1; // Input size: C_in.
+    uint64 outputChannels = 2; // Output size: C_out.
 
-    bool hasBias = 10; /// Whether a bias is added or not.
+    bool hasBias = 10; // Whether a bias is added or not.
 
-    WeightParams weights = 20; /// Weight matrix [C_out, C_in].
-    WeightParams bias = 21; /// Bias vector [C_out].
+    WeightParams weights = 20; // Weight matrix [C_out, C_in].
+    WeightParams bias = 21; // Bias vector [C_out].
 
-    /**
+    /*
      * If set, this layer, at runtime, quantizes the floating point input blob to int8 before applying an
      * inner product using INT8 weight matrix parameters, as provided in weights->int8RawValue. The
      * result is then dequantized.
@@ -1769,7 +1769,7 @@ message InnerProductLayerParams {
 
 }
 
-/**
+/*
  * A layer that performs a matrix lookup and optionally adds a bias.
  * The weights matrix is stored with dimensions [outputChannels, inputDim].
  *
@@ -1794,17 +1794,17 @@ message InnerProductLayerParams {
  */
 message EmbeddingLayerParams {
 
-    uint64 inputDim = 1; /// Size of the input dictionary.
-    uint64 outputChannels = 2; /// Size of the output vectors.
+    uint64 inputDim = 1; // Size of the input dictionary.
+    uint64 outputChannels = 2; // Size of the output vectors.
 
-    bool hasBias = 10; /// Whether a bias is added or not.
+    bool hasBias = 10; // Whether a bias is added or not.
 
-    WeightParams weights = 20; /// 2-D weights of dimensions [outputChannels, inputDim].
-    WeightParams bias = 21; /// Bias of size [outputChannels].
+    WeightParams weights = 20; // 2-D weights of dimensions [outputChannels, inputDim].
+    WeightParams bias = 21; // Bias of size [outputChannels].
 
 }
 
-/**
+/*
  * A layer that performs a matrix lookup and optionally adds a bias.
  * The weights matrix is stored with dimensions [embeddingSize, vocabSize].
  *
@@ -1832,15 +1832,15 @@ message EmbeddingLayerParams {
  */
 message EmbeddingNDLayerParams {
 
-    uint64 vocabSize = 1; /// Size of the input dictionary.
-    uint64 embeddingSize = 2; /// Size of the output vectors.
-    bool hasBias = 3; /// Whether a bias is added or not.
-    WeightParams weights = 20; /// 2-D weights of dimensions [embeddingSize, vocabSize].
-    WeightParams bias = 21; /// Bias of size [embeddingSize].
+    uint64 vocabSize = 1; // Size of the input dictionary.
+    uint64 embeddingSize = 2; // Size of the output vectors.
+    bool hasBias = 3; // Whether a bias is added or not.
+    WeightParams weights = 20; // 2-D weights of dimensions [embeddingSize, vocabSize].
+    WeightParams bias = 21; // Bias of size [embeddingSize].
 
 }
 
-/**
+/*
  * A layer that performs batch normalization,
  * which is performed along axis = -3,
  * and repeated along the other axes, if present.
@@ -1866,9 +1866,9 @@ message EmbeddingNDLayerParams {
  */
 message BatchnormLayerParams {
 
-    uint64 channels = 1; /// Size of the channel dimension in the input.
+    uint64 channels = 1; // Size of the channel dimension in the input.
 
-    /**
+    /*
      * If ``computeMeanVar == true``,
      * the mean and variance are calculated from either
      * the single input instance, if ``instanceNormalization == true``,
@@ -1878,20 +1878,20 @@ message BatchnormLayerParams {
     bool computeMeanVar = 5;
     bool instanceNormalization = 6;
 
-    /**
+    /*
      * A small constant to avoid division by 0 while normalizing by variance.
      * Defaults to ``1e-5`` if not set or set to ``0``.
      */
     float epsilon = 10;
 
-    WeightParams gamma = 15; /// Parameter of length [channels]
-    WeightParams beta = 16; /// Parameter of length [channels]
-    WeightParams mean = 17; /// Parameter of length [channels]
-    WeightParams variance = 18; /// Parameter of length [channels]
+    WeightParams gamma = 15; // Parameter of length [channels]
+    WeightParams beta = 16; // Parameter of length [channels]
+    WeightParams mean = 17; // Parameter of length [channels]
+    WeightParams variance = 18; // Parameter of length [channels]
 
 }
 
-/**
+/*
  * A spatial pooling layer.
  *
  * .. code::
@@ -1934,15 +1934,15 @@ message PoolingLayerParams {
         L2 = 2;
 
     }
-    PoolingType type = 1; /// Type of pooling operation.
+    PoolingType type = 1; // Type of pooling operation.
 
-    /**
+    /*
      * Must be length 2 in the order ``[H, W]``.
      * If not set, default value ``[3, 3]`` is used.
      */
     repeated uint64 kernelSize = 10;
 
-    /**
+    /*
      * Must be length 2 in the order ``[H, W]``.
      * If not set, default value ``[1, 1]`` is used.
      */
@@ -1950,7 +1950,7 @@ message PoolingLayerParams {
 
     message ValidCompletePadding {
 
-        /**
+        /*
          * Must be length 2 in order ``[H, W]``.
          * If not set, value ``[0, 0]`` is used.
          */
@@ -1964,13 +1964,13 @@ message PoolingLayerParams {
         ValidCompletePadding includeLastPixel = 32;
     }
 
-    /**
+    /*
      * If true, padded values are excluded from the count (denominator)
      * when computing average pooling.
      */
     bool avgPoolExcludePadding = 50;
 
-    /**
+    /*
      * If true, global pooling is performed.
      * Kernel size is inferred from the input data spatial dimensions.
      */
@@ -2044,7 +2044,7 @@ message Pooling3DLayerParams {
     // Stride along the width direction
     int32 strideWidth = 7;
     
-    /**
+    /*
      * The type of padding.
      * All padding types pad the input shape with zeros.
      * CUSTOM padding will add the custom padding values specified below to their respective
@@ -2134,7 +2134,7 @@ message GlobalPooling3DLayerParams {
     GlobalPoolingType3D type = 1;
 }
 
-/**
+/*
  * A layer that performs padding along spatial dimensions.
  *
  * .. code::
@@ -2212,20 +2212,20 @@ message GlobalPooling3DLayerParams {
  */
 message PaddingLayerParams {
 
-    /**
+    /*
      * Fill a constant value in the padded region.
      */
     message PaddingConstant {
         float value = 1;
     }
 
-    /**
+    /*
      * Reflect the values at the border for padding.
      */
     message PaddingReflection {
     }
 
-    /**
+    /*
      * Replicate the values at the border for padding.
      */
     message PaddingReplication {
@@ -2237,11 +2237,11 @@ message PaddingLayerParams {
         PaddingReplication replication = 3;
     }
 
-    BorderAmounts paddingAmounts = 10; /// Amounts to be padded to the input.
+    BorderAmounts paddingAmounts = 10; // Amounts to be padded to the input.
 
 }
 
-/**
+/*
  * A layer that concatenates along the axis = -3 or -5.
  * For general concatenation along any axis, see ConcatNDLayer.
  *
@@ -2262,14 +2262,14 @@ message PaddingLayerParams {
  */
 message ConcatLayerParams {
 
-    /**
+    /*
      * If true, concatenate along the axis = -5 instead of axis = -3.
      */
     bool sequenceConcat = 100;
 
 }
 
-/**
+/*
  * A layer that performs local response normalization (LRN).
  *
  * .. code::
@@ -2297,12 +2297,12 @@ message LRNLayerParams {
 
     float alpha = 1;
     float beta = 2;
-    uint64 localSize = 3; /// Number of channels in the normalization window.
-    float k = 4; /// Defaults to 1 if not set or 0. Must be strictly positive.
+    uint64 localSize = 3; // Number of channels in the normalization window.
+    float k = 4; // Defaults to 1 if not set or 0. Must be strictly positive.
 
 }
 
-/**
+/*
  * Softmax Normalization Layer
  *
  * A layer that performs softmax normalization.
@@ -2330,7 +2330,7 @@ message SoftmaxLayerParams {
 
 }
 
-/**
+/*
  * A layer that uniformly splits across axis = -3 to produce a specified number of outputs.
  * For general split operation along any axis, see SplitNDLayer.
  *
@@ -2349,11 +2349,11 @@ message SoftmaxLayerParams {
  */
 message SplitLayerParams {
 
-    uint64 nOutputs = 1; /// The number of outputs.
+    uint64 nOutputs = 1; // The number of outputs.
 
 }
 
-/**
+/*
  * A layer that performs elementwise addition.
  * This layer has limited broadcasting support. For general broadcasting see AddBroadcastableLayer.
  *
@@ -2378,7 +2378,7 @@ message SplitLayerParams {
  */
 message AddLayerParams {
 
-    /**
+    /*
      * Scalar to be added to the input.
      * Only used if there is a single input.
      */
@@ -2386,7 +2386,7 @@ message AddLayerParams {
 
 }
 
-/**
+/*
  * A layer that performs elementwise multiplication.
  * This layer has limited broadcasting support. For general broadcasting see MultiplyBroadcastableLayer.
  *
@@ -2411,7 +2411,7 @@ message AddLayerParams {
  */
 message MultiplyLayerParams {
 
-    /**
+    /*
      * Scalar to be multiplied with the input.
      * Only used if there is a single input.
      */
@@ -2419,7 +2419,7 @@ message MultiplyLayerParams {
 
 }
 
-/**
+/*
  * A layer that applies a unary function.
  *
  * .. code::
@@ -2440,7 +2440,7 @@ message MultiplyLayerParams {
  */
 message UnaryFunctionLayerParams {
 
-    /**
+    /*
      * A unary operator.
      *
      * The following functions are supported:
@@ -2479,27 +2479,27 @@ message UnaryFunctionLayerParams {
         ABS = 6;
         THRESHOLD = 7;
     }
-    Operation type = 1; /// The type of unary function.
+    Operation type = 1; // The type of unary function.
 
-    /**
+    /*
      * A constant used in ``POWER`` and ``THRESHOLD`` functions.
      */
     float alpha = 2;
 
-    /**
+    /*
      * A small constant to avoid division by 0 while normalizing variance.
      * Defaults to ``1e-6`` if not set or set to ``0``.
      */
     float epsilon = 3;
 
-    /**
+    /*
      * Input is shifted by this amount
      * before the unary function is applied.
      * Defaults to ``0.0`` if not set.
      */
     float shift = 4;
 
-    /**
+    /*
      * Input is scaled by this amount
      * before the unary function is applied.
      * Defaults to ``1.0`` if not set or set to ``0``.
@@ -2508,7 +2508,7 @@ message UnaryFunctionLayerParams {
 
 }
 
-/**
+/*
  * A layer that scales up spatial dimensions.
  * It supports two modes: nearest neighbour (default) and bilinear.
  *
@@ -2529,14 +2529,14 @@ message UnaryFunctionLayerParams {
  */
 message UpsampleLayerParams {
 
-    /**
+    /*
      * Scaling Factor. Mutually exclusive with fractionalScalingFactor.
      * Must be length 2 in order ``[H, W]``.
      * If not set, default value ``[1, 1]`` is used.
      */
     repeated uint64 scalingFactor = 1;
 
-    /**
+    /*
      * Fractional scaling factor. Mutually exclusive with scalingFactor.
      * Must be length 2 in order ``[H, W]``.
      * If not set, default value ``[1.0, 1.0]`` is used.
@@ -2550,14 +2550,14 @@ message UpsampleLayerParams {
      */
     enum InterpolationMode {
 
-        NN = 0; /// Nearest Neighbour
-        BILINEAR = 1; /// Bilinear
+        NN = 0; // Nearest Neighbour
+        BILINEAR = 1; // Bilinear
 
     }
 
     InterpolationMode mode = 5;
 
-    /**
+    /*
      * LinearUpsampleMode specifies the behavior for linear upsampling. Only valid when Interpolation Mode is BILINEAR.
      * If input grid is [0, Xin-1] (corresponding to an input size of Xin), and if the output size is Xout,
      * then the grid points are sampled in the following manner:
@@ -2583,7 +2583,7 @@ message UpsampleLayerParams {
 
 }
 
-/**
+/*
 * A layer that resizes the input to a pre-specified spatial size using bilinear interpolation.
 *
 * .. code::
@@ -2604,14 +2604,14 @@ message UpsampleLayerParams {
 */
 message ResizeBilinearLayerParams {
 
-    /**
+    /*
      * Target Spatial Size.
      * Must be length 2 in order ``[Height, Width]``, i.e. ``[H_out, W_out]``.
      * If not set, default value ``[1, 1]`` is used.
      */
     repeated uint64 targetSize = 1;
 
-    /**
+    /*
      * Mode used to compute the grid on which the spatial output values are evaluated.
      * Same mode is applied to both the height and width axes.
      */
@@ -2619,7 +2619,7 @@ message ResizeBilinearLayerParams {
 
 }
 
-/**
+/*
 * A layer that extracts cropped spatial patches or RoIs (regions of interest) from the input and resizes them to a pre-specified size using
 * bilinear interpolation.
 * Note that RoI Align layer can be implemented with this layer followed by a pooling layer.
@@ -2657,14 +2657,14 @@ message ResizeBilinearLayerParams {
 */
 message CropResizeLayerParams {
 
-    /**
+    /*
      * Target Spatial Size.
      * Must be length 2 in order ``[Height, Width]``, i.e. ``[H_out, W_out]``.
      * If not set, default value ``[1, 1]`` is used.
      */
     repeated uint64 targetSize = 1;
 
-    /**
+    /*
      * If true the bounding box coordinates must be in the interval [0, 1].
      * They are scaled by (H_in - 1), (W_in - 1), i.e. based on the input spatial dimensions.
      * If false the bounding box coordinates must be in the interval
@@ -2672,19 +2672,19 @@ message CropResizeLayerParams {
      */
     bool normalizedCoordinates = 2;
 
-    /**
+    /*
      * Mode used to compute the grid on which the spatial output values are evaluated.
      * Same mode is applied to both the height and width axes.
      */
     SamplingMode mode = 3;
 
-    /**
+    /*
      * Representation used to express the bounding box coordinates.
      * It determines how the values of the second input are interpreted.
      */
     BoxCoordinatesMode boxIndicesMode = 4;
 
-    /**
+    /*
      * Additional spatial scale that multiplies the bounding box coordinates.
      * Generally used while implementing the RoI Align layer,
      * which uses unnormalized RoI coordinates along with a spatial scale less than or equal to 1.
@@ -2693,7 +2693,7 @@ message CropResizeLayerParams {
 
 }
 
-/**
+/*
  * A layer that performs elementwise addition of a bias,
  * which is broadcasted to match the input shape.
  *
@@ -2712,14 +2712,14 @@ message CropResizeLayerParams {
  */
 message BiasLayerParams {
 
-    /**
+    /*
      * The shape of the bias.
      * Must be one of the following:
      * ``[1]``, ``[C]``, ``[1, H, W]`` or ``[C, H, W]``.
      */
     repeated uint64 shape = 1;
 
-    /**
+    /*
      * The bias values.
      * The size must be equal to the product of the ``shape`` dimensions.
      */
@@ -2727,7 +2727,7 @@ message BiasLayerParams {
 
 }
 
-/**
+/*
  * A layer that performs elmentwise multiplication by a scale factor
  * and optionally adds a bias;
  * both the scale and bias are broadcasted to match the input shape.
@@ -2747,29 +2747,29 @@ message BiasLayerParams {
  */
 message ScaleLayerParams {
 
-    /**
+    /*
      * The shape of the scale.
      * Must be one of the following:
      * ``[1]``, ``[C]``, ``[1, H, W]`` or ``[C, H, W]``.
      */
     repeated uint64 shapeScale = 1;
 
-    /**
+    /*
      * The scale values.
      * The size must be equal to the product of the ``shape`` dimensions.
      */
-    WeightParams scale = 2; /// Scale values. Size must be equal to the product of dimensions specified in shapeScale.
+    WeightParams scale = 2; // Scale values. Size must be equal to the product of dimensions specified in shapeScale.
 
-    bool hasBias = 3; /// If true, a bias is added after scaling.
+    bool hasBias = 3; // If true, a bias is added after scaling.
 
-    /**
+    /*
      * The shape of the bias.
      * Must be one of the following:
      * ``[1]``, ``[C]``, ``[1, H, W]`` or ``[C, H, W]``.
      */
     repeated uint64 shapeBias = 4;
 
-    /**
+    /*
      * The bias values.
      * The size must be equal to the product of the ``shape`` dimensions.
      */
@@ -2777,7 +2777,7 @@ message ScaleLayerParams {
 
 }
 
-/**
+/*
  * A layer that loads data as a parameter and provides it as an output.
  * The output is rank 5. For general rank, see LoadConstantNDLayer.
  *
@@ -2792,13 +2792,13 @@ message ScaleLayerParams {
  */
 message LoadConstantLayerParams {
 
-    /**
+    /*
      * The shape of the constant to be loaded,
      * which must be``[C, H, W]``, that is length 3.
      */
     repeated uint64 shape = 1;
 
-    /**
+    /*
      * The data values,
      * of size ``C * H * W``.
      */
@@ -2806,7 +2806,7 @@ message LoadConstantLayerParams {
 
 }
 
-/**
+/*
  * A layer that performs L2 normalization, i.e. divides by the
  * the square root of the sum of squares of all elements of input.
  *
@@ -2829,7 +2829,7 @@ message LoadConstantLayerParams {
  */
 message L2NormalizeLayerParams {
 
-    /**
+    /*
      * A small constant to avoid division by 0 while normalizing variance.
      * Defaults to ``1e-6`` if not set or set to ``0``.
      */
@@ -2837,10 +2837,10 @@ message L2NormalizeLayerParams {
 
 }
 
-/// Data Reorganization Layers
-/// --------------------------
+// Data Reorganization Layers
+// --------------------------
 
-/**
+/*
  * A layer that flattens the input.
  *
  * .. code::
@@ -2874,7 +2874,7 @@ message FlattenLayerParams {
 
 }
 
-/**
+/*
  * A layer that recasts the input into a new shape.
  *
  * .. code::
@@ -2903,7 +2903,7 @@ message FlattenLayerParams {
  */
 message ReshapeLayerParams {
 
-    /**
+    /*
      * The shape of the output.
      * Must be of length 3 or 4.
      * If set to 3, ``targetShape`` is interpreted as
@@ -2924,7 +2924,7 @@ message ReshapeLayerParams {
 
 }
 
-/**
+/*
  * A layer that rearranges the dimensions and data of an input.
  * For generic transpose/permute operation see TransposeLayer.
  *
@@ -2959,7 +2959,7 @@ message ReshapeLayerParams {
  */
 message PermuteLayerParams {
 
-    /**
+    /*
      * The order in which to permute the dimensions.
      * Must have length 4 and a permutation of ``[0, 1, 2, 3]``.
      */
@@ -2967,7 +2967,7 @@ message PermuteLayerParams {
 
 }
 
-/**
+/*
  * A layer that reorganizes data in the input in specific ways.
  *
  * .. code::
@@ -3051,11 +3051,11 @@ message ReorganizeDataLayerParams {
 
     }
     ReorganizationType mode = 1;
-    uint64 blockSize = 2; /// must be greater than 1
+    uint64 blockSize = 2; // must be greater than 1
 
 }
 
-/**
+/*
  * A layer that slices the input data along axis = -1 or -2 or -3.
  * For general slice along any axis, please see SliceStaticLayer/SliceDynamicLayer.
  *
@@ -3080,9 +3080,9 @@ message ReorganizeDataLayerParams {
  */
 message SliceLayerParams {
 
-    int64 startIndex = 1; /// start of the sliced section. Inclusive.
-    int64 endIndex = 2; /// end of sliced section. Exclusive.
-    uint64 stride = 3; /// The step size. Must be positive.
+    int64 startIndex = 1; // start of the sliced section. Inclusive.
+    int64 endIndex = 2; // end of sliced section. Exclusive.
+    uint64 stride = 3; // The step size. Must be positive.
 
     enum SliceAxis {
 
@@ -3099,7 +3099,7 @@ message SliceLayerParams {
 
 }
 
-/**
+/*
  * A layer that reduces the input using a specified operation.
  *
  * .. code::
@@ -3186,12 +3186,12 @@ message ReduceLayerParams {
         L2 = 6;
         MAX = 7;
         MIN = 8;
-        ARGMAX = 9; /// only supported with axis = C, H or W.
+        ARGMAX = 9; // only supported with axis = C, H or W.
 
     }
-    ReduceOperation mode = 1; /// Specifies function used to reduce.
+    ReduceOperation mode = 1; // Specifies function used to reduce.
 
-    /**
+    /*
      * Used if mode is ``LOGSUM``.
      * Defaults to ``1e-6`` if not set or is set to ``0``.
      */
@@ -3217,7 +3217,7 @@ message ReduceLayerParams {
 
 }
 
-/**
+/*
  * A layer that crops the spatial dimensions of an input.
  * If two inputs are provided, the shape of the second input is used as the reference shape.
  *
@@ -3261,13 +3261,13 @@ message ReduceLayerParams {
  */
 message CropLayerParams {
 
-    /**
+    /*
      * The amounts to be cropped from the input.
      * Used only if a single input is provided.
      */
     BorderAmounts cropAmounts = 1;
 
-    /**
+    /*
      * The offset amounts.
      * Used only if two inputs are provided.
      * Must be of length 2, in order ``[H, W]``.
@@ -3276,7 +3276,7 @@ message CropLayerParams {
 
 }
 
-/**
+/*
  * A layer that computes the elementwise average of the inputs.
  * This layer has limited broadcasting support. For general broadcasting see AddBroadcastableLayer.
  *
@@ -3297,7 +3297,7 @@ message AverageLayerParams {
 
 }
 
-/**
+/*
  * A layer that computes the elementwise maximum over the inputs.
  *
  * .. code::
@@ -3317,7 +3317,7 @@ message MaxLayerParams {
 
 }
 
-/**
+/*
  * A layer that computes the elementwise minimum over the inputs.
  *
  * .. code::
@@ -3337,7 +3337,7 @@ message MinLayerParams {
 
 }
 
-/**
+/*
  * A layer that computes the dot product of two vectors.
  *
  * .. code::
@@ -3357,7 +3357,7 @@ message MinLayerParams {
  */
 message DotProductLayerParams {
 
-    /**
+    /*
      * If true, inputs are normalized first,
      * thereby computing the cosine similarity.
      */
@@ -3365,7 +3365,7 @@ message DotProductLayerParams {
 
 }
 
-/**
+/*
  * A layer that performs mean variance normalization, along axis = -3.
  *
  * .. code::
@@ -3392,17 +3392,17 @@ message DotProductLayerParams {
  */
 message MeanVarianceNormalizeLayerParams {
 
-    /**
+    /*
      * If true, mean and variance are computed across channels.
      */
     bool acrossChannels = 1;
 
-    /**
+    /*
      * If false, only mean is subtracted.
      */
     bool normalizeVariance = 2;
 
-    /**
+    /*
      * A small constant to avoid division by 0 while normalizing variance.
      * Defaults to ``1e-6`` if not set or set to ``0``.
      */
@@ -3410,7 +3410,7 @@ message MeanVarianceNormalizeLayerParams {
 
 }
 
-/**
+/*
  * A layer that repeats a sequence or the dimension sitting at axis = -5
  *
  * .. code::
@@ -3428,7 +3428,7 @@ message MeanVarianceNormalizeLayerParams {
  */
 message SequenceRepeatLayerParams {
 
-    /**
+    /*
      * Number of repetitions.
      * Defaults to ``1`` if not set or set to ``0``.
      */
@@ -3436,8 +3436,8 @@ message SequenceRepeatLayerParams {
 
 }
 
-/// Recurrent Layers
-/// ----------------
+// Recurrent Layers
+// ----------------
 
 /*
  * The following activations are supported with recurrent layers:
@@ -3449,7 +3449,7 @@ message SequenceRepeatLayerParams {
  * - Hard Sigmoid: min(max(alpha * x + beta, 0), 1), currently only supported for alpha = 0.2, beta = 0.5
  */
 
-/**
+/*
  * A simple recurrent layer.
  *
  * .. code::
@@ -3482,32 +3482,32 @@ message SequenceRepeatLayerParams {
  */
 message SimpleRecurrentLayerParams {
 
-    uint64 inputVectorSize = 1; /// The size of the input vectors.
-    uint64 outputVectorSize = 2; /// The size of the output vectors.
+    uint64 inputVectorSize = 1; // The size of the input vectors.
+    uint64 outputVectorSize = 2; // The size of the output vectors.
 
-    /**
+    /*
     * Activations supported are Linear, Sigmoid, Tanh, ReLU, Scaled Tanh (alpha = 1.71, beta = 2/3), Hard sigmoid (alpha = 0.2, beta = 0.5)
     */
-    ActivationParams activation = 10; /// The activation function.
+    ActivationParams activation = 10; // The activation function.
 
-    /**
+    /*
         If false output is just the result after final state update.
         If true, output is a sequence, containing outputs at all time steps.
     */
     bool sequenceOutput = 15;
 
-    bool hasBiasVector = 20; /// If false, no bias is added.
+    bool hasBiasVector = 20; // If false, no bias is added.
 
-    WeightParams weightMatrix = 30; /// Weight matrix W.
-    WeightParams recursionMatrix = 31; /// Recursion Weight matrix R.
-    WeightParams biasVector = 32; /// Bias vector b.
+    WeightParams weightMatrix = 30; // Weight matrix W.
+    WeightParams recursionMatrix = 31; // Recursion Weight matrix R.
+    WeightParams biasVector = 32; // Bias vector b.
 
     bool reverseInput = 100;
     // If true, then the node processes the input sequence from right to left
 
 }
 
-/**
+/*
  * Gated-Recurrent Unit (GRU) Layer
  *
  * .. code::
@@ -3567,45 +3567,45 @@ message SimpleRecurrentLayerParams {
  */
 message GRULayerParams {
 
-    uint64 inputVectorSize = 1; /// Size of the input vectors.
-    uint64 outputVectorSize = 2; /// Size of the output vectors.
+    uint64 inputVectorSize = 1; // Size of the input vectors.
+    uint64 outputVectorSize = 2; // Size of the output vectors.
 
-    /**
+    /*
      * 2 element array representing activations [f(), g()] in that order.
      * Typical values used = [sigmoid, tanh].
      * Activations supported are Linear, Sigmoid, Tanh, ReLU, Scaled Tanh (alpha = 1.71, beta = 2/3), Hard sigmoid (alpha = 0.2, beta = 0.5)
      */
     repeated ActivationParams activations = 10;
 
-    /**
+    /*
      * If false output is just the result after final state update.
      * If true, output is a sequence, containing outputs at all time steps.
      */
     bool sequenceOutput = 15;
 
-    /**
+    /*
      * If false, no biases (``b_z``, ``b_r``, ``b_o``) are added.
      */
     bool hasBiasVectors = 20;
 
-    WeightParams updateGateWeightMatrix = 30; /// Weight Matrix W_z.
-    WeightParams resetGateWeightMatrix = 31; /// Weight Matrix W_r.
-    WeightParams outputGateWeightMatrix = 32; /// Weight Matrix W_o.
+    WeightParams updateGateWeightMatrix = 30; // Weight Matrix W_z.
+    WeightParams resetGateWeightMatrix = 31; // Weight Matrix W_r.
+    WeightParams outputGateWeightMatrix = 32; // Weight Matrix W_o.
 
-    WeightParams updateGateRecursionMatrix = 50; /// Recursion Weight Matrix R_z.
-    WeightParams resetGateRecursionMatrix = 51; /// Recursion Weight Matrix R_r.
-    WeightParams outputGateRecursionMatrix = 52; /// Recursion Weight Matrix R_o.
+    WeightParams updateGateRecursionMatrix = 50; // Recursion Weight Matrix R_z.
+    WeightParams resetGateRecursionMatrix = 51; // Recursion Weight Matrix R_r.
+    WeightParams outputGateRecursionMatrix = 52; // Recursion Weight Matrix R_o.
 
-    WeightParams updateGateBiasVector = 70; /// Bias vector b_z.
-    WeightParams resetGateBiasVector = 71; /// Bias vector b_r.
-    WeightParams outputGateBiasVector = 72; /// Bias vector b_o.
+    WeightParams updateGateBiasVector = 70; // Bias vector b_z.
+    WeightParams resetGateBiasVector = 71; // Bias vector b_r.
+    WeightParams outputGateBiasVector = 72; // Bias vector b_o.
 
-    /// If true, then the node processes the input sequence from right to left
+    // If true, then the node processes the input sequence from right to left
     bool reverseInput = 100;
 
 }
 
-/**
+/*
  * Long short-term memory (LSTM) parameters.
  *
  * This is described by the following equations:
@@ -3662,28 +3662,28 @@ message GRULayerParams {
  */
 message LSTMParams {
 
-    /**
+    /*
      * If true, output is a sequence, containing outputs at all time steps.
      * If false, output is just the result after final state update.
      */
     bool sequenceOutput = 10;
 
-    /**
+    /*
      * If false, no biases (``b_i``, ``b_f``, ``b_z``, ``b_o``) are added.
      */
     bool hasBiasVectors = 20;
 
-    /**
+    /*
      * If true, a vector of ``1`` values is added to ``b_f``.
      */
     bool forgetBias = 30;
 
-    /**
+    /*
      * If true, peephole vectors are included.
      */
     bool hasPeepholeVectors = 40;
 
-    /**
+    /*
      * If the coupled Input and Forget flag is on, the behaviour of
      * ``c_t`` is changed to the following (i.e. forget gate is not used):
      *
@@ -3695,7 +3695,7 @@ message LSTMParams {
      */
     bool coupledInputAndForgetGate = 50;
 
-    /**
+    /*
      * Places a limit on the maximum and minimum values of ``c_t``.
      * c_t = min(c_t, cellClipThreshold)
      * c_t = max(c_t, -cellClipThreshold)
@@ -3705,35 +3705,35 @@ message LSTMParams {
 
 }
 
-/**
+/*
  * Weights for long short-term memory (LSTM) layers
  */
 message LSTMWeightParams {
 
-    WeightParams inputGateWeightMatrix = 1; /// Weight Matrix W_i.
-    WeightParams forgetGateWeightMatrix = 2; /// Weight Matrix W_f.
-    WeightParams blockInputWeightMatrix = 3; /// Weight Matrix W_z.
-    WeightParams outputGateWeightMatrix = 4; /// Weight Matrix W_o.
+    WeightParams inputGateWeightMatrix = 1; // Weight Matrix W_i.
+    WeightParams forgetGateWeightMatrix = 2; // Weight Matrix W_f.
+    WeightParams blockInputWeightMatrix = 3; // Weight Matrix W_z.
+    WeightParams outputGateWeightMatrix = 4; // Weight Matrix W_o.
 
-    WeightParams inputGateRecursionMatrix = 20; /// Recursion Weight Matrix R_i.
-    WeightParams forgetGateRecursionMatrix = 21; /// Recursion Weight Matrix R_f.
-    WeightParams blockInputRecursionMatrix = 22; /// Recursion Weight Matrix R_z.
-    WeightParams outputGateRecursionMatrix = 23; /// Recursion Weight Matrix R_o.
+    WeightParams inputGateRecursionMatrix = 20; // Recursion Weight Matrix R_i.
+    WeightParams forgetGateRecursionMatrix = 21; // Recursion Weight Matrix R_f.
+    WeightParams blockInputRecursionMatrix = 22; // Recursion Weight Matrix R_z.
+    WeightParams outputGateRecursionMatrix = 23; // Recursion Weight Matrix R_o.
 
     //biases:
-    WeightParams inputGateBiasVector = 40; /// Bias vector b_i.
-    WeightParams forgetGateBiasVector = 41; /// Bias vector b_f.
-    WeightParams blockInputBiasVector = 42; /// Bias vector b_z.
-    WeightParams outputGateBiasVector = 43; /// Bias vector b_o.
+    WeightParams inputGateBiasVector = 40; // Bias vector b_i.
+    WeightParams forgetGateBiasVector = 41; // Bias vector b_f.
+    WeightParams blockInputBiasVector = 42; // Bias vector b_z.
+    WeightParams outputGateBiasVector = 43; // Bias vector b_o.
 
     //peepholes:
-    WeightParams inputGatePeepholeVector = 60; /// Peephole vector p_i.
-    WeightParams forgetGatePeepholeVector = 61; /// Peephole vector p_f.
-    WeightParams outputGatePeepholeVector = 62; /// Peephole vector p_o.
+    WeightParams inputGatePeepholeVector = 60; // Peephole vector p_i.
+    WeightParams forgetGatePeepholeVector = 61; // Peephole vector p_f.
+    WeightParams outputGatePeepholeVector = 62; // Peephole vector p_o.
 
 }
 
-/**
+/*
  * A unidirectional long short-term memory (LSTM) layer.
  *
  * .. code::
@@ -3753,10 +3753,10 @@ message LSTMWeightParams {
  */
 message UniDirectionalLSTMLayerParams {
 
-    uint64 inputVectorSize = 1; /// Size of the input vectors.
-    uint64 outputVectorSize = 2; /// Size of the output vectors.
+    uint64 inputVectorSize = 1; // Size of the input vectors.
+    uint64 outputVectorSize = 2; // Size of the output vectors.
 
-    /**
+    /*
      * 3 element array representing activations [f(),g(),h()] in that order.
      * Typical values used = [sigmoid, tanh, tanh].
      * Activations supported are Linear, Sigmoid, Tanh, ReLU, Scaled Tanh (alpha = 1.71, beta = 2/3), Hard sigmoid (alpha = 0.2, beta = 0.5)
@@ -3765,14 +3765,14 @@ message UniDirectionalLSTMLayerParams {
 
     LSTMParams params = 15;
 
-    LSTMWeightParams weightParams = 20; /// Weights, biases and peepholes.
+    LSTMWeightParams weightParams = 20; // Weights, biases and peepholes.
 
-    /// If true, then the node processes the input sequence from right to left
+    // If true, then the node processes the input sequence from right to left
     bool reverseInput = 100;
 
 }
 
-/**
+/*
  * Bidirectional long short-term memory (LSTM) layer
  *
  * .. code::
@@ -3819,34 +3819,34 @@ message UniDirectionalLSTMLayerParams {
  */
 message BiDirectionalLSTMLayerParams {
 
-    /**
+    /*
      * Size of the input vectors.
      */
     uint64 inputVectorSize = 1;
-    /**
+    /*
      * Size of the outputs vectors.
      * It is same for both forward and backward LSTMs.
      */
     uint64 outputVectorSize = 2;
 
-    /**
+    /*
      * 3 element array representing activations [f(),g(),h()] in that order.
      * Typical values used = [sigmoid, tanh, tanh].
      * Activations supported are Linear, Sigmoid, Tanh, ReLU, Scaled Tanh (alpha = 1.71, beta = 2/3), Hard sigmoid (alpha = 0.2, beta = 0.5)
      */
     repeated ActivationParams activationsForwardLSTM = 10;
-    /**
+    /*
      * Currently, backward LSTM activations
      * must be same as the ones for the forward LSTM.
      */
     repeated ActivationParams activationsBackwardLSTM = 11;
 
-    /**
+    /*
      * Common parameters shared by the forward and backward LSTMs.
      */
     LSTMParams params = 15;
 
-    /**
+    /*
      * Weights and biases.
      * Must be a length 2 message,
      * for the forward and backward LSTM respectively.
@@ -3874,7 +3874,7 @@ message CustomLayerParams {
 
 }
 
-/**
+/*
  * A layer that rearranges the dimensions and data of an input.
  *
  * .. code::
@@ -3897,7 +3897,7 @@ message CustomLayerParams {
 
 message TransposeLayerParams {
 
-    /**
+    /*
      * Length of "axes" should match the rank of input & output tensor
      * "axes" should be a permutation of "[0,1,2,...,N-1]" where N is the rank.
      */
@@ -3905,7 +3905,7 @@ message TransposeLayerParams {
 
 }
 
-/**
+/*
  * A layer that computes the matrix multiplication of two tensors with numpy-like broadcasting
  * where the matrices reside in the last two indices of the tensor.
  *
@@ -3944,12 +3944,12 @@ message TransposeLayerParams {
  */
 message BatchedMatMulLayerParams {
 
-    /**
+    /*
      * If transposeA is true, it transposes the left matrix on the fly before matrix multiplication.
      * (is ignored when there is one input)
      */
     bool transposeA = 1;
-    /**
+    /*
      * If transposeB is true, it transposes the right matrix on the fly before matrix multiplication.
      * (is ignored when there is one input)
      */
@@ -3959,10 +3959,10 @@ message BatchedMatMulLayerParams {
      * Following parameters are ignored when there are two inputs.
      */
 
-    uint64 weightMatrixFirstDimension = 5; /// X1: same as the last dimension of the input tensor
-    uint64 weightMatrixSecondDimension = 6; /// X2: same as the last dimension of the output tensor
+    uint64 weightMatrixFirstDimension = 5; // X1: same as the last dimension of the input tensor
+    uint64 weightMatrixSecondDimension = 6; // X2: same as the last dimension of the output tensor
 
-    bool hasBias = 7; /// Whether a bias is added or not. Supported only when there is one input.
+    bool hasBias = 7; // Whether a bias is added or not. Supported only when there is one input.
 
     /*
      * Weight matrix representing shape [X1, X2].
@@ -3970,9 +3970,9 @@ message BatchedMatMulLayerParams {
      * in the "repeated float" or "bytes" fields of the message "WeightParams"
      */
     WeightParams weights = 8;
-    WeightParams bias = 9; /// Bias vector [X2]. Supported only when there is one input.
+    WeightParams bias = 9; // Bias vector [X2]. Supported only when there is one input.
 
-    /**
+    /*
      * If set, this layer, at runtime, quantizes the floating point input blob to int8 before applying the
      * matrix multiplication using the INT8 weight parameters provided in weights->int8RawValue. The
      * result is then dequantized.
@@ -3988,7 +3988,7 @@ message BatchedMatMulLayerParams {
 
 }
 
-/**
+/*
  * A layer that concatenates a list of tensors along a specified axis.
  *
  * .. code::
@@ -4025,12 +4025,12 @@ message BatchedMatMulLayerParams {
  */
 message ConcatNDLayerParams {
 
-    /**
+    /*
      * Dimension along which to concatenate. Supports negative values of the parameter 'axis'.
      */
     int64 axis = 1;
     
-    /**
+    /*
      * (Only available in Core ML Specification >= 5 (iOS >= 14, macOS >= 11.0)
      * Interleave option. If True, concatenation is done via interleaving the inputs.
      * This requires all inputs to have the exact same shape.
@@ -4040,7 +4040,7 @@ message ConcatNDLayerParams {
 
 }
 
-/**
+/*
  * A layer that performs softmax normalization along a specified axis.
  *
  * .. code::
@@ -4053,14 +4053,14 @@ message ConcatNDLayerParams {
  */
 message SoftmaxNDLayerParams {
 
-    /**
+    /*
      * Dimension on which the softmax would be performed. Supports negative values of the parameter 'axis'.
      */
     int64 axis = 1;
 
 }
 
-/**
+/*
  * A layer that reverses specific dimensions of the input tensor.
  * It is similar in functionality to the numpy.flip method.
  *
@@ -4069,7 +4069,7 @@ message SoftmaxNDLayerParams {
  */
 message ReverseLayerParams {
 
-    /**
+    /*
      * Reverses each dimension of the input tensor for which corresponding reverseDim is set to True.
      * Requires len(reverseDim) == rank(inputTensor)
      */
@@ -4077,7 +4077,7 @@ message ReverseLayerParams {
 
 }
 
-/**
+/*
  * A layer that reverses variable length slices.
  *
  * Requires 2 inputs and produces 1 output.
@@ -4136,7 +4136,7 @@ message ReverseSeqLayerParams {
 
 }
 
-/**
+/*
  * A layer that loads data as a parameter and provides it as an output.
  *
  * .. code::
@@ -4149,7 +4149,7 @@ message ReverseSeqLayerParams {
  */
 message LoadConstantNDLayerParams {
 
-    /**
+    /*
      * The shape of the constant to be loaded.
      */
     repeated uint64 shape = 1;
@@ -4157,7 +4157,7 @@ message LoadConstantNDLayerParams {
 
 }
 
-/**
+/*
  * A layer that generates an output tensor with a constant value.
  * Input is only used to determine the shape of the output.
  * This layer is used to allocate a tensor with a dynamic shape (that of the input) and constant value.
@@ -4182,7 +4182,7 @@ message FillLikeLayerParams {
 
 }
 
-/**
+/*
  * A layer that generates an output tensor with a constant value.
  * This layer is used to allocate a tensor with a static shape and constant value.
  *
@@ -4203,7 +4203,7 @@ message FillStaticLayerParams {
 
 }
 
-/**
+/*
  * A layer that generates an output tensor with a constant value.
  * This layer is used to allocate a tensor with a dynamic shape (as specified by the input) and constant value.
  *
@@ -4226,7 +4226,7 @@ message FillDynamicLayerParams {
 
 }
 
-/**
+/*
  * A layer that returns the elements either from tensor x or tensor y,
  * depending on the value in the condition tensor.
  * It is similar in functionality to the numpy.where method with 3 inputs.
@@ -4248,7 +4248,7 @@ message WhereBroadcastableLayerParams {
 
 }
 
-/**
+/*
  * A layer that computes elementwise trigonometric sine function.
  *
  *
@@ -4264,7 +4264,7 @@ message SinLayerParams {
 
 }
 
-/**
+/*
  * A layer that computes elementwise trigonometric cosine function.
  *
  *
@@ -4280,7 +4280,7 @@ message CosLayerParams {
 
 }
 
-/**
+/*
  * A layer that computes elementwise trigonometric tangent function.
  *
  *
@@ -4296,7 +4296,7 @@ message TanLayerParams {
 
 }
 
-/**
+/*
  * A layer that computes elementwise trigonometric arcsine function.
  *
  *
@@ -4312,7 +4312,7 @@ message AsinLayerParams {
 
 }
 
-/**
+/*
  * A layer that computes elementwise trigonometric arccosine function.
  *
  *
@@ -4328,7 +4328,7 @@ message AcosLayerParams {
 
 }
 
-/**
+/*
  * A layer that computes elementwise trigonometric arctangent function.
  *
  *
@@ -4344,7 +4344,7 @@ message AtanLayerParams {
 
 }
 
-/**
+/*
  * A layer that computes elementwise trigonometric hyperbolic sine function.
  *
  *
@@ -4360,7 +4360,7 @@ message SinhLayerParams {
 
 }
 
-/**
+/*
  * A layer that computes elementwise trigonometric hyperbolic cosine function.
  *
  *
@@ -4376,7 +4376,7 @@ message CoshLayerParams {
 
 }
 
-/**
+/*
  * A layer that computes elementwise trigonometric hyperbolic tangent function.
  *
  *
@@ -4392,7 +4392,7 @@ message TanhLayerParams {
 
 }
 
-/**
+/*
  * A layer that computes elementwise trigonometric hyperbolic arcsine function.
  *
  *
@@ -4408,7 +4408,7 @@ message AsinhLayerParams {
 
 }
 
-/**
+/*
  * A layer that computes elementwise trigonometric hyperbolic arccosine function.
  *
  *
@@ -4424,7 +4424,7 @@ message AcoshLayerParams {
 
 }
 
-/**
+/*
  * A layer that computes elementwise trigonometric hyperbolic arctangent function.
  *
  *
@@ -4439,7 +4439,7 @@ message AcoshLayerParams {
 message AtanhLayerParams {
 
 }
-/**
+/*
  * A layer that raises each element in first tensor to the power of
  * corresponding element in the second tensor.
  * Supports conventional numpy-like broadcasting.
@@ -4462,7 +4462,7 @@ message PowBroadcastableLayerParams {
 
 }
 
-/**
+/*
  * A layer that computes the exponential of all elements in the input tensor, with the base 2.
  *
  *
@@ -4478,7 +4478,7 @@ message Exp2LayerParams {
 
 }
 
-/**
+/*
  * A layer that returns a tensor containing the indices of all non-zero
  * elements of input tensor.
  * It is similar in functionality to the numpy.where method with 1 input.
@@ -4515,7 +4515,7 @@ message WhereNonZeroLayerParams {
 
 }
 
-/**
+/*
  * A layer that copies a tensor setting everything outside a central band in
  * each inner-most matrix to zero.
  *
@@ -4537,7 +4537,7 @@ message MatrixBandPartLayerParams {
 
 }
 
-/**
+/*
  * A layer that copies a tensor setting everything outside upper triangular to zero.
  *
  * Requires 1 input and produces 1 output.
@@ -4552,7 +4552,7 @@ message UpperTriangularLayerParams {
 
 }
 
-/**
+/*
  * A layer that copies a tensor setting everything outside lower triangular to zero.
  *
  * Requires 1 input and produces 1 output.
@@ -4567,7 +4567,7 @@ message LowerTriangularLayerParams {
 
 }
 
-/**
+/*
  *
  * A layer that broadcasts a tensor to a new shape.
  *
@@ -4583,7 +4583,7 @@ message BroadcastToLikeLayerParams {
 
 }
 
-/**
+/*
  *
  * A layer that broadcasts a tensor to a new shape.
  *
@@ -4598,7 +4598,7 @@ message BroadcastToStaticLayerParams {
 
 }
 
-/**
+/*
  *
  * A layer that broadcasts a tensor to a new shape.
  *
@@ -4612,7 +4612,7 @@ message BroadcastToDynamicLayerParams {
 
 }
 
-/**
+/*
  * A layer that performs element-wise addition operation with broadcast support.
  *
  * Requires 2 inputs and produces 1 output.
@@ -4621,7 +4621,7 @@ message AddBroadcastableLayerParams {
 
 }
 
-/**
+/*
  * A layer that performs element-wise maximum operation with broadcast support.
  *
  * Requires 2 inputs and produces 1 output.
@@ -4630,7 +4630,7 @@ message MaxBroadcastableLayerParams {
 
 }
 
-/**
+/*
  * A layer that performs element-wise minimum operation with broadcast support.
  *
  * Requires 2 inputs and produces 1 output.
@@ -4639,7 +4639,7 @@ message MinBroadcastableLayerParams {
 
 }
 
-/**
+/*
  * A layer that performs element-wise modular operation with broadcast support.
  *
  * Requires 2 inputs and produces 1 output.
@@ -4648,7 +4648,7 @@ message ModBroadcastableLayerParams {
 
 }
 
-/**
+/*
  * A layer that performs element-wise floor division operation with broadcast support.
  *
  * Requires 2 inputs and produces 1 output.
@@ -4657,7 +4657,7 @@ message FloorDivBroadcastableLayerParams {
 
 }
 
-/**
+/*
  * A layer that performs element-wise subtract operation with broadcast support.
  *
  * Requires 2 inputs and produces 1 output.
@@ -4666,7 +4666,7 @@ message SubtractBroadcastableLayerParams {
 
 }
 
-/**
+/*
  * A layer that performs element-wise multiply operation with broadcast support.
  *
  * Requires 2 inputs and produces 1 output.
@@ -4675,7 +4675,7 @@ message MultiplyBroadcastableLayerParams {
 
 }
 
-/**
+/*
  * A layer that performs element-wise division operation with broadcast support.
  *
  * Requires 2 inputs and produces 1 output.
@@ -4684,7 +4684,7 @@ message DivideBroadcastableLayerParams {
 
 }
 
-/**
+/*
  * Gather layer that gathers elements from the first input, along a specified axis,
  * at indices specified in the second input.
  * It is similar in functionality to the numpy.take method.
@@ -4730,12 +4730,12 @@ message GatherLayerParams {
 enum ScatterMode {
 
     SCATTER_UPDATE = 0;
-    SCATTER_ADD = 1; /// add
-    SCATTER_SUB = 2; /// subtract
-    SCATTER_MUL = 3; /// multiply
-    SCATTER_DIV = 4; /// divide
-    SCATTER_MAX = 5; /// maximum
-    SCATTER_MIN = 6; /// minimum
+    SCATTER_ADD = 1; // add
+    SCATTER_SUB = 2; // subtract
+    SCATTER_MUL = 3; // multiply
+    SCATTER_DIV = 4; // divide
+    SCATTER_MAX = 5; // maximum
+    SCATTER_MIN = 6; // minimum
 
 }
 
@@ -4805,11 +4805,11 @@ enum ScatterMode {
 message ScatterLayerParams {
 
     int64 axis = 1;
-    ScatterMode mode = 2; /// mode of accumulation.
+    ScatterMode mode = 2; // mode of accumulation.
 
 }
 
-/**
+/*
  * A layer that gathers elements from the first input, 'params', at the multi-indices specified
  * by the second input, 'indices'.
  *
@@ -4887,11 +4887,11 @@ message GatherNDLayerParams {
  */
 message ScatterNDLayerParams {
 
-    ScatterMode mode = 1; /// mode of accumulation.
+    ScatterMode mode = 1; // mode of accumulation.
 
 }
 
-/**
+/*
  * Gather layer that gathers elements from the first input, along a specified axis,
  * at indices specified in the second input.
  * It is similar in functionality to the numpy.take_along_axis method.
@@ -4925,7 +4925,7 @@ message GatherAlongAxisLayerParams {
 
 }
 
-/**
+/*
  * A layer that scatters data into a new tensor according to indices from
  * the input along the given axis into the output tensor.
  * This is the inverse operation of GatherAlongAxis.
@@ -4957,11 +4957,11 @@ message GatherAlongAxisLayerParams {
 message ScatterAlongAxisLayerParams {
 
     int64 axis = 1;
-    ScatterMode mode = 2; /// mode of accumulation.
+    ScatterMode mode = 2; // mode of accumulation.
 
 }
 
-/**
+/*
  * A layer that stacks the input tensors along the given axis.
  * It is similar in functionality to the numpy.stack method.
  *
@@ -4989,7 +4989,7 @@ message StackLayerParams {
 
 }
 
-/**
+/*
  * A layer that reshapes a tensor that does not alter the rank of the input.
  * Order of the data is left unchanged.
  *
@@ -5011,7 +5011,7 @@ message StackLayerParams {
  */
 message RankPreservingReshapeLayerParams {
 
-    /**
+    /*
      * Length of this field must be same as the input/output rank.
      * It can have 0's, in which case the corresponding input dimension is kept intact.
      * At most one element can be -1, in which case the output dimension is calculated from rest of the shape.
@@ -5020,7 +5020,7 @@ message RankPreservingReshapeLayerParams {
 
 }
 
-/**
+/*
  * Constant padding layer.
  * Pad the input array with a constant value, either along a single given axis or along a set of axes.
  *
@@ -5057,26 +5057,26 @@ message RankPreservingReshapeLayerParams {
  * output shape = (20,17,14)
  */
 message ConstantPaddingLayerParams {
-    /**
+    /*
      * The value to be used for padding.
      */
     float value = 1;
 
-    /**
+    /*
      * Length of this repeated field must be twice the rank of the first input.
      * 2*i-th and (2*i+1)-th values represent the amount of padding to be applied to the the i-th input
      * dimension, "before" and "after" the input values, respectively.
      */
     repeated uint64 padAmounts = 2;
 
-    /**
+    /*
      * When this is True, positive values in "padAmounts" are equivalent to the output shape.
      * In that case only one of padAmounts[2*i] and padAmounts[2*i+1] can be non zero, for i=0,..,rank-1.
      */
     bool padToGivenOutputSizeMode = 3;
 }
 
-/**
+/*
  * A layer that returns a tensor filled with values from the normal distribution.
  *
  * Requires 1 input and produces 1 output.
@@ -5102,7 +5102,7 @@ message RandomNormalLikeLayerParams {
 
 }
 
-/**
+/*
  * A layer that returns a tensor filled with values from the normal distribution.
  *
  * Requires no input and produces 1 output.
@@ -5126,7 +5126,7 @@ message RandomNormalStaticLayerParams {
 
 }
 
-/**
+/*
  * A layer that returns a tensor filled with values from the normal distribution.
  *
  * Requires 1 input and produces 1 output.
@@ -5150,7 +5150,7 @@ message RandomNormalDynamicLayerParams {
 
 }
 
-/**
+/*
  * A layer that returns a tensor filled with values from the uniform distribution.
  *
  * Requires 1 input and produces 1 output.
@@ -5176,7 +5176,7 @@ message RandomUniformLikeLayerParams {
 
 }
 
-/**
+/*
  * A layer that returns a tensor filled with values from the uniform distribution.
  *
  * Requires no input and produces 1 output.
@@ -5200,7 +5200,7 @@ message RandomUniformStaticLayerParams {
 
 }
 
-/**
+/*
  * A layer that returns a tensor filled with values from the uniform distribution.
  *
  * Requires 1 input and produces 1 output.
@@ -5225,7 +5225,7 @@ message RandomUniformDynamicLayerParams {
 
 }
 
-/**
+/*
  * A layer that returns a tensor filled with values from the Bernoulli distribution.
  *
  * Requires 1 input and produces 1 output.
@@ -5249,7 +5249,7 @@ message RandomBernoulliLikeLayerParams {
 
 }
 
-/**
+/*
  * A layer that returns a tensor filled with values from the Bernoulli distribution.
  *
  * Requires no input and produces 1 output.
@@ -5270,7 +5270,7 @@ message RandomBernoulliStaticLayerParams {
 
 }
 
-/**
+/*
  * A layer that returns a tensor filled with values from the Bernoulli distribution.
  *
  * Requires 1 input and produces 1 output.
@@ -5292,7 +5292,7 @@ message RandomBernoulliDynamicLayerParams {
 
 }
 
-/**
+/*
  * A layer that returns a tensor of the specified shape filled with values from the categorical distribution.
  *
  * Requires 1 input and produces 1 output.
@@ -5317,7 +5317,7 @@ message CategoricalDistributionLayerParams {
     float temperature = 5;
 }
 
-/**
+/*
  * A layer that performs reduction with L1 normalization operation.
  *
  * Negative indexing is supported.
@@ -5337,7 +5337,7 @@ message ReduceL1LayerParams {
 
 }
 
-/**
+/*
  * A layer that performs reduction with L2 normalization operation.
  *
  * Negative indexing is supported.
@@ -5357,7 +5357,7 @@ message ReduceL2LayerParams {
 
 }
 
-/**
+/*
  * A layer that performs reduction with max operation.
  *
  * Negative indexing is supported.
@@ -5377,7 +5377,7 @@ message ReduceMaxLayerParams {
 
 }
 
-/**
+/*
  * A layer that performs reduction with min operation.
  *
  * Negative indexing is supported.
@@ -5397,7 +5397,7 @@ message ReduceMinLayerParams {
 
 }
 
-/**
+/*
  * A layer that performs reduction with sum operation.
  *
  * Negative indexing is supported.
@@ -5417,7 +5417,7 @@ message ReduceSumLayerParams {
 
 }
 
-/**
+/*
  * A layer that performs reduction with prod operation.
  *
  * Negative indexing is supported.
@@ -5437,7 +5437,7 @@ message ReduceProdLayerParams {
 
 }
 
-/**
+/*
  * A layer that performs reduction with mean operation.
  *
  * Negative indexing is supported.
@@ -5457,7 +5457,7 @@ message ReduceMeanLayerParams {
 
 }
 
-/**
+/*
  * A layer that performs reduction with logSum operation.
  *
  * Negative indexing is supported.
@@ -5477,7 +5477,7 @@ message ReduceLogSumLayerParams {
 
 }
 
-/**
+/*
  * A layer that performs reduction with logSumExp operation.
  *
  * Negative indexing is supported.
@@ -5497,7 +5497,7 @@ message ReduceSumSquareLayerParams {
 
 }
 
-/**
+/*
  * A layer that performs reduction with logSumExp operation.
  *
  * Negative indexing is supported.
@@ -5517,7 +5517,7 @@ message ReduceLogSumExpLayerParams {
 
 }
 
-/**
+/*
  * A layer that increases the rank of the input tensor by adding unit dimensions.
  *
  * Requires 1 input and produces 1 output.
@@ -5539,7 +5539,7 @@ message ReduceLogSumExpLayerParams {
  */
 message ExpandDimsLayerParams {
 
-    /**
+    /*
      * Axis values provided here get dimension 1 in the output tensor.
      * Negative indexing is supported.
      */
@@ -5547,7 +5547,7 @@ message ExpandDimsLayerParams {
 
 }
 
-/**
+/*
  * A layer that flattens the input tensor into a 2-dimensional matrix.
  *
  * Requires 1 input and produces 1 output.
@@ -5588,7 +5588,7 @@ message FlattenTo2DLayerParams {
 
 }
 
-/**
+/*
  * A layer that reshapes a tensor.
  *
  * Requires 1 input and produces 1 output.
@@ -5603,7 +5603,7 @@ message ReshapeStaticLayerParams {
 
 }
 
-/**
+/*
  * A layer that reshapes a tensor.
  *
  * Requires 2 inputs and produces 1 output.
@@ -5618,7 +5618,7 @@ message ReshapeLikeLayerParams {
 
 }
 
-/**
+/*
  * A layer that reshapes a tensor.
  *
  * Requires 2 inputs and produces 1 output.
@@ -5631,7 +5631,7 @@ message ReshapeDynamicLayerParams {
 
 }
 
-/**
+/*
  * A layer that decreases the rank of the input tensor by removing unit dimensions.
  *
  * Requires 1 input and produces 1 output.
@@ -5660,7 +5660,7 @@ message ReshapeDynamicLayerParams {
  */
 message SqueezeLayerParams {
 
-    /**
+    /*
      * Axis values provided here get removed from the input tensor.
      * Negative indexing is supported.
      */
@@ -5669,7 +5669,7 @@ message SqueezeLayerParams {
 
 }
 
-/**
+/*
  * A layer that returns top K (or bottom K) values and the corresponding indices
  * of the input along a given axis.
  *
@@ -5690,13 +5690,13 @@ message SqueezeLayerParams {
  */
 message TopKLayerParams {
 
-    int64 axis = 1; ///  negative indexing is supported
-    uint64 K = 2; /// is ignored if a second input is present.
-    bool useBottomK = 3; /// if true, bottom K (values, indices) are returned instead
+    int64 axis = 1; //  negative indexing is supported
+    uint64 K = 2; // is ignored if a second input is present.
+    bool useBottomK = 3; // if true, bottom K (values, indices) are returned instead
 
 }
 
-/**
+/*
  * A layer that returns the indices of the maximum value along a specified axis in a tensor.
  *
  * Requires 1 input and produces 1 output. Negative indexing is supported.
@@ -5723,7 +5723,7 @@ message ArgMaxLayerParams {
 
 }
 
-/**
+/*
 * A layer that returns the indices of the minimum value along a specified axis in a tensor.
 *
 * Requires 1 input and produces 1 output. Negative indexing is supported.
@@ -5750,7 +5750,7 @@ message ArgMinLayerParams {
 
 }
 
-/**
+/*
  * A layer layer that splits the input tensor into multiple output tensors,
  * along the specified axis.
  *
@@ -5779,7 +5779,7 @@ message SplitNDLayerParams {
 
 }
 
-/**
+/*
  * A layer that performs element-wise ceil operation on the input tensor that
  * rounds the value to the smallest integer not less than x.
  *
@@ -5791,7 +5791,7 @@ message CeilLayerParams {
 
 }
 
-/**
+/*
  * A layer that performs element-wise round operation on the input tensor
  * that rounds the value to the nearest integer.
  *
@@ -5803,7 +5803,7 @@ message RoundLayerParams {
 
 }
 
-/**
+/*
  * A layer that performs element-wise floor operation on the input tensor
  * that rounds the value to the largest integer not greater than x.
  *
@@ -5815,7 +5815,7 @@ message FloorLayerParams {
 
 }
 
-/**
+/*
  * A layer that performs element-wise sign operation (+1 for positive values,
  * -1 for negative values, 0 for zeros).
  *
@@ -5827,7 +5827,7 @@ message SignLayerParams {
 
 }
 
-/**
+/*
  * A layer that performs element-wise clip operation. Clip the values in the
  * input tensor to the threshold values [min_value, max_value].
  *
@@ -5847,7 +5847,7 @@ message ClipLayerParams {
 
 }
 
-/**
+/*
  * A layer that extracts a slice of size ``(end - begin) / stride``
  * from the given input tensor.
  * Support negative indexing and negative strides.
@@ -5903,7 +5903,7 @@ message SliceStaticLayerParams {
 
 }
 
-/**
+/*
  * A layer that extracts a slice of size ``(end - begin) / stride``
  * from the given input tensor.
  * Support negative indexing and negative strides.
@@ -5934,7 +5934,7 @@ message SliceDynamicLayerParams {
 
 }
 
-/**
+/*
  * A layer that constructs a tensor by repeating the input tensor multiple
  * number of times.
  *
@@ -5972,7 +5972,7 @@ message TileLayerParams {
 
 }
 
-/**
+/*
  * A layer that returns the shape of an input tensor.
  *
  * Requires 1 input and produces 1 output.
@@ -5985,7 +5985,7 @@ message GetShapeLayerParams {
 
 }
 
-/**
+/*
  * A layer that computes the Gauss error function,
  * which is defined as:
  *
@@ -5999,7 +5999,7 @@ message ErfLayerParams {
 
 }
 
-/**
+/*
  * A layer that evaluates the Gaussian Error Linear Unit (GELU) activation.
  * Following equations are used to compute the activation based on the value of the "mode" parameter:
  *
@@ -6029,11 +6029,11 @@ message GeluLayerParams {
 
     }
 
-    GeluMode mode = 1; /// mode of GELU operation.
+    GeluMode mode = 1; // mode of GELU operation.
 
 }
 
-/**
+/*
  * RangeStatic layer that returns a tensor that contains evenly spaced values.
  * It is similar in functionality to the numpy.arange method.
  *
@@ -6048,7 +6048,7 @@ message RangeStaticLayerParams {
 
 }
 
-/**
+/*
  * A layer that returns a tensor that contains evenly spaced values.
  * Its functionality is similar to the numpy.arange method.
  *
@@ -6069,7 +6069,7 @@ message RangeDynamicLayerParams {
 
 }
 
-/**
+/*
  * A layer that returns a tensor containing all windows of size ``windowSize``
  * separated by ``step`` along the dimension ``axis``.
  *
@@ -6103,7 +6103,7 @@ message SlidingWindowsLayerParams {
 
 }
 
-/**
+/*
  * A layer that applies layer normalization over the input tensor.
  *
  * Requires 1 input and produces 1 output.
@@ -6134,7 +6134,7 @@ message LayerNormalizationLayerParams {
 
 }
 
-/**
+/*
  * Non maximum suppression (NMS) layer.
  * Applies the non maximum suppression algorithm to input bounding box coordinates.
  * The effect of this layer is similar to the functionality of the "NonMaximumSuppression"
@@ -6184,29 +6184,29 @@ message LayerNormalizationLayerParams {
  *
  */
 message NonMaximumSuppressionLayerParams {
-    /**
+    /*
      * The intersection over union (IoU) threshold over which boxes are suppressed.
      */
     float iouThreshold = 1;
 
-    /**
+    /*
      * Before IoU suppression is performed, boxes with class scores below this threshold are rejected.
      */
     float scoreThreshold = 2;
 
-    /**
+    /*
      * The maximum number of boxes to be given out as output.
      * If the number of surviving boxes are less, output is padded up to this number.
      */
     uint64 maxBoxes = 3;
 
-    /**
+    /*
      * If true, suppression is performed independently within boxes of each class.
      */
     bool perClassSuppression = 4;
 }
 
-/**
+/*
  * A layer that performs element-wise clamped ReLU operation.
  *
  * Requires 1 input and produces 1 output.
@@ -6230,7 +6230,7 @@ message ClampedReLULayerParams {
 
 }
 
-/**
+/*
 * A layer that returns the indices that would sort the input tensor, along a specified axis.
 *
 * Requires 1 input and produces 1 output.
@@ -6258,12 +6258,12 @@ message ClampedReLULayerParams {
 */
 message ArgSortLayerParams {
 
-    int64 axis = 1; /// must be between [0, input_rank - 1]
+    int64 axis = 1; // must be between [0, input_rank - 1]
     bool descending = 2;
 
 }
 
-/**
+/*
  * A layer that does slice operation by providing size to be extracted 
  * from the given input tensor.
  *
@@ -6290,10 +6290,10 @@ message SliceBySizeLayerParams {
 }
 
 
-/// Neural Network Specializations
-/// ------------------------------
+// Neural Network Specializations
+// ------------------------------
 
-/**
+/*
  * A neural network specialized as a classifier.
  */
 message NeuralNetworkClassifier {
@@ -6322,7 +6322,7 @@ message NeuralNetworkClassifier {
 }
 
 
-/**
+/*
  * A layer that computes the one hot representation of the input.
  *
  * Requires 1 or 2 inputs and produces 1 output.
@@ -6354,14 +6354,14 @@ message NeuralNetworkClassifier {
 
 message OneHotLayerParams {
 
-    uint64 oneHotVectorSize = 1; /// size of the one hot vector
-    int64 axis = 2; ///  negative indexing is supported. It refers to the axis in the output tensor.
+    uint64 oneHotVectorSize = 1; // size of the one hot vector
+    int64 axis = 2; //  negative indexing is supported. It refers to the axis in the output tensor.
     float onValue = 3;
     float offValue = 4;
 }
 
 
-/**
+/*
  * A layer that computes the cumsum values of the input along a given axis.
  *
  * Requires 1 or 2 inputs and produces 1 output.
@@ -6393,18 +6393,18 @@ message OneHotLayerParams {
 
 message CumSumLayerParams {
 
-    int64 axis = 1; ///  negative indexing is supported
+    int64 axis = 1; //  negative indexing is supported
 
-    /// if true, the first element of the output is 0, and the last element contains the sum of the input up to the penultimate value
-    /// if false, the first element of the output is same as the input and the last element is the sum of all the input values
-    /// (this behavior is reversed when "reverse" flag is True)
+    // if true, the first element of the output is 0, and the last element contains the sum of the input up to the penultimate value
+    // if false, the first element of the output is same as the input and the last element is the sum of all the input values
+    // (this behavior is reversed when "reverse" flag is True)
     bool excludeFinalSum = 2;
 
-    bool reverse = 3; /// if true, cumsum is performed in the opposite direction
+    bool reverse = 3; // if true, cumsum is performed in the opposite direction
 }
 
 
-/**
+/*
  * A neural network specialized as a regressor.
  */
 message NeuralNetworkRegressor {
@@ -6422,11 +6422,11 @@ message NeuralNetworkRegressor {
 
 }
 
-/// ---------------------------------------------------------
-/// On-device Training related messages
-/// ---------------------------------------------------------
+// ---------------------------------------------------------
+// On-device Training related messages
+// ---------------------------------------------------------
 
-/**
+/*
  * Details on how the network will be updated
  */
 message NetworkUpdateParameters {
@@ -6435,18 +6435,18 @@ message NetworkUpdateParameters {
     Optimizer optimizer = 2;
     Int64Parameter epochs = 3;
 
-    /**
+    /*
      * Describes whether to shuffle the batch of data between epochs.
      */
     BoolParameter shuffle = 10;
 
-    /**
+    /*
      * The seed to be used in an associated random number generator.
      */
     Int64Parameter seed = 20;
 }
 
-/**
+/*
  * Loss layer - categorical cross entropy and mean squared error are the only supported loss functions currently
  */
 message LossLayer {
@@ -6461,7 +6461,7 @@ message LossLayer {
 
 }
 
-/**
+/*
  * Categorical cross entropy loss layer
  * Categorical cross entropy is used for single label categorization (only one category is applicable for each data point).
  *
@@ -6479,7 +6479,7 @@ message CategoricalCrossEntropyLossLayer {
 
 }
 
-/**
+/*
  * Mean squared error loss layer,
  * specifying input and target
  */
@@ -6490,7 +6490,7 @@ message MeanSquaredErrorLossLayer {
 
 }
 
-/**
+/*
  * Optimizer - stochastic gradient descent and adam are the only supported optimizers currently
  */
 message Optimizer {
@@ -6504,7 +6504,7 @@ message Optimizer {
 
 }
 
-/**
+/*
  * Stochastic gradient descent optimizer,
  * specifying configurable learning rate, mini batch size, and momentum
  */
@@ -6516,7 +6516,7 @@ message SGDOptimizer {
 
 }
 
-/**
+/*
  * Adam optimizer,
  * specifying configurable learning rate, mini batch size, betas, and eps
  */

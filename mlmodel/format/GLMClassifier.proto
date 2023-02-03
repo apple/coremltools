@@ -10,7 +10,7 @@ import public "DataStructures.proto";
 
 package CoreML.Specification;
 
-/**
+/*
  * A generalized linear model classifier.
  */
 message GLMClassifier {
@@ -20,12 +20,12 @@ message GLMClassifier {
 
     enum PostEvaluationTransform {
         Logit = 0;
-        Probit = 1; /// Only binary classification is supported for probit
+        Probit = 1; // Only binary classification is supported for probit
     }
 
     enum ClassEncoding {
-        ReferenceClass = 0; /// First class is the reference class
-        OneVsRest = 1; /// Also called One vs All
+        ReferenceClass = 0; // First class is the reference class
+        OneVsRest = 1; // Also called One vs All
     }
 
     repeated DoubleArray weights = 1;
@@ -33,7 +33,7 @@ message GLMClassifier {
     PostEvaluationTransform postEvaluationTransform = 3;
     ClassEncoding classEncoding = 4;
 
-    /**
+    /*
      * Required class label mapping.
      */
     oneof ClassLabels {

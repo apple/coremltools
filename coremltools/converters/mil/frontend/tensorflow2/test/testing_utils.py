@@ -143,7 +143,7 @@ def run_compare_tf2(
 
     for k,v in input_dict.items():
         if isinstance(v, np.ndarray) and issubclass(v.dtype.type, np.integer):
-            input_dict[k] = v.astype(np.float) # Core ML only accepts floats
+            input_dict[k] = v.astype(float) # Core ML only accepts floats
 
     if frontend_only or _macos_version() < (10, 13) \
        or (mlmodel.is_package and _macos_version() < (12, 0)):

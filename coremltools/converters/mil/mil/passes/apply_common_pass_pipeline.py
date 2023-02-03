@@ -38,6 +38,7 @@ def apply_common_pass_pipeline(prog, passes):
         return
 
     common_passes = [
+        "common::lower_complex_dialect_ops",
         "common::update_output_dtypes",
         "common::cast_optimization",
         "common::const_elimination",

@@ -7,11 +7,13 @@ import numpy as np
 import sympy as sm
 
 import coremltools.proto.MIL_pb2 as _mil_pm
-from coremltools.converters.mil.mil import types as _mil_types
 
 from .get_type_info import get_type_info
 from .type_bool import bool as types_bool
 from .type_bool import is_bool
+from .type_complex import complex64 as types_complex64
+from .type_complex import complex128 as types_complex128
+from .type_complex import is_complex
 from .type_double import fp16 as types_fp16
 from .type_double import fp32 as types_fp32
 from .type_double import fp64 as types_fp64
@@ -42,6 +44,8 @@ _types_TO_NPTYPES = {
     types_fp16: np.float16,
     types_fp32: np.float32,
     types_fp64: np.float64,
+    types_complex64: np.complex64,
+    types_complex128: np.complex128,
     types_str: np.str_,
 }
 
@@ -58,33 +62,35 @@ _types_TO_STRINGS = {
     types_fp16: "fp16",
     types_fp32: "fp32",
     types_fp64: "fp64",
+    types_complex64: "complex64",
+    types_complex128: "complex128",
     types_str: "string",
 }
 
 builtin_to_proto_types = {
     # bool:
-    _mil_types.bool: _mil_pm.BOOL,
+    types_bool: _mil_pm.BOOL,
 
     # fp
-    _mil_types.fp16: _mil_pm.FLOAT16,
-    _mil_types.float: _mil_pm.FLOAT32,
-    _mil_types.double: _mil_pm.FLOAT64,
+    types_fp16: _mil_pm.FLOAT16,
+    types_fp32: _mil_pm.FLOAT32,
+    types_fp64: _mil_pm.FLOAT64,
 
     # int
-    _mil_types.uint8: _mil_pm.UINT8,
-    _mil_types.int8: _mil_pm.INT8,
+    types_uint8: _mil_pm.UINT8,
+    types_int8: _mil_pm.INT8,
 
-    _mil_types.uint16: _mil_pm.UINT16,
-    _mil_types.int16: _mil_pm.INT16,
+    types_uint16: _mil_pm.UINT16,
+    types_int16: _mil_pm.INT16,
 
-    _mil_types.uint32: _mil_pm.UINT32,
-    _mil_types.int32: _mil_pm.INT32,
+    types_uint32: _mil_pm.UINT32,
+    types_int32: _mil_pm.INT32,
 
-    _mil_types.uint64: _mil_pm.UINT64,
-    _mil_types.int64: _mil_pm.INT64,
+    types_uint64: _mil_pm.UINT64,
+    types_int64: _mil_pm.INT64,
 
     # str
-    _mil_types.str: _mil_pm.STRING,
+    types_str: _mil_pm.STRING,
 }
 
 proto_to_builtin_types = {v: k for k, v in builtin_to_proto_types.items()}
@@ -94,11 +100,14 @@ def np_dtype_to_py_type(np_dtype):
     # Can't use dict, as hash(np.int32) != hash(val.dtype)
     if np_dtype in [np.int32, np.int64]:
         return int
-    if np_dtype in [np.bool, np.bool_]:
+    if np_dtype in [bool, np.bool_]:
         return bool
     if np_dtype in [np.float32, np.float64]:
         return float
+    if np_dtype in [np.complex64, np.complex128]:
+        return complex
     raise NotImplementedError('{} is not supported'.format(np_dtype))
+
 
 _STRINGS_TO_types = {v: k for k, v in _types_TO_STRINGS.items()}
 
@@ -148,7 +157,7 @@ def promote_types(dtype1, dtype2):
     nptype1 = nptype_from_builtin(dtype1)
     nptype2 = nptype_from_builtin(dtype2)
     # Circumvent the undesirable np type promotion:
-    # >> np.promote_types(np.float32, np.int)
+    # >> np.promote_types(np.float32, np.int32)
     # dtype('float64')
     if np.issubdtype(nptype1, np.floating) and np.issubdtype(nptype2, np.signedinteger):
         nppromoted = nptype1
@@ -189,18 +198,31 @@ def promote_dtypes(dtypes):
 
     return promote_types(dtypes[0], promote_dtypes(dtypes[1:]))
 
+
 def is_primitive(btype):
     """
     Is the indicated builtin type a primitive?
     """
-    return btype is types_bool or btype is types_str or is_float(btype) or is_int(btype)
+    return (
+        btype is types_bool
+        or btype is types_str
+        or is_float(btype)
+        or is_int(btype)
+        or is_complex(btype)
+    )
 
 
 def is_scalar(btype):
     """
     Is the given builtin type a scalar integer, float, boolean or string?
     """
-    return is_bool(btype) or is_int(btype) or is_float(btype) or is_str(btype)
+    return (
+        is_bool(btype)
+        or is_int(btype)
+        or is_float(btype)
+        or is_str(btype)
+        or is_complex(btype)
+    )
 
 
 def is_tensor(tensor_type):
@@ -232,6 +254,7 @@ def is_tuple(t):
         return False
     return type_info == "tuple"
 
+
 def is_dict(t):
     if t is None:
         return False
@@ -253,12 +276,12 @@ def numpy_type_to_builtin_type(nptype):
     if np.issubclass_(type(nptype), np.dtype):
         nptype = nptype.type
 
-    if np.issubclass_(nptype, np.bool) or np.issubclass_(nptype, np.bool_):
+    if np.issubclass_(nptype, (bool, np.bool_)):
         # numpy as 2 bool types it looks like. what is the difference?
         return types_bool
-    # Because np.uint is a subclass of np.int,
+    # Because np.uint is a subclass of int,
     # we need to first check for np.uint before
-    # checking for np.int
+    # checking for int
     elif np.issubclass_(nptype, np.uint8):
         return types_uint8
     elif np.issubclass_(nptype, np.int8):
@@ -275,8 +298,7 @@ def numpy_type_to_builtin_type(nptype):
         return types_uint64
     elif np.issubclass_(nptype, np.int64):
         return types_int64
-    # np.int == int (python native)
-    elif np.issubclass_(nptype, np.int) or nptype == int:
+    elif np.issubclass_(nptype, int) or nptype == int:
         # Catch all int
         return types_int32
     elif np.issubclass_(nptype, np.object_):
@@ -284,19 +306,20 @@ def numpy_type_to_builtin_type(nptype):
         return types_int32
     elif np.issubclass_(nptype, np.float16):
         return types_fp16
-    elif np.issubclass_(nptype, np.float32) or np.issubclass_(nptype,
-        np.single) or nptype == float: # np.float == float (python native)
-        return types_fp32
-    elif np.issubclass_(nptype, np.float64) or np.issubclass_(nptype, np.double):
-        return types_fp64
     elif (
-        np.issubclass_(nptype, str)
-        or np.issubclass_(nptype, np.string_)
-        or np.issubclass_(nptype, np.str_)
+        np.issubclass_(nptype, (np.float32, np.single)) or nptype == float
     ):
+        return types_fp32
+    elif np.issubclass_(nptype, (np.float64, np.double)):
+        return types_fp64
+    elif np.issubclass_(nptype, np.complex64):
+        return types_complex64
+    elif np.issubclass_(nptype, (np.complex128, complex)):
+        return types_complex128
+    elif np.issubclass_(nptype, (str, np.string_, np.str_)):
         return types_str
     else:
-        raise TypeError("Unsupported numpy type: %s" % (nptype))
+        raise TypeError(f"Unsupported numpy type: {nptype}.")
 
 
 # Tries to get the equivalent builtin type of a
@@ -315,6 +338,8 @@ def type_to_builtin_type(type):
         return types_str
     elif np.issubclass_(type, float):
         return types_fp32
+    elif np.issubclass_(type, complex):
+        return types_complex64
     else:
         raise TypeError("Could not determine builtin type for " + str(type))
 
@@ -382,7 +407,7 @@ def np_val_to_py_type(val):
     Given: val = np.array([True, False])
     Returns: [True, False]
 
-    Given: val = np.array(32, dtype=np.int)
+    Given: val = np.array(32, dtype=np.int32)
     Returns 32
     """
     if not isinstance(val, (_np.ndarray, _np.generic)):
@@ -395,3 +420,27 @@ def np_val_to_py_type(val):
         is_np_scalar = isinstance(val, _np.generic) or val.shape == ()
         py_type = np_dtype_to_py_type(val.dtype)
         return py_type(val) if is_np_scalar else tuple(py_type(v) for v in val.flatten())
+
+
+def infer_complex_dtype(real_dtype, imag_dtype):
+    """Infers the complex dtype from real and imaginary part's dtypes."""
+    promoted_dtype = promote_types(real_dtype, imag_dtype)
+    if promoted_dtype == types_fp32:
+        return types_complex64
+    elif promoted_dtype == types_fp64:
+        return types_complex128
+    else:
+        raise ValueError(
+            f"Unsupported real/imag dtype ({real_dtype}/{imag_dtype}) to construct a "
+            f"complex dtype."
+        )
+
+
+def infer_fp_dtype_from_complex(complex_dtype):
+    """Infers the fp dtype of real and imaginary part from the complex dtype."""
+    if complex_dtype == types_complex64:
+        return types_fp32
+    elif complex_dtype == types_complex128:
+        return types_fp64
+    else:
+        raise ValueError(f"Unsupported complex dtype ({complex_dtype}).")

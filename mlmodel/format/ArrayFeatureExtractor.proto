@@ -8,7 +8,7 @@ option optimize_for = LITE_RUNTIME;
 
 package CoreML.Specification;
 
-/**
+/*
  * An array feature extractor.
  *
  * Given an index, extracts the value at that index from its array input.
