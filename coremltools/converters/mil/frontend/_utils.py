@@ -261,7 +261,7 @@ def solve_sum_einsum(parsed_vectors, vars):
 
     e.g.:
     input : "abce,acd->ae"
-    returns : "ace,ax->ae"
+    returns : "ace,ac->ae"
 
     In this example, since each of those axes is only used by one var and does not appear in the output,
     axes `b` and `d` can be reduced before binary einsum.
