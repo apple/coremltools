@@ -90,20 +90,26 @@ def affine_quantize_weights(mlmodel, mode="linear_symmetric", op_selector=None, 
     offset) and a scale factor. For the int8 quantization, ``[low, high] = [-128, 127]``, while uint8 
     quantization uses range ``[0, 255]``.
 
-    ``"linear"`` mode uses the quantization formula ``w_r = s * (w_q - z)``, where:
-    
-        * ``w_r`` and  ``s`` are of type float.
-        * ``w_r`` represents the float precision weight.
-        * ``s`` represents the scale.
-        * ``w_q`` and ``z`` are of type 8-bit integer.
-        * ``w_q`` represents quantized weight.
-        * ``z`` represents the zero point.
-    
+    ``"linear"`` mode uses the quantization formula:
+
+    .. math::
+       w_r = s * (w_q - z)
+
+    Where:
+
+        * :math:`w_r` and  :math:`s` are of type float.
+        * :math:`w_r`` represents the float precision weight.
+        * :math:`s` represents the scale.
+        * :math:`w_q` and :math:`z` are of type 8-bit integer.
+        * :math:`w_q` represents quantized weight.
+        * :math:`z` represents the zero point.
+
     Quantized weights are computed as follows:
-    
-        * ``w_q = cast_to_8_bit_integer(w_r / s + cast_to_float(z))``
-        * Note: ``cast_to_8_bit_integer`` is the process of clipping the input to range ``[low, high]``
-          followed by rounding and casting to 8-bit integer.
+
+    .. math::
+       w_q = cast\_to\_8\_bit\_integer(w_r / s + cast\_to\_float(z))
+
+    Note: :math:`cast\_to\_8\_bit\_integer` is the process of clipping the input to range ``[low, high]`` followed by rounding and casting to 8-bit integer.
     
     In ``"linear"`` mode, ``s, z`` are computed by mapping the original float range
     ``[A, B]`` into the 8-bit integer range ``[-128, 127]`` or ``[0, 255]``. That is, you are solving the 
@@ -119,28 +125,28 @@ def affine_quantize_weights(mlmodel, mode="linear_symmetric", op_selector=None, 
     
     When the rank of weight ``w`` is 1, then ``s`` and ``z`` are both scalars. When the
     rank of the weight is greater than 1, then ``s`` and ``z`` are both vectors. In that
-    case, scales are computed "per channel", in which "channel" is the output dimension,
+    case, scales are computed per `channel`, in which `channel` is the output dimension,
     which corresponds to the first dimension for ops such as ``conv`` and ``linear``, and
     the second dimension for the ``conv_transpose`` op.
     
-    For ``"linear"`` mode, ``A = min(w_r), B = max(w_r)``.
+    For ``"linear"`` mode, :math:`A = min(w_r)`, :math:`B = max(w_r)`.
     
     **Linear symmetric interpolation**
     
     With linear symmetric interpolation (``"linear_symmetric"`` mode, the default), rather than
     mapping the exact min/max of the float range to the quantized range,
     the function chooses the maximum absolute value between the min/max, which results in a 
-    floating-point range is symmetric with respect to zero. This also makes the resulting zero 
-    point ``0`` for int8 weight and ``127`` for uint8 weight. 
+    floating-point range that is symmetric with respect to zero. This also makes the resulting zero 
+    point ``0`` for int8 weight and ``127`` for uint8 weight.
     
     For ``"linear_symmetric"`` mode:
     
-       * ``A = -R`` and ``B = R``, where ``R = max(abs(w_r))``.
+       * :math:`A = -R` and :math:`B = R`, where :math:`R = max(abs(w_r))`.
        * This function maps to the range of ``[-127, 127]`` for int8 weight and ``[0, 254]`` for uint8 weight.
-       * The result is ``s=(B-A)/254`` --> ``s=2R/254`` --> ``s=R/127``.
+       * The result is ``s=(B-A)/254`` -> ``s=2R/254`` -> ``s=R/127``.
        * Solving for ``z``: 
-            * int8:  ``z = (-127 * R + 127 * R)/2R`` --> ``z=0``.
-            * uint8: ``z = (0 * R + 254 * R)/2R`` --> ``z=127``.      
+            * int8:  ``z = (-127 * R + 127 * R)/2R`` -> ``z=0``.
+            * uint8: ``z = (0 * R + 254 * R)/2R`` -> ``z=127``.      
 
     Parameters
     ----------
@@ -151,9 +157,9 @@ def affine_quantize_weights(mlmodel, mode="linear_symmetric", op_selector=None, 
         Mode for linear quantization:
         
         * ``"linear_symmetric"`` (default): Input data are quantized in the range
-          ``[-R, R]``, where ``R = max(abs(w_r))``.
+          ``[-R, R]``, where :math:`R = max(abs(w_r))`.
         * ``"linear"``: Input data are quantized in the range
-          ``[min(w_r), max(w_r)]``.
+          :math:`[min(w_r), max(w_r)]`.
 
     op_selector: callable 
         This function takes a single parameter with type ``coremltools.converters.mil.Const``;
@@ -295,7 +301,7 @@ def palettize_weights(mlmodel, nbits=None, mode="kmeans", op_selector=None, lut_
            
            A `histogram` is a representation of the distribution of a continuous variable,
            in which the entire range of values is divided into a series of intervals (or
-           "bins") and the representation displays how many values fall into each bin.
+           `bins`) and the representation displays how many values fall into each bin.
            Linear histograms have one bin at even intervals, such as one bin per integer.
           
         * ``"unique"``: The LUT is generated by unique values in the weights. The weights
