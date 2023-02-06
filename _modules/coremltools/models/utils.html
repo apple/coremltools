@@ -89,12 +89,12 @@
 <span class="kn">import</span> <span class="nn">math</span> <span class="k">as</span> <span class="nn">_math</span>
 <span class="kn">import</span> <span class="nn">os</span> <span class="k">as</span> <span class="nn">_os</span>
 <span class="kn">import</span> <span class="nn">shutil</span> <span class="k">as</span> <span class="nn">_shutil</span>
-<span class="kn">import</span> <span class="nn">stat</span> <span class="k">as</span> <span class="nn">_stat</span>
 <span class="kn">import</span> <span class="nn">subprocess</span> <span class="k">as</span> <span class="nn">_subprocess</span>
 <span class="kn">import</span> <span class="nn">sys</span> <span class="k">as</span> <span class="nn">_sys</span>
 <span class="kn">import</span> <span class="nn">tempfile</span> <span class="k">as</span> <span class="nn">_tempfile</span>
 <span class="kn">import</span> <span class="nn">warnings</span> <span class="k">as</span> <span class="nn">_warnings</span>
 <span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">lru_cache</span> <span class="k">as</span> <span class="n">_lru_cache</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span> <span class="k">as</span> <span class="n">_Optional</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">_np</span>
 
@@ -127,6 +127,7 @@
     <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">x</span>
 
+
 <span class="k">def</span> <span class="nf">_remove_invalid_keys</span><span class="p">(</span><span class="n">input_dict</span><span class="p">,</span> <span class="n">model</span><span class="p">):</span>
     <span class="c1"># make sure that input_dict does not contain an input name, which</span>
     <span class="c1"># is not present in the list of model inputs</span>
@@ -136,53 +137,56 @@
         <span class="k">if</span> <span class="n">k</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">model_input_names</span><span class="p">:</span>
             <span class="k">del</span> <span class="n">input_dict</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
 
-<span class="k">def</span> <span class="nf">_create_mlpackage</span><span class="p">(</span><span class="n">proto_spec</span><span class="p">,</span> <span class="n">weights_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">package_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">copy_weights</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Parameters</span>
-<span class="sd">    ---------</span>
-<span class="sd">    proto_spec: Model_pb2</span>
-<span class="sd">    weights_dir: str</span>
-<span class="sd">        copy or move weights from this path to the mlpackage</span>
-<span class="sd">    package_path: str</span>
-<span class="sd">        If provided place the created mlpackage at this path</span>
-<span class="sd">    copy_weights: bool</span>
-<span class="sd">        If False, delete the weights directory provided in ``weights_dir``</span>
 
-<span class="sd">    :return: str</span>
+<span class="k">def</span> <span class="nf">_create_mlpackage</span><span class="p">(</span>
+    <span class="n">proto_spec</span><span class="p">:</span> <span class="n">_Model_pb2</span><span class="p">,</span>
+    <span class="n">weights_dir</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">package_path</span><span class="p">:</span> <span class="n">_Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Args:</span>
+<span class="sd">        proto_spec: The proto spec of the model.</span>
+<span class="sd">        weights_dir: Copy weights from this path to the mlpackage.</span>
+<span class="sd">        package_path: Place the created mlpackage at this path. Error out if this path is a non-empty directory.</span>
+
+<span class="sd">    Returns:</span>
 <span class="sd">        path to the mlpackage</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># Save proto to disk</span>
-    <span class="n">proto_spec_str</span> <span class="o">=</span> <span class="n">proto_spec</span><span class="o">.</span><span class="n">SerializeToString</span><span class="p">()</span>
-    <span class="n">spec_file</span> <span class="o">=</span> <span class="n">_tempfile</span><span class="o">.</span><span class="n">NamedTemporaryFile</span><span class="p">(</span><span class="n">suffix</span><span class="o">=</span><span class="n">_MLMODEL_EXTENSION</span><span class="p">)</span>
-    <span class="n">spec_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">proto_spec_str</span><span class="p">)</span>
-    <span class="n">spec_file</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
-
-    <span class="c1"># To make sure everyone can read this file</span>
-    <span class="n">_os</span><span class="o">.</span><span class="n">chmod</span><span class="p">(</span><span class="n">spec_file</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">_stat</span><span class="o">.</span><span class="n">S_IRUSR</span> <span class="o">|</span> <span class="n">_stat</span><span class="o">.</span><span class="n">S_IWUSR</span> <span class="o">|</span> <span class="n">_stat</span><span class="o">.</span><span class="n">S_IRGRP</span> <span class="o">|</span> <span class="n">_stat</span><span class="o">.</span><span class="n">S_IROTH</span><span class="p">)</span>
-
-    <span class="c1"># If package directory is already provided, use that</span>
     <span class="k">if</span> <span class="n">package_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">package_path</span> <span class="o">=</span> <span class="n">_tempfile</span><span class="o">.</span><span class="n">mkdtemp</span><span class="p">(</span><span class="n">suffix</span><span class="o">=</span><span class="n">_MLPACKAGE_EXTENSION</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">name</span><span class="p">,</span> <span class="n">ext</span> <span class="o">=</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">package_path</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">ext</span> <span class="o">!=</span> <span class="n">_MLPACKAGE_EXTENSION</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;For an ML Package, extension must be </span><span class="si">{}</span><span class="s2"> (not </span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">_MLPACKAGE_EXTENSION</span><span class="p">,</span> <span class="n">ext</span><span class="p">))</span>
-
     <span class="k">if</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">package_path</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">_os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">package_path</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">FileExistsError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;The package_path is invalid because it&#39;s a non-empty directory: </span><span class="si">{</span><span class="n">package_path</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+        <span class="c1"># If package_path is an empty dir, the ModelPackage load will error out with `manifest.json not found` issue.</span>
         <span class="n">_shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">package_path</span><span class="p">)</span>
+
+    <span class="n">_</span><span class="p">,</span> <span class="n">ext</span> <span class="o">=</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">package_path</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">ext</span> <span class="o">!=</span> <span class="n">_MLPACKAGE_EXTENSION</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;For an ML Package, extension must be </span><span class="si">{</span><span class="n">_MLPACKAGE_EXTENSION</span><span class="si">}</span><span class="s2"> (not </span><span class="si">{</span><span class="n">ext</span><span class="si">}</span><span class="s2">)&quot;</span>
+        <span class="p">)</span>
 
     <span class="n">package</span> <span class="o">=</span> <span class="n">_ModelPackage</span><span class="p">(</span><span class="n">package_path</span><span class="p">)</span>
 
-    <span class="c1"># Root model file is copied into the model package.</span>
+    <span class="c1"># Save proto to disk as the root model file, and copy into the model package.</span>
+    <span class="n">spec_file</span> <span class="o">=</span> <span class="n">_tempfile</span><span class="o">.</span><span class="n">NamedTemporaryFile</span><span class="p">(</span><span class="n">suffix</span><span class="o">=</span><span class="n">_MLMODEL_EXTENSION</span><span class="p">)</span>
+    <span class="n">spec_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">proto_spec</span><span class="o">.</span><span class="n">SerializeToString</span><span class="p">())</span>
+    <span class="n">spec_file</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
     <span class="n">package</span><span class="o">.</span><span class="n">setRootModel</span><span class="p">(</span><span class="n">spec_file</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">_MODEL_FILE_NAME</span><span class="p">,</span> <span class="n">_MLPACKAGE_AUTHOR_NAME</span><span class="p">,</span>
                          <span class="s2">&quot;CoreML Model Specification&quot;</span><span class="p">)</span>
-    <span class="n">spec_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>  <span class="c1"># clean up spec file now that it is part of the model package</span>
+    <span class="c1"># Spec file is auto cleaned after close, which is fine because it is already added to the model package.</span>
+    <span class="n">spec_file</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
 
-    <span class="c1"># Weights bundle is copied into the model package. Changes to in-memory JSON is commited to disk when package goes out of scope.</span>
+    <span class="c1"># Add weights bundle into the model package.</span>
     <span class="k">if</span> <span class="n">weights_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">package</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span><span class="n">weights_dir</span><span class="p">,</span> <span class="n">_WEIGHTS_DIR_NAME</span><span class="p">,</span> <span class="n">_MLPACKAGE_AUTHOR_NAME</span><span class="p">,</span> <span class="s2">&quot;CoreML Model Weights&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">copy_weights</span><span class="p">:</span>
-            <span class="n">_shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">weights_dir</span><span class="p">)</span>  <span class="c1"># clean up weights now that it is part of the model package</span>
+        <span class="n">package</span><span class="o">.</span><span class="n">addItem</span><span class="p">(</span>
+            <span class="n">weights_dir</span><span class="p">,</span>
+            <span class="n">_WEIGHTS_DIR_NAME</span><span class="p">,</span>
+            <span class="n">_MLPACKAGE_AUTHOR_NAME</span><span class="p">,</span>
+            <span class="s2">&quot;CoreML Model Weights&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
 
     <span class="k">return</span> <span class="n">package_path</span>
 
@@ -211,9 +215,11 @@
 <span class="sd">    --------</span>
 <span class="sd">    .. sourcecode:: python</span>
 
-<span class="sd">        &gt;&gt;&gt; coremltools.utils.save_spec(spec, &#39;HousePricer.mlmodel&#39;)</span>
-<span class="sd">        &gt;&gt;&gt; coremltools.utils.save_spec(spec, &#39;HousePricer.mlpackage&#39;)</span>
-<span class="sd">        &gt;&gt;&gt; coremltools.utils.save_spec(spec, &#39;mlprogram_model.mlpackage&#39;, weights_dir=&quot;/path/to/weights/directory&quot;)</span>
+<span class="sd">        coremltools.utils.save_spec(spec, &quot;HousePricer.mlmodel&quot;)</span>
+<span class="sd">        coremltools.utils.save_spec(spec, &quot;HousePricer.mlpackage&quot;)</span>
+<span class="sd">        coremltools.utils.save_spec(</span>
+<span class="sd">            spec, &quot;mlprogram_model.mlpackage&quot;, weights_dir=&quot;/path/to/weights/directory&quot;</span>
+<span class="sd">        )</span>
 
 <span class="sd">    See Also</span>
 <span class="sd">    --------</span>
@@ -255,21 +261,19 @@
                 <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;spec of type mlProgram cannot be saved without the&#39;</span>
                                 <span class="s1">&#39; weights file. Please provide the path to the weights file as well, &#39;</span>
                                 <span class="s1">&#39;using the </span><span class="se">\&#39;</span><span class="s1">weights_dir</span><span class="se">\&#39;</span><span class="s1"> argument.&#39;</span><span class="p">)</span>
-        <span class="n">_create_mlpackage</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">weights_dir</span><span class="o">=</span><span class="n">weights_dir</span><span class="p">,</span> <span class="n">package_path</span><span class="o">=</span><span class="n">filename</span><span class="p">,</span> <span class="n">copy_weights</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">_create_mlpackage</span><span class="p">(</span><span class="n">spec</span><span class="p">,</span> <span class="n">weights_dir</span><span class="o">=</span><span class="n">weights_dir</span><span class="p">,</span> <span class="n">package_path</span><span class="o">=</span><span class="n">filename</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">spec_str</span> <span class="o">=</span> <span class="n">spec</span><span class="o">.</span><span class="n">SerializeToString</span><span class="p">()</span>
         <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">spec_str</span><span class="p">)</span></div>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">spec</span><span class="o">.</span><span class="n">SerializeToString</span><span class="p">())</span></div>
 
-<div class="viewcode-block" id="load_spec"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.utils.load_spec">[docs]</a><span class="k">def</span> <span class="nf">load_spec</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+
+<div class="viewcode-block" id="load_spec"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.utils.load_spec">[docs]</a><span class="k">def</span> <span class="nf">load_spec</span><span class="p">(</span><span class="n">model_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">_Model_pb2</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Load a protobuf model specification from file.</span>
+<span class="sd">    Load a protobuf model specification from file (mlmodel) or directory (mlpackage).</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    filename: str</span>
-<span class="sd">        Location on disk (a valid file path) from which the file is loaded</span>
-<span class="sd">        as a protobuf spec.</span>
+<span class="sd">    model_path: Path to the model from which the protobuf spec is loaded.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -280,36 +284,24 @@
 <span class="sd">    --------</span>
 <span class="sd">    .. sourcecode:: python</span>
 
-<span class="sd">        &gt;&gt;&gt; spec = coremltools.utils.load_spec(&#39;HousePricer.mlmodel&#39;)</span>
-<span class="sd">        &gt;&gt;&gt; spec = coremltools.utils.load_spec(&#39;HousePricer.mlpackage&#39;)</span>
+<span class="sd">        spec = coremltools.utils.load_spec(&quot;HousePricer.mlmodel&quot;)</span>
+<span class="sd">        spec = coremltools.utils.load_spec(&quot;HousePricer.mlpackage&quot;)</span>
 
 <span class="sd">    See Also</span>
 <span class="sd">    --------</span>
 <span class="sd">    save_spec</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">_</span><span class="p">,</span> <span class="n">file_extension</span> <span class="o">=</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
-    
-    <span class="n">has_mlmodel_file_extension</span> <span class="o">=</span> <span class="kc">False</span>
-    <span class="k">if</span> <span class="n">file_extension</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">file_extension</span> <span class="o">==</span> <span class="n">_MLMODEL_EXTENSION</span><span class="p">:</span>
-            <span class="n">has_mlmodel_file_extension</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="k">elif</span> <span class="n">file_extension</span> <span class="o">!=</span> <span class="n">_MLPACKAGE_EXTENSION</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;File extension must be </span><span class="si">{}</span><span class="s2"> or </span><span class="si">{}</span><span class="s2"> (not </span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
-                <span class="n">_MLMODEL_EXTENSION</span><span class="p">,</span> <span class="n">_MLPACKAGE_EXTENSION</span><span class="p">,</span> <span class="n">file_extension</span><span class="p">))</span>
-
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">has_mlmodel_file_extension</span> <span class="ow">and</span> <span class="n">_ModelPackage</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Unable to load libmodelpackage. Cannot make save spec.&quot;</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">has_mlmodel_file_extension</span> <span class="ow">and</span> <span class="n">_ModelPackage</span><span class="o">.</span><span class="n">isValid</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
-        <span class="n">specfile</span> <span class="o">=</span> <span class="n">_ModelPackage</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span><span class="o">.</span><span class="n">getRootModel</span><span class="p">()</span><span class="o">.</span><span class="n">path</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">model_path</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">_ModelPackage</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Unable to load libmodelpackage. Cannot make save spec.&quot;</span><span class="p">)</span>
+        <span class="n">specfile</span> <span class="o">=</span> <span class="n">_ModelPackage</span><span class="p">(</span><span class="n">model_path</span><span class="p">)</span><span class="o">.</span><span class="n">getRootModel</span><span class="p">()</span><span class="o">.</span><span class="n">path</span><span class="p">()</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">specfile</span> <span class="o">=</span> <span class="n">filename</span>
+        <span class="n">specfile</span> <span class="o">=</span> <span class="n">model_path</span>
 
     <span class="n">spec</span> <span class="o">=</span> <span class="n">_Model_pb2</span><span class="o">.</span><span class="n">Model</span><span class="p">()</span>
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">specfile</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-        <span class="n">contents</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
-        <span class="n">spec</span><span class="o">.</span><span class="n">ParseFromString</span><span class="p">(</span><span class="n">contents</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">spec</span></div>
+        <span class="n">spec</span><span class="o">.</span><span class="n">ParseFromString</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+    <span class="k">return</span> <span class="n">spec</span></div>
 
 
 <span class="k">def</span> <span class="nf">_get_nn_layers</span><span class="p">(</span><span class="n">spec</span><span class="p">):</span>
@@ -457,8 +449,10 @@
 <span class="sd">    --------</span>
 <span class="sd">    .. sourcecode:: python</span>
 
-<span class="sd">        &gt;&gt;&gt; metrics = coremltools.utils.evaluate_regressor(spec, &#39;data_and_predictions.csv&#39;, &#39;target&#39;)</span>
-<span class="sd">        &gt;&gt;&gt; print(metrics)</span>
+<span class="sd">        metrics = coremltools.utils.evaluate_regressor(</span>
+<span class="sd">            spec, &quot;data_and_predictions.csv&quot;, &quot;target&quot;</span>
+<span class="sd">        )</span>
+<span class="sd">        print(metrics)</span>
 <span class="sd">        {&quot;samples&quot;: 10, &quot;rmse&quot;: 0.0, max_error: 0.0}</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">model</span> <span class="o">=</span> <span class="n">_get_model</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
@@ -524,8 +518,10 @@
 <span class="sd">    --------</span>
 <span class="sd">    .. sourcecode:: python</span>
 
-<span class="sd">        &gt;&gt;&gt; metrics =  coremltools.utils.evaluate_classifier(spec, &#39;data_and_predictions.csv&#39;, &#39;target&#39;)</span>
-<span class="sd">        &gt;&gt;&gt; print(metrics)</span>
+<span class="sd">        metrics = coremltools.utils.evaluate_classifier(</span>
+<span class="sd">            spec, &quot;data_and_predictions.csv&quot;, &quot;target&quot;</span>
+<span class="sd">        )</span>
+<span class="sd">        print(metrics)</span>
 <span class="sd">        {&quot;samples&quot;: 10, num_errors: 0}</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">model</span> <span class="o">=</span> <span class="n">_get_model</span><span class="p">(</span><span class="n">model</span><span class="p">)</span>
@@ -653,22 +649,22 @@
 <span class="sd">    .. sourcecode:: python</span>
 
 <span class="sd">        # In-place rename of spec</span>
-<span class="sd">        &gt;&gt;&gt; model = MLModel(&quot;model.mlmodel&quot;)</span>
-<span class="sd">        &gt;&gt;&gt; spec = model.get_spec()</span>
-<span class="sd">        &gt;&gt;&gt; coremltools.utils.rename_feature(spec, &#39;old_feature&#39;, &#39;new_feature_name&#39;)</span>
-<span class="sd">        &gt;&gt;&gt; # re-initialize model</span>
-<span class="sd">        &gt;&gt;&gt; model = MLModel(spec)</span>
-<span class="sd">        &gt;&gt;&gt; model.save(&quot;model.mlmodel&quot;)</span>
+<span class="sd">        model = MLModel(&quot;model.mlmodel&quot;)</span>
+<span class="sd">        spec = model.get_spec()</span>
+<span class="sd">        coremltools.utils.rename_feature(spec, &quot;old_feature&quot;, &quot;new_feature_name&quot;)</span>
+<span class="sd">        # re-initialize model</span>
+<span class="sd">        model = MLModel(spec)</span>
+<span class="sd">        model.save(&quot;model.mlmodel&quot;)</span>
 
 <span class="sd">        # Rename a spec when the model is an mlprogram, in that case, weights are stored outside of the spec</span>
-<span class="sd">        &gt;&gt;&gt; model = coremltools.convert(torch_model, convert_to=&quot;mlprogram&quot;)</span>
-<span class="sd">        &gt;&gt;&gt; spec = model.get_spec()</span>
-<span class="sd">        &gt;&gt;&gt; # print info about inputs and outputs</span>
-<span class="sd">        &gt;&gt;&gt; print(spec.description)</span>
-<span class="sd">        &gt;&gt;&gt; coremltools.utils.rename_feature(spec, &#39;old_feature&#39;, &#39;new_feature_name&#39;)</span>
-<span class="sd">        &gt;&gt;&gt; # re-initialize model</span>
-<span class="sd">        &gt;&gt;&gt; model = MLModel(spec, weights_dir=model.weights_dir)</span>
-<span class="sd">        &gt;&gt;&gt; model.save(&quot;model.mlpackage&quot;)</span>
+<span class="sd">        model = coremltools.convert(torch_model, convert_to=&quot;mlprogram&quot;)</span>
+<span class="sd">        spec = model.get_spec()</span>
+<span class="sd">        # print info about inputs and outputs</span>
+<span class="sd">        print(spec.description)</span>
+<span class="sd">        coremltools.utils.rename_feature(spec, &quot;old_feature&quot;, &quot;new_feature_name&quot;)</span>
+<span class="sd">        # re-initialize model</span>
+<span class="sd">        model = MLModel(spec, weights_dir=model.weights_dir)</span>
+<span class="sd">        model.save(&quot;model.mlpackage&quot;)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="kn">from</span> <span class="nn">coremltools.models</span> <span class="kn">import</span> <span class="n">MLModel</span>
 
@@ -849,9 +845,11 @@
 <span class="sd">    --------</span>
 <span class="sd">    .. sourcecode:: python</span>
 
-<span class="sd">        &gt;&gt;&gt; input_data = [{&#39;input_1&#39;: 1, &#39;input_2&#39;: 2}, {&#39;input_1&#39;: 3, &#39;input_2&#39;: 3}]</span>
-<span class="sd">        &gt;&gt;&gt; expected_output = [{&#39;input_1&#39;: 2.5, &#39;input_2&#39;: 2.0}, {&#39;input_1&#39;: 1.3, &#39;input_2&#39;: 2.3}]</span>
-<span class="sd">        &gt;&gt;&gt; metrics = coremltools.utils.evaluate_transformer(scaler_spec, input_data, expected_output)</span>
+<span class="sd">        input_data = [{&quot;input_1&quot;: 1, &quot;input_2&quot;: 2}, {&quot;input_1&quot;: 3, &quot;input_2&quot;: 3}]</span>
+<span class="sd">        expected_output = [{&quot;input_1&quot;: 2.5, &quot;input_2&quot;: 2.0}, {&quot;input_1&quot;: 1.3, &quot;input_2&quot;: 2.3}]</span>
+<span class="sd">        metrics = coremltools.utils.evaluate_transformer(</span>
+<span class="sd">            scaler_spec, input_data, expected_output</span>
+<span class="sd">        )</span>
 
 <span class="sd">    See Also</span>
 <span class="sd">    --------</span>
@@ -1055,9 +1053,9 @@
 <span class="sd">    .. sourcecode:: python</span>
 
 <span class="sd">        # In-place convert multiarray type of spec</span>
-<span class="sd">        &gt;&gt;&gt; spec = mlmodel.get_spec()</span>
-<span class="sd">        &gt;&gt;&gt; coremltools.utils.convert_double_to_float_multiarray_type(spec)</span>
-<span class="sd">        &gt;&gt;&gt; model = coremltools.models.MLModel(spec)</span>
+<span class="sd">        spec = mlmodel.get_spec()</span>
+<span class="sd">        coremltools.utils.convert_double_to_float_multiarray_type(spec)</span>
+<span class="sd">        model = coremltools.models.MLModel(spec)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">_convert_to_float</span><span class="p">(</span><span class="n">feature</span><span class="p">):</span>

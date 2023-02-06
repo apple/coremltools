@@ -19,6 +19,7 @@
         <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
         <script src="../_static/sphinx_highlight.js"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -110,7 +111,7 @@
 <span id="affine-quantize-weights"></span><h1>affine_quantize_weights<a class="headerlink" href="#module-coremltools.models.ml_program.compression_utils" title="Permalink to this heading"></a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="coremltools.models.ml_program.compression_utils.affine_quantize_weights">
-<span class="sig-prename descclassname"><span class="pre">coremltools.models.ml_program.compression_utils.</span></span><span class="sig-name descname"><span class="pre">affine_quantize_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mlmodel</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'linear_symmetric'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">op_selector</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/ml_program/compression_utils.html#affine_quantize_weights"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.ml_program.compression_utils.affine_quantize_weights" title="Permalink to this definition"></a></dt>
+<span class="sig-prename descclassname"><span class="pre">coremltools.models.ml_program.compression_utils.</span></span><span class="sig-name descname"><span class="pre">affine_quantize_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mlmodel</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode='linear_symmetric'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">op_selector=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype=&lt;class</span> <span class="pre">'numpy.int8'&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/models/ml_program/compression_utils.html#affine_quantize_weights"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.models.ml_program.compression_utils.affine_quantize_weights" title="Permalink to this definition"></a></dt>
 <dd><p>Utility function to convert a float precision MLModel of type <code class="docutils literal notranslate"><span class="pre">mlprogram</span></code> that uses
 float-precision weights into a compressed MLModel that uses 8-bit weights. This is
 achieved by converting the float weight values that are stored in the <code class="docutils literal notranslate"><span class="pre">const</span></code> op
@@ -119,67 +120,74 @@ into the <code class="docutils literal notranslate"><span class="pre">constexpr_
 savings in storage compared to float 16, or up to 4x savings compared to float 32.
 All computation at runtime uses float precision; the precision of the intermediate
 tensors and the compute precision of the ops are not altered.</p>
-<p>For each weight, this utility function converts the weight into the uint8 type using
+<p>For each weight, this utility function converts the weight into the int8 or uint8 type using
 either <cite>Linear interpolation</cite> (<code class="docutils literal notranslate"><span class="pre">&quot;linear&quot;</span></code> mode) or <cite>Linear symmetric
 interpolation</cite> (<code class="docutils literal notranslate"><span class="pre">&quot;linear_symmetric&quot;</span></code> mode, the default).</p>
 <p><strong>Linear interpolation</strong></p>
 <p>Linear interpolation (<code class="docutils literal notranslate"><span class="pre">&quot;linear&quot;</span></code> mode) maps the min/max of the float
-range to the range [0, 255] using a zero point (also called quantization bias, or
-offset) and a scale factor.</p>
-<p><code class="docutils literal notranslate"><span class="pre">&quot;linear&quot;</span></code> mode uses the quantization formula <code class="docutils literal notranslate"><span class="pre">w_r</span> <span class="pre">=</span> <span class="pre">s</span> <span class="pre">*</span> <span class="pre">(w_q</span> <span class="pre">-</span> <span class="pre">z)</span></code>, where:</p>
+range to the 8-bit integer range <code class="docutils literal notranslate"><span class="pre">[low,</span> <span class="pre">high]</span></code> using a zero point (also called quantization bias, or
+offset) and a scale factor. For the int8 quantization, <code class="docutils literal notranslate"><span class="pre">[low,</span> <span class="pre">high]</span> <span class="pre">=</span> <span class="pre">[-128,</span> <span class="pre">127]</span></code>, while uint8
+quantization uses range <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">255]</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">&quot;linear&quot;</span></code> mode uses the quantization formula:</p>
+<div class="math notranslate nohighlight">
+\[w_r = s * (w_q - z)\]</div>
+<p>Where:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">w_r</span></code> and  <code class="docutils literal notranslate"><span class="pre">s</span></code> are of type float.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">w_r</span></code> represents the float precision weight.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">s</span></code> represents the scale.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">w_q</span></code> and <code class="docutils literal notranslate"><span class="pre">z</span></code> are of type uint8.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">w_q</span></code> represents quantized weight.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">z</span></code> represents the zero point.</p></li>
+<li><p><span class="math notranslate nohighlight">\(w_r\)</span> and  <span class="math notranslate nohighlight">\(s\)</span> are of type float.</p></li>
+<li><p><span class="math notranslate nohighlight">\(w_r\)</span> represents the float precision weight.</p></li>
+<li><p><span class="math notranslate nohighlight">\(s\)</span> represents the scale.</p></li>
+<li><p><span class="math notranslate nohighlight">\(w_q\)</span> and <span class="math notranslate nohighlight">\(z\)</span> are of type 8-bit integer.</p></li>
+<li><p><span class="math notranslate nohighlight">\(w_q\)</span> represents quantized weight.</p></li>
+<li><p><span class="math notranslate nohighlight">\(z\)</span> represents the zero point.</p></li>
 </ul>
 </div></blockquote>
 <p>Quantized weights are computed as follows:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">w_q</span> <span class="pre">=</span> <span class="pre">cast_to_uint8(w_r</span> <span class="pre">/</span> <span class="pre">s</span> <span class="pre">+</span> <span class="pre">cast_to_float(z))</span></code></p></li>
-<li><p>Note: <code class="docutils literal notranslate"><span class="pre">cast_to_uint8</span></code> is the process of clipping the input to range [0, 255]
-followed by rounding and casting to uint8.</p></li>
-</ul>
-</div></blockquote>
+<div class="math notranslate nohighlight">
+\[w_q = cast\_to\_8\_bit\_integer(w_r / s + cast\_to\_float(z))\]</div>
+<p>Note: <span class="math notranslate nohighlight">\(cast\_to\_8\_bit\_integer\)</span> is the process of clipping the input to range <code class="docutils literal notranslate"><span class="pre">[low,</span> <span class="pre">high]</span></code> followed by rounding and casting to 8-bit integer.</p>
 <p>In <code class="docutils literal notranslate"><span class="pre">&quot;linear&quot;</span></code> mode, <code class="docutils literal notranslate"><span class="pre">s,</span> <span class="pre">z</span></code> are computed by mapping the original float range
-<code class="docutils literal notranslate"><span class="pre">[A,</span> <span class="pre">B]</span></code> into the uint8 range [0, 255]. That is, you are solving the following
-linear equations:</p>
+<code class="docutils literal notranslate"><span class="pre">[A,</span> <span class="pre">B]</span></code> into the 8-bit integer range <code class="docutils literal notranslate"><span class="pre">[-128,</span> <span class="pre">127]</span></code> or <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">255]</span></code>. That is, you are solving the
+following linear equations:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">B</span> <span class="pre">=</span> <span class="pre">s</span> <span class="pre">*</span> <span class="pre">(255</span> <span class="pre">-</span> <span class="pre">z)</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">=</span> <span class="pre">s</span> <span class="pre">*</span> <span class="pre">(0</span> <span class="pre">-</span> <span class="pre">z)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">B</span> <span class="pre">=</span> <span class="pre">s</span> <span class="pre">*</span> <span class="pre">(high</span> <span class="pre">-</span> <span class="pre">z)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">=</span> <span class="pre">s</span> <span class="pre">*</span> <span class="pre">(low</span> <span class="pre">-</span> <span class="pre">z)</span></code></p></li>
 </ul>
 </div></blockquote>
 <p>The equations result in the following:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">s</span> <span class="pre">=</span> <span class="pre">(B</span> <span class="pre">-</span> <span class="pre">A)</span> <span class="pre">/</span> <span class="pre">255</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">z</span> <span class="pre">=</span> <span class="pre">cast_to_uint8(-255</span> <span class="pre">*</span> <span class="pre">A</span> <span class="pre">/</span> <span class="pre">(B</span> <span class="pre">-</span> <span class="pre">A))</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">s</span> <span class="pre">=</span> <span class="pre">(B</span> <span class="pre">-</span> <span class="pre">A)</span> <span class="pre">/</span> <span class="pre">(high</span> <span class="pre">-</span> <span class="pre">low)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">z</span> <span class="pre">=</span> <span class="pre">cast_to_8_bit_integer((low</span> <span class="pre">*</span> <span class="pre">B</span> <span class="pre">-</span> <span class="pre">high</span> <span class="pre">*</span> <span class="pre">A)</span> <span class="pre">/</span> <span class="pre">(B</span> <span class="pre">-</span> <span class="pre">A))</span></code></p></li>
 </ul>
 </div></blockquote>
 <p>When the rank of weight <code class="docutils literal notranslate"><span class="pre">w</span></code> is 1, then <code class="docutils literal notranslate"><span class="pre">s</span></code> and <code class="docutils literal notranslate"><span class="pre">z</span></code> are both scalars. When the
 rank of the weight is greater than 1, then <code class="docutils literal notranslate"><span class="pre">s</span></code> and <code class="docutils literal notranslate"><span class="pre">z</span></code> are both vectors. In that
-case, scales are computed “per channel”, in which “channel” is the output dimension,
+case, scales are computed per <cite>channel</cite>, in which <cite>channel</cite> is the output dimension,
 which corresponds to the first dimension for ops such as <code class="docutils literal notranslate"><span class="pre">conv</span></code> and <code class="docutils literal notranslate"><span class="pre">linear</span></code>, and
 the second dimension for the <code class="docutils literal notranslate"><span class="pre">conv_transpose</span></code> op.</p>
-<p>For <code class="docutils literal notranslate"><span class="pre">&quot;linear&quot;</span></code> mode, <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">=</span> <span class="pre">min(w_r),</span> <span class="pre">B</span> <span class="pre">=</span> <span class="pre">max(w_r)</span></code>.</p>
+<p>For <code class="docutils literal notranslate"><span class="pre">&quot;linear&quot;</span></code> mode, <span class="math notranslate nohighlight">\(A = min(w_r)\)</span>, <span class="math notranslate nohighlight">\(B = max(w_r)\)</span>.</p>
 <p><strong>Linear symmetric interpolation</strong></p>
 <p>With linear symmetric interpolation (<code class="docutils literal notranslate"><span class="pre">&quot;linear_symmetric&quot;</span></code> mode, the default), rather than
 mapping the exact min/max of the float range to the quantized range,
-the function chooses the maximum absolute value between the min/max, which results in
-a zero point value of 127. The floating-point range is symmetric with respect to zero,
-and so is the quantized range.</p>
+the function chooses the maximum absolute value between the min/max, which results in a
+floating-point range that is symmetric with respect to zero. This also makes the resulting zero
+point <code class="docutils literal notranslate"><span class="pre">0</span></code> for int8 weight and <code class="docutils literal notranslate"><span class="pre">127</span></code> for uint8 weight.</p>
 <p>For <code class="docutils literal notranslate"><span class="pre">&quot;linear_symmetric&quot;</span></code> mode:</p>
 <blockquote>
 <div><ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">=</span> <span class="pre">-R</span></code> and <code class="docutils literal notranslate"><span class="pre">B</span> <span class="pre">=</span> <span class="pre">R</span></code>, where <code class="docutils literal notranslate"><span class="pre">R</span> <span class="pre">=</span> <span class="pre">max(abs(w_r))</span></code>.</p></li>
-<li><p>This function maps to the range [0, 254].</p></li>
-<li><p>The result is <code class="docutils literal notranslate"><span class="pre">s=(B-A)/254</span></code> –&gt; <code class="docutils literal notranslate"><span class="pre">s=2R/254</span></code> –&gt; <code class="docutils literal notranslate"><span class="pre">s=R/127</span></code>.</p></li>
-<li><p>Solving for <code class="docutils literal notranslate"><span class="pre">z</span></code>: <code class="docutils literal notranslate"><span class="pre">z</span> <span class="pre">=</span> <span class="pre">(R/2R)</span> <span class="pre">*</span> <span class="pre">254</span></code> –&gt; <code class="docutils literal notranslate"><span class="pre">z=127</span></code>.</p></li>
+<li><p><span class="math notranslate nohighlight">\(A = -R\)</span> and <span class="math notranslate nohighlight">\(B = R\)</span>, where <span class="math notranslate nohighlight">\(R = max(abs(w_r))\)</span>.</p></li>
+<li><p>This function maps to the range of <code class="docutils literal notranslate"><span class="pre">[-127,</span> <span class="pre">127]</span></code> for int8 weight and <code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">254]</span></code> for uint8 weight.</p></li>
+<li><p>The result is <code class="docutils literal notranslate"><span class="pre">s=(B-A)/254</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">s=2R/254</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">s=R/127</span></code>.</p></li>
+<li><dl class="simple">
+<dt>Solving for <code class="docutils literal notranslate"><span class="pre">z</span></code>:</dt><dd><ul>
+<li><p>int8:  <code class="docutils literal notranslate"><span class="pre">z</span> <span class="pre">=</span> <span class="pre">(-127</span> <span class="pre">*</span> <span class="pre">R</span> <span class="pre">+</span> <span class="pre">127</span> <span class="pre">*</span> <span class="pre">R)/2R</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">z=0</span></code>.</p></li>
+<li><p>uint8: <code class="docutils literal notranslate"><span class="pre">z</span> <span class="pre">=</span> <span class="pre">(0</span> <span class="pre">*</span> <span class="pre">R</span> <span class="pre">+</span> <span class="pre">254</span> <span class="pre">*</span> <span class="pre">R)/2R</span></code> -&gt; <code class="docutils literal notranslate"><span class="pre">z=127</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
 </ul>
 </div></blockquote>
 <dl class="field-list">
@@ -190,9 +198,9 @@ and so is the quantized range.</p>
 <dt><strong>mode: str</strong></dt><dd><p>Mode for linear quantization:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">&quot;linear_symmetric&quot;</span></code> (default): Input data are quantized in the range
-<code class="docutils literal notranslate"><span class="pre">[-R,</span> <span class="pre">R]</span></code>, where <code class="docutils literal notranslate"><span class="pre">R</span> <span class="pre">=</span> <span class="pre">max(abs(w_r))</span></code>.</p></li>
+<code class="docutils literal notranslate"><span class="pre">[-R,</span> <span class="pre">R]</span></code>, where <span class="math notranslate nohighlight">\(R = max(abs(w_r))\)</span>.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">&quot;linear&quot;</span></code>: Input data are quantized in the range
-<code class="docutils literal notranslate"><span class="pre">[min(w_r),</span> <span class="pre">max(w_r)]</span></code>.</p></li>
+<span class="math notranslate nohighlight">\([min(w_r), max(w_r)]\)</span>.</p></li>
 </ul>
 </dd>
 <dt><strong>op_selector: callable</strong></dt><dd><p>This function takes a single parameter with type <code class="docutils literal notranslate"><span class="pre">coremltools.converters.mil.Const</span></code>;
@@ -239,6 +247,20 @@ weights bigger than 2048 elements are compressed:</p>
       <span class="n">returm</span> <span class="n">const_op</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">val</span><span class="o">.</span><span class="n">size</span> <span class="o">&gt;</span> <span class="mi">2048</span><span class="p">:</span>
 </pre></div>
 </div>
+</li>
+</ul>
+</dd>
+<dt><strong>dtype: np.generic or mil.type type</strong></dt><dd><p>Determines the quantizaed data type (int8/uint8).</p>
+<ul class="simple">
+<li><dl class="simple">
+<dt>The allowed values are:</dt><dd><ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">np.int8</span></code> (the default)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">np.uint8</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">coremltools.converters.mil.mil.types.int8</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">coremltools.converters.mil.mil.types.uint8</span></code></p></li>
+</ul>
+</dd>
+</dl>
 </li>
 </ul>
 </dd>
@@ -323,7 +345,7 @@ similarities. <cite>nbits</cite> is required.</p></li>
 </ul>
 <p>A <cite>histogram</cite> is a representation of the distribution of a continuous variable,
 in which the entire range of values is divided into a series of intervals (or
-“bins”) and the representation displays how many values fall into each bin.
+<cite>bins</cite>) and the representation displays how many values fall into each bin.
 Linear histograms have one bin at even intervals, such as one bin per integer.</p>
 </div></blockquote>
 </li>

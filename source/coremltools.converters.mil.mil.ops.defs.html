@@ -1203,9 +1203,11 @@ The list is similar to an auto-resizing array.</p>
 </ul>
 </dd>
 <dt><strong>dynamic_length: &lt;bool&gt; (Optional, Default is True)</strong></dt><dd></dd>
-<dt><strong>elem_shape: &lt;K,T&gt; (Required)</strong></dt><dd><ul class="simple">
-<li><p>Where <code class="docutils literal notranslate"><span class="pre">T</span> <span class="pre">=</span> <span class="pre">&quot;string&quot;,</span> <span class="pre">&quot;int32&quot;</span></code>.</p></li>
-<li><p>Non-symbolic 1-D tensor denoting the shape of elements.</p></li>
+<dt><strong>elem_shape: Tuple[const&lt;T&gt;] (Required)</strong></dt><dd><ul class="simple">
+<li><p>1-D vector denoting the shape of elements.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">T</span> <span class="pre">=</span> <span class="pre">int32</span></code>, the element shape is known at compile time.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">T</span> <span class="pre">=</span> <span class="pre">string</span></code> denotes the symbolic shape, in which the shape is determined
+at runtime.</p></li>
 <li><p>If not provided, the resulting <code class="docutils literal notranslate"><span class="pre">List</span></code> won’t have the elementary shape
 info, which may cause backend errors. Remedy this with SSA passes.</p></li>
 </ul>
@@ -1220,6 +1222,11 @@ info, which may cause backend errors. Remedy this with SSA passes.</p></li>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><dl class="simple">
 <dt>List[*]</dt><dd></dd>
+</dl>
+</dd>
+<dt class="field-odd">Attributes</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>T: i32, string</strong></dt><dd></dd>
 </dl>
 </dd>
 </dl>
@@ -4127,7 +4134,7 @@ input tensor.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">S</span> <span class="pre">==</span> <span class="pre">len(D_in)</span></code>.</p></li>
 </ul>
 </dd>
-<dt><strong>pad_type: const str (Required)</strong></dt><dd><p>Must be one of <code class="docutils literal notranslate"><span class="pre">valid</span></code>, <code class="docutils literal notranslate"><span class="pre">same</span></code> or <code class="docutils literal notranslate"><span class="pre">custom</span></code>.</p>
+<dt><strong>pad_type: const str (Required)</strong></dt><dd><p>Must be one of <code class="docutils literal notranslate"><span class="pre">valid</span></code>, <code class="docutils literal notranslate"><span class="pre">same</span></code>, <code class="docutils literal notranslate"><span class="pre">custom</span></code> or <code class="docutils literal notranslate"><span class="pre">same_lower</span></code>.</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">valid</span></code>: No padding. This is equivalent to custom pad with <code class="docutils literal notranslate"><span class="pre">pad[i]</span> <span class="pre">=</span> <span class="pre">0,</span> <span class="pre">for</span>
 <span class="pre">all</span> <span class="pre">i</span></code>.</p></li>
@@ -5855,11 +5862,12 @@ boxes.</p>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>boxes: tensor&lt;[n, B, 4], T&gt; (Required)</strong></dt><dd><ul class="simple">
-<li><p>Box coordinates on which to perform NMS.</p></li>
+<li><p>Box coordinates on which to perform NMS. The coordinates are expected in
+CENTER_SIZE_WIDTH_FIRST format (x, y, width, height) where (x, y) is the center.</p></li>
 </ul>
 </dd>
 <dt><strong>scores: tensor&lt;[n, B, K], T&gt; (Required)</strong></dt><dd><ul class="simple">
-<li><p>Scores for each one of the boxes.</p></li>
+<li><p>Scores for each one of the boxes. K is the number of classes.</p></li>
 </ul>
 </dd>
 <dt><strong>iou_threshold: const&lt;T&gt; (Required)</strong></dt><dd><ul class="simple">
@@ -6500,13 +6508,11 @@ from <code class="docutils literal notranslate"><span class="pre">num_splits</sp
 <dl class="py class">
 <dt class="sig sig-object py" id="coremltools.converters.mil.mil.ops.defs.iOS16.tensor_operation.topk">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">coremltools.converters.mil.mil.ops.defs.iOS16.tensor_operation.</span></span><span class="sig-name descname"><span class="pre">topk</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/coremltools/converters/mil/mil/ops/defs/iOS16/tensor_operation.html#topk"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#coremltools.converters.mil.mil.ops.defs.iOS16.tensor_operation.topk" title="Permalink to this definition"></a></dt>
-<dd><p>A version of <code class="docutils literal notranslate"><span class="pre">topk</span></code> for iOS 16+. This section documents the differences. For the
+<dd><p>A version of <code class="docutils literal notranslate"><span class="pre">topk</span></code> for iOS 16+. This section documents the differences. The following are additional parameters for the iOS 16+ version. For the
 rest of the documentation, see <a class="reference external" href="#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.topk">the iOS 15 version of topk</a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>The following are additional parameters for the iOS 16+ version. (For more parameters,</strong></dt><dd></dd>
-<dt><strong>see `the iOS 15 version of topk &lt;#coremltools.converters.mil.mil.ops.defs.iOS15.tensor_operation.topk&gt;`_.)</strong></dt><dd></dd>
 <dt><strong>sort: const&lt;bool&gt; (Optional)</strong></dt><dd><ul class="simple">
 <li><p>Defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></li>
 <li><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, <code class="docutils literal notranslate"><span class="pre">top-k</span></code> elements are themselves sorted.
@@ -6769,7 +6775,7 @@ squeeze if indexing is intended.</p>
 <li><p>Input tensor</p></li>
 </ul>
 </dd>
-<dt><strong>begin: tensor&lt;[rank&lt;x&gt;], i32&gt; (Required)</strong></dt><dd><ul class="simple">
+<dt><strong>begin: tensor&lt;[rank(x)], i32&gt; (Required)</strong></dt><dd><ul class="simple">
 <li><p>Starting index for the dimension of slicing.</p></li>
 </ul>
 </dd>
@@ -6784,17 +6790,17 @@ squeeze if indexing is intended.</p>
 </dd>
 <dt><strong>begin_mask: tensor&lt;[rank(x)], bool&gt; (Optional)</strong></dt><dd><ul class="simple">
 <li><p>Default to all <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
-<li><p>If <code class="docutils literal notranslate"><span class="pre">begin_mask[i]==True</span></code>, neglect <code class="docutils literal notranslate"><span class="pre">begin[i]</span></code>, and set <code class="docutils literal notranslate"><span class="pre">begin[i]</span></code> to <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">begin_mask[i]==True</span></code>, ignores <code class="docutils literal notranslate"><span class="pre">begin[i]</span></code>, and set <code class="docutils literal notranslate"><span class="pre">begin[i]</span></code> to <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p></li>
 </ul>
 </dd>
 <dt><strong>end_mask: tensor&lt;[rank(x)], bool&gt; (Optional)</strong></dt><dd><ul class="simple">
 <li><p>Default to all <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
-<li><p>If <code class="docutils literal notranslate"><span class="pre">end_mask[i]==True</span></code>, neglect <code class="docutils literal notranslate"><span class="pre">end[i]</span></code>, and set <code class="docutils literal notranslate"><span class="pre">end[i]</span></code> to <code class="docutils literal notranslate"><span class="pre">x.shape[i]</span></code>.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">end_mask[i]==True</span></code>, ignores <code class="docutils literal notranslate"><span class="pre">end[i]</span></code>, and set <code class="docutils literal notranslate"><span class="pre">end[i]</span></code> to <code class="docutils literal notranslate"><span class="pre">x.shape[i]</span></code>.</p></li>
 </ul>
 </dd>
 <dt><strong>squeeze_mask: tensor&lt;[rank(x)], bool&gt; (Optional)</strong></dt><dd><ul class="simple">
 <li><p>Default to all <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
-<li><p>If <code class="docutils literal notranslate"><span class="pre">squeeze_mask[i]==true</span></code>, neglect <code class="docutils literal notranslate"><span class="pre">end[i]</span></code>, and do the pure index at <code class="docutils literal notranslate"><span class="pre">begin[i]</span></code>.</p></li>
+<li><p>If <code class="docutils literal notranslate"><span class="pre">squeeze_mask[i]==true</span></code>, ignores <code class="docutils literal notranslate"><span class="pre">end[i]</span></code>, and do the pure index at <code class="docutils literal notranslate"><span class="pre">begin[i]</span></code>.</p></li>
 </ul>
 </dd>
 </dl>

@@ -494,7 +494,7 @@
 <span class="sd">    ----------</span>
 <span class="sd">    x: tensor&lt;*?, T&gt; (Required)</span>
 <span class="sd">        * Input tensor</span>
-<span class="sd">    begin: tensor&lt;[rank&lt;x&gt;], i32&gt; (Required)</span>
+<span class="sd">    begin: tensor&lt;[rank(x)], i32&gt; (Required)</span>
 <span class="sd">        * Starting index for the dimension of slicing.</span>
 <span class="sd">    end: tensor&lt;[rank(x)], i32&gt; (Required)</span>
 <span class="sd">        * Ending index for the dimension of slicing.</span>
@@ -503,13 +503,13 @@
 <span class="sd">        * Stride for the dimension of slicing.</span>
 <span class="sd">    begin_mask: tensor&lt;[rank(x)], bool&gt; (Optional)</span>
 <span class="sd">        * Default to all ``False``.</span>
-<span class="sd">        * If ``begin_mask[i]==True``, neglect ``begin[i]``, and set ``begin[i]`` to ``0``.</span>
+<span class="sd">        * If ``begin_mask[i]==True``, ignores ``begin[i]``, and set ``begin[i]`` to ``0``.</span>
 <span class="sd">    end_mask: tensor&lt;[rank(x)], bool&gt; (Optional)</span>
 <span class="sd">        * Default to all ``False``.</span>
-<span class="sd">        * If ``end_mask[i]==True``, neglect ``end[i]``, and set ``end[i]`` to ``x.shape[i]``.</span>
+<span class="sd">        * If ``end_mask[i]==True``, ignores ``end[i]``, and set ``end[i]`` to ``x.shape[i]``.</span>
 <span class="sd">    squeeze_mask: tensor&lt;[rank(x)], bool&gt; (Optional)</span>
 <span class="sd">        * Default to all ``False``.</span>
-<span class="sd">        * If ``squeeze_mask[i]==true``, neglect ``end[i]``, and do the pure index at ``begin[i]``.</span>
+<span class="sd">        * If ``squeeze_mask[i]==true``, ignores ``end[i]``, and do the pure index at ``begin[i]``.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>

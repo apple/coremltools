@@ -83,6 +83,8 @@
 <span class="c1"># Use of this source code is governed by a BSD-3-clause license that can be</span>
 <span class="c1"># found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
 
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">_np</span>
+
 <span class="kn">from</span> <span class="nn">coremltools</span> <span class="kn">import</span> <span class="n">_SPECIFICATION_VERSION_IOS_16</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil</span> <span class="kn">import</span> <span class="n">Operation</span> <span class="k">as</span> <span class="n">_Operation</span>
 <span class="kn">from</span> <span class="nn">coremltools.converters.mil.converter</span> <span class="kn">import</span> <span class="n">mil_convert</span> <span class="k">as</span> <span class="n">_mil_convert</span>
@@ -145,7 +147,7 @@
     <span class="p">)</span>
     <span class="k">return</span> <span class="n">compressed_mlmodel</span>
 
-<div class="viewcode-block" id="affine_quantize_weights"><a class="viewcode-back" href="../../../../source/coremltools.models.ml_program.html#coremltools.models.ml_program.compression_utils.affine_quantize_weights">[docs]</a><span class="k">def</span> <span class="nf">affine_quantize_weights</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;linear_symmetric&quot;</span><span class="p">,</span> <span class="n">op_selector</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="affine_quantize_weights"><a class="viewcode-back" href="../../../../source/coremltools.models.ml_program.html#coremltools.models.ml_program.compression_utils.affine_quantize_weights">[docs]</a><span class="k">def</span> <span class="nf">affine_quantize_weights</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;linear_symmetric&quot;</span><span class="p">,</span> <span class="n">op_selector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">_np</span><span class="o">.</span><span class="n">int8</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Utility function to convert a float precision MLModel of type ``mlprogram`` that uses</span>
 <span class="sd">    float-precision weights into a compressed MLModel that uses 8-bit weights. This is</span>
@@ -157,65 +159,74 @@
 <span class="sd">    All computation at runtime uses float precision; the precision of the intermediate</span>
 <span class="sd">    tensors and the compute precision of the ops are not altered.</span>
 <span class="sd">    </span>
-<span class="sd">    For each weight, this utility function converts the weight into the uint8 type using</span>
+<span class="sd">    For each weight, this utility function converts the weight into the int8 or uint8 type using</span>
 <span class="sd">    either `Linear interpolation` (``&quot;linear&quot;`` mode) or `Linear symmetric</span>
 <span class="sd">    interpolation` (``&quot;linear_symmetric&quot;`` mode, the default).</span>
 <span class="sd">    </span>
 <span class="sd">    **Linear interpolation**</span>
 <span class="sd">    </span>
 <span class="sd">    Linear interpolation (``&quot;linear&quot;`` mode) maps the min/max of the float</span>
-<span class="sd">    range to the range [0, 255] using a zero point (also called quantization bias, or</span>
-<span class="sd">    offset) and a scale factor.</span>
-<span class="sd">    </span>
-<span class="sd">    ``&quot;linear&quot;`` mode uses the quantization formula ``w_r = s * (w_q - z)``, where:</span>
-<span class="sd">    </span>
-<span class="sd">        * ``w_r`` and  ``s`` are of type float.</span>
-<span class="sd">        * ``w_r`` represents the float precision weight.</span>
-<span class="sd">        * ``s`` represents the scale.</span>
-<span class="sd">        * ``w_q`` and ``z`` are of type uint8.</span>
-<span class="sd">        * ``w_q`` represents quantized weight.</span>
-<span class="sd">        * ``z`` represents the zero point.</span>
-<span class="sd">    </span>
+<span class="sd">    range to the 8-bit integer range ``[low, high]`` using a zero point (also called quantization bias, or</span>
+<span class="sd">    offset) and a scale factor. For the int8 quantization, ``[low, high] = [-128, 127]``, while uint8 </span>
+<span class="sd">    quantization uses range ``[0, 255]``.</span>
+
+<span class="sd">    ``&quot;linear&quot;`` mode uses the quantization formula:</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">       w_r = s * (w_q - z)</span>
+
+<span class="sd">    Where:</span>
+
+<span class="sd">        * :math:`w_r` and  :math:`s` are of type float.</span>
+<span class="sd">        * :math:`w_r`` represents the float precision weight.</span>
+<span class="sd">        * :math:`s` represents the scale.</span>
+<span class="sd">        * :math:`w_q` and :math:`z` are of type 8-bit integer.</span>
+<span class="sd">        * :math:`w_q` represents quantized weight.</span>
+<span class="sd">        * :math:`z` represents the zero point.</span>
+
 <span class="sd">    Quantized weights are computed as follows:</span>
-<span class="sd">    </span>
-<span class="sd">        * ``w_q = cast_to_uint8(w_r / s + cast_to_float(z))``</span>
-<span class="sd">        * Note: ``cast_to_uint8`` is the process of clipping the input to range [0, 255]</span>
-<span class="sd">          followed by rounding and casting to uint8.</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">       w_q = cast\_to\_8\_bit\_integer(w_r / s + cast\_to\_float(z))</span>
+
+<span class="sd">    Note: :math:`cast\_to\_8\_bit\_integer` is the process of clipping the input to range ``[low, high]`` followed by rounding and casting to 8-bit integer.</span>
 <span class="sd">    </span>
 <span class="sd">    In ``&quot;linear&quot;`` mode, ``s, z`` are computed by mapping the original float range</span>
-<span class="sd">    ``[A, B]`` into the uint8 range [0, 255]. That is, you are solving the following</span>
-<span class="sd">    linear equations:</span>
+<span class="sd">    ``[A, B]`` into the 8-bit integer range ``[-128, 127]`` or ``[0, 255]``. That is, you are solving the </span>
+<span class="sd">    following linear equations:</span>
 <span class="sd">    </span>
-<span class="sd">        * ``B = s * (255 - z)``</span>
-<span class="sd">        * ``A = s * (0 - z)``</span>
+<span class="sd">        * ``B = s * (high - z)``</span>
+<span class="sd">        * ``A = s * (low - z)``</span>
 <span class="sd">    </span>
 <span class="sd">    The equations result in the following:</span>
-<span class="sd">    </span>
-<span class="sd">        * ``s = (B - A) / 255``</span>
-<span class="sd">        * ``z = cast_to_uint8(-255 * A / (B - A))``</span>
+
+<span class="sd">        * ``s = (B - A) / (high - low)``</span>
+<span class="sd">        * ``z = cast_to_8_bit_integer((low * B - high * A) / (B - A))``</span>
 <span class="sd">    </span>
 <span class="sd">    When the rank of weight ``w`` is 1, then ``s`` and ``z`` are both scalars. When the</span>
 <span class="sd">    rank of the weight is greater than 1, then ``s`` and ``z`` are both vectors. In that</span>
-<span class="sd">    case, scales are computed &quot;per channel&quot;, in which &quot;channel&quot; is the output dimension,</span>
+<span class="sd">    case, scales are computed per `channel`, in which `channel` is the output dimension,</span>
 <span class="sd">    which corresponds to the first dimension for ops such as ``conv`` and ``linear``, and</span>
 <span class="sd">    the second dimension for the ``conv_transpose`` op.</span>
 <span class="sd">    </span>
-<span class="sd">    For ``&quot;linear&quot;`` mode, ``A = min(w_r), B = max(w_r)``.</span>
+<span class="sd">    For ``&quot;linear&quot;`` mode, :math:`A = min(w_r)`, :math:`B = max(w_r)`.</span>
 <span class="sd">    </span>
 <span class="sd">    **Linear symmetric interpolation**</span>
 <span class="sd">    </span>
 <span class="sd">    With linear symmetric interpolation (``&quot;linear_symmetric&quot;`` mode, the default), rather than</span>
 <span class="sd">    mapping the exact min/max of the float range to the quantized range,</span>
-<span class="sd">    the function chooses the maximum absolute value between the min/max, which results in</span>
-<span class="sd">    a zero point value of 127. The floating-point range is symmetric with respect to zero,</span>
-<span class="sd">    and so is the quantized range.</span>
+<span class="sd">    the function chooses the maximum absolute value between the min/max, which results in a </span>
+<span class="sd">    floating-point range that is symmetric with respect to zero. This also makes the resulting zero </span>
+<span class="sd">    point ``0`` for int8 weight and ``127`` for uint8 weight.</span>
 <span class="sd">    </span>
 <span class="sd">    For ``&quot;linear_symmetric&quot;`` mode:</span>
 <span class="sd">    </span>
-<span class="sd">       * ``A = -R`` and ``B = R``, where ``R = max(abs(w_r))``.</span>
-<span class="sd">       * This function maps to the range [0, 254].</span>
-<span class="sd">       * The result is ``s=(B-A)/254`` --&gt; ``s=2R/254`` --&gt; ``s=R/127``.</span>
-<span class="sd">       * Solving for ``z``: ``z = (R/2R) * 254`` --&gt; ``z=127``.</span>
+<span class="sd">       * :math:`A = -R` and :math:`B = R`, where :math:`R = max(abs(w_r))`.</span>
+<span class="sd">       * This function maps to the range of ``[-127, 127]`` for int8 weight and ``[0, 254]`` for uint8 weight.</span>
+<span class="sd">       * The result is ``s=(B-A)/254`` -&gt; ``s=2R/254`` -&gt; ``s=R/127``.</span>
+<span class="sd">       * Solving for ``z``: </span>
+<span class="sd">            * int8:  ``z = (-127 * R + 127 * R)/2R`` -&gt; ``z=0``.</span>
+<span class="sd">            * uint8: ``z = (0 * R + 254 * R)/2R`` -&gt; ``z=127``.      </span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -226,9 +237,9 @@
 <span class="sd">        Mode for linear quantization:</span>
 <span class="sd">        </span>
 <span class="sd">        * ``&quot;linear_symmetric&quot;`` (default): Input data are quantized in the range</span>
-<span class="sd">          ``[-R, R]``, where ``R = max(abs(w_r))``.</span>
+<span class="sd">          ``[-R, R]``, where :math:`R = max(abs(w_r))`.</span>
 <span class="sd">        * ``&quot;linear&quot;``: Input data are quantized in the range</span>
-<span class="sd">          ``[min(w_r), max(w_r)]``.</span>
+<span class="sd">          :math:`[min(w_r), max(w_r)]`.</span>
 
 <span class="sd">    op_selector: callable </span>
 <span class="sd">        This function takes a single parameter with type ``coremltools.converters.mil.Const``;</span>
@@ -277,6 +288,15 @@
 <span class="sd">              def op_selector(const_op):</span>
 <span class="sd">                    returm const_op.val.val.size &gt; 2048:</span>
 
+<span class="sd">    dtype: np.generic or mil.type type</span>
+<span class="sd">        Determines the quantizaed data type (int8/uint8).</span>
+<span class="sd">        </span>
+<span class="sd">        * The allowed values are:</span>
+<span class="sd">            * ``np.int8`` (the default)</span>
+<span class="sd">            * ``np.uint8``</span>
+<span class="sd">            * ``coremltools.converters.mil.mil.types.int8``</span>
+<span class="sd">            * ``coremltools.converters.mil.mil.types.uint8``</span>
+
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    </span>
@@ -293,7 +313,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">op_selector</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">op_selector</span> <span class="o">=</span> <span class="n">_default_op_selector</span>
-    <span class="n">affine_weight_quantizer</span> <span class="o">=</span> <span class="n">_WeightAffineQuantizer</span><span class="p">(</span><span class="n">fake_compression</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span> <span class="n">op_selector</span><span class="o">=</span><span class="n">op_selector</span><span class="p">)</span>
+    <span class="n">affine_weight_quantizer</span> <span class="o">=</span> <span class="n">_WeightAffineQuantizer</span><span class="p">(</span><span class="n">fake_compression</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span> <span class="n">op_selector</span><span class="o">=</span><span class="n">op_selector</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">_apply_graph_pass</span><span class="p">(</span><span class="n">mlmodel</span><span class="p">,</span> <span class="n">affine_weight_quantizer</span><span class="p">)</span></div>
 
 
@@ -361,7 +381,7 @@
 <span class="sd">           </span>
 <span class="sd">           A `histogram` is a representation of the distribution of a continuous variable,</span>
 <span class="sd">           in which the entire range of values is divided into a series of intervals (or</span>
-<span class="sd">           &quot;bins&quot;) and the representation displays how many values fall into each bin.</span>
+<span class="sd">           `bins`) and the representation displays how many values fall into each bin.</span>
 <span class="sd">           Linear histograms have one bin at even intervals, such as one bin per integer.</span>
 <span class="sd">          </span>
 <span class="sd">        * ``&quot;unique&quot;``: The LUT is generated by unique values in the weights. The weights</span>

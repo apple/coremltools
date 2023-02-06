@@ -83,6 +83,7 @@
 <span class="c1"># Use of this source code is governed by a BSD-3-clause license that can be</span>
 <span class="c1"># found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause</span>
 
+<span class="kn">import</span> <span class="nn">atexit</span> <span class="k">as</span> <span class="nn">_atexit</span>
 <span class="kn">import</span> <span class="nn">os</span> <span class="k">as</span> <span class="nn">_os</span>
 <span class="kn">import</span> <span class="nn">shutil</span> <span class="k">as</span> <span class="nn">_shutil</span>
 <span class="kn">import</span> <span class="nn">tempfile</span> <span class="k">as</span> <span class="nn">_tempfile</span>
@@ -217,10 +218,10 @@
         <span class="k">if</span> <span class="n">specification</span><span class="o">.</span><span class="n">specificationVersion</span> <span class="o">&gt;</span> <span class="n">engine_version</span><span class="p">:</span>
             <span class="c1"># in this case the specification is a newer kind of .mlmodel than this</span>
             <span class="c1"># version of the engine can support so we&#39;ll not try to have a proxy object</span>
-            <span class="k">return</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">specification</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="n">specification</span><span class="p">,</span> <span class="kc">None</span>
 
         <span class="k">try</span><span class="p">:</span>
-            <span class="k">return</span> <span class="p">(</span><span class="n">_MLModelProxy</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">compute_units</span><span class="o">.</span><span class="n">name</span><span class="p">),</span> <span class="n">specification</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">_MLModelProxy</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">compute_units</span><span class="o">.</span><span class="n">name</span><span class="p">),</span> <span class="n">specification</span><span class="p">,</span> <span class="kc">None</span>
         <span class="k">except</span> <span class="ne">RuntimeError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="n">_warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
                 <span class="s2">&quot;You will not be able to run predict() on this Core ML model.&quot;</span>
@@ -228,9 +229,10 @@
                 <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span>
                 <span class="ne">RuntimeWarning</span><span class="p">,</span>
             <span class="p">)</span>
-            <span class="k">return</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">specification</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="n">specification</span><span class="p">,</span> <span class="n">e</span>
 
-    <span class="k">return</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">specification</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kc">None</span><span class="p">,</span> <span class="n">specification</span><span class="p">,</span> <span class="kc">None</span>
+
 
 <span class="k">def</span> <span class="nf">_try_get_weights_dir_path</span><span class="p">(</span><span class="n">mlpackage_path</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
@@ -268,52 +270,55 @@
 <span class="sd">    .. sourcecode:: python</span>
 
 <span class="sd">        # Load the model</span>
-<span class="sd">        &gt;&gt;&gt; model =  MLModel(&#39;HousePricer.mlmodel&#39;)</span>
+<span class="sd">        model = MLModel(&quot;HousePricer.mlmodel&quot;)</span>
 
 <span class="sd">        # Set the model metadata</span>
-<span class="sd">        &gt;&gt;&gt; model.author = &#39;Author&#39;</span>
-<span class="sd">        &gt;&gt;&gt; model.license = &#39;BSD&#39;</span>
-<span class="sd">        &gt;&gt;&gt; model.short_description = &#39;Predicts the price of a house in the Seattle area.&#39;</span>
+<span class="sd">        model.author = &quot;Author&quot;</span>
+<span class="sd">        model.license = &quot;BSD&quot;</span>
+<span class="sd">        model.short_description = &quot;Predicts the price of a house in the Seattle area.&quot;</span>
 
 <span class="sd">        # Get the interface to the model</span>
-<span class="sd">        &gt;&gt;&gt; model.input_description</span>
-<span class="sd">        &gt;&gt;&gt; model.output_description</span>
+<span class="sd">        model.input_description</span>
+<span class="sd">        model.output_description</span>
 
 <span class="sd">        # Set feature descriptions manually</span>
-<span class="sd">        &gt;&gt;&gt; model.input_description[&#39;bedroom&#39;] = &#39;Number of bedrooms&#39;</span>
-<span class="sd">        &gt;&gt;&gt; model.input_description[&#39;bathrooms&#39;] = &#39;Number of bathrooms&#39;</span>
-<span class="sd">        &gt;&gt;&gt; model.input_description[&#39;size&#39;] = &#39;Size (in square feet)&#39;</span>
+<span class="sd">        model.input_description[&quot;bedroom&quot;] = &quot;Number of bedrooms&quot;</span>
+<span class="sd">        model.input_description[&quot;bathrooms&quot;] = &quot;Number of bathrooms&quot;</span>
+<span class="sd">        model.input_description[&quot;size&quot;] = &quot;Size (in square feet)&quot;</span>
 
 <span class="sd">        # Set</span>
-<span class="sd">        &gt;&gt;&gt; model.output_description[&#39;price&#39;] = &#39;Price of the house&#39;</span>
+<span class="sd">        model.output_description[&quot;price&quot;] = &quot;Price of the house&quot;</span>
 
 <span class="sd">        # Make predictions</span>
-<span class="sd">        &gt;&gt;&gt; predictions = model.predict({&#39;bedroom&#39;: 1.0, &#39;bath&#39;: 1.0, &#39;size&#39;: 1240})</span>
+<span class="sd">        predictions = model.predict({&quot;bedroom&quot;: 1.0, &quot;bath&quot;: 1.0, &quot;size&quot;: 1240})</span>
 
 <span class="sd">        # Get the spec of the model</span>
-<span class="sd">        &gt;&gt;&gt; spec = model.get_spec()</span>
+<span class="sd">        spec = model.get_spec()</span>
 
 <span class="sd">        # Save the model</span>
-<span class="sd">        &gt;&gt;&gt; model.save(&#39;HousePricer.mlpackage&#39;)</span>
+<span class="sd">        model.save(&quot;HousePricer.mlpackage&quot;)</span>
 
 <span class="sd">        # Load the model from the spec object</span>
-<span class="sd">        &gt;&gt;&gt; spec = model.get_spec()</span>
-<span class="sd">        &gt;&gt;&gt; # modify spec (e.g. rename inputs/ouputs etc)</span>
-<span class="sd">        &gt;&gt;&gt; model = MLModel(spec)</span>
-<span class="sd">        &gt;&gt;&gt; # if model type is mlprogram, i.e. spec.WhichOneof(&#39;Type&#39;) == &quot;mlProgram&quot;, then:</span>
-<span class="sd">        &gt;&gt;&gt; model = MLModel(spec, weights_dir=model.weights_dir)</span>
+<span class="sd">        spec = model.get_spec()</span>
+<span class="sd">        # modify spec (e.g. rename inputs/ouputs etc)</span>
+<span class="sd">        model = MLModel(spec)</span>
+<span class="sd">        # if model type is mlprogram, i.e. spec.WhichOneof(&#39;Type&#39;) == &quot;mlProgram&quot;, then:</span>
+<span class="sd">        model = MLModel(spec, weights_dir=model.weights_dir)</span>
 
 <span class="sd">    See Also</span>
 <span class="sd">    --------</span>
 <span class="sd">    predict</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="MLModel.__init__"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.model.MLModel.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span>
-                 <span class="n">is_temp_package</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                 <span class="n">mil_program</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                 <span class="n">skip_model_load</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                 <span class="n">compute_units</span><span class="o">=</span><span class="n">_ComputeUnit</span><span class="o">.</span><span class="n">ALL</span><span class="p">,</span>
-                 <span class="n">weights_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="MLModel.__init__"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.model.MLModel.__init__">[docs]</a>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">model</span><span class="p">,</span>
+        <span class="n">is_temp_package</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">mil_program</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">skip_model_load</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">compute_units</span><span class="o">=</span><span class="n">_ComputeUnit</span><span class="o">.</span><span class="n">ALL</span><span class="p">,</span>
+        <span class="n">weights_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Construct an MLModel from an ``.mlmodel``.</span>
 
@@ -333,8 +338,7 @@
 <span class="sd">            i.e. a spec object.</span>
 
 <span class="sd">        is_temp_package: bool</span>
-<span class="sd">            Set to true if the input model package dir is temporary and can be</span>
-<span class="sd">            deleted upon destruction of this class.</span>
+<span class="sd">            Set to true if the input model package dir is temporary and can be deleted upon interpreter termination.</span>
 
 <span class="sd">        mil_program: coremltools.converters.mil.Program</span>
 <span class="sd">            Set to the MIL program object, if available.</span>
@@ -346,10 +350,10 @@
 <span class="sd">            to compile and load the model. In that case, the returned model object cannot</span>
 <span class="sd">            be used to make a prediction. This flag may be used to load a newer model</span>
 <span class="sd">            type on an older Mac, to inspect or load/save the spec.</span>
-<span class="sd">            </span>
+
 <span class="sd">            Example: Loading an ML Program model type on a macOS 11, since an ML Program can be</span>
 <span class="sd">            compiled and loaded only from macOS12+.</span>
-<span class="sd">            </span>
+
 <span class="sd">            Defaults to False.</span>
 
 <span class="sd">        compute_units: coremltools.ComputeUnit</span>
@@ -379,9 +383,14 @@
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
-<span class="sd">        &gt;&gt;&gt; loaded_model = MLModel(&#39;my_model.mlmodel&#39;)</span>
-<span class="sd">        &gt;&gt;&gt; loaded_model = MLModel(&quot;my_model.mlpackage&quot;)</span>
+<span class="sd">        loaded_model = MLModel(&#39;my_model.mlmodel&#39;)</span>
+<span class="sd">        loaded_model = MLModel(&quot;my_model.mlpackage&quot;)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">def</span> <span class="nf">cleanup</span><span class="p">(</span><span class="n">package_path</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">package_path</span><span class="p">):</span>
+                <span class="n">_shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">package_path</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">compute_units</span><span class="p">,</span> <span class="n">_ComputeUnit</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;&quot;compute_units&quot; parameter must be of type: coremltools.ComputeUnit&#39;</span><span class="p">)</span>
         <span class="k">elif</span> <span class="p">(</span><span class="n">compute_units</span> <span class="o">==</span> <span class="n">_ComputeUnit</span><span class="o">.</span><span class="n">CPU_AND_NE</span>
@@ -394,6 +403,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">compute_unit</span> <span class="o">=</span> <span class="n">compute_units</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">is_package</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_temp_package</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">package_path</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_weights_dir</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="n">mil_program</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -419,7 +429,7 @@
                                     <span class="s1">&#39;using the </span><span class="se">\&#39;</span><span class="s1">weights_dir</span><span class="se">\&#39;</span><span class="s1"> argument.&#39;</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">is_package</span> <span class="o">=</span> <span class="kc">True</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">is_temp_package</span> <span class="o">=</span> <span class="kc">True</span>
-                <span class="n">filename</span> <span class="o">=</span> <span class="n">_create_mlpackage</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">weights_dir</span><span class="p">,</span> <span class="n">copy_weights</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="n">filename</span> <span class="o">=</span> <span class="n">_create_mlpackage</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">weights_dir</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">package_path</span> <span class="o">=</span> <span class="n">filename</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_weights_dir</span> <span class="o">=</span> <span class="n">_try_get_weights_dir_path</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
@@ -439,15 +449,10 @@
             <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_input_description</span> <span class="o">=</span> <span class="n">_FeatureDescription</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">input</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_output_description</span> <span class="o">=</span> <span class="n">_FeatureDescription</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">output</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_output_description</span> <span class="o">=</span> <span class="n">_FeatureDescription</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_spec</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">output</span><span class="p">)</span>
 
-
-    <span class="k">def</span> <span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="c1"># Cleanup temporary package upon destruction</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;is_package&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_package</span> \
-           <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;is_temp_package&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_temp_package</span><span class="p">:</span>
-            <span class="kn">import</span> <span class="nn">shutil</span> <span class="k">as</span> <span class="nn">_shutil</span>
-            <span class="n">_shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">package_path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_package</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_temp_package</span><span class="p">:</span>
+            <span class="n">_atexit</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">cleanup</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">package_path</span><span class="p">)</span></div>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">short_description</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -503,34 +508,37 @@
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__repr__</span><span class="p">()</span>
 
-<div class="viewcode-block" id="MLModel.save"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.model.MLModel.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+<div class="viewcode-block" id="MLModel.save"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.model.MLModel.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">save_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Save the model to a ``.mlmodel`` format. For an MIL program, the filename is</span>
+<span class="sd">        Save the model to a ``.mlmodel`` format. For an MIL program, the save_path is</span>
 <span class="sd">        a package directory containing the ``mlmodel`` and weights.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        filename: str</span>
-<span class="sd">            Target filename / bundle directory for the model. Must have the</span>
-<span class="sd">            ``.mlmodel`` extension</span>
+<span class="sd">        save_path: Target file path / bundle directory for the model.</span>
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
-<span class="sd">        &gt;&gt;&gt; model.save(&#39;my_model_file.mlmodel&#39;)</span>
-<span class="sd">        &gt;&gt;&gt; loaded_model = MLModel(&#39;my_model_file.mlmodel&#39;)</span>
+<span class="sd">        model.save(&#39;my_model_file.mlmodel&#39;)</span>
+<span class="sd">        loaded_model = MLModel(&#39;my_model_file.mlmodel&#39;)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">filename</span> <span class="o">=</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+        <span class="n">save_path</span> <span class="o">=</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">save_path</span><span class="p">)</span>
+        <span class="c1"># Clean up existing file or directory.</span>
+        <span class="k">if</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">save_path</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">save_path</span><span class="p">):</span>
+                <span class="n">_shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">save_path</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">_os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">save_path</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_package</span><span class="p">:</span>
-            <span class="n">name</span><span class="p">,</span> <span class="n">ext</span> <span class="o">=</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+            <span class="n">name</span><span class="p">,</span> <span class="n">ext</span> <span class="o">=</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">save_path</span><span class="p">)</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">ext</span><span class="p">:</span>
-                <span class="n">filename</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">_MLPACKAGE_EXTENSION</span><span class="p">)</span>
+                <span class="n">save_path</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">save_path</span><span class="p">,</span> <span class="n">_MLPACKAGE_EXTENSION</span><span class="p">)</span>
             <span class="k">elif</span> <span class="n">ext</span> <span class="o">!=</span> <span class="n">_MLPACKAGE_EXTENSION</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;For an ML Program, extension must be </span><span class="si">{}</span><span class="s2"> (not </span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">_MLPACKAGE_EXTENSION</span><span class="p">,</span> <span class="n">ext</span><span class="p">))</span>
-            <span class="k">if</span> <span class="n">_os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
-                <span class="n">_shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
-            <span class="n">_shutil</span><span class="o">.</span><span class="n">copytree</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">package_path</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+            <span class="n">_shutil</span><span class="o">.</span><span class="n">copytree</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">package_path</span><span class="p">,</span> <span class="n">save_path</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">_save_spec</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_spec</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span></div>
+            <span class="n">_save_spec</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_spec</span><span class="p">,</span> <span class="n">save_path</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="MLModel.get_spec"><a class="viewcode-back" href="../../../source/coremltools.models.html#coremltools.models.model.MLModel.get_spec">[docs]</a>    <span class="k">def</span> <span class="nf">get_spec</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
@@ -543,7 +551,7 @@
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
-<span class="sd">        &gt;&gt;&gt; spec = model.get_spec()</span>
+<span class="sd">        spec = model.get_spec()</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">_deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_spec</span><span class="p">)</span></div>
 
@@ -567,14 +575,14 @@
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
-<span class="sd">        &gt;&gt;&gt; data = {&#39;bedroom&#39;: 1.0, &#39;bath&#39;: 1.0, &#39;size&#39;: 1240}</span>
-<span class="sd">        &gt;&gt;&gt; predictions = model.predict(data)</span>
-<span class="sd">        &gt;&gt;&gt; data = {&#39;array&#39;: numpy.array([[1.0, 2.0], [3.0, 4.0]])}</span>
-<span class="sd">        &gt;&gt;&gt; predictions = model.predict(data)</span>
-<span class="sd">        &gt;&gt;&gt; data = {&#39;array&#39;: torch.Tensor([[1.0, 2.0], [3.0, 4.0]])}</span>
-<span class="sd">        &gt;&gt;&gt; predictions = model.predict(data)</span>
-<span class="sd">        &gt;&gt;&gt; data = {&#39;array&#39;: tensorflow.Tensor([[1.0, 2.0], [3.0, 4.0]])}</span>
-<span class="sd">        &gt;&gt;&gt; predictions = model.predict(data)</span>
+<span class="sd">        data = {&#39;bedroom&#39;: 1.0, &#39;bath&#39;: 1.0, &#39;size&#39;: 1240}</span>
+<span class="sd">        predictions = model.predict(data)</span>
+<span class="sd">        data = {&#39;array&#39;: numpy.array([[1.0, 2.0], [3.0, 4.0]])}</span>
+<span class="sd">        predictions = model.predict(data)</span>
+<span class="sd">        data = {&#39;array&#39;: torch.Tensor([[1.0, 2.0], [3.0, 4.0]])}</span>
+<span class="sd">        predictions = model.predict(data)</span>
+<span class="sd">        data = {&#39;array&#39;: tensorflow.Tensor([[1.0, 2.0], [3.0, 4.0]])}</span>
+<span class="sd">        predictions = model.predict(data)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_package</span> <span class="ow">and</span> <span class="n">_is_macos</span><span class="p">()</span> <span class="ow">and</span> <span class="n">_macos_version</span><span class="p">()</span> <span class="o">&lt;</span> <span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">0</span><span class="p">):</span>
             <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span>
@@ -666,7 +674,7 @@
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
-<span class="sd">        &gt;&gt;&gt; mil_prog = model._get_mil_internal()</span>
+<span class="sd">        mil_prog = model._get_mil_internal()</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">_deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_mil_program</span><span class="p">)</span>
 
@@ -739,7 +747,6 @@
             <span class="k">if</span> <span class="ow">not</span> <span class="n">given_input_name</span> <span class="ow">in</span> <span class="n">model_input_to_types</span><span class="p">:</span>
                 <span class="k">continue</span>
             <span class="n">input_dict</span><span class="p">[</span><span class="n">given_input_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">convert</span><span class="p">(</span><span class="n">given_input</span><span class="p">)</span></div>
-
 </pre></div>
 
            </div>

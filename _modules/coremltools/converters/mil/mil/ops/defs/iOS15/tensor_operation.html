@@ -312,9 +312,10 @@
 <span class="sd">    ----------</span>
 
 <span class="sd">    boxes: tensor&lt;[n, B, 4], T&gt; (Required)</span>
-<span class="sd">        * Box coordinates on which to perform NMS.</span>
+<span class="sd">        * Box coordinates on which to perform NMS. The coordinates are expected in</span>
+<span class="sd">          CENTER_SIZE_WIDTH_FIRST format (x, y, width, height) where (x, y) is the center.</span>
 <span class="sd">    scores: tensor&lt;[n, B, K], T&gt; (Required)</span>
-<span class="sd">        * Scores for each one of the boxes.</span>
+<span class="sd">        * Scores for each one of the boxes. K is the number of classes.</span>
 <span class="sd">    iou_threshold: const&lt;T&gt; (Required)</span>
 <span class="sd">        * The intersection over union (``IoU``) threshold over which boxes are</span>
 <span class="sd">          suppressed. NMS remove all overlapping boxes with ``IoU &gt; iou_threshold``.</span>
@@ -1279,7 +1280,7 @@
             <span class="c1"># No split_indices possible.</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">sym_val</span>
 
-        <span class="n">split_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">sizes</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
+        <span class="n">split_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">sizes</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">int32</span><span class="p">)</span>
         <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">sym_val</span><span class="p">,</span> <span class="n">split_indices</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="o">.</span><span class="n">val</span><span class="p">))</span></div>
 
 

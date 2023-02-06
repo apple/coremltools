@@ -113,14 +113,14 @@
     <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
         <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
     <span class="p">)</span>
-    
+
     <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">),</span>
     <span class="p">}</span>
 
     <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">sym_type</span>
-        
+
 <span class="k">class</span> <span class="nc">elementwise_unary_with_int</span><span class="p">(</span><span class="n">Operation</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Elementwise Unary Op Superclass</span>
@@ -128,7 +128,7 @@
     <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
         <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
     <span class="p">)</span>
-    
+
     <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
     <span class="p">}</span>
@@ -319,7 +319,7 @@
         <span class="n">alpha</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
         <span class="n">beta</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
     <span class="p">)</span>
-    
+
     <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">),</span>
     <span class="p">}</span>
@@ -510,7 +510,7 @@
         <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
         <span class="n">epsilon</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
     <span class="p">)</span>
-    
+
     <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">),</span>
     <span class="p">}</span>
@@ -525,7 +525,7 @@
 
     <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">reciprocal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">val</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">epsilon</span><span class="o">.</span><span class="n">val</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">reciprocal</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">val</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">epsilon</span><span class="o">.</span><span class="n">val</span><span class="p">),</span> <span class="n">copy</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="log"><a class="viewcode-back" href="../../../../../../../../source/coremltools.converters.mil.mil.ops.defs.html#coremltools.converters.mil.mil.ops.defs.iOS15.elementwise_unary.log">[docs]</a><span class="nd">@register_op</span>
@@ -554,7 +554,7 @@
         <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
         <span class="n">epsilon</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
     <span class="p">)</span>
-    
+
     <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">),</span>
     <span class="p">}</span>
@@ -592,7 +592,7 @@
 <span class="sd">    ----------</span>
 <span class="sd">    T: bool</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    
+
     <span class="n">input_spec</span> <span class="o">=</span> <span class="n">InputSpec</span><span class="p">(</span>
         <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="n">types</span><span class="o">.</span><span class="n">bool</span><span class="p">),</span>
     <span class="p">)</span>
@@ -600,7 +600,7 @@
     <span class="nd">@precondition</span><span class="p">(</span><span class="n">allow</span><span class="o">=</span><span class="n">VALUE</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">value_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">logical_not</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">val</span><span class="p">)</span>
-        
+
     <span class="k">def</span> <span class="nf">type_inference</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="o">.</span><span class="n">sym_type</span></div>
 
@@ -658,7 +658,7 @@
         <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
         <span class="n">epsilon</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">optional</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
     <span class="p">)</span>
-    
+
     <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">),</span>
     <span class="p">}</span>
@@ -880,7 +880,7 @@
         <span class="n">x</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
         <span class="n">alpha</span><span class="o">=</span><span class="n">TensorInputType</span><span class="p">(</span><span class="n">const</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">type_domain</span><span class="o">=</span><span class="s2">&quot;T&quot;</span><span class="p">),</span>
     <span class="p">)</span>
-    
+
     <span class="n">type_domains</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;T&quot;</span><span class="p">:</span> <span class="p">(</span><span class="n">types</span><span class="o">.</span><span class="n">fp16</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">fp32</span><span class="p">,</span> <span class="n">types</span><span class="o">.</span><span class="n">int32</span><span class="p">),</span>
     <span class="p">}</span>
@@ -957,7 +957,7 @@
             <span class="s2">&quot;fp16&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">float16</span><span class="p">,</span>
             <span class="s2">&quot;fp32&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span>
             <span class="s2">&quot;fp64&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span>
-            <span class="s2">&quot;bool&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">bool</span><span class="p">,</span>
+            <span class="s2">&quot;bool&quot;</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
         <span class="p">}</span>
 
         <span class="k">if</span> <span class="n">dtype_val</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">type_map</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
