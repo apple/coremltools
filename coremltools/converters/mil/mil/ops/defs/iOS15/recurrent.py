@@ -4,16 +4,18 @@
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
 from coremltools.converters.mil.mil import Operation, types
-from coremltools.converters.mil.mil.input_type import (DefaultInputs,
-                                                       InputSpec,
-                                                       TensorInputType)
+from coremltools.converters.mil.mil.input_type import (
+    DefaultInputs,
+    InputSpec,
+    TensorInputType
+)
 from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
 
 
 @register_op
 class gru(Operation):
     r"""
-    Gated recurrent unit (GRU).
+    Gated Recurrent Unit (GRU)
 
     .. math::
        r_t = \rm{recurrent\_activation}(W_{ir} x_t + b_{ir} + W_{hr} h_{t-1} + b_{hr})
@@ -29,9 +31,10 @@ class gru(Operation):
 
     Where:
 
-    * :math:`W_{ir}`, :math:`W_{io}`, and :math:`W_{iz}` are state input-hidden weights for reset, output
-      and update gate, respectively.
-    * :math:`W_{h[r|o|z]}` are recurrent weights on hidden state to reset, output, and update gates, respectively.
+    * :math:`W_{i[r|o|z]}` are state input weights for reset, output and update gate, respectively.
+    * :math:`b_{i[r|o|z]}` are input biases for reset, output and update gate, respectively.
+    * :math:`W_{h[r|o|z]}` are recurrent/hidden weights on hidden state to reset, output, and update gates, respectively.
+    * :math:`b_{h[r|o|z]}` are recurrent/hidden biases on hidden state to reset, output, and update gates, respectively.
     * :math:`h_t`  is the hidden state at time ``t``.
     * :math:`x_t` is the input at time ``t``.
     * :math:`h_{t-1}` is the hidden state of the layer at time ``t-1`` or the initial
@@ -170,7 +173,7 @@ class gru(Operation):
 @register_op
 class lstm(Operation):
     r"""
-    Single long short-term memory (LSTM) sequence.
+    Long Short-Term Memory (LSTM)
 
     .. math::
        i_t = \rm{recurrent\_activation}(W_{ii} x_t + B_{ii} + W_{hi} h_{t-1} + B_{hi})
@@ -198,7 +201,11 @@ class lstm(Operation):
     * :math:`h_t`  is the hidden state at time ``t``.
     * :math:`W_{ii}`, :math:`W_{if}`, :math:`W_{io}`, and :math:`W_{iz}` are input weights for input,
       forget, output, and cell gate, respectively.
+    * :math:`B_{ii}`, :math:`B_{if}`, :math:`B_{io}`, and :math:`B_{iz}` are input biases for input,
+      forget, output, and cell gate, respectively.
     * :math:`W_{hi}`, :math:`W_{hf}`, :math:`W_{ho}`, and :math:`W_{hz}` are recurrent weights for input,
+      forget, output, and cell gate, respectively.
+    * :math:`B_{hi}`, :math:`B_{hf}`, :math:`B_{ho}`, and :math:`B_{hz}` are recurrent weights for input,
       forget, output, and cell gate, respectively.
 
     Parameters
@@ -207,14 +214,14 @@ class lstm(Operation):
         * ``s`` is the sequence length, ``b`` is the batch size, and ``I`` is the
           input dimension.
 
-    initial_h: <b, DIRECTION*H, T> (Required)
-        * Initial hidden state. ``DIRECTION = 1`` for uni-directional, ``2`` for
-          bi-directional LSTM.
+    initial_h: <b, DIRECTIONS*H, T> (Required)
+        * Initial hidden state. ``DIRECTIONS = 1`` for uni-directional.
+          ``DIRECTIONS = 2`` for bi-directional LSTM.
         * ``H`` denotes hidden size.
         * ``[b, :H]`` and ``[b, H:]`` represents forward and reverse direction
           values, respectively.
 
-    initial_c: <b, DIRECTION*H, T> (Required)
+    initial_c: <b, DIRECTIONS*H, T> (Required)
         * Initial cell state.
         * Format is same as ``initial_h``.
 
@@ -232,12 +239,12 @@ class lstm(Operation):
         * If direction=="bidirectional", this is applied in forward direction.
         * If direction=="forward" or "backward" these weights are used.
 
-    bias: const<4*H, T> (Optional) [Default all 0s]
+    bias: const<4*H, T> (Optional, default all 0s)
         * bias = input-hidden bias + hidden-hidden bias
         * If direction=="bidirectional", this is applied in forward direction.
         * If direction=="forward" or "backward" this bias are used.
 
-    peephole: const<3*H, T> (Optional, default to 0)
+    peephole: const<3*H, T> (Optional, default all 0s)
         * Weight tensor for peephole.
         * Order is ``[input_gate, forget_gate, output_gate]``.
         * Shape of each peephole vector is ``(H,)`` (``H`` is hidden size).
@@ -260,13 +267,13 @@ class lstm(Operation):
         * This is only used when `direction` is "bidirectional".
         * For direction="reverse" use `weight_hh` instead.
 
-    bias_back: const<4*H, T> (Optional) [Default all 0s]
+    bias_back: const<4*H, T> (Optional, default all 0s)
         * bias = input-hidden bias + hidden-hidden bias.
         * Bias of backward direction for `bidirectional lstm`
         * This is only used when `direction` is "bidirectional".
         * For direction="reverse" use `bias` instead.
 
-    peephole_back: const<3*H, T> (Optional, default to 0)
+    peephole_back: const<3*H, T> (Optional, default all 0s)
         * Weight tensor for peephole in backward direction for `bidirectional LSTM`.
         * Order is ``[input_gate, forget_gate, output_gate]``.
         * Shape of each peephole vector is ``(H,)`` (``H`` is hidden size).
@@ -285,7 +292,7 @@ class lstm(Operation):
     recurrent_activation: const<str> (Optional) [Default=sigmoid]
         * Activation applied on input, forget, and output gates.
 
-    cell_activation: const<str> (Optional) [Default=tang]
+    cell_activation: const<str> (Optional) [Default=tanh]
         * Activation applied on cell gate.
 
     activation: const<str> (Optional) [Default=tanh]
@@ -296,13 +303,13 @@ class lstm(Operation):
 
     Returns
     -------
-    <s, b, DIRECTION*H, T> or <1, b, DIRECTION*H, T>
+    <s, b, DIRECTIONS*H, T> or <1, b, DIRECTIONS*H, T>
         * If ``output_sequence == True`` (hidden states from every step):
-          ``<s, b, DIRECTION*H, T>``.
-        * Else ``<1, b, DIRECTION*H, T>`` (hidden states of the final step).
-    <b, DIRECTION*H, T>
+          ``<s, b, DIRECTIONS*H, T>``.
+        * Else ``<1, b, DIRECTIONS*H, T>`` (hidden states of the final step).
+    <b, DIRECTIONS*H, T>
         * Hidden states of the final step.
-    <b, DIRECTION*H, T>
+    <b, DIRECTIONS*H, T>
         * Memory state of the final step.
 
     Attributes
@@ -402,7 +409,7 @@ class lstm(Operation):
 @register_op
 class rnn(Operation):
     r"""
-    Recurrent neural network (RNN).
+    Recurrent Neural Network (RNN)
 
     .. math::
        h_t = \rm{activation}(W_{ih} x_t + b_{ih} + W_{hh} h_{t−1} + b_{hh})
@@ -414,7 +421,9 @@ class rnn(Operation):
     * :math:`h_t`  is the hidden state at time ``t``.
     * :math:`x_t` is the input at time ``t``.
     * :math:`h_{t-1}` is the hidden state of the layer at time ``t-1`` or the initial
-      hidden state at time ``0``.
+      hidden state at ``t = 0``.
+    * :math:`b_{ih}` is the input bias.
+    * :math:`b_{hh}` if the hidden/recurrent bias.
 
     Parameters
     ----------
