@@ -694,11 +694,14 @@ def le(context, node):
     context.add(less_equal)
 
 
-@register_paddle_op
+@register_paddle_op(paddle_alias=['less_than'])
 def lt(context, node):
-    inputs = _get_inputs(context, node, expected=2)
+    x = context[node.input("X")[0]]
+    y = context[node.input("Y")[0]]
+    inputs = [x, y]
+    output_name = node.output("Out")[0]
     x, y = promote_input_dtypes(inputs)
-    less = mb.less(x=x, y=y, name=node.name)
+    less = mb.less(x=x, y=y, name=output_name)
     context.add(less)
 
 
@@ -1053,14 +1056,15 @@ def softmax(context, node):
     context.add(res)
 
 
-@register_paddle_op
+@register_paddle_op(paddle_alias=["flatten_contiguous_range"])
 def flatten(context, node):
-    inputs = _get_inputs(context, node)
+    x = context[node.input("X")[0]]
+    output_name = node.output("Out")[0]
 
-    x = inputs[0]
     dims = list(x.shape)
-    start_val = inputs[1].val
-    end_val = inputs[2].val
+
+    start_val = node.desc.attr("start_axis")
+    end_val = node.desc.attr("stop_axis")
 
     start = len(dims) + start_val if start_val < 0 else start_val
     end = len(dims) + end_val if end_val < 0 else end_val
@@ -1086,7 +1090,7 @@ def flatten(context, node):
 
     shape = mb.concat(values=(shape1, [flatten_dim], shape2), axis=0)
     shape = mb.cast(x=shape, dtype="int32")
-    reshape = mb.reshape(x=x, shape=shape, name=node.name)
+    reshape = mb.reshape(x=x, shape=shape, name=output_name)
     context.add(reshape)
 
 
@@ -1963,15 +1967,11 @@ def concat(context, node):
 def stack(context, node):
     values = [context[k] for k in node.input("X")]
     output_name = node.output("Y")[0]
-
     axis = node.desc.attr("axis")
-
-    # if (len(values)==1):
-    #     res = mb.expand_dims(x=values[0], axes=[axis], name=output_name)
-    #     context.add(res)
-    #     return
-
-    
+    if (len(values)==1):
+        res = mb.expand_dims(x=values[0], axes=[axis], name=output_name)
+        context.add(res)
+        return
     res = mb.stack(values=values, axis=axis, name=output_name)
     context.add(res)
 
@@ -3247,6 +3247,10 @@ def loop(context, node):
     for output_name, output_var in zip(node.outputs, loop[2:]):
         context.add(output_var, paddle_name=output_name)
 
+@register_paddle_op(paddle_alias=["while"])
+def _while(context, node):
+    
+
 
 @register_paddle_op(paddle_alias=["if"])
 def _if(context, node):
@@ -3433,6 +3437,13 @@ def _internal_op_tensor_inplace_copy(context, node):
         name=node.name,
     )
     context.add(updated_x)
+
+@register_paddle_op
+def assign_value(context, node):
+    fp32_value = node.desc.attr("fp32_values")
+    output_name = node.output("Out")[0]
+    output_var = mb.const(val=fp32_value, name=output_name)
+    context.add(output_var)
 
 
 @register_paddle_op
@@ -3694,7 +3705,14 @@ def _make_fill_op(size, val, name, dtype):
 def fill_constant(context, node):
     output_name = node.output("Out")[0]
 
-    size = node.desc.attr("shape")
+    if node.input_names and  node.input("ShapeTensorList"):
+        shape_tensor_list = [context[k] for k in node.input("ShapeTensorList")]
+        shape_tensor_list = [mb.cast(x=shape, dtype="int32") for shape in shape_tensor_list]
+        size = mb.concat(values=shape_tensor_list, axis=0)
+    elif node.input_names and node.input("ShapeTensor"):
+        size = node.input("ShapeTensor")[0]
+    else:
+        size = node.desc.attr("shape")
     val = node.desc.attr("value")
     dtype = node.desc.attr("dtype")
 

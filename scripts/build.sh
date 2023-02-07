@@ -13,7 +13,7 @@ NUM_PROCS=1
 BUILD_PROTO=0
 BUILD_DIST=0
 BUILD_DIST_DEV=0
-PYTHON="3.7"
+PYTHON="3.8"
 CHECK_ENV=1
 
 # Defaults, which may be overridden
@@ -107,7 +107,7 @@ CMAKE_COMMAND=""
 if [[ $OSTYPE == darwin* ]]; then
   CMAKE_COMMAND="xcrun --sdk ${sdk} "
 fi
-CMAKE_COMMAND+="cmake $ADDITIONAL_CMAKE_OPTIONS \
+CMAKE_COMMAND+="/opt/homebrew/opt/cmake/bin/cmake $ADDITIONAL_CMAKE_OPTIONS \
   -DCMAKE_BUILD_TYPE=$BUILD_MODE \
   -DPYTHON_EXECUTABLE:FILEPATH=$PYTHON_EXECUTABLE \
   -DPYTHON_INCLUDE_DIR=$PYTHON_INCLUDE_DIR \
@@ -120,7 +120,9 @@ eval ${CMAKE_COMMAND}
 # Make the python wheel
 make -j${NUM_PROCS}
 
-if [ $BUILD_DIST -eq 1 ] || [ $BUILD_DIST_DEV -eq 1 ]
-then
-  make dist
-fi
+# if [ $BUILD_DIST -eq 1 ] || [ $BUILD_DIST_DEV -eq 1 ]
+# then
+make dist
+# fi
+
+

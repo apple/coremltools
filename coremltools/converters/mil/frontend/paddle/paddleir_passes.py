@@ -9,7 +9,7 @@ from coremltools import _logger as logger
 
 from .internal_graph import InternalPaddleIRGraph, InternalPaddleIRNode
 
-
+# Fuse conv2d(no bias) with bias into conv2d op.
 def fuse_conv_bias(paddle_program):
     for block in paddle_program.blocks:
         cnt = 0
@@ -23,23 +23,108 @@ def fuse_conv_bias(paddle_program):
                     block._insert_op(i+1, 
                                     type = "conv2d", 
                                     inputs={
-                                        'Input': block.ops[i-1].input("Input")[0],
-                                        'Filter': block.ops[i-1].input("Filter")[0],
-                                        'Bias': block.ops[i].input("Y")[0]
+                                        'Input': last_op.input("Input")[0],
+                                        'Filter': last_op.input("Filter")[0],
+                                        'Bias': op.input("Y")[0]
                                     },
                                     outputs={
-                                        'Output': block.ops[i].output("Out")[0]
+                                        'Output': op.output("Out")[0]
                                     },
                                     attrs={
-                                        'dilations': block.ops[i-1].desc.attr('dilations'),
-                                        'groups': block.ops[i-1].desc.attr('groups'),
-                                        'paddings': block.ops[i-1].desc.attr('paddings'),
-                                        'strides': block.ops[i-1].desc.attr('strides')
+                                        'dilations': last_op.desc.attr('dilations'),
+                                        'groups': last_op.desc.attr('groups'),
+                                        'paddings': last_op.desc.attr('paddings'),
+                                        'strides': last_op.desc.attr('strides')
                                     }
                                     )
                     block._remove_op(i-1)
                     block._remove_op(i-1)
                     cnt -= 1
+
+# Fuse matmul_v2 with bias into conv2d op.
+def fuse_matmul_v2_bias(paddle_program):
+    for block in paddle_program.blocks:
+        cnt = 0
+        op_num = len(block.ops)
+        for ind in range(op_num):
+            i = ind + cnt
+            op = block.ops[i]
+            if op.type == "elementwise_add" and i > 0:
+                last_op = block.ops[i-1]
+                if last_op.type == "matmul_v2" and last_op.desc.attr("transpose_X") == False and last_op.desc.attr("transpose_Y") == False and len(last_op.input("Y")[0].shape) == 2:
+                    # If "X" and "Y" in matmul_v2 are both 2D, unsqueeze them to 4D firstly.
+                    if len(last_op.input("X")[0].shape) == 2:
+                        block._insert_op(i+1, 
+                                        type = "unsqueeze2", 
+                                        inputs={
+                                            'X': last_op.input("X")[0],
+                                            'AxesTensor': [-1, -1]
+                                        },
+                                        outputs={
+                                            'Out': last_op.input("X")[0] + "_unsqueeze2"
+                                        },
+                                        attrs={
+                                            'axes': [-1, -1]
+                                        }
+                                        )
+                        block._insert_op(i+2, 
+                                        type = "unsqueeze2", 
+                                        inputs={
+                                            'X': last_op.input("Y")[0],
+                                            'AxesTensor': [-1, -1]
+                                        },
+                                        outputs={
+                                            'Out': last_op.input("Y")[0] + "_unsqueeze2"
+                                        },
+                                        attrs={
+                                            'axes': [-1, -1]
+                                        }
+                                        )
+                        block._insert_op(i+3, 
+                                        type = "conv2d", 
+                                        inputs={
+                                            'Input': last_op.input("X")[0] + "_unsqueeze2",
+                                            'Filter': last_op.input("Y")[0] + "_unsqueeze2",
+                                            'Bias': op.input("Y")[0]
+                                        },
+                                        outputs={
+                                            'Output': op.output("Out")[0]
+                                        },
+                                        attrs={
+                                            'dilations': [1, 1],
+                                            'groups': 1,
+                                            'paddings': [0, 0],
+                                            'strides': [1, 1]
+                                        }
+                                        )
+                        block._remove_op(i-1)
+                        block._remove_op(i-1)
+                        block._remove_op(i-1)
+                        cnt -= 2
+                    else:
+                        # block.
+                        block._insert_op(i+2, 
+                                        type = "conv2d", 
+                                        inputs={
+                                            'Input': last_op.input("X")[0],
+                                            'Filter': last_op.input("Y")[0],
+                                            'Bias': op.input("Y")[0]
+                                        },
+                                        outputs={
+                                            'Output': op.output("Out")[0]
+                                        },
+                                        attrs={
+                                            'dilations': [1, 1],
+                                            'groups': 1,
+                                            'paddings': [0, 0],
+                                            'strides': [1, 1]
+                                        }
+                                        )
+                        block._remove_op(i-1)
+                        block._remove_op(i-1)
+                        cnt -= 1
+    
+    
             
 
 
