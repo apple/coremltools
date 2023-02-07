@@ -1191,11 +1191,21 @@ def relu6(context, node):
 
 @register_paddle_op
 def einsum(context, node):
-    a = context[node.inputs[1]][0]
-    b = context[node.inputs[1]][1]
-    equation = context[node.inputs[0]].val
-    x = build_einsum_mil(a, b, equation, node.name)
-    context.add(x)
+    operands = [context[k] for k in node.input("Operands")]
+    equation = node.desc.attr("equation")
+    output_name = node.output("Out")[0]
+    x = build_einsum_mil(operands[0], operands[1], equation, output_name)
+    context.add(x, output_name)
+
+
+
+# @register_paddle_op
+# def einsum(context, node):
+#     a = context[node.inputs[1]][0]
+#     b = context[node.inputs[1]][1]
+#     equation = context[node.inputs[0]].val
+#     x = build_einsum_mil(a, b, equation, node.name)
+#     context.add(x)
 
 
 @register_paddle_op
@@ -1492,31 +1502,15 @@ def pow(context, node):
     context.add(res)
 
 
-@register_paddle_op(paddle_alias=["rsub"])
+@register_paddle_op(paddle_alias=["elementwise_sub"])
 def sub(context, node):
-    inputs = _get_inputs(context, node, expected=[2, 3])
-    assert len(node.outputs) == 1
-
-    if node.kind == "rsub":
-        # rsub reverses the order of arguments
-        y = inputs[0]
-        x = inputs[1]
-    else:
-        x = inputs[0]
-        y = inputs[1]
-
-    if len(inputs) > 2:
-        alpha = inputs[2].val
-
-        # TODO (sberardi): 3rd param to aten::sub is a scale factor, need to handle that.
-        # out=input-alpha x other
-        # rdar://60175736
-        if alpha != 1:
-            raise ValueError("SUB does not support scale factor param")
-
+    x = context[node.input("X")[0]]
+    y = context[node.input("Y")[0]]
     x, y = promote_input_dtypes([x, y])
-    res = mb.sub(x=x, y=y, name=node.name)
+    output_name = node.output("Out")[0]
+    res = mb.sub(x=x, y=y, name=output_name)
     context.add(res)
+
 
 
 @register_paddle_op(
@@ -1559,6 +1553,15 @@ def mean(context, node):
         res = mb.reduce_log_sum_exp(**kwargs)
     else:
         res = mb.reduce_mean(**kwargs)
+    context.add(res)
+
+@register_paddle_op
+def reduce_mean(context, node):
+    x = context[node.input("X")[0]]
+    output_name = node.output("Out")[0]
+    axes = node.desc.attr("dim")
+    keep_dim = node.desc.attr("keep_dim")
+    res = mb.reduce_mean(x=x, axes=axes, keep_dims=keep_dim, name=output_name)
     context.add(res)
 
 
@@ -3247,10 +3250,6 @@ def loop(context, node):
     for output_name, output_var in zip(node.outputs, loop[2:]):
         context.add(output_var, paddle_name=output_name)
 
-@register_paddle_op(paddle_alias=["while"])
-def _while(context, node):
-    
-
 
 @register_paddle_op(paddle_alias=["if"])
 def _if(context, node):
@@ -4746,8 +4745,10 @@ def _round(context, node):
 
 @register_paddle_op
 def rsqrt(context, node):
-    inputs = _get_inputs(context, node, expected=1)
-    context.add(mb.rsqrt(x=inputs[0], name=node.name))
+    x = context[node.input("X")[0]]
+    output_name = node.output("Out")[0]
+    context.add(mb.rsqrt(x=x, name=output_name))
+
 
 
 @register_paddle_op
