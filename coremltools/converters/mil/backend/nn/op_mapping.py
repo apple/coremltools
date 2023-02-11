@@ -3068,13 +3068,13 @@ def add_upsample_nn(const_context, builder, op, scale_factor_h, scale_factor_w):
         scale_factor_h = int(scale_factor_h)
     else:
         raise NotImplementedError(
-            "Unsupported float type 'scale_factor_height' ({scale_factor_h}) for neuralnetwork."
+           f"Unsupported float type 'scale_factor_height' ({scale_factor_h}) for neuralnetwork."
         )
     if _np.abs(_np.round(scale_factor_w) - scale_factor_w) < 1e-4 and scale_factor_w >= 1 - 1e-4:
         scale_factor_w = int(scale_factor_w)
     else:
         raise NotImplementedError(
-            "Unsupported float type 'scale_factor_width' ({scale_factor_w}) for neuralnetwork."
+           f"Unsupported float type 'scale_factor_width' ({scale_factor_w}) for neuralnetwork."
         )
 
     builder.add_upsample(
