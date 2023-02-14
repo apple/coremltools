@@ -830,9 +830,6 @@ class Block:
 
 
 class Function(Block):
-    """
-    """
-
     def __init__(self, inputs, opset_version=None):
         """
         inputs: str -> placeholder

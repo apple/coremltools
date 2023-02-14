@@ -241,12 +241,12 @@ class TorchConverter:
         # This will hold the converted model.
         prog = self._prog
 
-        # Construct placeholder for input to ssa function
+        # Construct placeholder for input to SSA function
         # This is where input renaming occurs
         ssa_func_inputs = OrderedDict()
         for index, (name, spec) in enumerate(self.graph.inputs.items()):
             placeholder = self._create_placeholder(spec)
-            # Set ssa function input name to user defined name if provided.
+            # Set SSA function input name to user defined name if provided.
             if spec.name is not None:
                 name = spec.name
             self.inputs[index].name = name

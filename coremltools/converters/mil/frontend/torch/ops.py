@@ -5632,3 +5632,9 @@ def torchvision_nms(context, node):
     valid_indices = mb.gather(x=indices, indices=range, axis=0)
     valid_indices = mb.cast(x=valid_indices, dtype="int32", name=node.name)
     context.add(valid_indices)
+
+
+@register_torch_op
+def tupleindex(context, node):
+    tuple_input, index_input = _get_inputs(context, node, expected=2)
+    context.add(tuple_input[index_input.val], node.name)
