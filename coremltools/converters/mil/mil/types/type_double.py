@@ -121,7 +121,7 @@ def make_float(width):
 
         @annotate(delay_type.bool)
         def __bool__(self):
-            return self.val
+            return self.val != 0
 
         @annotate(delay_type.int)
         def __int__(self):
