@@ -59,7 +59,7 @@ def _try_get_upsample_factor(output_size):
     #       (paddle.floor((input.size(i + 2).float() * paddle.tensor(scale_factors[i], dtype=paddle.float32)).float()))
     #        for i in range(dim)
     #    ]
-    # source from : https://pypaddle.org/docs/stable/_modules/paddle/nn/functional.html#interpolate
+    # source from : https://paddle.org/docs/stable/_modules/paddle/nn/functional.html#interpolate
     # We validation if we can trace all the way back to the original scale_factor
     # The whole sequence is mul(input_size, scale_factor) -> cast(fp32) -> floor() -> cast(int32)
 

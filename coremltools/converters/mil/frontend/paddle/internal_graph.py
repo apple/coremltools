@@ -199,35 +199,16 @@ class InternalPaddleIRNode:
 
 class InternalPaddleIRGraph:
     """
-    CoreML internal representation of a paddle IR graph. A paddle._C.Graph
-    object is not an ideal structure to use in converting to CoreML. Conversion
-    to an InternalPaddleIRGraph is inserted between the original graph and the
-    final CoreML model to address several issues:
-        1. A paddle._C.graph is hard to work with. For example, its .inputs()
-          and .outputs() functions return iterators, so the only way to
-          determine the number of inputs/outputs is by counting to the end.
-          There are other examples of why the paddle structure is hard to work
-          with, and this structure alleviates those isses.
-        2. paddle._C.graph is an internal API and so we can't count on its
-          stability. By inserting a layer in between, we can handle any changes
-          to paddle._C.graph here and isolate the ops code that processes the
-          graph.
-        3. paddle._C.graph does not expose a Python constructor. This makes
-          it impossible to write unit tests that isolate specific ops since
-          they have to come from actually converting a PyPaddle graph. With an
-          internal structure, we can directly build the test cases we need for
-          unit testing.
+    CoreML internal representation of a paddle IR graph. 
     """
 
     def __init__(
-            self, raw_graph=None, params_dict=None, input_values=None, cut_at_symbols=None,
+            self, raw_graph=None, input_values=None, cut_at_symbols=None,
             nodes=None, params=None, inputs=None, outputs=None,
     ):
         """
         Arguments:
-            raw_graph: raw_graph: The paddle._C.Graph to convert, or None.
-            params_dict: A dictionary mapping graph parameter names to tensors.
-                Must be given if @raw_graph is not None.
+            raw_graph: raw_graph: The paddle.static.Program to convert, or None.
             input_values: A list of inputs to the graph. Must be given is
                 @raw_graph if not None.
             cut_at_symbols: The list of desired outputs from the graph. Symbols

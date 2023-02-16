@@ -37,11 +37,7 @@ from .._utils import value_at, build_einsum_mil
 from .paddle_op_registry import _PADDLE_OPS_REGISTRY, register_paddle_op
 
 
-# The pypaddle args for many of the below ops were sourced from
-# https://github.com/pypaddle/pypaddle/blob/d971007c291c0ead1003d12cd553d18ddb582207/paddle/csrc/jit/mobile/register_mobile_ops.cpp#L216
-
-
-# This is a magic number in PyPaddle. It's used as a default value in many
+# This is a magic number in PaddlePaddle. It's used as a default value in many
 # functions.
 PYPADDLE_MAGIC_DEFAULT = 9223372036854775807
 VALUE_CLOSE_TO_INFINITY = 1e+38
@@ -92,7 +88,7 @@ def convert_nodes(context, paddle_program):
                 # logger.info("Converting op {} : {}".format(node.name, node.kind))
                 if add_op is None:
                     raise RuntimeError(
-                        "PyPaddle convert function for op '{}' not implemented.".format(node.kind)
+                        "PaddlePaddle convert function for op '{}' not implemented.".format(node.kind)
                     )
                 add_op(context, op)
 
@@ -101,7 +97,7 @@ def convert_nodes(context, paddle_program):
                 #     break
 
 
-    # for node in _tqdm(graph.nodes, desc="Converting PyPaddle Frontend ==> MIL Ops", unit=" ops"):
+    # for node in _tqdm(graph.nodes, desc="Converting PaddlePaddle Frontend ==> MIL Ops", unit=" ops"):
     #     op_lookup = node.kind
     #     if op_lookup.endswith("_"):
     #         # This is an "in place" op.
@@ -112,7 +108,7 @@ def convert_nodes(context, paddle_program):
     #     logger.info("Converting op {} : {}".format(node.name, node.kind))
     #     if add_op is None:
     #         raise RuntimeError(
-    #             "PyPaddle convert function for op '{}' not implemented.".format(node.kind)
+    #             "PaddlePaddle convert function for op '{}' not implemented.".format(node.kind)
     #         )
     #     add_op(context, node)
 
@@ -258,7 +254,7 @@ def _construct_constant(val, name):
     if isinstance(val, int) and val == PYPADDLE_MAGIC_DEFAULT:
         val = None
 
-    # Pypaddle uses inf
+    # PaddlePaddle uses inf
     if val is not None and isinstance(val, numbers.Number) and _np.isinf(val):
         if val < 0:  # neg inf
             # most negative number in fp32
@@ -273,12 +269,12 @@ def _construct_constant(val, name):
 
 @register_paddle_op
 def affine_grid_generator(context, node):
-    # rdar://73165386 (Improve error handling of coremltools "affine" op PyPaddle conversion.)
+    # rdar://73165386 (Improve error handling of coremltools "affine" op PaddlePaddle conversion.)
 
     affine_op_name = node.name
     theta, size, align_corners = _get_inputs(context, node, expected=3)
 
-    # note: only add consts here as PyPaddle uses affine_grid + grid_sampler together
+    # note: only add consts here as PaddlePaddle uses affine_grid + grid_sampler together
     is_theta_const = theta.val is not None
     if is_theta_const:
         context.add(mb.const(val=theta.val, name="{}_theta".format(affine_op_name)))
@@ -292,7 +288,7 @@ def affine_grid_generator(context, node):
 @register_paddle_op
 def grid_sampler(context, node):
     affine_op_name = node.inputs[1]
-    # https://github.com/pypaddle/pypaddle/blob/00d432a1ed179eff52a9d86a0630f623bf20a37a/aten/src/ATen/native/GridSampler.h#L10-L11
+    # https://github.com/paddle/paddle/blob/00d432a1ed179eff52a9d86a0630f623bf20a37a/aten/src/ATen/native/GridSampler.h#L10-L11
     m_mode = {0: "bilinear", 1: "nearest"}
     m_padding_mode = {0: "constant", 1: "border", 2: "reflection"}
 
@@ -728,7 +724,7 @@ def transpose(context, node):
     x = inputs[0]
 
     if len(node.inputs) == 1:
-        # PyPaddle has several transpose ops that can be emitted. This one is only
+        # PaddlePaddle has several transpose ops that can be emitted. This one is only
         # emitted when .t() is called on a tensor, which means it can only be
         # called on a matrix.
         if len(x.shape) > 2:
@@ -900,7 +896,7 @@ def _convolution(context, node):
     # inputs = _get_inputs(context, node)
 
     # x = inputs[0]
-    # PyPaddle and MIL has same weight layout
+    # PaddlePaddle and MIL has same weight layout
     # Conv: [Cout, Cin, *D]
     # ConvTranspose: [Cin, Cout, *D]
     # weight = inputs[1]
@@ -951,7 +947,7 @@ def _convolution(context, node):
         "groups": groups,
         "name": output_name,
     }
-    # # Bias is optional in PyPaddle's convolution.
+    # # Bias is optional in PaddlePaddle's convolution.
     if bias is not None:
         kwargs["bias"] = bias
 
@@ -996,7 +992,7 @@ def _convolution(context, node):
 
     #     conv = mb.conv_transpose(**kwargs)
     #     if any(post_crop):
-    #         # TODO: rdar://65575826 (PyPaddle converter: output_padding mapping to slice
+    #         # TODO: rdar://65575826 (PaddlePaddle converter: output_padding mapping to slice
     #         # instead of crop layer for 1 and 3D ConvTranspose)
     #         if len(post_crop) == 2 and conv.rank == 3:
     #             # Number of elements to crop from right = post_crop[-1].
@@ -1279,8 +1275,8 @@ def _adjust_pad_for_ceil_mode(input_shape, kernel_size, stride_sizes, pad_sizes)
         MIL 3D pooling does not support ceil_mode natively, but we can
         workaround by padding the input appropriately.
 
-        PyPaddle output size formula for pooling:
-        (reference: https://github.com/pypaddle/pypaddle/blob/375c30a7177442fb9d6de7516a9ae4031ae324c4/aten/src/ATen/native/Pool.h#L28)
+        PaddlePaddle output size formula for pooling:
+        (reference: https://github.com/paddle/paddle/blob/375c30a7177442fb9d6de7516a9ae4031ae324c4/aten/src/ATen/native/Pool.h#L28)
 
         When ceil mode is True:
             out_dim = floor((in_dim + pad_l + pad_r - kernel_size + (stride-1)) / stride) + 1
@@ -1291,7 +1287,7 @@ def _adjust_pad_for_ceil_mode(input_shape, kernel_size, stride_sizes, pad_sizes)
 
 
         # follow the approach here to calculate padding:
-        # https://github.com/pypaddle/pypaddle/blob/edf751ca2fededecdd9366874c761431c0f61f01/aten/src/ATen/native/mkldnn/Pooling.cpp#L121
+        # https://github.com/paddle/paddle/blob/edf751ca2fededecdd9366874c761431c0f61f01/aten/src/ATen/native/mkldnn/Pooling.cpp#L121
         # which keeps increasing the pad_r value until the output size without the ceil mode matches that of the ceil mode
     """
 
@@ -1660,8 +1656,8 @@ def adaptive_avg_pool2d(context, node):
     elif _input.shape is not None:
         # TODO: The calculations to convert adaptive_pool to standard pool,
         # given a known input size, come from
-        # https://stackoverflow.com/questions/53841509/how-does-adaptive-pooling-in-pypaddle-work
-        # However, as indicated in that SO, this isn't quite how PyPaddle
+        # https://stackoverflow.com/questions/53841509/how-does-adaptive-pooling-in-paddle-work
+        # However, as indicated in that SO, this isn't quite how PaddlePaddle
         # computes adaptive pooling, leading to inaccuracies in model outputs.
         # rdar://60900834
         strides = [ind // outd for ind, outd in zip(_input.shape[-2:], output_size)]
@@ -1735,8 +1731,8 @@ def adaptive_max_pool2d(context, node):
     elif _input.shape is not None:
         # TODO: The calculations to convert adaptive_pool to standard pool,
         # given a known input size, come from
-        # https://stackoverflow.com/questions/53841509/how-does-adaptive-pooling-in-pypaddle-work
-        # However, as indicated in that SO, this isn't quite how PyPaddle
+        # https://stackoverflow.com/questions/53841509/how-does-adaptive-pooling-in-paddle-work
+        # However, as indicated in that SO, this isn't quite how PaddlePaddle
         # computes adaptive pooling, leading to inaccuracies in model outputs.
         # rdar://60900834
         strides = [ind // outd for ind, outd in zip(_input.shape[-2:], output_size)]
@@ -2079,7 +2075,7 @@ def _ifzo_to_ifoz(weights, name):
     """
         i, f, z, o -> i, f, o, z
         where weights_split[0] == i, etc.
-        Used to transform lstm weights from pypaddle
+        Used to transform lstm weights from paddle
         to CoreML format
     """
     split_size = weights.shape[0] // 4
@@ -2090,10 +2086,10 @@ def _ifzo_to_ifoz(weights, name):
     )
 
 
-def _pypaddle_hidden_to_coreml_milops(x, name):
+def _paddle_hidden_to_coreml_milops(x, name):
     """
         Used to transform lstm state values (hn, cn)
-        from pypaddle to CoreML format.
+        from paddle to CoreML format.
     """
     split_size = x.shape[0] // 2
     x_split = mb.split(x=x, split_sizes=_np.array([split_size] * 2), axis=0)
@@ -2493,7 +2489,7 @@ def _add_mil_lstm(input, initial_h, initial_c, weights, has_bias, bidirectional,
     Most of this code is to transform the tensors into
     a shape acceptable by the CoreML implementation of LSTM.
 
-    For weights, biases,  per direction, pypaddle uses two tensors:
+    For weights, biases,  per direction, paddle uses two tensors:
     (ii, if, ig, io) stacked on top of each other for each layer (tensor 1)
     and (hi, hf, hg, ho) stacked on top of each other for each layer (tensor 2).
     That is,  (W_ii|W_if|W_ig|W_io), of shape (4*hidden_size, input_size) and
@@ -2501,7 +2497,7 @@ def _add_mil_lstm(input, initial_h, initial_c, weights, has_bias, bidirectional,
 
 
     The CoreML LSTM op expects two tensors, weight and bias. So
-    the tensors for weight and bias are seperated from pypaddle's @weights list (1.).
+    the tensors for weight and bias are seperated from paddle's @weights list (1.).
     For bias tensor, the CoreML LSTM op expects the form ii, if, io, ig and hi, hf, ho, hg,
     requiring the ifzo_to_ifoz function. Further adding input and hidden bias into one (2.).
     Similar to bias, input and hidden weight requires different layout. (3.)
@@ -2548,8 +2544,8 @@ def _add_mil_lstm(input, initial_h, initial_c, weights, has_bias, bidirectional,
             weights[3], name=name + "_lstm_reverse_hh_weights_ifoz_to_ifzo",
         )
 
-        h = _pypaddle_hidden_to_coreml_milops(initial_h, name=name + "_lstm_h0_reshaped")
-        c = _pypaddle_hidden_to_coreml_milops(initial_c, name=name + "_lstm_c0_reshaped")
+        h = _paddle_hidden_to_coreml_milops(initial_h, name=name + "_lstm_h0_reshaped")
+        c = _paddle_hidden_to_coreml_milops(initial_c, name=name + "_lstm_c0_reshaped")
         return mb.lstm(x=input,
                        initial_h=h,
                        initial_c=c,
@@ -2790,7 +2786,7 @@ def _get_scales_from_output_size(output_size, input_shape):
         if isinstance(output_size, _np.ndarray):
             output_size = output_size.tolist()
 
-        # output size is computed using the formula floor (scale * input_size) in Core ML (and PyPaddle).
+        # output size is computed using the formula floor (scale * input_size) in Core ML (and PaddlePaddle).
         # Thus, when computing the scales from the output size, we add a small positive constant to the output size
         # to make sure that the floor formula results in the correct output size and not 1 unit smaller.
         # For instance, if output size = 5 and input size = 2, then scale will be 2.5, which can get
@@ -3594,7 +3590,7 @@ def index(context, node):
 
         b has shape (2, )
 
-    Note that, in pypaddle, the indices can be broadcasable. And it is NOT supported right now.
+    Note that, in paddle, the indices can be broadcasable. And it is NOT supported right now.
     """
 
     # get the index axes
@@ -4135,7 +4131,7 @@ def to(context, node):
         return
     else:
         raise ValueError(
-            "Received invalid arguments for PyPaddle conversion of op {}".format(node)
+            "Received invalid arguments for PaddlePaddle conversion of op {}".format(node)
         )
 
     paddle_dtype = NUM_TO_PADDLE_DTYPE[dtype]
@@ -4224,7 +4220,7 @@ def _broadcast(name, tensor, shape):
 #         return res
 
 
-#     # PyPaddle 1.6+ has 3 inputs while older version has 2
+#     # PaddlePaddle 1.6+ has 3 inputs while older version has 2
 #     inputs = _get_inputs(context, node, expected=[2, 3])
 
 #     x = inputs[0]
@@ -4271,7 +4267,7 @@ def expand(context, node):
 
 @register_paddle_op
 def expand_as(context, node):
-    # PyPaddle 1.6+ has 3 inputs while older version has 2
+    # PaddlePaddle 1.6+ has 3 inputs while older version has 2
     inputs = _get_inputs(context, node, expected=[2, 3])
     x = inputs[0]
     other = inputs[1]
@@ -4390,7 +4386,7 @@ def meshgrid(context, node):
     ]
 )
 def noop(context, node):
-    logger.info("Setting pypaddle op: {} to no-op.".format(node))
+    logger.info("Setting paddle op: {} to no-op.".format(node))
     inputs = _get_inputs(context, node)
     _input = inputs[0]
     context.add(_input, paddle_name=node.name)
@@ -4482,7 +4478,7 @@ def dim(context, node):
 def min(context, node):
     inputs = _get_inputs(context, node)
 
-    # mimic functionality from https://pypaddle.org/docs/stable/generated/paddle.min.html
+    # mimic functionality from https://paddle.org/docs/stable/generated/paddle.min.html
     if len(inputs) == 1:
         value = mb.reduce_min(x=inputs[0], axes=None, name=node.name)
         context.add(value)
@@ -4508,7 +4504,7 @@ def min(context, node):
 def max(context, node):
     inputs = _get_inputs(context, node)
 
-    # mimic functionality from https://pypaddle.org/docs/stable/generated/paddle.max.html
+    # mimic functionality from https://paddle.org/docs/stable/generated/paddle.max.html
     if len(inputs) == 1:
         value = mb.reduce_max(x=inputs[0], axes=None, name=node.name)
         context.add(value)
@@ -5092,7 +5088,7 @@ def tensor(context, node):
 
 
 """
-Pack and unpack op in pypaddle.
+Pack and unpack op in paddle.
 The typical pattern is as following
 
 >>> seq = paddle.tensor([[1,2,0], [3,0,0], [4,5,6]])
@@ -5109,7 +5105,7 @@ tensor([[1, 2, 0],
 >>> lens_unpacked
 tensor([2, 1, 3])
 
-source from https://pypaddle.org/docs/stable/generated/paddle.nn.utils.rnn.pad_packed_sequence.html
+source from https://paddle.org/docs/stable/generated/paddle.nn.utils.rnn.pad_packed_sequence.html
 """
 
 
@@ -5117,7 +5113,7 @@ source from https://pypaddle.org/docs/stable/generated/paddle.nn.utils.rnn.pad_p
 def _pack_padded_sequence(context, node):
     # The implementation of this op is not efficient. Raise a warning.
     logger.warning("Encountered a _pack_padded_sequence layer. The implementation of translating pack/unpack op\
-        in pypaddle is not efficient due to the current limitation of CoreML. Removing the pack-unpack logic \
+        in paddle is not efficient due to the current limitation of CoreML. Removing the pack-unpack logic \
         and use a fixed batch size model is recommended.")
 
     inputs = _get_inputs(context, node, expected=3)
@@ -5141,7 +5137,7 @@ def _pack_padded_sequence(context, node):
 def _pad_packed_sequence(context, node):
     # The implementation of this op is not efficient. Raise a warning.
     logger.warning("Encountered a _pad_packed_sequence layer. The implementation of translating pack/unpack op\
-        in pypaddle is not efficient due to the current limitation of CoreML. Removing the pack-unpack logic \
+        in paddle is not efficient due to the current limitation of CoreML. Removing the pack-unpack logic \
         and use a fixed batch size model is recommended.")
     inputs = _get_inputs(context, node)
 
@@ -5167,7 +5163,7 @@ def _pad_packed_sequence(context, node):
     # which is the total_tensor here.
     # Say the input_tensor has shape [batch , padded_seq_len, input_dim],
     # and the seq_lengths = [len_1, len_2, len_3].
-    # Note that in pypaddle, the seq_lengths must be decreasing in order, len_1 >= len_2 >= len_3.
+    # Note that in paddle, the seq_lengths must be decreasing in order, len_1 >= len_2 >= len_3.
     total_tensor = []
 
     for i in range(batch):
@@ -5289,7 +5285,7 @@ def _broadcast_tensors(tensors):
         for i in range(rank):
             dims = [shapes[j][i] for j in range(len(tensors))]
             if any_symbolic(dims):
-                # rdar://85559497 (Handle dynamic shapes inputs broadcast for pypaddle)
+                # rdar://85559497 (Handle dynamic shapes inputs broadcast for paddle)
                 raise NotImplementedError(
                     "Only static shaped inputs are supported for paddle.broadcast_tensors conversion."
                 )
@@ -5514,7 +5510,7 @@ def im2col(context, node):
     This op is used by paddle.nn.Unfold, which extracts sliding local blocks from a batched input
     tensor.
 
-    It only supports rank-4 tensor (consistent with PyPaddle) with dilation and stride both set to 1.
+    It only supports rank-4 tensor (consistent with PaddlePaddle) with dilation and stride both set to 1.
     More flexbible dilation and stride support will be added in the future.
     """
     inputs = _get_inputs(context, node, expected=5)

@@ -17,16 +17,14 @@ def load(model_spec, inputs, specification_version,
          debug=False, outputs=None, cut_at_symbols=None,
          **kwargs):
     """
-    Convert PyPaddle model to mil CoreML format.
+    Convert PaddlePaddle model to mil CoreML format.
 
     Parameters
     ----------
-    model_spec: String path to .pt file, or a PaddleScript object representing
-        the model to convert.
+    model_spec: String path to .pdmodel file.
     inputs: Can be a singular element or list of elements of the following form
         1. Any subclass of InputType
-        2. paddle.Tensor (only shape and dtype will be used)
-        3. list of (1. or 2.)
+        2. list of (1.)
         Inputs are parsed in the flattened order that the model accepts them.
         If names are not specified: input keys for calling predict on the converted model
         will be internal symbols of the input to the graph.
@@ -43,16 +41,7 @@ def load(model_spec, inputs, specification_version,
         terminate once these symbols have been generated. For debugging use
         only.
     """
-    [paddle_program, feed_var_names, fetch_vars]  = _pdmodel_from_model(model_spec)
-
-    # if hasattr(pdmodel, 'training') and pdmodel.training:
-    #     logger.warning("Model is not in eval mode. "
-    #                      "Consider calling '.eval()' on your model prior to conversion")
-    # if type(pdmodel) == _paddle.jit._script.RecursiveScriptModule:
-    #     logger.warning("Support for converting Paddle Script Models is experimental. "
-    #                      "If possible you should use a traced model for conversion.")
-
-    # inputs = _convert_to_inputtype(inputs)
+    [paddle_program, _, _]  = _pdmodel_from_model(model_spec)
     converter = PaddleConverter(paddle_program, inputs, outputs, cut_at_symbols, specification_version)
     return _perform_paddle_convert(converter, debug)
 
@@ -64,8 +53,7 @@ def _pdmodel_from_model(model_spec):
         exe = _fluid.Executor(_fluid.CPUPlace())
         return _fluid.io.load_inference_model(
             model_dir, exe, model_filename="inference.pdmodel", params_filename="inference.pdiparams")
-    # elif isinstance(model_spec, _paddle.jit.ScriptModule):
-    #     return model_spec
+    # todo: support paddle.jit.load
     else:
         raise TypeError(
             "@model must the path of Paddle inference model, received: {}".format(

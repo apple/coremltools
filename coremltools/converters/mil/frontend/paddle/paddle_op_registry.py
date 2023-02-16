@@ -8,18 +8,18 @@ _PADDLE_OPS_REGISTRY = {}
 
 def register_paddle_op(_func=None, paddle_alias=None, override=False):
     """
-    Registration routine for PyPaddle operators
-    _func: (PyPaddle conversion function) [Default=None]
-        PyPaddle conversion function to register
+    Registration routine for PaddlePaddle operators
+    _func: (PaddlePaddle conversion function) [Default=None]
+        PaddlePaddle conversion function to register
 
     paddle_alias: (List of string) [Default=None]
-        All other PyPaddle operators that should also be mapped to
+        All other PaddlePaddle operators that should also be mapped to
         current conversion routine.
         e.g. Sort aliased with SortV1, SortV2
         All provided alias operators must not be registered previously.
 
         "In place" alias are looked up automatically and do not need to
-        be registered. PyPaddle uses an underscore suffix to denote the
+        be registered. PaddlePaddle uses an underscore suffix to denote the
         in place version, e.g. "sum_" is the in place version of "sum".
 
     override: (Boolean) [Default=False]

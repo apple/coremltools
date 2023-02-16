@@ -65,16 +65,16 @@ def convert(
     debug=False,
 ):
     """
-    Convert a TensorFlow or PyTorch model to the Core ML model format as either
+    Convert a TensorFlow, PyTorch or PaddlePaddle model to the Core ML model format as either
     a neural network or an `ML program <https://coremltools.readme.io/docs/ml-programs>`_.
-    Some parameters and requirements differ for TensorFlow and PyTorch
+    Some parameters and requirements differ for TensorFlow, PyTorch and PaddlePaddle
     conversions.
 
     Parameters
     ----------
 
     model :
-        TensorFlow 1, TensorFlow 2, or PyTorch model in one of the following
+        TensorFlow 1, TensorFlow 2, PyTorch or PaddlePaddle model in one of the following
         formats:
 
         * TensorFlow versions 1.x
@@ -98,9 +98,12 @@ def convert(
             - A `TorchScript <https://pytorch.org/docs/stable/jit.html>`_ object
             - Path to a ``.pt`` file
 
+        * PaddlePaddle
+            - Path to a ``.pdmodel`` file
+
     source : str (optional)
     
-        One of [``auto``, ``tensorflow``, ``pytorch``, ``milinternal``]. ``auto``
+        One of [``auto``, ``tensorflow``, ``pytorch``, ``paddle``, ``milinternal``]. ``auto``
         determines the framework automatically for most cases. Raises
         ``ValueError`` if it fails to determine the source framework.
 
@@ -154,6 +157,17 @@ def convert(
               ``ImageType``, the converted Core ML model will have inputs with
               the same name.
             - If ``dtype`` is missing, it defaults to float 32.
+        
+        * PaddlePaddle:
+            - The ``inputs`` parameter is temporarily required.
+            - Number of elements in ``inputs`` must match the number of inputs
+                of the PaddlePaddle model.
+            ‘- ``inputs`` may be a nested list or tuple.
+            - ``TensorType`` and ``ImageType`` must have the ``shape`` specified.
+            - If the ``name`` argument is specified with ``TensorType`` or
+                ``ImageType``, the converted Core ML model will have inputs with
+                the same name.
+            - If ``dtype`` is missing, it defaults to float 32.
 
     outputs : list of ``TensorType`` or ``ImageType`` (optional)
 
@@ -189,6 +203,13 @@ def convert(
               will be converted up to that node.
 
         * PyTorch:
+
+            - If specified, the length of the list must match the number of
+              outputs returned by the PyTorch model.
+            - If ``name`` is specified, it is applied to the output names of the
+              converted Core ML model.
+
+        * PaddlePaddle:
 
             - If specified, the length of the list must match the number of
               outputs returned by the PyTorch model.
@@ -411,6 +432,15 @@ def convert(
         >>> mlmodel = ct.convert(traced_model, inputs=[input])
         >>> results = mlmodel.predict({"input": example_input.numpy()})
         >>> print(results['1651']) # 1651 is the node name given by PyTorch's JIT
+
+    PaddlePaddle:
+
+        >>> model = "Path/to/model"
+        >>> example_input = paddle.rand((1, 4, 224, 224), dtype=paddle.float32)
+        >>> input = ct.TensorType(name='input_name', shape=(1, 4, 224, 224))
+        >>> mlmodel = ct.convert(model, inputs=[input], source="paddle")
+        >>> results = mlmodel.predict({"input": example_input.numpy()})
+        >>> print(results['output'])
 
     See `Conversion Options <https://coremltools.readme.io/docs/neural-network-conversion>`_ for
     more advanced options.
@@ -672,7 +702,18 @@ def _validate_conversion_arguments(model,
             )
 
     elif exact_source == "paddle":
-        pass
+        #todo: support no input case
+        if inputs is None:
+            msg = 'Expected argument for paddle "inputs" not provided'
+            raise ValueError(msg)
+        
+        raise_if_duplicated(flat_inputs)
+        if inputs is not None and not all(
+            [isinstance(_input, InputType) for _input in flat_inputs]
+        ):
+            raise ValueError(
+                "Input should be a list/tuple (or nested lists/tuples) of TensorType or ImageType"
+            )
 
     elif exact_source == "milinternal":
         if not isinstance(model, Program):
@@ -688,10 +729,10 @@ def _determine_source(model, source,
     Infer source (which can be auto) to the precise framework.
     """
     source = source.lower()
-    if source not in {"auto", "tensorflow", "pytorch", "milinternal"}:
+    if source not in {"auto", "tensorflow", "pytorch", "paddle", "milinternal"}:
         msg = (
             'Unrecognized value of argument "source": {}. '
-            'It must be one of ["auto", "tensorflow", "pytorch"].'
+            'It must be one of ["auto", "tensorflow", "pytorch", "paddle"].'
         )
         raise ValueError(msg.format(source))
 
@@ -736,20 +777,14 @@ def _determine_source(model, source,
                 raise ValueError(msg)
             return "pytorch"
     if source == "auto" and _HAS_PADDLE:
-        is_paddle_load_successful = False
         try:
             paddle_load(model)
-            is_paddle_load_successful = True
-        except:
-            pass
-        if is_paddle_load_successful:
-            # validate that the outputs passed by the user are of type ImageType/TensorType
-            # if output_argument_as_specified_by_user is not None and \
-            #     not all([isinstance(t, TensorType) or isinstance(t, ImageType) \
-            #             for t in output_argument_as_specified_by_user]):
-            #     msg = '"outputs" must be a list of type ct.TensorType or ct.ImageType for pytorch conversion'
-            #     raise ValueError(msg)
             return "paddle"
+        except:
+            msg = "Unable to load paddle model"
+            raise ValueError(msg)
+
+            
 
 
     if source == "auto" and isinstance(model, Program):

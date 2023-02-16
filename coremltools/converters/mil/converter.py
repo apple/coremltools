@@ -168,12 +168,12 @@ def mil_convert(
 
     Parameters
     ----------
-    model: TF, PyTorch, or `coremltools.converters.mil.Program`.
+    model: TF, PyTorch, PaddlePaddle or `coremltools.converters.mil.Program`.
         See `coremltools.converters.convert`
 
     convert_from: str
         The value must be one of ['tensorflow', 'tensorflow2',
-        'pytorch', 'milinternal'] (aka name of a `ConverterRegistry.frontend`).
+        'pytorch', 'paddle', 'milinternal'] (aka name of a `ConverterRegistry.frontend`).
 
     compute_units: coremltools.ComputeUnit
         A enum with three possible values:

@@ -33,7 +33,7 @@ class paddle_upsample_nearest_neighbor(Operation):
     scale factors using nearest-neighbor interpolation.
     It corresponds to `paddle.nn.functional.interpolate` function with `mode=nearest`,
     `recompute_scale_factor=True`, and input with flexible shape.
-    source: https://pypaddle.org/docs/stable/_modules/paddle/nn/functional.html#interpolate
+    source: https://paddle.org/docs/stable/_modules/paddle/nn/functional.html#interpolate
 
     Parameters
     ----------
@@ -84,7 +84,7 @@ class paddle_upsample_bilinear(Operation):
     scale factors using bilinear interpolation.
     It corresponds to `paddle.nn.functional.interpolate` function with `mode=bilinear`,
     `recompute_scale_factor=True`, and input with flexible shape.
-    source: https://pypaddle.org/docs/stable/_modules/paddle/nn/functional.html#interpolate
+    source: https://paddle.org/docs/stable/_modules/paddle/nn/functional.html#interpolate
 
     Parameters
     ----------
