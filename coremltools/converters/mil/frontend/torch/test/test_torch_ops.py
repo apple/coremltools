@@ -8172,3 +8172,28 @@ class TestUnfold(TorchBaseTest):
         self.run_compare_torch(
             input_shape, UnfoldModel(), backend=backend, compute_unit=compute_unit
         )
+
+
+class TestTupleIndex(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend",
+        itertools.product(compute_units, backends,),
+    )
+    def test_tuple_index(self, compute_unit, backend):
+        class InnerModel(nn.Module):
+            def forward(self,x):
+                return (torch.tensor([0]), torch.tensor([1]))
+
+        class OuterModel(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.innermodel = torch.jit.trace(InnerModel().eval(), x)
+
+            def forward(self, x):
+                inner = self.innermodel(x)
+                return inner[0]
+
+        x = torch.rand(1, 3, 640, 640)
+        self.run_compare_torch(x, OuterModel(),
+                               input_as_shape=False, use_scripting=True,
+                               backend=backend, compute_unit=compute_unit)
