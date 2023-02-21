@@ -9,15 +9,12 @@ import numpy as _np
 import paddle as _paddle
 
 from coremltools import _logger as logger
-from coremltools._deps import version_lt
 from coremltools.converters.mil._deployment_compatibility import \
     AvailableTarget as _target
-from coremltools.converters.mil.input_types import InputType, TensorType, ImageType
+from coremltools.converters.mil.input_types import InputType, TensorType
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import Function, Program, types
 
-from .._utils import get_output_names
-from .internal_graph import InternalPaddleIRGraph
 from .ops import convert_nodes
 from .ssa_passes.paddle_passes import paddle_passes
 from .paddle_op_registry import _PADDLE_OPS_REGISTRY
@@ -143,10 +140,6 @@ class PaddleConverter:
         """
         assert isinstance(paddle_program, _paddle.static.Program)
 
-        for idx, inp in enumerate(self.inputs):
-            if isinstance(inp, ImageType) and self.inputs[idx].channel_first is None:
-                self.inputs[idx].channel_first = True
-
         self.paddle_program = paddle_program
         
         self.input_names = [k.name  for k in inputs]
@@ -158,10 +151,6 @@ class PaddleConverter:
         self.opset_version = _target(opset_version) if opset_version is not None else None
         self.context = TranscriptionContext()
 
-        # self.graph = InternalPaddleIRGraph(
-        #     paddle_program, self.inputs, cut_at_symbols
-        # )
-
         # Apply Paddle IR passes
         passes = [
             fuse_conv_bias
@@ -169,30 +158,8 @@ class PaddleConverter:
         for p in passes:
             p(self.paddle_program)
 
-        # self.inputs = list(self.graph.inputs.values())
         self.paddle_passes = paddle_passes
         self._prog = Program()
-
-    @staticmethod
-    def _check_ops(graph):
-        """
-        Returns the set of ops in @graph that are implemented, and the set
-        for which no conversion function is registered. @graph can be
-        either InternalPaddleIRGraph or InternalPaddleIRBlock.
-        """
-        implemented_ops = set()
-        missing_ops = set()
-        for node in graph.nodes:
-            _add_op = _PADDLE_OPS_REGISTRY.get(node.kind, None)
-            if _add_op is None:
-                missing_ops.add(node.kind)
-            else:
-                implemented_ops.add(node.kind)
-            for block in node.blocks:
-                _impl, _miss = PaddleConverter._check_ops(block)
-                implemented_ops.update(_impl)
-                missing_ops.update(_miss)
-        return implemented_ops, missing_ops
 
     @staticmethod
     def _create_placeholder(_input):
@@ -225,46 +192,6 @@ class PaddleConverter:
                     "Unknown type {} for conversion to InputType.".format(type(_input))
                 )
         return input_type
-    
-    # def infer_shape(self, input_shape_dict):
-    #     import paddle
-    #     paddle.enable_static()
-    #     import paddle.fluid as fluid
-
-    #     OP_WITHOUT_KERNEL_SET = {
-    #         'feed', 'fetch', 'recurrent', 'go', 'rnn_memory_helper_grad',
-    #         'conditional_block', 'while', 'send', 'recv', 'listen_and_serv',
-    #         'fl_listen_and_serv', 'ncclInit', 'select', 'checkpoint_notify',
-    #         'gen_bkcl_id', 'c_gen_bkcl_id', 'gen_nccl_id', 'c_gen_nccl_id',
-    #         'c_comm_init', 'c_sync_calc_stream', 'c_sync_comm_stream',
-    #         'queue_generator', 'dequeue', 'enqueue', 'heter_listen_and_serv',
-    #         'c_wait_comm', 'c_wait_compute', 'c_gen_hccl_id', 'c_comm_init_hccl',
-    #         'copy_cross_scope'
-    #     }
-    #     model_version = self.paddle_program.desc._version()
-    #     paddle_version = paddle.__version__
-    #     major_ver = model_version // 1000000
-    #     minor_ver = (model_version - major_ver * 1000000) // 1000
-    #     patch_ver = model_version - major_ver * 1000000 - minor_ver * 1000
-    #     model_version = "{}.{}.{}".format(major_ver, minor_ver, patch_ver)
-    #     if model_version != paddle_version:
-    #         print(
-    #             "[WARNING] The model is saved by paddlepaddle v{}, but now your paddlepaddle is version of {}, this difference may cause error, it is recommend you reinstall a same version of paddlepaddle for this model".
-    #             format(model_version, paddle_version))
-    #     for k, v in input_shape_dict.items():
-    #         self.paddle_program.blocks[0].var(k).desc.set_shape(v)
-    #     for i in range(len(self.paddle_program.blocks)):
-    #         for j in range(len(self.paddle_program.blocks[0].ops)):
-    #             if self.paddle_program.blocks[i].ops[j].type in OP_WITHOUT_KERNEL_SET:
-    #                 continue
-    #             self.paddle_program.blocks[i].ops[j].desc.infer_shape(self.paddle_program.blocks[i].desc)
-
-    def check_ops(self):
-        """
-        Returns the set of ops in @self.graph that are implemented, and
-        the set for which no conversion function is registered.
-        """
-        return PaddleConverter._check_ops(self.graph)
 
     def convert_const(self):
         scope = _paddle.fluid.global_scope()
@@ -297,25 +224,12 @@ class PaddleConverter:
             ssa_func_inputs[name] = placeholder
         prog.set_main_input_types(tuple(self.inputs))
 
-        # for index, (name, spec) in enumerate(self.graph.inputs.items()):
-        #     placeholder = self._create_placeholder(spec)
-        #     # Set ssa function input name to user defined name if provided.
-        #     if spec.name is not None:
-        #         name = spec.name
-        #     self.inputs[index].name = name
-        #     ssa_func_inputs[name] = placeholder
-        # prog.set_main_input_types(tuple(self.inputs))
-
         # Initialize the SSA for conversion
         with Function(ssa_func_inputs, opset_version=self.opset_version) as ssa_func:
-
             # Map internal @self.graph.inputs to user specified @ssa_func_inputs
             # If @self.graph.inputs == @ssa_func_inputs this just adds the inputs
             # to the context.
 
-            # for internal_name, users_name in zip(
-            #     self.graph.inputs.keys(), ssa_func_inputs.keys()
-            # ):
             for internal_name, users_name in zip(
                 self.input_names, ssa_func_inputs.keys()
             ):

@@ -14,8 +14,6 @@ def paddle_passes(prog):
         "common::dead_code_elimination",
         "common::loop_invariant_elimination",
         "common::dead_code_elimination",
-        "paddle::paddle_upsample_to_core_upsample",
-        "paddle::paddle_tensor_assign_to_core",
     ]
 
     prog.validate()

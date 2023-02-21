@@ -3,12 +3,6 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
-from collections import OrderedDict, defaultdict
-
-from coremltools import _logger as logger
-
-from .internal_graph import InternalPaddleIRGraph, InternalPaddleIRNode
-
 def fuse_conv_bias(paddle_program):
     for block in paddle_program.blocks:
         cnt = 0
