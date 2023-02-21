@@ -17,7 +17,6 @@ from coremltools.converters.mil.mil import Function, Program, types
 
 from .ops import convert_nodes
 from .ssa_passes.paddle_passes import paddle_passes
-from .paddle_op_registry import _PADDLE_OPS_REGISTRY
 from .paddleir_passes import (fuse_conv_bias)
 
 paddle_to_mil_types = {
