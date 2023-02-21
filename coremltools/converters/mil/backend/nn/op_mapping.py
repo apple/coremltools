@@ -3064,18 +3064,26 @@ def shape(const_context, builder, op):
 
 
 def add_upsample_nn(const_context, builder, op, scale_factor_h, scale_factor_w):
+    mode = "NN"
+    linear_upsample_mode = "DEFAULT"
     if _np.abs(_np.round(scale_factor_h) - scale_factor_h) < 1e-4 and scale_factor_h >= 1 - 1e-4:
         scale_factor_h = int(scale_factor_h)
     else:
-        raise NotImplementedError(
-           f"Unsupported float type 'scale_factor_height' ({scale_factor_h}) for neuralnetwork."
+        logger.warning(
+           f"Unsupported float type 'scale_factor_height' ({scale_factor_h}) for neuralnetwork. "
+           "Falling back to bilinear interpolation."
         )
+        mode = "BILINEAR"
+        linear_upsample_mode = "ALIGN_CORNERS_TRUE"
     if _np.abs(_np.round(scale_factor_w) - scale_factor_w) < 1e-4 and scale_factor_w >= 1 - 1e-4:
         scale_factor_w = int(scale_factor_w)
     else:
-        raise NotImplementedError(
-           f"Unsupported float type 'scale_factor_width' ({scale_factor_w}) for neuralnetwork."
+        logger.warning(
+           f"Unsupported float type 'scale_factor_width' ({scale_factor_w}) for neuralnetwork. "
+           "Falling back to bilinear interpolation."
         )
+        mode = "BILINEAR"
+        linear_upsample_mode = "ALIGN_CORNERS_TRUE"
 
     builder.add_upsample(
         name=op.name,
@@ -3083,7 +3091,8 @@ def add_upsample_nn(const_context, builder, op, scale_factor_h, scale_factor_w):
         scaling_factor_w=scale_factor_w,
         input_name=make_input(const_context, builder, op.x),
         output_name=op.outputs[0].name,
-        mode="NN",
+        mode=mode,
+        linear_upsample_mode=linear_upsample_mode,
     )
 
 

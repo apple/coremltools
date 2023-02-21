@@ -2465,7 +2465,7 @@ def OneHot(context, node):
     context.add(node.name, x)
 
 
-def _get_non_maximum_supression(context, node):
+def _get_non_maximum_supression(context, node, iou_threshold_override=None, score_threshold_override=None):
     """
     The helper function returns the outputs from mb.non_maximum_suppression,
     along with the number of boxes and the maximum number of boxes.
@@ -2473,8 +2473,8 @@ def _get_non_maximum_supression(context, node):
     boxes = context[node.inputs[0]]
     scores = context[node.inputs[1]]
     max_boxes = context[node.inputs[2]]
-    iou_threshold = context[node.inputs[3]]
-    score_threshold = context[node.inputs[4]]
+    iou_threshold = iou_threshold_override or context[node.inputs[3]]
+    score_threshold = score_threshold_override or context[node.inputs[4]]
 
     # The boxes' coordinates in Tensorflow is (y1, x1, y2, x2) where (y1, x1) and (y2, x2) are the
     # coordinates of diagonal pair of box corners. However, MIL NMS expects CENTER_SIZE_WIDTH_FIRST
@@ -2534,11 +2534,17 @@ def NonMaxSuppressionV5(context, node):
     NonMaxSuppressionV5 returns all indices, scores and number of the selected boxes.
     """
     soft_nms_sigma = context[node.inputs[5]].val
+    iou_threshold_override = None
+    score_threshold_override = None
     if soft_nms_sigma != 0:
-        raise NotImplementedError("NonMaxSuppressionV5 with soft_nms_sigma != 0 not supported.")
+        # fallback to "hard" NMS with sensible defaults
+        iou_threshold_override = types.fp32(0.5)
+        score_threshold_override = types.fp32(float("-inf"))
+        logger.warning("NonMaxSuppressionV5 with soft_nms_sigma != 0 not supported. "
+                       "Setting soft_nms_sigma to zero.")
 
     _, valid_scores, valid_indices, valid_outputs = _get_non_maximum_supression(
-        context, node
+        context, node, iou_threshold_override=iou_threshold_override, score_threshold_override=score_threshold_override
     )
     res = [valid_indices, valid_scores, valid_outputs]
     context.add(node.name, res)
