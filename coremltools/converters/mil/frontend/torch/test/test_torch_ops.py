@@ -2865,6 +2865,37 @@ class TestMaximumMinimum(TorchBaseTest):
             input_shapes, model, backend=backend, compute_unit=compute_unit
         )
 
+class TestAMaxAMin(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, input_shapes, mode, reduce_dim, keepdim",
+        itertools.product(
+            compute_units,
+            backends,
+            [
+                [(2, 5, 7, 3)],
+                [(3, 2, 9)],
+                [(1,)],
+            ],
+            ["minimum", "maximum"],
+            [0, 1, 2, 3],
+            [True, False],
+        ),
+    )
+    def test_minimum_maximum(self, compute_unit, backend, input_shapes, mode, reduce_dim, keepdim):
+        class TestModel(torch.nn.Module):
+            def forward(self, input):
+                if mode == "minimum":
+                    return torch.amin(input, min(input.dim() - 1, reduce_dim), keepdim)
+                elif mode == "maximum":
+                    return torch.amax(input, min(input.dim() - 1, reduce_dim), keepdim)
+                else:
+                    raise ValueError("Unsupported mode: {mode}".format(mode=mode))
+
+        model = TestModel()
+        self.run_compare_torch(
+            input_shapes, model, backend=backend, compute_unit=compute_unit
+        )
+
 
 class TestPoolSymbolicInput(TorchBaseTest):
     def test_max_pool(self):
