@@ -4314,7 +4314,7 @@ def amax(context, node):
     # mimic functionality from https://pytorch.org/docs/stable/generated/torch.amax.html
     _input = inputs[0]
     dim = [inputs[1].val] if type(inputs[1].val) == int else [x for x in inputs[1].val]
-    keepdim = False
+    keepdim = inputs[2] if len(inputs) == 3 else False
 
     values = mb.reduce_max(x=_input, axes=dim, keep_dims=keepdim)
     assert len(node.outputs) == 1
@@ -4328,7 +4328,7 @@ def amin(context, node):
     # mimic functionality from https://pytorch.org/docs/stable/generated/torch.amin.html
     _input = inputs[0]
     dim = [inputs[1].val] if type(inputs[1].val) == int else [x for x in inputs[1].val]
-    keepdim = False
+    keepdim = inputs[2] if len(inputs) == 3 else False
 
     values = mb.reduce_min(x=_input, axes=dim, keep_dims=keepdim)
     assert len(node.outputs) == 1
