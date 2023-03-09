@@ -4307,33 +4307,27 @@ def max(context, node):
         context.add(values, torch_name=values_name)
         context.add(indices, torch_name=indices_name)
 
+def _get_input_amax_amin(context, node):
+     # mimic functionality from https://pytorch.org/docs/stable/generated/torch.amax.html
+     # mimic functionality from https://pytorch.org/docs/stable/generated/torch.amin.html
+    assert len(node.outputs) == 1
+    
+    all_inputs = _get_inputs(context, node, expected=[2, 3])
+    input = all_inputs[0]
+    dim = [all_inputs[1].val] if type(all_inputs[1].val) == int else [x for x in all_inputs[1].val]
+    keepdim = all_inputs[2] if len(all_inputs) == 3 else False
+    
+    return input, dim, keepdim
+
 @register_torch_op
 def amax(context, node):
-    inputs = _get_inputs(context, node, expected=[2, 3])
-
-    # mimic functionality from https://pytorch.org/docs/stable/generated/torch.amax.html
-    _input = inputs[0]
-    dim = [inputs[1].val] if type(inputs[1].val) == int else [x for x in inputs[1].val]
-    keepdim = inputs[2] if len(inputs) == 3 else False
-
-    values = mb.reduce_max(x=_input, axes=dim, keep_dims=keepdim)
-    assert len(node.outputs) == 1
-    values_name = node.outputs[0]
-    context.add(values, torch_name=values_name)
+    _input, dim, keepdim = _get_input_amax_amin(context, node)
+    context.add(mb.reduce_max(x=_input, axes=dim, keep_dims=keepdim))
 
 @register_torch_op
 def amin(context, node):
-    inputs = _get_inputs(context, node, expected=[2, 3])
-
-    # mimic functionality from https://pytorch.org/docs/stable/generated/torch.amin.html
-    _input = inputs[0]
-    dim = [inputs[1].val] if type(inputs[1].val) == int else [x for x in inputs[1].val]
-    keepdim = inputs[2] if len(inputs) == 3 else False
-
-    values = mb.reduce_min(x=_input, axes=dim, keep_dims=keepdim)
-    assert len(node.outputs) == 1
-    values_name = node.outputs[0]
-    context.add(values, torch_name=values_name)
+    _input, dim, keepdim = _get_input_amax_amin(context, node)
+    context.add(mb.reduce_min(x=_input, axes=dim, keep_dims=keepdim))
 
 
 @register_torch_op
