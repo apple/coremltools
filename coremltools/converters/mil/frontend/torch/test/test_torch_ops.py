@@ -2877,17 +2877,21 @@ class TestAMaxAMin(TorchBaseTest):
                 [(1,)],
             ],
             ["minimum", "maximum"],
-            [0, 1, 2, 3],
+            [0, 1, 2, 3, [0, 1], [0, 1, 2], [0, 1, 2, 3]],
             [True, False],
         ),
     )
     def test_minimum_maximum(self, compute_unit, backend, input_shapes, mode, reduce_dim, keepdim):
         class TestModel(torch.nn.Module):
             def forward(self, input):
+                if type(reduce_dim) == int:
+                    reduce_dim_clamped = min(input.dim() - 1, reduce_dim)
+                else:
+                    reduce_dim_clamped = reduce_dim[:input.dim()]
                 if mode == "minimum":
-                    return torch.amin(input, min(input.dim() - 1, reduce_dim), keepdim)
+                    return torch.amin(input, reduce_dim_clamped, keepdim)
                 elif mode == "maximum":
-                    return torch.amax(input, min(input.dim() - 1, reduce_dim), keepdim)
+                    return torch.amax(input, reduce_dim_clamped, keepdim)
                 else:
                     raise ValueError("Unsupported mode: {mode}".format(mode=mode))
 
