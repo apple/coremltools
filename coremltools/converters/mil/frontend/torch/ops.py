@@ -4307,6 +4307,26 @@ def max(context, node):
         context.add(values, torch_name=values_name)
         context.add(indices, torch_name=indices_name)
 
+def _add_amax_amin(context, node, reduce_op):
+     # mimic functionality from https://pytorch.org/docs/stable/generated/torch.amax.html
+     # mimic functionality from https://pytorch.org/docs/stable/generated/torch.amin.html
+    assert len(node.outputs) == 1
+    
+    all_inputs = _get_inputs(context, node, expected=[2, 3])
+    _input = all_inputs[0]
+    dim = [all_inputs[1].val] if type(all_inputs[1].val) == int else [x for x in all_inputs[1].val]
+    keepdim = all_inputs[2] if len(all_inputs) == 3 else False
+    
+    context.add(reduce_op(x=_input, axes=dim, keep_dims=keepdim), torch_name=node.outputs[0])
+
+@register_torch_op
+def amax(context, node):
+    _add_amax_amin(context, node, mb.reduce_max)
+
+@register_torch_op
+def amin(context, node):
+    _add_amax_amin(context, node, mb.reduce_min)
+
 
 @register_torch_op
 def argsort(context, node):
