@@ -1,26 +1,54 @@
 """pytest configuration
 
 Extends output capture as needed by pybind11: ignore constructors, optional unordered lines.
-Adds docstring and exceptions message sanitizers: ignore Python 2 vs 3 differences.
+Adds docstring and exceptions message sanitizers.
 """
 
-import pytest
-import textwrap
-import difflib
-import re
-import sys
 import contextlib
-import platform
+import difflib
 import gc
+import multiprocessing
+import os
+import re
+import textwrap
+import traceback
 
-_unicode_marker = re.compile(r'u(\'[^\']*\')')
-_long_marker = re.compile(r'([0-9])L')
-_hexadecimal = re.compile(r'0x[0-9a-fA-F]+')
+import pytest
+
+# Early diagnostic for failed imports
+try:
+    import pybind11_tests
+except Exception:
+    # pytest does not show the traceback without this.
+    traceback.print_exc()
+    raise
+
+
+@pytest.fixture(scope="session", autouse=True)
+def always_forkserver_on_unix():
+    if os.name == "nt":
+        return
+
+    # Full background: https://github.com/pybind/pybind11/issues/4105#issuecomment-1301004592
+    # In a nutshell: fork() after starting threads == flakiness in the form of deadlocks.
+    # It is actually a well-known pitfall, unfortunately without guard rails.
+    # "forkserver" is more performant than "spawn" (~9s vs ~13s for tests/test_gil_scoped.py,
+    # visit the issuecomment link above for details).
+    # Windows does not have fork() and the associated pitfall, therefore it is best left
+    # running with defaults.
+    multiprocessing.set_start_method("forkserver")
+
+
+_long_marker = re.compile(r"([0-9])L")
+_hexadecimal = re.compile(r"0x[0-9a-fA-F]+")
+
+# Avoid collecting Python3 only files
+collect_ignore = []
 
 
 def _strip_and_dedent(s):
     """For triple-quote strings"""
-    return textwrap.dedent(s.lstrip('\n').rstrip())
+    return textwrap.dedent(s.lstrip("\n").rstrip())
 
 
 def _split_and_sort(s):
@@ -30,11 +58,14 @@ def _split_and_sort(s):
 
 def _make_explanation(a, b):
     """Explanation for a failed assert -- the a and b arguments are List[str]"""
-    return ["--- actual / +++ expected"] + [line.strip('\n') for line in difflib.ndiff(a, b)]
+    return ["--- actual / +++ expected"] + [
+        line.strip("\n") for line in difflib.ndiff(a, b)
+    ]
 
 
-class Output(object):
+class Output:
     """Basic output post-processing and comparison"""
+
     def __init__(self, string):
         self.string = string
         self.explanation = []
@@ -44,28 +75,31 @@ class Output(object):
 
     def __eq__(self, other):
         # Ignore constructor/destructor output which is prefixed with "###"
-        a = [line for line in self.string.strip().splitlines() if not line.startswith("###")]
+        a = [
+            line
+            for line in self.string.strip().splitlines()
+            if not line.startswith("###")
+        ]
         b = _strip_and_dedent(other).splitlines()
         if a == b:
             return True
-        else:
-            self.explanation = _make_explanation(a, b)
-            return False
+        self.explanation = _make_explanation(a, b)
+        return False
 
 
 class Unordered(Output):
     """Custom comparison for output without strict line ordering"""
+
     def __eq__(self, other):
         a = _split_and_sort(self.string)
         b = _split_and_sort(other)
         if a == b:
             return True
-        else:
-            self.explanation = _make_explanation(a, b)
-            return False
+        self.explanation = _make_explanation(a, b)
+        return False
 
 
-class Capture(object):
+class Capture:
     def __init__(self, capfd):
         self.capfd = capfd
         self.out = ""
@@ -75,7 +109,7 @@ class Capture(object):
         self.capfd.readouterr()
         return self
 
-    def __exit__(self, *_):
+    def __exit__(self, *args):
         self.out, self.err = self.capfd.readouterr()
 
     def __eq__(self, other):
@@ -83,9 +117,8 @@ class Capture(object):
         b = other
         if a == b:
             return True
-        else:
-            self.explanation = a.explanation
-            return False
+        self.explanation = a.explanation
+        return False
 
     def __str__(self):
         return self.out
@@ -102,13 +135,13 @@ class Capture(object):
         return Output(self.err)
 
 
-@pytest.fixture
-def capture(capfd):
-    """Extended `capfd` with context manager and custom equality operators"""
-    return Capture(capfd)
+@pytest.fixture()
+def capture(capsys):
+    """Extended `capsys` with context manager and custom equality operators"""
+    return Capture(capsys)
 
 
-class SanitizedString(object):
+class SanitizedString:
     def __init__(self, sanitizer):
         self.sanitizer = sanitizer
         self.string = ""
@@ -123,27 +156,22 @@ class SanitizedString(object):
         b = _strip_and_dedent(other)
         if a == b:
             return True
-        else:
-            self.explanation = _make_explanation(a.splitlines(), b.splitlines())
-            return False
+        self.explanation = _make_explanation(a.splitlines(), b.splitlines())
+        return False
 
 
 def _sanitize_general(s):
     s = s.strip()
     s = s.replace("pybind11_tests.", "m.")
-    s = s.replace("unicode", "str")
-    s = _long_marker.sub(r"\1", s)
-    s = _unicode_marker.sub(r"\1", s)
-    return s
+    return _long_marker.sub(r"\1", s)
 
 
 def _sanitize_docstring(thing):
     s = thing.__doc__
-    s = _sanitize_general(s)
-    return s
+    return _sanitize_general(s)
 
 
-@pytest.fixture
+@pytest.fixture()
 def doc():
     """Sanitize docstrings and add custom failure explanation"""
     return SanitizedString(_sanitize_docstring)
@@ -152,88 +180,43 @@ def doc():
 def _sanitize_message(thing):
     s = str(thing)
     s = _sanitize_general(s)
-    s = _hexadecimal.sub("0", s)
-    return s
+    return _hexadecimal.sub("0", s)
 
 
-@pytest.fixture
+@pytest.fixture()
 def msg():
     """Sanitize messages and add custom failure explanation"""
     return SanitizedString(_sanitize_message)
 
 
-# noinspection PyUnusedLocal
-def pytest_assertrepr_compare(op, left, right):
+def pytest_assertrepr_compare(op, left, right):  # noqa: ARG001
     """Hook to insert custom failure explanation"""
-    if hasattr(left, 'explanation'):
+    if hasattr(left, "explanation"):
         return left.explanation
-
-
-@contextlib.contextmanager
-def suppress(exception):
-    """Suppress the desired exception"""
-    try:
-        yield
-    except exception:
-        pass
+    return None
 
 
 def gc_collect():
-    ''' Run the garbage collector twice (needed when running
-    reference counting tests with PyPy) '''
+    """Run the garbage collector twice (needed when running
+    reference counting tests with PyPy)"""
     gc.collect()
     gc.collect()
 
 
-def pytest_namespace():
-    """Add import suppression and test requirements to `pytest` namespace"""
-    try:
-        import numpy as np
-    except ImportError:
-        np = None
-    try:
-        import scipy
-    except ImportError:
-        scipy = None
-    try:
-        from pybind11_tests import have_eigen
-    except ImportError:
-        have_eigen = False
-    pypy = platform.python_implementation() == "PyPy"
-
-    skipif = pytest.mark.skipif
-    return {
-        'suppress': suppress,
-        'requires_numpy': skipif(not np, reason="numpy is not installed"),
-        'requires_scipy': skipif(not np, reason="scipy is not installed"),
-        'requires_eigen_and_numpy': skipif(not have_eigen or not np,
-                                           reason="eigen and/or numpy are not installed"),
-        'requires_eigen_and_scipy': skipif(not have_eigen or not scipy,
-                                           reason="eigen and/or scipy are not installed"),
-        'unsupported_on_pypy': skipif(pypy, reason="unsupported on PyPy"),
-        'gc_collect': gc_collect
-    }
+def pytest_configure():
+    pytest.suppress = contextlib.suppress
+    pytest.gc_collect = gc_collect
 
 
-def _test_import_pybind11():
-    """Early diagnostic for test module initialization errors
-
-    When there is an error during initialization, the first import will report the
-    real error while all subsequent imports will report nonsense. This import test
-    is done early (in the pytest configuration file, before any tests) in order to
-    avoid the noise of having all tests fail with identical error messages.
-
-    Any possible exception is caught here and reported manually *without* the stack
-    trace. This further reduces noise since the trace would only show pytest internals
-    which are not useful for debugging pybind11 module issues.
-    """
-    # noinspection PyBroadException
-    try:
-        import pybind11_tests  # noqa: F401 imported but unused
-    except Exception as e:
-        print("Failed to import pybind11_tests from pytest:")
-        print("  {}: {}".format(type(e).__name__, e))
-        sys.exit(1)
-
-
-_test_import_pybind11()
+def pytest_report_header(config):
+    del config  # Unused.
+    assert (
+        pybind11_tests.compiler_info is not None
+    ), "Please update pybind11_tests.cpp if this assert fails."
+    return (
+        "C++ Info:"
+        f" {pybind11_tests.compiler_info}"
+        f" {pybind11_tests.cpp_std}"
+        f" {pybind11_tests.PYBIND11_INTERNALS_ID}"
+        f" PYBIND11_SIMPLE_GIL_MANAGEMENT={pybind11_tests.PYBIND11_SIMPLE_GIL_MANAGEMENT}"
+    )

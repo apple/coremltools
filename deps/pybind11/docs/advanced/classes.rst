@@ -9,7 +9,7 @@ that you are already familiar with the basics from :doc:`/classes`.
 Overriding virtual functions in Python
 ======================================
 
-Suppose that a C++ class or interface has a virtual function that we'd like to
+Suppose that a C++ class or interface has a virtual function that we'd like
 to override from within Python (we'll focus on the class ``Animal``; ``Dog`` is
 given as a specific example of how one would do this with traditional C++
 code).
@@ -45,19 +45,14 @@ Normally, the binding code for these classes would look as follows:
 
 .. code-block:: cpp
 
-    PYBIND11_PLUGIN(example) {
-        py::module m("example", "pybind11 example plugin");
-
-        py::class_<Animal> animal(m, "Animal");
-        animal
+    PYBIND11_MODULE(example, m) {
+        py::class_<Animal>(m, "Animal")
             .def("go", &Animal::go);
 
-        py::class_<Dog>(m, "Dog", animal)
+        py::class_<Dog, Animal>(m, "Dog")
             .def(py::init<>());
 
         m.def("call_go", &call_go);
-
-        return m.ptr();
     }
 
 However, these bindings are impossible to extend: ``Animal`` is not
@@ -76,7 +71,7 @@ helper class that is defined as follows:
 
         /* Trampoline (need one for each virtual function) */
         std::string go(int n_times) override {
-            PYBIND11_OVERLOAD_PURE(
+            PYBIND11_OVERRIDE_PURE(
                 std::string, /* Return type */
                 Animal,      /* Parent class */
                 go,          /* Name of function in C++ (must match Python name) */
@@ -85,34 +80,29 @@ helper class that is defined as follows:
         }
     };
 
-The macro :func:`PYBIND11_OVERLOAD_PURE` should be used for pure virtual
-functions, and :func:`PYBIND11_OVERLOAD` should be used for functions which have
+The macro :c:macro:`PYBIND11_OVERRIDE_PURE` should be used for pure virtual
+functions, and :c:macro:`PYBIND11_OVERRIDE` should be used for functions which have
 a default implementation.  There are also two alternate macros
-:func:`PYBIND11_OVERLOAD_PURE_NAME` and :func:`PYBIND11_OVERLOAD_NAME` which
+:c:macro:`PYBIND11_OVERRIDE_PURE_NAME` and :c:macro:`PYBIND11_OVERRIDE_NAME` which
 take a string-valued name argument between the *Parent class* and *Name of the
-function* slots, which defines the name of function in Python. This is required 
+function* slots, which defines the name of function in Python. This is required
 when the C++ and Python versions of the
 function have different names, e.g.  ``operator()`` vs ``__call__``.
 
 The binding code also needs a few minor adaptations (highlighted):
 
 .. code-block:: cpp
-    :emphasize-lines: 4,6,7
+    :emphasize-lines: 2,3
 
-    PYBIND11_PLUGIN(example) {
-        py::module m("example", "pybind11 example plugin");
-
-        py::class_<Animal, PyAnimal /* <--- trampoline*/> animal(m, "Animal");
-        animal
+    PYBIND11_MODULE(example, m) {
+        py::class_<Animal, PyAnimal /* <--- trampoline*/>(m, "Animal")
             .def(py::init<>())
             .def("go", &Animal::go);
 
-        py::class_<Dog>(m, "Dog", animal)
+        py::class_<Dog, Animal>(m, "Dog")
             .def(py::init<>());
 
         m.def("call_go", &call_go);
-
-        return m.ptr();
     }
 
 Importantly, pybind11 is made aware of the trampoline helper class by
@@ -124,15 +114,15 @@ define a constructor as usual.
 Bindings should be made against the actual class, not the trampoline helper class.
 
 .. code-block:: cpp
+    :emphasize-lines: 3
 
-    py::class_<Animal, PyAnimal /* <--- trampoline*/> animal(m, "Animal");
-        animal
-            .def(py::init<>())
-            .def("go", &PyAnimal::go); /* <--- THIS IS WRONG, use &Animal::go */
+    py::class_<Animal, PyAnimal /* <--- trampoline*/>(m, "Animal");
+        .def(py::init<>())
+        .def("go", &PyAnimal::go); /* <--- THIS IS WRONG, use &Animal::go */
 
 Note, however, that the above is sufficient for allowing python classes to
-extend ``Animal``, but not ``Dog``: see ref:`virtual_and_inheritance` for the
-necessary steps required to providing proper overload support for inherited
+extend ``Animal``, but not ``Dog``: see :ref:`virtual_and_inheritance` for the
+necessary steps required to providing proper overriding support for inherited
 classes.
 
 The Python session below shows how to override ``Animal::go`` and invoke it via
@@ -143,14 +133,43 @@ a virtual method call.
     >>> from example import *
     >>> d = Dog()
     >>> call_go(d)
-    u'woof! woof! woof! '
+    'woof! woof! woof! '
     >>> class Cat(Animal):
     ...     def go(self, n_times):
-    ...             return "meow! " * n_times
+    ...         return "meow! " * n_times
     ...
     >>> c = Cat()
     >>> call_go(c)
-    u'meow! meow! meow! '
+    'meow! meow! meow! '
+
+If you are defining a custom constructor in a derived Python class, you *must*
+ensure that you explicitly call the bound C++ constructor using ``__init__``,
+*regardless* of whether it is a default constructor or not. Otherwise, the
+memory for the C++ portion of the instance will be left uninitialized, which
+will generally leave the C++ instance in an invalid state and cause undefined
+behavior if the C++ instance is subsequently used.
+
+.. versionchanged:: 2.6
+   The default pybind11 metaclass will throw a ``TypeError`` when it detects
+   that ``__init__`` was not called by a derived class.
+
+Here is an example:
+
+.. code-block:: python
+
+    class Dachshund(Dog):
+        def __init__(self, name):
+            Dog.__init__(self)  # Without this, a TypeError is raised.
+            self.name = name
+
+        def bark(self):
+            return "yap!"
+
+Note that a direct ``__init__`` constructor *should be called*, and ``super()``
+should not be used. For simple cases of linear inheritance, ``super()``
+may work, but once you begin mixing Python and C++ multiple inheritance,
+things will fall apart due to differences between Python's MRO and C++'s
+mechanisms.
 
 Please take a look at the :ref:`macro_notes` before using this feature.
 
@@ -163,15 +182,24 @@ Please take a look at the :ref:`macro_notes` before using this feature.
 
     - because in these cases there is no C++ variable to reference (the value
       is stored in the referenced Python variable), pybind11 provides one in
-      the PYBIND11_OVERLOAD macros (when needed) with static storage duration.
-      Note that this means that invoking the overloaded method on *any*
+      the PYBIND11_OVERRIDE macros (when needed) with static storage duration.
+      Note that this means that invoking the overridden method on *any*
       instance will change the referenced value stored in *all* instances of
       that type.
 
     - Attempts to modify a non-const reference will not have the desired
       effect: it will change only the static cache variable, but this change
       will not propagate to underlying Python instance, and the change will be
-      replaced the next time the overload is invoked.
+      replaced the next time the override is invoked.
+
+.. warning::
+
+    The :c:macro:`PYBIND11_OVERRIDE` and accompanying macros used to be called
+    ``PYBIND11_OVERLOAD`` up until pybind11 v2.5.0, and :func:`get_override`
+    used to be called ``get_overload``. This naming was corrected and the older
+    macro and function names may soon be deprecated, in order to reduce
+    confusion with overloaded functions and methods and ``py::overload_cast``
+    (see :ref:`classes`).
 
 .. seealso::
 
@@ -219,16 +247,23 @@ override the ``name()`` method):
     class PyAnimal : public Animal {
     public:
         using Animal::Animal; // Inherit constructors
-        std::string go(int n_times) override { PYBIND11_OVERLOAD_PURE(std::string, Animal, go, n_times); }
-        std::string name() override { PYBIND11_OVERLOAD(std::string, Animal, name, ); }
+        std::string go(int n_times) override { PYBIND11_OVERRIDE_PURE(std::string, Animal, go, n_times); }
+        std::string name() override { PYBIND11_OVERRIDE(std::string, Animal, name, ); }
     };
     class PyDog : public Dog {
     public:
         using Dog::Dog; // Inherit constructors
-        std::string go(int n_times) override { PYBIND11_OVERLOAD_PURE(std::string, Dog, go, n_times); }
-        std::string name() override { PYBIND11_OVERLOAD(std::string, Dog, name, ); }
-        std::string bark() override { PYBIND11_OVERLOAD(std::string, Dog, bark, ); }
+        std::string go(int n_times) override { PYBIND11_OVERRIDE(std::string, Dog, go, n_times); }
+        std::string name() override { PYBIND11_OVERRIDE(std::string, Dog, name, ); }
+        std::string bark() override { PYBIND11_OVERRIDE(std::string, Dog, bark, ); }
     };
+
+.. note::
+
+    Note the trailing commas in the ``PYBIND11_OVERRIDE`` calls to ``name()``
+    and ``bark()``. These are needed to portably implement a trampoline for a
+    function that does not take any arguments. For functions that take
+    a nonzero number of arguments, the trailing comma must be omitted.
 
 A registered class derived from a pybind11-registered class with virtual
 methods requires a similar trampoline class, *even if* it doesn't explicitly
@@ -240,9 +275,9 @@ declare or override any virtual methods itself:
     class PyHusky : public Husky {
     public:
         using Husky::Husky; // Inherit constructors
-        std::string go(int n_times) override { PYBIND11_OVERLOAD_PURE(std::string, Husky, go, n_times); }
-        std::string name() override { PYBIND11_OVERLOAD(std::string, Husky, name, ); }
-        std::string bark() override { PYBIND11_OVERLOAD(std::string, Husky, bark, ); }
+        std::string go(int n_times) override { PYBIND11_OVERRIDE_PURE(std::string, Husky, go, n_times); }
+        std::string name() override { PYBIND11_OVERRIDE(std::string, Husky, name, ); }
+        std::string bark() override { PYBIND11_OVERRIDE(std::string, Husky, bark, ); }
     };
 
 There is, however, a technique that can be used to avoid this duplication
@@ -255,15 +290,15 @@ follows:
     template <class AnimalBase = Animal> class PyAnimal : public AnimalBase {
     public:
         using AnimalBase::AnimalBase; // Inherit constructors
-        std::string go(int n_times) override { PYBIND11_OVERLOAD_PURE(std::string, AnimalBase, go, n_times); }
-        std::string name() override { PYBIND11_OVERLOAD(std::string, AnimalBase, name, ); }
+        std::string go(int n_times) override { PYBIND11_OVERRIDE_PURE(std::string, AnimalBase, go, n_times); }
+        std::string name() override { PYBIND11_OVERRIDE(std::string, AnimalBase, name, ); }
     };
     template <class DogBase = Dog> class PyDog : public PyAnimal<DogBase> {
     public:
         using PyAnimal<DogBase>::PyAnimal; // Inherit constructors
         // Override PyAnimal's pure virtual go() with a non-pure one:
-        std::string go(int n_times) override { PYBIND11_OVERLOAD(std::string, DogBase, go, n_times); }
-        std::string bark() override { PYBIND11_OVERLOAD(std::string, DogBase, bark, ); }
+        std::string go(int n_times) override { PYBIND11_OVERRIDE(std::string, DogBase, go, n_times); }
+        std::string bark() override { PYBIND11_OVERRIDE(std::string, DogBase, bark, ); }
     };
 
 This technique has the advantage of requiring just one trampoline method to be
@@ -277,8 +312,8 @@ The classes are then registered with pybind11 using:
 .. code-block:: cpp
 
     py::class_<Animal, PyAnimal<>> animal(m, "Animal");
-    py::class_<Dog, PyDog<>> dog(m, "Dog");
-    py::class_<Husky, PyDog<Husky>> husky(m, "Husky");
+    py::class_<Dog, Animal, PyDog<>> dog(m, "Dog");
+    py::class_<Husky, Dog, PyDog<Husky>> husky(m, "Husky");
     // ... add animal, dog, husky definitions
 
 Note that ``Husky`` did not require a dedicated trampoline template class at
@@ -299,9 +334,15 @@ can now create a python class that inherits from ``Dog``:
     See the file :file:`tests/test_virtual_functions.cpp` for complete examples
     using both the duplication and templated trampoline approaches.
 
+.. _extended_aliases:
+
 Extended trampoline class functionality
 =======================================
 
+.. _extended_class_functionality_forced_trampoline:
+
+Forced trampoline class initialisation
+--------------------------------------
 The trampoline classes described in the previous sections are, by default, only
 initialized when needed.  More specifically, they are initialized when a python
 class actually inherits from a registered type (instead of merely creating an
@@ -310,7 +351,7 @@ valid for the trampoline class but not the registered class.  This is primarily
 for performance reasons: when the trampoline class is not needed for anything
 except virtual method dispatching, not initializing the trampoline class
 improves performance by avoiding needing to do a run-time check to see if the
-inheriting python instance has an overloaded method.
+inheriting python instance has an overridden method.
 
 Sometimes, however, it is useful to always initialize a trampoline class as an
 intermediate class that does more than just handle virtual method dispatching.
@@ -326,8 +367,47 @@ ensuring member initialization and (eventual) destruction.
 
 .. seealso::
 
-    See the file :file:`tests/test_alias_initialization.cpp` for complete examples
+    See the file :file:`tests/test_virtual_functions.cpp` for complete examples
     showing both normal and forced trampoline instantiation.
+
+Different method signatures
+---------------------------
+The macro's introduced in :ref:`overriding_virtuals` cover most of the standard
+use cases when exposing C++ classes to Python. Sometimes it is hard or unwieldy
+to create a direct one-on-one mapping between the arguments and method return
+type.
+
+An example would be when the C++ signature contains output arguments using
+references (See also :ref:`faq_reference_arguments`). Another way of solving
+this is to use the method body of the trampoline class to do conversions to the
+input and return of the Python method.
+
+The main building block to do so is the :func:`get_override`, this function
+allows retrieving a method implemented in Python from within the trampoline's
+methods. Consider for example a C++ method which has the signature
+``bool myMethod(int32_t& value)``, where the return indicates whether
+something should be done with the ``value``. This can be made convenient on the
+Python side by allowing the Python function to return ``None`` or an ``int``:
+
+.. code-block:: cpp
+
+    bool MyClass::myMethod(int32_t& value)
+    {
+        pybind11::gil_scoped_acquire gil;  // Acquire the GIL while in this scope.
+        // Try to look up the overridden method on the Python side.
+        pybind11::function override = pybind11::get_override(this, "myMethod");
+        if (override) {  // method is found
+            auto obj = override(value);  // Call the Python function.
+            if (py::isinstance<py::int_>(obj)) {  // check if it returned a Python integer type
+                value = obj.cast<int32_t>();  // Cast it and assign it to the value.
+                return true;  // Return true; value should be used.
+            } else {
+                return false;  // Python returned none, return false.
+            }
+        }
+        return false;  // Alternatively return MyClass::myMethod(value);
+    }
+
 
 .. _custom_constructors:
 
@@ -335,29 +415,129 @@ Custom constructors
 ===================
 
 The syntax for binding constructors was previously introduced, but it only
-works when a constructor with the given parameters actually exists on the C++
-side. To extend this to more general cases, let's take a look at what actually
-happens under the hood: the following statement
+works when a constructor of the appropriate arguments actually exists on the
+C++ side.  To extend this to more general cases, pybind11 makes it possible
+to bind factory functions as constructors. For example, suppose you have a
+class like this:
 
 .. code-block:: cpp
 
-    py::class_<Example>(m, "Example")
-        .def(py::init<int>());
+    class Example {
+    private:
+        Example(int); // private constructor
+    public:
+        // Factory function:
+        static Example create(int a) { return Example(a); }
+    };
 
-is short hand notation for
+    py::class_<Example>(m, "Example")
+        .def(py::init(&Example::create));
+
+While it is possible to create a straightforward binding of the static
+``create`` method, it may sometimes be preferable to expose it as a constructor
+on the Python side. This can be accomplished by calling ``.def(py::init(...))``
+with the function reference returning the new instance passed as an argument.
+It is also possible to use this approach to bind a function returning a new
+instance by raw pointer or by the holder (e.g. ``std::unique_ptr``).
+
+The following example shows the different approaches:
 
 .. code-block:: cpp
 
-    py::class_<Example>(m, "Example")
-        .def("__init__",
-            [](Example &instance, int arg) {
-                new (&instance) Example(arg);
-            }
-        );
+    class Example {
+    private:
+        Example(int); // private constructor
+    public:
+        // Factory function - returned by value:
+        static Example create(int a) { return Example(a); }
 
-In other words, :func:`init` creates an anonymous function that invokes an
-in-place constructor. Memory allocation etc. is already take care of beforehand
-within pybind11.
+        // These constructors are publicly callable:
+        Example(double);
+        Example(int, int);
+        Example(std::string);
+    };
+
+    py::class_<Example>(m, "Example")
+        // Bind the factory function as a constructor:
+        .def(py::init(&Example::create))
+        // Bind a lambda function returning a pointer wrapped in a holder:
+        .def(py::init([](std::string arg) {
+            return std::unique_ptr<Example>(new Example(arg));
+        }))
+        // Return a raw pointer:
+        .def(py::init([](int a, int b) { return new Example(a, b); }))
+        // You can mix the above with regular C++ constructor bindings as well:
+        .def(py::init<double>())
+        ;
+
+When the constructor is invoked from Python, pybind11 will call the factory
+function and store the resulting C++ instance in the Python instance.
+
+When combining factory functions constructors with :ref:`virtual function
+trampolines <overriding_virtuals>` there are two approaches.  The first is to
+add a constructor to the alias class that takes a base value by
+rvalue-reference.  If such a constructor is available, it will be used to
+construct an alias instance from the value returned by the factory function.
+The second option is to provide two factory functions to ``py::init()``: the
+first will be invoked when no alias class is required (i.e. when the class is
+being used but not inherited from in Python), and the second will be invoked
+when an alias is required.
+
+You can also specify a single factory function that always returns an alias
+instance: this will result in behaviour similar to ``py::init_alias<...>()``,
+as described in the :ref:`extended trampoline class documentation
+<extended_aliases>`.
+
+The following example shows the different factory approaches for a class with
+an alias:
+
+.. code-block:: cpp
+
+    #include <pybind11/factory.h>
+    class Example {
+    public:
+        // ...
+        virtual ~Example() = default;
+    };
+    class PyExample : public Example {
+    public:
+        using Example::Example;
+        PyExample(Example &&base) : Example(std::move(base)) {}
+    };
+    py::class_<Example, PyExample>(m, "Example")
+        // Returns an Example pointer.  If a PyExample is needed, the Example
+        // instance will be moved via the extra constructor in PyExample, above.
+        .def(py::init([]() { return new Example(); }))
+        // Two callbacks:
+        .def(py::init([]() { return new Example(); } /* no alias needed */,
+                      []() { return new PyExample(); } /* alias needed */))
+        // *Always* returns an alias instance (like py::init_alias<>())
+        .def(py::init([]() { return new PyExample(); }))
+        ;
+
+Brace initialization
+--------------------
+
+``pybind11::init<>`` internally uses C++11 brace initialization to call the
+constructor of the target class. This means that it can be used to bind
+*implicit* constructors as well:
+
+.. code-block:: cpp
+
+    struct Aggregate {
+        int a;
+        std::string b;
+    };
+
+    py::class_<Aggregate>(m, "Aggregate")
+        .def(py::init<int, const std::string &>());
+
+.. note::
+
+    Note that brace initialization preferentially invokes constructor overloads
+    taking a ``std::initializer_list``. In the rare event that this causes an
+    issue, you can work around it by using ``py::init(...)`` with a lambda
+    function that constructs the new object as desired.
 
 .. _classes_with_non_public_destructors:
 
@@ -387,6 +567,46 @@ crucial that instances are deallocated on the C++ side to avoid memory leaks.
 
     py::class_<MyClass, std::unique_ptr<MyClass, py::nodelete>>(m, "MyClass")
         .def(py::init<>())
+
+.. _destructors_that_call_python:
+
+Destructors that call Python
+============================
+
+If a Python function is invoked from a C++ destructor, an exception may be thrown
+of type :class:`error_already_set`. If this error is thrown out of a class destructor,
+``std::terminate()`` will be called, terminating the process. Class destructors
+must catch all exceptions of type :class:`error_already_set` to discard the Python
+exception using :func:`error_already_set::discard_as_unraisable`.
+
+Every Python function should be treated as *possibly throwing*. When a Python generator
+stops yielding items, Python will throw a ``StopIteration`` exception, which can pass
+though C++ destructors if the generator's stack frame holds the last reference to C++
+objects.
+
+For more information, see :ref:`the documentation on exceptions <unraisable_exceptions>`.
+
+.. code-block:: cpp
+
+    class MyClass {
+    public:
+        ~MyClass() {
+            try {
+                py::print("Even printing is dangerous in a destructor");
+                py::exec("raise ValueError('This is an unraisable exception')");
+            } catch (py::error_already_set &e) {
+                // error_context should be information about where/why the occurred,
+                // e.g. use __func__ to get the name of the current function
+                e.discard_as_unraisable(__func__);
+            }
+        }
+    };
+
+.. note::
+
+    pybind11 does not support C++ destructors marked ``noexcept(false)``.
+
+.. versionadded:: 2.6
 
 .. _implicit_conversions:
 
@@ -428,6 +648,10 @@ Python side:
     Implicit conversions from ``A`` to ``B`` only work when ``B`` is a custom
     data type that is exposed to Python via pybind11.
 
+    To prevent runaway recursion, implicit conversions are non-reentrant: an
+    implicit conversion invoked as part of another implicit conversion of the
+    same type (i.e. from ``A`` to ``B``) will fail.
+
 .. _static_properties:
 
 Static properties
@@ -437,24 +661,15 @@ The section on :ref:`properties` discussed the creation of instance properties
 that are implemented in terms of C++ getters and setters.
 
 Static properties can also be created in a similar way to expose getters and
-setters of static class attributes. Two things are important to note:
-
-1. Static properties are implemented by instrumenting the *metaclass* of the
-   class in question -- however, this requires the class to have a modifiable
-   metaclass in the first place. pybind11 provides a ``py::metaclass()``
-   annotation that must be specified in the ``class_`` constructor, or any
-   later method calls to ``def_{property_,∅}_{readwrite,readonly}_static`` will
-   fail (see the example below).
-
-2. For static properties defined in terms of setter and getter functions, note
-   that the implicit ``self`` argument also exists in this case and is used to
-   pass the Python ``type`` subclass instance. This parameter will often not be
-   needed by the C++ side, and the following example illustrates how to
-   instantiate a lambda getter function that ignores it:
+setters of static class attributes. Note that the implicit ``self`` argument
+also exists in this case and is used to pass the Python ``type`` subclass
+instance. This parameter will often not be needed by the C++ side, and the
+following example illustrates how to instantiate a lambda getter function
+that ignores it:
 
 .. code-block:: cpp
 
-    py::class_<Foo>(m, "Foo", py::metaclass())
+    py::class_<Foo>(m, "Foo")
         .def_property_readonly_static("foo", [](py::object /* self */) { return Foo(); });
 
 Operator overloading
@@ -493,9 +708,7 @@ to Python.
 
     #include <pybind11/operators.h>
 
-    PYBIND11_PLUGIN(example) {
-        py::module m("example", "pybind11 example plugin");
-
+    PYBIND11_MODULE(example, m) {
         py::class_<Vector2>(m, "Vector2")
             .def(py::init<float, float>())
             .def(py::self + py::self)
@@ -503,9 +716,8 @@ to Python.
             .def(py::self *= float())
             .def(float() * py::self)
             .def(py::self * float())
+            .def(-py::self)
             .def("__repr__", &Vector2::toString);
-
-        return m.ptr();
     }
 
 Note that a line like
@@ -539,13 +751,15 @@ throwing a type error.
     complete example that demonstrates how to work with overloaded operators in
     more detail.
 
+.. _pickling:
+
 Pickling support
 ================
 
 Python's ``pickle`` module provides a powerful facility to serialize and
 de-serialize a Python object graph into a binary data stream. To pickle and
-unpickle C++ classes using pybind11, two additional functions must be provided.
-Suppose the class in question has the following signature:
+unpickle C++ classes using pybind11, a ``py::pickle()`` definition must be
+provided. Suppose the class in question has the following signature:
 
 .. code-block:: cpp
 
@@ -561,8 +775,9 @@ Suppose the class in question has the following signature:
         int m_extra = 0;
     };
 
-The binding code including the requisite ``__setstate__`` and ``__getstate__`` methods [#f3]_
-looks as follows:
+Pickling support in Python is enabled by defining the ``__setstate__`` and
+``__getstate__`` methods [#f3]_. For pybind11 classes, use ``py::pickle()``
+to bind these two functions:
 
 .. code-block:: cpp
 
@@ -571,42 +786,48 @@ looks as follows:
         .def("value", &Pickleable::value)
         .def("extra", &Pickleable::extra)
         .def("setExtra", &Pickleable::setExtra)
-        .def("__getstate__", [](const Pickleable &p) {
-            /* Return a tuple that fully encodes the state of the object */
-            return py::make_tuple(p.value(), p.extra());
-        })
-        .def("__setstate__", [](Pickleable &p, py::tuple t) {
-            if (t.size() != 2)
-                throw std::runtime_error("Invalid state!");
+        .def(py::pickle(
+            [](const Pickleable &p) { // __getstate__
+                /* Return a tuple that fully encodes the state of the object */
+                return py::make_tuple(p.value(), p.extra());
+            },
+            [](py::tuple t) { // __setstate__
+                if (t.size() != 2)
+                    throw std::runtime_error("Invalid state!");
 
-            /* Invoke the in-place constructor. Note that this is needed even
-               when the object just has a trivial default constructor */
-            new (&p) Pickleable(t[0].cast<std::string>());
+                /* Create a new C++ instance */
+                Pickleable p(t[0].cast<std::string>());
 
-            /* Assign any additional state */
-            p.setExtra(t[1].cast<int>());
-        });
+                /* Assign any additional state */
+                p.setExtra(t[1].cast<int>());
+
+                return p;
+            }
+        ));
+
+The ``__setstate__`` part of the ``py::pickle()`` definition follows the same
+rules as the single-argument version of ``py::init()``. The return type can be
+a value, pointer or holder type. See :ref:`custom_constructors` for details.
 
 An instance can now be pickled as follows:
 
 .. code-block:: python
 
-    try:
-        import cPickle as pickle  # Use cPickle on Python 2.7
-    except ImportError:
-        import pickle
+    import pickle
 
     p = Pickleable("test_value")
     p.setExtra(15)
-    data = pickle.dumps(p, 2)
+    data = pickle.dumps(p)
 
-Note that only the cPickle module is supported on Python 2.7. The second
-argument to ``dumps`` is also crucial: it selects the pickle protocol version
-2, since the older version 1 is not supported. Newer versions are also fine—for
-instance, specify ``-1`` to always use the latest available version. Beware:
-failure to follow these instructions will cause important pybind11 memory
-allocation routines to be skipped during unpickling, which will likely lead to
-memory corruption and/or segmentation faults.
+
+.. note::
+    If given, the second argument to ``dumps`` must be 2 or larger - 0 and 1 are
+    not supported. Newer versions are also fine; for instance, specify ``-1`` to
+    always use the latest available version. Beware: failure to follow these
+    instructions will cause important pybind11 memory allocation routines to be
+    skipped during unpickling, which will likely lead to memory corruption
+    and/or segmentation faults. Python defaults to version 3 (Python 3-3.7) and
+    version 4 for Python 3.8+.
 
 .. seealso::
 
@@ -615,6 +836,36 @@ memory corruption and/or segmentation faults.
     detail.
 
 .. [#f3] http://docs.python.org/3/library/pickle.html#pickling-class-instances
+
+Deepcopy support
+================
+
+Python normally uses references in assignments. Sometimes a real copy is needed
+to prevent changing all copies. The ``copy`` module [#f5]_ provides these
+capabilities.
+
+A class with pickle support is automatically also (deep)copy
+compatible. However, performance can be improved by adding custom
+``__copy__`` and ``__deepcopy__`` methods.
+
+For simple classes (deep)copy can be enabled by using the copy constructor,
+which should look as follows:
+
+.. code-block:: cpp
+
+    py::class_<Copyable>(m, "Copyable")
+        .def("__copy__",  [](const Copyable &self) {
+            return Copyable(self);
+        })
+        .def("__deepcopy__", [](const Copyable &self, py::dict) {
+            return Copyable(self);
+        }, "memo"_a);
+
+.. note::
+
+    Dynamic attributes will not be copied in this example.
+
+.. [#f5] https://docs.python.org/3/library/copy.html
 
 Multiple Inheritance
 ====================
@@ -633,27 +884,452 @@ interspersed with alias types and holder types (discussed earlier in this
 document)---pybind11 will automatically find out which is which. The only
 requirement is that the first template argument is the type to be declared.
 
-There are two caveats regarding the implementation of this feature:
+It is also permitted to inherit multiply from exported C++ classes in Python,
+as well as inheriting from multiple Python and/or pybind11-exported classes.
 
-1. When only one base type is specified for a C++ type that actually has
-   multiple bases, pybind11 will assume that it does not participate in
-   multiple inheritance, which can lead to undefined behavior. In such cases,
-   add the tag ``multiple_inheritance``:
+There is one caveat regarding the implementation of this feature:
 
-    .. code-block:: cpp
+When only one base type is specified for a C++ type that actually has multiple
+bases, pybind11 will assume that it does not participate in multiple
+inheritance, which can lead to undefined behavior. In such cases, add the tag
+``multiple_inheritance`` to the class constructor:
 
-        py::class_<MyType, BaseType2>(m, "MyType", py::multiple_inheritance());
+.. code-block:: cpp
 
-   The tag is redundant and does not need to be specified when multiple base
-   types are listed.
+    py::class_<MyType, BaseType2>(m, "MyType", py::multiple_inheritance());
 
-2. As was previously discussed in the section on :ref:`overriding_virtuals`, it
-   is easy to create Python types that derive from C++ classes. It is even
-   possible to make use of multiple inheritance to declare a Python class which
-   has e.g. a C++ and a Python class as bases. However, any attempt to create a
-   type that has *two or more* C++ classes in its hierarchy of base types will
-   fail with a fatal error message: ``TypeError: multiple bases have instance
-   lay-out conflict``. Core Python types that are implemented in C (e.g.
-   ``dict``, ``list``, ``Exception``, etc.) also fall under this combination
-   and cannot be combined with C++ types bound using pybind11 via multiple
-   inheritance.
+The tag is redundant and does not need to be specified when multiple base types
+are listed.
+
+.. _module_local:
+
+Module-local class bindings
+===========================
+
+When creating a binding for a class, pybind11 by default makes that binding
+"global" across modules.  What this means is that a type defined in one module
+can be returned from any module resulting in the same Python type.  For
+example, this allows the following:
+
+.. code-block:: cpp
+
+    // In the module1.cpp binding code for module1:
+    py::class_<Pet>(m, "Pet")
+        .def(py::init<std::string>())
+        .def_readonly("name", &Pet::name);
+
+.. code-block:: cpp
+
+    // In the module2.cpp binding code for module2:
+    m.def("create_pet", [](std::string name) { return new Pet(name); });
+
+.. code-block:: pycon
+
+    >>> from module1 import Pet
+    >>> from module2 import create_pet
+    >>> pet1 = Pet("Kitty")
+    >>> pet2 = create_pet("Doggy")
+    >>> pet2.name()
+    'Doggy'
+
+When writing binding code for a library, this is usually desirable: this
+allows, for example, splitting up a complex library into multiple Python
+modules.
+
+In some cases, however, this can cause conflicts.  For example, suppose two
+unrelated modules make use of an external C++ library and each provide custom
+bindings for one of that library's classes.  This will result in an error when
+a Python program attempts to import both modules (directly or indirectly)
+because of conflicting definitions on the external type:
+
+.. code-block:: cpp
+
+    // dogs.cpp
+
+    // Binding for external library class:
+    py::class<pets::Pet>(m, "Pet")
+        .def("name", &pets::Pet::name);
+
+    // Binding for local extension class:
+    py::class<Dog, pets::Pet>(m, "Dog")
+        .def(py::init<std::string>());
+
+.. code-block:: cpp
+
+    // cats.cpp, in a completely separate project from the above dogs.cpp.
+
+    // Binding for external library class:
+    py::class<pets::Pet>(m, "Pet")
+        .def("get_name", &pets::Pet::name);
+
+    // Binding for local extending class:
+    py::class<Cat, pets::Pet>(m, "Cat")
+        .def(py::init<std::string>());
+
+.. code-block:: pycon
+
+    >>> import cats
+    >>> import dogs
+    Traceback (most recent call last):
+      File "<stdin>", line 1, in <module>
+    ImportError: generic_type: type "Pet" is already registered!
+
+To get around this, you can tell pybind11 to keep the external class binding
+localized to the module by passing the ``py::module_local()`` attribute into
+the ``py::class_`` constructor:
+
+.. code-block:: cpp
+
+    // Pet binding in dogs.cpp:
+    py::class<pets::Pet>(m, "Pet", py::module_local())
+        .def("name", &pets::Pet::name);
+
+.. code-block:: cpp
+
+    // Pet binding in cats.cpp:
+    py::class<pets::Pet>(m, "Pet", py::module_local())
+        .def("get_name", &pets::Pet::name);
+
+This makes the Python-side ``dogs.Pet`` and ``cats.Pet`` into distinct classes,
+avoiding the conflict and allowing both modules to be loaded.  C++ code in the
+``dogs`` module that casts or returns a ``Pet`` instance will result in a
+``dogs.Pet`` Python instance, while C++ code in the ``cats`` module will result
+in a ``cats.Pet`` Python instance.
+
+This does come with two caveats, however: First, external modules cannot return
+or cast a ``Pet`` instance to Python (unless they also provide their own local
+bindings).  Second, from the Python point of view they are two distinct classes.
+
+Note that the locality only applies in the C++ -> Python direction.  When
+passing such a ``py::module_local`` type into a C++ function, the module-local
+classes are still considered.  This means that if the following function is
+added to any module (including but not limited to the ``cats`` and ``dogs``
+modules above) it will be callable with either a ``dogs.Pet`` or ``cats.Pet``
+argument:
+
+.. code-block:: cpp
+
+    m.def("pet_name", [](const pets::Pet &pet) { return pet.name(); });
+
+For example, suppose the above function is added to each of ``cats.cpp``,
+``dogs.cpp`` and ``frogs.cpp`` (where ``frogs.cpp`` is some other module that
+does *not* bind ``Pets`` at all).
+
+.. code-block:: pycon
+
+    >>> import cats, dogs, frogs  # No error because of the added py::module_local()
+    >>> mycat, mydog = cats.Cat("Fluffy"), dogs.Dog("Rover")
+    >>> (cats.pet_name(mycat), dogs.pet_name(mydog))
+    ('Fluffy', 'Rover')
+    >>> (cats.pet_name(mydog), dogs.pet_name(mycat), frogs.pet_name(mycat))
+    ('Rover', 'Fluffy', 'Fluffy')
+
+It is possible to use ``py::module_local()`` registrations in one module even
+if another module registers the same type globally: within the module with the
+module-local definition, all C++ instances will be cast to the associated bound
+Python type.  In other modules any such values are converted to the global
+Python type created elsewhere.
+
+.. note::
+
+    STL bindings (as provided via the optional :file:`pybind11/stl_bind.h`
+    header) apply ``py::module_local`` by default when the bound type might
+    conflict with other modules; see :ref:`stl_bind` for details.
+
+.. note::
+
+    The localization of the bound types is actually tied to the shared object
+    or binary generated by the compiler/linker.  For typical modules created
+    with ``PYBIND11_MODULE()``, this distinction is not significant.  It is
+    possible, however, when :ref:`embedding` to embed multiple modules in the
+    same binary (see :ref:`embedding_modules`).  In such a case, the
+    localization will apply across all embedded modules within the same binary.
+
+.. seealso::
+
+    The file :file:`tests/test_local_bindings.cpp` contains additional examples
+    that demonstrate how ``py::module_local()`` works.
+
+Binding protected member functions
+==================================
+
+It's normally not possible to expose ``protected`` member functions to Python:
+
+.. code-block:: cpp
+
+    class A {
+    protected:
+        int foo() const { return 42; }
+    };
+
+    py::class_<A>(m, "A")
+        .def("foo", &A::foo); // error: 'foo' is a protected member of 'A'
+
+On one hand, this is good because non-``public`` members aren't meant to be
+accessed from the outside. But we may want to make use of ``protected``
+functions in derived Python classes.
+
+The following pattern makes this possible:
+
+.. code-block:: cpp
+
+    class A {
+    protected:
+        int foo() const { return 42; }
+    };
+
+    class Publicist : public A { // helper type for exposing protected functions
+    public:
+        using A::foo; // inherited with different access modifier
+    };
+
+    py::class_<A>(m, "A") // bind the primary class
+        .def("foo", &Publicist::foo); // expose protected methods via the publicist
+
+This works because ``&Publicist::foo`` is exactly the same function as
+``&A::foo`` (same signature and address), just with a different access
+modifier. The only purpose of the ``Publicist`` helper class is to make
+the function name ``public``.
+
+If the intent is to expose ``protected`` ``virtual`` functions which can be
+overridden in Python, the publicist pattern can be combined with the previously
+described trampoline:
+
+.. code-block:: cpp
+
+    class A {
+    public:
+        virtual ~A() = default;
+
+    protected:
+        virtual int foo() const { return 42; }
+    };
+
+    class Trampoline : public A {
+    public:
+        int foo() const override { PYBIND11_OVERRIDE(int, A, foo, ); }
+    };
+
+    class Publicist : public A {
+    public:
+        using A::foo;
+    };
+
+    py::class_<A, Trampoline>(m, "A") // <-- `Trampoline` here
+        .def("foo", &Publicist::foo); // <-- `Publicist` here, not `Trampoline`!
+
+Binding final classes
+=====================
+
+Some classes may not be appropriate to inherit from. In C++11, classes can
+use the ``final`` specifier to ensure that a class cannot be inherited from.
+The ``py::is_final`` attribute can be used to ensure that Python classes
+cannot inherit from a specified type. The underlying C++ type does not need
+to be declared final.
+
+.. code-block:: cpp
+
+    class IsFinal final {};
+
+    py::class_<IsFinal>(m, "IsFinal", py::is_final());
+
+When you try to inherit from such a class in Python, you will now get this
+error:
+
+.. code-block:: pycon
+
+    >>> class PyFinalChild(IsFinal):
+    ...     pass
+    ...
+    TypeError: type 'IsFinal' is not an acceptable base type
+
+.. note:: This attribute is currently ignored on PyPy
+
+.. versionadded:: 2.6
+
+Binding classes with template parameters
+========================================
+
+pybind11 can also wrap classes that have template parameters. Consider these classes:
+
+.. code-block:: cpp
+
+    struct Cat {};
+    struct Dog {};
+
+    template <typename PetType>
+    struct Cage {
+        Cage(PetType& pet);
+        PetType& get();
+    };
+
+C++ templates may only be instantiated at compile time, so pybind11 can only
+wrap instantiated templated classes. You cannot wrap a non-instantiated template:
+
+.. code-block:: cpp
+
+    // BROKEN (this will not compile)
+    py::class_<Cage>(m, "Cage");
+        .def("get", &Cage::get);
+
+You must explicitly specify each template/type combination that you want to
+wrap separately.
+
+.. code-block:: cpp
+
+    // ok
+    py::class_<Cage<Cat>>(m, "CatCage")
+        .def("get", &Cage<Cat>::get);
+
+    // ok
+    py::class_<Cage<Dog>>(m, "DogCage")
+        .def("get", &Cage<Dog>::get);
+
+If your class methods have template parameters you can wrap those as well,
+but once again each instantiation must be explicitly specified:
+
+.. code-block:: cpp
+
+    typename <typename T>
+    struct MyClass {
+        template <typename V>
+        T fn(V v);
+    };
+
+    py::class<MyClass<int>>(m, "MyClassT")
+        .def("fn", &MyClass<int>::fn<std::string>);
+
+Custom automatic downcasters
+============================
+
+As explained in :ref:`inheritance`, pybind11 comes with built-in
+understanding of the dynamic type of polymorphic objects in C++; that
+is, returning a Pet to Python produces a Python object that knows it's
+wrapping a Dog, if Pet has virtual methods and pybind11 knows about
+Dog and this Pet is in fact a Dog. Sometimes, you might want to
+provide this automatic downcasting behavior when creating bindings for
+a class hierarchy that does not use standard C++ polymorphism, such as
+LLVM [#f4]_. As long as there's some way to determine at runtime
+whether a downcast is safe, you can proceed by specializing the
+``pybind11::polymorphic_type_hook`` template:
+
+.. code-block:: cpp
+
+    enum class PetKind { Cat, Dog, Zebra };
+    struct Pet {   // Not polymorphic: has no virtual methods
+        const PetKind kind;
+        int age = 0;
+      protected:
+        Pet(PetKind _kind) : kind(_kind) {}
+    };
+    struct Dog : Pet {
+        Dog() : Pet(PetKind::Dog) {}
+        std::string sound = "woof!";
+        std::string bark() const { return sound; }
+    };
+
+    namespace PYBIND11_NAMESPACE {
+        template<> struct polymorphic_type_hook<Pet> {
+            static const void *get(const Pet *src, const std::type_info*& type) {
+                // note that src may be nullptr
+                if (src && src->kind == PetKind::Dog) {
+                    type = &typeid(Dog);
+                    return static_cast<const Dog*>(src);
+                }
+                return src;
+            }
+        };
+    } // namespace PYBIND11_NAMESPACE
+
+When pybind11 wants to convert a C++ pointer of type ``Base*`` to a
+Python object, it calls ``polymorphic_type_hook<Base>::get()`` to
+determine if a downcast is possible. The ``get()`` function should use
+whatever runtime information is available to determine if its ``src``
+parameter is in fact an instance of some class ``Derived`` that
+inherits from ``Base``. If it finds such a ``Derived``, it sets ``type
+= &typeid(Derived)`` and returns a pointer to the ``Derived`` object
+that contains ``src``. Otherwise, it just returns ``src``, leaving
+``type`` at its default value of nullptr. If you set ``type`` to a
+type that pybind11 doesn't know about, no downcasting will occur, and
+the original ``src`` pointer will be used with its static type
+``Base*``.
+
+It is critical that the returned pointer and ``type`` argument of
+``get()`` agree with each other: if ``type`` is set to something
+non-null, the returned pointer must point to the start of an object
+whose type is ``type``. If the hierarchy being exposed uses only
+single inheritance, a simple ``return src;`` will achieve this just
+fine, but in the general case, you must cast ``src`` to the
+appropriate derived-class pointer (e.g. using
+``static_cast<Derived>(src)``) before allowing it to be returned as a
+``void*``.
+
+.. [#f4] https://llvm.org/docs/HowToSetUpLLVMStyleRTTI.html
+
+.. note::
+
+    pybind11's standard support for downcasting objects whose types
+    have virtual methods is implemented using
+    ``polymorphic_type_hook`` too, using the standard C++ ability to
+    determine the most-derived type of a polymorphic object using
+    ``typeid()`` and to cast a base pointer to that most-derived type
+    (even if you don't know what it is) using ``dynamic_cast<void*>``.
+
+.. seealso::
+
+    The file :file:`tests/test_tagbased_polymorphic.cpp` contains a
+    more complete example, including a demonstration of how to provide
+    automatic downcasting for an entire class hierarchy without
+    writing one get() function for each class.
+
+Accessing the type object
+=========================
+
+You can get the type object from a C++ class that has already been registered using:
+
+.. code-block:: cpp
+
+    py::type T_py = py::type::of<T>();
+
+You can directly use ``py::type::of(ob)`` to get the type object from any python
+object, just like ``type(ob)`` in Python.
+
+.. note::
+
+    Other types, like ``py::type::of<int>()``, do not work, see :ref:`type-conversions`.
+
+.. versionadded:: 2.6
+
+Custom type setup
+=================
+
+For advanced use cases, such as enabling garbage collection support, you may
+wish to directly manipulate the ``PyHeapTypeObject`` corresponding to a
+``py::class_`` definition.
+
+You can do that using ``py::custom_type_setup``:
+
+.. code-block:: cpp
+
+   struct OwnsPythonObjects {
+       py::object value = py::none();
+   };
+   py::class_<OwnsPythonObjects> cls(
+       m, "OwnsPythonObjects", py::custom_type_setup([](PyHeapTypeObject *heap_type) {
+           auto *type = &heap_type->ht_type;
+           type->tp_flags |= Py_TPFLAGS_HAVE_GC;
+           type->tp_traverse = [](PyObject *self_base, visitproc visit, void *arg) {
+               auto &self = py::cast<OwnsPythonObjects&>(py::handle(self_base));
+               Py_VISIT(self.value.ptr());
+               return 0;
+           };
+           type->tp_clear = [](PyObject *self_base) {
+               auto &self = py::cast<OwnsPythonObjects&>(py::handle(self_base));
+               self.value = py::none();
+               return 0;
+           };
+       }));
+   cls.def(py::init<>());
+   cls.def_readwrite("value", &OwnsPythonObjects::value);
+
+.. versionadded:: 2.8

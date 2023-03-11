@@ -27,15 +27,11 @@ The binding code for ``Pet`` looks as follows:
 
     namespace py = pybind11;
 
-    PYBIND11_PLUGIN(example) {
-        py::module m("example", "pybind11 example plugin");
-
+    PYBIND11_MODULE(example, m) {
         py::class_<Pet>(m, "Pet")
             .def(py::init<const std::string &>())
             .def("setName", &Pet::setName)
             .def("getName", &Pet::getName);
-
-        return m.ptr();
     }
 
 :class:`class_` creates bindings for a C++ *class* or *struct*-style data
@@ -48,14 +44,14 @@ interactive Python session demonstrating this example is shown below:
 
     % python
     >>> import example
-    >>> p = example.Pet('Molly')
+    >>> p = example.Pet("Molly")
     >>> print(p)
     <example.Pet object at 0x10cd98060>
     >>> p.getName()
-    u'Molly'
-    >>> p.setName('Charly')
+    'Molly'
+    >>> p.setName("Charly")
     >>> p.getName()
-    u'Charly'
+    'Charly'
 
 .. seealso::
 
@@ -78,7 +74,7 @@ Note how ``print(p)`` produced a rather useless summary of our data structure in
     >>> print(p)
     <example.Pet object at 0x10cd98060>
 
-To address this, we could bind an utility function that returns a human-readable
+To address this, we could bind a utility function that returns a human-readable
 summary to the special method slot named ``__repr__``. Unfortunately, there is no
 suitable functionality in the ``Pet`` data structure, and it would be nice if
 we did not have to change it. This can easily be accomplished by binding a
@@ -126,12 +122,12 @@ This makes it possible to write
 
 .. code-block:: pycon
 
-    >>> p = example.Pet('Molly')
+    >>> p = example.Pet("Molly")
     >>> p.name
-    u'Molly'
-    >>> p.name = 'Charly'
+    'Molly'
+    >>> p.name = "Charly"
     >>> p.name
-    u'Charly'
+    'Charly'
 
 Now suppose that ``Pet::name`` was a private internal variable
 that can only be accessed via setters and getters.
@@ -159,6 +155,9 @@ the setter and getter functions:
             .def_property("name", &Pet::getName, &Pet::setName)
             // ... remainder ...
 
+Write only properties can be defined by passing ``nullptr`` as the
+input for the read function.
+
 .. seealso::
 
     Similar functions :func:`class_::def_readwrite_static`,
@@ -175,10 +174,10 @@ Native Python classes can pick up new attributes dynamically:
 .. code-block:: pycon
 
     >>> class Pet:
-    ...     name = 'Molly'
+    ...     name = "Molly"
     ...
     >>> p = Pet()
-    >>> p.name = 'Charly'  # overwrite existing
+    >>> p.name = "Charly"  # overwrite existing
     >>> p.age = 2  # dynamically add a new attribute
 
 By default, classes exported from C++ do not support this and the only writable
@@ -196,7 +195,7 @@ Trying to set any other attribute results in an error:
 .. code-block:: pycon
 
     >>> p = example.Pet()
-    >>> p.name = 'Charly'  # OK, attribute defined in C++
+    >>> p.name = "Charly"  # OK, attribute defined in C++
     >>> p.age = 2  # fail
     AttributeError: 'Pet' object has no attribute 'age'
 
@@ -214,7 +213,7 @@ Now everything works as expected:
 .. code-block:: pycon
 
     >>> p = example.Pet()
-    >>> p.name = 'Charly'  # OK, overwrite value in C++
+    >>> p.name = "Charly"  # OK, overwrite value in C++
     >>> p.age = 2  # OK, dynamically add a new attribute
     >>> p.__dict__  # just like a native Python class
     {'age': 2}
@@ -229,8 +228,8 @@ just brings them on par.
 
 .. _inheritance:
 
-Inheritance
-===========
+Inheritance and automatic downcasting
+=====================================
 
 Suppose now that the example consists of two data structures with an
 inheritance relationship:
@@ -281,11 +280,70 @@ expose fields and methods of both types:
 
 .. code-block:: pycon
 
-    >>> p = example.Dog('Molly')
+    >>> p = example.Dog("Molly")
     >>> p.name
-    u'Molly'
+    'Molly'
     >>> p.bark()
-    u'woof!'
+    'woof!'
+
+The C++ classes defined above are regular non-polymorphic types with an
+inheritance relationship. This is reflected in Python:
+
+.. code-block:: cpp
+
+    // Return a base pointer to a derived instance
+    m.def("pet_store", []() { return std::unique_ptr<Pet>(new Dog("Molly")); });
+
+.. code-block:: pycon
+
+    >>> p = example.pet_store()
+    >>> type(p)  # `Dog` instance behind `Pet` pointer
+    Pet          # no pointer downcasting for regular non-polymorphic types
+    >>> p.bark()
+    AttributeError: 'Pet' object has no attribute 'bark'
+
+The function returned a ``Dog`` instance, but because it's a non-polymorphic
+type behind a base pointer, Python only sees a ``Pet``. In C++, a type is only
+considered polymorphic if it has at least one virtual function and pybind11
+will automatically recognize this:
+
+.. code-block:: cpp
+
+    struct PolymorphicPet {
+        virtual ~PolymorphicPet() = default;
+    };
+
+    struct PolymorphicDog : PolymorphicPet {
+        std::string bark() const { return "woof!"; }
+    };
+
+    // Same binding code
+    py::class_<PolymorphicPet>(m, "PolymorphicPet");
+    py::class_<PolymorphicDog, PolymorphicPet>(m, "PolymorphicDog")
+        .def(py::init<>())
+        .def("bark", &PolymorphicDog::bark);
+
+    // Again, return a base pointer to a derived instance
+    m.def("pet_store2", []() { return std::unique_ptr<PolymorphicPet>(new PolymorphicDog); });
+
+.. code-block:: pycon
+
+    >>> p = example.pet_store2()
+    >>> type(p)
+    PolymorphicDog  # automatically downcast
+    >>> p.bark()
+    'woof!'
+
+Given a pointer to a polymorphic base, pybind11 performs automatic downcasting
+to the actual derived type. Note that this goes beyond the usual situation in
+C++: we don't just get access to the virtual functions of the base, we get the
+concrete derived type including functions and attributes that the base type may
+not even be aware of.
+
+.. seealso::
+
+    For more information about polymorphic behavior see :ref:`overriding_virtuals`.
+
 
 Overloaded methods
 ==================
@@ -315,8 +373,8 @@ sequence.
 
     py::class_<Pet>(m, "Pet")
        .def(py::init<const std::string &, int>())
-       .def("set", (void (Pet::*)(int)) &Pet::set, "Set the pet's age")
-       .def("set", (void (Pet::*)(const std::string &)) &Pet::set, "Set the pet's name");
+       .def("set", static_cast<void (Pet::*)(int)>(&Pet::set), "Set the pet's age")
+       .def("set", static_cast<void (Pet::*)(const std::string &)>(&Pet::set), "Set the pet's name");
 
 The overload signatures are also visible in the method's docstring:
 
@@ -364,9 +422,19 @@ on constness, the ``py::const_`` tag should be used:
        .def("foo_mutable", py::overload_cast<int, float>(&Widget::foo))
        .def("foo_const",   py::overload_cast<int, float>(&Widget::foo, py::const_));
 
+If you prefer the ``py::overload_cast`` syntax but have a C++11 compatible compiler only,
+you can use ``py::detail::overload_cast_impl`` with an additional set of parentheses:
 
-.. [#cpp14] A compiler which supports the ``-std=c++14`` flag
-            or Visual Studio 2015 Update 2 and newer.
+.. code-block:: cpp
+
+    template <typename... Args>
+    using overload_cast_ = pybind11::detail::overload_cast_impl<Args...>;
+
+    py::class_<Pet>(m, "Pet")
+        .def("set", overload_cast_<int>()(&Pet::set), "Set the pet's age")
+        .def("set", overload_cast_<const std::string &>()(&Pet::set), "Set the pet's name");
+
+.. [#cpp14] A compiler which supports the ``-std=c++14`` flag.
 
 .. note::
 
@@ -377,8 +445,7 @@ on constness, the ``py::const_`` tag should be used:
 Enumerations and internal types
 ===============================
 
-Let's now suppose that the example class contains an internal enumeration type,
-e.g.:
+Let's now suppose that the example class contains internal types like enumerations, e.g.:
 
 .. code-block:: cpp
 
@@ -388,10 +455,15 @@ e.g.:
             Cat
         };
 
+        struct Attributes {
+            float age = 0;
+        };
+
         Pet(const std::string &name, Kind type) : name(name), type(type) { }
 
         std::string name;
         Kind type;
+        Attributes attr;
     };
 
 The binding code for this example looks as follows:
@@ -402,27 +474,57 @@ The binding code for this example looks as follows:
 
     pet.def(py::init<const std::string &, Pet::Kind>())
         .def_readwrite("name", &Pet::name)
-        .def_readwrite("type", &Pet::type);
+        .def_readwrite("type", &Pet::type)
+        .def_readwrite("attr", &Pet::attr);
 
     py::enum_<Pet::Kind>(pet, "Kind")
         .value("Dog", Pet::Kind::Dog)
         .value("Cat", Pet::Kind::Cat)
         .export_values();
 
-To ensure that the ``Kind`` type is created within the scope of ``Pet``, the
-``pet`` :class:`class_` instance must be supplied to the :class:`enum_`.
+    py::class_<Pet::Attributes>(pet, "Attributes")
+        .def(py::init<>())
+        .def_readwrite("age", &Pet::Attributes::age);
+
+
+To ensure that the nested types ``Kind`` and ``Attributes`` are created within the scope of ``Pet``, the
+``pet`` :class:`class_` instance must be supplied to the :class:`enum_` and :class:`class_`
 constructor. The :func:`enum_::export_values` function exports the enum entries
 into the parent scope, which should be skipped for newer C++11-style strongly
 typed enums.
 
 .. code-block:: pycon
 
-    >>> p = Pet('Lucy', Pet.Cat)
+    >>> p = Pet("Lucy", Pet.Cat)
     >>> p.type
     Kind.Cat
     >>> int(p.type)
     1L
 
+The entries defined by the enumeration type are exposed in the ``__members__`` property:
+
+.. code-block:: pycon
+
+    >>> Pet.Kind.__members__
+    {'Dog': Kind.Dog, 'Cat': Kind.Cat}
+
+The ``name`` property returns the name of the enum value as a unicode string.
+
+.. note::
+
+    It is also possible to use ``str(enum)``, however these accomplish different
+    goals. The following shows how these two approaches differ.
+
+    .. code-block:: pycon
+
+        >>> p = Pet("Lucy", Pet.Cat)
+        >>> pet_type = p.type
+        >>> pet_type
+        Pet.Cat
+        >>> str(pet_type)
+        'Pet.Cat'
+        >>> pet_type.name
+        'Cat'
 
 .. note::
 
