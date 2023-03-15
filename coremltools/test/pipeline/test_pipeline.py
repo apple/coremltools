@@ -3,9 +3,17 @@
 # Use of this source code is governed by a BSD-3-clause license that can be
 # found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+import itertools
+import tempfile
 import unittest
 
+import numpy as np
+import pytest
+
+import coremltools as ct
 from coremltools._deps import _HAS_LIBSVM, _HAS_SKLEARN
+from coremltools.converters.mil.mil import Builder as mb
+from coremltools.converters.mil.mil import Function, Program
 from coremltools.models.pipeline import PipelineClassifier, PipelineRegressor
 
 if _HAS_SKLEARN:
@@ -210,3 +218,52 @@ class LinearRegressionPipeline(unittest.TestCase):
         with self.assertRaises(TypeError):
             model = OneHotEncoder()
             spec = converter.convert(model, "data", "out", "regressor")
+
+
+class TestMakePipeline:
+    @staticmethod
+    def _make_model(input_name, input_length,
+                    output_name, output_length,
+                    convert_to):
+
+        weight_tensor = np.arange(input_length * output_length, dtype='float32')
+        weight_tensor = weight_tensor.reshape(output_length, input_length)
+
+        prog = Program()
+        func_inputs = {input_name: mb.placeholder(shape=(input_length,))}
+        with Function(func_inputs) as ssa_fun:
+            input = ssa_fun.inputs[input_name]
+            y = mb.linear(x=input, weight=weight_tensor, name=output_name)
+            ssa_fun.set_outputs([y])
+            prog.add_function("main", ssa_fun)
+
+        return ct.convert(prog, convert_to=convert_to)
+
+
+    @staticmethod
+    @pytest.mark.parametrize(
+        "model1_backend, model2_backend",
+        itertools.product(["mlprogram", "neuralnetwork"], ["mlprogram", "neuralnetwork"]),
+    )
+    def test_simple(model1_backend, model2_backend):
+        # Create models
+        m1 = TestMakePipeline._make_model("x", 20, "y1", 10, model1_backend)
+        m2 = TestMakePipeline._make_model("y1", 10, "y2", 2, model2_backend)
+
+        # Get non-pipeline result
+        x = np.random.rand(20)
+        y1 = m1.predict({"x": x})["y1"]
+        y2 = m2.predict({"y1": y1})
+
+        pipeline_model = ct.utils.make_pipeline(m1, m2)
+
+        y_pipeline = pipeline_model.predict({"x": x})
+        np.testing.assert_allclose(y2["y2"], y_pipeline["y2"])
+
+        # Check save/load
+        with tempfile.TemporaryDirectory() as save_dir:
+            save_path = save_dir + "/test.mlpackage"
+            pipeline_model.save(save_path)
+            p2 = ct.models.MLModel(save_path)
+            y_pipeline = p2.predict({"x": x})
+            np.testing.assert_allclose(y2["y2"], y_pipeline["y2"])
