@@ -257,6 +257,43 @@ def solve_diagonal_einsum(parsed_vectors, vars):
     return tuple(parsed_vectors), vars
 
 
+def solve_sum_einsum(parsed_vectors, vars):
+    """
+    Apply reduce_sum for axes before binary einsum calculation if enable.
+
+    e.g.:
+    input : "abce,acd->ae"
+    returns : "ace,ac->ae"
+
+    In this example, since each of those axes is only used by one var and does not appear in the output,
+    axes `b` and `d` can be reduced before binary einsum.
+    """
+
+    def solve_sum_einsum_one_step(src_axes, used_by_other_axes, x):
+        dst_axes = []
+        for axis in src_axes:
+            if axis not in used_by_other_axes:
+                continue
+            dst_axes.append(axis)
+        summed_axis_indices = [i for i in range(len(src_axes)) if src_axes[i] not in dst_axes]
+        if summed_axis_indices:
+            x = mb.reduce_sum(x=x, axes=summed_axis_indices)
+        return dst_axes, x
+
+    ret_parsed_vectors = []
+    parsed_vectors = list(parsed_vectors)
+    for i, var in enumerate(vars):
+        used_by_other_axes = []
+        for j, parsed_vector in enumerate(parsed_vectors):
+            if i != j:
+                used_by_other_axes += parsed_vector
+        dst_axes, var = solve_sum_einsum_one_step(parsed_vectors[i], used_by_other_axes, vars[i])
+        ret_parsed_vectors.append(dst_axes)
+        vars[i] = var
+    ret_parsed_vectors.append(parsed_vectors[-1])
+    return ret_parsed_vectors, vars
+
+
 def solve_generic_einsum(parsed_vectors, a_var, b_var, name):
     """
     :param parsed_vectors: list[list[int]]
@@ -292,6 +329,7 @@ def solve_generic_einsum(parsed_vectors, a_var, b_var, name):
         return mb.concat(values=dims, axis=0)
 
     parsed_vectors, vars = solve_diagonal_einsum(parsed_vectors, [a_var, b_var])
+    parsed_vectors, vars = solve_sum_einsum(parsed_vectors, vars)
     a_var, b_var = vars
     a_axes, b_axes, out_axes = parsed_vectors
 
