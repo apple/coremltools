@@ -1092,4 +1092,4 @@ def make_pipeline(*models):
             if _os.path.exists(weight_file_path):
                 _shutil.copyfile(weight_file_path, dst + f"/{i}-weight.bin")
 
-    return _ct.models.MLModel(mlpackage_path)
+    return _ct.models.MLModel(pipeline_spec, weights_dir=dst)

@@ -262,8 +262,16 @@ class TestMakePipeline:
 
         # Check save/load
         with tempfile.TemporaryDirectory() as save_dir:
+            # Save pipeline
             save_path = save_dir + "/test.mlpackage"
             pipeline_model.save(save_path)
+
+            # Check loading from a mlpackage path
             p2 = ct.models.MLModel(save_path)
             y_pipeline = p2.predict({"x": x})
+            np.testing.assert_allclose(y2["y2"], y_pipeline["y2"])
+
+            # Check loading from spec and weight dir
+            p3 = ct.models.MLModel(p2.get_spec(), weights_dir=p2.weights_dir)
+            y_pipeline = p3.predict({"x": x})
             np.testing.assert_allclose(y2["y2"], y_pipeline["y2"])

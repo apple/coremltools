@@ -22,9 +22,9 @@ from ..proto import MIL_pb2 as _MIL_pb2
 from ..proto import Model_pb2 as _Model_pb2
 from .utils import (_MLMODEL_EXTENSION, _MLPACKAGE_AUTHOR_NAME,
                     _MLPACKAGE_EXTENSION, _WEIGHTS_DIR_NAME, _create_mlpackage,
-                    _has_custom_layer, _is_macos, _macos_version)
-from .utils import load_spec as _load_spec
-from .utils import save_spec as _save_spec
+                    _has_custom_layer, _is_macos, _macos_version,
+                    load_spec as _load_spec, save_spec as _save_spec,
+                    )
 
 if _HAS_TORCH:
     import torch
@@ -326,9 +326,8 @@ class MLModel:
         self.is_temp_package = False
         self.package_path = None
         self._weights_dir = None
-        if mil_program is not None:
-            if not isinstance(mil_program, _Program):
-                raise ValueError("mil_program must be of type 'coremltools.converters.mil.Program'")
+        if mil_program is not None and not isinstance(mil_program, _Program):
+            raise ValueError('"mil_program" must be of type "coremltools.converters.mil.Program"')
         self._mil_program = mil_program
 
         if isinstance(model, str):
@@ -342,8 +341,9 @@ class MLModel:
                 model, compute_units, skip_model_load=skip_model_load,
             )
         elif isinstance(model, _Model_pb2.Model):
-            if model.WhichOneof('Type') == "mlProgram":
-                if weights_dir is None:
+            model_type = model.WhichOneof('Type')
+            if model_type in ("mlProgram", 'pipelineClassifier', 'pipelineRegressor', 'pipeline'):
+                if model_type == "mlProgram" and weights_dir is None:
                     raise Exception('MLModel of type mlProgram cannot be loaded just from the model spec object. '
                                     'It also needs the path to the weights file. Please provide that as well, '
                                     'using the \'weights_dir\' argument.')
