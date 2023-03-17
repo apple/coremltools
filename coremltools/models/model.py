@@ -27,10 +27,10 @@ from .utils import (_MLMODEL_EXTENSION, _MLPACKAGE_AUTHOR_NAME,
                     )
 
 if _HAS_TORCH:
-    import torch
+    import _torch
 
 if _HAS_TF_1 or _HAS_TF_2:
-    import tensorflow as tf
+    import tensorflow as _tf
 
 
 try:
@@ -258,7 +258,7 @@ class MLModel:
             i.e. a spec object.
 
         is_temp_package: bool
-            Set to true if the input model package dir is temporary and can be deleted upon interpreter termination.
+            Set to True if the input model package dir is temporary and can be deleted upon interpreter termination.
 
         mil_program: coremltools.converters.mil.Program
             Set to the MIL program object, if available.
@@ -443,6 +443,7 @@ class MLModel:
         loaded_model = MLModel('my_model_file.mlmodel')
         """
         save_path = _os.path.expanduser(save_path)
+
         # Clean up existing file or directory.
         if _os.path.exists(save_path):
             if _os.path.isdir(save_path):
@@ -489,7 +490,7 @@ class MLModel:
 
         Returns
         -------
-        out: dict[str, value]
+        dict[str, value]
             Predictions as a dictionary where each key is the output feature
             name.
 
@@ -648,10 +649,10 @@ class MLModel:
         def convert(given_input):
             if isinstance(given_input, _numpy.ndarray):
                 sanitized_input = given_input
-            elif _HAS_TORCH and isinstance(given_input, torch.Tensor):
+            elif _HAS_TORCH and isinstance(given_input, _torch.Tensor):
                 sanitized_input = given_input.detach().numpy()
-            elif (_HAS_TF_1 or _HAS_TF_2) and isinstance(given_input, tf.Tensor):
-                sanitized_input = given_input.eval(session=tf.compat.v1.Session())
+            elif (_HAS_TF_1 or _HAS_TF_2) and isinstance(given_input, _tf.Tensor):
+                sanitized_input = given_input.eval(session=_tf.compat.v1.Session())
             else:
                 sanitized_input = _numpy.array(given_input)
             return sanitized_input
