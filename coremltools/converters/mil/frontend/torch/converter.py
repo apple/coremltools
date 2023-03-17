@@ -232,6 +232,8 @@ class TorchConverter:
                 raise ValueError("unsupported class for {} in PyTorch graph: {}".format(name, type(val)))
             if val.dtype == _np.uint8:
                 val = val.astype(_np.int32)
+            if val.dtype == _np.float32:
+                val = val.astype(_np.float16)
             const = mb.const(val=val, name=name)
             self.context.add(const)
 
@@ -263,8 +265,6 @@ class TorchConverter:
                 self.graph.inputs.keys(), ssa_func_inputs.keys()
             ):
                 input_var = ssa_func.inputs[users_name]
-                if (types.is_tensor(input_var.sym_type) or types.is_scalar(input_var.sym_type)) \
-                    and (input_var.dtype == types.fp16 or input_var.dtype == types.fp64):
                     # cast the input var to float32
                     # We need to do this because the type inference is very buggy when started from
                     # float16/float64 typed inputs. Until that is fixed in the following radar
@@ -272,7 +272,6 @@ class TorchConverter:
                     # These casts will later get removed, if compute_precision=Float16 is
                     # provided, which will cause the FP16ComputePrecision pass to run.
                     # TODO: remove this when this radar is fixed: rdar://93731970
-                    input_var = mb.cast(x=input_var, dtype="fp32")
                 self.context.add(input_var, torch_name=internal_name)
 
             self.convert_const()

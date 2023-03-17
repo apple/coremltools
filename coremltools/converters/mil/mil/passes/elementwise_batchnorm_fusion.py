@@ -73,8 +73,8 @@ def _try_to_transform(mul_op, add_op, block):
     out_name = add_op.outputs[0].name
     x = mb.batch_norm(
         x=non_const_input_mul,
-        mean=np.zeros((C,), np.float32),
-        variance=np.ones((C,), np.float32),
+        mean=np.zeros((C,), np.float16),
+        variance=np.ones((C,), np.float16),
         gamma=np.squeeze(gamma),
         beta=np.squeeze(beta),
         name=out_name,
