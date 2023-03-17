@@ -53,7 +53,7 @@ class TestTorchOps:
         assert test_data.shape == ssa.shape
 
     def test_constant_magic(self, context):
-        test_val = ops.PYTORCH_MAGIC_DEFAULT
+        test_val = ops.PYTORCH_DEFAULT_VALUE
         node = InternalTorchIRNode(
             attr={"value": test_val}, kind="constant", inputs=[], outputs=["1"]
         )
