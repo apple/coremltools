@@ -5,8 +5,8 @@
 
 from collections import OrderedDict
 
-import numpy as _np
-import torch as _torch
+import numpy as np
+import torch as torch
 
 from coremltools import _logger as logger
 from coremltools._deps import version_lt
@@ -30,12 +30,12 @@ from .torchir_passes import (
 )
 
 torch_to_mil_types = {
-    _torch.bool: types.bool,
-    _torch.float16: types.fp16,
-    _torch.float32: types.fp32,
-    _torch.float64: types.fp32,
-    _torch.int32: types.int32,
-    _torch.int64: types.int32,
+    torch.bool: types.bool,
+    torch.float16: types.fp16,
+    torch.float32: types.fp32,
+    torch.float64: types.fp32,
+    torch.int32: types.int32,
+    torch.int64: types.int32,
 }
 
 
@@ -154,7 +154,7 @@ class TorchConverter:
                 only. See kwarg in load.py.
             opset_version: An int represents the Core ML opset version
         """
-        assert isinstance(torchscript, _torch.jit.ScriptModule)
+        assert isinstance(torchscript, torch.jit.ScriptModule)
 
         self.inputs = inputs
         for idx, inp in enumerate(self.inputs):
@@ -228,10 +228,10 @@ class TorchConverter:
 
     def convert_const(self):
         for name, val in self.graph.params.items():
-            if not isinstance(val, _np.ndarray):
+            if not isinstance(val, np.ndarray):
                 raise ValueError("unsupported class for {} in PyTorch graph: {}".format(name, type(val)))
-            if val.dtype == _np.uint8:
-                val = val.astype(_np.int32)
+            if val.dtype == np.uint8:
+                val = val.astype(np.int32)
             const = mb.const(val=val, name=name)
             self.context.add(const)
 
@@ -313,7 +313,7 @@ class TorchConverter:
 
     def _jit_pass_lower_graph(graph, torchscript):
         """
-        This graph pass does a similar thing as _torch._C._jit_pass_lower_graph does.
+        This graph pass does a similar thing as torch._C._jit_pass_lower_graph does.
         It does two things:
         1. Rename getattr nodes which produce a torch tensor to match the keys in torch model's state_dict
         2. Construct the params_dict, with the keys similar to state_dict
@@ -379,14 +379,14 @@ class TorchConverter:
         state_dict = torchscript.state_dict(keep_vars=True)
 
         def _check_is_tensor(node, module):
-            if not isinstance(module, _torch.Tensor):
+            if not isinstance(module, torch.Tensor):
                 return False
             if str(node.output().type()) not in ("Tensor", "Optional[Tensor]"):
                 raise TypeError("Type \"{}\" not supported".format(node.output().type()))
             return True
 
         def _check_is_quantized_tensor(node, module):
-            if not isinstance(module, _torch._C.ScriptObject):
+            if not isinstance(module, torch._C.ScriptObject):
                 return False
             # We only support ScriptObjects that correspond to quantized packed params.
             assert "PackedParams" in node.output().type().name()
@@ -422,9 +422,9 @@ class TorchConverter:
 
                 if is_tensor or is_quantized_tensor:
                     if is_tensor and prefix in state_dict:
-                        assert _torch.equal(module, state_dict[prefix]), "tensor value not consistent between torch ir and state_dict"
+                        assert torch.equal(module, state_dict[prefix]), "tensor value not consistent between torch ir and state_dict"
                     if prefix in params_dict:
-                        assert _torch.equal(module, params_dict[prefix])
+                        assert torch.equal(module, params_dict[prefix])
                         replace_input[_output] = first_node_with_prefix[prefix]
                     else:
                         params_dict[prefix] = module
@@ -444,46 +444,46 @@ class TorchConverter:
         graph = torchscript.forward.graph
 
         # From PyTorch code: Inline function and method calls.
-        _torch._C._jit_pass_inline(graph)
+        torch._C._jit_pass_inline(graph)
         # From PyTorch code: This inlines the forked section in the fork()
         # callsite and replaces uses of the result of wait() calls with the
         # values produced from the (now-inlined) forked section.
-        _torch._C._jit_pass_inline_fork_wait(graph)
+        torch._C._jit_pass_inline_fork_wait(graph)
         # Starting from the return node, marks all nodes that feed into the
         # output, as well as nodes with side effects. Any nodes not marked are
         # eliminated.
-        _torch._C._jit_pass_dce(graph)
+        torch._C._jit_pass_dce(graph)
         # From PyTorch code: checks well-formedness and invariants of graph.
-        _torch._C._jit_pass_lint(graph)
+        torch._C._jit_pass_lint(graph)
         # Replaces a couple specific ops patterns (add, sub, mul, div, chunk).
-        if version_lt(_torch, '1.6.0'):
-            _torch._C._jit_pass_canonicalize_ops(graph)
-            _torch._C._jit_pass_lint(graph)
+        if version_lt(torch, '1.6.0'):
+            torch._C._jit_pass_canonicalize_ops(graph)
+            torch._C._jit_pass_lint(graph)
 
             # From PyTorch code: This pass catches all of the small, easy to catch
             # peephole optimizations you might be interested in doing.
             #     Eliminate no-op 'expand' nodes
             #     Simplify x.t().t() to x
             # pass disabled for v1.6.0 and onwards, wrongly captures the shape of dummy inputs during tracing.
-            _torch._C._jit_pass_peephole(graph, addmm_fusion_enabled=False)
+            torch._C._jit_pass_peephole(graph, addmm_fusion_enabled=False)
         else:
             # v1.6.0 pass renamed
-            _torch._C._jit_pass_canonicalize_graph_fuser_ops(graph)
-        _torch._C._jit_pass_lint(graph)
+            torch._C._jit_pass_canonicalize_graph_fuser_ops(graph)
+        torch._C._jit_pass_lint(graph)
 
         # From PyTorch docs: Renumber the graph so that all structurally
         # equivalent graphs have same numbers.
-        graph = _torch._C._jit_pass_canonicalize(graph)
-        _torch._C._jit_pass_lint(graph)
-        if version_lt(_torch, '1.6.0'):
+        graph = torch._C._jit_pass_canonicalize(graph)
+        torch._C._jit_pass_lint(graph)
+        if version_lt(torch, '1.6.0'):
             # v1.6.0 JIT changes disallows pulling list values out of
             # prim::Constant. We can only pull scalar values. constant
             # propagation removes `listConstruct` and results in list values.
             # We disallow constant prop pass to keep them as scalars, and rely
             # on our own constant prop to interpret `listConstruct`.
-            _torch._C._jit_pass_constant_propagation(graph)
+            torch._C._jit_pass_constant_propagation(graph)
         # NOTE: Don't need another DCE, it's included in constant propagation.
-        _torch._C._jit_pass_lint(graph)
+        torch._C._jit_pass_lint(graph)
 
         # Get the params_dict and rename the getattr nodes in the graph
         graph, params_dict = TorchConverter._jit_pass_lower_graph(graph, torchscript)

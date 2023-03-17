@@ -11,13 +11,13 @@ including deep neural networks (both convolutional and recurrent), tree ensemble
 and generalized linear models. Models in this format can be directly integrated into apps
 through Xcode.
 
-Core MLTools in a python package for creating, examining, and testing models in the .mlmodel
-format. In particular, it can be used to:
+Coremltools is a python package for creating, examining, and testing models in the .mlpackage
+and .mlmodel formats. In particular, it can be used to:
 
 * Convert existing models to .mlpackage or .mlmodel formats from popular machine learning tools including:
      PyTorch, TensorFlow, scikit-learn, XGBoost and libsvm.
-* Express models in .mlmodel format through a simple API.
-* Make predictions with an .mlmodel (on select platforms for testing purposes).
+* Express models in .mlpackage and .mlmodel formats through a simple API.
+* Make predictions with .mlpackage and .mlmodel files (on macOS).
 
 For more information: http://developer.apple.com/documentation/coreml
 """
