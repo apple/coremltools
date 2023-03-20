@@ -27,7 +27,7 @@ from .utils import (_MLMODEL_EXTENSION, _MLPACKAGE_AUTHOR_NAME,
                     )
 
 if _HAS_TORCH:
-    import _torch
+    import torch as _torch
 
 if _HAS_TF_1 or _HAS_TF_2:
     import tensorflow as _tf
