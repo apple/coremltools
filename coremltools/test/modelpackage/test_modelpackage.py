@@ -319,7 +319,7 @@ class TestMLModel:
         )
         assert isinstance(mlmodel, MLModel)
 
-        package = tempfile.TemporaryDirectory(suffix="")
+        package = tempfile.TemporaryDirectory()
         package.cleanup()
         package_path = package.name
 

@@ -39,10 +39,9 @@ from .torch_op_registry import _TORCH_OPS_REGISTRY, register_torch_op
 # The pytorch args for many of the below ops were sourced from
 # https://github.com/pytorch/pytorch/blob/d971007c291c0ead1003d12cd553d18ddb582207/torch/csrc/jit/mobile/register_mobile_ops.cpp#L216
 
+# Max int64 value. Used as a default value in many PyTorch functions.
+PYTORCH_DEFAULT_VALUE = 2 ** 63 - 1
 
-# This is a magic number in PyTorch. It's used as a default value in many
-# functions.
-PYTORCH_MAGIC_DEFAULT = 9223372036854775807
 VALUE_CLOSE_TO_INFINITY = 1e+38
 
 
@@ -225,10 +224,10 @@ def _construct_constant(val, name):
     if isinstance(val, torch.Tensor):
         val = val.cpu().numpy()
 
-    # MIL casts ints to int32, which can't represent the 64 bit magic number.
+    # MIL casts ints to int32, which can't represent PyTorch's default value.
     # So we instead represent it with None, and any ops that might get the
     # value will check for None instead.
-    if isinstance(val, int) and val == PYTORCH_MAGIC_DEFAULT:
+    if isinstance(val, int) and val == PYTORCH_DEFAULT_VALUE:
         val = None
 
     # Pytorch uses inf

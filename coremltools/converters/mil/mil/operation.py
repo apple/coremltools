@@ -321,9 +321,7 @@ class Operation:
                 self._output_vars.append(new_var)
         else:
             # Check new inference result against existing self._output_vars.
-            for i, (n, sym_type, sym_val) in enumerate(
-                zip(output_names, output_types, output_vals)
-            ):
+            for i, (sym_type, sym_val) in enumerate(zip(output_types, output_vals)):
                 out_var = self._output_vars[i]
                 # Check type inference
                 if overwrite_output:
@@ -453,7 +451,7 @@ class Operation:
 
     def _ensure_required_inputs(self):
         """
-        Raise value error if required inputs aren't present
+        Raises ValueError if required inputs are not present
         """
         for name, input_type in self._input_types.items():
             if not input_type.optional and self._input_vars[name] is None:
