@@ -6,22 +6,26 @@
 """
 Utilities for the entire package.
 """
+
+from collections.abc import Iterable as _Iterable
+from functools import lru_cache as _lru_cache
 import math as _math
 import os as _os
 import shutil as _shutil
 import subprocess as _subprocess
 import sys as _sys
 import tempfile as _tempfile
-import warnings as _warnings
-from functools import lru_cache as _lru_cache
 from typing import Optional as _Optional
+import warnings as _warnings
 
 import numpy as _np
 
+import coremltools as _ct
 from coremltools import ComputeUnit as _ComputeUnit
 from coremltools.converters.mil.mil.passes.name_sanitization_utils import \
     NameSanitizer as _NameSanitizer
 from coremltools.proto import Model_pb2 as _Model_pb2
+import coremltools.proto.MIL_pb2 as _mil_proto
 
 from .._deps import _HAS_SCIPY
 
@@ -1000,3 +1004,96 @@ def convert_double_to_float_multiarray_type(spec):
     if spec.WhichOneof("Type") == "pipeline":
         for model_spec in spec.pipeline.models:
             convert_double_to_float_multiarray_type(model_spec)
+
+
+def make_pipeline(*models):
+    """
+    Makes a pipeline with the given models.
+
+    Parameters
+    ----------
+    *models - two or more instances of ct.models.MLModel
+
+    Returns
+    -------
+    ct.models.MLModel
+
+    Examples
+    --------
+    my_model1 = ct.models.MLModel('/tmp/m1.mlpackage')
+    my_model2 = ct.models.MLModel('/tmp/m2.mlmodel')
+
+    my_pipeline_model = ct.utils.make_pipeline(my_model1, my_model2)
+    """
+
+    def updateBlobFileName(proto_message, new_path):
+        if type(proto_message) == _mil_proto.Value:
+            # Value protobuf message. This is what might need to be updated.
+            if proto_message.WhichOneof('value') == 'blobFileValue':
+                assert proto_message.blobFileValue.fileName == "@model_path/weights/weight.bin"
+                proto_message.blobFileValue.fileName = new_path
+        elif hasattr(proto_message, 'ListFields'):
+            # Normal protobuf message
+            for f in proto_message.ListFields():
+                updateBlobFileName(f[1], new_path)
+        elif hasattr(proto_message, 'values'):
+            # Protobuf map
+            for v in proto_message.values():
+                updateBlobFileName(v, new_path)
+        elif isinstance(proto_message, _Iterable) and not isinstance(proto_message, str):
+            # Repeated protobuf message
+            for e in proto_message:
+                updateBlobFileName(e, new_path)
+
+
+    assert len(models) > 1
+    input_specs = list(map(lambda m: m.get_spec(), models))
+
+    pipeline_spec = _ct.proto.Model_pb2.Model()
+    pipeline_spec.specificationVersion = max(
+        map(lambda spec: spec.specificationVersion, input_specs)
+    )
+
+    # Set pipeline input
+    pipeline_spec.description.input.MergeFrom(
+        input_specs[0].description.input
+    )
+
+    # Set pipeline output
+    pipeline_spec.description.output.MergeFrom(
+        input_specs[-1].description.output
+    )
+
+    # Map input shapes to output shapes
+    var_name_to_type = {}
+    for i in range(len(input_specs) - 1):
+        for j in input_specs[i + 1].description.input:
+            var_name_to_type[j.name] = j.type
+
+        for j in input_specs[i].description.output:
+            # If shape is already present, don't override it
+            if j.type.WhichOneof('Type') == 'multiArrayType' and len(j.type.multiArrayType.shape) != 0:
+                continue
+
+            if j.name in var_name_to_type:
+                j.type.CopyFrom(var_name_to_type[j.name])
+
+    # Update each model's spec to have a unique weight filename
+    for i, cur_spec in enumerate(input_specs):
+        if cur_spec.WhichOneof("Type") == "mlProgram":
+            new_file_path = f"@model_path/weights/{i}-weight.bin"
+            updateBlobFileName(cur_spec.mlProgram, new_file_path)
+        pipeline_spec.pipeline.models.append(cur_spec)
+
+    mlpackage_path = _create_mlpackage(pipeline_spec)
+    dst = mlpackage_path + '/Data/' + _MLPACKAGE_AUTHOR_NAME + '/' + _WEIGHTS_DIR_NAME
+    _os.mkdir(dst)
+
+    # Copy and rename each model's weight file
+    for i, cur_model in enumerate(models):
+        if cur_model.weights_dir is not None:
+            weight_file_path = cur_model.weights_dir + "/" + _WEIGHTS_FILE_NAME
+            if _os.path.exists(weight_file_path):
+                _shutil.copyfile(weight_file_path, dst + f"/{i}-weight.bin")
+
+    return _ct.models.MLModel(pipeline_spec, weights_dir=dst)

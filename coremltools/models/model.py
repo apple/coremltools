@@ -22,15 +22,15 @@ from ..proto import MIL_pb2 as _MIL_pb2
 from ..proto import Model_pb2 as _Model_pb2
 from .utils import (_MLMODEL_EXTENSION, _MLPACKAGE_AUTHOR_NAME,
                     _MLPACKAGE_EXTENSION, _WEIGHTS_DIR_NAME, _create_mlpackage,
-                    _has_custom_layer, _is_macos, _macos_version)
-from .utils import load_spec as _load_spec
-from .utils import save_spec as _save_spec
+                    _has_custom_layer, _is_macos, _macos_version,
+                    load_spec as _load_spec, save_spec as _save_spec,
+                    )
 
 if _HAS_TORCH:
-    import torch
+    import torch as _torch
 
 if _HAS_TF_1 or _HAS_TF_2:
-    import tensorflow as tf
+    import tensorflow as _tf
 
 
 try:
@@ -258,7 +258,7 @@ class MLModel:
             i.e. a spec object.
 
         is_temp_package: bool
-            Set to true if the input model package dir is temporary and can be deleted upon interpreter termination.
+            Set to True if the input model package dir is temporary and can be deleted upon interpreter termination.
 
         mil_program: coremltools.converters.mil.Program
             Set to the MIL program object, if available.
@@ -326,9 +326,8 @@ class MLModel:
         self.is_temp_package = False
         self.package_path = None
         self._weights_dir = None
-        if mil_program is not None:
-            if not isinstance(mil_program, _Program):
-                raise ValueError("mil_program must be of type 'coremltools.converters.mil.Program'")
+        if mil_program is not None and not isinstance(mil_program, _Program):
+            raise ValueError('"mil_program" must be of type "coremltools.converters.mil.Program"')
         self._mil_program = mil_program
 
         if isinstance(model, str):
@@ -342,8 +341,9 @@ class MLModel:
                 model, compute_units, skip_model_load=skip_model_load,
             )
         elif isinstance(model, _Model_pb2.Model):
-            if model.WhichOneof('Type') == "mlProgram":
-                if weights_dir is None:
+            model_type = model.WhichOneof('Type')
+            if model_type in ("mlProgram", 'pipelineClassifier', 'pipelineRegressor', 'pipeline'):
+                if model_type == "mlProgram" and weights_dir is None:
                     raise Exception('MLModel of type mlProgram cannot be loaded just from the model spec object. '
                                     'It also needs the path to the weights file. Please provide that as well, '
                                     'using the \'weights_dir\' argument.')
@@ -443,6 +443,7 @@ class MLModel:
         loaded_model = MLModel('my_model_file.mlmodel')
         """
         save_path = _os.path.expanduser(save_path)
+
         # Clean up existing file or directory.
         if _os.path.exists(save_path):
             if _os.path.isdir(save_path):
@@ -489,7 +490,7 @@ class MLModel:
 
         Returns
         -------
-        out: dict[str, value]
+        dict[str, value]
             Predictions as a dictionary where each key is the output feature
             name.
 
@@ -648,10 +649,10 @@ class MLModel:
         def convert(given_input):
             if isinstance(given_input, _numpy.ndarray):
                 sanitized_input = given_input
-            elif _HAS_TORCH and isinstance(given_input, torch.Tensor):
+            elif _HAS_TORCH and isinstance(given_input, _torch.Tensor):
                 sanitized_input = given_input.detach().numpy()
-            elif (_HAS_TF_1 or _HAS_TF_2) and isinstance(given_input, tf.Tensor):
-                sanitized_input = given_input.eval(session=tf.compat.v1.Session())
+            elif (_HAS_TF_1 or _HAS_TF_2) and isinstance(given_input, _tf.Tensor):
+                sanitized_input = given_input.eval(session=_tf.compat.v1.Session())
             else:
                 sanitized_input = _numpy.array(given_input)
             return sanitized_input

@@ -60,6 +60,7 @@ class TestApiVisibilities:
             "evaluate_classifier_with_probabilities",
             "evaluate_regressor",
             "evaluate_transformer",
+            "make_pipeline",
             "load_spec",
             "rename_feature",
             "save_spec",
