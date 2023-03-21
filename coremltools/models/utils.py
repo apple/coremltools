@@ -1071,6 +1071,10 @@ def make_pipeline(*models):
             var_name_to_type[j.name] = j.type
 
         for j in input_specs[i].description.output:
+            # If shape is already present, don't override it
+            if j.type.WhichOneof('Type') == 'multiArrayType' and len(j.type.multiArrayType.shape) != 0:
+                continue
+
             if j.name in var_name_to_type:
                 j.type.CopyFrom(var_name_to_type[j.name])
 
