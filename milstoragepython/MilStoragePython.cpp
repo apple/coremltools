@@ -32,11 +32,27 @@ PYBIND11_PLUGIN(libmilstoragepython) {
     py::module m("libmilstoragepython", "Library to create, access and edit CoreML blob files.");
 
     py::class_<MilStoragePythonWriter> blobStorageWriter(m, "_BlobStorageWriter");
-    blobStorageWriter.def(py::init<const std::string&, bool>(), py::arg("file_name"), py::arg("truncate_file") = true)
-      .def("write_int8_data", &MilStoragePythonWriter::write_int8_data)
-      .def("write_uint8_data", &MilStoragePythonWriter::write_uint8_data)
-      .def("write_fp16_data", &MilStoragePythonWriter::write_fp16_data)
-      .def("write_float_data", &MilStoragePythonWriter::write_float_data);
+    blobStorageWriter.def(py::init<const std::string &, bool>(), py::arg("file_name"), py::arg("truncate_file") = true)
+        .def("write_int8_data", [](MilStoragePythonWriter &w, py::buffer buf) {
+            auto info = buf.request();
+            std::vector<int8_t> data(static_cast<int8_t*>(info.ptr), static_cast<int8_t*>(info.ptr) + info.size);
+            return w.write_int8_data(data);
+        })
+        .def("write_uint8_data", [](MilStoragePythonWriter &w, py::buffer buf) {
+            auto info = buf.request();
+            std::vector<uint8_t> data(static_cast<uint8_t*>(info.ptr), static_cast<uint8_t*>(info.ptr) + info.size);
+            return w.write_uint8_data(data);
+        })
+        .def("write_fp16_data", [](MilStoragePythonWriter &w, py::buffer buf) {
+            auto info = buf.request();
+            std::vector<uint16_t> data(static_cast<uint16_t*>(info.ptr), static_cast<uint16_t*>(info.ptr) + info.size);
+            return w.write_fp16_data(data);
+        })
+        .def("write_float_data", [](MilStoragePythonWriter &w, py::buffer buf) {
+            auto info = buf.request();
+            std::vector<float> data(static_cast<float*>(info.ptr), static_cast<float*>(info.ptr) + info.size);
+            return w.write_float_data(data);
+        });
 
     py::class_<MilStoragePythonReader> blobStorageReader(m, "_BlobStorageReader");
     blobStorageReader.def(py::init<std::string>())
