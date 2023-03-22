@@ -35,22 +35,22 @@ PYBIND11_PLUGIN(libmilstoragepython) {
     blobStorageWriter.def(py::init<const std::string &, bool>(), py::arg("file_name"), py::arg("truncate_file") = true)
         .def("write_int8_data", [](MilStoragePythonWriter &w, py::buffer buf) {
             auto info = buf.request();
-            std::vector<int8_t> data(static_cast<int8_t*>(info.ptr), static_cast<int8_t*>(info.ptr) + info.size);
+            const std::vector<const int8_t> data(static_cast<int8_t*>(info.ptr), static_cast<int8_t*>(info.ptr) + info.size);
             return w.write_int8_data(data);
         })
         .def("write_uint8_data", [](MilStoragePythonWriter &w, py::buffer buf) {
             auto info = buf.request();
-            std::vector<uint8_t> data(static_cast<uint8_t*>(info.ptr), static_cast<uint8_t*>(info.ptr) + info.size);
+            const std::vector<const uint8_t> data(static_cast<uint8_t*>(info.ptr), static_cast<uint8_t*>(info.ptr) + info.size);
             return w.write_uint8_data(data);
         })
         .def("write_fp16_data", [](MilStoragePythonWriter &w, py::buffer buf) {
             auto info = buf.request();
-            std::vector<uint16_t> data(static_cast<uint16_t*>(info.ptr), static_cast<uint16_t*>(info.ptr) + info.size);
+            const std::vector<const uint16_t> data(static_cast<uint16_t*>(info.ptr), static_cast<uint16_t*>(info.ptr) + info.size);
             return w.write_fp16_data(data);
         })
         .def("write_float_data", [](MilStoragePythonWriter &w, py::buffer buf) {
             auto info = buf.request();
-            std::vector<float> data(static_cast<float*>(info.ptr), static_cast<float*>(info.ptr) + info.size);
+            const std::vector<const float> data(static_cast<float*>(info.ptr), static_cast<float*>(info.ptr) + info.size);
             return w.write_float_data(data);
         });
 
