@@ -58,39 +58,34 @@ build_wheel_macos_py39:
 #########################################################################
 .test_macos_pkg: &test_macos_pkg
    stage: test
-   timeout: 9h
-   script:
-     - zsh -e scripts/test.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON}
-       --test-package=${TEST_PACKAGE} --fast
-
-.test_macos_pkg_with_reqs: &test_macos_pkg_with_reqs
-   stage: test
    timeout: 12h
    script:
      - zsh -e scripts/test.sh --wheel-path=${WHEEL_PATH} --python=${PYTHON}
        --test-package=${TEST_PACKAGE} --requirements=${REQUIREMENTS} --fast
 
-test_py37_coremltools_test:
+test_py39_coremltools_test:
   <<: *test_macos_pkg
   tags:
     - macos12
   dependencies:
-    - build_wheel_macos_py37
+    - build_wheel_macos_py39
   variables:
-    WHEEL_PATH: build/dist/*cp37*10_15*
+    WHEEL_PATH: build/dist/*cp39*10_15*
     TEST_PACKAGE: coremltools.test
-    PYTHON: "3.7"
+    PYTHON: "3.9"
+    REQUIREMENTS: reqs/test.pip
 
-test_py37_pytorch:
+test_py39_pytorch:
   <<: *test_macos_pkg
   tags:
     - macos12
   dependencies:
-    - build_wheel_macos_py37
+    - build_wheel_macos_py39
   variables:
-    PYTHON: "3.7"
+    PYTHON: "3.9"
     TEST_PACKAGE: coremltools.converters.mil.frontend.torch
-    WHEEL_PATH: build/dist/*cp37*10_15*
+    WHEEL_PATH: build/dist/*cp39*10_15*
+    REQUIREMENTS: reqs/test.pip
 
 test_py37_tf1:
   <<: *test_macos_pkg
@@ -102,29 +97,31 @@ test_py37_tf1:
     PYTHON: "3.7"
     TEST_PACKAGE: coremltools.converters.mil.frontend.tensorflow
     WHEEL_PATH: build/dist/*cp37*10_15*
+    REQUIREMENTS: reqs/test_tf1.pip
 
-test_py37_tf2:
-  <<: *test_macos_pkg_with_reqs
-  tags:
-    - macos12
-  dependencies:
-    - build_wheel_macos_py37
-  variables:
-    PYTHON: "3.7"
-    TEST_PACKAGE: coremltools.converters.mil.frontend.tensorflow2
-    WHEEL_PATH: build/dist/*cp37*10_15*
-    REQUIREMENTS: reqs/test.pip
-
-test_py37_mil:
+test_py39_tf2:
   <<: *test_macos_pkg
   tags:
     - macos12
   dependencies:
-    - build_wheel_macos_py37
+    - build_wheel_macos_py39
   variables:
-    PYTHON: "3.7"
+    PYTHON: "3.9"
+    TEST_PACKAGE: coremltools.converters.mil.frontend.tensorflow2
+    WHEEL_PATH: build/dist/*cp39*10_15*
+    REQUIREMENTS: reqs/test.pip
+
+test_py39_mil:
+  <<: *test_macos_pkg
+  tags:
+    - macos12
+  dependencies:
+    - build_wheel_macos_py39
+  variables:
+    PYTHON: "3.9"
     TEST_PACKAGE: coremltools.converters.mil.mil
-    WHEEL_PATH: build/dist/*cp37*10_15*
+    WHEEL_PATH: build/dist/*cp39*10_15*
+    REQUIREMENTS: reqs/test.pip
 
 #########################################################################
 ##
