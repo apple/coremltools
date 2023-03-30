@@ -24,7 +24,7 @@ def generate_tensor_assignment_ops(graph):
     In Pytorch, this is represented by a sequence of slice / select ops followed by a copy op:
 
         input -> %x
-        %1 = slice(%x, dim=0, begin=0, end=2) # the slice for dimension 0
+        %1 = slice(%x, dim=0, begin=0, end=2, stride=1) # the slice for dimension 0
         %2 = select(%1, dim=1, index=4) # the select for dimension 1
         %3 = copy_(%2, value=[[1], [3]])
         output -> %x
@@ -32,7 +32,7 @@ def generate_tensor_assignment_ops(graph):
     This graph pass fuses the sequences into a single InternalTorchIRNode of a new kind, which is defined as `_internal_op_tensor_inplace_copy`.
 
         input -> %x
-        %nodes_to_fuse = [slice(%x, begin=0, end=2), select(%1, dim=1, index=4)]
+        %nodes_to_fuse = [slice(%x, begin=0, end=2, stride=1), select(%1, dim=1, index=4)]
         %x_internal_tensor_assign_1 = _internal_op_tensor_inplace_copy(%x, value=[[1],[3]], nodes_to_fuse=nodes_to_fuse)
         output -> x_internal_tensor_assign_1
 
@@ -50,8 +50,8 @@ def generate_tensor_assignment_ops(graph):
         %1 = select(%x, dim=0, index=0)
         %2 = select(%1, dim=0, index=0)
         %3 = copy_(%2, value=1)
-        %4 = slice(%x, dim=0, begin=1, end=2)
-        %5 = slice(%4, dim=1, begin=1, end=2)
+        %4 = slice(%x, dim=0, begin=1, end=2, stride=1)
+        %5 = slice(%4, dim=1, begin=1, end=2, stride=1)
         %6 = copy_(%5, value=[[0]])
         output -> %x
 
@@ -59,7 +59,7 @@ def generate_tensor_assignment_ops(graph):
         input -> %x
         %nodes_to_fuse_1 = [select(%x, dim=0, index=0), select(%1, dim=0, index=0)]
         %x_internal_tensor_assign_1 = _internal_op_tensor_inplace_copy(%x, value=1, nodes_to_fuse=nodes_to_fuse_1)
-        %nodes_to_fuse_2 = [slice(%x, dim=0, begin=1, end=2), slice(%4, dim=1, begin=1, end=2)]
+        %nodes_to_fuse_2 = [slice(%x, dim=0, begin=1, end=2, stride=1), slice(%4, dim=1, begin=1, end=2, stride=1)]
         %x_internal_tensor_assign_2 = _internal_op_tensor_inplace_copy(%x_internal_tensor_assign_1, value=[[0]], nodes_to_fuse=nodes_to_fuse_2)
         output -> x_internal_tensor_assign_2
 
@@ -83,9 +83,9 @@ def generate_tensor_assignment_ops(graph):
         inputs = []
         for node in nodes_to_fuse:
             if node.kind == "select":
-                inputs += [node.inputs[2], None]
+                inputs += [node.inputs[2], None, None]
             if node.kind == "slice":
-                inputs += [node.inputs[2], node.inputs[3]]
+                inputs += [node.inputs[2], node.inputs[3], node.inputs[4]]
         return inputs
 
     tensor_to_node_sequence_mapping = {}

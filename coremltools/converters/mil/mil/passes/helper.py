@@ -3,16 +3,19 @@
 #  Use of this source code is governed by a BSD-3-clause license that can be
 #  found in the LICENSE.txt file or at https://opensource.org/licenses/BSD-3-Clause
 
+from typing import List
+
 import numpy as np
 
-from coremltools.converters.mil.mil import Block, Var
+from coremltools.converters.mil.mil import Block, Operation, Var
+from coremltools.converters.mil.mil.passes.graph_pass import AbstractGraphPass
 
 
 def block_context_manager(func):
     """
     This decorator executes a function under the context manager `with block`.
     For instance, given a function `func` with an input block and other arguments:
-    
+
     def func(block, *args):
         ...
         with block:
@@ -20,7 +23,7 @@ def block_context_manager(func):
         ...
         with block:
             op_2 = mb.relu...()
-            
+
     It can be be streamlined as:
 
     @block_context_manager
@@ -29,18 +32,28 @@ def block_context_manager(func):
         op_1 = mb.add(...)
         ...
         op_2 = mb.relu...()
-    
+
     Note that, the first argument of the function must have type Block.
     It is highly recommended to decorate a function with block_context_manager if it is calling `with block` multiple times,
     since when the code exit `block`, an expensive _propagate_nonreplaceable_vars() is invoked.
     The decorator reduces the amount of calling `with block` overally.
     """
     def wrapper(*args):
-        if not isinstance(args[0], Block):
-            raise ValueError("The function decorated with block_context_manager must have a Block type argument as the first input.")
-        with args[0]:
+        # Make it compatible with class method.
+        if isinstance(args[0], AbstractGraphPass):
+            block = args[1]
+        else:
+            block = args[0]
+
+        if not isinstance(block, Block):
+            raise ValueError(
+                "The function decorated with block_context_manager must have a Block "
+                "type argument as the first input."
+            )
+        with block:
             return func(*args)
     return wrapper
+
 
 def _check_child_op_type(op, child_op_type):
     """
@@ -56,6 +69,22 @@ def _check_child_op_type(op, child_op_type):
     if child_ops[0].op_type == child_op_type:
         return True
     return False
+
+
+def _check_no_output_connection(block: Block, ops: List[Operation]) -> bool:
+    """
+    Check that none of the op in this pattern is connected to the output
+    (except the last op)
+
+    :param block: Block
+    :param ops: List of operations to check on.
+    """
+    for op in ops[:-1]:
+        for out in op.outputs:
+            if out in block.outputs:
+                return False
+    return True
+
 
 def _check_var_scalar_value_in_interval(x, lower_bound, upper_bound):
     """

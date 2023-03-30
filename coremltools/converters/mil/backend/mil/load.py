@@ -7,34 +7,37 @@ import os
 
 import numpy as np
 
-from coremltools import _logger as logger, _OPSET, _SPECIFICATION_VERSION_IOS_15
-from coremltools.converters.mil.backend.backend_helper import \
-    _get_probability_var_for_classifier
+from coremltools import _OPSET, _SPECIFICATION_VERSION_IOS_15
+from coremltools import _logger as logger
+from coremltools.converters.mil.backend.backend_helper import _get_probability_var_for_classifier
 from coremltools.converters.mil.backend.mil.helper import (
-    cast_to_framework_io_dtype, create_file_value, create_immediate_value,
-    create_list_scalarvalue, create_scalar_value, types_to_proto)
+    cast_to_framework_io_dtype,
+    create_file_value,
+    create_immediate_value,
+    create_list_scalarvalue,
+    create_scalar_value,
+    types_to_proto,
+)
 from coremltools.converters.mil.backend.nn.load import _set_optional_inputs
-from coremltools.converters.mil.input_types import (EnumeratedShapes,
-                                                    ImageType, RangeDim,
-                                                    TensorType)
+from coremltools.converters.mil.input_types import EnumeratedShapes, ImageType, RangeDim, TensorType
 from coremltools.converters.mil.mil import Builder as mb
 from coremltools.converters.mil.mil import Function, mil_list, types
 from coremltools.converters.mil.mil.ops.registry import SSAOpRegistry
-from coremltools.converters.mil.mil.types.symbolic import (any_symbolic,
-                                                           any_variadic,
-                                                           is_symbolic)
+from coremltools.converters.mil.mil.types.symbolic import any_symbolic, any_variadic, is_symbolic
 from coremltools.models.neural_network.flexible_shape_utils import (
-    NeuralNetworkImageSize, NeuralNetworkImageSizeRange,
-    add_enumerated_image_sizes, add_multiarray_ndshape_enumeration,
-    set_multiarray_ndshape_range, update_image_size_range)
+    NeuralNetworkImageSize,
+    NeuralNetworkImageSizeRange,
+    add_enumerated_image_sizes,
+    add_multiarray_ndshape_enumeration,
+    set_multiarray_ndshape_range,
+    update_image_size_range,
+)
 from coremltools.models.utils import _WEIGHTS_FILE_NAME
 from coremltools.proto import FeatureTypes_pb2 as ft
 from coremltools.proto import MIL_pb2 as pm
 from coremltools.proto import Model_pb2 as ml
 
-from ..backend_helper import (_get_colorspace_enum,
-                              _validate_image_input_output_shapes)
-from .passes import mil_passes
+from ..backend_helper import _get_colorspace_enum, _validate_image_input_output_shapes
 
 try:
     from coremltools.libmilstoragepython import _BlobStorageWriter as BlobWriter
@@ -274,13 +277,12 @@ def _add_classify_op(prog, classifier_config):
         block.outputs[:0] = out
         return out[0].name, out[1].name
 
+
 def load(prog, weights_dir, resume_on_errors=False, specification_version=_SPECIFICATION_VERSION_IOS_15, **kwargs):
     if BlobWriter is None:
         raise RuntimeError("BlobWriter not loaded")
     if "main" not in prog.functions:
         raise ValueError("main function not found in program")
-
-    mil_passes.mil_backend_passes(prog)
 
     # if user has specified "ClassifierConfig", then add the "classify" op to the prog
     classifier_config = kwargs.get("classifier_config", None)

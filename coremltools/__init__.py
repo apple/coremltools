@@ -84,26 +84,18 @@ _LOWEST_ALLOWED_SPECIFICATION_VERSION_FOR_MILPROGRAM = _SPECIFICATION_VERSION_IO
 
 
 # expose sub packages as directories
-from . import converters
-from . import proto
-from . import models
-from .models import utils
-from .models.ml_program import compression_utils
+from . import converters, models, proto
 
 # expose unified converter in coremltools package level
-from .converters import convert
-from .converters import (
-    ClassifierConfig,
-    ColorLayout as colorlayout,
-    TensorType,
-    ImageType,
-    RangeDim,
-    Shape,
-    EnumeratedShapes,
-)
+from .converters import ClassifierConfig
+from .converters import ColorLayout as colorlayout
+from .converters import EnumeratedShapes, ImageType, RangeDim, Shape, TensorType, convert
 from .converters.mil._deployment_compatibility import AvailableTarget as target
-from .converters.mil.mil.passes import quantization_passes as transform
-from .converters.mil.mil.passes.quantization_passes import ComputePrecision as precision
+from .converters.mil.mil.passes.defs import quantization as transform
+from .converters.mil.mil.passes.pass_pipeline import PassPipeline
+from .converters.mil.mil.passes.defs.quantization import ComputePrecision as precision
+from .models import utils
+from .models.ml_program import compression_utils
 
 try:
     from . import libcoremlpython
@@ -113,6 +105,7 @@ except:
 # Time profiling for functions in coremltools package, decorated with @profile
 import os as _os
 import sys as _sys
+
 from .converters._profile_utils import _profiler
 
 _ENABLE_PROFILING = _os.environ.get("ENABLE_PROFILING", False)

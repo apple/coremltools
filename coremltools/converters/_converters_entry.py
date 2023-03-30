@@ -6,25 +6,32 @@
 import collections
 import gc
 import os
+from typing import Optional, Text, Union
 
 from coremltools import (
     _LOWEST_ALLOWED_SPECIFICATION_VERSION_FOR_MILPROGRAM,
-    _LOWEST_ALLOWED_SPECIFICATION_VERSION_FOR_NEURALNETWORK)
+    _LOWEST_ALLOWED_SPECIFICATION_VERSION_FOR_NEURALNETWORK,
+)
 from coremltools import ComputeUnit as _ComputeUnit
 from coremltools import __version__ as _ct_version
 from coremltools._deps import _HAS_TF_1, _HAS_TF_2, _HAS_TORCH
 from coremltools.converters._profile_utils import _profile
 from coremltools.converters.mil._deployment_compatibility import (
-    AvailableTarget, check_deployment_compatibility)
+    AvailableTarget,
+    check_deployment_compatibility,
+)
 from coremltools.converters.mil.converter import mil_convert
-from coremltools.converters.mil.input_types import (ClassifierConfig,
-                                                    ImageType, InputType,
-                                                    TensorType)
+from coremltools.converters.mil.input_types import (
+    ClassifierConfig,
+    ImageType,
+    InputType,
+    TensorType,
+)
 from coremltools.converters.mil.mil import Program, types
-from coremltools.converters.mil.mil.passes.quantization_passes import \
-    ComputePrecision as precision
-from coremltools.converters.mil.mil.passes.quantization_passes import \
-    FP16ComputePrecision
+from coremltools.converters.mil.mil.passes.defs.quantization import ComputePrecision as precision
+from coremltools.converters.mil.mil.passes.defs.quantization import FP16ComputePrecision
+from coremltools.converters.mil.mil.passes.graph_pass import PassOption as _PassOption
+from coremltools.converters.mil.mil.passes.pass_pipeline import PassPipeline
 from coremltools.models import _METADATA_SOURCE, _METADATA_VERSION
 from coremltools.models.utils import _MLPACKAGE_EXTENSION
 
@@ -43,6 +50,7 @@ if _HAS_TORCH:
     from coremltools.converters.mil.frontend.torch.load import \
         _torchscript_from_model as pytorch_load
 
+
 @_profile
 def convert(
     model,
@@ -57,6 +65,7 @@ def convert(
     compute_units=_ComputeUnit.ALL,
     package_dir=None,
     debug=False,
+    pass_pipeline: Optional[PassPipeline] = None,
 ):
     """
     Convert a TensorFlow or PyTorch model to the Core ML model format as either
@@ -72,7 +81,7 @@ def convert(
         formats:
 
         * TensorFlow versions 1.x
-        
+
             - Frozen `tf.Graph <https://www.tensorflow.org/api_docs/python/tf/Graph>`_
             - Frozen graph (``.pb``) file path
             - `tf.keras.Model <https://www.tensorflow.org/api_docs/python/tf/keras>`_
@@ -80,7 +89,7 @@ def convert(
             - `SavedModel <https://www.tensorflow.org/guide/saved_model>`_ directory path
 
         * TensorFlow versions 2.x
-        
+
             - `tf.keras.Model <https://www.tensorflow.org/api_docs/python/tf/keras>`_
             - `HDF5 file path <https://keras.io/api/models/model_saving_apis/>`_ (``.h5``)
             - `SavedModel <https://www.tensorflow.org/guide/saved_model>`_ directory path
@@ -88,12 +97,12 @@ def convert(
             - A `GraphDef <https://www.tensorflow.org/api_docs/python/tf/compat/v1/GraphDef>`_
 
         * PyTorch
-        
+
             - A `TorchScript <https://pytorch.org/docs/stable/jit.html>`_ object
             - Path to a ``.pt`` file
 
     source : str (optional)
-    
+
         One of [``auto``, ``tensorflow``, ``pytorch``, ``milinternal``]. ``auto``
         determines the framework automatically for most cases. Raises
         ``ValueError`` if it fails to determine the source framework.
@@ -104,25 +113,32 @@ def convert(
           be applied to the input of the converted model. For example, the
           following code snippet will produce a Core ML model with float 16 typed
           inputs.
-          
+
           .. sourcecode:: python
 
               import coremltools as ct
-              mlmodel = ct.convert(keras_model,
-                                   inputs=[ct.TensorType(dtype=np.float16)],
-                                   minimum_deployment_target=ct.target.macOS13)
+
+              mlmodel = ct.convert(
+                  keras_model,
+                  inputs=[ct.TensorType(dtype=np.float16)],
+                  minimum_deployment_target=ct.target.macOS13,
+              )
 
         * The following code snippet will produce a Core ML model with the
           ``GRAYSCALE_FLOAT16`` input image type:
-          
+
           .. sourcecode:: python
 
               import coremltools as ct
+
               # H : image height, W: image width
-              mlmodel = ct.convert(torch_model,
-                               inputs=[ct.ImageType(shape=(1, 1, H, W),
-                                       color_layout=ct.colorlayout.GRAYSCALE_FLOAT16)],
-                               minimum_deployment_target=ct.target.macOS13)
+              mlmodel = ct.convert(
+                  torch_model,
+                  inputs=[
+                      ct.ImageType(shape=(1, 1, H, W), color_layout=ct.colorlayout.GRAYSCALE_FLOAT16)
+                  ],
+                  minimum_deployment_target=ct.target.macOS13,
+              )
 
         * TensorFlow 1 and 2 (including tf.keras):
             - The ``inputs`` parameter is optional. If not provided, the inputs
@@ -154,29 +170,35 @@ def convert(
         * If you specify ``dtype`` with ``TensorType`` or ``ImageType``,
           it will be applied to the output of the converted model. For example,
           to produce float 16 typed inputs and outputs:
-          
+
           .. sourcecode:: python
 
               import coremltools as ct
-              mlmodel = ct.convert(keras_model,
-                                   inputs=[ct.TensorType(dtype=np.float16)],
-                                   outputs=[ct.TensorType(dtype=np.float16)],
-                                   minimum_deployment_target=ct.target.macOS13)
+
+              mlmodel = ct.convert(
+                  keras_model,
+                  inputs=[ct.TensorType(dtype=np.float16)],
+                  outputs=[ct.TensorType(dtype=np.float16)],
+                  minimum_deployment_target=ct.target.macOS13,
+              )
 
         * To produce image inputs and outputs:
-          
+
           .. sourcecode:: python
 
               import coremltools as ct
+
               # H: image height, W: image width
-              mlmodel = ct.convert(torch_model,
-                                   inputs=[ct.ImageType(shape=(1, 3, H, W), color_layout=ct.colorlayout.RGB)],
-                                   outputs=[ct.ImageType(color_layout=ct.colorlayout.RGB)],
-                                   minimum_deployment_target=ct.target.macOS13)
+              mlmodel = ct.convert(
+                  torch_model,
+                  inputs=[ct.ImageType(shape=(1, 3, H, W), color_layout=ct.colorlayout.RGB)],
+                  outputs=[ct.ImageType(color_layout=ct.colorlayout.RGB)],
+                  minimum_deployment_target=ct.target.macOS13,
+              )
 
         * TensorFlow 1 and 2 (including tf.keras):
 
-            - If ``outputs`` is not specified, the converter infers outputs from 
+            - If ``outputs`` is not specified, the converter infers outputs from
               the sink nodes in the graph.
             - If specified, the ``name`` with ``TensorType`` or ``ImageType``
               must correspond to a node in the TF graph. In this case, the model
@@ -230,7 +252,7 @@ def convert(
         representation produced by the converter. To learn about the
         differences between neural networks and ML programs, see
         `ML Programs <https://coremltools.readme.io/docs/ml-programs>`_.
-        
+
         - ``'neuralnetwork'``: Returns an MLModel (``coremltools.models.MLModel``)
           containing a NeuralNetwork proto, which is the original Core ML format.
           The model saved from this returned object is executable either on
@@ -257,7 +279,7 @@ def convert(
 
         Use this argument to control the storage precision of the tensors in the
         ML program. Must be one of the following.
-        
+
         - ``coremltools.precision.FLOAT16`` enum: The following transform is
           applied to produce a float 16 program; that is, a program in which all
           the intermediate float tensors are of type float 16 (for ops that
@@ -272,19 +294,19 @@ def convert(
           type float 16.
 
         - ``coremltools.precision.FLOAT32`` enum: No transform is applied.
-          
+
           The original float32 tensor dtype in the source model is preserved.
           Opt into this option if the default converted model is displaying
           numerical precision issues.
 
         - ``coremltools.transform.FP16ComputePrecision(op_selector=...)``
-          
+
           Use this option to control which tensors are cast to float 16.
           Before casting the inputs/outputs of any op from float32 to float 16,
           the op_selector function is invoked on the op object. This function
           must return a boolean value. By default it returns ``True`` for every op,
           but you can customize this.
-          
+
           For example:
           ::
              coremltools.transform.FP16ComputePrecision(op_selector=
@@ -302,18 +324,20 @@ def convert(
             - For example, you can customize the float 16 precision transform to prevent
               casting all the ``real_div`` ops in the program to float 16
               precision:
-              
+
               .. sourcecode:: python
 
                   def skip_real_div_ops(op):
-                       if op.op_type == "real_div":
-                           return False
-                       return True
-                  
-                  model = ct.convert(source_model,
-                                     compute_precision=ct.transform.FP16ComputePrecision(op_selector=skip_real_div_ops),
-                                     minimum_deployment_target=ct.target.iOS15
-                                    )
+                      if op.op_type == "real_div":
+                          return False
+                      return True
+
+
+                  model = ct.convert(
+                      source_model,
+                      compute_precision=ct.transform.FP16ComputePrecision(op_selector=skip_real_div_ops),
+                      minimum_deployment_target=ct.target.iOS15,
+                  )
 
     skip_model_load : bool
         Set to ``True`` to prevent coremltools from calling into the Core ML framework
@@ -322,17 +346,17 @@ def convert(
         with ``model.save()``. This flag may be used to convert to a newer model type
         on an older Mac, which may raise a runtime warning if done without
         turning this flag on.
-        
+
         Example: Use this flag to suppress a runtime warning when converting to an
         ML program model on macOS 11, since an ML program can only be compiled and
         loaded from macOS12+.
-        
+
         Defaults to ``False``.
 
     compute_units: coremltools.ComputeUnit
-    
+
         An enum with the following possible values.
-        
+
             - ``coremltools.ComputeUnit.ALL``: Use all compute units available, including the
               neural engine.
             - ``coremltools.ComputeUnit.CPU_ONLY``: Limit the model to only use the CPU.
@@ -344,7 +368,7 @@ def convert(
     package_dir : str
         Post conversion, the model is saved at a temporary location and
         loaded to form the MLModel object ready for prediction.
-        
+
         * If ``package_dir`` is provided, model will be saved at this location
           rather than creating a temporary directory.
         * If not ``None``, this must be a path to a directory with the extension
@@ -359,15 +383,38 @@ def convert(
           - For Tensorflow conversion, it will cause to display extra logging
             and visualizations.
 
+    pass_pipeline : PassPipeline
+        Manage graph passes. You can control which graph passes to run and the order of the
+        graph passes. You can also specify options for each pass. See the details in the docstring of
+        PassPipeline (``coremltools/converters/mil/mil/passes/pass_pipeline.py``).
+
+        * To avoid fusing the ``conv`` and ``batchnorm`` ops, skip the corresponding pass
+          as shown in the following example:
+
+          .. sourcecode:: python
+
+            pipeline = ct.PassPipeline()
+            pipeline.remove_passes({"common::fuse_conv_batchnorm"})
+            ct.convert(model, pass_pipeline=pipeline)
+
+        * To avoid folding too-large ``const`` ops that lead to a large model, set pass option
+          as shown in the following example:
+
+          .. sourcecode:: python
+
+            pipeline = ct.PassPipeline()
+            pipeline.set_options("common::const_elimination", {"skip_const_by_size": "1e6"})
+            ct.convert(model, pass_pipeline=pipeline)
+
     Returns
     -------
-    
+
     model : ``coremltools.models.MLModel`` or ``coremltools.converters.mil.Program``
         A Core ML MLModel object or MIL program object (see ``convert_to``).
 
     Examples
     --------
-    
+
     TensorFlow 1, 2 (``model`` is a frozen graph):
 
         >>> with tf.Graph().as_default() as graph:
@@ -420,24 +467,25 @@ def convert(
                                    classifier_config, compute_precision,
                                    exact_target, minimum_deployment_target)
 
-    if compute_precision is None:
-        transforms = [FP16ComputePrecision(op_selector=lambda op: True)] if convert_to != "neuralnetwork" else list()
-    elif compute_precision == precision.FLOAT32:
-        transforms = list()
-    elif compute_precision == precision.FLOAT16:
-        transforms = [FP16ComputePrecision(op_selector=lambda op: True)]
-    elif isinstance(compute_precision, FP16ComputePrecision):
-        transforms = [compute_precision]
-    else:
-        raise ValueError("Invalid value of the argument 'compute_precision'")
+    if pass_pipeline is None:
+        pass_pipeline = PassPipeline()
+    if not _need_fp16_cast_pass(compute_precision, exact_target):
+        pass_pipeline.remove_passes({"common::add_fp16_cast"})
+    if isinstance(compute_precision, FP16ComputePrecision):
+        # For backward compatibility with the `op_selector` param in FP16ComputePrecision.
+        pass_pipeline._pass_options["common::add_fp16_cast"] = [
+            _PassOption(option_name="op_selector", option_val=compute_precision.op_selector)
+        ]
 
     if package_dir is not None:
         _, ext = os.path.splitext(package_dir)
         if ext != _MLPACKAGE_EXTENSION:
-            raise Exception("If package_dir is provided, it must have extension {} (not {})".format(_MLPACKAGE_EXTENSION, ext))
+            raise ValueError(
+                f"`package_dir` must have extension {_MLPACKAGE_EXTENSION} (not {ext})"
+            )
 
     specification_version = minimum_deployment_target.value if minimum_deployment_target is not None else None
-    
+
     if specification_version is None:
         specification_version = _set_default_specification_version(exact_target)
 
@@ -446,18 +494,18 @@ def convert(
         convert_from=exact_source,
         convert_to=exact_target,
         inputs=inputs,
-        outputs=outputs_as_tensor_or_image_types, # None or list[ct.ImageType/ct.TensorType]
+        outputs=outputs_as_tensor_or_image_types,  # None or list[ct.ImageType/ct.TensorType]
         classifier_config=classifier_config,
-        transforms=tuple(transforms),
         skip_model_load=skip_model_load,
         compute_units=compute_units,
         package_dir=package_dir,
         debug=debug,
         specification_version=specification_version,
+        main_pipeline=pass_pipeline,
     )
 
     if exact_target == 'milinternal':
-        return mlmodel # Returns the MIL program
+        return mlmodel  # Returns the MIL program
 
     if minimum_deployment_target is not None:
         check_deployment_compatibility(
@@ -472,6 +520,25 @@ def convert(
 
     return mlmodel
 
+
+def _need_fp16_cast_pass(
+    compute_precision: Optional[Union[precision, FP16ComputePrecision]], convert_to: Text
+) -> bool:
+    if convert_to not in ("mlprogram", "neuralnetwork", "milinternal", "milpython"):
+        raise NotImplementedError(f"Backend converter {convert_to} not implemented")
+
+    if compute_precision is None:
+        return convert_to != "neuralnetwork"
+    elif compute_precision == precision.FLOAT32:
+        return False
+    elif compute_precision == precision.FLOAT16 or isinstance(
+        compute_precision, FP16ComputePrecision
+    ):
+        return True
+    else:
+        raise ValueError(f"Invalid value of the argument 'compute_precision': {compute_precision}")
+
+
 def _set_default_specification_version(target):
     if target == "neuralnetwork":
         return _LOWEST_ALLOWED_SPECIFICATION_VERSION_FOR_NEURALNETWORK
@@ -484,14 +551,16 @@ def _set_default_specification_version(target):
 
 
 def _check_deployment_target(minimum_deployment_target):
-    if minimum_deployment_target is not None and \
-        not isinstance(minimum_deployment_target, AvailableTarget):
+    if minimum_deployment_target is not None and not isinstance(
+        minimum_deployment_target, AvailableTarget
+    ):
         msg = (
             "Unrecognized value of argument 'minimum_deployment_target': {}. "
             "It needs to be a member of 'coremltools.target' enumeration. "
             "For example, coremltools.target.iOS13"
         )
         raise TypeError(msg.format(minimum_deployment_target))
+
 
 def _validate_outputs_argument(outputs):
     """
@@ -506,13 +575,11 @@ def _validate_outputs_argument(outputs):
         return None, None
     else:
         if not isinstance(outputs, list):
-            msg = '"outputs" must be of type list'
-            raise ValueError(msg)
+            raise ValueError('"outputs" must be of type list')
         if len(outputs) == 0:
             return None, None
-        if not all([isinstance(t, TensorType) or isinstance(t, ImageType) or isinstance(t, str) for t in outputs]):
-            msg = '"outputs" must be a list of type ct.TensorType or ct.ImageType or strings'
-            raise ValueError(msg)
+        if not all(map(lambda t: isinstance(t, (ImageType, str, TensorType)), outputs)):
+            raise ValueError('Elements in "outputs" must be ct.TensorType or ct.ImageType or str')
 
         msg_inconsistent_types = 'all elements of "outputs" must either be of type str ' \
                                  'or of types ct.ImageType/ct.TensorType'
@@ -532,7 +599,9 @@ def _validate_outputs_argument(outputs):
             for out_ in outputs:
                 if isinstance(out_, TensorType):
                     if out_.default_value is not None:
-                        raise ValueError("The 'default_value' argument must not be specified for the outputs")
+                        raise ValueError(
+                            "The 'default_value' argument must not be specified for the outputs"
+                        )
                 if isinstance(out_, ImageType):
                     if out_.scale != 1.0:
                         raise ValueError("'scale' must be 1.0 for a output of ImageType")
@@ -555,6 +624,7 @@ def _validate_outputs_argument(outputs):
             else:
                 return output_names, outputs
 
+
 def _validate_conversion_arguments(model,
                                    exact_source,
                                    inputs,
@@ -568,6 +638,7 @@ def _validate_conversion_arguments(model,
     Validate and process model, inputs, classifier_config based on
     `exact_source` (which cannot be `auto`)
     """
+
     def raise_if_duplicated(input_list):
         # Detect duplicated inputs
         input_names = [t.name for t in input_list if t.name is not None]
@@ -597,65 +668,71 @@ def _validate_conversion_arguments(model,
     flat_inputs = None
     if inputs is not None:
         if not isinstance(inputs, list):
-            msg = '"inputs" must be of type list'
-            raise ValueError(msg)
+            raise ValueError("`inputs` must be of type list")
 
         # get flattened inputs
         flat_inputs = _flatten_list(inputs)
         for t in flat_inputs:
             if not isinstance(t, InputType):
-                msg = 'inputs must be a list of type ct.TensorType or ct.ImageType'
-                raise ValueError(msg)
+                raise ValueError("inputs must be a list of type ct.TensorType or ct.ImageType")
             if t.dtype == types.fp16:
-                if not (minimum_deployment_target is not None and \
-                    minimum_deployment_target >= AvailableTarget.iOS16):
-                    msg = "float16 dtype for inputs is only supported for deployment target >= iOS16/macOS13/watchOS9/tvOS16"
-                    raise TypeError(msg)
+                if not (
+                    minimum_deployment_target is not None
+                    and minimum_deployment_target >= AvailableTarget.iOS16
+                ):
+                    raise TypeError(
+                        "float16 dtype for inputs is only supported for deployment "
+                        "target >= iOS16/macOS13/watchOS9/tvOS16"
+                    )
 
     if outputs is not None:
         for t in outputs:
             if t.dtype == types.fp16:
-                if not (minimum_deployment_target is not None and \
-                    minimum_deployment_target >= AvailableTarget.iOS16):
-                    msg = "float16 dtype for outputs is only supported for deployment target >= iOS16/macOS13/watchOS9/tvOS16"
-                    raise TypeError(msg)
+                if not (
+                    minimum_deployment_target is not None
+                    and minimum_deployment_target >= AvailableTarget.iOS16
+                ):
+                    raise TypeError(
+                        "float16 dtype for outputs is only supported for deployment "
+                        "target >= iOS16/macOS13/watchOS9/tvOS16"
+                    )
 
     if classifier_config is not None:
         if not isinstance(classifier_config, ClassifierConfig):
-            msg = '"classifier_config" must be of type ClassifierConfig'
-            raise ValueError(msg)
+            raise ValueError("`classifier_config` must be of type ClassifierConfig")
 
-    if convert_to.lower() == 'neuralnetwork' and compute_precision is not None:
-        msg = "compute_precision is only supported for mlprogram target and must be None if target=='neuralnetwork'.\n" \
-              "Note that target may be implicitly set depending on the minimum_deployment_target.\n" \
-              "See minimum_deployment_target for more details."
-        raise ValueError(msg)
+    if convert_to.lower() == "neuralnetwork" and compute_precision is not None:
+        raise ValueError(
+            "compute_precision is only supported for mlprogram target and must be "
+            "None if target=='neuralnetwork'. Note that target may be implicitly set "
+            "depending on the minimum_deployment_target. See "
+            "minimum_deployment_target for more details."
+        )
 
     if compute_precision is not None:
         if compute_precision not in [precision.FLOAT32, precision.FLOAT16]:
             if not isinstance(compute_precision, FP16ComputePrecision):
-                msg = "'compute_precision' must be either coremltools.precision.FLOAT32 or coremltools.precision.FLOAT16" \
-                      " or of type coremltools.transform.FP16ComputePrecision()"
-                raise ValueError(msg)
+                raise ValueError(
+                    "'compute_precision' must be either coremltools.precision.FLOAT32 "
+                    "or coremltools.precision.FLOAT16 or of type "
+                    "coremltools.transform.FP16ComputePrecision()"
+                )
 
     if exact_source in {"tensorflow", "tensorflow2"}:
         if exact_source == "tensorflow" and not _HAS_TF_1:
-            msg = 'Converter was called with source="tensorflow", ' +\
-                    'but missing tensorflow package'
-            raise ValueError(msg)
+            raise ValueError(
+                'Converter was called with source="tensorflow", but missing ' "tensorflow package"
+            )
 
         if inputs is not None:
             raise_if_duplicated(inputs)
 
-        if inputs is not None and not all(
-            [isinstance(_input, InputType) for _input in inputs]
-        ):
+        if inputs is not None and not all([isinstance(_input, InputType) for _input in inputs]):
             raise ValueError("Input should be a list of TensorType or ImageType")
 
     elif exact_source == "pytorch":
         if inputs is None:
-            msg = 'Expected argument for pytorch "inputs" not provided'
-            raise ValueError(msg)
+            raise ValueError('Expected argument for pytorch "inputs" not provided')
 
         raise_if_duplicated(flat_inputs)
         if inputs is not None and not all(
@@ -667,8 +744,9 @@ def _validate_conversion_arguments(model,
 
     elif exact_source == "milinternal":
         if not isinstance(model, Program):
-            msg = "Converter was asked to convert MIL input, but input is not a MIL program!"
-            raise ValueError(msg)
+            raise ValueError(
+                "Converter was asked to convert MIL input, but input is not a MIL " "program!"
+            )
 
 
 def _determine_source(model, source,
@@ -680,12 +758,9 @@ def _determine_source(model, source,
     """
     source = source.lower()
     if source not in {"auto", "tensorflow", "pytorch", "milinternal"}:
-        msg = (
-            'Unrecognized value of argument "source": {}. '
-            'It must be one of ["auto", "tensorflow", "pytorch"].'
+        raise ValueError(
+            f'Unrecognized value of argument "source": {source}. It must be one of ["auto", "tensorflow", "pytorch"].'
         )
-        raise ValueError(msg.format(source))
-
 
     # Determine tensorflow version
     if source == "tensorflow" and _HAS_TF_2:
@@ -720,13 +795,17 @@ def _determine_source(model, source,
             pass
         if is_torch_load_successful:
             # validate that the outputs passed by the user are of type ImageType/TensorType
-            if output_argument_as_specified_by_user is not None and \
-                not all([isinstance(t, TensorType) or isinstance(t, ImageType) \
-                        for t in output_argument_as_specified_by_user]):
-                msg = '"outputs" must be a list of type ct.TensorType or ct.ImageType for pytorch conversion'
-                raise ValueError(msg)
+            if output_argument_as_specified_by_user is not None and not all(
+                [
+                    isinstance(t, TensorType) or isinstance(t, ImageType)
+                    for t in output_argument_as_specified_by_user
+                ]
+            ):
+                raise ValueError(
+                    '"outputs" must be a list of type ct.TensorType or ct.ImageType '
+                    "for pytorch conversion"
+                )
             return "pytorch"
-
 
     if source == "auto" and isinstance(model, Program):
         return "milinternal"
@@ -742,21 +821,24 @@ def _determine_source(model, source,
     )
     raise ValueError(msg)
 
+
 def _determine_target(convert_to, minimum_deployment_target):
     """
     Infer the precise backend target, which could be one of ``milinternal``, ``neuralnetwork`` or ``mlprogram``
     """
     if minimum_deployment_target is not None:
-        if convert_to == "mlprogram" and \
-            minimum_deployment_target < AvailableTarget.iOS15:
-                msg = "When 'convert_to' is {}, the minimum deployment target must be at least iOS15/macOS12/watchOS8/tvOS15"
-                raise ValueError(msg.format(convert_to))
+        if convert_to == "mlprogram" and minimum_deployment_target < AvailableTarget.iOS15:
+            raise ValueError(
+                f"When 'convert_to' is {convert_to}, the minimum deployment target "
+                f"must be at least iOS15/macOS12/watchOS8/tvOS15"
+            )
 
-        if convert_to == "neuralnetwork" and \
-            minimum_deployment_target >= AvailableTarget.iOS15:
-            msg = "If minimum deployment target is iOS15/macOS12/watchOS8/tvOS15 or higher, then " \
-                  "'convert_to' cannot be {}. It must be 'mlprogram'"
-            raise ValueError(msg.format(convert_to))
+        if convert_to == "neuralnetwork" and minimum_deployment_target >= AvailableTarget.iOS15:
+            raise ValueError(
+                f"If minimum deployment target is iOS15/macOS12/watchOS8/tvOS15 or "
+                f"higher, then 'convert_to' cannot be {convert_to}. It must be "
+                f"'mlprogram'"
+            )
 
     if convert_to is not None:
         return convert_to
@@ -784,7 +866,9 @@ def _get_metadata_from_mlmodel(mlmodel):
     else:
         raise AssertionError("Unable to parse src_pkg_version")
 
-    build_info = {'coremltools-version': _ct_version if not coremltools_version else coremltools_version}
+    build_info = {
+        "coremltools-version": _ct_version if not coremltools_version else coremltools_version
+    }
     if src_pkg is not None and pkg_ver is not None:
         build_info['coremltools-component-' + src_pkg] = str(pkg_ver)
 

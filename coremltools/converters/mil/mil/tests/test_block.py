@@ -9,13 +9,12 @@ import numpy as np
 import pytest
 
 from coremltools.converters.mil.mil import Builder as mb
-from coremltools.converters.mil.mil.passes.test_passes import CONSTEXPR_FUNCS
+from coremltools.converters.mil.mil.passes.tests.test_passes import TestSkipConstexprOps
 from coremltools.converters.mil.testing_utils import (
     assert_same_output_names,
     assert_same_output_shapes,
-    get_op_types_in_program
+    get_op_types_in_program,
 )
-
 
 """
 Test manipulating variable and operations in the Block.
@@ -231,37 +230,38 @@ def test_op_removal_and_insertion():
         )
         block.remove_ops([op])
 
-    # remove 1st transpose
-    remove_transpose(block)
-    assert get_op_types_in_program(prog) == ["relu", "avg_pool", "transpose", "log"]
-
-    # remove 2nd transpose
-    remove_transpose(block)
-    assert get_op_types_in_program(prog) == ["relu", "avg_pool", "log"]
-
-    print("after transpose ops removal:\n{}".format(prog))
-
-    # insert transpose before pool
-    pool_op = block.find_ops(op_type="avg_pool")[0]
     with block:
-        y = mb.transpose(x=pool_op.inputs["x"], perm=[0, 2, 3, 1], before_op=pool_op)
+        # remove 1st transpose
+        remove_transpose(block)
+        assert get_op_types_in_program(prog) == ["relu", "avg_pool", "transpose", "log"]
 
-    block.replace_uses_of_var_after_op(
-        anchor_op=y.op,
-        end_op=pool_op,
-        old_var=pool_op.inputs["x"],
-        new_var=y,
-        no_check_var_types=True,
-    )
+        # remove 2nd transpose
+        remove_transpose(block)
+        assert get_op_types_in_program(prog) == ["relu", "avg_pool", "log"]
 
-    print("after transpose insertion:\n{}".format(prog))
-    assert get_op_types_in_program(prog) == ["relu", "transpose", "avg_pool", "log"]
+        print("after transpose ops removal:\n{}".format(prog))
 
-    for op in block.operations:
-        op.type_value_inference(overwrite_output=True)
+        # insert transpose before pool
+        pool_op = block.find_ops(op_type="avg_pool")[0]
+        with block:
+            y = mb.transpose(x=pool_op.inputs["x"], perm=[0, 2, 3, 1], before_op=pool_op)
 
-    assert_same_output_names(prev_prog, prog)
-    assert_same_output_shapes(prev_prog, prog)
+        block.replace_uses_of_var_after_op(
+            anchor_op=y.op,
+            end_op=pool_op,
+            old_var=pool_op.inputs["x"],
+            new_var=y,
+            no_check_var_types=True,
+        )
+
+        print("after transpose insertion:\n{}".format(prog))
+        assert get_op_types_in_program(prog) == ["relu", "transpose", "avg_pool", "log"]
+
+        for op in block.operations:
+            op.type_value_inference(overwrite_output=True)
+
+        assert_same_output_names(prev_prog, prog)
+        assert_same_output_shapes(prev_prog, prog)
 
 
 def test_replace_nonreplaceable_vars():
@@ -271,12 +271,12 @@ def test_replace_nonreplaceable_vars():
     constexpr_op = "constexpr_sparse_to_dense"
     @mb.program(input_specs=[mb.TensorSpec(shape=(4, 2))])
     def prog(x):
-        constexpr = CONSTEXPR_FUNCS[constexpr_op]((4, 2))
+        constexpr = TestSkipConstexprOps.CONSTEXPR_FUNCS[constexpr_op]((4, 2))
         return mb.add(x=x, y=constexpr)
 
     block = prog.functions["main"]
     constexpr_op = block.find_ops(op_type=constexpr_op)[0]
-    
+
     with block:
         const = mb.const(val=np.random.rand(4, 2), before_op=constexpr_op)
         expected_err_str = "might potentially be removed during the replacement of those vars."
@@ -286,7 +286,8 @@ def test_replace_nonreplaceable_vars():
                 old_var=constexpr_op.outputs[0],
                 new_var=const
             )
-            
+
+
 def test_replace_nonreplaceable_vars_force():
     """
     The conversion should not error out if the replace_uses_of_vars_after_op is executed with
@@ -296,7 +297,7 @@ def test_replace_nonreplaceable_vars_force():
     constexpr_op = "constexpr_sparse_to_dense"
     @mb.program(input_specs=[mb.TensorSpec(shape=(4, 2))])
     def prog(x):
-        constexpr = CONSTEXPR_FUNCS[constexpr_op]((4, 2))
+        constexpr = TestSkipConstexprOps.CONSTEXPR_FUNCS[constexpr_op]((4, 2))
         return mb.add(x=x, y=constexpr)
 
     block = prog.functions["main"]
@@ -314,9 +315,9 @@ def test_replace_nonreplaceable_vars_force():
             force_replace=True,
         )
         block.remove_ops([constexpr_op])
-        
+
     assert len(add_op.outputs[0].nonreplaceable_vars_upstream) == 0
-    
+
 
 def test_simple_substituion():
     """

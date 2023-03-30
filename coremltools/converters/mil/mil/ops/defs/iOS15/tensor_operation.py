@@ -327,6 +327,9 @@ class non_zero(Operation):
     }
 
     def type_inference(self):
+        if self.x.val is not None:
+            value = self.value_inference()
+            return types.tensor(types.int32, value.shape)
         shape = tuple([get_new_symbol(), self.x.rank])
         return types.tensor(types.int32, shape)
 

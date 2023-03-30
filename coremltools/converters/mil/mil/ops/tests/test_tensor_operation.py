@@ -672,7 +672,13 @@ class TestNonZero:
         x_val = np.random.randint(low=-1, high=2, size=(6, 1, 7))
         res = mb.non_zero(x=x_val)
         np.testing.assert_allclose(np.transpose(np.nonzero(x_val)), res.val, atol=1e-04, rtol=1e-05)
-
+        
+    @ssa_fn
+    def test_shape_inference_for_deterministic_input(self):
+        # If the input is compile time known, the builder should be able to infer the shape from value
+        x_val = np.array([[0, 2], [1, 1]])
+        res = mb.non_zero(x=x_val)
+        assert res.shape == (3, 2)
 
 class TestOneHot:
     @pytest.mark.parametrize(

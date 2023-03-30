@@ -12,27 +12,9 @@ from coremltools.converters.mil.mil.passes.pass_registry import register_pass
 @register_pass(namespace="torch")
 class torch_tensor_assign_to_core(AbstractGraphPass):
     """
-    Try to map Torch dialect ops `torch_tensor_assign` into core op set if compatible.
-    We only support the single index selection + whole dimension slicing + stride 1
+    Map Torch dialect ops `torch_tensor_assign` into core opset.
 
-    Example 1:
-    x[0] = 0
-
-    Example 2:
-    x[:,:,0,:] = [[[0],[0]]]
-
-    Currently, we tranform the torch_tensor_assign op into transposes + scatter + expand_dims
-
-    Given:
-        %output = torch_tensor_assign(data=%data, updates=%updates)
-
-    Result:
-        %data_transpose_1 = transpose(%data)
-        %updates_expand = expand_dims(%updates)
-        %scatter = scatter(data=%data_transpose_1, updates=%updates_expand)
-        %output = transpose(%scatter)
-        ...
-
+    Currently, we tranform the torch_tensor_assign op using mb.scatter.
     """
     def apply(self, prog):
         for f in prog.functions.values():
@@ -49,43 +31,34 @@ def _torch_tensor_assign_to_core_block(block):
 
 
 def _transform_tensor_assign(op, block):
-    begin = op.begin.val
-    strides = op.stride.val
-
-    begin_mask = op.begin_mask.val
-    end_mask = op.end_mask.val
-    squeeze_mask = op.squeeze_mask.val
-
-    # check for the pattern is supported
-    if any([stride != 1 for stride in strides]):
-        raise NotImplementedError("Only tensor assignment with stride 1 is supported.")
-
-    if sum(squeeze_mask) != 1:
-        raise NotImplementedError("Only tensor assignment with exactly 1 pure dimension selection is supported")
-
-    for i in range(len(squeeze_mask)):
-        if not squeeze_mask[i]:
-            if not (begin_mask[i] or begin[i] == 0) or not end_mask[i]:
-                raise NotImplementedError("Non supported tensor assignment pattern detected.")
-
-    # put the select dimension in front
-    # for instance, x[:,0] = ...
-    # we transpose the tensor to make the assignment be x[0] = ... instead
-    data = op.data
-    updates = op.updates
-    out_name = op.outputs[0].name
-
-    select_dim = squeeze_mask.tolist().index(True)
-    perm = [select_dim] + [i for i in range(len(squeeze_mask)) if i != select_dim]
-    data = mb.transpose(x=data, perm=perm, before_op=op)
-    updates = mb.expand_dims(x=updates, axes=[0], before_op=op)
-    select_idx = begin[select_dim]
-    data = mb.scatter(data=data, indices=[select_idx], updates=updates, axis=0, mode="update", before_op=op)
-    perm_back = [perm.index(i) for i in range(len(perm))]
-    data = mb.transpose(x=data, perm=perm_back, name=out_name, before_op=op)
+    shape = mb.shape(x=op.data, before_op=op)
+    dim_prod = mb.reduce_prod(x=shape, before_op=op)
+    ref_indices = mb.range_1d(end=dim_prod, start=0, step=1, before_op=op)
+    ref_indices = mb.reshape(x=ref_indices, shape=shape, before_op=op)
+    ref_sliced_indices = mb.slice_by_index(
+                            x=ref_indices,
+                            begin=op.begin,
+                            end=op.end,
+                            stride=op.stride,
+                            begin_mask=op.begin_mask,
+                            end_mask=op.end_mask,
+                            squeeze_mask=op.squeeze_mask,
+                            before_op=op,
+                        )
+    flatten_indices = mb.reshape(x=ref_sliced_indices, shape=[-1], before_op=op)
+    flatten_updates = mb.reshape(x=op.updates, shape=[-1], before_op=op)
+    flatten_data = mb.reshape(x=op.data, shape=[-1], before_op=op)
+    new_data = mb.scatter(
+                data=flatten_data, 
+                indices=flatten_indices, 
+                updates=flatten_updates, 
+                mode="update", 
+                before_op=op
+            )
+    new_data = mb.reshape(x=new_data, shape=shape, before_op=op)
 
     op.enclosing_block.replace_uses_of_var_after_op(
-        anchor_op=op, old_var=op.outputs[0], new_var=data
+        anchor_op=op, old_var=op.outputs[0], new_var=new_data
     )
     # Remove all the ops at once
     block.remove_ops([op])

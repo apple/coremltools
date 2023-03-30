@@ -137,14 +137,20 @@ class SSAOpRegistry:
             if is_custom_op or is_dialect_op:
                 op_reg[op_type] = op_cls
             else:
-                msg = "Older version of op {} must be registered before a newer version.".format(op_type)
+                # The older version of the op must be registered first, or it will override the
+                # newer version. For example, assuming an op has two versions: IOS13 and IOS15. If
+                # the IOS15 is registered first, the op_reg[op_type] will have that op class for
+                # IOS15/16/..., and when IOS13 is registered, it will override all op classes for
+                # IOS13/14/15/16/... where IOS15 op class will get lost. So we error out early
+                # instead of keep registering when this happens.
                 if opset_version in op_reg[op_type]:
                     old_op_cls = op_reg[op_type][opset_version]
                     for i in range(opset_version, SSAOpRegistry.SUPPORTED_OPSET_VERSIONS[-1] + 1):
                         if op_reg[op_type][i] != old_op_cls:
-                            raise ValueError(msg)
-                elif len(op_reg[op_type]) != 0:
-                    raise ValueError(msg)
+                            raise ValueError(
+                                f"Older version of op {op_type} must be registered "
+                                f"before a newer version."
+                            )
                 idx = SSAOpRegistry.SUPPORTED_OPSET_VERSIONS.index(opset_version)
                 for i in range(idx, len(SSAOpRegistry.SUPPORTED_OPSET_VERSIONS)):
                     op_reg[op_type][SSAOpRegistry.SUPPORTED_OPSET_VERSIONS[i]] = op_cls

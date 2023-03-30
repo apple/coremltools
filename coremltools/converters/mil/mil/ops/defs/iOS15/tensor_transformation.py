@@ -532,7 +532,7 @@ class slice_by_index(Operation):
                 if len(res) == 0:
                     logger.warning("%s seems to be a 0 sized tensor", self.name)
                     return np.array([])
-                res = res.tolist()[0]
+                res = np.squeeze(res).tolist()
                 if is_symbolic(res):
                     return res
                 elif self.x.dtype == types.int32 or self.x.dtype == types.int64:

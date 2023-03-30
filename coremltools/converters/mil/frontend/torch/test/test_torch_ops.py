@@ -17,16 +17,11 @@ import coremltools as ct
 from coremltools import RangeDim, Shape, TensorType
 from coremltools._deps import version_lt
 from coremltools.converters.mil import testing_reqs
-from coremltools.converters.mil.testing_utils import gen_input_shapes_einsum
 from coremltools.converters.mil.mil.var import Var
+from coremltools.converters.mil.testing_utils import einsum_equations, gen_input_shapes_einsum
 from coremltools.models.utils import _macos_version, _python_version
 
-from .testing_utils import (
-    ModuleWrapper,
-    TorchBaseTest,
-    contains_op,
-    generate_input_data,
-)
+from .testing_utils import ModuleWrapper, TorchBaseTest, contains_op, generate_input_data
 
 backends = testing_reqs.backends
 compute_units = testing_reqs.compute_units
@@ -4344,44 +4339,7 @@ class TestEinsum(TorchBaseTest):
         itertools.product(
             compute_units,
             backends,
-            [
-                # Hardcoded cases
-                "abcd,adce->abce",
-                "abc,cbd->abd",
-                "bnqd,bnkd->bnqk",
-                "abc,cd->abd",
-                "abc,cde->abde",
-                "btnh,bfnh->bnft",
-                "bnft,btnh->bfnh",
-                "abcd,cde->abe",
-                "a b c d , a d c e -> a b c e",
-                # Generic cases
-                "i,i->i",
-                "i,j->ij",
-                "ab,b->a",
-                "ab,ab->b",
-                "abc,abc->a",
-                "abc,abc->c",
-                "abc,bac->c",
-                "abc,acd->abd",
-                "abc,abc->ab",
-                "abc,abc->bc",
-                "abc,bac->ba",
-                "abcd,cb->dca",
-                "abcd,acdb->ad",
-                "abcd,abde->abce",
-                "abcd,efbd->eafc",
-                "acdb,bade->abce",
-                # Generic with diagonal
-                "jiii,ijjk->jk",
-                "iji,ji->j",
-                "jii,ijk->jk",
-                "ijij,iij->ij",
-                # Generic with sum
-                "ij,j->ij",
-                "ij,kjl->j",
-                "iijj,j->j",
-             ],
+            einsum_equations,
             [False, True],
             [False, True],
         ),
@@ -4390,6 +4348,34 @@ class TestEinsum(TorchBaseTest):
         class TestEinsum(nn.Module):
             def forward(self, x, y):
                 return torch.einsum(equation, x, y)
+        if backend == ("mlprogram", "fp16"):
+            if equation in [
+                "abc,cde->abde",
+                "abcd,cde->abe",
+                "iji,ji->j",
+                "jii,ijk->jk",
+                "ija,la->ijal",
+                "ia,ia->a",
+                "ai,ia->a",
+                "abi,abi->ab",
+                "iab,iab->ab",
+                "abi,bai->ba",
+                "ij,j->i",
+                "i,ij->j",
+                "ai,ija->aj",
+                "aibj,bi->jba",
+                "ij,jk->ik",
+                "abij,abjk->abik",
+                "aijb,bajk->abik",
+                "aij,aij->a",
+                "ija,ija->a",
+                "ija,jia->a",
+                "aijb,ajbi->ab",
+                "aibj,cdij->cadb",
+                "ijk,lmj->iklm",
+                "ijak,akl->aijl",
+            ] and dynamic:
+                pytest.xfail("rdar://106631543 ([Infra]Re-enable the unittests for torch einsum ops)")
 
         input_shapes, converter_input_type = gen_input_shapes_einsum(equation, dynamic)
 
@@ -4721,7 +4707,6 @@ class TestActivation(TorchBaseTest):
         model = nn.GELU().eval()
         self.run_compare_torch(shape, model, backend=backend, compute_unit=compute_unit)
 
-    @pytest.mark.skipif(_python_version() < (3, 6), reason="requires python 3.6")
     @pytest.mark.parametrize(
         "compute_unit, backend, shape",
         itertools.product(compute_units, backends, COMMON_SHAPES_ALL),
@@ -4744,7 +4729,6 @@ class TestActivation(TorchBaseTest):
         model = nn.Sigmoid().eval()
         self.run_compare_torch(shape, model, backend=backend, compute_unit=compute_unit)
 
-    @pytest.mark.skipif(_python_version() < (3, 6), reason="requires python 3.6")
     @pytest.mark.parametrize(
         "compute_unit, backend, shape",
         itertools.product(compute_units, backends, COMMON_SHAPES_ALL),
@@ -4878,6 +4862,7 @@ class TestElementWiseUnary(TorchBaseTest):
                 (-3.0, None),
                 (1, 2),
                 (1, 3.5),
+                (1, -1),
             ],
         ),
     )
@@ -6422,6 +6407,86 @@ class TestTensorAssign(TorchBaseTest):
         self.run_compare_torch(shape, model, backend=backend, compute_unit=compute_unit)
 
     @pytest.mark.parametrize(
+        "compute_unit, backend, dynamic",
+        itertools.product(
+            compute_units,
+            backends,
+            [True, False],
+        ),
+    )
+    def test_tensor_assign_case_7(self, compute_unit, backend, dynamic):
+        # general case
+        class TensorAssignModel(torch.nn.Module):
+            def forward(self, x):
+                x[:1, 1, :1] = torch.tensor([1.0]).view(1, 1)
+                x[0, 1, 2] = 6.
+                x[:2, 2:8:2, 1:2] = torch.tensor([1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).view(2, 3, 1)
+                x[:, 1:10:8, 1:3] = torch.tensor([1.0, 2.0, 3.0, 4.0]).view(2, 1, 2)
+                return x
+
+        shape = (2, 10, 3)
+        model = TensorAssignModel()
+        if dynamic:
+            converter_input_type = [ct.TensorType(shape=(ct.RangeDim(), ct.RangeDim(), ct.RangeDim()))]
+        else:
+            converter_input_type = None
+        self.run_compare_torch(
+            shape,
+            model,
+            converter_input_type=converter_input_type,
+            backend=backend,
+            compute_unit=compute_unit
+        )
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, dynamic",
+        itertools.product(
+            compute_units,
+            backends,
+            [True, False],
+        ),
+    )
+    def test_tensor_assign_case_8(self, compute_unit, backend, dynamic):
+        # general case with dynamic begin and end
+        class TensorAssignModel(torch.nn.Module):
+            def forward(self, x, begin_0, begin_1, end_1):
+                x[:1, begin_0:begin_0+5:2, 2] = torch.tensor([1.0, 2.0, 3.0]).view(1, 3)
+                x[:, 4, begin_1:end_1] = torch.tensor([1.0]).view(1, 1)
+                return x
+
+        shape = (2, 10, 3)
+        model = TensorAssignModel()
+        if dynamic:
+            converter_input_type = [
+                ct.TensorType(shape=(ct.RangeDim(), ct.RangeDim(), ct.RangeDim())),
+                ct.TensorType(shape=(1,), dtype=np.int32),
+                ct.TensorType(shape=(1,), dtype=np.int32),
+                ct.TensorType(shape=(1,), dtype=np.int32),
+            ]
+        else:
+            converter_input_type = None
+
+        inputs = [
+            torch.rand(*shape),
+            torch.as_tensor([1], dtype=torch.int32),
+            torch.as_tensor([1], dtype=torch.int32),
+            torch.as_tensor([2], dtype=torch.int32),
+        ]
+
+        torch_inputs = [torch.clone(x) for x in inputs]
+        expected_results = model(*torch_inputs)
+
+        self.run_compare_torch(
+            inputs,
+            model,
+            expected_results=expected_results,
+            input_as_shape=False,
+            converter_input_type=converter_input_type,
+            backend=backend,
+            compute_unit=compute_unit
+        )
+
+    @pytest.mark.parametrize(
         "compute_unit, backend",
         itertools.product(
             compute_units,
@@ -6558,21 +6623,42 @@ class TestIndex(TorchBaseTest):
             ],
         ),
     )
-    def test_index_bool_index(self, compute_unit, backend, shape):
+    def test_index_bool_indices(self, compute_unit, backend, shape):
+        rank = len(shape)
         class IndexModel(torch.nn.Module):
-            def forward(self, x):
-                return x[x > 0.5]
+            def __init__(self, axis):
+                super().__init__()
+                self.axis = axis
 
-        input_data = torch.randn(*shape, dtype=torch.float32)
-        input_data[0] = 0.6  # make sure the result is not an empty tensor
-        model = IndexModel()
-        self.run_compare_torch(
-            input_data,
-            model,
-            backend=backend,
-            compute_unit=compute_unit,
-            input_as_shape=False,
-        )
+            def forward(self, x, y):
+                index = y > 0.5
+                if self.axis == 0:
+                    return x[index]
+                elif self.axis == 1:
+                    return x[:, index]
+                elif self.axis == 2:
+                    return x[:, :, index]
+                else:
+                    assert self.axis == 3
+                    return x[:, :, :, index]
+
+        for index_rank in range(1, rank + 1):
+            for axis in range(rank + 1 - index_rank):
+                input_data = torch.randn(*shape, dtype=torch.float32)
+                ref_data_shape = shape[axis:axis+index_rank]
+                ref_data = torch.rand(ref_data_shape)
+                # We set the first element to 0.6, so that we can make sure at least one element is selected,
+                # and ensure no empty tensors are produced.
+                ref_data[0] = 0.6
+
+                model = IndexModel(axis=axis)
+                self.run_compare_torch(
+                    [input_data, ref_data],
+                    model,
+                    backend=backend,
+                    compute_unit=compute_unit,
+                    input_as_shape=False,
+                )
 
     @pytest.mark.parametrize(
         "compute_unit, backend, shape",
@@ -6828,19 +6914,58 @@ class TestIndex(TorchBaseTest):
         ),
     )
     def test_index_int_index_case_10(self, compute_unit, backend, shape):
-        # multiple axes are sliced through bool masks
+        # multiple axes are sliced through bool masks with possible broadcasting
         class IndexModel(torch.nn.Module):
             def forward(self, x):
                 if len(shape) == 3:
                     return x[[True], [True, False], [False, True, False]]
 
-                elif len(shape) == 4:
-                    return x[
+                else:
+                    assert len(shape) == 4
+                    # This is an non-broadcasable case, where the number of `True` for each dimension is the same
+                    output_1 = x[
                         [True, True],
                         :,
                         [True, True, False, False],
                         [True, False, False, True, False],
                     ]
+                    # This is a broadcasable case
+                    output_2 = x[
+                        [True, True],
+                        :,
+                        [False, False, True, False],
+                        [True, False, False, True, False],
+                    ]
+                    return output_1, output_2
+
+        model = IndexModel()
+        self.run_compare_torch(shape, model, backend=backend, compute_unit=compute_unit)
+
+    @pytest.mark.parametrize(
+        "compute_unit, backend, shape",
+        itertools.product(
+            compute_units,
+            backends,
+            [
+                (3, 4),
+                (3, 4, 5, 6)
+            ],
+        ),
+    )
+    def test_index_int_index_case_11(self, compute_unit, backend, shape):
+        # broadcasable indices
+        class IndexModel(torch.nn.Module):
+            def forward(self, x):
+                if len(shape) == 2:
+                    index_1 = torch.tensor([0, 1])
+                    index_2 = torch.tensor([0])
+                    return x[index_1, index_2]
+                else:
+                    assert len(shape) == 4
+                    index_1 = torch.tensor([0, 1, 1, 1, 1, 1, 0, 0]).view(4, 2)
+                    index_2 = torch.tensor([0, 1, 2, 3]).view(4, 1)
+                    index_3 = torch.tensor([2]).view(1,)
+                    return x[index_1, :, index_3, index_2]
 
         model = IndexModel()
         self.run_compare_torch(shape, model, backend=backend, compute_unit=compute_unit)
@@ -6856,7 +6981,8 @@ class TestIndex(TorchBaseTest):
             ],
         ),
     )
-    def test_index_broadcast(self, compute_unit, backend, shape):
+    def test_index_int_index_case_12(self, compute_unit, backend, shape):
+        # Another broadcastable indices test case
         class IndexModel(torch.nn.Module):
             def forward(self, x):
                 index_1 = torch.tensor([0, 1])
@@ -6869,6 +6995,29 @@ class TestIndex(TorchBaseTest):
 
         self.run_compare_torch(
             shape, IndexModel(), backend=backend, compute_unit=compute_unit
+        )
+
+class TestLoss(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend, rank, reduction",
+        itertools.product(
+            compute_units, backends, range(1, 4), ["none", "mean", "sum"]
+        ),
+    )
+    def test_mse_loss(self, compute_unit, backend, rank: int, reduction: str):
+        input_shape = tuple(np.random.randint(low=1, high=5, size=rank))
+        class Model(torch.nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.loss = nn.MSELoss(reduction=reduction)
+
+            def forward(self, x, y):
+                return self.loss(x, y)
+
+        input_shapes = [input_shape, input_shape]
+
+        self.run_compare_torch(
+            input_shapes, Model(), backend=backend, compute_unit=compute_unit
         )
 
 
@@ -7544,6 +7693,35 @@ class TestRoll(TorchBaseTest):
             compute_unit=compute_unit
         )
 
+    @pytest.mark.parametrize(
+        "compute_unit, backend, shape, shifts_dims",
+        itertools.product(
+            compute_units,
+            backends,
+            [(4, 2, 3)],
+            [
+                [0, 0],
+                [4, 0],
+                [9, 0],
+                [[0, 1], [0, 1]],
+                # Shifts exceeeds dimension
+                [[89, 93, 102], [0, 1, 2]],
+                # Negative shifts
+                [[-9, -1], [1, 2]],
+                # Duplicate dims
+                [[8, 10, -8], [0, 1, 0]]
+            ],
+        ),
+    )
+    def test_roll_with_dims(self, compute_unit, backend, shape, shifts_dims):
+        shifts, dims = shifts_dims
+        model = ModuleWrapper(torch.roll, kwargs={"shifts": shifts, "dims": dims})
+        self.run_compare_torch(
+            shape,
+            model,
+            backend=backend,
+            compute_unit=compute_unit
+        )
 
 class TestArgmax(TorchBaseTest):
     @pytest.mark.parametrize(
@@ -8189,6 +8367,7 @@ class TestBitwiseAnd(TorchBaseTest):
                 input_as_shape=False,
             )
 
+
 class TestUnfold(TorchBaseTest):
     @pytest.mark.parametrize(
         "compute_unit, backend, input_shape, kernel_size, padding, stride",
@@ -8211,6 +8390,31 @@ class TestUnfold(TorchBaseTest):
         self.run_compare_torch(
             input_shape, UnfoldModel(), backend=backend, compute_unit=compute_unit
         )
+
+
+class TestTupleUnpack(TorchBaseTest):
+    @pytest.mark.parametrize(
+        "compute_unit, backend",
+        itertools.product(
+            compute_units,
+            backends,
+        ),
+    )
+    def test_tuple_unpack(self, compute_unit, backend):
+        class ReturnTupleModel(nn.Module):
+            def forward(self, x):
+                return x * 3, x * 4, x * 5
+
+        class TestModel(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.return_tuple_layer = ReturnTupleModel()
+
+            def forward(self, x):
+                out1, out2, out3 = self.return_tuple_layer(x)
+                return out1.relu(), out2.sigmoid(), out3.softmax(1)
+
+        self.run_compare_torch((1, 2, 3), TestModel(), backend=backend, compute_unit=compute_unit)
 
 
 class TestTupleIndex(TorchBaseTest):

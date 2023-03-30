@@ -133,7 +133,7 @@ class conv(Operation):
         dilations=TensorInputType(const=True, optional=True, type_domain=types.int32),
         groups=TensorInputType(const=True, optional=True, type_domain=types.int32),
     )
-    
+
     type_domains = {
         "T": (types.fp16, types.fp32),
     }
@@ -157,8 +157,10 @@ class conv(Operation):
         C_in = self.x.shape[1]
         groups = self.groups.val
 
-        if self.bias is not None and self.bias.val.shape[0] != C_out:
+        if self.bias is not None and \
+        (len(self.bias.val.shape) > 1 or self.bias.val.shape[0] != C_out):
             msg = "# of bias values {} not equal to # output channels {}"
+            raise ValueError(msg.format(self.bias.val.shape[0], C_out))
         if C_in % groups != 0:
             msg = "# of input channels {} not divisible by groups {}"
             raise ValueError(msg.format(C_in, groups))
@@ -168,7 +170,7 @@ class conv(Operation):
 
         strides = self.strides.val
         dilations = self.dilations.val
-        
+
         # The same_lower padding is not supported in iOS15
         if curr_opset_version() == _IOS15_TARGET and self.pad_type.val == "same_lower":
             msg = "iOS15 version of conv does not support pad_type = `same_lower`"
@@ -244,7 +246,7 @@ class conv_quantized(conv):
         dilations=TensorInputType(const=True, optional=True, type_domain=types.int32),
         groups=TensorInputType(const=True, optional=True, type_domain=types.int32),
         )
-        
+
     type_domains = {
         "T": (types.fp32, types.fp16),
         "U": (types.uint8,),
@@ -313,21 +315,21 @@ class conv_transpose(Operation):
     -------
     tensor<[n,C_out,*D_out],T>
 		* If ``output_shape`` is not ``None``:
-		  
+
 		     ``Dout = output_shape``
 
 		* If ``pad_type == "custom"``:
-		  
+
 		     ``Dout[i] = (D_in[i]-1)*stride[i] + (K[i]-1) * dilation[i] + 1 - pad[2*i] - pad[2*i-1]``
 
 		* If ``pad_type == "valid"``:
-		  
+
 		     ``Dout[i] = (D_in[i]-1)*stride[i] + (K[i]-1) * dilation[i] + 1``
 
 		* If ``pad_type == "same"``:
-		  
+
 		     ``Dout[i] = D_in[i] * stride[i]``
-    
+
 
     Attributes
     ----------
@@ -349,7 +351,7 @@ class conv_transpose(Operation):
         dilations=TensorInputType(const=True, optional=True, type_domain=types.int32),
         groups=TensorInputType(const=True, optional=True, type_domain=types.int32),
     )
-    
+
     type_domains = {
         "T": (types.fp16, types.fp32),
     }

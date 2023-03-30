@@ -98,7 +98,8 @@ def test_conv_example():
 
         return conv1, conv2, conv3, pool1, pool2, conv4
 
-    mlmodel = ct.convert(prog, source="milinternal", convert_to="neuralnetwork")
+    # rdar://105988903 ([Infra] re-enable the test_conv_example unit test on M1 with compute_units=ALL)
+    mlmodel = ct.convert(prog, source="milinternal", convert_to="neuralnetwork", compute_units=ct.ComputeUnit.CPU_ONLY)
 
     feed_dict = {
         "img": np.random.rand(*img_shape).astype(np.float32),
@@ -183,11 +184,11 @@ def get_simple_nested_block_program(opset_version=None):
     def prog(x):
         def true_fn():
             topk, _ = mb.topk(x=x, k=1, axis=-1, ascending=True)
-            return mb.add(x=topk, y=1)
+            return mb.add(x=topk, y=1.)
 
         def false_fn():
             topk, _ = mb.topk(x=x, k=1, axis=-1, ascending=True)
-            return mb.add(x=topk, y=2)
+            return mb.add(x=topk, y=2.)
 
         shape = mb.shape(x=x)
         rank = mb.shape(x=shape)
@@ -311,7 +312,7 @@ class TestMLProgramVersionHandling:
     @staticmethod
     def test_rank6_tensor_early_error_out():
         '''
-        The builder should error out early when detecting a rank 6 (or higher) tensor is created
+        The builder should error out early when detecting a rank 6 (or higher) tensor which cannot be eliminated by graph passes
         '''
         expected_err_str = (
             "Core ML only supports tensors with rank <= 5. Layer \"reshape_0\", with type \"reshape\", outputs a rank 6 tensor"
@@ -321,6 +322,7 @@ class TestMLProgramVersionHandling:
             def prog(x):
                 res = mb.reshape(x=x, shape=(1, 1, 1, 1, 1, 1), name="reshape_0")
                 return res
+            ct.convert(prog, source="milinternal")
                 
     @staticmethod
     def test_rank5_list_early_error_out():

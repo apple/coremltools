@@ -5,24 +5,18 @@
 
 from coremltools import _logger as logger
 from coremltools.converters._profile_utils import _profile
-from coremltools.converters.mil._deployment_compatibility import \
-    AvailableTarget as _target
-from coremltools.converters.mil.input_types import (ImageType, InputType,
-                                                    RangeDim)
+from coremltools.converters.mil._deployment_compatibility import AvailableTarget as _target
+from coremltools.converters.mil.input_types import ImageType, InputType, RangeDim
 from coremltools.converters.mil.input_types import Shape as InputShape
-from coremltools.converters.mil.input_types import (TensorType,
-                                                    _get_shaping_class)
+from coremltools.converters.mil.input_types import TensorType, _get_shaping_class
 from coremltools.converters.mil.mil import Builder as mb
-from coremltools.converters.mil.mil import (Function, Program, get_new_symbol,
-                                            types)
+from coremltools.converters.mil.mil import Function, Program, get_new_symbol, types
 from coremltools.converters.mil.mil.types.symbolic import is_symbolic
 from coremltools.converters.mil.mil.var import Var
 
 from .._utils import get_output_names
 from .basic_graph_ops import simple_topsort
 from .convert_utils import convert_graph
-from .ssa_passes.tf_passes import tensorflow_passes
-
 
 
 # TranscriptionContext maintains a map of tf_node.name --> ssa_var available
@@ -232,7 +226,6 @@ class TFConverter:
         # We would like a stack so that we run conversion sequentially.
         self.graph_stack = self._get_stack(tfssa, root="main")
         self.context = TranscriptionContext()
-        self.tensorflow_passes = tensorflow_passes
 
     def _get_placeholder_shape_from_tf_graph(self, tfgraph, name):
 
@@ -348,7 +341,6 @@ class TFConverter:
                 main_output_types.append(name_to_input_type_map[out_var.name])
             self.main_output_types = main_output_types
 
-
     def check_placeholder_output(self, prog, outputs_name):
         """
         Handle the cases where placeholder is output.
@@ -459,7 +451,6 @@ class TFConverter:
             self._validate_and_update_main_output_types(prog)
             prog.set_main_output_types(self.main_output_types)
 
-
     @_profile
     def convert(self):
         prog = Program()
@@ -472,9 +463,4 @@ class TFConverter:
         for g_name in self.graph_stack[1:]:
             self.context.add_graph(g_name, self.tfssa.functions[g_name].graph)
         self.convert_main_graph(prog, graph)
-
-        # Apply TF frontend passes on Program. These passes are different
-        # from passes applied to tfssa.
-        self.tensorflow_passes(prog)
-
         return prog

@@ -202,10 +202,10 @@ class TF2Loader(TFLoader):
     def _program_from_tf_ssa(self):
         self._run_tf_ssa_passes()
         converter = TF2Converter(
-            tf_ssa=self._tf_ssa,
+            tfssa=self._tf_ssa,
             inputs=self.kwargs["inputs"],
             outputs=self.kwargs["outputs"],
-            opset_version=self.kwargs["specification_version"]
+            opset_version=self.kwargs["specification_version"],
         )
         return converter.convert()
 

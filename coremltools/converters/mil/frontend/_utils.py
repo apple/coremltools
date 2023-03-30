@@ -333,11 +333,6 @@ def solve_generic_einsum(parsed_vectors, a_var, b_var, name):
     a_var, b_var = vars
     a_axes, b_axes, out_axes = parsed_vectors
 
-    if not out_axes:
-        raise ValueError(
-            "Generic einsum does not support scalar output."
-        )
-
     a_dims = mb.shape(x=a_var)
     b_dims = mb.shape(x=b_var)
 
@@ -363,8 +358,12 @@ def solve_generic_einsum(parsed_vectors, a_var, b_var, name):
         else:
             a_unique_axes.append(a_axis)
             a_unique_dims.append(a_dim)
-    concat_batch_dims = _concat_dims(batch_dims)
+    concat_batch_dims = _concat_dims(batch_dims, True)
+    # if there is no dim to reduce, then add a dummy dim,
+    # so mb.matmul will reduce the dummy dim to achieve outer product
     concat_reduce_dims = _concat_dims(reduce_dims)
+    # if there is no dim of `a` remains, then add a dummy dim for `a` as a matrix dim,
+    # otherwise mb.matmul may mistake the batch dim of `a` as the matrix dim
     concat_a_unique_dims = _concat_dims(a_unique_dims)
 
     for i, b_axis in enumerate(b_axes):
@@ -372,6 +371,8 @@ def solve_generic_einsum(parsed_vectors, a_var, b_var, name):
         if b_axis not in a_axes:
             b_unique_axes.append(b_axis)
             b_unique_dims.append(b_dim)
+    # if there is no dim of `b` remains, then add a dummy dim for `b`,
+    # otherwise mb.matmul may mistake the batch dim of `b` as a matrix dim
     concat_b_unique_dims = _concat_dims(b_unique_dims)
 
     a_transpose_axes = batched_axes + a_unique_axes + reduced_axes
@@ -391,8 +392,19 @@ def solve_generic_einsum(parsed_vectors, a_var, b_var, name):
     concat_a_unique_dims = _concat_dims(a_unique_dims, True)
     concat_b_unique_dims = _concat_dims(b_unique_dims, True)
     ab_reshaped_dims = _concat_dims(
-        [x for x in [concat_batch_dims, concat_a_unique_dims, concat_b_unique_dims] if x is not None])
-    ab = mb.reshape(x=ab, shape=ab_reshaped_dims)
-    ab_reshaped_axes = batched_axes + a_unique_axes + b_unique_axes
-    ab = mb.transpose(x=ab, perm=_get_perm(ab_reshaped_axes, out_axes), name=name)
-    return ab
+        [
+            x
+            for x in [concat_batch_dims, concat_a_unique_dims, concat_b_unique_dims]
+            if x is not None
+        ],
+        True,
+    )
+    # Removes excessive dimensions for scalar output
+    if ab_reshaped_dims is None:
+        return mb.squeeze(x=ab, name=name)
+    # Reshape tensor output to specified output shape
+    else:
+        ab = mb.reshape(x=ab, shape=ab_reshaped_dims)
+        ab_reshaped_axes = batched_axes + a_unique_axes + b_unique_axes
+        ab = mb.transpose(x=ab, perm=_get_perm(ab_reshaped_axes, out_axes), name=name)
+        return ab

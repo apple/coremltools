@@ -179,8 +179,8 @@ class torch_tensor_assign(Operation):
     input_spec = InputSpec(
         data=TensorInputType(type_domain="T"),
         updates=TensorInputType(type_domain="T"),
-        begin=TensorInputType(const=True, type_domain=types.int32),
-        end=TensorInputType(const=True, type_domain=types.int32),
+        begin=TensorInputType(type_domain=types.int32),
+        end=TensorInputType(type_domain=types.int32),
         stride=TensorInputType(const=True, optional=True, type_domain=types.int32),
         begin_mask=TensorInputType(const=True, optional=True, type_domain=types.bool),
         end_mask=TensorInputType(const=True, optional=True, type_domain=types.bool),

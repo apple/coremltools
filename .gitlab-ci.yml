@@ -36,11 +36,6 @@ check_python_flake8:
       paths:
         - build/dist/
 
-build_wheel_macos_py36:
-  <<: *build_macos
-  variables:
-    PYTHON: "3.6"
-
 build_wheel_macos_py37:
   <<: *build_macos
   variables:
@@ -166,7 +161,6 @@ collect_artifacts:
   script:
     echo "Collect artifacts (wheels and documentation)"
   dependencies:
-    - build_wheel_macos_py36
     - build_wheel_macos_py37
     - build_wheel_macos_py38
     - build_wheel_macos_py39

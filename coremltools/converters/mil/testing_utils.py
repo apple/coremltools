@@ -16,9 +16,8 @@ import coremltools as ct
 import coremltools.models.utils as coremltoolsutils
 from coremltools._deps import _IS_MACOS
 from coremltools.converters.mil.mil import Function, Program
+from coremltools.converters.mil.mil.passes.defs.quantization import AbstractQuantizationPass
 from coremltools.converters.mil.mil.passes.pass_registry import PASS_REGISTRY
-from coremltools.converters.mil.mil.passes.quantization_passes import \
-    AbstractQuantizationPass
 from coremltools.proto import FeatureTypes_pb2 as ft
 
 np.random.seed(10)
@@ -27,6 +26,55 @@ DTYPE_TO_FEATURE_TYPE_MAP = {"int32": ft.ArrayFeatureType.INT32,
                              "fp32": ft.ArrayFeatureType.FLOAT32,
                              "fp16": ft.ArrayFeatureType.FLOAT16,
                              }
+
+einsum_equations = [
+    # hardcoded cases
+    "abcd,adce->abce",
+    "abc,cbd->abd",
+    "bnqd,bnkd->bnqk",
+    "abc,cd->abd",
+    "abc,cde->abde",
+    "btnh,bfnh->bnft",
+    "bnft,btnh->bfnh",
+    "abcd,cde->abe",
+    "a b c d , a d c e -> a b c e",
+    # with-diagonal generic cases
+    "jiii,ijjk->jk",
+    "iji,ji->j",
+    "jii,ijk->jk",
+    "ijij,iij->ij",
+    # no-diagonal generic cases
+    "i,j->ij",  # outer product
+    "a,a->a",  # batched outer product
+    "ija,la->ijal",  # batched outer product
+    "i,i->",  # inner product
+    "ia,ia->a",  # batched inner product
+    "ai,ia->a",  # batched inner product
+    "abi,abi->ab",  # batched inner product
+    "iab,iab->ab",  # batched inner product
+    "abi,bai->ba",  # batched inner product
+    "ij,j->i",  # matrix-vector multiplication
+    "i,ij->j",  # vector-matrix multiplication
+    "ai,ija->aj",  # batched vector-matrix multiplication
+    "aibj,bi->jba",  # batched matrix-vector multiplication
+    "ij,jk->ik",  # matrix multiplication
+    "aij,ajk->iak",  # batched matrix multiplication
+    "abij,abjk->abik",  # batched matrix multiplication
+    "aijb,bajk->abik",  # batched matrix multiplication
+    "ij,ij->",  # double-inner product
+    "ij,ji->",  # double-inner product
+    "aij,aij->a",  # batched double-inner product
+    "ija,ija->a",  # batched double-inner product
+    "ija,jia->a",  # batched double-inner product
+    "aijb,ajbi->ab",  # batched double-inner product
+    "aibj,cdij->cadb",  # batched double-inner product
+    "ijk,lmj->iklm",  # 3rd-order tensor contraction
+    "ijak,akl->aijl",  # batched 3rd-order tensor and matrix contraction
+    # Generic with sum
+    "ij,j->ij",
+    "ij,kjl->j",
+    "iijj,j->j",
+]
 
 def _serialize_current_pytest(mlmodel):
     class_name = os.environ.get('PYTEST_CURRENT_TEST').split("::")[1].strip()
@@ -76,8 +124,7 @@ def assert_model_is_valid(
     assert mlmodel is not None
 
     if verbose:
-        from coremltools.models.neural_network.printer import \
-            print_network_spec
+        from coremltools.models.neural_network.printer import print_network_spec
         print_network_spec(mlmodel.get_spec(), style="coding")
 
     if _IS_MACOS and (not mlmodel.is_package or coremltoolsutils._macos_version() >= (12, 0)):
@@ -265,7 +312,7 @@ def compare_shapes(
             pred = run_core_ml_predict(mlmodel, input_key_values)
         for o, expected in expected_outputs.items():
             coreml_out = _get_coreml_out_from_dict(pred, o)
-            
+
             # output is dictionary (for classifier)
             if isinstance(coreml_out, dict) and isinstance(expected, dict):
                 assert len(coreml_out) == len(expected)
@@ -333,8 +380,7 @@ def ct_convert(
     )
 
     if os.environ.get("DEBUG_SAVE_MLMODEL", "0") == "1":
-        from coremltools.converters.mil.testing_utils import \
-            _serialize_current_pytest
+        from coremltools.converters.mil.testing_utils import _serialize_current_pytest
         _serialize_current_pytest(mlmodel)
 
     return mlmodel

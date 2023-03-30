@@ -18,7 +18,7 @@ UNK_SYM = "s_unk"
 def run_compare_builder(
     build,
     input_placeholders,
-    input_values,
+    input_values=None,
     expected_output_types=None,
     expected_outputs=None,
     compute_unit=ct.ComputeUnit.CPU_ONLY,

@@ -2,21 +2,18 @@
 # source: LinkedModel.proto
 
 import sys
-
 _b=sys.version_info[0]<3 and (lambda x:x) or (lambda x:x.encode('latin1'))
 from google.protobuf import descriptor as _descriptor
-from google.protobuf import descriptor_pb2
 from google.protobuf import message as _message
 from google.protobuf import reflection as _reflection
 from google.protobuf import symbol_database as _symbol_database
-
+from google.protobuf import descriptor_pb2
 # @@protoc_insertion_point(imports)
 
 _sym_db = _symbol_database.Default()
 
 
 from . import Parameters_pb2 as Parameters__pb2
-
 try:
   DataStructures__pb2 = Parameters__pb2.DataStructures__pb2
 except AttributeError:

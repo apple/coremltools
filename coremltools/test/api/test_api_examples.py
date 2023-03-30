@@ -11,9 +11,13 @@ import numpy as np
 import pytest
 
 import coremltools as ct
+from coremltools._deps import _HAS_TORCH
 from coremltools.converters.mil import Builder as mb
 from coremltools.converters.mil.mil import Function, Program, get_new_symbol
 from coremltools.converters.mil.testing_utils import get_op_types_in_program
+
+if _HAS_TORCH:
+    import torch
 
 
 class TestMILExamples:
@@ -103,10 +107,13 @@ class TestInputs:
     def test_rank0_inputs_mil():
         with pytest.raises(ValueError, match=r"Rank-0"):
             @mb.program(
-                input_specs=[mb.TensorSpec(shape=()),]
+                input_specs=[
+                    mb.TensorSpec(shape=()),
+                ]
             )
             def prog(x):
                 return x
+
 
 ###############################################################################
 # Note: all tests are examples of conversion to the Core ML format
@@ -163,7 +170,7 @@ class TestMLProgramConverterExamples:
             ssa_fun.set_outputs([z])
         prog.add_function("main", ssa_fun)
         mlmodel = ct.convert(prog, convert_to="mlprogram", compute_precision=ct.precision.FLOAT32)
-        prog2 = mlmodel._get_mil_internal() # this will invoke a deepcopy on the prog
+        prog2 = mlmodel._get_mil_internal()  # this will invoke a deepcopy on the prog
 
     @pytest.mark.skipif(not ct.utils._is_macos(), reason="Platform is not Mac OS")
     @pytest.mark.parametrize("skip_model_load", [True, False])
@@ -179,8 +186,7 @@ class TestMLProgramConverterExamples:
                 model = ct.convert(prog, convert_to='mlprogram',
                                    skip_model_load=skip_model_load)
         else:
-            model = ct.convert(prog, convert_to='mlprogram',
-                                skip_model_load=skip_model_load)
+            model = ct.convert(prog, convert_to="mlprogram", skip_model_load=skip_model_load)
 
         assert model is not None
         if skip_model_load:
@@ -212,10 +218,13 @@ class TestMLProgramFP16Transform:
         mil_prog = mlmodel._get_mil_internal()
         np.testing.assert_array_equal(["square"], get_op_types_in_program(mil_prog))
 
-        mlmodel = ct.convert(copy.deepcopy(prog),
-                             compute_precision=ct.transform.FP16ComputePrecision(
-                                                            op_selector=lambda op: op.op_type != 'square'),
-                             convert_to='mlprogram')
+        mlmodel = ct.convert(
+            copy.deepcopy(prog),
+            compute_precision=ct.transform.FP16ComputePrecision(
+                op_selector=lambda op: op.op_type != "square"
+            ),
+            convert_to="mlprogram",
+        )
         mil_prog = mlmodel._get_mil_internal()
         np.testing.assert_array_equal(["square"], get_op_types_in_program(mil_prog))
 
@@ -227,7 +236,7 @@ class TestMLProgramFP16Transform:
                          "coremltools.precision.FLOAT16 or of type coremltools.transform.FP16ComputePrecision()"
         assert expected_error == str(e.value)
 
-        expected_pattern = "compute_precision .* supported .* mlprogram .* None .* target==\'neuralnetwork\'.*\n.*minimum_deployment_target.*"
+        expected_pattern = "compute_precision .* supported .* mlprogram .* None .* target=='neuralnetwork'.*minimum_deployment_target.*"
         with pytest.raises(ValueError, match=expected_pattern) as e:
             mlmodel = ct.convert(copy.deepcopy(prog), compute_precision='fp16')
 
@@ -237,6 +246,7 @@ class TestMLProgramFP16Transform:
         Since the  compute_precision argument is only applicable when converting to "mlprogram",
         check that an error is correctly raised when conversion is targeted at the neuralnetwork backend
         '''
+
         @mb.program(input_specs=[mb.TensorSpec(shape=(10, 20))])
         def prog(x):
             x = mb.square(x=x)
@@ -247,3 +257,263 @@ class TestMLProgramFP16Transform:
             mlmodel = ct.convert(prog, compute_precision=ct.precision.FLOAT16)
         with pytest.raises(ValueError, match=expected_err_str):
             mlmodel = ct.convert(prog, compute_precision=ct.precision.FLOAT32)
+
+
+@pytest.mark.skipif(not _HAS_TORCH, reason="PyTorch not found")
+class TestGraphPassManagement:
+    @staticmethod
+    def _get_test_model():
+        class TestModel(torch.nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.conv1 = torch.nn.Conv2d(1, 8, 5, padding="same")
+                self.bn1 = torch.nn.BatchNorm2d(8)
+                self.linear1 = torch.nn.Linear(28 * 28 * 8, 5)
+                self.alpha = 0.7
+
+            def forward(self, x):
+                x = self.conv1(x)
+                x = self.bn1(x)
+                x = self.linear1(torch.flatten(x))
+                x = torch.maximum(self.alpha * x, x)
+                return x
+
+        return TestModel().eval()
+
+    def test_default_pipeline(self):
+        model = self._get_test_model()
+        example_input = torch.rand(1, 1, 28, 28)
+        traced_model = torch.jit.trace(model, example_input)
+        model_converted = ct.convert(
+            traced_model,
+            inputs=[ct.TensorType(shape=example_input.shape)],
+            convert_to="mlprogram",
+            pass_pipeline=ct.PassPipeline(),
+        )
+        assert get_op_types_in_program(model_converted._get_mil_internal()) == [
+            "cast",
+            "conv",
+            "reshape",
+            "linear",
+            "leaky_relu",
+            "cast",
+        ]
+
+    def test_skip_pass(self):
+        model = self._get_test_model()
+        example_input = torch.rand(1, 1, 28, 28)
+        traced_model = torch.jit.trace(model, example_input)
+
+        model_converted = ct.convert(
+            traced_model, inputs=[ct.TensorType(shape=example_input.shape)], convert_to="mlprogram"
+        )
+        assert get_op_types_in_program(model_converted._get_mil_internal()) == [
+            "cast",
+            "conv",
+            "reshape",
+            "linear",
+            "leaky_relu",
+            "cast",
+        ]
+
+        pipeline = ct.PassPipeline()
+        pipeline.remove_passes(passes_names=["common::fuse_conv_batchnorm"])
+        model_converted_with_skipped_passes = ct.convert(
+            traced_model,
+            inputs=[ct.TensorType(shape=example_input.shape)],
+            convert_to="mlprogram",
+            pass_pipeline=pipeline,
+        )
+        assert get_op_types_in_program(model_converted_with_skipped_passes._get_mil_internal()) == [
+            "cast",
+            "conv",
+            "batch_norm",
+            "reshape",
+            "linear",
+            "leaky_relu",
+            "cast",
+        ]
+
+    def test_skip_two_passes(self):
+        model = self._get_test_model()
+        example_input = torch.rand(1, 1, 28, 28)
+        traced_model = torch.jit.trace(model, example_input)
+
+        pipeline = ct.PassPipeline()
+        pipeline.remove_passes(
+            passes_names=["common::fuse_conv_batchnorm", "common::fuse_leaky_relu"]
+        )
+        model_converted_with_skipped_passes = ct.convert(
+            traced_model,
+            inputs=[ct.TensorType(shape=example_input.shape)],
+            convert_to="mlprogram",
+            pass_pipeline=pipeline,
+        )
+        assert get_op_types_in_program(model_converted_with_skipped_passes._get_mil_internal()) == [
+            "cast",
+            "conv",
+            "batch_norm",
+            "reshape",
+            "linear",
+            "mul",
+            "maximum",
+            "cast",
+        ]
+
+    def test_skip_passes_in_different_pipelines(self):
+        """
+        Some passes exist in different pipelines. For example, const_elimination is in both main
+        and backend pipelines. If the user want to skip the const_elimination pass, we want to make
+        sure both pipelines skip that pass.
+        """
+        model = self._get_test_model()
+        example_input = torch.rand(1, 1, 28, 28)
+        traced_model = torch.jit.trace(model, example_input)
+
+        pipeline = ct.PassPipeline()
+        pipeline.remove_passes(passes_names=["common::const_elimination"])
+        model_converted = ct.convert(
+            traced_model,
+            inputs=[ct.TensorType(shape=example_input.shape)],
+            convert_to="mlprogram",
+            pass_pipeline=pipeline,
+        )
+        assert (
+            get_op_types_in_program(
+                model_converted._get_mil_internal(), skip_const_ops=False
+            ).count("const")
+            == 24
+        )
+
+    def test_empty_pipeline(self):
+        model = self._get_test_model()
+        example_input = torch.rand(1, 1, 28, 28)
+        traced_model = torch.jit.trace(model, example_input)
+
+        pipeline = ct.PassPipeline.get_empty_pipeline()
+
+        model_converted = ct.convert(
+            traced_model,
+            inputs=[ct.TensorType(shape=example_input.shape)],
+            convert_to="mlprogram",
+            pass_pipeline=pipeline,
+        )
+        assert get_op_types_in_program(model_converted._get_mil_internal()) == [
+            "conv",
+            "batch_norm",
+            "shape",
+            "slice_by_index",
+            "slice_by_index",
+            "concat",
+            "cast",
+            "reshape",
+            "linear",
+            "mul",
+            "maximum",
+        ]
+
+    def test_pass_option_skip_ops_by_type(self):
+        model = self._get_test_model()
+        example_input = torch.rand(1, 1, 28, 28)
+        traced_model = torch.jit.trace(model, example_input)
+
+        pipeline = ct.PassPipeline()
+        pipeline.set_options("common::add_fp16_cast", {"skip_ops_by_type": "conv,linear"})
+        model_converted = ct.convert(
+            traced_model,
+            inputs=[ct.TensorType(shape=example_input.shape)],
+            convert_to="mlprogram",
+            pass_pipeline=pipeline,
+        )
+        # The fp16 cast is skipped for conv and linear as we specified them in the pass options.
+        assert get_op_types_in_program(model_converted._get_mil_internal()) == [
+            "conv",
+            "cast",
+            "reshape",
+            "cast",
+            "linear",
+            "cast",
+            "leaky_relu",
+            "cast",
+        ]
+
+    def test_pass_option_skip_const_by_size(self):
+        model = self._get_test_model()
+        example_input = torch.rand(1, 1, 28, 28)
+        traced_model = torch.jit.trace(model, example_input)
+
+        model_converted_without_pipeline = ct.convert(
+            traced_model,
+            inputs=[ct.TensorType(shape=example_input.shape)],
+            convert_to="mlprogram",
+        )
+
+        pipeline = ct.PassPipeline()
+        pipeline.set_options("common::const_elimination", {"skip_const_by_size": "1e8"})
+        model_converted = ct.convert(
+            traced_model,
+            inputs=[ct.TensorType(shape=example_input.shape)],
+            convert_to="mlprogram",
+            pass_pipeline=pipeline,
+        )
+        # When the threshold is set to 1e8, no var is skipped in const elimination.
+        assert get_op_types_in_program(
+            model_converted._get_mil_internal(), skip_const_ops=False
+        ).count("const") == get_op_types_in_program(
+            model_converted_without_pipeline._get_mil_internal(), skip_const_ops=False
+        ).count(
+            "const"
+        )
+
+        pipeline.set_options(
+            "common::const_elimination", {"skip_const_by_size": "-1"}, override=True
+        )
+        model_converted = ct.convert(
+            traced_model,
+            inputs=[ct.TensorType(shape=example_input.shape)],
+            convert_to="mlprogram",
+            pass_pipeline=pipeline,
+        )
+        # When the threshold -1, almost all vars (except scalars) are skipped in const elimination.
+        assert (
+            get_op_types_in_program(
+                model_converted._get_mil_internal(), skip_const_ops=False
+            ).count("const")
+            == 23
+        )
+
+    def test_pass_unsupported_option(self):
+        model = self._get_test_model()
+        example_input = torch.rand(1, 1, 28, 28)
+        traced_model = torch.jit.trace(model, example_input)
+
+        pipeline = ct.PassPipeline()
+        pipeline.set_options("common::fuse_conv_batchnorm", {"skip_ops_by_type": "conv,linear"})
+        with pytest.raises(
+            NotImplementedError,
+            match="The graph pass `fuse_conv_batchnorm` doesn't support option `skip_ops_by_type`.",
+        ):
+            ct.convert(
+                traced_model,
+                inputs=[ct.TensorType(shape=example_input.shape)],
+                convert_to="mlprogram",
+                pass_pipeline=pipeline,
+            )
+
+    def test_pass_option_invalid_val(self):
+        model = self._get_test_model()
+        example_input = torch.rand(1, 1, 28, 28)
+        traced_model = torch.jit.trace(model, example_input)
+
+        pipeline = ct.PassPipeline()
+        pipeline.set_options("common::const_elimination", {"skip_const_by_size": "dummy"})
+        with pytest.raises(
+            ValueError,
+            match="Expected to get float threshold, but got `dummy` which cannot be converted to float",
+        ):
+            ct.convert(
+                traced_model,
+                inputs=[ct.TensorType(shape=example_input.shape)],
+                convert_to="mlprogram",
+                pass_pipeline=pipeline,
+            )

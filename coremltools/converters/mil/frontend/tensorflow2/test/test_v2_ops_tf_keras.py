@@ -15,15 +15,14 @@ import coremltools as ct
 from coremltools._deps import _get_version
 from coremltools.converters.mil import testing_reqs
 from coremltools.converters.mil.frontend._utils import is_symbolic_dim_in_prog
-from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import \
-    TensorFlowBaseTest
-from coremltools.converters.mil.frontend.tensorflow2.test.testing_utils import \
-    TensorFlow2BaseTest
-from coremltools.converters.mil.testing_utils import (get_op_types_in_program,
-                                                      random_gen)
-                                                      
+from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import (
+    TensorFlowBaseTest,
+)
+from coremltools.converters.mil.frontend.tensorflow2.test.testing_utils import (
+    TensorFlow2BaseTest,
+)
+from coremltools.converters.mil.testing_utils import get_op_types_in_program, random_gen
 from coremltools.models.utils import _macos_version
-from ..._utils import is_symbolic_dim_in_prog
 
 TensorFlowBaseTest.run_compare_tf_keras = TensorFlow2BaseTest.run_compare_tf_keras
 backends = testing_reqs.backends
@@ -653,13 +652,14 @@ class TestConvTranspose(TensorFlowBaseTest):
         dilations,
         batch_size,
     ):
-        if (platform.machine() == "arm64" and
-            backend == ("mlprogram", "fp16") and 
-            op == tf.keras.layers.Conv3DTranspose and
-            padding == "valid" and
-            spatial_dim_and_ks == (7, 11, 12, 1, 2, 2) and
-            strides == (2, 3, 3) and
-            batch_size == 3
+        if (
+            platform.machine() == "arm64"
+            and backend == ("mlprogram", "fp16")
+            and op == tf.keras.layers.Conv3DTranspose
+            and padding == "valid"
+            and spatial_dim_and_ks == (7, 11, 12, 1, 2, 2)
+            and strides == (2, 3, 3)
+            and batch_size == 3
         ):
            pytest.xfail("rdar://98015195 ([M1 native tests] Some MIL unittests are failing M1 native)")
 
@@ -977,7 +977,7 @@ class TestBatchNormalization(TensorFlowBaseTest):
             compute_unit=compute_unit,
             backend=backend,
         )
-        
+
         if mixed_precision:
             tf.keras.mixed_precision.set_global_policy(tf.keras.backend.floatx())
 
@@ -1119,10 +1119,10 @@ class TestPadding(TensorFlowBaseTest):
     def test(self, compute_unit, backend, op, data_format, padding, mixed_precision):
         if backend[0] != "mlprogram" and mixed_precision:
             pytest.skip("neuralnetwork backend doesn't support fp16 computation.")
-        
+
         if mixed_precision:
-            tf.keras.mixed_precision.set_global_policy('mixed_float16')
-            
+            tf.keras.mixed_precision.set_global_policy("mixed_float16")
+
         shape = None
         kwargs = {}
         if op == tf.keras.layers.ZeroPadding1D:
@@ -1144,7 +1144,7 @@ class TestPadding(TensorFlowBaseTest):
             compute_unit=compute_unit,
             backend=backend,
         )
-        
+
         if mixed_precision:
             tf.keras.mixed_precision.set_global_policy(tf.keras.backend.floatx())
 
@@ -1414,25 +1414,33 @@ class TestRecurrent(TensorFlowBaseTest):
                                       are_symbols_expected=True)
 
     @pytest.mark.parametrize(
-        "compute_unit, tf_raw_lstm_op, backend",
+        "compute_unit, tf_raw_lstm_op, is_flexible_input, batch_size, backend",
         itertools.product(
             compute_units,
-            [tf.raw_ops.BlockLSTMV2, tf.raw_ops.BlockLSTM,],
+            [
+                tf.raw_ops.BlockLSTMV2,
+                tf.raw_ops.BlockLSTM,
+            ],
+            [False, True],
+            [1, 2],
             backends,
         ),
     )
-    def test_lstm_block_fused_op(self, compute_unit, tf_raw_lstm_op, backend):
-        '''
+    def test_lstm_block_fused_op(
+        self, compute_unit, tf_raw_lstm_op, is_flexible_input, batch_size, backend
+    ):
+        """
         Define a model with custom LSTM ops that uses tf.raw_ops.BlockLSTM / tf.raw_ops.BlockLSTMV2
         and verify that it converts to a fused lstm op.
 
-        %x (shape: (Seq, Batch, idim) == (5, 2, 4))
-        %x1 = LSTM(h=10) (%input) # shape = (5, 2, 10)
-        %x2 = LSTM(h=20) (%x1) # shape = (5, 2, 20)
-        %x3 = slice()(%x2) # shape = (1, 2, 20), to get the final seq value
-        %x4 = reshape((1, -1)) (%x3) # shape = (1, 40)
+        %x (shape: (Seq, Batch, idim) == (seq_len, batch, 4))
+        %x1 = LSTM(h=10) (%input) # shape = (seq_len, batch, 10)
+        %x2 = LSTM(h=20) (%x1) # shape = (seq_len, batch, 20)
+        %x3 = slice()(%x2) # shape = (1, batch, 20), to get the final seq value
+        %x4 = reshape((1, -1)) (%x3) # shape = (1, batch * 20)
         %x5 = Dense(h=3)(%x4) # shape = (1, 3)
-        '''
+        """
+
         class CustomLSTM(tf.keras.layers.Layer):
             def __init__(self, num_units, max_seq_length, batch_size):
                 super(CustomLSTM, self).__init__()
@@ -1467,31 +1475,41 @@ class TestRecurrent(TensorFlowBaseTest):
 
         input_dim = 4
         seq_length = 5
-        batch_size = 2
+        batch_size = batch_size
         x_shape = (seq_length, batch_size, input_dim)
         hidden_dim_1 = 10
         hidden_dim_2 = 20
 
-        x = tf.keras.Input(batch_input_shape=x_shape)  # (5, 2, 4)
-        x1, output_states_1 = CustomLSTM(num_units=hidden_dim_1, max_seq_length=seq_length, batch_size=batch_size)(x)  # (5, 2, 10), (5, 2, 10)
-        x2, output_states_2 = CustomLSTM(num_units=hidden_dim_2, max_seq_length=seq_length, batch_size=batch_size)(x1)  # (5, 2, 20), (5, 2 10)
-        x3 = tf.slice(x2, begin=[4, 0, 0], size=[1, 2, 20])  # (1, 2, 20)
-        x4 = tf.reshape(x3, shape=(1, -1))  # (1, 40)
+        x = tf.keras.Input(batch_input_shape=x_shape)  # (seq_len, batch, 4)
+        x1, output_states_1 = CustomLSTM(num_units=hidden_dim_1, max_seq_length=seq_length, batch_size=batch_size)(x)  # (seq_len, batch, 10), (seq_len, batch, 10)
+        x2, output_states_2 = CustomLSTM(num_units=hidden_dim_2, max_seq_length=seq_length, batch_size=batch_size)(x1)  # (seq_len, batch, 20), (seq_len, batch 10)
+        x3 = tf.slice(x2, begin=[4, 0, 0], size=[1, batch_size, 20])  # (1, batch, 20)
+        x4 = tf.reshape(x3, shape=(1, -1))  # (1, batch * 20)
         x5 = tf.keras.layers.Dense(3)(x4)  # (1, 3)
-        
+
         # Test that we can fuse the lstm op if we have an output that only extract the information from the last cell state
-        x6 = output_states_1[4, :, 1] # (2, )
-        x7 = output_states_2[4:5, 0, 0:2] # (1, 2)
-        x8 = output_states_1[-1, :, :]  # (2, 10)
-        x9 = output_states_2[-1:, :, 0:10:2] # (1, 2, 5)
-        outputs = [x5, x6, x7, x8, x9]
+        x6 = tf.keras.layers.ReLU()(output_states_1[4, :, :])
+        x7 = output_states_2[4:5, :, :]
+        x8 = output_states_1[-1, :, :]
+        x9 = tf.keras.layers.ReLU()(output_states_2[-1:, :, :])
+        outputs = [x5, x8, x9] if is_flexible_input else [x5, x6, x7, x8, x9]
+
         keras_model = tf.keras.Model(inputs=x, outputs=outputs)
+
+        inputs = None
+        if is_flexible_input:
+            inputs = [
+                ct.TensorType(
+                    shape=(ct.RangeDim(seq_length, 20), batch_size, input_dim)
+                )
+            ]
 
         res = TensorFlowBaseTest.run_compare_tf_keras(
             keras_model,
             [random_gen(x_shape, -1, 1)],
             compute_unit=compute_unit,
             backend=backend,
+            inputs_for_conversion=inputs,
         )
         coreml_model = res[1]
         mil_prog = coreml_model._get_mil_internal()

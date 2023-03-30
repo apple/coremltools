@@ -15,12 +15,20 @@ import pytest
 
 import coremltools as ct
 from coremltools import RangeDim, TensorType
-from coremltools._deps import (_HAS_TF_1, _HAS_TF_2, MSG_TF1_NOT_FOUND,
-                               _get_version)
+from coremltools._deps import _HAS_TF_1, _HAS_TF_2, MSG_TF1_NOT_FOUND, _get_version
 from coremltools.converters.mil.frontend.tensorflow.test.testing_utils import (
-    TensorFlowBaseTest, freeze_g, layer_counts, load_tf_pb, make_tf_graph)
+    TensorFlowBaseTest,
+    freeze_g,
+    layer_counts,
+    load_tf_pb,
+    make_tf_graph,
+)
 from coremltools.converters.mil.testing_reqs import backends, compute_units
-from coremltools.converters.mil.testing_utils import random_gen, gen_input_shapes_einsum
+from coremltools.converters.mil.testing_utils import (
+    einsum_equations,
+    gen_input_shapes_einsum,
+    random_gen,
+)
 from coremltools.models.utils import _is_macos, _macos_version
 
 tf = pytest.importorskip("tensorflow")
@@ -2197,43 +2205,7 @@ class TestEinsum(TensorFlowBaseTest):
         itertools.product(
             compute_units,
             backends,
-            [
-                # Hardcoded cases
-                "abcd,adce->abce",
-                "abc,cbd->abd",
-                "bnqd,bnkd->bnqk",
-                "abc,cd->abd",
-                "abc,cde->abde",
-                "btnh,bfnh->bnft",
-                "bnft,btnh->bfnh",
-                "abcd,cde->abe",
-                # Generic cases
-                "i,i->i",
-                "i,j->ij",
-                "ab,b->a",
-                "ab,ab->b",
-                "abc,abc->a",
-                "abc,abc->c",
-                "abc,bac->c",
-                "abc,acd->abd",
-                "abc,abc->ab",
-                "abc,abc->bc",
-                "abc,bac->ba",
-                "abcd,cb->dca",
-                "abcd,acdb->ad",
-                "abcd,abde->abce",
-                "abcd,efbd->eafc",
-                "acdb,bade->abce",
-                # Generic with diagonal
-                "jiii,ijjk->jk",
-                "iji,ji->j",
-                "jii,ijk->jk",
-                "ijij,iij->ij",
-                # Generic with sum
-                "ij,j->ij",
-                "ij,kjl->j",
-                "iijj,j->j",
-            ],
+            einsum_equations,
             [False, True],
         )
     )

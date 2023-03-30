@@ -5,14 +5,18 @@
 
 import numpy as np
 
-from coremltools.converters.mil.mil import (DefaultInputs, InputSpec,
-                                            Operation, TensorInputType,
-                                            TupleInputType, precondition,
-                                            types)
+from coremltools.converters.mil.mil import (
+    DefaultInputs,
+    InputSpec,
+    Operation,
+    TensorInputType,
+    TupleInputType,
+    precondition,
+    types,
+)
 from coremltools.converters.mil.mil.operation import VALUE
 from coremltools.converters.mil.mil.ops.defs._op_reqs import register_op
-from coremltools.converters.mil.mil.ops.defs._utils import (
-    broadcast_shapes, parse_einsum_equation)
+from coremltools.converters.mil.mil.ops.defs._utils import broadcast_shapes, parse_einsum_equation
 from coremltools.converters.mil.mil.types.symbolic import is_symbolic
 
 
@@ -45,7 +49,7 @@ class linear(Operation):
         weight=TensorInputType(const=True, type_domain="T"),
         bias=TensorInputType(const=True, optional=True, type_domain="T"),
     )
-    
+
     type_domains = {
         "T": (types.fp16, types.fp32, types.int32),
     }
@@ -165,7 +169,7 @@ class matmul(Operation):
         transpose_x=TensorInputType(const=True, optional=True, type_domain=types.bool),
         transpose_y=TensorInputType(const=True, optional=True, type_domain=types.bool),
     )
-    
+
     type_domains = {
         "T": (types.fp16, types.fp32, types.int32),
     }

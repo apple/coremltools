@@ -26,17 +26,19 @@ The following Python snippet demonstrates the intended usage from the Python sid
         def __int__(self):
             return 123
 
+
     from example import print
+
     print(A())
 
-To register the necessary conversion routines, it is necessary to add
-a partial overload to the ``pybind11::detail::type_caster<T>`` template.
-Although this is an implementation detail, adding partial overloads to this
+To register the necessary conversion routines, it is necessary to add an
+instantiation of the ``pybind11::detail::type_caster<T>`` template.
+Although this is an implementation detail, adding an instantiation of this
 type is explicitly allowed.
 
 .. code-block:: cpp
 
-    namespace pybind11 { namespace detail {
+    namespace PYBIND11_NAMESPACE { namespace detail {
         template <> struct type_caster<inty> {
         public:
             /**
@@ -44,7 +46,7 @@ type is explicitly allowed.
              * function signatures and declares a local variable
              * 'value' of type inty
              */
-            PYBIND11_TYPE_CASTER(inty, _("inty"));
+            PYBIND11_TYPE_CASTER(inty, const_name("inty"));
 
             /**
              * Conversion part 1 (Python->C++): convert a PyObject into a inty
@@ -76,7 +78,13 @@ type is explicitly allowed.
                 return PyLong_FromLong(src.long_value);
             }
         };
-    }} // namespace pybind11::detail
+    }} // namespace PYBIND11_NAMESPACE::detail
+
+.. note::
+
+    A ``type_caster<T>`` defined with ``PYBIND11_TYPE_CASTER(T, ...)`` requires
+    that ``T`` is default-constructible (``value`` is first default constructed
+    and then ``load()`` assigns to it).
 
 .. warning::
 

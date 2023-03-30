@@ -22,8 +22,7 @@ import numpy as _np
 
 import coremltools as _ct
 from coremltools import ComputeUnit as _ComputeUnit
-from coremltools.converters.mil.mil.passes.name_sanitization_utils import \
-    NameSanitizer as _NameSanitizer
+from coremltools.converters.mil.mil.passes.defs.preprocess import NameSanitizer as _NameSanitizer
 from coremltools.proto import Model_pb2 as _Model_pb2
 import coremltools.proto.MIL_pb2 as _mil_proto
 
@@ -590,7 +589,6 @@ def rename_feature(
         model = MLModel(spec, weights_dir=model.weights_dir)
         model.save("model.mlpackage")
     """
-    from coremltools.models import MLModel
 
     if not rename_inputs and not rename_outputs:
         return
