@@ -162,16 +162,18 @@ int8 = make_int(8, "")
 int16 = make_int(16, "")
 int32 = make_int(32, "")
 int64 = make_int(64, "")
+intc = make_int("c", "")
 
 uint8 = make_int(8, "u")
 uint16 = make_int(16, "u")
 uint32 = make_int(32, "u")
 uint64 = make_int(64, "u")
 uint = uint64
+uintc = make_int("c", "u")
 
 
 def is_int(t):
     return any(
         t is i or isinstance(t, i)
-        for i in [int8, int16, int32, int64, uint8, uint16, uint32, uint64]
+        for i in [int8, int16, int32, int64, intc, uint8, uint16, uint32, uint64, uintc]
     )
